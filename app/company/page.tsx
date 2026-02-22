@@ -30,7 +30,7 @@ export default function CompanyPage() {
                 <td style={tdRight}>2026年</td>
               </tr>
               <tr>
-                <td style={tdLeft}>代表</td>
+                <td style={tdLeft}>代表取締役</td>
                 <td style={tdRight}>Jin Yang（ジン ヤン）</td>
               </tr>
               <tr>
