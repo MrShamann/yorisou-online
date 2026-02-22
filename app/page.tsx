@@ -19,7 +19,14 @@ export default function Home() {
         }}
       >
         <div style={{ fontWeight: 700, fontSize: 20 }}>
-          寄り添う – Yorisou
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+  <img
+    src="/images/yorisou-logo.png"
+    alt="Yorisou"
+    style={{ height: 34, width: "auto" }}
+  />
+  <div style={{ fontWeight: 700, fontSize: 20 }}>寄り添う – Yorisou</div>
+</div>
         </div>
 
         <a
