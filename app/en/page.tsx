@@ -1,3 +1,5 @@
+import React from "react";
+
 export default function EnglishPage() {
   return (
     <main
@@ -8,10 +10,31 @@ export default function EnglishPage() {
         fontFamily: "system-ui, -apple-system",
       }}
     >
-      <div style={{ padding: "24px 40px", display: "flex", justifyContent: "space-between" }}>
-        <div style={{ fontWeight: 700, fontSize: 20 }}>
-          Yorisou
+      {/* Header */}
+      <div
+        style={{
+          padding: "24px 40px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <img
+            src="/images/yorisou-logo.png"
+            alt="Yorisou"
+            style={{ height: 90, width: "auto" }}
+          />
+          <div style={{ lineHeight: 1.1 }}>
+            <div style={{ fontWeight: 800, fontSize: 24 }}>
+              Yorisou
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.7 }}>
+              Community Mobility Initiative
+            </div>
+          </div>
         </div>
+
         <a
           href="/"
           style={{
@@ -27,6 +50,7 @@ export default function EnglishPage() {
         </a>
       </div>
 
+      {/* Hero Section */}
       <section style={{ padding: "80px 40px", maxWidth: 1100, margin: "0 auto" }}>
         <h1 style={{ fontSize: 42, marginBottom: 20 }}>
           Senior-Friendly Community Mobility from Fukuoka

@@ -1,5 +1,4 @@
-import React from "react";
-
+import SiteHeader from "./components/SiteHeader";
 export default function Home() {
   return (
     <main
@@ -8,7 +7,7 @@ export default function Home() {
         background: "#f6f3ec",
         color: "#2c2c2c",
         fontFamily:
-          "Hiragino Kaku Gothic ProN, Yu Gothic, system-ui, -apple-system",
+          'Hiragino Kaku Gothic ProN, Yu Gothic, system-ui, -apple-system',
       }}
     >
       {/* Header */}
@@ -20,20 +19,15 @@ export default function Home() {
           alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <img
-            src="/images/yorisou-logo.png"
-            alt="Yorisou"
-            style={{ height: 90, width: "auto" }}
-          />
-          <div style={{ lineHeight: 1.1 }}>
-            <div style={{ fontWeight: 800, fontSize: 24 }}>
-              寄り添う – Yorisou
-            </div>
-            <div style={{ fontSize: 13, opacity: 0.7 }}>
-              Community Mobility Initiative
-            </div>
-          </div>
+        <div style={{ fontWeight: 700, fontSize: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+  <img
+    src="/images/yorisou-logo.png"
+    alt="Yorisou"
+    style={{ height: 34, width: "auto" }}
+  />
+  <div style={{ fontWeight: 700, fontSize: 20 }}>寄り添う – Yorisou</div>
+</div>
         </div>
 
         <a
