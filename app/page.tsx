@@ -20,6 +20,7 @@ export default function Home() {
           alignItems: "center",
         }}
       >
+        {/* Brand */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <img
             src="/images/yorisou-logo.png"
@@ -36,22 +37,25 @@ export default function Home() {
           </div>
         </div>
 
-        <a
-          href="/en"
-          style={{
-            textDecoration: "none",
-            fontSize: 14,
-            padding: "8px 14px",
-            borderRadius: 20,
-            background: "#e3dfd6",
-            color: "#333",
-          }}
-        >
-          English
-        </a>
+        {/* Navigation */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <a
+            href="/pilot"
+            style={navButton}
+          >
+            Pilot
+          </a>
+
+          <a
+            href="/en"
+            style={navButton}
+          >
+            English
+          </a>
+        </div>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero */}
       <section
         style={{
           padding: "80px 40px",
@@ -94,6 +98,7 @@ export default function Home() {
 
       {/* Contact */}
       <section
+        id="contact"
         style={{
           padding: "80px 40px",
           maxWidth: 900,
@@ -151,6 +156,15 @@ export default function Home() {
     </main>
   );
 }
+
+const navButton: React.CSSProperties = {
+  textDecoration: "none",
+  fontSize: 14,
+  padding: "8px 14px",
+  borderRadius: 20,
+  background: "#e3dfd6",
+  color: "#333",
+};
 
 const inputStyle: React.CSSProperties = {
   padding: "14px",

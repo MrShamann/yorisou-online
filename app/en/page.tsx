@@ -19,6 +19,7 @@ export default function EnglishPage() {
           alignItems: "center",
         }}
       >
+        {/* Brand */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <img
             src="/images/yorisou-logo.png"
@@ -35,23 +36,32 @@ export default function EnglishPage() {
           </div>
         </div>
 
-        <a
-          href="/"
-          style={{
-            textDecoration: "none",
-            fontSize: 14,
-            padding: "8px 14px",
-            borderRadius: 20,
-            background: "#e3dfd6",
-            color: "#333",
-          }}
-        >
-          日本語
-        </a>
+        {/* Navigation */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <a
+            href="/en/pilot"
+            style={navButton}
+          >
+            Pilot
+          </a>
+
+          <a
+            href="/"
+            style={navButton}
+          >
+            日本語
+          </a>
+        </div>
       </div>
 
-      {/* Hero Section */}
-      <section style={{ padding: "80px 40px", maxWidth: 1100, margin: "0 auto" }}>
+      {/* Hero */}
+      <section
+        style={{
+          padding: "80px 40px",
+          maxWidth: 1100,
+          margin: "0 auto",
+        }}
+      >
         <h1 style={{ fontSize: 42, marginBottom: 20 }}>
           Senior-Friendly Community Mobility from Fukuoka
         </h1>
@@ -65,3 +75,12 @@ export default function EnglishPage() {
     </main>
   );
 }
+
+const navButton: React.CSSProperties = {
+  textDecoration: "none",
+  fontSize: 14,
+  padding: "8px 14px",
+  borderRadius: 20,
+  background: "#e3dfd6",
+  color: "#333",
+};
