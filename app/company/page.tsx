@@ -31,7 +31,7 @@ export default function CompanyPage() {
               </tr>
               <tr>
                 <td style={tdLeft}>代表</td>
-                <td style={tdRight}>Yang Jin</td>
+                <td style={tdRight}>Jin Yang（ジン ヤン）</td>
               </tr>
               <tr>
                 <td style={tdLeft}>事業内容</td>
