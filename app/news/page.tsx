@@ -1,64 +1,33 @@
+import Link from "next/link";
+import Hero from "../components/Hero";
+import { getSortedNews } from "../content/news";
+
 export default function NewsPage() {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "#f6f3ec",
-          color: "#2c2c2c",
-          fontFamily:
-            "Hiragino Kaku Gothic ProN, Yu Gothic, system-ui, -apple-system",
-          padding: "80px 40px",
-        }}
-      >
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h1 style={{ fontSize: 36, marginBottom: 40 }}>
-            お知らせ
-          </h1>
-  
-          <div style={newsBox}>
-            <div style={dateStyle}>2026.02</div>
-            <div style={titleStyle}>
-              福岡市向け小規模モビリティ実証の準備開始
-            </div>
-            <div style={contentStyle}>
-              地域関係者との協議を開始し、実証エリアの候補選定を進めています。
-            </div>
-          </div>
-  
-          <div style={newsBox}>
-            <div style={dateStyle}>2026.01</div>
-            <div style={titleStyle}>
-              寄り添う（Yorisou）設立
-            </div>
-            <div style={contentStyle}>
-              福岡を拠点に、高齢社会に対応する地域モビリティ設計事業を開始しました。
-            </div>
+  const posts = getSortedNews();
+
+  return (
+    <main>
+      <Hero
+        title="お知らせ"
+        subtitle="実証実験、地域連携、運用改善に関する最新情報を掲載しています。"
+      />
+
+      <section className="section">
+        <div className="container">
+          <div className="grid" style={{ gridTemplateColumns: "1fr", gap: 12 }}>
+            {posts.map((post) => (
+              <article key={post.slug} className="card">
+                <p className="muted" style={{ margin: 0, fontSize: 13 }}>{post.date}</p>
+                <h2 style={{ margin: "8px 0", fontSize: 22 }}>{post.title}</h2>
+                <p className="muted" style={{ margin: 0 }}>{post.summary}</p>
+                <Link href={`/news/${post.slug}`} style={{ marginTop: 10, display: "inline-block", color: "var(--accent)", fontWeight: 700 }}>
+                  詳細を見る
+                </Link>
+              </article>
+            ))}
           </div>
         </div>
-      </main>
-    );
-  }
-  
-  const newsBox: React.CSSProperties = {
-    background: "#fff",
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-    boxShadow: "0 6px 24px rgba(0,0,0,0.05)",
-  };
-  
-  const dateStyle: React.CSSProperties = {
-    fontSize: 13,
-    opacity: 0.6,
-  };
-  
-  const titleStyle: React.CSSProperties = {
-    fontSize: 18,
-    fontWeight: 800,
-    marginTop: 6,
-  };
-  
-  const contentStyle: React.CSSProperties = {
-    marginTop: 8,
-    lineHeight: 1.8,
-  };
+      </section>
+    </main>
+  );
+}

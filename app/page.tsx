@@ -1,184 +1,120 @@
-import React from "react";
-import SiteHeader from "./components/SiteHeader";
+import Link from "next/link";
+import CTA from "./components/CTA";
+import CardGrid from "./components/CardGrid";
+import Hero from "./components/Hero";
+import NewsTeaser from "./components/NewsTeaser";
+import Section from "./components/Section";
 
-function Card({
-  title,
-  desc,
-}: {
-  title: string;
-  desc: string;
-}) {
+export default function HomePage() {
   return (
-    <div
-      style={{
-        borderRadius: 16,
-        padding: 18,
-        background: "rgba(255,255,255,0.78)",
-        border: "1px solid rgba(0,0,0,0.06)",
-        boxShadow: "0 10px 22px rgba(0,0,0,0.04)",
-      }}
-    >
-      <div style={{ fontWeight: 800, fontSize: 15 }}>{title}</div>
-      <div style={{ marginTop: 10, fontSize: 13, color: "#5b5b5b", lineHeight: 1.8 }}>
-        {desc}
-      </div>
-    </div>
-  );
-}
+    <main>
+      <Hero
+        title="高齢社会の『移動』を、福岡から。"
+        subtitle="YORISOUは、地域の生活導線に即した小規模実証を通じて、安全性と継続運用性を検証し、自治体・地域機関とともに実装可能な移動モデルを構築します。"
+        primaryHref="/contact"
+        primaryLabel="お問い合わせ"
+        secondaryHref="/pilot"
+        secondaryLabel="実証実験を見る"
+      />
 
-export default function HomeJP() {
-  return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#f6f3ec",
-        color: "#222",
-        fontFamily: "Hiragino Kaku Gothic ProN, Yu Gothic, system-ui, -apple-system",
-      }}
-    >
-      <SiteHeader lang="jp" />
-
-      {/* HERO */}
-      <section style={{ padding: "70px 40px 30px" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.1fr 0.9fr",
-            gap: 34,
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 12, letterSpacing: "0.14em", color: "#7b7b7b" }}>
-              FUKUOKA COMMUNITY MOBILITY
-            </div>
-
-            <h1
-              style={{
-                marginTop: 18,
-                fontSize: 52,
-                lineHeight: 1.15,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              寄り添う。
-              <br />
-              移動の不安をなくす。
-            </h1>
-
-            <p style={{ marginTop: 18, fontSize: 16, color: "#4f4f4f", lineHeight: 1.9 }}>
-              Yorisou は、日本の高齢社会に向けた
-              <b>小規模・地域密着型モビリティ実証</b>を設計・運用します。
-              病院、商店街、駅、住宅地など、日常の動線に自然に溶け込む仕組みをつくります。
-            </p>
-
-            <div style={{ marginTop: 26, display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <a
-                href="/pilot"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "12px 18px",
-                  borderRadius: 10,
-                  background: "#222",
-                  color: "#fff",
-                  textDecoration: "none",
-                  fontWeight: 800,
-                  fontSize: 14,
-                }}
-              >
-                Pilotを見る
-              </a>
-
-              <a
-                href="/contact"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "12px 18px",
-                  borderRadius: 10,
-                  background: "#fff",
-                  color: "#222",
-                  textDecoration: "none",
-                  fontWeight: 800,
-                  fontSize: 14,
-                  border: "1px solid rgba(0,0,0,0.12)",
-                }}
-              >
-                お問い合わせ
-              </a>
-            </div>
-
-            <div
-              style={{
-                marginTop: 26,
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 12,
-              }}
-            >
-              <Card title="目的" desc="高齢者の移動不安を減らし、外出機会を増やす" />
-              <Card title="方法" desc="30〜90日規模の小規模実証を設計し、改善ループで最適化" />
-              <Card title="場所" desc="福岡を起点に、地域単位で展開可能なモデルを構築" />
-            </div>
-          </div>
-
-          <div
-            style={{
-              borderRadius: 18,
-              overflow: "hidden",
-              border: "1px solid rgba(0,0,0,0.06)",
-              background: "rgba(255,255,255,0.78)",
-              boxShadow: "0 10px 22px rgba(0,0,0,0.04)",
-              padding: 14,
-            }}
-          >
-            <img
-              src="/images/yorisou-hero.png"
-              alt="Yorisou"
-              style={{ width: "100%", height: "auto", borderRadius: 12, display: "block" }}
-            />
-            <div style={{ marginTop: 10, fontSize: 12, color: "#6b6b6b", lineHeight: 1.6 }}>
-              ※ 画像を置く: <code style={{ background: "#fff", padding: "2px 6px", borderRadius: 8 }}>
-                public/images/yorisou-hero.png
-              </code>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SIMPLE SECTIONS */}
-      <section style={{ padding: "30px 40px" }}>
-        <div style={{ fontSize: 12, letterSpacing: "0.14em", color: "#7b7b7b" }}>WHY YORISOU</div>
-        <h2 style={{ marginTop: 12, fontSize: 30, lineHeight: 1.25 }}>日本の生活動線に合わせた実証設計</h2>
-
-        <div
-          style={{
-            marginTop: 18,
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 12,
-          }}
-        >
-          <Card title="安全第一" desc="ルール設計・運行チェック・教育を含めた安全運用を標準化" />
-          <Card title="地域共創" desc="自治体・施設・地域事業者と一緒に、導入と改善を進める" />
-          <Card title="実証重視" desc="データと利用者の声をもとに、改善ループで最適化して拡大" />
-        </div>
-      </section>
-
-      <footer
-        style={{
-          padding: "22px 40px 34px",
-          borderTop: "1px solid rgba(0,0,0,0.06)",
-          color: "#6b6b6b",
-          fontSize: 12,
-          marginTop: 40,
-        }}
+      <Section
+        label="課題認識"
+        title="日常の短距離移動に、見えにくい不便が蓄積しています"
       >
-        <div>© {new Date().getFullYear()} Yorisou 寄り添う</div>
-      </footer>
+        <CardGrid>
+          <article className="card">
+            <h3>短距離移動の空白</h3>
+            <p className="muted">徒歩では負担が大きく、既存交通では過剰となる移動区間が地域に残されています。</p>
+          </article>
+          <article className="card">
+            <h3>生活導線の分断</h3>
+            <p className="muted">買い物・公共施設・交流拠点をつなぐ日常ルートに、継続的な移動支援が不足しています。</p>
+          </article>
+          <article className="card">
+            <h3>介護・医療アクセス</h3>
+            <p className="muted">通院や介護関連の移動負担が、本人・家族・支援者の運用負荷として顕在化しています。</p>
+          </article>
+        </CardGrid>
+      </Section>
+
+      <Section
+        label="アプローチ"
+        title="小規模・安全・検証可能を原則とした実装"
+      >
+        <CardGrid>
+          <article className="card">
+            <h3>小規模</h3>
+            <p className="muted">対象エリアを絞り、関係者の合意形成と現場運用を丁寧に積み上げます。</p>
+          </article>
+          <article className="card">
+            <h3>安全</h3>
+            <p className="muted">運行ルール、点検、記録、教育を標準化し、予防的な安全管理を徹底します。</p>
+          </article>
+          <article className="card">
+            <h3>検証可能</h3>
+            <p className="muted">利用データと運用実績を可視化し、次段階判断に必要な根拠を明確化します。</p>
+          </article>
+        </CardGrid>
+      </Section>
+
+      <Section label="事業内容" title="導入フェーズに応じた3つの支援" lead="各支援の詳細は事業内容ページでご覧いただけます。">
+        <CardGrid>
+          <article className="card">
+            <h3>計画策定支援</h3>
+            <p className="muted">地域課題の整理、対象ルート設計、評価指標設定を支援します。</p>
+          </article>
+          <article className="card">
+            <h3>実証運用支援</h3>
+            <p className="muted">運用手順の整備、現場伴走、関係者調整を実施します。</p>
+          </article>
+          <article className="card">
+            <h3>評価・次期計画支援</h3>
+            <p className="muted">実証結果をレポート化し、改善提案と次フェーズ計画へ接続します。</p>
+          </article>
+        </CardGrid>
+        <div style={{ marginTop: 16 }}>
+          <Link href="/services" className="btn btn-secondary">
+            事業内容の詳細へ
+          </Link>
+        </div>
+      </Section>
+
+      <Section label="Pilot Flow" title="実証実験の進め方（5ステップ）">
+        <div className="card">
+          <ol className="list-clean" style={{ margin: 0, display: "grid", gap: 6 }}>
+            <li>相談</li>
+            <li>設計</li>
+            <li>実施</li>
+            <li>評価</li>
+            <li>レポート</li>
+          </ol>
+        </div>
+      </Section>
+
+      <Section label="連携先" title="地域の多様な主体との協働を前提とします">
+        <CardGrid>
+          <article className="card"><h3>自治体</h3><p className="muted">政策整合と公共性の観点から制度面の調整を行います。</p></article>
+          <article className="card"><h3>介護施設</h3><p className="muted">利用者の日常行動に即した移動シナリオを設計します。</p></article>
+          <article className="card"><h3>医療機関</h3><p className="muted">通院アクセスを踏まえた安全運行時間帯を設計します。</p></article>
+          <article className="card"><h3>地域企業</h3><p className="muted">地域内で継続可能な運用体制を共同で整備します。</p></article>
+        </CardGrid>
+        <div style={{ marginTop: 16 }}>
+          <Link href="/partners" className="btn btn-secondary">
+            連携体制を見る
+          </Link>
+        </div>
+      </Section>
+
+      <Section label="お知らせ" title="最新情報">
+        <NewsTeaser limit={3} />
+      </Section>
+
+      <CTA
+        title="実証実験のご相談を受け付けています"
+        description="地域の状況に応じて、初期ヒアリングから段階的に進行します。"
+        href="/contact"
+        label="お問い合わせへ"
+      />
     </main>
   );
 }
