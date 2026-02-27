@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import CTA from "../components/CTA";
 import CardGrid from "../components/CardGrid";
@@ -14,6 +15,14 @@ export default function PilotPage() {
         primaryLabel="実証の相談をする"
       />
 
+      <section className="section" style={{ paddingTop: 22 }}>
+        <div className="container">
+          <div className="card" style={{ padding: 10 }}>
+            <Image src="/images/illustrations/pilot-scene.svg" alt="実証実験イメージ" width={1000} height={620} style={{ width: "100%", height: "auto", borderRadius: 10 }} />
+          </div>
+        </div>
+      </section>
+
       <Section label="Purpose" title="実証の目的">
         <div className="card">
           <p className="muted" style={{ margin: 0 }}>
@@ -24,18 +33,9 @@ export default function PilotPage() {
 
       <Section label="Pilot Menus" title="実証メニュー（3シナリオ）" lead="車両モデル名ではなく、生活導線シナリオを基準に設計します。">
         <CardGrid>
-          <article className="card">
-            <h3>生活支援ルート型</h3>
-            <p className="muted">住宅地から商業施設・公共施設までの短距離移動を支援します。</p>
-          </article>
-          <article className="card">
-            <h3>通院アクセス型</h3>
-            <p className="muted">診療所・薬局へのアクセス改善を目的に時間帯別運行を設計します。</p>
-          </article>
-          <article className="card">
-            <h3>介護施設連携型</h3>
-            <p className="muted">施設利用者の外出機会創出と運用者負荷の最適化を検証します。</p>
-          </article>
+          <article className="card"><h3>生活支援ルート型</h3><p className="muted">住宅地から商業施設・公共施設までの短距離移動を支援します。</p></article>
+          <article className="card"><h3>通院アクセス型</h3><p className="muted">診療所・薬局へのアクセス改善を目的に時間帯別運行を設計します。</p></article>
+          <article className="card"><h3>介護施設連携型</h3><p className="muted">施設利用者の外出機会創出と運用者負荷の最適化を検証します。</p></article>
         </CardGrid>
       </Section>
 

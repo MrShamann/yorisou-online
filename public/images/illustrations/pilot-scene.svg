@@ -1,0 +1,15 @@
+<svg width="1000" height="620" viewBox="0 0 1000 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="620" fill="#EDF3F9"/>
+  <rect y="420" width="1000" height="200" fill="#DBE7F2"/>
+  <rect x="120" y="280" width="420" height="90" rx="45" fill="#FFFFFF" stroke="#9FB8D1" stroke-width="3"/>
+  <circle cx="190" cy="370" r="28" fill="#4B637A"/>
+  <circle cx="470" cy="370" r="28" fill="#4B637A"/>
+  <rect x="610" y="140" width="300" height="260" rx="16" fill="#FFFFFF" stroke="#9FB8D1"/>
+  <rect x="650" y="180" width="220" height="22" rx="11" fill="#D9E7F5"/>
+  <rect x="650" y="225" width="220" height="22" rx="11" fill="#D9E7F5"/>
+  <rect x="650" y="270" width="220" height="22" rx="11" fill="#D9E7F5"/>
+  <circle cx="220" cy="200" r="66" fill="#FFFFFF" stroke="#9FB8D1" stroke-width="4"/>
+  <path d="M190 200H250" stroke="#0F4C81" stroke-width="7" stroke-linecap="round"/>
+  <path d="M220 170V230" stroke="#0F4C81" stroke-width="7" stroke-linecap="round"/>
+  <text x="80" y="90" fill="#0F4C81" font-size="38" font-family="'Yu Gothic', sans-serif" font-weight="700">Pilot Program with Safety Review</text>
+</svg>

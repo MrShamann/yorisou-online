@@ -7,10 +7,7 @@ export default function NewsPage() {
 
   return (
     <main>
-      <Hero
-        title="お知らせ"
-        subtitle="実証実験、地域連携、運用改善に関する最新情報を掲載しています。"
-      />
+      <Hero title="お知らせ" subtitle="実証実験、地域連携、運用改善に関する最新情報を掲載しています。" />
 
       <section className="section">
         <div className="container">
@@ -18,8 +15,8 @@ export default function NewsPage() {
             {posts.map((post) => (
               <article key={post.slug} className="card">
                 <p className="muted" style={{ margin: 0, fontSize: 13 }}>{post.date}</p>
-                <h2 style={{ margin: "8px 0", fontSize: 22 }}>{post.title}</h2>
-                <p className="muted" style={{ margin: 0 }}>{post.summary}</p>
+                <h2 style={{ margin: "8px 0", fontSize: 22 }}>{post.title.ja}</h2>
+                <p className="muted" style={{ margin: 0 }}>{post.summary.ja}</p>
                 <Link href={`/news/${post.slug}`} style={{ marginTop: 10, display: "inline-block", color: "var(--accent)", fontWeight: 700 }}>
                   詳細を見る
                 </Link>

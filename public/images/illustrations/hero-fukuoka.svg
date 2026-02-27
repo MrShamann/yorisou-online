@@ -1,0 +1,16 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" fill="#EAF1F8"/>
+  <rect y="470" width="1200" height="250" fill="#D8E4F1"/>
+  <path d="M80 480L180 360L260 430L360 300L460 430L540 360L660 470H80Z" fill="#BFD2E6"/>
+  <rect x="760" y="220" width="300" height="260" rx="14" fill="#FFFFFF" stroke="#9EB6CF"/>
+  <rect x="790" y="255" width="110" height="95" rx="10" fill="#EAF1F8"/>
+  <rect x="920" y="255" width="110" height="95" rx="10" fill="#EAF1F8"/>
+  <rect x="790" y="365" width="240" height="85" rx="10" fill="#EAF1F8"/>
+  <rect x="120" y="370" width="450" height="90" rx="45" fill="#FFFFFF" stroke="#9EB6CF" stroke-width="3"/>
+  <circle cx="190" cy="460" r="28" fill="#4B637A"/>
+  <circle cx="510" cy="460" r="28" fill="#4B637A"/>
+  <circle cx="350" cy="295" r="78" fill="#FFFFFF" stroke="#9EB6CF" stroke-width="4"/>
+  <path d="M332 295H367" stroke="#0F4C81" stroke-width="6" stroke-linecap="round"/>
+  <path d="M350 278V313" stroke="#0F4C81" stroke-width="6" stroke-linecap="round"/>
+  <text x="120" y="110" fill="#0F4C81" font-size="42" font-family="'Yu Gothic', sans-serif" font-weight="700">Fukuoka Local Mobility Pilot</text>
+</svg>

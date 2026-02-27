@@ -2,6 +2,8 @@
 
 import { CSSProperties, FormEvent, useMemo, useState } from "react";
 
+type Locale = "ja" | "en";
+
 type FormState = {
   name: string;
   organizationType: string;
@@ -9,6 +11,8 @@ type FormState = {
   inquiryType: string;
   message: string;
 };
+
+const RECIPIENT = "shigeru.nagano1111@gmail.com";
 
 const initialState: FormState = {
   name: "",
@@ -18,13 +22,47 @@ const initialState: FormState = {
   message: "",
 };
 
-export default function ContactForm() {
+const labels = {
+  ja: {
+    name: "お名前",
+    orgType: "組織区分",
+    email: "メールアドレス",
+    inquiryType: "お問い合わせ種別",
+    message: "お問い合わせ内容",
+    submit: "送信する",
+    formTitle: "ご相談フォーム",
+    validation: "入力内容をご確認ください。本文は10文字以上でご入力ください。",
+    success: "メール作成画面を起動しました。起動しない場合は下記メールアドレスへ直接ご連絡ください。",
+    mailLink: "メールで直接問い合わせる",
+    orgOptions: ["自治体", "介護施設", "医療機関", "地域企業", "その他"],
+    inquiryOptions: ["実証実験のご相談", "連携のご相談", "資料請求", "その他"],
+    choose: "選択してください",
+  },
+  en: {
+    name: "Name",
+    orgType: "Organization Type",
+    email: "Email",
+    inquiryType: "Inquiry Type",
+    message: "Message",
+    submit: "Send",
+    formTitle: "Inquiry Form",
+    validation: "Please check your input. Message must be at least 10 characters.",
+    success: "Your email client was triggered. If it does not open, please contact us directly via email below.",
+    mailLink: "Contact by email",
+    orgOptions: ["Municipality", "Care Facility", "Medical Institution", "Regional Company", "Other"],
+    inquiryOptions: ["Pilot Program", "Partnership", "Document Request", "Other"],
+    choose: "Please select",
+  },
+};
+
+export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
   const [form, setForm] = useState<FormState>(initialState);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string>("");
+  const t = labels[locale];
 
   const canSubmit = useMemo(() => {
-    return (
+    return Boolean(
       form.name.trim() &&
       form.organizationType.trim() &&
       form.email.includes("@") &&
@@ -37,13 +75,29 @@ export default function ContactForm() {
     event.preventDefault();
 
     if (!canSubmit) {
-      setError("入力内容をご確認ください。本文は10文字以上でご入力ください。");
+      setError(t.validation);
       setSubmitted(false);
       return;
     }
 
+    const subjectPrefix = locale === "ja" ? "【YORISOU お問い合わせ】" : "[YORISOU Inquiry]";
+    const body = [
+      `${t.name}: ${form.name}`,
+      `${t.orgType}: ${form.organizationType}`,
+      `${t.email}: ${form.email}`,
+      `${t.inquiryType}: ${form.inquiryType}`,
+      "",
+      `${t.message}:`,
+      form.message,
+    ].join("\n");
+
+    const mailto = `mailto:${RECIPIENT}?subject=${encodeURIComponent(
+      `${subjectPrefix} ${form.inquiryType}`
+    )}&body=${encodeURIComponent(body)}`;
+
     setError("");
     setSubmitted(true);
+    window.location.href = mailto;
     setForm(initialState);
   };
 
@@ -52,7 +106,7 @@ export default function ContactForm() {
       <form onSubmit={handleSubmit}>
         <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
           <label>
-            お名前
+            {t.name}
             <input
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
@@ -61,23 +115,21 @@ export default function ContactForm() {
             />
           </label>
           <label>
-            組織区分
+            {t.orgType}
             <select
               value={form.organizationType}
               onChange={(event) => setForm({ ...form, organizationType: event.target.value })}
               required
               style={inputStyle}
             >
-              <option value="">選択してください</option>
-              <option value="自治体">自治体</option>
-              <option value="介護施設">介護施設</option>
-              <option value="医療機関">医療機関</option>
-              <option value="地域企業">地域企業</option>
-              <option value="その他">その他</option>
+              <option value="">{t.choose}</option>
+              {t.orgOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
             </select>
           </label>
           <label>
-            メールアドレス
+            {t.email}
             <input
               type="email"
               value={form.email}
@@ -87,24 +139,23 @@ export default function ContactForm() {
             />
           </label>
           <label>
-            お問い合わせ種別
+            {t.inquiryType}
             <select
               value={form.inquiryType}
               onChange={(event) => setForm({ ...form, inquiryType: event.target.value })}
               required
               style={inputStyle}
             >
-              <option value="">選択してください</option>
-              <option value="実証実験のご相談">実証実験のご相談</option>
-              <option value="連携のご相談">連携のご相談</option>
-              <option value="資料請求">資料請求</option>
-              <option value="その他">その他</option>
+              <option value="">{t.choose}</option>
+              {t.inquiryOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
             </select>
           </label>
         </div>
 
         <label style={{ display: "block", marginTop: 14 }}>
-          お問い合わせ内容
+          {t.message}
           <textarea
             value={form.message}
             onChange={(event) => setForm({ ...form, message: event.target.value })}
@@ -115,7 +166,7 @@ export default function ContactForm() {
         </label>
 
         <button type="submit" className="btn btn-primary" style={{ marginTop: 14 }}>
-          送信する
+          {t.submit}
         </button>
       </form>
 
@@ -127,9 +178,15 @@ export default function ContactForm() {
 
       {submitted && (
         <p style={{ marginTop: 12, color: "#0f4c81", fontWeight: 700 }}>
-          送信を受け付けました。担当より2営業日以内を目安にご連絡します。
+          {t.success}
         </p>
       )}
+
+      <p style={{ marginTop: 8 }}>
+        <a href={`mailto:${RECIPIENT}`} style={{ color: "var(--accent)", fontWeight: 700 }}>
+          {t.mailLink}: {RECIPIENT}
+        </a>
+      </p>
     </div>
   );
 }

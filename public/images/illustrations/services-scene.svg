@@ -1,0 +1,14 @@
+<svg width="1000" height="620" viewBox="0 0 1000 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="620" fill="#EEF4FA"/>
+  <rect x="70" y="110" width="860" height="400" rx="20" fill="#FFFFFF" stroke="#C9D8E8"/>
+  <rect x="130" y="180" width="220" height="260" rx="14" fill="#E6EFF8"/>
+  <rect x="390" y="180" width="220" height="260" rx="14" fill="#E6EFF8"/>
+  <rect x="650" y="180" width="220" height="260" rx="14" fill="#E6EFF8"/>
+  <circle cx="240" cy="250" r="34" fill="#0F4C81"/>
+  <circle cx="500" cy="250" r="34" fill="#0F4C81"/>
+  <circle cx="760" cy="250" r="34" fill="#0F4C81"/>
+  <rect x="180" y="320" width="120" height="18" rx="9" fill="#A9BFD5"/>
+  <rect x="440" y="320" width="120" height="18" rx="9" fill="#A9BFD5"/>
+  <rect x="700" y="320" width="120" height="18" rx="9" fill="#A9BFD5"/>
+  <text x="80" y="80" fill="#0F4C81" font-size="38" font-family="'Yu Gothic', sans-serif" font-weight="700">Structured Service Program</text>
+</svg>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Hero from "../components/Hero";
 import Section from "../components/Section";
 import CardGrid from "../components/CardGrid";
@@ -9,6 +10,14 @@ export default function PartnersPage() {
         title="連携・パートナー"
         subtitle="YORISOUは、行政・地域機関・民間事業者との協働により、公共性と継続性を両立した運用体制を構築します。"
       />
+
+      <section className="section" style={{ paddingTop: 22 }}>
+        <div className="container">
+          <div className="card" style={{ padding: 10 }}>
+            <Image src="/images/illustrations/partners-scene.svg" alt="連携ネットワークのイメージ" width={1000} height={620} style={{ width: "100%", height: "auto", borderRadius: 10 }} />
+          </div>
+        </div>
+      </section>
 
       <Section label="Partnership" title="主な連携先">
         <CardGrid>

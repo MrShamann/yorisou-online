@@ -11,7 +11,7 @@ export default function ContactPage() {
       />
 
       <Section label="Contact" title="ご相談フォーム">
-        <ContactForm />
+        <ContactForm locale="ja" />
       </Section>
     </main>
   );

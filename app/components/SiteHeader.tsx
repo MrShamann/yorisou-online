@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react";
 
-const navItems = [
+const navJa = [
   { href: "/", label: "トップ" },
   { href: "/services", label: "事業内容" },
   { href: "/pilot", label: "実証実験" },
@@ -12,9 +14,50 @@ const navItems = [
   { href: "/news", label: "お知らせ" },
 ];
 
+const navEn = [
+  { href: "/", label: "Home" },
+  { href: "/services", label: "Services" },
+  { href: "/pilot", label: "Pilot Program" },
+  { href: "/partners", label: "Partnerships" },
+  { href: "/about", label: "About" },
+  { href: "/news", label: "News" },
+];
+
+function toJapanesePath(pathname: string): string {
+  if (pathname === "/en") return "/";
+  if (pathname.startsWith("/en/")) {
+    const base = pathname.replace("/en", "");
+    if (base === "/news" || base.startsWith("/news/")) return base;
+    if (["/", "/about", "/services", "/pilot", "/partners", "/contact", "/legal"].includes(base)) return base;
+    return "/";
+  }
+  return pathname;
+}
+
+function toEnglishPath(pathname: string): string {
+  if (pathname === "/") return "/en";
+  if (pathname.startsWith("/en")) return pathname;
+  if (pathname === "/news" || pathname.startsWith("/news/")) return `/en${pathname}`;
+  if (["/about", "/services", "/pilot", "/partners", "/contact", "/legal"].includes(pathname)) return `/en${pathname}`;
+  return "/en";
+}
+
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const [logoError, setLogoError] = useState(false);
+  const pathname = usePathname() || "/";
+  const isEn = pathname === "/en" || pathname.startsWith("/en/");
+
+  const currentPath = isEn ? toJapanesePath(pathname) : pathname;
+  const navItems = isEn ? navEn : navJa;
+
+  const langSwitchHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
+  const langSwitchLabel = isEn ? "日本語" : "EN";
+  const homeHref = isEn ? "/en" : "/";
+
+  const localizedContactHref = isEn ? "/en/contact" : "/contact";
+  const localizedContactLabel = isEn ? "Contact" : "お問い合わせ";
+
+  const normalizedCurrent = useMemo(() => currentPath.replace(/\/$/, "") || "/", [currentPath]);
 
   return (
     <header
@@ -38,7 +81,7 @@ export default function SiteHeader() {
         }}
       >
         <Link
-          href="/"
+          href={homeHref}
           style={{
             textDecoration: "none",
             display: "inline-flex",
@@ -48,20 +91,19 @@ export default function SiteHeader() {
             letterSpacing: "0.03em",
           }}
         >
-          {!logoError && (
-            <img
-              src="/images/yorisou-logo.png"
-              alt="YORISOU"
-              style={{ width: 40, height: 40, borderRadius: 8, objectFit: "contain", background: "#fff" }}
-              onError={() => setLogoError(true)}
-            />
-          )}
+          <Image
+            src="/images/yorisou-logo.png"
+            alt="YORISOU"
+            width={40}
+            height={40}
+            style={{ borderRadius: 8, objectFit: "contain", background: "#fff" }}
+          />
           <span>YORISOU</span>
         </Link>
 
         <button
           onClick={() => setOpen((v) => !v)}
-          aria-label="メニュー"
+          aria-label={isEn ? "Menu" : "メニュー"}
           style={{
             display: "none",
             border: "1px solid var(--line)",
@@ -77,13 +119,22 @@ export default function SiteHeader() {
         </button>
 
         <nav className={`site-nav ${open ? "open" : ""}`}>
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="nav-link" onClick={() => setOpen(false)}>
-              {item.label}
-            </Link>
-          ))}
-          <Link href="/contact" className="btn btn-primary" onClick={() => setOpen(false)}>
-            お問い合わせ
+          {navItems.map((item) => {
+            const href = isEn ? toEnglishPath(item.href) : item.href;
+            const normalizedHref = item.href.replace(/\/$/, "") || "/";
+            const active = normalizedCurrent === normalizedHref || normalizedCurrent.startsWith(`${normalizedHref}/`);
+
+            return (
+              <Link key={href} href={href} className={`nav-link ${active ? "active" : ""}`} onClick={() => setOpen(false)}>
+                {item.label}
+              </Link>
+            );
+          })}
+          <Link href={localizedContactHref} className="btn btn-primary" onClick={() => setOpen(false)}>
+            {localizedContactLabel}
+          </Link>
+          <Link href={langSwitchHref} className="lang-switch" onClick={() => setOpen(false)}>
+            {langSwitchLabel}
           </Link>
         </nav>
       </div>
@@ -101,10 +152,20 @@ export default function SiteHeader() {
           font-size: 14px;
           white-space: nowrap;
         }
-        .nav-link:hover {
+        .nav-link:hover,
+        .nav-link.active {
           background: var(--surface-soft);
         }
-        @media (max-width: 900px) {
+        .lang-switch {
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 8px 12px;
+          font-size: 13px;
+          text-decoration: none;
+          font-weight: 700;
+          background: var(--surface);
+        }
+        @media (max-width: 1024px) {
           .mobile-toggle {
             display: block !important;
           }
@@ -112,7 +173,7 @@ export default function SiteHeader() {
             position: absolute;
             right: 4vw;
             top: 64px;
-            width: min(320px, 92vw);
+            width: min(340px, 92vw);
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 12px;

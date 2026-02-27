@@ -1,0 +1,13 @@
+<svg width="1000" height="620" viewBox="0 0 1000 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="620" fill="#EFF4FA"/>
+  <rect x="90" y="120" width="820" height="380" rx="20" fill="#FFFFFF" stroke="#CAD8E7"/>
+  <circle cx="270" cy="300" r="70" fill="#E1EBF6"/>
+  <circle cx="500" cy="300" r="70" fill="#E1EBF6"/>
+  <circle cx="730" cy="300" r="70" fill="#E1EBF6"/>
+  <path d="M340 300H430" stroke="#0F4C81" stroke-width="6" stroke-linecap="round"/>
+  <path d="M570 300H660" stroke="#0F4C81" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="270" cy="300" r="24" fill="#0F4C81"/>
+  <circle cx="500" cy="300" r="24" fill="#0F4C81"/>
+  <circle cx="730" cy="300" r="24" fill="#0F4C81"/>
+  <text x="190" y="185" fill="#0F4C81" font-size="34" font-family="'Yu Gothic', sans-serif" font-weight="700">Local Partnership Network</text>
+</svg>
