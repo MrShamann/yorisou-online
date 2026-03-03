@@ -9,26 +9,25 @@ const navJa = [
   { href: "/", label: "トップ" },
   { href: "/services", label: "事業内容" },
   { href: "/pilot", label: "実証実験" },
+  { href: "/progress", label: "実証進捗" },
   { href: "/partners", label: "連携" },
   { href: "/about", label: "私たちについて" },
-  { href: "/news", label: "お知らせ" },
 ];
 
 const navEn = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
   { href: "/pilot", label: "Pilot Program" },
+  { href: "/progress", label: "Project Progress" },
   { href: "/partners", label: "Partnerships" },
   { href: "/about", label: "About" },
-  { href: "/news", label: "News" },
 ];
 
 function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (base === "/news" || base.startsWith("/news/")) return base;
-    if (["/", "/about", "/services", "/pilot", "/partners", "/contact", "/legal"].includes(base)) return base;
+    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -37,8 +36,7 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (pathname === "/news" || pathname.startsWith("/news/")) return `/en${pathname}`;
-  if (["/about", "/services", "/pilot", "/partners", "/contact", "/legal"].includes(pathname)) return `/en${pathname}`;
+  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 

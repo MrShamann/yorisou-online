@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import CTA from "./components/CTA";
 import CardGrid from "./components/CardGrid";
-import NewsTeaser from "./components/NewsTeaser";
 import Section from "./components/Section";
 
 export default function HomePage() {
@@ -109,10 +108,6 @@ export default function HomePage() {
         <div style={{ marginTop: 16 }}>
           <Link href="/partners" className="btn btn-secondary">連携体制を見る</Link>
         </div>
-      </Section>
-
-      <Section label="お知らせ" title="最新情報">
-        <NewsTeaser limit={3} locale="ja" />
       </Section>
 
       <CTA

@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import CTA from "../components/CTA";
 import CardGrid from "../components/CardGrid";
-import NewsTeaser from "../components/NewsTeaser";
 import Section from "../components/Section";
 
 export default function HomePageEn() {
@@ -81,10 +80,6 @@ export default function HomePageEn() {
           <article className="card"><h3>Regional Companies</h3><p className="muted">Operational support toward sustainable local implementation.</p></article>
         </CardGrid>
         <div style={{ marginTop: 16 }}><Link href="/en/partners" className="btn btn-secondary">View Partnerships</Link></div>
-      </Section>
-
-      <Section label="News" title="Latest updates">
-        <NewsTeaser limit={3} locale="en" />
       </Section>
 
       <CTA
