@@ -83,7 +83,7 @@ export default function PilotPage() {
 
       <CTA
         title="地域条件に応じた実証設計をご提案します"
-        description="まずは対象地域と課題の概要をお知らせください。"
+        description="まずは対象地域と課題の概要をご共有ください。"
         href="/contact"
         label="相談を開始する"
       />
