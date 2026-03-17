@@ -90,7 +90,7 @@ export default function SiteHeader() {
           }}
         >
           <Image
-            src="/images/yorisou-logo.png"
+            src="/images/brand/tsuru-logo.png"
             alt="YORISOU"
             width={40}
             height={40}
