@@ -1,93 +1,132 @@
-import Image from "next/image";
-import Link from "next/link";
-import CTA from "../components/CTA";
-import CardGrid from "../components/CardGrid";
-import Section from "../components/Section";
-
 export default function HomePageEn() {
   return (
-    <main>
-      <section style={{ padding: "72px 0 40px", borderBottom: "1px solid var(--line)" }}>
-        <div className="container" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", lineHeight: 1.3, margin: 0 }}>
-              Mobility for an Aging Society, Starting from Fukuoka.
-            </h1>
-            <p className="muted" style={{ marginTop: 16, fontSize: 16 }}>
-              YORISOU builds practical local mobility models with municipalities and institutions through small-scale pilots,
-              with priority on safety, compliance, and long-term operational sustainability.
-            </p>
-            <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/en/contact" className="btn btn-primary">Contact</Link>
-              <Link href="/en/pilot" className="btn btn-secondary">View Pilot Program</Link>
+    <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
+      <section className="relative overflow-hidden">
+        <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div>
+              <div className="mb-6 inline-flex items-center rounded-full border border-[#D6C3A3]/60 bg-white/60 px-4 py-2 text-sm tracking-wide text-[#6B5A4A] backdrop-blur">
+                Yorisou · Companion Mobility
+              </div>
+
+              <h1 className="text-4xl font-light leading-tight md:text-6xl">
+                Mobility that
+                <span className="block text-[#6B5A4A]">stays by your side</span>
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
+                Yorisou is a warm, trustworthy mobility brand designed for everyday life in Japan.
+                Built around companionship, simplicity, and peace of mind, it supports movement
+                through neighborhoods, shopping streets, clinics, and community spaces with ease.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                <a
+                  href="/en/contact"
+                  className="rounded-2xl bg-[#3B2F2F] px-6 py-3 text-center text-sm text-white shadow-sm transition hover:opacity-90"
+                >
+                  Contact Us
+                </a>
+                <a
+                  href="/en/about"
+                  className="rounded-2xl border border-[#3B2F2F]/20 bg-white/70 px-6 py-3 text-center text-sm transition hover:bg-white"
+                >
+                  Learn More
+                </a>
+              </div>
+
+              <div className="mt-10 grid gap-4 sm:grid-cols-3">
+                {[
+                  { title: "Comfort", text: "Gentle mobility for daily errands and short neighborhood trips." },
+                  { title: "Companionship", text: "A brand shaped around care, dignity, and human connection." },
+                  { title: "Clarity", text: "Easy to understand, easy to use, and easy to trust." },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-2xl border border-[#D6C3A3]/40 bg-white/70 p-4 shadow-sm">
+                    <div className="text-sm font-medium tracking-wide text-[#6B5A4A]">{item.title}</div>
+                    <p className="mt-2 text-sm leading-6 text-[#5A4B3E]">{item.text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="card" style={{ padding: 10 }}>
-            <Image
-              src="/images/illustrations/hero-fukuoka.svg"
-              alt="Fukuoka local mobility pilot illustration"
-              width={1200}
-              height={720}
-              style={{ width: "100%", height: "auto", borderRadius: 10 }}
-              priority
-            />
+
+            <div className="relative">
+              <div className="absolute -left-10 top-10 h-48 w-48 rounded-full bg-[#D6C3A3]/30 blur-3xl" />
+              <div className="absolute -bottom-8 right-0 h-56 w-56 rounded-full bg-white/50 blur-3xl" />
+
+              <div className="relative rounded-[2rem] border border-[#D6C3A3]/40 bg-white/70 p-5 shadow-[0_20px_60px_rgba(59,47,47,0.08)] backdrop-blur">
+                <div className="rounded-[1.5rem] bg-gradient-to-br from-[#F7F4EE] to-[#ECE5D8] p-6">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.2em] text-[#8A7764]">Brand Concept</div>
+                      <div className="mt-2 text-2xl font-light">Yorisou</div>
+                    </div>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6C3A3]/50 bg-white shadow-sm">
+                      <span className="text-xl text-[#6B5A4A]">TSURU</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-[#D6C3A3]/40 bg-[#F5F1E8] p-4">
+                    <div className="aspect-[4/3] rounded-[1.25rem] border border-dashed border-[#C8B69E] bg-white/80 p-6">
+                      <div className="flex h-full flex-col justify-between">
+                        <div className="max-w-sm">
+                          <div className="text-sm tracking-[0.18em] text-[#8A7764]">Visual Direction</div>
+                          <h2 className="mt-3 text-2xl font-light leading-snug">
+                            Crane × Ginkgo
+                          </h2>
+                          <p className="mt-3 text-sm leading-6 text-[#5A4B3E]">
+                            A calm identity shaped by Japanese symbolism: the crane for grace and
+                            longevity, and the ginkgo for resilience, memory, and civic warmth.
+                          </p>
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-3 gap-3">
+                          {[
+                            { label: "Deep Brown", hex: "#3B2F2F" },
+                            { label: "Warm Ivory", hex: "#F5F1E8" },
+                            { label: "Soft Gold", hex: "#D6C3A3" },
+                          ].map((color) => (
+                            <div key={color.hex} className="rounded-2xl border border-[#D6C3A3]/30 bg-white p-3">
+                              <div className="h-14 rounded-xl border border-black/5" style={{ backgroundColor: color.hex }} />
+                              <div className="mt-2 text-xs text-[#6B5A4A]">{color.label}</div>
+                              <div className="mt-1 text-[11px] text-[#8A7764]">{color.hex}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <Section label="Problem" title="Practical mobility gaps remain in short-distance daily travel">
-        <CardGrid>
-          <article className="card"><Image src="/images/icons/problem-distance.svg" alt="distance" width={52} height={52} /><h3>Short-Distance Mobility Gap</h3><p className="muted">Walking is often difficult while existing public transit can be excessive for local short trips.</p></article>
-          <article className="card"><Image src="/images/icons/problem-route.svg" alt="route" width={52} height={52} /><h3>Fragmented Daily Routes</h3><p className="muted">Continuous support is limited across shopping, public facilities, and neighborhood destinations.</p></article>
-          <article className="card"><Image src="/images/icons/problem-care.svg" alt="care" width={52} height={52} /><h3>Care and Medical Access</h3><p className="muted">Travel burden for clinic visits creates operational pressure for users, families, and care staff.</p></article>
-        </CardGrid>
-      </Section>
-
-      <Section label="Approach" title="Small-Scale, Safety-Oriented, and Verifiable">
-        <CardGrid>
-          <article className="card"><Image src="/images/icons/approach-small.svg" alt="small-scale" width={52} height={52} /><h3>Small-Scale</h3><p className="muted">Focused pilot areas enable careful consensus-building and operational control.</p></article>
-          <article className="card"><Image src="/images/icons/approach-safe.svg" alt="safe" width={52} height={52} /><h3>Safety</h3><p className="muted">Rules, inspections, records, and training are standardized for preventive safety management.</p></article>
-          <article className="card"><Image src="/images/icons/approach-verify.svg" alt="verifiable" width={52} height={52} /><h3>Verifiable</h3><p className="muted">Pilot outcomes are measured through data and field records to support next-phase decisions.</p></article>
-        </CardGrid>
-      </Section>
-
-      <Section label="Services" title="Three support layers by implementation phase" lead="Details are available on the Services page.">
-        <CardGrid>
-          <article className="card"><h3>Planning Support</h3><p className="muted">Issue definition, route design, and evaluation metric setting.</p></article>
-          <article className="card"><h3>Pilot Operation Support</h3><p className="muted">Operational procedure setup, field support, and stakeholder coordination.</p></article>
-          <article className="card"><h3>Evaluation and Next-Phase Planning</h3><p className="muted">Reporting, improvement proposals, and expansion planning.</p></article>
-        </CardGrid>
-        <div style={{ marginTop: 16 }}><Link href="/en/services" className="btn btn-secondary">View Services</Link></div>
-      </Section>
-
-      <Section label="Pilot Flow" title="Pilot program flow (5 steps)">
-        <div className="card">
-          <ol className="list-clean" style={{ margin: 0, display: "grid", gap: 6 }}>
-            <li>Consultation</li>
-            <li>Design</li>
-            <li>Execution</li>
-            <li>Evaluation</li>
-            <li>Report</li>
-          </ol>
+      <section className="border-t border-[#D6C3A3]/30 bg-white/50">
+        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                title: "For neighborhoods",
+                text: "Designed for short-distance, low-stress daily movement in real community settings.",
+              },
+              {
+                title: "For older adults",
+                text: "A calm and respectful service experience that values confidence over complexity.",
+              },
+              {
+                title: "For cities and partners",
+                text: "A warm civic-facing identity suited to pilots, public collaboration, and trust-building.",
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm">
+                <h3 className="text-xl font-light">{item.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </Section>
-
-      <Section label="Partners" title="Collaboration with local stakeholders">
-        <CardGrid>
-          <article className="card"><h3>Municipalities</h3><p className="muted">Policy alignment and public-interest coordination.</p></article>
-          <article className="card"><h3>Care Facilities</h3><p className="muted">Mobility scenarios aligned with daily routines of users.</p></article>
-          <article className="card"><h3>Medical Institutions</h3><p className="muted">Safer clinic access planning with time-slot coordination.</p></article>
-          <article className="card"><h3>Regional Companies</h3><p className="muted">Operational support toward sustainable local implementation.</p></article>
-        </CardGrid>
-        <div style={{ marginTop: 16 }}><Link href="/en/partners" className="btn btn-secondary">View Partnerships</Link></div>
-      </Section>
-
-      <CTA
-        title="Consultation for local pilot programs"
-        description="We can start from an initial review of your local conditions and operational constraints."
-        href="/en/contact"
-        label="Go to Contact"
-      />
+      </section>
     </main>
   );
 }
