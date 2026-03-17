@@ -12,8 +12,6 @@ type FormState = {
   message: string;
 };
 
-const RECIPIENT = "shigeru.nagano1111@gmail.com";
-
 const initialState: FormState = {
   name: "",
   organizationType: "",
@@ -30,9 +28,10 @@ const labels = {
     inquiryType: "お問い合わせ種別",
     message: "お問い合わせ内容",
     submit: "送信する",
-    formTitle: "ご相談フォーム",
+    sending: "送信中...",
     validation: "入力内容をご確認ください。本文は10文字以上でご入力ください。",
-    success: "メール作成画面を起動しました。内容を確認のうえ、順次ご連絡いたします。",
+    success: "お問い合わせを受け付けました。内容を確認のうえ、順次ご連絡いたします。",
+    error: "送信に失敗しました。恐れ入りますが、時間をおいて再度お試しください。",
     orgOptions: ["自治体", "介護施設", "医療機関", "地域企業", "その他"],
     inquiryOptions: ["実証実験のご相談", "連携のご相談", "資料請求", "その他"],
     choose: "選択してください",
@@ -44,9 +43,10 @@ const labels = {
     inquiryType: "Inquiry Type",
     message: "Message",
     submit: "Send",
-    formTitle: "Inquiry Form",
+    sending: "Sending...",
     validation: "Please check your input. Message must be at least 10 characters.",
-    success: "Your email client was triggered. We will get back to you as soon as possible.",
+    success: "Your inquiry has been sent. We will get back to you as soon as possible.",
+    error: "Submission failed. Please try again in a few moments.",
     orgOptions: ["Municipality", "Care Facility", "Medical Institution", "Regional Company", "Other"],
     inquiryOptions: ["Pilot Program", "Partnership", "Document Request", "Other"],
     choose: "Please select",
@@ -56,7 +56,8 @@ const labels = {
 export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
   const [form, setForm] = useState<FormState>(initialState);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const t = labels[locale];
 
   const canSubmit = useMemo(() => {
@@ -69,7 +70,7 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
     );
   }, [form]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!canSubmit) {
@@ -78,25 +79,33 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
       return;
     }
 
-    const subjectPrefix = locale === "ja" ? "【YORISOU お問い合わせ】" : "[YORISOU Inquiry]";
-    const body = [
-      `${t.name}: ${form.name}`,
-      `${t.orgType}: ${form.organizationType}`,
-      `${t.email}: ${form.email}`,
-      `${t.inquiryType}: ${form.inquiryType}`,
-      "",
-      `${t.message}:`,
-      form.message,
-    ].join("\n");
-
-    const mailto = `mailto:${RECIPIENT}?subject=${encodeURIComponent(
-      `${subjectPrefix} ${form.inquiryType}`
-    )}&body=${encodeURIComponent(body)}`;
-
+    setIsSubmitting(true);
     setError("");
-    setSubmitted(true);
-    window.location.href = mailto;
-    setForm(initialState);
+    setSubmitted(false);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          locale,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("request_failed");
+      }
+
+      setSubmitted(true);
+      setForm(initialState);
+    } catch {
+      setError(t.error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -122,7 +131,9 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
             >
               <option value="">{t.choose}</option>
               {t.orgOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
           </label>
@@ -146,7 +157,9 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
             >
               <option value="">{t.choose}</option>
               {t.inquiryOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
           </label>
@@ -163,8 +176,13 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
           />
         </label>
 
-        <button type="submit" className="btn btn-primary" style={{ marginTop: 14 }}>
-          {t.submit}
+        <button
+          type="submit"
+          className="btn btn-primary"
+          style={{ marginTop: 14, opacity: isSubmitting ? 0.8 : 1 }}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? t.sending : t.submit}
         </button>
       </form>
 
@@ -179,7 +197,6 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
           {t.success}
         </p>
       )}
-
     </div>
   );
 }
