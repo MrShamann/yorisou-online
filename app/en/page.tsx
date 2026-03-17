@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function HomePageEn() {
   return (
     <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
@@ -5,7 +7,16 @@ export default function HomePageEn() {
         <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <div className="mb-6 inline-flex items-center rounded-full border border-[#D6C3A3]/60 bg-white/60 px-4 py-2 text-sm tracking-wide text-[#6B5A4A] backdrop-blur">
+              <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#D6C3A3]/60 bg-white/60 px-4 py-2 text-sm tracking-wide text-[#6B5A4A] backdrop-blur">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D6C3A3]/40 bg-white/80 shadow-sm">
+                  <Image
+                    src="/images/brand/tsuru-logo.png"
+                    alt="Yorisou logo"
+                    width={20}
+                    height={20}
+                    className="h-5 w-5 object-contain"
+                  />
+                </span>
                 Yorisou · Companion Mobility
               </div>
 
@@ -61,7 +72,13 @@ export default function HomePageEn() {
                       <div className="mt-2 text-2xl font-light">Yorisou</div>
                     </div>
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6C3A3]/50 bg-white shadow-sm">
-                      <span className="text-xl text-[#6B5A4A]">TSURU</span>
+                      <Image
+                        src="/images/brand/tsuru-logo.png"
+                        alt="Yorisou brand mark"
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 object-contain"
+                      />
                     </div>
                   </div>
 
