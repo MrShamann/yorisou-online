@@ -32,8 +32,7 @@ const labels = {
     submit: "送信する",
     formTitle: "ご相談フォーム",
     validation: "入力内容をご確認ください。本文は10文字以上でご入力ください。",
-    success: "メール作成画面を起動しました。起動しない場合は下記メールアドレスへ直接ご連絡ください。",
-    mailLink: "メールで直接問い合わせる",
+    success: "メール作成画面を起動しました。内容を確認のうえ、順次ご連絡いたします。",
     orgOptions: ["自治体", "介護施設", "医療機関", "地域企業", "その他"],
     inquiryOptions: ["実証実験のご相談", "連携のご相談", "資料請求", "その他"],
     choose: "選択してください",
@@ -47,8 +46,7 @@ const labels = {
     submit: "Send",
     formTitle: "Inquiry Form",
     validation: "Please check your input. Message must be at least 10 characters.",
-    success: "Your email client was triggered. If it does not open, please contact us directly via email below.",
-    mailLink: "Contact by email",
+    success: "Your email client was triggered. We will get back to you as soon as possible.",
     orgOptions: ["Municipality", "Care Facility", "Medical Institution", "Regional Company", "Other"],
     inquiryOptions: ["Pilot Program", "Partnership", "Document Request", "Other"],
     choose: "Please select",
@@ -182,11 +180,6 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
         </p>
       )}
 
-      <p style={{ marginTop: 8 }}>
-        <a href={`mailto:${RECIPIENT}`} style={{ color: "var(--accent)", fontWeight: 700 }}>
-          {t.mailLink}: {RECIPIENT}
-        </a>
-      </p>
     </div>
   );
 }

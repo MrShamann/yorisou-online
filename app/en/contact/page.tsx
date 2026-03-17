@@ -116,6 +116,9 @@ export default function ContactPageEn() {
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
                 Please choose the closest inquiry type and share a few details. We will respond in due course.
               </p>
+              <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">
+                Please use the contact form and we will get back to you as soon as possible.
+              </p>
             </div>
             <ContactForm locale="en" />
           </div>

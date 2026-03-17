@@ -116,6 +116,9 @@ export default function ContactPage() {
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
                 ご希望に近い内容をお選びのうえ、必要事項をご入力ください。内容に応じて、順次ご連絡します。
               </p>
+              <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">
+                お問い合わせはフォームよりお願いいたします。内容を確認のうえ、順次ご連絡いたします。
+              </p>
             </div>
             <ContactForm locale="ja" />
           </div>
