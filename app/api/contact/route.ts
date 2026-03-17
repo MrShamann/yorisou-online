@@ -9,11 +9,14 @@ type ContactPayload = {
   locale?: "ja" | "en";
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function isValidPayload(payload: ContactPayload) {
   return Boolean(
     payload.name?.trim() &&
       payload.organizationType?.trim() &&
-      payload.email?.includes("@") &&
+      payload.email?.trim() &&
+      EMAIL_PATTERN.test(payload.email.trim()) &&
       payload.inquiryType?.trim() &&
       payload.message?.trim() &&
       payload.message.trim().length >= 10
@@ -38,6 +41,7 @@ export async function POST(request: Request) {
     }
 
     const locale = payload.locale === "en" ? "en" : "ja";
+    const normalizedEmail = payload.email!.trim();
     const subject =
       locale === "ja"
         ? `【YORISOU お問い合わせ】${payload.inquiryType}`
@@ -46,7 +50,7 @@ export async function POST(request: Request) {
     const textBody = [
       `Name: ${payload.name}`,
       `Organization Type: ${payload.organizationType}`,
-      `Email: ${payload.email}`,
+      `Email: ${normalizedEmail}`,
       `Inquiry Type: ${payload.inquiryType}`,
       "",
       "Message:",
@@ -57,7 +61,7 @@ export async function POST(request: Request) {
       <div>
         <p><strong>Name:</strong> ${escapeHtml(payload.name || "")}</p>
         <p><strong>Organization Type:</strong> ${escapeHtml(payload.organizationType || "")}</p>
-        <p><strong>Email:</strong> ${escapeHtml(payload.email || "")}</p>
+        <p><strong>Email:</strong> ${escapeHtml(normalizedEmail)}</p>
         <p><strong>Inquiry Type:</strong> ${escapeHtml(payload.inquiryType || "")}</p>
         <p><strong>Message:</strong></p>
         <p>${escapeHtml(payload.message || "").replace(/\n/g, "<br />")}</p>
@@ -73,7 +77,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         from: contactFromEmail,
         to: [contactToEmail],
-        reply_to: payload.email,
+        reply_to: normalizedEmail,
         subject,
         text: textBody,
         html: htmlBody,

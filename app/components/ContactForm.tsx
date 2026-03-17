@@ -12,6 +12,14 @@ type FormState = {
   message: string;
 };
 
+type ApiErrorCode =
+  | "invalid_payload"
+  | "contact_not_configured"
+  | "delivery_failed"
+  | "unexpected_error";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const initialState: FormState = {
   name: "",
   organizationType: "",
@@ -29,9 +37,10 @@ const labels = {
     message: "お問い合わせ内容",
     submit: "送信する",
     sending: "送信中...",
-    validation: "入力内容をご確認ください。本文は10文字以上でご入力ください。",
+    validation: "入力内容をご確認ください。メールアドレスと本文を含め、必須項目を正しくご入力ください。",
     success: "お問い合わせを受け付けました。内容を確認のうえ、順次ご連絡いたします。",
     error: "送信に失敗しました。恐れ入りますが、時間をおいて再度お試しください。",
+    unavailable: "現在、お問い合わせ受付の設定を確認中です。しばらくしてから再度お試しください。",
     orgOptions: ["自治体", "介護施設", "医療機関", "地域企業", "その他"],
     inquiryOptions: ["実証実験のご相談", "連携のご相談", "資料請求", "その他"],
     choose: "選択してください",
@@ -44,9 +53,10 @@ const labels = {
     message: "Message",
     submit: "Send",
     sending: "Sending...",
-    validation: "Please check your input. Message must be at least 10 characters.",
+    validation: "Please review your input. Required fields, email format, and a message of at least 10 characters are needed.",
     success: "Your inquiry has been sent. We will get back to you as soon as possible.",
     error: "Submission failed. Please try again in a few moments.",
+    unavailable: "The contact service is currently being configured. Please try again shortly.",
     orgOptions: ["Municipality", "Care Facility", "Medical Institution", "Regional Company", "Other"],
     inquiryOptions: ["Pilot Program", "Partnership", "Document Request", "Other"],
     choose: "Please select",
@@ -64,7 +74,7 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
     return Boolean(
       form.name.trim() &&
       form.organizationType.trim() &&
-      form.email.includes("@") &&
+      EMAIL_PATTERN.test(form.email.trim()) &&
       form.inquiryType.trim() &&
       form.message.trim().length >= 10
     );
@@ -91,18 +101,29 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
         },
         body: JSON.stringify({
           ...form,
+          email: form.email.trim(),
           locale,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("request_failed");
+        const result = (await response.json().catch(() => null)) as { error?: ApiErrorCode } | null;
+
+        if (result?.error === "contact_not_configured") {
+          throw new Error("contact_not_configured");
+        }
+
+        throw new Error(result?.error || "request_failed");
       }
 
       setSubmitted(true);
       setForm(initialState);
-    } catch {
-      setError(t.error);
+    } catch (error) {
+      if (error instanceof Error && error.message === "contact_not_configured") {
+        setError(t.unavailable);
+      } else {
+        setError(t.error);
+      }
     } finally {
       setIsSubmitting(false);
     }
