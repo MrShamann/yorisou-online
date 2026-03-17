@@ -25,14 +25,14 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <Section label="Mission" title="地域の移動課題を、実装可能な形で改善する">
+      <Section label="使命" title="地域の移動課題を、実装可能な形で改善する">
         <p className="muted">
           生活に必要な移動を持続的に支えるため、机上設計ではなく現場で検証可能な方法論を重視します。
           安全性、公共性、費用対効果を丁寧に確認しながら、段階的な社会実装を目指します。
         </p>
       </Section>
 
-      <Section label="Value" title="事業推進の基本方針">
+      <Section label="基本方針" title="事業推進の基本方針">
         <CardGrid>
           <article className="card"><h3>法令・規範の順守</h3><p className="muted">関連法規、地域ルール、個人情報保護の観点を徹底します。</p></article>
           <article className="card"><h3>安全最優先</h3><p className="muted">ヒヤリハットを含む運用記録を蓄積し、予防型の改善を継続します。</p></article>
@@ -41,7 +41,7 @@ export default function AboutPage() {
         </CardGrid>
       </Section>
 
-      <Section label="Founder" title="代表挨拶 / 代表略歴">
+      <Section label="代表情報" title="代表挨拶 / 代表略歴">
         <div className="card" style={{ display: "grid", gap: 14 }}>
           <h3 style={{ margin: 0 }}>代表挨拶（Founder Message）</h3>
           <p style={{ margin: 0, fontWeight: 700 }}>「グローバル経営の経験を、福岡の地域課題へ」</p>

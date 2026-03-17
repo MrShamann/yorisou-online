@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 const issues = [
@@ -46,6 +45,8 @@ const serviceLayers = [
   },
 ];
 
+const flowSteps = ["相談", "設計", "実行", "評価", "報告"];
+
 const partners = [
   {
     title: "自治体",
@@ -69,102 +70,31 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
       <section className="relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/50 to-transparent" />
         <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div>
-              <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#D6C3A3]/60 bg-white/60 px-4 py-2 text-sm tracking-wide text-[#6B5A4A] backdrop-blur">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D6C3A3]/40 bg-white/80 shadow-sm">
-                  <Image
-                    src="/images/brand/tsuru-logo.png"
-                    alt="Yorisou logo"
-                    width={24}
-                    height={24}
-                    className="h-6 w-6 object-contain"
-                  />
-                </span>
-                Yorisou · 寄り添うモビリティ
-              </div>
-
-              <h1 className="text-4xl font-light leading-tight md:text-6xl">
-                高齢社会の移動を、
-                <span className="block text-[#6B5A4A]">福岡から再設計する。</span>
-              </h1>
-
-              <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-                Yorisouは、福岡を起点に、高齢社会における地域内移動の課題に向き合う実証型プロジェクトです。
-                小規模な実証を通じて、安全性・継続性・地域適合性を検証し、自治体・地域機関・民間施設と連携可能な移動モデルの構築を目指します。
-              </p>
-
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <Link
-                  href="/contact"
-                  className="rounded-2xl bg-[#3B2F2F] px-6 py-3 text-center text-sm text-white shadow-sm transition hover:opacity-90"
-                >
-                  お問い合わせ
-                </Link>
-                <Link
-                  href="/pilot"
-                  className="rounded-2xl border border-[#3B2F2F]/20 bg-white/70 px-6 py-3 text-center text-sm transition hover:bg-white"
-                >
-                  実証実験を見る
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute -left-10 top-10 h-48 w-48 rounded-full bg-[#D6C3A3]/30 blur-3xl" />
-              <div className="absolute -bottom-8 right-0 h-56 w-56 rounded-full bg-white/50 blur-3xl" />
-
-              <div className="relative rounded-[2rem] border border-[#D6C3A3]/40 bg-white/70 p-5 shadow-[0_20px_60px_rgba(59,47,47,0.08)] backdrop-blur">
-                <div className="rounded-[1.5rem] bg-gradient-to-br from-[#F7F4EE] to-[#ECE5D8] p-6">
-                  <div className="mb-6 flex items-center justify-between">
-                    <div>
-                      <div className="text-xs tracking-[0.2em] text-[#8A7764]">基本姿勢</div>
-                      <div className="mt-2 text-2xl font-light">Yorisou</div>
-                    </div>
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6C3A3]/50 bg-white shadow-sm">
-                      <Image
-                        src="/images/brand/tsuru-logo.png"
-                        alt="Yorisou brand mark"
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 object-contain"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="rounded-[1.5rem] border border-[#D6C3A3]/40 bg-[#F5F1E8] p-4">
-                    <div className="aspect-[4/3] rounded-[1.25rem] border border-dashed border-[#C8B69E] bg-white/80 p-6">
-                      <div className="flex h-full flex-col justify-between">
-                        <div className="max-w-sm">
-                          <div className="text-sm tracking-[0.18em] text-[#8A7764]">視点</div>
-                          <h2 className="mt-3 text-2xl font-light leading-snug">
-                            地域に合う移動のあり方を探る
-                          </h2>
-                          <p className="mt-3 text-sm leading-6 text-[#5A4B3E]">
-                            鶴が持つ静かな品格と、いちょうが持つ生活に根ざした強さを重ねながら、
-                            使う人にも地域にも無理のない移動の形を考えていきます。
-                          </p>
-                        </div>
-
-                        <div className="mt-6 grid grid-cols-3 gap-3">
-                          {[
-                            { label: "深い茶色", hex: "#3B2F2F" },
-                            { label: "やわらかな生成り", hex: "#F5F1E8" },
-                            { label: "淡い金色", hex: "#D6C3A3" },
-                          ].map((color) => (
-                            <div key={color.hex} className="rounded-2xl border border-[#D6C3A3]/30 bg-white p-3">
-                              <div className="h-14 rounded-xl border border-black/5" style={{ backgroundColor: color.hex }} />
-                              <div className="mt-2 text-xs text-[#6B5A4A]">{color.label}</div>
-                              <div className="mt-1 text-[11px] text-[#8A7764]">{color.hex}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="max-w-4xl rounded-[2.5rem] border border-[#D6C3A3]/40 bg-white/70 p-8 shadow-[0_24px_70px_rgba(59,47,47,0.08)] backdrop-blur md:p-12">
+            <div className="text-sm tracking-[0.18em] text-[#8A7764]">福岡発・地域モビリティ実証</div>
+            <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
+              高齢社会の移動を、
+              <span className="block text-[#6B5A4A]">福岡から再設計する。</span>
+            </h1>
+            <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
+              Yorisouは、福岡を起点に、高齢社会における地域内移動の課題に向き合う実証型プロジェクトです。
+              小規模な実証を通じて、安全性・継続性・地域適合性を検証し、自治体・地域機関・民間施設と連携可能な移動モデルの構築を目指します。
+            </p>
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <Link
+                href="/contact"
+                className="rounded-2xl bg-[#3B2F2F] px-6 py-3 text-center text-sm text-white shadow-sm transition hover:opacity-90"
+              >
+                お問い合わせ
+              </Link>
+              <Link
+                href="/pilot"
+                className="rounded-2xl border border-[#3B2F2F]/20 bg-white/70 px-6 py-3 text-center text-sm transition hover:bg-white"
+              >
+                実証実験を見る
+              </Link>
             </div>
           </div>
         </div>
@@ -238,7 +168,7 @@ export default function HomePage() {
             <h2 className="mt-3 text-3xl font-light leading-tight">実証プログラムの基本フロー（5段階）</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-5">
-            {["相談", "設計", "実行", "評価", "報告"].map((step, index) => (
+            {flowSteps.map((step, index) => (
               <div key={step} className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/70 p-5 shadow-sm">
                 <div className="text-xs tracking-[0.18em] text-[#8A7764]">STEP {index + 1}</div>
                 <div className="mt-3 text-xl font-light">{step}</div>

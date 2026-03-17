@@ -3,8 +3,8 @@ import ContactForm from "../../components/ContactForm";
 
 const inquiryCards = [
   {
-    title: "Request a Test Ride",
-    text: "We welcome gentle first conversations for personal use, family review, and introductory ride requests.",
+    title: "Experience Inquiry",
+    text: "We welcome calm first conversations for personal review, family consultation, and introductory experience requests.",
   },
   {
     title: "Partnership / Pilot Inquiry",
@@ -48,7 +48,7 @@ export default function ContactPageEn() {
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
               Yorisou aims to be approachable for individuals, families, and local partners alike.
-              From test ride requests to community discussions, we value a calm and thoughtful conversation.
+              From introductory experience requests to community discussions, we value a calm and thoughtful conversation.
             </p>
           </div>
 

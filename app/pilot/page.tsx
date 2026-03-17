@@ -23,7 +23,7 @@ export default function PilotPage() {
         </div>
       </section>
 
-      <Section label="Purpose" title="実証の目的">
+      <Section label="目的" title="実証の目的">
         <div className="card">
           <p className="muted" style={{ margin: 0 }}>
             地域の移動課題に対し、安全性・受容性・運用負荷を同時に検証し、継続導入に向けた判断材料を整えることを目的とします。
@@ -31,7 +31,7 @@ export default function PilotPage() {
         </div>
       </Section>
 
-      <Section label="Pilot Menus" title="実証メニュー（3シナリオ）" lead="車両モデル名ではなく、生活導線シナリオを基準に設計します。">
+      <Section label="実証メニュー" title="実証メニュー（3シナリオ）" lead="車両モデル名ではなく、生活導線シナリオを基準に設計します。">
         <CardGrid>
           <article className="card"><h3>生活支援ルート型</h3><p className="muted">住宅地から商業施設・公共施設までの短距離移動を支援します。</p></article>
           <article className="card"><h3>通院アクセス型</h3><p className="muted">診療所・薬局へのアクセス改善を目的に時間帯別運行を設計します。</p></article>
@@ -39,7 +39,7 @@ export default function PilotPage() {
         </CardGrid>
       </Section>
 
-      <Section label="Process" title="実証プロセス（6ステップ）">
+      <Section label="実施プロセス" title="実証プロセス（6ステップ）">
         <div className="card">
           <ol className="list-clean" style={{ margin: 0, display: "grid", gap: 8 }}>
             <li>事前相談・課題整理</li>
@@ -52,7 +52,7 @@ export default function PilotPage() {
         </div>
       </Section>
 
-      <Section label="Data" title="主な収集データ">
+      <Section label="収集データ" title="主な収集データ">
         <CardGrid>
           <article className="card"><h3>利用実績</h3><p className="muted">利用回数、時間帯別利用、再利用率</p></article>
           <article className="card"><h3>移動量</h3><p className="muted">移動距離、ルート別利用傾向、所要時間</p></article>
@@ -62,7 +62,7 @@ export default function PilotPage() {
         </CardGrid>
       </Section>
 
-      <Section label="Deliverables" title="成果物">
+      <Section label="成果物" title="成果物">
         <CardGrid>
           <article className="card"><h3>Pilot Report</h3><p className="muted">実績値と定性評価を統合した報告書</p></article>
           <article className="card"><h3>改善提案</h3><p className="muted">課題別の運用改善提案と優先順位</p></article>
@@ -70,7 +70,7 @@ export default function PilotPage() {
         </CardGrid>
       </Section>
 
-      <Section label="FAQ" title="よくあるご質問">
+      <Section label="よくあるご質問" title="よくあるご質問">
         <div className="grid" style={{ gridTemplateColumns: "1fr", gap: 10 }}>
           <article className="card"><h3>Q. 実証期間はどの程度ですか。</h3><p className="muted">A. 地域状況に応じて、1〜3か月程度の小規模実証を基本としています。</p></article>
           <article className="card"><h3>Q. 実施前に必要な準備はありますか。</h3><p className="muted">A. 関係者ヒアリング、対象導線の現地確認、運用ルールの合意形成を実施します。</p></article>

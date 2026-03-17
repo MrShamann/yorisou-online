@@ -19,7 +19,7 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      <Section label="Partnership" title="主な連携先">
+      <Section label="連携先" title="主な連携先">
         <CardGrid>
           <article className="card"><h3>自治体</h3><p className="muted">政策整合、公共性評価、地域調整</p></article>
           <article className="card"><h3>介護施設</h3><p className="muted">利用者導線把握、運用協力、評価協力</p></article>
@@ -28,7 +28,7 @@ export default function PartnersPage() {
         </CardGrid>
       </Section>
 
-      <Section label="Policy" title="連携方針">
+      <Section label="連携方針" title="連携方針">
         <div className="card">
           <ul className="list-clean" style={{ margin: 0, display: "grid", gap: 6 }}>
             <li>法令順守および個人情報保護を前提とした業務設計</li>

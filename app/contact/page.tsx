@@ -3,8 +3,8 @@ import ContactForm from "../components/ContactForm";
 
 const inquiryCards = [
   {
-    title: "試乗のご相談",
-    text: "ご本人やご家族が安心して体験できるよう、落ち着いた導入相談からご案内します。",
+    title: "導入体験のご相談",
+    text: "ご本人やご家族が安心して確認できるよう、体験機会や初期相談を落ち着いてご案内します。",
   },
   {
     title: "連携・実証のご相談",
@@ -38,17 +38,17 @@ export default function ContactPage() {
                   className="h-6 w-6 object-contain"
                 />
               </span>
-              Yorisou · お問い合わせ
+              Yorisou · ご相談窓口
             </div>
 
             <h1 className="text-4xl font-light leading-tight md:text-6xl">
               やさしく相談できる
-              <span className="block text-[#6B5A4A]">試乗・お問い合わせ窓口</span>
+              <span className="block text-[#6B5A4A]">お問い合わせ窓口</span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
               Yorisouは、ご本人、ご家族、地域の関係者にとって話しかけやすい窓口でありたいと考えています。
-              試乗のご相談から地域連携まで、落ち着いた対話を大切にしながらご案内します。
+              体験のご相談から地域連携まで、落ち着いた対話を大切にしながらご案内します。
             </p>
           </div>
 
@@ -60,7 +60,7 @@ export default function ContactPage() {
               <div className="rounded-[1.5rem] bg-gradient-to-br from-[#F7F4EE] to-[#ECE5D8] p-6">
                 <div className="mb-5 flex items-center justify-between">
                   <div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-[#8A7764]">Contact</div>
+                    <div className="text-xs tracking-[0.2em] text-[#8A7764]">ご相談窓口</div>
                     <div className="mt-2 text-2xl font-light">Yorisou</div>
                   </div>
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6C3A3]/50 bg-white shadow-sm">
@@ -89,10 +89,10 @@ export default function ContactPage() {
       <section className="border-b border-[#D6C3A3]/30 bg-white/45">
         <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
           <div className="mb-8 max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">How We Can Help</div>
+            <div className="text-sm tracking-[0.18em] text-[#8A7764]">ご相談内容</div>
             <h2 className="mt-3 text-3xl font-light leading-tight">ご相談いただける内容</h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
-              個人の試乗相談から地域での導入検討まで、目的に応じた形でお受けしています。
+              個人の体験相談から地域での導入検討まで、目的に応じた形でお受けしています。
             </p>
           </div>
 
@@ -111,7 +111,7 @@ export default function ContactPage() {
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-[2rem] border border-[#D6C3A3]/40 bg-white/70 p-6 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur md:p-8">
             <div className="mb-6">
-              <div className="text-sm tracking-[0.18em] text-[#8A7764]">Form</div>
+              <div className="text-sm tracking-[0.18em] text-[#8A7764]">お問い合わせフォーム</div>
               <h2 className="mt-3 text-3xl font-light">お問い合わせフォーム</h2>
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
                 ご希望に近い内容をお選びのうえ、必要事項をご入力ください。内容に応じて、順次ご連絡します。
@@ -121,7 +121,7 @@ export default function ContactPage() {
           </div>
 
           <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm md:p-8">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">Trust</div>
+            <div className="text-sm tracking-[0.18em] text-[#8A7764]">安心感</div>
             <h2 className="mt-3 text-3xl font-light">安心して話せる窓口を目指して</h2>
             <div className="mt-6 grid gap-4">
               {trustPoints.map((item) => (
