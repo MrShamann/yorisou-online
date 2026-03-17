@@ -8,13 +8,13 @@ export default function HomePageEn() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#D6C3A3]/60 bg-white/60 px-4 py-2 text-sm tracking-wide text-[#6B5A4A] backdrop-blur">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D6C3A3]/40 bg-white/80 shadow-sm">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D6C3A3]/40 bg-white/80 shadow-sm">
                   <Image
                     src="/images/brand/tsuru-logo.png"
                     alt="Yorisou logo"
-                    width={20}
-                    height={20}
-                    className="h-5 w-5 object-contain"
+                    width={24}
+                    height={24}
+                    className="h-6 w-6 object-contain"
                   />
                 </span>
                 Yorisou · Companion Mobility
@@ -75,9 +75,9 @@ export default function HomePageEn() {
                       <Image
                         src="/images/brand/tsuru-logo.png"
                         alt="Yorisou brand mark"
-                        width={36}
-                        height={36}
-                        className="h-9 w-9 object-contain"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 object-contain"
                       />
                     </div>
                   </div>

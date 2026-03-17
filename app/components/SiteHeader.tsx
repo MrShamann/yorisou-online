@@ -92,8 +92,8 @@ export default function SiteHeader() {
           <Image
             src="/images/brand/tsuru-logo.png"
             alt="YORISOU"
-            width={40}
-            height={40}
+            width={44}
+            height={44}
             style={{ borderRadius: 8, objectFit: "contain", background: "#fff" }}
           />
           <span>YORISOU</span>
