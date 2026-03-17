@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 
 const navJa = [
   { href: "/", label: "トップ" },
-  { href: "/product", label: "製品紹介" },
   { href: "/services", label: "事業内容" },
   { href: "/pilot", label: "実証実験" },
   { href: "/progress", label: "実証進捗" },
@@ -17,7 +16,6 @@ const navJa = [
 
 const navEn = [
   { href: "/", label: "Home" },
-  { href: "/product", label: "Product" },
   { href: "/services", label: "Services" },
   { href: "/pilot", label: "Pilot Program" },
   { href: "/progress", label: "Project Progress" },
@@ -29,7 +27,7 @@ function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/about", "/product", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal"].includes(base)) return base;
+    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -38,7 +36,7 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (["/about", "/product", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal"].includes(pathname)) return `/en${pathname}`;
+  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 

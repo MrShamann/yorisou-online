@@ -49,7 +49,7 @@ export default function ProductPage() {
                   className="h-6 w-6 object-contain"
                 />
               </span>
-              Yorisou · 製品紹介
+                Yorisou · ご案内
             </div>
 
             <h1 className="text-4xl font-light leading-tight md:text-6xl">
@@ -87,7 +87,7 @@ export default function ProductPage() {
               <div className="rounded-[1.5rem] bg-gradient-to-br from-[#F7F4EE] to-[#ECE5D8] p-6">
                 <div className="mb-5 flex items-center justify-between">
                   <div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-[#8A7764]">Product</div>
+                      <div className="text-xs tracking-[0.2em] text-[#8A7764]">ご紹介</div>
                     <div className="mt-2 text-2xl font-light">Yorisou</div>
                   </div>
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6C3A3]/50 bg-white shadow-sm">
