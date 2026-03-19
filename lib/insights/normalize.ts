@@ -26,12 +26,25 @@ export type NormalizedInsightCandidate = {
 };
 
 function slugify(value: string) {
-  return value
+  const normalized = value
     .toLowerCase()
     .replace(/https?:\/\//g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 64);
+
+  return normalized;
+}
+
+function buildFallbackSlug(item: FetchedInsightItem) {
+  const urlPart = item.sourceUrl
+    .toLowerCase()
+    .replace(/https?:\/\//g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(-48);
+
+  return `insight-${urlPart || item.sourceId}`;
 }
 
 function matchesKeywords(value: string, includeKeywords: string[], excludeKeywords: string[] = []) {
@@ -64,7 +77,7 @@ export function normalizeFetchedItem(item: FetchedInsightItem): NormalizedInsigh
   const tags = Array.from(new Set([...source.tagHints, ...extractTags(haystack)]));
 
   return {
-    slug: slugify(`${item.sourceName}-${item.title}`),
+    slug: slugify(`${item.sourceName}-${item.title}`) || buildFallbackSlug(item),
     sourceName: item.sourceName,
     sourceUrl: item.sourceUrl,
     publishedAt: item.publishedAt,

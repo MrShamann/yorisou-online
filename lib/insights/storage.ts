@@ -6,6 +6,28 @@ import type { InsightDraft, ReviewStatus } from "@/lib/insights/types";
 const dataDir = path.join(process.cwd(), "data");
 const draftsPath = path.join(dataDir, "insight-drafts.json");
 
+function deriveDraftSlug(item: InsightDraft) {
+  const fromTitle = `${item.sourceName}-${item.rawTitle}`
+    .toLowerCase()
+    .replace(/https?:\/\//g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+
+  if (fromTitle) {
+    return fromTitle;
+  }
+
+  const fromUrl = item.sourceUrl
+    .toLowerCase()
+    .replace(/https?:\/\//g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(-48);
+
+  return `insight-${fromUrl || item.id}`;
+}
+
 async function ensureDraftStorage() {
   await fs.mkdir(dataDir, { recursive: true });
 
@@ -22,7 +44,12 @@ export async function readInsightDrafts() {
 
   try {
     const parsed = JSON.parse(content) as InsightDraft[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed)
+      ? parsed.map((item) => ({
+          ...item,
+          slug: item.slug || deriveDraftSlug(item),
+        }))
+      : [];
   } catch {
     return [];
   }
