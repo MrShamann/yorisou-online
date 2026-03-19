@@ -20,12 +20,80 @@ const categoryLabels = {
   },
 } as const;
 
+const categoryLensJa: Record<InsightCategory, { concern: string; action: string; partner: string }> = {
+  "aging-society": {
+    concern: "日常の短距離移動が生活維持そのものに直結する点",
+    action: "移動手段の有無だけでなく、どの場面で負担が集中しているかを見極める",
+    partner: "自治体や地域支援者が生活導線の空白を把握しやすくなる",
+  },
+  "community-transport": {
+    concern: "地域内で移動支援が継続運用できるかどうか",
+    action: "導入前に窓口・保管・説明・安全確認の役割分担を整える",
+    partner: "地域交通の実証や小規模導入の現実性を判断しやすくなる",
+  },
+  "senior-mobility": {
+    concern: "ご本人の使いやすさとご家族の安心が両立するかどうか",
+    action: "試乗時に操作感だけでなく説明の分かりやすさや保管性も確認する",
+    partner: "相談現場で比較軸を整理しやすくなる",
+  },
+  "welfare-mobility": {
+    concern: "通院や施設利用の前後にある細かな移動負担",
+    action: "入口から受付までの導線や付き添い負担まで含めて確認する",
+    partner: "福祉・医療の現場で実務的な導入論点を共有しやすくなる",
+  },
+  "local-transport": {
+    concern: "地域ごとの交通空白や生活導線の分断",
+    action: "利用頻度、時間帯、目的地の偏りを具体的に捉える",
+    partner: "地域の運行設計や実証テーマを具体化しやすくなる",
+  },
+  "micro-mobility": {
+    concern: "地域条件に合わない導入が定着しないこと",
+    action: "道路環境や保管条件を前提に、役割を限定して評価する",
+    partner: "実証時に“どこで、誰が、どう使うか”を明確にしやすくなる",
+  },
+};
+
+function summarizeJa(candidate: NormalizedInsightCandidate) {
+  const excerpt = candidate.rawExcerpt.trim();
+  const firstSentence = excerpt.split(/(?<=[。！？])/)[0]?.trim() || "";
+
+  if (firstSentence) {
+    return `${candidate.rawTitle}に関する動きです。${firstSentence}`;
+  }
+
+  return `${candidate.rawTitle}について、${categoryLabels.ja[candidate.category]}の観点から確認しておきたい論点が含まれています。`;
+}
+
+function whyItMattersJa(category: InsightCategory) {
+  const lens = categoryLensJa[category];
+  return `${categoryLabels.ja[category]}の論点では、${lens.concern}が重要です。制度や発表の内容を追うだけでなく、現場でどの負担が減るのかを具体的に見る必要があります。`;
+}
+
+function yorisouViewJa(category: InsightCategory, candidate: NormalizedInsightCandidate): string[] {
+  const lens = categoryLensJa[category];
+  return [
+    `Yorisouでは、この話題を${categoryLabels.ja[category]}における実務上の示唆として捉えます。`,
+    `${candidate.rawTitle}のような動きは、利用者側の利便性だけでなく、${lens.concern}を見直すきっかけになります。`,
+    `ご本人、ご家族、地域の関係者は、${lens.action}という視点で読み解くことが重要です。`,
+  ];
+}
+
+function takeawaysJa(category: InsightCategory): string[] {
+  const lens = categoryLensJa[category];
+  return [
+    `${lens.concern}を、利用場面ごとに言語化しておく。`,
+    `${lens.action}という順番で相談や比較を進める。`,
+    `${lens.partner}ため、実証や試乗では現場条件を必ず合わせて確認する。`,
+  ];
+}
+
 function audienceBlockJa(category: InsightCategory): InsightAudienceBlock {
+  const lens = categoryLensJa[category];
   return {
-    seniors: `${categoryLabels.ja[category]}の話題として、日々の移動負担がどう変わるかを見ることが大切です。`,
-    families: "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-    localCommunities: "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-    operators: "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。",
+    seniors: `ご本人にとっては、${lens.concern}が日々の外出意欲や安心感にどう影響するかを見ておくことが大切です。`,
+    families: `ご家族は、${lens.action}という視点で、送迎や見守り負担がどう変わるかを確認すると判断しやすくなります。`,
+    localCommunities: `地域側では、${lens.partner}ための運用設計や説明体制まで含めて整理することが重要です。`,
+    operators: `運営者や実証パートナーは、${lens.action}という観点で導入条件と継続運用の両方を確認する必要があります。`,
   };
 }
 
@@ -38,26 +106,9 @@ function audienceBlockEn(category: InsightCategory): InsightAudienceBlock {
   };
 }
 
-function summarizeJa(candidate: NormalizedInsightCandidate) {
-  const excerpt = candidate.rawExcerpt || candidate.rawTitle;
-  return `${candidate.rawTitle}に関する話題です。${excerpt.slice(0, 110)}${excerpt.length > 110 ? "..." : ""}`;
-}
-
 function summarizeEn(candidate: NormalizedInsightCandidate) {
   const excerpt = candidate.rawExcerpt || candidate.rawTitle;
   return `This item relates to ${candidate.rawTitle}. ${excerpt.slice(0, 110)}${excerpt.length > 110 ? "..." : ""}`;
-}
-
-function whyItMattersJa(category: InsightCategory) {
-  const map: Record<InsightCategory, string> = {
-    "aging-society": "高齢社会では、短距離移動のしやすさが生活継続の基盤になります。",
-    "community-transport": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
-    "senior-mobility": "シニアモビリティの論点は、ご本人だけでなくご家族の安心や比較判断にも影響します。",
-    "welfare-mobility": "福祉移動の改善は、通院や施設利用の実務負担を左右します。",
-    "local-transport": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
-    "micro-mobility": "マイクロモビリティの導入は、地域条件や高齢者利用との相性確認が欠かせません。",
-  };
-  return map[category];
 }
 
 function whyItMattersEn(category: InsightCategory) {
@@ -72,27 +123,11 @@ function whyItMattersEn(category: InsightCategory) {
   return map[category];
 }
 
-function yorisouViewJa(category: InsightCategory): string[] {
-  return [
-    `Yorisouは、この話題を${categoryLabels.ja[category]}の実務課題として見ています。`,
-    "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-    "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。",
-  ];
-}
-
 function yorisouViewEn(category: InsightCategory): string[] {
   return [
     `Yorisou reads this as a practical ${categoryLabels.en[category]} issue.`,
     "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
     "Users, families, and local partners should review operating context and support setup alongside specifications.",
-  ];
-}
-
-function takeawaysJa(category: InsightCategory): string[] {
-  return [
-    "実際の利用導線に引き寄せて読む。",
-    "ご家族や付き添い側の負担変化も合わせて考える。",
-    `Yorisouでは${categoryLabels.ja[category]}の観点から試乗・導入相談につなげて整理できます。`,
   ];
 }
 
@@ -191,7 +226,7 @@ export async function buildInsightContent(candidate: NormalizedInsightCandidate,
           title: candidate.rawTitle,
           summary: summarizeJa(candidate),
           whyItMatters: whyItMattersJa(candidate.category),
-          yorisouView: yorisouViewJa(candidate.category),
+          yorisouView: yorisouViewJa(candidate.category, candidate),
           practicalTakeaways: takeawaysJa(candidate.category),
           whatThisMeans: audienceBlockJa(candidate.category),
         }

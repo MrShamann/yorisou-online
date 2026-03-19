@@ -1,6 +1,6 @@
 import { XMLParser } from "@/lib/insights/xml";
 import { insightSources } from "@/lib/insights/sources";
-import type { FetchedInsightItem, InsightSourceConfig } from "@/lib/insights/types";
+import type { FetchedInsightItem, InsightSourceConfig, InsightSourceRun } from "@/lib/insights/types";
 
 function cleanText(value: string) {
   return value.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -85,7 +85,7 @@ export async function fetchFromSource(source: InsightSourceConfig) {
 export async function fetchConfiguredSources() {
   const results = await Promise.allSettled(insightSources.map((source) => fetchFromSource(source)));
 
-  return results.flatMap((result, index) => {
+  const items = results.flatMap((result, index) => {
     if (result.status === "fulfilled") {
       return result.value;
     }
@@ -93,4 +93,28 @@ export async function fetchConfiguredSources() {
     console.error(`Insight fetch failed for ${insightSources[index].name}:`, result.reason);
     return [];
   });
+
+  const sourceRuns: InsightSourceRun[] = results.map((result, index) => {
+    const source = insightSources[index];
+
+    if (result.status === "fulfilled") {
+      return {
+        sourceId: source.id,
+        sourceName: source.name,
+        fetched: result.value.length,
+      };
+    }
+
+    return {
+      sourceId: source.id,
+      sourceName: source.name,
+      fetched: 0,
+      error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+    };
+  });
+
+  return {
+    items,
+    sourceRuns,
+  };
 }

@@ -5,7 +5,7 @@ const keywordCategoryMap: Array<{ keywords: string[]; category: InsightCategory 
   { keywords: ["高齢", "介護", "高齢者", "見守り"], category: "aging-society" },
   { keywords: ["地域交通", "コミュニティ", "公共交通", "交通空白"], category: "community-transport" },
   { keywords: ["シニア", "歩行", "移動支援", "福祉用具"], category: "senior-mobility" },
-  { keywords: ["バリアフリー", "福祉", "病院", "通院"], category: "welfare-mobility" },
+  { keywords: ["バリアフリー", "福祉", "病院", "通院", "介護保険", "アクセシビリティ"], category: "welfare-mobility" },
   { keywords: ["ラストマイル", "地域", "交通", "移動"], category: "local-transport" },
   { keywords: ["EV", "電動", "モビリティ", "自動運転"], category: "micro-mobility" },
 ];
@@ -54,6 +54,15 @@ function matchesKeywords(value: string, includeKeywords: string[], excludeKeywor
   return included && !excluded;
 }
 
+function matchesJapanMobilityContext(text: string) {
+  const lower = text.toLowerCase();
+  const japanSignals = ["国土交通", "厚生労働", "経済産業", "日本", "国内", "都道府県", "自治体", "地域", "jr", "鉄道", "バス", "道路", "高齢", "福祉", "介護", "通院"];
+  const mobilitySignals = ["交通", "移動", "移動支援", "モビリティ", "ラストマイル", "バリアフリー", "アクセシビリティ", "物流", "公共交通", "自動車", "ev", "電動"];
+
+  return japanSignals.some((keyword) => lower.includes(keyword.toLowerCase())) &&
+    mobilitySignals.some((keyword) => lower.includes(keyword.toLowerCase()));
+}
+
 function inferCategory(text: string, defaultCategory: InsightCategory) {
   const lower = text.toLowerCase();
   const matched = keywordCategoryMap.find((item) => item.keywords.some((keyword) => lower.includes(keyword.toLowerCase())));
@@ -69,7 +78,7 @@ export function normalizeFetchedItem(item: FetchedInsightItem): NormalizedInsigh
 
   const haystack = `${item.title} ${item.excerpt}`;
 
-  if (!matchesKeywords(haystack, source.includeKeywords, source.excludeKeywords)) {
+  if (!matchesKeywords(haystack, source.includeKeywords, source.excludeKeywords) || !matchesJapanMobilityContext(haystack)) {
     return null;
   }
 
@@ -98,24 +107,47 @@ function extractTags(text: string) {
   if (text.includes("高齢")) tags.push("高齢社会");
   if (text.includes("地域")) tags.push("地域交通");
   if (text.includes("バリアフリー")) tags.push("バリアフリー");
+  if (text.includes("介護") || text.includes("福祉")) tags.push("介護・福祉");
   if (text.includes("EV") || text.includes("電動")) tags.push("EV");
   if (text.includes("通院")) tags.push("通院");
   if (text.includes("モビリティ")) tags.push("モビリティ");
+  if (text.includes("ラストマイル")) tags.push("ラストマイル");
 
   return tags;
+}
+
+export function normalizeSourceUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    parsed.hash = "";
+    const keptParams = ["id", "article", "press"];
+    const nextParams = new URLSearchParams();
+
+    [...parsed.searchParams.entries()]
+      .filter(([key]) => keptParams.includes(key.toLowerCase()))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([key, value]) => nextParams.set(key, value));
+
+    parsed.search = nextParams.toString();
+    const normalized = parsed.toString().replace(/\/$/, "");
+    return normalized.toLowerCase();
+  } catch {
+    return url.trim().toLowerCase();
+  }
 }
 
 export function dedupeCandidates<T extends { sourceUrl: string }>(items: T[]) {
   const seen = new Set<string>();
   return items.filter((item) => {
-    if (seen.has(item.sourceUrl)) {
+    const key = normalizeSourceUrl(item.sourceUrl);
+    if (seen.has(key)) {
       return false;
     }
-    seen.add(item.sourceUrl);
+    seen.add(key);
     return true;
   });
 }
 
 export function existingDraftKeySet(drafts: InsightDraft[]) {
-  return new Set(drafts.map((item) => item.sourceUrl));
+  return new Set(drafts.map((item) => normalizeSourceUrl(item.sourceUrl)));
 }
