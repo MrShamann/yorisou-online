@@ -48,6 +48,9 @@ export default async function InsightDetailPage({
         <header className="mt-6 rounded-[2.5rem] border border-[#D6C3A3]/40 bg-white/75 p-8 shadow-[0_24px_70px_rgba(59,47,47,0.08)] backdrop-blur md:p-10">
           <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
             <span className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-3 py-1">{insight.categoryLabel}</span>
+            {insight.featured && (
+              <span className="rounded-full border border-[#C8D0C1] bg-[#F3F0E7] px-3 py-1 text-[#4D5642]">注目</span>
+            )}
             <span>{insight.regionLabel}</span>
             <span>{insight.publishedAt}</span>
           </div>

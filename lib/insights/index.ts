@@ -55,6 +55,9 @@ function toEntry(seed: InsightSeed, locale: Locale): InsightEntry {
     whatThisMeans: localized.whatThisMeans,
     sourceType: "seed",
     reviewStatus: "approved",
+    featured: seed.featured || false,
+    featuredRank: seed.featuredRank,
+    homepageFeatured: seed.homepageFeatured || false,
   };
 }
 
@@ -79,14 +82,33 @@ function draftToEntry(draft: InsightDraft, locale: Locale): InsightEntry {
     whatThisMeans: localized.whatThisMeans,
     sourceType: draft.createdFrom,
     reviewStatus: "approved",
+    featured: draft.featured || false,
+    featuredRank: draft.featuredRank,
+    homepageFeatured: draft.homepageFeatured || false,
   };
+}
+
+function compareInsights(a: InsightEntry, b: InsightEntry) {
+  const priorityA = a.homepageFeatured ? 0 : a.featured ? 1 : 2;
+  const priorityB = b.homepageFeatured ? 0 : b.featured ? 1 : 2;
+
+  if (priorityA !== priorityB) {
+    return priorityA - priorityB;
+  }
+
+  const rankA = a.featuredRank ?? Number.MAX_SAFE_INTEGER;
+  const rankB = b.featuredRank ?? Number.MAX_SAFE_INTEGER;
+  if (rankA !== rankB) {
+    return rankA - rankB;
+  }
+
+  return a.publishedAt < b.publishedAt ? 1 : -1;
 }
 
 export function getAllInsights(locale: Locale): InsightEntry[] {
   return insightSeeds
-    .slice()
-    .sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
-    .map((seed) => toEntry(seed, locale));
+    .map((seed) => toEntry(seed, locale))
+    .sort(compareInsights);
 }
 
 export async function getPublicInsights(locale: Locale): Promise<InsightEntry[]> {
@@ -94,7 +116,7 @@ export async function getPublicInsights(locale: Locale): Promise<InsightEntry[]>
     .filter((item) => item.reviewStatus === "approved" && item.approvedForPublic)
     .map((item) => draftToEntry(item, locale));
 
-  return [...getAllInsights(locale), ...publishedDrafts].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
+  return [...getAllInsights(locale), ...publishedDrafts].sort(compareInsights);
 }
 
 export function getInsightBySlug(slug: string, locale: Locale): InsightEntry | null {
@@ -119,6 +141,31 @@ export function getLatestInsights(locale: Locale, limit = 3) {
 
 export async function getLatestPublicInsights(locale: Locale, limit = 3) {
   return (await getPublicInsights(locale)).slice(0, limit);
+}
+
+export async function getFeaturedPublicInsights(locale: Locale, limit = 3) {
+  return (await getPublicInsights(locale))
+    .filter((item) => item.featured)
+    .slice(0, limit);
+}
+
+export async function getLatestPublicNonFeaturedInsights(locale: Locale, limit = 3) {
+  return (await getPublicInsights(locale))
+    .filter((item) => !item.featured)
+    .slice(0, limit);
+}
+
+export async function getHomepagePriorityInsights(locale: Locale, heroLimit = 1, secondaryLimit = 3) {
+  const all = await getPublicInsights(locale);
+  const heroCandidates = all.filter((item) => item.homepageFeatured || item.featured);
+  const hero = heroCandidates.slice(0, heroLimit);
+  const heroSlugs = new Set(hero.map((item) => item.slug));
+  const secondary = all.filter((item) => !heroSlugs.has(item.slug)).slice(0, secondaryLimit);
+
+  return {
+    hero,
+    secondary,
+  };
 }
 
 export function getInsightCategoriesFromEntries(all: InsightEntry[]) {

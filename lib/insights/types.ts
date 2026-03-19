@@ -34,6 +34,9 @@ export type InsightSeed = {
   category: InsightCategory;
   region: InsightRegion;
   tags: string[];
+  featured?: boolean;
+  featuredRank?: number;
+  homepageFeatured?: boolean;
   content: Record<Locale, InsightContent>;
 };
 
@@ -58,6 +61,13 @@ export type InsightDraft = {
   approvedForPublic: boolean;
   createdFrom: InsightOrigin;
   ingestionNotes?: string;
+  reviewedAt?: string;
+  publicAt?: string;
+  reviewedBy?: string;
+  analysisVersion: string;
+  featured?: boolean;
+  featuredRank?: number;
+  homepageFeatured?: boolean;
 };
 
 export type InsightEntry = {
@@ -78,6 +88,9 @@ export type InsightEntry = {
   whatThisMeans: InsightAudienceBlock;
   sourceType: InsightOrigin;
   reviewStatus: "approved";
+  featured: boolean;
+  featuredRank?: number;
+  homepageFeatured: boolean;
 };
 
 export type InsightSourceConfig = {
@@ -103,10 +116,35 @@ export type FetchedInsightItem = {
 };
 
 export type IngestionResult = {
+  startedAt: string;
+  finishedAt: string;
   fetched: number;
   relevant: number;
   created: number;
   skippedDuplicate: number;
   skippedIrrelevant: number;
+  errors: number;
+  sourcesChecked: string[];
   drafts: InsightDraft[];
+};
+
+export type InsightSourceRun = {
+  sourceId: string;
+  sourceName: string;
+  fetched: number;
+  error?: string;
+};
+
+export type InsightIngestionRun = {
+  id: string;
+  startedAt: string;
+  finishedAt: string;
+  fetched: number;
+  relevant: number;
+  created: number;
+  skippedDuplicate: number;
+  skippedIrrelevant: number;
+  errors: number;
+  draftCountAfterRun: number;
+  sources: InsightSourceRun[];
 };

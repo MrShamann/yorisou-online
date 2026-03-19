@@ -15,6 +15,11 @@ export default function InsightCard({
     <article className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
       <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
         <span className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-3 py-1">{insight.categoryLabel}</span>
+        {insight.featured && (
+          <span className="rounded-full border border-[#C8D0C1] bg-[#F3F0E7] px-3 py-1 text-[#4D5642]">
+            {locale === "ja" ? "注目" : "Featured"}
+          </span>
+        )}
         <span>{formatDate(insight.publishedAt, locale)}</span>
         <span>{insight.regionLabel}</span>
       </div>

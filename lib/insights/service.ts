@@ -2,12 +2,15 @@ import { buildInsightContent } from "@/lib/insights/analyze";
 import { fetchConfiguredSources } from "@/lib/insights/fetchers";
 import {
   filterInsights,
+  getHomepagePriorityInsights,
   getLatestPublicInsights,
+  getLatestPublicNonFeaturedInsights,
+  getFeaturedPublicInsights,
   getPublicInsightBySlug,
   getPublicInsights,
 } from "@/lib/insights/index";
 import { dedupeCandidates, existingDraftKeySet, normalizeFetchedItem } from "@/lib/insights/normalize";
-import { readInsightDrafts, upsertInsightDrafts } from "@/lib/insights/storage";
+import { readInsightDrafts, recordInsightIngestionRun, upsertInsightDrafts } from "@/lib/insights/storage";
 import type { IngestionResult, InsightDraft, InsightEntry, Locale } from "@/lib/insights/types";
 
 export async function fetchNews(locale: Locale): Promise<InsightEntry[]> {
@@ -30,6 +33,18 @@ export async function fetchLatestInsights(locale: Locale, limit = 3) {
   return getLatestPublicInsights(locale, limit);
 }
 
+export async function fetchFeaturedInsights(locale: Locale, limit = 3) {
+  return getFeaturedPublicInsights(locale, limit);
+}
+
+export async function fetchLatestNonFeaturedInsights(locale: Locale, limit = 3) {
+  return getLatestPublicNonFeaturedInsights(locale, limit);
+}
+
+export async function fetchHomepageInsights(locale: Locale, heroLimit = 1, secondaryLimit = 3) {
+  return getHomepagePriorityInsights(locale, heroLimit, secondaryLimit);
+}
+
 export async function filterPublicInsights(
   locale: Locale,
   filters: {
@@ -42,13 +57,14 @@ export async function filterPublicInsights(
 }
 
 export async function ingestConfiguredInsightSources(): Promise<IngestionResult> {
-  const fetchedItems = await fetchConfiguredSources();
+  const startedAt = new Date().toISOString();
+  const { items: fetchedItems, sourceRuns } = await fetchConfiguredSources();
   const normalized = dedupeCandidates(fetchedItems.map((item) => normalizeFetchedItem(item)).filter((item) => item !== null));
   const existing = await readInsightDrafts();
   const existingKeys = existingDraftKeySet(existing);
 
   const freshCandidates = normalized.filter((item) => !existingKeys.has(item.sourceUrl));
-  const drafts: InsightDraft[] = [];
+const drafts: InsightDraft[] = [];
 
   for (const candidate of freshCandidates) {
     const contentJa = await buildInsightContent(candidate, "ja");
@@ -74,17 +90,40 @@ export async function ingestConfiguredInsightSources(): Promise<IngestionResult>
       approvedForPublic: false,
       createdFrom: candidate.createdFrom,
       ingestionNotes: candidate.ingestionNotes,
+      analysisVersion: "v2-ja-editorial",
+      featured: false,
+      homepageFeatured: false,
     });
   }
 
-  await upsertInsightDrafts(drafts);
-
-  return {
+  const mergedDrafts = await upsertInsightDrafts(drafts);
+  const finishedAt = new Date().toISOString();
+  const result: IngestionResult = {
+    startedAt,
+    finishedAt,
     fetched: fetchedItems.length,
     relevant: normalized.length,
     created: drafts.length,
     skippedDuplicate: normalized.length - freshCandidates.length,
     skippedIrrelevant: fetchedItems.length - normalized.length,
+    errors: sourceRuns.filter((run) => Boolean(run.error)).length,
+    sourcesChecked: sourceRuns.map((run) => run.sourceName),
     drafts,
   };
+
+  await recordInsightIngestionRun({
+    id: `ingestion_${Date.now()}`,
+    startedAt,
+    finishedAt,
+    fetched: result.fetched,
+    relevant: result.relevant,
+    created: result.created,
+    skippedDuplicate: result.skippedDuplicate,
+    skippedIrrelevant: result.skippedIrrelevant,
+    errors: result.errors,
+    draftCountAfterRun: mergedDrafts.length,
+    sources: sourceRuns,
+  });
+
+  return result;
 }

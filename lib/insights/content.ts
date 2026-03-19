@@ -9,6 +9,9 @@ export const insightSeeds: InsightSeed[] = [
     category: "aging-society",
     region: "japan",
     tags: ["高齢社会", "移動格差", "日常移動"],
+    featured: true,
+    featuredRank: 1,
+    homepageFeatured: true,
     content: {
       ja: {
         title: "高齢社会で広がる日常移動の負担を、地域の設計課題として見る",
@@ -66,6 +69,8 @@ export const insightSeeds: InsightSeed[] = [
     category: "community-transport",
     region: "local-community",
     tags: ["地域交通", "実証", "コミュニティ"],
+    featured: true,
+    featuredRank: 2,
     content: {
       ja: {
         title: "地域交通の実証で見落としやすいのは、車両より運用の継続性",
@@ -123,6 +128,8 @@ export const insightSeeds: InsightSeed[] = [
     category: "senior-mobility",
     region: "japan",
     tags: ["家族安心", "シニアモビリティ", "試乗"],
+    featured: true,
+    featuredRank: 3,
     content: {
       ja: {
         title: "シニアモビリティ選びで家族が重視するのは、本人の安心感と説明のしやすさ",
