@@ -1,225 +1,135 @@
 import Link from "next/link";
+
 import InsightsPreview from "./components/InsightsPreview";
 
-const issues = [
-  {
-    title: "短距離移動の空白",
-    text: "徒歩では負担が大きく、既存交通では過剰となる短距離移動が地域内に数多く存在します。",
-  },
-  {
-    title: "分断された生活導線",
-    text: "商店街、公共施設、医院、地域拠点のあいだを無理なく移動できる仕組みが不足しています。",
-  },
-  {
-    title: "通院・ケア移動の負担",
-    text: "通院や付き添いに伴う移動負担は、本人・家族・支援者のすべてに影響します。",
-  },
+const trustPoints = [
+  "ご本人・ご家族向けの移動相談",
+  "地域・施設単位での小規模実証設計",
+  "導入後まで見据えた運用整理",
 ];
 
-const approaches = [
+const serviceCards = [
   {
-    title: "小規模",
-    text: "限定された地域単位で始めることで、合意形成と運用管理を丁寧に行います。",
+    title: "モビリティ相談",
+    text: "どの手段が日常導線に合うかを、歩行状況、利用環境、ご家族の安心まで含めて整理します。",
+    href: "/ai-advisor",
+    cta: "相談を始める",
   },
   {
-    title: "安全性",
-    text: "ルール、点検、記録、研修を標準化し、予防型の安全管理を重視します。",
-  },
-  {
-    title: "検証可能性",
-    text: "実証結果を定量・定性の両面から記録し、次段階の判断材料にします。",
-  },
-];
-
-const serviceLayers = [
-  {
-    title: "企画設計支援",
-    text: "課題整理、導線設計、評価指標の設計",
-  },
-  {
-    title: "実証運用支援",
-    text: "運用手順整備、現場調整、関係者連携",
-  },
-  {
-    title: "評価・次段階設計",
-    text: "報告、改善提案、次段階計画の整理",
-  },
-];
-
-const flowSteps = ["相談", "設計", "実行", "評価", "報告"];
-
-const partners = [
-  {
-    title: "自治体",
-    text: "政策整合性と公共性の調整",
-  },
-  {
-    title: "介護・福祉施設",
-    text: "利用者の日常動線に沿った移動設計",
-  },
-  {
-    title: "医療機関",
-    text: "通院動線と時間調整を踏まえた設計",
-  },
-  {
-    title: "地域企業",
-    text: "継続運用に向けた実務支援",
+    title: "地域導入・実証支援",
+    text: "自治体、施設、地域事業者と連携し、小規模な実証から現実的な運用モデルを設計します。",
+    href: "/services",
+    cta: "支援内容を見る",
   },
 ];
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/50 to-transparent" />
-        <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
-          <div className="max-w-4xl rounded-[2.5rem] border border-[#D6C3A3]/40 bg-white/70 p-8 shadow-[0_24px_70px_rgba(59,47,47,0.08)] backdrop-blur md:p-12">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">福岡発・地域モビリティ実証</div>
+      <section className="relative overflow-hidden border-b border-[#D6C3A3]/30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.84),_rgba(245,241,232,0.96)_58%)]">
+        <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/60 to-transparent" />
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
+          <div className="shell-card p-8 md:p-12">
+            <div className="eyebrow">Senior-Friendly Mobility / Japan</div>
             <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
-              高齢社会の移動を、
-              <span className="block text-[#6B5A4A]">福岡から再設計する。</span>
+              ご本人にも、ご家族にも、
+              <span className="block text-[#6B5A4A]">納得しやすい移動の選び方を。</span>
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisouは、福岡を起点に、高齢社会における地域内移動の課題に向き合う実証型プロジェクトです。
-              小規模な実証を通じて、安全性・継続性・地域適合性を検証し、自治体・地域機関・民間施設と連携可能な移動モデルの構築を目指します。
+              Yorisouは、高齢社会の移動に向き合う地域モビリティブランドです。
+              まずは個別のモビリティ相談から始め、必要に応じて試乗、地域実証、運用整理までつなげます。
             </p>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
+              迷った段階でも大丈夫です。最初の相談では、利用者像と日常の移動場面をやさしく整理します。
+            </p>
+
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/contact"
-                className="rounded-2xl bg-[#3B2F2F] px-6 py-3 text-center text-sm text-white shadow-sm transition hover:opacity-90"
-              >
-                お問い合わせ
+              <Link href="/ai-advisor" className="btn btn-primary">
+                AI相談を始める
               </Link>
-              <Link
-                href="/pilot"
-                className="rounded-2xl border border-[#3B2F2F]/20 bg-white/70 px-6 py-3 text-center text-sm transition hover:bg-white"
-              >
-                実証実験を見る
+              <Link href="/contact" className="btn btn-secondary">
+                個別相談・お問い合わせ
               </Link>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              {trustPoints.map((item) => (
+                <div key={item} className="rounded-full border border-[#D6C3A3]/35 bg-[#FCFAF6] px-4 py-2 text-sm text-[#5A4B3E]">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-5">
+            <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-[0_24px_60px_rgba(59,47,47,0.06)]">
+              <div className="eyebrow">こんなときに</div>
+              <div className="mt-4 grid gap-3">
+                <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                  親の通院や買い物の移動が負担になってきた。
+                </div>
+                <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                  どのモビリティが合うのか、価格だけでは判断しづらい。
+                </div>
+                <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                  地域や施設で小規模に導入検証したいが、進め方が見えにくい。
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-7 shadow-sm">
+              <div className="eyebrow">Yorisouの考え方</div>
+              <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
+                乗り物の比較だけではなく、生活導線、家族負担、説明のしやすさ、導入後の運用まで含めて移動を整えることを重視しています。
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="border-t border-[#D6C3A3]/30 bg-white/50">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+      <section className="border-b border-[#D6C3A3]/30 bg-white/50 px-6 py-14 md:px-10 md:py-16">
+        <div className="mx-auto max-w-7xl">
           <div className="mb-8 max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">課題</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">
-              日常の短距離移動には、まだ実務的な空白が残っています
-            </h2>
+            <div className="eyebrow">What Yorisou Offers</div>
+            <h2 className="mt-3 text-3xl font-light leading-tight">入口は相談から。必要に応じて、地域実装まで支援します。</h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {issues.map((item) => (
-              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm">
-                <h3 className="text-xl font-light">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <section className="border-t border-[#D6C3A3]/30 bg-[#F8F4EC]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-          <div className="mb-8 max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">アプローチ</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">小規模・安全重視・検証可能</h2>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {approaches.map((item) => (
-              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/70 p-6 shadow-sm">
-                <h3 className="text-xl font-light">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
+          <div className="grid gap-6 md:grid-cols-2">
+            {serviceCards.map((item) => (
+              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
+                <h3 className="text-2xl font-light">{item.title}</h3>
+                <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
+                <div className="mt-6">
+                  <Link href={item.href} className="btn btn-secondary">
+                    {item.cta}
+                  </Link>
+                </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-[#D6C3A3]/30 bg-white/50">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-          <div className="mb-8 max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">事業内容</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">導入段階に応じた3つの支援レイヤー</h2>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {serviceLayers.map((item) => (
-              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm">
-                <h3 className="text-xl font-light">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8">
-            <Link
-              href="/services"
-              className="rounded-2xl border border-[#3B2F2F]/20 bg-white/70 px-6 py-3 text-sm transition hover:bg-white"
-            >
-              事業内容を見る
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-[#D6C3A3]/30 bg-[#F8F4EC]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-          <div className="mb-8 max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">実証フロー</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">実証プログラムの基本フロー（5段階）</h2>
-          </div>
-          <div className="grid gap-4 md:grid-cols-5">
-            {flowSteps.map((step, index) => (
-              <div key={step} className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/70 p-5 shadow-sm">
-                <div className="text-xs tracking-[0.18em] text-[#8A7764]">STEP {index + 1}</div>
-                <div className="mt-3 text-xl font-light">{step}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-[#D6C3A3]/30 bg-white/50">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-          <div className="mb-8 max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">連携先</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">地域の関係主体との連携</h2>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {partners.map((item) => (
-              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm">
-                <h3 className="text-xl font-light">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8">
-            <Link
-              href="/partners"
-              className="rounded-2xl border border-[#3B2F2F]/20 bg-white/70 px-6 py-3 text-sm transition hover:bg-white"
-            >
-              連携を見る
-            </Link>
           </div>
         </div>
       </section>
 
       <InsightsPreview locale="ja" />
 
-      <section className="px-6 py-16 md:px-10">
-        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#D6C3A3]/40 bg-white/70 p-8 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur">
+      <section className="border-t border-[#D6C3A3]/30 bg-white/50 px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-8 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl">
-              <h2 className="text-3xl font-light leading-tight">
-                地域の条件や制約に応じた実証のご相談から対応しています。
-              </h2>
+              <div className="eyebrow">For Organizations</div>
+              <h2 className="mt-3 text-3xl font-light leading-tight">地域導入や実証設計については、別途ご相談ください。</h2>
+              <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
+                自治体、施設、医療・福祉関係者向けの実証支援や運用設計は、お問い合わせベースでご案内しています。
+              </p>
             </div>
-            <Link
-              href="/contact"
-              className="rounded-2xl bg-[#3B2F2F] px-6 py-3 text-center text-sm text-white shadow-sm transition hover:opacity-90"
-            >
-              お問い合わせへ
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/contact" className="btn btn-primary">
+                お問い合わせ
+              </Link>
+              <Link href="/pilot" className="btn btn-secondary">
+                実証実験を見る
+              </Link>
+            </div>
           </div>
         </div>
       </section>

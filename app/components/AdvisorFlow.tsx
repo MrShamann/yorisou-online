@@ -54,11 +54,13 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const copy = {
   ja: {
     badge: "Yorisou Mobility Advisor",
-    heroTitle: "やさしく選べる\nモビリティ相談",
+    heroTitle: "まずは一問、\n移動のご様子を教えてください",
     heroText:
       "ご本人やご家族の移動状況を順番にうかがい、今の暮らしに合いやすい候補を落ち着いて整理します。",
     estimate: "所要時間 約2分",
     progressLabel: "進行状況",
+    start: "相談を始める",
+    startSubtext: "選択中心で、2分ほどで整理できます。",
     next: "次へ",
     back: "戻る",
     review: "結果を見る",
@@ -117,11 +119,13 @@ const copy = {
   },
   en: {
     badge: "Yorisou Mobility Advisor",
-    heroTitle: "A calm way to choose\nmobility support",
+    heroTitle: "Start with one question,\nand we will organize the rest calmly",
     heroText:
       "We ask a few structured questions and organize a recommendation that feels suitable for the user and family situation.",
     estimate: "About 2 minutes",
     progressLabel: "Progress",
+    start: "Start consultation",
+    startSubtext: "Mostly tap selections, about 2 minutes.",
     next: "Next",
     back: "Back",
     review: "See recommendation",
@@ -288,6 +292,7 @@ const questionOptions = {
 } as const;
 
 export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
+  const [hasStarted, setHasStarted] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<AdvisorAnswers>(initialAnswers);
   const [recommendation, setRecommendation] = useState<AdvisorRecommendation | null>(null);
@@ -314,7 +319,6 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
 
   const progress = Math.round((stepIndex / steps.length) * 100);
   const answerLabels = useMemo(() => getAnswerLabels(answers, locale), [answers, locale]);
-
   const currentStep = steps[stepIndex];
 
   const handleOptionChange = (key: keyof AdvisorAnswers, value: string) => {
@@ -401,10 +405,12 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
 
   const showResults = Boolean(recommendation);
   const currentRecommendation = recommendation;
+  const phaseLabels = locale === "ja" ? ["開始", "整理", "ご相談"] : ["Start", "Review", "Consult"];
+  const currentPhase = showResults ? 3 : hasStarted ? Math.min(3, Math.floor(stepIndex / 4) + 2) : 1;
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16">
-      <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <section className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
         <div className="rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-6 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur md:p-8">
           <div className="inline-flex items-center rounded-full border border-[#D6C3A3]/50 bg-[#F7F2E9] px-4 py-2 text-xs tracking-[0.18em] text-[#8A7764]">
             {t.badge}
@@ -414,55 +420,110 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
           </h1>
           <p className="mt-5 text-base leading-8 text-[#5A4B3E] md:text-lg">{t.heroText}</p>
 
-          <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.progressLabel}</div>
-                <div className="mt-2 text-lg font-light text-[#3B2F2F]">
-                  {showResults ? "100%" : `${progress}%`}
+          <div className="mt-8 grid gap-4">
+            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-5">
+              <div className="text-xs tracking-[0.18em] text-[#8A7764]">{locale === "ja" ? "ご相談の進め方" : "How it works"}</div>
+              <div className="mt-3 grid gap-3">
+                <div className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
+                  {locale === "ja" ? "1. どなたが使うか、どんな移動かを確認します。" : "1. We begin with the user and the mobility situation."}
+                </div>
+                <div className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
+                  {locale === "ja" ? "2. 使う頻度や環境、ご予算を整理して候補を絞ります。" : "2. We narrow options through usage, environment, and budget."}
+                </div>
+                <div className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
+                  {locale === "ja" ? "3. 試乗や個別相談につながる形でおすすめをまとめます。" : "3. We organize a recommendation that can lead into a consultation or trial."}
                 </div>
               </div>
-              <div className="rounded-full bg-white px-4 py-2 text-sm text-[#6B5A4A] shadow-sm">{t.estimate}</div>
             </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E8DED0]">
-              <div
-                className="h-full rounded-full bg-[#6B5A4A] transition-all"
-                style={{ width: `${showResults ? 100 : progress}%` }}
-              />
-            </div>
-            <div className="mt-5 grid gap-2 text-sm text-[#6B5A4A]">
-              {steps.map((step, index) => (
-                <div key={step.key} className="flex items-center gap-3">
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs ${
-                      showResults || index < stepIndex
-                        ? "border-[#6B5A4A] bg-[#6B5A4A] text-white"
-                        : index === stepIndex
-                          ? "border-[#6B5A4A] bg-white text-[#6B5A4A]"
-                          : "border-[#D6C3A3] bg-transparent text-[#8A7764]"
+
+            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.progressLabel}</div>
+                  <div className="mt-2 text-lg font-light text-[#3B2F2F]">{showResults ? "100%" : `${progress}%`}</div>
+                </div>
+                <div className="rounded-full bg-white px-4 py-2 text-sm text-[#6B5A4A] shadow-sm">{t.estimate}</div>
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E8DED0]">
+                <div className="h-full rounded-full bg-[#6B5A4A] transition-all" style={{ width: `${showResults ? 100 : progress}%` }} />
+              </div>
+              <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
+                {phaseLabels.map((label, index) => (
+                  <div
+                    key={label}
+                    className={`rounded-2xl px-4 py-3 text-center ${
+                      index + 1 <= currentPhase ? "bg-[#6B5A4A] text-white" : "bg-white text-[#8A7764]"
                     }`}
                   >
-                    {index + 1}
-                  </span>
-                  <span>{step.title}</span>
-                </div>
-              ))}
+                    {label}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <p className="mt-6 text-sm leading-7 text-[#6B5A4A]">{t.disclaimer}</p>
-          {process.env.NODE_ENV === "development" && (
-            <p className="mt-3 text-xs leading-6 text-[#8A7764]">{t.devNote}</p>
+          {!hasStarted && !showResults && (
+            <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/85 p-5">
+              <div className="text-sm leading-7 text-[#5A4B3E]">
+                {locale === "ja"
+                  ? "最初の一問から始められます。長い入力は不要です。"
+                  : "You can begin with just one question. No long form first."}
+              </div>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={() => setHasStarted(true)}
+                  className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90"
+                >
+                  {t.start}
+                </button>
+                <div className="text-sm text-[#6B5A4A]">{t.startSubtext}</div>
+              </div>
+            </div>
           )}
+
+          <p className="mt-6 text-sm leading-7 text-[#6B5A4A]">{t.disclaimer}</p>
+          {process.env.NODE_ENV === "development" && <p className="mt-3 text-xs leading-6 text-[#8A7764]">{t.devNote}</p>}
         </div>
 
-        <div className="rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-6 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur md:p-8">
-          {!showResults ? (
-            <>
-              <div className="text-sm tracking-[0.18em] text-[#8A7764]">
-                STEP {stepIndex + 1} / {steps.length}
+        <div className="rounded-[2rem] border border-[#D6C3A3]/40 bg-white/80 p-6 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur md:p-8">
+          {!showResults && !hasStarted ? (
+            <div className="flex h-full min-h-[420px] flex-col justify-between rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6">
+              <div>
+                <div className="text-sm tracking-[0.18em] text-[#8A7764]">
+                  {locale === "ja" ? "MOBILITY ADVISOR" : "MOBILITY ADVISOR"}
+                </div>
+                <h2 className="mt-4 text-3xl font-light leading-tight text-[#3B2F2F]">
+                  {locale === "ja" ? "まずは、どなたが使う予定かを確認します。" : "We begin by confirming who will use the mobility support."}
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
+                  {locale === "ja"
+                    ? "ご本人、ご家族、親御さま、施設利用のいずれかを選ぶところから始まります。"
+                    : "The first step is simply choosing whether the user is the person themself, a parent, a family member, or a facility."}
+                </p>
               </div>
-              <h2 className="mt-3 text-3xl font-light leading-tight text-[#3B2F2F]">{currentStep.title}</h2>
+
+              <div className="grid gap-3">
+                {questionOptions[locale].userType.map((option) => (
+                  <div key={option.value} className="rounded-2xl border border-[#D6C3A3]/35 bg-white px-4 py-4 text-base text-[#3B2F2F]">
+                    {option.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : !showResults ? (
+            <>
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="text-sm tracking-[0.18em] text-[#8A7764]">
+                    STEP {stepIndex + 1} / {steps.length}
+                  </div>
+                  <h2 className="mt-3 text-3xl font-light leading-tight text-[#3B2F2F]">{currentStep.title}</h2>
+                </div>
+                <div className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-4 py-2 text-sm text-[#6B5A4A]">
+                  {locale === "ja" ? "選択中心で進められます" : "Mostly simple tap selections"}
+                </div>
+              </div>
               <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{currentStep.description}</p>
 
               {currentStep.key === "safetyNote" ? (
@@ -479,7 +540,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                   </label>
                 </div>
               ) : (
-                <div className="mt-8 grid gap-4">
+                <div className="mt-8 grid gap-4 md:grid-cols-2">
                   {questionOptions[locale][currentStep.key as Exclude<keyof AdvisorAnswers, "safetyNote">].map((option) => {
                     const selected = answers[currentStep.key] === option.value;
 
@@ -603,6 +664,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                       setRecommendation(null);
                       setLeadSuccess("");
                       setLeadError("");
+                      setHasStarted(false);
                       setStepIndex(0);
                     }}
                     className="rounded-full border border-[#D6C3A3]/60 px-6 py-3 text-sm text-[#5A4B3E] transition hover:bg-[#FCFAF6]"
@@ -613,43 +675,21 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
 
                 <form className="mt-8 grid gap-5 md:grid-cols-2" onSubmit={handleLeadSubmit}>
                   <Field label={t.fields.name}>
-                    <input
-                      value={lead.name}
-                      onChange={(event) => setLead((current) => ({ ...current, name: event.target.value }))}
-                      className={inputClassName}
-                    />
+                    <input value={lead.name} onChange={(event) => setLead((current) => ({ ...current, name: event.target.value }))} className={inputClassName} />
                   </Field>
                   <Field label={t.fields.phone}>
-                    <input
-                      value={lead.phone}
-                      onChange={(event) => setLead((current) => ({ ...current, phone: event.target.value }))}
-                      className={inputClassName}
-                    />
+                    <input value={lead.phone} onChange={(event) => setLead((current) => ({ ...current, phone: event.target.value }))} className={inputClassName} />
                   </Field>
                   <Field label={t.fields.email}>
-                    <input
-                      type="email"
-                      value={lead.email}
-                      onChange={(event) => setLead((current) => ({ ...current, email: event.target.value }))}
-                      className={inputClassName}
-                    />
+                    <input type="email" value={lead.email} onChange={(event) => setLead((current) => ({ ...current, email: event.target.value }))} className={inputClassName} />
                   </Field>
                   <Field label={t.fields.city}>
-                    <input
-                      value={lead.city}
-                      onChange={(event) => setLead((current) => ({ ...current, city: event.target.value }))}
-                      className={inputClassName}
-                    />
+                    <input value={lead.city} onChange={(event) => setLead((current) => ({ ...current, city: event.target.value }))} className={inputClassName} />
                   </Field>
                   <Field label={t.fields.preferredContactMethod}>
                     <select
                       value={lead.preferredContactMethod}
-                      onChange={(event) =>
-                        setLead((current) => ({
-                          ...current,
-                          preferredContactMethod: event.target.value as AdvisorLead["preferredContactMethod"],
-                        }))
-                      }
+                      onChange={(event) => setLead((current) => ({ ...current, preferredContactMethod: event.target.value as AdvisorLead["preferredContactMethod"] }))}
                       className={inputClassName}
                     >
                       <option value="phone">{t.contactMethods.phone}</option>
@@ -660,12 +700,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                   <Field label={t.fields.interestedInTestRide}>
                     <select
                       value={lead.interestedInTestRide}
-                      onChange={(event) =>
-                        setLead((current) => ({
-                          ...current,
-                          interestedInTestRide: event.target.value as AdvisorLead["interestedInTestRide"],
-                        }))
-                      }
+                      onChange={(event) => setLead((current) => ({ ...current, interestedInTestRide: event.target.value as AdvisorLead["interestedInTestRide"] }))}
                       className={inputClassName}
                     >
                       <option value="yes">{t.yesNo.yes}</option>
@@ -684,11 +719,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                   </div>
 
                   <div className="md:col-span-2">
-                    <button
-                      type="submit"
-                      className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90"
-                      disabled={isSubmittingLead}
-                    >
+                    <button type="submit" className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90" disabled={isSubmittingLead}>
                       {isSubmittingLead ? t.leadSubmitting : t.leadSubmit}
                     </button>
                     {leadError && <p className="mt-4 text-sm font-medium text-[#9A3B2F]">{leadError}</p>}
