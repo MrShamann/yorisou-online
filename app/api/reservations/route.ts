@@ -3,11 +3,18 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+type ReservationPayload = Record<string, FormDataEntryValue | string>;
+
+function parseJsonRecord(value: string): ReservationPayload {
+  const parsed = JSON.parse(value) as unknown;
+  return typeof parsed === "object" && parsed !== null ? (parsed as ReservationPayload) : {};
+}
+
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get("content-type") || "";
 
-    let payload: any = {};
+    let payload: ReservationPayload = {};
 
     if (contentType.includes("application/json")) {
       payload = await request.json();
@@ -21,7 +28,7 @@ export async function POST(request: Request) {
     } else {
       const text = await request.text();
       try {
-        payload = JSON.parse(text);
+        payload = parseJsonRecord(text);
       } catch {
         const params = new URLSearchParams(text);
         payload = Object.fromEntries(params.entries());
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
     fs.writeFileSync(filePath, JSON.stringify(existing, null, 2));
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       { success: false, error: "Failed to save reservation" },
       { status: 500 }

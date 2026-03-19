@@ -1,4 +1,5 @@
 import Link from "next/link";
+import InsightsPreview from "../components/InsightsPreview";
 
 const challenges = [
   {
@@ -201,6 +202,8 @@ export default function HomePageEn() {
           </div>
         </div>
       </section>
+
+      <InsightsPreview locale="en" />
 
       <section className="px-6 py-16 md:px-10">
         <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#D6C3A3]/40 bg-white/70 p-8 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur">
