@@ -6,18 +6,21 @@ export default function InsightCard({
   insight,
   locale,
   detailBasePath,
+  variant = "default",
 }: {
   insight: InsightEntry;
   locale: Locale;
   detailBasePath: string;
+  variant?: "default" | "list";
 }) {
   const summary = insight.summary?.trim() || (locale === "ja" ? "詳細を準備中です。" : "Details are being prepared.");
   const yorisouView = insight.yorisouView?.filter(Boolean) || [];
   const primaryView = yorisouView[0] || (locale === "ja" ? "Yorisouの見立てを準備中です。" : "Yorisou's editorial reading is being prepared.");
   const tags = insight.tags?.filter(Boolean) || [];
+  const isList = variant === "list";
 
   return (
-    <article className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
+    <article className={`rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 ${isList ? "p-5" : "p-6"} shadow-sm`}>
       <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
         <span className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-3 py-1">{insight.categoryLabel}</span>
         {insight.featured && (
@@ -28,25 +31,31 @@ export default function InsightCard({
         <span>{formatDate(insight.publishedAt, locale)}</span>
         <span>{insight.regionLabel}</span>
       </div>
-      <h2 className="mt-4 text-2xl font-light leading-tight text-[#3B2F2F]">
+      <h2 className={`mt-4 font-light leading-tight text-[#3B2F2F] ${isList ? "text-[1.65rem]" : "text-2xl"}`}>
         <Link href={`${detailBasePath}/${insight.slug}`} className="transition hover:text-[#6B5A4A]">
           {insight.title}
         </Link>
       </h2>
-      <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{summary}</p>
+      <p className={`mt-4 text-sm text-[#5A4B3E] ${isList ? "leading-8" : "leading-7"}`}>{summary}</p>
 
-      <div className="mt-5 rounded-[1.25rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-4">
-        <div className="text-xs tracking-[0.18em] text-[#8A7764]">YORISOU VIEW</div>
-        <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{primaryView}</p>
-      </div>
+      {!isList && (
+        <div className="mt-5 rounded-[1.25rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-4">
+          <div className="text-xs tracking-[0.18em] text-[#8A7764]">YORISOU VIEW</div>
+          <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{primaryView}</p>
+        </div>
+      )}
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        {tags.map((tag) => (
-          <span key={tag} className="rounded-full bg-[#F7F2E9] px-3 py-1 text-xs text-[#6B5A4A]">
-            #{tag}
-          </span>
-        ))}
-      </div>
+      {isList ? (
+        <p className="mt-4 text-sm leading-7 text-[#6B5A4A]">{insight.whyItMatters || primaryView}</p>
+      ) : (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <span key={tag} className="rounded-full bg-[#F7F2E9] px-3 py-1 text-xs text-[#6B5A4A]">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      )}
     </article>
   );
 }

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import InsightCard from "@/app/components/InsightCard";
 import { fetchNews } from "@/lib/insights/service";
+import type { InsightEntry } from "@/lib/insights/types";
 
 export const metadata: Metadata = {
   title: "Yorisou Insights | 高齢社会と移動を読み解く",
@@ -12,88 +14,130 @@ export const metadata: Metadata = {
 export default async function InsightsPage() {
   const insights = await fetchNews("ja");
   const featured = insights.filter((item) => item.featured);
-  const latest = insights.filter((item) => !item.featured);
+  const hero = featured[0] || insights[0];
+  const topicHighlights = buildTopicHighlights(insights, hero).filter(Boolean) as Array<{
+    label: string;
+    title: string;
+    summary: string;
+    href: string;
+  }>;
 
   return (
     <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
       <section className="relative overflow-hidden border-b border-[#D6C3A3]/35">
         <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-24">
-          <div className="max-w-4xl rounded-[2.5rem] border border-[#D6C3A3]/40 bg-white/70 p-8 shadow-[0_24px_70px_rgba(59,47,47,0.08)] backdrop-blur md:p-12">
-            <div className="eyebrow">Aging &amp; Mobility Intelligence</div>
-            <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
-              高齢社会の移動を、
-              <span className="block text-[#6B5A4A]">次の判断につながる形で読み解く。</span>
+          <div className="max-w-4xl">
+            <h1 className="text-4xl font-light leading-tight md:text-6xl">
+              今、まず読んでおきたいことを
+              <span className="block text-[#6B5A4A]">Yorisouの視点で整理しています。</span>
             </h1>
-            <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisou Insightsは、シニアモビリティ、地域交通、高齢社会の移動課題を、
-              ご本人・ご家族・地域関係者・事業パートナーにとって判断しやすい形に整理するインテリジェンスレイヤーです。
-            </p>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
-              単なるブログやニュース集約ではなく、生活導線、家族負担、地域運用、将来のサービス設計に照らして何が重要かを優先しています。
+            <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
+              ご家族の安心、地域導入の考え方、導入後の支え方。高齢社会と移動の論点を、まず読むべき順に並べています。
             </p>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-[#D6C3A3]/30 bg-[#FCFAF6]">
-        <div className="mx-auto max-w-7xl px-6 py-10 md:px-10">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/80 p-5 shadow-sm">
-              <div className="text-sm tracking-[0.18em] text-[#8A7764]">Editorial Role</div>
-              <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">政策・制度・地域実務を、現場で使える視点に翻訳します。</p>
-            </div>
-            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/80 p-5 shadow-sm">
-              <div className="text-sm tracking-[0.18em] text-[#8A7764]">Product Intelligence</div>
-              <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">相談支援、導入判断、将来のYorisou標準づくりに返すための知見を蓄積します。</p>
-            </div>
-            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/80 p-5 shadow-sm">
-              <div className="text-sm tracking-[0.18em] text-[#8A7764]">Public Reading</div>
-              <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">高齢社会と移動の変化を、公共性と暮らしの両方から落ち着いて読み解きます。</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {featured.length > 0 && (
-        <section className="px-6 py-16 md:px-10">
+      {hero && (
+        <section className="px-6 py-14 md:px-10 md:py-16">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-8 flex items-end justify-between gap-4">
-              <div>
-                <div className="text-sm tracking-[0.18em] text-[#8A7764]">注目インサイト</div>
-                <h2 className="mt-3 text-3xl font-light">今、優先して見ておきたい論点</h2>
-              </div>
-              <div className="text-sm text-[#6B5A4A]">{featured.length}件</div>
-            </div>
+            <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+              <article className="rounded-[2.2rem] border border-[#D6C3A3]/35 bg-white/82 p-7 shadow-[0_20px_56px_rgba(59,47,47,0.06)] md:p-9">
+                <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
+                  <span className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-3 py-1">{hero.categoryLabel}</span>
+                  <span>{formatDate(hero.publishedAt)}</span>
+                  <span>{hero.regionLabel}</span>
+                </div>
+                <h2 className="mt-5 text-3xl font-light leading-tight text-[#3B2F2F] md:text-[2.5rem]">
+                  <Link href={`/insights/${hero.slug}`} className="transition hover:text-[#6B5A4A]">
+                    {hero.title}
+                  </Link>
+                </h2>
+                <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E]">{hero.summary}</p>
+                <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-5 py-4">
+                  <div className="text-xs tracking-[0.18em] text-[#8A7764]">いま読む理由</div>
+                  <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{hero.whyItMatters}</p>
+                </div>
+                <div className="mt-7">
+                  <Link href={`/insights/${hero.slug}`} className="btn btn-primary">
+                    この記事を読む
+                  </Link>
+                </div>
+              </article>
 
-            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-              <InsightCard insight={featured[0]} locale="ja" detailBasePath="/insights" />
-              <div className="grid gap-6">
-                {featured.slice(1, 3).map((insight) => (
-                  <InsightCard key={insight.slug} insight={insight} locale="ja" detailBasePath="/insights" />
-                ))}
+              <div>
+                <div className="text-sm tracking-[0.18em] text-[#8A7764]">気になるテーマから読む</div>
+                <div className="mt-4 grid gap-4">
+                  {topicHighlights.slice(0, 3).map((topic) => (
+                    <Link
+                      key={topic.label}
+                      href={topic.href}
+                      className="rounded-[1.6rem] border border-[#D6C3A3]/32 bg-white/78 px-5 py-5 shadow-sm transition hover:bg-white"
+                    >
+                      <div className="text-sm text-[#8A7764]">{topic.label}</div>
+                      <h3 className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{topic.title}</h3>
+                      <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{topic.summary}</p>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </section>
       )}
 
-      <section className="px-6 py-16 md:px-10">
+      <section className="px-6 py-14 md:px-10 md:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 flex items-center justify-between gap-4">
             <div>
-              <div className="text-sm tracking-[0.18em] text-[#8A7764]">記事一覧</div>
-              <h2 className="mt-3 text-3xl font-light">{featured.length > 0 ? "最新インサイト" : "Yorisou Insights"}</h2>
+              <h2 className="text-3xl font-light">{hero ? "そのほかの読みもの" : "Yorisouの読みもの"}</h2>
+              <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">続けて読みやすい順に、関連する論点を並べています。</p>
             </div>
             <div className="hidden text-sm text-[#6B5A4A] md:block">{insights.length}件</div>
           </div>
 
           <div className="grid gap-6">
-            {(featured.length > 0 ? latest : insights).map((insight) => (
-              <InsightCard key={insight.slug} insight={insight} locale="ja" detailBasePath="/insights" />
+            {(hero ? insights.filter((insight) => insight.slug !== hero.slug) : insights).map((insight) => (
+              <InsightCard key={insight.slug} insight={insight} locale="ja" detailBasePath="/insights" variant="list" />
             ))}
           </div>
         </div>
       </section>
     </main>
   );
+}
+
+function buildTopicHighlights(insights: InsightEntry[], fallback?: InsightEntry) {
+  const family = insights.find((item) => item.tags.includes("家族安心") || item.category === "senior-mobility") || fallback;
+  const regional = insights.find((item) => item.tags.includes("実証") || item.category === "community-transport") || fallback;
+  const support = insights.find((item) => item.tags.includes("ラストマイル") || item.category === "welfare-mobility") || fallback;
+
+  return [
+    family && {
+      label: "ご家族の安心",
+      title: family.title,
+      summary: family.whyItMatters,
+      href: `/insights/${family.slug}`,
+    },
+    regional && {
+      label: "地域導入の考え方",
+      title: regional.title,
+      summary: regional.whyItMatters,
+      href: `/insights/${regional.slug}`,
+    },
+    support && {
+      label: "導入後の支え方",
+      title: support.title,
+      summary: support.whyItMatters,
+      href: `/insights/${support.slug}`,
+    },
+  ];
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
 }

@@ -19,7 +19,7 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {locale === "ja"
-                ? "高齢社会、地域交通、家族の不安、導入後の支え方。Yorisouが日々向き合っていることを、静かに整理してお届けします。"
+                ? "今、まず読んでおきたいことを、Yorisouの視点で選んでいます。"
                 : "A calm editorial selection around aging, mobility, and care, shaped by the questions Yorisou sees on the ground."}
             </p>
           </div>
@@ -29,11 +29,12 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
         </div>
 
         {heroItem && (
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-6 lg:grid-cols-[1.06fr_0.94fr]">
             <article className="rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-sm md:p-8">
+              <div className="text-xs tracking-[0.18em] text-[#8A7764]">{locale === "ja" ? "今、まず読んでおきたいこと" : "Read first"}</div>
               <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
-                <span>{formatDate(heroItem.publishedAt, locale)}</span>
-                <span>{heroItem.categoryLabel}</span>
+                <span className="mt-4">{formatDate(heroItem.publishedAt, locale)}</span>
+                <span className="mt-4">{heroItem.categoryLabel}</span>
               </div>
               <h3 className="mt-4 text-3xl font-light leading-tight text-[#3B2F2F]">
                 <Link href={`${href}/${heroItem.slug}`} className="transition hover:text-[#6B5A4A]">
@@ -41,22 +42,31 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
                 </Link>
               </h3>
               <p className="mt-4 text-sm leading-8 text-[#5A4B3E] md:text-base">{heroItem.summary}</p>
-              <p className="mt-5 text-sm leading-7 text-[#6B5A4A]">{heroItem.yorisouView[0]}</p>
+              <p className="mt-5 text-sm leading-7 text-[#6B5A4A]">{heroItem.whyItMatters}</p>
+              <div className="mt-6">
+                <Link href={`${href}/${heroItem.slug}`} className="btn btn-secondary">
+                  {locale === "ja" ? "この記事を読む" : "Read this"}
+                </Link>
+              </div>
             </article>
 
-            <div className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/78 p-6 shadow-sm">
-              {secondaryItems.map((item) => (
-                <article key={item.slug} className="border-t border-[#D6C3A3]/28 py-5 first:border-t-0 first:pt-0 last:pb-0">
-                  <div className="text-xs tracking-[0.12em] text-[#8A7764]">
-                    {formatDate(item.publishedAt, locale)} ・ {item.categoryLabel}
+            <div className="grid gap-4">
+              {secondaryItems.map((item, index) => (
+                <Link
+                  key={item.slug}
+                  href={`${href}/${item.slug}`}
+                  className="rounded-[1.6rem] border border-[#D6C3A3]/32 bg-white/78 px-5 py-5 shadow-sm transition hover:bg-white"
+                >
+                  <div className="text-sm text-[#8A7764]">
+                    {locale === "ja"
+                      ? index === 0
+                        ? "地域導入の考え方"
+                        : "ご家族の安心"
+                      : "Topic"}
                   </div>
-                  <h3 className="mt-3 text-2xl font-light leading-tight text-[#3B2F2F]">
-                    <Link href={`${href}/${item.slug}`} className="transition hover:text-[#6B5A4A]">
-                      {item.title}
-                    </Link>
-                  </h3>
-                  <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.summary}</p>
-                </article>
+                  <h3 className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.whyItMatters}</p>
+                </Link>
               ))}
             </div>
           </div>
