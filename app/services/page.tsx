@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import Hero from "../components/Hero";
@@ -32,8 +31,8 @@ export default function ServicesPage() {
   return (
     <main className="bg-[#F5F1E8] text-[#3B2F2F]">
       <Hero
-        title="サービスの流れ"
-        subtitle="Yorisouは、相談で終わる窓口ではなく、移動手段の整理からご家族との共有、導入後の見直しまでを静かにつなぐ高齢者モビリティ支援サービスです。"
+        title="サービスについて"
+        subtitle="Yorisouは、相談から始まり、ご家族との共有や導入後の見直しまで静かにつなぐ高齢者モビリティ支援サービスです。"
         primaryHref="/ai-advisor"
         primaryLabel="AI相談を始める"
       />
@@ -43,49 +42,28 @@ export default function ServicesPage() {
           <div
             className="card"
             style={{
-              display: "grid",
-              gap: 28,
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
               background: "rgba(255,255,255,0.82)",
             }}
           >
-            <div>
-              <h2 className="section-title" style={{ marginTop: 0 }}>
-                相談から導入後まで、ひと続きで考えます。
-              </h2>
-              <p className="muted" style={{ marginTop: 12, maxWidth: 700 }}>
-                候補を紹介して終わるのではなく、何に困っているのかを整え、比べ、ご家族とも共有し、その後も見直しやすい流れをつくります。
-              </p>
-              <div className="grid" style={{ marginTop: 22, gap: 18 }}>
-                {pathItems.map((item, index) => (
-                  <article key={item.title} style={{ borderTop: "1px solid rgba(217, 204, 184, 0.35)", paddingTop: index === 0 ? 0 : 18 }}>
-                    <div style={{ fontSize: 11, letterSpacing: "0.18em", color: "var(--muted)" }}>0{index + 1}</div>
-                    <h3 style={{ margin: "8px 0 0", fontSize: 28, fontWeight: 300 }}>{item.title}</h3>
-                    <p className="muted" style={{ marginBottom: 0, marginTop: 10 }}>
-                      {item.text}
-                    </p>
-                  </article>
-                ))}
-              </div>
+            <h2 className="section-title" style={{ marginTop: 0 }}>
+              相談から導入後まで、ひと続きで考えます。
+            </h2>
+            <p className="muted" style={{ marginTop: 12, maxWidth: 760 }}>
+              候補を紹介して終わるのではなく、何に困っているのかを整え、比べ、ご家族とも共有し、その後も見直しやすい流れをつくります。
+            </p>
+            <div className="grid" style={{ marginTop: 28, gap: 18 }}>
+              {pathItems.map((item) => (
+                <article key={item.title} style={{ borderTop: "1px solid rgba(217, 204, 184, 0.35)", paddingTop: 18 }}>
+                  <h3 style={{ margin: 0, fontSize: 28, fontWeight: 300 }}>{item.title}</h3>
+                  <p className="muted" style={{ marginBottom: 0, marginTop: 10, maxWidth: 760 }}>
+                    {item.text}
+                  </p>
+                </article>
+              ))}
             </div>
-
-            <div>
-              <div className="card" style={{ padding: 10, boxShadow: "none", background: "rgba(252,250,246,0.84)" }}>
-                <Image
-                  src="/images/illustrations/services-scene.svg"
-                  alt="Yorisouのサービスの流れ"
-                  width={1000}
-                  height={620}
-                  style={{ width: "100%", height: "auto", borderRadius: 14 }}
-                />
-              </div>
-              <div className="card" style={{ marginTop: 18, background: "var(--surface-soft)", boxShadow: "none" }}>
-                <h3 style={{ margin: 0, fontSize: 26, fontWeight: 300 }}>相談のあとに続く支え方</h3>
-                <p className="muted" style={{ marginTop: 12, marginBottom: 0 }}>
-                  いまは個別フォローが中心ですが、相談履歴やご家族共有も含めた継続支援サービスへ広げていく前提で設計しています。
-                </p>
-              </div>
-            </div>
+            <p className="muted" style={{ marginTop: 22, marginBottom: 0, maxWidth: 760 }}>
+              いまは個別フォローが中心ですが、相談履歴やご家族共有も含めた継続支援サービスへ広げていく前提で設計しています。
+            </p>
           </div>
         </div>
       </section>
@@ -94,7 +72,7 @@ export default function ServicesPage() {
         <div className="container">
           <div className="card" style={{ background: "rgba(255,255,255,0.78)" }}>
             <h2 className="section-title" style={{ marginTop: 0 }}>
-              地域導入や実証支援について
+              必要に応じて、地域導入や実証支援にもつなぎます
             </h2>
             <p className="muted" style={{ marginTop: 12, maxWidth: 760 }}>
               自治体、施設、地域事業者向けの支援も、単発イベントではなく、現場で続くかどうかを見極めるための実務支援として行っています。

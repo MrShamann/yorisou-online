@@ -76,13 +76,13 @@ export default function SiteHeader() {
       <div className="container py-4">
         <div className="flex items-center justify-between gap-6">
           <Link href={homeHref} className="flex min-w-0 items-center gap-4 no-underline">
-            <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[1.2rem] border border-[#D9CCB8]/70 bg-white/92 shadow-[0_12px_30px_rgba(59,47,47,0.08)] md:h-[72px] md:w-[72px]">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={54} height={54} className="h-auto w-[46px] object-contain md:w-[52px]" />
+            <div className="flex h-[72px] w-[72px] items-center justify-center rounded-[1.35rem] border border-[#D9CCB8]/72 bg-white/94 shadow-[0_14px_34px_rgba(59,47,47,0.08)] md:h-[84px] md:w-[84px]">
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={62} height={62} className="h-auto w-[54px] object-contain md:w-[60px]" />
             </div>
             <div className="min-w-0">
-              <div className="mt-1 text-[1.18rem] font-semibold tracking-[0.18em] text-[var(--text)] md:text-[1.36rem]">YORISOU</div>
-              <div className="hidden text-sm leading-6 text-[#6E5D4D] md:block">
-                {isEn ? "Senior mobility service for families, communities, and care networks" : "高齢者とご家族の移動を、相談から静かに支えるサービス"}
+              <div className="text-[1.32rem] font-semibold tracking-[0.2em] text-[var(--text)] md:text-[1.62rem]">YORISOU</div>
+              <div className="mt-1 hidden text-sm leading-6 text-[#6E5D4D] md:block">
+                {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動相談に、静かに寄り添うサービス"}
               </div>
             </div>
           </Link>
@@ -90,9 +90,13 @@ export default function SiteHeader() {
           <button
             onClick={() => setOpen((value) => !value)}
             aria-label={isEn ? "Menu" : "メニュー"}
-            className="mobile-toggle hidden rounded-full border border-[rgba(217,204,184,0.6)] bg-white/84 px-4 py-2 text-sm font-medium text-[var(--text)]"
+            className="mobile-toggle hidden items-center justify-center rounded-full border border-[rgba(217,204,184,0.6)] bg-white/84 text-[var(--text)]"
           >
-            {isEn ? "Menu" : "案内"}
+            <span className="menu-icon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
           </button>
 
           <div className={`site-nav ${open ? "open" : ""}`}>
@@ -113,8 +117,13 @@ export default function SiteHeader() {
                   type="button"
                   className={`more-button ${secondaryNav.some((item) => isActive(item.href)) ? "active" : ""}`}
                   onClick={() => setMoreOpen((value) => !value)}
+                  aria-label={isEn ? "More" : "その他の案内"}
                 >
-                  {isEn ? "More" : "案内"}
+                  <span className="menu-icon" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
                 </button>
                 <div className={`more-menu ${moreOpen ? "open" : ""}`}>
                   {secondaryNav.map((item) => (
@@ -152,11 +161,11 @@ export default function SiteHeader() {
         .primary-nav {
           display: flex;
           align-items: center;
-          gap: 1px;
-          padding: 3px;
+          gap: 2px;
+          padding: 4px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.44);
-          border: 1px solid rgba(217, 204, 184, 0.22);
+          background: rgba(255, 255, 255, 0.5);
+          border: 1px solid rgba(217, 204, 184, 0.24);
         }
         .nav-link,
         .more-button {
@@ -164,17 +173,39 @@ export default function SiteHeader() {
           background: transparent;
           text-decoration: none;
           color: var(--text);
-          padding: 9px 12px;
+          padding: 10px 13px;
           border-radius: 999px;
           font-size: 12px;
           white-space: nowrap;
           cursor: pointer;
+        }
+        .more-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 38px;
         }
         .nav-link:hover,
         .nav-link.active,
         .more-button:hover,
         .more-button.active {
           background: rgba(243, 235, 224, 0.8);
+        }
+        .menu-icon {
+          display: inline-flex;
+          flex-direction: column;
+          gap: 3px;
+          justify-content: center;
+          align-items: center;
+          width: 18px;
+          height: 18px;
+        }
+        .menu-icon span {
+          display: block;
+          width: 14px;
+          height: 1.5px;
+          border-radius: 999px;
+          background: currentColor;
         }
         .more-wrap {
           position: relative;
@@ -222,12 +253,14 @@ export default function SiteHeader() {
         }
         @media (max-width: 1024px) {
           .mobile-toggle {
-            display: block !important;
+            display: inline-flex !important;
+            width: 40px;
+            height: 40px;
           }
           .site-nav {
             position: absolute;
             right: 4vw;
-            top: 90px;
+            top: 96px;
             width: min(360px, 92vw);
             display: none;
             flex-direction: column;
@@ -252,6 +285,10 @@ export default function SiteHeader() {
           .more-link {
             border-radius: 12px;
             padding: 11px 12px;
+          }
+          .more-button {
+            justify-content: space-between;
+            min-width: 0;
           }
           .more-menu {
             position: static;

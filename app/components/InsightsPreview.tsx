@@ -16,11 +16,11 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
         <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
             <h2 className="text-3xl font-light leading-tight text-[#3B2F2F]">
-              {locale === "ja" ? "Yorisouが日々考えていること" : "Selected thinking from Yorisou"}
+              {locale === "ja" ? "Yorisouの読みもの" : "Selected thinking from Yorisou"}
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {locale === "ja"
-                ? "高齢社会、地域交通、福祉移動の話題を、現場で感じる問いとあわせて静かに整理しています。"
+                ? "高齢社会や地域交通、福祉移動の話題を、現場で感じることとあわせて静かに綴っています。"
                 : "A calm editorial selection around aging, mobility, and care, shaped by the questions Yorisou sees on the ground."}
             </p>
           </div>

@@ -59,7 +59,7 @@ const copy = {
     estimate: "所要時間 約2分",
     progressLabel: "進行状況",
     start: "相談を始める",
-    startSubtext: "選択中心で、短く整理できます。",
+    startSubtext: "選択中心で進められます。",
     next: "次へ",
     back: "戻る",
     review: "結果を見る",
@@ -81,7 +81,7 @@ const copy = {
     disclaimer:
       "本結果は一般的なご案内です。実際の適合性・安全性は、個別相談や試乗での確認をおすすめします。",
     devNote: "開発中は /dev/ai-advisor で保存内容を確認できます。",
-    supportTitle: "相談のあとに続く支援",
+    supportTitle: "このあとのご相談",
     supportCards: [
       "おすすめ内容を見返しながら、試乗や個別相談に進めます。",
       "ご家族にも共有しやすい形で、確認事項を整理していきます。",
@@ -135,7 +135,7 @@ const copy = {
     estimate: "About 2 minutes",
     progressLabel: "Progress",
     start: "Start consultation",
-    startSubtext: "Mostly tap selections, about 2 minutes.",
+    startSubtext: "Mostly tap selections.",
     next: "Next",
     back: "Back",
     review: "See recommendation",
@@ -157,7 +157,7 @@ const copy = {
     disclaimer:
       "This result is general guidance only. Real suitability and safety should be confirmed during consultation or a test ride.",
     devNote: "During local development, saved entries can be reviewed at /dev/ai-advisor.",
-    supportTitle: "What happens after this",
+    supportTitle: "What comes next",
     supportCards: [
       "Use the recommendation as a starting point for a test ride or a direct consultation.",
       "Make it easier to share key points with family members before a decision.",
@@ -433,7 +433,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16">
       {!hasStarted && !showResults ? (
         <section className="mx-auto max-w-3xl">
-          <div className="shell-card p-8 text-center md:p-12">
+          <div className="shell-card p-9 text-center md:p-14">
             <h1 className="text-4xl font-light leading-tight text-[#3B2F2F] md:text-5xl">
               {locale === "ja" ? "まずは話してみましょう" : "Start with a calm first conversation"}
             </h1>
@@ -451,13 +451,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                 {t.start}
               </button>
             </div>
-            <p className="mt-4 text-sm text-[#6B5A4A]">{t.startSubtext}</p>
           </div>
-          <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
-            {locale === "ja"
-              ? "必要に応じて、結果をもとに個別相談やご家族との共有へつなげられます。"
-              : "If needed, the result can lead into direct consultation and family discussion."}
-          </p>
         </section>
       ) : (
       <section className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
