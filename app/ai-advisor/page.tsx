@@ -5,7 +5,7 @@ import AdvisorFlow from "@/app/components/AdvisorFlow";
 export const metadata: Metadata = {
   title: "Yorisou AI Mobility Advisor | 移動相談ガイド",
   description:
-    "Yorisouのモビリティ相談ガイドです。ご本人やご家族の状況に合わせて、やさしく移動手段の候補を整理し、試乗や相談につなげます。",
+    "Yorisouのモビリティ相談ガイドです。ご本人やご家族の状況に合わせて候補を整理し、試乗や個別相談、その後の継続支援につながる入口を整えます。",
 };
 
 export default function AiAdvisorPage() {

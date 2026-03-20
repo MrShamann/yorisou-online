@@ -54,9 +54,9 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const copy = {
   ja: {
     badge: "Yorisou Mobility Advisor",
-    heroTitle: "まずは一問、\n移動のご様子を教えてください",
+    heroTitle: "まずは一問、\nこれからの移動を一緒に整理しましょう",
     heroText:
-      "ご本人やご家族の移動状況を順番にうかがい、今の暮らしに合いやすい候補を落ち着いて整理します。",
+      "ご本人やご家族の移動状況を順番にうかがい、いま合いやすい候補と、その後の相談・導入の進め方を落ち着いて整理します。",
     estimate: "所要時間 約2分",
     progressLabel: "進行状況",
     start: "相談を始める",
@@ -74,14 +74,25 @@ const copy = {
     answersTitle: "ご入力内容",
     leadTitle: "ご相談内容を送る",
     leadText:
-      "試乗や個別相談をご希望の場合は、連絡先をご入力ください。回答内容とあわせて社内確認用に保存されます。",
+      "試乗や個別相談をご希望の場合は、連絡先をご入力ください。回答内容とあわせて保存し、今後のフォローにつながる相談記録として扱います。",
     leadSubmit: "相談内容を送信する",
     leadSubmitting: "送信中...",
-    leadSuccess: "送信を受け付けました。内容を確認のうえ、順次ご連絡いたします。",
+    leadSuccess: "送信を受け付けました。内容を確認のうえ、順次ご連絡いたします。継続相談の入口としても活用していきます。",
     leadError: "送信に失敗しました。時間をおいて再度お試しください。",
     disclaimer:
       "本結果は一般的なご案内です。実際の適合性・安全性は、個別相談や試乗での確認をおすすめします。",
     devNote: "開発中は /dev/ai-advisor で保存内容を確認できます。",
+    supportTitle: "相談のあとに続くこと",
+    supportCards: [
+      "おすすめ内容を見返しながら、試乗や個別相談に進めます。",
+      "ご家族にも共有しやすい形で、確認事項を整理していきます。",
+      "導入後の使い方や不安にもつながる継続支援の土台を整えます。",
+    ],
+    doorwayTitle: "AI相談は、継続支援の入口として設計しています。",
+    doorwayText:
+      "いまはログイン機能や家族連携機能はありませんが、将来的には相談履歴やご家族共有、フォローアップが続く支援基盤へ広げていく予定です。",
+    doorwayItems: ["相談履歴の確認", "ご家族との共有準備", "継続支援エリア（準備中）"],
+    nextStepTitle: "このあとの進め方",
     fields: {
       name: "お名前",
       phone: "電話番号",
@@ -119,9 +130,9 @@ const copy = {
   },
   en: {
     badge: "Yorisou Mobility Advisor",
-    heroTitle: "Start with one question,\nand we will organize the rest calmly",
+    heroTitle: "Start with one question,\nand we will calmly map the next steps",
     heroText:
-      "We ask a few structured questions and organize a recommendation that feels suitable for the user and family situation.",
+      "We ask a few structured questions and organize a recommendation that fits the user and family situation, while preparing for consultation and follow-up.",
     estimate: "About 2 minutes",
     progressLabel: "Progress",
     start: "Start consultation",
@@ -139,14 +150,25 @@ const copy = {
     answersTitle: "Your answers",
     leadTitle: "Send this consultation",
     leadText:
-      "If you would like a test ride or consultation, please leave your contact details. The advisor answers will be saved together with your lead.",
+      "If you would like a test ride or consultation, please leave your contact details. The advisor answers will be saved together with your lead as the start of an ongoing support record.",
     leadSubmit: "Submit consultation",
     leadSubmitting: "Submitting...",
-    leadSuccess: "Your consultation has been received. We will review it and contact you.",
+    leadSuccess: "Your consultation has been received. We will review it and contact you as the next step in support.",
     leadError: "Submission failed. Please try again shortly.",
     disclaimer:
       "This result is general guidance only. Real suitability and safety should be confirmed during consultation or a test ride.",
     devNote: "During local development, saved entries can be reviewed at /dev/ai-advisor.",
+    supportTitle: "What happens after this",
+    supportCards: [
+      "Use the recommendation as a starting point for a test ride or a direct consultation.",
+      "Make it easier to share key points with family members before a decision.",
+      "Prepare for follow-up support after introduction, not only the first recommendation.",
+    ],
+    doorwayTitle: "The advisor is designed as the entry to ongoing support.",
+    doorwayText:
+      "There is no real member area or LINE-linked continuity yet, but Yorisou is intentionally preparing for recommendation history, family sharing, and follow-up support.",
+    doorwayItems: ["Consultation history", "Family sharing prep", "Support area (coming soon)"],
+    nextStepTitle: "Next steps from here",
     fields: {
       name: "Name",
       phone: "Phone",
@@ -431,7 +453,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                   {locale === "ja" ? "2. 使う頻度や環境、ご予算を整理して候補を絞ります。" : "2. We narrow options through usage, environment, and budget."}
                 </div>
                 <div className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
-                  {locale === "ja" ? "3. 試乗や個別相談につながる形でおすすめをまとめます。" : "3. We organize a recommendation that can lead into a consultation or trial."}
+                  {locale === "ja" ? "3. 試乗や個別相談、その後のフォローにつながる形でおすすめをまとめます。" : "3. We organize a recommendation that can lead into consultation, trial, and follow-up."}
                 </div>
               </div>
             </div>
@@ -460,13 +482,24 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                 ))}
               </div>
             </div>
+
+            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-5">
+              <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.supportTitle}</div>
+              <div className="mt-3 grid gap-3">
+                {t.supportCards.map((item) => (
+                  <div key={item} className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {!hasStarted && !showResults && (
             <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/85 p-5">
               <div className="text-sm leading-7 text-[#5A4B3E]">
                 {locale === "ja"
-                  ? "最初の一問から始められます。長い入力は不要です。"
+                  ? "最初の一問から始められます。長い入力は不要で、相談の入口として気軽に使えます。"
                   : "You can begin with just one question. No long form first."}
               </div>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -509,6 +542,18 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                     {option.label}
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-white/90 p-5">
+                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.doorwayTitle}</div>
+                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{t.doorwayText}</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  {t.doorwayItems.map((item) => (
+                    <div key={item} className="rounded-2xl bg-[#FCFAF6] px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
+                      {item}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ) : !showResults ? (
@@ -649,6 +694,17 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                       </div>
                     ))}
                   </dl>
+                </div>
+              </div>
+
+              <div className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6">
+                <div className="text-sm tracking-[0.18em] text-[#8A7764]">{t.nextStepTitle}</div>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  {t.supportCards.map((item) => (
+                    <div key={item} className="rounded-2xl border border-[#D6C3A3]/30 bg-white/85 px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                      {item}
+                    </div>
+                  ))}
                 </div>
               </div>
 

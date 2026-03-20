@@ -5,7 +5,7 @@ import AdvisorFlow from "@/app/components/AdvisorFlow";
 export const metadata: Metadata = {
   title: "Yorisou AI Mobility Advisor",
   description:
-    "A calm mobility advisor from Yorisou that helps users and families organize mobility needs, receive a recommendation, and request a consultation or test ride.",
+    "A calm mobility advisor from Yorisou that helps users and families organize mobility needs, receive a recommendation, and move into consultation, trial, and future follow-up support.",
 };
 
 export default function AiAdvisorPageEn() {
