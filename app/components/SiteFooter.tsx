@@ -43,20 +43,17 @@ export default function SiteFooter() {
               <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={34} height={34} />
             </div>
             <div>
-              <div style={{ fontSize: 11, letterSpacing: "0.18em", color: "var(--muted)" }}>
-                {isEn ? "SENIOR MOBILITY PLATFORM" : "シニアモビリティプラットフォーム"}
-              </div>
               <div style={{ marginTop: 4, fontWeight: 800, letterSpacing: "0.12em" }}>YORISOU</div>
               <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-              {isEn
-                ? "Built from Fukuoka validation with mobility support and insights"
-                : "福岡での検証とインサイトを起点に育てる高齢者移動支援"}
+                {isEn
+                  ? "A calm mobility support service for seniors, families, and communities in Japan"
+                  : "高齢者とご家族の移動に静かに寄り添う、Yorisouの支援サービス"}
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 13, paddingTop: 8 }}>
+          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 13, paddingTop: 8, color: "var(--muted)" }}>
             <Link href={aboutHref}>{isEn ? "About" : "Yorisouについて"}</Link>
-            <Link href={servicesHref}>{isEn ? "Solutions" : "導入・実証"}</Link>
+            <Link href={servicesHref}>{isEn ? "Service" : "サービス"}</Link>
             <Link href={insightsHref}>{isEn ? "Insights" : "インサイト"}</Link>
             <Link href={legalHref}>{isEn ? "Terms & Privacy" : "利用規約・プライバシーポリシー"}</Link>
             <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>

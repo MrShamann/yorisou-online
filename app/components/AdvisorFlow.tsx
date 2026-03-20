@@ -431,6 +431,35 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16">
+      {!hasStarted && !showResults ? (
+        <section className="mx-auto max-w-3xl">
+          <div className="shell-card p-8 text-center md:p-12">
+            <h1 className="text-4xl font-light leading-tight text-[#3B2F2F] md:text-5xl">
+              {locale === "ja" ? "まずは話してみましょう" : "Start with a calm first conversation"}
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
+              {locale === "ja"
+                ? "ご本人やご家族の状況を短くうかがい、いま考えやすい移動の選び方を静かに整理します。"
+                : "We ask a few simple questions and calmly organize the next mobility options for the user and family."}
+            </p>
+            <div className="mt-8">
+              <button
+                type="button"
+                onClick={() => setHasStarted(true)}
+                className="rounded-full bg-[#3B2F2F] px-7 py-3 text-sm text-white shadow-sm transition hover:opacity-90"
+              >
+                {t.start}
+              </button>
+            </div>
+            <p className="mt-4 text-sm text-[#6B5A4A]">{t.startSubtext}</p>
+          </div>
+          <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
+            {locale === "ja"
+              ? "必要に応じて、結果をもとに個別相談やご家族との共有へつなげられます。"
+              : "If needed, the result can lead into direct consultation and family discussion."}
+          </p>
+        </section>
+      ) : (
       <section className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
         <div className="rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-6 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur md:p-8">
           <div className="inline-flex items-center rounded-full border border-[#D6C3A3]/50 bg-[#F7F2E9] px-4 py-2 text-xs tracking-[0.18em] text-[#8A7764]">
@@ -440,32 +469,6 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
             {t.heroTitle}
           </h1>
           <p className="mt-5 text-base leading-8 text-[#5A4B3E] md:text-lg">{t.heroText}</p>
-
-          {!hasStarted && !showResults && (
-            <div className="mt-8 rounded-[1.6rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6">
-              <div className="grid gap-3 text-sm leading-7 text-[#5A4B3E]">
-                <div className="rounded-2xl bg-white/88 px-4 py-3">
-                  {locale === "ja" ? "ご本人・ご家族・親御さま・施設利用のいずれかを選ぶところから始まります。" : "We begin by selecting who will use the mobility support."}
-                </div>
-                <div className="rounded-2xl bg-white/88 px-4 py-3">
-                  {locale === "ja" ? "長い入力は不要です。まずは状況を短く整理し、次の相談先を見つけます。" : "No long form first. We keep the start light and practical."}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!hasStarted && !showResults && (
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => setHasStarted(true)}
-                className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90"
-              >
-                {t.start}
-              </button>
-              <div className="text-sm text-[#6B5A4A]">{t.startSubtext}</div>
-            </div>
-          )}
 
           {(hasStarted || showResults) && (
             <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-5">
@@ -498,41 +501,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
         </div>
 
         <div className="rounded-[2rem] border border-[#D6C3A3]/40 bg-white/80 p-6 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur md:p-8">
-          {!showResults && !hasStarted ? (
-            <div className="flex h-full min-h-[420px] flex-col justify-between rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6">
-              <div>
-                <div className="text-sm tracking-[0.18em] text-[#8A7764]">{locale === "ja" ? "ご相談の入口" : "Consultation entry"}</div>
-                <h2 className="mt-4 text-3xl font-light leading-tight text-[#3B2F2F]">
-                  {locale === "ja" ? "まずは、どなたの移動について考えるかを教えてください。" : "We begin by confirming whose mobility we are organizing."}
-                </h2>
-                <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
-                  {locale === "ja"
-                    ? "最初の選択だけで始められます。細かな比較や導入後の相談は、結果を見ながら落ち着いて進められます。"
-                    : "The first step is just a simple choice. Details can be organized after the first recommendation."}
-                </p>
-              </div>
-
-              <div className="grid gap-3">
-                {questionOptions[locale].userType.map((option) => (
-                  <div key={option.value} className="rounded-2xl border border-[#D6C3A3]/35 bg-white px-4 py-4 text-base text-[#3B2F2F]">
-                    {option.label}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-white/90 p-5">
-                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.supportTitle}</div>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{t.doorwayText}</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  {t.doorwayItems.map((item) => (
-                    <div key={item} className="rounded-2xl bg-[#FCFAF6] px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : !showResults ? (
+          {!showResults ? (
             <>
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
@@ -774,6 +743,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
           ) : null}
         </div>
       </section>
+      )}
     </div>
   );
 }

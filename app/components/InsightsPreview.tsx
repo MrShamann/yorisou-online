@@ -20,7 +20,7 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {locale === "ja"
-                ? "高齢社会、地域交通、福祉移動の話題を、現場の支援設計にもつながる視点として静かに整理しています。"
+                ? "高齢社会、地域交通、福祉移動の話題を、現場で感じる問いとあわせて静かに整理しています。"
                 : "A calm editorial selection around aging, mobility, and care, shaped by the questions Yorisou sees on the ground."}
             </p>
           </div>
@@ -33,9 +33,6 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <article className="rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-sm md:p-8">
               <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
-                <span className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-3 py-1 text-[#6B5A4A]">
-                  {locale === "ja" ? "注目の記事" : "Featured"}
-                </span>
                 <span>{heroItem.categoryLabel}</span>
                 <span>{formatDate(heroItem.publishedAt, locale)}</span>
               </div>
@@ -45,10 +42,7 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
                 </Link>
               </h3>
               <p className="mt-4 text-sm leading-8 text-[#5A4B3E] md:text-base">{heroItem.summary}</p>
-              <div className="mt-5 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-5">
-                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{locale === "ja" ? "Yorisouの視点" : "Yorisou view"}</div>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{heroItem.yorisouView[0]}</p>
-              </div>
+              <p className="mt-5 text-sm leading-7 text-[#6B5A4A]">{heroItem.yorisouView[0]}</p>
             </article>
 
             <div className="grid gap-6">
