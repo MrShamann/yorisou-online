@@ -11,6 +11,11 @@ export default function InsightCard({
   locale: Locale;
   detailBasePath: string;
 }) {
+  const summary = insight.summary?.trim() || (locale === "ja" ? "詳細を準備中です。" : "Details are being prepared.");
+  const yorisouView = insight.yorisouView?.filter(Boolean) || [];
+  const primaryView = yorisouView[0] || (locale === "ja" ? "Yorisouの見立てを準備中です。" : "Yorisou's editorial reading is being prepared.");
+  const tags = insight.tags?.filter(Boolean) || [];
+
   return (
     <article className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
       <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
@@ -28,15 +33,15 @@ export default function InsightCard({
           {insight.title}
         </Link>
       </h2>
-      <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{insight.summary}</p>
+      <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{summary}</p>
 
       <div className="mt-5 rounded-[1.25rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-4">
         <div className="text-xs tracking-[0.18em] text-[#8A7764]">YORISOU VIEW</div>
-        <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{insight.yorisouView[0]}</p>
+        <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{primaryView}</p>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        {insight.tags.map((tag) => (
+        {tags.map((tag) => (
           <span key={tag} className="rounded-full bg-[#F7F2E9] px-3 py-1 text-xs text-[#6B5A4A]">
             #{tag}
           </span>
