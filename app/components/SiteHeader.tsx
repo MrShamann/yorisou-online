@@ -76,11 +76,11 @@ export default function SiteHeader() {
       <div className="container py-4">
         <div className="flex items-center justify-between gap-6">
           <Link href={homeHref} className="flex min-w-0 items-center gap-4 no-underline">
-            <div className="flex h-[72px] w-[72px] items-center justify-center rounded-[1.35rem] border border-[#D9CCB8]/72 bg-white/94 shadow-[0_14px_34px_rgba(59,47,47,0.08)] md:h-[84px] md:w-[84px]">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={62} height={62} className="h-auto w-[54px] object-contain md:w-[60px]" />
+            <div className="flex h-[78px] w-[78px] items-center justify-center rounded-[1.45rem] border border-[#D9CCB8]/72 bg-white/94 shadow-[0_14px_34px_rgba(59,47,47,0.08)] md:h-[92px] md:w-[92px]">
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={68} height={68} className="h-auto w-[58px] object-contain md:w-[66px]" />
             </div>
             <div className="min-w-0">
-              <div className="text-[1.32rem] font-semibold tracking-[0.2em] text-[var(--text)] md:text-[1.62rem]">YORISOU</div>
+              <div className="text-[1.42rem] font-semibold tracking-[0.22em] text-[var(--text)] md:text-[1.8rem]">YORISOU</div>
               <div className="mt-1 hidden text-sm leading-6 text-[#6E5D4D] md:block">
                 {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動相談に、静かに寄り添うサービス"}
               </div>
@@ -175,7 +175,7 @@ export default function SiteHeader() {
           color: var(--text);
           padding: 10px 13px;
           border-radius: 999px;
-          font-size: 12px;
+          font-size: 11px;
           white-space: nowrap;
           cursor: pointer;
         }

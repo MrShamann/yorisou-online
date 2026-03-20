@@ -59,7 +59,7 @@ const copy = {
     estimate: "所要時間 約2分",
     progressLabel: "進行状況",
     start: "相談を始める",
-    startSubtext: "選択中心で進められます。",
+    startSubtext: "",
     next: "次へ",
     back: "戻る",
     review: "結果を見る",
@@ -439,7 +439,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
               {locale === "ja"
-                ? "ご本人やご家族の状況を短くうかがい、いま考えやすい移動の選び方を静かに整理します。"
+                ? "ご本人でも、ご家族でも大丈夫です。いまの移動のことを、短く整理するところから始められます。"
                 : "We ask a few simple questions and calmly organize the next mobility options for the user and family."}
             </p>
             <div className="mt-8">
@@ -452,6 +452,11 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
               </button>
             </div>
           </div>
+          <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
+            {locale === "ja"
+              ? "必要に応じて、個別相談やご家族との共有にもつなげていけます。"
+              : "If needed, this can lead to direct consultation or sharing with family members."}
+          </p>
         </section>
       ) : (
       <section className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">

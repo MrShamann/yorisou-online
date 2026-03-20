@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import AdvisorFlow from "@/app/components/AdvisorFlow";
 
 export const metadata: Metadata = {
-  title: "Yorisou AI Mobility Advisor | 移動相談ガイド",
+  title: "Yorisou | モビリティ相談",
   description:
-    "Yorisouのモビリティ相談ガイドです。ご本人やご家族の状況に合わせて候補を整理し、試乗や個別相談、その後の継続支援につながる入口を整えます。",
+    "ご本人でもご家族でも始められる、Yorisouのモビリティ相談です。いまの移動のことを短く整理し、必要に応じて個別相談へつなげます。",
 };
 
 export default function AiAdvisorPage() {

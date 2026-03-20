@@ -19,7 +19,7 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {locale === "ja"
-                ? "高齢社会や地域交通、福祉移動の話題を、現場で感じることとあわせて静かに綴っています。"
+                ? "高齢社会、地域交通、家族の不安、導入後の支え方。Yorisouが日々向き合っていることを、静かに整理してお届けします。"
                 : "A calm editorial selection around aging, mobility, and care, shaped by the questions Yorisou sees on the ground."}
             </p>
           </div>
