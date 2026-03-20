@@ -6,9 +6,9 @@ import { getInsightCategoriesFromEntries, getInsightTagsFromEntries } from "@/li
 import { fetchNews } from "@/lib/insights/service";
 
 export const metadata: Metadata = {
-  title: "Yorisou Insights | 地域モビリティの視点",
+  title: "Yorisou Insights | 高齢社会と移動を読み解く",
   description:
-    "高齢社会、地域交通、福祉移動、シニア向けモビリティに関する話題を、Yorisouの視点で整理するNews + Analysisセクションです。",
+    "高齢社会、地域交通、福祉移動、シニア向けモビリティの論点を、Yorisouの実務視点で整理するインテリジェンスレイヤーです。",
 };
 
 type SearchParams = Promise<{
@@ -38,18 +38,37 @@ export default async function InsightsPage({
       <section className="relative overflow-hidden border-b border-[#D6C3A3]/35">
         <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-24">
           <div className="max-w-4xl rounded-[2.5rem] border border-[#D6C3A3]/40 bg-white/70 p-8 shadow-[0_24px_70px_rgba(59,47,47,0.08)] backdrop-blur md:p-12">
-            <div className="eyebrow">News + Analysis</div>
+            <div className="eyebrow">Aging &amp; Mobility Intelligence</div>
             <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
-              地域モビリティを、
-              <span className="block text-[#6B5A4A]">実務の視点で読み解く。</span>
+              高齢社会の移動を、
+              <span className="block text-[#6B5A4A]">次の判断につながる形で読み解く。</span>
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisou Insightsは、シニアモビリティ、地域交通、高齢社会の移動課題に関する話題を、
-              ご本人・ご家族・地域関係者にとって分かりやすく整理するための編集セクションです。
+              Yorisou Insightsは、シニアモビリティ、地域交通、高齢社会の移動課題を、
+              ご本人・ご家族・地域関係者・事業パートナーにとって判断しやすい形に整理するインテリジェンスレイヤーです。
             </p>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
-              速報性よりも、生活導線、家族負担、地域での運用現実に照らして何が重要かを優先しています。
+              単なるブログやニュース集約ではなく、生活導線、家族負担、地域運用、将来のサービス設計に照らして何が重要かを優先しています。
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#D6C3A3]/30 bg-[#FCFAF6]">
+        <div className="mx-auto max-w-7xl px-6 py-10 md:px-10">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/80 p-5 shadow-sm">
+              <div className="text-sm tracking-[0.18em] text-[#8A7764]">Editorial Role</div>
+              <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">政策・制度・地域実務を、現場で使える視点に翻訳します。</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/80 p-5 shadow-sm">
+              <div className="text-sm tracking-[0.18em] text-[#8A7764]">Product Intelligence</div>
+              <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">相談支援、導入判断、将来のYorisou標準づくりに返すための知見を蓄積します。</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/80 p-5 shadow-sm">
+              <div className="text-sm tracking-[0.18em] text-[#8A7764]">Public Reading</div>
+              <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">高齢社会と移動の変化を、公共性と暮らしの両方から落ち着いて読み解きます。</p>
+            </div>
           </div>
         </div>
       </section>

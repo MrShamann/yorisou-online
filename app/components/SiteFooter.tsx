@@ -10,6 +10,9 @@ export default function SiteFooter() {
 
   const legalHref = isEn ? "/en/legal" : "/legal";
   const contactHref = isEn ? "/en/contact" : "/contact";
+  const aboutHref = isEn ? "/en/about" : "/about";
+  const insightsHref = isEn ? "/en/insights" : "/insights";
+  const servicesHref = isEn ? "/en/services" : "/services";
 
   return (
     <footer style={{ marginTop: 72, borderTop: "1px solid var(--line)", background: "rgba(255,255,255,0.7)" }}>
@@ -41,17 +44,20 @@ export default function SiteFooter() {
             </div>
             <div>
               <div style={{ fontSize: 11, letterSpacing: "0.18em", color: "var(--muted)" }}>
-                {isEn ? "LOCAL MOBILITY DESIGN" : "地域モビリティ設計"}
+                {isEn ? "SENIOR MOBILITY PLATFORM" : "シニアモビリティプラットフォーム"}
               </div>
               <div style={{ marginTop: 4, fontWeight: 800, letterSpacing: "0.12em" }}>YORISOU</div>
               <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
               {isEn
-                ? "Fukuoka-based local mobility pilot and operations design"
-                : "福岡発・地域モビリティ実証と運用設計"}
+                ? "Built from Fukuoka validation with mobility support and insights"
+                : "福岡での検証とインサイトを起点に育てる高齢者移動支援"}
               </div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: 13, paddingTop: 8 }}>
+            <Link href={aboutHref}>{isEn ? "About" : "Yorisouについて"}</Link>
+            <Link href={servicesHref}>{isEn ? "Solutions" : "導入・実証"}</Link>
+            <Link href={insightsHref}>{isEn ? "Insights" : "インサイト"}</Link>
             <Link href={legalHref}>{isEn ? "Terms & Privacy" : "利用規約・プライバシーポリシー"}</Link>
             <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>
           </div>

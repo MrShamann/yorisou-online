@@ -8,25 +8,25 @@ import { useMemo, useState } from "react";
 const primaryNavJa = [
   { href: "/ai-advisor", label: "モビリティ相談" },
   { href: "/insights", label: "インサイト" },
-  { href: "/services", label: "事業内容" },
+  { href: "/services", label: "導入・実証" },
+  { href: "/about", label: "Yorisouについて" },
 ];
 
 const primaryNavEn = [
   { href: "/ai-advisor", label: "Advisor" },
   { href: "/insights", label: "Insights" },
-  { href: "/services", label: "Services" },
+  { href: "/services", label: "Solutions" },
+  { href: "/about", label: "About" },
 ];
 
 const secondaryNavJa = [
   { href: "/pilot", label: "実証実験" },
-  { href: "/about", label: "私たちについて" },
   { href: "/progress", label: "実証進捗" },
   { href: "/partners", label: "連携" },
 ];
 
 const secondaryNavEn = [
   { href: "/pilot", label: "Pilot Program" },
-  { href: "/about", label: "About" },
   { href: "/progress", label: "Progress" },
   { href: "/partners", label: "Partners" },
 ];
@@ -86,13 +86,13 @@ export default function SiteHeader() {
             </div>
             <div className="min-w-0">
               <div className="text-[11px] tracking-[0.22em] text-[var(--muted)]">
-                {isEn ? "JAPAN LOCAL MOBILITY" : "JAPAN LOCAL MOBILITY"}
+                {isEn ? "JAPAN SENIOR MOBILITY" : "JAPAN SENIOR MOBILITY"}
               </div>
               <div className="mt-1 text-[1.22rem] font-semibold tracking-[0.16em] text-[var(--text)] md:text-[1.42rem]">
                 YORISOU
               </div>
               <div className="hidden text-sm leading-6 text-[#6E5D4D] md:block">
-                {isEn ? "Senior-friendly mobility for families and communities" : "高齢社会の移動を、家族と地域に寄り添って整える"}
+                {isEn ? "Senior mobility platform for families, communities, and care networks" : "高齢者とご家族の移動を、相談から支えるモビリティプラットフォーム"}
               </div>
             </div>
           </Link>

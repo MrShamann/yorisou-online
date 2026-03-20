@@ -16,16 +16,16 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
         <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
             <div className="text-sm tracking-[0.18em] text-[#8A7764]">
-              {locale === "ja" ? "Editorial Insights" : "Editorial Insights"}
+              {locale === "ja" ? "Aging & Mobility Intelligence" : "Aging & Mobility Intelligence"}
             </div>
             <h2 className="mt-3 text-3xl font-light leading-tight text-[#3B2F2F]">
               {locale === "ja"
-                ? "Yorisouが継続的に見ている、地域モビリティの重要論点"
+                ? "Yorisouのサービス設計にもつながる、重要論点の読み解き"
                 : "Yorisou’s editorial reading of senior and community mobility"}
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {locale === "ja"
-                ? "高齢社会、地域交通、福祉移動に関する話題の中から、Yorisouが特に重要と考える論点を優先して整理しています。"
+                ? "高齢社会、地域交通、福祉移動の話題を、相談支援や導入判断にも返せるインテリジェンスとして整理しています。"
                 : "A calm mobility briefing that gives priority to the themes Yorisou considers most relevant for aging-society and community transport design in Japan."}
             </p>
           </div>
