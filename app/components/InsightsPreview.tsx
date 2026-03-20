@@ -15,24 +15,16 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
       <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
         <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">
-              {locale === "ja" ? "Aging & Mobility Intelligence" : "Aging & Mobility Intelligence"}
-            </div>
-            <h2 className="mt-3 text-3xl font-light leading-tight text-[#3B2F2F]">
-              {locale === "ja"
-                ? "Yorisouのサービス設計にもつながる、重要論点の読み解き"
-                : "Yorisou’s editorial reading of senior and community mobility"}
+            <h2 className="text-3xl font-light leading-tight text-[#3B2F2F]">
+              {locale === "ja" ? "Yorisouが日々考えていること" : "Selected thinking from Yorisou"}
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {locale === "ja"
-                ? "高齢社会、地域交通、福祉移動の話題を、相談支援や導入判断にも返せるインテリジェンスとして整理しています。"
-                : "A calm mobility briefing that gives priority to the themes Yorisou considers most relevant for aging-society and community transport design in Japan."}
+                ? "高齢社会、地域交通、福祉移動の話題を、現場の支援設計にもつながる視点として静かに整理しています。"
+                : "A calm editorial selection around aging, mobility, and care, shaped by the questions Yorisou sees on the ground."}
             </p>
           </div>
-          <Link
-            href={href}
-            className="rounded-2xl border border-[#3B2F2F]/20 bg-white/70 px-6 py-3 text-sm transition hover:bg-white"
-          >
+          <Link href={href} className="rounded-full border border-[#3B2F2F]/16 bg-white/72 px-6 py-3 text-sm transition hover:bg-white">
             {locale === "ja" ? "インサイト一覧へ" : "View all insights"}
           </Link>
         </div>
@@ -41,8 +33,8 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <article className="rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-sm md:p-8">
               <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
-                <span className="rounded-full border border-[#C8D0C1] bg-[#F3F0E7] px-3 py-1 text-[#4D5642]">
-                  {locale === "ja" ? "注目インサイト" : "Featured Insight"}
+                <span className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-3 py-1 text-[#6B5A4A]">
+                  {locale === "ja" ? "注目の記事" : "Featured"}
                 </span>
                 <span>{heroItem.categoryLabel}</span>
                 <span>{formatDate(heroItem.publishedAt, locale)}</span>
@@ -54,7 +46,7 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
               </h3>
               <p className="mt-4 text-sm leading-8 text-[#5A4B3E] md:text-base">{heroItem.summary}</p>
               <div className="mt-5 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-5">
-                <div className="text-xs tracking-[0.18em] text-[#8A7764]">YORISOU VIEW</div>
+                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{locale === "ja" ? "Yorisouの視点" : "Yorisou view"}</div>
                 <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{heroItem.yorisouView[0]}</p>
               </div>
             </article>

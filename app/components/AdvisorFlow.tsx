@@ -53,14 +53,13 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const copy = {
   ja: {
-    badge: "Yorisou Mobility Advisor",
+    badge: "Yorisou 相談案内",
     heroTitle: "まずは一問、\nこれからの移動を一緒に整理しましょう",
-    heroText:
-      "ご本人やご家族の移動状況を順番にうかがい、いま合いやすい候補と、その後の相談・導入の進め方を落ち着いて整理します。",
+    heroText: "ご本人やご家族の移動状況を順番にうかがい、いま合いやすい候補と、次に相談したいことを静かに整理します。",
     estimate: "所要時間 約2分",
     progressLabel: "進行状況",
     start: "相談を始める",
-    startSubtext: "選択中心で、2分ほどで整理できます。",
+    startSubtext: "選択中心で、短く整理できます。",
     next: "次へ",
     back: "戻る",
     review: "結果を見る",
@@ -82,15 +81,15 @@ const copy = {
     disclaimer:
       "本結果は一般的なご案内です。実際の適合性・安全性は、個別相談や試乗での確認をおすすめします。",
     devNote: "開発中は /dev/ai-advisor で保存内容を確認できます。",
-    supportTitle: "相談のあとに続くこと",
+    supportTitle: "相談のあとに続く支援",
     supportCards: [
       "おすすめ内容を見返しながら、試乗や個別相談に進めます。",
       "ご家族にも共有しやすい形で、確認事項を整理していきます。",
       "導入後の使い方や不安にもつながる継続支援の土台を整えます。",
     ],
-    doorwayTitle: "AI相談は、継続支援の入口として設計しています。",
+    doorwayTitle: "相談後も見返せる支援基盤を準備しています。",
     doorwayText:
-      "いまはログイン機能や家族連携機能はありませんが、将来的には相談履歴やご家族共有、フォローアップが続く支援基盤へ広げていく予定です。",
+      "いまはログイン機能や家族連携機能はありませんが、将来的には相談履歴やご家族共有、フォローアップへつながる形へ広げていく予定です。",
     doorwayItems: ["相談履歴の確認", "ご家族との共有準備", "継続支援エリア（準備中）"],
     nextStepTitle: "このあとの進め方",
     fields: {
@@ -442,75 +441,54 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
           </h1>
           <p className="mt-5 text-base leading-8 text-[#5A4B3E] md:text-lg">{t.heroText}</p>
 
-          <div className="mt-8 grid gap-4">
-            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-5">
-              <div className="text-xs tracking-[0.18em] text-[#8A7764]">{locale === "ja" ? "ご相談の進め方" : "How it works"}</div>
-              <div className="mt-3 grid gap-3">
-                <div className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
-                  {locale === "ja" ? "1. どなたが使うか、どんな移動かを確認します。" : "1. We begin with the user and the mobility situation."}
+          {!hasStarted && !showResults && (
+            <div className="mt-8 rounded-[1.6rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6">
+              <div className="grid gap-3 text-sm leading-7 text-[#5A4B3E]">
+                <div className="rounded-2xl bg-white/88 px-4 py-3">
+                  {locale === "ja" ? "ご本人・ご家族・親御さま・施設利用のいずれかを選ぶところから始まります。" : "We begin by selecting who will use the mobility support."}
                 </div>
-                <div className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
-                  {locale === "ja" ? "2. 使う頻度や環境、ご予算を整理して候補を絞ります。" : "2. We narrow options through usage, environment, and budget."}
-                </div>
-                <div className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
-                  {locale === "ja" ? "3. 試乗や個別相談、その後のフォローにつながる形でおすすめをまとめます。" : "3. We organize a recommendation that can lead into consultation, trial, and follow-up."}
+                <div className="rounded-2xl bg-white/88 px-4 py-3">
+                  {locale === "ja" ? "長い入力は不要です。まずは状況を短く整理し、次の相談先を見つけます。" : "No long form first. We keep the start light and practical."}
                 </div>
               </div>
             </div>
-
-            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.progressLabel}</div>
-                  <div className="mt-2 text-lg font-light text-[#3B2F2F]">{showResults ? "100%" : `${progress}%`}</div>
-                </div>
-                <div className="rounded-full bg-white px-4 py-2 text-sm text-[#6B5A4A] shadow-sm">{t.estimate}</div>
-              </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E8DED0]">
-                <div className="h-full rounded-full bg-[#6B5A4A] transition-all" style={{ width: `${showResults ? 100 : progress}%` }} />
-              </div>
-              <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
-                {phaseLabels.map((label, index) => (
-                  <div
-                    key={label}
-                    className={`rounded-2xl px-4 py-3 text-center ${
-                      index + 1 <= currentPhase ? "bg-[#6B5A4A] text-white" : "bg-white text-[#8A7764]"
-                    }`}
-                  >
-                    {label}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-5">
-              <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.supportTitle}</div>
-              <div className="mt-3 grid gap-3">
-                {t.supportCards.map((item) => (
-                  <div key={item} className="rounded-2xl bg-white/90 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          )}
 
           {!hasStarted && !showResults && (
-            <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/85 p-5">
-              <div className="text-sm leading-7 text-[#5A4B3E]">
-                {locale === "ja"
-                  ? "最初の一問から始められます。長い入力は不要で、相談の入口として気軽に使えます。"
-                  : "You can begin with just one question. No long form first."}
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => setHasStarted(true)}
+                className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90"
+              >
+                {t.start}
+              </button>
+              <div className="text-sm text-[#6B5A4A]">{t.startSubtext}</div>
+            </div>
+          )}
+
+          {(hasStarted || showResults) && (
+            <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-5">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.progressLabel}</div>
+                  <div className="mt-2 text-base text-[#5A4B3E]">
+                    {showResults ? "100%" : `${progress}%`} / {t.estimate}
+                  </div>
+                </div>
+                <div className="flex gap-2 text-xs">
+                  {phaseLabels.map((label, index) => (
+                    <div
+                      key={label}
+                      className={`rounded-full px-3 py-2 ${index + 1 <= currentPhase ? "bg-[#6B5A4A] text-white" : "bg-white text-[#8A7764]"}`}
+                    >
+                      {label}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <button
-                  type="button"
-                  onClick={() => setHasStarted(true)}
-                  className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90"
-                >
-                  {t.start}
-                </button>
-                <div className="text-sm text-[#6B5A4A]">{t.startSubtext}</div>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#E8DED0]">
+                <div className="h-full rounded-full bg-[#6B5A4A] transition-all" style={{ width: `${showResults ? 100 : progress}%` }} />
               </div>
             </div>
           )}
@@ -523,16 +501,14 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
           {!showResults && !hasStarted ? (
             <div className="flex h-full min-h-[420px] flex-col justify-between rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6">
               <div>
-                <div className="text-sm tracking-[0.18em] text-[#8A7764]">
-                  {locale === "ja" ? "MOBILITY ADVISOR" : "MOBILITY ADVISOR"}
-                </div>
+                <div className="text-sm tracking-[0.18em] text-[#8A7764]">{locale === "ja" ? "ご相談の入口" : "Consultation entry"}</div>
                 <h2 className="mt-4 text-3xl font-light leading-tight text-[#3B2F2F]">
-                  {locale === "ja" ? "まずは、どなたが使う予定かを確認します。" : "We begin by confirming who will use the mobility support."}
+                  {locale === "ja" ? "まずは、どなたの移動について考えるかを教えてください。" : "We begin by confirming whose mobility we are organizing."}
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
                   {locale === "ja"
-                    ? "ご本人、ご家族、親御さま、施設利用のいずれかを選ぶところから始まります。"
-                    : "The first step is simply choosing whether the user is the person themself, a parent, a family member, or a facility."}
+                    ? "最初の選択だけで始められます。細かな比較や導入後の相談は、結果を見ながら落ち着いて進められます。"
+                    : "The first step is just a simple choice. Details can be organized after the first recommendation."}
                 </p>
               </div>
 
@@ -545,7 +521,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
               </div>
 
               <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-white/90 p-5">
-                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.doorwayTitle}</div>
+                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.supportTitle}</div>
                 <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{t.doorwayText}</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   {t.doorwayItems.map((item) => (
@@ -638,6 +614,17 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
               </div>
 
               {advisorError && <p className="mt-4 text-sm font-medium text-[#9A3B2F]">{advisorError}</p>}
+
+              <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-5">
+                <div className="text-xs tracking-[0.18em] text-[#8A7764]">{t.supportTitle}</div>
+                <div className="mt-3 grid gap-3">
+                  {t.supportCards.map((item) => (
+                    <div key={item} className="rounded-2xl bg-white/88 px-4 py-3 text-sm leading-7 text-[#5A4B3E]">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </>
           ) : currentRecommendation ? (
             <div className="space-y-8">

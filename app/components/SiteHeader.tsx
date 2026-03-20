@@ -71,28 +71,18 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[rgba(245,241,232,0.96)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-[rgba(217,204,184,0.5)] bg-[rgba(245,241,232,0.9)] backdrop-blur-xl">
       <div className="container py-4">
         <div className="flex items-center justify-between gap-6">
           <Link href={homeHref} className="flex min-w-0 items-center gap-4 no-underline">
-            <div className="flex h-[66px] w-[66px] items-center justify-center rounded-[1.25rem] border border-[#D9CCB8]/75 bg-white shadow-[0_18px_34px_rgba(59,47,47,0.1)] md:h-[78px] md:w-[78px]">
-              <Image
-                src="/images/brand/tsuru-logo.png"
-                alt="YORISOU"
-                width={54}
-                height={54}
-                className="h-auto w-[48px] object-contain md:w-[56px]"
-              />
+            <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[1.2rem] border border-[#D9CCB8]/70 bg-white/92 shadow-[0_12px_30px_rgba(59,47,47,0.08)] md:h-[72px] md:w-[72px]">
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={54} height={54} className="h-auto w-[46px] object-contain md:w-[52px]" />
             </div>
             <div className="min-w-0">
-              <div className="text-[11px] tracking-[0.22em] text-[var(--muted)]">
-                {isEn ? "JAPAN SENIOR MOBILITY" : "JAPAN SENIOR MOBILITY"}
-              </div>
-              <div className="mt-1 text-[1.22rem] font-semibold tracking-[0.16em] text-[var(--text)] md:text-[1.42rem]">
-                YORISOU
-              </div>
+              <div className="text-[10px] tracking-[0.2em] text-[var(--muted)]">JAPAN SENIOR MOBILITY</div>
+              <div className="mt-1 text-[1.18rem] font-semibold tracking-[0.18em] text-[var(--text)] md:text-[1.36rem]">YORISOU</div>
               <div className="hidden text-sm leading-6 text-[#6E5D4D] md:block">
-                {isEn ? "Senior mobility platform for families, communities, and care networks" : "高齢者とご家族の移動を、相談から支えるモビリティプラットフォーム"}
+                {isEn ? "Senior mobility service for families, communities, and care networks" : "高齢者とご家族の移動を、相談から静かに支えるサービス"}
               </div>
             </div>
           </Link>
@@ -100,7 +90,7 @@ export default function SiteHeader() {
           <button
             onClick={() => setOpen((value) => !value)}
             aria-label={isEn ? "Menu" : "メニュー"}
-            className="mobile-toggle hidden rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-semibold text-[var(--text)]"
+            className="mobile-toggle hidden rounded-full border border-[rgba(217,204,184,0.6)] bg-white/86 px-4 py-2 text-sm font-medium tracking-[0.08em] text-[var(--text)]"
           >
             MENU
           </button>
@@ -160,16 +150,16 @@ export default function SiteHeader() {
         .site-nav {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
         }
         .primary-nav {
           display: flex;
           align-items: center;
-          gap: 4px;
-          padding: 6px;
+          gap: 2px;
+          padding: 4px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.7);
-          border: 1px solid rgba(217, 204, 184, 0.45);
+          background: rgba(255, 255, 255, 0.54);
+          border: 1px solid rgba(217, 204, 184, 0.28);
         }
         .nav-link,
         .more-button {
@@ -177,9 +167,9 @@ export default function SiteHeader() {
           background: transparent;
           text-decoration: none;
           color: var(--text);
-          padding: 10px 14px;
+          padding: 10px 12px;
           border-radius: 999px;
-          font-size: 14px;
+          font-size: 13px;
           white-space: nowrap;
           cursor: pointer;
         }
@@ -187,7 +177,7 @@ export default function SiteHeader() {
         .nav-link.active,
         .more-button:hover,
         .more-button.active {
-          background: var(--accent-soft);
+          background: rgba(243, 235, 224, 0.85);
         }
         .more-wrap {
           position: relative;
@@ -214,7 +204,7 @@ export default function SiteHeader() {
           color: var(--text);
           padding: 10px 12px;
           border-radius: 12px;
-          font-size: 14px;
+          font-size: 13px;
         }
         .more-link:hover,
         .more-link.active {
@@ -223,22 +213,22 @@ export default function SiteHeader() {
         .header-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
         .contact-link {
           text-decoration: none;
-          color: var(--text);
-          font-size: 14px;
-          padding: 10px 6px;
+          color: #6e5d4d;
+          font-size: 13px;
+          padding: 10px 8px;
         }
         .lang-switch {
-          border: 1px solid var(--line);
+          border: 1px solid rgba(217, 204, 184, 0.55);
           border-radius: 999px;
-          padding: 10px 14px;
-          font-size: 13px;
+          padding: 9px 12px;
+          font-size: 12px;
           text-decoration: none;
           font-weight: 700;
-          background: rgba(255, 255, 255, 0.84);
+          background: rgba(255, 255, 255, 0.78);
         }
         @media (max-width: 1024px) {
           .mobile-toggle {
@@ -247,7 +237,7 @@ export default function SiteHeader() {
           .site-nav {
             position: absolute;
             right: 4vw;
-            top: 94px;
+            top: 90px;
             width: min(380px, 92vw);
             display: none;
             flex-direction: column;
@@ -264,7 +254,7 @@ export default function SiteHeader() {
           .primary-nav {
             flex-direction: column;
             align-items: stretch;
-            border-radius: 20px;
+            border-radius: 18px;
             padding: 8px;
           }
           .nav-link,
