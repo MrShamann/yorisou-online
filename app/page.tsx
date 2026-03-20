@@ -8,25 +8,10 @@ const trustPoints = [
   "福岡での検証知見を、全国に向けた設計へ返しています。",
 ];
 
-const supportFlow = [
-  {
-    title: "困りごとを落ち着いてうかがいます",
-    text: "歩く距離や外出先、ご家族の心配ごとまで確認し、いま何から考えるべきかを見える形にします。",
-  },
-  {
-    title: "合う移動を一緒に比べます",
-    text: "急いで決めるのではなく、生活導線、使いやすさ、ご家族の納得感まで含めて候補を整えます。",
-  },
-  {
-    title: "その後も相談しやすく整えます",
-    text: "試乗や個別相談、導入後の見直しまでつながる前提で、無理のない支え方を考えています。",
-  },
-];
-
 const lowerItems = [
   "福岡は、受容性や運用の成立を確かめる検証拠点です。",
   "地域導入の相談も、続くかどうかを見極める実務支援として行っています。",
-  "将来はYorisou標準へつながる学びを、ここから積み上げていきます。",
+  "ここでの学びを、これからの支え方へ静かに返していきます。",
 ];
 
 export default function HomePage() {
@@ -72,17 +57,17 @@ export default function HomePage() {
           <p className="mt-4 max-w-3xl text-sm leading-7 text-[#5A4B3E] md:text-base">
             まず困りごとをうかがい、合う移動を一緒に比べ、必要に応じてご家族とも共有しながら、その後の見直しまで相談しやすい流れを整えます。
           </p>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {supportFlow.map((item) => (
-              <div key={item.title} className="rounded-[1.8rem] bg-[#FCFAF6] px-5 py-6">
-                <h3 className="text-2xl font-light">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
-              </div>
-            ))}
+          <div className="mt-8 space-y-5 border-t border-[#D6C3A3]/26 pt-6">
+            <p className="text-base leading-8 text-[#5A4B3E]">
+              まずは、歩く距離や外出先、ご家族の心配ごとまで落ち着いてうかがいます。
+            </p>
+            <p className="text-base leading-8 text-[#5A4B3E]">
+              そのうえで、急いで決めるのではなく、暮らしに合う移動を一緒に比べていきます。
+            </p>
+            <p className="text-base leading-8 text-[#5A4B3E]">
+              必要に応じてご家族にも共有しながら、試乗や個別相談、導入後の見直しへつながる支え方を整えます。
+            </p>
           </div>
-          <p className="mt-6 text-sm leading-7 text-[#6B5A4A]">
-            いまはAI相談と個別フォローが中心ですが、相談内容の見返しやご家族との共有にもつながる支援体験を目指しています。
-          </p>
         </div>
       </section>
 
@@ -93,8 +78,8 @@ export default function HomePage() {
           <div>
             <h2 className="text-3xl font-light leading-tight">福岡で確かめたことを、これからの支え方へ返しています。</h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
-              Yorisouは福岡で、利用者の反応、ご家族の受容、現場運用、地域連携の成立条件を確かめています。
-              その学びを、全国に向けたサービス設計と将来のYorisou標準へ反映していきます。
+              Yorisouは福岡で、利用者の反応やご家族の受け止め方、現場運用の成立条件を確かめています。
+              地域導入や実証支援が必要な場合も、この知見をもとに静かに伴走します。
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link href="/pilot" className="btn btn-secondary">

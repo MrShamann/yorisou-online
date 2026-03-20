@@ -47,7 +47,7 @@ export default function SiteFooter() {
               <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
                 {isEn
                   ? "A calm mobility support service for seniors, families, and communities in Japan"
-                  : "高齢者とご家族の移動相談に、静かに寄り添うYorisou"}
+                  : "高齢者とご家族の移動相談に、静かに寄り添います"}
               </div>
             </div>
           </div>

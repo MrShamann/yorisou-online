@@ -1,3 +1,3 @@
 Production refresh trigger for yorisou.online
-Commit: pending-japanese-ui-reset
-Timestamp: 2026-03-20 14:36:00 CST
+Commit: pending-direct-structure-reset
+Timestamp: 2026-03-20 15:05:00 CST

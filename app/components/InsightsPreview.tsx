@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import InsightCard from "@/app/components/InsightCard";
 import { fetchHomepageInsights } from "@/lib/insights/service";
 import type { Locale } from "@/lib/insights/types";
 
@@ -33,8 +32,8 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <article className="rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-sm md:p-8">
               <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
-                <span>{heroItem.categoryLabel}</span>
                 <span>{formatDate(heroItem.publishedAt, locale)}</span>
+                <span>{heroItem.categoryLabel}</span>
               </div>
               <h3 className="mt-4 text-3xl font-light leading-tight text-[#3B2F2F]">
                 <Link href={`${href}/${heroItem.slug}`} className="transition hover:text-[#6B5A4A]">
@@ -45,9 +44,19 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
               <p className="mt-5 text-sm leading-7 text-[#6B5A4A]">{heroItem.yorisouView[0]}</p>
             </article>
 
-            <div className="grid gap-6">
+            <div className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/78 p-6 shadow-sm">
               {secondaryItems.map((item) => (
-                <InsightCard key={item.slug} insight={item} locale={locale} detailBasePath={href} />
+                <article key={item.slug} className="border-t border-[#D6C3A3]/28 py-5 first:border-t-0 first:pt-0 last:pb-0">
+                  <div className="text-xs tracking-[0.12em] text-[#8A7764]">
+                    {formatDate(item.publishedAt, locale)} ・ {item.categoryLabel}
+                  </div>
+                  <h3 className="mt-3 text-2xl font-light leading-tight text-[#3B2F2F]">
+                    <Link href={`${href}/${item.slug}`} className="transition hover:text-[#6B5A4A]">
+                      {item.title}
+                    </Link>
+                  </h3>
+                  <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.summary}</p>
+                </article>
               ))}
             </div>
           </div>

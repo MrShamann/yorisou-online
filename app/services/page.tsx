@@ -2,25 +2,6 @@ import Link from "next/link";
 
 import Hero from "../components/Hero";
 
-const pathItems = [
-  {
-    title: "相談する",
-    text: "ご本人・ご家族の状況、地域での生活導線、導入後に心配な点を整理し、どこから支援を始めるべきかを見極めます。",
-  },
-  {
-    title: "比べる",
-    text: "移動手段を無理に一つへ決めるのではなく、使いやすさ、安全性、ご家族の納得感まで含めて比較しやすく整えます。",
-  },
-  {
-    title: "ご家族と共有する",
-    text: "必要に応じて試乗や個別相談につなぎながら、確認事項をご家族にも共有しやすい形にまとめます。",
-  },
-  {
-    title: "その後も見直せるようにする",
-    text: "使い始めてからの不安や運用上の課題も見据え、継続支援へつながる相談設計を進めます。",
-  },
-];
-
 const partnerFlow = [
   "自治体、施設、地域事業者とともに、対象者像や導線、運用条件を整理します。",
   "福岡での検証知見を踏まえながら、現実的な規模で実証を行い、受容性と運用負荷を確認します。",
@@ -51,19 +32,20 @@ export default function ServicesPage() {
             <p className="muted" style={{ marginTop: 12, maxWidth: 760 }}>
               候補を紹介して終わるのではなく、何に困っているのかを整え、比べ、ご家族とも共有し、その後も見直しやすい流れをつくります。
             </p>
-            <div className="grid" style={{ marginTop: 28, gap: 18 }}>
-              {pathItems.map((item) => (
-                <article key={item.title} style={{ borderTop: "1px solid rgba(217, 204, 184, 0.35)", paddingTop: 18 }}>
-                  <h3 style={{ margin: 0, fontSize: 28, fontWeight: 300 }}>{item.title}</h3>
-                  <p className="muted" style={{ marginBottom: 0, marginTop: 10, maxWidth: 760 }}>
-                    {item.text}
-                  </p>
-                </article>
-              ))}
+            <div style={{ marginTop: 28, borderTop: "1px solid rgba(217, 204, 184, 0.35)", paddingTop: 22 }}>
+              <p className="muted" style={{ margin: 0, maxWidth: 780 }}>
+                まずはご本人やご家族の状況、地域での生活導線、導入後に心配な点を整理し、どこから支援を始めるべきかを見極めます。
+              </p>
+              <p className="muted" style={{ marginTop: 18, maxWidth: 780 }}>
+                そのうえで、移動手段を無理に一つへ決めるのではなく、使いやすさ、安全性、ご家族の納得感まで含めて比べやすく整えます。
+              </p>
+              <p className="muted" style={{ marginTop: 18, maxWidth: 780 }}>
+                必要に応じて試乗や個別相談につなぎながら、確認事項をご家族にも共有しやすい形にまとめ、導入後も見直せるようにしていきます。
+              </p>
+              <p className="muted" style={{ marginTop: 18, marginBottom: 0, maxWidth: 780 }}>
+                いまは個別フォローが中心ですが、相談履歴やご家族共有も含めた継続支援サービスへ広げていく前提で設計しています。
+              </p>
             </div>
-            <p className="muted" style={{ marginTop: 22, marginBottom: 0, maxWidth: 760 }}>
-              いまは個別フォローが中心ですが、相談履歴やご家族共有も含めた継続支援サービスへ広げていく前提で設計しています。
-            </p>
           </div>
         </div>
       </section>
