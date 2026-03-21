@@ -3,19 +3,50 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import {
-  type AccountProfile,
-  type ConsultationSnapshot,
-  getConsultationShareText,
-  getSignedInAccount,
-  listConsultationSnapshots,
-  logoutLocalAccount,
-} from "@/lib/mvpAccountStorage";
+import type { AccountRecord, ConsultationRecord, LineBindingStatus, SupportProfile } from "@/lib/server/yorisouData";
 
-export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
-  const [account, setAccount] = useState<AccountProfile | null>(() => getSignedInAccount());
-  const [consultations] = useState<ConsultationSnapshot[]>(() => listConsultationSnapshots().filter((entry) => entry.locale === locale));
+type Locale = "ja" | "en";
+
+const lineStatusLabels: Record<Locale, Record<LineBindingStatus, string>> = {
+  ja: {
+    not_connected: "未登録",
+    registered: "連絡先登録済み",
+    connected: "連携済み",
+  },
+  en: {
+    not_connected: "Not connected",
+    registered: "Contact saved",
+    connected: "Connected",
+  },
+};
+
+export default function SupportWorkspace({
+  locale,
+  initialAccount,
+  initialConsultations,
+}: {
+  locale: Locale;
+  initialAccount: AccountRecord | null;
+  initialConsultations: ConsultationRecord[];
+}) {
+  const [account, setAccount] = useState<AccountRecord | null>(initialAccount);
+  const [consultations] = useState<ConsultationRecord[]>(initialConsultations);
   const [shareMessage, setShareMessage] = useState("");
+  const [lineForm, setLineForm] = useState<SupportProfile>(
+    initialAccount?.supportProfile || {
+      lineBindingStatus: "not_connected",
+      lineDisplayName: "",
+      lineNotificationsEnabled: false,
+      familyContactName: "",
+      familyContactRelation: "",
+      familyContactMethod: "",
+      familyContactValue: "",
+      familyShareNote: "",
+    }
+  );
+  const [saveMessage, setSaveMessage] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const latest = consultations[0] || null;
   const followups = useMemo(() => consultations.filter((entry) => entry.leadSubmitted), [consultations]);
@@ -29,7 +60,14 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
       return;
     }
 
-    const text = getConsultationShareText(latest);
+    const baseLines = [
+      locale === "ja" ? "Yorisou 相談内容メモ" : "Yorisou consultation note",
+      `${locale === "ja" ? "おすすめ" : "Recommended"}: ${latest.recommendedCategory}`,
+      `${locale === "ja" ? "次点候補" : "Second option"}: ${latest.secondaryRecommendation}`,
+      `${locale === "ja" ? "要点" : "Summary"}: ${latest.summary}`,
+      `${locale === "ja" ? "次の動き" : "Next step"}: ${latest.suggestedNextAction}`,
+    ];
+    const text = [...baseLines, lineForm.familyShareNote].filter(Boolean).join("\n");
 
     try {
       await navigator.clipboard.writeText(text);
@@ -37,6 +75,43 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
     } catch {
       setShareMessage(locale === "ja" ? "コピーに失敗しました。" : "Failed to copy.");
     }
+  }
+
+  async function saveSupportProfile() {
+    setIsSaving(true);
+    setSaveError("");
+    setSaveMessage("");
+
+    try {
+      const response = await fetch("/api/support/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(lineForm),
+      });
+
+      const result = (await response.json()) as { success?: boolean; supportProfile?: SupportProfile };
+
+      if (!response.ok || !result.success || !result.supportProfile) {
+        setSaveError(locale === "ja" ? "保存に失敗しました。" : "Failed to save.");
+        return;
+      }
+
+      setLineForm(result.supportProfile);
+      setAccount((current) => (current ? { ...current, supportProfile: result.supportProfile! } : current));
+      setSaveMessage(locale === "ja" ? "サポート設定を保存しました。" : "Support settings saved.");
+    } catch {
+      setSaveError(locale === "ja" ? "通信に失敗しました。" : "Request failed.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setAccount(null);
+    window.location.href = loginHref;
   }
 
   if (!account) {
@@ -51,7 +126,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
               <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                 {locale === "ja"
                   ? "ログインすると、相談履歴、ご提案内容、ご家族共有、継続相談、フォローアップをまとめて確認できます。"
-                  : "After login, Yorisou brings together consultation history, recommendation notes, family-sharing text, and follow-up actions."}
+                  : "After login, Yorisou brings together consultation history, recommendation notes, family sharing, ongoing consultation, and follow-up."}
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 <Link href={loginHref} className="btn btn-primary">
@@ -71,8 +146,8 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
             <p className="mt-3 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {consultations.length > 0
                 ? locale === "ja"
-                  ? `${consultations.length}件の相談結果が保存されています。ログインすると、このページで見返せます。`
-                  : `${consultations.length} consultation result(s) are already saved on this device. Log in to review them here.`
+                  ? `${consultations.length}件の相談結果が保存されています。ログインすると、このページで確認できます。`
+                  : `${consultations.length} consultation result(s) are saved in the current session. Log in to review them here.`
                 : locale === "ja"
                   ? "まだ相談結果はありません。まずはAI相談か製品比較から始められます。"
                   : "There are no saved consultations yet. Start with the advisor or product browsing."}
@@ -104,15 +179,12 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
                 <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                   {locale === "ja"
                     ? "相談履歴、ご提案内容、ご家族と共有したい要点、継続相談、フォローアップをひとつにまとめています。"
-                    : "Consultation history, recommendation notes, family-sharing text, and follow-up support are collected here."}
+                    : "Consultation history, recommendation notes, family sharing, ongoing consultation, and follow-up are collected here."}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  logoutLocalAccount();
-                  setAccount(null);
-                }}
+                onClick={handleLogout}
                 className="rounded-full border border-[#D6C3A3]/60 px-6 py-3 text-sm text-[#5A4B3E] transition hover:bg-[#FCFAF6]"
               >
                 {locale === "ja" ? "ログアウト" : "Log out"}
@@ -130,14 +202,14 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
             note={locale === "ja" ? "現在見返せる件数" : "Currently available"}
           />
           <StatCard
-            label={locale === "ja" ? "ご提案内容" : "Recommendation notes"}
+            label={locale === "ja" ? "ご提案内容" : "Recommendation"}
             value={latest ? latest.recommendedCategory : locale === "ja" ? "未保存" : "None"}
             note={latest ? formatDate(latest.createdAt, locale) : locale === "ja" ? "最新の相談結果はまだありません" : "No saved recommendation yet"}
           />
           <StatCard
-            label={locale === "ja" ? "フォローアップ" : "Follow-up"}
-            value={String(followups.length)}
-            note={locale === "ja" ? "送信済み相談" : "Submitted consultations"}
+            label={locale === "ja" ? "LINE連携" : "LINE"}
+            value={lineStatusLabels[locale][lineForm.lineBindingStatus]}
+            note={lineForm.lineNotificationsEnabled ? (locale === "ja" ? "フォローアップ有効" : "Follow-up enabled") : locale === "ja" ? "フォローアップ未設定" : "Follow-up disabled"}
           />
         </div>
       </section>
@@ -157,11 +229,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
                   ))}
                 </div>
               ) : (
-                <EmptyState
-                  locale={locale}
-                  textJa="まだ相談履歴はありません。AI相談から始められます。"
-                  textEn="No consultation history yet. Start with the advisor and it will appear here."
-                />
+                <EmptyState locale={locale} textJa="まだ相談履歴はありません。AI相談から始められます。" textEn="No consultation history yet. Start with the advisor." />
               )}
             </Panel>
 
@@ -181,42 +249,70 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
                   </Link>
                 </div>
               ) : (
-                <EmptyState
-                  locale={locale}
-                  textJa="ご提案内容はまだありません。まずは相談や製品比較から始められます。"
-                  textEn="No recommendation is saved yet. Advisor results will appear here."
-                />
+                <EmptyState locale={locale} textJa="ご提案内容はまだありません。まずは相談や製品比較から始められます。" textEn="No recommendation is saved yet." />
               )}
             </Panel>
           </div>
 
           <div className="space-y-6">
             <Panel title={locale === "ja" ? "ご家族共有" : "Family sharing"}>
-              {latest ? (
-                <>
-                  <p className="text-sm leading-7 text-[#5A4B3E]">
-                    {locale === "ja"
-                      ? "ご家族へ伝えたい要点を、短い共有メモとしてコピーできます。"
-                      : "Copy a short summary to share with family members."}
-                  </p>
-                  <button type="button" onClick={copyShareText} className="mt-4 btn btn-secondary">
-                    {locale === "ja" ? "共有用メモをコピー" : "Copy share note"}
-                  </button>
-                  {shareMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{shareMessage}</p>}
-                </>
-              ) : (
-                <EmptyState
-                  locale={locale}
-                  textJa="共有する内容はまだありません。相談結果が保存されると、ご家族向けの要点をここでコピーできます。"
-                  textEn="No shareable note yet. Once a consultation is saved, key points can be copied here."
-                />
-              )}
+              <div className="grid gap-4">
+                <Field label={locale === "ja" ? "ご家族のお名前" : "Family contact name"}>
+                  <input
+                    value={lineForm.familyContactName}
+                    onChange={(event) => setLineForm((current) => ({ ...current, familyContactName: event.target.value }))}
+                    className={inputClassName}
+                  />
+                </Field>
+                <Field label={locale === "ja" ? "ご関係" : "Relationship"}>
+                  <input
+                    value={lineForm.familyContactRelation}
+                    onChange={(event) => setLineForm((current) => ({ ...current, familyContactRelation: event.target.value }))}
+                    className={inputClassName}
+                  />
+                </Field>
+                <Field label={locale === "ja" ? "連絡先" : "Contact"}>
+                  <input
+                    value={lineForm.familyContactValue}
+                    onChange={(event) => setLineForm((current) => ({ ...current, familyContactValue: event.target.value }))}
+                    className={inputClassName}
+                  />
+                </Field>
+                <Field label={locale === "ja" ? "連絡方法" : "Contact method"}>
+                  <select
+                    value={lineForm.familyContactMethod}
+                    onChange={(event) => setLineForm((current) => ({ ...current, familyContactMethod: event.target.value }))}
+                    className={inputClassName}
+                  >
+                    <option value="">{locale === "ja" ? "選択してください" : "Select one"}</option>
+                    <option value="line">LINE</option>
+                    <option value="phone">{locale === "ja" ? "電話" : "Phone"}</option>
+                    <option value="email">Email</option>
+                  </select>
+                </Field>
+                <Field label={locale === "ja" ? "共有メモ" : "Shared note"}>
+                  <textarea
+                    value={lineForm.familyShareNote}
+                    onChange={(event) => setLineForm((current) => ({ ...current, familyShareNote: event.target.value }))}
+                    className={`${inputClassName} min-h-[120px]`}
+                  />
+                </Field>
+              </div>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={copyShareText} className="btn btn-secondary">
+                  {locale === "ja" ? "共有用メモをコピー" : "Copy share note"}
+                </button>
+                <button type="button" onClick={saveSupportProfile} className="btn btn-secondary" disabled={isSaving}>
+                  {locale === "ja" ? "ご家族情報を保存" : "Save family info"}
+                </button>
+              </div>
+              {shareMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{shareMessage}</p>}
             </Panel>
 
             <Panel title={locale === "ja" ? "継続相談" : "Ongoing consultation"}>
               <p className="text-sm leading-7 text-[#5A4B3E]">
                 {locale === "ja"
-                  ? "前回の相談を見返しながら、条件を変えてもう一度相談したり、詳しい相談内容を送ったりできます。"
+                  ? "前回の相談を見返しながら、条件を変えてもう一度相談したり、導入後の不安点を追加で送ったりできます。"
                   : "Review the last consultation, then continue with a new advisor run or a direct consultation submission."}
               </p>
               <div className="mt-4 flex flex-col gap-3">
@@ -230,8 +326,60 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
             </Panel>
 
             <Panel title={locale === "ja" ? "フォローアップ" : "Follow-up"}>
+              <div className="grid gap-4">
+                <Field label={locale === "ja" ? "LINE表示名" : "LINE display name"}>
+                  <input
+                    value={lineForm.lineDisplayName}
+                    onChange={(event) =>
+                      setLineForm((current) => ({
+                        ...current,
+                        lineDisplayName: event.target.value,
+                        lineBindingStatus: event.target.value ? "registered" : "not_connected",
+                      }))
+                    }
+                    className={inputClassName}
+                  />
+                </Field>
+                <label className="flex items-start gap-3 rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                  <input
+                    type="checkbox"
+                    checked={lineForm.lineNotificationsEnabled}
+                    onChange={(event) => setLineForm((current) => ({ ...current, lineNotificationsEnabled: event.target.checked }))}
+                    className="mt-1"
+                  />
+                  <span>{locale === "ja" ? "LINEでのフォローアップ連絡を受け取る" : "Receive follow-up over LINE"}</span>
+                </label>
+                <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                  {locale === "ja"
+                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。この環境では自動認証は未設定のため、連絡先情報の保存まで利用できます。`
+                    : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. In this environment, automatic LINE authentication is not configured, so contact details can be saved only.`}
+                </div>
+                <label className="flex items-start gap-3 rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                  <input
+                    type="checkbox"
+                    checked={lineForm.lineBindingStatus === "connected"}
+                    onChange={(event) =>
+                      setLineForm((current) => ({
+                        ...current,
+                        lineBindingStatus: event.target.checked ? "connected" : current.lineDisplayName ? "registered" : "not_connected",
+                      }))
+                    }
+                    className="mt-1"
+                  />
+                  <span>
+                    {locale === "ja"
+                      ? "担当者がLINE連携を確認済みにする"
+                      : "Mark LINE connection as confirmed"}
+                  </span>
+                </label>
+              </div>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={saveSupportProfile} className="btn btn-secondary" disabled={isSaving}>
+                  {locale === "ja" ? "LINE連携情報を保存" : "Save LINE details"}
+                </button>
+              </div>
               {followups.length > 0 ? (
-                <div className="space-y-3">
+                <div className="mt-5 space-y-3">
                   {followups.map((entry) => (
                     <div key={entry.id} className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                       {formatDate(entry.createdAt, locale)}: {entry.recommendedCategory}
@@ -240,12 +388,12 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
                   ))}
                 </div>
               ) : (
-                <EmptyState
-                  locale={locale}
-                  textJa="まだ送信済みのフォローアップはありません。必要になった時点で相談内容を送れます。"
-                  textEn="No submitted follow-up yet. You can send the consultation when needed."
-                />
+                <p className="mt-4 rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
+                  {locale === "ja" ? "送信済みのフォローアップはまだありません。" : "No submitted follow-up yet."}
+                </p>
               )}
+              {saveMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{saveMessage}</p>}
+              {saveError && <p className="mt-4 text-sm text-[#9A3B2F]">{saveError}</p>}
             </Panel>
           </div>
         </div>
@@ -273,22 +421,26 @@ function StatCard({ label, value, note }: { label: string; value: string; note: 
   );
 }
 
-function EmptyState({
-  locale,
-  textJa,
-  textEn,
-}: {
-  locale: "ja" | "en";
-  textJa: string;
-  textEn: string;
-}) {
+function EmptyState({ locale, textJa, textEn }: { locale: Locale; textJa: string; textEn: string }) {
   return <p className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">{locale === "ja" ? textJa : textEn}</p>;
 }
 
-function formatDate(value: string, locale: "ja" | "en") {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block text-sm font-medium text-[#5A4B3E]">
+      <span>{label}</span>
+      <div className="mt-3">{children}</div>
+    </label>
+  );
+}
+
+function formatDate(value: string, locale: Locale) {
   return new Intl.DateTimeFormat(locale === "ja" ? "ja-JP" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   }).format(new Date(value));
 }
+
+const inputClassName =
+  "w-full rounded-[1.25rem] border border-[#D6C3A3]/45 bg-[#FCFAF6] px-4 py-4 text-base text-[#3B2F2F] outline-none transition focus:border-[#6B5A4A]";

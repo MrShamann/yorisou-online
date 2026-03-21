@@ -5,7 +5,6 @@ import { FormEvent, useMemo, useState } from "react";
 
 import type { AdvisorAnswers, AdvisorRecommendation, Locale } from "@/lib/ai/yorisouAdvisor";
 import { getAnswerLabels } from "@/lib/ai/yorisouAdvisor";
-import { markConsultationLeadSubmitted, saveConsultationSnapshot } from "@/lib/mvpAccountStorage";
 import type { AdvisorLead } from "@/lib/yorisouAdvisorStorage";
 
 type AdvisorFlowProps = {
@@ -21,6 +20,7 @@ type StepDefinition = {
 type ResultResponse = {
   success: true;
   recommendation: AdvisorRecommendation;
+  consultationId: string;
 };
 
 type LeadResponse = {
@@ -366,12 +366,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
 
       const result = (await response.json()) as ResultResponse;
       setRecommendation(result.recommendation);
-      const entryId = saveConsultationSnapshot({
-        locale,
-        recommendation: result.recommendation,
-        answerLabels: getAnswerLabels(answers, locale),
-      });
-      setSavedEntryId(entryId);
+      setSavedEntryId(result.consultationId);
     } catch {
       setAdvisorError(locale === "ja" ? "おすすめの整理に失敗しました。時間をおいて再度お試しください。" : "Failed to prepare recommendation. Please try again.");
     } finally {
@@ -382,7 +377,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
   const handleLeadSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!recommendation) {
+    if (!recommendation || !savedEntryId) {
       return;
     }
 
@@ -406,6 +401,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
           locale,
           answers,
           recommendation,
+          consultationId: savedEntryId,
           lead: {
             ...lead,
             email: lead.email.trim(),
@@ -418,9 +414,6 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
       }
 
       await response.json() as LeadResponse;
-      if (savedEntryId) {
-        markConsultationLeadSubmitted(savedEntryId);
-      }
       setLeadSuccess(t.leadSuccess);
       setLead(initialLead);
     } catch {

@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 
 import type { AdvisorAnswers, AdvisorRecommendation, Locale } from "@/lib/ai/yorisouAdvisor";
-import { appendAdvisorEntry, createAdvisorEntry, type AdvisorLead } from "@/lib/yorisouAdvisorStorage";
+import type { AdvisorLead } from "@/lib/yorisouAdvisorStorage";
+import { attachLeadToConsultation, findConsultationForViewer } from "@/lib/server/yorisouData";
+import { getViewerContext } from "@/lib/server/yorisouAuth";
 
 type LeadRequest = {
   locale?: Locale;
   answers?: Partial<AdvisorAnswers>;
   recommendation?: AdvisorRecommendation;
   lead?: Partial<AdvisorLead>;
+  consultationId?: string;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,8 +48,9 @@ function isRecommendation(value: AdvisorRecommendation | undefined): value is Ad
 export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as LeadRequest;
+    const viewer = await getViewerContext();
 
-    if (!payload.answers || !payload.recommendation || !payload.lead) {
+    if (!payload.answers || !payload.recommendation || !payload.lead || !payload.consultationId) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
     }
 
@@ -54,10 +58,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
     }
 
-    const entry = createAdvisorEntry({
-      locale: payload.locale === "en" ? "en" : "ja",
-      answers: payload.answers as AdvisorAnswers,
-      recommendation: payload.recommendation,
+    const consultation = await findConsultationForViewer({
+      consultationId: payload.consultationId,
+      userId: viewer.account?.id || null,
+      sessionId: viewer.session?.id || null,
+    });
+
+    if (!consultation) {
+      return NextResponse.json({ success: false, error: "consultation_not_found" }, { status: 404 });
+    }
+
+    await attachLeadToConsultation({
+      consultationId: consultation.id,
+      userId: viewer.account?.id || null,
       lead: {
         ...payload.lead,
         name: payload.lead.name.trim(),
@@ -68,9 +81,7 @@ export async function POST(request: Request) {
       },
     });
 
-    await appendAdvisorEntry(entry);
-
-    return NextResponse.json({ success: true, entryId: entry.id });
+    return NextResponse.json({ success: true, entryId: consultation.id });
   } catch (error) {
     console.error("AI advisor lead route error:", error);
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });

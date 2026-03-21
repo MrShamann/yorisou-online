@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local phase-1 persistence
+data/phase1-accounts.json
+data/phase1-sessions.json
+data/phase1-consultations.json
+
 # vercel
 .vercel
 

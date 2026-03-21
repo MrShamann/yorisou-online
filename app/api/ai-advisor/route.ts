@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { generateAdvisorRecommendation, type AdvisorAnswers, type Locale } from "@/lib/ai/yorisouAdvisor";
+import { createConsultation } from "@/lib/server/yorisouData";
+import { getViewerContext, SESSION_COOKIE, ensureViewerSession } from "@/lib/server/yorisouAuth";
+import { getAnswerLabels } from "@/lib/ai/yorisouAdvisor";
 
 type AdvisorRequest = {
   locale?: Locale;
@@ -38,11 +41,28 @@ export async function POST(request: Request) {
     }
 
     const recommendation = await generateAdvisorRecommendation(payload.answers, locale);
+    const viewer = await getViewerContext();
+    const session = viewer.session || (await ensureViewerSession());
+    const consultation = await createConsultation({
+      sessionId: session.id,
+      userId: viewer.account?.id || null,
+      locale,
+      recommendation,
+      answerLabels: getAnswerLabels(payload.answers, locale),
+    });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       recommendation,
+      consultationId: consultation.id,
     });
+    response.cookies.set(SESSION_COOKIE, session.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    });
+    return response;
   } catch (error) {
     console.error("AI advisor route error:", error);
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });

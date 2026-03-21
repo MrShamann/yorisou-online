@@ -4,55 +4,83 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { getSignedInAccount, loginLocalAccount, registerLocalAccount } from "@/lib/mvpAccountStorage";
+import type { AccountRecord } from "@/lib/server/yorisouData";
 
 type Mode = "login" | "register";
 
-export default function AccountEntryForm({ mode, locale }: { mode: Mode; locale: "ja" | "en" }) {
+export default function AccountEntryForm({
+  mode,
+  locale,
+  initialAccount,
+}: {
+  mode: Mode;
+  locale: "ja" | "en";
+  initialAccount: AccountRecord | null;
+}) {
   const router = useRouter();
-  const existingAccount = getSignedInAccount();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [city, setCity] = useState("");
   const [role, setRole] = useState<"self" | "family" | "facility">("family");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const supportHref = locale === "ja" ? "/support" : "/en/support";
   const loginHref = locale === "ja" ? "/login" : "/en/login";
   const registerHref = locale === "ja" ? "/register" : "/en/register";
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setIsSubmitting(true);
 
-    if (mode === "login") {
-      const result = loginLocalAccount(email.trim(), password);
-      if (!result.ok) {
-        setError(locale === "ja" ? "メールアドレスかパスワードが一致しません。" : "Email or password did not match.");
+    try {
+      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const payload =
+        mode === "login"
+          ? {
+              email: email.trim(),
+              password,
+            }
+          : {
+              name: name.trim(),
+              email: email.trim(),
+              password,
+              city: city.trim(),
+              role,
+            };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = (await response.json()) as { success?: boolean; error?: string };
+
+      if (!response.ok || !result.success) {
+        if (result.error === "email_exists") {
+          setError(locale === "ja" ? "そのメールアドレスはすでに登録されています。" : "That email address is already registered.");
+        } else if (result.error === "invalid_credentials") {
+          setError(locale === "ja" ? "メールアドレスかパスワードが一致しません。" : "Email or password did not match.");
+        } else if (result.error === "invalid_payload") {
+          setError(locale === "ja" ? "入力内容を確認してください。" : "Please check the form values.");
+        } else {
+          setError(locale === "ja" ? "処理に失敗しました。時間をおいてお試しください。" : "Request failed. Please try again.");
+        }
         return;
       }
 
       router.push(supportHref);
       router.refresh();
-      return;
+    } catch {
+      setError(locale === "ja" ? "通信に失敗しました。時間をおいてお試しください。" : "Network request failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (!name.trim() || !email.trim() || !password.trim() || !city.trim()) {
-      setError(locale === "ja" ? "お名前、メールアドレス、パスワード、地域を入力してください。" : "Please enter name, email, password, and city.");
-      return;
-    }
-
-    registerLocalAccount({
-      name: name.trim(),
-      email: email.trim(),
-      password,
-      city: city.trim(),
-      role,
-    });
-
-    router.push(supportHref);
-    router.refresh();
   }
 
   return (
@@ -84,11 +112,11 @@ export default function AccountEntryForm({ mode, locale }: { mode: Mode; locale:
                   ? "ご本人、ご家族、施設担当者のどなたでも利用できます。"
                   : "This entry works for the user, family members, or facility operators."}
               </div>
-              {existingAccount && (
+              {initialAccount && (
                 <div className="mt-5 rounded-[1.5rem] border border-[#C8D0C1] bg-[#F3F0E7] px-5 py-5 text-sm leading-7 text-[#4D5642]">
                   {locale === "ja"
-                    ? `${existingAccount.name}さんとしてログイン済みです。`
-                    : `Already signed in as ${existingAccount.name}.`}
+                    ? `${initialAccount.name}さんとしてログイン済みです。`
+                    : `Already signed in as ${initialAccount.name}.`}
                   <div className="mt-4">
                     <Link href={supportHref} className="btn btn-secondary">
                       {locale === "ja" ? "サポートページを見る" : "Open support page"}
@@ -141,7 +169,11 @@ export default function AccountEntryForm({ mode, locale }: { mode: Mode; locale:
                 {error && <p className="text-sm font-medium text-[#9A3B2F]">{error}</p>}
 
                 <button type="submit" className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90">
-                  {mode === "login"
+                  {isSubmitting
+                    ? locale === "ja"
+                      ? "処理中..."
+                      : "Submitting..."
+                    : mode === "login"
                     ? locale === "ja"
                       ? "ログインしてサポートを見る"
                       : "Log in to support"

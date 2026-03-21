@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SiteHeader from "./components/SiteHeader";
 import SiteFooter from "./components/SiteFooter";
+import { getReleaseMarker } from "@/lib/releaseMarker";
 
 export const metadata: Metadata = {
   title: "YORISOU | 高齢者とご家族の移動相談サービス",
@@ -14,9 +15,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const releaseMarker = getReleaseMarker();
   return (
     <html lang="ja">
       <body>
+        <div id="yorisou-release" hidden data-release={releaseMarker} />
         <SiteHeader />
         {children}
         <SiteFooter />
