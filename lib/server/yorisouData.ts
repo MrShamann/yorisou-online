@@ -58,7 +58,9 @@ type DataFile<T> = {
   fallback: T;
 };
 
-const dataDir = path.join(process.cwd(), "data");
+const dataDir =
+  process.env.YORISOU_DATA_DIR ||
+  (process.env.NODE_ENV === "production" ? path.join("/tmp", "yorisou-phase1") : path.join(process.cwd(), "data"));
 const accountsFile: DataFile<AccountRecord[]> = {
   path: path.join(dataDir, "phase1-accounts.json"),
   fallback: [],

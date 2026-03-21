@@ -119,14 +119,14 @@ export default function SupportWorkspace({
       <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
         <section className="border-b border-[#D6C3A3]/22 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.94),_rgba(245,241,232,0.98)_60%)] px-6 py-16 md:px-10 md:py-22">
           <div className="mx-auto max-w-6xl">
-            <div className="shell-card max-w-4xl p-8 md:p-12">
+            <div className="shell-card max-w-3xl p-8 md:p-12">
               <h1 className="text-4xl font-light leading-tight md:text-6xl">
-                {locale === "ja" ? "サポートページで、相談内容をまとめて確認できます" : "Review consultations and support in one place"}
+                {locale === "ja" ? "ログインしてサポートを開く" : "Log in to open support"}
               </h1>
-              <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
+              <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                 {locale === "ja"
-                  ? "ログインすると、相談履歴、ご提案内容、ご家族共有、継続相談、フォローアップをまとめて確認できます。"
-                  : "After login, Yorisou brings together consultation history, recommendation notes, family sharing, ongoing consultation, and follow-up."}
+                  ? "相談内容やご提案を、ひとつのアカウントで確認できます。"
+                  : "Open your account to review saved consultations and recommendations."}
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 <Link href={loginHref} className="btn btn-primary">
@@ -136,29 +136,6 @@ export default function SupportWorkspace({
                   {locale === "ja" ? "新規登録する" : "Create account"}
                 </Link>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-[#D6C3A3]/20 bg-white/58 px-6 py-8 md:px-10">
-          <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-[#D6C3A3]/28 bg-white/78 p-6 md:p-8">
-            <h2 className="text-2xl font-light leading-tight">{locale === "ja" ? "いま確認できる内容" : "What you can review now"}</h2>
-            <p className="mt-3 text-sm leading-7 text-[#5A4B3E] md:text-base">
-              {consultations.length > 0
-                ? locale === "ja"
-                  ? `${consultations.length}件の相談結果が保存されています。ログインすると、このページで確認できます。`
-                  : `${consultations.length} consultation result(s) are saved in the current session. Log in to review them here.`
-                : locale === "ja"
-                  ? "まだ相談結果はありません。まずはAI相談か製品比較から始められます。"
-                  : "There are no saved consultations yet. Start with the advisor or product browsing."}
-            </p>
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row">
-              <Link href={advisorHref} className="btn btn-secondary">
-                {locale === "ja" ? "相談する" : "Start advisor"}
-              </Link>
-              <Link href={productsHref} className="btn btn-secondary">
-                {locale === "ja" ? "製品を見る" : "Browse products"}
-              </Link>
             </div>
           </div>
         </section>
@@ -176,11 +153,6 @@ export default function SupportWorkspace({
                 <h1 className="text-4xl font-light leading-tight md:text-6xl">
                   {locale === "ja" ? `${account.name}さんのサポートページ` : `${account.name}'s support page`}
                 </h1>
-                <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-                  {locale === "ja"
-                    ? "相談履歴、ご提案内容、ご家族と共有したい要点、継続相談、フォローアップをひとつにまとめています。"
-                    : "Consultation history, recommendation notes, family sharing, ongoing consultation, and follow-up are collected here."}
-                </p>
               </div>
               <button
                 type="button"
@@ -351,8 +323,8 @@ export default function SupportWorkspace({
                 </label>
                 <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   {locale === "ja"
-                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。この環境では自動認証は未設定のため、連絡先情報の保存まで利用できます。`
-                    : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. In this environment, automatic LINE authentication is not configured, so contact details can be saved only.`}
+                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。連絡先とフォローアップ設定をこのアカウントに記録します。`
+                    : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. Contact details and follow-up preference are stored in this account.`}
                 </div>
                 <label className="flex items-start gap-3 rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   <input

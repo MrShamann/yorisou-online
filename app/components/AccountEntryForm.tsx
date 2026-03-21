@@ -104,8 +104,8 @@ export default function AccountEntryForm({
                     ? "サポートページでは、相談履歴、ご提案内容、ご家族への共有メモ、フォローアップ状況を確認できます。"
                     : "The support page brings together consultation history, recommendation notes, family sharing, and follow-up status."
                   : locale === "ja"
-                    ? "登録すると、この端末で保存した相談結果をサポートページにまとめて見返せます。"
-                    : "Registration lets you keep locally saved consultations and review them in the support page."}
+                    ? "Yorisouの相談内容やご提案を、ひとつのアカウントで確認できるようになります。"
+                    : "Create one account to keep consultations and recommendations together."}
               </p>
               <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
                 {locale === "ja"

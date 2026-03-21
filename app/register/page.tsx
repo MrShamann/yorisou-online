@@ -5,7 +5,7 @@ import { getViewerContext } from "@/lib/server/yorisouAuth";
 
 export const metadata: Metadata = {
   title: "Yorisou | 新規登録",
-  description: "Yorisouに登録すると、相談履歴やご提案内容をご本人・ご家族で確認できます。",
+  description: "Yorisouのアカウントを作成し、相談内容やご提案をまとめて確認できます。",
 };
 
 export default async function RegisterPage() {
