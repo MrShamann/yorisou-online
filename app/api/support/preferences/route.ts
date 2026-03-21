@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { getViewerContext, restoreAccountFromCookie, setViewerAccountCookie, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
 import { updateSupportProfile, type LineBindingStatus } from "@/lib/server/yorisouData";
 
 type SupportPreferencesPayload = {
@@ -22,6 +22,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "unauthorized" }, { status: 401 });
     }
 
+    await restoreAccountFromCookie(viewer.account);
+
     const payload = (await request.json()) as SupportPreferencesPayload;
     const account = await updateSupportProfile(viewer.account.id, {
       lineBindingStatus: payload.lineBindingStatus,
@@ -34,7 +36,14 @@ export async function POST(request: Request) {
       familyShareNote: payload.familyShareNote?.trim(),
     });
 
-    return NextResponse.json({ success: true, supportProfile: account?.supportProfile || null });
+    const response = NextResponse.json({ success: true, supportProfile: account?.supportProfile || null });
+    if (account) {
+      setViewerAccountCookie(response, account);
+    }
+    if (viewer.session) {
+      setViewerSessionCookie(response, { ...viewer.session, userId: viewer.account.id });
+    }
+    return response;
   } catch (error) {
     console.error("support preferences route error:", error);
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });

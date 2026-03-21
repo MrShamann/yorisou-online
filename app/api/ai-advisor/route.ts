@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { generateAdvisorRecommendation, type AdvisorAnswers, type Locale } from "@/lib/ai/yorisouAdvisor";
 import { createConsultation } from "@/lib/server/yorisouData";
-import { getViewerContext, SESSION_COOKIE, ensureViewerSession } from "@/lib/server/yorisouAuth";
+import { getViewerContext, ensureViewerSession, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
 import { getAnswerLabels } from "@/lib/ai/yorisouAdvisor";
 
 type AdvisorRequest = {
@@ -56,12 +56,7 @@ export async function POST(request: Request) {
       recommendation,
       consultationId: consultation.id,
     });
-    response.cookies.set(SESSION_COOKIE, session.id, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-    });
+    setViewerSessionCookie(response, { ...session, userId: viewer.account?.id || null });
     return response;
   } catch (error) {
     console.error("AI advisor route error:", error);

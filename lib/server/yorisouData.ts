@@ -189,6 +189,23 @@ export async function createAccount(input: {
   return { ok: true as const, account };
 }
 
+export async function upsertAccountRecord(account: AccountRecord) {
+  const accounts = await listAccounts();
+  const nextAccounts = [...accounts];
+  const existingIndex = nextAccounts.findIndex(
+    (entry) => entry.id === account.id || entry.email.toLowerCase() === account.email.toLowerCase(),
+  );
+
+  if (existingIndex >= 0) {
+    nextAccounts[existingIndex] = account;
+  } else {
+    nextAccounts.unshift(account);
+  }
+
+  await writeJson(accountsFile, nextAccounts);
+  return account;
+}
+
 export async function updateSupportProfile(userId: string, patch: Partial<SupportProfile>) {
   const accounts = await listAccounts();
   const updated = accounts.map((account) =>

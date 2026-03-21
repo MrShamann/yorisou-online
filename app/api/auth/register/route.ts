@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createAccount } from "@/lib/server/yorisouData";
-import { bindSessionToUser, ensureViewerSession, SESSION_COOKIE } from "@/lib/server/yorisouAuth";
+import { bindSessionToUser, ensureViewerSession, setViewerAccountCookie, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
 
 type RegisterPayload = {
   name?: string;
@@ -121,12 +121,8 @@ export async function POST(request: Request) {
             email: result.account.email,
           },
         });
-    response.cookies.set(SESSION_COOKIE, session.id, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-    });
+    setViewerSessionCookie(response, { ...session, userId: result.account.id });
+    setViewerAccountCookie(response, result.account);
     return response;
   } catch (error) {
     console.error("register route error:", error);

@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { findAccountByEmail, verifyPassword } from "@/lib/server/yorisouData";
-import { bindSessionToUser, ensureViewerSession, SESSION_COOKIE } from "@/lib/server/yorisouAuth";
+import {
+  bindSessionToUser,
+  ensureViewerSession,
+  readAccountCookieFromRequest,
+  restoreAccountFromCookie,
+  setViewerAccountCookie,
+  setViewerSessionCookie,
+} from "@/lib/server/yorisouAuth";
 
 type LoginPayload = {
   email?: string;
@@ -66,7 +73,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
     }
 
-    const account = await findAccountByEmail(payload.email.trim());
+    const normalizedEmail = payload.email.trim().toLowerCase();
+    const accountFromStore = await findAccountByEmail(normalizedEmail);
+    const accountFromCookie = readAccountCookieFromRequest(request);
+    const account =
+      accountFromStore ||
+      (accountFromCookie && accountFromCookie.email.toLowerCase() === normalizedEmail ? accountFromCookie : null);
 
     if (!account || !verifyPassword(payload.password, account.passwordHash)) {
       if (isDocumentRequest) {
@@ -74,6 +86,8 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ success: false, error: "invalid_credentials" }, { status: 401 });
     }
+
+    await restoreAccountFromCookie(account);
 
     const session = await ensureViewerSession();
     await bindSessionToUser(session.id, account.id);
@@ -88,12 +102,8 @@ export async function POST(request: Request) {
             email: account.email,
           },
         });
-    response.cookies.set(SESSION_COOKIE, session.id, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-    });
+    setViewerSessionCookie(response, { ...session, userId: account.id });
+    setViewerAccountCookie(response, account);
     return response;
   } catch (error) {
     console.error("login route error:", error);
