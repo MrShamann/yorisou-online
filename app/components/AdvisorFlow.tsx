@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useState } from "react";
 
 import type { AdvisorAnswers, AdvisorRecommendation, Locale } from "@/lib/ai/yorisouAdvisor";
 import { getAnswerLabels } from "@/lib/ai/yorisouAdvisor";
+import { markConsultationLeadSubmitted, saveConsultationSnapshot } from "@/lib/mvpAccountStorage";
 import type { AdvisorLead } from "@/lib/yorisouAdvisorStorage";
 
 type AdvisorFlowProps = {
@@ -74,10 +75,10 @@ const copy = {
     answersTitle: "ご入力内容",
     leadTitle: "ご相談内容を送る",
     leadText:
-      "試乗や個別相談をご希望の場合は、連絡先をご入力ください。回答内容とあわせて保存し、今後のフォローにつながる相談記録として扱います。",
+      "試乗や個別相談をご希望の場合は、連絡先をご入力ください。相談内容はサポートページでも見返せるよう保存されます。",
     leadSubmit: "相談内容を送信する",
     leadSubmitting: "送信中...",
-    leadSuccess: "送信を受け付けました。内容を確認のうえ、順次ご連絡いたします。継続相談の入口としても活用していきます。",
+    leadSuccess: "送信を受け付けました。内容を確認のうえ、順次ご連絡いたします。サポートページにも反映しました。",
     leadError: "送信に失敗しました。時間をおいて再度お試しください。",
     disclaimer:
       "本結果は一般的なご案内です。実際の適合性・安全性は、個別相談や試乗での確認をおすすめします。",
@@ -85,13 +86,9 @@ const copy = {
     supportTitle: "このあとのご相談",
     supportCards: [
       "おすすめ内容を見返しながら、試乗や個別相談に進めます。",
-      "ご家族にも共有しやすい形で、確認事項を整理していきます。",
-      "導入後の使い方や不安にもつながる継続支援の土台を整えます。",
+      "ご家族へ伝えたい要点を整理しながら、相談を続けられます。",
+      "相談結果はサポートページにも残せます。",
     ],
-    doorwayTitle: "相談後も見返せる支援基盤を準備しています。",
-    doorwayText:
-      "いまはログイン機能や家族連携機能はありませんが、将来的には相談履歴やご家族共有、フォローアップへつながる形へ広げていく予定です。",
-    doorwayItems: ["相談履歴の確認", "ご家族との共有準備", "継続支援エリア（準備中）"],
     nextStepTitle: "このあとの進め方",
     fields: {
       name: "お名前",
@@ -150,7 +147,7 @@ const copy = {
     answersTitle: "Your answers",
     leadTitle: "Send this consultation",
     leadText:
-      "If you would like a test ride or consultation, please leave your contact details. The advisor answers will be saved together with your lead as the start of an ongoing support record.",
+      "If you would like a test ride or direct consultation, leave your contact details and the result will also remain visible in the support page.",
     leadSubmit: "Submit consultation",
     leadSubmitting: "Submitting...",
     leadSuccess: "Your consultation has been received. We will review it and contact you as the next step in support.",
@@ -161,13 +158,9 @@ const copy = {
     supportTitle: "What comes next",
     supportCards: [
       "Use the recommendation as a starting point for a test ride or a direct consultation.",
-      "Make it easier to share key points with family members before a decision.",
-      "Prepare for follow-up support after introduction, not only the first recommendation.",
+      "Keep key points easy to share with family members before a decision.",
+      "Review the saved result again in the support page.",
     ],
-    doorwayTitle: "The advisor is designed as the entry to ongoing support.",
-    doorwayText:
-      "There is no real member area or LINE-linked continuity yet, but Yorisou is intentionally preparing for recommendation history, family sharing, and follow-up support.",
-    doorwayItems: ["Consultation history", "Family sharing prep", "Support area (coming soon)"],
     nextStepTitle: "Next steps from here",
     fields: {
       name: "Name",
@@ -324,8 +317,11 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
   const [advisorError, setAdvisorError] = useState("");
   const [leadError, setLeadError] = useState("");
   const [leadSuccess, setLeadSuccess] = useState("");
+  const [savedEntryId, setSavedEntryId] = useState<string | null>(null);
 
   const t = copy[locale];
+  const supportHref = locale === "ja" ? "/support" : "/en/support";
+  const loginHref = locale === "ja" ? "/login" : "/en/login";
   const steps: StepDefinition[] = [
     { key: "userType", title: t.stepDescriptions.userType, description: t.stepDescriptions.userType },
     { key: "ageRange", title: t.stepDescriptions.ageRange, description: t.stepDescriptions.ageRange },
@@ -370,6 +366,12 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
 
       const result = (await response.json()) as ResultResponse;
       setRecommendation(result.recommendation);
+      const entryId = saveConsultationSnapshot({
+        locale,
+        recommendation: result.recommendation,
+        answerLabels: getAnswerLabels(answers, locale),
+      });
+      setSavedEntryId(entryId);
     } catch {
       setAdvisorError(locale === "ja" ? "おすすめの整理に失敗しました。時間をおいて再度お試しください。" : "Failed to prepare recommendation. Please try again.");
     } finally {
@@ -416,6 +418,9 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
       }
 
       await response.json() as LeadResponse;
+      if (savedEntryId) {
+        markConsultationLeadSubmitted(savedEntryId);
+      }
       setLeadSuccess(t.leadSuccess);
       setLead(initialLead);
     } catch {
@@ -453,30 +458,30 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
               </button>
             </div>
           </div>
-          <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
-            {locale === "ja"
-              ? "必要に応じて、個別相談やご家族との共有にもつなげていけます。"
-              : "If needed, this can lead to direct consultation or sharing with family members."}
-          </p>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
-            {locale === "ja" ? (
-              <>
-                この相談内容は、今後
-                <Link href="/support" className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
+            <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
+              {locale === "ja"
+                ? "必要に応じて、個別相談やご家族との共有にもつなげていけます。"
+                : "If needed, this can lead to direct consultation or sharing with family members."}
+            </p>
+            <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
+              {locale === "ja" ? (
+                <>
+                相談結果は
+                <Link href={supportHref} className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
                   サポートページ
                 </Link>
-                でも振り返れるよう準備しています。
+                でも見返せます。
               </>
-            ) : (
-              <>
-                Yorisou is also preparing a
-                <Link href="/support" className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
+              ) : (
+                <>
+                Saved consultation results can also be reviewed in the
+                <Link href={supportHref} className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
                   support page
                 </Link>
-                for recommendation history and follow-up.
+                .
               </>
-            )}
-          </p>
+              )}
+            </p>
         </section>
       ) : (
       <section className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
@@ -681,6 +686,14 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                     </div>
                   ))}
                 </div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <Link href={supportHref} className="btn btn-secondary">
+                    {locale === "ja" ? "サポートページで確認する" : "Open support page"}
+                  </Link>
+                  <Link href={loginHref} className="btn btn-secondary">
+                    {locale === "ja" ? "ログインする" : "Log in"}
+                  </Link>
+                </div>
               </div>
 
               <div className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white p-6">
@@ -697,6 +710,7 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
                       setLeadError("");
                       setHasStarted(false);
                       setStepIndex(0);
+                      setSavedEntryId(null);
                     }}
                     className="rounded-full border border-[#D6C3A3]/60 px-6 py-3 text-sm text-[#5A4B3E] transition hover:bg-[#FCFAF6]"
                   >

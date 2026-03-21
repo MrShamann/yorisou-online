@@ -9,17 +9,18 @@ const primaryNavJa = [
   { href: "/ai-advisor", label: "相談する" },
   { href: "/products", label: "製品を見る" },
   { href: "/services", label: "導入・実証" },
-  { href: "/support", label: "ログイン" },
+  { href: "/login", label: "ログイン" },
 ];
 
 const primaryNavEn = [
   { href: "/ai-advisor", label: "Consult" },
   { href: "/products", label: "Products" },
   { href: "/services", label: "Implementation" },
-  { href: "/support", label: "Login" },
+  { href: "/login", label: "Login" },
 ];
 
 const secondaryNavJa = [
+  { href: "/support", label: "サポートページ" },
   { href: "/insights", label: "インサイト" },
   { href: "/about", label: "Yorisouについて" },
   { href: "/pilot", label: "実証実験" },
@@ -29,6 +30,7 @@ const secondaryNavJa = [
 ];
 
 const secondaryNavEn = [
+  { href: "/support", label: "Support" },
   { href: "/insights", label: "Insights" },
   { href: "/about", label: "About" },
   { href: "/pilot", label: "Pilot Program" },
@@ -41,7 +43,7 @@ function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products"].includes(base)) return base;
+    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -50,7 +52,7 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products"].includes(pathname)) return `/en${pathname}`;
+  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 
@@ -64,7 +66,6 @@ export default function SiteHeader() {
   const normalizedCurrent = useMemo(() => currentPath.replace(/\/$/, "") || "/", [currentPath]);
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
-  const loginHref = localizedHref("/support");
   const languageHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
 
   function localizedHref(path: string) {
@@ -85,7 +86,7 @@ export default function SiteHeader() {
               <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={84} height={84} className="h-auto w-[66px] object-contain md:w-[82px]" />
             </div>
             <div className="min-w-0">
-              <div className="text-[1.7rem] font-semibold tracking-[0.28em] text-[var(--text)] md:text-[2.2rem]">YORISOU</div>
+              <div className="text-[1.78rem] font-semibold tracking-[0.28em] text-[var(--text)] md:text-[2.35rem]">YORISOU</div>
               <div className="mt-2 hidden text-[0.95rem] leading-7 text-[#6E5D4D] md:block">
                 {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動相談に、静かに寄り添うサービス"}
               </div>
@@ -149,9 +150,6 @@ export default function SiteHeader() {
             </nav>
 
             <div className="header-actions">
-              <Link href={loginHref} className="login-link" onClick={() => setOpen(false)}>
-                {isEn ? "Login" : "ログイン"}
-              </Link>
               <Link href={languageHref} className="locale-switch" onClick={() => setOpen(false)}>
                 <span className="locale-current">{isEn ? "EN" : "JP"}</span>
                 <span className="locale-target">{isEn ? "日本語" : "EN"}</span>
@@ -253,17 +251,6 @@ export default function SiteHeader() {
           align-items: center;
           gap: 10px;
         }
-        .login-link {
-          border: 1px solid rgba(217, 204, 184, 0.58);
-          border-radius: 999px;
-          padding: 12px 18px;
-          font-size: 12px;
-          text-decoration: none;
-          font-weight: 700;
-          color: var(--text);
-          background: rgba(255, 255, 255, 0.82);
-          box-shadow: 0 12px 28px rgba(59, 47, 47, 0.04);
-        }
         .locale-switch {
           display: inline-flex;
           align-items: center;
@@ -344,13 +331,11 @@ export default function SiteHeader() {
             background: #fcfaf6;
           }
           .header-actions {
-            justify-content: stretch;
-            flex-direction: column;
+            justify-content: flex-end;
+            flex-direction: row;
           }
-          .login-link,
           .locale-switch {
-            width: 100%;
-            text-align: center;
+            width: auto;
             justify-content: center;
           }
         }

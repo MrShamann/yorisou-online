@@ -30,8 +30,8 @@ export default function HomePage() {
               <Link href="/products" className="btn btn-secondary">
                 製品を見る
               </Link>
-              <Link href="/support" className="btn btn-secondary">
-                サポートページへ
+              <Link href="/login" className="btn btn-secondary">
+                ログイン / サポートへ
               </Link>
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function HomePage() {
           </div>
           <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-5 py-5">
             <div className="text-sm leading-7 text-[#6B5A4A]">
-              まず相談し、合う製品を見比べながら、その後はサポートページで振り返れる形を準備しています。
+              まず相談し、合う製品を見比べながら、相談結果やご提案内容はログイン後のサポートページでまとめて見返せます。
             </div>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <Link href="/ai-advisor" className="btn btn-secondary">
@@ -73,8 +73,8 @@ export default function HomePage() {
               <Link href="/products" className="btn btn-secondary">
                 製品を見る
               </Link>
-              <Link href="/support" className="btn btn-secondary">
-                サポートページへ
+              <Link href="/login" className="btn btn-secondary">
+                ログイン / サポートへ
               </Link>
             </div>
           </div>
