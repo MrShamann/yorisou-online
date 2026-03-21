@@ -18,6 +18,7 @@ const primaryNavEn = [
 ];
 
 const secondaryNavJa = [
+  { href: "/support", label: "サポートページ" },
   { href: "/about", label: "Yorisouについて" },
   { href: "/pilot", label: "実証実験" },
   { href: "/progress", label: "実証進捗" },
@@ -26,6 +27,7 @@ const secondaryNavJa = [
 ];
 
 const secondaryNavEn = [
+  { href: "/support", label: "Support Page" },
   { href: "/about", label: "About" },
   { href: "/pilot", label: "Pilot Program" },
   { href: "/progress", label: "Progress" },
@@ -37,7 +39,7 @@ function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights"].includes(base)) return base;
+    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -46,7 +48,7 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights"].includes(pathname)) return `/en${pathname}`;
+  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 
@@ -60,7 +62,7 @@ export default function SiteHeader() {
   const normalizedCurrent = useMemo(() => currentPath.replace(/\/$/, "") || "/", [currentPath]);
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
-  const langSwitchHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
+  const supportHref = "/support";
 
   function localizedHref(path: string) {
     return isEn ? toEnglishPath(path) : path;
@@ -76,12 +78,12 @@ export default function SiteHeader() {
       <div className="container py-4">
         <div className="flex items-center justify-between gap-6">
           <Link href={homeHref} className="flex min-w-0 items-center gap-4 no-underline">
-            <div className="flex h-[78px] w-[78px] items-center justify-center rounded-[1.45rem] border border-[#D9CCB8]/72 bg-white/94 shadow-[0_14px_34px_rgba(59,47,47,0.08)] md:h-[92px] md:w-[92px]">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={68} height={68} className="h-auto w-[58px] object-contain md:w-[66px]" />
+            <div className="flex h-[88px] w-[88px] items-center justify-center rounded-[1.7rem] border border-[#D9CCB8]/78 bg-white/96 shadow-[0_20px_44px_rgba(59,47,47,0.09)] md:h-[112px] md:w-[112px]">
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={84} height={84} className="h-auto w-[66px] object-contain md:w-[82px]" />
             </div>
             <div className="min-w-0">
-              <div className="text-[1.42rem] font-semibold tracking-[0.22em] text-[var(--text)] md:text-[1.8rem]">YORISOU</div>
-              <div className="mt-1 hidden text-sm leading-6 text-[#6E5D4D] md:block">
+              <div className="text-[1.7rem] font-semibold tracking-[0.28em] text-[var(--text)] md:text-[2.2rem]">YORISOU</div>
+              <div className="mt-2 hidden text-[0.95rem] leading-7 text-[#6E5D4D] md:block">
                 {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動相談に、静かに寄り添うサービス"}
               </div>
             </div>
@@ -144,8 +146,8 @@ export default function SiteHeader() {
             </nav>
 
             <div className="header-actions">
-              <Link href={langSwitchHref} className="lang-switch" onClick={() => setOpen(false)}>
-                {isEn ? "日本語" : "EN"}
+              <Link href={supportHref} className="support-link" onClick={() => setOpen(false)}>
+                {isEn ? "Support Page" : "サポートページへ"}
               </Link>
             </div>
           </div>
@@ -156,16 +158,17 @@ export default function SiteHeader() {
         .site-nav {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 14px;
         }
         .primary-nav {
           display: flex;
           align-items: center;
-          gap: 2px;
-          padding: 4px;
+          gap: 4px;
+          padding: 6px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.5);
-          border: 1px solid rgba(217, 204, 184, 0.24);
+          background: rgba(255, 255, 255, 0.56);
+          border: 1px solid rgba(217, 204, 184, 0.28);
+          box-shadow: 0 12px 28px rgba(59, 47, 47, 0.04);
         }
         .nav-link,
         .more-button {
@@ -173,9 +176,9 @@ export default function SiteHeader() {
           background: transparent;
           text-decoration: none;
           color: var(--text);
-          padding: 10px 13px;
+          padding: 12px 16px;
           border-radius: 999px;
-          font-size: 11px;
+          font-size: 12px;
           white-space: nowrap;
           cursor: pointer;
         }
@@ -183,7 +186,7 @@ export default function SiteHeader() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-width: 38px;
+          min-width: 42px;
         }
         .nav-link:hover,
         .nav-link.active,
@@ -242,14 +245,16 @@ export default function SiteHeader() {
           display: flex;
           align-items: center;
         }
-        .lang-switch {
-          border: 1px solid rgba(217, 204, 184, 0.55);
+        .support-link {
+          border: 1px solid rgba(217, 204, 184, 0.58);
           border-radius: 999px;
-          padding: 8px 11px;
+          padding: 12px 18px;
           font-size: 12px;
           text-decoration: none;
           font-weight: 700;
-          background: rgba(255, 255, 255, 0.72);
+          color: var(--text);
+          background: rgba(255, 255, 255, 0.82);
+          box-shadow: 0 12px 28px rgba(59, 47, 47, 0.04);
         }
         @media (max-width: 1024px) {
           .mobile-toggle {
@@ -279,12 +284,14 @@ export default function SiteHeader() {
             align-items: stretch;
             border-radius: 18px;
             padding: 8px;
+            box-shadow: none;
           }
           .nav-link,
           .more-button,
           .more-link {
             border-radius: 12px;
-            padding: 11px 12px;
+            padding: 14px 16px;
+            font-size: 13px;
           }
           .more-button {
             justify-content: space-between;
@@ -299,7 +306,11 @@ export default function SiteHeader() {
             background: #fcfaf6;
           }
           .header-actions {
-            justify-content: flex-end;
+            justify-content: stretch;
+          }
+          .support-link {
+            width: 100%;
+            text-align: center;
           }
         }
       `}</style>

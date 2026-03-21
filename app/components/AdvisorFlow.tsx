@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 
 import type { AdvisorAnswers, AdvisorRecommendation, Locale } from "@/lib/ai/yorisouAdvisor";
@@ -456,6 +457,25 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
             {locale === "ja"
               ? "必要に応じて、個別相談やご家族との共有にもつなげていけます。"
               : "If needed, this can lead to direct consultation or sharing with family members."}
+          </p>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
+            {locale === "ja" ? (
+              <>
+                この相談内容は、今後
+                <Link href="/support" className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
+                  サポートページ
+                </Link>
+                でも振り返れるよう準備しています。
+              </>
+            ) : (
+              <>
+                Yorisou is also preparing a
+                <Link href="/support" className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
+                  support page
+                </Link>
+                for recommendation history and follow-up.
+              </>
+            )}
           </p>
         </section>
       ) : (
