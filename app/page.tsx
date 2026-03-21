@@ -23,12 +23,15 @@ export default function HomePage() {
               Yorisouは、高齢者とご家族のための移動相談サービスです。
               いきなり決めるのではなく、いまの暮らしに合う移動のかたちを、相談から静かに整えていきます。
             </p>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
               <Link href="/ai-advisor" className="btn btn-primary">
-                AI相談を始める
+                相談する
               </Link>
-              <Link href="/services" className="btn btn-secondary">
-                導入・実証について見る
+              <Link href="/products" className="btn btn-secondary">
+                製品を見る
+              </Link>
+              <Link href="/support" className="btn btn-secondary">
+                サポートページへ
               </Link>
             </div>
           </div>
@@ -59,16 +62,20 @@ export default function HomePage() {
               必要に応じてご家族にも共有しながら、試乗や個別相談、導入後の見直しへつながる支え方を整えます。
             </p>
           </div>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/ai-advisor" className="btn btn-secondary">
-              相談を始める
-            </Link>
+          <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-5 py-5">
             <div className="text-sm leading-7 text-[#6B5A4A]">
-              相談後に見返せる記録やご家族との共有は、
-              <Link href="/support" className="ml-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
-                サポートページ
+              まず相談し、合う製品を見比べながら、その後はサポートページで振り返れる形を準備しています。
+            </div>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <Link href="/ai-advisor" className="btn btn-secondary">
+                まず相談する
               </Link>
-              として準備しています。
+              <Link href="/products" className="btn btn-secondary">
+                製品を見る
+              </Link>
+              <Link href="/support" className="btn btn-secondary">
+                サポートページへ
+              </Link>
             </div>
           </div>
         </div>

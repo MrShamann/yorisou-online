@@ -24,6 +24,10 @@ const futureSections = [
     title: "継続相談・見直し",
     body: "導入後に気になったことや見直したい点も、継続して相談しやすい流れへつなげていく予定です。",
   },
+  {
+    title: "フォローアップ",
+    body: "試乗後や導入後に確認したい点、次の相談タイミングもこのページで追いやすくする予定です。",
+  },
 ];
 
 export default function SupportPage() {
@@ -32,9 +36,9 @@ export default function SupportPage() {
       <section className="border-b border-[#D6C3A3]/22 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.94),_rgba(245,241,232,0.98)_60%)] px-6 py-16 md:px-10 md:py-22">
         <div className="mx-auto max-w-6xl">
           <div className="shell-card max-w-4xl p-8 md:p-12">
-            <h1 className="text-4xl font-light leading-tight md:text-6xl">相談のあとも、ひと続きで支えられるよう準備しています</h1>
+            <h1 className="text-4xl font-light leading-tight md:text-6xl">ログイン後の支援を、ここにまとめていく予定です</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisouは、一度きりの相談窓口ではなく、あとから振り返り、ご家族とも共有しながら、導入後の見直しまで続けて相談しやすい形を目指しています。
+              Yorisouは、一度きりの相談窓口ではなく、相談履歴、ご提案内容、ご家族共有、継続相談までをひとつにつなげる会員ページを準備しています。
             </p>
           </div>
         </div>
@@ -45,7 +49,7 @@ export default function SupportPage() {
           <div>
             <h2 className="text-2xl font-light leading-tight">ログイン・登録</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5A4B3E] md:text-base">
-              現在、ログインや会員登録の機能は準備中です。公開後は、相談履歴やご提案内容、ご家族との共有をこのページから確認できるようにしていきます。
+              現在、ログインや会員登録の機能は準備中です。公開後は、相談履歴、ご提案内容、ご家族との共有、継続相談やフォローアップをこのページから確認できるようにしていきます。
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -71,8 +75,8 @@ export default function SupportPage() {
 
       <section className="border-b border-[#D6C3A3]/22 bg-[#FBF7F0] px-6 py-16 md:px-10 md:py-18">
         <div className="mx-auto max-w-6xl rounded-[2.25rem] border border-[#D6C3A3]/28 bg-white/78 p-7 shadow-[0_24px_60px_rgba(59,47,47,0.05)] md:p-10">
-          <h2 className="text-3xl font-light leading-tight">これから、このページでできるようにしていくこと</h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <h2 className="text-3xl font-light leading-tight">ログイン後に見られるようにしていくもの</h2>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {futureSections.map((section) => (
               <div key={section.title} className="rounded-[1.6rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
                 <h3 className="text-xl font-light leading-tight text-[#3B2F2F]">{section.title}</h3>
@@ -81,11 +85,14 @@ export default function SupportPage() {
             ))}
           </div>
           <p className="mt-8 text-sm leading-7 text-[#6B5A4A] md:text-base">
-            まだ実際の会員機能はありませんが、今後の継続支援はこのページを入口にまとめていく予定です。
+            まだ実際の会員機能はありませんが、今後の継続支援はこのページを会員入口としてまとめていく予定です。
           </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
             <Link href="/ai-advisor" className="btn btn-primary">
-              AI相談を始める
+              相談する
+            </Link>
+            <Link href="/products" className="btn btn-secondary">
+              製品を見る
             </Link>
             <Link href="/services" className="btn btn-secondary">
               導入・実証の考え方を見る

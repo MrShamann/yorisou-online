@@ -6,19 +6,21 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
-  { href: "/ai-advisor", label: "モビリティ相談" },
-  { href: "/insights", label: "インサイト" },
+  { href: "/ai-advisor", label: "相談する" },
+  { href: "/products", label: "製品を見る" },
   { href: "/services", label: "導入・実証" },
+  { href: "/support", label: "ログイン" },
 ];
 
 const primaryNavEn = [
-  { href: "/ai-advisor", label: "Advisor" },
-  { href: "/insights", label: "Insights" },
-  { href: "/services", label: "Solutions" },
+  { href: "/ai-advisor", label: "Consult" },
+  { href: "/products", label: "Products" },
+  { href: "/services", label: "Implementation" },
+  { href: "/support", label: "Login" },
 ];
 
 const secondaryNavJa = [
-  { href: "/support", label: "サポートページ" },
+  { href: "/insights", label: "インサイト" },
   { href: "/about", label: "Yorisouについて" },
   { href: "/pilot", label: "実証実験" },
   { href: "/progress", label: "実証進捗" },
@@ -27,7 +29,7 @@ const secondaryNavJa = [
 ];
 
 const secondaryNavEn = [
-  { href: "/support", label: "Support Page" },
+  { href: "/insights", label: "Insights" },
   { href: "/about", label: "About" },
   { href: "/pilot", label: "Pilot Program" },
   { href: "/progress", label: "Progress" },
@@ -39,7 +41,7 @@ function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support"].includes(base)) return base;
+    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -48,7 +50,7 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support"].includes(pathname)) return `/en${pathname}`;
+  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 
@@ -62,7 +64,8 @@ export default function SiteHeader() {
   const normalizedCurrent = useMemo(() => currentPath.replace(/\/$/, "") || "/", [currentPath]);
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
-  const supportHref = "/support";
+  const loginHref = localizedHref("/support");
+  const languageHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
 
   function localizedHref(path: string) {
     return isEn ? toEnglishPath(path) : path;
@@ -146,8 +149,12 @@ export default function SiteHeader() {
             </nav>
 
             <div className="header-actions">
-              <Link href={supportHref} className="support-link" onClick={() => setOpen(false)}>
-                {isEn ? "Support Page" : "サポートページへ"}
+              <Link href={loginHref} className="login-link" onClick={() => setOpen(false)}>
+                {isEn ? "Login" : "ログイン"}
+              </Link>
+              <Link href={languageHref} className="locale-switch" onClick={() => setOpen(false)}>
+                <span className="locale-current">{isEn ? "EN" : "JP"}</span>
+                <span className="locale-target">{isEn ? "日本語" : "EN"}</span>
               </Link>
             </div>
           </div>
@@ -244,8 +251,9 @@ export default function SiteHeader() {
         .header-actions {
           display: flex;
           align-items: center;
+          gap: 10px;
         }
-        .support-link {
+        .login-link {
           border: 1px solid rgba(217, 204, 184, 0.58);
           border-radius: 999px;
           padding: 12px 18px;
@@ -255,6 +263,36 @@ export default function SiteHeader() {
           color: var(--text);
           background: rgba(255, 255, 255, 0.82);
           box-shadow: 0 12px 28px rgba(59, 47, 47, 0.04);
+        }
+        .locale-switch {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid rgba(217, 204, 184, 0.58);
+          border-radius: 999px;
+          padding: 8px 10px;
+          text-decoration: none;
+          background: rgba(255, 255, 255, 0.82);
+          box-shadow: 0 12px 28px rgba(59, 47, 47, 0.04);
+          color: var(--text);
+        }
+        .locale-current {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 34px;
+          height: 28px;
+          border-radius: 999px;
+          background: rgba(243, 235, 224, 0.9);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+        }
+        .locale-target {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          padding-right: 4px;
         }
         @media (max-width: 1024px) {
           .mobile-toggle {
@@ -307,10 +345,13 @@ export default function SiteHeader() {
           }
           .header-actions {
             justify-content: stretch;
+            flex-direction: column;
           }
-          .support-link {
+          .login-link,
+          .locale-switch {
             width: 100%;
             text-align: center;
+            justify-content: center;
           }
         }
       `}</style>
