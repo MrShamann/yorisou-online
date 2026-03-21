@@ -81,7 +81,6 @@ type MigrationState = {
   consultationCount: number;
 };
 
-const DEFAULT_SHARED_BUCKET = "yorisou-phase1-shared-prod-20260321";
 const DEFAULT_SHARED_REGION = "us-east-2";
 const SHARED_PREFIX = "phase1";
 const MIGRATION_VERSION = 2;
@@ -89,8 +88,7 @@ const MIGRATION_VERSION = 2;
 const dataDir =
   process.env.YORISOU_DATA_DIR ||
   (process.env.NODE_ENV === "production" ? path.join("/tmp", "yorisou-phase1") : path.join(process.cwd(), "data"));
-const sharedStoreBucket =
-  process.env.YORISOU_SHARED_STORE_BUCKET || (process.env.NODE_ENV === "production" ? DEFAULT_SHARED_BUCKET : "");
+const sharedStoreBucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
 const sharedStoreRegion = process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
 const shouldUseSharedStore = Boolean(sharedStoreBucket);
 
