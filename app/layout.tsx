@@ -4,9 +4,9 @@ import SiteHeader from "./components/SiteHeader";
 import SiteFooter from "./components/SiteFooter";
 
 export const metadata: Metadata = {
-  title: "YORISOU | 日本のシニアモビリティ相談プラットフォーム",
+  title: "YORISOU | 高齢者とご家族の移動相談サービス",
   description:
-    "YORISOUは、日本の高齢者とご家族に向けたモビリティ相談プラットフォームです。福岡での実証検証とインサイト分析を通じて、納得しやすく続けやすい移動支援を育てています。",
+    "YORISOUは、日本の高齢者とご家族に向けた移動相談サービスです。相談、製品比較、導入検討までを落ち着いてつなぎ、福岡での検証知見も支援に活かしています。",
 };
 
 export default function RootLayout({

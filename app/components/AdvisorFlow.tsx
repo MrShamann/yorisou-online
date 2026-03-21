@@ -75,7 +75,7 @@ const copy = {
     answersTitle: "ご入力内容",
     leadTitle: "ご相談内容を送る",
     leadText:
-      "試乗や個別相談をご希望の場合は、連絡先をご入力ください。相談内容はサポートページでも見返せるよう保存されます。",
+      "試乗や個別相談をご希望の場合は、連絡先をご入力ください。送信した内容はサポートページでも確認できます。",
     leadSubmit: "相談内容を送信する",
     leadSubmitting: "送信中...",
     leadSuccess: "送信を受け付けました。内容を確認のうえ、順次ご連絡いたします。サポートページにも反映しました。",
@@ -458,30 +458,6 @@ export default function AdvisorFlow({ locale }: AdvisorFlowProps) {
               </button>
             </div>
           </div>
-            <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
-              {locale === "ja"
-                ? "必要に応じて、個別相談やご家族との共有にもつなげていけます。"
-                : "If needed, this can lead to direct consultation or sharing with family members."}
-            </p>
-            <p className="mx-auto mt-3 max-w-2xl text-center text-sm leading-7 text-[#6B5A4A]">
-              {locale === "ja" ? (
-                <>
-                相談結果は
-                <Link href={supportHref} className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
-                  サポートページ
-                </Link>
-                でも見返せます。
-              </>
-              ) : (
-                <>
-                Saved consultation results can also be reviewed in the
-                <Link href={supportHref} className="mx-1 text-[#3B2F2F] underline decoration-[#D6C3A3] underline-offset-4">
-                  support page
-                </Link>
-                .
-              </>
-              )}
-            </p>
         </section>
       ) : (
       <section className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">

@@ -46,11 +46,11 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
           <div className="mx-auto max-w-6xl">
             <div className="shell-card max-w-4xl p-8 md:p-12">
               <h1 className="text-4xl font-light leading-tight md:text-6xl">
-                {locale === "ja" ? "サポートページで、相談のつづきを確認できます" : "Review consultations and support in one place"}
+                {locale === "ja" ? "サポートページで、相談内容をまとめて確認できます" : "Review consultations and support in one place"}
               </h1>
               <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                 {locale === "ja"
-                  ? "ログインすると、相談履歴、ご提案内容、ご家族への共有メモ、継続相談の入口をまとめて確認できます。"
+                  ? "ログインすると、相談履歴、ご提案内容、ご家族共有、継続相談、フォローアップをまとめて確認できます。"
                   : "After login, Yorisou brings together consultation history, recommendation notes, family-sharing text, and follow-up actions."}
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -67,7 +67,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
 
         <section className="border-b border-[#D6C3A3]/20 bg-white/58 px-6 py-8 md:px-10">
           <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-[#D6C3A3]/28 bg-white/78 p-6 md:p-8">
-            <h2 className="text-2xl font-light leading-tight">{locale === "ja" ? "この端末にある相談内容" : "Consultations on this device"}</h2>
+            <h2 className="text-2xl font-light leading-tight">{locale === "ja" ? "いま確認できる内容" : "What you can review now"}</h2>
             <p className="mt-3 text-sm leading-7 text-[#5A4B3E] md:text-base">
               {consultations.length > 0
                 ? locale === "ja"
@@ -103,7 +103,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
                 </h1>
                 <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                   {locale === "ja"
-                    ? "相談履歴、ご提案内容、ご家族と共有したい要点、継続相談の入口をひとつにまとめています。"
+                    ? "相談履歴、ご提案内容、ご家族と共有したい要点、継続相談、フォローアップをひとつにまとめています。"
                     : "Consultation history, recommendation notes, family-sharing text, and follow-up support are collected here."}
                 </p>
               </div>
@@ -127,7 +127,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
           <StatCard
             label={locale === "ja" ? "相談履歴" : "Consultations"}
             value={String(consultations.length)}
-            note={locale === "ja" ? "この端末で保存されている件数" : "Saved on this device"}
+            note={locale === "ja" ? "現在見返せる件数" : "Currently available"}
           />
           <StatCard
             label={locale === "ja" ? "ご提案内容" : "Recommendation notes"}
@@ -159,7 +159,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
               ) : (
                 <EmptyState
                   locale={locale}
-                  textJa="まだ相談履歴はありません。AI相談から始めると、このページに保存されます。"
+                  textJa="まだ相談履歴はありません。AI相談から始められます。"
                   textEn="No consultation history yet. Start with the advisor and it will appear here."
                 />
               )}
@@ -183,7 +183,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
               ) : (
                 <EmptyState
                   locale={locale}
-                  textJa="ご提案内容はまだありません。製品比較だけでなく、AI相談の結果もここに残ります。"
+                  textJa="ご提案内容はまだありません。まずは相談や製品比較から始められます。"
                   textEn="No recommendation is saved yet. Advisor results will appear here."
                 />
               )}
@@ -207,7 +207,7 @@ export default function SupportWorkspace({ locale }: { locale: "ja" | "en" }) {
               ) : (
                 <EmptyState
                   locale={locale}
-                  textJa="共有する内容はまだありません。相談結果が保存されると、ここからご家族向けの要点をまとめられます。"
+                  textJa="共有する内容はまだありません。相談結果が保存されると、ご家族向けの要点をここでコピーできます。"
                   textEn="No shareable note yet. Once a consultation is saved, key points can be copied here."
                 />
               )}

@@ -20,22 +20,14 @@ const primaryNavEn = [
 ];
 
 const secondaryNavJa = [
-  { href: "/support", label: "サポートページ" },
   { href: "/insights", label: "インサイト" },
   { href: "/about", label: "Yorisouについて" },
-  { href: "/pilot", label: "実証実験" },
-  { href: "/progress", label: "実証進捗" },
-  { href: "/partners", label: "連携" },
   { href: "/contact", label: "お問い合わせ" },
 ];
 
 const secondaryNavEn = [
-  { href: "/support", label: "Support" },
   { href: "/insights", label: "Insights" },
   { href: "/about", label: "About" },
-  { href: "/pilot", label: "Pilot Program" },
-  { href: "/progress", label: "Progress" },
-  { href: "/partners", label: "Partners" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -73,6 +65,9 @@ export default function SiteHeader() {
   }
 
   function isActive(path: string) {
+    if (path === "/login") {
+      return ["/login", "/register", "/support"].includes(normalizedCurrent);
+    }
     const normalizedHref = path.replace(/\/$/, "") || "/";
     return normalizedCurrent === normalizedHref || normalizedCurrent.startsWith(`${normalizedHref}/`);
   }
@@ -123,7 +118,7 @@ export default function SiteHeader() {
                   type="button"
                   className={`more-button ${secondaryNav.some((item) => isActive(item.href)) ? "active" : ""}`}
                   onClick={() => setMoreOpen((value) => !value)}
-                  aria-label={isEn ? "More" : "その他の案内"}
+                  aria-label={isEn ? "More" : "補助メニュー"}
                 >
                   <span className="menu-icon" aria-hidden="true">
                     <span />

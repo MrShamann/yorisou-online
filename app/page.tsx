@@ -31,7 +31,7 @@ export default function HomePage() {
                 製品を見る
               </Link>
               <Link href="/login" className="btn btn-secondary">
-                ログイン / サポートへ
+                ログイン
               </Link>
             </div>
           </div>
@@ -62,11 +62,8 @@ export default function HomePage() {
               必要に応じてご家族にも共有しながら、試乗や個別相談、導入後の見直しへつながる支え方を整えます。
             </p>
           </div>
-          <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-5 py-5">
-            <div className="text-sm leading-7 text-[#6B5A4A]">
-              まず相談し、合う製品を見比べながら、相談結果やご提案内容はログイン後のサポートページでまとめて見返せます。
-            </div>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 border-t border-[#D6C3A3]/26 pt-6">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/ai-advisor" className="btn btn-secondary">
                 まず相談する
               </Link>
@@ -74,7 +71,7 @@ export default function HomePage() {
                 製品を見る
               </Link>
               <Link href="/login" className="btn btn-secondary">
-                ログイン / サポートへ
+                ログイン
               </Link>
             </div>
           </div>
