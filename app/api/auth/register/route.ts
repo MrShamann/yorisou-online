@@ -20,6 +20,19 @@ function safeRedirectPath(value: string | undefined, fallback: string) {
   return value;
 }
 
+function buildRedirectUrl(request: Request, path: string) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost || request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const proto = forwardedProto || (host?.includes("localhost") ? "http" : "https");
+
+  if (host) {
+    return new URL(path, `${proto}://${host}`);
+  }
+
+  return new URL(path, request.url);
+}
+
 async function parsePayload(request: Request): Promise<{ payload: RegisterPayload; isDocumentRequest: boolean }> {
   const contentType = request.headers.get("content-type") || "";
 
@@ -54,7 +67,7 @@ export async function POST(request: Request) {
 
     if (!payload.name?.trim() || !payload.email?.trim() || !payload.password?.trim() || !payload.city?.trim()) {
       if (isDocumentRequest) {
-        return NextResponse.redirect(new URL(`${returnPath}?error=invalid_payload`, request.url), { status: 303 });
+        return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=invalid_payload`), { status: 303 });
       }
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
     }
@@ -69,7 +82,7 @@ export async function POST(request: Request) {
 
     if (!result.ok) {
       if (isDocumentRequest) {
-        return NextResponse.redirect(new URL(`${returnPath}?error=${result.reason}`, request.url), { status: 303 });
+        return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=${result.reason}`), { status: 303 });
       }
       return NextResponse.json({ success: false, error: result.reason }, { status: 409 });
     }
@@ -78,7 +91,7 @@ export async function POST(request: Request) {
     await bindSessionToUser(session.id, result.account.id);
 
     const response = isDocumentRequest
-      ? NextResponse.redirect(new URL(successPath, request.url), { status: 303 })
+      ? NextResponse.redirect(buildRedirectUrl(request, successPath), { status: 303 })
       : NextResponse.json({
           success: true,
           account: {
@@ -97,7 +110,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("register route error:", error);
     if ((request.headers.get("content-type") || "").includes("application/x-www-form-urlencoded")) {
-      return NextResponse.redirect(new URL(`${returnPath}?error=unexpected_error`, request.url), { status: 303 });
+      return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=unexpected_error`), { status: 303 });
     }
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });
   }
