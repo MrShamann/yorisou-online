@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { AccountRecord } from "@/lib/server/yorisouData";
@@ -12,75 +11,29 @@ export default function AccountEntryForm({
   mode,
   locale,
   initialAccount,
+  initialError,
 }: {
   mode: Mode;
   locale: "ja" | "en";
   initialAccount: AccountRecord | null;
+  initialError?: string | null;
 }) {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [city, setCity] = useState("");
   const [role, setRole] = useState<"self" | "family" | "facility">("family");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const supportHref = locale === "ja" ? "/support" : "/en/support";
   const loginHref = locale === "ja" ? "/login" : "/en/login";
   const registerHref = locale === "ja" ? "/register" : "/en/register";
+  const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function handleSubmit() {
     setError("");
     setIsSubmitting(true);
-
-    try {
-      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const payload =
-        mode === "login"
-          ? {
-              email: email.trim(),
-              password,
-            }
-          : {
-              name: name.trim(),
-              email: email.trim(),
-              password,
-              city: city.trim(),
-              role,
-            };
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = (await response.json()) as { success?: boolean; error?: string };
-
-      if (!response.ok || !result.success) {
-        if (result.error === "email_exists") {
-          setError(locale === "ja" ? "そのメールアドレスはすでに登録されています。" : "That email address is already registered.");
-        } else if (result.error === "invalid_credentials") {
-          setError(locale === "ja" ? "メールアドレスかパスワードが一致しません。" : "Email or password did not match.");
-        } else if (result.error === "invalid_payload") {
-          setError(locale === "ja" ? "入力内容を確認してください。" : "Please check the form values.");
-        } else {
-          setError(locale === "ja" ? "処理に失敗しました。時間をおいてお試しください。" : "Request failed. Please try again.");
-        }
-        return;
-      }
-
-      router.push(supportHref);
-      router.refresh();
-    } catch {
-      setError(locale === "ja" ? "通信に失敗しました。時間をおいてお試しください。" : "Network request failed. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
   }
 
   return (
@@ -136,28 +89,30 @@ export default function AccountEntryForm({
                 </Link>
               </div>
 
-              <form className="grid gap-5" onSubmit={handleSubmit}>
+              <form className="grid gap-5" action={endpoint} method="post" onSubmit={handleSubmit}>
+                <input type="hidden" name="next" value={supportHref} />
+                <input type="hidden" name="returnTo" value={mode === "login" ? loginHref : registerHref} />
                 {mode === "register" && (
                   <Field label={locale === "ja" ? "お名前" : "Name"}>
-                    <input value={name} onChange={(event) => setName(event.target.value)} className={inputClassName} />
+                    <input name="name" value={name} onChange={(event) => setName(event.target.value)} className={inputClassName} />
                   </Field>
                 )}
 
                 <Field label={locale === "ja" ? "メールアドレス" : "Email"}>
-                  <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClassName} />
+                  <input name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClassName} />
                 </Field>
 
                 <Field label={locale === "ja" ? "パスワード" : "Password"}>
-                  <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className={inputClassName} />
+                  <input name="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className={inputClassName} />
                 </Field>
 
                 {mode === "register" && (
                   <>
                     <Field label={locale === "ja" ? "お住まいの地域" : "City / area"}>
-                      <input value={city} onChange={(event) => setCity(event.target.value)} className={inputClassName} />
+                      <input name="city" value={city} onChange={(event) => setCity(event.target.value)} className={inputClassName} />
                     </Field>
                     <Field label={locale === "ja" ? "立場" : "Role"}>
-                      <select value={role} onChange={(event) => setRole(event.target.value as "self" | "family" | "facility")} className={inputClassName}>
+                      <select name="role" value={role} onChange={(event) => setRole(event.target.value as "self" | "family" | "facility")} className={inputClassName}>
                         <option value="self">{locale === "ja" ? "ご本人" : "Self"}</option>
                         <option value="family">{locale === "ja" ? "ご家族" : "Family"}</option>
                         <option value="facility">{locale === "ja" ? "施設・事業者" : "Facility / operator"}</option>

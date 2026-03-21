@@ -8,7 +8,23 @@ export const metadata: Metadata = {
   description: "Yorisouのアカウントを作成し、相談内容やご提案をまとめて確認できます。",
 };
 
-export default async function RegisterPage() {
+function getErrorMessage(code: string | undefined) {
+  switch (code) {
+    case "email_exists":
+      return "そのメールアドレスはすでに登録されています。";
+    case "invalid_payload":
+      return "入力内容を確認してください。";
+    default:
+      return code ? "処理に失敗しました。時間をおいてお試しください。" : null;
+  }
+}
+
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
   const viewer = await getViewerContext();
-  return <AccountEntryForm mode="register" locale="ja" initialAccount={viewer.account} />;
+  const params = (await searchParams) || {};
+  return <AccountEntryForm mode="register" locale="ja" initialAccount={viewer.account} initialError={getErrorMessage(params.error)} />;
 }

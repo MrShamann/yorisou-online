@@ -8,7 +8,23 @@ export const metadata: Metadata = {
   description: "Yorisouのサポートページへログインし、相談履歴やご提案内容を確認できます。",
 };
 
-export default async function LoginPage() {
+function getErrorMessage(code: string | undefined) {
+  switch (code) {
+    case "invalid_credentials":
+      return "メールアドレスかパスワードが一致しません。";
+    case "invalid_payload":
+      return "入力内容を確認してください。";
+    default:
+      return code ? "処理に失敗しました。時間をおいてお試しください。" : null;
+  }
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
   const viewer = await getViewerContext();
-  return <AccountEntryForm mode="login" locale="ja" initialAccount={viewer.account} />;
+  const params = (await searchParams) || {};
+  return <AccountEntryForm mode="login" locale="ja" initialAccount={viewer.account} initialError={getErrorMessage(params.error)} />;
 }
