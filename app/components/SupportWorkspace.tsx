@@ -54,6 +54,7 @@ export default function SupportWorkspace({
   const registerHref = locale === "ja" ? "/register" : "/en/register";
   const advisorHref = locale === "ja" ? "/ai-advisor" : "/en/ai-advisor";
   const productsHref = locale === "ja" ? "/products" : "/en/products";
+  const lineStatusLabel = lineStatusLabels[locale][lineForm.lineBindingStatus];
 
   async function copyShareText() {
     if (!latest) {
@@ -180,7 +181,7 @@ export default function SupportWorkspace({
           />
           <StatCard
             label={locale === "ja" ? "LINE連携" : "LINE"}
-            value={lineStatusLabels[locale][lineForm.lineBindingStatus]}
+            value={lineStatusLabel}
             note={lineForm.lineNotificationsEnabled ? (locale === "ja" ? "フォローアップ有効" : "Follow-up enabled") : locale === "ja" ? "フォローアップ未設定" : "Follow-up disabled"}
           />
         </div>
@@ -297,6 +298,32 @@ export default function SupportWorkspace({
               </div>
             </Panel>
 
+            <Panel title={locale === "ja" ? "LINE Connect" : "LINE Connect"} id="line-connect">
+              <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "現在の状態" : "Current status"}</div>
+                    <div className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{lineStatusLabel}</div>
+                    <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
+                      {locale === "ja"
+                        ? "このアカウントには、LINE表示名とフォローアップ連絡の設定を保存できます。"
+                        : "Save the LINE display name and follow-up preference in this account."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={saveSupportProfile}
+                    className="btn btn-secondary"
+                    disabled={isSaving}
+                  >
+                    {locale === "ja" ? "LINE Connect" : "LINE Connect"}
+                  </button>
+                </div>
+              </div>
+              {saveMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{saveMessage}</p>}
+              {saveError && <p className="mt-4 text-sm text-[#9A3B2F]">{saveError}</p>}
+            </Panel>
+
             <Panel title={locale === "ja" ? "フォローアップ" : "Follow-up"}>
               <div className="grid gap-4">
                 <Field label={locale === "ja" ? "LINE表示名" : "LINE display name"}>
@@ -323,8 +350,8 @@ export default function SupportWorkspace({
                 </label>
                 <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   {locale === "ja"
-                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。連絡先とフォローアップ設定をこのアカウントに記録します。`
-                    : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. Contact details and follow-up preference are stored in this account.`}
+                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。LINE表示名とフォローアップ設定をこのアカウントに記録します。`
+                    : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. LINE display name and follow-up preference are stored in this account.`}
                 </div>
                 <label className="flex items-start gap-3 rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   <input
@@ -347,7 +374,7 @@ export default function SupportWorkspace({
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={saveSupportProfile} className="btn btn-secondary" disabled={isSaving}>
-                  {locale === "ja" ? "LINE連携情報を保存" : "Save LINE details"}
+                  {locale === "ja" ? "LINE状態を保存" : "Save LINE status"}
                 </button>
               </div>
               {followups.length > 0 ? (
@@ -364,8 +391,6 @@ export default function SupportWorkspace({
                   {locale === "ja" ? "送信済みのフォローアップはまだありません。" : "No submitted follow-up yet."}
                 </p>
               )}
-              {saveMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{saveMessage}</p>}
-              {saveError && <p className="mt-4 text-sm text-[#9A3B2F]">{saveError}</p>}
             </Panel>
           </div>
         </div>
@@ -374,9 +399,9 @@ export default function SupportWorkspace({
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
   return (
-    <section className="rounded-[2rem] border border-[#D6C3A3]/28 bg-white/80 p-7 shadow-[0_20px_48px_rgba(59,47,47,0.05)]">
+    <section id={id} className="rounded-[2rem] border border-[#D6C3A3]/28 bg-white/80 p-7 shadow-[0_20px_48px_rgba(59,47,47,0.05)]">
       <h2 className="text-2xl font-light leading-tight text-[#3B2F2F]">{title}</h2>
       <div className="mt-5">{children}</div>
     </section>

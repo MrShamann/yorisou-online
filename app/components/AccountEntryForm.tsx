@@ -70,6 +70,12 @@ export default function AccountEntryForm({
   const hasPasswordInput = password.length > 0;
   const hasStrongPassword = passwordChecks.every((rule) => rule.ok);
 
+  function clearError() {
+    if (error) {
+      setError("");
+    }
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     setError("");
 
@@ -144,12 +150,29 @@ export default function AccountEntryForm({
                 <input type="hidden" name="returnTo" value={mode === "login" ? loginHref : registerHref} />
                 {mode === "register" && (
                   <Field label={locale === "ja" ? "お名前" : "Name"}>
-                    <input name="name" value={name} onChange={(event) => setName(event.target.value)} className={inputClassName} />
+                    <input
+                      name="name"
+                      value={name}
+                      onChange={(event) => {
+                        clearError();
+                        setName(event.target.value);
+                      }}
+                      className={inputClassName}
+                    />
                   </Field>
                 )}
 
                 <Field label={locale === "ja" ? "メールアドレス" : "Email"}>
-                  <input name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClassName} />
+                  <input
+                    name="email"
+                    type="email"
+                    value={email}
+                    onChange={(event) => {
+                      clearError();
+                      setEmail(event.target.value);
+                    }}
+                    className={inputClassName}
+                  />
                 </Field>
 
                 <Field label={locale === "ja" ? "パスワード" : "Password"}>
@@ -157,7 +180,10 @@ export default function AccountEntryForm({
                     name="password"
                     type="password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      clearError();
+                      setPassword(event.target.value);
+                    }}
                     className={inputClassName}
                     autoComplete={mode === "register" ? "new-password" : "current-password"}
                   />
@@ -185,10 +211,26 @@ export default function AccountEntryForm({
                 {mode === "register" && (
                   <>
                     <Field label={locale === "ja" ? "お住まいの地域" : "City / area"}>
-                      <input name="city" value={city} onChange={(event) => setCity(event.target.value)} className={inputClassName} />
+                      <input
+                        name="city"
+                        value={city}
+                        onChange={(event) => {
+                          clearError();
+                          setCity(event.target.value);
+                        }}
+                        className={inputClassName}
+                      />
                     </Field>
                     <Field label={locale === "ja" ? "立場" : "Role"}>
-                      <select name="role" value={role} onChange={(event) => setRole(event.target.value as "self" | "family" | "facility")} className={inputClassName}>
+                      <select
+                        name="role"
+                        value={role}
+                        onChange={(event) => {
+                          clearError();
+                          setRole(event.target.value as "self" | "family" | "facility");
+                        }}
+                        className={inputClassName}
+                      >
                         <option value="self">{locale === "ja" ? "ご本人" : "Self"}</option>
                         <option value="family">{locale === "ja" ? "ご家族" : "Family"}</option>
                         <option value="facility">{locale === "ja" ? "施設・事業者" : "Facility / operator"}</option>
