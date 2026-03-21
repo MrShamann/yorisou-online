@@ -20,6 +20,20 @@ function safeRedirectPath(value: string | undefined, fallback: string) {
   return value;
 }
 
+function getPasswordRuleChecks(password: string) {
+  return [
+    { key: "length", ok: password.length >= 12 },
+    { key: "uppercase", ok: /[A-Z]/.test(password) },
+    { key: "lowercase", ok: /[a-z]/.test(password) },
+    { key: "number", ok: /\d/.test(password) },
+    { key: "symbol", ok: /[^A-Za-z0-9]/.test(password) },
+  ];
+}
+
+function isStrongPassword(password: string) {
+  return getPasswordRuleChecks(password).every((rule) => rule.ok);
+}
+
 function buildRedirectUrl(request: Request, path: string) {
   const forwardedHost = request.headers.get("x-forwarded-host");
   const host = forwardedHost || request.headers.get("host");
@@ -70,6 +84,13 @@ export async function POST(request: Request) {
         return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=invalid_payload`), { status: 303 });
       }
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
+    }
+
+    if (!isStrongPassword(payload.password)) {
+      if (isDocumentRequest) {
+        return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=weak_password`), { status: 303 });
+      }
+      return NextResponse.json({ success: false, error: "weak_password" }, { status: 400 });
     }
 
     const result = await createAccount({

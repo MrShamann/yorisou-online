@@ -12,6 +12,8 @@ function getErrorMessage(code: string | undefined) {
   switch (code) {
     case "email_exists":
       return "そのメールアドレスはすでに登録されています。";
+    case "weak_password":
+      return "パスワードは12文字以上で、大文字・小文字・数字・記号をそれぞれ1文字以上含めてください。";
     case "invalid_payload":
       return "入力内容を確認してください。";
     default:

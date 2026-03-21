@@ -7,6 +7,39 @@ import type { AccountRecord } from "@/lib/server/yorisouData";
 
 type Mode = "login" | "register";
 
+const passwordRules = [
+  {
+    key: "length",
+    ja: "12文字以上",
+    en: "At least 12 characters",
+    test: (value: string) => value.length >= 12,
+  },
+  {
+    key: "uppercase",
+    ja: "英大文字を1文字以上",
+    en: "At least 1 uppercase letter",
+    test: (value: string) => /[A-Z]/.test(value),
+  },
+  {
+    key: "lowercase",
+    ja: "英小文字を1文字以上",
+    en: "At least 1 lowercase letter",
+    test: (value: string) => /[a-z]/.test(value),
+  },
+  {
+    key: "number",
+    ja: "数字を1文字以上",
+    en: "At least 1 number",
+    test: (value: string) => /\d/.test(value),
+  },
+  {
+    key: "symbol",
+    ja: "記号を1文字以上",
+    en: "At least 1 symbol",
+    test: (value: string) => /[^A-Za-z0-9]/.test(value),
+  },
+];
+
 export default function AccountEntryForm({
   mode,
   locale,
@@ -30,9 +63,26 @@ export default function AccountEntryForm({
   const loginHref = locale === "ja" ? "/login" : "/en/login";
   const registerHref = locale === "ja" ? "/register" : "/en/register";
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+  const passwordChecks = passwordRules.map((rule) => ({
+    ...rule,
+    ok: rule.test(password),
+  }));
+  const hasPasswordInput = password.length > 0;
+  const hasStrongPassword = passwordChecks.every((rule) => rule.ok);
 
-  function handleSubmit() {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     setError("");
+
+    if (mode === "register" && !hasStrongPassword) {
+      event.preventDefault();
+      setError(
+        locale === "ja"
+          ? "パスワードは12文字以上で、大文字・小文字・数字・記号をそれぞれ1文字以上含めてください。"
+          : "Use 12+ characters including uppercase, lowercase, number, and symbol.",
+      );
+      return;
+    }
+
     setIsSubmitting(true);
   }
 
@@ -103,7 +153,33 @@ export default function AccountEntryForm({
                 </Field>
 
                 <Field label={locale === "ja" ? "パスワード" : "Password"}>
-                  <input name="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className={inputClassName} />
+                  <input
+                    name="password"
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className={inputClassName}
+                    autoComplete={mode === "register" ? "new-password" : "current-password"}
+                  />
+                  {mode === "register" && (
+                    <div className="mt-3 rounded-[1.25rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-4 py-4 text-sm text-[#5A4B3E]">
+                      <p className="font-medium text-[#5A4B3E]">
+                        {locale === "ja" ? "パスワードの条件" : "Password requirements"}
+                      </p>
+                      <ul className="mt-3 space-y-2">
+                        {passwordChecks.map((rule) => {
+                          const label = locale === "ja" ? rule.ja : rule.en;
+                          const tone = rule.ok ? "text-[#4D6B45]" : hasPasswordInput ? "text-[#9A3B2F]" : "text-[#6E5D4D]";
+                          return (
+                            <li key={rule.key} className={`flex items-center gap-2 ${tone}`}>
+                              <span aria-hidden="true">{rule.ok ? "✓" : "•"}</span>
+                              <span>{label}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
                 </Field>
 
                 {mode === "register" && (
