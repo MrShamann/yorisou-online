@@ -1,0 +1,23 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - printf "YORISOU_SHARED_STORE_BUCKET=%s\n" "$YORISOU_SHARED_STORE_BUCKET" > .env.production
+        - printf "YORISOU_SHARED_STORE_REGION=%s\n" "${YORISOU_SHARED_STORE_REGION:-us-east-2}" >> .env.production
+        - printf "LINE_CHANNEL_ID=%s\n" "$LINE_CHANNEL_ID" >> .env.production
+        - printf "LINE_CHANNEL_SECRET=%s\n" "$LINE_CHANNEL_SECRET" >> .env.production
+        - printf "LINE_REDIRECT_URI=%s\n" "$LINE_REDIRECT_URI" >> .env.production
+        - printf "LINE_SCOPE=%s\n" "${LINE_SCOPE:-openid profile}" >> .env.production
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .next/cache/**/*
+      - node_modules/**/*
