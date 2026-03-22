@@ -16,6 +16,19 @@ function safeRedirectPath(value: string | null, fallback: string) {
   return value;
 }
 
+function buildPublicUrl(request: Request, path: string) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost || request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const proto = forwardedProto || (host?.includes("localhost") ? "http" : "https");
+
+  if (host) {
+    return new URL(path, `${proto}://${host}`);
+  }
+
+  return new URL(path, request.url);
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const returnTo = safeRedirectPath(url.searchParams.get("returnTo"), "/support#line-connect");
@@ -25,11 +38,11 @@ export async function GET(request: Request) {
 
   if (!viewer.account) {
     const loginPath = locale === "ja" ? "/login" : "/en/login";
-    return NextResponse.redirect(new URL(`${loginPath}?next=${encodeURIComponent(returnTo)}`, request.url), { status: 303 });
+    return NextResponse.redirect(buildPublicUrl(request, `${loginPath}?next=${encodeURIComponent(returnTo)}`), { status: 303 });
   }
 
   if (!isLineLoginConfigured()) {
-    return NextResponse.redirect(new URL(`${returnTo.split("#")[0]}?line_error=not_configured#line-connect`, request.url), {
+    return NextResponse.redirect(buildPublicUrl(request, `${returnTo.split("#")[0]}?line_error=not_configured#line-connect`), {
       status: 303,
     });
   }
