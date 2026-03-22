@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { getPasswordPolicyMessage, PASSWORD_RULES } from "@/lib/passwordPolicy";
-import type { AccountRecord, ConsultationRecord, LineBindingStatus, SupportProfile } from "@/lib/server/yorisouData";
+import type {
+  AccountRecord,
+  ConsultationRecord,
+  LineBindingStatus,
+  LineWebhookEventRecord,
+  SupportProfile,
+} from "@/lib/server/yorisouData";
 
 type Locale = "ja" | "en";
 
@@ -25,14 +31,18 @@ export default function SupportWorkspace({
   locale,
   initialAccount,
   initialConsultations,
+  initialLatestLineEvent,
   lineAuthReady,
+  lineMessagingReady,
   lineNotice,
   lineError,
 }: {
   locale: Locale;
   initialAccount: AccountRecord | null;
   initialConsultations: ConsultationRecord[];
+  initialLatestLineEvent: LineWebhookEventRecord | null;
   lineAuthReady: boolean;
+  lineMessagingReady: boolean;
   lineNotice: string;
   lineError: string;
 }) {
@@ -72,6 +82,11 @@ export default function SupportWorkspace({
   const lineStartHref = locale === "ja" ? "/api/line/auth/start?locale=ja&returnTo=/support" : "/api/line/auth/start?locale=en&returnTo=/en/support";
   const lineStatusLabel = lineStatusLabels[locale][lineForm.lineBindingStatus];
   const isLineConnected = lineForm.lineBindingStatus === "connected" && Boolean(account?.lineUserId);
+  const latestLineEventLabel = initialLatestLineEvent
+    ? locale === "ja"
+      ? `${formatDate(initialLatestLineEvent.receivedAt, locale)} / ${initialLatestLineEvent.eventType}`
+      : `${formatDate(initialLatestLineEvent.receivedAt, locale)} / ${initialLatestLineEvent.eventType}`
+    : "";
   const lineNoticeMessage =
     lineNotice === "connected"
       ? locale === "ja"
@@ -477,6 +492,15 @@ export default function SupportWorkspace({
                           ? "The verified LINE identity is saved on this Yorisou account."
                           : "Connect a LINE account to the currently logged-in Yorisou account."}
                     </p>
+                    <p className="mt-2 text-sm leading-7 text-[#5A4B3E]">
+                      {lineMessagingReady
+                        ? locale === "ja"
+                          ? "Messaging API の受信準備は有効です。"
+                          : "Messaging API receive path is enabled."
+                        : locale === "ja"
+                          ? "Messaging API の設定はまだ完了していません。"
+                          : "Messaging API is not configured yet."}
+                    </p>
                   </div>
                   {isLineConnected ? (
                     <div className="rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#5A4B3E]">
@@ -497,6 +521,11 @@ export default function SupportWorkspace({
               {lineErrorMessage && <p className="mt-4 text-sm text-[#9A3B2F]">{lineErrorMessage}</p>}
               {saveMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{saveMessage}</p>}
               {saveError && <p className="mt-4 text-sm text-[#9A3B2F]">{saveError}</p>}
+              {latestLineEventLabel && (
+                <p className="mt-4 text-sm text-[#5A4B3E]">
+                  {locale === "ja" ? `最新のLINE受信: ${latestLineEventLabel}` : `Latest LINE activity: ${latestLineEventLabel}`}
+                </p>
+              )}
             </Panel>
 
             <Panel title={locale === "ja" ? "フォローアップ" : "Follow-up"}>

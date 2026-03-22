@@ -74,6 +74,25 @@ export type PasswordResetTokenRecord = {
   usedAt: string | null;
 };
 
+export type LineWebhookEventRecord = {
+  id: string;
+  accountId: string | null;
+  lineUserId: string | null;
+  sourceType: string | null;
+  eventType: string;
+  messageType: string | null;
+  messageText: string | null;
+  postbackData: string | null;
+  replyTokenPresent: boolean;
+  replyStatus: "not_attempted" | "sent" | "failed";
+  replyError: string | null;
+  webhookEventId: string | null;
+  deliveryMode: string | null;
+  isRedelivery: boolean;
+  eventTimestamp: string | null;
+  receivedAt: string;
+};
+
 type DataFile<T> = {
   path: string;
   fallback: T;
@@ -82,6 +101,12 @@ type DataFile<T> = {
 type AccountEmailLookup = {
   accountId: string;
   email: string;
+  updatedAt: string;
+};
+
+type AccountLineLookup = {
+  accountId: string;
+  lineUserId: string;
   updatedAt: string;
 };
 
@@ -119,6 +144,10 @@ const consultationsFile: DataFile<ConsultationRecord[]> = {
 };
 const passwordResetTokensFile: DataFile<PasswordResetTokenRecord[]> = {
   path: path.join(dataDir, "phase1-password-reset-tokens.json"),
+  fallback: [],
+};
+const lineWebhookEventsFile: DataFile<LineWebhookEventRecord[]> = {
+  path: path.join(dataDir, "phase1-line-webhook-events.json"),
   fallback: [],
 };
 
@@ -213,6 +242,15 @@ function consultationRecordKey(id: string) {
 
 function passwordResetTokenKey(tokenHash: string) {
   return `${SHARED_PREFIX}/password-resets/${tokenHash}.json`;
+}
+
+function lineUserLookupKey(lineUserId: string) {
+  const digest = createHash("sha256").update(lineUserId).digest("hex");
+  return `${SHARED_PREFIX}/accounts/by-line-user/${digest}.json`;
+}
+
+function lineWebhookEventKey(id: string) {
+  return `${SHARED_PREFIX}/line-events/${id}.json`;
 }
 
 function hashResetToken(token: string) {
@@ -375,12 +413,34 @@ async function getSharedAccountByEmail(email: string) {
   return getSharedAccountById(lookup.accountId);
 }
 
+async function getSharedAccountByLineUserId(lineUserId: string) {
+  const lookup = await sharedReadJson<AccountLineLookup>(lineUserLookupKey(lineUserId));
+
+  if (lookup) {
+    return getSharedAccountById(lookup.accountId);
+  }
+
+  const accounts = await listSharedAccounts();
+  const account = accounts.find((entry) => entry.lineUserId === lineUserId) || null;
+
+  if (account) {
+    await sharedWriteJson(lineUserLookupKey(lineUserId), {
+      accountId: account.id,
+      lineUserId,
+      updatedAt: nowIso(),
+    } satisfies AccountLineLookup);
+  }
+
+  return account;
+}
+
 async function putSharedAccountRecord(account: AccountRecord) {
   const normalizedEmail = normalizeEmail(account.email);
   const normalizedAccount = {
     ...account,
     email: normalizedEmail,
   };
+  const existingAccount = await getSharedAccountById(normalizedAccount.id);
 
   await sharedWriteJson(accountRecordKey(normalizedAccount.id), normalizedAccount);
   await sharedWriteJson(accountEmailLookupKey(normalizedEmail), {
@@ -388,6 +448,19 @@ async function putSharedAccountRecord(account: AccountRecord) {
     email: normalizedEmail,
     updatedAt: nowIso(),
   } satisfies AccountEmailLookup);
+
+  if (existingAccount?.lineUserId && existingAccount.lineUserId !== normalizedAccount.lineUserId) {
+    await sharedDeleteJson(lineUserLookupKey(existingAccount.lineUserId));
+  }
+
+  if (normalizedAccount.lineUserId) {
+    await sharedWriteJson(lineUserLookupKey(normalizedAccount.lineUserId), {
+      accountId: normalizedAccount.id,
+      lineUserId: normalizedAccount.lineUserId,
+      updatedAt: nowIso(),
+    } satisfies AccountLineLookup);
+  }
+
   return normalizedAccount;
 }
 
@@ -436,6 +509,21 @@ async function listSharedPasswordResetTokens() {
 async function putSharedPasswordResetToken(record: PasswordResetTokenRecord) {
   await sharedWriteJson(passwordResetTokenKey(record.tokenHash), record);
   return record;
+}
+
+async function listSharedLineWebhookEvents() {
+  return (await sharedListJsonObjects<LineWebhookEventRecord>(`${SHARED_PREFIX}/line-events/`)).sort((a, b) =>
+    b.receivedAt.localeCompare(a.receivedAt),
+  );
+}
+
+async function putSharedLineWebhookEvent(record: LineWebhookEventRecord) {
+  await sharedWriteJson(lineWebhookEventKey(record.id), record);
+  return record;
+}
+
+async function getSharedLineWebhookEventById(id: string) {
+  return sharedReadJson<LineWebhookEventRecord>(lineWebhookEventKey(id));
 }
 
 async function ensureSharedStoreReady() {
@@ -537,6 +625,16 @@ export async function findAccountById(id: string): Promise<AccountRecord | null>
 
   const accounts = await listAccounts();
   return accounts.find((account) => account.id === id) || null;
+}
+
+export async function findAccountByLineUserId(lineUserId: string): Promise<AccountRecord | null> {
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    return getSharedAccountByLineUserId(lineUserId);
+  }
+
+  const accounts = await listAccounts();
+  return accounts.find((account) => account.lineUserId === lineUserId) || null;
 }
 
 export async function createAccount(input: {
@@ -797,6 +895,69 @@ export async function listPasswordResetTokens(): Promise<PasswordResetTokenRecor
   }
 
   return readLocalJson(passwordResetTokensFile);
+}
+
+export async function listLineWebhookEvents(): Promise<LineWebhookEventRecord[]> {
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    return listSharedLineWebhookEvents();
+  }
+
+  return readLocalJson(lineWebhookEventsFile);
+}
+
+export async function findLineWebhookEventById(id: string): Promise<LineWebhookEventRecord | null> {
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    return getSharedLineWebhookEventById(id);
+  }
+
+  const records = await listLineWebhookEvents();
+  return records.find((record) => record.id === id) || null;
+}
+
+async function upsertLineWebhookEvent(record: LineWebhookEventRecord) {
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    await putSharedLineWebhookEvent(record);
+    return record;
+  }
+
+  const records = await listLineWebhookEvents();
+  const nextRecords = [...records];
+  const existingIndex = nextRecords.findIndex((entry) => entry.id === record.id);
+
+  if (existingIndex >= 0) {
+    nextRecords[existingIndex] = record;
+  } else {
+    nextRecords.unshift(record);
+  }
+
+  await writeLocalJson(lineWebhookEventsFile, nextRecords);
+  return record;
+}
+
+export async function createLineWebhookEvent(
+  input: Omit<LineWebhookEventRecord, "id" | "receivedAt"> & { id?: string },
+) {
+  const record: LineWebhookEventRecord = {
+    ...input,
+    id: input.id || createId("lineevt"),
+    receivedAt: nowIso(),
+  };
+
+  await upsertLineWebhookEvent(record);
+  return record;
+}
+
+export async function listLineWebhookEventsForAccount(accountId: string) {
+  const records = await listLineWebhookEvents();
+  return records.filter((record) => record.accountId === accountId);
+}
+
+export async function getLatestLineWebhookEventForAccount(accountId: string) {
+  const records = await listLineWebhookEventsForAccount(accountId);
+  return records[0] || null;
 }
 
 async function upsertPasswordResetToken(record: PasswordResetTokenRecord) {

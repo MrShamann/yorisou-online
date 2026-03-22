@@ -8,10 +8,12 @@ import {
   deleteSession,
   findAccountById,
   findSessionById,
+  getLatestLineWebhookEventForAccount,
   listConsultationsForViewer,
   upsertAccountRecord,
   touchSession,
   type AccountRecord,
+  type LineWebhookEventRecord,
   type SessionRecord,
 } from "@/lib/server/yorisouData";
 
@@ -232,10 +234,14 @@ export async function getSupportWorkspaceData(locale: "ja" | "en") {
     sessionId: viewer.session?.id || null,
     locale,
   });
+  const latestLineEvent: LineWebhookEventRecord | null = viewer.account
+    ? await getLatestLineWebhookEventForAccount(viewer.account.id)
+    : null;
 
   return {
     ...viewer,
     consultations,
+    latestLineEvent,
   };
 }
 

@@ -9,6 +9,7 @@ frontend:
         - printf "LINE_CHANNEL_SECRET=%s\n" "$LINE_CHANNEL_SECRET" >> .env.production
         - printf "LINE_REDIRECT_URI=%s\n" "$LINE_REDIRECT_URI" >> .env.production
         - printf "LINE_SCOPE=%s\n" "${LINE_SCOPE:-openid profile}" >> .env.production
+        - printf "LINE_MESSAGING_CHANNEL_ACCESS_TOKEN=%s\n" "$LINE_MESSAGING_CHANNEL_ACCESS_TOKEN" >> .env.production
         - printf "RESEND_API_KEY=%s\n" "$RESEND_API_KEY" >> .env.production
         - printf "PASSWORD_RESET_FROM_EMAIL=%s\n" "$PASSWORD_RESET_FROM_EMAIL" >> .env.production
         - printf "CONTACT_FROM_EMAIL=%s\n" "$CONTACT_FROM_EMAIL" >> .env.production

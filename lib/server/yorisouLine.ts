@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 
 import type { AccountRecord, SessionRecord } from "@/lib/server/yorisouData";
 
@@ -115,6 +115,19 @@ export function isLineLoginConfigured() {
   return Boolean(process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET && process.env.LINE_REDIRECT_URI);
 }
 
+export function isLineMessagingConfigured() {
+  return Boolean(process.env.LINE_CHANNEL_SECRET && process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN);
+}
+
+export function getLineMessagingConfigStatus() {
+  return {
+    loginConfigured: isLineLoginConfigured(),
+    messagingConfigured: isLineMessagingConfigured(),
+    channelSecretPresent: Boolean(process.env.LINE_CHANNEL_SECRET),
+    channelAccessTokenPresent: Boolean(process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN),
+  };
+}
+
 export async function exchangeLineAuthorizationCode(input: { code: string }) {
   const channelId = process.env.LINE_CHANNEL_ID;
   const channelSecret = process.env.LINE_CHANNEL_SECRET;
@@ -203,4 +216,60 @@ export async function fetchLineProfile(accessToken: string) {
     displayName?: string;
     pictureUrl?: string;
   };
+}
+
+export function verifyLineWebhookSignature(input: { body: string; signature: string | null }) {
+  const channelSecret = process.env.LINE_CHANNEL_SECRET;
+
+  if (!channelSecret || !input.signature) {
+    return false;
+  }
+
+  const expected = createHmac("sha256", channelSecret).update(input.body, "utf8").digest("base64");
+  const actualBuffer = Buffer.from(input.signature);
+  const expectedBuffer = Buffer.from(expected);
+
+  if (actualBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(actualBuffer, expectedBuffer);
+}
+
+export async function sendLineReplyMessage(input: { replyToken: string; text: string }) {
+  const channelAccessToken = process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN;
+
+  if (!channelAccessToken) {
+    return { ok: false as const, reason: "not_configured" as const, status: null };
+  }
+
+  const response = await fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${channelAccessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      replyToken: input.replyToken,
+      messages: [
+        {
+          type: "text",
+          text: input.text,
+        },
+      ],
+    }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    return {
+      ok: false as const,
+      reason: "reply_failed" as const,
+      status: response.status,
+      errorText,
+    };
+  }
+
+  return { ok: true as const, status: response.status };
 }

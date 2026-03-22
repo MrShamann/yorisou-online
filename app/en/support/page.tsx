@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import SupportWorkspace from "@/app/components/SupportWorkspace";
 import { getSupportWorkspaceData } from "@/lib/server/yorisouAuth";
-import { isLineLoginConfigured } from "@/lib/server/yorisouLine";
+import { getLineMessagingConfigStatus, isLineLoginConfigured } from "@/lib/server/yorisouLine";
 
 export const metadata: Metadata = {
   title: "Yorisou | Support",
@@ -24,7 +24,9 @@ export default async function SupportPageEn({
       locale="en"
       initialAccount={data.account}
       initialConsultations={data.consultations}
+      initialLatestLineEvent={data.latestLineEvent}
       lineAuthReady={isLineLoginConfigured()}
+      lineMessagingReady={getLineMessagingConfigStatus().messagingConfigured}
       lineNotice={lineStatus}
       lineError={lineError}
     />
