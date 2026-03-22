@@ -36,6 +36,10 @@ export type AccountRecord = {
   role: AccountRole;
   createdAt: string;
   updatedAt: string;
+  lineUserId?: string;
+  lineConnectedAt?: string;
+  linePictureUrl?: string;
+  lineIdTokenSubject?: string;
   supportProfile: SupportProfile;
 };
 
@@ -59,6 +63,15 @@ export type ConsultationRecord = {
   answerLabels: Record<string, string>;
   leadSubmitted: boolean;
   lead: AdvisorLead | null;
+};
+
+export type PasswordResetTokenRecord = {
+  tokenHash: string;
+  accountId: string;
+  email: string;
+  createdAt: string;
+  expiresAt: string;
+  usedAt: string | null;
 };
 
 type DataFile<T> = {
@@ -102,6 +115,10 @@ const sessionsFile: DataFile<SessionRecord[]> = {
 };
 const consultationsFile: DataFile<ConsultationRecord[]> = {
   path: path.join(dataDir, "phase1-consultations.json"),
+  fallback: [],
+};
+const passwordResetTokensFile: DataFile<PasswordResetTokenRecord[]> = {
+  path: path.join(dataDir, "phase1-password-reset-tokens.json"),
   fallback: [],
 };
 
@@ -192,6 +209,14 @@ function sessionRecordKey(id: string) {
 
 function consultationRecordKey(id: string) {
   return `${SHARED_PREFIX}/consultations/${id}.json`;
+}
+
+function passwordResetTokenKey(tokenHash: string) {
+  return `${SHARED_PREFIX}/password-resets/${tokenHash}.json`;
+}
+
+function hashResetToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 async function ensureFile<T>(file: DataFile<T>) {
@@ -388,6 +413,10 @@ async function getSharedConsultationById(id: string) {
   return sharedReadJson<ConsultationRecord>(consultationRecordKey(id));
 }
 
+async function getSharedPasswordResetTokenByHash(tokenHash: string) {
+  return sharedReadJson<PasswordResetTokenRecord>(passwordResetTokenKey(tokenHash));
+}
+
 async function listSharedAccounts() {
   return sortByCreatedAtDesc(await sharedListJsonObjects<AccountRecord>(`${SHARED_PREFIX}/accounts/by-id/`));
 }
@@ -398,6 +427,15 @@ async function listSharedSessions() {
 
 async function listSharedConsultations() {
   return sortByCreatedAtDesc(await sharedListJsonObjects<ConsultationRecord>(`${SHARED_PREFIX}/consultations/`));
+}
+
+async function listSharedPasswordResetTokens() {
+  return sortByCreatedAtDesc(await sharedListJsonObjects<PasswordResetTokenRecord>(`${SHARED_PREFIX}/password-resets/`));
+}
+
+async function putSharedPasswordResetToken(record: PasswordResetTokenRecord) {
+  await sharedWriteJson(passwordResetTokenKey(record.tokenHash), record);
+  return record;
 }
 
 async function ensureSharedStoreReady() {
@@ -558,6 +596,10 @@ export async function createAccount(input: {
   return { ok: true as const, account };
 }
 
+function hashPasswordForStorage(password: string) {
+  return hashPassword(password);
+}
+
 export async function upsertAccountRecord(account: AccountRecord): Promise<AccountRecord> {
   const normalizedAccount = {
     ...account,
@@ -586,6 +628,23 @@ export async function upsertAccountRecord(account: AccountRecord): Promise<Accou
   return normalizedAccount;
 }
 
+export async function updateAccountPassword(userId: string, password: string): Promise<AccountRecord | null> {
+  const account = await findAccountById(userId);
+
+  if (!account) {
+    return null;
+  }
+
+  const updatedAccount: AccountRecord = {
+    ...account,
+    passwordHash: hashPasswordForStorage(password),
+    updatedAt: nowIso(),
+  };
+
+  await upsertAccountRecord(updatedAccount);
+  return updatedAccount;
+}
+
 export async function updateSupportProfile(userId: string, patch: Partial<SupportProfile>): Promise<AccountRecord | null> {
   const account = await findAccountById(userId);
 
@@ -599,6 +658,37 @@ export async function updateSupportProfile(userId: string, patch: Partial<Suppor
     supportProfile: {
       ...account.supportProfile,
       ...patch,
+    },
+  };
+
+  await upsertAccountRecord(updatedAccount);
+  return updatedAccount;
+}
+
+export async function bindLineIdentity(input: {
+  userId: string;
+  lineUserId: string;
+  lineDisplayName: string;
+  linePictureUrl?: string;
+  lineIdTokenSubject?: string;
+}): Promise<AccountRecord | null> {
+  const account = await findAccountById(input.userId);
+
+  if (!account) {
+    return null;
+  }
+
+  const updatedAccount: AccountRecord = {
+    ...account,
+    updatedAt: nowIso(),
+    lineUserId: input.lineUserId,
+    lineConnectedAt: nowIso(),
+    linePictureUrl: input.linePictureUrl || account.linePictureUrl || "",
+    lineIdTokenSubject: input.lineIdTokenSubject || input.lineUserId,
+    supportProfile: {
+      ...account.supportProfile,
+      lineBindingStatus: "connected",
+      lineDisplayName: input.lineDisplayName,
     },
   };
 
@@ -698,6 +788,142 @@ export async function listConsultations(): Promise<ConsultationRecord[]> {
   }
 
   return readLocalJson(consultationsFile);
+}
+
+export async function listPasswordResetTokens(): Promise<PasswordResetTokenRecord[]> {
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    return listSharedPasswordResetTokens();
+  }
+
+  return readLocalJson(passwordResetTokensFile);
+}
+
+async function upsertPasswordResetToken(record: PasswordResetTokenRecord) {
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    await putSharedPasswordResetToken(record);
+    return record;
+  }
+
+  const records = await listPasswordResetTokens();
+  const nextRecords = [...records];
+  const existingIndex = nextRecords.findIndex((entry) => entry.tokenHash === record.tokenHash);
+
+  if (existingIndex >= 0) {
+    nextRecords[existingIndex] = record;
+  } else {
+    nextRecords.unshift(record);
+  }
+
+  await writeLocalJson(passwordResetTokensFile, nextRecords);
+  return record;
+}
+
+export async function createPasswordResetToken(input: {
+  accountId: string;
+  email: string;
+  expiresInMinutes?: number;
+}) {
+  const token = randomBytes(32).toString("base64url");
+  const createdAt = nowIso();
+  const expiresAt = new Date(Date.now() + (input.expiresInMinutes || 60) * 60 * 1000).toISOString();
+  const record: PasswordResetTokenRecord = {
+    tokenHash: hashResetToken(token),
+    accountId: input.accountId,
+    email: normalizeEmail(input.email),
+    createdAt,
+    expiresAt,
+    usedAt: null,
+  };
+
+  const existing = await listPasswordResetTokens();
+  const activeForAccount = existing.filter((entry) => entry.accountId === input.accountId && entry.usedAt === null);
+
+  for (const entry of activeForAccount) {
+    await upsertPasswordResetToken({
+      ...entry,
+      usedAt: createdAt,
+    });
+  }
+
+  await upsertPasswordResetToken(record);
+  return {
+    token,
+    record,
+  };
+}
+
+export async function getPasswordResetTokenRecord(token: string): Promise<PasswordResetTokenRecord | null> {
+  const tokenHash = hashResetToken(token);
+
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    return getSharedPasswordResetTokenByHash(tokenHash);
+  }
+
+  const records = await listPasswordResetTokens();
+  return records.find((entry) => entry.tokenHash === tokenHash) || null;
+}
+
+export async function validatePasswordResetToken(token: string) {
+  const record = await getPasswordResetTokenRecord(token);
+
+  if (!record) {
+    return { ok: false as const, reason: "invalid_token" as const };
+  }
+
+  if (record.usedAt) {
+    return { ok: false as const, reason: "used_token" as const };
+  }
+
+  if (record.expiresAt <= nowIso()) {
+    return { ok: false as const, reason: "expired_token" as const };
+  }
+
+  const account = await findAccountById(record.accountId);
+
+  if (!account || normalizeEmail(account.email) !== record.email) {
+    return { ok: false as const, reason: "invalid_token" as const };
+  }
+
+  return {
+    ok: true as const,
+    record,
+    account,
+  };
+}
+
+export async function consumePasswordResetToken(token: string, password: string) {
+  const validation = await validatePasswordResetToken(token);
+
+  if (!validation.ok) {
+    return validation;
+  }
+
+  const updatedAccount = await updateAccountPassword(validation.account.id, password);
+
+  if (!updatedAccount) {
+    return { ok: false as const, reason: "invalid_token" as const };
+  }
+
+  const allTokens = await listPasswordResetTokens();
+  const relatedActiveTokens = allTokens.filter(
+    (entry) => entry.accountId === validation.account.id && entry.usedAt === null,
+  );
+  const usedAt = nowIso();
+
+  for (const entry of relatedActiveTokens) {
+    await upsertPasswordResetToken({
+      ...entry,
+      usedAt,
+    });
+  }
+
+  return {
+    ok: true as const,
+    account: updatedAccount,
+  };
 }
 
 export async function createConsultation(input: {

@@ -19,12 +19,29 @@ function getErrorMessage(code: string | undefined) {
   }
 }
 
+function getNoticeMessage(code: string | undefined) {
+  switch (code) {
+    case "password_reset":
+      return "新しいパスワードを保存しました。ログインしてください。";
+    default:
+      return null;
+  }
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; notice?: string }>;
 }) {
   const viewer = await getViewerContext();
   const params = (await searchParams) || {};
-  return <AccountEntryForm mode="login" locale="ja" initialAccount={viewer.account} initialError={getErrorMessage(params.error)} />;
+  return (
+    <AccountEntryForm
+      mode="login"
+      locale="ja"
+      initialAccount={viewer.account}
+      initialError={getErrorMessage(params.error)}
+      initialNotice={getNoticeMessage(params.notice)}
+    />
+  );
 }

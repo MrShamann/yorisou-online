@@ -3,67 +3,40 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { getPasswordPolicyMessage, PASSWORD_RULES } from "@/lib/passwordPolicy";
 import type { AccountRecord } from "@/lib/server/yorisouData";
 
 type Mode = "login" | "register";
-
-const passwordRules = [
-  {
-    key: "length",
-    ja: "12文字以上",
-    en: "At least 12 characters",
-    test: (value: string) => value.length >= 12,
-  },
-  {
-    key: "uppercase",
-    ja: "英大文字を1文字以上",
-    en: "At least 1 uppercase letter",
-    test: (value: string) => /[A-Z]/.test(value),
-  },
-  {
-    key: "lowercase",
-    ja: "英小文字を1文字以上",
-    en: "At least 1 lowercase letter",
-    test: (value: string) => /[a-z]/.test(value),
-  },
-  {
-    key: "number",
-    ja: "数字を1文字以上",
-    en: "At least 1 number",
-    test: (value: string) => /\d/.test(value),
-  },
-  {
-    key: "symbol",
-    ja: "記号を1文字以上",
-    en: "At least 1 symbol",
-    test: (value: string) => /[^A-Za-z0-9]/.test(value),
-  },
-];
 
 export default function AccountEntryForm({
   mode,
   locale,
   initialAccount,
   initialError,
+  initialNotice,
 }: {
   mode: Mode;
   locale: "ja" | "en";
   initialAccount: AccountRecord | null;
   initialError?: string | null;
+  initialNotice?: string | null;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [city, setCity] = useState("");
   const [role, setRole] = useState<"self" | "family" | "facility">("family");
   const [error, setError] = useState(initialError || "");
+  const [notice, setNotice] = useState(initialNotice || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const supportHref = locale === "ja" ? "/support" : "/en/support";
   const loginHref = locale === "ja" ? "/login" : "/en/login";
   const registerHref = locale === "ja" ? "/register" : "/en/register";
+  const forgotPasswordHref = locale === "ja" ? "/forgot-password" : "/en/forgot-password";
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
-  const passwordChecks = passwordRules.map((rule) => ({
+  const passwordChecks = PASSWORD_RULES.map((rule) => ({
     ...rule,
     ok: rule.test(password),
   }));
@@ -74,6 +47,9 @@ export default function AccountEntryForm({
     if (error) {
       setError("");
     }
+    if (notice) {
+      setNotice("");
+    }
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -81,16 +57,21 @@ export default function AccountEntryForm({
 
     if (mode === "register" && !hasStrongPassword) {
       event.preventDefault();
-      setError(
-        locale === "ja"
-          ? "パスワードは12文字以上で、大文字・小文字・数字・記号をそれぞれ1文字以上含めてください。"
-          : "Use 12+ characters including uppercase, lowercase, number, and symbol.",
-      );
+      setError(getPasswordPolicyMessage(locale));
       return;
     }
 
     setIsSubmitting(true);
   }
+
+  const togglePasswordLabel =
+    locale === "ja"
+      ? showPassword
+        ? "パスワードを隠す"
+        : "パスワードを表示する"
+      : showPassword
+        ? "Hide password"
+        : "Show password";
 
   return (
     <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
@@ -176,17 +157,28 @@ export default function AccountEntryForm({
                 </Field>
 
                 <Field label={locale === "ja" ? "パスワード" : "Password"}>
-                  <input
-                    name="password"
-                    type="password"
-                    value={password}
-                    onChange={(event) => {
-                      clearError();
-                      setPassword(event.target.value);
-                    }}
-                    className={inputClassName}
-                    autoComplete={mode === "register" ? "new-password" : "current-password"}
-                  />
+                  <div className="relative">
+                    <input
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(event) => {
+                        clearError();
+                        setPassword(event.target.value);
+                      }}
+                      className={`${inputClassName} pr-24`}
+                      autoComplete={mode === "register" ? "new-password" : "current-password"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((current) => !current)}
+                      className="absolute inset-y-2 right-2 rounded-full px-3 text-sm text-[#6E5D4D] transition hover:bg-[#F3E8D6] hover:text-[#3B2F2F] focus:outline-none focus:ring-2 focus:ring-[#D6C3A3]"
+                      aria-label={togglePasswordLabel}
+                      aria-pressed={showPassword}
+                    >
+                      {showPassword ? (locale === "ja" ? "隠す" : "Hide") : locale === "ja" ? "表示" : "Show"}
+                    </button>
+                  </div>
                   {mode === "register" && (
                     <div className="mt-3 rounded-[1.25rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-4 py-4 text-sm text-[#5A4B3E]">
                       <p className="font-medium text-[#5A4B3E]">
@@ -239,6 +231,15 @@ export default function AccountEntryForm({
                   </>
                 )}
 
+                {mode === "login" && (
+                  <div className="text-sm">
+                    <Link href={forgotPasswordHref} className="text-[#6E5D4D] underline underline-offset-4 hover:text-[#3B2F2F]">
+                      {locale === "ja" ? "パスワードをお忘れですか？" : "Forgot password?"}
+                    </Link>
+                  </div>
+                )}
+
+                {notice && <p className="text-sm font-medium text-[#4D6B45]">{notice}</p>}
                 {error && <p className="text-sm font-medium text-[#9A3B2F]">{error}</p>}
 
                 <button type="submit" className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90">

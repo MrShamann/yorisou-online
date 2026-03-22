@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isStrongPassword } from "@/lib/passwordPolicy";
 import { createAccount } from "@/lib/server/yorisouData";
 import { bindSessionToUser, ensureViewerSession, setViewerAccountCookie, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
 
@@ -18,20 +19,6 @@ function safeRedirectPath(value: string | undefined, fallback: string) {
     return fallback;
   }
   return value;
-}
-
-function getPasswordRuleChecks(password: string) {
-  return [
-    { key: "length", ok: password.length >= 12 },
-    { key: "uppercase", ok: /[A-Z]/.test(password) },
-    { key: "lowercase", ok: /[a-z]/.test(password) },
-    { key: "number", ok: /\d/.test(password) },
-    { key: "symbol", ok: /[^A-Za-z0-9]/.test(password) },
-  ];
-}
-
-function isStrongPassword(password: string) {
-  return getPasswordRuleChecks(password).every((rule) => rule.ok);
 }
 
 function buildRedirectUrl(request: Request, path: string) {
