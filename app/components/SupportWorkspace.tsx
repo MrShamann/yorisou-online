@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { getPasswordPolicyMessage, PASSWORD_RULES } from "@/lib/passwordPolicy";
 import type { AccountRecord, ConsultationRecord, LineBindingStatus, SupportProfile } from "@/lib/server/yorisouData";
 
 type Locale = "ja" | "en";
@@ -53,6 +54,14 @@ export default function SupportWorkspace({
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const latest = consultations[0] || null;
   const followups = useMemo(() => consultations.filter((entry) => entry.leadSubmitted), [consultations]);
@@ -148,6 +157,71 @@ export default function SupportWorkspace({
       setSaveError(locale === "ja" ? "通信に失敗しました。" : "Request failed.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function changePassword() {
+    setPasswordMessage("");
+    setPasswordError("");
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmNewPassword) {
+      setPasswordError(locale === "ja" ? "すべての項目を入力してください。" : "Fill in all password fields.");
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
+      setPasswordError(locale === "ja" ? "新しいパスワードが一致しません。" : "New passwords do not match.");
+      return;
+    }
+
+    if (!PASSWORD_RULES.every((rule) => rule.test(passwordForm.newPassword))) {
+      setPasswordError(getPasswordPolicyMessage(locale));
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...passwordForm,
+          locale,
+        }),
+      });
+
+      const result = (await response.json()) as { success?: boolean; error?: string; message?: string };
+
+      if (!response.ok || !result.success) {
+        if (result.error === "invalid_current_password") {
+          setPasswordError(locale === "ja" ? "現在のパスワードが正しくありません。" : "Current password is incorrect.");
+          return;
+        }
+        if (result.error === "weak_password") {
+          setPasswordError(result.message || getPasswordPolicyMessage(locale));
+          return;
+        }
+        if (result.error === "password_mismatch") {
+          setPasswordError(locale === "ja" ? "新しいパスワードが一致しません。" : "New passwords do not match.");
+          return;
+        }
+        setPasswordError(locale === "ja" ? "パスワードの更新に失敗しました。" : "Failed to update password.");
+        return;
+      }
+
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
+      setPasswordMessage(locale === "ja" ? "パスワードを更新しました。" : "Password updated.");
+    } catch {
+      setPasswordError(locale === "ja" ? "通信に失敗しました。" : "Request failed.");
+    } finally {
+      setIsChangingPassword(false);
     }
   }
 
@@ -338,6 +412,54 @@ export default function SupportWorkspace({
                   {locale === "ja" ? "製品を見比べる" : "Browse products"}
                 </Link>
               </div>
+            </Panel>
+
+            <Panel title={locale === "ja" ? "パスワード変更" : "Change password"}>
+              <div className="grid gap-4">
+                <Field label={locale === "ja" ? "現在のパスワード" : "Current password"}>
+                  <input
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))}
+                    className={inputClassName}
+                    autoComplete="current-password"
+                  />
+                </Field>
+                <Field label={locale === "ja" ? "新しいパスワード" : "New password"}>
+                  <input
+                    type="password"
+                    value={passwordForm.newPassword}
+                    onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))}
+                    className={inputClassName}
+                    autoComplete="new-password"
+                  />
+                </Field>
+                <Field label={locale === "ja" ? "新しいパスワード（確認）" : "Confirm new password"}>
+                  <input
+                    type="password"
+                    value={passwordForm.confirmNewPassword}
+                    onChange={(event) => setPasswordForm((current) => ({ ...current, confirmNewPassword: event.target.value }))}
+                    className={inputClassName}
+                    autoComplete="new-password"
+                  />
+                </Field>
+                <p className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                  {getPasswordPolicyMessage(locale)}
+                </p>
+              </div>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={changePassword} className="btn btn-secondary" disabled={isChangingPassword}>
+                  {isChangingPassword
+                    ? locale === "ja"
+                      ? "更新中..."
+                      : "Updating..."
+                    : locale === "ja"
+                      ? "パスワードを更新"
+                      : "Update password"}
+                </button>
+              </div>
+              {passwordMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{passwordMessage}</p>}
+              {passwordError && <p className="mt-4 text-sm text-[#9A3B2F]">{passwordError}</p>}
             </Panel>
 
             <Panel title={locale === "ja" ? "LINE Connect" : "LINE Connect"} id="line-connect">
