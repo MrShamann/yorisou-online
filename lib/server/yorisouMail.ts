@@ -4,6 +4,8 @@ type PasswordResetMailInput = {
   locale: "ja" | "en";
 };
 
+const TRACE_PREFIX = "[YORI_RESET_TRACE]";
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -16,9 +18,15 @@ function escapeHtml(value: string) {
 export async function sendPasswordResetEmail(input: PasswordResetMailInput) {
   const resendApiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.PASSWORD_RESET_FROM_EMAIL || process.env.CONTACT_FROM_EMAIL;
+  const resendKeyPresent = Boolean(resendApiKey);
+  const fromEmailPresent = Boolean(fromEmail);
+
+  console.info(
+    `${TRACE_PREFIX} send_attempt resendKeyPresent=${resendKeyPresent} fromEmailPresent=${fromEmailPresent} locale=${input.locale}`
+  );
 
   if (!resendApiKey || !fromEmail) {
-    return { ok: false as const, reason: "not_configured" as const };
+    return { ok: false as const, reason: "not_configured" as const, providerStatus: null };
   }
 
   const subject =
@@ -49,9 +57,11 @@ export async function sendPasswordResetEmail(input: PasswordResetMailInput) {
 
   if (!response.ok) {
     const errorBody = await response.text();
+    console.info(`${TRACE_PREFIX} provider_response ok=false status=${response.status} body=${JSON.stringify(errorBody)}`);
     console.error("Password reset email delivery failed:", errorBody);
-    return { ok: false as const, reason: "delivery_failed" as const };
+    return { ok: false as const, reason: "delivery_failed" as const, providerStatus: response.status };
   }
 
-  return { ok: true as const };
+  console.info(`${TRACE_PREFIX} provider_response ok=true status=${response.status}`);
+  return { ok: true as const, providerStatus: response.status };
 }
