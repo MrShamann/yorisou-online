@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { getViewerContext, restoreAccountFromCookie, setViewerAccountCookie, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
-import { updateSupportProfile, type LineBindingStatus } from "@/lib/server/yorisouData";
+import { updateSupportProfile } from "@/lib/server/yorisouData";
 
 type SupportPreferencesPayload = {
-  lineBindingStatus?: LineBindingStatus;
-  lineDisplayName?: string;
   lineNotificationsEnabled?: boolean;
   familyContactName?: string;
   familyContactRelation?: string;
@@ -26,8 +24,6 @@ export async function POST(request: Request) {
 
     const payload = (await request.json()) as SupportPreferencesPayload;
     const account = await updateSupportProfile(viewer.account.id, {
-      lineBindingStatus: payload.lineBindingStatus,
-      lineDisplayName: payload.lineDisplayName?.trim(),
       lineNotificationsEnabled: payload.lineNotificationsEnabled,
       familyContactName: payload.familyContactName?.trim(),
       familyContactRelation: payload.familyContactRelation?.trim(),

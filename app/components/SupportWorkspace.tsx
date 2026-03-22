@@ -24,10 +24,16 @@ export default function SupportWorkspace({
   locale,
   initialAccount,
   initialConsultations,
+  lineAuthReady,
+  lineNotice,
+  lineError,
 }: {
   locale: Locale;
   initialAccount: AccountRecord | null;
   initialConsultations: ConsultationRecord[];
+  lineAuthReady: boolean;
+  lineNotice: string;
+  lineError: string;
 }) {
   const [account, setAccount] = useState<AccountRecord | null>(initialAccount);
   const [consultations] = useState<ConsultationRecord[]>(initialConsultations);
@@ -54,7 +60,43 @@ export default function SupportWorkspace({
   const registerHref = locale === "ja" ? "/register" : "/en/register";
   const advisorHref = locale === "ja" ? "/ai-advisor" : "/en/ai-advisor";
   const productsHref = locale === "ja" ? "/products" : "/en/products";
+  const lineStartHref = locale === "ja" ? "/api/line/auth/start?locale=ja&returnTo=/support" : "/api/line/auth/start?locale=en&returnTo=/en/support";
   const lineStatusLabel = lineStatusLabels[locale][lineForm.lineBindingStatus];
+  const isLineConnected = lineForm.lineBindingStatus === "connected" && Boolean(account?.lineUserId);
+  const lineNoticeMessage =
+    lineNotice === "connected"
+      ? locale === "ja"
+        ? "LINEアカウントを連携しました。"
+        : "LINE account connected."
+      : "";
+  const lineErrorMessage = (() => {
+    if (!lineError) {
+      return "";
+    }
+    const messagesJa: Record<string, string> = {
+      not_configured: "LINE連携の設定がまだ完了していません。",
+      missing_auth: "LINE連携の認証情報が見つかりませんでした。もう一度お試しください。",
+      session_mismatch: "ログイン状態を確認できませんでした。ログインし直してからお試しください。",
+      cancelled: "LINE連携はキャンセルされました。",
+      invalid_state: "LINE連携の確認に失敗しました。もう一度お試しください。",
+      token_exchange: "LINE側の認証確認に失敗しました。",
+      profile_mismatch: "LINEアカウント情報の確認に失敗しました。",
+      bind_failed: "LINE連携の保存に失敗しました。",
+      unexpected_error: "LINE連携中にエラーが発生しました。",
+    };
+    const messagesEn: Record<string, string> = {
+      not_configured: "LINE connection is not configured yet.",
+      missing_auth: "LINE authorization details were not found. Please try again.",
+      session_mismatch: "The current login session could not be confirmed. Please log in again.",
+      cancelled: "LINE connection was cancelled.",
+      invalid_state: "LINE verification failed. Please try again.",
+      token_exchange: "Failed to verify LINE authorization.",
+      profile_mismatch: "Failed to confirm the LINE account identity.",
+      bind_failed: "Failed to save the LINE connection.",
+      unexpected_error: "An unexpected error occurred during LINE connection.",
+    };
+    return locale === "ja" ? messagesJa[lineError] || messagesJa.unexpected_error : messagesEn[lineError] || messagesEn.unexpected_error;
+  })();
 
   async function copyShareText() {
     if (!latest) {
@@ -306,20 +348,31 @@ export default function SupportWorkspace({
                     <div className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{lineStatusLabel}</div>
                     <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
                       {locale === "ja"
-                        ? "このアカウントには、LINE表示名とフォローアップ連絡の設定を保存できます。"
-                        : "Save the LINE display name and follow-up preference in this account."}
+                        ? isLineConnected
+                          ? "このアカウントには、LINEログインで確認した表示名と連携状態を保存しています。"
+                          : "ログイン中のYorisouアカウントに、LINEアカウントを連携できます。"
+                        : isLineConnected
+                          ? "The verified LINE identity is saved on this Yorisou account."
+                          : "Connect a LINE account to the currently logged-in Yorisou account."}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={saveSupportProfile}
-                    className="btn btn-secondary"
-                    disabled={isSaving}
-                  >
-                    {locale === "ja" ? "LINE Connect" : "LINE Connect"}
-                  </button>
+                  {isLineConnected ? (
+                    <div className="rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#5A4B3E]">
+                      {locale === "ja" ? "連携済み" : "Connected"}
+                    </div>
+                  ) : lineAuthReady ? (
+                    <Link href={lineStartHref} className="btn btn-secondary">
+                      {locale === "ja" ? "LINE Connect" : "LINE Connect"}
+                    </Link>
+                  ) : (
+                    <div className="rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#8A7764]">
+                      {locale === "ja" ? "設定待ち" : "Awaiting configuration"}
+                    </div>
+                  )}
                 </div>
               </div>
+              {lineNoticeMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{lineNoticeMessage}</p>}
+              {lineErrorMessage && <p className="mt-4 text-sm text-[#9A3B2F]">{lineErrorMessage}</p>}
               {saveMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{saveMessage}</p>}
               {saveError && <p className="mt-4 text-sm text-[#9A3B2F]">{saveError}</p>}
             </Panel>
@@ -327,17 +380,9 @@ export default function SupportWorkspace({
             <Panel title={locale === "ja" ? "フォローアップ" : "Follow-up"}>
               <div className="grid gap-4">
                 <Field label={locale === "ja" ? "LINE表示名" : "LINE display name"}>
-                  <input
-                    value={lineForm.lineDisplayName}
-                    onChange={(event) =>
-                      setLineForm((current) => ({
-                        ...current,
-                        lineDisplayName: event.target.value,
-                        lineBindingStatus: event.target.value ? "registered" : "not_connected",
-                      }))
-                    }
-                    className={inputClassName}
-                  />
+                  <div className={`${inputClassName} flex items-center`}>
+                    {lineForm.lineDisplayName || (locale === "ja" ? "未登録" : "Not connected")}
+                  </div>
                 </Field>
                 <label className="flex items-start gap-3 rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   <input
@@ -350,27 +395,9 @@ export default function SupportWorkspace({
                 </label>
                 <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   {locale === "ja"
-                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。LINE表示名とフォローアップ設定をこのアカウントに記録します。`
-                    : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. LINE display name and follow-up preference are stored in this account.`}
+                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。連携後は、このアカウントに保存された状態を表示します。`
+                    : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. The saved account state is shown after connection.`}
                 </div>
-                <label className="flex items-start gap-3 rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-                  <input
-                    type="checkbox"
-                    checked={lineForm.lineBindingStatus === "connected"}
-                    onChange={(event) =>
-                      setLineForm((current) => ({
-                        ...current,
-                        lineBindingStatus: event.target.checked ? "connected" : current.lineDisplayName ? "registered" : "not_connected",
-                      }))
-                    }
-                    className="mt-1"
-                  />
-                  <span>
-                    {locale === "ja"
-                      ? "担当者がLINE連携を確認済みにする"
-                      : "Mark LINE connection as confirmed"}
-                  </span>
-                </label>
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={saveSupportProfile} className="btn btn-secondary" disabled={isSaving}>
