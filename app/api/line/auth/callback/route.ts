@@ -49,29 +49,16 @@ function getViewerLegacyAccount(viewer: ViewerContext) {
 }
 
 export function resolveLineCallbackBindAuthorization(viewer: ViewerContext, expectedLegacyAccountId: string) {
-  const principalCandidates = [
-    viewer.principal?.legacyAccountId || null,
-    viewer.principal?.userProfileId || null,
-  ].filter((entry): entry is string => Boolean(entry));
   const legacyAccount = getViewerLegacyAccount(viewer);
   const legacyCandidate = legacyAccount?.id || null;
-  const principalMatched = principalCandidates.includes(expectedLegacyAccountId);
+  const principalMatched = false;
   const legacyMatched = legacyCandidate === expectedLegacyAccountId;
 
-  if (viewer.principal && !principalMatched && legacyMatched) {
-    console.warn("line callback bind authorization falling back to legacy account match despite principal mismatch", {
-      expectedLegacyAccountId,
-      principalCandidates,
-      legacyCandidate,
-      principalId: viewer.principal.userProfileId,
-    });
-  }
-
   return {
-    authorized: principalMatched || legacyMatched,
+    authorized: legacyMatched,
     principalMatched,
     legacyMatched,
-    matchedBy: principalMatched ? "principal" : legacyMatched ? "legacy" : "none",
+    matchedBy: legacyMatched ? "legacy" : "none",
     expectedLegacyAccountId,
   } as const;
 }
