@@ -28,6 +28,14 @@ const AUTH_COOKIE_SECRET = process.env.YORISOU_AUTH_COOKIE_SECRET || "yorisou-ph
 const AUTH_COOKIE_KEY = createHash("sha256").update(AUTH_COOKIE_SECRET).digest();
 const DEFAULT_SCOPE = "openid profile";
 
+function getLineLoginChannelSecret() {
+  return process.env.LINE_LOGIN_CHANNEL_SECRET || process.env.LINE_CHANNEL_SECRET || null;
+}
+
+function getLineMessagingChannelSecret() {
+  return process.env.LINE_MESSAGING_CHANNEL_SECRET || null;
+}
+
 function createLineAuthState(locale: "ja" | "en") {
   return `${locale}.${randomBytes(16).toString("hex")}`;
 }
@@ -132,25 +140,27 @@ export function buildLineAuthorizeUrl(payload: LineAuthCookiePayload) {
 }
 
 export function isLineLoginConfigured() {
-  return Boolean(process.env.LINE_CHANNEL_ID && process.env.LINE_CHANNEL_SECRET && process.env.LINE_REDIRECT_URI);
+  return Boolean(process.env.LINE_CHANNEL_ID && getLineLoginChannelSecret() && process.env.LINE_REDIRECT_URI);
 }
 
 export function isLineMessagingConfigured() {
-  return Boolean(process.env.LINE_CHANNEL_SECRET && process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN);
+  return Boolean(getLineMessagingChannelSecret() && process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN);
 }
 
 export function getLineMessagingConfigStatus() {
   return {
     loginConfigured: isLineLoginConfigured(),
     messagingConfigured: isLineMessagingConfigured(),
-    channelSecretPresent: Boolean(process.env.LINE_CHANNEL_SECRET),
+    loginChannelSecretPresent: Boolean(getLineLoginChannelSecret()),
+    messagingChannelSecretPresent: Boolean(getLineMessagingChannelSecret()),
+    channelSecretPresent: Boolean(getLineMessagingChannelSecret()),
     channelAccessTokenPresent: Boolean(process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN),
   };
 }
 
 export async function exchangeLineAuthorizationCode(input: { code: string }) {
   const channelId = process.env.LINE_CHANNEL_ID;
-  const channelSecret = process.env.LINE_CHANNEL_SECRET;
+  const channelSecret = getLineLoginChannelSecret();
   const redirectUri = process.env.LINE_REDIRECT_URI;
 
   if (!channelId || !channelSecret || !redirectUri) {
@@ -239,7 +249,7 @@ export async function fetchLineProfile(accessToken: string) {
 }
 
 export function verifyLineWebhookSignature(input: { body: string; signature: string | null }) {
-  const channelSecret = process.env.LINE_CHANNEL_SECRET;
+  const channelSecret = getLineMessagingChannelSecret();
 
   if (!channelSecret || !input.signature) {
     return false;
