@@ -143,11 +143,11 @@ export async function GET(request: Request) {
     }
 
     const session = viewer.session || (await ensureViewerSession());
-    const boundSession =
-      (await bindSessionToUser(session.id, account.id, {
-        legacyAccount: account,
-        source: lineCookie.accountId ? "line_bind" : "line_login",
-      })) || { ...session, userId: account.id };
+    await bindSessionToUser(session.id, account.id, {
+      legacyAccount: account,
+      source: lineCookie.accountId ? "line_bind" : "line_login",
+    });
+    const boundSession = { ...session, userId: account.id };
 
     const response = NextResponse.redirect(
       buildReturnUrl(request, `${fallbackPath.split("#")[0]}?line_status=connected#line-connect`),
