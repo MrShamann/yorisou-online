@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isPlaceholderEmail } from "@/lib/server/foundation/ids";
 import { createPasswordResetToken, findAccountByEmail } from "@/lib/server/yorisouData";
 import { sendPasswordResetEmail } from "@/lib/server/yorisouMail";
 
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
     const account = await findAccountByEmail(normalizedEmail);
     trace(`account_lookup found=${Boolean(account)} email=${maskedEmail}`);
 
-    if (account) {
+    if (account && !isPlaceholderEmail(account.email)) {
       trace(`token_create_start accountId=${account.id}`);
       let token: string;
 
@@ -125,6 +126,8 @@ export async function POST(request: Request) {
       if (!delivery.ok) {
         console.error("password reset email not sent:", delivery.reason);
       }
+    } else if (account) {
+      trace(`placeholder_email_not_resettable accountId=${account.id}`);
     }
 
     if (isDocumentRequest) {

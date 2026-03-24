@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { findAccountByEmail, verifyPassword } from "@/lib/server/yorisouData";
+import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import {
   bindSessionToUser,
   ensureViewerSession,
@@ -8,7 +9,10 @@ import {
   restoreAccountFromCookie,
   setViewerAccountCookie,
   setViewerSessionCookie,
+  switchSessionToPrincipalLandingTruth,
+  withSessionPrincipalLandingShadow,
 } from "@/lib/server/yorisouAuth";
+import { inferLocaleFromPaths } from "@/app/api/auth/redirectLocale";
 
 type LoginPayload = {
   email?: string;
@@ -63,8 +67,11 @@ export async function POST(request: Request) {
   let returnPath = "/login";
   try {
     const { payload, isDocumentRequest } = await parsePayload(request);
-    const successPath = safeRedirectPath(payload.next, "/support");
-    returnPath = safeRedirectPath(payload.returnTo, "/login");
+    const locale = inferLocaleFromPaths(payload.returnTo, payload.next);
+    const defaultSuccessPath = locale === "en" ? "/en/support" : "/support";
+    const defaultReturnPath = locale === "en" ? "/en/login" : "/login";
+    const successPath = safeRedirectPath(payload.next, defaultSuccessPath);
+    returnPath = safeRedirectPath(payload.returnTo, defaultReturnPath);
 
     if (!payload.email?.trim() || !payload.password) {
       if (isDocumentRequest) {
@@ -88,9 +95,26 @@ export async function POST(request: Request) {
     }
 
     await restoreAccountFromCookie(account);
+    try {
+      await identityFoundationService.ensureEmailIdentityForLogin(account);
+    } catch (foundationError) {
+      console.error("login foundation sync error:", foundationError);
+    }
 
     const session = await ensureViewerSession();
-    await bindSessionToUser(session.id, account.id);
+    const boundSession =
+      (await bindSessionToUser(session.id, account.id, {
+        legacyAccount: account,
+        source: "email_login",
+      })) || { ...session, userId: account.id };
+    const shadowSession = await withSessionPrincipalLandingShadow(boundSession, {
+      legacyAccount: account,
+      source: "email_login",
+    });
+    const sessionForCookie = await switchSessionToPrincipalLandingTruth(shadowSession, {
+      legacyAccount: account,
+      source: "email_login",
+    });
 
     const response = isDocumentRequest
       ? NextResponse.redirect(buildRedirectUrl(request, successPath), { status: 303 })
@@ -102,7 +126,7 @@ export async function POST(request: Request) {
             email: account.email,
           },
         });
-    setViewerSessionCookie(response, { ...session, userId: account.id });
+    setViewerSessionCookie(response, sessionForCookie);
     setViewerAccountCookie(response, account);
     return response;
   } catch (error) {

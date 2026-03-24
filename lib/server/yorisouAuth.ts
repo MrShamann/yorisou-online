@@ -1,7 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
-import type { AuthIdentity, ConsentLog, FoundationLocale, UserProfile } from "@/lib/server/foundation/schema";
 
 import {
   assignSessionConsultationsToUser,
@@ -9,17 +8,15 @@ import {
   deleteSession,
   findAccountById,
   findSessionById,
+  getLatestLineWebhookEventForAccount,
   listConsultationsForViewer,
-  upsertAccountRecord,
   touchSession,
+  upsertAccountRecord,
   type AccountRecord,
   type LineBindingStatus,
   type SessionPrincipalLanding,
   type SessionRecord,
 } from "@/lib/server/yorisouData";
-import { identityFoundationService } from "@/lib/server/foundation/identityService";
-import { privacyAuditService } from "@/lib/server/foundation/privacyService";
-import { getSupportDisplaySnapshot } from "@/lib/server/midBackend/support/supportDisplaySnapshot";
 
 export const SESSION_COOKIE = "yorisou_session";
 export const ACCOUNT_COOKIE = "yorisou_account";
@@ -32,12 +29,15 @@ type SessionCookiePayload = {
   principalLanding?: SessionPrincipalLanding | null;
 };
 
-export type ViewerContext = {
-  session: SessionRecord | null;
-  account: AccountRecord | null;
-  legacyAccount: AccountRecord | null;
-  principal: ViewerPrincipal | null;
-  principalLanding: ViewerPrincipalLandingContext;
+export type ViewerPrincipalIdentitySummary = {
+  emailNormalized: string | null;
+};
+
+export type ViewerPrincipal = {
+  principalId: string;
+  userProfileId: string;
+  legacyAccountId: string | null;
+  authSourceSummary: ViewerPrincipalIdentitySummary[];
 };
 
 export type ViewerPrincipalLandingContext = {
@@ -54,31 +54,13 @@ export type SessionPrincipalLandingCoverageStatus =
   | "legacy_fallback"
   | "conflict_fallback";
 
-export type ViewerPrincipalIdentitySummary = {
-  authIdentityId: string;
-  identityType: AuthIdentity["identityType"];
-  identityStatus: AuthIdentity["identityStatus"];
-  bindingState: AuthIdentity["bindingState"];
-  source: AuthIdentity["source"];
-  channel: AuthIdentity["channel"];
-  legacyAccountId: string | null;
-  emailNormalized: string | null;
-  lineUserId: string | null;
+export type ViewerContext = {
+  session: SessionRecord | null;
+  account: AccountRecord | null;
+  legacyAccount: AccountRecord | null;
+  principal: ViewerPrincipal | null;
+  principalLanding: ViewerPrincipalLandingContext;
 };
-
-export type ViewerPrincipal = {
-  principalId: string;
-  userProfileId: string;
-  legacyAccountId: string | null;
-  profileStatus: UserProfile["profileStatus"];
-  bindingState: UserProfile["bindingState"];
-  displayName: string;
-  primaryLocale: FoundationLocale | null;
-  authSourceSummary: ViewerPrincipalIdentitySummary[];
-  stableAccessKey: string;
-};
-
-type SessionPrincipalLandingSource = SessionPrincipalLanding["source"];
 
 export type SupportDiagnosticsSource =
   | "canonical"
@@ -120,7 +102,7 @@ export type AccessAccountabilityViewModel = {
   accessType: "support_self_view" | "admin_target_view";
   latestConsent: {
     available: boolean;
-    consentType: ConsentLog["consentType"] | null;
+    consentType: "account_registration" | "line_identity_binding" | "line_primary_login" | "email_identity_attachment" | null;
     timestamp: string | null;
   };
 };
@@ -192,7 +174,12 @@ export function composeSupportDiagnosticsViewModel(input: {
 
 export function composeAccessAccountabilityViewModel(input: {
   accessType: AccessAccountabilityViewModel["accessType"];
-  latestConsent: ConsentLog | null;
+  latestConsent:
+    | {
+        consentType?: AccessAccountabilityViewModel["latestConsent"]["consentType"];
+        timestamp?: string | null;
+      }
+    | null;
 }): AccessAccountabilityViewModel {
   return {
     auditLogged: true,
@@ -337,7 +324,6 @@ export function parseSessionPrincipalLanding(value: unknown): SessionPrincipalLa
   }
 
   const candidate = value as Partial<SessionPrincipalLanding>;
-
   if (candidate.version !== 1 || candidate.kind !== "canonical_principal") {
     return null;
   }
@@ -348,20 +334,6 @@ export function parseSessionPrincipalLanding(value: unknown): SessionPrincipalLa
     typeof candidate.source !== "string" ||
     typeof candidate.issuedAt !== "string"
   ) {
-    return null;
-  }
-
-  if (
-    candidate.source !== "email_login" &&
-    candidate.source !== "register" &&
-    candidate.source !== "line_login" &&
-    candidate.source !== "line_bind" &&
-    candidate.source !== "session_upgrade"
-  ) {
-    return null;
-  }
-
-  if (candidate.legacyAccountId !== null && candidate.legacyAccountId !== undefined && typeof candidate.legacyAccountId !== "string") {
     return null;
   }
 
@@ -376,16 +348,17 @@ export function parseSessionPrincipalLanding(value: unknown): SessionPrincipalLa
   };
 }
 
-function getParsedSessionPrincipalLanding(...values: Array<unknown>) {
-  for (const value of values) {
-    const parsed = parseSessionPrincipalLanding(value);
-
-    if (parsed) {
-      return parsed;
-    }
+function toViewerPrincipal(account: AccountRecord | null): ViewerPrincipal | null {
+  if (!account) {
+    return null;
   }
 
-  return null;
+  return {
+    principalId: account.id,
+    userProfileId: account.id,
+    legacyAccountId: account.id,
+    authSourceSummary: [{ emailNormalized: account.email.toLowerCase() }],
+  };
 }
 
 export function resolveSessionPrincipalLandingContext(input: {
@@ -406,7 +379,7 @@ export function resolveSessionPrincipalLandingContext(input: {
   if (contract?.legacyAccountId) {
     return {
       contract,
-      contractStatus: "present",
+      contractStatus,
       restoreSource: "contract_legacy_account",
     };
   }
@@ -418,136 +391,30 @@ export function resolveSessionPrincipalLandingContext(input: {
   };
 }
 
-function toViewerPrincipalIdentitySummary(identity: AuthIdentity): ViewerPrincipalIdentitySummary {
-  return {
-    authIdentityId: identity.authIdentityId,
-    identityType: identity.identityType,
-    identityStatus: identity.identityStatus,
-    bindingState: identity.bindingState,
-    source: identity.source,
-    channel: identity.channel,
-    legacyAccountId: identity.legacyAccountId,
-    emailNormalized: identity.emailNormalized,
-    lineUserId: identity.lineUserId,
-  };
-}
-
-function toViewerPrincipal(
-  userProfile: UserProfile,
-  authIdentities: AuthIdentity[],
-): ViewerPrincipal {
-  return {
-    principalId: userProfile.userProfileId,
-    userProfileId: userProfile.userProfileId,
-    legacyAccountId: userProfile.legacyAccountId,
-    profileStatus: userProfile.profileStatus,
-    bindingState: userProfile.bindingState,
-    displayName: userProfile.profile.displayName,
-    primaryLocale: userProfile.profile.primaryLocale,
-    authSourceSummary: authIdentities.map(toViewerPrincipalIdentitySummary),
-    stableAccessKey: `user_profile:${userProfile.userProfileId}`,
-  };
-}
-
-async function resolveViewerPrincipal(account: AccountRecord | null): Promise<ViewerPrincipal | null> {
-  if (!account) {
-    return null;
-  }
-
-  try {
-    const userProfile =
-      (await identityFoundationService.getUserProfileByLegacyAccountId(account.id)) ||
-      (await identityFoundationService.getUserProfileById(account.id));
-
-    if (!userProfile) {
-      return null;
-    }
-
-    const authIdentities = await identityFoundationService.getAuthIdentitiesByUserProfileId(userProfile.userProfileId);
-    return toViewerPrincipal(userProfile, authIdentities);
-  } catch (error) {
-    console.error("viewer principal resolution error:", error);
-    return null;
-  }
-}
-
-async function resolveViewerPrincipalFromLandingContract(
-  contract: SessionPrincipalLanding | null,
-  effectiveLegacyAccountId: string | null,
-): Promise<ViewerPrincipal | null> {
-  if (!contract) {
-    return null;
-  }
-
-  try {
-    const userProfile =
-      (await identityFoundationService.getUserProfileById(contract.userProfileId)) ||
-      (contract.principalId !== contract.userProfileId ? await identityFoundationService.getUserProfileById(contract.principalId) : null);
-
-    if (!userProfile) {
-      return null;
-    }
-
-    if (
-      effectiveLegacyAccountId &&
-      userProfile.legacyAccountId &&
-      userProfile.legacyAccountId !== effectiveLegacyAccountId &&
-      userProfile.userProfileId !== effectiveLegacyAccountId
-    ) {
-      console.warn("session landing contract falling back to legacy truth because contract conflicts with legacy account", {
-        effectiveLegacyAccountId,
-        contractLegacyAccountId: contract.legacyAccountId,
-        contractUserProfileId: contract.userProfileId,
-        resolvedLegacyAccountId: userProfile.legacyAccountId,
-      });
-      return null;
-    }
-
-    const authIdentities = await identityFoundationService.getAuthIdentitiesByUserProfileId(userProfile.userProfileId);
-    return toViewerPrincipal(userProfile, authIdentities);
-  } catch (error) {
-    console.error("viewer principal landing contract resolution error:", error);
-    return null;
-  }
-}
-
 async function buildSessionPrincipalLandingContract(input: {
   legacyAccount: AccountRecord | null;
-  source: SessionPrincipalLandingSource;
+  source: SessionPrincipalLanding["source"];
 }): Promise<SessionPrincipalLanding | null> {
   if (!input.legacyAccount) {
     return null;
   }
 
-  try {
-    const userProfile =
-      (await identityFoundationService.getUserProfileByLegacyAccountId(input.legacyAccount.id)) ||
-      (await identityFoundationService.getUserProfileById(input.legacyAccount.id));
-
-    if (!userProfile) {
-      return null;
-    }
-
-    return {
-      version: 1,
-      kind: "canonical_principal",
-      principalId: userProfile.userProfileId,
-      userProfileId: userProfile.userProfileId,
-      legacyAccountId: input.legacyAccount.id,
-      source: input.source,
-      issuedAt: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error("session principal landing contract build error:", error);
-    return null;
-  }
+  return {
+    version: 1,
+    kind: "canonical_principal",
+    principalId: input.legacyAccount.id,
+    userProfileId: input.legacyAccount.id,
+    legacyAccountId: input.legacyAccount.id,
+    source: input.source,
+    issuedAt: new Date().toISOString(),
+  };
 }
 
 export async function withSessionPrincipalLandingShadow(
   session: SessionRecord,
   input: {
     legacyAccount: AccountRecord | null;
-    source: SessionPrincipalLandingSource;
+    source: SessionPrincipalLanding["source"];
   },
 ): Promise<SessionRecord> {
   if (parseSessionPrincipalLanding(session.principalLanding)) {
@@ -569,46 +436,35 @@ export async function ensureSessionPrincipalLandingShadowWrite(
   session: SessionRecord,
   input: {
     legacyAccount: AccountRecord | null;
-    source: SessionPrincipalLandingSource;
+    source: SessionPrincipalLanding["source"];
   },
 ): Promise<SessionRecord> {
   const sessionWithShadow = await withSessionPrincipalLandingShadow(session, input);
-
   if (sessionWithShadow.principalLanding === session.principalLanding) {
     return session;
   }
 
-  return (
-    (await touchSession(session.id, session.userId, sessionWithShadow.principalLanding || null)) ||
-    sessionWithShadow
-  );
+  return (await touchSession(session.id, session.userId, sessionWithShadow.principalLanding || null)) || sessionWithShadow;
 }
 
 export async function switchSessionToPrincipalLandingTruth(
   session: SessionRecord,
   input: {
     legacyAccount: AccountRecord | null;
-    source: SessionPrincipalLandingSource;
+    source: SessionPrincipalLanding["source"];
   },
 ): Promise<SessionRecord> {
   const sessionWithShadow = await withSessionPrincipalLandingShadow(session, input);
   const contract = parseSessionPrincipalLanding(sessionWithShadow.principalLanding);
 
   if (!contract) {
-    console.warn("session writer-switch falling back to legacy session truth because principal landing contract is unavailable", {
-      sessionId: session.id,
-      source: input.source,
-      legacyAccountId: input.legacyAccount?.id || null,
-    });
     return session;
   }
 
-  return (
-    (await touchSession(session.id, null, contract)) || {
-      ...sessionWithShadow,
-      userId: null,
-    }
-  );
+  return (await touchSession(session.id, null, contract)) || {
+    ...sessionWithShadow,
+    userId: null,
+  };
 }
 
 export async function inspectSessionPrincipalLandingCoverage(input: {
@@ -626,26 +482,15 @@ export async function inspectSessionPrincipalLandingCoverage(input: {
       : principalLanding.restoreSource === "contract_legacy_account"
         ? principalLanding.contract?.legacyAccountId || null
         : null;
-  const accountFromStore = effectiveLegacyAccountId ? await findAccountById(effectiveLegacyAccountId) : null;
   const account =
-    accountFromStore ||
-    (input.accountCookie && effectiveLegacyAccountId && input.accountCookie.id === effectiveLegacyAccountId
-      ? input.accountCookie
-      : null);
-  const principalFromContract = await resolveViewerPrincipalFromLandingContract(principalLanding.contract, effectiveLegacyAccountId);
-  const principal = principalFromContract || (await resolveViewerPrincipal(account));
-  const contractPresent = Boolean(principalLanding.contract);
-  const contractStatus =
-    contractPresent && principalLanding.contractStatus === "present" && !principalFromContract
-      ? ("conflict_fallback" as const)
-      : principalLanding.contractStatus;
+    (effectiveLegacyAccountId ? await findAccountById(effectiveLegacyAccountId) : null) ||
+    (input.accountCookie && effectiveLegacyAccountId === input.accountCookie.id ? input.accountCookie : null);
+  const principal = toViewerPrincipal(account);
 
   let classification: SessionPrincipalLandingCoverageStatus;
   if (principalLanding.contractStatus === "invalid") {
     classification = "invalid_contract";
-  } else if (contractStatus === "conflict_fallback") {
-    classification = "conflict_fallback";
-  } else if (contractPresent && principalFromContract) {
+  } else if (principalLanding.contractStatus === "present") {
     classification = "written_ok";
   } else if (!effectiveLegacyAccountId) {
     classification = "no_write_by_design";
@@ -657,7 +502,7 @@ export async function inspectSessionPrincipalLandingCoverage(input: {
 
   return {
     classification,
-    contractStatus,
+    contractStatus: principalLanding.contractStatus,
     restoreSource: principalLanding.restoreSource,
     contract: principalLanding.contract,
     effectiveLegacyAccountId,
@@ -705,12 +550,22 @@ export function readAccountCookieFromRequest(request: Request) {
 }
 
 export function setViewerSessionCookie(response: NextResponse, session: SessionRecord) {
-  response.cookies.set(SESSION_COOKIE, encodeSessionCookie(session), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-  });
+  response.cookies.set(
+    SESSION_COOKIE,
+    encodeSessionCookie({
+      id: session.id,
+      userId: session.userId,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+      principalLanding: session.principalLanding || null,
+    }),
+    {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    },
+  );
 }
 
 export function setViewerAccountCookie(response: NextResponse, account: AccountRecord) {
@@ -731,134 +586,69 @@ export async function getViewerContext(): Promise<ViewerContext> {
 
   if (sessionCookie) {
     const storedSession = await findSessionById(sessionCookie.id);
-    const session = storedSession
-      ? ((await touchSession(sessionCookie.id, sessionCookie.userId)) || storedSession)
-      : createSyntheticSession(sessionCookie);
-    const contract = getParsedSessionPrincipalLanding(session.principalLanding, sessionCookie.principalLanding);
+    const session =
+      storedSession
+        ? ((await touchSession(
+            sessionCookie.id,
+            sessionCookie.userId,
+            sessionCookie.principalLanding === undefined ? undefined : sessionCookie.principalLanding || null,
+          )) || storedSession)
+        : createSyntheticSession(sessionCookie);
     const principalLanding = resolveSessionPrincipalLandingContext({
       sessionUserId: session.userId,
-      contractValue: contract,
+      contractValue: session.principalLanding || sessionCookie.principalLanding || null,
     });
-    const effectiveLegacyAccountId =
-      principalLanding.restoreSource === "legacy_user_id"
-        ? session.userId
-        : principalLanding.restoreSource === "contract_legacy_account"
-          ? principalLanding.contract?.legacyAccountId || null
-          : null;
-    const accountFromStore = effectiveLegacyAccountId ? await findAccountById(effectiveLegacyAccountId) : null;
-    const account =
-      accountFromStore ||
-      (accountCookie && effectiveLegacyAccountId && accountCookie.id === effectiveLegacyAccountId ? accountCookie : null);
-    const principalFromContract = await resolveViewerPrincipalFromLandingContract(principalLanding.contract, effectiveLegacyAccountId);
-    const principal = principalFromContract || (await resolveViewerPrincipal(account));
-    const resolvedPrincipalLanding =
-      principalLanding.contract && principalLanding.contractStatus === "present" && !principalFromContract
-        ? { ...principalLanding, contractStatus: "conflict_fallback" as const }
-        : principalLanding;
-
+    const accountId =
+      session.userId ||
+      sessionCookie.userId ||
+      (principalLanding.restoreSource === "contract_legacy_account" ? principalLanding.contract?.legacyAccountId || null : null);
+    const account = accountId ? (await findAccountById(accountId)) || (accountCookie?.id === accountId ? accountCookie : null) : null;
     return {
       session,
       account,
       legacyAccount: account,
-      principal,
-      principalLanding: resolvedPrincipalLanding,
+      principal: toViewerPrincipal(account),
+      principalLanding,
     };
-  }
-
-  if (!rawSessionValue) {
-    return {
-      session: null,
-      account: null,
-      legacyAccount: null,
-      principal: null,
-      principalLanding: {
-        contract: null,
-        contractStatus: "absent",
-        restoreSource: "none",
-      },
-    };
-  }
-
-  const session = await findSessionById(rawSessionValue);
-
-  if (!session) {
-    return {
-      session: null,
-      account: null,
-      legacyAccount: null,
-      principal: null,
-      principalLanding: {
-        contract: null,
-        contractStatus: "absent",
-        restoreSource: "none",
-      },
-    };
-  }
-
-  await touchSession(session.id);
-  const principalLanding = resolveSessionPrincipalLandingContext({
-    sessionUserId: session.userId,
-    contractValue: session.principalLanding,
-  });
-  const effectiveLegacyAccountId =
-    principalLanding.restoreSource === "legacy_user_id"
-      ? session.userId
-      : principalLanding.restoreSource === "contract_legacy_account"
-        ? principalLanding.contract?.legacyAccountId || null
-        : null;
-  const account = effectiveLegacyAccountId ? await findAccountById(effectiveLegacyAccountId) : null;
-  const principalFromContract = await resolveViewerPrincipalFromLandingContract(principalLanding.contract, effectiveLegacyAccountId);
-  const principal = principalFromContract || (await resolveViewerPrincipal(account));
-  const resolvedPrincipalLanding =
-    principalLanding.contract && principalLanding.contractStatus === "present" && !principalFromContract
-      ? { ...principalLanding, contractStatus: "conflict_fallback" as const }
-      : principalLanding;
-  return {
-    session,
-    account,
-    legacyAccount: account,
-    principal,
-    principalLanding: resolvedPrincipalLanding,
-  };
-}
-
-export async function ensureViewerSession() {
-  const cookieStore = await cookies();
-  const rawSessionValue = cookieStore.get(SESSION_COOKIE)?.value;
-  const sessionCookie = decodeSessionCookie(rawSessionValue);
-
-  if (sessionCookie) {
-    const session = await findSessionById(sessionCookie.id);
-    if (session) {
-      const touchedSession = (await touchSession(session.id, sessionCookie.userId)) || session;
-      if (touchedSession.userId) {
-        const account = await findAccountById(touchedSession.userId);
-        return switchSessionToPrincipalLandingTruth(touchedSession, {
-          legacyAccount: account,
-          source: "session_upgrade",
-        });
-      }
-      return touchedSession;
-    }
-    return createSyntheticSession(sessionCookie);
   }
 
   if (rawSessionValue) {
     const session = await findSessionById(rawSessionValue);
     if (session) {
-      const touchedSession = (await touchSession(session.id)) || session;
-      if (touchedSession.userId) {
-        const account = await findAccountById(touchedSession.userId);
-        return switchSessionToPrincipalLandingTruth(touchedSession, {
-          legacyAccount: account,
-          source: "session_upgrade",
-        });
-      }
-      return touchedSession;
+      const touchedSession = (await touchSession(session.id, session.userId)) || session;
+      const account = touchedSession.userId ? await findAccountById(touchedSession.userId) : null;
+      return {
+        session: touchedSession,
+        account,
+        legacyAccount: account,
+        principal: toViewerPrincipal(account),
+        principalLanding: resolveSessionPrincipalLandingContext({
+          sessionUserId: touchedSession.userId,
+          contractValue: touchedSession.principalLanding,
+        }),
+      };
     }
   }
 
-  return createSession(null);
+  return {
+    session: null,
+    account: accountCookie || null,
+    legacyAccount: accountCookie || null,
+    principal: toViewerPrincipal(accountCookie || null),
+    principalLanding: {
+      contract: null,
+      contractStatus: "absent",
+      restoreSource: "none",
+    },
+  };
+}
+
+export async function ensureViewerSession() {
+  const viewer = await getViewerContext();
+  if (viewer.session) {
+    return viewer.session;
+  }
+  return createSession(viewer.account?.id || null);
 }
 
 export async function bindSessionToUser(
@@ -866,18 +656,15 @@ export async function bindSessionToUser(
   userId: string,
   options?: {
     legacyAccount?: AccountRecord | null;
-    source?: SessionPrincipalLandingSource;
+    source?: SessionPrincipalLanding["source"];
   },
 ) {
-  const legacyAccount = options?.legacyAccount || (await findAccountById(userId));
   const contract = await buildSessionPrincipalLandingContract({
-    legacyAccount,
+    legacyAccount: options?.legacyAccount || (await findAccountById(userId)),
     source: options?.source || "session_upgrade",
   });
-  const session = await touchSession(sessionId, contract ? null : userId, contract || undefined);
-  await assignSessionConsultationsToUser(sessionId, userId, {
-    ownerTargetId: contract?.userProfileId || userId,
-  });
+  const session = await touchSession(sessionId, userId, contract || undefined);
+  await assignSessionConsultationsToUser(sessionId, userId);
   return session;
 }
 
@@ -900,12 +687,8 @@ export async function restoreAccountFromCookie(account: AccountRecord | null) {
   return account;
 }
 
-function getLegacyViewerAccount(viewer: ViewerContext) {
-  return viewer.legacyAccount || viewer.account;
-}
-
 export function resolveSupportWorkspaceViewerLookup(viewer: ViewerContext) {
-  const legacyAccount = getLegacyViewerAccount(viewer);
+  const legacyAccount = viewer.legacyAccount || viewer.account;
 
   if (!legacyAccount) {
     return {
@@ -918,7 +701,7 @@ export function resolveSupportWorkspaceViewerLookup(viewer: ViewerContext) {
       legacyMatched: false,
       matchedBy: "none" as const,
       fallbackAccount: null,
-    };
+    } as const;
   }
 
   const principalCandidates = [
@@ -927,18 +710,9 @@ export function resolveSupportWorkspaceViewerLookup(viewer: ViewerContext) {
   ].filter((entry): entry is string => Boolean(entry));
   const principalMatched = principalCandidates.includes(legacyAccount.id);
 
-  if (viewer.principal && !principalMatched) {
-    console.warn("support workspace viewer lookup falling back to legacy account despite principal mismatch", {
-      legacyAccountId: legacyAccount.id,
-      principalCandidates,
-      principalId: viewer.principal.userProfileId,
-    });
-  }
-
   return {
     effectiveLegacyAccountId: legacyAccount.id,
-    supportReadTargetUserProfileId:
-      principalMatched && viewer.principal?.userProfileId ? viewer.principal.userProfileId : legacyAccount.id,
+    supportReadTargetUserProfileId: principalMatched && viewer.principal?.userProfileId ? viewer.principal.userProfileId : legacyAccount.id,
     consultationOwnerIds: Array.from(new Set([legacyAccount.id, viewer.principal?.userProfileId || null].filter((entry): entry is string => Boolean(entry)))),
     consultationOwnerTargetId: viewer.principal?.userProfileId || legacyAccount.id,
     hasAuthenticatedViewer: true,
@@ -952,55 +726,19 @@ export function resolveSupportWorkspaceViewerLookup(viewer: ViewerContext) {
 export async function getSupportWorkspaceData(locale: "ja" | "en") {
   const viewer = await getViewerContext();
   const viewerLookup = resolveSupportWorkspaceViewerLookup(viewer);
-  // Consultation display remains on the legacy ConsultationRecord boundary for now.
-  // The support workspace consumes the existing record shape directly, and there is
-  // no canonical consultation read model yet that can replace it without risking
-  // display contract drift or coupling to consultation write semantics.
+  const account = viewer.account;
   const consultations = await listConsultationsForViewer({
     userId: viewerLookup.effectiveLegacyAccountId,
-    userIds: viewerLookup.consultationOwnerIds,
     sessionId: viewer.session?.id || null,
     locale,
   });
-  const supportDisplaySnapshot = await getSupportDisplaySnapshot({
-    userProfileId: viewerLookup.supportReadTargetUserProfileId,
-    fallbackAccount: viewerLookup.fallbackAccount,
-  });
-  const latestConsent = viewer.principal?.userProfileId
-    ? (await privacyAuditService.listRecentConsentEntries(20)).find((entry) => entry?.userProfileId === viewer.principal?.userProfileId) || null
-    : null;
-
-  if (viewerLookup.hasAuthenticatedViewer) {
-    try {
-      await privacyAuditService.recordAudit({
-        actorType: "user",
-        actorUserProfileId: viewer.principal?.userProfileId || null,
-        actorAuthIdentityId: null,
-        action: "support.view_sensitive",
-        resourceType: "user_profile",
-        resourceId: viewer.principal?.userProfileId || viewerLookup.effectiveLegacyAccountId,
-        channel: "support_web",
-        source: "support_workspace",
-        bindingState: viewer.principal ? "bound" : "unbound",
-        containsSensitiveAccess: true,
-        summary: "User viewed support workspace with support profile and consultation context",
-        metadata: {
-          locale,
-          accessType: "support_self_view",
-          targetUserProfileId: viewer.principal?.userProfileId || null,
-          targetLegacyAccountId: viewerLookup.effectiveLegacyAccountId,
-        },
-      });
-    } catch (foundationError) {
-      console.error("support workspace view audit error:", foundationError);
-    }
-  }
+  const latestLineEvent = account ? await getLatestLineWebhookEventForAccount(account.id) : null;
+  const supportSource = account ? "compatibility_mirror" : "unresolved";
 
   return {
     ...viewer,
-    account: supportDisplaySnapshot.account,
-    supportProfile: supportDisplaySnapshot.supportProfile,
-    supportReadModelSource: supportDisplaySnapshot.readModelSource,
+    supportProfile: account?.supportProfile || null,
+    supportReadModelSource: supportSource,
     supportDiagnostics: composeSupportDiagnosticsViewModel({
       hasPrincipal: viewerLookup.hasAuthenticatedViewer,
       principalMatched: viewerLookup.principalMatched,
@@ -1009,17 +747,17 @@ export async function getSupportWorkspaceData(locale: "ja" | "en") {
       activeWriteTargetId: viewerLookup.principalMatched
         ? viewer.principal?.userProfileId || null
         : viewerLookup.effectiveLegacyAccountId,
-      lineBindingStatus: supportDisplaySnapshot.supportProfile?.lineBindingStatus || "not_connected",
-      lineBindingStatusSource: supportDisplaySnapshot.lineBindingStatusSource,
-      supportProfileSource: supportDisplaySnapshot.supportProfileSource,
-      preferencesStorageSource: supportDisplaySnapshot.preferencesStorageSource,
-      readFallbackActive: supportDisplaySnapshot.readFallbackActive,
+      lineBindingStatus: account?.supportProfile.lineBindingStatus || "not_connected",
+      lineBindingStatusSource: supportSource,
+      supportProfileSource: supportSource,
+      preferencesStorageSource: supportSource,
+      readFallbackActive: Boolean(account),
     }),
     consultations,
-    latestLineEvent: supportDisplaySnapshot.latestLineEvent,
+    latestLineEvent,
     accessAccountability: composeAccessAccountabilityViewModel({
       accessType: "support_self_view",
-      latestConsent,
+      latestConsent: null,
     }),
   };
 }

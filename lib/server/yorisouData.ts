@@ -12,6 +12,7 @@ import {
 
 import type { AdvisorLead } from "@/lib/yorisouAdvisorStorage";
 import type { AdvisorRecommendation, Locale } from "@/lib/ai/yorisouAdvisor";
+import { isPlaceholderEmail } from "@/lib/server/foundation/ids";
 
 export type AccountRole = "self" | "family" | "facility";
 export type LineBindingStatus = "not_connected" | "registered" | "connected";
@@ -48,6 +49,17 @@ export type SessionRecord = {
   userId: string | null;
   createdAt: string;
   updatedAt: string;
+  principalLanding?: SessionPrincipalLanding | null;
+};
+
+export type SessionPrincipalLanding = {
+  version: 1;
+  kind: "canonical_principal";
+  principalId: string;
+  userProfileId: string;
+  legacyAccountId: string | null;
+  source: "email_login" | "register" | "line_login" | "line_bind" | "session_upgrade";
+  issuedAt: string;
 };
 
 export type ConsultationRecord = {
@@ -184,7 +196,7 @@ function sortByCreatedAtDesc<T extends { createdAt: string }>(entries: T[]) {
   return [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-function defaultSupportProfile(): SupportProfile {
+export function defaultSupportProfile(): SupportProfile {
   return {
     lineBindingStatus: "not_connected",
     lineDisplayName: "",
@@ -776,6 +788,11 @@ export async function bindLineIdentity(input: {
     return null;
   }
 
+  const existingHolder = await findAccountByLineUserId(input.lineUserId);
+  if (existingHolder && existingHolder.id !== input.userId) {
+    return null;
+  }
+
   const updatedAccount: AccountRecord = {
     ...account,
     updatedAt: nowIso(),
@@ -833,7 +850,11 @@ export async function createSession(userId: string | null): Promise<SessionRecor
   return session;
 }
 
-export async function touchSession(id: string, userId?: string | null): Promise<SessionRecord | null> {
+export async function touchSession(
+  id: string,
+  userId?: string | null,
+  principalLanding?: SessionPrincipalLanding | null,
+): Promise<SessionRecord | null> {
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     const session = await getSharedSessionById(id);
@@ -845,6 +866,7 @@ export async function touchSession(id: string, userId?: string | null): Promise<
     const updatedSession: SessionRecord = {
       ...session,
       userId: userId === undefined ? session.userId : userId,
+      principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
       updatedAt: nowIso(),
     };
     await putSharedSessionRecord(updatedSession);
@@ -857,6 +879,7 @@ export async function touchSession(id: string, userId?: string | null): Promise<
       ? {
           ...session,
           userId: userId === undefined ? session.userId : userId,
+          principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
           updatedAt: nowIso(),
         }
       : session,
@@ -986,6 +1009,10 @@ export async function createPasswordResetToken(input: {
   email: string;
   expiresInMinutes?: number;
 }) {
+  if (isPlaceholderEmail(input.email)) {
+    throw new Error("placeholder_email_not_resettable");
+  }
+
   const token = randomBytes(32).toString("base64url");
   const createdAt = nowIso();
   const expiresAt = new Date(Date.now() + (input.expiresInMinutes || 60) * 60 * 1000).toISOString();
@@ -1044,6 +1071,10 @@ export async function validatePasswordResetToken(token: string) {
 
   const account = await findAccountById(record.accountId);
 
+  if (isPlaceholderEmail(record.email) || (account && isPlaceholderEmail(account.email))) {
+    return { ok: false as const, reason: "invalid_token" as const };
+  }
+
   if (!account || normalizeEmail(account.email) !== record.email) {
     return { ok: false as const, reason: "invalid_token" as const };
   }
@@ -1090,6 +1121,7 @@ export async function consumePasswordResetToken(token: string, password: string)
 export async function createConsultation(input: {
   sessionId: string;
   userId: string | null;
+  ownerTargetId?: string | null;
   locale: Locale;
   recommendation: AdvisorRecommendation;
   answerLabels: Record<string, string>;
@@ -1097,7 +1129,7 @@ export async function createConsultation(input: {
   const consultation: ConsultationRecord = {
     id: createId("consult"),
     sessionId: input.sessionId,
-    userId: input.userId,
+    userId: input.ownerTargetId === undefined ? input.userId : input.ownerTargetId,
     createdAt: nowIso(),
     locale: input.locale,
     recommendedCategory: input.recommendation.recommendedCategory,
@@ -1123,17 +1155,22 @@ export async function createConsultation(input: {
 
 export async function listConsultationsForViewer(input: {
   userId: string | null;
+  userIds?: string[] | null;
   sessionId: string | null;
   locale?: Locale;
 }): Promise<ConsultationRecord[]> {
   const consultations = await listConsultations();
+  const ownerIds = new Set((input.userIds || []).filter(Boolean));
+  if (input.userId) {
+    ownerIds.add(input.userId);
+  }
 
   return consultations.filter((entry) => {
     if (input.locale && entry.locale !== input.locale) {
       return false;
     }
-    if (input.userId) {
-      return entry.userId === input.userId;
+    if (ownerIds.size) {
+      return entry.userId ? ownerIds.has(entry.userId) : false;
     }
     if (input.sessionId) {
       return entry.sessionId === input.sessionId;
@@ -1146,7 +1183,25 @@ export async function attachLeadToConsultation(input: {
   consultationId: string;
   lead: AdvisorLead;
   userId: string | null;
+  ownerTargetId?: string | null;
+  ownerIds?: string[] | null;
 }): Promise<ConsultationRecord | null> {
+  const ownerIds = new Set((input.ownerIds || []).filter(Boolean));
+  if (input.userId) {
+    ownerIds.add(input.userId);
+  }
+  if (input.ownerTargetId) {
+    ownerIds.add(input.ownerTargetId);
+  }
+
+  const resolveUpdatedOwnerTarget = (entry: ConsultationRecord) => {
+    if (ownerIds.size && entry.userId && !ownerIds.has(entry.userId)) {
+      return null;
+    }
+
+    return input.ownerTargetId === undefined ? (input.userId ?? entry.userId) : input.ownerTargetId;
+  };
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     const entry = await getSharedConsultationById(input.consultationId);
@@ -1155,9 +1210,15 @@ export async function attachLeadToConsultation(input: {
       return null;
     }
 
+    const updatedOwnerTarget = resolveUpdatedOwnerTarget(entry);
+
+    if (updatedOwnerTarget === null) {
+      return null;
+    }
+
     const updatedEntry: ConsultationRecord = {
       ...entry,
-      userId: input.userId ?? entry.userId,
+      userId: updatedOwnerTarget,
       leadSubmitted: true,
       lead: input.lead,
     };
@@ -1172,9 +1233,16 @@ export async function attachLeadToConsultation(input: {
       return entry;
     }
 
+    const updatedOwnerTarget = resolveUpdatedOwnerTarget(entry);
+
+    if (updatedOwnerTarget === null) {
+      updatedEntry = null;
+      return entry;
+    }
+
     updatedEntry = {
       ...entry,
-      userId: input.userId ?? entry.userId,
+      userId: updatedOwnerTarget,
       leadSubmitted: true,
       lead: input.lead,
     };
@@ -1184,31 +1252,44 @@ export async function attachLeadToConsultation(input: {
   return updatedEntry;
 }
 
-export async function assignSessionConsultationsToUser(sessionId: string, userId: string) {
+export async function assignSessionConsultationsToUser(
+  sessionId: string,
+  userId: string,
+  options?: {
+    ownerTargetId?: string | null;
+  },
+) {
   const consultations = await listConsultations();
   const matching = consultations.filter((entry) => entry.sessionId === sessionId);
+  const ownerTargetId = options?.ownerTargetId || userId;
 
   if (shouldUseSharedStore) {
     await Promise.all(
       matching.map((entry) =>
         putSharedConsultationRecord({
           ...entry,
-          userId,
+          userId: ownerTargetId,
         }),
       ),
     );
     return;
   }
 
-  const updated = consultations.map((entry) => (entry.sessionId === sessionId ? { ...entry, userId } : entry));
+  const updated = consultations.map((entry) => (entry.sessionId === sessionId ? { ...entry, userId: ownerTargetId } : entry));
   await writeLocalJson(consultationsFile, updated);
 }
 
 export async function findConsultationForViewer(input: {
   consultationId: string;
   userId: string | null;
+  userIds?: string[] | null;
   sessionId: string | null;
 }): Promise<ConsultationRecord | null> {
+  const ownerIds = new Set((input.userIds || []).filter(Boolean));
+  if (input.userId) {
+    ownerIds.add(input.userId);
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     const entry = await getSharedConsultationById(input.consultationId);
@@ -1216,8 +1297,8 @@ export async function findConsultationForViewer(input: {
     if (!entry) {
       return null;
     }
-    if (input.userId) {
-      return entry.userId === input.userId || entry.sessionId === input.sessionId ? entry : null;
+    if (ownerIds.size) {
+      return (entry.userId && ownerIds.has(entry.userId)) || entry.sessionId === input.sessionId ? entry : null;
     }
     return input.sessionId && entry.sessionId === input.sessionId ? entry : null;
   }
@@ -1228,8 +1309,8 @@ export async function findConsultationForViewer(input: {
       if (entry.id !== input.consultationId) {
         return false;
       }
-      if (input.userId) {
-        return entry.userId === input.userId || entry.sessionId === input.sessionId;
+      if (ownerIds.size) {
+        return (entry.userId && ownerIds.has(entry.userId)) || entry.sessionId === input.sessionId;
       }
       return input.sessionId ? entry.sessionId === input.sessionId : false;
     }) || null

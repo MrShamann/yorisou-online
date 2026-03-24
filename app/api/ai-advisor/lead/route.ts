@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { AdvisorAnswers, AdvisorRecommendation, Locale } from "@/lib/ai/yorisouAdvisor";
 import type { AdvisorLead } from "@/lib/yorisouAdvisorStorage";
 import { attachLeadToConsultation, findConsultationForViewer } from "@/lib/server/yorisouData";
-import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { getViewerContext, type ViewerContext } from "@/lib/server/yorisouAuth";
 
 type LeadRequest = {
   locale?: Locale;
@@ -45,10 +45,55 @@ function isRecommendation(value: AdvisorRecommendation | undefined): value is Ad
   );
 }
 
+function getLegacyViewerAccount(viewer: ViewerContext) {
+  return viewer.legacyAccount || viewer.account;
+}
+
+export function resolveAiAdvisorLeadViewerAuthority(viewer: ViewerContext) {
+  const legacyAccount = getLegacyViewerAccount(viewer);
+
+  if (!legacyAccount) {
+    return {
+      effectiveLegacyAccountId: null,
+      consultationOwnerIds: [] as string[],
+      consultationOwnerTargetId: null,
+      hasAuthenticatedViewer: false,
+      principalMatched: false,
+      legacyMatched: false,
+      matchedBy: "none" as const,
+    };
+  }
+
+  const principalCandidates = [
+    viewer.principal?.legacyAccountId || null,
+    viewer.principal?.userProfileId || null,
+  ].filter((entry): entry is string => Boolean(entry));
+  const principalMatched = principalCandidates.includes(legacyAccount.id);
+
+  if (viewer.principal && !principalMatched) {
+    console.warn("ai advisor lead viewer authority falling back to legacy account despite principal mismatch", {
+      legacyAccountId: legacyAccount.id,
+      principalCandidates,
+      principalId: viewer.principal.userProfileId,
+    });
+  }
+
+  return {
+    effectiveLegacyAccountId: legacyAccount.id,
+    consultationOwnerIds: Array.from(new Set([legacyAccount.id, viewer.principal?.userProfileId || null].filter((entry): entry is string => Boolean(entry)))),
+    consultationOwnerTargetId: principalMatched && viewer.principal?.userProfileId ? viewer.principal.userProfileId : legacyAccount.id,
+    hasAuthenticatedViewer: true,
+    principalMatched,
+    legacyMatched: true,
+    matchedBy: principalMatched ? "principal" : "legacy",
+  } as const;
+}
+
 export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as LeadRequest;
     const viewer = await getViewerContext();
+    const viewerAuthority = resolveAiAdvisorLeadViewerAuthority(viewer);
 
     if (!payload.answers || !payload.recommendation || !payload.lead || !payload.consultationId) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
@@ -60,7 +105,8 @@ export async function POST(request: Request) {
 
     const consultation = await findConsultationForViewer({
       consultationId: payload.consultationId,
-      userId: viewer.account?.id || null,
+      userId: viewerAuthority.effectiveLegacyAccountId,
+      userIds: viewerAuthority.consultationOwnerIds,
       sessionId: viewer.session?.id || null,
     });
 
@@ -70,7 +116,9 @@ export async function POST(request: Request) {
 
     await attachLeadToConsultation({
       consultationId: consultation.id,
-      userId: viewer.account?.id || null,
+      userId: viewerAuthority.effectiveLegacyAccountId,
+      ownerTargetId: viewerAuthority.consultationOwnerTargetId,
+      ownerIds: viewerAuthority.consultationOwnerIds,
       lead: {
         ...payload.lead,
         name: payload.lead.name.trim(),

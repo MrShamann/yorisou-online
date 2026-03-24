@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 
+import { inferLocaleFromPaths } from "@/app/api/auth/redirectLocale";
+import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { isStrongPassword } from "@/lib/passwordPolicy";
 import { createAccount } from "@/lib/server/yorisouData";
-import { bindSessionToUser, ensureViewerSession, setViewerAccountCookie, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
+import {
+  bindSessionToUser,
+  ensureViewerSession,
+  setViewerAccountCookie,
+  setViewerSessionCookie,
+  switchSessionToPrincipalLandingTruth,
+} from "@/lib/server/yorisouAuth";
 
 type RegisterPayload = {
   name?: string;
@@ -63,8 +71,11 @@ export async function POST(request: Request) {
   let returnPath = "/register";
   try {
     const { payload, isDocumentRequest } = await parsePayload(request);
-    const successPath = safeRedirectPath(payload.next, "/support");
-    returnPath = safeRedirectPath(payload.returnTo, "/register");
+    const locale = inferLocaleFromPaths(payload.returnTo, payload.next);
+    const defaultSuccessPath = locale === "en" ? "/en/support" : "/support";
+    const defaultReturnPath = locale === "en" ? "/en/register" : "/register";
+    const successPath = safeRedirectPath(payload.next, defaultSuccessPath);
+    returnPath = safeRedirectPath(payload.returnTo, defaultReturnPath);
 
     if (!payload.name?.trim() || !payload.email?.trim() || !payload.password?.trim() || !payload.city?.trim()) {
       if (isDocumentRequest) {
@@ -95,8 +106,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: result.reason }, { status: 409 });
     }
 
+    const deterministicPrincipal = await identityFoundationService.ensureDeterministicEmailPrincipalForAccount(result.account);
+    if (!deterministicPrincipal.ok) {
+      console.error("register canonical sync did not reach deterministic principal state:", {
+        accountId: result.account.id,
+        reason: deterministicPrincipal.reason,
+      });
+      if (isDocumentRequest) {
+        return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=unexpected_error`), { status: 303 });
+      }
+      return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });
+    }
+
     const session = await ensureViewerSession();
-    await bindSessionToUser(session.id, result.account.id);
+    const boundSession =
+      (await bindSessionToUser(session.id, result.account.id, {
+        legacyAccount: result.account,
+        source: "register",
+      })) || { ...session, userId: result.account.id };
+    const sessionForCookie = await switchSessionToPrincipalLandingTruth(boundSession, {
+      legacyAccount: result.account,
+      source: "register",
+    });
 
     const response = isDocumentRequest
       ? NextResponse.redirect(buildRedirectUrl(request, successPath), { status: 303 })
@@ -108,7 +139,7 @@ export async function POST(request: Request) {
             email: result.account.email,
           },
         });
-    setViewerSessionCookie(response, { ...session, userId: result.account.id });
+    setViewerSessionCookie(response, sessionForCookie);
     setViewerAccountCookie(response, result.account);
     return response;
   } catch (error) {
