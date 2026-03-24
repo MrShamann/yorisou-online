@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { ensureViewerSession, getViewerContext, setViewerSessionCookie, withSessionPrincipalLandingShadow } from "@/lib/server/yorisouAuth";
 import {
   LINE_AUTH_COOKIE,
   buildLineAuthorizeUrl,
@@ -31,15 +31,21 @@ function buildPublicUrl(request: Request, path: string) {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const returnTo = safeRedirectPath(url.searchParams.get("returnTo"), "/support#line-connect");
   const locale = url.searchParams.get("locale") === "en" ? "en" : "ja";
+  const returnTo = safeRedirectPath(
+    url.searchParams.get("returnTo"),
+    locale === "en" ? "/en/support#line-connect" : "/support#line-connect",
+  );
 
   const viewer = await getViewerContext();
-
-  if (!viewer.account) {
-    const loginPath = locale === "ja" ? "/login" : "/en/login";
-    return NextResponse.redirect(buildPublicUrl(request, `${loginPath}?next=${encodeURIComponent(returnTo)}`), { status: 303 });
-  }
+  const session = viewer.session || (await ensureViewerSession());
+  const sessionForCookie =
+    viewer.legacyAccount || viewer.account
+      ? await withSessionPrincipalLandingShadow(session, {
+          legacyAccount: viewer.legacyAccount || viewer.account,
+          source: "session_upgrade",
+        })
+      : session;
 
   if (!isLineLoginConfigured()) {
     return NextResponse.redirect(buildPublicUrl(request, `${returnTo.split("#")[0]}?line_error=not_configured#line-connect`), {
@@ -49,12 +55,13 @@ export async function GET(request: Request) {
 
   const payload = createLineAuthCookiePayload({
     account: viewer.account,
-    session: viewer.session,
+    session,
     returnTo,
     locale,
   });
 
   const response = NextResponse.redirect(buildLineAuthorizeUrl(payload), { status: 303 });
+  setViewerSessionCookie(response, { ...sessionForCookie, userId: viewer.account?.id || null });
   response.cookies.set(LINE_AUTH_COOKIE, encodeLineAuthCookie(payload), {
     httpOnly: true,
     sameSite: "lax",

@@ -5,7 +5,7 @@ import type { AccountRecord, SessionRecord } from "@/lib/server/yorisouData";
 export const LINE_AUTH_COOKIE = "yorisou_line_auth";
 
 type LineAuthCookiePayload = {
-  accountId: string;
+  accountId: string | null;
   sessionId: string | null;
   state: string;
   nonce: string;
@@ -27,6 +27,10 @@ type LineIdTokenPayload = {
 const AUTH_COOKIE_SECRET = process.env.YORISOU_AUTH_COOKIE_SECRET || "yorisou-phase1-auth-cookie-secret";
 const AUTH_COOKIE_KEY = createHash("sha256").update(AUTH_COOKIE_SECRET).digest();
 const DEFAULT_SCOPE = "openid profile";
+
+function createLineAuthState(locale: "ja" | "en") {
+  return `${locale}.${randomBytes(16).toString("hex")}`;
+}
 
 function encryptCookieValue(value: string) {
   const iv = randomBytes(12);
@@ -55,20 +59,36 @@ function decryptCookieValue(value: string) {
 }
 
 export function createLineAuthCookiePayload(input: {
-  account: AccountRecord;
+  account: AccountRecord | null;
   session: SessionRecord | null;
   returnTo: string;
   locale: "ja" | "en";
 }) {
   return {
-    accountId: input.account.id,
+    accountId: input.account?.id || null,
     sessionId: input.session?.id || null,
-    state: randomBytes(16).toString("hex"),
+    state: createLineAuthState(input.locale),
     nonce: randomBytes(16).toString("hex"),
     returnTo: input.returnTo,
     locale: input.locale,
     createdAt: new Date().toISOString(),
   } satisfies LineAuthCookiePayload;
+}
+
+export function inferLineLocaleFromState(state: string | null | undefined) {
+  if (typeof state !== "string") {
+    return null;
+  }
+
+  if (state.startsWith("en.")) {
+    return "en" as const;
+  }
+
+  if (state.startsWith("ja.")) {
+    return "ja" as const;
+  }
+
+  return null;
 }
 
 export function encodeLineAuthCookie(payload: LineAuthCookiePayload) {

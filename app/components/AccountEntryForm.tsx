@@ -35,6 +35,11 @@ export default function AccountEntryForm({
   const loginHref = locale === "ja" ? "/login" : "/en/login";
   const registerHref = locale === "ja" ? "/register" : "/en/register";
   const forgotPasswordHref = locale === "ja" ? "/forgot-password" : "/en/forgot-password";
+  const lineReturnTo = mode === "login" ? loginHref : registerHref;
+  const lineLoginHref =
+    locale === "ja"
+      ? `/api/line/auth/start?locale=ja&returnTo=${encodeURIComponent(`${lineReturnTo}#line-entry`)}`
+      : `/api/line/auth/start?locale=en&returnTo=${encodeURIComponent(`${lineReturnTo}#line-entry`)}`;
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
   const passwordChecks = PASSWORD_RULES.map((rule) => ({
     ...rule,
@@ -125,6 +130,30 @@ export default function AccountEntryForm({
                   {locale === "ja" ? "新規登録" : "Register"}
                 </Link>
               </div>
+
+              {!initialAccount && (
+                <div id="line-entry" className="mb-6 rounded-[1.5rem] border border-[#C8D0C1] bg-[#F3F7F1] px-5 py-5 text-sm leading-7 text-[#4D5642]">
+                  <div className="text-xs tracking-[0.14em] text-[#6C7A67]">{locale === "ja" ? "LINE ENTRY" : "LINE ENTRY"}</div>
+                  <div className="mt-2 text-lg font-medium text-[#314236]">
+                    {mode === "login"
+                      ? locale === "ja"
+                        ? "LINEでログイン"
+                        : "Log in with LINE"
+                      : locale === "ja"
+                        ? "LINEではじめる"
+                        : "Start with LINE"}
+                  </div>
+                  <p className="mt-2">
+                    {mode === "login"
+                      ? locale === "ja"
+                        ? "すでにLINE連携済みのアカウントがあれば、そのままサポートページへ入れます。"
+                        : "If your account is already linked to LINE, you can enter support directly."
+                      : locale === "ja"
+                        ? "LINEアカウントから開始して、そのままサポートページへ進めます。"
+                        : "Start from your LINE account and continue into support."}
+                  </p>
+                </div>
+              )}
 
               <form className="grid gap-5" action={endpoint} method="post" onSubmit={handleSubmit}>
                 <input type="hidden" name="next" value={supportHref} />
@@ -255,6 +284,18 @@ export default function AccountEntryForm({
                       ? "登録してサポートを見る"
                       : "Create account and continue"}
                 </button>
+
+                {!initialAccount && (
+                  <Link href={lineLoginHref} className="rounded-full border border-[#8EB49B]/55 bg-[#EFF8F1] px-6 py-3 text-center text-sm font-medium text-[#314236] transition hover:bg-[#E4F1E7] hover:text-[#243329]">
+                    {mode === "login"
+                      ? locale === "ja"
+                        ? "LINEでログイン"
+                        : "Continue with LINE"
+                      : locale === "ja"
+                        ? "LINEではじめる"
+                        : "Start with LINE"}
+                  </Link>
+                )}
               </form>
             </div>
           </div>

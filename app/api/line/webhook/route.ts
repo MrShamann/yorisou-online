@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { createLineWebhookEvent, findAccountByLineUserId, findLineWebhookEventById } from "@/lib/server/yorisouData";
+import { createAuthIdentityId } from "@/lib/server/midBackend/utils";
+import { identityFoundationService } from "@/lib/server/foundation/identityService";
+import { privacyAuditService } from "@/lib/server/foundation/privacyService";
+import { timelineService } from "@/lib/server/foundation/timelineService";
+import { createLineWebhookEvent, findAccountById } from "@/lib/server/yorisouData";
+import { identityReadService } from "@/lib/server/midBackend/services/identityReadService";
+import { messageEventReadService } from "@/lib/server/midBackend/services/messageEventReadService";
 import {
   getLineMessagingConfigStatus,
   isLineMessagingConfigured,
@@ -99,7 +105,7 @@ export async function POST(request: Request) {
     }
 
     if (event.webhookEventId) {
-      const existing = await findLineWebhookEventById(event.webhookEventId);
+      const existing = await messageEventReadService.getMessageEventByProviderEventId(event.webhookEventId);
 
       if (existing) {
         continue;
@@ -107,7 +113,9 @@ export async function POST(request: Request) {
     }
 
     const lineUserId = event.source?.userId || null;
-    const account = lineUserId ? await findAccountByLineUserId(lineUserId) : null;
+    const lineBindingState = lineUserId ? await identityReadService.resolveLineBindingState(lineUserId) : null;
+    const accountMatched = lineBindingState?.bindingState === "bound";
+    const accountId = lineBindingState?.userProfile?.userProfileId || null;
     const shouldReply = Boolean(event.replyToken && (eventType === "message" || eventType === "follow" || eventType === "postback"));
     let replyStatus: "not_attempted" | "sent" | "failed" = "not_attempted";
     let replyError: string | null = null;
@@ -117,7 +125,7 @@ export async function POST(request: Request) {
         replyToken: event.replyToken,
         text: buildReplyText({
           eventType,
-          accountMatched: Boolean(account),
+          accountMatched,
         }),
       });
 
@@ -127,11 +135,32 @@ export async function POST(request: Request) {
         replyStatus = "failed";
         replyError = reply.reason === "reply_failed" ? `status=${reply.status}` : reply.reason;
       }
+
+      try {
+        await privacyAuditService.recordAudit({
+          actorType: "system",
+          actorUserProfileId: accountId,
+          actorAuthIdentityId: lineUserId ? createAuthIdentityId("line", lineUserId) : null,
+          action: "message.send",
+          resourceType: "message_event",
+          resourceId: event.webhookEventId || null,
+          channel: "line",
+          source: "line_webhook",
+          bindingState: accountId ? "bound" : "unbound",
+          summary: `Sent LINE reply with status ${replyStatus}`,
+          metadata: {
+            replyStatus,
+            eventType,
+          },
+        });
+      } catch (foundationError) {
+        console.error("line webhook audit error:", foundationError);
+      }
     }
 
-    await createLineWebhookEvent({
+    const createdEvent = await createLineWebhookEvent({
       id: event.webhookEventId || undefined,
-      accountId: account?.id || null,
+      accountId,
       lineUserId,
       sourceType: event.source?.type || null,
       eventType,
@@ -146,6 +175,48 @@ export async function POST(request: Request) {
       isRedelivery: Boolean(event.deliveryContext?.isRedelivery),
       eventTimestamp: eventTimestampToIso(event.timestamp),
     });
+
+    try {
+      const identity = lineUserId
+        ? accountId
+          ? {
+              ok: true as const,
+              identity:
+                (await (async () => {
+                  const account = await findAccountById(accountId);
+
+                  if (account) {
+                    await identityFoundationService.ensureCanonicalUserForAccount(account, "line_webhook");
+                  }
+
+                  return await identityFoundationService.getAuthIdentityByLineUserId(lineUserId);
+                })()),
+            }
+          : {
+              ok: true as const,
+              identity: await identityFoundationService.ensureUnboundLineIdentity({
+                lineUserId,
+                source: "line_webhook",
+              }),
+            }
+        : null;
+
+      if (identity?.ok && identity.identity) {
+        await timelineService.recordLineWebhookEvent({
+          event: createdEvent,
+          authIdentityId: identity.identity.authIdentityId,
+          userProfileId: accountId,
+        });
+      } else {
+        await timelineService.recordLineWebhookEvent({
+          event: createdEvent,
+          authIdentityId: null,
+          userProfileId: accountId,
+        });
+      }
+    } catch (foundationError) {
+      console.error("line webhook foundation timeline error:", foundationError);
+    }
   }
 
   return NextResponse.json({ ok: true, eventCount: events.length });

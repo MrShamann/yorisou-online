@@ -1,13 +1,24 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { getViewerContext, setViewerAccountCookie, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
-import { bindLineIdentity } from "@/lib/server/yorisouData";
+import {
+  bindSessionToUser,
+  ensureViewerSession,
+  getViewerContext,
+  setViewerAccountCookie,
+  setViewerSessionCookie,
+  switchSessionToPrincipalLandingTruth,
+  withSessionPrincipalLandingShadow,
+  type ViewerContext,
+} from "@/lib/server/yorisouAuth";
+import { bindLineIdentity, findAccountById } from "@/lib/server/yorisouData";
+import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import {
   LINE_AUTH_COOKIE,
   decodeLineAuthCookie,
   exchangeLineAuthorizationCode,
   fetchLineProfile,
+  inferLineLocaleFromState,
   verifyLineIdToken,
 } from "@/lib/server/yorisouLine";
 
@@ -36,19 +47,57 @@ function failResponse(request: Request, path: string) {
   return response;
 }
 
+function getViewerLegacyAccount(viewer: ViewerContext) {
+  return viewer.legacyAccount || viewer.account;
+}
+
+export function resolveLineCallbackBindAuthorization(viewer: ViewerContext, expectedLegacyAccountId: string) {
+  const principalCandidates = [
+    viewer.principal?.legacyAccountId || null,
+    viewer.principal?.userProfileId || null,
+  ].filter((entry): entry is string => Boolean(entry));
+  const legacyAccount = getViewerLegacyAccount(viewer);
+  const legacyCandidate = legacyAccount?.id || null;
+  const principalMatched = principalCandidates.includes(expectedLegacyAccountId);
+  const legacyMatched = legacyCandidate === expectedLegacyAccountId;
+
+  if (viewer.principal && !principalMatched && legacyMatched) {
+    console.warn("line callback bind authorization falling back to legacy account match despite principal mismatch", {
+      expectedLegacyAccountId,
+      principalCandidates,
+      legacyCandidate,
+      principalId: viewer.principal.userProfileId,
+    });
+  }
+
+  return {
+    authorized: principalMatched || legacyMatched,
+    principalMatched,
+    legacyMatched,
+    matchedBy: principalMatched ? "principal" : legacyMatched ? "legacy" : "none",
+    expectedLegacyAccountId,
+  } as const;
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const cookieStore = await cookies();
   const lineCookie = decodeLineAuthCookie(cookieStore.get(LINE_AUTH_COOKIE)?.value);
 
   if (!lineCookie) {
-    return NextResponse.redirect(buildReturnUrl(request, "/support?line_error=missing_auth#line-connect"), { status: 303 });
+    const locale = inferLineLocaleFromState(url.searchParams.get("state")) === "en" ? "en" : "ja";
+    const fallbackPath =
+      locale === "en" ? "/en/support?line_error=missing_auth#line-connect" : "/support?line_error=missing_auth#line-connect";
+    return NextResponse.redirect(buildReturnUrl(request, fallbackPath), { status: 303 });
   }
 
   const viewer = await getViewerContext();
   const fallbackPath = `${lineCookie.returnTo.split("#")[0]}#line-connect`;
+  const bindAuthorization = lineCookie.accountId
+    ? resolveLineCallbackBindAuthorization(viewer, lineCookie.accountId)
+    : null;
 
-  if (!viewer.account || viewer.account.id !== lineCookie.accountId) {
+  if (lineCookie.accountId && !bindAuthorization?.authorized) {
     return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=session_mismatch#line-connect`);
   }
 
@@ -81,17 +130,97 @@ export async function GET(request: Request) {
       return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=profile_mismatch#line-connect`);
     }
 
-    const account = await bindLineIdentity({
-      userId: viewer.account.id,
-      lineUserId: profile.userId,
-      lineDisplayName: profile.displayName || idToken.name || viewer.account.supportProfile.lineDisplayName || "LINE user",
-      linePictureUrl: profile.pictureUrl || idToken.picture,
-      lineIdTokenSubject: idToken.sub,
-    });
+    let account = null;
+    let directLoginDeterministicPrincipal:
+      | Awaited<ReturnType<typeof identityFoundationService.resolveDeterministicLinePrimaryUser>>
+      | null = null;
+
+    if (lineCookie.accountId) {
+      const legacyViewerAccount = getViewerLegacyAccount(viewer);
+      const bindTargetAccount =
+        legacyViewerAccount?.id === lineCookie.accountId
+          ? legacyViewerAccount
+          : await findAccountById(lineCookie.accountId);
+
+      if (!bindTargetAccount) {
+        return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=session_mismatch#line-connect`);
+      }
+
+      const deterministicPrincipal = await identityFoundationService.ensureDeterministicPrincipalForLegacyAccount(
+        bindTargetAccount,
+        "line_login",
+      );
+
+      if (!deterministicPrincipal.ok) {
+        console.error("line callback bind did not reach deterministic principal state before legacy bind mutation", {
+          accountId: bindTargetAccount.id,
+          reason: deterministicPrincipal.reason,
+        });
+        return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=unexpected_error#line-connect`);
+      }
+
+      account = await bindLineIdentity({
+        userId: bindTargetAccount.id,
+        lineUserId: profile.userId,
+        lineDisplayName: profile.displayName || idToken.name || bindTargetAccount.supportProfile.lineDisplayName || "LINE user",
+        linePictureUrl: profile.pictureUrl || idToken.picture,
+        lineIdTokenSubject: idToken.sub,
+      });
+
+      if (account) {
+        try {
+          await identityFoundationService.ensureCanonicalUserForAccount(account, "line_login");
+          await identityFoundationService.bindLineIdentityToUserProfile({
+            userProfileId: account.id,
+            lineUserId: profile.userId,
+            lineDisplayName: profile.displayName || idToken.name || account.supportProfile.lineDisplayName || "LINE user",
+            linePictureUrl: profile.pictureUrl || idToken.picture,
+            lineIdTokenSubject: idToken.sub,
+            source: "line_login",
+            actorUserProfileId: account.id,
+          });
+        } catch (foundationError) {
+          console.error("line callback foundation bind error:", foundationError);
+        }
+      }
+    } else {
+      directLoginDeterministicPrincipal = await identityFoundationService.resolveDeterministicLinePrimaryUser({
+        lineUserId: profile.userId,
+        lineDisplayName: profile.displayName || idToken.name || "LINE user",
+        linePictureUrl: profile.pictureUrl || idToken.picture,
+        lineIdTokenSubject: idToken.sub,
+        locale: lineCookie.locale,
+      });
+
+      if (!directLoginDeterministicPrincipal.ok) {
+        console.error("line callback direct login did not reach deterministic principal state before success landing", {
+          lineUserId: profile.userId,
+          reason: directLoginDeterministicPrincipal.reason,
+        });
+        return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=unexpected_error#line-connect`);
+      }
+
+      account = directLoginDeterministicPrincipal.account;
+    }
 
     if (!account) {
       return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=bind_failed#line-connect`);
     }
+
+    const session = viewer.session || (await ensureViewerSession());
+    const boundSession =
+      (await bindSessionToUser(session.id, account.id, {
+        legacyAccount: account,
+        source: lineCookie.accountId ? "line_bind" : "line_login",
+      })) || { ...session, userId: account.id };
+    const shadowSession = await withSessionPrincipalLandingShadow(boundSession, {
+      legacyAccount: account,
+      source: lineCookie.accountId ? "line_bind" : "line_login",
+    });
+    const sessionForCookie = await switchSessionToPrincipalLandingTruth(shadowSession, {
+      legacyAccount: account,
+      source: lineCookie.accountId ? "line_bind" : "line_login",
+    });
 
     const response = NextResponse.redirect(
       buildReturnUrl(request, `${fallbackPath.split("#")[0]}?line_status=connected#line-connect`),
@@ -105,9 +234,7 @@ export async function GET(request: Request) {
       maxAge: 0,
     });
     setViewerAccountCookie(response, account);
-    if (viewer.session) {
-      setViewerSessionCookie(response, { ...viewer.session, userId: viewer.account.id });
-    }
+    setViewerSessionCookie(response, sessionForCookie);
     return response;
   } catch (routeError) {
     console.error("line callback route error:", routeError);
