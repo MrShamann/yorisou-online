@@ -143,10 +143,7 @@ export async function GET(request: Request) {
     }
 
     const session = viewer.session || (await ensureViewerSession());
-    await bindSessionToUser(session.id, account.id, {
-      legacyAccount: account,
-      source: lineCookie.accountId ? "line_bind" : "line_login",
-    });
+    await bindSessionToUser(session.id, account.id);
     const boundSession = { ...session, userId: account.id };
 
     const response = NextResponse.redirect(
