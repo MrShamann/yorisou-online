@@ -9,7 +9,10 @@ type LineAuthCookiePayload = {
   sessionId: string | null;
   state: string;
   nonce: string;
+  intent: "login" | "register" | "support";
   returnTo: string;
+  successRedirect: string;
+  failureRedirect: string;
   locale: "ja" | "en";
   createdAt: string;
 };
@@ -69,7 +72,10 @@ function decryptCookieValue(value: string) {
 export function createLineAuthCookiePayload(input: {
   account: AccountRecord | null;
   session: SessionRecord | null;
+  intent: "login" | "register" | "support";
   returnTo: string;
+  successRedirect: string;
+  failureRedirect: string;
   locale: "ja" | "en";
 }) {
   return {
@@ -77,7 +83,10 @@ export function createLineAuthCookiePayload(input: {
     sessionId: input.session?.id || null,
     state: createLineAuthState(input.locale),
     nonce: randomBytes(16).toString("hex"),
+    intent: input.intent,
     returnTo: input.returnTo,
+    successRedirect: input.successRedirect,
+    failureRedirect: input.failureRedirect,
     locale: input.locale,
     createdAt: new Date().toISOString(),
   } satisfies LineAuthCookiePayload;

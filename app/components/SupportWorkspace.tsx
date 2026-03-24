@@ -133,7 +133,10 @@ export default function SupportWorkspace({
   const registerHref = locale === "ja" ? "/register" : "/en/register";
   const advisorHref = locale === "ja" ? "/ai-advisor" : "/en/ai-advisor";
   const productsHref = locale === "ja" ? "/products" : "/en/products";
-  const lineStartHref = locale === "ja" ? "/api/line/auth/start?locale=ja&returnTo=/support" : "/api/line/auth/start?locale=en&returnTo=/en/support";
+  const lineStartHref =
+    locale === "ja"
+      ? `/api/line/auth/start?locale=ja&intent=support&returnTo=${encodeURIComponent("/support#line-connect")}`
+      : `/api/line/auth/start?locale=en&intent=support&returnTo=${encodeURIComponent("/en/support#line-connect")}`;
   const lineStatusLabel = lineStatusLabels[locale][lineForm.lineBindingStatus];
   const diagnosticsLineStatusLabel = lineStatusLabels[locale][initialSupportDiagnostics.lineBinding.status];
   const isLineConnected = lineForm.lineBindingStatus === "connected" && Boolean(account?.lineUserId);
@@ -329,21 +332,47 @@ export default function SupportWorkspace({
           <div className="mx-auto max-w-6xl">
             <div className="shell-card max-w-3xl p-8 md:p-12">
               <h1 className="text-4xl font-light leading-tight md:text-6xl">
-                {locale === "ja" ? "ログインしてサポートを開く" : "Log in to open support"}
+                {locale === "ja" ? "サポートを続ける" : "Continue into support"}
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                 {locale === "ja"
-                  ? "相談内容やご提案を、ひとつのアカウントで確認できます。"
-                  : "Open your account to review saved consultations and recommendations."}
+                  ? "LINEからそのまま続けるか、メールアカウントでログインして相談内容やご提案を確認できます。"
+                  : "Continue with LINE or sign in with email to review saved consultations and recommendations."}
               </p>
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <Link href={loginHref} className="btn btn-primary">
-                  {locale === "ja" ? "ログインする" : "Log in"}
-                </Link>
-                <Link href={registerHref} className="btn btn-secondary">
-                  {locale === "ja" ? "新規登録する" : "Create account"}
-                </Link>
+              <div className="mt-8 rounded-[1.5rem] border border-[#B9D1BE] bg-[#F3F7F1] px-5 py-5 text-sm leading-7 text-[#314236]">
+                <div className="text-lg font-medium">
+                  {locale === "ja" ? "LINEですぐに続ける" : "Continue with LINE"}
+                </div>
+                <p className="mt-2 text-[#4D5642]">
+                  {locale === "ja"
+                    ? "すでにLINE連携済みならそのままサポートへ進めます。初回でも、戻ったあとの状態をこの画面で確認できます。"
+                    : "If your account is already linked to LINE, you can continue straight into support. If it is your first time, this page will show the next step after return."}
+                </p>
+                <div className="mt-4">
+                  {lineAuthReady ? (
+                    <Link href={lineStartHref} className="btn btn-primary">
+                      {locale === "ja" ? "LINEで続ける" : "Continue with LINE"}
+                    </Link>
+                  ) : (
+                    <div className="inline-flex rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#8A7764]">
+                      {locale === "ja" ? "現在はLINE連携を準備中です" : "LINE sign-in is not available yet"}
+                    </div>
+                  )}
+                </div>
               </div>
+              <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
+                <div className="font-medium text-[#3B2F2F]">{locale === "ja" ? "メールで続ける" : "Continue with email"}</div>
+                <div className="mt-4 flex flex-col gap-4 sm:flex-row">
+                  <Link href={loginHref} className="btn btn-secondary">
+                    {locale === "ja" ? "メールでログイン" : "Log in with email"}
+                  </Link>
+                  <Link href={registerHref} className="btn btn-secondary">
+                    {locale === "ja" ? "メールで新規登録" : "Create account with email"}
+                  </Link>
+                </div>
+              </div>
+              {lineNoticeMessage && <p className="mt-6 text-sm text-[#2E5B3C]">{lineNoticeMessage}</p>}
+              {lineErrorMessage && <p className="mt-3 text-sm text-[#9A3B2F]">{lineErrorMessage}</p>}
             </div>
           </div>
         </section>
@@ -843,7 +872,7 @@ export default function SupportWorkspace({
                     </div>
                   ) : lineAuthReady ? (
                     <Link href={lineStartHref} className="btn btn-secondary">
-                      {locale === "ja" ? "LINE Connect" : "LINE Connect"}
+                      {locale === "ja" ? "LINEを連携する" : "Connect LINE"}
                     </Link>
                   ) : (
                     <div className="rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#8A7764]">

@@ -28,6 +28,8 @@ function getErrorMessage(code: string | undefined) {
       return "LINE認証の確認に失敗しました。";
     case "profile_mismatch":
       return "LINEアカウント情報の確認に失敗しました。";
+    case "line_not_registered":
+      return "このLINEアカウントはまだYorisouに登録されていません。LINEではじめるから続けてください。";
     case "bind_failed":
       return "LINEログインの保存に失敗しました。";
     case "unexpected_error":

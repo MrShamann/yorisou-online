@@ -9,7 +9,7 @@ import {
   setViewerSessionCookie,
   type ViewerContext,
 } from "@/lib/server/yorisouAuth";
-import { bindLineIdentity, findAccountById, findAccountByLineUserId } from "@/lib/server/yorisouData";
+import { bindLineIdentity, createAccount, findAccountById, findAccountByLineUserId } from "@/lib/server/yorisouData";
 import {
   LINE_AUTH_COOKIE,
   decodeLineAuthCookie,
@@ -44,6 +44,15 @@ function failResponse(request: Request, path: string) {
   return response;
 }
 
+function withStatus(path: string, params: Record<string, string>) {
+  const [base, hash = ""] = path.split("#");
+  const nextUrl = new URL(base, "https://yorisou.local");
+  for (const [key, value] of Object.entries(params)) {
+    nextUrl.searchParams.set(key, value);
+  }
+  return `${nextUrl.pathname}${nextUrl.search}${hash ? `#${hash}` : ""}`;
+}
+
 function getViewerLegacyAccount(viewer: ViewerContext) {
   return viewer.account;
 }
@@ -76,32 +85,33 @@ export async function GET(request: Request) {
   }
 
   const viewer = await getViewerContext();
-  const fallbackPath = `${lineCookie.returnTo.split("#")[0]}#line-connect`;
+  const successPath = lineCookie.successRedirect || `${lineCookie.returnTo.split("#")[0]}#line-connect`;
+  const failurePath = lineCookie.failureRedirect || `${lineCookie.returnTo.split("#")[0]}#line-connect`;
   const bindAuthorization = lineCookie.accountId
     ? resolveLineCallbackBindAuthorization(viewer, lineCookie.accountId)
     : null;
 
   if (lineCookie.accountId && !bindAuthorization?.authorized) {
-    return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=session_mismatch#line-connect`);
+    return failResponse(request, withStatus(failurePath, { line_error: "session_mismatch" }));
   }
 
   const error = url.searchParams.get("error");
   if (error) {
-    return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=cancelled#line-connect`);
+    return failResponse(request, withStatus(failurePath, { line_error: "cancelled" }));
   }
 
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
 
   if (!code || !state || state !== lineCookie.state) {
-    return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=invalid_state#line-connect`);
+    return failResponse(request, withStatus(failurePath, { line_error: "invalid_state" }));
   }
 
   try {
     const tokenResponse = await exchangeLineAuthorizationCode({ code });
 
     if (!tokenResponse.access_token || !tokenResponse.id_token) {
-      return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=token_exchange#line-connect`);
+      return failResponse(request, withStatus(failurePath, { line_error: "token_exchange" }));
     }
 
     const idToken = verifyLineIdToken({
@@ -111,7 +121,7 @@ export async function GET(request: Request) {
     const profile = await fetchLineProfile(tokenResponse.access_token);
 
     if (!profile.userId || profile.userId !== idToken.sub) {
-      return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=profile_mismatch#line-connect`);
+      return failResponse(request, withStatus(failurePath, { line_error: "profile_mismatch" }));
     }
 
     let account = null;
@@ -124,7 +134,7 @@ export async function GET(request: Request) {
           : await findAccountById(lineCookie.accountId);
 
       if (!bindTargetAccount) {
-        return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=session_mismatch#line-connect`);
+        return failResponse(request, withStatus(failurePath, { line_error: "session_mismatch" }));
       }
 
       account = await bindLineIdentity({
@@ -136,10 +146,32 @@ export async function GET(request: Request) {
       });
     } else {
       account = await findAccountByLineUserId(profile.userId);
+
+      if (!account && lineCookie.intent === "register") {
+        const placeholderEmail = `${profile.userId.toLowerCase()}@line.yorisou.local`;
+        const created = await createAccount({
+          name: profile.displayName || idToken.name || "LINE user",
+          email: placeholderEmail,
+          password: `${lineCookie.nonce}-${profile.userId}`,
+          city: "",
+          role: "self",
+        });
+
+        if (created.ok) {
+          account = await bindLineIdentity({
+            userId: created.account.id,
+            lineUserId: profile.userId,
+            lineDisplayName: profile.displayName || idToken.name || "LINE user",
+            linePictureUrl: profile.pictureUrl || idToken.picture,
+            lineIdTokenSubject: idToken.sub,
+          });
+        }
+      }
     }
 
     if (!account) {
-      return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=bind_failed#line-connect`);
+      const errorCode = lineCookie.intent === "login" ? "line_not_registered" : "bind_failed";
+      return failResponse(request, withStatus(failurePath, { line_error: errorCode }));
     }
 
     const session = viewer.session || (await ensureViewerSession());
@@ -147,7 +179,7 @@ export async function GET(request: Request) {
     const boundSession = { ...session, userId: account.id };
 
     const response = NextResponse.redirect(
-      buildReturnUrl(request, `${fallbackPath.split("#")[0]}?line_status=connected#line-connect`),
+      buildReturnUrl(request, withStatus(successPath, { line_status: "connected" })),
       { status: 303 },
     );
     response.cookies.set(LINE_AUTH_COOKIE, "", {
@@ -162,6 +194,6 @@ export async function GET(request: Request) {
     return response;
   } catch (routeError) {
     console.error("line callback route error:", routeError);
-    return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=unexpected_error#line-connect`);
+    return failResponse(request, withStatus(failurePath, { line_error: "unexpected_error" }));
   }
 }

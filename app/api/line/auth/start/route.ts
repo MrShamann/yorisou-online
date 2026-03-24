@@ -32,16 +32,21 @@ function buildPublicUrl(request: Request, path: string) {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const locale = url.searchParams.get("locale") === "en" ? "en" : "ja";
-  const returnTo = safeRedirectPath(
-    url.searchParams.get("returnTo"),
-    locale === "en" ? "/en/support#line-connect" : "/support#line-connect",
-  );
+  const intent = url.searchParams.get("intent") === "register" ? "register" : url.searchParams.get("intent") === "support" ? "support" : "login";
+  const supportHref = locale === "en" ? "/en/support#line-connect" : "/support#line-connect";
+  const loginHref = locale === "en" ? "/en/login#line-entry" : "/login#line-entry";
+  const registerHref = locale === "en" ? "/en/register#line-entry" : "/register#line-entry";
+  const returnTo = safeRedirectPath(url.searchParams.get("returnTo"), supportHref);
+  const successRedirect = intent === "support" ? returnTo : supportHref;
+  const failureRedirect = intent === "register" ? registerHref : intent === "support" ? supportHref : loginHref;
 
   const viewer = await getViewerContext();
   const session = viewer.session || (await ensureViewerSession());
 
   if (!isLineLoginConfigured()) {
-    return NextResponse.redirect(buildPublicUrl(request, `${returnTo.split("#")[0]}?line_error=not_configured#line-connect`), {
+    const failureBase = failureRedirect.split("#")[0];
+    const failureHash = failureRedirect.includes("#") ? `#${failureRedirect.split("#")[1]}` : "";
+    return NextResponse.redirect(buildPublicUrl(request, `${failureBase}?line_error=not_configured${failureHash}`), {
       status: 303,
     });
   }
@@ -49,7 +54,10 @@ export async function GET(request: Request) {
   const payload = createLineAuthCookiePayload({
     account: viewer.account,
     session,
+    intent,
     returnTo,
+    successRedirect,
+    failureRedirect,
     locale,
   });
 

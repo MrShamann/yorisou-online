@@ -35,11 +35,10 @@ export default function AccountEntryForm({
   const loginHref = locale === "ja" ? "/login" : "/en/login";
   const registerHref = locale === "ja" ? "/register" : "/en/register";
   const forgotPasswordHref = locale === "ja" ? "/forgot-password" : "/en/forgot-password";
-  const lineReturnTo = mode === "login" ? loginHref : registerHref;
   const lineLoginHref =
     locale === "ja"
-      ? `/api/line/auth/start?locale=ja&returnTo=${encodeURIComponent(`${lineReturnTo}#line-entry`)}`
-      : `/api/line/auth/start?locale=en&returnTo=${encodeURIComponent(`${lineReturnTo}#line-entry`)}`;
+      ? `/api/line/auth/start?locale=ja&intent=${mode}`
+      : `/api/line/auth/start?locale=en&intent=${mode}`;
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
   const passwordChecks = PASSWORD_RULES.map((rule) => ({
     ...rule,
@@ -132,32 +131,56 @@ export default function AccountEntryForm({
               </div>
 
               {!initialAccount && (
-                <div id="line-entry" className="mb-6 rounded-[1.5rem] border border-[#C8D0C1] bg-[#F3F7F1] px-5 py-5 text-sm leading-7 text-[#4D5642]">
-                  <div className="text-xs tracking-[0.14em] text-[#6C7A67]">{locale === "ja" ? "LINE ENTRY" : "LINE ENTRY"}</div>
-                  <div className="mt-2 text-lg font-medium text-[#314236]">
+                <div id="line-entry" className="mb-6 rounded-[1.75rem] border border-[#B9D1BE] bg-[#F3F7F1] px-5 py-5 text-sm leading-7 text-[#314236]">
+                  <h2 className="text-xl font-medium text-[#314236]">
                     {mode === "login"
                       ? locale === "ja"
-                        ? "LINEでログイン"
-                        : "Log in with LINE"
+                        ? "まずはLINEで続ける"
+                        : "Continue with LINE first"
                       : locale === "ja"
-                        ? "LINEではじめる"
-                        : "Start with LINE"}
-                  </div>
-                  <p className="mt-2">
+                        ? "まずはLINEではじめる"
+                        : "Start with LINE first"}
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-[#4D5642]">
                     {mode === "login"
                       ? locale === "ja"
-                        ? "すでにLINE連携済みのアカウントがあれば、そのままサポートページへ入れます。"
-                        : "If your account is already linked to LINE, you can enter support directly."
+                        ? "すでにLINE連携済みなら、そのままサポートページへ進めます。連携前でも、結果はこのあと分かりやすくご案内します。"
+                        : "If your account is already linked to LINE, you can continue straight into support. If not, we will clearly guide you on the next step after return."
                       : locale === "ja"
-                        ? "LINEアカウントから開始して、そのままサポートページへ進めます。"
-                        : "Start from your LINE account and continue into support."}
+                        ? "LINEアカウントで開始すると、そのままサポート利用を始められます。メール登録はあとから追加できます。"
+                        : "Starting with LINE lets you begin support right away. You can add email access later."}
                   </p>
+                  <div className="mt-4">
+                    <Link href={lineLoginHref} className="inline-flex w-full items-center justify-center rounded-full bg-[#2E8B57] px-6 py-3 text-center text-sm font-medium text-white transition hover:opacity-90">
+                      {mode === "login"
+                        ? locale === "ja"
+                          ? "LINEでログイン"
+                          : "Log in with LINE"
+                        : locale === "ja"
+                          ? "LINEではじめる"
+                          : "Start with LINE"}
+                    </Link>
+                  </div>
                 </div>
               )}
 
               <form className="grid gap-5" action={endpoint} method="post" onSubmit={handleSubmit}>
                 <input type="hidden" name="next" value={supportHref} />
                 <input type="hidden" name="returnTo" value={mode === "login" ? loginHref : registerHref} />
+                {!initialAccount && (
+                  <div className="rounded-[1.25rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+                    <div className="font-medium text-[#3B2F2F]">{locale === "ja" ? "メールで続ける" : "Continue with email instead"}</div>
+                    <p className="mt-2">
+                      {mode === "login"
+                        ? locale === "ja"
+                          ? "メールアドレスとパスワードでログインしたい場合はこちらを使ってください。"
+                          : "Use this if you want to sign in with your email address and password."
+                        : locale === "ja"
+                          ? "LINEを使わずに始める場合は、こちらからメール登録できます。"
+                          : "Use this to create an account with email if you do not want to start with LINE."}
+                    </p>
+                  </div>
+                )}
                 {mode === "register" && (
                   <Field label={locale === "ja" ? "お名前" : "Name"}>
                     <input
@@ -285,17 +308,6 @@ export default function AccountEntryForm({
                       : "Create account and continue"}
                 </button>
 
-                {!initialAccount && (
-                  <Link href={lineLoginHref} className="rounded-full border border-[#8EB49B]/55 bg-[#EFF8F1] px-6 py-3 text-center text-sm font-medium text-[#314236] transition hover:bg-[#E4F1E7] hover:text-[#243329]">
-                    {mode === "login"
-                      ? locale === "ja"
-                        ? "LINEでログイン"
-                        : "Continue with LINE"
-                      : locale === "ja"
-                        ? "LINEではじめる"
-                        : "Start with LINE"}
-                  </Link>
-                )}
               </form>
             </div>
           </div>

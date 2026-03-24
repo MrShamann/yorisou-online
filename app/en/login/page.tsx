@@ -28,6 +28,8 @@ function getErrorMessage(code: string | undefined) {
       return "LINE authorization could not be verified.";
     case "profile_mismatch":
       return "The LINE account identity could not be confirmed.";
+    case "line_not_registered":
+      return "This LINE account is not registered with Yorisou yet. Please continue from Start with LINE.";
     case "bind_failed":
       return "The LINE login result could not be saved.";
     case "unexpected_error":
