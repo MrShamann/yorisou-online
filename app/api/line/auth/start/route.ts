@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { ensureViewerSession, getViewerContext, setViewerSessionCookie, withSessionPrincipalLandingShadow } from "@/lib/server/yorisouAuth";
+import { ensureViewerSession, getViewerContext, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
 import {
   LINE_AUTH_COOKIE,
   buildLineAuthorizeUrl,
@@ -39,13 +39,6 @@ export async function GET(request: Request) {
 
   const viewer = await getViewerContext();
   const session = viewer.session || (await ensureViewerSession());
-  const sessionForCookie =
-    viewer.legacyAccount || viewer.account
-      ? await withSessionPrincipalLandingShadow(session, {
-          legacyAccount: viewer.legacyAccount || viewer.account,
-          source: "session_upgrade",
-        })
-      : session;
 
   if (!isLineLoginConfigured()) {
     return NextResponse.redirect(buildPublicUrl(request, `${returnTo.split("#")[0]}?line_error=not_configured#line-connect`), {
@@ -61,7 +54,7 @@ export async function GET(request: Request) {
   });
 
   const response = NextResponse.redirect(buildLineAuthorizeUrl(payload), { status: 303 });
-  setViewerSessionCookie(response, { ...sessionForCookie, userId: viewer.account?.id || null });
+  setViewerSessionCookie(response, { ...session, userId: viewer.account?.id || null });
   response.cookies.set(LINE_AUTH_COOKIE, encodeLineAuthCookie(payload), {
     httpOnly: true,
     sameSite: "lax",

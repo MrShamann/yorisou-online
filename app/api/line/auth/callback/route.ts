@@ -7,12 +7,9 @@ import {
   getViewerContext,
   setViewerAccountCookie,
   setViewerSessionCookie,
-  switchSessionToPrincipalLandingTruth,
-  withSessionPrincipalLandingShadow,
   type ViewerContext,
 } from "@/lib/server/yorisouAuth";
-import { bindLineIdentity, findAccountById } from "@/lib/server/yorisouData";
-import { identityFoundationService } from "@/lib/server/foundation/identityService";
+import { bindLineIdentity, findAccountById, findAccountByLineUserId } from "@/lib/server/yorisouData";
 import {
   LINE_AUTH_COOKIE,
   decodeLineAuthCookie,
@@ -131,9 +128,6 @@ export async function GET(request: Request) {
     }
 
     let account = null;
-    let directLoginDeterministicPrincipal:
-      | Awaited<ReturnType<typeof identityFoundationService.resolveDeterministicLinePrimaryUser>>
-      | null = null;
 
     if (lineCookie.accountId) {
       const legacyViewerAccount = getViewerLegacyAccount(viewer);
@@ -146,19 +140,6 @@ export async function GET(request: Request) {
         return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=session_mismatch#line-connect`);
       }
 
-      const deterministicPrincipal = await identityFoundationService.ensureDeterministicPrincipalForLegacyAccount(
-        bindTargetAccount,
-        "line_login",
-      );
-
-      if (!deterministicPrincipal.ok) {
-        console.error("line callback bind did not reach deterministic principal state before legacy bind mutation", {
-          accountId: bindTargetAccount.id,
-          reason: deterministicPrincipal.reason,
-        });
-        return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=unexpected_error#line-connect`);
-      }
-
       account = await bindLineIdentity({
         userId: bindTargetAccount.id,
         lineUserId: profile.userId,
@@ -166,41 +147,8 @@ export async function GET(request: Request) {
         linePictureUrl: profile.pictureUrl || idToken.picture,
         lineIdTokenSubject: idToken.sub,
       });
-
-      if (account) {
-        try {
-          await identityFoundationService.ensureCanonicalUserForAccount(account, "line_login");
-          await identityFoundationService.bindLineIdentityToUserProfile({
-            userProfileId: account.id,
-            lineUserId: profile.userId,
-            lineDisplayName: profile.displayName || idToken.name || account.supportProfile.lineDisplayName || "LINE user",
-            linePictureUrl: profile.pictureUrl || idToken.picture,
-            lineIdTokenSubject: idToken.sub,
-            source: "line_login",
-            actorUserProfileId: account.id,
-          });
-        } catch (foundationError) {
-          console.error("line callback foundation bind error:", foundationError);
-        }
-      }
     } else {
-      directLoginDeterministicPrincipal = await identityFoundationService.resolveDeterministicLinePrimaryUser({
-        lineUserId: profile.userId,
-        lineDisplayName: profile.displayName || idToken.name || "LINE user",
-        linePictureUrl: profile.pictureUrl || idToken.picture,
-        lineIdTokenSubject: idToken.sub,
-        locale: lineCookie.locale,
-      });
-
-      if (!directLoginDeterministicPrincipal.ok) {
-        console.error("line callback direct login did not reach deterministic principal state before success landing", {
-          lineUserId: profile.userId,
-          reason: directLoginDeterministicPrincipal.reason,
-        });
-        return failResponse(request, `${fallbackPath.split("#")[0]}?line_error=unexpected_error#line-connect`);
-      }
-
-      account = directLoginDeterministicPrincipal.account;
+      account = await findAccountByLineUserId(profile.userId);
     }
 
     if (!account) {
@@ -213,14 +161,6 @@ export async function GET(request: Request) {
         legacyAccount: account,
         source: lineCookie.accountId ? "line_bind" : "line_login",
       })) || { ...session, userId: account.id };
-    const shadowSession = await withSessionPrincipalLandingShadow(boundSession, {
-      legacyAccount: account,
-      source: lineCookie.accountId ? "line_bind" : "line_login",
-    });
-    const sessionForCookie = await switchSessionToPrincipalLandingTruth(shadowSession, {
-      legacyAccount: account,
-      source: lineCookie.accountId ? "line_bind" : "line_login",
-    });
 
     const response = NextResponse.redirect(
       buildReturnUrl(request, `${fallbackPath.split("#")[0]}?line_status=connected#line-connect`),
@@ -234,7 +174,7 @@ export async function GET(request: Request) {
       maxAge: 0,
     });
     setViewerAccountCookie(response, account);
-    setViewerSessionCookie(response, sessionForCookie);
+    setViewerSessionCookie(response, boundSession);
     return response;
   } catch (routeError) {
     console.error("line callback route error:", routeError);
