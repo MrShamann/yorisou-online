@@ -45,7 +45,7 @@ function failResponse(request: Request, path: string) {
 }
 
 function getViewerLegacyAccount(viewer: ViewerContext) {
-  return viewer.legacyAccount || viewer.account;
+  return viewer.account;
 }
 
 export function resolveLineCallbackBindAuthorization(viewer: ViewerContext, expectedLegacyAccountId: string) {
