@@ -57,7 +57,7 @@ export default async function LoginPage({
   searchParams?: Promise<{ error?: string; notice?: string; line_error?: string; line_status?: string }>;
 }) {
   const viewer = await getViewerContext();
-  if (viewer.session?.userId && viewer.account) {
+  if (viewer.session && viewer.account) {
     redirect("/support");
   }
   const params = (await searchParams) || {};
@@ -65,7 +65,7 @@ export default async function LoginPage({
     <AccountEntryForm
       mode="login"
       locale="ja"
-      initialAccount={viewer.session?.userId ? viewer.account : null}
+      initialAccount={viewer.session ? viewer.account : null}
       initialError={getErrorMessage(params.line_error || params.error)}
       initialNotice={getNoticeMessage(params.notice || (params.line_status === "connected" ? "line_connected" : undefined))}
     />
