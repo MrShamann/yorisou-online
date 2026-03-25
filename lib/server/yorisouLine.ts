@@ -3,6 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, 
 import type { AccountRecord, SessionRecord } from "@/lib/server/yorisouData";
 
 export const LINE_AUTH_COOKIE = "yorisou_line_auth";
+const MAX_PENDING_LINE_AUTH_STATES = 6;
 
 type LineAuthCookiePayload = {
   accountId: string | null;
@@ -127,6 +128,43 @@ export function decodeLineAuthCookie(value: string | undefined) {
   } catch {
     return null;
   }
+}
+
+export function decodeLineAuthCookieEntries(value: string | undefined) {
+  const decoded = decodeLineAuthCookie(value);
+
+  if (!decoded) {
+    const raw = value ? decryptCookieValue(value) : null;
+    if (!raw) {
+      return [] as LineAuthCookiePayload[];
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed as LineAuthCookiePayload[];
+      }
+    } catch {
+      return [] as LineAuthCookiePayload[];
+    }
+
+    return [] as LineAuthCookiePayload[];
+  }
+
+  return [decoded];
+}
+
+export function encodeLineAuthCookieEntries(entries: LineAuthCookiePayload[]) {
+  return encryptCookieValue(JSON.stringify(entries.slice(-MAX_PENDING_LINE_AUTH_STATES)));
+}
+
+export function upsertLineAuthCookieEntry(
+  existingEntries: LineAuthCookiePayload[],
+  payload: LineAuthCookiePayload,
+) {
+  const nextEntries = existingEntries.filter((entry) => entry.state !== payload.state);
+  nextEntries.push(payload);
+  return nextEntries.slice(-MAX_PENDING_LINE_AUTH_STATES);
 }
 
 export function buildLineAuthorizeUrl(payload: LineAuthCookiePayload) {

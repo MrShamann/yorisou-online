@@ -12,7 +12,8 @@ import {
 import { bindLineIdentity, createAccount, findAccountById, findAccountByLineUserId } from "@/lib/server/yorisouData";
 import {
   LINE_AUTH_COOKIE,
-  decodeLineAuthCookie,
+  decodeLineAuthCookieEntries,
+  encodeLineAuthCookieEntries,
   exchangeLineAuthorizationCode,
   fetchLineProfile,
   inferLineLocaleFromState,
@@ -32,14 +33,14 @@ function buildReturnUrl(request: Request, path: string) {
   return new URL(path, request.url);
 }
 
-function failResponse(request: Request, path: string) {
+function failResponse(request: Request, path: string, remainingEntries: ReturnType<typeof decodeLineAuthCookieEntries> = []) {
   const response = NextResponse.redirect(buildReturnUrl(request, path), { status: 303 });
-  response.cookies.set(LINE_AUTH_COOKIE, "", {
+  response.cookies.set(LINE_AUTH_COOKIE, encodeLineAuthCookieEntries(remainingEntries), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 0,
+    maxAge: remainingEntries.length > 0 ? 60 * 10 : 0,
   });
   return response;
 }
@@ -75,7 +76,9 @@ export function resolveLineCallbackBindAuthorization(viewer: ViewerContext, expe
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const cookieStore = await cookies();
-  const lineCookie = decodeLineAuthCookie(cookieStore.get(LINE_AUTH_COOKIE)?.value);
+  const state = url.searchParams.get("state");
+  const lineCookieEntries = decodeLineAuthCookieEntries(cookieStore.get(LINE_AUTH_COOKIE)?.value);
+  const lineCookie = state ? lineCookieEntries.find((entry) => entry.state === state) || null : null;
 
   if (!lineCookie) {
     const locale = inferLineLocaleFromState(url.searchParams.get("state")) === "en" ? "en" : "ja";
@@ -87,31 +90,31 @@ export async function GET(request: Request) {
   const viewer = await getViewerContext();
   const successPath = lineCookie.successRedirect || `${lineCookie.returnTo.split("#")[0]}#line-connect`;
   const failurePath = lineCookie.failureRedirect || `${lineCookie.returnTo.split("#")[0]}#line-connect`;
+  const remainingEntries = lineCookieEntries.filter((entry) => entry.state !== lineCookie.state);
   const bindAuthorization = lineCookie.accountId
     ? resolveLineCallbackBindAuthorization(viewer, lineCookie.accountId)
     : null;
 
   if (lineCookie.accountId && !bindAuthorization?.authorized) {
-    return failResponse(request, withStatus(failurePath, { line_error: "session_mismatch" }));
+    return failResponse(request, withStatus(failurePath, { line_error: "session_mismatch" }), remainingEntries);
   }
 
   const error = url.searchParams.get("error");
   if (error) {
-    return failResponse(request, withStatus(failurePath, { line_error: "cancelled" }));
+    return failResponse(request, withStatus(failurePath, { line_error: "cancelled" }), remainingEntries);
   }
 
   const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state");
 
   if (!code || !state || state !== lineCookie.state) {
-    return failResponse(request, withStatus(failurePath, { line_error: "invalid_state" }));
+    return failResponse(request, withStatus(failurePath, { line_error: "invalid_state" }), remainingEntries);
   }
 
   try {
     const tokenResponse = await exchangeLineAuthorizationCode({ code });
 
     if (!tokenResponse.access_token || !tokenResponse.id_token) {
-      return failResponse(request, withStatus(failurePath, { line_error: "token_exchange" }));
+      return failResponse(request, withStatus(failurePath, { line_error: "token_exchange" }), remainingEntries);
     }
 
     const idToken = verifyLineIdToken({
@@ -121,7 +124,7 @@ export async function GET(request: Request) {
     const profile = await fetchLineProfile(tokenResponse.access_token);
 
     if (!profile.userId || profile.userId !== idToken.sub) {
-      return failResponse(request, withStatus(failurePath, { line_error: "profile_mismatch" }));
+      return failResponse(request, withStatus(failurePath, { line_error: "profile_mismatch" }), remainingEntries);
     }
 
     let account = null;
@@ -134,7 +137,7 @@ export async function GET(request: Request) {
           : await findAccountById(lineCookie.accountId);
 
       if (!bindTargetAccount) {
-        return failResponse(request, withStatus(failurePath, { line_error: "session_mismatch" }));
+        return failResponse(request, withStatus(failurePath, { line_error: "session_mismatch" }), remainingEntries);
       }
 
       account = await bindLineIdentity({
@@ -171,7 +174,7 @@ export async function GET(request: Request) {
 
     if (!account) {
       const errorCode = lineCookie.intent === "login" ? "line_not_registered" : "bind_failed";
-      return failResponse(request, withStatus(failurePath, { line_error: errorCode }));
+      return failResponse(request, withStatus(failurePath, { line_error: errorCode }), remainingEntries);
     }
 
     const session = viewer.session || (await ensureViewerSession());
@@ -182,18 +185,18 @@ export async function GET(request: Request) {
       buildReturnUrl(request, withStatus(successPath, { line_status: "connected" })),
       { status: 303 },
     );
-    response.cookies.set(LINE_AUTH_COOKIE, "", {
+    response.cookies.set(LINE_AUTH_COOKIE, encodeLineAuthCookieEntries(remainingEntries), {
       httpOnly: true,
       sameSite: "lax",
       path: "/",
       secure: process.env.NODE_ENV === "production",
-      maxAge: 0,
+      maxAge: remainingEntries.length > 0 ? 60 * 10 : 0,
     });
     setViewerAccountCookie(response, account);
     setViewerSessionCookie(response, boundSession);
     return response;
   } catch (routeError) {
     console.error("line callback route error:", routeError);
-    return failResponse(request, withStatus(failurePath, { line_error: "unexpected_error" }));
+    return failResponse(request, withStatus(failurePath, { line_error: "unexpected_error" }), remainingEntries);
   }
 }

@@ -725,27 +725,51 @@ export function resolveSupportWorkspaceViewerLookup(viewer: ViewerContext) {
 
 export async function getSupportWorkspaceData(locale: "ja" | "en") {
   const viewer = await getViewerContext();
-  const viewerLookup = resolveSupportWorkspaceViewerLookup(viewer);
-  const account = viewer.account;
+  const authenticatedViewer =
+    viewer.session?.userId && viewer.account
+      ? {
+          ...viewer,
+          account: viewer.account,
+          legacyAccount: viewer.legacyAccount || viewer.account,
+        }
+      : {
+          ...viewer,
+          account: null,
+          legacyAccount: null,
+          principal: null,
+        };
+  const viewerLookup = resolveSupportWorkspaceViewerLookup(authenticatedViewer);
+  const account =
+    authenticatedViewer.account &&
+    authenticatedViewer.account.lineUserId &&
+    authenticatedViewer.account.supportProfile.lineBindingStatus !== "connected"
+      ? {
+          ...authenticatedViewer.account,
+          supportProfile: {
+            ...authenticatedViewer.account.supportProfile,
+            lineBindingStatus: "connected" as const,
+          },
+        }
+      : authenticatedViewer.account;
   const consultations = await listConsultationsForViewer({
     userId: viewerLookup.effectiveLegacyAccountId,
-    sessionId: viewer.session?.id || null,
+    sessionId: authenticatedViewer.session?.id || null,
     locale,
   });
   const latestLineEvent = account ? await getLatestLineWebhookEventForAccount(account.id) : null;
   const supportSource = account ? "compatibility_mirror" : "unresolved";
 
   return {
-    ...viewer,
+    ...authenticatedViewer,
     supportProfile: account?.supportProfile || null,
     supportReadModelSource: supportSource,
     supportDiagnostics: composeSupportDiagnosticsViewModel({
       hasPrincipal: viewerLookup.hasAuthenticatedViewer,
       principalMatched: viewerLookup.principalMatched,
-      principalId: viewer.principal?.userProfileId || null,
+      principalId: authenticatedViewer.principal?.userProfileId || null,
       legacyAccountId: viewerLookup.effectiveLegacyAccountId,
       activeWriteTargetId: viewerLookup.principalMatched
-        ? viewer.principal?.userProfileId || null
+        ? authenticatedViewer.principal?.userProfileId || null
         : viewerLookup.effectiveLegacyAccountId,
       lineBindingStatus: account?.supportProfile.lineBindingStatus || "not_connected",
       lineBindingStatusSource: supportSource,

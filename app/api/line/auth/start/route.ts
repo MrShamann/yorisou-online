@@ -5,8 +5,10 @@ import {
   LINE_AUTH_COOKIE,
   buildLineAuthorizeUrl,
   createLineAuthCookiePayload,
-  encodeLineAuthCookie,
+  decodeLineAuthCookieEntries,
+  encodeLineAuthCookieEntries,
   isLineLoginConfigured,
+  upsertLineAuthCookieEntry,
 } from "@/lib/server/yorisouLine";
 
 function safeRedirectPath(value: string | null, fallback: string) {
@@ -60,10 +62,12 @@ export async function GET(request: Request) {
     failureRedirect,
     locale,
   });
+  const existingEntries = decodeLineAuthCookieEntries(request.headers.get("cookie")?.match(/(?:^|; )yorisou_line_auth=([^;]+)/)?.[1]);
+  const nextEntries = upsertLineAuthCookieEntry(existingEntries, payload);
 
   const response = NextResponse.redirect(buildLineAuthorizeUrl(payload), { status: 303 });
   setViewerSessionCookie(response, { ...session, userId: viewer.account?.id || null });
-  response.cookies.set(LINE_AUTH_COOKIE, encodeLineAuthCookie(payload), {
+  response.cookies.set(LINE_AUTH_COOKIE, encodeLineAuthCookieEntries(nextEntries), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",

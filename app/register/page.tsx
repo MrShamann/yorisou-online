@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import AccountEntryForm from "@/app/components/AccountEntryForm";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
@@ -54,12 +55,15 @@ export default async function RegisterPage({
   searchParams?: Promise<{ error?: string; line_error?: string; line_status?: string }>;
 }) {
   const viewer = await getViewerContext();
+  if (viewer.session?.userId && viewer.account) {
+    redirect("/support");
+  }
   const params = (await searchParams) || {};
   return (
     <AccountEntryForm
       mode="register"
       locale="ja"
-      initialAccount={viewer.account}
+      initialAccount={viewer.session?.userId ? viewer.account : null}
       initialError={getErrorMessage(params.line_error || params.error)}
       initialNotice={getNoticeMessage(params.line_status === "connected" ? "line_connected" : undefined)}
     />
