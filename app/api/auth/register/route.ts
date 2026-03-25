@@ -106,16 +106,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: result.reason }, { status: 409 });
     }
 
-    const deterministicPrincipal = await identityFoundationService.ensureDeterministicEmailPrincipalForAccount(result.account);
-    if (!deterministicPrincipal.ok) {
-      console.error("register canonical sync did not reach deterministic principal state:", {
-        accountId: result.account.id,
-        reason: deterministicPrincipal.reason,
-      });
-      if (isDocumentRequest) {
-        return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=unexpected_error`), { status: 303 });
+    try {
+      const deterministicPrincipal = await identityFoundationService.ensureDeterministicEmailPrincipalForAccount(result.account);
+      if (!deterministicPrincipal.ok) {
+        console.error("register canonical sync did not reach deterministic principal state:", {
+          accountId: result.account.id,
+          reason: deterministicPrincipal.reason,
+        });
       }
-      return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });
+    } catch (foundationError) {
+      console.error("register foundation sync error:", foundationError);
     }
 
     const session = await ensureViewerSession();
