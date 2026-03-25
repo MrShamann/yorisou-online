@@ -131,27 +131,24 @@ export function decodeLineAuthCookie(value: string | undefined) {
 }
 
 export function decodeLineAuthCookieEntries(value: string | undefined) {
-  const decoded = decodeLineAuthCookie(value);
-
-  if (!decoded) {
-    const raw = value ? decryptCookieValue(value) : null;
-    if (!raw) {
-      return [] as LineAuthCookiePayload[];
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (Array.isArray(parsed)) {
-        return parsed as LineAuthCookiePayload[];
-      }
-    } catch {
-      return [] as LineAuthCookiePayload[];
-    }
-
+  const raw = value ? decryptCookieValue(value) : null;
+  if (!raw) {
     return [] as LineAuthCookiePayload[];
   }
 
-  return [decoded];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed.filter((entry): entry is LineAuthCookiePayload => Boolean(entry && typeof entry === "object"));
+    }
+    if (parsed && typeof parsed === "object") {
+      return [parsed as LineAuthCookiePayload];
+    }
+  } catch {
+    return [] as LineAuthCookiePayload[];
+  }
+
+  return [] as LineAuthCookiePayload[];
 }
 
 export function encodeLineAuthCookieEntries(entries: LineAuthCookiePayload[]) {
