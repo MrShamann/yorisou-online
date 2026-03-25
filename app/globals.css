@@ -1,14 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f5f1e8;
-  --surface: #ffffff;
-  --surface-soft: #fcfaf6;
-  --line: #d9ccb8;
-  --text: #3b2f2f;
-  --muted: #736252;
-  --accent: #3b2f2f;
-  --accent-soft: #f3ebe0;
+  --bg: #f7f0e5;
+  --surface: #fffdf9;
+  --surface-soft: #f9f3eb;
+  --surface-soft-strong: #f3eadf;
+  --line: #d8c6b4;
+  --text: #312321;
+  --muted: #70605a;
+  --accent: #2f2321;
+  --accent-soft: #ede2d4;
+  --accent-sage: #dbe7d7;
+  --accent-sage-text: #35513d;
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
 
 * {
@@ -19,8 +24,9 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.75;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -55,6 +61,8 @@ main {
   margin: 8px 0 0;
   font-size: clamp(28px, 3vw, 38px);
   line-height: 1.35;
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
 }
 
 .muted {
@@ -64,9 +72,9 @@ main {
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 10px 26px rgba(59, 47, 47, 0.045);
+  border-radius: 26px;
+  padding: 28px;
+  box-shadow: 0 18px 38px rgba(49, 35, 33, 0.05);
 }
 
 .grid {
@@ -78,28 +86,32 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  padding: 12px 22px;
+  gap: 10px;
+  border-radius: 18px;
+  min-height: 54px;
+  padding: 14px 24px;
   font-weight: 700;
   text-decoration: none;
   border: 1px solid transparent;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-primary {
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 10px 24px rgba(59, 47, 47, 0.12);
+  box-shadow: 0 16px 30px rgba(47, 35, 33, 0.16);
 }
 
 .btn-secondary {
-  background: var(--surface);
+  background: rgba(255, 253, 249, 0.94);
   color: var(--text);
   border-color: var(--line);
+  box-shadow: 0 10px 22px rgba(47, 35, 33, 0.05);
 }
 
 .btn:hover {
-  opacity: 0.94;
+  opacity: 0.98;
+  transform: translateY(-1px);
 }
 
 .eyebrow {
@@ -111,10 +123,22 @@ main {
 
 .shell-card {
   border: 1px solid rgba(217, 204, 184, 0.5);
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(10px);
-  border-radius: 32px;
-  box-shadow: 0 20px 56px rgba(59, 47, 47, 0.07);
+  background: rgba(255, 251, 246, 0.9);
+  backdrop-filter: blur(12px);
+  border-radius: 38px;
+  box-shadow: 0 28px 60px rgba(47, 35, 33, 0.08);
+}
+
+.display-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.03em;
+}
+
+.service-kicker {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .list-clean {

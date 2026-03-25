@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { getPasswordPolicyMessage, PASSWORD_RULES } from "@/lib/passwordPolicy";
 import type { AccountRecord } from "@/lib/server/yorisouData";
+import LineBrandIcon from "@/app/components/LineBrandIcon";
 
 type Mode = "login" | "register";
 
@@ -78,12 +79,13 @@ export default function AccountEntryForm({
         : "Show password";
 
   return (
-    <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
-      <section className="border-b border-[#D6C3A3]/22 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.94),_rgba(245,241,232,0.98)_60%)] px-6 py-16 md:px-10 md:py-22">
-        <div className="mx-auto max-w-5xl">
-          <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr]">
-            <div className="shell-card p-8 md:p-10">
-              <h1 className="text-4xl font-light leading-tight md:text-5xl">
+    <main className="min-h-screen bg-[#F7F0E5] text-[#312321]">
+      <section className="border-b border-[#D8C6B4]/30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(247,240,229,0.98)_62%)] px-6 py-16 md:px-10 md:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+            <div className="shell-card p-8 md:p-12">
+              <div className="service-kicker">{locale === "ja" ? "Senior support access" : "Senior support access"}</div>
+              <h1 className="display-serif mt-4 text-4xl leading-[1.2] md:text-6xl">
                 {mode === "login"
                   ? locale === "ja"
                     ? "ログインして、相談のつづきを確認する"
@@ -92,7 +94,7 @@ export default function AccountEntryForm({
                     ? "会員登録して、相談内容をまとめる"
                     : "Create an account for ongoing support"}
               </h1>
-              <p className="mt-6 text-base leading-8 text-[#5A4B3E] md:text-lg">
+              <p className="mt-6 max-w-xl text-base leading-8 text-[#665651] md:text-lg">
                 {mode === "login"
                   ? locale === "ja"
                     ? "サポートページでは、相談履歴、ご提案内容、ご家族への共有メモ、フォローアップ状況を確認できます。"
@@ -101,13 +103,12 @@ export default function AccountEntryForm({
                     ? "Yorisouの相談内容やご提案を、ひとつのアカウントで確認できるようになります。"
                     : "Create one account to keep consultations and recommendations together."}
               </p>
-              <div className="mt-8 rounded-[1.5rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
-                {locale === "ja"
-                  ? "ご本人、ご家族、施設担当者のどなたでも利用できます。"
-                  : "This entry works for the user, family members, or facility operators."}
+              <div className="mt-8 grid gap-3 rounded-[2rem] border border-[#D8C6B4]/35 bg-[#FFF9F2] px-6 py-6 text-sm leading-7 text-[#665651]">
+                <div>{locale === "ja" ? "ご本人、ご家族、施設担当者のどなたでも利用できます。" : "This entry works for the user, family members, or facility operators."}</div>
+                <div>{locale === "ja" ? "相談の履歴、共有メモ、LINE連携まで一つのアカウントで落ち着いて確認できます。" : "Review consultation history, shared notes, and LINE connection status in one calm account view."}</div>
               </div>
               {initialAccount && (
-                <div className="mt-5 rounded-[1.5rem] border border-[#C8D0C1] bg-[#F3F0E7] px-5 py-5 text-sm leading-7 text-[#4D5642]">
+                <div className="mt-6 rounded-[2rem] border border-[#C8D0C1] bg-[#F3F0E7] px-6 py-6 text-sm leading-7 text-[#4D5642]">
                   {locale === "ja"
                     ? `${initialAccount.name}さんとしてログイン済みです。`
                     : `Already signed in as ${initialAccount.name}.`}
@@ -120,38 +121,40 @@ export default function AccountEntryForm({
               )}
             </div>
 
-            <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-white/82 p-7 shadow-[0_20px_56px_rgba(59,47,47,0.06)] md:p-9">
-              <div className="mb-6 flex gap-3">
-                <Link href={loginHref} className={`rounded-full px-5 py-3 text-sm ${mode === "login" ? "bg-[#3B2F2F] text-white" : "border border-[#D6C3A3]/50 bg-[#FCFAF6] text-[#5A4B3E]"}`}>
+            <div className="rounded-[2.25rem] border border-[#D8C6B4]/40 bg-[rgba(255,251,246,0.92)] p-7 shadow-[0_24px_58px_rgba(47,35,33,0.08)] md:p-10">
+              <div className="mb-6 flex gap-3 rounded-full border border-[#E0D2C4] bg-[#F8F0E6] p-2">
+                <Link href={loginHref} className={`rounded-full px-5 py-3 text-sm ${mode === "login" ? "bg-[#312321] text-white shadow-[0_10px_24px_rgba(47,35,33,0.18)]" : "text-[#665651]"}`}>
                   {locale === "ja" ? "ログイン" : "Login"}
                 </Link>
-                <Link href={registerHref} className={`rounded-full px-5 py-3 text-sm ${mode === "register" ? "bg-[#3B2F2F] text-white" : "border border-[#D6C3A3]/50 bg-[#FCFAF6] text-[#5A4B3E]"}`}>
+                <Link href={registerHref} className={`rounded-full px-5 py-3 text-sm ${mode === "register" ? "bg-[#312321] text-white shadow-[0_10px_24px_rgba(47,35,33,0.18)]" : "text-[#665651]"}`}>
                   {locale === "ja" ? "新規登録" : "Register"}
                 </Link>
               </div>
 
               {!initialAccount && (
-                <div id="line-entry" className="mb-6 rounded-[1.75rem] border border-[#B9D1BE] bg-[#F3F7F1] px-5 py-5 text-sm leading-7 text-[#314236]">
-                  <h2 className="text-xl font-medium text-[#314236]">
+                <div id="line-entry" className="mb-7 rounded-[2rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-6 py-6 text-sm leading-7 text-[#314236] shadow-[0_16px_36px_rgba(53,81,61,0.08)]">
+                  <div className="service-kicker text-[#55705C]">{locale === "ja" ? "LINE support access" : "LINE support access"}</div>
+                  <h2 className="display-serif mt-3 text-3xl leading-tight text-[#243329]">
                     {mode === "login"
                       ? locale === "ja"
-                        ? "まずはLINEで続ける"
+                        ? "まずはLINEですばやく続けられます"
                         : "Continue with LINE first"
                       : locale === "ja"
-                        ? "まずはLINEではじめる"
+                        ? "最短でサポートにつながります"
                         : "Start with LINE first"}
                   </h2>
                   <p className="mt-3 text-sm leading-7 text-[#4D5642]">
                     {mode === "login"
                       ? locale === "ja"
-                        ? "すでにLINE連携済みなら、そのままサポートページへ進めます。連携前でも、結果はこのあと分かりやすくご案内します。"
+                        ? "LINE連携済みならそのままサポートへ進めます。まだ連携前でも、戻ったあとに次の進み方を分かりやすく案内します。"
                         : "If your account is already linked to LINE, you can continue straight into support. If not, we will clearly guide you on the next step after return."
                       : locale === "ja"
-                        ? "LINEアカウントで開始すると、そのままサポート利用を始められます。メール登録はあとから追加できます。"
+                        ? "LINEアカウントで始めると、そのまま見積もりや相談の続きへ進めます。メール登録はあとから追加できます。"
                         : "Starting with LINE lets you begin support right away. You can add email access later."}
                   </p>
                   <div className="mt-4">
-                    <Link href={lineLoginHref} className="inline-flex w-full items-center justify-center rounded-full bg-[#2E8B57] px-6 py-3 text-center text-sm font-medium text-white transition hover:opacity-90">
+                    <Link href={lineLoginHref} className="inline-flex w-full items-center justify-center rounded-[1.25rem] bg-[#06C755] px-6 py-4 text-center text-sm font-semibold text-white shadow-[0_16px_30px_rgba(6,199,85,0.22)] transition hover:translate-y-[-1px] hover:opacity-95">
+                      <LineBrandIcon className="h-5 w-5" />
                       {mode === "login"
                         ? locale === "ja"
                           ? "LINEでログイン"
@@ -168,8 +171,8 @@ export default function AccountEntryForm({
                 <input type="hidden" name="next" value={supportHref} />
                 <input type="hidden" name="returnTo" value={mode === "login" ? loginHref : registerHref} />
                 {!initialAccount && (
-                  <div className="rounded-[1.25rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-                    <div className="font-medium text-[#3B2F2F]">{locale === "ja" ? "メールで続ける" : "Continue with email instead"}</div>
+                  <div className="rounded-[1.6rem] border border-[#E0D2C4] bg-[#FFF9F2] px-5 py-5 text-sm leading-7 text-[#665651]">
+                    <div className="font-medium text-[#312321]">{locale === "ja" ? "メールで続ける" : "Continue with email instead"}</div>
                     <p className="mt-2">
                       {mode === "login"
                         ? locale === "ja"
@@ -294,7 +297,7 @@ export default function AccountEntryForm({
                 {notice && <p className="text-sm font-medium text-[#4D6B45]">{notice}</p>}
                 {error && <p className="text-sm font-medium text-[#9A3B2F]">{error}</p>}
 
-                <button type="submit" className="rounded-full bg-[#3B2F2F] px-6 py-3 text-sm text-white shadow-sm transition hover:opacity-90">
+                <button type="submit" className="rounded-[1.2rem] bg-[#312321] px-6 py-4 text-sm text-white shadow-[0_16px_30px_rgba(47,35,33,0.18)] transition hover:translate-y-[-1px] hover:opacity-95">
                   {isSubmitting
                     ? locale === "ja"
                       ? "処理中..."
@@ -319,7 +322,7 @@ export default function AccountEntryForm({
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block text-sm font-medium text-[#5A4B3E]">
+    <label className="block text-sm font-medium text-[#5F514A]">
       <span>{label}</span>
       <div className="mt-3">{children}</div>
     </label>
@@ -327,4 +330,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputClassName =
-  "w-full rounded-[1.25rem] border border-[#D6C3A3]/45 bg-[#FCFAF6] px-4 py-4 text-base text-[#3B2F2F] outline-none transition focus:border-[#6B5A4A]";
+  "w-full rounded-[1.25rem] border border-[#DDCFC2] bg-[#FFFCF8] px-5 py-4 text-base text-[#312321] outline-none transition focus:border-[#8B6C55] focus:bg-white";

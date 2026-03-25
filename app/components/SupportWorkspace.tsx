@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { getPasswordPolicyMessage, PASSWORD_RULES } from "@/lib/passwordPolicy";
+import LineBrandIcon from "@/app/components/LineBrandIcon";
 import type {
   AccountRecord,
   ConsultationRecord,
@@ -327,20 +328,22 @@ export default function SupportWorkspace({
 
   if (!account) {
     return (
-      <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
-        <section className="border-b border-[#D6C3A3]/22 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.94),_rgba(245,241,232,0.98)_60%)] px-6 py-16 md:px-10 md:py-22">
+      <main className="min-h-screen bg-[#F7F0E5] text-[#312321]">
+        <section className="border-b border-[#D8C6B4]/28 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(247,240,229,0.98)_62%)] px-6 py-16 md:px-10 md:py-24">
           <div className="mx-auto max-w-6xl">
-            <div className="shell-card max-w-3xl p-8 md:p-12">
-              <h1 className="text-4xl font-light leading-tight md:text-6xl">
-                {locale === "ja" ? "サポートを続ける" : "Continue into support"}
+            <div className="shell-card max-w-4xl p-8 md:p-12">
+              <div className="service-kicker">{locale === "ja" ? "Support continuation" : "Support continuation"}</div>
+              <h1 className="display-serif mt-4 text-4xl leading-[1.18] md:text-6xl">
+                {locale === "ja" ? "見積もりや相談のつづきに進む" : "Continue your estimate or support conversation"}
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                 {locale === "ja"
-                  ? "LINEからそのまま続けるか、メールアカウントでログインして相談内容やご提案を確認できます。"
-                  : "Continue with LINE or sign in with email to review saved consultations and recommendations."}
+                  ? "LINEならすぐに続けられます。メールでも続けられます。相談の履歴やご提案、共有メモはログイン後にまとめて確認できます。"
+                  : "Continue quickly with LINE, or use email if you prefer. After sign-in, you can review your recommendations, notes, and support history in one place."}
               </p>
-              <div className="mt-8 rounded-[1.5rem] border border-[#B9D1BE] bg-[#F3F7F1] px-5 py-5 text-sm leading-7 text-[#314236]">
-                <div className="text-lg font-medium">
+              <div className="mt-8 rounded-[2rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-6 py-6 text-sm leading-7 text-[#314236] shadow-[0_18px_40px_rgba(53,81,61,0.08)]">
+                <div className="service-kicker text-[#55705C]">{locale === "ja" ? "LINE priority path" : "LINE priority path"}</div>
+                <div className="mt-3 text-2xl font-medium">
                   {locale === "ja" ? "LINEですぐに続ける" : "Continue with LINE"}
                 </div>
                 <p className="mt-2 text-[#4D5642]">
@@ -350,7 +353,8 @@ export default function SupportWorkspace({
                 </p>
                 <div className="mt-4">
                   {lineAuthReady ? (
-                    <Link href={lineStartHref} className="btn btn-primary">
+                    <Link href={lineStartHref} className="btn btn-primary bg-[#06C755] shadow-[0_16px_30px_rgba(6,199,85,0.22)]">
+                      <LineBrandIcon className="h-5 w-5" />
                       {locale === "ja" ? "LINEで続ける" : "Continue with LINE"}
                     </Link>
                   ) : (
@@ -360,8 +364,8 @@ export default function SupportWorkspace({
                   )}
                 </div>
               </div>
-              <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
-                <div className="font-medium text-[#3B2F2F]">{locale === "ja" ? "メールで続ける" : "Continue with email"}</div>
+              <div className="mt-6 rounded-[1.8rem] border border-[#E0D2C4] bg-[#FFF9F2] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
+                <div className="font-medium text-[#312321]">{locale === "ja" ? "メールで続ける" : "Continue with email"}</div>
                 <div className="mt-4 flex flex-col gap-4 sm:flex-row">
                   <Link href={loginHref} className="btn btn-secondary">
                     {locale === "ja" ? "メールでログイン" : "Log in with email"}
