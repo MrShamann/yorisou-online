@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const locale = url.searchParams.get("locale") === "en" ? "en" : "ja";
   const intent = url.searchParams.get("intent") === "register" ? "register" : url.searchParams.get("intent") === "support" ? "support" : "login";
-  const supportHref = locale === "en" ? "/en/support#line-connect" : "/support#line-connect";
+  const supportHref = locale === "en" ? "/en/support" : "/support";
   const loginHref = locale === "en" ? "/en/login#line-entry" : "/login#line-entry";
   const registerHref = locale === "en" ? "/en/register#line-entry" : "/register#line-entry";
   const returnTo = safeRedirectPath(url.searchParams.get("returnTo"), supportHref);

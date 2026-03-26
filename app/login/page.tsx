@@ -57,7 +57,7 @@ export default async function LoginPage({
   searchParams?: Promise<{ error?: string; notice?: string; line_error?: string; line_status?: string }>;
 }) {
   const viewer = await getViewerContext();
-  if (viewer.session && viewer.account) {
+  if (viewer.session && (viewer.account || viewer.principal)) {
     redirect("/support");
   }
   const params = (await searchParams) || {};

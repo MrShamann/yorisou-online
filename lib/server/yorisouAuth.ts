@@ -726,7 +726,7 @@ export function resolveSupportWorkspaceViewerLookup(viewer: ViewerContext) {
 export async function getSupportWorkspaceData(locale: "ja" | "en") {
   const viewer = await getViewerContext();
   const authenticatedViewer =
-    viewer.session && viewer.account
+    viewer.session && (viewer.account || viewer.legacyAccount)
       ? {
           ...viewer,
           account: viewer.account,
