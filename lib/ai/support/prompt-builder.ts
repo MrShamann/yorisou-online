@@ -15,40 +15,63 @@ export function buildSupportAssistantPrompt(input: {
   actions: SupportRecommendedAction[];
 }) {
   return input.locale === "ja"
-    ? `あなたは Yorisou の相談案内担当です。やさしく、誠実に。高齢者とご家族に寄り添う短い日本語で返答してください。
-
-判断はすでに終わっています。あなたの役割は自然な表現だけです。
+    ? `以下は Yorisou の相談対話の入力です。返答本文だけを自然な日本語で作成してください。
 
 相談者区分: ${input.scenario.labels.persona}
 相談テーマ: ${input.scenario.labels.scenario}
-ご案内トーン: ${input.scenario.toneMode}
-優先事項: ${input.policy.responsePriorities.join(" / ")}
-避ける表現: ${input.policy.forbiddenStyles.join(" / ")}
-確認質問: ${input.policy.followUpQuestion}
-次の案内候補: ${input.actions.map((action) => action.title).join(" / ")}
+リスクの見立て: ${input.scenario.labels.risk}
+トーン: ${input.scenario.toneMode}
 
-会話履歴: ${JSON.stringify(input.history)}
-今回の入力: ${input.userMessage || "未入力"}
+返答ポリシー:
+- 出だし: ${input.policy.opening}
+- 優先事項: ${input.policy.responsePriorities.join(" / ")}
+- 長さ: ${input.policy.responseLength}
+- 質問の仕方: ${input.policy.followUpStyle}
+- 不確実な場合: ${input.policy.uncertaintyHandling}
+- 製品や支え方: ${input.policy.productStatusGuidance}
+- 続け方: ${input.policy.continuationGuidance}
+- 行動提案: ${input.policy.actionOfferingGuidance}
+- 避ける表現: ${input.policy.forbiddenStyles.join(" / ")}
 
-以下の形で 2〜4 文で返答してください。
-1. まず気持ちや状況を受け止める
-2. 次に短く整理する
-3. 必要なら質問を1つだけ入れる
-4. 最後に次の案内へやわらかくつなぐ`
-    : `You are Yorisou's support guide. Write a calm, warm, short reply for older adults and families in Japan. Decision-making is already done. You only handle expression.
+次の案内候補: ${input.actions.map((action) => action.title).join(" / ") || "なし"}
+確認質問候補: ${input.policy.followUpQuestion}
+
+会話履歴:
+${input.history.map((entry) => `${entry.role === "assistant" ? "ひなた" : "利用者"}: ${entry.content}`).join("\n") || "なし"}
+
+今回の入力:
+${input.userMessage || "未入力"}
+
+返答ルール:
+1. まず不安や状況をやさしく受け止める
+2. 次に一歩だけ整理する
+3. 質問は必要な場合だけ1つ
+4. 最後に必要なら次の案内をやわらかく添える
+5. 本文だけを返す`
+    : `Create only the assistant reply body for Yorisou.
 
 Persona: ${input.scenario.labels.persona}
 Scenario: ${input.scenario.labels.scenario}
+Risk: ${input.scenario.labels.risk}
 Tone: ${input.scenario.toneMode}
 Priorities: ${input.policy.responsePriorities.join(" / ")}
+Length: ${input.policy.responseLength}
+Follow-up style: ${input.policy.followUpStyle}
+Uncertainty: ${input.policy.uncertaintyHandling}
+Product guidance: ${input.policy.productStatusGuidance}
+Continuation: ${input.policy.continuationGuidance}
+Action guidance: ${input.policy.actionOfferingGuidance}
 Avoid: ${input.policy.forbiddenStyles.join(" / ")}
-Question: ${input.policy.followUpQuestion}
-Next actions: ${input.actions.map((action) => action.title).join(" / ")}
+Next actions: ${input.actions.map((action) => action.title).join(" / ") || "none"}
+Follow-up question: ${input.policy.followUpQuestion}
 
-Conversation history: ${JSON.stringify(input.history)}
-User message: ${input.userMessage || "No message"}
+History:
+${input.history.map((entry) => `${entry.role}: ${entry.content}`).join("\n") || "none"}
 
-Reply in 2-4 short sentences.`;
+User message:
+${input.userMessage || "No message"}
+
+Reply in 2-4 short sentences, with at most one natural follow-up question.`;
 }
 
 export function buildDeterministicSupportReply(input: {
@@ -88,10 +111,16 @@ export function buildDeterministicSupportReply(input: {
 
   const question = input.scenario.shouldAskClarifyingQuestion ? input.policy.followUpQuestion : "";
   const actionLead = input.actions[0]
-    ? `必要に応じて、${input.actions[0].title}にもおつなぎできます。`
-    : "必要に応じて、次のご案内をご提案します。";
+    ? `必要に応じて、${input.actions[0].title}にもゆっくりおつなぎできます。`
+    : "必要に応じて、次の支え方も一緒に考えられます。";
+  const honestyNote =
+    input.scenario.scenario === "product_guidance"
+      ? "まだ迷っていても大丈夫です。暮らしに合うかどうかを見ながら考えていけます。"
+      : input.scenario.scenario === "institutional_inquiry"
+        ? "内容が固まっていない段階でも、確認しながら整理していけます。"
+        : "";
 
   return {
-    message: [opening, summary, question, actionLead].filter(Boolean).join("\n\n"),
+    message: [opening, summary, honestyNote, question, actionLead].filter(Boolean).join("\n\n"),
   };
 }

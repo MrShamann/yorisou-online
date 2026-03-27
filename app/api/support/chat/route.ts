@@ -71,7 +71,15 @@ export async function POST(request: Request) {
       actions: recommendedActions,
     });
 
-    const gatewayResult = await generateSupportAssistantText(prompt);
+    const gatewayResult = await generateSupportAssistantText({
+      locale,
+      userMessage,
+      history: messages,
+      scenario: scenarioResult,
+      policy,
+      actions: recommendedActions,
+      prompt,
+    });
     const deterministic = buildDeterministicSupportReply({
       locale,
       userMessage,
