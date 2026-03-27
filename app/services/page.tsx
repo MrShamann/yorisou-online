@@ -27,6 +27,7 @@ export default function ServicesPage() {
   return (
     <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
+        eyebrow="サービス"
         title="Yorisouのサービスは、まず話を聞くところから始まります。"
         subtitle="移動や暮らしの不安をうかがいながら、ご本人とご家族に合う支え方を一緒に整理します。すぐに何かを決める必要はありません。必要に応じて、その先の導入や継続支援まで丁寧につないでいきます。"
         primaryHref="/support#scenario-assistant"
@@ -38,7 +39,7 @@ export default function ServicesPage() {
       <section className="section">
         <div className="container">
           <div className="section-header">
-            <p className="section-label">Service Flow</p>
+            <p className="section-label">ご相談の流れ</p>
             <h2 className="section-title">相談から、その先の支え方まで。</h2>
             <p className="muted" style={{ marginTop: 10, maxWidth: 760 }}>
               相談だけで終わらせず、ご本人、ご家族、地域の状況に応じて続けやすい流れを整えていきます。
@@ -47,7 +48,7 @@ export default function ServicesPage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {supportSteps.map((item) => (
-              <article key={item.title} className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-5 py-5">
+              <article key={item.title} className="rounded-[1.4rem] bg-[rgba(255,253,249,0.7)] px-5 py-5">
                 <h3 className="text-lg font-medium leading-8 text-[var(--text)]">{item.title}</h3>
                 <p className="muted">{item.text}</p>
               </article>
@@ -59,8 +60,8 @@ export default function ServicesPage() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
-              <div className="service-kicker">For individuals & families</div>
+            <div className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
+              <div className="service-kicker">ご本人とご家族へ</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 ご本人とご家族のための相談支援
               </h2>
@@ -75,8 +76,8 @@ export default function ServicesPage() {
               </div>
             </div>
 
-            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
-              <div className="service-kicker">For organizations</div>
+            <div className="rounded-[1.5rem] bg-[rgba(225,232,219,0.48)] px-6 py-6">
+              <div className="service-kicker">自治体・施設・地域事業者の方へ</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 導入や実証を考えている方へ
               </h2>

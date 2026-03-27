@@ -34,6 +34,7 @@ export default function PilotPage() {
   return (
     <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
+        eyebrow="導入・実証"
         title="導入・実証も、まずは暮らしに合うかを丁寧に見るところから始めます。"
         subtitle="Yorisouの導入・実証は、自治体、施設、地域事業者の方と一緒に、高齢者とご家族の移動支援が現場で続けられるかを確かめる取り組みです。福岡での学びも活かしながら、相談体験と運用の両方を見ていきます。"
         primaryHref="/contact"
@@ -43,7 +44,7 @@ export default function PilotPage() {
       />
 
       <Section
-        label="Approach"
+        label="大切にしていること"
         title="Yorisouが大切にしていること"
         lead="制度や計画だけでなく、実際に使う方、ご家族、運営する方の無理のなさを同時に見ます。"
       >
@@ -58,13 +59,13 @@ export default function PilotPage() {
       </Section>
 
       <Section
-        label="How We Support"
+        label="進め方"
         title="ご相談から実施までの流れ"
         lead="導入の可否を急いで決めるのではなく、地域や現場に合う形を一緒に整理していきます。"
       >
         <div className="grid gap-4 md:grid-cols-4">
           {["課題の共有", "対象場面の整理", "小規模実施", "振り返りと次の提案"].map((item, index) => (
-            <div key={item} className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-5 py-5">
+            <div key={item} className="rounded-[1.4rem] bg-[rgba(255,253,249,0.72)] px-5 py-5">
               <div className="text-sm tracking-[0.12em] text-[#87776b]">STEP {index + 1}</div>
               <div className="mt-3 text-lg leading-8 text-[var(--text)]">{item}</div>
             </div>
@@ -73,10 +74,10 @@ export default function PilotPage() {
       </Section>
 
       <Section
-        label="What You Receive"
+        label="ご一緒できること"
         title="導入・実証でご一緒できること"
       >
-        <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
+        <div className="rounded-[1.5rem] bg-[rgba(225,232,219,0.42)] px-6 py-6">
           <ul className="list-clean muted" style={{ display: "grid", gap: 10, margin: 0 }}>
             {deliverables.map((item) => (
               <li key={item}>{item}</li>

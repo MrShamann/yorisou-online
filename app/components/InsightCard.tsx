@@ -20,7 +20,7 @@ export default function InsightCard({
   const isList = variant === "list";
 
   return (
-    <article className={`rounded-[1.5rem] bg-[rgba(255,253,249,0.82)] ${isList ? "p-5" : "p-6"} shadow-sm`}>
+    <article className={`rounded-[1.4rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.82)] ${isList ? "p-5" : "p-6"}`}>
       <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
         <span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{insight.categoryLabel}</span>
         {insight.featured && (
@@ -36,7 +36,7 @@ export default function InsightCard({
           {insight.title}
         </Link>
       </h2>
-      <p className={`mt-3 text-sm text-[#5A4B3E] ${isList ? "leading-7" : "leading-7"}`}>{summary}</p>
+      <p className={`mt-3 text-sm text-[#5A4B3E] ${isList ? "line-clamp-3 leading-7" : "leading-7"}`}>{summary}</p>
 
       {!isList && (
         <div className="mt-4 rounded-[1.2rem] bg-[var(--surface-soft)] p-4">
@@ -46,7 +46,7 @@ export default function InsightCard({
       )}
 
       {isList ? (
-        <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">{insight.whyItMatters || primaryView}</p>
+        <p className="mt-3 line-clamp-3 text-sm leading-7 text-[#6B5A4A]">{insight.whyItMatters || primaryView}</p>
       ) : (
         <div className="mt-5 flex flex-wrap gap-2">
           {tags.map((tag) => (

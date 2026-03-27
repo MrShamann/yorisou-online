@@ -27,6 +27,7 @@ export default function ContactPage() {
   return (
     <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
+        eyebrow="お問い合わせ"
         title="お問い合わせも、やさしく話せる窓口でありたいと考えています。"
         subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
         primaryHref="/support#scenario-assistant"
@@ -38,7 +39,7 @@ export default function ContactPage() {
       <section className="section">
         <div className="container">
           <div className="section-header">
-            <p className="section-label">Inquiry</p>
+            <p className="section-label">お問い合わせ内容</p>
             <h2 className="section-title">ご相談いただける内容</h2>
             <p className="muted" style={{ marginTop: 10, maxWidth: 760 }}>
               個人のご相談から、地域での導入検討まで、目的に応じた形でご案内します。
@@ -47,7 +48,7 @@ export default function ContactPage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {inquiryCards.map((item) => (
-              <article key={item.title} className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-5 py-5">
+              <article key={item.title} className="rounded-[1.4rem] bg-[rgba(255,253,249,0.7)] px-5 py-5">
                 <h3 className="text-lg font-medium leading-8 text-[var(--text)]">{item.title}</h3>
                 <p className="muted">{item.text}</p>
               </article>
@@ -59,8 +60,8 @@ export default function ContactPage() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
-              <div className="service-kicker">Contact form</div>
+            <div className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
+              <div className="service-kicker">お問い合わせフォーム</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 お問い合わせフォーム
               </h2>
@@ -72,8 +73,8 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
-              <div className="service-kicker">A calm first step</div>
+            <div className="rounded-[1.5rem] bg-[rgba(225,232,219,0.46)] px-6 py-6">
+              <div className="service-kicker">はじめての方へ</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 はじめてでも大丈夫です
               </h2>
@@ -83,7 +84,7 @@ export default function ContactPage() {
                   "ご高齢の方やご家族にも伝わりやすいご案内を心がけています。",
                   "必要に応じて、ひなたとの相談や導入相談につながる形で整理します。",
                 ].map((item) => (
-                  <div key={item} className="rounded-[1.3rem] bg-[var(--surface)] px-5 py-4 text-sm leading-8 text-[var(--muted)]">
+                  <div key={item} className="rounded-[1.25rem] bg-[rgba(255,253,249,0.86)] px-5 py-4 text-sm leading-8 text-[var(--muted)]">
                     {item}
                   </div>
                 ))}

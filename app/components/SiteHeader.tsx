@@ -8,19 +8,17 @@ import { useMemo, useState } from "react";
 const primaryNavJa = [
   { href: "/about", label: "Yorisouについて" },
   { href: "/services", label: "サービス" },
-  { href: "/pilot", label: "導入・実証" },
-  { href: "/login", label: "ログイン" },
+  { href: "/insights", label: "読みもの" },
 ];
 
 const primaryNavEn = [
-  { href: "/ai-advisor", label: "Consult" },
+  { href: "/support", label: "Consult" },
   { href: "/products", label: "Products" },
   { href: "/services", label: "Implementation" },
-  { href: "/login", label: "Login" },
 ];
 
 const secondaryNavJa = [
-  { href: "/insights", label: "インサイト" },
+  { href: "/pilot", label: "導入・実証" },
   { href: "/contact", label: "お問い合わせ" },
 ];
 
@@ -58,6 +56,7 @@ export default function SiteHeader() {
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
   const languageHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
+  const loginHref = localizedHref("/login");
 
   function localizedHref(path: string) {
     return isEn ? toEnglishPath(path) : path;
@@ -77,12 +76,12 @@ export default function SiteHeader() {
         <div className="flex items-center justify-between gap-5">
           <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline md:gap-4">
             <div className="flex items-center justify-center">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={104} height={104} className="h-auto w-[74px] object-contain md:w-[94px]" />
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={120} height={120} className="h-auto w-[86px] object-contain md:w-[108px]" />
             </div>
             <div className="min-w-0">
-              <div className="display-serif text-[1.86rem] font-semibold tracking-[0.12em] text-[var(--text)] md:text-[2.34rem]">YORISOU</div>
-              <div className="mt-1 hidden text-[0.9rem] leading-7 text-[var(--muted)] md:block">
-                {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動と暮らしに、やさしく寄り添う。"}
+              <div className="display-serif text-[1.78rem] font-semibold tracking-[0.11em] text-[var(--text)] md:text-[2.18rem]">YORISOU</div>
+              <div className="mt-1 hidden text-[0.88rem] leading-7 text-[var(--muted)] md:block">
+                {isEn ? "Calm mobility support for seniors and families in Japan" : "移動の不安から、暮らしの安心へ。"}
               </div>
             </div>
           </Link>
@@ -144,6 +143,9 @@ export default function SiteHeader() {
             </nav>
 
             <div className="header-actions">
+              <Link href={loginHref} className={`login-link ${isActive("/login") ? "active" : ""}`} onClick={() => setOpen(false)}>
+                {isEn ? "Login" : "ログイン"}
+              </Link>
               <Link href={languageHref} className="locale-switch" onClick={() => setOpen(false)}>
                 <span className="locale-current">{isEn ? "EN" : "JP"}</span>
                 <span className="locale-target">{isEn ? "日本語" : "EN"}</span>
@@ -162,12 +164,12 @@ export default function SiteHeader() {
         .primary-nav {
           display: flex;
           align-items: center;
-          gap: 4px;
-          padding: 6px;
+          gap: 2px;
+          padding: 5px;
           border-radius: 20px;
-            background: rgba(255, 252, 247, 0.82);
-            border: 1px solid rgba(221, 208, 194, 0.44);
-          box-shadow: 0 12px 22px rgba(47, 35, 33, 0.04);
+          background: rgba(252, 250, 245, 0.82);
+          border: 1px solid rgba(216, 207, 195, 0.54);
+          box-shadow: 0 10px 18px rgba(47, 35, 33, 0.035);
         }
         .nav-link,
         .more-button {
@@ -175,7 +177,7 @@ export default function SiteHeader() {
           background: transparent;
           text-decoration: none;
           color: var(--text);
-          padding: 11px 14px;
+          padding: 10px 13px;
           border-radius: 14px;
           font-size: 12px;
           white-space: nowrap;
@@ -243,7 +245,25 @@ export default function SiteHeader() {
         .header-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
+        }
+        .login-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0 13px;
+          border-radius: 15px;
+          border: 1px solid rgba(216, 198, 180, 0.52);
+          background: rgba(255, 253, 249, 0.88);
+          box-shadow: 0 8px 18px rgba(59, 47, 47, 0.035);
+          color: var(--text);
+          font-size: 12px;
+          text-decoration: none;
+        }
+        .login-link:hover,
+        .login-link.active {
+          background: rgba(235, 241, 232, 0.8);
         }
         .locale-switch {
           display: inline-flex;
@@ -325,11 +345,15 @@ export default function SiteHeader() {
             background: #fcfaf6;
           }
           .header-actions {
-            justify-content: flex-end;
-            flex-direction: row;
+            justify-content: stretch;
+            flex-direction: column;
+            gap: 8px;
+          }
+          .login-link {
+            width: 100%;
           }
           .locale-switch {
-            width: auto;
+            width: 100%;
             justify-content: center;
           }
         }
