@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { getPasswordPolicyMessage, PASSWORD_RULES } from "@/lib/passwordPolicy";
 import LineBrandIcon from "@/app/components/LineBrandIcon";
+import ScenarioSupportAssistant from "@/app/components/ScenarioSupportAssistant";
 import type {
   AccountRecord,
   ConsultationRecord,
@@ -132,7 +133,7 @@ export default function SupportWorkspace({
   const followups = useMemo(() => consultations.filter((entry) => entry.leadSubmitted), [consultations]);
   const loginHref = locale === "ja" ? "/login" : "/en/login";
   const registerHref = locale === "ja" ? "/register" : "/en/register";
-  const advisorHref = locale === "ja" ? "/ai-advisor" : "/en/ai-advisor";
+  const advisorHref = locale === "ja" ? "/support#scenario-assistant" : "/en/support#scenario-assistant";
   const productsHref = locale === "ja" ? "/products" : "/en/products";
   const lineStartHref =
     locale === "ja"
@@ -332,30 +333,33 @@ export default function SupportWorkspace({
         <section className="border-b border-[#D8C6B4]/28 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(247,240,229,0.98)_62%)] px-6 py-16 md:px-10 md:py-24">
           <div className="mx-auto max-w-6xl">
             <div className="shell-card max-w-4xl p-8 md:p-12">
-              <div className="service-kicker">{locale === "ja" ? "Support continuation" : "Support continuation"}</div>
+              <div className="service-kicker">{locale === "ja" ? "ご相談はこちら" : "Consultation support access"}</div>
               <h1 className="display-serif mt-4 text-4xl leading-[1.18] md:text-6xl">
-                {locale === "ja" ? "見積もりや相談のつづきに進む" : "Continue your estimate or support conversation"}
+                {locale === "ja" ? "ご相談のつづきを確認する" : "Continue your estimate or support conversation"}
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                 {locale === "ja"
-                  ? "LINEならすぐに続けられます。メールでも続けられます。相談の履歴やご提案、共有メモはログイン後にまとめて確認できます。"
+                  ? "LINEでもメールでも、ご相談内容やご案内をやさしく確認できます。"
                   : "Continue quickly with LINE, or use email if you prefer. After sign-in, you can review your recommendations, notes, and support history in one place."}
               </p>
+              <div className="mt-8">
+                <ScenarioSupportAssistant locale={locale} />
+              </div>
               <div className="mt-8 rounded-[2rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-6 py-6 text-sm leading-7 text-[#314236] shadow-[0_18px_40px_rgba(53,81,61,0.08)]">
-                <div className="service-kicker text-[#55705C]">{locale === "ja" ? "LINE priority path" : "LINE priority path"}</div>
+                <div className="service-kicker text-[#55705C]">{locale === "ja" ? "LINEでやさしく相談する" : "Continue with LINE"}</div>
                 <div className="mt-3 text-2xl font-medium">
-                  {locale === "ja" ? "LINEですぐに続ける" : "Continue with LINE"}
+                  {locale === "ja" ? "LINEでやさしく相談する" : "Continue with LINE"}
                 </div>
                 <p className="mt-2 text-[#4D5642]">
                   {locale === "ja"
-                    ? "すでにLINE連携済みならそのままサポートへ進めます。初回でも、戻ったあとの状態をこの画面で確認できます。"
+                    ? "ご高齢の方やご家族でも安心してご利用いただけます"
                     : "If your account is already linked to LINE, you can continue straight into support. If it is your first time, this page will show the next step after return."}
                 </p>
                 <div className="mt-4">
                   {lineAuthReady ? (
                     <Link href={lineStartHref} className="btn btn-primary bg-[#06C755] shadow-[0_16px_30px_rgba(6,199,85,0.22)]">
                       <LineBrandIcon className="h-5 w-5" />
-                      {locale === "ja" ? "LINEで続ける" : "Continue with LINE"}
+                      {locale === "ja" ? "LINEでやさしく相談する" : "Continue with LINE"}
                     </Link>
                   ) : (
                     <div className="inline-flex rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#8A7764]">
@@ -363,6 +367,11 @@ export default function SupportWorkspace({
                     </div>
                   )}
                 </div>
+                <p className="mt-3 text-xs leading-6 text-[#55705C]">
+                  {locale === "ja"
+                    ? "ご高齢の方やご家族でも安心してご利用いただけます"
+                    : "Your first intake on LINE is guided by AI, then we guide you to the next step."}
+                </p>
               </div>
               <div className="mt-6 rounded-[1.8rem] border border-[#E0D2C4] bg-[#FFF9F2] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
                 <div className="font-medium text-[#312321]">{locale === "ja" ? "メールで続ける" : "Continue with email"}</div>
@@ -394,6 +403,11 @@ export default function SupportWorkspace({
                 <h1 className="text-4xl font-light leading-tight md:text-6xl">
                   {locale === "ja" ? `${account.name}さんのサポートページ` : `${account.name}'s support page`}
                 </h1>
+                <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
+                  {locale === "ja"
+                    ? "ご相談内容やご案内、LINEでのやり取りをここでまとめて確認できます。必要に応じて、ご家族共有や次のご相談へ進めます。"
+                    : "Review your consultation history, recommendation, and LINE follow-up status here, then move to the next support step when needed."}
+                </p>
               </div>
               <button
                 type="button"
@@ -403,6 +417,116 @@ export default function SupportWorkspace({
                 {locale === "ja" ? "ログアウト" : "Log out"}
               </button>
             </div>
+            <div className="mt-8">
+              <ScenarioSupportAssistant locale={locale} />
+            </div>
+            <div className="mt-8 grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+              <div className="rounded-[1.8rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-6 py-6">
+                <div className="text-xs tracking-[0.14em] text-[#8A7764]">
+                  {locale === "ja" ? "ご案内" : "NEXT STEP"}
+                </div>
+                <h2 className="mt-3 text-2xl font-light leading-tight text-[#3B2F2F]">
+                  {latest
+                    ? locale === "ja"
+                      ? "いまの相談状況"
+                      : "Your current consultation status"
+                    : locale === "ja"
+                      ? "まずは最初の相談を始めましょう"
+                      : "Start your first consultation"}
+                </h2>
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <div className="rounded-[1.25rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4">
+                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "ご相談中の内容" : "Current topic"}</div>
+                    <div className="mt-2 text-lg font-light leading-tight text-[#3B2F2F]">
+                      {latest
+                        ? latest.recommendedCategory
+                        : locale === "ja"
+                          ? "まだ相談内容は保存されていません"
+                          : "No consultation topic saved yet"}
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
+                      {latest
+                        ? latest.summary
+                        : locale === "ja"
+                          ? "最初の相談で、現在の移動状況やご家族の不安を整理できます。"
+                          : "Your first consultation helps organize current mobility needs and family concerns."}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4">
+                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "次のご案内" : "Recommended next step"}</div>
+                    <div className="mt-2 text-lg font-light leading-tight text-[#3B2F2F]">
+                      {latest
+                        ? latest.suggestedNextAction
+                        : locale === "ja"
+                          ? "まずは相談を始める"
+                          : "Start consultation"}
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
+                      {isLineConnected
+                        ? locale === "ja"
+                          ? "LINE連携は完了しています。必要に応じて、このあとLINEでのご案内も確認できます。"
+                          : "LINE is connected. You can also review LINE follow-up status after this."
+                        : locale === "ja"
+                          ? "LINEで続けたい場合も、このあと落ち着いて確認できます。"
+                          : "If you want to continue with LINE, you can also review connection status below."}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <Link href={advisorHref} className="btn btn-secondary">
+                    {latest
+                      ? locale === "ja"
+                        ? "相談を続ける"
+                        : "Continue consultation"
+                      : locale === "ja"
+                        ? "相談を始める"
+                        : "Start consultation"}
+                  </Link>
+                  <Link href={productsHref} className="btn btn-secondary">
+                    {locale === "ja" ? "製品を見比べる" : "Browse products"}
+                  </Link>
+                  <a href="#line-connect" className="btn btn-secondary">
+                    {isLineConnected
+                      ? locale === "ja"
+                        ? "LINEの状況を確認する"
+                        : "Review LINE status"
+                      : locale === "ja"
+                        ? "LINE連携を確認する"
+                        : "Review LINE connection"}
+                  </a>
+                </div>
+              </div>
+              <div className="rounded-[1.8rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-6 py-6 text-[#314236] shadow-[0_18px_40px_rgba(53,81,61,0.08)]">
+                <div className="text-xs tracking-[0.14em] text-[#55705C]">
+                  {locale === "ja" ? "LINEのご案内" : "LINE STATUS"}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className={`inline-flex items-center rounded-full px-4 py-2 text-sm ${isLineConnected ? "bg-[#E6F4EA] text-[#2E5B3C]" : "bg-white/80 text-[#6E5D4D]"}`}>
+                    {isLineConnected ? (locale === "ja" ? "LINE連携済み" : "LINE connected") : lineStatusLabel}
+                  </span>
+                  <span className="text-sm leading-7 text-[#4D5642]">
+                    {isLineConnected
+                      ? locale === "ja"
+                        ? "このアカウントはLINEログイン済みです。Yorisouからのご案内ややり取りは下のLINE欄で確認できます。"
+                        : "This account is connected through LINE login. You can review LINE follow-up status in the LINE section below."
+                      : locale === "ja"
+                        ? "まだLINE連携は完了していません。必要に応じて、このページからやさしく進められます。"
+                        : "LINE is not fully connected yet. You can complete connection from this page if needed."}
+                  </span>
+                </div>
+                <div className="mt-5 grid gap-3 text-sm leading-7 text-[#4D5642]">
+                  <div className="rounded-[1.2rem] border border-[#C7D7C1] bg-white/75 px-4 py-4">
+                    {lineMessagingReady
+                      ? locale === "ja"
+                        ? "LINEでメッセージを送ったあと、このページでやり取りの内容を確認できます。"
+                        : "After sending a LINE message, you can review the latest intake and reply result on this page."
+                      : locale === "ja"
+                        ? "LINEでのご案内はご利用いただけます。準備状況は下でも確認できます。"
+                        : "LINE status is available here, but please also review the Messaging API configuration below."}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -410,19 +534,31 @@ export default function SupportWorkspace({
       <section className="border-b border-[#D6C3A3]/20 bg-white/58 px-6 py-8 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
           <StatCard
-            label={locale === "ja" ? "相談履歴" : "Consultations"}
+            label={locale === "ja" ? "相談件数" : "Consultations"}
             value={String(consultations.length)}
-            note={locale === "ja" ? "現在見返せる件数" : "Currently available"}
+            note={locale === "ja" ? "このページで確認できる相談履歴" : "Consultations available in this workspace"}
           />
           <StatCard
-            label={locale === "ja" ? "ご提案内容" : "Recommendation"}
+            label={locale === "ja" ? "ご相談中の内容" : "Current topic"}
             value={latest ? latest.recommendedCategory : locale === "ja" ? "未保存" : "None"}
             note={latest ? formatDate(latest.createdAt, locale) : locale === "ja" ? "最新の相談結果はまだありません" : "No saved recommendation yet"}
           />
           <StatCard
-            label={locale === "ja" ? "LINE連携" : "LINE"}
+            label={locale === "ja" ? "LINEの状況" : "LINE status"}
             value={lineStatusLabel}
-            note={lineForm.lineNotificationsEnabled ? (locale === "ja" ? "フォローアップ有効" : "Follow-up enabled") : locale === "ja" ? "フォローアップ未設定" : "Follow-up disabled"}
+            note={
+              isLineConnected
+                ? locale === "ja"
+                  ? "LINEで続けられる状態です"
+                  : "Ready to continue with LINE"
+                : lineForm.lineNotificationsEnabled
+                  ? locale === "ja"
+                    ? "フォローアップ有効"
+                    : "Follow-up enabled"
+                  : locale === "ja"
+                    ? "フォローアップ未設定"
+                    : "Follow-up disabled"
+            }
           />
         </div>
       </section>
@@ -433,15 +569,15 @@ export default function SupportWorkspace({
             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
                 <div className="text-xs tracking-[0.16em] text-[#8A7764]">
-                  {locale === "ja" ? "SUPPORT DATA STATUS" : "SUPPORT DATA STATUS"}
+                  {locale === "ja" ? "ご利用状況" : "SUPPORT DATA STATUS"}
                 </div>
                 <h2 className="mt-2 text-2xl font-light leading-tight text-[#3B2F2F]">
-                  {locale === "ja" ? "現在のサポート解決状態" : "Current support resolution"}
+                  {locale === "ja" ? "ご利用状況の確認" : "Current support resolution"}
                 </h2>
               </div>
               <p className="text-sm leading-7 text-[#5A4B3E]">
                 {locale === "ja"
-                  ? "support の canonical read/write 状態をこの画面で確認できます。"
+                  ? "ご利用状況や連携状態を、この画面で確認できます。"
                   : "This panel shows the current canonical read/write state for support."}
               </p>
             </div>
@@ -461,89 +597,89 @@ export default function SupportWorkspace({
                 note={sourceLabel(locale, initialSupportDiagnostics.lineBinding.source)}
               />
               <StatusTile
-                label={locale === "ja" ? "Support profile source" : "Support profile source"}
+                label={locale === "ja" ? "ご登録内容" : "Support profile source"}
                 value={sourceLabel(locale, initialSupportDiagnostics.supportProfile.source)}
                 tone={sourceTone(initialSupportDiagnostics.supportProfile.source)}
                 note={
                   initialSupportDiagnostics.supportProfile.source === "canonical"
                     ? locale === "ja"
-                      ? "family/contact/share fields は canonical-first"
+                      ? "ご家族情報や共有内容を確認できます。"
                       : "Family/contact/share fields are canonical-first"
                     : locale === "ja"
-                      ? "support profile は fallback から復元"
+                      ? "一部確認しながらご案内しています。"
                       : "Support profile is being restored from fallback"
                 }
               />
               <StatusTile
-                label={locale === "ja" ? "Owner resolution" : "Owner resolution"}
+                label={locale === "ja" ? "ご利用者の確認状況" : "Owner resolution"}
                 value={ownerModeLabel(locale, initialSupportDiagnostics.ownerResolution.mode)}
                 tone={initialSupportDiagnostics.ownerResolution.mode === "principal_aware" ? "ok" : "warn"}
                 note={
                   initialSupportDiagnostics.ownerResolution.principalId
                     ? locale === "ja"
-                      ? `principal: ${truncateId(initialSupportDiagnostics.ownerResolution.principalId)}`
+                      ? `確認ID: ${truncateId(initialSupportDiagnostics.ownerResolution.principalId)}`
                       : `principal: ${truncateId(initialSupportDiagnostics.ownerResolution.principalId)}`
                     : locale === "ja"
-                      ? "principal 未解決"
+                      ? "確認中です"
                       : "Principal unresolved"
                 }
               />
               <StatusTile
-                label={locale === "ja" ? "Preferences storage" : "Preferences storage"}
+                label={locale === "ja" ? "設定内容" : "Preferences storage"}
                 value={sourceLabel(locale, initialSupportDiagnostics.preferences.source)}
                 tone={sourceTone(initialSupportDiagnostics.preferences.source)}
                 note={
                   initialSupportDiagnostics.preferences.activeWriteTarget === "principal_aware_target"
                     ? locale === "ja"
-                      ? "active write target: principal-aware"
+                      ? "現在の設定を確認できます。"
                       : "active write target: principal-aware"
                     : locale === "ja"
-                      ? "active write target: legacy fallback"
+                      ? "一部確認しながらご案内しています。"
                       : "active write target: legacy fallback"
                 }
               />
               <StatusTile
-                label={locale === "ja" ? "Read fallback" : "Read fallback"}
+                label={locale === "ja" ? "確認状況" : "Read fallback"}
                 value={initialSupportDiagnostics.readFallback.active ? sourceLabel(locale, initialSupportDiagnostics.readFallback.source) : locale === "ja" ? "not active" : "not active"}
                 tone={initialSupportDiagnostics.readFallback.active ? "warn" : "ok"}
-                note={initialSupportDiagnostics.readFallback.active ? (locale === "ja" ? "fallback 読み取りが稼働中" : "Fallback read is active") : locale === "ja" ? "主要 read は canonical-first" : "Primary read is canonical-first"}
+                note={initialSupportDiagnostics.readFallback.active ? (locale === "ja" ? "一部確認しながらご案内しています。" : "Fallback read is active") : locale === "ja" ? "落ち着いてご確認いただけます。" : "Primary read is canonical-first"}
               />
             </div>
             <div className="mt-5 grid gap-4 lg:grid-cols-2">
               <div className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
-                <div className="text-sm text-[#8A7764]">{locale === "ja" ? "Active owner path" : "Active owner path"}</div>
+                <div className="text-sm text-[#8A7764]">{locale === "ja" ? "確認情報" : "Active owner path"}</div>
                 <div className="mt-3 space-y-2 text-sm leading-7 text-[#5A4B3E]">
                   <p>
-                    {locale === "ja" ? "principal id" : "principal id"}:{" "}
+                    {locale === "ja" ? "確認ID" : "principal id"}:{" "}
                     <span className="font-mono text-[#3B2F2F]">{initialSupportDiagnostics.ownerResolution.principalId || "—"}</span>
                   </p>
                   <p>
-                    {locale === "ja" ? "legacy account id" : "legacy account id"}:{" "}
+                    {locale === "ja" ? "アカウントID" : "legacy account id"}:{" "}
                     <span className="font-mono text-[#3B2F2F]">{initialSupportDiagnostics.ownerResolution.legacyAccountId || "—"}</span>
                   </p>
                   <p>
-                    {locale === "ja" ? "active write target id" : "active write target id"}:{" "}
+                    {locale === "ja" ? "設定ID" : "active write target id"}:{" "}
                     <span className="font-mono text-[#3B2F2F]">{initialSupportDiagnostics.ownerResolution.activeWriteTargetId || "—"}</span>
                   </p>
                 </div>
               </div>
               <div className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
-                <div className="text-sm text-[#8A7764]">{locale === "ja" ? "What this means" : "What this means"}</div>
+                <div className="text-sm text-[#8A7764]">{locale === "ja" ? "ご案内" : "What this means"}</div>
                 <div className="mt-3 text-sm leading-7 text-[#5A4B3E]">
                   {initialSupportDiagnostics.summaryState === "canonical_healthy"
                     ? locale === "ja"
-                      ? "support は canonical-first で読めており、owner も principal-aware target に解決されています。"
+                      ? "現在の内容は落ち着いてご確認いただけます。"
                       : "Support is reading canonical-first, and the owner resolves to a principal-aware target."
                     : initialSupportDiagnostics.summaryState === "canonical_with_compatibility_fallback"
                       ? locale === "ja"
-                        ? "主要な support データは canonical ですが、一部 slice は compatibility mirror/fallback を併用しています。"
+                        ? "一部確認しながらのご案内ですが、必要な内容はご確認いただけます。"
                         : "Core support data is canonical, while some slices still rely on compatibility mirror or fallback reads."
                       : initialSupportDiagnostics.summaryState === "fallback_active"
                         ? locale === "ja"
-                          ? "現在の表示には legacy/compatibility fallback が含まれています。"
+                          ? "確認が必要な内容を含みますが、このままご覧いただけます。"
                           : "The current view still depends on legacy or compatibility fallback."
                         : locale === "ja"
-                          ? "owner が未解決のため canonical read を全面使用できていません。"
+                          ? "一部確認中の内容があるため、見ながらご案内します。"
                           : "Owner resolution is incomplete, so canonical read is not fully active."}
                 </div>
               </div>
@@ -555,19 +691,19 @@ export default function SupportWorkspace({
       <section className="bg-[#FBF7F0] px-6 py-16 md:px-10 md:py-18">
         <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="space-y-6">
-            <Panel title={locale === "ja" ? "現在のサポート対象" : "Current support target"}>
+            <Panel title={locale === "ja" ? "現在の相談状況" : "Current consultation status"}>
               <div className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
                 <div className={`rounded-[1.2rem] border px-4 py-4 ${guardrailTone(initialSupportDiagnostics.summaryState)}`}>
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <div className="text-xs tracking-[0.14em] opacity-75">
-                        {locale === "ja" ? "TARGET INTEGRITY" : "TARGET INTEGRITY"}
+                        {locale === "ja" ? "確認状況" : "TARGET INTEGRITY"}
                       </div>
                       <div className="mt-1 text-lg font-medium">{summaryLabel(locale, initialSupportDiagnostics.summaryState)}</div>
                       <p className="mt-2 text-sm leading-7">{guardrailMessage(locale, initialSupportDiagnostics.summaryState)}</p>
                     </div>
                     <a href="#support-data-status" className="text-sm underline underline-offset-4">
-                      {locale === "ja" ? "診断を見る" : "Review diagnostics"}
+                      {locale === "ja" ? "詳しく確認する" : "Review diagnostics"}
                     </a>
                   </div>
                 </div>
@@ -577,27 +713,27 @@ export default function SupportWorkspace({
                   </span>
                   <span className="text-sm leading-7 text-[#5A4B3E]">
                     {locale === "ja"
-                      ? "このワークスペースで現在参照している support 対象の解決結果です。"
+                      ? "現在のご利用状況を確認するための表示です。"
                       : "This is the current target-truth state for the support context shown in this workspace."}
                   </span>
                 </div>
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4 text-sm leading-7 text-[#5A4B3E] md:col-span-2">
-                    <div className="text-xs tracking-[0.14em] text-[#8A7764]">
-                      {locale === "ja" ? "ACCOUNTABILITY / PRIVACY" : "ACCOUNTABILITY / PRIVACY"}
-                    </div>
+                      <div className="text-xs tracking-[0.14em] text-[#8A7764]">
+                        {locale === "ja" ? "ご利用記録" : "ACCOUNTABILITY / PRIVACY"}
+                      </div>
                     <div className="mt-2 font-medium text-[#3B2F2F]">
                       {locale === "ja"
-                        ? "この support アクセスは監査ログに記録されます。"
+                        ? "このページの確認履歴は適切に記録されます。"
                         : "This support access is audit logged."}
                     </div>
                     <div className="mt-2 text-sm leading-7 text-[#5A4B3E]">
                       {initialAccessAccountability.latestConsent.available
                         ? locale === "ja"
-                          ? `最新の consent signal: ${consentLabel(locale, initialAccessAccountability.latestConsent.consentType)} / ${formatDate(initialAccessAccountability.latestConsent.timestamp || "", locale)}`
+                          ? `最近の確認記録: ${consentLabel(locale, initialAccessAccountability.latestConsent.consentType)} / ${formatDate(initialAccessAccountability.latestConsent.timestamp || "", locale)}`
                           : `Latest consent signal: ${consentLabel(locale, initialAccessAccountability.latestConsent.consentType)} / ${formatDate(initialAccessAccountability.latestConsent.timestamp || "", locale)}`
                         : locale === "ja"
-                          ? "表示可能な consent 状態はまだモデル化されていないため、現在はアクセス記録のみを表示しています。"
+                          ? "現在は確認履歴のみをご案内しています。"
                           : "No stable consent status is modeled for display here yet, so this panel currently shows access accountability only."}
                     </div>
                   </div>
@@ -605,7 +741,7 @@ export default function SupportWorkspace({
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div>
                         <div className="text-xs tracking-[0.14em] text-[#8A7764]">
-                          {locale === "ja" ? "LINE READINESS" : "LINE READINESS"}
+                          {locale === "ja" ? "LINEの準備状況" : "LINE READINESS"}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-3">
                           <span className={`inline-flex items-center rounded-full px-4 py-2 text-sm ${lineReadinessTone(initialLineReadiness.continuityStatus)}`}>
@@ -617,64 +753,64 @@ export default function SupportWorkspace({
                         </div>
                       </div>
                       <a href="#line-connect" className="text-sm underline underline-offset-4">
-                        {locale === "ja" ? "LINE設定を見る" : "Review LINE setup"}
+                        {locale === "ja" ? "LINE設定を確認する" : "Review LINE setup"}
                       </a>
                     </div>
                     <div className="mt-4 grid gap-3 md:grid-cols-4">
                       <LineReadinessTile
-                        label={locale === "ja" ? "LINE identity" : "LINE identity"}
+                        label={locale === "ja" ? "LINE連携" : "LINE identity"}
                         value={lineIdentityLabel(locale, initialLineReadiness.identityState)}
-                        note={initialLineReadiness.lineIdentityPresent ? (locale === "ja" ? "bound LINE identity present" : "bound LINE identity present") : (locale === "ja" ? "bound LINE identity not present" : "bound LINE identity not present")}
+                        note={initialLineReadiness.lineIdentityPresent ? (locale === "ja" ? "連携内容を確認できます。" : "bound LINE identity present") : (locale === "ja" ? "これから連携できます。" : "bound LINE identity not present")}
                       />
                       <LineReadinessTile
-                        label={locale === "ja" ? "LINE login readiness" : "LINE login readiness"}
+                        label={locale === "ja" ? "LINEログイン" : "LINE login readiness"}
                         value={lineLoginReadinessLabel(locale, initialLineReadiness.loginReadiness)}
-                        note={initialLineReadiness.loginConfigured ? (locale === "ja" ? "LINE login config available" : "LINE login config available") : (locale === "ja" ? "LINE login config unresolved" : "LINE login config unresolved")}
+                        note={initialLineReadiness.loginConfigured ? (locale === "ja" ? "ご利用いただけます。" : "LINE login config available") : (locale === "ja" ? "確認中です。" : "LINE login config unresolved")}
                       />
                       <LineReadinessTile
-                        label={locale === "ja" ? "Support continuity" : "Support continuity"}
+                        label={locale === "ja" ? "継続のご案内" : "Support continuity"}
                         value={lineContinuityLabel(locale, initialLineReadiness.continuityStatus)}
-                        note={initialLineReadiness.principalResolved ? (locale === "ja" ? "principal-resolved LINE linkage" : "principal-resolved LINE linkage") : (locale === "ja" ? "principal linkage not fully resolved" : "principal linkage not fully resolved")}
+                        note={initialLineReadiness.principalResolved ? (locale === "ja" ? "このまま進められます。" : "principal-resolved LINE linkage") : (locale === "ja" ? "内容を確認しながら進めます。" : "principal linkage not fully resolved")}
                       />
                       <LineReadinessTile
-                        label={locale === "ja" ? "Source truth" : "Source truth"}
+                        label={locale === "ja" ? "確認状況" : "Source truth"}
                         value={sourceLabel(locale, initialLineReadiness.source)}
-                        note={initialLineReadiness.compatibilityOrFallbackActive ? (locale === "ja" ? "compatibility or fallback still in use" : "compatibility or fallback still in use") : (locale === "ja" ? "canonical source confirmed" : "canonical source confirmed")}
+                        note={initialLineReadiness.compatibilityOrFallbackActive ? (locale === "ja" ? "一部確認しながらご案内しています。" : "compatibility or fallback still in use") : (locale === "ja" ? "安心してご確認いただけます。" : "canonical source confirmed")}
                       />
                     </div>
                   </div>
                   <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                     <div className="text-xs tracking-[0.14em] text-[#8A7764]">
-                      {locale === "ja" ? "TARGET OWNER" : "TARGET OWNER"}
+                      {locale === "ja" ? "確認情報" : "TARGET OWNER"}
                     </div>
                     <div className="mt-2 text-lg font-light text-[#3B2F2F]">
                       {ownerModeLabel(locale, initialSupportDiagnostics.ownerResolution.mode)}
                     </div>
                     <div className="mt-3 space-y-1 font-mono text-xs text-[#3B2F2F]">
-                      <div>principal id: {initialSupportDiagnostics.ownerResolution.principalId || "—"}</div>
-                      <div>legacy account id: {initialSupportDiagnostics.ownerResolution.legacyAccountId || "—"}</div>
-                      <div>active write target id: {initialSupportDiagnostics.ownerResolution.activeWriteTargetId || "—"}</div>
+                      <div>{locale === "ja" ? "確認ID" : "principal id"}: {initialSupportDiagnostics.ownerResolution.principalId || "—"}</div>
+                      <div>{locale === "ja" ? "アカウントID" : "legacy account id"}: {initialSupportDiagnostics.ownerResolution.legacyAccountId || "—"}</div>
+                      <div>{locale === "ja" ? "設定ID" : "active write target id"}: {initialSupportDiagnostics.ownerResolution.activeWriteTargetId || "—"}</div>
                     </div>
                   </div>
                   <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                     <div className="text-xs tracking-[0.14em] text-[#8A7764]">
-                      {locale === "ja" ? "CURRENT LINKAGE" : "CURRENT LINKAGE"}
+                      {locale === "ja" ? "連携状況" : "CURRENT LINKAGE"}
                     </div>
                     <div className="mt-2 space-y-2">
                       <div>
-                        {locale === "ja" ? "LINE binding" : "LINE binding"}:{" "}
+                        {locale === "ja" ? "LINE連携" : "LINE binding"}:{" "}
                         <span className="font-medium">{sourceLabel(locale, initialSupportDiagnostics.lineBinding.source)}</span>
                       </div>
                       <div>
-                        {locale === "ja" ? "support profile" : "support profile"}:{" "}
+                        {locale === "ja" ? "ご登録内容" : "support profile"}:{" "}
                         <span className="font-medium">{sourceLabel(locale, initialSupportDiagnostics.supportProfile.source)}</span>
                       </div>
                       <div>
-                        {locale === "ja" ? "preferences" : "preferences"}:{" "}
+                        {locale === "ja" ? "設定内容" : "preferences"}:{" "}
                         <span className="font-medium">{sourceLabel(locale, initialSupportDiagnostics.preferences.source)}</span>
                       </div>
                       <div>
-                        {locale === "ja" ? "read fallback" : "read fallback"}:{" "}
+                        {locale === "ja" ? "確認状況" : "read fallback"}:{" "}
                         <span className="font-medium">
                           {initialSupportDiagnostics.readFallback.active
                             ? sourceLabel(locale, initialSupportDiagnostics.readFallback.source)
@@ -701,11 +837,11 @@ export default function SupportWorkspace({
                   ))}
                 </div>
               ) : (
-                <EmptyState locale={locale} textJa="まだ相談履歴はありません。AI相談から始められます。" textEn="No consultation history yet. Start with the advisor." />
+                <EmptyState locale={locale} textJa="まだ相談履歴はありません。まずは相談から始められます。" textEn="No consultation history yet. Start with consultation." />
               )}
             </Panel>
 
-            <Panel title={locale === "ja" ? "ご提案内容" : "Recommendations"}>
+            <Panel title={locale === "ja" ? "現在のご提案" : "Current recommendation"}>
               {latest ? (
                 <div className="space-y-4">
                   <div className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
@@ -727,7 +863,7 @@ export default function SupportWorkspace({
           </div>
 
           <div className="space-y-6">
-            <Panel title={locale === "ja" ? "ご家族共有" : "Family sharing"}>
+            <Panel title={locale === "ja" ? "ご家族共有" : "Family sharing"} id="family-share">
               <div className="grid gap-4">
                 <Field label={locale === "ja" ? "ご家族のお名前" : "Family contact name"}>
                   <input
@@ -772,7 +908,7 @@ export default function SupportWorkspace({
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={copyShareText} className="btn btn-secondary">
-                  {locale === "ja" ? "共有用メモをコピー" : "Copy share note"}
+                  {locale === "ja" ? "共有内容をコピー" : "Copy share note"}
                 </button>
                 <button type="button" onClick={saveSupportProfile} className="btn btn-secondary" disabled={isSaving}>
                   {locale === "ja" ? "ご家族情報を保存" : "Save family info"}
@@ -781,15 +917,15 @@ export default function SupportWorkspace({
               {shareMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{shareMessage}</p>}
             </Panel>
 
-            <Panel title={locale === "ja" ? "継続相談" : "Ongoing consultation"}>
+            <Panel title={locale === "ja" ? "次のご案内" : "Next consultation step"}>
               <p className="text-sm leading-7 text-[#5A4B3E]">
                 {locale === "ja"
                   ? "前回の相談を見返しながら、条件を変えてもう一度相談したり、導入後の不安点を追加で送ったりできます。"
-                  : "Review the last consultation, then continue with a new advisor run or a direct consultation submission."}
+                  : "Review the last consultation, then continue with another consultation or compare product options."}
               </p>
               <div className="mt-4 flex flex-col gap-3">
                 <Link href={advisorHref} className="btn btn-secondary">
-                  {locale === "ja" ? "AI相談を続ける" : "Continue with advisor"}
+                  {locale === "ja" ? "相談を続ける" : "Continue consultation"}
                 </Link>
                 <Link href={productsHref} className="btn btn-secondary">
                   {locale === "ja" ? "製品を見比べる" : "Browse products"}
@@ -845,11 +981,11 @@ export default function SupportWorkspace({
               {passwordError && <p className="mt-4 text-sm text-[#9A3B2F]">{passwordError}</p>}
             </Panel>
 
-            <Panel title={locale === "ja" ? "LINE Connect" : "LINE Connect"} id="line-connect">
+            <Panel title={locale === "ja" ? "LINE連携とご案内" : "LINE connection and follow-up"} id="line-connect">
               <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "現在の状態" : "Current status"}</div>
+                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "現在の状況" : "Current status"}</div>
                     <div className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{lineStatusLabel}</div>
                     <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
                       {locale === "ja"
@@ -863,10 +999,10 @@ export default function SupportWorkspace({
                     <p className="mt-2 text-sm leading-7 text-[#5A4B3E]">
                       {lineMessagingReady
                         ? locale === "ja"
-                          ? "Messaging API の受信準備は有効です。"
+                          ? "LINEでのやり取りを受け取れる状態です。"
                           : "Messaging API receive path is enabled."
                         : locale === "ja"
-                          ? "Messaging API の設定はまだ完了していません。"
+                          ? "LINEでのやり取りは準備中です。"
                           : "Messaging API is not configured yet."}
                     </p>
                   </div>
@@ -891,7 +1027,7 @@ export default function SupportWorkspace({
               {saveError && <p className="mt-4 text-sm text-[#9A3B2F]">{saveError}</p>}
               {latestLineEventLabel ? (
                 <div className="mt-4 rounded-[1.2rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-                  <div className="text-xs tracking-[0.14em] text-[#8A7764]">{locale === "ja" ? "LATEST LINE EVENT" : "LATEST LINE EVENT"}</div>
+                  <div className="text-xs tracking-[0.14em] text-[#8A7764]">{locale === "ja" ? "最新のLINE案内" : "LATEST LINE EVENT"}</div>
                   <p className="mt-2">
                     {locale === "ja" ? `最新のLINE受信: ${latestLineEventLabel}` : `Latest LINE activity: ${latestLineEventLabel}`}
                   </p>
@@ -912,20 +1048,20 @@ export default function SupportWorkspace({
                   </p>
                   <p className="text-[#6E5D4D]">
                     {locale === "ja"
-                      ? "LINEでメッセージを送信したあとにこの画面を再読み込みすると、最新イベントと返信結果を確認できます。"
+                      ? "LINEでメッセージを送信したあとにこの画面を再読み込みすると、最新のやり取りを確認できます。"
                       : "After sending a LINE message, refresh this page to verify the latest event and reply result."}
                   </p>
                 </div>
               ) : (
                 <p className="mt-4 text-sm text-[#6E5D4D]">
                   {locale === "ja"
-                    ? "まだLINEイベントは記録されていません。LINEでフォローまたはメッセージ送信後に再読み込みすると結果を確認できます。"
+                    ? "まだLINEでのやり取りは記録されていません。メッセージ送信後に再読み込みすると確認できます。"
                     : "No LINE event has been recorded yet. Follow or send a LINE message, then refresh to verify the result."}
                 </p>
               )}
             </Panel>
 
-            <Panel title={locale === "ja" ? "フォローアップ" : "Follow-up"}>
+            <Panel title={locale === "ja" ? "その後のご案内" : "Follow-up"}>
               <div className="grid gap-4">
                 <Field label={locale === "ja" ? "LINE表示名" : "LINE display name"}>
                   <div className={`${inputClassName} flex items-center`}>
@@ -943,13 +1079,13 @@ export default function SupportWorkspace({
                 </label>
                 <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   {locale === "ja"
-                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。連携後は、このアカウントに保存された状態を表示します。`
+                    ? `現在のLINE状態: ${lineStatusLabels.ja[lineForm.lineBindingStatus]}。連携後は、このアカウントで落ち着いて確認できます。`
                     : `Current LINE status: ${lineStatusLabels.en[lineForm.lineBindingStatus]}. The saved account state is shown after connection.`}
                 </div>
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <button type="button" onClick={saveSupportProfile} className="btn btn-secondary" disabled={isSaving}>
-                  {locale === "ja" ? "LINE状態を保存" : "Save LINE status"}
+                  {locale === "ja" ? "LINEの設定を保存" : "Save LINE status"}
                 </button>
               </div>
               {followups.length > 0 ? (
@@ -957,13 +1093,13 @@ export default function SupportWorkspace({
                   {followups.map((entry) => (
                     <div key={entry.id} className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                       {formatDate(entry.createdAt, locale)}: {entry.recommendedCategory}
-                      {locale === "ja" ? " について相談送信済みです。" : " has already been submitted."}
+                      {locale === "ja" ? " についてご相談済みです。" : " has already been submitted."}
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="mt-4 rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
-                  {locale === "ja" ? "送信済みのフォローアップはまだありません。" : "No submitted follow-up yet."}
+                  {locale === "ja" ? "その後のご案内はまだありません。" : "No submitted follow-up yet."}
                 </p>
               )}
             </Panel>
@@ -1035,58 +1171,58 @@ function sourceLabel(
   value: "canonical" | "compatibility_mirror" | "legacy_fallback" | "unresolved",
 ) {
   if (value === "canonical") {
-    return "canonical";
+    return locale === "ja" ? "安定" : "canonical";
   }
   if (value === "compatibility_mirror") {
-    return locale === "ja" ? "compatibility mirror" : "compatibility mirror";
+    return locale === "ja" ? "一部調整中" : "compatibility mirror";
   }
   if (value === "legacy_fallback") {
-    return locale === "ja" ? "legacy fallback" : "legacy fallback";
+    return locale === "ja" ? "確認が必要" : "legacy fallback";
   }
-  return locale === "ja" ? "unresolved" : "unresolved";
+  return locale === "ja" ? "未確認" : "unresolved";
 }
 
 function ownerModeLabel(locale: Locale, value: SupportDiagnostics["ownerResolution"]["mode"]) {
   if (value === "principal_aware") {
-    return "principal-aware";
+    return locale === "ja" ? "確認済み" : "principal-aware";
   }
   if (value === "legacy_fallback") {
-    return locale === "ja" ? "legacy fallback" : "legacy fallback";
+    return locale === "ja" ? "一部確認中" : "legacy fallback";
   }
-  return locale === "ja" ? "unresolved" : "unresolved";
+  return locale === "ja" ? "未確認" : "unresolved";
 }
 
 function summaryLabel(locale: Locale, value: SupportDiagnostics["summaryState"]) {
   if (value === "canonical_healthy") {
-    return locale === "ja" ? "Canonical healthy" : "Canonical healthy";
+    return locale === "ja" ? "安定してご利用いただけます" : "Canonical healthy";
   }
   if (value === "canonical_with_compatibility_fallback") {
-    return locale === "ja" ? "Canonical with compatibility fallback" : "Canonical with compatibility fallback";
+    return locale === "ja" ? "一部確認しながらご案内しています" : "Canonical with compatibility fallback";
   }
   if (value === "fallback_active") {
-    return locale === "ja" ? "Fallback active" : "Fallback active";
+    return locale === "ja" ? "確認しながらご案内しています" : "Fallback active";
   }
-  return locale === "ja" ? "Owner unresolved" : "Owner unresolved";
+  return locale === "ja" ? "確認中です" : "Owner unresolved";
 }
 
 function summaryNote(locale: Locale, value: SupportDiagnostics["summaryState"]) {
   if (value === "canonical_healthy") {
     return locale === "ja"
-      ? "support read/write は principal-aware で安定しています。"
+      ? "現在のご利用状況は安定して確認できます。"
       : "Support read/write is stable on the principal-aware path.";
   }
   if (value === "canonical_with_compatibility_fallback") {
     return locale === "ja"
-      ? "主経路は canonical ですが、一部 slice は互換レイヤーを併用しています。"
+      ? "一部確認しながらのご案内ですが、基本的な内容はご確認いただけます。"
       : "The main path is canonical, but some slices still use compatibility fallback.";
   }
   if (value === "fallback_active") {
     return locale === "ja"
-      ? "現在の表示には fallback 経路が入っています。"
+      ? "一部確認が必要な内容を含みますが、このままご覧いただけます。"
       : "The current view is still using fallback paths.";
   }
   return locale === "ja"
-    ? "owner 解決が足りないため canonical path が十分に使えていません。"
+    ? "一部の確認がまだ完了していないため、内容を見ながらご案内します。"
     : "Owner resolution is incomplete, so the canonical path is not fully active.";
 }
 
@@ -1119,21 +1255,21 @@ function guardrailTone(value: SupportDiagnostics["summaryState"]) {
 function guardrailMessage(locale: Locale, value: SupportDiagnostics["summaryState"]) {
   if (value === "canonical_healthy") {
     return locale === "ja"
-      ? "Canonical target confirmed。現在の support 対象は canonical principal と principal-aware target に解決されています。"
+      ? "現在のご利用状況は安定しており、このまま安心してご確認いただけます。"
       : "Canonical target confirmed. The current support target resolves to a canonical principal and principal-aware target.";
   }
   if (value === "canonical_with_compatibility_fallback") {
     return locale === "ja"
-      ? "Compatibility fallback in use。現在の support 対象は一部 compatibility mirror に依存しています。"
+      ? "一部確認しながらのご案内ですが、必要な内容はこのままご覧いただけます。"
       : "Compatibility fallback in use. The current support target still relies on compatibility mirror data for some slices.";
   }
   if (value === "fallback_active") {
     return locale === "ja"
-      ? "Legacy fallback active。現在の support 対象は legacy fallback 解決を含んでいます。"
+      ? "確認が必要な項目を含みますが、内容を見ながらご案内できます。"
       : "Legacy fallback active. The current support target is still using legacy fallback resolution.";
   }
   return locale === "ja"
-    ? "Owner unresolved。現在の support 対象は完全には解決されていません。診断を確認してから扱ってください。"
+    ? "まだ確認中の項目があります。必要に応じて内容を一緒に確認しながら進めます。"
     : "Owner unresolved. The current support target is not fully resolved. Review diagnostics before relying on this record.";
 }
 
@@ -1146,51 +1282,51 @@ function truncateId(value: string) {
 
 function consentLabel(locale: Locale, value: AccessAccountability["latestConsent"]["consentType"]) {
   if (value === "account_registration") {
-    return locale === "ja" ? "account registration" : "account registration";
+    return locale === "ja" ? "アカウント登録" : "account registration";
   }
   if (value === "line_identity_binding") {
-    return locale === "ja" ? "LINE identity binding" : "LINE identity binding";
+    return locale === "ja" ? "LINE連携" : "LINE identity binding";
   }
   if (value === "line_primary_login") {
-    return locale === "ja" ? "LINE primary login" : "LINE primary login";
+    return locale === "ja" ? "LINEログイン" : "LINE primary login";
   }
   if (value === "email_identity_attachment") {
-    return locale === "ja" ? "email identity attachment" : "email identity attachment";
+    return locale === "ja" ? "メール連携" : "email identity attachment";
   }
-  return locale === "ja" ? "not available" : "not available";
+  return locale === "ja" ? "確認中" : "not available";
 }
 
 function lineIdentityLabel(locale: Locale, value: LineReadiness["identityState"]) {
   if (value === "bound") {
-    return locale === "ja" ? "bound" : "bound";
+    return locale === "ja" ? "連携済み" : "bound";
   }
   if (value === "not_bound") {
-    return locale === "ja" ? "not bound" : "not bound";
+    return locale === "ja" ? "未連携" : "not bound";
   }
-  return locale === "ja" ? "unresolved" : "unresolved";
+  return locale === "ja" ? "確認中" : "unresolved";
 }
 
 function lineLoginReadinessLabel(locale: Locale, value: LineReadiness["loginReadiness"]) {
   if (value === "available") {
-    return locale === "ja" ? "available" : "available";
+    return locale === "ja" ? "ご利用いただけます" : "available";
   }
   if (value === "limited") {
-    return locale === "ja" ? "limited" : "limited";
+    return locale === "ja" ? "一部ご利用いただけます" : "limited";
   }
-  return locale === "ja" ? "unresolved" : "unresolved";
+  return locale === "ja" ? "確認中" : "unresolved";
 }
 
 function lineContinuityLabel(locale: Locale, value: LineReadiness["continuityStatus"]) {
   if (value === "ready") {
-    return locale === "ja" ? "Ready" : "Ready";
+    return locale === "ja" ? "準備が整っています" : "Ready";
   }
   if (value === "partial") {
-    return locale === "ja" ? "Partial" : "Partial";
+    return locale === "ja" ? "一部ご利用いただけます" : "Partial";
   }
   if (value === "not_ready") {
-    return locale === "ja" ? "Not ready" : "Not ready";
+    return locale === "ja" ? "準備中です" : "Not ready";
   }
-  return locale === "ja" ? "Unresolved" : "Unresolved";
+  return locale === "ja" ? "確認中です" : "Unresolved";
 }
 
 function lineReadinessTone(value: LineReadiness["continuityStatus"]) {
@@ -1209,32 +1345,32 @@ function lineReadinessTone(value: LineReadiness["continuityStatus"]) {
 function lineReadinessMessage(locale: Locale, value: LineReadiness) {
   if (value.continuityStatus === "ready") {
     return locale === "ja"
-      ? "現在の対象は canonical な LINE linkage に解決されており、継続サポートの準備が整っています。"
+      ? "LINEでのご案内を継続して受けられる状態です。"
       : "The current target resolves to canonical LINE linkage and is ready for support continuity.";
   }
   if (value.continuityStatus === "partial") {
     return locale === "ja"
-      ? "LINE は一部利用可能ですが、compatibility/fallback 依存または設定制限が残っています。"
+      ? "LINEは一部ご利用いただけます。必要に応じて確認しながら進めます。"
       : "LINE is partially usable, but compatibility or fallback dependency remains.";
   }
   if (value.continuityStatus === "not_ready") {
     return locale === "ja"
-      ? "現在の対象は LINE 継続サポートの準備がまだ整っていません。"
+      ? "LINEでのご案内は現在準備中です。"
       : "The current target is not yet ready for LINE-based support continuity.";
   }
   return locale === "ja"
-    ? "LINE readiness を確定するための owner/source 解決がまだ不足しています。"
+    ? "LINEのご利用状況を確認中です。"
     : "Owner or source resolution is still incomplete for confirmed LINE readiness.";
 }
 
 function lineReplyStatusLabel(locale: Locale, value: "not_attempted" | "sent" | "failed") {
   if (value === "sent") {
-    return locale === "ja" ? "sent" : "sent";
+    return locale === "ja" ? "送信済み" : "sent";
   }
   if (value === "failed") {
-    return locale === "ja" ? "failed" : "failed";
+    return locale === "ja" ? "未送信" : "failed";
   }
-  return locale === "ja" ? "not attempted" : "not attempted";
+  return locale === "ja" ? "未対応" : "not attempted";
 }
 
 function EmptyState({ locale, textJa, textEn }: { locale: Locale; textJa: string; textEn: string }) {

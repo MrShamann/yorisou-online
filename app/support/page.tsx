@@ -6,7 +6,7 @@ import { getLineMessagingConfigStatus, isLineLoginConfigured } from "@/lib/serve
 
 export const metadata: Metadata = {
   title: "Yorisou | サポートページ",
-  description: "相談履歴、ご提案内容、ご家族共有、継続相談、フォローアップをまとめて確認できるYorisouの会員ページです。",
+  description: "ご相談者やお困りごとを選びながら、AIと一緒に内容を整理し、次のご案内につなげられるYorisouのサポートページです。",
 };
 
 export default async function SupportPage({

@@ -1,2 +1,2 @@
-Commit: phase1-live-line-entry-activation
-Timestamp: 2026-03-24 14:42:00 CST
+Commit: scenario-aware-support-mvp
+Timestamp: 2026-03-27 13:45:00 CST
