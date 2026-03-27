@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 
-import CTA from "../components/CTA";
 import CardGrid from "../components/CardGrid";
 import Hero from "../components/Hero";
 import Section from "../components/Section";
@@ -65,7 +64,7 @@ export default function PilotPage() {
       >
         <div className="grid gap-4 md:grid-cols-4">
           {["課題の共有", "対象場面の整理", "小規模実施", "振り返りと次の提案"].map((item, index) => (
-            <div key={item} className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-5">
+            <div key={item} className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-5 py-5">
               <div className="text-sm tracking-[0.12em] text-[#87776b]">STEP {index + 1}</div>
               <div className="mt-3 text-lg leading-8 text-[var(--text)]">{item}</div>
             </div>
@@ -77,7 +76,7 @@ export default function PilotPage() {
         label="What You Receive"
         title="導入・実証でご一緒できること"
       >
-        <div className="card">
+        <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
           <ul className="list-clean muted" style={{ display: "grid", gap: 10, margin: 0 }}>
             {deliverables.map((item) => (
               <li key={item}>{item}</li>
@@ -85,13 +84,6 @@ export default function PilotPage() {
           </ul>
         </div>
       </Section>
-
-      <CTA
-        title="地域や現場に合う進め方を、まずは一緒に整理しませんか。"
-        description="導入ありきではなく、何を確かめたいか、どこから始めるのがよいかを落ち着いてご相談いただけます。"
-        href="/contact"
-        label="導入・実証を相談する"
-      />
     </main>
   );
 }

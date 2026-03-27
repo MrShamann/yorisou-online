@@ -45,10 +45,10 @@ export default function ContactPage() {
             </p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {inquiryCards.map((item) => (
-              <article key={item.title} className="card">
-                <h3>{item.title}</h3>
+              <article key={item.title} className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-5 py-5">
+                <h3 className="text-lg font-medium leading-8 text-[var(--text)]">{item.title}</h3>
                 <p className="muted">{item.text}</p>
               </article>
             ))}
@@ -59,7 +59,7 @@ export default function ContactPage() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="card">
+            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
               <div className="service-kicker">Contact form</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 お問い合わせフォーム
@@ -72,7 +72,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="card">
+            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
               <div className="service-kicker">A calm first step</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 はじめてでも大丈夫です
@@ -83,7 +83,7 @@ export default function ContactPage() {
                   "ご高齢の方やご家族にも伝わりやすいご案内を心がけています。",
                   "必要に応じて、ひなたとの相談や導入相談につながる形で整理します。",
                 ].map((item) => (
-                  <div key={item} className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-4 text-sm leading-8 text-[var(--muted)]">
+                  <div key={item} className="rounded-[1.3rem] bg-[var(--surface)] px-5 py-4 text-sm leading-8 text-[var(--muted)]">
                     {item}
                   </div>
                 ))}

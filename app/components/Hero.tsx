@@ -19,10 +19,10 @@ export default function Hero({
 }: HeroProps) {
   return (
     <section className="border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.97),_rgba(250,245,238,0.99)_58%)]">
-      <div className="container py-14 md:py-18">
+      <div className="container py-12 md:py-16">
         <div className="max-w-[56rem]">
           <div className="service-kicker">YORISOU</div>
-          <h1 className="display-serif mt-5 max-w-[13em] text-[2.2rem] leading-[1.32] text-[var(--text)] md:text-[3.25rem]">
+          <h1 className="display-serif mt-5 max-w-[14em] text-[2rem] leading-[1.42] text-[var(--text)] md:text-[2.9rem]">
             {title}
           </h1>
           <p className="mt-5 max-w-[44rem] text-sm leading-8 text-[var(--muted)] md:text-base">

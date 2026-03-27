@@ -23,14 +23,13 @@ export default async function InsightsPage() {
   }>;
 
   return (
-    <main className="min-h-screen bg-[#F7F0E5] text-[#312321]">
-      <section className="relative overflow-hidden border-b border-[#D6C3A3]/35">
-        <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-24">
-          <div className="max-w-4xl">
+    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <section className="relative overflow-hidden border-b border-[color:var(--line-soft)]">
+        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-18">
+          <div className="max-w-3xl">
             <div className="service-kicker">Yorisouの読みもの</div>
-            <h1 className="display-serif mt-5 text-4xl font-light leading-tight md:text-6xl">
-              移動と暮らしを考えるための
-              <span className="block text-[#6B5A4A]">静かな読みものをそろえています。</span>
+            <h1 className="display-serif mt-5 max-w-[14em] text-[2.15rem] font-light leading-[1.45] md:text-[3rem]">
+              移動と暮らしを考えるための、静かな読みもの。
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
               ご家族の安心、地域導入の考え方、導入後の支え方。ひなたとの相談の前後にも読みやすい形で、
@@ -41,27 +40,27 @@ export default async function InsightsPage() {
       </section>
 
       {hero && (
-        <section className="px-6 py-14 md:px-10 md:py-16">
+        <section className="px-6 py-10 md:px-10 md:py-12">
           <div className="mx-auto max-w-7xl">
-            <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-              <article className="rounded-[2.2rem] border border-[#D6C3A3]/35 bg-white/82 p-7 shadow-[0_20px_56px_rgba(59,47,47,0.06)] md:p-9">
+            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+              <article className="rounded-[1.8rem] bg-[rgba(255,253,249,0.84)] p-7 shadow-[0_12px_28px_rgba(59,47,47,0.05)] md:p-8">
                 <div className="flex flex-wrap items-center gap-3 text-xs tracking-[0.12em] text-[#8A7764]">
-                  <span className="rounded-full border border-[#D6C3A3]/45 bg-[#FCFAF6] px-3 py-1">{hero.categoryLabel}</span>
+                  <span className="rounded-full bg-[var(--surface-soft)] px-3 py-1">{hero.categoryLabel}</span>
                   <span>{formatDate(hero.publishedAt)}</span>
                   <span>{hero.regionLabel}</span>
                 </div>
-                <h2 className="mt-5 text-3xl font-light leading-tight text-[#3B2F2F] md:text-[2.5rem]">
+                <h2 className="mt-5 text-[1.9rem] font-light leading-[1.45] text-[#3B2F2F] md:text-[2.3rem]">
                   <Link href={`/insights/${hero.slug}`} className="transition hover:text-[#6B5A4A]">
                     {hero.title}
                   </Link>
                 </h2>
-                <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E]">{hero.summary}</p>
-                <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/28 bg-[#FCFAF6] px-5 py-4">
+                <p className="mt-4 max-w-3xl text-base leading-8 text-[#5A4B3E]">{hero.summary}</p>
+                <div className="mt-5 rounded-[1.4rem] bg-[var(--surface-soft)] px-5 py-4">
                   <div className="text-xs tracking-[0.18em] text-[#8A7764]">いま読む理由</div>
                   <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{hero.whyItMatters}</p>
                 </div>
-                <div className="mt-7">
-                  <Link href={`/insights/${hero.slug}`} className="btn btn-primary">
+                <div className="mt-6">
+                  <Link href={`/insights/${hero.slug}`} className="text-sm text-[var(--text)] underline underline-offset-4">
                     この記事を読む
                   </Link>
                 </div>
@@ -74,10 +73,10 @@ export default async function InsightsPage() {
                     <Link
                       key={topic.label}
                       href={topic.href}
-                      className="rounded-[1.6rem] border border-[#D6C3A3]/32 bg-white/78 px-5 py-5 shadow-sm transition hover:bg-white"
+                      className="rounded-[1.4rem] bg-[rgba(255,253,249,0.78)] px-5 py-5 shadow-sm transition hover:bg-white"
                     >
                       <div className="text-sm text-[#8A7764]">{topic.label}</div>
-                      <h3 className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{topic.title}</h3>
+                      <h3 className="mt-2 text-[1.2rem] font-light leading-[1.5] text-[#3B2F2F]">{topic.title}</h3>
                       <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{topic.summary}</p>
                     </Link>
                   ))}
@@ -88,7 +87,7 @@ export default async function InsightsPage() {
         </section>
       )}
 
-      <section className="px-6 py-14 md:px-10 md:py-16">
+      <section className="px-6 py-10 md:px-10 md:py-12">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 flex items-center justify-between gap-4">
             <div>
@@ -98,9 +97,9 @@ export default async function InsightsPage() {
             <div className="hidden text-sm text-[#6B5A4A] md:block">{insights.length}件</div>
           </div>
 
-          <div className="grid gap-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {(hero ? insights.filter((insight) => insight.slug !== hero.slug) : insights).map((insight) => (
-              <InsightCard key={insight.slug} insight={insight} locale="ja" detailBasePath="/insights" variant="list" />
+              <InsightCard key={insight.slug} insight={insight} locale="ja" detailBasePath="/insights" />
             ))}
           </div>
         </div>

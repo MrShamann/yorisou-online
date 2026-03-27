@@ -32,11 +32,11 @@ export default function SiteFooter() {
                   ? "A calmer mobility consultation service for seniors, families, and community operators in Japan."
                   : "移動の不安から、暮らしの安心へ。高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添います。"}
               </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link href={supportHref} className="btn btn-primary">
+              <div className="mt-5 flex flex-wrap gap-5 text-sm">
+                <Link href={supportHref} className="text-[var(--text)] underline underline-offset-4">
                   {isEn ? "Open support" : "ひなたに相談する"}
                 </Link>
-                <Link href={contactHref} className="btn btn-secondary">
+                <Link href={contactHref} className="text-[var(--muted)]">
                   {isEn ? "Contact" : "お問い合わせ"}
                 </Link>
               </div>

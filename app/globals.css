@@ -47,7 +47,7 @@ main {
 }
 
 .section {
-  padding: 64px 0;
+  padding: 56px 0;
 }
 
 .section-header {
@@ -63,11 +63,11 @@ main {
 
 .section-title {
   margin: 8px 0 0;
-  font-size: clamp(26px, 2.8vw, 35px);
-  line-height: 1.44;
+  font-size: clamp(25px, 2.4vw, 32px);
+  line-height: 1.5;
   font-family: var(--font-serif);
   letter-spacing: -0.02em;
-  max-width: 16em;
+  max-width: 17em;
 }
 
 .muted {
@@ -77,9 +77,9 @@ main {
 .card {
   background: rgba(255, 252, 247, 0.9);
   border: 1px solid rgba(221, 208, 194, 0.44);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 14px 28px rgba(49, 35, 33, 0.04);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 10px 22px rgba(49, 35, 33, 0.035);
 }
 
 .grid {
@@ -130,8 +130,8 @@ main {
   border: 1px solid rgba(221, 208, 194, 0.52);
   background: rgba(255, 252, 247, 0.9);
   backdrop-filter: blur(12px);
-  border-radius: 38px;
-  box-shadow: 0 22px 46px rgba(47, 35, 33, 0.06);
+  border-radius: 34px;
+  box-shadow: 0 18px 34px rgba(47, 35, 33, 0.05);
 }
 
 .panel-sage {
@@ -159,7 +159,7 @@ main {
 
 @media (max-width: 880px) {
   .section {
-    padding: 52px 0;
+    padding: 46px 0;
   }
 
   .section-title {

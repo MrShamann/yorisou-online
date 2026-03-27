@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import CTA from "../components/CTA";
 import Hero from "../components/Hero";
 
 const supportSteps = [
@@ -46,10 +45,10 @@ export default function ServicesPage() {
             </p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {supportSteps.map((item) => (
-              <article key={item.title} className="card">
-                <h3>{item.title}</h3>
+              <article key={item.title} className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-5 py-5">
+                <h3 className="text-lg font-medium leading-8 text-[var(--text)]">{item.title}</h3>
                 <p className="muted">{item.text}</p>
               </article>
             ))}
@@ -60,7 +59,7 @@ export default function ServicesPage() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="card">
+            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
               <div className="service-kicker">For individuals & families</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 ご本人とご家族のための相談支援
@@ -76,7 +75,7 @@ export default function ServicesPage() {
               </div>
             </div>
 
-            <div className="card">
+            <div className="rounded-[1.6rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
               <div className="service-kicker">For organizations</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 導入や実証を考えている方へ
@@ -96,13 +95,6 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
-
-      <CTA
-        title="まずは、ご相談内容をゆっくりお聞かせください。"
-        description="移動のことでも、暮らしのことでもかまいません。ひなたが落ち着いて整理しながらご案内します。"
-        href="/support#scenario-assistant"
-        label="ひなたに相談する"
-      />
     </main>
   );
 }

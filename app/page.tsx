@@ -71,42 +71,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.36)] px-6 py-14 md:px-10 md:py-18">
+      <section className="bg-[rgba(255,255,255,0.36)] px-6 py-14 md:px-10 md:py-16">
         <div className="mx-auto max-w-5xl">
-          <div className="rounded-[2.2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-7 py-8 shadow-[0_18px_40px_rgba(47,35,33,0.05)] md:px-10 md:py-9">
+          <div className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-7 py-8 shadow-[0_14px_28px_rgba(47,35,33,0.045)] md:px-10 md:py-9">
             <div className="service-kicker">How Yorisou helps</div>
-            <h2 className="display-serif mt-4 text-4xl leading-tight md:text-5xl">Yorisouは、まず話を聞くところから始めます。</h2>
+            <h2 className="display-serif mt-4 max-w-[14em] text-[2.1rem] leading-[1.45] md:text-[2.8rem]">
+              Yorisouは、まず話を聞くところから始めます。
+            </h2>
             <div className="mt-5 max-w-3xl text-sm leading-8 text-[var(--muted)] md:text-base">
               <p>移動や暮らしのお悩みをお聞きしながら、状況に合う支え方を一緒に整理します。</p>
-              <p className="mt-3">すぐに何かを決める必要はありません。必要に応じて、製品やサービス、その後のサポートまで丁寧につないでいきます。</p>
+              <p className="mt-3">必要なときだけ、製品やサービス、その先のサポートへ丁寧につないでいきます。</p>
               <p className="mt-4 text-[var(--accent-sage-text)]">あとから続けたい方には、LINEでのやり取りにも静かに対応しています。</p>
             </div>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link href="/support#scenario-assistant" className="btn btn-primary">
+            <div className="mt-7 flex flex-wrap items-center gap-4 text-sm">
+              <Link href="/support#scenario-assistant" className="text-[var(--text)] underline underline-offset-4">
                 ひなたに相談する
               </Link>
-              <Link href="/login" className="inline-flex items-center justify-center rounded-[18px] border border-[color:var(--line-sage)] bg-[var(--surface-sage)] px-5 py-3 text-sm font-medium text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage-strong)]">
-                LINEで続きを受け取る
+              <Link href="/login" className="text-[var(--accent-sage-text)]">
+                LINEで静かに続ける
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-[var(--bg)] px-6 py-14 md:px-10 md:py-18">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="service-kicker">AI相談員 ひなた</div>
-          <h2 className="display-serif mt-4 text-4xl leading-tight md:text-5xl">まずは、ひなたに相談してみませんか。</h2>
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
-            はじめてでも大丈夫です。気になることから、ゆっくりお話しいただけます。
-          </p>
-          <div className="mt-7 flex flex-col justify-center gap-4 sm:flex-row">
-            <Link href="/support#scenario-assistant" className="btn btn-primary">
-              相談する
-            </Link>
-            <Link href="/contact" className="btn btn-secondary">
-              お問い合わせ
-            </Link>
           </div>
         </div>
       </section>
