@@ -6,14 +6,14 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
-  { href: "/support", label: "サポート" },
-  { href: "/products", label: "製品を見る" },
-  { href: "/services", label: "導入・実証" },
+  { href: "/about", label: "Yorisouについて" },
+  { href: "/services", label: "サービス" },
+  { href: "/pilot", label: "導入・実証" },
   { href: "/login", label: "ログイン" },
 ];
 
 const primaryNavEn = [
-  { href: "/support", label: "Support" },
+  { href: "/ai-advisor", label: "Consult" },
   { href: "/products", label: "Products" },
   { href: "/services", label: "Implementation" },
   { href: "/login", label: "Login" },
@@ -83,7 +83,7 @@ export default function SiteHeader() {
             <div className="min-w-0">
               <div className="display-serif text-[1.78rem] font-semibold tracking-[0.14em] text-[var(--text)] md:text-[2.2rem]">YORISOU</div>
               <div className="mt-2 hidden text-[0.95rem] leading-7 text-[#6E5D4D] md:block">
-                {isEn ? "Gentle mobility and daily-living support for seniors and families in Japan" : "高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添う。"}
+                {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動相談に、静かに寄り添うサービス"}
               </div>
             </div>
           </Link>
