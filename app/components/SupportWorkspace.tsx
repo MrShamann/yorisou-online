@@ -342,6 +342,34 @@ export default function SupportWorkspace({
                   ? "LINEでもメールでも、ご相談内容やご案内をやさしく確認できます。"
                   : "Continue quickly with LINE, or use email if you prefer. After sign-in, you can review your recommendations, notes, and support history in one place."}
               </p>
+              <div className="mt-8 rounded-[2rem] border border-[#E0D2C4] bg-[#FFF9F2] p-6 shadow-[0_18px_40px_rgba(47,35,33,0.05)]">
+                <div className="flex flex-col gap-5 md:flex-row md:items-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_#F6EBDD_0%,_#E6D6C4_72%,_#D8C6B4_100%)] text-2xl text-[#7A6150] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    ひ
+                  </div>
+                  <div className="max-w-2xl">
+                    <div className="text-sm tracking-[0.12em] text-[#8A7764]">{locale === "ja" ? "AI相談員 ひなた" : "AI consultation guide"}</div>
+                    <h2 className="mt-2 text-2xl font-medium text-[#312321]">
+                      {locale === "ja" ? "やさしく、お話をうかがいます。" : "We are here to listen calmly."}
+                    </h2>
+                    <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
+                      {locale === "ja"
+                        ? "ご本人でも、ご家族でも、安心してご相談ください。わからないことを、一緒に整理しながらご案内します。"
+                        : "Whether you are seeking help for yourself or a family member, we help organize the next step with care."}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-[#6B5A4A]">
+                      {locale === "ja"
+                        ? "無理にうまく話そうとしなくても大丈夫です。気になることから、ゆっくりお聞かせください。"
+                        : "You do not need to explain everything perfectly. Start with what feels important today."}
+                    </p>
+                    <div className="mt-4">
+                      <Link href={advisorHref} className="btn btn-secondary">
+                        {locale === "ja" ? "ひなたに相談する" : "Start with support"}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div className="mt-8">
                 <ScenarioSupportAssistant locale={locale} />
               </div>

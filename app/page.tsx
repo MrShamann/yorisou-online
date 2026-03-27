@@ -49,9 +49,12 @@ export default function HomePage() {
                 <LineBrandIcon className="h-5 w-5" />
                 LINEで相談する
               </Link>
-              <Link href="/support#scenario-assistant" className="btn btn-primary">
-                AIに相談する
-              </Link>
+              <div className="flex flex-col gap-2">
+                <span className="text-sm leading-6 text-[#6B5A4A]">AI相談員 ひなた</span>
+                <Link href="/support#scenario-assistant" className="btn btn-primary">
+                  ひなたに相談する
+                </Link>
+              </div>
               <Link href="/products" className="btn btn-secondary">
                 製品を見る
               </Link>
