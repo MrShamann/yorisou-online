@@ -333,13 +333,13 @@ export default function SupportWorkspace({
         <section className="border-b border-[#D8C6B4]/28 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(247,240,229,0.98)_62%)] px-6 py-16 md:px-10 md:py-24">
           <div className="mx-auto max-w-6xl">
             <div className="shell-card max-w-4xl p-8 md:p-12">
-              <div className="service-kicker">{locale === "ja" ? "ご相談はこちら" : "Consultation support access"}</div>
+              <div className="service-kicker">{locale === "ja" ? "移動の不安から、暮らしの安心へ。" : "Consultation support access"}</div>
               <h1 className="display-serif mt-4 text-4xl leading-[1.18] md:text-6xl">
-                {locale === "ja" ? "ご相談のつづきを確認する" : "Continue your estimate or support conversation"}
+                {locale === "ja" ? "AI相談員 ひなたと、ゆっくりお話しください" : "Talk with our support guide"}
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                 {locale === "ja"
-                  ? "LINEでもメールでも、ご相談内容やご案内をやさしく確認できます。"
+                  ? "移動や暮らしの不安を一緒に整理し、その方に合う支え方を丁寧に考えていきます。"
                   : "Continue quickly with LINE, or use email if you prefer. After sign-in, you can review your recommendations, notes, and support history in one place."}
               </p>
               <div className="mt-8 rounded-[2rem] border border-[#E0D2C4] bg-[#FFF9F2] p-6 shadow-[0_18px_40px_rgba(47,35,33,0.05)]">
@@ -378,9 +378,9 @@ export default function SupportWorkspace({
               <div className="mt-8">
                 <ScenarioSupportAssistant locale={locale} />
               </div>
-              <div className="mt-8 rounded-[2rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-6 py-6 text-sm leading-7 text-[#314236] shadow-[0_18px_40px_rgba(53,81,61,0.08)]">
-                <div className="service-kicker text-[#55705C]">{locale === "ja" ? "この先も、やさしく続ける" : "Continue gently"}</div>
-                <div className="mt-3 text-2xl font-medium">
+              <div className="mt-10 rounded-[1.8rem] border border-[#C7D7C1]/80 bg-[linear-gradient(180deg,#F6FAF5_0%,#EEF5EC_100%)] px-6 py-5 text-sm leading-7 text-[#314236] shadow-[0_12px_28px_rgba(53,81,61,0.06)]">
+                <div className="service-kicker text-[#55705C]">{locale === "ja" ? "あとで続ける方法" : "Continue gently"}</div>
+                <div className="mt-3 text-xl font-medium">
                   {locale === "ja" ? "LINEでつながっておく" : "Stay connected with LINE"}
                 </div>
                 <p className="mt-2 text-[#4D5642]">

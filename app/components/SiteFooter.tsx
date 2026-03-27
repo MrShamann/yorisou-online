@@ -29,11 +29,11 @@ export default function SiteFooter() {
               <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
                 {isEn
                   ? "A calmer mobility consultation service for seniors, families, and community operators in Japan."
-                  : "高齢者とご家族の移動相談を、比較・導入・共有まで静かに支えるサービスです。"}
+                  : "移動の不安から、暮らしの安心へ。高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添います。"}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link href={supportHref} className="btn btn-primary">
-                  {isEn ? "Open support" : "ご相談はこちら"}
+                  {isEn ? "Open support" : "ひなたに相談する"}
                 </Link>
                 <Link href={contactHref} className="btn btn-secondary">
                   {isEn ? "Contact" : "お問い合わせ"}

@@ -36,19 +36,18 @@ export default function HomePage() {
         <div className="absolute inset-y-0 right-0 hidden w-[34%] rounded-l-[7rem] bg-[#EFE4D6] lg:block" />
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="relative z-10">
-            <div className="service-kicker">Yorisou</div>
+            <div className="service-kicker">AI相談員 ひなた</div>
             <h1 className="display-serif mt-5 text-5xl leading-[1.14] md:text-7xl">
-              やさしく、誠実に。
-              <span className="block text-[#7A6150]">すべての移動に寄り添う。</span>
+              移動の不安から、
+              <span className="block text-[#7A6150]">暮らしの安心へ。</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-9 text-[#665651]">
-              高齢者とご家族のための、移動と暮らしを支えるサービス
+              高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添う。
+            </p>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#6B5A4A]">
+              ひなたは、移動や暮らしの不安を一緒に整理し、その方に合う支え方を丁寧に考えていきます。
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
-              <Link href="/login" className="btn btn-primary bg-[#06C755] shadow-[0_18px_34px_rgba(6,199,85,0.22)]">
-                <LineBrandIcon className="h-5 w-5" />
-                LINEで相談する
-              </Link>
               <div className="flex flex-col gap-2">
                 <span className="text-sm leading-6 text-[#6B5A4A]">AI相談員 ひなた</span>
                 <Link href="/support#scenario-assistant" className="btn btn-primary">
@@ -58,12 +57,16 @@ export default function HomePage() {
                   はじめてでも大丈夫です。気になることから、ゆっくりお話しいただけます。
                 </span>
               </div>
-              <Link href="/products" className="btn btn-secondary">
+              <Link href="/login" className="btn btn-secondary border-[#9AD8AA] bg-[#F4FBF5] text-[#245B33]">
+                <LineBrandIcon className="h-5 w-5" />
+                LINEであとから続ける
+              </Link>
+              <Link href="/products" className="text-sm leading-7 text-[#6B5A4A] underline-offset-4 transition hover:text-[#312321] hover:underline">
                 製品を見る
               </Link>
             </div>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-[#6B5A4A]">
-              Yorisou は、移動に不安を抱える高齢者とそのご家族に寄り添い、相談・導入・利用後サポートまでを一体で提供します。LINE や AI を活用しながら、安心して外出できる日常を支えます。
+              Yorisou は、移動に不安を抱える高齢者とそのご家族に寄り添い、相談からその後の見守りまでをつないでいきます。必要に応じて、LINE やアカウントで無理なく続けられます。
             </p>
             <div className="mt-8 grid gap-3 md:max-w-2xl">
               {trustPoints.map((item) => (
@@ -127,18 +130,18 @@ export default function HomePage() {
             <div>
               <div className="service-kicker text-[#55705C]">Yorisou とは</div>
               <h2 className="display-serif mt-4 text-4xl leading-tight md:text-5xl">
-                移動と暮らしに寄り添い、
-                <span className="block">安心をつなぐ。</span>
+                移動の不安を減らし、
+                <span className="block">自分らしい暮らしへ。</span>
               </h2>
               <p className="mt-5 max-w-3xl text-base leading-8 text-[#51614E]">
-                Yorisou は、高齢者一人ひとりの移動と暮らしに寄り添い、家族・地域・テクノロジーをつなぎながら、安心して毎日を過ごせるよう支えるサービスです。
+                年齢を重ねても自分らしく外出し、暮らせる社会をつくることを目指して、Yorisou は移動の不安から暮らしの安心へとつながる支え方を整えていきます。
               </p>
               <div className="mt-7 flex flex-col gap-4 sm:flex-row">
-                <Link href="/login" className="btn btn-primary bg-[#06C755] shadow-[0_18px_34px_rgba(6,199,85,0.22)]">
-                  LINEで相談する
-                </Link>
-                <Link href="/support" className="btn btn-secondary">
+                <Link href="/support" className="btn btn-primary">
                   ひなたと相談を始める
+                </Link>
+                <Link href="/login" className="btn btn-secondary border-[#9AD8AA] bg-[#F4FBF5] text-[#245B33]">
+                  LINEであとから続ける
                 </Link>
               </div>
             </div>
