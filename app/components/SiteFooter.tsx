@@ -15,14 +15,15 @@ export default function SiteFooter() {
   const servicesHref = isEn ? "/en/services" : "/services";
   const supportHref = isEn ? "/en/support" : "/support";
   const loginHref = isEn ? "/en/login" : "/login";
+  const pilotHref = isEn ? "/en/pilot" : "/pilot";
 
   return (
     <footer className="mt-[72px] border-t border-[var(--line)] bg-[rgba(255,251,246,0.88)]">
       <div className="container py-12">
         <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start">
           <div className="flex gap-5">
-            <div className="flex h-[68px] w-[68px] items-center justify-center rounded-[1.4rem] border border-[#D8C6B4]/75 bg-white shadow-[0_14px_30px_rgba(47,35,33,0.06)]">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={42} height={42} />
+            <div className="flex items-start justify-center pt-1">
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={56} height={56} className="h-auto w-[56px] object-contain" />
             </div>
             <div className="max-w-xl">
               <div className="display-serif text-[1.6rem] font-semibold tracking-[0.08em]">YORISOU</div>
@@ -44,17 +45,19 @@ export default function SiteFooter() {
 
           <div className="grid gap-8 sm:grid-cols-2">
             <div>
-              <div className="service-kicker">{isEn ? "Navigation" : "Navigation"}</div>
+              <div className="service-kicker">{isEn ? "Navigation" : "ご案内"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
                 <Link href={aboutHref}> {isEn ? "About" : "Yorisouについて"} </Link>
                 <Link href={servicesHref}> {isEn ? "Services" : "サービス"} </Link>
-                <Link href={insightsHref}> {isEn ? "Insights" : "インサイト"} </Link>
+                <Link href={pilotHref}> {isEn ? "Pilot" : "導入・実証"} </Link>
                 <Link href={contactHref}> {isEn ? "Contact" : "お問い合わせ"} </Link>
               </div>
             </div>
             <div>
-              <div className="service-kicker">{isEn ? "Policy" : "Policy"}</div>
+              <div className="service-kicker">{isEn ? "Support" : "サポート"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
+                <Link href={supportHref}>{isEn ? "Open support" : "ひなたに相談する"}</Link>
+                <Link href={insightsHref}>{isEn ? "Insights" : "インサイト"}</Link>
                 <Link href={legalHref}>{isEn ? "Terms & Privacy" : "利用規約・プライバシーポリシー"}</Link>
                 <Link href={loginHref}>{isEn ? "Login / Register" : "ログイン・新規登録"}</Link>
               </div>

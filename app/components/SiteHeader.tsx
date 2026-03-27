@@ -21,7 +21,6 @@ const primaryNavEn = [
 
 const secondaryNavJa = [
   { href: "/insights", label: "インサイト" },
-  { href: "/about", label: "Yorisouについて" },
   { href: "/contact", label: "お問い合わせ" },
 ];
 
@@ -75,15 +74,15 @@ export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[rgba(216,198,180,0.46)] bg-[rgba(251,246,238,0.92)] backdrop-blur-xl">
       <div className="container py-4">
-        <div className="flex items-center justify-between gap-6">
-          <Link href={homeHref} className="flex min-w-0 items-center gap-4 no-underline">
-            <div className="flex h-[82px] w-[82px] items-center justify-center rounded-[1.9rem] border border-[#D8C6B4]/75 bg-white shadow-[0_18px_40px_rgba(47,35,33,0.08)] md:h-[104px] md:w-[104px]">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={84} height={84} className="h-auto w-[66px] object-contain md:w-[82px]" />
+        <div className="flex items-center justify-between gap-5">
+          <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline md:gap-4">
+            <div className="flex items-center justify-center">
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={104} height={104} className="h-auto w-[74px] object-contain md:w-[94px]" />
             </div>
             <div className="min-w-0">
-              <div className="display-serif text-[1.78rem] font-semibold tracking-[0.14em] text-[var(--text)] md:text-[2.2rem]">YORISOU</div>
-              <div className="mt-2 hidden text-[0.95rem] leading-7 text-[#6E5D4D] md:block">
-                {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動相談に、静かに寄り添うサービス"}
+              <div className="display-serif text-[1.86rem] font-semibold tracking-[0.12em] text-[var(--text)] md:text-[2.34rem]">YORISOU</div>
+              <div className="mt-1 hidden text-[0.9rem] leading-7 text-[#6E5D4D] md:block">
+                {isEn ? "Calm mobility support for seniors and families in Japan" : "移動と暮らしに、やさしく、誠実に寄り添う。"}
               </div>
             </div>
           </Link>
@@ -158,17 +157,17 @@ export default function SiteHeader() {
         .site-nav {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 12px;
         }
         .primary-nav {
           display: flex;
           align-items: center;
           gap: 4px;
-          padding: 7px;
-          border-radius: 22px;
-          background: rgba(255, 251, 246, 0.92);
+          padding: 6px;
+          border-radius: 20px;
+          background: rgba(255, 251, 246, 0.84);
           border: 1px solid rgba(216, 198, 180, 0.42);
-          box-shadow: 0 14px 28px rgba(47, 35, 33, 0.05);
+          box-shadow: 0 12px 22px rgba(47, 35, 33, 0.04);
         }
         .nav-link,
         .more-button {
@@ -176,8 +175,8 @@ export default function SiteHeader() {
           background: transparent;
           text-decoration: none;
           color: var(--text);
-          padding: 12px 16px;
-          border-radius: 16px;
+          padding: 11px 14px;
+          border-radius: 14px;
           font-size: 12px;
           white-space: nowrap;
           cursor: pointer;
@@ -244,18 +243,18 @@ export default function SiteHeader() {
         .header-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
         .locale-switch {
           display: inline-flex;
           align-items: center;
           gap: 8px;
           border: 1px solid rgba(216, 198, 180, 0.58);
-          border-radius: 18px;
-          padding: 10px 12px;
+          border-radius: 16px;
+          padding: 9px 11px;
           text-decoration: none;
           background: rgba(255, 253, 249, 0.92);
-          box-shadow: 0 12px 28px rgba(59, 47, 47, 0.04);
+          box-shadow: 0 10px 22px rgba(59, 47, 47, 0.04);
           color: var(--text);
         }
         .locale-current {
