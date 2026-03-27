@@ -8,7 +8,7 @@ import type {
 } from "@/lib/ai/support/scenario-engine";
 
 export type SupportGatewayUsage = {
-  provider: "opencloud" | "mistral" | "openai" | "deterministic";
+  provider: "opencloud" | "ai-gateway" | "mistral" | "openai" | "deterministic";
   model: string;
   promptChars: number;
   outputChars: number;
@@ -37,6 +37,7 @@ export type SupportGatewayInput = {
 
 const MAX_OUTPUT_TOKENS = 260;
 const OPENCLOUD_DEFAULT_MODEL = "vercel-ai-gateway/mistral/devstral-2";
+const AI_GATEWAY_DEFAULT_MODEL = "mistral/devstral-2";
 
 function extractText(value: unknown): string | null {
   if (typeof value === "string") {
@@ -145,6 +146,32 @@ function buildSystemInstruction(input: SupportGatewayInput) {
   });
 }
 
+function normalizeAiGatewayModel(model: string) {
+  return model.replace(/^vercel-ai-gateway\//, "").trim();
+}
+
+function buildChatMessages(input: SupportGatewayInput) {
+  const systemInstruction = buildSystemInstruction(input);
+  const history = input.history
+    .filter((entry) => (entry.role === "user" || entry.role === "assistant") && entry.content.trim().length > 0)
+    .map((entry) => ({
+      role: entry.role,
+      content: entry.content.trim(),
+    }));
+
+  return [
+    {
+      role: "system" as const,
+      content: systemInstruction,
+    },
+    ...history,
+    {
+      role: "user" as const,
+      content: input.userMessage.trim() || input.prompt,
+    },
+  ];
+}
+
 async function requestOpenCloud(input: SupportGatewayInput): Promise<SupportGatewayResult | null> {
   const url = process.env.OPENCLOUD_SUPPORT_CHAT_URL?.trim();
   if (!url) {
@@ -223,6 +250,70 @@ async function requestOpenCloud(input: SupportGatewayInput): Promise<SupportGate
   }
 }
 
+async function requestAiGateway(input: SupportGatewayInput): Promise<SupportGatewayResult | null> {
+  const apiKey = process.env.AI_GATEWAY_API_KEY?.trim();
+  if (!apiKey) {
+    return null;
+  }
+
+  const model = normalizeAiGatewayModel(
+    process.env.AI_GATEWAY_MODEL?.trim() ||
+      process.env.OPENCLOUD_SUPPORT_MODEL?.trim() ||
+      AI_GATEWAY_DEFAULT_MODEL,
+  );
+
+  try {
+    const response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: buildChatMessages(input),
+        temperature: 0.35,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("support gateway ai-gateway request failed:", await response.text());
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+      model?: string;
+    };
+    const text = data.choices?.[0]?.message?.content?.trim() || null;
+    if (!text) {
+      return null;
+    }
+
+    return {
+      text,
+      usage: {
+        provider: "ai-gateway",
+        model: data.model || model,
+        promptChars: input.prompt.length,
+        outputChars: text.length,
+        fallbackUsed: false,
+        tokenUsage: {
+          inputTokens: data.usage?.prompt_tokens,
+          outputTokens: data.usage?.completion_tokens,
+          totalTokens: data.usage?.total_tokens,
+        },
+      },
+    };
+  } catch (error) {
+    console.error("support gateway ai-gateway error:", error);
+    return null;
+  }
+}
+
 async function requestMistral(input: SupportGatewayInput): Promise<SupportGatewayResult | null> {
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) {
@@ -230,7 +321,7 @@ async function requestMistral(input: SupportGatewayInput): Promise<SupportGatewa
   }
 
   const model = process.env.MISTRAL_MODEL || "mistral-small-latest";
-  const systemInstruction = buildSystemInstruction(input);
+  const messages = buildChatMessages(input);
 
   try {
     const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
@@ -243,16 +334,7 @@ async function requestMistral(input: SupportGatewayInput): Promise<SupportGatewa
         model,
         temperature: 0.35,
         max_tokens: MAX_OUTPUT_TOKENS,
-        messages: [
-          {
-            role: "system",
-            content: systemInstruction,
-          },
-          {
-            role: "user",
-            content: input.prompt,
-          },
-        ],
+        messages,
       }),
     });
 
@@ -356,6 +438,12 @@ export async function generateSupportAssistantText(input: SupportGatewayInput): 
   if (opencloud?.text) {
     console.info("support gateway result", opencloud.usage);
     return opencloud;
+  }
+
+  const aiGateway = await requestAiGateway(input);
+  if (aiGateway?.text) {
+    console.info("support gateway result", aiGateway.usage);
+    return aiGateway;
   }
 
   const mistral = await requestMistral(input);

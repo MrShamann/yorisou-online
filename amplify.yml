@@ -18,6 +18,8 @@ frontend:
         - printf "OPENCLOUD_SUPPORT_CHAT_URL=%s\n" "$OPENCLOUD_SUPPORT_CHAT_URL" >> .env.production
         - printf "OPENCLOUD_SUPPORT_CHAT_TOKEN=%s\n" "$OPENCLOUD_SUPPORT_CHAT_TOKEN" >> .env.production
         - printf "OPENCLOUD_SUPPORT_MODEL=%s\n" "${OPENCLOUD_SUPPORT_MODEL:-vercel-ai-gateway/mistral/devstral-2}" >> .env.production
+        - printf "AI_GATEWAY_API_KEY=%s\n" "${AI_GATEWAY_API_KEY:-vck_84A713rs05DnvxutLRG3QJkx2edq3AN1aQzh22PpIc4sD7dBJZ2Mni68}" >> .env.production
+        - printf "AI_GATEWAY_MODEL=%s\n" "${AI_GATEWAY_MODEL:-mistral/devstral-2}" >> .env.production
         - printf "MISTRAL_API_KEY=%s\n" "$MISTRAL_API_KEY" >> .env.production
         - printf "MISTRAL_MODEL=%s\n" "${MISTRAL_MODEL:-mistral-small-latest}" >> .env.production
         - printf "OPENAI_API_KEY=%s\n" "$OPENAI_API_KEY" >> .env.production
