@@ -43,11 +43,11 @@ main {
 }
 
 .section {
-  padding: 72px 0;
+  padding: 64px 0;
 }
 
 .section-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .section-label {
@@ -59,10 +59,11 @@ main {
 
 .section-title {
   margin: 8px 0 0;
-  font-size: clamp(28px, 3vw, 38px);
-  line-height: 1.35;
+  font-size: clamp(26px, 2.8vw, 35px);
+  line-height: 1.44;
   font-family: var(--font-serif);
   letter-spacing: -0.02em;
+  max-width: 16em;
 }
 
 .muted {
@@ -70,11 +71,11 @@ main {
 }
 
 .card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 26px;
-  padding: 28px;
-  box-shadow: 0 18px 38px rgba(49, 35, 33, 0.05);
+  background: rgba(255, 251, 246, 0.88);
+  border: 1px solid rgba(216, 198, 180, 0.42);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 14px 28px rgba(49, 35, 33, 0.04);
 }
 
 .grid {
@@ -105,8 +106,8 @@ main {
 .btn-secondary {
   background: rgba(255, 253, 249, 0.94);
   color: var(--text);
-  border-color: var(--line);
-  box-shadow: 0 10px 22px rgba(47, 35, 33, 0.05);
+  border-color: rgba(216, 198, 180, 0.72);
+  box-shadow: 0 8px 18px rgba(47, 35, 33, 0.04);
 }
 
 .btn:hover {
@@ -126,7 +127,7 @@ main {
   background: rgba(255, 251, 246, 0.9);
   backdrop-filter: blur(12px);
   border-radius: 38px;
-  box-shadow: 0 28px 60px rgba(47, 35, 33, 0.08);
+  box-shadow: 0 22px 46px rgba(47, 35, 33, 0.06);
 }
 
 .display-serif {
@@ -149,5 +150,9 @@ main {
 @media (max-width: 880px) {
   .section {
     padding: 52px 0;
+  }
+
+  .section-title {
+    max-width: none;
   }
 }

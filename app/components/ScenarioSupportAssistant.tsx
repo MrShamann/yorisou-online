@@ -61,19 +61,29 @@ const copy = {
   ja: {
     badge: "AI相談案内",
     title: "ご相談内容をお聞かせください",
-    description: "移動の不安から暮らしのことまで、内容を確認しながらご案内します。わからないことも一緒に整理し、この先の続け方もやさしく整えていきます。",
-    step1: "1. ご相談者を選ぶ",
-    step2: "2. ご相談内容を選ぶ",
-    step3: "3. 気になっていることを書く",
+    description:
+      "移動の不安から暮らしのことまで、ひなたが順番にお話をうかがいます。うまくまとまっていなくても、そのままで大丈夫です。",
+    step1: "どなたについてのご相談ですか",
+    step2: "いま近い内容を選んでください",
+    step3: "気になっていることを、ひとことでも",
     placeholder: "たとえば、最近の外出で不安なことや、ご家族として気になっていることをお書きください。",
     submit: "ひなたに相談する",
     loading: "内容を確認しています...",
-    summaryTitle: "ご相談の整理",
-    actionsTitle: "おすすめの進み方",
+    summaryTitle: "ひなたが受け取った内容",
+    actionsTitle: "このあと選べること",
     emptyPrompt: "選択だけでも大丈夫です。お気軽にご相談ください。ひなたがやさしくお話をうかがいます。",
     error: "ご案内の準備に失敗しました。時間をおいてもう一度お試しください。",
     assistantLabel: "AI相談員 ひなた",
     userLabel: "ご相談内容",
+    helper: "まずは近いものを選ぶだけでも大丈夫です。必要なことは、ひなたが少しずつ一緒に整理します。",
+    introTitle: "まずは、いま気になっていることから。",
+    conversationTitle: "ひなたからのご案内",
+    conversationEmpty: "ご相談者と内容を選んだあと、気になっていることをひとこと添えてみてください。ひなたが落ち着いてご案内します。",
+    selectionLabel: "選択中",
+    personaLabel: "ご相談者",
+    scenarioLabel: "ご相談内容",
+    guidanceLabel: "ご案内の進め方",
+    guidanceFallback: "内容を確認しながら、やさしくご案内します。",
   },
   en: {
     badge: "AI consultation",
@@ -91,6 +101,15 @@ const copy = {
     error: "We could not prepare guidance. Please try again.",
     assistantLabel: "AI consultation guide",
     userLabel: "Your message",
+    helper: "You can begin with a simple selection first. We help organize the rest calmly.",
+    introTitle: "Start with what feels important today.",
+    conversationTitle: "Hinata's guidance",
+    conversationEmpty: "Choose who you are and the topic, then share your situation in a few words.",
+    selectionLabel: "Current selection",
+    personaLabel: "Persona",
+    scenarioLabel: "Topic",
+    guidanceLabel: "Guidance",
+    guidanceFallback: "We guide you calmly while organizing the next step.",
   },
 } as const;
 
@@ -157,145 +176,153 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
   return (
     <section
       id="scenario-assistant"
-      className="rounded-[2rem] border border-[#D6C3A3]/28 bg-white/86 p-7 shadow-[0_20px_48px_rgba(59,47,47,0.05)]"
+      className="rounded-[2.2rem] border border-[#D6C3A3]/20 bg-white/78 p-6 shadow-[0_16px_38px_rgba(59,47,47,0.04)] md:p-8"
     >
       <div className="service-kicker">{t.badge}</div>
-      <h2 className="mt-3 text-3xl font-light leading-tight text-[#3B2F2F]">{t.title}</h2>
-      <p className="mt-4 max-w-3xl text-sm leading-7 text-[#5A4B3E]">{t.description}</p>
+      <h2 className="mt-3 max-w-[18em] text-[2rem] font-light leading-[1.36] text-[#3B2F2F] md:text-[2.4rem]">
+        {t.title}
+      </h2>
+      <p className="mt-4 max-w-2xl text-sm leading-8 text-[#5A4B3E] md:text-base">{t.description}</p>
 
-      <form className="mt-6 grid gap-6" onSubmit={handleSubmit}>
-        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="grid gap-5">
-            <div className="rounded-[1.4rem] border border-[#E0D2C4] bg-[#FCFAF6] px-5 py-5">
-              <div className="text-sm font-medium text-[#312321]">{t.step1}</div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                {identityOptions[locale].map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setIdentity(option.value)}
-                    className={`rounded-full px-4 py-3 text-sm transition ${
-                      identity === option.value
-                        ? "bg-[#312321] text-white shadow-[0_10px_24px_rgba(47,35,33,0.16)]"
-                        : "border border-[#D6C3A3]/45 bg-white text-[#5A4B3E]"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+      <form className="mt-7 space-y-6" onSubmit={handleSubmit}>
+        <div className="rounded-[2rem] border border-[#E0D2C4]/72 bg-[#FFFBF6] px-5 py-6 md:px-7">
+          <div className="text-sm font-medium text-[#312321]">{t.introTitle}</div>
+          <p className="mt-2 text-sm leading-7 text-[#6B5A4A]">{t.helper}</p>
+
+          <div className="mt-6">
+            <div className="text-sm font-medium text-[#312321]">{t.step1}</div>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {identityOptions[locale].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setIdentity(option.value)}
+                  className={`rounded-full px-4 py-3 text-sm transition ${
+                    identity === option.value
+                      ? "bg-[#312321] text-white shadow-[0_10px_24px_rgba(47,35,33,0.12)]"
+                      : "border border-[#D6C3A3]/42 bg-white text-[#5A4B3E]"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="rounded-[1.4rem] border border-[#E0D2C4] bg-[#FCFAF6] px-5 py-5">
-              <div className="text-sm font-medium text-[#312321]">{t.step2}</div>
-              <div className="mt-4 grid gap-3">
-                {issueOptions[locale].map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setIssueType(option.value)}
-                    className={`rounded-[1.2rem] px-4 py-4 text-left text-sm leading-7 transition ${
-                      issueType === option.value
-                        ? "bg-[#F3E8D6] text-[#312321] shadow-[0_10px_24px_rgba(47,35,33,0.08)]"
-                        : "border border-[#D6C3A3]/40 bg-white text-[#5A4B3E]"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+          <div className="mt-6">
+            <div className="text-sm font-medium text-[#312321]">{t.step2}</div>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {issueOptions[locale].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setIssueType(option.value)}
+                  className={`rounded-full px-4 py-3 text-sm transition ${
+                    issueType === option.value
+                      ? "bg-[#F3E8D6] text-[#312321] shadow-[0_10px_24px_rgba(47,35,33,0.06)]"
+                      : "border border-[#D6C3A3]/40 bg-white text-[#5A4B3E]"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="rounded-[1.4rem] border border-[#E0D2C4] bg-[#FCFAF6] px-5 py-5">
-              <div className="text-sm font-medium text-[#312321]">{t.step3}</div>
+          <div className="mt-6 rounded-[1.6rem] bg-[#FCF7F0] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+            <div className="text-xs tracking-[0.12em] text-[#8A7764]">{t.selectionLabel}</div>
+            <div className="mt-2">
+              {identityLabel} / {issueLabel}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-[#312321]">
+              <span>{t.step3}</span>
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={t.placeholder}
-                className="mt-4 min-h-[160px] w-full rounded-[1.2rem] border border-[#D6C3A3]/45 bg-white px-4 py-4 text-sm leading-7 text-[#3B2F2F] outline-none transition focus:border-[#6B5A4A]"
+                className="mt-3 min-h-[150px] w-full rounded-[1.4rem] border border-[#D6C3A3]/38 bg-white px-4 py-4 text-sm leading-7 text-[#3B2F2F] outline-none transition focus:border-[#6B5A4A]"
               />
-              <div className="mt-4 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="rounded-[1.2rem] bg-[#312321] px-6 py-4 text-sm text-white shadow-[0_16px_30px_rgba(47,35,33,0.18)] transition hover:translate-y-[-1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isSubmitting ? t.loading : t.submit}
-                </button>
-              </div>
-              {error && <p className="mt-4 text-sm text-[#9A3B2F]">{error}</p>}
-            </div>
+            </label>
           </div>
 
-          <div className="grid gap-5">
-            <div className="rounded-[1.4rem] border border-[#E0D2C4] bg-[#FFF9F2] px-5 py-5">
-              <div className="text-sm font-medium text-[#312321]">{t.summaryTitle}</div>
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <div className="rounded-[1.1rem] border border-[#E0D2C4] bg-white px-4 py-4">
-                  <div className="text-xs tracking-[0.12em] text-[#8A7764]">{locale === "ja" ? "ご相談者" : "Persona"}</div>
-                  <div className="mt-2 text-sm leading-7 text-[#3B2F2F]">{scenarioResult?.labels.persona || identityLabel}</div>
-                </div>
-                <div className="rounded-[1.1rem] border border-[#E0D2C4] bg-white px-4 py-4">
-                  <div className="text-xs tracking-[0.12em] text-[#8A7764]">{locale === "ja" ? "ご相談テーマ" : "Scenario"}</div>
-                  <div className="mt-2 text-sm leading-7 text-[#3B2F2F]">{scenarioResult?.labels.scenario || issueLabel}</div>
-                </div>
-                <div className="rounded-[1.1rem] border border-[#E0D2C4] bg-white px-4 py-4">
-                  <div className="text-xs tracking-[0.12em] text-[#8A7764]">{locale === "ja" ? "ご案内の進め方" : "Guidance"}</div>
-                  <div className="mt-2 text-sm leading-7 text-[#3B2F2F]">
-                    {scenarioResult?.labels.risk || (locale === "ja" ? "内容を確認しながらご案内" : "Calm guidance")}
-                  </div>
-                </div>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm leading-7 text-[#6B5A4A]">{t.emptyPrompt}</p>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-[1.2rem] bg-[#312321] px-6 py-4 text-sm text-white shadow-[0_16px_30px_rgba(47,35,33,0.14)] transition hover:translate-y-[-1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSubmitting ? t.loading : t.submit}
+            </button>
+          </div>
+          {error && <p className="mt-4 text-sm text-[#9A3B2F]">{error}</p>}
+        </div>
+
+        <div className="rounded-[2rem] border border-[#E0D2C4]/62 bg-white/72 px-5 py-6 md:px-7">
+          <div className="text-sm font-medium text-[#312321]">{t.conversationTitle}</div>
+          {scenarioResult && (
+            <div className="mt-4 rounded-[1.5rem] bg-[#FCF7F0] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
+              <div className="text-xs tracking-[0.12em] text-[#8A7764]">{t.summaryTitle}</div>
+              <div className="mt-2">
+                {t.personaLabel}: {scenarioResult.labels.persona || identityLabel}
+              </div>
+              <div>
+                {t.scenarioLabel}: {scenarioResult.labels.scenario || issueLabel}
+              </div>
+              <div>
+                {t.guidanceLabel}: {scenarioResult.labels.risk || t.guidanceFallback}
               </div>
             </div>
+          )}
 
-            <div className="rounded-[1.4rem] border border-[#E0D2C4] bg-[#FCFAF6] px-5 py-5">
-              <div className="text-sm font-medium text-[#312321]">{locale === "ja" ? "ご案内内容" : "Conversation"}</div>
-              <div className="mt-4 grid gap-3">
-                {messages.length === 0 ? (
-                  <div className="rounded-[1.1rem] border border-dashed border-[#D6C3A3]/55 bg-white px-4 py-5 text-sm leading-7 text-[#6B5A4A]">
-                    {locale === "ja"
-                      ? "ご相談者と内容を選んだあと、気になっていることをお書きください。内容を確認しながらご案内します。"
-                      : "Choose who you are and the topic, then share your situation."}
+          <div className="mt-4 space-y-3">
+            {messages.length === 0 ? (
+              <div className="rounded-[1.5rem] bg-[#FCFAF6] px-4 py-5 text-sm leading-7 text-[#6B5A4A]">
+                {t.conversationEmpty}
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <div
+                  key={`${message.role}-${index}`}
+                  className={`max-w-[92%] rounded-[1.5rem] px-4 py-4 text-sm leading-7 ${
+                    message.role === "assistant"
+                      ? "border border-[#E0D2C4]/60 bg-[#FFFBF6] text-[#3B2F2F]"
+                      : "ml-auto bg-[#F3E8D6] text-[#5A4B3E]"
+                  }`}
+                >
+                  <div className="text-xs tracking-[0.12em] text-[#8A7764]">
+                    {message.role === "assistant" ? t.assistantLabel : t.userLabel}
                   </div>
-                ) : (
-                  messages.map((message, index) => (
-                    <div
-                      key={`${message.role}-${index}`}
-                      className={`rounded-[1.1rem] px-4 py-4 text-sm leading-7 ${
-                        message.role === "assistant"
-                          ? "border border-[#D6C3A3]/35 bg-white text-[#3B2F2F]"
-                          : "bg-[#F3E8D6] text-[#5A4B3E]"
-                      }`}
-                    >
-                      <div className="text-xs tracking-[0.12em] text-[#8A7764]">
-                        {message.role === "assistant" ? t.assistantLabel : t.userLabel}
-                      </div>
-                      <div className="mt-2 whitespace-pre-wrap">{message.content}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {recommendedActions.length > 0 && (
-              <div className="rounded-[1.4rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-5 py-5">
-                <div className="text-sm font-medium text-[#314236]">{t.actionsTitle}</div>
-                <div className="mt-4 grid gap-3">
-                  {recommendedActions.map((action) => (
-                    <div key={action.id} className="rounded-[1.1rem] border border-[#C7D7C1] bg-white/85 px-4 py-4">
-                      <div className="text-sm font-medium text-[#243329]">{action.title}</div>
-                      <p className="mt-2 text-sm leading-7 text-[#4D5642]">{action.description}</p>
-                      <div className="mt-4">
-                        <Link href={action.href} className="btn btn-secondary">
-                          {action.label}
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
+                  <div className="mt-2 whitespace-pre-wrap">{message.content}</div>
                 </div>
-              </div>
+              ))
             )}
           </div>
+
+          {recommendedActions.length > 0 && (
+            <div className="mt-6 border-t border-[#E6D8CA] pt-6">
+              <div className="text-sm font-medium text-[#314236]">{t.actionsTitle}</div>
+              <div className="mt-4 space-y-3">
+                {recommendedActions.map((action) => (
+                  <div
+                    key={action.id}
+                    className="rounded-[1.5rem] border border-[#C7D7C1]/72 bg-[linear-gradient(180deg,#F7FBF6_0%,#F1F7EF_100%)] px-4 py-4"
+                  >
+                    <div className="text-sm font-medium text-[#243329]">{action.title}</div>
+                    <p className="mt-2 text-sm leading-7 text-[#4D5642]">{action.description}</p>
+                    <div className="mt-4">
+                      <Link href={action.href} className="btn btn-secondary">
+                        {action.label}
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </form>
     </section>
