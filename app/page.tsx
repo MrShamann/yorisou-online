@@ -54,6 +54,9 @@ export default function HomePage() {
                 <Link href="/support#scenario-assistant" className="btn btn-primary">
                   ひなたに相談する
                 </Link>
+                <span className="text-xs leading-6 text-[#8A7764]">
+                  はじめてでも大丈夫です。気になることから、ゆっくりお話しいただけます。
+                </span>
               </div>
               <Link href="/products" className="btn btn-secondary">
                 製品を見る
@@ -135,7 +138,7 @@ export default function HomePage() {
                   LINEで相談する
                 </Link>
                 <Link href="/support" className="btn btn-secondary">
-                  まずはお気軽にご相談ください
+                  ひなたと相談を始める
                 </Link>
               </div>
             </div>

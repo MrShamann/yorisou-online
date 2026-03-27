@@ -362,6 +362,11 @@ export default function SupportWorkspace({
                         ? "無理にうまく話そうとしなくても大丈夫です。気になることから、ゆっくりお聞かせください。"
                         : "You do not need to explain everything perfectly. Start with what feels important today."}
                     </p>
+                    <p className="mt-2 text-sm leading-7 text-[#6B5A4A]">
+                      {locale === "ja"
+                        ? "この先も、ひなたがやさしく寄り添います。必要なときに、無理のない形でご案内できます。"
+                        : "Support can continue gently over time, in a way that feels manageable for you."}
+                    </p>
                     <div className="mt-4">
                       <Link href={advisorHref} className="btn btn-secondary">
                         {locale === "ja" ? "ひなたに相談する" : "Start with support"}
@@ -374,20 +379,20 @@ export default function SupportWorkspace({
                 <ScenarioSupportAssistant locale={locale} />
               </div>
               <div className="mt-8 rounded-[2rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-6 py-6 text-sm leading-7 text-[#314236] shadow-[0_18px_40px_rgba(53,81,61,0.08)]">
-                <div className="service-kicker text-[#55705C]">{locale === "ja" ? "LINEでやさしく相談する" : "Continue with LINE"}</div>
+                <div className="service-kicker text-[#55705C]">{locale === "ja" ? "この先も、やさしく続ける" : "Continue gently"}</div>
                 <div className="mt-3 text-2xl font-medium">
-                  {locale === "ja" ? "LINEでやさしく相談する" : "Continue with LINE"}
+                  {locale === "ja" ? "LINEでつながっておく" : "Stay connected with LINE"}
                 </div>
                 <p className="mt-2 text-[#4D5642]">
                   {locale === "ja"
-                    ? "ご高齢の方やご家族でも安心してご利用いただけます"
+                    ? "LINEでつながっておくと、ご相談の続きや、お知らせをやさしく受け取れます。"
                     : "If your account is already linked to LINE, you can continue straight into support. If it is your first time, this page will show the next step after return."}
                 </p>
                 <div className="mt-4">
                   {lineAuthReady ? (
                     <Link href={lineStartHref} className="btn btn-primary bg-[#06C755] shadow-[0_16px_30px_rgba(6,199,85,0.22)]">
                       <LineBrandIcon className="h-5 w-5" />
-                      {locale === "ja" ? "LINEでやさしく相談する" : "Continue with LINE"}
+                      {locale === "ja" ? "LINEで続ける" : "Continue with LINE"}
                     </Link>
                   ) : (
                     <div className="inline-flex rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#8A7764]">
@@ -397,18 +402,23 @@ export default function SupportWorkspace({
                 </div>
                 <p className="mt-3 text-xs leading-6 text-[#55705C]">
                   {locale === "ja"
-                    ? "ご高齢の方やご家族でも安心してご利用いただけます"
+                    ? "ご希望に合わせて、受け取り方を少しずつ整えていけます。"
                     : "Your first intake on LINE is guided by AI, then we guide you to the next step."}
                 </p>
               </div>
               <div className="mt-6 rounded-[1.8rem] border border-[#E0D2C4] bg-[#FFF9F2] px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
-                <div className="font-medium text-[#312321]">{locale === "ja" ? "メールで続ける" : "Continue with email"}</div>
+                <div className="font-medium text-[#312321]">{locale === "ja" ? "アカウントで続ける" : "Continue with email"}</div>
+                <p className="mt-2 text-sm leading-7 text-[#6B5A4A]">
+                  {locale === "ja"
+                    ? "あとで見返したいときや、ご相談の続きを落ち着いて確認したいときに使えます。"
+                    : "Use your account to return later and review your guidance calmly."}
+                </p>
                 <div className="mt-4 flex flex-col gap-4 sm:flex-row">
                   <Link href={loginHref} className="btn btn-secondary">
-                    {locale === "ja" ? "メールでログイン" : "Log in with email"}
+                    {locale === "ja" ? "ログインして続ける" : "Log in with email"}
                   </Link>
                   <Link href={registerHref} className="btn btn-secondary">
-                    {locale === "ja" ? "メールで新規登録" : "Create account with email"}
+                    {locale === "ja" ? "新しく登録して続ける" : "Create account with email"}
                   </Link>
                 </div>
               </div>
