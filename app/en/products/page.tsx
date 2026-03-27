@@ -84,8 +84,8 @@ export default function ProductsPageEn() {
                         {item.difference}
                       </p>
                       <div className="mt-5">
-                        <Link href="/en/ai-advisor" className="btn btn-secondary">
-                          Consult with these conditions
+                        <Link href="/en/support#scenario-assistant" className="btn btn-secondary">
+                          Open support with this context
                         </Link>
                       </div>
                     </div>

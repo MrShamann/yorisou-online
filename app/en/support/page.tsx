@@ -6,7 +6,7 @@ import { getLineMessagingConfigStatus, isLineLoginConfigured } from "@/lib/serve
 
 export const metadata: Metadata = {
   title: "Yorisou | Support",
-  description: "Yorisou's support workspace for consultation history, recommendation review, family sharing, ongoing consultation, and follow-up.",
+  description: "Yorisou's support entry for calmly organizing concerns, receiving guidance, and moving into the next step.",
 };
 
 export default async function SupportPageEn({

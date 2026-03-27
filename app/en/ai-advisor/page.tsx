@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-
-import AdvisorFlow from "@/app/components/AdvisorFlow";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Yorisou AI Mobility Advisor",
+  title: "Yorisou | Support",
   description:
-    "A calm mobility advisor from Yorisou that helps users and families organize mobility needs, receive a recommendation, and move into consultation, trial, and future follow-up support.",
+    "Yorisou support is available from the support page.",
 };
 
 export default function AiAdvisorPageEn() {
-  return (
-    <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
-      <AdvisorFlow locale="en" />
-    </main>
-  );
+  redirect("/en/support");
 }

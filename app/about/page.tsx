@@ -9,8 +9,8 @@ export default function AboutPage() {
       <Hero
         title="Yorisouについて"
         subtitle="Yorisouは、日本の高齢者とご家族の移動を支えるモビリティサービスプラットフォームです。相談支援、福岡での検証、インサイト分析を一体で進めながら、長期的なYorisou標準を育てていきます。"
-        primaryHref="/ai-advisor"
-        primaryLabel="モビリティ相談へ"
+        primaryHref="/support#scenario-assistant"
+        primaryLabel="ご相談はこちら"
         secondaryHref="/insights"
         secondaryLabel="インサイトを見る"
       />

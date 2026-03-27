@@ -93,8 +93,8 @@ export default function ProductsPage() {
                         {item.difference}
                       </p>
                       <div className="mt-5">
-                        <Link href="/ai-advisor" className="btn btn-secondary">
-                          この条件で相談する
+                        <Link href="/support#scenario-assistant" className="btn btn-secondary">
+                          この内容で相談する
                         </Link>
                       </div>
                     </div>

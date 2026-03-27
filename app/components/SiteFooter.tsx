@@ -13,6 +13,7 @@ export default function SiteFooter() {
   const aboutHref = isEn ? "/en/about" : "/about";
   const insightsHref = isEn ? "/en/insights" : "/insights";
   const servicesHref = isEn ? "/en/services" : "/services";
+  const supportHref = isEn ? "/en/support" : "/support";
   const loginHref = isEn ? "/en/login" : "/login";
 
   return (
@@ -31,8 +32,8 @@ export default function SiteFooter() {
                   : "高齢者とご家族の移動相談を、比較・導入・共有まで静かに支えるサービスです。"}
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <Link href={loginHref} className="btn btn-primary">
-                  {isEn ? "Open support access" : "サポート入口を見る"}
+                <Link href={supportHref} className="btn btn-primary">
+                  {isEn ? "Open support" : "ご相談はこちら"}
                 </Link>
                 <Link href={contactHref} className="btn btn-secondary">
                   {isEn ? "Contact" : "お問い合わせ"}

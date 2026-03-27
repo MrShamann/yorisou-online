@@ -11,9 +11,9 @@ const trustPoints = [
 const serviceCards = [
   {
     title: "Mobility Advisor",
-    text: "Start with a guided consultation to compare options through daily routes, walking condition, and family reassurance.",
-    href: "/en/ai-advisor",
-    cta: "Start advisor",
+    text: "Start with guided support to organize the user, the concern, and the next step in a calm way.",
+    href: "/en/support#scenario-assistant",
+    cta: "Open support",
   },
   {
     title: "Pilot and implementation support",
@@ -44,8 +44,8 @@ export default function HomePageEn() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link href="/en/ai-advisor" className="btn btn-primary">
-                Start AI advisor
+              <Link href="/en/support#scenario-assistant" className="btn btn-primary">
+                Open support
               </Link>
               <Link href="/en/contact" className="btn btn-secondary">
                 Contact Yorisou

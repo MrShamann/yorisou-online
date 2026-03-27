@@ -8,8 +8,8 @@ export default function ServicesPage() {
       <Hero
         title="サービスについて"
         subtitle="Yorisouは、相談で終わる窓口ではなく、移動手段の整理、ご家族との共有、導入後の見直しまでを見据えた支援サービスです。"
-        primaryHref="/ai-advisor"
-        primaryLabel="AI相談を始める"
+        primaryHref="/support#scenario-assistant"
+        primaryLabel="ご相談はこちら"
       />
 
       <section className="section" style={{ paddingTop: 28 }}>
@@ -48,8 +48,8 @@ export default function ServicesPage() {
               自治体、施設、地域事業者向けには、単発イベントではなく、現場で続くかどうかを見極めるための実務支援も行っています。
             </p>
             <div style={{ marginTop: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/ai-advisor" className="btn btn-primary">
-                AI相談を始める
+              <Link href="/support#scenario-assistant" className="btn btn-primary">
+                ご相談はこちら
               </Link>
               <Link href="/pilot" className="btn btn-secondary">
                 導入・実証の考え方を見る

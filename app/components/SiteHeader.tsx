@@ -6,14 +6,14 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
-  { href: "/ai-advisor", label: "相談する" },
+  { href: "/support", label: "サポート" },
   { href: "/products", label: "製品を見る" },
   { href: "/services", label: "導入・実証" },
   { href: "/login", label: "ログイン" },
 ];
 
 const primaryNavEn = [
-  { href: "/ai-advisor", label: "Consult" },
+  { href: "/support", label: "Support" },
   { href: "/products", label: "Products" },
   { href: "/services", label: "Implementation" },
   { href: "/login", label: "Login" },
