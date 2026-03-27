@@ -53,36 +53,36 @@ function actionCopy(locale: SupportAssistantLocale, action: SupportNextActionTyp
   if (action === "offer_consultation") {
     return {
       id: action,
-      title: "相談予約",
-      description: "まずはお気軽にご相談ください。内容を確認しながらご案内します。",
+      title: "もう少し詳しく話す",
+      description: "ひなたとの内容をふまえて、次の支え方を落ち着いて一緒に考えられます。",
       href: "/contact",
-      label: "相談予約へ進む",
+      label: "次の相談につなぐ",
     };
   }
   if (action === "suggest_products") {
     return {
       id: action,
-      title: "製品案内",
-      description: "移動のご様子に合わせて、製品の見方を一緒に整理できます。",
+      title: "支え方や製品を見る",
+      description: "移動や暮らしのご様子に合わせて、合いそうな支え方を静かに見比べられます。",
       href: "/products",
-      label: "製品を見てみる",
+      label: "支え方を見る",
     };
   }
   if (action === "family_support_info") {
     return {
       id: action,
-      title: "ご家族向けサポート入口",
-      description: "ご家族とも共有しながら、落ち着いて進められます。",
+      title: "ご家族と一緒に見る",
+      description: "ご家族とも共有しながら、無理のない進め方を見ていけます。",
       href: "/support#scenario-assistant",
-      label: "ご家族向けの案内を見る",
+      label: "ご家族向けの見方へ",
     };
   }
   return {
     id: action,
-    title: "導入 / 協業相談",
-    description: "自治体や介護関係者のご相談も、内容を確認しながらご案内します。",
+    title: "導入や連携を考える",
+    description: "自治体や介護関係者の方とも、現場に合う進め方を落ち着いて整理できます。",
     href: "/contact",
-    label: "導入・協業相談へ進む",
+    label: "導入・連携の相談へ",
   };
 }
 

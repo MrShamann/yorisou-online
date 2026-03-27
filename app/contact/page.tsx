@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import ContactForm from "../components/ContactForm";
 import Hero from "../components/Hero";
 
-const inquiryCards = [
-  {
-    title: "ご本人・ご家族のご相談",
-    text: "移動や暮らしの不安について、ひなたとの相談につながる形でご案内します。",
-  },
-  {
-    title: "導入・実証のご相談",
-    text: "自治体、施設、地域事業者の方からの導入や小規模実証に関するご相談をお受けします。",
-  },
-  {
-    title: "一般のお問い合わせ",
-    text: "Yorisouの考え方や今後の取り組みについて、幅広くお問い合わせいただけます。",
-  },
+const inquiryNotes = [
+  "ご相談内容がまだ曖昧でも、気になることからお話しいただけます。",
+  "ご高齢の方やご家族にも伝わりやすいご案内を心がけています。",
+  "必要に応じて、ひなたとの対話や導入相談につながる形で整理します。",
 ];
 
 export const metadata: Metadata = {
@@ -31,68 +23,51 @@ export default function ContactPage() {
         title={
           <>
             <span className="block md:whitespace-nowrap">お問い合わせも、</span>
-            <span className="block md:whitespace-nowrap">やさしく話せる窓口でありたいと考えています。</span>
+            <span className="block md:whitespace-nowrap">やさしく話せる入口でありたいと考えています。</span>
           </>
         }
         subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
         primaryHref="/support#scenario-assistant"
         primaryLabel="ひなたに相談する"
         secondaryHref="/services"
-        secondaryLabel="サービスを見る"
+        secondaryLabel="支援内容を見る"
       />
 
       <section className="section">
         <div className="container">
-          <div className="section-header">
-            <p className="section-label">お問い合わせ内容</p>
-            <h2 className="section-title">ご相談いただける内容</h2>
-            <p className="muted" style={{ marginTop: 10, maxWidth: 760 }}>
-              個人のご相談から、地域での導入検討まで、目的に応じた形でご案内します。
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {inquiryCards.map((item) => (
-              <article key={item.title} className="rounded-[1.4rem] bg-[rgba(255,253,249,0.7)] px-5 py-5">
-                <h3 className="text-lg font-medium leading-8 text-[var(--text)]">{item.title}</h3>
-                <p className="muted">{item.text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="container">
-          <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="rounded-[1.5rem] bg-[rgba(255,253,249,0.72)] px-6 py-6">
+          <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
               <div className="service-kicker">お問い合わせフォーム</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
-                お問い合わせフォーム
+                ご相談から導入のお話まで、このままお送りいただけます。
               </h2>
-              <p className="muted" style={{ marginTop: 12 }}>
-                内容に応じて、順次ご連絡します。相談の入口として使いたい場合も、そのままお送りいただけます。
+              <p className="page-copy" style={{ marginTop: 12 }}>
+                内容に応じて順次ご連絡します。ひなたとのやりとりの延長として使いたい場合も、そのままお送りください。
               </p>
-              <div style={{ marginTop: 24 }}>
+              <div style={{ marginTop: 20 }}>
                 <ContactForm locale="ja" />
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] bg-[rgba(225,232,219,0.46)] px-6 py-6">
-              <div className="service-kicker">はじめての方へ</div>
+            <div className="panel-sage rounded-[1.7rem] px-6 py-6">
+              <div className="service-kicker text-[var(--accent-sage-text)]">はじめての方へ</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
-                はじめてでも大丈夫です
+                急がずに、必要なことから話せれば大丈夫です。
               </h2>
-              <div className="grid gap-4" style={{ marginTop: 18 }}>
-                {[
-                  "ご相談内容が曖昧でも、気になることからお話しいただけます。",
-                  "ご高齢の方やご家族にも伝わりやすいご案内を心がけています。",
-                  "必要に応じて、ひなたとの相談や導入相談につながる形で整理します。",
-                ].map((item) => (
-                  <div key={item} className="rounded-[1.25rem] bg-[rgba(255,253,249,0.86)] px-5 py-4 text-sm leading-8 text-[var(--muted)]">
+              <div className="mt-5 grid gap-3">
+                {inquiryNotes.map((item) => (
+                  <div key={item} className="rounded-[1.2rem] bg-[rgba(252,250,245,0.82)] px-5 py-4 text-sm leading-8 text-[var(--accent-sage-text)]">
                     {item}
                   </div>
                 ))}
+              </div>
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+                <Link href="/support#scenario-assistant" className="soft-link">
+                  ひなたと話し始める
+                </Link>
+                <Link href="/pilot" className="soft-link">
+                  導入・実証について
+                </Link>
               </div>
             </div>
           </div>

@@ -1,2 +1,2 @@
-Commit: scenario-aware-support-mvp
-Timestamp: 2026-03-27 13:45:00 CST
+Commit: conversation-first-public-redesign
+Timestamp: 2026-03-27 19:09:54 CST

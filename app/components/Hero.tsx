@@ -21,19 +21,19 @@ export default function Hero({
   secondaryLabel,
 }: HeroProps) {
   return (
-    <section className="border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.97),_rgba(250,245,238,0.99)_58%)]">
-      <div className="container py-12 md:py-14">
-        <div className="max-w-[52rem]">
+    <section className="border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.97),_rgba(247,244,238,0.99)_60%)]">
+      <div className="container py-11 md:py-13">
+        <div className="max-w-[48rem]">
           <div className="service-kicker">{eyebrow}</div>
-          <h1 className="display-serif mt-5 max-w-[16.5em] text-[1.8rem] leading-[1.62] text-[var(--text)] md:text-[2.32rem]">
+          <h1 className="display-serif mt-4 max-w-[15.4em] text-[1.62rem] leading-[1.68] text-[var(--text)] md:text-[2.04rem]">
             {title}
           </h1>
-          <p className="mt-5 max-w-[44rem] text-sm leading-8 text-[var(--muted)] md:text-base">
+          <p className="mt-4 max-w-[40rem] text-sm leading-8 text-[var(--muted)] md:text-[0.97rem]">
             {subtitle}
           </p>
         </div>
         {(primaryHref || secondaryHref) && (
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             {primaryHref && primaryLabel && (
               <Link href={primaryHref} className="btn btn-primary">
                 {primaryLabel}

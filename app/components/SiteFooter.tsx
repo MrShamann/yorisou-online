@@ -23,13 +23,13 @@ export default function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start">
           <div className="flex gap-5">
             <div className="flex items-start justify-center pt-1">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={62} height={62} className="h-auto w-[62px] object-contain" />
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={70} height={70} className="h-auto w-[70px] object-contain" />
             </div>
             <div className="max-w-xl">
               <div className="display-serif text-[1.6rem] font-semibold tracking-[0.08em]">YORISOU</div>
               <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
                 {isEn
-                  ? "A calmer mobility consultation service for seniors, families, and community operators in Japan."
+                  ? "A calmer support service for mobility and daily living in Japan."
                   : "移動の不安から、暮らしの安心へ。高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添います。"}
               </p>
             </div>
@@ -37,19 +37,19 @@ export default function SiteFooter() {
 
           <div className="grid gap-8 sm:grid-cols-2">
             <div>
-              <div className="service-kicker">{isEn ? "About Yorisou" : "ご案内"}</div>
+              <div className="service-kicker">{isEn ? "Yorisou" : "Yorisou"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
-                <Link href={aboutHref}> {isEn ? "About" : "Yorisouについて"} </Link>
-                <Link href={servicesHref}> {isEn ? "Services" : "サービス"} </Link>
-                <Link href={pilotHref}> {isEn ? "Pilot" : "導入・実証"} </Link>
-                <Link href={insightsHref}> {isEn ? "Insights" : "読みもの"} </Link>
+                <Link href={aboutHref}> {isEn ? "About" : "Yorisouとは"} </Link>
+                <Link href={servicesHref}> {isEn ? "Support" : "支援内容"} </Link>
+                <Link href={pilotHref}> {isEn ? "Implementation" : "導入・実証"} </Link>
+                <Link href={insightsHref}> {isEn ? "Reading" : "読みもの"} </Link>
               </div>
             </div>
             <div>
-              <div className="service-kicker">{isEn ? "Continue" : "継続とご案内"}</div>
+              <div className="service-kicker">{isEn ? "Continue" : "つづけ方"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
-                <Link href={supportHref}>{isEn ? "Support page" : "相談ページ"}</Link>
-                <Link href={loginHref}>{isEn ? "Login / Register" : "ログイン・継続"}</Link>
+                <Link href={supportHref}>{isEn ? "Talk with Hinata" : "ひなたとの対話"}</Link>
+                <Link href={loginHref}>{isEn ? "Continue your account" : "ログイン・アカウント"}</Link>
                 <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>
                 <Link href={legalHref}>{isEn ? "Terms & Privacy" : "利用規約・プライバシーポリシー"}</Link>
               </div>

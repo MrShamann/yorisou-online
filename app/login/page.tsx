@@ -6,7 +6,7 @@ import { getViewerContext } from "@/lib/server/yorisouAuth";
 
 export const metadata: Metadata = {
   title: "相談のつづき | Yorisou",
-  description: "ひなたとのご相談内容やご案内を、落ち着いて見返したいときのためのログインページです。",
+  description: "ひなたとのやりとりやご案内を、あとから落ち着いて見返し、続けたいときのためのログインページです。",
 };
 
 function getErrorMessage(code: string | undefined) {

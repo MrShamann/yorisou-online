@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
-  { href: "/about", label: "Yorisouについて" },
-  { href: "/services", label: "サービス" },
+  { href: "/about", label: "Yorisouとは" },
+  { href: "/services", label: "支援内容" },
   { href: "/insights", label: "読みもの" },
 ];
 
@@ -71,22 +71,23 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[rgba(221,208,194,0.52)] bg-[rgba(255,251,246,0.9)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-[rgba(216,207,195,0.56)] bg-[rgba(252,250,245,0.92)] backdrop-blur-xl">
       <div className="container py-4">
         <div className="flex items-center justify-between gap-5">
-          <Link href={homeHref} className="flex min-w-0 items-center gap-2.5 no-underline md:gap-3.5">
+          <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline md:gap-4">
             <div className="flex items-center justify-center">
               <Image
                 src="/images/brand/tsuru-logo.png"
                 alt="YORISOU"
                 width={132}
                 height={132}
-                className="h-auto w-[96px] object-contain drop-shadow-[0_6px_12px_rgba(63,45,39,0.06)] md:w-[122px]"
+                priority
+                className="h-auto w-[108px] object-contain drop-shadow-[0_7px_14px_rgba(63,45,39,0.08)] md:w-[138px]"
               />
             </div>
             <div className="min-w-0">
-              <div className="display-serif text-[1.7rem] font-semibold tracking-[0.1em] text-[var(--text)] md:text-[2.02rem]">YORISOU</div>
-              <div className="mt-1 hidden text-[0.84rem] leading-7 text-[var(--muted)] md:block">
+              <div className="display-serif text-[1.78rem] font-semibold tracking-[0.09em] text-[var(--text)] md:text-[2.12rem]">YORISOU</div>
+              <div className="mt-0.5 hidden text-[0.82rem] leading-7 text-[var(--muted)] md:block">
                 {isEn ? "Calm mobility support for seniors and families in Japan" : "移動の不安から、暮らしの安心へ。"}
               </div>
             </div>
@@ -165,17 +166,17 @@ export default function SiteHeader() {
         .site-nav {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
         .primary-nav {
           display: flex;
           align-items: center;
-          gap: 2px;
-          padding: 5px;
+          gap: 1px;
+          padding: 4px 6px;
           border-radius: 20px;
-          background: rgba(252, 250, 245, 0.82);
-          border: 1px solid rgba(216, 207, 195, 0.54);
-          box-shadow: 0 10px 18px rgba(47, 35, 33, 0.035);
+          background: rgba(252, 250, 245, 0.74);
+          border: 1px solid rgba(201, 211, 195, 0.54);
+          box-shadow: 0 8px 14px rgba(47, 35, 33, 0.028);
         }
         .nav-link,
         .more-button {
@@ -183,7 +184,7 @@ export default function SiteHeader() {
           background: transparent;
           text-decoration: none;
           color: var(--text);
-          padding: 10px 13px;
+          padding: 10px 12px;
           border-radius: 14px;
           font-size: 12px;
           white-space: nowrap;
@@ -199,7 +200,8 @@ export default function SiteHeader() {
         .nav-link.active,
         .more-button:hover,
         .more-button.active {
-          background: rgba(235, 241, 232, 0.82);
+          background: rgba(225, 232, 219, 0.82);
+          color: var(--accent-sage-text);
         }
         .menu-icon {
           display: inline-flex;
@@ -230,9 +232,9 @@ export default function SiteHeader() {
           gap: 4px;
           padding: 10px;
           border-radius: 18px;
-          background: rgba(255, 255, 255, 0.96);
-          border: 1px solid rgba(217, 204, 184, 0.65);
-          box-shadow: 0 18px 36px rgba(59, 47, 47, 0.12);
+          background: rgba(252, 250, 245, 0.97);
+          border: 1px solid rgba(201, 211, 195, 0.65);
+          box-shadow: 0 16px 28px rgba(59, 47, 47, 0.1);
         }
         .more-menu.open {
           display: flex;
@@ -246,7 +248,8 @@ export default function SiteHeader() {
         }
         .more-link:hover,
         .more-link.active {
-          background: var(--accent-soft);
+          background: rgba(225, 232, 219, 0.82);
+          color: var(--accent-sage-text);
         }
         .header-actions {
           display: flex;
@@ -258,29 +261,29 @@ export default function SiteHeader() {
           align-items: center;
           justify-content: center;
           min-height: 40px;
-          padding: 0 13px;
+          padding: 0 14px;
           border-radius: 15px;
-          border: 1px solid rgba(216, 198, 180, 0.52);
-          background: rgba(255, 253, 249, 0.88);
-          box-shadow: 0 8px 18px rgba(59, 47, 47, 0.035);
+          border: 1px solid rgba(201, 211, 195, 0.56);
+          background: rgba(252, 250, 245, 0.88);
+          box-shadow: 0 6px 14px rgba(59, 47, 47, 0.028);
           color: var(--text);
           font-size: 12px;
           text-decoration: none;
         }
         .login-link:hover,
         .login-link.active {
-          background: rgba(235, 241, 232, 0.8);
+          background: rgba(225, 232, 219, 0.8);
         }
         .locale-switch {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          border: 1px solid rgba(216, 198, 180, 0.58);
+          border: 1px solid rgba(201, 211, 195, 0.58);
           border-radius: 16px;
           padding: 9px 11px;
           text-decoration: none;
-          background: rgba(255, 253, 249, 0.92);
-          box-shadow: 0 10px 22px rgba(59, 47, 47, 0.04);
+          background: rgba(252, 250, 245, 0.92);
+          box-shadow: 0 8px 16px rgba(59, 47, 47, 0.03);
           color: var(--text);
         }
         .locale-current {
@@ -290,7 +293,7 @@ export default function SiteHeader() {
           min-width: 34px;
           height: 28px;
           border-radius: 12px;
-          background: rgba(239, 228, 214, 0.92);
+          background: rgba(225, 232, 219, 0.86);
           font-size: 11px;
           font-weight: 700;
           letter-spacing: 0.08em;
@@ -317,8 +320,8 @@ export default function SiteHeader() {
             align-items: stretch;
             padding: 16px;
             border-radius: 24px;
-            background: rgba(255, 251, 246, 0.98);
-            border: 1px solid rgba(216, 198, 180, 0.75);
+            background: rgba(252, 250, 245, 0.98);
+            border: 1px solid rgba(201, 211, 195, 0.75);
             box-shadow: 0 20px 40px rgba(47, 35, 33, 0.12);
           }
           .site-nav.open {

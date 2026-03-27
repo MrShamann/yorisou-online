@@ -130,7 +130,7 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
   };
 
   return (
-    <div className="card" style={{ maxWidth: 860 }}>
+    <div style={{ maxWidth: 860 }}>
       <form onSubmit={handleSubmit}>
         <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
           <label>
@@ -197,12 +197,7 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
           />
         </label>
 
-        <button
-          type="submit"
-          className="btn btn-primary"
-          style={{ marginTop: 14, opacity: isSubmitting ? 0.8 : 1 }}
-          disabled={isSubmitting}
-        >
+        <button type="submit" className="btn btn-primary" style={{ marginTop: 14, opacity: isSubmitting ? 0.8 : 1 }} disabled={isSubmitting}>
           {isSubmitting ? t.sending : t.submit}
         </button>
       </form>
@@ -224,11 +219,11 @@ export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
 
 const inputStyle: CSSProperties = {
   width: "100%",
-  border: "1px solid var(--line)",
-  borderRadius: 8,
+  border: "1px solid var(--line-soft)",
+  borderRadius: 14,
   marginTop: 6,
-  padding: "10px 12px",
+  padding: "12px 14px",
   fontSize: 14,
   fontFamily: "inherit",
-  background: "#fff",
+  background: "rgba(255,253,249,0.92)",
 };

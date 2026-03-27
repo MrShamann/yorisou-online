@@ -333,12 +333,12 @@ export default function SupportWorkspace({
         <section className="border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-6 py-16 md:px-10 md:py-24">
           <div className="mx-auto max-w-4xl">
             <div className="shell-card p-7 md:p-10">
-              <div className="service-kicker">{locale === "ja" ? "移動の不安から、暮らしの安心へ。" : "Consultation support access"}</div>
-              <h1 className="display-serif mt-4 max-w-[15em] text-[1.95rem] leading-[1.58] md:text-[2.45rem]">
+              <div className="service-kicker">{locale === "ja" ? "移動と暮らしに寄り添う支援サービス" : "Support that begins calmly"}</div>
+              <h1 className="display-serif mt-4 max-w-[14em] text-[1.78rem] leading-[1.62] md:text-[2.22rem]">
                 {locale === "ja" ? (
                   <>
-                    <span className="block md:whitespace-nowrap">AI相談員 ひなたと、</span>
-                    <span className="block md:whitespace-nowrap">ゆっくりお話しください</span>
+                    <span className="block md:whitespace-nowrap">AI相談員 ひなたが、</span>
+                    <span className="block md:whitespace-nowrap">いま気になることをやさしく受け取ります。</span>
                   </>
                 ) : (
                   "Talk with our support guide"
@@ -346,41 +346,23 @@ export default function SupportWorkspace({
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
                 {locale === "ja"
-                  ? "移動や暮らしの不安を一緒に整理し、その方に合う支え方を丁寧に考えていきます。"
+                  ? "移動のことでも、暮らしのことでも、まだうまく整理できていなくて大丈夫です。ひなたとのやりとりから、その方に合う支え方を少しずつ整えていきます。"
                   : "Continue quickly with LINE, or use email if you prefer. After sign-in, you can review your recommendations, notes, and support history in one place."}
               </p>
-              <div className="mt-7 flex flex-col gap-4 rounded-[1.7rem] bg-[rgba(255,253,249,0.82)] px-6 py-6 md:flex-row md:items-start">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_#f4ece2_0%,_#e2d7c9_72%,_#d2c5b8_100%)] text-lg text-[#78675f]">
-                  ひ
-                </div>
-                <div className="max-w-2xl">
-                  <div className="text-sm tracking-[0.12em] text-[#87776b]">{locale === "ja" ? "AI相談員 ひなた" : "AI consultation guide"}</div>
-                  <p className="mt-2 text-sm leading-8 text-[var(--muted)]">
-                    {locale === "ja"
-                      ? "ご本人でも、ご家族でも大丈夫です。無理に整理しなくても、気になることからお話しください。"
-                      : "Whether you are seeking help for yourself or a family member, you can begin naturally."}
-                  </p>
-                  <p className="mt-2 text-sm leading-8 text-[var(--accent-sage-text)]">
-                    {locale === "ja"
-                      ? "相談の整理は、ひなたが裏側で少しずつ受け持ちます。"
-                      : "Hinata quietly handles the structure in the background."}
-                  </p>
-                </div>
-              </div>
 
               <div className="mt-7">
                 <ScenarioSupportAssistant locale={locale} />
               </div>
 
-              <div className="panel-sage mt-7 rounded-[1.6rem] px-6 py-6">
-                <div className="service-kicker text-[var(--accent-sage-text)]">{locale === "ja" ? "あとから続ける方法" : "Continue later"}</div>
+              <div className="panel-sage mt-6 rounded-[1.5rem] px-6 py-5">
+                <div className="service-kicker text-[var(--accent-sage-text)]">{locale === "ja" ? "あとから続けたいときは" : "Continue later"}</div>
                 <p className="mt-3 max-w-2xl text-sm leading-8">
                   {locale === "ja"
-                    ? "最初から登録しなくても大丈夫です。まずは相談し、あとで必要を感じたら受け取りやすい形を選べます。"
+                    ? "最初から登録しなくても大丈夫です。まずはひなたと話し、必要を感じたときにだけ、LINEやアカウントで続けられます。"
                     : "Start here first, then continue later with the channel that feels easiest for you."}
                 </p>
 
-                <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+                <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
                   {lineAuthReady ? (
                     <Link href={lineStartHref} className="inline-flex items-center gap-2 text-[var(--accent-sage-text)] underline underline-offset-4">
                       <LineBrandIcon className="h-5 w-5" />

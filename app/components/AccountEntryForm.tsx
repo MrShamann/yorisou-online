@@ -82,16 +82,16 @@ export default function AccountEntryForm({
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <section className="border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-6 py-16 md:px-10 md:py-24">
         <div className="mx-auto max-w-5xl">
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-            <div className="shell-card p-7 md:p-10">
+          <div className="grid gap-8 lg:grid-cols-[0.78fr_1.08fr] lg:items-start">
+            <div className="px-1 py-2 md:pr-6">
               <div className="service-kicker">{locale === "ja" ? "相談のつづき" : "Continue your consultation"}</div>
-              <h1 className="display-serif mt-4 max-w-[14.5em] text-[1.92rem] leading-[1.58] md:text-[2.38rem]">
+              <h1 className="display-serif mt-4 max-w-[13.5em] text-[1.7rem] leading-[1.66] md:text-[2.08rem]">
                 {mode === "login"
                   ? locale === "ja"
                     ? (
                       <>
-                        <span className="block md:whitespace-nowrap">落ち着いて、</span>
-                        <span className="block md:whitespace-nowrap">相談のつづきを確認できます。</span>
+                        <span className="block md:whitespace-nowrap">ひなたとのやりとりを、</span>
+                        <span className="block md:whitespace-nowrap">落ち着いて続けられます。</span>
                       </>
                     )
                     : "Log in to review your support"
@@ -99,7 +99,7 @@ export default function AccountEntryForm({
                     ? (
                       <>
                         <span className="block md:whitespace-nowrap">あとから続けやすい</span>
-                        <span className="block md:whitespace-nowrap">形を整えます。</span>
+                        <span className="block md:whitespace-nowrap">受け取り方を整えます。</span>
                       </>
                     )
                     : "Create an account for ongoing support"}
@@ -107,15 +107,15 @@ export default function AccountEntryForm({
               <p className="mt-5 max-w-xl text-sm leading-8 text-[var(--muted)] md:text-base">
                 {mode === "login"
                   ? locale === "ja"
-                    ? "ひなたとのご相談内容やご案内を、あとから見返したいときに使えます。"
+                    ? "ひなたとの対話やご案内を、あとから見返したいときに使えます。"
                     : "The support page brings together consultation history, recommendation notes, family sharing, and follow-up status."
                   : locale === "ja"
-                    ? "登録しておくと、ご相談の流れやご案内をひとつの場所でやさしく確認できるようになります。"
+                    ? "登録しておくと、ひなたとのやりとりやご案内を、ひとつの場所でやさしく続けやすくなります。"
                     : "Create one account to keep consultations and recommendations together."}
               </p>
-              <div className="mt-6 rounded-[1.4rem] bg-[rgba(255,253,249,0.8)] px-5 py-5 text-sm leading-7 text-[var(--muted)]">
+              <div className="panel-sage mt-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
                 <div>{locale === "ja" ? "ご本人でも、ご家族でも、無理のない形で続けられます。" : "This entry works for older adults and family members."}</div>
-                <div className="mt-2">{locale === "ja" ? "LINEで受け取りたい方も、メールで見返したい方も、あとから選べます。" : "You can choose LINE or email later, whichever feels easier."}</div>
+                <div className="mt-2">{locale === "ja" ? "LINEで受け取りたい方も、メールで見返したい方も、あとから静かに選べます。" : "You can choose LINE or email later, whichever feels easier."}</div>
               </div>
               {initialAccount && (
                 <div className="panel-sage mt-6 rounded-[2rem] px-6 py-6 text-sm leading-7">
@@ -131,18 +131,18 @@ export default function AccountEntryForm({
               )}
             </div>
 
-            <div className="rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.9)] p-6 shadow-[0_12px_24px_rgba(47,35,33,0.045)] md:p-8">
-              <div className="mb-6 inline-flex gap-2 rounded-full border border-[color:var(--line-soft)] bg-[var(--surface-soft)] p-1.5">
-                <Link href={loginHref} className={`rounded-full px-5 py-3 text-sm ${mode === "login" ? "bg-[var(--accent)] text-white shadow-[0_10px_24px_rgba(47,35,33,0.18)]" : "text-[var(--muted)]"}`}>
+            <div className="shell-card p-6 md:p-8">
+              <div className="mb-5 inline-flex gap-2 rounded-full border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.88)] p-1.5">
+                <Link href={loginHref} className={`rounded-full px-5 py-3 text-sm ${mode === "login" ? "bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,35,33,0.14)]" : "text-[var(--muted)]"}`}>
                   {locale === "ja" ? "ログイン" : "Login"}
                 </Link>
-                <Link href={registerHref} className={`rounded-full px-5 py-3 text-sm ${mode === "register" ? "bg-[var(--accent)] text-white shadow-[0_10px_24px_rgba(47,35,33,0.18)]" : "text-[var(--muted)]"}`}>
+                <Link href={registerHref} className={`rounded-full px-5 py-3 text-sm ${mode === "register" ? "bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,35,33,0.14)]" : "text-[var(--muted)]"}`}>
                   {locale === "ja" ? "新規登録" : "Register"}
                 </Link>
               </div>
 
               {!initialAccount && (
-                <div id="line-entry" className="panel-sage mb-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
+                <div id="line-entry" className="panel-sage mb-5 rounded-[1.4rem] px-5 py-5 text-sm leading-7">
                   <div className="service-kicker text-[#64705f]">{locale === "ja" ? "あとから受け取りたい方へ" : "Continue with LINE"}</div>
                   <p className="mt-3 text-sm leading-7 text-[var(--accent-sage-text)]">
                     {locale === "ja"
@@ -167,15 +167,15 @@ export default function AccountEntryForm({
                 <input type="hidden" name="next" value={supportHref} />
                 <input type="hidden" name="returnTo" value={mode === "login" ? loginHref : registerHref} />
                 {!initialAccount && (
-                  <div className="rounded-[1.4rem] bg-[var(--surface)] px-5 py-5 text-sm leading-7 text-[var(--muted)]">
-                    <div className="font-medium text-[var(--text)]">{locale === "ja" ? "メールで落ち着いて続ける" : "Continue with email instead"}</div>
+                  <div className="rounded-[1.3rem] bg-[rgba(255,253,249,0.78)] px-5 py-4 text-sm leading-7 text-[var(--muted)]">
+                    <div className="font-medium text-[var(--text)]">{locale === "ja" ? "メールやパスワードで続ける" : "Continue with email instead"}</div>
                     <p className="mt-2">
                       {mode === "login"
                         ? locale === "ja"
-                          ? "メールアドレスとパスワードで、ご相談内容を見返したい方はこちらをお使いください。"
+                          ? "メールアドレスとパスワードで、ひなたとのやりとりを見返したい方はこちらをお使いください。"
                           : "Use this if you want to sign in with your email address and password."
                         : locale === "ja"
-                          ? "LINEを使わずに始めたい場合も、こちらから無理なく登録できます。"
+                          ? "LINEを使わずに始めたい場合も、こちらから落ち着いて登録できます。"
                           : "Use this to create an account with email if you do not want to start with LINE."}
                     </p>
                   </div>
