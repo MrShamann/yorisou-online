@@ -14,9 +14,9 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 md:px-10 md:py-18 lg:grid-cols-[1.14fr_0.86fr] lg:items-center lg:gap-10">
           <div className="order-2 lg:order-1">
             <div className="service-kicker">YORISOUとは</div>
-            <h1 className="display-serif mt-5 max-w-[10.2em] text-[2.6rem] leading-[1.34] md:text-[3.8rem] lg:text-[4.2rem]">
-              移動の不安から、
-              <span className="text-[#79685f] md:inline">暮らしの安心へ。</span>
+            <h1 className="display-serif mt-5 max-w-[11.8em] text-[2.45rem] leading-[1.28] md:text-[3.4rem] lg:text-[3.86rem]">
+              <span className="block md:whitespace-nowrap">移動の不安から、</span>
+              <span className="block text-[#79685f] md:whitespace-nowrap">暮らしの安心へ。</span>
             </h1>
             <p className="mt-6 max-w-[34rem] text-base leading-9 text-[var(--muted)] md:text-lg">
               高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添います。
@@ -55,7 +55,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-2xl">
             <div className="service-kicker">こんなお悩みはありませんか</div>
-            <h2 className="display-serif mt-4 text-[2rem] leading-[1.55] md:text-[2.7rem]">まずは、不安を言葉にするところから。</h2>
+            <h2 className="display-serif mt-4 max-w-[14em] text-[1.9rem] leading-[1.58] md:text-[2.42rem]">
+              <span className="block md:whitespace-nowrap">まずは、</span>
+              <span className="block md:whitespace-nowrap">不安を言葉にするところから。</span>
+            </h2>
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {concerns.map((item) => (
@@ -75,8 +78,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl">
           <div className="rounded-[1.9rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-7 py-8 shadow-[0_12px_24px_rgba(47,35,33,0.04)] md:px-9 md:py-9">
             <div className="service-kicker">Yorisouの進め方</div>
-            <h2 className="display-serif mt-4 max-w-[15em] text-[1.95rem] leading-[1.56] md:text-[2.45rem]">
-              Yorisouは、まず話を聞くところから始めます。
+            <h2 className="display-serif mt-4 max-w-[16em] text-[1.88rem] leading-[1.58] md:text-[2.26rem]">
+              <span className="block md:whitespace-nowrap">Yorisouは、</span>
+              <span className="block md:whitespace-nowrap">まず話を聞くところから始めます。</span>
             </h2>
             <div className="mt-5 max-w-3xl text-sm leading-8 text-[var(--muted)] md:text-base">
               <p>移動や暮らしのお悩みをお聞きしながら、状況に合う支え方を一緒に整理します。</p>

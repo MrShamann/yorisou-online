@@ -74,13 +74,19 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-[rgba(221,208,194,0.52)] bg-[rgba(255,251,246,0.9)] backdrop-blur-xl">
       <div className="container py-4">
         <div className="flex items-center justify-between gap-5">
-          <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline md:gap-4">
+          <Link href={homeHref} className="flex min-w-0 items-center gap-2.5 no-underline md:gap-3.5">
             <div className="flex items-center justify-center">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={120} height={120} className="h-auto w-[86px] object-contain md:w-[108px]" />
+              <Image
+                src="/images/brand/tsuru-logo.png"
+                alt="YORISOU"
+                width={132}
+                height={132}
+                className="h-auto w-[96px] object-contain drop-shadow-[0_6px_12px_rgba(63,45,39,0.06)] md:w-[122px]"
+              />
             </div>
             <div className="min-w-0">
-              <div className="display-serif text-[1.78rem] font-semibold tracking-[0.11em] text-[var(--text)] md:text-[2.18rem]">YORISOU</div>
-              <div className="mt-1 hidden text-[0.88rem] leading-7 text-[var(--muted)] md:block">
+              <div className="display-serif text-[1.7rem] font-semibold tracking-[0.1em] text-[var(--text)] md:text-[2.02rem]">YORISOU</div>
+              <div className="mt-1 hidden text-[0.84rem] leading-7 text-[var(--muted)] md:block">
                 {isEn ? "Calm mobility support for seniors and families in Japan" : "移動の不安から、暮らしの安心へ。"}
               </div>
             </div>

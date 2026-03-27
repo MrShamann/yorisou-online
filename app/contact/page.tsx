@@ -28,7 +28,12 @@ export default function ContactPage() {
     <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
         eyebrow="お問い合わせ"
-        title="お問い合わせも、やさしく話せる窓口でありたいと考えています。"
+        title={
+          <>
+            <span className="block md:whitespace-nowrap">お問い合わせも、</span>
+            <span className="block md:whitespace-nowrap">やさしく話せる窓口でありたいと考えています。</span>
+          </>
+        }
         subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
         primaryHref="/support#scenario-assistant"
         primaryLabel="ひなたに相談する"

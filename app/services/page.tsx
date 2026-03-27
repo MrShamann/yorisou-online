@@ -28,7 +28,12 @@ export default function ServicesPage() {
     <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
         eyebrow="サービス"
-        title="Yorisouのサービスは、まず話を聞くところから始まります。"
+        title={
+          <>
+            <span className="block md:whitespace-nowrap">Yorisouのサービスは、</span>
+            <span className="block md:whitespace-nowrap">まず話を聞くところから始まります。</span>
+          </>
+        }
         subtitle="移動や暮らしの不安をうかがいながら、ご本人とご家族に合う支え方を一緒に整理します。すぐに何かを決める必要はありません。必要に応じて、その先の導入や継続支援まで丁寧につないでいきます。"
         primaryHref="/support#scenario-assistant"
         primaryLabel="ひなたに相談する"

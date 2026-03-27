@@ -28,8 +28,9 @@ export default async function InsightsPage() {
         <div className="mx-auto max-w-7xl px-6 py-14 md:px-10 md:py-16">
           <div className="max-w-3xl">
             <div className="service-kicker">Yorisouの読みもの</div>
-            <h1 className="display-serif mt-5 max-w-[15em] text-[2rem] font-light leading-[1.58] md:text-[2.6rem]">
-              移動と暮らしを考えるための、静かな読みもの。
+            <h1 className="display-serif mt-5 max-w-[16em] text-[1.88rem] font-light leading-[1.6] md:text-[2.28rem]">
+              <span className="block md:whitespace-nowrap">移動と暮らしを考えるための、</span>
+              <span className="block md:whitespace-nowrap">静かな読みもの。</span>
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
               ご家族の安心、地域導入の考え方、導入後の支え方。ひなたとの相談の前後にも読みやすい形で、
@@ -49,7 +50,7 @@ export default async function InsightsPage() {
                   <span>{formatDate(hero.publishedAt)}</span>
                   <span>{hero.regionLabel}</span>
                 </div>
-                <h2 className="mt-5 text-[1.65rem] font-light leading-[1.55] text-[#3B2F2F] md:text-[2rem]">
+                <h2 className="mt-5 text-[1.5rem] font-light leading-[1.58] text-[#3B2F2F] md:text-[1.8rem]">
                   <Link href={`/insights/${hero.slug}`} className="transition hover:text-[#6B5A4A]">
                     {hero.title}
                   </Link>
@@ -91,7 +92,7 @@ export default async function InsightsPage() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-7 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-[1.9rem] font-light leading-[1.5]">{hero ? "そのほかの読みもの" : "Yorisouの読みもの"}</h2>
+              <h2 className="text-[1.7rem] font-light leading-[1.56]">{hero ? "そのほかの読みもの" : "Yorisouの読みもの"}</h2>
               <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">相談の前にも後にも読みやすい順で、関連する論点を並べています。</p>
             </div>
             <div className="hidden text-sm text-[#6B5A4A] md:block">{insights.length}件</div>

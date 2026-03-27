@@ -46,10 +46,10 @@ export default function SiteFooter() {
               </div>
             </div>
             <div>
-              <div className="service-kicker">{isEn ? "Consultation" : "相談と継続"}</div>
+              <div className="service-kicker">{isEn ? "Continue" : "継続とご案内"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
-                <Link href={supportHref}>{isEn ? "Open support" : "ひなたに相談する"}</Link>
-                <Link href={loginHref}>{isEn ? "Login / Register" : "ログイン・新規登録"}</Link>
+                <Link href={supportHref}>{isEn ? "Support page" : "相談ページ"}</Link>
+                <Link href={loginHref}>{isEn ? "Login / Register" : "ログイン・継続"}</Link>
                 <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>
                 <Link href={legalHref}>{isEn ? "Terms & Privacy" : "利用規約・プライバシーポリシー"}</Link>
               </div>

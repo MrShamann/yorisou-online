@@ -35,7 +35,12 @@ export default function PilotPage() {
     <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
         eyebrow="導入・実証"
-        title="導入・実証も、まずは暮らしに合うかを丁寧に見るところから始めます。"
+        title={
+          <>
+            <span className="block md:whitespace-nowrap">導入・実証も、</span>
+            <span className="block md:whitespace-nowrap">まずは暮らしに合うかを丁寧に見るところから始めます。</span>
+          </>
+        }
         subtitle="Yorisouの導入・実証は、自治体、施設、地域事業者の方と一緒に、高齢者とご家族の移動支援が現場で続けられるかを確かめる取り組みです。福岡での学びも活かしながら、相談体験と運用の両方を見ていきます。"
         primaryHref="/contact"
         primaryLabel="導入・実証を相談する"

@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 type HeroProps = {
   eyebrow?: string;
-  title: string;
-  subtitle: string;
+  title: ReactNode;
+  subtitle: ReactNode;
   primaryHref?: string;
   primaryLabel?: string;
   secondaryHref?: string;
@@ -24,7 +25,7 @@ export default function Hero({
       <div className="container py-12 md:py-14">
         <div className="max-w-[52rem]">
           <div className="service-kicker">{eyebrow}</div>
-          <h1 className="display-serif mt-5 max-w-[15em] text-[1.95rem] leading-[1.6] text-[var(--text)] md:text-[2.5rem]">
+          <h1 className="display-serif mt-5 max-w-[16.5em] text-[1.8rem] leading-[1.62] text-[var(--text)] md:text-[2.32rem]">
             {title}
           </h1>
           <p className="mt-5 max-w-[44rem] text-sm leading-8 text-[var(--muted)] md:text-base">

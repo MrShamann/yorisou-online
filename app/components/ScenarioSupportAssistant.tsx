@@ -182,13 +182,13 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
   return (
     <section id="scenario-assistant" className="rounded-[1.9rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-6 md:px-7 md:py-7">
       <div className="service-kicker">{t.badge}</div>
-      <h2 className="display-serif mt-4 max-w-[15em] text-[1.85rem] leading-[1.58] text-[var(--text)] md:text-[2.3rem]">
+      <h2 className="display-serif mt-4 max-w-[16em] text-[1.76rem] leading-[1.62] text-[var(--text)] md:text-[2.08rem]">
         {t.title}
       </h2>
       <p className="mt-4 max-w-3xl text-sm leading-8 text-[var(--muted)] md:text-base">{t.description}</p>
 
       <form className="mt-7" onSubmit={handleSubmit}>
-        <div className="rounded-[1.6rem] bg-[var(--surface-soft)] px-5 py-5">
+        <div className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.92)] px-5 py-5">
           <div className="text-sm font-medium text-[var(--text)]">{t.promptLabel}</div>
           <div className="mt-4 flex flex-wrap gap-2.5">
             {starterOptions.map((starter) => (
@@ -199,17 +199,15 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
                   setIssueType(starter.issueType);
                   setDraft(starter.message);
                 }}
-                className="rounded-full bg-[rgba(255,253,249,0.9)] px-4 py-2.5 text-sm text-[var(--muted)] transition hover:bg-white hover:text-[var(--text)]"
+                className="rounded-full bg-[var(--surface-soft)] px-4 py-2.5 text-sm text-[var(--muted)] transition hover:bg-white hover:text-[var(--text)]"
               >
                 {starter.label}
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="mt-4 rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.92)] px-5 py-5">
           <label className="block">
-            <span className="text-sm font-medium text-[var(--text)]">{t.textareaLabel}</span>
+            <span className="mt-5 block text-sm font-medium text-[var(--text)]">{t.textareaLabel}</span>
             <textarea
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
@@ -260,12 +258,12 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
         {error && <p className="mt-4 text-sm text-[#9A3B2F]">{error}</p>}
       </form>
 
-      <div className="mt-8 border-t border-[color:var(--line-soft)] pt-6">
-        <div className="text-sm font-medium text-[var(--text)]">{t.assistantLabel}</div>
+      {messages.length === 0 && recommendedActions.length === 0 && !scenarioResult ? (
+        <p className="mt-6 text-sm leading-7 text-[var(--muted)]">{t.assistantEmpty}</p>
+      ) : (
+        <div className="mt-8 border-t border-[color:var(--line-soft)] pt-6">
+          <div className="text-sm font-medium text-[var(--text)]">{t.assistantLabel}</div>
 
-        {messages.length === 0 ? (
-          <div className="mt-4 rounded-[1.5rem] bg-[var(--surface-soft)] px-5 py-5 text-sm leading-8 text-[var(--muted)]">{t.assistantEmpty}</div>
-        ) : (
           <div className="mt-4 space-y-3">
             {messages.slice(-2).map((message, index) => (
               <div
@@ -279,30 +277,30 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
               </div>
             ))}
           </div>
-        )}
 
-        {scenarioResult && (
-          <p className="mt-4 text-sm leading-7 text-[var(--accent-sage-text)]">
-            {scenarioResult.labels.persona || activeIdentityLabel}
-            {scenarioResult.labels.scenario ? ` / ${scenarioResult.labels.scenario}` : ""}
-          </p>
-        )}
+          {scenarioResult && (
+            <p className="mt-4 text-sm leading-7 text-[var(--accent-sage-text)]">
+              {scenarioResult.labels.persona || activeIdentityLabel}
+              {scenarioResult.labels.scenario ? ` / ${scenarioResult.labels.scenario}` : ""}
+            </p>
+          )}
 
-        {recommendedActions.length > 0 && (
-          <div className="mt-6">
-            <div className="text-sm font-medium text-[var(--text)]">{t.actionsTitle}</div>
-            <div className="mt-3 space-y-3">
-              {recommendedActions.map((action) => (
-                <Link key={action.id} href={action.href} className="block rounded-[1.4rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.74)] px-5 py-4 transition hover:bg-[var(--surface-soft)]">
-                  <div className="text-sm font-medium text-[var(--text)]">{action.title}</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{action.description}</p>
-                  <div className="mt-3 text-sm text-[var(--accent-sage-text)]">{action.label}</div>
-                </Link>
-              ))}
+          {recommendedActions.length > 0 && (
+            <div className="mt-6">
+              <div className="text-sm font-medium text-[var(--text)]">{t.actionsTitle}</div>
+              <div className="mt-3 space-y-3">
+                {recommendedActions.map((action) => (
+                  <Link key={action.id} href={action.href} className="block rounded-[1.4rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.74)] px-5 py-4 transition hover:bg-[var(--surface-soft)]">
+                    <div className="text-sm font-medium text-[var(--text)]">{action.title}</div>
+                    <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{action.description}</p>
+                    <div className="mt-3 text-sm text-[var(--accent-sage-text)]">{action.label}</div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

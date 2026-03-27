@@ -85,13 +85,23 @@ export default function AccountEntryForm({
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
             <div className="shell-card p-7 md:p-10">
               <div className="service-kicker">{locale === "ja" ? "相談のつづき" : "Continue your consultation"}</div>
-              <h1 className="display-serif mt-4 max-w-[13em] text-[2rem] leading-[1.56] md:text-[2.75rem]">
+              <h1 className="display-serif mt-4 max-w-[14.5em] text-[1.92rem] leading-[1.58] md:text-[2.38rem]">
                 {mode === "login"
                   ? locale === "ja"
-                    ? "落ち着いて、相談のつづきを確認できます。"
+                    ? (
+                      <>
+                        <span className="block md:whitespace-nowrap">落ち着いて、</span>
+                        <span className="block md:whitespace-nowrap">相談のつづきを確認できます。</span>
+                      </>
+                    )
                     : "Log in to review your support"
                   : locale === "ja"
-                    ? "あとから続けやすい形を整えます。"
+                    ? (
+                      <>
+                        <span className="block md:whitespace-nowrap">あとから続けやすい</span>
+                        <span className="block md:whitespace-nowrap">形を整えます。</span>
+                      </>
+                    )
                     : "Create an account for ongoing support"}
               </h1>
               <p className="mt-5 max-w-xl text-sm leading-8 text-[var(--muted)] md:text-base">

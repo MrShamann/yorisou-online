@@ -334,8 +334,15 @@ export default function SupportWorkspace({
           <div className="mx-auto max-w-4xl">
             <div className="shell-card p-7 md:p-10">
               <div className="service-kicker">{locale === "ja" ? "移動の不安から、暮らしの安心へ。" : "Consultation support access"}</div>
-              <h1 className="display-serif mt-4 max-w-[14em] text-[2.05rem] leading-[1.54] md:text-[2.85rem]">
-                {locale === "ja" ? "AI相談員 ひなたと、ゆっくりお話しください" : "Talk with our support guide"}
+              <h1 className="display-serif mt-4 max-w-[15em] text-[1.95rem] leading-[1.58] md:text-[2.45rem]">
+                {locale === "ja" ? (
+                  <>
+                    <span className="block md:whitespace-nowrap">AI相談員 ひなたと、</span>
+                    <span className="block md:whitespace-nowrap">ゆっくりお話しください</span>
+                  </>
+                ) : (
+                  "Talk with our support guide"
+                )}
               </h1>
               <p className="mt-5 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
                 {locale === "ja"
