@@ -6,9 +6,9 @@ import { fetchNews } from "@/lib/insights/service";
 import type { InsightEntry } from "@/lib/insights/types";
 
 export const metadata: Metadata = {
-  title: "Yorisou Insights | 高齢社会と移動を読み解く",
+  title: "Yorisouの読みもの | 移動と暮らしを考える",
   description:
-    "高齢社会、地域交通、福祉移動、シニア向けモビリティの論点を、Yorisouの実務視点で整理するインテリジェンスレイヤーです。",
+    "高齢社会と移動、暮らしの支え方、地域導入の考え方を、Yorisouの視点でやさしく整理する読みもの一覧です。",
 };
 
 export default async function InsightsPage() {
@@ -23,16 +23,18 @@ export default async function InsightsPage() {
   }>;
 
   return (
-    <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
+    <main className="min-h-screen bg-[#F7F0E5] text-[#312321]">
       <section className="relative overflow-hidden border-b border-[#D6C3A3]/35">
         <div className="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-24">
           <div className="max-w-4xl">
-            <h1 className="text-4xl font-light leading-tight md:text-6xl">
-              今、まず読んでおきたいことを
-              <span className="block text-[#6B5A4A]">Yorisouの視点で整理しています。</span>
+            <div className="service-kicker">Yorisouの読みもの</div>
+            <h1 className="display-serif mt-5 text-4xl font-light leading-tight md:text-6xl">
+              移動と暮らしを考えるための
+              <span className="block text-[#6B5A4A]">静かな読みものをそろえています。</span>
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              ご家族の安心、地域導入の考え方、導入後の支え方。高齢社会と移動の論点を、まず読むべき順に並べています。
+              ご家族の安心、地域導入の考え方、導入後の支え方。ひなたとの相談の前後にも読みやすい形で、
+              気になる論点を整理しています。
             </p>
           </div>
         </div>
@@ -91,7 +93,7 @@ export default async function InsightsPage() {
           <div className="mb-8 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-3xl font-light">{hero ? "そのほかの読みもの" : "Yorisouの読みもの"}</h2>
-              <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">続けて読みやすい順に、関連する論点を並べています。</p>
+              <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">相談の前にも後にも読みやすい順で、関連する論点を並べています。</p>
             </div>
             <div className="hidden text-sm text-[#6B5A4A] md:block">{insights.length}件</div>
           </div>

@@ -5,8 +5,8 @@ import { composeLineReadinessViewModel, getSupportWorkspaceData } from "@/lib/se
 import { getLineMessagingConfigStatus, isLineLoginConfigured } from "@/lib/server/yorisouLine";
 
 export const metadata: Metadata = {
-  title: "Yorisou | サポートページ",
-  description: "ご相談者やお困りごとを選びながら、AIと一緒に内容を整理し、次のご案内につなげられるYorisouのサポートページです。",
+  title: "ひなたに相談する | Yorisou",
+  description: "AI相談員 ひなたと一緒に、移動や暮らしのお悩みを整理し、必要な支え方や次のご案内につなげられるYorisouの相談ページです。",
 };
 
 export default async function SupportPage({

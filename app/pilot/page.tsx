@@ -1,107 +1,96 @@
-import Image from "next/image";
-import Link from "next/link";
+import type { Metadata } from "next";
+
 import CTA from "../components/CTA";
 import CardGrid from "../components/CardGrid";
 import Hero from "../components/Hero";
 import Section from "../components/Section";
 
+export const metadata: Metadata = {
+  title: "導入・実証 | Yorisou",
+  description: "Yorisouの導入・実証は、高齢者とご家族の移動支援が地域で続けられるかを、相談体験と運用の両面から丁寧に確かめる取り組みです。",
+};
+
+const themes = [
+  {
+    title: "相談導線の確かめ",
+    body: "ご本人、ご家族、地域の関係者が無理なく相談を始められるかを見ます。",
+  },
+  {
+    title: "運用の続けやすさ",
+    body: "現場での案内、共有、見直しが継続できる流れになっているかを確認します。",
+  },
+  {
+    title: "導入判断の整理",
+    body: "何を導入するかより先に、どの条件なら続けられるかを落ち着いて見極めます。",
+  },
+];
+
+const deliverables = [
+  "対象地域や利用場面に応じた相談・運用整理",
+  "小規模導入や実証の進め方の設計",
+  "現場で得られた気づきの共有と次の提案",
+];
+
 export default function PilotPage() {
   return (
-    <main>
+    <main className="bg-[#F7F0E5] text-[#312321]">
       <Hero
-        title="福岡パイロット"
-        subtitle="Yorisouにとって福岡は、単なる地域事例ではなく、利用者適合、家族受容、運用成立性、将来標準化を確認するための戦略的な検証拠点です。"
+        title="導入・実証も、まずは暮らしに合うかを丁寧に見るところから始めます。"
+        subtitle="Yorisouの導入・実証は、自治体、施設、地域事業者の方と一緒に、高齢者とご家族の移動支援が現場で続けられるかを確かめる取り組みです。福岡での学びも活かしながら、相談体験と運用の両方を見ていきます。"
         primaryHref="/contact"
         primaryLabel="導入・実証を相談する"
-        secondaryHref="/about"
-        secondaryLabel="Yorisouの考え方を見る"
+        secondaryHref="/services"
+        secondaryLabel="サービスを見る"
       />
 
-      <section className="section" style={{ paddingTop: 22 }}>
-        <div className="container">
-          <div className="card" style={{ padding: 10 }}>
-            <Image src="/images/illustrations/pilot-scene.svg" alt="実証実験イメージ" width={1000} height={620} style={{ width: "100%", height: "auto", borderRadius: 10 }} />
-          </div>
-        </div>
-      </section>
-
-      <Section label="Role of Fukuoka" title="福岡パイロットの目的">
-        <div className="card">
-          <p className="muted" style={{ margin: 0 }}>
-            福岡パイロットでは、安全性、受容性、運用負荷を同時に見ながら、どのような相談導線と支援体験が日本の高齢者移動に合うのかを検証します。
-            目的は、地域に合う導入判断と、将来のYorisou標準づくりの両方に必要な学びを得ることです。
-          </p>
-        </div>
-      </Section>
-
-      <Section label="Validation Themes" title="主な検証テーマ" lead="車両モデル名ではなく、生活導線と支援体験を基準に設計します。">
-        <CardGrid>
-          <article className="card"><h3>生活支援ルート型</h3><p className="muted">住宅地から商業施設・公共施設までの短距離移動について、日常利用のしやすさを確認します。</p></article>
-          <article className="card"><h3>通院アクセス型</h3><p className="muted">診療所・薬局へのアクセス改善をテーマに、時間帯と支援導線の適合性を確かめます。</p></article>
-          <article className="card"><h3>介護施設連携型</h3><p className="muted">施設利用者の外出機会創出と、運用者負荷を抑えた支援モデルの成立性を検証します。</p></article>
-        </CardGrid>
-      </Section>
-
-      <Section label="Process" title="実証プロセス（6ステップ）">
-        <div className="card">
-          <ol className="list-clean" style={{ margin: 0, display: "grid", gap: 8 }}>
-            <li>事前相談・課題整理</li>
-            <li>対象エリア・導線設計</li>
-            <li>運用手順・安全計画策定</li>
-            <li>現場実施・運行管理</li>
-            <li>中間評価・改善調整</li>
-            <li>最終評価・次段階計画</li>
-          </ol>
-        </div>
-      </Section>
-
-      <Section label="What We Observe" title="主な観察項目">
-        <CardGrid>
-          <article className="card"><h3>利用実績</h3><p className="muted">利用回数、時間帯別利用、再利用率</p></article>
-          <article className="card"><h3>移動量</h3><p className="muted">移動距離、ルート別利用傾向、所要時間</p></article>
-          <article className="card"><h3>利用者評価</h3><p className="muted">満足度、安心感、要望項目、家族の納得感</p></article>
-          <article className="card"><h3>安全指標</h3><p className="muted">ヒヤリハット件数、近接事象、運用是正履歴</p></article>
-          <article className="card"><h3>運用負荷</h3><p className="muted">人員工数、問い合わせ件数、保守対応頻度</p></article>
-        </CardGrid>
-      </Section>
-
-      <Section label="Outputs" title="成果物">
-        <CardGrid>
-          <article className="card"><h3>Pilot Report</h3><p className="muted">実績値と定性評価を統合した報告書</p></article>
-          <article className="card"><h3>改善提案</h3><p className="muted">課題別の運用改善提案と優先順位</p></article>
-          <article className="card"><h3>次段階計画</h3><p className="muted">対象拡張の条件、体制案、実施ロードマップ、Yorisou標準への反映事項</p></article>
+      <Section
+        label="Approach"
+        title="Yorisouが大切にしていること"
+        lead="制度や計画だけでなく、実際に使う方、ご家族、運営する方の無理のなさを同時に見ます。"
+      >
+        <CardGrid minWidth={220}>
+          {themes.map((item) => (
+            <article key={item.title} className="card">
+              <h3>{item.title}</h3>
+              <p className="muted">{item.body}</p>
+            </article>
+          ))}
         </CardGrid>
       </Section>
 
       <Section
-        label="Strategic Meaning"
-        title="福岡での学びは、今後のYorisouのサービス標準に返していきます"
-        lead="外部ソリューションの適合性を見極めるだけでなく、将来的にYorisouとして何を標準化すべきかを見定める役割も持たせています。"
+        label="How We Support"
+        title="ご相談から実施までの流れ"
+        lead="導入の可否を急いで決めるのではなく、地域や現場に合う形を一緒に整理していきます。"
       >
-        <div className="card">
-          <p className="muted" style={{ margin: 0 }}>
-            福岡パイロットは、地域ごとの導入支援と並行して、相談の進め方、説明のしやすさ、支援継続の要件を蓄積する場所です。
-            この知見が、将来的なYorisouブランドの設計思想と品質基準の土台になります。
-          </p>
+        <div className="grid gap-4 md:grid-cols-4">
+          {["課題の共有", "対象場面の整理", "小規模実施", "振り返りと次の提案"].map((item, index) => (
+            <div key={item} className="rounded-[1.6rem] border border-[#E2D5C7] bg-[#FFFBF6] px-5 py-5">
+              <div className="text-sm tracking-[0.12em] text-[#8A7764]">STEP {index + 1}</div>
+              <div className="mt-3 text-lg leading-8 text-[#3B2F2F]">{item}</div>
+            </div>
+          ))}
         </div>
       </Section>
 
-      <Section label="よくあるご質問" title="よくあるご質問">
-        <div className="grid" style={{ gridTemplateColumns: "1fr", gap: 10 }}>
-          <article className="card"><h3>Q. 実証期間はどの程度ですか。</h3><p className="muted">A. 地域状況に応じて、1〜3か月程度の小規模実証を基本としています。</p></article>
-          <article className="card"><h3>Q. 実施前に必要な準備はありますか。</h3><p className="muted">A. 関係者ヒアリング、対象導線の現地確認、運用ルールの合意形成を実施します。</p></article>
-          <article className="card"><h3>Q. 実証後の継続導入支援は可能ですか。</h3><p className="muted">A. 可能です。評価結果を踏まえ、体制・予算・範囲を整理した次期計画と、継続支援の考え方をご提案します。</p></article>
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <Link href="/contact" className="btn btn-primary">お問い合わせへ</Link>
+      <Section
+        label="What You Receive"
+        title="導入・実証でご一緒できること"
+      >
+        <div className="card">
+          <ul className="list-clean muted" style={{ display: "grid", gap: 10, margin: 0 }}>
+            {deliverables.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </div>
       </Section>
 
       <CTA
-        title="地域条件に応じた実証設計をご提案します"
-        description="まずは対象地域と課題の概要をご共有ください。"
+        title="地域や現場に合う進め方を、まずは一緒に整理しませんか。"
+        description="導入ありきではなく、何を確かめたいか、どこから始めるのがよいかを落ち着いてご相談いただけます。"
         href="/contact"
-        label="相談を開始する"
+        label="導入・実証を相談する"
       />
     </main>
   );

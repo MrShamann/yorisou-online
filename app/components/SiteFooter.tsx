@@ -45,7 +45,7 @@ export default function SiteFooter() {
 
           <div className="grid gap-8 sm:grid-cols-2">
             <div>
-              <div className="service-kicker">{isEn ? "Navigation" : "ご案内"}</div>
+              <div className="service-kicker">{isEn ? "About Yorisou" : "Yorisouについて"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
                 <Link href={aboutHref}> {isEn ? "About" : "Yorisouについて"} </Link>
                 <Link href={servicesHref}> {isEn ? "Services" : "サービス"} </Link>
@@ -54,10 +54,10 @@ export default function SiteFooter() {
               </div>
             </div>
             <div>
-              <div className="service-kicker">{isEn ? "Support" : "サポート"}</div>
+              <div className="service-kicker">{isEn ? "Consultation" : "相談と継続"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
                 <Link href={supportHref}>{isEn ? "Open support" : "ひなたに相談する"}</Link>
-                <Link href={insightsHref}>{isEn ? "Insights" : "インサイト"}</Link>
+                <Link href={insightsHref}>{isEn ? "Insights" : "読みもの"}</Link>
                 <Link href={legalHref}>{isEn ? "Terms & Privacy" : "利用規約・プライバシーポリシー"}</Link>
                 <Link href={loginHref}>{isEn ? "Login / Register" : "ログイン・新規登録"}</Link>
               </div>

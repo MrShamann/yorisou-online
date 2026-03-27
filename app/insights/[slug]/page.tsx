@@ -39,7 +39,7 @@ export default async function InsightDetailPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
+    <main className="min-h-screen bg-[#F7F0E5] text-[#312321]">
       <article className="mx-auto max-w-5xl px-6 py-14 md:px-10 md:py-18">
         <Link href="/insights" className="text-sm text-[#6B5A4A] transition hover:text-[#3B2F2F]">
           ← インサイト一覧へ戻る
@@ -57,7 +57,7 @@ export default async function InsightDetailPage({
           <h1 className="mt-4 text-4xl font-light leading-tight md:text-5xl">{insight.title}</h1>
           <p className="mt-6 text-base leading-8 text-[#5A4B3E] md:text-lg">{insight.summary}</p>
           <div className="mt-5 text-sm text-[#6B5A4A]">
-            Source:{" "}
+            出典:{" "}
             <a href={insight.sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4">
               {insight.sourceName}
             </a>
@@ -66,12 +66,12 @@ export default async function InsightDetailPage({
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">Why It Matters</div>
+            <div className="text-sm tracking-[0.18em] text-[#8A7764]">いま読む理由</div>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{insight.whyItMatters}</p>
           </div>
 
           <div className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">YORISOU VIEW</div>
+            <div className="text-sm tracking-[0.18em] text-[#8A7764]">Yorisouの見方</div>
             <div className="mt-4 grid gap-4">
               {insight.yorisouView.map((item) => (
                 <div key={item} className="rounded-2xl bg-[#FCFAF6] p-4 text-sm leading-7 text-[#5A4B3E]">
@@ -83,7 +83,7 @@ export default async function InsightDetailPage({
         </section>
 
         <section className="mt-8 rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
-          <div className="text-sm tracking-[0.18em] text-[#8A7764]">Practical Takeaways</div>
+          <div className="text-sm tracking-[0.18em] text-[#8A7764]">現場へのヒント</div>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             {insight.practicalTakeaways.map((item) => (
               <div key={item} className="rounded-2xl bg-[#FCFAF6] p-4 text-sm leading-7 text-[#5A4B3E]">
@@ -94,7 +94,7 @@ export default async function InsightDetailPage({
         </section>
 
         <section className="mt-8 rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
-          <div className="text-sm tracking-[0.18em] text-[#8A7764]">What This Means</div>
+          <div className="text-sm tracking-[0.18em] text-[#8A7764]">立場ごとの見え方</div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <AudienceCard title="ご高齢の方へ" text={insight.whatThisMeans.seniors} />
             <AudienceCard title="ご家族へ" text={insight.whatThisMeans.families} />

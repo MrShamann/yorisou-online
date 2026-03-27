@@ -40,7 +40,7 @@ export default function InsightCard({
 
       {!isList && (
         <div className="mt-5 rounded-[1.25rem] border border-[#D6C3A3]/30 bg-[#FCFAF6] p-4">
-          <div className="text-xs tracking-[0.18em] text-[#8A7764]">YORISOU VIEW</div>
+          <div className="text-xs tracking-[0.18em] text-[#8A7764]">Yorisouの見方</div>
           <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{primaryView}</p>
         </div>
       )}

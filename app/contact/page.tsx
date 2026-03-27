@@ -1,14 +1,16 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+
 import ContactForm from "../components/ContactForm";
+import Hero from "../components/Hero";
 
 const inquiryCards = [
   {
-    title: "導入体験のご相談",
-    text: "ご本人やご家族が安心して確認できるよう、体験機会や初期相談を落ち着いてご案内します。",
+    title: "ご本人・ご家族のご相談",
+    text: "移動や暮らしの不安について、ひなたとの相談につながる形でご案内します。",
   },
   {
-    title: "連携・実証のご相談",
-    text: "自治体、地域団体、施設、事業者との連携や小規模実証に関するご相談を受け付けています。",
+    title: "導入・実証のご相談",
+    text: "自治体、施設、地域事業者の方からの導入や小規模実証に関するご相談をお受けします。",
   },
   {
     title: "一般のお問い合わせ",
@@ -16,122 +18,76 @@ const inquiryCards = [
   },
 ];
 
-const trustPoints = [
-  "初めてのご相談でも話しやすい窓口を心がけています。",
-  "地域に根ざした視点で、無理のない導入を大切にします。",
-  "ご高齢の方やご家族にも伝わりやすい丁寧なご案内を行います。",
-];
+export const metadata: Metadata = {
+  title: "お問い合わせ | Yorisou",
+  description: "ご本人やご家族のご相談から、導入・実証に関するお問い合わせまで、Yorisouの窓口で落ち着いてお受けしています。",
+};
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
-      <section className="relative overflow-hidden border-b border-[#D6C3A3]/35">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 md:px-10 md:py-24 lg:grid-cols-[1.05fr_0.95fr]">
-          <div>
-            <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#D6C3A3]/60 bg-white/60 px-4 py-2 text-sm tracking-wide text-[#6B5A4A] backdrop-blur">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D6C3A3]/40 bg-white/80 shadow-sm">
-                <Image
-                  src="/images/brand/tsuru-logo.png"
-                  alt="Yorisou logo"
-                  width={24}
-                  height={24}
-                  className="h-6 w-6 object-contain"
-                />
-              </span>
-              Yorisou · ご相談窓口
-            </div>
+    <main className="bg-[#F7F0E5] text-[#312321]">
+      <Hero
+        title="お問い合わせも、やさしく話せる窓口でありたいと考えています。"
+        subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
+        primaryHref="/support#scenario-assistant"
+        primaryLabel="ひなたに相談する"
+        secondaryHref="/services"
+        secondaryLabel="サービスを見る"
+      />
 
-            <h1 className="text-4xl font-light leading-tight md:text-6xl">
-              やさしく相談できる
-              <span className="block text-[#6B5A4A]">お問い合わせ窓口</span>
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisouは、ご本人、ご家族、地域の関係者にとって話しかけやすい窓口でありたいと考えています。
-              体験のご相談から地域連携まで、落ち着いた対話を大切にしながらご案内します。
+      <section className="section">
+        <div className="container">
+          <div className="section-header">
+            <p className="section-label">Inquiry</p>
+            <h2 className="section-title">ご相談いただける内容</h2>
+            <p className="muted" style={{ marginTop: 10, maxWidth: 760 }}>
+              個人のご相談から、地域での導入検討まで、目的に応じた形でご案内します。
             </p>
           </div>
 
-          <div className="relative">
-            <div className="absolute -left-8 top-10 h-40 w-40 rounded-full bg-[#D6C3A3]/25 blur-3xl" />
-            <div className="absolute -bottom-8 right-0 h-52 w-52 rounded-full bg-white/55 blur-3xl" />
-
-            <div className="relative rounded-[2rem] border border-[#D6C3A3]/40 bg-white/70 p-5 shadow-[0_20px_60px_rgba(59,47,47,0.08)] backdrop-blur">
-              <div className="rounded-[1.5rem] bg-gradient-to-br from-[#F7F4EE] to-[#ECE5D8] p-6">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <div className="text-xs tracking-[0.2em] text-[#8A7764]">ご相談窓口</div>
-                    <div className="mt-2 text-2xl font-light">Yorisou</div>
-                  </div>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6C3A3]/50 bg-white shadow-sm">
-                    <Image
-                      src="/images/brand/tsuru-logo.png"
-                      alt="Yorisou brand mark"
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 object-contain"
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-[1.5rem] border border-[#D6C3A3]/40 bg-[#FCFAF6] p-5">
-                  <p className="text-sm leading-7 text-[#5A4B3E]">
-                    ご相談内容がまだ固まっていなくても問題ありません。まずは試してみたいこと、
-                    気になっていること、地域で感じていることからお聞かせください。
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-[#D6C3A3]/30 bg-white/45">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
-          <div className="mb-8 max-w-3xl">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">ご相談内容</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">ご相談いただける内容</h2>
-            <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
-              個人の体験相談から地域での導入検討まで、目的に応じた形でお受けしています。
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3">
             {inquiryCards.map((item) => (
-              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm">
-                <h3 className="text-xl font-light">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
-              </div>
+              <article key={item.title} className="card">
+                <h3>{item.title}</h3>
+                <p className="muted">{item.text}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-6 py-16 md:px-10">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-[#D6C3A3]/40 bg-white/70 p-6 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur md:p-8">
-            <div className="mb-6">
-              <div className="text-sm tracking-[0.18em] text-[#8A7764]">お問い合わせフォーム</div>
-              <h2 className="mt-3 text-3xl font-light">お問い合わせフォーム</h2>
-              <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
-                ご希望に近い内容をお選びのうえ、必要事項をご入力ください。内容に応じて、順次ご連絡します。
+      <section className="section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="card">
+              <div className="service-kicker">Contact form</div>
+              <h2 className="section-title" style={{ marginTop: 12 }}>
+                お問い合わせフォーム
+              </h2>
+              <p className="muted" style={{ marginTop: 12 }}>
+                内容に応じて、順次ご連絡します。相談の入口として使いたい場合も、そのままお送りいただけます。
               </p>
-              <p className="mt-3 text-sm leading-7 text-[#6B5A4A]">
-                お問い合わせはフォームよりお願いいたします。内容を確認のうえ、順次ご連絡いたします。
-              </p>
+              <div style={{ marginTop: 24 }}>
+                <ContactForm locale="ja" />
+              </div>
             </div>
-            <ContactForm locale="ja" />
-          </div>
 
-          <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-6 shadow-sm md:p-8">
-            <div className="text-sm tracking-[0.18em] text-[#8A7764]">安心感</div>
-            <h2 className="mt-3 text-3xl font-light">安心して話せる窓口を目指して</h2>
-            <div className="mt-6 grid gap-4">
-              {trustPoints.map((item) => (
-                <div key={item} className="rounded-2xl border border-[#D6C3A3]/30 bg-white/80 p-5">
-                  <p className="text-sm leading-7 text-[#5A4B3E]">{item}</p>
-                </div>
-              ))}
+            <div className="card">
+              <div className="service-kicker">A calm first step</div>
+              <h2 className="section-title" style={{ marginTop: 12 }}>
+                はじめてでも大丈夫です
+              </h2>
+              <div className="grid gap-4" style={{ marginTop: 18 }}>
+                {[
+                  "ご相談内容が曖昧でも、気になることからお話しいただけます。",
+                  "ご高齢の方やご家族にも伝わりやすいご案内を心がけています。",
+                  "必要に応じて、ひなたとの相談や導入相談につながる形で整理します。",
+                ].map((item) => (
+                  <div key={item} className="rounded-[1.5rem] border border-[#E2D5C7] bg-[#FFFBF6] px-5 py-4 text-sm leading-8 text-[#5A4B3E]">
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
