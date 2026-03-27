@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="bg-[#F7F0E5] text-[#312321]">
+    <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
         title="お問い合わせも、やさしく話せる窓口でありたいと考えています。"
         subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
@@ -83,7 +83,7 @@ export default function ContactPage() {
                   "ご高齢の方やご家族にも伝わりやすいご案内を心がけています。",
                   "必要に応じて、ひなたとの相談や導入相談につながる形で整理します。",
                 ].map((item) => (
-                  <div key={item} className="rounded-[1.5rem] border border-[#E2D5C7] bg-[#FFFBF6] px-5 py-4 text-sm leading-8 text-[#5A4B3E]">
+                  <div key={item} className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-4 text-sm leading-8 text-[var(--muted)]">
                     {item}
                   </div>
                 ))}

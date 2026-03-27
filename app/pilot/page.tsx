@@ -33,7 +33,7 @@ const deliverables = [
 
 export default function PilotPage() {
   return (
-    <main className="bg-[#F7F0E5] text-[#312321]">
+    <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
         title="導入・実証も、まずは暮らしに合うかを丁寧に見るところから始めます。"
         subtitle="Yorisouの導入・実証は、自治体、施設、地域事業者の方と一緒に、高齢者とご家族の移動支援が現場で続けられるかを確かめる取り組みです。福岡での学びも活かしながら、相談体験と運用の両方を見ていきます。"
@@ -65,9 +65,9 @@ export default function PilotPage() {
       >
         <div className="grid gap-4 md:grid-cols-4">
           {["課題の共有", "対象場面の整理", "小規模実施", "振り返りと次の提案"].map((item, index) => (
-            <div key={item} className="rounded-[1.6rem] border border-[#E2D5C7] bg-[#FFFBF6] px-5 py-5">
-              <div className="text-sm tracking-[0.12em] text-[#8A7764]">STEP {index + 1}</div>
-              <div className="mt-3 text-lg leading-8 text-[#3B2F2F]">{item}</div>
+            <div key={item} className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-5">
+              <div className="text-sm tracking-[0.12em] text-[#87776b]">STEP {index + 1}</div>
+              <div className="mt-3 text-lg leading-8 text-[var(--text)]">{item}</div>
             </div>
           ))}
         </div>

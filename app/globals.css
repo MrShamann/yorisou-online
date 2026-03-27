@@ -1,17 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f7f0e5;
+  --bg: #faf5ee;
   --surface: #fffdf9;
-  --surface-soft: #f9f3eb;
-  --surface-soft-strong: #f3eadf;
-  --line: #d8c6b4;
-  --text: #312321;
-  --muted: #70605a;
-  --accent: #2f2321;
-  --accent-soft: #ede2d4;
-  --accent-sage: #dbe7d7;
-  --accent-sage-text: #35513d;
+  --surface-soft: #f8f2ea;
+  --surface-soft-strong: #f1e8de;
+  --surface-sage: #edf2ea;
+  --surface-sage-strong: #e4ebe0;
+  --line: #ddd0c2;
+  --line-soft: #e8ddd1;
+  --line-sage: #cfd9cb;
+  --text: #342724;
+  --muted: #6f625b;
+  --accent: #322522;
+  --accent-soft: #ebe0d2;
+  --accent-sage: #d6dfd1;
+  --accent-sage-text: #4c5a49;
   --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
   --font-serif: "Iowan Old Style", "Palatino Linotype", "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
@@ -71,8 +75,8 @@ main {
 }
 
 .card {
-  background: rgba(255, 251, 246, 0.88);
-  border: 1px solid rgba(216, 198, 180, 0.42);
+  background: rgba(255, 252, 247, 0.9);
+  border: 1px solid rgba(221, 208, 194, 0.44);
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 14px 28px rgba(49, 35, 33, 0.04);
@@ -104,9 +108,9 @@ main {
 }
 
 .btn-secondary {
-  background: rgba(255, 253, 249, 0.94);
+  background: rgba(255, 253, 249, 0.9);
   color: var(--text);
-  border-color: rgba(216, 198, 180, 0.72);
+  border-color: rgba(221, 208, 194, 0.8);
   box-shadow: 0 8px 18px rgba(47, 35, 33, 0.04);
 }
 
@@ -123,11 +127,17 @@ main {
 }
 
 .shell-card {
-  border: 1px solid rgba(217, 204, 184, 0.5);
-  background: rgba(255, 251, 246, 0.9);
+  border: 1px solid rgba(221, 208, 194, 0.52);
+  background: rgba(255, 252, 247, 0.9);
   backdrop-filter: blur(12px);
   border-radius: 38px;
   box-shadow: 0 22px 46px rgba(47, 35, 33, 0.06);
+}
+
+.panel-sage {
+  border: 1px solid rgba(207, 217, 203, 0.72);
+  background: linear-gradient(180deg, rgba(241, 245, 238, 0.96) 0%, rgba(235, 241, 232, 0.96) 100%);
+  color: var(--accent-sage-text);
 }
 
 .display-serif {

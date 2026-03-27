@@ -176,21 +176,21 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
   return (
     <section
       id="scenario-assistant"
-      className="rounded-[2.2rem] border border-[#D6C3A3]/20 bg-white/78 p-6 shadow-[0_16px_38px_rgba(59,47,47,0.04)] md:p-8"
+      className="rounded-[2.2rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.78)] p-6 shadow-[0_16px_38px_rgba(59,47,47,0.04)] md:p-8"
     >
       <div className="service-kicker">{t.badge}</div>
-      <h2 className="mt-3 max-w-[18em] text-[2rem] font-light leading-[1.36] text-[#3B2F2F] md:text-[2.4rem]">
+      <h2 className="mt-3 max-w-[18em] text-[2rem] font-light leading-[1.36] text-[var(--text)] md:text-[2.4rem]">
         {t.title}
       </h2>
-      <p className="mt-4 max-w-2xl text-sm leading-8 text-[#5A4B3E] md:text-base">{t.description}</p>
+      <p className="mt-4 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">{t.description}</p>
 
       <form className="mt-7 space-y-6" onSubmit={handleSubmit}>
-        <div className="rounded-[2rem] border border-[#E0D2C4]/72 bg-[#FFFBF6] px-5 py-6 md:px-7">
-          <div className="text-sm font-medium text-[#312321]">{t.introTitle}</div>
-          <p className="mt-2 text-sm leading-7 text-[#6B5A4A]">{t.helper}</p>
+        <div className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-6 md:px-7">
+          <div className="text-sm font-medium text-[var(--text)]">{t.introTitle}</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{t.helper}</p>
 
           <div className="mt-6">
-            <div className="text-sm font-medium text-[#312321]">{t.step1}</div>
+            <div className="text-sm font-medium text-[var(--text)]">{t.step1}</div>
             <div className="mt-3 flex flex-wrap gap-3">
               {identityOptions[locale].map((option) => (
                 <button
@@ -199,8 +199,8 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
                   onClick={() => setIdentity(option.value)}
                   className={`rounded-full px-4 py-3 text-sm transition ${
                     identity === option.value
-                      ? "bg-[#312321] text-white shadow-[0_10px_24px_rgba(47,35,33,0.12)]"
-                      : "border border-[#D6C3A3]/42 bg-white text-[#5A4B3E]"
+                      ? "bg-[var(--accent)] text-white shadow-[0_10px_24px_rgba(47,35,33,0.12)]"
+                      : "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.92)] text-[var(--muted)]"
                   }`}
                 >
                   {option.label}
@@ -210,7 +210,7 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
           </div>
 
           <div className="mt-6">
-            <div className="text-sm font-medium text-[#312321]">{t.step2}</div>
+            <div className="text-sm font-medium text-[var(--text)]">{t.step2}</div>
             <div className="mt-3 flex flex-wrap gap-3">
               {issueOptions[locale].map((option) => (
                 <button
@@ -219,8 +219,8 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
                   onClick={() => setIssueType(option.value)}
                   className={`rounded-full px-4 py-3 text-sm transition ${
                     issueType === option.value
-                      ? "bg-[#F3E8D6] text-[#312321] shadow-[0_10px_24px_rgba(47,35,33,0.06)]"
-                      : "border border-[#D6C3A3]/40 bg-white text-[#5A4B3E]"
+                      ? "bg-[var(--accent-soft)] text-[var(--text)] shadow-[0_10px_24px_rgba(47,35,33,0.06)]"
+                      : "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.92)] text-[var(--muted)]"
                   }`}
                 >
                   {option.label}
@@ -229,31 +229,31 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
             </div>
           </div>
 
-          <div className="mt-6 rounded-[1.6rem] bg-[#FCF7F0] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-            <div className="text-xs tracking-[0.12em] text-[#8A7764]">{t.selectionLabel}</div>
+          <div className="mt-6 rounded-[1.6rem] bg-[var(--surface-soft)] px-4 py-4 text-sm leading-7 text-[var(--muted)]">
+            <div className="text-xs tracking-[0.12em] text-[#87776b]">{t.selectionLabel}</div>
             <div className="mt-2">
               {identityLabel} / {issueLabel}
             </div>
           </div>
 
           <div className="mt-6">
-            <label className="block text-sm font-medium text-[#312321]">
+            <label className="block text-sm font-medium text-[var(--text)]">
               <span>{t.step3}</span>
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={t.placeholder}
-                className="mt-3 min-h-[150px] w-full rounded-[1.4rem] border border-[#D6C3A3]/38 bg-white px-4 py-4 text-sm leading-7 text-[#3B2F2F] outline-none transition focus:border-[#6B5A4A]"
+                className="mt-3 min-h-[150px] w-full rounded-[1.4rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.94)] px-4 py-4 text-sm leading-7 text-[var(--text)] outline-none transition focus:border-[#867164]"
               />
             </label>
           </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm leading-7 text-[#6B5A4A]">{t.emptyPrompt}</p>
+            <p className="text-sm leading-7 text-[var(--muted)]">{t.emptyPrompt}</p>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-[1.2rem] bg-[#312321] px-6 py-4 text-sm text-white shadow-[0_16px_30px_rgba(47,35,33,0.14)] transition hover:translate-y-[-1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-[1.2rem] bg-[var(--accent)] px-6 py-4 text-sm text-white shadow-[0_16px_30px_rgba(47,35,33,0.14)] transition hover:translate-y-[-1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isSubmitting ? t.loading : t.submit}
             </button>
@@ -261,11 +261,11 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
           {error && <p className="mt-4 text-sm text-[#9A3B2F]">{error}</p>}
         </div>
 
-        <div className="rounded-[2rem] border border-[#E0D2C4]/62 bg-white/72 px-5 py-6 md:px-7">
-          <div className="text-sm font-medium text-[#312321]">{t.conversationTitle}</div>
+        <div className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.72)] px-5 py-6 md:px-7">
+          <div className="text-sm font-medium text-[var(--text)]">{t.conversationTitle}</div>
           {scenarioResult && (
-            <div className="mt-4 rounded-[1.5rem] bg-[#FCF7F0] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-              <div className="text-xs tracking-[0.12em] text-[#8A7764]">{t.summaryTitle}</div>
+            <div className="mt-4 rounded-[1.5rem] bg-[var(--surface-soft)] px-4 py-4 text-sm leading-7 text-[var(--muted)]">
+              <div className="text-xs tracking-[0.12em] text-[#87776b]">{t.summaryTitle}</div>
               <div className="mt-2">
                 {t.personaLabel}: {scenarioResult.labels.persona || identityLabel}
               </div>
@@ -280,7 +280,7 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
 
           <div className="mt-4 space-y-3">
             {messages.length === 0 ? (
-              <div className="rounded-[1.5rem] bg-[#FCFAF6] px-4 py-5 text-sm leading-7 text-[#6B5A4A]">
+              <div className="rounded-[1.5rem] bg-[var(--surface-soft)] px-4 py-5 text-sm leading-7 text-[var(--muted)]">
                 {t.conversationEmpty}
               </div>
             ) : (
@@ -289,11 +289,11 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
                   key={`${message.role}-${index}`}
                   className={`max-w-[92%] rounded-[1.5rem] px-4 py-4 text-sm leading-7 ${
                     message.role === "assistant"
-                      ? "border border-[#E0D2C4]/60 bg-[#FFFBF6] text-[#3B2F2F]"
-                      : "ml-auto bg-[#F3E8D6] text-[#5A4B3E]"
+                      ? "border border-[color:var(--line-soft)] bg-[var(--surface)] text-[var(--text)]"
+                      : "ml-auto bg-[var(--accent-soft)] text-[var(--muted)]"
                   }`}
                 >
-                  <div className="text-xs tracking-[0.12em] text-[#8A7764]">
+                  <div className="text-xs tracking-[0.12em] text-[#87776b]">
                     {message.role === "assistant" ? t.assistantLabel : t.userLabel}
                   </div>
                   <div className="mt-2 whitespace-pre-wrap">{message.content}</div>
@@ -303,16 +303,16 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
           </div>
 
           {recommendedActions.length > 0 && (
-            <div className="mt-6 border-t border-[#E6D8CA] pt-6">
-              <div className="text-sm font-medium text-[#314236]">{t.actionsTitle}</div>
+            <div className="mt-6 border-t border-[color:var(--line-soft)] pt-6">
+              <div className="text-sm font-medium text-[var(--accent-sage-text)]">{t.actionsTitle}</div>
               <div className="mt-4 space-y-3">
                 {recommendedActions.map((action) => (
                   <div
                     key={action.id}
-                    className="rounded-[1.5rem] border border-[#C7D7C1]/72 bg-[linear-gradient(180deg,#F7FBF6_0%,#F1F7EF_100%)] px-4 py-4"
+                    className="panel-sage rounded-[1.5rem] px-4 py-4"
                   >
-                    <div className="text-sm font-medium text-[#243329]">{action.title}</div>
-                    <p className="mt-2 text-sm leading-7 text-[#4D5642]">{action.description}</p>
+                    <div className="text-sm font-medium text-[var(--accent-sage-text)]">{action.title}</div>
+                    <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">{action.description}</p>
                     <div className="mt-4">
                       <Link href={action.href} className="btn btn-secondary">
                         {action.label}

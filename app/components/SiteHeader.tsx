@@ -72,7 +72,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[rgba(216,198,180,0.46)] bg-[rgba(251,246,238,0.92)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-[rgba(221,208,194,0.52)] bg-[rgba(255,251,246,0.9)] backdrop-blur-xl">
       <div className="container py-4">
         <div className="flex items-center justify-between gap-5">
           <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline md:gap-4">
@@ -81,7 +81,7 @@ export default function SiteHeader() {
             </div>
             <div className="min-w-0">
               <div className="display-serif text-[1.86rem] font-semibold tracking-[0.12em] text-[var(--text)] md:text-[2.34rem]">YORISOU</div>
-              <div className="mt-1 hidden text-[0.9rem] leading-7 text-[#6E5D4D] md:block">
+              <div className="mt-1 hidden text-[0.9rem] leading-7 text-[var(--muted)] md:block">
                 {isEn ? "Calm mobility support for seniors and families in Japan" : "高齢者とご家族の移動と暮らしに、やさしく寄り添う。"}
               </div>
             </div>
@@ -165,8 +165,8 @@ export default function SiteHeader() {
           gap: 4px;
           padding: 6px;
           border-radius: 20px;
-          background: rgba(255, 251, 246, 0.84);
-          border: 1px solid rgba(216, 198, 180, 0.42);
+            background: rgba(255, 252, 247, 0.82);
+            border: 1px solid rgba(221, 208, 194, 0.44);
           box-shadow: 0 12px 22px rgba(47, 35, 33, 0.04);
         }
         .nav-link,
@@ -191,7 +191,7 @@ export default function SiteHeader() {
         .nav-link.active,
         .more-button:hover,
         .more-button.active {
-          background: rgba(239, 228, 214, 0.85);
+          background: rgba(235, 241, 232, 0.82);
         }
         .menu-icon {
           display: inline-flex;

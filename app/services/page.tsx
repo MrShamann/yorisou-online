@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function ServicesPage() {
   return (
-    <main className="bg-[#F7F0E5] text-[#312321]">
+    <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
         title="Yorisouのサービスは、まず話を聞くところから始まります。"
         subtitle="移動や暮らしの不安をうかがいながら、ご本人とご家族に合う支え方を一緒に整理します。すぐに何かを決める必要はありません。必要に応じて、その先の導入や継続支援まで丁寧につないでいきます。"

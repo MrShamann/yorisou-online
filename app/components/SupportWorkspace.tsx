@@ -329,40 +329,40 @@ export default function SupportWorkspace({
 
   if (!account) {
     return (
-      <main className="min-h-screen bg-[#F7F0E5] text-[#312321]">
-        <section className="border-b border-[#D8C6B4]/28 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(247,240,229,0.98)_62%)] px-6 py-16 md:px-10 md:py-24">
+      <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+        <section className="border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-6 py-16 md:px-10 md:py-24">
           <div className="mx-auto max-w-6xl">
             <div className="shell-card max-w-4xl p-8 md:p-12">
               <div className="service-kicker">{locale === "ja" ? "移動の不安から、暮らしの安心へ。" : "Consultation support access"}</div>
               <h1 className="display-serif mt-4 max-w-[13em] text-[2.6rem] leading-[1.24] md:text-[4rem]">
                 {locale === "ja" ? "AI相談員 ひなたと、ゆっくりお話しください" : "Talk with our support guide"}
               </h1>
-              <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
+              <p className="mt-6 max-w-2xl text-base leading-8 text-[var(--muted)] md:text-lg">
                 {locale === "ja"
                   ? "移動や暮らしの不安を一緒に整理し、その方に合う支え方を丁寧に考えていきます。"
                   : "Continue quickly with LINE, or use email if you prefer. After sign-in, you can review your recommendations, notes, and support history in one place."}
               </p>
-              <div className="mt-8 rounded-[2rem] border border-[#E0D2C4]/72 bg-[#FFF9F2] p-6 shadow-[0_14px_30px_rgba(47,35,33,0.04)]">
+              <div className="mt-8 rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] p-6 shadow-[0_14px_30px_rgba(47,35,33,0.04)]">
                 <div className="flex flex-col gap-5 md:flex-row md:items-center">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_#F6EBDD_0%,_#E6D6C4_72%,_#D8C6B4_100%)] text-2xl text-[#7A6150] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,_#f4ece2_0%,_#e4d7c7_72%,_#d7c8b7_100%)] text-2xl text-[#78675f] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
                     ひ
                   </div>
                   <div className="max-w-2xl">
-                    <div className="text-sm tracking-[0.12em] text-[#8A7764]">{locale === "ja" ? "AI相談員 ひなた" : "AI consultation guide"}</div>
-                    <h2 className="mt-2 text-2xl font-medium text-[#312321]">
+                    <div className="text-sm tracking-[0.12em] text-[#87776b]">{locale === "ja" ? "AI相談員 ひなた" : "AI consultation guide"}</div>
+                    <h2 className="mt-2 text-2xl font-medium text-[var(--text)]">
                       {locale === "ja" ? "やさしく、お話をうかがいます。" : "We are here to listen calmly."}
                     </h2>
-                    <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
+                    <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
                       {locale === "ja"
                         ? "ご本人でも、ご家族でも、安心してご相談ください。わからないことを、一緒に整理しながらご案内します。"
                         : "Whether you are seeking help for yourself or a family member, we help organize the next step with care."}
                     </p>
-                    <p className="mt-2 text-sm leading-7 text-[#6B5A4A]">
+                    <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
                       {locale === "ja"
                         ? "無理にうまく話そうとしなくても大丈夫です。気になることから、ゆっくりお聞かせください。"
                         : "You do not need to explain everything perfectly. Start with what feels important today."}
                     </p>
-                    <p className="mt-2 text-sm leading-7 text-[#6B5A4A]">
+                    <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
                       {locale === "ja"
                         ? "この先も、ひなたがやさしく寄り添います。必要なときに、無理のない形でご案内できます。"
                         : "Support can continue gently over time, in a way that feels manageable for you."}
@@ -380,21 +380,21 @@ export default function SupportWorkspace({
                 <ScenarioSupportAssistant locale={locale} />
               </div>
 
-              <div className="mt-10 rounded-[1.8rem] border border-[#E0D2C4]/62 bg-[#FFF9F2] px-6 py-6">
+              <div className="mt-10 rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6">
                 <div className="service-kicker">{locale === "ja" ? "あとで続けたい方へ" : "Continue later"}</div>
-                <h2 className="mt-3 text-[1.7rem] font-light leading-[1.4] text-[#312321]">
+                <h2 className="mt-3 text-[1.7rem] font-light leading-[1.4] text-[var(--text)]">
                   {locale === "ja" ? "相談の続きを、受け取りやすい形に整えていけます。" : "Choose a calm way to continue later."}
                 </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5A4B3E]">
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
                   {locale === "ja"
                     ? "まずはこのページで気になることを整理し、あとで続けたくなったらLINEやアカウントでやり取りを残せます。"
                     : "Start here first, then continue later with the channel that feels easiest for you."}
                 </p>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[1.5rem] bg-[linear-gradient(180deg,#F7FBF6_0%,#F1F7EF_100%)] px-5 py-5 text-sm leading-7 text-[#314236]">
-                    <div className="font-medium text-[#243329]">{locale === "ja" ? "LINEでつながっておく" : "Stay connected with LINE"}</div>
-                    <p className="mt-2 text-[#4D5642]">
+                  <div className="panel-sage rounded-[1.5rem] px-5 py-5 text-sm leading-7">
+                    <div className="font-medium text-[var(--accent-sage-text)]">{locale === "ja" ? "LINEでつながっておく" : "Stay connected with LINE"}</div>
+                    <p className="mt-2 text-[var(--accent-sage-text)]">
                       {locale === "ja"
                         ? "ご相談の続きやお知らせを、必要なときだけやさしく受け取れます。"
                         : "Receive gentle follow-up only when you need it."}
@@ -403,22 +403,22 @@ export default function SupportWorkspace({
                       {lineAuthReady ? (
                         <Link
                           href={lineStartHref}
-                          className="inline-flex items-center justify-center gap-2 rounded-[1.1rem] border border-[#BFD3BF] bg-white/84 px-5 py-3 text-sm font-medium text-[#35513D] transition hover:bg-white"
+                          className="inline-flex items-center justify-center gap-2 rounded-[1.1rem] border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.82)] px-5 py-3 text-sm font-medium text-[var(--accent-sage-text)] transition hover:bg-[rgba(255,253,249,0.94)]"
                         >
                           <LineBrandIcon className="h-5 w-5" />
                           {locale === "ja" ? "LINEでつながる" : "Connect with LINE"}
                         </Link>
                       ) : (
-                        <div className="inline-flex rounded-full border border-[#D6C3A3]/60 px-5 py-3 text-sm text-[#8A7764]">
+                        <div className="inline-flex rounded-full border border-[color:var(--line-soft)] px-5 py-3 text-sm text-[#87776b]">
                           {locale === "ja" ? "現在はLINE連携を準備中です" : "LINE sign-in is not available yet"}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="rounded-[1.5rem] bg-white px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
-                    <div className="font-medium text-[#312321]">{locale === "ja" ? "アカウントで落ち着いて見返す" : "Review with an account"}</div>
-                    <p className="mt-2 text-[#6B5A4A]">
+                  <div className="rounded-[1.5rem] bg-[rgba(255,253,249,0.84)] px-5 py-5 text-sm leading-7 text-[var(--muted)]">
+                    <div className="font-medium text-[var(--text)]">{locale === "ja" ? "アカウントで落ち着いて見返す" : "Review with an account"}</div>
+                    <p className="mt-2 text-[var(--muted)]">
                       {locale === "ja"
                         ? "あとで見返したいときや、ご案内をまとめて確認したいときに使えます。"
                         : "Use your account to review guidance and continue calmly later."}
@@ -434,7 +434,7 @@ export default function SupportWorkspace({
                   </div>
                 </div>
               </div>
-              {lineNoticeMessage && <p className="mt-6 text-sm text-[#2E5B3C]">{lineNoticeMessage}</p>}
+              {lineNoticeMessage && <p className="mt-6 text-sm text-[var(--accent-sage-text)]">{lineNoticeMessage}</p>}
               {lineErrorMessage && <p className="mt-3 text-sm text-[#9A3B2F]">{lineErrorMessage}</p>}
             </div>
           </div>

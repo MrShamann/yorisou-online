@@ -18,7 +18,7 @@ export default function SiteFooter() {
   const pilotHref = isEn ? "/en/pilot" : "/pilot";
 
   return (
-    <footer className="mt-[72px] border-t border-[var(--line)] bg-[rgba(255,251,246,0.88)]">
+    <footer className="mt-[72px] border-t border-[var(--line)] bg-[rgba(255,252,247,0.9)]">
       <div className="container py-12">
         <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start">
           <div className="flex gap-5">
@@ -64,7 +64,7 @@ export default function SiteFooter() {
             </div>
           </div>
         </div>
-        <div className="mt-10 border-t border-[#E1D4C6] pt-5 text-xs text-[var(--muted)]">
+        <div className="mt-10 border-t border-[var(--line-soft)] pt-5 text-xs text-[var(--muted)]">
           © {new Date().getFullYear()} YORISOU. All rights reserved.
         </div>
       </div>

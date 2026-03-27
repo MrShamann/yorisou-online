@@ -18,7 +18,7 @@ export default function Hero({
   secondaryLabel,
 }: HeroProps) {
   return (
-    <section className="border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(247,240,229,0.98)_60%)]">
+    <section className="border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.97),_rgba(250,245,238,0.99)_58%)]">
       <div className="container py-14 md:py-18">
         <div className="max-w-[56rem]">
           <div className="service-kicker">YORISOU</div>
