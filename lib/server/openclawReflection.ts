@@ -4,7 +4,12 @@ import path from "path";
 import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
 import type { SupportGatewayUsage } from "@/lib/ai/support/model-gateway";
 import type { SupportConversationMessage, SupportScenarioResult } from "@/lib/ai/support/scenario-engine";
-import { ensureLocalArtifactDir, getOpenClawArtifactDataDir, mirrorOpenClawArtifact } from "@/lib/server/openclawArtifactStore";
+import {
+  ensureLocalArtifactDir,
+  getOpenClawArtifactDataDir,
+  listMirroredOpenClawArtifacts,
+  mirrorOpenClawArtifact,
+} from "@/lib/server/openclawArtifactStore";
 import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
 import { recordNeedsSignalArtifact } from "@/lib/server/openclawNeedsInsight";
 import type { OpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
@@ -47,6 +52,8 @@ export type OpenClawReflectionDiagnosis = {
 
 const dataDir = getOpenClawArtifactDataDir();
 const reflectionFile = path.join(dataDir, "phase1-openclaw-reflections.json");
+const productionReflectionFile = path.join("/tmp", "yorisou-phase1", "phase1-openclaw-reflections.json");
+const localReflectionFile = path.join(process.cwd(), "data", "phase1-openclaw-reflections.json");
 
 function nowIso() {
   return new Date().toISOString();
@@ -57,11 +64,26 @@ function createId() {
 }
 
 async function readArtifacts() {
-  try {
-    return JSON.parse(await fs.readFile(reflectionFile, "utf8")) as OpenClawReflectionArtifact[];
-  } catch {
-    return [];
+  const merged = new Map<string, OpenClawReflectionArtifact>();
+  const candidates = [...new Set([reflectionFile, productionReflectionFile, localReflectionFile])];
+
+  for (const file of candidates) {
+    try {
+      const artifacts = JSON.parse(await fs.readFile(file, "utf8")) as OpenClawReflectionArtifact[];
+      for (const artifact of artifacts) {
+        merged.set(artifact.id, artifact);
+      }
+    } catch {
+      continue;
+    }
   }
+
+  const mirroredArtifacts = await listMirroredOpenClawArtifacts<OpenClawReflectionArtifact>("reflections");
+  for (const artifact of mirroredArtifacts) {
+    merged.set(artifact.id, artifact);
+  }
+
+  return [...merged.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 async function writeArtifacts(artifacts: OpenClawReflectionArtifact[]) {
@@ -246,4 +268,8 @@ export async function recordOpenClawReflection(input: {
     locale: input.memory?.thread?.locale || null,
   });
   return artifact;
+}
+
+export async function readOpenClawReflectionArtifacts() {
+  return readArtifacts();
 }
