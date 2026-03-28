@@ -20,6 +20,9 @@ export function buildSupportAssistantPrompt(input: {
   capabilityPlan?: OpenClawCapabilityPlan | null;
   knowledge?: HinataKnowledgePacket | null;
 }) {
+  const turnCount = input.history.filter((entry) => entry.role === "user").length + 1;
+  const tinyEnglishGreeting = /^(hi|hello|hey|good (morning|afternoon|evening))\b/i.test(input.userMessage.trim());
+
   return input.locale === "ja"
     ? `以下は Yorisou の相談対話の入力です。返答本文だけを自然な日本語で作成してください。
 
@@ -66,13 +69,15 @@ ${input.knowledge?.snippets.map((snippet) => `- ${snippet.title}: ${snippet.summ
 ${input.userMessage || "未入力"}
 
 返答ルール:
+0. 利用者の最新発話が英語など別言語で明確な場合は、その言語で自然に返してよい
 1. まず不安や状況をやさしく受け止める
 2. 会話履歴がある場合は、最新の利用者発話にだけ自然に続ける
 3. 前のひなたの返答と同じ要点や同じ確認質問を繰り返さない
-4. 次に一歩だけ整理する
-5. 質問は必要な場合だけ1つ
-6. 最後に必要なら次の案内をやわらかく添える
-5. 本文だけを返す`
+4. 初手が "hi" "hello" のような短い挨拶だけなら、定型的な相談案内にせず、短い挨拶と「どうお手伝いできますか」に近い自然な返しにする
+5. 次に一歩だけ整理する
+6. 質問は必要な場合だけ1つ
+7. 次の案内は会話の材料が十分あるときだけ、やわらかく添える
+8. 本文だけを返す`
     : `Create only the assistant reply body for Yorisou.
 
 Persona: ${input.scenario.labels.persona}
@@ -113,7 +118,11 @@ User message:
 ${input.userMessage || "No message"}
 
 Reply in 2-4 short sentences, with at most one natural follow-up question.
-If history exists, continue from the latest user message and do not repeat the same assistant summary or question from the previous turn.`;
+Follow the user's current language when it is clear from the latest message.
+If the latest user message is only a tiny greeting like "hi" or "hello", respond naturally first and do not jump into a consultation script or action menu.
+If history exists, continue from the latest user message and do not repeat the same assistant summary or question from the previous turn.
+Current turn count: ${turnCount}
+Tiny English greeting detected: ${tinyEnglishGreeting ? "yes" : "no"}.`;
 }
 
 export function buildDeterministicSupportReply(input: {
@@ -127,10 +136,18 @@ export function buildDeterministicSupportReply(input: {
 }) {
   if (input.locale === "en") {
     const continued = input.history.filter((entry) => entry.role === "assistant").length > 0;
+    const tinyGreeting = /^(hi|hello|hey|good (morning|afternoon|evening))\b/i.test(input.userMessage.trim());
+    if (tinyGreeting && !continued) {
+      return {
+        message: "Hello. I'm Hinata. How can I help today?",
+      };
+    }
     return {
       message: `${
         continued ? "Thank you for adding that." : "Thank you for sharing that."
-      } Yorisou can help organize this calmly and keep the next step simple. ${
+      } ${
+        "Yorisou can help organize this calmly and keep the next step simple."
+      } ${
         input.memory?.thread?.openQuestion === input.policy.followUpQuestion
           ? "Could you tell me a little more about what feels most important right now?"
           : input.policy.followUpQuestion
@@ -144,6 +161,14 @@ export function buildDeterministicSupportReply(input: {
   const continued = input.history.filter((entry) => entry.role === "assistant").length > 0;
   const latestFocus = input.userMessage.replace(/\s+/g, " ").trim();
   const focusText = latestFocus.length > 28 ? `${latestFocus.slice(0, 28)}…` : latestFocus;
+  const tinyEnglishGreeting = /^(hi|hello|hey|good (morning|afternoon|evening))\b/i.test(latestFocus);
+  const hasEnglishOnly = /[A-Za-z]/.test(latestFocus) && !/[\u3040-\u30ff\u3400-\u9fff]/.test(latestFocus);
+
+  if (!continued && tinyEnglishGreeting && hasEnglishOnly) {
+    return {
+      message: "Hello. I'm Hinata. How can I help today?",
+    };
+  }
 
   const opening =
     continued && input.scenario.scenario === "family_mobility_support"

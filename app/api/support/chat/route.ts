@@ -25,6 +25,12 @@ type SupportChatRequest = {
   messages?: SupportConversationMessage[];
 };
 
+const englishGreetingPattern = /^(hi|hello|hey|good (morning|afternoon|evening)|how are you)\b/i;
+const englishSignalPattern = /[A-Za-z]/;
+const japaneseSignalPattern = /[\u3040-\u30ff\u3400-\u9fff]/;
+const earlyActionKeywordsJa = ["予約", "相談したい", "詳しく話したい", "製品", "比較", "導入", "連携"];
+const earlyActionKeywordsEn = ["book", "consult", "consultation", "product", "products", "compare", "implementation"];
+
 function isValidIdentity(value: string | undefined): value is SupportIdentity {
   return value === "self" || value === "family" || value === "institution";
 }
@@ -39,12 +45,64 @@ function isValidIssueType(value: string | undefined): value is SupportIssueType 
   );
 }
 
+function detectConversationLocale(message: string, history: SupportConversationMessage[], fallback: SupportAssistantLocale) {
+  const recentUserText = [message, ...history.filter((entry) => entry.role === "user").slice(-2).map((entry) => entry.content)]
+    .join("\n")
+    .trim();
+
+  if (!recentUserText) {
+    return fallback;
+  }
+
+  const hasJapanese = japaneseSignalPattern.test(recentUserText);
+  const hasEnglish = englishSignalPattern.test(recentUserText);
+
+  if (hasEnglish && !hasJapanese) {
+    return "en" as const;
+  }
+
+  if (hasJapanese) {
+    return "ja" as const;
+  }
+
+  return fallback;
+}
+
+function shouldOfferActions(input: {
+  locale: SupportAssistantLocale;
+  userMessage: string;
+  history: SupportConversationMessage[];
+}) {
+  const trimmed = input.userMessage.trim();
+  const lower = trimmed.toLowerCase();
+  const userTurnCount = input.history.filter((entry) => entry.role === "user").length + 1;
+  const isTinyGreeting =
+    trimmed.length <= 12 &&
+    (englishGreetingPattern.test(trimmed) ||
+      /^(こんにちは|こんばんは|もしもし|やあ|おはよう|hi|hello|hey)$/i.test(trimmed));
+
+  if (isTinyGreeting) {
+    return false;
+  }
+
+  const explicitActionIntent =
+    input.locale === "en"
+      ? earlyActionKeywordsEn.some((keyword) => lower.includes(keyword))
+      : earlyActionKeywordsJa.some((keyword) => trimmed.includes(keyword));
+
+  if (userTurnCount <= 1 && !explicitActionIntent) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function POST(request: Request) {
   try {
     const viewer = await getViewerContext();
     const session = viewer.session || (await ensureViewerSession());
     const payload = (await request.json()) as SupportChatRequest;
-    const locale = payload.locale === "en" ? "en" : "ja";
+    const requestedLocale = payload.locale === "en" ? "en" : "ja";
 
     if (!isValidIdentity(payload.identity) || !isValidIssueType(payload.issueType)) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
@@ -59,6 +117,7 @@ export async function POST(request: Request) {
         )
       : [];
     const userMessage = typeof payload.message === "string" ? payload.message.trim() : "";
+    const locale = detectConversationLocale(userMessage, messages, requestedLocale);
 
     const scenarioResult = classifySupportScenario({
       locale,
@@ -68,7 +127,13 @@ export async function POST(request: Request) {
       messages,
     });
     const policy = getConversationPolicy(scenarioResult, locale);
-    const recommendedActions = routeSupportActions(scenarioResult, locale);
+    const recommendedActions = shouldOfferActions({
+      locale,
+      userMessage,
+      history: messages,
+    })
+      ? routeSupportActions(scenarioResult, locale)
+      : [];
     const memory = await getHinataMemorySnapshot({
       viewer,
       session,
