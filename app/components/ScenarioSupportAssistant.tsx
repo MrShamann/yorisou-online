@@ -14,6 +14,7 @@ import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
 
 type ScenarioSupportAssistantProps = {
   locale: SupportAssistantLocale;
+  onConversationStateChange?: (started: boolean) => void;
 };
 
 type SupportChatResponse = {
@@ -121,14 +122,13 @@ const institutionHints = ["自治体", "施設", "介護", "事業者", "病院"
 const bookingHints = ["相談したい", "予約", "面談", "話を聞いてほしい", "直接"];
 const productHints = ["製品", "車いす", "電動", "カート", "何が合う", "比較"];
 
-export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssistantProps) {
+export default function ScenarioSupportAssistant({ locale, onConversationStateChange }: ScenarioSupportAssistantProps) {
   const t = copy[locale];
   const threadRef = useRef<HTMLDivElement | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
   const [identity, setIdentity] = useState<SupportIdentity>("self");
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<SupportConversationMessage[]>([
-    { role: "assistant", content: t.greeting },
-  ]);
+  const [messages, setMessages] = useState<SupportConversationMessage[]>([]);
   const [recommendedActions, setRecommendedActions] = useState<SupportRecommendedAction[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -138,12 +138,20 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
 
   const detailOptions = identityOptions[locale];
   const starterOptions = starters[locale];
+  const hasStarted = messages.length > 0;
 
   useEffect(() => {
-    if (threadRef.current) {
+    onConversationStateChange?.(hasStarted);
+  }, [hasStarted, onConversationStateChange]);
+
+  useEffect(() => {
+    if (threadRef.current && hasStarted) {
       threadRef.current.scrollTop = threadRef.current.scrollHeight;
     }
-  }, [messages, isSubmitting, recommendedActions.length]);
+    if (endRef.current && hasStarted) {
+      endRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [hasStarted, messages, isSubmitting, recommendedActions.length]);
 
   function inferIdentityFromMessage(message: string): SupportIdentity {
     if (identityTouched) {
@@ -187,6 +195,7 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
     setIsSubmitting(true);
     setRecommendedActions([]);
     setScenarioResult(null);
+    setDetailsOpen(false);
 
     const resolvedIdentity = inferIdentityFromMessage(nextUserMessage);
     const resolvedIssueType = preferredIssueType || inferIssueTypeFromMessage(nextUserMessage);
@@ -231,157 +240,198 @@ export default function ScenarioSupportAssistant({ locale }: ScenarioSupportAssi
     await sendMessage(draft);
   }
 
+  async function handleComposerKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      await sendMessage(draft);
+    }
+  }
+
   return (
     <section
       id="scenario-assistant"
-      className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-5 shadow-[0_14px_30px_rgba(47,35,33,0.035)] md:px-6 md:py-6"
+      className="overflow-hidden rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] shadow-[0_18px_38px_rgba(47,35,33,0.05)]"
     >
-      <div ref={threadRef} className="max-h-[34rem] space-y-4 overflow-y-auto pr-1">
-        {messages.map((message, index) => {
-          const isAssistant = message.role === "assistant";
-          const isFirstGreeting = index === 0 && isAssistant;
-
-          return (
-            <div key={`${message.role}-${index}`} className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}>
-              <div className={`flex max-w-[48rem] gap-3 ${isAssistant ? "" : "flex-row-reverse"}`}>
-                <div
-                  className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${
-                    isAssistant
-                      ? "bg-[var(--surface-sage)] text-[var(--accent-sage-text)]"
-                      : "bg-[var(--surface-soft)] text-[var(--muted)]"
-                  }`}
-                >
-                  {isAssistant ? "ひ" : "話"}
-                </div>
-                <div
-                  className={`rounded-[1.5rem] px-4 py-4 text-sm leading-8 md:px-5 ${
-                    isAssistant
-                      ? "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.8)] text-[var(--text)]"
-                      : "bg-[var(--surface-soft)] text-[var(--text)]"
-                  }`}
-                >
-                  <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">
-                    {isAssistant ? t.assistantLabel : t.userLabel}
-                  </div>
-                  <p className="mt-2 whitespace-pre-wrap">{message.content}</p>
-
-                  {isFirstGreeting && (
-                    <>
-                      <p className="mt-3 text-sm leading-7 text-[var(--accent-sage-text)]">{t.quietNote}</p>
-                      <div className="mt-4">
-                        <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.promptLabel}</div>
-                        <div className="mt-3 flex flex-wrap gap-2.5">
-                          {starterOptions.map((starter) => (
-                            <button
-                              key={starter.label}
-                              type="button"
-                              onClick={() => void sendMessage(starter.message, starter.issueType)}
-                              className="rounded-full border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.88)] px-4 py-2.5 text-sm text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage)]"
-                            >
-                              {starter.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {isAssistant && index === messages.length - 1 && scenarioResult && recommendedActions.length > 0 && !isSubmitting && (
-                    <div className="mt-5 rounded-[1.3rem] bg-[var(--surface-sage)]/75 px-4 py-4">
-                      <div className="text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">{t.actionsTitle}</div>
-                      <div className="mt-3 flex flex-col gap-2.5">
-                        {recommendedActions.map((action) => (
-                          <Link
-                            key={action.id}
-                            href={action.href}
-                            className="rounded-[1rem] border border-[color:var(--line-sage)] bg-[rgba(252,250,245,0.86)] px-4 py-3 text-sm text-[var(--accent-sage-text)] transition hover:bg-white"
-                          >
-                            <div className="font-medium text-[var(--text)]">{action.title}</div>
-                            <div className="mt-1 leading-7">{action.description}</div>
-                            <div className="mt-2 text-sm underline underline-offset-4">{action.label}</div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {isSubmitting && (
-          <div className="flex justify-start">
-            <div className="flex max-w-[42rem] gap-3">
-              <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-sm text-[var(--accent-sage-text)]">
-                ひ
-              </div>
-              <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.8)] px-4 py-4 text-sm text-[var(--muted)]">
-                {t.typing}
-              </div>
-            </div>
+      <div className="border-b border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.95)] px-4 py-4 md:px-6">
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-base text-[var(--accent-sage-text)]">
+            ひ
           </div>
-        )}
+          <div className="min-w-0">
+            <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">AI相談員</div>
+            <div className="mt-1 text-base text-[var(--text)]">{t.assistantLabel}</div>
+          </div>
+          {hasStarted && <div className="ml-auto text-xs text-[var(--accent-sage-text)]">{locale === "ja" ? "対話中" : "In conversation"}</div>}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-5 border-t border-[color:var(--line-soft)] pt-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.textareaLabel}</div>
-          <button
-            type="button"
-            onClick={() => setDetailsOpen((value) => !value)}
-            className="text-sm text-[var(--accent-sage-text)] underline underline-offset-4"
-          >
-            {detailsOpen ? t.detailToggleClose : t.detailToggleOpen}
-          </button>
-        </div>
+      <div className="flex min-h-[70vh] flex-col md:min-h-[76vh]">
+        <div
+          ref={threadRef}
+          className={`flex-1 overflow-y-auto px-4 py-5 md:px-6 ${
+            hasStarted ? "bg-[linear-gradient(180deg,rgba(247,244,238,0.38)_0%,rgba(252,250,245,0.9)_100%)]" : "bg-[linear-gradient(180deg,rgba(255,255,255,0.62)_0%,rgba(247,244,238,0.48)_100%)]"
+          }`}
+        >
+          {hasStarted ? (
+            <div className="mx-auto flex max-w-3xl flex-col gap-4 pb-5">
+              {messages.map((message, index) => {
+                const isAssistant = message.role === "assistant";
 
-        {detailsOpen && (
-          <div className="mt-3 rounded-[1.2rem] bg-[var(--surface-sage)]/72 px-4 py-4">
-            <div className="text-sm leading-7 text-[var(--accent-sage-text)]">{t.detailHint}</div>
-            <div className="mt-3 flex flex-wrap gap-2.5">
-              {detailOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setIdentityTouched(true);
-                    setIdentity(option.value);
-                  }}
-                  className={`rounded-full px-4 py-2.5 text-sm transition ${
-                    identity === option.value
-                      ? "bg-[var(--accent)] text-white"
-                      : "border border-[color:var(--line-sage)] bg-[rgba(252,250,245,0.86)] text-[var(--accent-sage-text)]"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
+                return (
+                  <div key={`${message.role}-${index}`} className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}>
+                    <div className={`flex max-w-[44rem] gap-3 ${isAssistant ? "" : "flex-row-reverse"}`}>
+                      <div
+                        className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${
+                          isAssistant
+                            ? "bg-[var(--surface-sage)] text-[var(--accent-sage-text)]"
+                            : "bg-[rgba(58,38,33,0.12)] text-[var(--text)]"
+                        }`}
+                      >
+                        {isAssistant ? "ひ" : "あ"}
+                      </div>
+                      <div
+                        className={`rounded-[1.6rem] px-4 py-4 text-sm leading-8 md:px-5 ${
+                          isAssistant
+                            ? "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] text-[var(--text)] shadow-[0_8px_18px_rgba(47,35,33,0.04)]"
+                            : "bg-[var(--accent)] text-white shadow-[0_10px_20px_rgba(47,35,33,0.12)]"
+                        }`}
+                      >
+                        <div className={`text-[11px] tracking-[0.14em] ${isAssistant ? "text-[var(--muted)]" : "text-[rgba(255,255,255,0.72)]"}`}>
+                          {isAssistant ? t.assistantLabel : t.userLabel}
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap">{message.content}</p>
+
+                        {isAssistant && index === messages.length - 1 && scenarioResult && recommendedActions.length > 0 && !isSubmitting && (
+                          <div className="mt-5 rounded-[1.2rem] bg-[var(--surface-sage)]/75 px-4 py-4 text-[var(--accent-sage-text)]">
+                            <div className="text-[11px] tracking-[0.14em]">{t.actionsTitle}</div>
+                            <div className="mt-3 flex flex-col gap-2.5">
+                              {recommendedActions.map((action) => (
+                                <Link
+                                  key={action.id}
+                                  href={action.href}
+                                  className="rounded-[1rem] border border-[color:var(--line-sage)] bg-[rgba(252,250,245,0.9)] px-4 py-3 text-sm transition hover:bg-white"
+                                >
+                                  <div className="font-medium text-[var(--text)]">{action.title}</div>
+                                  <div className="mt-1 leading-7">{action.description}</div>
+                                  <div className="mt-2 underline underline-offset-4">{action.label}</div>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {isSubmitting && (
+                <div className="flex justify-start">
+                  <div className="flex max-w-[42rem] gap-3">
+                    <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-sm text-[var(--accent-sage-text)]">
+                      ひ
+                    </div>
+                    <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] px-4 py-4 text-sm text-[var(--muted)]">
+                      {t.typing}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={endRef} />
             </div>
-          </div>
-        )}
-
-        <div className="mt-3 rounded-[1.4rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.82)] px-4 py-4">
-          <textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={t.placeholder}
-            className="min-h-[92px] w-full resize-none bg-transparent text-sm leading-8 text-[var(--text)] outline-none md:text-base"
-          />
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <div className="text-sm text-[var(--muted)]">{identityTouched ? detailOptions.find((option) => option.value === identity)?.label : "\u00A0"}</div>
-            <button
-              type="submit"
-              disabled={isSubmitting || draft.trim().length === 0}
-              className="rounded-[1.2rem] bg-[var(--accent)] px-5 py-3 text-sm text-white shadow-[0_12px_24px_rgba(47,35,33,0.12)] transition hover:translate-y-[-1px] hover:bg-[var(--cta-main-hover)] disabled:cursor-not-allowed disabled:opacity-65"
-            >
-              {isSubmitting ? t.loading : t.submit}
-            </button>
-          </div>
+          ) : (
+            <div className="mx-auto flex h-full max-w-3xl flex-col justify-center pb-4 pt-2 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-sage)] text-xl text-[var(--accent-sage-text)]">
+                ひ
+              </div>
+              <div className="mt-6 text-[11px] tracking-[0.14em] text-[var(--muted)]">AI相談員 ひなた</div>
+              <h2 className="display-serif mx-auto mt-3 max-w-[12em] text-[1.5rem] leading-[1.6] text-[var(--text)] md:text-[1.9rem]">
+                {locale === "ja" ? "気になっていることを、そのままお話しください。" : "Tell Hinata what is on your mind."}
+              </h2>
+              <p className="mx-auto mt-4 max-w-[34rem] text-sm leading-8 text-[var(--muted)] md:text-base">{t.quietNote}</p>
+              <div className="mt-8">
+                <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.promptLabel}</div>
+                <div className="mt-3 flex flex-wrap justify-center gap-2.5">
+                  {starterOptions.map((starter) => (
+                    <button
+                      key={starter.label}
+                      type="button"
+                      onClick={() => void sendMessage(starter.message, starter.issueType)}
+                      className="rounded-full border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.92)] px-4 py-2.5 text-sm text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage)]"
+                    >
+                      {starter.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {error && <p className="mt-4 text-sm text-[#9A3B2F]">{error}</p>}
-      </form>
+        <form onSubmit={handleSubmit} className="border-t border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-4 py-4 backdrop-blur-sm md:px-6">
+          <div className="mx-auto max-w-3xl">
+            {detailsOpen && (
+              <div className="mb-3 rounded-[1.2rem] bg-[var(--surface-sage)]/72 px-4 py-4">
+                <div className="text-sm leading-7 text-[var(--accent-sage-text)]">{t.detailHint}</div>
+                <div className="mt-3 flex flex-wrap gap-2.5">
+                  {detailOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setIdentityTouched(true);
+                        setIdentity(option.value);
+                      }}
+                      className={`rounded-full px-4 py-2.5 text-sm transition ${
+                        identity === option.value
+                          ? "bg-[var(--accent)] text-white"
+                          : "border border-[color:var(--line-sage)] bg-[rgba(252,250,245,0.9)] text-[var(--accent-sage-text)]"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-white/88 px-4 py-4 shadow-[0_10px_22px_rgba(47,35,33,0.04)]">
+              <textarea
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => void handleComposerKeyDown(event)}
+                placeholder={t.placeholder}
+                className="min-h-[88px] w-full resize-none bg-transparent text-sm leading-8 text-[var(--text)] outline-none md:text-base"
+              />
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDetailsOpen((value) => !value)}
+                  className="text-sm text-[var(--accent-sage-text)] underline underline-offset-4"
+                >
+                  {detailsOpen ? t.detailToggleClose : t.detailToggleOpen}
+                </button>
+                <div className="flex items-center gap-3">
+                  {identityTouched && (
+                    <div className="hidden text-sm text-[var(--muted)] md:block">
+                      {detailOptions.find((option) => option.value === identity)?.label}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || draft.trim().length === 0}
+                    className="rounded-[1.15rem] bg-[var(--accent)] px-5 py-3 text-sm text-white shadow-[0_12px_24px_rgba(47,35,33,0.12)] transition hover:translate-y-[-1px] hover:bg-[var(--cta-main-hover)] disabled:cursor-not-allowed disabled:opacity-65"
+                  >
+                    {isSubmitting ? t.loading : t.submit}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {error && <p className="mt-3 text-sm text-[#9A3B2F]">{error}</p>}
+          </div>
+        </form>
+      </div>
     </section>
   );
 }

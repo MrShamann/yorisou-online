@@ -103,6 +103,7 @@ export default function SupportWorkspace({
   lineError: string;
 }) {
   const [account, setAccount] = useState<AccountRecord | null>(initialAccount);
+  const [hasConversationStarted, setHasConversationStarted] = useState(false);
   const [consultations] = useState<ConsultationRecord[]>(initialConsultations);
   const [shareMessage, setShareMessage] = useState("");
   const [lineForm, setLineForm] = useState<SupportProfile>(
@@ -330,38 +331,44 @@ export default function SupportWorkspace({
   if (!account) {
     return (
       <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-        <section className="border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-6 py-16 md:px-10 md:py-24">
-          <div className="mx-auto max-w-4xl">
-            <div className="shell-card p-7 md:p-10">
-              <div className="service-kicker">{locale === "ja" ? "移動と暮らしに寄り添う支援サービス" : "Support that begins calmly"}</div>
-              <h1 className="display-serif mt-4 max-w-[14em] text-[1.78rem] leading-[1.62] md:text-[2.22rem]">
-                {locale === "ja" ? (
-                  <>
-                    <span className="block md:whitespace-nowrap">AI相談員 ひなたが、</span>
-                    <span className="block md:whitespace-nowrap">いま気になることをやさしく受け取ります。</span>
-                  </>
-                ) : (
-                  "Talk with our support guide"
-                )}
-              </h1>
-              <p className="mt-5 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
-                {locale === "ja"
-                  ? "移動のことでも、暮らしのことでも、まだうまく整理できていなくて大丈夫です。ひなたとのやりとりから、その方に合う支え方を少しずつ整えていきます。"
-                  : "Continue quickly with LINE, or use email if you prefer. After sign-in, you can review your recommendations, notes, and support history in one place."}
-              </p>
-
-              <div className="mt-7">
-                <ScenarioSupportAssistant locale={locale} />
-              </div>
-
-              <div className="panel-sage mt-6 rounded-[1.5rem] px-6 py-5">
-                <div className="service-kicker text-[var(--accent-sage-text)]">{locale === "ja" ? "あとから続けたいときは" : "Continue later"}</div>
-                <p className="mt-3 max-w-2xl text-sm leading-8">
-                  {locale === "ja"
-                    ? "最初から登録しなくても大丈夫です。まずはひなたと話し、必要を感じたときにだけ、LINEやアカウントで続けられます。"
-                    : "Start here first, then continue later with the channel that feels easiest for you."}
+        <section
+          className={`border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-4 md:px-8 ${
+            hasConversationStarted ? "py-4 md:py-5" : "py-6 md:py-8"
+          }`}
+        >
+          <div className="mx-auto max-w-5xl">
+            <div className={`px-1 ${hasConversationStarted ? "mb-3" : "mb-4 md:mb-5"}`}>
+              <div className="service-kicker">{locale === "ja" ? "AI相談員 ひなた" : "Hinata"}</div>
+              {hasConversationStarted ? (
+                <p className="mt-2 text-sm leading-7 text-[var(--muted)] md:text-[0.95rem]">
+                  {locale === "ja" ? "ひなたとの対話をそのまま続けられます。" : "Continue the conversation with Hinata."}
                 </p>
+              ) : (
+                <>
+                  <h1 className="display-serif mt-3 max-w-[16em] text-[1.42rem] leading-[1.58] md:text-[1.9rem]">
+                    {locale === "ja" ? "移動のことも、暮らしのことも、ひなたとゆっくり話せます。" : "Talk calmly with Hinata about mobility and daily life."}
+                  </h1>
+                  <p className="mt-3 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
+                    {locale === "ja"
+                      ? "最初から整理しなくても大丈夫です。まずは気になることをそのまま送り、必要な続け方だけあとから選べます。"
+                      : "You can begin naturally first, then choose how to continue only if needed."}
+                  </p>
+                </>
+              )}
+            </div>
 
+            <ScenarioSupportAssistant locale={locale} onConversationStateChange={setHasConversationStarted} />
+
+            <details className={`panel-sage mt-4 rounded-[1.4rem] px-5 py-4 ${hasConversationStarted ? "opacity-80" : ""}`}>
+              <summary className="cursor-pointer list-none text-sm text-[var(--accent-sage-text)]">
+                {locale === "ja" ? "LINEやアカウントであとから続ける" : "Continue later with LINE or account"}
+              </summary>
+              <div className="mt-4 border-t border-[color:var(--line-sage)]/70 pt-4">
+                <p className="max-w-2xl text-sm leading-8 text-[var(--accent-sage-text)]">
+                  {locale === "ja"
+                    ? "必要を感じたときだけ、LINEやアカウントで続きを受け取れます。まずはこの場でひなたと話すだけでも大丈夫です。"
+                    : "Only if helpful, you can continue later with LINE or your account."}
+                </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
                   {lineAuthReady ? (
                     <Link href={lineStartHref} className="inline-flex items-center gap-2 text-[var(--accent-sage-text)] underline underline-offset-4">
@@ -381,9 +388,10 @@ export default function SupportWorkspace({
                   </Link>
                 </div>
               </div>
-              {lineNoticeMessage && <p className="mt-6 text-sm text-[var(--accent-sage-text)]">{lineNoticeMessage}</p>}
-              {lineErrorMessage && <p className="mt-3 text-sm text-[#9A3B2F]">{lineErrorMessage}</p>}
-            </div>
+            </details>
+
+            {lineNoticeMessage && <p className="mt-4 text-sm text-[var(--accent-sage-text)]">{lineNoticeMessage}</p>}
+            {lineErrorMessage && <p className="mt-3 text-sm text-[#9A3B2F]">{lineErrorMessage}</p>}
           </div>
         </section>
       </main>
