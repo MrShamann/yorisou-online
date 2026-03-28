@@ -333,11 +333,11 @@ export default function SupportWorkspace({
       <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <section
           className={`border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-4 md:px-8 ${
-            hasConversationStarted ? "py-4 md:py-5" : "py-6 md:py-8"
+            hasConversationStarted ? "py-3 md:py-4" : "py-5 md:py-6"
           }`}
         >
           <div className="mx-auto max-w-5xl">
-            <div className={`px-1 ${hasConversationStarted ? "mb-3" : "mb-4 md:mb-5"}`}>
+            <div className={`px-1 ${hasConversationStarted ? "mb-2" : "mb-3 md:mb-4"}`}>
               <div className="service-kicker">{locale === "ja" ? "AI相談員 ひなた" : "Hinata"}</div>
               {hasConversationStarted ? (
                 <p className="mt-2 text-sm leading-7 text-[var(--muted)] md:text-[0.95rem]">
@@ -345,10 +345,7 @@ export default function SupportWorkspace({
                 </p>
               ) : (
                 <>
-                  <h1 className="display-serif mt-3 max-w-[16em] text-[1.42rem] leading-[1.58] md:text-[1.9rem]">
-                    {locale === "ja" ? "移動のことも、暮らしのことも、ひなたとゆっくり話せます。" : "Talk calmly with Hinata about mobility and daily life."}
-                  </h1>
-                  <p className="mt-3 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
+                  <p className="mt-2 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
                     {locale === "ja"
                       ? "最初から整理しなくても大丈夫です。まずは気になることをそのまま送り、必要な続け方だけあとから選べます。"
                       : "You can begin naturally first, then choose how to continue only if needed."}
@@ -359,7 +356,7 @@ export default function SupportWorkspace({
 
             <ScenarioSupportAssistant locale={locale} onConversationStateChange={setHasConversationStarted} />
 
-            <details className={`panel-sage mt-4 rounded-[1.4rem] px-5 py-4 ${hasConversationStarted ? "opacity-80" : ""}`}>
+            <details className={`panel-sage mt-3 rounded-[1.4rem] px-5 py-4 ${hasConversationStarted ? "opacity-75" : ""}`}>
               <summary className="cursor-pointer list-none text-sm text-[var(--accent-sage-text)]">
                 {locale === "ja" ? "LINEやアカウントであとから続ける" : "Continue later with LINE or account"}
               </summary>

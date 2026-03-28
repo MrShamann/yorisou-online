@@ -2,6 +2,8 @@ import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
 import type { SupportConversationPolicy } from "@/lib/ai/support/conversation-policy";
 import type { SupportAssistantLocale, SupportConversationMessage, SupportScenarioResult } from "@/lib/ai/support/scenario-engine";
 import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
+import type { OpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
+import type { HinataKnowledgePacket } from "@/lib/server/hinataKnowledge";
 
 export const HINATA_DISPLAY_NAME = "AI相談員 ひなた";
 
@@ -12,6 +14,8 @@ export function buildHinataSystemInstruction(input: {
   policy: SupportConversationPolicy;
   actions: SupportRecommendedAction[];
   memory?: HinataMemorySnapshot | null;
+  capabilityPlan?: OpenClawCapabilityPlan | null;
+  knowledge?: HinataKnowledgePacket | null;
 }) {
   const historySummary = input.history
     .slice(-6)
@@ -76,6 +80,14 @@ Memory:
 - Open question: ${input.memory?.thread?.openQuestion || "None"}
 - Latest next step: ${input.memory?.thread?.latestNextStep || "None"}
 - Important tags: ${input.memory?.profile?.importantTags.join(" / ") || "None"}
+
+OpenClaw capability plan:
+- Primary capability: ${input.capabilityPlan?.primary || "support_reasoning"}
+- Secondary capabilities: ${input.capabilityPlan?.secondary.join(" / ") || "None"}
+- Notes: ${input.capabilityPlan?.notes.join(" / ") || "None"}
+
+Relevant knowledge:
+${input.knowledge?.snippets.map((snippet) => `- ${snippet.title}: ${snippet.summary} / ${snippet.whyItMatters}`).join("\n") || "None"}
 
 Recent conversation:
 ${historySummary || "No prior conversation"}
@@ -144,6 +156,14 @@ ${lastUserMessage || "None"}
 - 開いている問い: ${input.memory?.thread?.openQuestion || "なし"}
 - 次に案内した内容: ${input.memory?.thread?.latestNextStep || "なし"}
 - 重要タグ: ${input.memory?.profile?.importantTags.join(" / ") || "なし"}
+
+OpenClaw capability plan:
+- 主軸 capability: ${input.capabilityPlan?.primary || "support_reasoning"}
+- 補助 capability: ${input.capabilityPlan?.secondary.join(" / ") || "なし"}
+- 裏側メモ: ${input.capabilityPlan?.notes.join(" / ") || "なし"}
+
+関連知識:
+${input.knowledge?.snippets.map((snippet) => `- ${snippet.title}: ${snippet.summary} / ${snippet.whyItMatters}`).join("\n") || "なし"}
 
 直近の会話:
 ${historySummary || "会話履歴なし"}

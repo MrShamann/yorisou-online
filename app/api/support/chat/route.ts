@@ -12,6 +12,9 @@ import {
   type SupportIssueType,
 } from "@/lib/ai/support/scenario-engine";
 import { getHinataMemorySnapshot, upsertHinataMemory } from "@/lib/server/hinataMemory";
+import { buildOpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
+import { getHinataKnowledgePacket } from "@/lib/server/hinataKnowledge";
+import { recordOpenClawReflection } from "@/lib/server/openclawReflection";
 import { ensureViewerSession, getViewerContext, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
 
 type SupportChatRequest = {
@@ -70,6 +73,15 @@ export async function POST(request: Request) {
       viewer,
       session,
     });
+    const capabilityPlan = buildOpenClawCapabilityPlan({
+      scenario: scenarioResult,
+      policy,
+      memory,
+    });
+    const knowledge = await getHinataKnowledgePacket({
+      scenario: scenarioResult,
+      userMessage,
+    });
     const prompt = buildSupportAssistantPrompt({
       locale,
       userMessage,
@@ -78,6 +90,8 @@ export async function POST(request: Request) {
       policy,
       actions: recommendedActions,
       memory,
+      capabilityPlan,
+      knowledge,
     });
 
     const gatewayResult = await generateSupportAssistantText({
@@ -89,13 +103,17 @@ export async function POST(request: Request) {
       actions: recommendedActions,
       prompt,
       memory,
+      capabilityPlan,
+      knowledge,
     });
     const deterministic = buildDeterministicSupportReply({
       locale,
       userMessage,
+      history: messages,
       scenario: scenarioResult,
       policy,
       actions: recommendedActions,
+      memory,
     });
     const assistantMessage = gatewayResult?.text || deterministic.message;
     const memoryWrite = await upsertHinataMemory({
@@ -108,6 +126,22 @@ export async function POST(request: Request) {
       history: messages,
       userMessage,
       assistantMessage,
+      actions: recommendedActions,
+    });
+    await recordOpenClawReflection({
+      scenario: scenarioResult,
+      userMessage,
+      assistantMessage,
+      usage:
+        gatewayResult?.usage || {
+          provider: "deterministic",
+          model: "deterministic",
+          promptChars: prompt.length,
+          outputChars: deterministic.message.length,
+          fallbackUsed: true,
+        },
+      memory,
+      capabilityPlan,
       actions: recommendedActions,
     });
 

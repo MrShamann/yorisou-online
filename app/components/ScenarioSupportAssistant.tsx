@@ -265,7 +265,7 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
         </div>
       </div>
 
-      <div className="flex min-h-[70vh] flex-col md:min-h-[76vh]">
+      <div className="flex min-h-[72vh] flex-col md:min-h-[78vh]">
         <div
           ref={threadRef}
           className={`flex-1 overflow-y-auto px-4 py-5 md:px-6 ${
@@ -302,18 +302,17 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
                         <p className="mt-2 whitespace-pre-wrap">{message.content}</p>
 
                         {isAssistant && index === messages.length - 1 && scenarioResult && recommendedActions.length > 0 && !isSubmitting && (
-                          <div className="mt-5 rounded-[1.2rem] bg-[var(--surface-sage)]/75 px-4 py-4 text-[var(--accent-sage-text)]">
-                            <div className="text-[11px] tracking-[0.14em]">{t.actionsTitle}</div>
-                            <div className="mt-3 flex flex-col gap-2.5">
+                          <div className="mt-4 border-t border-[color:var(--line-soft)] pt-4">
+                            <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.actionsTitle}</div>
+                            <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1">
                               {recommendedActions.map((action) => (
                                 <Link
                                   key={action.id}
                                   href={action.href}
-                                  className="rounded-[1rem] border border-[color:var(--line-sage)] bg-[rgba(252,250,245,0.9)] px-4 py-3 text-sm transition hover:bg-white"
+                                  className="min-w-[13.5rem] shrink-0 snap-start rounded-[1rem] border border-[color:var(--line-sage)] bg-[var(--surface-sage)]/72 px-3.5 py-3 text-sm text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage)]"
                                 >
                                   <div className="font-medium text-[var(--text)]">{action.title}</div>
-                                  <div className="mt-1 leading-7">{action.description}</div>
-                                  <div className="mt-2 underline underline-offset-4">{action.label}</div>
+                                  <div className="mt-1 line-clamp-3 leading-7">{action.description}</div>
                                 </Link>
                               ))}
                             </div>
@@ -340,18 +339,22 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
               <div ref={endRef} />
             </div>
           ) : (
-            <div className="mx-auto flex h-full max-w-3xl flex-col justify-center pb-4 pt-2 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-sage)] text-xl text-[var(--accent-sage-text)]">
-                ひ
+            <div className="mx-auto flex h-full max-w-3xl flex-col justify-center gap-5 pb-4 pt-2">
+              <div className="flex justify-start">
+                <div className="flex max-w-[44rem] gap-3">
+                  <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-sm text-[var(--accent-sage-text)]">
+                    ひ
+                  </div>
+                  <div className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] px-4 py-4 text-sm leading-8 text-[var(--text)] shadow-[0_8px_18px_rgba(47,35,33,0.04)] md:px-5">
+                    <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.assistantLabel}</div>
+                    <p className="mt-2 whitespace-pre-wrap">{t.greeting}</p>
+                    <p className="mt-3 text-[var(--muted)]">{t.quietNote}</p>
+                  </div>
+                </div>
               </div>
-              <div className="mt-6 text-[11px] tracking-[0.14em] text-[var(--muted)]">AI相談員 ひなた</div>
-              <h2 className="display-serif mx-auto mt-3 max-w-[12em] text-[1.5rem] leading-[1.6] text-[var(--text)] md:text-[1.9rem]">
-                {locale === "ja" ? "気になっていることを、そのままお話しください。" : "Tell Hinata what is on your mind."}
-              </h2>
-              <p className="mx-auto mt-4 max-w-[34rem] text-sm leading-8 text-[var(--muted)] md:text-base">{t.quietNote}</p>
-              <div className="mt-8">
+              <div>
                 <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.promptLabel}</div>
-                <div className="mt-3 flex flex-wrap justify-center gap-2.5">
+                <div className="mt-3 flex flex-wrap gap-2.5">
                   {starterOptions.map((starter) => (
                     <button
                       key={starter.label}
@@ -368,7 +371,7 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="border-t border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-4 py-4 backdrop-blur-sm md:px-6">
+        <form onSubmit={handleSubmit} className="border-t border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.98)] px-4 py-4 backdrop-blur-sm md:px-6">
           <div className="mx-auto max-w-3xl">
             {detailsOpen && (
               <div className="mb-3 rounded-[1.2rem] bg-[var(--surface-sage)]/72 px-4 py-4">
@@ -395,7 +398,7 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
               </div>
             )}
 
-            <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-white/88 px-4 py-4 shadow-[0_10px_22px_rgba(47,35,33,0.04)]">
+            <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-white/92 px-4 py-4 shadow-[0_10px_22px_rgba(47,35,33,0.04)]">
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}

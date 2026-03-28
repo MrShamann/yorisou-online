@@ -7,6 +7,8 @@ import type {
   SupportScenarioResult,
 } from "@/lib/ai/support/scenario-engine";
 import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
+import type { OpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
+import type { HinataKnowledgePacket } from "@/lib/server/hinataKnowledge";
 
 export type SupportGatewayUsage = {
   provider: "opencloud" | "ai-gateway" | "mistral" | "openai" | "deterministic";
@@ -35,6 +37,8 @@ export type SupportGatewayInput = {
   actions: SupportRecommendedAction[];
   prompt: string;
   memory?: HinataMemorySnapshot | null;
+  capabilityPlan?: OpenClawCapabilityPlan | null;
+  knowledge?: HinataKnowledgePacket | null;
 };
 
 const MAX_OUTPUT_TOKENS = 260;
@@ -146,6 +150,8 @@ function buildSystemInstruction(input: SupportGatewayInput) {
       policy: input.policy,
       actions: input.actions,
       memory: input.memory,
+      capabilityPlan: input.capabilityPlan,
+      knowledge: input.knowledge,
     });
 }
 
@@ -255,7 +261,8 @@ async function requestOpenCloud(input: SupportGatewayInput): Promise<SupportGate
 
 async function requestAiGateway(input: SupportGatewayInput): Promise<SupportGatewayResult | null> {
   const apiKey = process.env.AI_GATEWAY_API_KEY?.trim();
-  if (!apiKey) {
+  const oidcToken = process.env.VERCEL_OIDC_TOKEN?.trim();
+  if (!apiKey || !oidcToken) {
     return null;
   }
 
@@ -271,6 +278,7 @@ async function requestAiGateway(input: SupportGatewayInput): Promise<SupportGate
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
+        "x-vercel-oidc-token": oidcToken,
       },
       body: JSON.stringify({
         model,
