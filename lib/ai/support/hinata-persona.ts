@@ -15,6 +15,8 @@ export function buildHinataSystemInstruction(input: {
     .slice(-6)
     .map((entry) => `${entry.role === "assistant" ? "ひなた" : "利用者"}: ${entry.content}`)
     .join("\n");
+  const lastAssistantMessage = [...input.history].reverse().find((entry) => entry.role === "assistant")?.content ?? "";
+  const lastUserMessage = [...input.history].reverse().find((entry) => entry.role === "user")?.content ?? "";
   const actionTitles = input.actions.map((action) => action.title).join(" / ");
 
   if (input.locale === "en") {
@@ -34,6 +36,9 @@ Behavior rules:
 - Start by receiving the concern gently.
 - Ask only one natural follow-up question at a time.
 - Keep replies brief and avoid long explanations.
+- If there is prior conversation, continue naturally from the latest user message instead of restarting the conversation.
+- Do not repeat the same opening, summary, or follow-up question from the previous assistant turn.
+- React to what the user just said in this turn before offering any next step.
 - Be honest when details are still uncertain or under validation.
 - Never sound like a technical demo, dashboard, form engine, or policy bot.
 - Do not expose backend logic, scenario classification, policy text, routing, or hidden decision logic.
@@ -63,6 +68,12 @@ Available next actions:
 
 Recent conversation:
 ${historySummary || "No prior conversation"}
+
+Previous assistant reply:
+${lastAssistantMessage || "None"}
+
+Latest prior user message:
+${lastUserMessage || "None"}
 `.trim();
   }
 
@@ -83,6 +94,9 @@ ${historySummary || "No prior conversation"}
 - 日本語はやわらかく、短く、落ち着いて。
 - まず受け止めてから、一歩だけ整理する。
 - 質問は一度に1つだけ。
+- 会話履歴がある場合は、会話を最初からやり直さず、最新の利用者発話に自然に続ける。
+- 前のひなたの返答と同じ要点・同じ質問を繰り返さない。
+- 毎ターン、まず直前の利用者発話に触れてから次の一歩を返す。
 - 長い説明、手続き的な言い方、営業色、技術説明、制度説明に寄りすぎない。
 - 「分類しました」「判定しました」など、裏側の判断やシステム事情を出さない。
 - 商品やサービスがまだ固まっていない場合は、正直に、確認しながら進める言い方をする。
@@ -113,5 +127,11 @@ ${historySummary || "No prior conversation"}
 
 直近の会話:
 ${historySummary || "会話履歴なし"}
+
+直前のひなたの返答:
+${lastAssistantMessage || "なし"}
+
+直前の利用者発話:
+${lastUserMessage || "なし"}
 `.trim();
 }

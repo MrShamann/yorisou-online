@@ -44,9 +44,11 @@ ${input.userMessage || "未入力"}
 
 返答ルール:
 1. まず不安や状況をやさしく受け止める
-2. 次に一歩だけ整理する
-3. 質問は必要な場合だけ1つ
-4. 最後に必要なら次の案内をやわらかく添える
+2. 会話履歴がある場合は、最新の利用者発話にだけ自然に続ける
+3. 前のひなたの返答と同じ要点や同じ確認質問を繰り返さない
+4. 次に一歩だけ整理する
+5. 質問は必要な場合だけ1つ
+6. 最後に必要なら次の案内をやわらかく添える
 5. 本文だけを返す`
     : `Create only the assistant reply body for Yorisou.
 
@@ -71,7 +73,8 @@ ${input.history.map((entry) => `${entry.role}: ${entry.content}`).join("\n") || 
 User message:
 ${input.userMessage || "No message"}
 
-Reply in 2-4 short sentences, with at most one natural follow-up question.`;
+Reply in 2-4 short sentences, with at most one natural follow-up question.
+If history exists, continue from the latest user message and do not repeat the same assistant summary or question from the previous turn.`;
 }
 
 export function buildDeterministicSupportReply(input: {
