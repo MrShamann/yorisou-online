@@ -1,0 +1,81 @@
+{
+  "version": "v1",
+  "purpose": "Aggregate recurring elder/family need patterns from Hinata conversations into lightweight design and product-review inputs.",
+  "aggregation_fields": [
+    {
+      "name": "time_window",
+      "type": "object",
+      "fields": ["start_at", "end_at", "label"]
+    },
+    {
+      "name": "volume",
+      "type": "object",
+      "fields": ["conversation_count", "signal_count", "unique_owner_count_estimate"]
+    },
+    {
+      "name": "speaker_type_distribution",
+      "type": "record<number>",
+      "description": "Counts by older adult / family member / institutional contact / unclear."
+    },
+    {
+      "name": "need_category_counts",
+      "type": "record<number>",
+      "description": "Recurring elder/family need categories."
+    },
+    {
+      "name": "secondary_need_overlap_counts",
+      "type": "record<number>",
+      "description": "Where ambiguous or mixed needs recur together."
+    },
+    {
+      "name": "hesitation_barrier_counts",
+      "type": "record<number>",
+      "description": "Common barriers such as falling fear, stigma, storage, taxi dislike, or process confusion."
+    },
+    {
+      "name": "readiness_to_solution_distribution",
+      "type": "record<number>",
+      "description": "How ready users are for solution/product/service discussion."
+    },
+    {
+      "name": "openness_to_product_service_distribution",
+      "type": "record<number>",
+      "description": "How open users are to products/services versus needing conversation first."
+    },
+    {
+      "name": "top_practical_constraints",
+      "type": "array<object>",
+      "fields": ["constraint", "count"]
+    },
+    {
+      "name": "top_family_concerns",
+      "type": "array<object>",
+      "fields": ["concern", "count"]
+    },
+    {
+      "name": "top_dignity_autonomy_concerns",
+      "type": "array<object>",
+      "fields": ["concern", "count"]
+    },
+    {
+      "name": "trial_explanation_request_summary",
+      "type": "object",
+      "fields": ["yes_count", "maybe_count", "top_related_categories"]
+    },
+    {
+      "name": "process_subsidy_clarity_summary",
+      "type": "object",
+      "fields": ["request_count", "top_questions", "confidence_note"]
+    },
+    {
+      "name": "conversation_first_signal_summary",
+      "type": "object",
+      "fields": ["conversation_only_count", "clarification_count", "not_ready_for_product_count"]
+    },
+    {
+      "name": "interpretation_notes",
+      "type": "string[]",
+      "description": "Human-readable caution notes about over-interpretation risk."
+    }
+  ]
+}

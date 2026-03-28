@@ -10,10 +10,10 @@ const trustPoints = [
 
 const serviceCards = [
   {
-    title: "Mobility Advisor",
-    text: "Start with guided support to organize the user, the concern, and the next step in a calm way.",
+    title: "Talk with Hinata",
+    text: "Start with a calm conversation. Hinata helps make sense of the concern first, then helps with the next step only when needed.",
     href: "/en/support#scenario-assistant",
-    cta: "Open support",
+    cta: "Talk with Hinata",
   },
   {
     title: "Pilot and implementation support",
@@ -36,16 +36,15 @@ export default function HomePageEn() {
               <span className="block text-[#6B5A4A]">organized for seniors, families, and communities.</span>
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisou is a Japan-focused mobility brand. The main entry point is a guided mobility consultation,
-              and from there the support can extend into trials, local pilot planning, and operating design.
+              Yorisou is a calm support service for mobility and daily life in Japan. The main entry is a conversation with Hinata, and from there support can extend into products, family support, and local implementation when needed.
             </p>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
-              It is fine to begin before everything is clear. The first step is simply organizing the user and the real daily route.
+              It is fine to begin before everything is clear. You can simply start talking, and the structure can come later.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link href="/en/support#scenario-assistant" className="btn btn-primary">
-                Open support
+                Talk with Hinata
               </Link>
               <Link href="/en/contact" className="btn btn-secondary">
                 Contact Yorisou
@@ -91,7 +90,7 @@ export default function HomePageEn() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 max-w-3xl">
             <div className="eyebrow">What Yorisou Offers</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">The entry point is consultation. From there, support can scale to local implementation.</h2>
+            <h2 className="mt-3 text-3xl font-light leading-tight">The entry point is conversation. From there, support can extend into products or local implementation.</h2>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">

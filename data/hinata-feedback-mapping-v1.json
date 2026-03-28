@@ -1,0 +1,140 @@
+[
+  {
+    "pattern_id": "fear_of_falling_high",
+    "signal_conditions": {
+      "need_categories": ["fear_of_falling"],
+      "concern_intensity": ["medium", "high"]
+    },
+    "product_selection_implications": [
+      "安定性や段差・距離との相性を比較軸として重視する",
+      "大きな機器カテゴリに飛ぶ前に、短距離支援カテゴリも含めて比較する"
+    ],
+    "service_design_implications": [
+      "試す前に『どこで怖さが強いか』を確認する対話設計を重視する",
+      "家族向け説明では安全感の伝え方を強める"
+    ],
+    "product_design_implications": [
+      "安心感、安定感、見通しのよさ、使い始めの分かりやすさが重要になりやすい"
+    ],
+    "content_explanation_implications": [
+      "安全の断定ではなく、どういう場面で確認すべきかを説明する"
+    ]
+  },
+  {
+    "pattern_id": "reluctance_to_go_out_alone_high",
+    "signal_conditions": {
+      "need_categories": ["reluctance_to_go_out_alone", "reduced_confidence", "isolation_reduced_outings"]
+    },
+    "product_selection_implications": [
+      "製品より先に confidence-building や段階的導入が必要なケースが多いかもしれない"
+    ],
+    "service_design_implications": [
+      "trial や家族説明、継続対話を製品導線より先に置く価値が高い",
+      "感情要因と物理要因を分けて見る支援設計が必要"
+    ],
+    "product_design_implications": [
+      "威圧感の少ない見た目や『大げさでない』印象が重要になりうる"
+    ],
+    "content_explanation_implications": [
+      "『無理に外出を増やす』ではなく、『少しずつ自信を取り戻す』語り方が必要"
+    ]
+  },
+  {
+    "pattern_id": "family_burden_and_dignity",
+    "signal_conditions": {
+      "need_categories": ["family_worry_about_parent", "fear_of_burdening_family", "dignity_and_independence"]
+    },
+    "product_selection_implications": [
+      "本人の自立感と家族の扱いやすさを両立する候補を重視する",
+      "family practicality oriented カテゴリの重要度が上がる可能性がある"
+    ],
+    "service_design_implications": [
+      "家族説明支援や共有しやすい言葉づくりが重要になる",
+      "製品比較より前に dignity/autonomy を扱う会話フローが必要"
+    ],
+    "product_design_implications": [
+      "『介護される感じ』を減らす印象設計や受け入れやすさが重要になる"
+    ],
+    "content_explanation_implications": [
+      "機能説明より、本人らしさや家族負担軽減の文脈を先に置く"
+    ]
+  },
+  {
+    "pattern_id": "conversation_before_product",
+    "signal_conditions": {
+      "readiness_for_solution_discussion": ["not_ready", "lightly_open"],
+      "user_goal": ["conversation_only", "clarification"]
+    },
+    "product_selection_implications": [
+      "早期 product push は逆効果になりやすい"
+    ],
+    "service_design_implications": [
+      "conversation layer を製品導線の前に置く現在方針を維持・強化する",
+      "Hinata の会話継続性を優先改善する"
+    ],
+    "product_design_implications": [
+      "導入前提でなく『理解されやすさ』の設計も重要視する"
+    ],
+    "content_explanation_implications": [
+      "比較表や catalog の前に、困りごと整理の入口コンテンツが必要"
+    ]
+  },
+  {
+    "pattern_id": "trial_and_explanation_demand",
+    "signal_conditions": {
+      "trial_explanation_needed": ["yes", "maybe"]
+    },
+    "product_selection_implications": [
+      "試しやすさ、説明しやすさ、家族同席のしやすさが評価軸として重要"
+    ],
+    "service_design_implications": [
+      "trial / demo / explanation session の整理を強める",
+      "何を確認したいかを事前に整える対話が必要"
+    ],
+    "product_design_implications": [
+      "初回説明や onboarding のやさしさが重要になる"
+    ],
+    "content_explanation_implications": [
+      "『何を試すとよいか』を calm に示す説明資材が有効"
+    ]
+  },
+  {
+    "pattern_id": "process_confusion_high",
+    "signal_conditions": {
+      "need_categories": ["subsidy_process_next_steps_uncertainty"],
+      "user_goal": ["concrete_next_step", "process_subsidy_guidance"]
+    },
+    "product_selection_implications": [
+      "製品自体より、進め方の分かりやすさが購買/導入前の大きな障壁かもしれない"
+    ],
+    "service_design_implications": [
+      "手順・相談予約・説明機会の導線をシンプルにする必要がある",
+      "制度や補助は断定せず、確認プロセスを明確にする"
+    ],
+    "product_design_implications": [
+      "運用や導入の分かりやすさを product experience の一部として扱う"
+    ],
+    "content_explanation_implications": [
+      "FAQ や short process guide の必要性が高まる"
+    ]
+  },
+  {
+    "pattern_id": "short_distance_daily_routes",
+    "signal_conditions": {
+      "need_categories": ["low_distance_mobility_difficulty"],
+      "practical_constraints": ["distance", "stairs", "slope", "clinic_route", "shopping_route"]
+    },
+    "product_selection_implications": [
+      "近距離・日常動線・保管性・家族扱いやすさを比較軸として優先する"
+    ],
+    "service_design_implications": [
+      "『どの場面で使うか』を先に整理する対話設計が重要"
+    ],
+    "product_design_implications": [
+      "日常の短距離利用、地域ルート適合、保管性などが重要になりうる"
+    ],
+    "content_explanation_implications": [
+      "長距離性能より、買い物・通院・近所の立ち寄り文脈を使って説明する"
+    ]
+  }
+]

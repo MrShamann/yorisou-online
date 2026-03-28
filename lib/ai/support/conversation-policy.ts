@@ -28,7 +28,7 @@ export function getConversationPolicy(result: SupportScenarioResult, locale: Sup
       uncertaintyHandling: "Be honest when details are still unclear or under validation.",
       productStatusGuidance: "Do not oversell products or imply certainty before fit is confirmed.",
       continuationGuidance: "Mention LINE or account continuation only as a calm optional next step.",
-      actionOfferingGuidance: "Offer at most one or two next actions, and only after acknowledging the concern.",
+      actionOfferingGuidance: "Do not offer actions in the first few turns unless the user clearly asks for a next step. Keep conversation first.",
     };
   }
 
@@ -43,7 +43,7 @@ export function getConversationPolicy(result: SupportScenarioResult, locale: Sup
       uncertaintyHandling: "わからない点は曖昧にごまかさず、まだ確認が必要だと率直に伝える。",
       productStatusGuidance: "製品や支え方は決めつけず、暮らしに合うかを一緒に見る姿勢を保つ。",
       continuationGuidance: "LINEやアカウントは、あとから続けたい場合の選択肢として静かに触れる。",
-      actionOfferingGuidance: "次の案内は急がせず、必要を感じる場合だけやわらかく添える。",
+      actionOfferingGuidance: "最初の数往復は会話を優先し、明確に必要が見えてからだけ次の案内をやわらかく添える。",
     };
   }
 
@@ -58,7 +58,7 @@ export function getConversationPolicy(result: SupportScenarioResult, locale: Sup
       uncertaintyHandling: "まだ決められないことはそのまま認め、試しながら考える流れを示す。",
       productStatusGuidance: "検証中のものは検証中と伝え、合うかどうかは一緒に見ていく言い方にする。",
       continuationGuidance: "詳しく見返したい場合のみ、LINEやアカウント継続を案内する。",
-      actionOfferingGuidance: "製品案内は押し出しすぎず、支え方を見る流れの一部として示す。",
+      actionOfferingGuidance: "最初の数往復では比較や製品導線を急がず、会話が進んでから必要な場合だけ示す。",
     };
   }
 
@@ -73,7 +73,7 @@ export function getConversationPolicy(result: SupportScenarioResult, locale: Sup
       uncertaintyHandling: "枠や日程が未確定なら、確定していないことを正直に伝える。",
       productStatusGuidance: "予約や導入を急がせる言い方は避ける。",
       continuationGuidance: "相談を続ける方法として、あとから受け取れる手段を静かに添える。",
-      actionOfferingGuidance: "予約・導入に進む導線は1つに絞り、説明より安心感を優先する。",
+      actionOfferingGuidance: "予約や導入の導線は、利用者が明確に進みたそうなときだけ短く示す。",
     };
   }
 
@@ -88,7 +88,7 @@ export function getConversationPolicy(result: SupportScenarioResult, locale: Sup
       uncertaintyHandling: "未確定の機能や運用条件は、検討中・確認中と明示する。",
       productStatusGuidance: "導入可否や成果を断定しない。",
       continuationGuidance: "継続手段よりも、まず窓口整理を優先する。",
-      actionOfferingGuidance: "導入・連携の次アクションは簡潔に1つ示す。",
+      actionOfferingGuidance: "初期ターンでは窓口整理を優先し、具体的な導入アクションは急いで出しすぎない。",
     };
   }
 
@@ -102,6 +102,6 @@ export function getConversationPolicy(result: SupportScenarioResult, locale: Sup
     uncertaintyHandling: "まだ決まっていない内容は正直に伝え、確認しながら進める。",
     productStatusGuidance: "製品や支え方は候補として案内し、確定した最適解のように言わない。",
     continuationGuidance: "LINEやアカウントは任意の続き方として後半に短く触れる。",
-    actionOfferingGuidance: "行動提案は最大2つまで、押しつけずに添える。",
+    actionOfferingGuidance: "最初の数往復は会話を優先し、行動提案は必要が見えてからだけ短く添える。",
   };
 }

@@ -15,6 +15,7 @@ import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
 type ScenarioSupportAssistantProps = {
   locale: SupportAssistantLocale;
   onConversationStateChange?: (started: boolean) => void;
+  mode?: "entry" | "continuation";
 };
 
 type SupportChatResponse = {
@@ -81,39 +82,57 @@ const starters = {
 const copy = {
   ja: {
     greeting:
-      "こんにちは。AI相談員 ひなたです。移動のことでも、暮らしのことでも、気になっていることをそのままお話しください。",
-    quietNote: "うまく整理できていなくても大丈夫です。必要な整理は、ひなたが裏側で少しずつ受け持ちます。",
-    promptLabel: "こんな始め方もできます",
+      "こんにちは。AI相談員 ひなたです。気になっていることを、そのまま話しかけてください。",
+    continuationGreeting:
+      "こんにちは。前回の続きからでも、いま気になっていることからでも大丈夫です。",
+    quietNote: "うまくまとまっていなくても大丈夫です。必要な整理は、ひなたが会話の中で少しずつ受け持ちます。",
+    continuationNote:
+      "前に話したことも踏まえながら、必要な整理はひなたが会話の中で静かに受け持ちます。",
+    promptLabel: "たとえば",
     textareaLabel: "気になっていることを、そのままどうぞ",
     placeholder:
       "たとえば「最近の外出が少し不安です」「親の通院をどう支えればよいかわかりません」など、思いつくままで大丈夫です。",
     submit: "ひなたに相談する",
+    continuationSubmit: "続きを話す",
     loading: "ひなたが受け取っています...",
     typing: "ひなたが考えています…",
-    detailToggleOpen: "立場を添える",
+    detailToggleOpen: "必要なら立場を添える",
     detailToggleClose: "立場を閉じる",
-    detailHint: "必要なときだけ添えられます。選ばなくても大丈夫です。",
+    detailHint: "ご本人・ご家族・地域や施設のことなど、必要なときだけ添えられます。",
     assistantLabel: "ひなた",
     userLabel: "あなた",
     error: "ご案内の準備に失敗しました。少し時間をおいて、もう一度お試しください。",
-    actionsTitle: "このあとできること",
+    actionsTitle: "必要なら、このあと",
+    continuationActionsTitle: "必要になったら",
+    continuationComposerNote: "このまま続けて話せます。短いひと言でも大丈夫です。",
+    threadStatus: "対話中",
+    continuationThreadStatus: "ひなたとの続き",
   },
   en: {
-    greeting: "Hello, I'm Hinata. Please share what is on your mind about mobility or daily life.",
-    quietNote: "You do not need to organize it first. Hinata will quietly help structure it in the background.",
-    promptLabel: "You can begin from:",
+    greeting: "Hello, I'm Hinata. You can just start by telling me what is on your mind.",
+    continuationGreeting:
+      "Welcome back. You can continue from where we left off, or start with what is on your mind now.",
+    quietNote: "It does not need to be organized first. Hinata will quietly help make sense of it as you talk.",
+    continuationNote:
+      "Hinata can continue from what you shared before and quietly help organize things as you talk.",
+    promptLabel: "For example",
     textareaLabel: "What is on your mind",
     placeholder: "A short natural message is enough to begin.",
-    submit: "Start consultation",
+    submit: "Talk with Hinata",
+    continuationSubmit: "Continue",
     loading: "Receiving your message...",
     typing: "Hinata is thinking…",
-    detailToggleOpen: "Add context",
+    detailToggleOpen: "Add context if helpful",
     detailToggleClose: "Hide context",
-    detailHint: "Only if helpful. You can skip this.",
+    detailHint: "Only if helpful. You can add whether this is about you, family, or a local organization.",
     assistantLabel: "Hinata",
     userLabel: "You",
     error: "We could not prepare guidance. Please try again.",
-    actionsTitle: "Next options",
+    actionsTitle: "If helpful, next steps",
+    continuationActionsTitle: "If needed later",
+    continuationComposerNote: "You can continue naturally here. A short message is enough.",
+    threadStatus: "In conversation",
+    continuationThreadStatus: "Continuing with Hinata",
   },
 } as const;
 
@@ -122,8 +141,13 @@ const institutionHints = ["自治体", "施設", "介護", "事業者", "病院"
 const bookingHints = ["相談したい", "予約", "面談", "話を聞いてほしい", "直接"];
 const productHints = ["製品", "車いす", "電動", "カート", "何が合う", "比較"];
 
-export default function ScenarioSupportAssistant({ locale, onConversationStateChange }: ScenarioSupportAssistantProps) {
+export default function ScenarioSupportAssistant({
+  locale,
+  onConversationStateChange,
+  mode = "entry",
+}: ScenarioSupportAssistantProps) {
   const t = copy[locale];
+  const isContinuationMode = mode === "continuation";
   const threadRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   const [identity, setIdentity] = useState<SupportIdentity>("self");
@@ -261,7 +285,11 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
             <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">AI相談員</div>
             <div className="mt-1 text-base text-[var(--text)]">{t.assistantLabel}</div>
           </div>
-          {hasStarted && <div className="ml-auto text-xs text-[var(--accent-sage-text)]">{locale === "ja" ? "対話中" : "In conversation"}</div>}
+          {hasStarted && (
+            <div className="ml-auto text-xs text-[var(--accent-sage-text)]">
+              {isContinuationMode ? t.continuationThreadStatus : t.threadStatus}
+            </div>
+          )}
         </div>
       </div>
 
@@ -292,7 +320,9 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
                       <div
                         className={`rounded-[1.6rem] px-4 py-4 text-sm leading-8 md:px-5 ${
                           isAssistant
-                            ? "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] text-[var(--text)] shadow-[0_8px_18px_rgba(47,35,33,0.04)]"
+                            ? index === messages.length - 1
+                              ? "border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.98)] text-[var(--text)] shadow-[0_14px_28px_rgba(47,35,33,0.07)]"
+                              : "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] text-[var(--text)] shadow-[0_8px_18px_rgba(47,35,33,0.04)]"
                             : "bg-[var(--accent)] text-white shadow-[0_10px_20px_rgba(47,35,33,0.12)]"
                         }`}
                       >
@@ -303,7 +333,9 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
 
                         {isAssistant && index === messages.length - 1 && scenarioResult && recommendedActions.length > 0 && !isSubmitting && (
                           <div className="mt-4 border-t border-[color:var(--line-soft)] pt-4">
-                            <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.actionsTitle}</div>
+                            <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">
+                              {isContinuationMode ? t.continuationActionsTitle : t.actionsTitle}
+                            </div>
                             <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1">
                               {recommendedActions.map((action) => (
                                 <Link
@@ -347,8 +379,12 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
                   </div>
                   <div className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] px-4 py-4 text-sm leading-8 text-[var(--text)] shadow-[0_8px_18px_rgba(47,35,33,0.04)] md:px-5">
                     <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.assistantLabel}</div>
-                    <p className="mt-2 whitespace-pre-wrap">{t.greeting}</p>
-                    <p className="mt-3 text-[var(--muted)]">{t.quietNote}</p>
+                    <p className="mt-2 whitespace-pre-wrap">
+                      {isContinuationMode ? t.continuationGreeting : t.greeting}
+                    </p>
+                    <p className="mt-3 text-[var(--muted)]">
+                      {isContinuationMode ? t.continuationNote : t.quietNote}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -373,6 +409,9 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
 
         <form onSubmit={handleSubmit} className="border-t border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.98)] px-4 py-4 backdrop-blur-sm md:px-6">
           <div className="mx-auto max-w-3xl">
+            {hasStarted && isContinuationMode && (
+              <p className="mb-3 text-sm leading-7 text-[var(--muted)]">{t.continuationComposerNote}</p>
+            )}
             {detailsOpen && (
               <div className="mb-3 rounded-[1.2rem] bg-[var(--surface-sage)]/72 px-4 py-4">
                 <div className="text-sm leading-7 text-[var(--accent-sage-text)]">{t.detailHint}</div>
@@ -425,7 +464,11 @@ export default function ScenarioSupportAssistant({ locale, onConversationStateCh
                     disabled={isSubmitting || draft.trim().length === 0}
                     className="rounded-[1.15rem] bg-[var(--accent)] px-5 py-3 text-sm text-white shadow-[0_12px_24px_rgba(47,35,33,0.12)] transition hover:translate-y-[-1px] hover:bg-[var(--cta-main-hover)] disabled:cursor-not-allowed disabled:opacity-65"
                   >
-                    {isSubmitting ? t.loading : t.submit}
+                    {isSubmitting
+                      ? t.loading
+                      : isContinuationMode
+                        ? t.continuationSubmit
+                        : t.submit}
                   </button>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { routeSupportActions } from "@/lib/ai/support/action-router";
 import { getConversationPolicy } from "@/lib/ai/support/conversation-policy";
 import { generateSupportAssistantText } from "@/lib/ai/support/model-gateway";
 import { buildDeterministicSupportReply, buildSupportAssistantPrompt } from "@/lib/ai/support/prompt-builder";
+import { detectConversationLocale, shouldOfferActions } from "@/lib/ai/support/runtime-helpers";
 import {
   classifySupportScenario,
   type SupportAssistantLocale,
@@ -25,12 +26,6 @@ type SupportChatRequest = {
   messages?: SupportConversationMessage[];
 };
 
-const englishGreetingPattern = /^(hi|hello|hey|good (morning|afternoon|evening)|how are you)\b/i;
-const englishSignalPattern = /[A-Za-z]/;
-const japaneseSignalPattern = /[\u3040-\u30ff\u3400-\u9fff]/;
-const earlyActionKeywordsJa = ["予約", "相談したい", "詳しく話したい", "製品", "比較", "導入", "連携"];
-const earlyActionKeywordsEn = ["book", "consult", "consultation", "product", "products", "compare", "implementation"];
-
 function isValidIdentity(value: string | undefined): value is SupportIdentity {
   return value === "self" || value === "family" || value === "institution";
 }
@@ -43,58 +38,6 @@ function isValidIssueType(value: string | undefined): value is SupportIssueType 
     value === "consultation_booking" ||
     value === "institutional_inquiry"
   );
-}
-
-function detectConversationLocale(message: string, history: SupportConversationMessage[], fallback: SupportAssistantLocale) {
-  const recentUserText = [message, ...history.filter((entry) => entry.role === "user").slice(-2).map((entry) => entry.content)]
-    .join("\n")
-    .trim();
-
-  if (!recentUserText) {
-    return fallback;
-  }
-
-  const hasJapanese = japaneseSignalPattern.test(recentUserText);
-  const hasEnglish = englishSignalPattern.test(recentUserText);
-
-  if (hasEnglish && !hasJapanese) {
-    return "en" as const;
-  }
-
-  if (hasJapanese) {
-    return "ja" as const;
-  }
-
-  return fallback;
-}
-
-function shouldOfferActions(input: {
-  locale: SupportAssistantLocale;
-  userMessage: string;
-  history: SupportConversationMessage[];
-}) {
-  const trimmed = input.userMessage.trim();
-  const lower = trimmed.toLowerCase();
-  const userTurnCount = input.history.filter((entry) => entry.role === "user").length + 1;
-  const isTinyGreeting =
-    trimmed.length <= 12 &&
-    (englishGreetingPattern.test(trimmed) ||
-      /^(こんにちは|こんばんは|もしもし|やあ|おはよう|hi|hello|hey)$/i.test(trimmed));
-
-  if (isTinyGreeting) {
-    return false;
-  }
-
-  const explicitActionIntent =
-    input.locale === "en"
-      ? earlyActionKeywordsEn.some((keyword) => lower.includes(keyword))
-      : earlyActionKeywordsJa.some((keyword) => trimmed.includes(keyword));
-
-  if (userTurnCount <= 1 && !explicitActionIntent) {
-    return false;
-  }
-
-  return true;
 }
 
 export async function POST(request: Request) {
@@ -119,6 +62,11 @@ export async function POST(request: Request) {
     const userMessage = typeof payload.message === "string" ? payload.message.trim() : "";
     const locale = detectConversationLocale(userMessage, messages, requestedLocale);
 
+    const memory = await getHinataMemorySnapshot({
+      viewer,
+      session,
+    });
+
     const scenarioResult = classifySupportScenario({
       locale,
       identity: payload.identity,
@@ -131,13 +79,11 @@ export async function POST(request: Request) {
       locale,
       userMessage,
       history: messages,
+      relationshipStage: memory.profile?.relationshipStage || null,
+      openQuestion: memory.thread?.openQuestion || null,
     })
       ? routeSupportActions(scenarioResult, locale)
       : [];
-    const memory = await getHinataMemorySnapshot({
-      viewer,
-      session,
-    });
     const capabilityPlan = buildOpenClawCapabilityPlan({
       scenario: scenarioResult,
       policy,
@@ -205,6 +151,7 @@ export async function POST(request: Request) {
           outputChars: deterministic.message.length,
           fallbackUsed: true,
         },
+      history: messages,
       memory,
       capabilityPlan,
       actions: recommendedActions,

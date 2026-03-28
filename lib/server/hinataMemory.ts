@@ -426,7 +426,7 @@ export async function upsertHinataMemory(input: {
     principalId: resolved.principalId,
     currentTopic: input.scenario.labels.scenario,
     recentMessageSummary: buildRecentMessageSummary(input.history, input.userMessage, input.assistantMessage),
-    openQuestion: extractOpenQuestion(input.assistantMessage) || input.policy.followUpQuestion || null,
+    openQuestion: extractOpenQuestion(input.assistantMessage),
     latestNextStep: input.actions[0]?.title || null,
     continuityMarkers: [
       input.scenario.scenario,

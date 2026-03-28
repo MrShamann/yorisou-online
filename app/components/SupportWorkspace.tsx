@@ -347,8 +347,8 @@ export default function SupportWorkspace({
                 <>
                   <p className="mt-2 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">
                     {locale === "ja"
-                      ? "最初から整理しなくても大丈夫です。まずは気になることをそのまま送り、必要な続け方だけあとから選べます。"
-                      : "You can begin naturally first, then choose how to continue only if needed."}
+                      ? "最初から整理しなくても大丈夫です。まずは気になることを、そのまま送ってください。"
+                      : "You can begin by saying it naturally first. Any next step can wait until later."}
                   </p>
                 </>
               )}
@@ -356,21 +356,21 @@ export default function SupportWorkspace({
 
             <ScenarioSupportAssistant locale={locale} onConversationStateChange={setHasConversationStarted} />
 
-            <details className={`panel-sage mt-3 rounded-[1.4rem] px-5 py-4 ${hasConversationStarted ? "opacity-75" : ""}`}>
+            <details className={`panel-sage mt-3 rounded-[1.4rem] px-5 py-4 ${hasConversationStarted ? "opacity-65" : ""}`}>
               <summary className="cursor-pointer list-none text-sm text-[var(--accent-sage-text)]">
-                {locale === "ja" ? "LINEやアカウントであとから続ける" : "Continue later with LINE or account"}
+                {locale === "ja" ? "あとでこの続きに戻る" : "Return to this later"}
               </summary>
               <div className="mt-4 border-t border-[color:var(--line-sage)]/70 pt-4">
                 <p className="max-w-2xl text-sm leading-8 text-[var(--accent-sage-text)]">
                   {locale === "ja"
                     ? "必要を感じたときだけ、LINEやアカウントで続きを受け取れます。まずはこの場でひなたと話すだけでも大丈夫です。"
-                    : "Only if helpful, you can continue later with LINE or your account."}
+                    : "Only if helpful, you can continue later with LINE or your account. You can simply talk with Hinata here first."}
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
                   {lineAuthReady ? (
                     <Link href={lineStartHref} className="inline-flex items-center gap-2 text-[var(--accent-sage-text)] underline underline-offset-4">
                       <LineBrandIcon className="h-5 w-5" />
-                      {locale === "ja" ? "LINEでつながる" : "Connect with LINE"}
+                      {locale === "ja" ? "LINEで続きを受け取る" : "Continue with LINE"}
                     </Link>
                   ) : (
                     <span className="text-[var(--accent-sage-text)]">
@@ -378,10 +378,10 @@ export default function SupportWorkspace({
                     </span>
                   )}
                   <Link href={loginHref} className="text-[var(--accent-sage-text)] underline underline-offset-4">
-                    {locale === "ja" ? "ログインして続きを見る" : "Log in to continue"}
+                    {locale === "ja" ? "ログインして続ける" : "Continue with login"}
                   </Link>
                   <Link href={registerHref} className="text-[var(--accent-sage-text)] underline underline-offset-4">
-                    {locale === "ja" ? "新しく登録する" : "Create account"}
+                    {locale === "ja" ? "新しく登録する" : "Create an account"}
                   </Link>
                 </div>
               </div>
@@ -403,104 +403,104 @@ export default function SupportWorkspace({
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
               <div>
                 <h1 className="text-4xl font-light leading-tight md:text-6xl">
-                  {locale === "ja" ? `${account.name}さんのサポートページ` : `${account.name}'s support page`}
+                  {locale === "ja" ? "ひなたとの対話を続ける" : "Continue with Hinata"}
                 </h1>
                 <p className="mt-5 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
                   {locale === "ja"
-                    ? "ご相談内容やご案内、LINEでのやり取りをここでまとめて確認できます。必要に応じて、ご家族共有や次のご相談へ進めます。"
-                    : "Review your consultation history, recommendation, and LINE follow-up status here, then move to the next support step when needed."}
+                    ? `${account.name}さんのこれまでの対話を引き継ぎながら、ひなたとこのまま話を続けられます。必要な記録や連携は、下で静かに確認できます。`
+                    : `Pick up the conversation with Hinata from where you left off. Notes, status, and continuation options stay available below when you need them.`}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-full border border-[#D6C3A3]/60 px-6 py-3 text-sm text-[#5A4B3E] transition hover:bg-[#FCFAF6]"
+                className="rounded-full border border-[#D6C3A3]/50 px-5 py-2.5 text-sm text-[#6B5A4A] transition hover:bg-[#FCFAF6]"
               >
                 {locale === "ja" ? "ログアウト" : "Log out"}
               </button>
             </div>
             <div className="mt-8">
-              <ScenarioSupportAssistant locale={locale} />
+              <ScenarioSupportAssistant locale={locale} mode="continuation" />
             </div>
             <div className="mt-8 grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
               <div className="rounded-[1.8rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-6 py-6">
                 <div className="text-xs tracking-[0.14em] text-[#8A7764]">
-                  {locale === "ja" ? "ご案内" : "NEXT STEP"}
+                  {locale === "ja" ? "ひなたとの続き" : "CONTINUE WITH HINATA"}
                 </div>
                 <h2 className="mt-3 text-2xl font-light leading-tight text-[#3B2F2F]">
                   {latest
                     ? locale === "ja"
-                      ? "いまの相談状況"
-                      : "Your current consultation status"
+                      ? "前回までの対話を引き継ぐ"
+                      : "Pick up from the last conversation"
                     : locale === "ja"
-                      ? "まずは最初の相談を始めましょう"
-                      : "Start your first consultation"}
+                      ? "まずは、ひなたに話しかけてみましょう"
+                      : "Start by talking with Hinata"}
                 </h2>
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   <div className="rounded-[1.25rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4">
-                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "ご相談中の内容" : "Current topic"}</div>
+                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "ひなたが受け取っていること" : "What Hinata has understood"}</div>
                     <div className="mt-2 text-lg font-light leading-tight text-[#3B2F2F]">
                       {latest
                         ? latest.recommendedCategory
                         : locale === "ja"
-                          ? "まだ相談内容は保存されていません"
-                          : "No consultation topic saved yet"}
+                          ? "まだ対話の記録はありません"
+                          : "No saved conversation yet"}
                     </div>
                     <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
                       {latest
                         ? latest.summary
                         : locale === "ja"
-                          ? "最初の相談で、現在の移動状況やご家族の不安を整理できます。"
-                          : "Your first consultation helps organize current mobility needs and family concerns."}
+                          ? "最初のやり取りから、気になっていることを少しずつ整理できます。"
+                          : "A first exchange is enough to start making sense of what matters most."}
                     </p>
                   </div>
                   <div className="rounded-[1.25rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4">
-                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "次のご案内" : "Recommended next step"}</div>
+                    <div className="text-sm text-[#8A7764]">{locale === "ja" ? "このあと話せること" : "Where the conversation can continue"}</div>
                     <div className="mt-2 text-lg font-light leading-tight text-[#3B2F2F]">
                       {latest
                         ? latest.suggestedNextAction
                         : locale === "ja"
-                          ? "まずは相談を始める"
-                          : "Start consultation"}
+                          ? "まずは話し始める"
+                          : "Start talking"}
                     </div>
                     <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
                       {isLineConnected
                         ? locale === "ja"
-                          ? "LINE連携は完了しています。必要に応じて、このあとLINEでのご案内も確認できます。"
-                          : "LINE is connected. You can also review LINE follow-up status after this."
+                          ? "LINE連携は完了しています。必要になったときだけ、あとから続き方を選べます。"
+                          : "LINE is connected, so you can choose a continuation path later if helpful."
                         : locale === "ja"
-                          ? "LINEで続けたい場合も、このあと落ち着いて確認できます。"
-                          : "If you want to continue with LINE, you can also review connection status below."}
+                          ? "続き方や連携の設定は、このあと必要になってから確認できます。"
+                          : "Continuation and connection settings can wait until you actually need them."}
                     </p>
                   </div>
                 </div>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <Link href={advisorHref} className="btn btn-secondary">
+                  <Link href={advisorHref} className="btn btn-primary">
                     {latest
                       ? locale === "ja"
-                        ? "相談を続ける"
-                        : "Continue consultation"
+                        ? "ひなたと続きを話す"
+                        : "Continue with Hinata"
                       : locale === "ja"
-                        ? "相談を始める"
-                        : "Start consultation"}
+                        ? "ひなたと話し始める"
+                        : "Start with Hinata"}
                   </Link>
                   <Link href={productsHref} className="btn btn-secondary">
-                    {locale === "ja" ? "製品を見比べる" : "Browse products"}
+                    {locale === "ja" ? "必要なら製品を見る" : "View products if helpful"}
                   </Link>
                   <a href="#line-connect" className="btn btn-secondary">
                     {isLineConnected
                       ? locale === "ja"
-                        ? "LINEの状況を確認する"
-                        : "Review LINE status"
+                        ? "LINEの続き方を見る"
+                        : "Review LINE continuation"
                       : locale === "ja"
-                        ? "LINE連携を確認する"
-                        : "Review LINE connection"}
+                        ? "連携の準備を見る"
+                        : "Review continuation setup"}
                   </a>
                 </div>
               </div>
-              <div className="rounded-[1.8rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F4F9F3_0%,#EDF6EB_100%)] px-6 py-6 text-[#314236] shadow-[0_18px_40px_rgba(53,81,61,0.08)]">
+              <div className="rounded-[1.8rem] border border-[#C7D7C1] bg-[linear-gradient(180deg,#F7FBF5_0%,#F1F6EE_100%)] px-6 py-6 text-[#314236] shadow-[0_10px_24px_rgba(53,81,61,0.05)]">
                 <div className="text-xs tracking-[0.14em] text-[#55705C]">
-                  {locale === "ja" ? "LINEのご案内" : "LINE STATUS"}
+                  {locale === "ja" ? "あとから続けるとき" : "CONTINUE LATER IF HELPFUL"}
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <span className={`inline-flex items-center rounded-full px-4 py-2 text-sm ${isLineConnected ? "bg-[#E6F4EA] text-[#2E5B3C]" : "bg-white/80 text-[#6E5D4D]"}`}>
@@ -509,22 +509,22 @@ export default function SupportWorkspace({
                   <span className="text-sm leading-7 text-[#4D5642]">
                     {isLineConnected
                       ? locale === "ja"
-                        ? "このアカウントはLINEログイン済みです。Yorisouからのご案内ややり取りは下のLINE欄で確認できます。"
-                        : "This account is connected through LINE login. You can review LINE follow-up status in the LINE section below."
+                        ? "このアカウントでは、必要になったときにLINEでも続けられます。"
+                        : "This account can continue through LINE later if that becomes helpful."
                       : locale === "ja"
-                        ? "まだLINE連携は完了していません。必要に応じて、このページからやさしく進められます。"
-                        : "LINE is not fully connected yet. You can complete connection from this page if needed."}
+                        ? "まだLINE連携は完了していませんが、会話はこのまま続けられます。"
+                        : "LINE is not fully connected yet, but the conversation can continue here."}
                   </span>
                 </div>
                 <div className="mt-5 grid gap-3 text-sm leading-7 text-[#4D5642]">
                   <div className="rounded-[1.2rem] border border-[#C7D7C1] bg-white/75 px-4 py-4">
                     {lineMessagingReady
                       ? locale === "ja"
-                        ? "LINEでメッセージを送ったあと、このページでやり取りの内容を確認できます。"
-                        : "After sending a LINE message, you can review the latest intake and reply result on this page."
+                        ? "LINEで受け取った続きも、このページで静かに見返せます。"
+                        : "Any follow-up that comes through LINE can also be reviewed here."
                       : locale === "ja"
-                        ? "LINEでのご案内はご利用いただけます。準備状況は下でも確認できます。"
-                        : "LINE status is available here, but please also review the Messaging API configuration below."}
+                        ? "LINEの準備状況は、この下で必要なときに確認できます。"
+                        : "LINE setup details stay available below when you need them."}
                   </div>
                 </div>
               </div>
@@ -533,33 +533,33 @@ export default function SupportWorkspace({
         </div>
       </section>
 
-      <section className="border-b border-[#D6C3A3]/20 bg-white/58 px-6 py-8 md:px-10">
+      <section className="border-b border-[#D6C3A3]/16 bg-white/44 px-6 py-6 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-3">
           <StatCard
-            label={locale === "ja" ? "相談件数" : "Consultations"}
+            label={locale === "ja" ? "これまでの対話" : "Conversation history"}
             value={String(consultations.length)}
-            note={locale === "ja" ? "このページで確認できる相談履歴" : "Consultations available in this workspace"}
+            note={locale === "ja" ? "この画面で見返せる対話の記録" : "Saved conversations available here"}
           />
           <StatCard
-            label={locale === "ja" ? "ご相談中の内容" : "Current topic"}
+            label={locale === "ja" ? "いまの話題" : "Current thread"}
             value={latest ? latest.recommendedCategory : locale === "ja" ? "未保存" : "None"}
-            note={latest ? formatDate(latest.createdAt, locale) : locale === "ja" ? "最新の相談結果はまだありません" : "No saved recommendation yet"}
+            note={latest ? formatDate(latest.createdAt, locale) : locale === "ja" ? "まだ続きの記録はありません" : "No saved continuation yet"}
           />
           <StatCard
-            label={locale === "ja" ? "LINEの状況" : "LINE status"}
+            label={locale === "ja" ? "続け方" : "Continuation"}
             value={lineStatusLabel}
             note={
               isLineConnected
                 ? locale === "ja"
-                  ? "LINEで続けられる状態です"
-                  : "Ready to continue with LINE"
+                  ? "必要ならLINEでも続けられます"
+                  : "LINE is available if you want it later"
                 : lineForm.lineNotificationsEnabled
                   ? locale === "ja"
                     ? "フォローアップ有効"
                     : "Follow-up enabled"
                   : locale === "ja"
-                    ? "フォローアップ未設定"
-                    : "Follow-up disabled"
+                    ? "この場で続けられます"
+                    : "You can continue here"
             }
           />
         </div>
@@ -567,22 +567,24 @@ export default function SupportWorkspace({
 
       <section id="support-data-status" className="bg-[#F7F0E5] px-6 py-8 md:px-10">
         <div className="mx-auto max-w-6xl">
-          <section className="rounded-[2rem] border border-[#D6C3A3]/28 bg-white/84 p-6 shadow-[0_20px_48px_rgba(59,47,47,0.05)]">
-            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
-                <div className="text-xs tracking-[0.16em] text-[#8A7764]">
-                  {locale === "ja" ? "ご利用状況" : "SUPPORT DATA STATUS"}
+          <details className="rounded-[2rem] border border-[#D6C3A3]/24 bg-white/76 p-6 shadow-[0_12px_30px_rgba(59,47,47,0.04)]">
+            <summary className="cursor-pointer list-none">
+              <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <div className="text-xs tracking-[0.16em] text-[#8A7764]">
+                    {locale === "ja" ? "接続と記録の詳細" : "CONNECTION AND RECORD DETAILS"}
+                  </div>
+                  <h2 className="mt-2 text-2xl font-light leading-tight text-[#3B2F2F]">
+                    {locale === "ja" ? "必要なときだけ確認する" : "Open only when you need it"}
+                  </h2>
                 </div>
-                <h2 className="mt-2 text-2xl font-light leading-tight text-[#3B2F2F]">
-                  {locale === "ja" ? "ご利用状況の確認" : "Current support resolution"}
-                </h2>
+                <p className="text-sm leading-7 text-[#5A4B3E]">
+                  {locale === "ja"
+                    ? "連携状況や記録の詳細はここで確認できます。対話を続けるだけなら、このまま上から進められます。"
+                    : "Connection status and record details stay here in the background while the conversation remains primary."}
+                </p>
               </div>
-              <p className="text-sm leading-7 text-[#5A4B3E]">
-                {locale === "ja"
-                  ? "ご利用状況や連携状態を、この画面で確認できます。"
-                  : "This panel shows the current canonical read/write state for support."}
-              </p>
-            </div>
+            </summary>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span className={`inline-flex items-center rounded-full px-4 py-2 text-sm ${summaryTone(initialSupportDiagnostics.summaryState)}`}>
                 {summaryLabel(locale, initialSupportDiagnostics.summaryState)}
@@ -686,13 +688,13 @@ export default function SupportWorkspace({
                 </div>
               </div>
             </div>
-          </section>
+          </details>
         </div>
       </section>
 
-      <section className="bg-[#FBF7F0] px-6 py-16 md:px-10 md:py-18">
-        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-          <div className="space-y-6">
+      <section className="bg-[#FBF7F0] px-6 py-12 md:px-10 md:py-14">
+        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.16fr_0.84fr]">
+          <div className="space-y-4">
             <Panel title={locale === "ja" ? "現在の相談状況" : "Current consultation status"}>
               <div className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
                 <div className={`rounded-[1.2rem] border px-4 py-4 ${guardrailTone(initialSupportDiagnostics.summaryState)}`}>
@@ -827,45 +829,45 @@ export default function SupportWorkspace({
               </div>
             </Panel>
 
-            <Panel title={locale === "ja" ? "相談履歴" : "Consultation history"}>
+            <Panel title={locale === "ja" ? "これまでの対話" : "Conversation history"} compact>
               {consultations.length > 0 ? (
                 <div className="space-y-4">
                   {consultations.map((entry) => (
-                    <article key={entry.id} className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
+                    <article key={entry.id} className="rounded-[1.2rem] border border-[#D6C3A3]/20 bg-[#FCFAF6] px-4 py-4">
                       <div className="text-xs tracking-[0.12em] text-[#8A7764]">{formatDate(entry.createdAt, locale)}</div>
-                      <h3 className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{entry.recommendedCategory}</h3>
+                      <h3 className="mt-2 text-lg font-light leading-tight text-[#3B2F2F]">{entry.recommendedCategory}</h3>
                       <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{entry.summary}</p>
                     </article>
                   ))}
                 </div>
               ) : (
-                <EmptyState locale={locale} textJa="まだ相談履歴はありません。まずは相談から始められます。" textEn="No consultation history yet. Start with consultation." />
+                <EmptyState locale={locale} textJa="まだ対話の記録はありません。まずは、ひなたに話しかけてみてください。" textEn="No conversation history yet. Start by talking with Hinata." />
               )}
             </Panel>
 
-            <Panel title={locale === "ja" ? "現在のご提案" : "Current recommendation"}>
+            <Panel title={locale === "ja" ? "ひなたが整理していること" : "What Hinata is holding in view"} compact>
               {latest ? (
-                <div className="space-y-4">
-                  <div className="rounded-[1.4rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-5 py-5">
+                <div className="space-y-3">
+                  <div className="rounded-[1.2rem] border border-[#D6C3A3]/20 bg-[#FCFAF6] px-4 py-4">
                     <div className="text-sm text-[#8A7764]">{locale === "ja" ? "おすすめ" : "Recommended"}</div>
-                    <h3 className="mt-2 text-2xl font-light leading-tight text-[#3B2F2F]">{latest.recommendedCategory}</h3>
+                    <h3 className="mt-2 text-xl font-light leading-tight text-[#3B2F2F]">{latest.recommendedCategory}</h3>
                     <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{latest.summary}</p>
-                    <div className="mt-4 rounded-[1.1rem] border border-[#D6C3A3]/24 bg-white/85 px-4 py-4 text-sm leading-7 text-[#6B5A4A]">
+                    <div className="mt-4 rounded-[1rem] border border-[#D6C3A3]/20 bg-white/85 px-4 py-3.5 text-sm leading-7 text-[#6B5A4A]">
                       {locale === "ja" ? "次の動き" : "Next step"}: {latest.suggestedNextAction}
                     </div>
                   </div>
                   <Link href={advisorHref} className="btn btn-secondary">
-                    {locale === "ja" ? "相談を続ける" : "Continue consultation"}
+                    {locale === "ja" ? "ひなたと続きを話す" : "Continue with Hinata"}
                   </Link>
                 </div>
               ) : (
-                <EmptyState locale={locale} textJa="ご提案内容はまだありません。まずは相談や製品比較から始められます。" textEn="No recommendation is saved yet." />
+                <EmptyState locale={locale} textJa="まだ整理中の内容はありません。まずはひなたとの対話から始められます。" textEn="Nothing is being held in view yet. Start by talking with Hinata." />
               )}
             </Panel>
           </div>
 
-          <div className="space-y-6">
-            <Panel title={locale === "ja" ? "ご家族共有" : "Family sharing"} id="family-share">
+          <div className="space-y-3">
+            <Panel title={locale === "ja" ? "ご家族共有" : "Family sharing"} id="family-share" compact collapsible>
               <div className="grid gap-4">
                 <Field label={locale === "ja" ? "ご家族のお名前" : "Family contact name"}>
                   <input
@@ -919,23 +921,15 @@ export default function SupportWorkspace({
               {shareMessage && <p className="mt-4 text-sm text-[#2E5B3C]">{shareMessage}</p>}
             </Panel>
 
-            <Panel title={locale === "ja" ? "次のご案内" : "Next consultation step"}>
+            <Panel title={locale === "ja" ? "続け方の設定" : "Continuation settings"} compact collapsible>
               <p className="text-sm leading-7 text-[#5A4B3E]">
                 {locale === "ja"
-                  ? "前回の相談を見返しながら、条件を変えてもう一度相談したり、導入後の不安点を追加で送ったりできます。"
-                  : "Review the last consultation, then continue with another consultation or compare product options."}
+                  ? "ひなたとの対話を続けながら、必要になったときだけ受け取り方や次の手段を整えられます。"
+                  : "While continuing with Hinata, you can adjust continuation options only when needed."}
               </p>
-              <div className="mt-4 flex flex-col gap-3">
-                <Link href={advisorHref} className="btn btn-secondary">
-                  {locale === "ja" ? "相談を続ける" : "Continue consultation"}
-                </Link>
-                <Link href={productsHref} className="btn btn-secondary">
-                  {locale === "ja" ? "製品を見比べる" : "Browse products"}
-                </Link>
-              </div>
             </Panel>
 
-            <Panel title={locale === "ja" ? "パスワード変更" : "Change password"}>
+            <Panel title={locale === "ja" ? "パスワード変更" : "Change password"} compact collapsible>
               <div className="grid gap-4">
                 <Field label={locale === "ja" ? "現在のパスワード" : "Current password"}>
                   <input
@@ -983,7 +977,7 @@ export default function SupportWorkspace({
               {passwordError && <p className="mt-4 text-sm text-[#9A3B2F]">{passwordError}</p>}
             </Panel>
 
-            <Panel title={locale === "ja" ? "LINE連携とご案内" : "LINE connection and follow-up"} id="line-connect">
+            <Panel title={locale === "ja" ? "LINE連携とご案内" : "LINE connection and follow-up"} id="line-connect" compact collapsible>
               <div className="rounded-[1.2rem] border border-[#D6C3A3]/24 bg-[#FCFAF6] px-4 py-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -1063,7 +1057,7 @@ export default function SupportWorkspace({
               )}
             </Panel>
 
-            <Panel title={locale === "ja" ? "その後のご案内" : "Follow-up"}>
+            <Panel title={locale === "ja" ? "その後のご案内" : "Follow-up"} compact collapsible>
               <div className="grid gap-4">
                 <Field label={locale === "ja" ? "LINE表示名" : "LINE display name"}>
                   <div className={`${inputClassName} flex items-center`}>
@@ -1112,11 +1106,42 @@ export default function SupportWorkspace({
   );
 }
 
-function Panel({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
+function Panel({
+  title,
+  children,
+  id,
+  compact = false,
+  collapsible = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  id?: string;
+  compact?: boolean;
+  collapsible?: boolean;
+}) {
+  const className = compact
+    ? "rounded-[1.6rem] border border-[#D6C3A3]/20 bg-white/72 p-5 shadow-[0_10px_24px_rgba(59,47,47,0.035)]"
+    : "rounded-[2rem] border border-[#D6C3A3]/28 bg-white/80 p-7 shadow-[0_20px_48px_rgba(59,47,47,0.05)]";
+  const titleClassName = compact
+    ? "text-[1.2rem] font-light leading-tight text-[#3B2F2F]"
+    : "text-2xl font-light leading-tight text-[#3B2F2F]";
+  const contentClassName = compact ? "mt-4" : "mt-5";
+
+  if (collapsible) {
+    return (
+      <details id={id} className={className}>
+        <summary className="cursor-pointer list-none">
+          <h2 className={titleClassName}>{title}</h2>
+        </summary>
+        <div className={contentClassName}>{children}</div>
+      </details>
+    );
+  }
+
   return (
-    <section id={id} className="rounded-[2rem] border border-[#D6C3A3]/28 bg-white/80 p-7 shadow-[0_20px_48px_rgba(59,47,47,0.05)]">
-      <h2 className="text-2xl font-light leading-tight text-[#3B2F2F]">{title}</h2>
-      <div className="mt-5">{children}</div>
+    <section id={id} className={className}>
+      <h2 className={titleClassName}>{title}</h2>
+      <div className={contentClassName}>{children}</div>
     </section>
   );
 }
