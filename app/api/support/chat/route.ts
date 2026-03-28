@@ -11,6 +11,8 @@ import {
   type SupportIdentity,
   type SupportIssueType,
 } from "@/lib/ai/support/scenario-engine";
+import { getHinataMemorySnapshot, upsertHinataMemory } from "@/lib/server/hinataMemory";
+import { ensureViewerSession, getViewerContext, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
 
 type SupportChatRequest = {
   locale?: SupportAssistantLocale;
@@ -36,6 +38,8 @@ function isValidIssueType(value: string | undefined): value is SupportIssueType 
 
 export async function POST(request: Request) {
   try {
+    const viewer = await getViewerContext();
+    const session = viewer.session || (await ensureViewerSession());
     const payload = (await request.json()) as SupportChatRequest;
     const locale = payload.locale === "en" ? "en" : "ja";
 
@@ -62,6 +66,10 @@ export async function POST(request: Request) {
     });
     const policy = getConversationPolicy(scenarioResult, locale);
     const recommendedActions = routeSupportActions(scenarioResult, locale);
+    const memory = await getHinataMemorySnapshot({
+      viewer,
+      session,
+    });
     const prompt = buildSupportAssistantPrompt({
       locale,
       userMessage,
@@ -69,6 +77,7 @@ export async function POST(request: Request) {
       scenario: scenarioResult,
       policy,
       actions: recommendedActions,
+      memory,
     });
 
     const gatewayResult = await generateSupportAssistantText({
@@ -79,6 +88,7 @@ export async function POST(request: Request) {
       policy,
       actions: recommendedActions,
       prompt,
+      memory,
     });
     const deterministic = buildDeterministicSupportReply({
       locale,
@@ -87,12 +97,30 @@ export async function POST(request: Request) {
       policy,
       actions: recommendedActions,
     });
+    const assistantMessage = gatewayResult?.text || deterministic.message;
+    const memoryWrite = await upsertHinataMemory({
+      viewer,
+      session,
+      locale,
+      identity: scenarioResult.persona,
+      scenario: scenarioResult,
+      policy,
+      history: messages,
+      userMessage,
+      assistantMessage,
+      actions: recommendedActions,
+    });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      assistantMessage: gatewayResult?.text || deterministic.message,
+      assistantMessage,
       scenarioResult,
       recommendedActions,
+      memory: {
+        threadId: memoryWrite.thread.id,
+        relationshipStage: memoryWrite.profile.relationshipStage,
+        currentTopic: memoryWrite.thread.currentTopic,
+      },
       modelUsage: gatewayResult?.usage || {
         provider: "deterministic",
         model: "deterministic",
@@ -101,6 +129,8 @@ export async function POST(request: Request) {
         fallbackUsed: Boolean(gatewayResult) === false,
       },
     });
+    setViewerSessionCookie(response, session);
+    return response;
   } catch (error) {
     console.error("support chat route error:", error);
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });

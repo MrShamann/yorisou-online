@@ -1,6 +1,7 @@
 import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
 import type { SupportConversationPolicy } from "@/lib/ai/support/conversation-policy";
 import type { SupportAssistantLocale, SupportConversationMessage, SupportScenarioResult } from "@/lib/ai/support/scenario-engine";
+import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
 
 export const HINATA_DISPLAY_NAME = "AI相談員 ひなた";
 
@@ -10,6 +11,7 @@ export function buildHinataSystemInstruction(input: {
   scenario: SupportScenarioResult;
   policy: SupportConversationPolicy;
   actions: SupportRecommendedAction[];
+  memory?: HinataMemorySnapshot | null;
 }) {
   const historySummary = input.history
     .slice(-6)
@@ -65,6 +67,15 @@ Response policy:
 
 Available next actions:
 - ${actionTitles || "No actions"}
+
+Memory:
+- Relationship stage: ${input.memory?.profile?.relationshipStage || "new"}
+- Concern summary: ${input.memory?.profile?.concernSummary || "None"}
+- Latest summary: ${input.memory?.profile?.latestSummary || "None"}
+- Current topic: ${input.memory?.thread?.currentTopic || input.scenario.labels.scenario}
+- Open question: ${input.memory?.thread?.openQuestion || "None"}
+- Latest next step: ${input.memory?.thread?.latestNextStep || "None"}
+- Important tags: ${input.memory?.profile?.importantTags.join(" / ") || "None"}
 
 Recent conversation:
 ${historySummary || "No prior conversation"}
@@ -124,6 +135,15 @@ ${lastUserMessage || "None"}
 
 使える次の案内:
 - ${actionTitles || "なし"}
+
+継続メモ:
+- 関係段階: ${input.memory?.profile?.relationshipStage || "new"}
+- 関心の要約: ${input.memory?.profile?.concernSummary || "なし"}
+- 直近の要約: ${input.memory?.profile?.latestSummary || "なし"}
+- 現在の話題: ${input.memory?.thread?.currentTopic || input.scenario.labels.scenario}
+- 開いている問い: ${input.memory?.thread?.openQuestion || "なし"}
+- 次に案内した内容: ${input.memory?.thread?.latestNextStep || "なし"}
+- 重要タグ: ${input.memory?.profile?.importantTags.join(" / ") || "なし"}
 
 直近の会話:
 ${historySummary || "会話履歴なし"}

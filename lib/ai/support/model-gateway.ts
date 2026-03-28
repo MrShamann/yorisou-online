@@ -6,6 +6,7 @@ import type {
   SupportConversationMessage,
   SupportScenarioResult,
 } from "@/lib/ai/support/scenario-engine";
+import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
 
 export type SupportGatewayUsage = {
   provider: "opencloud" | "ai-gateway" | "mistral" | "openai" | "deterministic";
@@ -33,6 +34,7 @@ export type SupportGatewayInput = {
   policy: SupportConversationPolicy;
   actions: SupportRecommendedAction[];
   prompt: string;
+  memory?: HinataMemorySnapshot | null;
 };
 
 const MAX_OUTPUT_TOKENS = 260;
@@ -140,10 +142,11 @@ function buildSystemInstruction(input: SupportGatewayInput) {
   return buildHinataSystemInstruction({
     locale: input.locale,
     history: input.history,
-    scenario: input.scenario,
-    policy: input.policy,
-    actions: input.actions,
-  });
+      scenario: input.scenario,
+      policy: input.policy,
+      actions: input.actions,
+      memory: input.memory,
+    });
 }
 
 function normalizeAiGatewayModel(model: string) {

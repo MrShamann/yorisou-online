@@ -5,6 +5,7 @@ import type {
   SupportScenarioResult,
 } from "@/lib/ai/support/scenario-engine";
 import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
+import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
 
 export function buildSupportAssistantPrompt(input: {
   locale: SupportAssistantLocale;
@@ -13,6 +14,7 @@ export function buildSupportAssistantPrompt(input: {
   scenario: SupportScenarioResult;
   policy: SupportConversationPolicy;
   actions: SupportRecommendedAction[];
+  memory?: HinataMemorySnapshot | null;
 }) {
   return input.locale === "ja"
     ? `以下は Yorisou の相談対話の入力です。返答本文だけを自然な日本語で作成してください。
@@ -38,6 +40,15 @@ export function buildSupportAssistantPrompt(input: {
 
 会話履歴:
 ${input.history.map((entry) => `${entry.role === "assistant" ? "ひなた" : "利用者"}: ${entry.content}`).join("\n") || "なし"}
+
+継続メモ:
+- 関係段階: ${input.memory?.profile?.relationshipStage || "new"}
+- いまの関心: ${input.memory?.profile?.concernSummary || "なし"}
+- 直近の要約: ${input.memory?.profile?.latestSummary || "なし"}
+- 現在の話題: ${input.memory?.thread?.currentTopic || input.scenario.labels.scenario}
+- 開いている問い: ${input.memory?.thread?.openQuestion || "なし"}
+- 次に案内した内容: ${input.memory?.thread?.latestNextStep || "なし"}
+- 重要タグ: ${input.memory?.profile?.importantTags.join(" / ") || "なし"}
 
 今回の入力:
 ${input.userMessage || "未入力"}
@@ -69,6 +80,14 @@ Follow-up question: ${input.policy.followUpQuestion}
 
 History:
 ${input.history.map((entry) => `${entry.role}: ${entry.content}`).join("\n") || "none"}
+
+Memory:
+- relationship stage: ${input.memory?.profile?.relationshipStage || "new"}
+- concern summary: ${input.memory?.profile?.concernSummary || "none"}
+- latest summary: ${input.memory?.profile?.latestSummary || "none"}
+- current topic: ${input.memory?.thread?.currentTopic || input.scenario.labels.scenario}
+- open question: ${input.memory?.thread?.openQuestion || "none"}
+- latest next step: ${input.memory?.thread?.latestNextStep || "none"}
 
 User message:
 ${input.userMessage || "No message"}
