@@ -42,6 +42,11 @@ function artifactKey(kind: "reflections" | "needs-signals", artifactId: string) 
   return `${ARTIFACT_PREFIX}/${kind}/${artifactId}.json`;
 }
 
+export function getOpenClawArtifactLocalFiles(kind: "reflections" | "needs-signals") {
+  const filename = kind === "reflections" ? "phase1-openclaw-reflections.json" : "phase1-openclaw-needs-signals.json";
+  return [...new Set([path.join(getOpenClawArtifactDataDir(), filename), path.join(productionDataDir, filename), path.join(localDataDir, filename)])];
+}
+
 export async function mirrorOpenClawArtifact<T extends { id: string }>(
   kind: "reflections" | "needs-signals",
   artifact: T,
@@ -114,6 +119,10 @@ export async function ensureLocalArtifactDir() {
 export function getOpenClawArtifactStoreStatus() {
   return {
     localDataDir: getOpenClawArtifactDataDir(),
+    localRuntimeFiles: {
+      reflections: getOpenClawArtifactLocalFiles("reflections"),
+      needsSignals: getOpenClawArtifactLocalFiles("needs-signals"),
+    },
     sharedStoreEnabled: shouldUseSharedStore,
     sharedStoreBucketConfigured: shouldUseSharedStore,
     sharedStoreRegion,

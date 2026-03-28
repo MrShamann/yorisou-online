@@ -4,7 +4,13 @@ import path from "path";
 import elderNeedsTaxonomy from "@/data/hinata-domain-needs-taxonomy-v1.json";
 import feedbackMapping from "@/data/hinata-feedback-mapping-v1.json";
 import matchingPlaybook from "@/data/hinata-matching-playbook-v1.json";
-import { ensureLocalArtifactDir, getOpenClawArtifactDataDir, listMirroredOpenClawArtifacts, mirrorOpenClawArtifact } from "@/lib/server/openclawArtifactStore";
+import {
+  ensureLocalArtifactDir,
+  getOpenClawArtifactDataDir,
+  getOpenClawArtifactLocalFiles,
+  listMirroredOpenClawArtifacts,
+  mirrorOpenClawArtifact,
+} from "@/lib/server/openclawArtifactStore";
 
 export type HinataNeedsSignal = {
   speakerType: "older_adult" | "family_member" | "institutional_contact" | "unclear";
@@ -77,18 +83,11 @@ export type OpenClawNeedsSignalArtifact = {
   signal: HinataNeedsSignal;
 };
 
-const productionDataDir = path.join("/tmp", "yorisou-phase1");
-const localDataDir = path.join(process.cwd(), "data");
 const dataDir = getOpenClawArtifactDataDir();
 const needsSignalsFile = path.join(dataDir, "phase1-openclaw-needs-signals.json");
 
 function artifactReadFiles() {
-  const candidates = [
-    needsSignalsFile,
-    path.join(productionDataDir, "phase1-openclaw-needs-signals.json"),
-    path.join(localDataDir, "phase1-openclaw-needs-signals.json"),
-  ];
-  return [...new Set(candidates)];
+  return getOpenClawArtifactLocalFiles("needs-signals");
 }
 
 const taxonomyIds = new Set((elderNeedsTaxonomy as Array<{ id: string }>).map((entry) => entry.id));

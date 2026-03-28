@@ -50,6 +50,16 @@ async function main() {
     console.log(`${label}: ${count}`);
   }
   console.log("");
+  console.log("Speaker Types");
+  console.log("-------------");
+  if (Object.keys(aggregate.speakerTypeDistribution).length === 0) {
+    console.log("none");
+  } else {
+    for (const [label, count] of Object.entries(aggregate.speakerTypeDistribution).sort((a, b) => b[1] - a[1])) {
+      console.log(`${label}: ${count}`);
+    }
+  }
+  console.log("");
   console.log("Top Practical Constraints");
   console.log("-------------------------");
   if (aggregate.topPracticalConstraints.length === 0) {
@@ -70,6 +80,18 @@ async function main() {
       console.log(`  service: ${candidate.serviceDesignImplications[0] || "none"}`);
       console.log(`  product: ${candidate.productSelectionImplications[0] || "none"}`);
       console.log(`  content: ${candidate.contentExplanationImplications[0] || "none"}`);
+    }
+  }
+  console.log("");
+  console.log("Recent Signals");
+  console.log("--------------");
+  if (report.recentArtifacts.length === 0) {
+    console.log("none");
+  } else {
+    for (const artifact of report.recentArtifacts.slice(0, 5)) {
+      console.log(
+        `${artifact.createdAt} | ${artifact.signal.needCategory || "unclear"} | ${artifact.signal.readinessForSolutionDiscussion} | ${artifact.signal.speakerType}`,
+      );
     }
   }
   console.log("");

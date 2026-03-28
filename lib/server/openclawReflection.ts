@@ -7,6 +7,7 @@ import type { SupportConversationMessage, SupportScenarioResult } from "@/lib/ai
 import {
   ensureLocalArtifactDir,
   getOpenClawArtifactDataDir,
+  getOpenClawArtifactLocalFiles,
   listMirroredOpenClawArtifacts,
   mirrorOpenClawArtifact,
 } from "@/lib/server/openclawArtifactStore";
@@ -52,8 +53,6 @@ export type OpenClawReflectionDiagnosis = {
 
 const dataDir = getOpenClawArtifactDataDir();
 const reflectionFile = path.join(dataDir, "phase1-openclaw-reflections.json");
-const productionReflectionFile = path.join("/tmp", "yorisou-phase1", "phase1-openclaw-reflections.json");
-const localReflectionFile = path.join(process.cwd(), "data", "phase1-openclaw-reflections.json");
 
 function nowIso() {
   return new Date().toISOString();
@@ -65,7 +64,7 @@ function createId() {
 
 async function readArtifacts() {
   const merged = new Map<string, OpenClawReflectionArtifact>();
-  const candidates = [...new Set([reflectionFile, productionReflectionFile, localReflectionFile])];
+  const candidates = getOpenClawArtifactLocalFiles("reflections");
 
   for (const file of candidates) {
     try {
