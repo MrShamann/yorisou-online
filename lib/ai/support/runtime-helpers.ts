@@ -6,15 +6,52 @@ const japaneseSignalPattern = /[\u3040-\u30ff\u3400-\u9fff]/;
 const earlyActionKeywordsJa = ["予約", "相談したい", "詳しく話したい", "製品", "比較", "導入", "連携"];
 const earlyActionKeywordsEn = ["book", "consult", "consultation", "product", "products", "compare", "implementation"];
 
+function detectTextLocale(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return "unknown" as const;
+  }
+
+  const japaneseMatches = trimmed.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || [];
+  const englishMatches = trimmed.match(/[A-Za-z]/g) || [];
+
+  if (englishMatches.length > 0 && japaneseMatches.length === 0) {
+    return "en" as const;
+  }
+
+  if (japaneseMatches.length > 0 && englishMatches.length === 0) {
+    return "ja" as const;
+  }
+
+  if (japaneseMatches.length > 0 && englishMatches.length > 0) {
+    return japaneseMatches.length >= englishMatches.length ? ("ja" as const) : ("en" as const);
+  }
+
+  return "unknown" as const;
+}
+
 export function detectConversationLocale(
   message: string,
   history: SupportConversationMessage[],
   fallback: SupportAssistantLocale,
 ) {
-  const recentUserText = [message, ...history.filter((entry) => entry.role === "user").slice(-2).map((entry) => entry.content)]
-    .join("\n")
-    .trim();
+  const latestMessageLocale = detectTextLocale(message);
+  if (latestMessageLocale !== "unknown") {
+    return latestMessageLocale;
+  }
 
+  const recentUserMessages = history
+    .filter((entry) => entry.role === "user")
+    .slice(-2)
+    .map((entry) => entry.content);
+  for (const recentMessage of recentUserMessages.reverse()) {
+    const detected = detectTextLocale(recentMessage);
+    if (detected !== "unknown") {
+      return detected;
+    }
+  }
+
+  const recentUserText = [message, ...recentUserMessages].join("\n").trim();
   if (!recentUserText) {
     return fallback;
   }
@@ -22,12 +59,12 @@ export function detectConversationLocale(
   const hasJapanese = japaneseSignalPattern.test(recentUserText);
   const hasEnglish = englishSignalPattern.test(recentUserText);
 
-  if (hasEnglish && !hasJapanese) {
-    return "en" as const;
+  if (hasJapanese && !hasEnglish) {
+    return "ja" as const;
   }
 
-  if (hasJapanese) {
-    return "ja" as const;
+  if (hasEnglish && !hasJapanese) {
+    return "en" as const;
   }
 
   return fallback;

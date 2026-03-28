@@ -4,6 +4,7 @@ import path from "path";
 import elderNeedsTaxonomy from "@/data/hinata-domain-needs-taxonomy-v1.json";
 import feedbackMapping from "@/data/hinata-feedback-mapping-v1.json";
 import matchingPlaybook from "@/data/hinata-matching-playbook-v1.json";
+import { ensureLocalArtifactDir, getOpenClawArtifactDataDir, listMirroredOpenClawArtifacts, mirrorOpenClawArtifact } from "@/lib/server/openclawArtifactStore";
 
 export type HinataNeedsSignal = {
   speakerType: "older_adult" | "family_member" | "institutional_contact" | "unclear";
@@ -78,7 +79,7 @@ export type OpenClawNeedsSignalArtifact = {
 
 const productionDataDir = path.join("/tmp", "yorisou-phase1");
 const localDataDir = path.join(process.cwd(), "data");
-const dataDir = process.env.YORISOU_DATA_DIR || (process.env.NODE_ENV === "production" ? productionDataDir : localDataDir);
+const dataDir = getOpenClawArtifactDataDir();
 const needsSignalsFile = path.join(dataDir, "phase1-openclaw-needs-signals.json");
 
 function artifactReadFiles() {
@@ -143,11 +144,16 @@ async function readArtifacts() {
     }
   }
 
+  const mirroredArtifacts = await listMirroredOpenClawArtifacts<OpenClawNeedsSignalArtifact>("needs-signals");
+  for (const artifact of mirroredArtifacts) {
+    merged.set(artifact.id, artifact);
+  }
+
   return [...merged.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 async function writeArtifacts(artifacts: OpenClawNeedsSignalArtifact[]) {
-  await fs.mkdir(dataDir, { recursive: true });
+  await ensureLocalArtifactDir();
   await fs.writeFile(needsSignalsFile, JSON.stringify(artifacts.slice(0, 500), null, 2) + "\n", "utf8");
 }
 
@@ -288,6 +294,7 @@ export async function recordNeedsSignalArtifact(input: {
   const artifacts = await readArtifacts();
   artifacts.unshift(artifact);
   await writeArtifacts(artifacts);
+  await mirrorOpenClawArtifact("needs-signals", artifact).catch(() => false);
   return artifact;
 }
 

@@ -4,6 +4,7 @@ import path from "path";
 import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
 import type { SupportGatewayUsage } from "@/lib/ai/support/model-gateway";
 import type { SupportConversationMessage, SupportScenarioResult } from "@/lib/ai/support/scenario-engine";
+import { ensureLocalArtifactDir, getOpenClawArtifactDataDir, mirrorOpenClawArtifact } from "@/lib/server/openclawArtifactStore";
 import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
 import { recordNeedsSignalArtifact } from "@/lib/server/openclawNeedsInsight";
 import type { OpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
@@ -44,9 +45,7 @@ export type OpenClawReflectionDiagnosis = {
   memoryWriteRecommendation: "keep_light" | "write_summary_only" | "write_open_question" | "avoid_memory_write";
 };
 
-const dataDir =
-  process.env.YORISOU_DATA_DIR ||
-  (process.env.NODE_ENV === "production" ? path.join("/tmp", "yorisou-phase1") : path.join(process.cwd(), "data"));
+const dataDir = getOpenClawArtifactDataDir();
 const reflectionFile = path.join(dataDir, "phase1-openclaw-reflections.json");
 
 function nowIso() {
@@ -66,7 +65,7 @@ async function readArtifacts() {
 }
 
 async function writeArtifacts(artifacts: OpenClawReflectionArtifact[]) {
-  await fs.mkdir(dataDir, { recursive: true });
+  await ensureLocalArtifactDir();
   await fs.writeFile(reflectionFile, JSON.stringify(artifacts.slice(0, 300), null, 2) + "\n", "utf8");
 }
 
@@ -237,6 +236,7 @@ export async function recordOpenClawReflection(input: {
   const artifacts = await readArtifacts();
   artifacts.unshift(artifact);
   await writeArtifacts(artifacts);
+  await mirrorOpenClawArtifact("reflections", artifact).catch(() => false);
   await recordNeedsSignalArtifact({
     latestUserMessage: input.userMessage,
     history: input.history,

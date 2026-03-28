@@ -90,6 +90,7 @@ export async function POST(request: Request) {
       memory,
     });
     const knowledge = await getHinataKnowledgePacket({
+      locale,
       scenario: scenarioResult,
       userMessage,
     });

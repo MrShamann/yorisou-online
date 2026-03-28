@@ -397,6 +397,7 @@ export async function runHinataOfflineEval(options?: {
         memory,
       });
       const knowledge = await getHinataKnowledgePacket({
+        locale,
         scenario: scenarioResult,
         userMessage,
       });

@@ -161,6 +161,10 @@ function normalizeAiGatewayModel(model: string) {
 
 function buildChatMessages(input: SupportGatewayInput) {
   const systemInstruction = buildSystemInstruction(input);
+  const languageLock =
+    input.locale === "en"
+      ? "CRITICAL LANGUAGE LOCK: Reply in natural English only unless the user's latest message clearly switches to Japanese."
+      : "CRITICAL LANGUAGE LOCK: 返答は自然な日本語を基本にし、利用者の最新発話が明確に別言語へ切り替わった場合だけその言語に合わせる。";
   const history = input.history
     .filter((entry) => (entry.role === "user" || entry.role === "assistant") && entry.content.trim().length > 0)
     .map((entry) => ({
@@ -172,6 +176,14 @@ function buildChatMessages(input: SupportGatewayInput) {
     {
       role: "system" as const,
       content: systemInstruction,
+    },
+    {
+      role: "system" as const,
+      content: languageLock,
+    },
+    {
+      role: "system" as const,
+      content: input.prompt,
     },
     ...history,
     {
@@ -204,6 +216,7 @@ async function requestOpenCloud(input: SupportGatewayInput): Promise<SupportGate
           name: HINATA_DISPLAY_NAME,
           locale: input.locale,
           systemInstruction,
+          runtimePrompt: input.prompt,
         },
         conversation: {
           history: input.history,

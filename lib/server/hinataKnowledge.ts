@@ -163,29 +163,33 @@ function scoreDomainExample(entry: {
 }
 
 export async function getHinataKnowledgePacket(input: {
+  locale: "ja" | "en";
   scenario: SupportScenarioResult;
   userMessage: string;
 }): Promise<HinataKnowledgePacket | null> {
   const snippets: HinataKnowledgeSnippet[] = [];
   const signal = extractNeedsSignalFromConversation({ latestUserMessage: input.userMessage });
+  const isEnglish = input.locale === "en";
 
-  try {
-    const raw = await fs.readFile(draftsPath, "utf8");
-    const drafts = JSON.parse(raw) as InsightDraft[];
-    snippets.push(
-      ...drafts
-        .map((draft) => ({ draft, score: scoreDraft(draft, input.scenario, input.userMessage) }))
-        .filter((entry) => entry.score > 0 && entry.draft.content?.ja?.title && entry.draft.content?.ja?.summary)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 1)
-        .map((entry) => ({
-          title: entry.draft.content?.ja?.title || "",
-          summary: entry.draft.content?.ja?.summary || "",
-          whyItMatters: entry.draft.content?.ja?.whyItMatters || "",
-        })),
-    );
-  } catch {
-    // Insight drafts are optional for runtime grounding.
+  if (!isEnglish) {
+    try {
+      const raw = await fs.readFile(draftsPath, "utf8");
+      const drafts = JSON.parse(raw) as InsightDraft[];
+      snippets.push(
+        ...drafts
+          .map((draft) => ({ draft, score: scoreDraft(draft, input.scenario, input.userMessage) }))
+          .filter((entry) => entry.score > 0 && entry.draft.content?.ja?.title && entry.draft.content?.ja?.summary)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 1)
+          .map((entry) => ({
+            title: entry.draft.content?.ja?.title || "",
+            summary: entry.draft.content?.ja?.summary || "",
+            whyItMatters: entry.draft.content?.ja?.whyItMatters || "",
+          })),
+      );
+    } catch {
+      // Insight drafts are optional for runtime grounding.
+    }
   }
 
   const topNeed = (elderNeedsTaxonomy as Array<{
@@ -201,7 +205,7 @@ export async function getHinataKnowledgePacket(input: {
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)[0];
 
-  if (topNeed) {
+  if (topNeed && !isEnglish) {
     snippets.push({
       title: `Need lens: ${topNeed.entry.title}`,
       summary: compact(`${topNeed.entry.hidden_underlying_need} / ${topNeed.entry.recommended_conversational_stance}`),
@@ -221,7 +225,7 @@ export async function getHinataKnowledgePacket(input: {
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)[0];
 
-  if (topPlaybook) {
+  if (topPlaybook && !isEnglish) {
     snippets.push({
       title: `Conversation cue: ${topPlaybook.entry.scenario_pattern}`,
       summary: compact(`${topPlaybook.entry.hinata_response_posture} / Need layers: ${topPlaybook.entry.likely_need_layers.join(" / ")}`),
@@ -243,7 +247,7 @@ export async function getHinataKnowledgePacket(input: {
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)[0];
 
-  if (topCatalog) {
+  if (topCatalog && !isEnglish) {
     snippets.push({
       title: `Support option hint: ${topCatalog.entry.name}`,
       summary: compact(`${topCatalog.entry.what_problem_it_addresses.join(" / ")} / barriers: ${topCatalog.entry.likely_barriers_or_hesitation_points.join(" / ")}`),
@@ -259,12 +263,12 @@ export async function getHinataKnowledgePacket(input: {
     tags: string[];
   }>)
     .map((entry) => ({ entry, score: scoreDomainExample(entry, input.userMessage, input.scenario) }))
-    .filter((entry) => entry.score > 0)
+    .filter((entry) => entry.score > 0 && (isEnglish ? entry.entry.language !== "ja" : entry.entry.language !== "en"))
     .sort((a, b) => b.score - a.score)[0];
 
   if (topExample && signal.readinessForSolutionDiscussion === "not_ready") {
     snippets.push({
-      title: "Reply style cue",
+      title: isEnglish ? "Reply style cue" : "Reply style cue",
       summary: compact(`User pattern: ${topExample.entry.user_input}`),
       whyItMatters: compact(`Ideal direction: ${topExample.entry.ideal_hinata_reply}`),
     });
