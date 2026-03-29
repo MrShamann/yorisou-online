@@ -16,11 +16,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
     }
 
-    const record = await recordOpenClawVoiceSignal(payload);
-    return NextResponse.json({ success: true, recordId: record.id });
+    const result = await recordOpenClawVoiceSignal(payload);
+    return NextResponse.json({
+      success: true,
+      recordId: result.signal.id,
+      backendForwarded: result.backendForwarded,
+    });
   } catch (error) {
     console.error("voice event route error:", error);
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });
   }
 }
-

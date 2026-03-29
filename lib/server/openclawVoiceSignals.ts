@@ -36,8 +36,10 @@ export async function recordOpenClawVoiceSignal(
   await ensureLocalArtifactDir();
   await fs.writeFile(getOpenClawArtifactLocalFiles("voice-signals")[0], JSON.stringify(current, null, 2) + "\n", "utf8");
   await mirrorOpenClawArtifact("voice-signals", signal);
-  await forwardVoiceSignalToOpenClaw(signal);
+  const backendForwarded = await forwardVoiceSignalToOpenClaw(signal);
 
-  return signal;
+  return {
+    signal,
+    backendForwarded,
+  };
 }
-

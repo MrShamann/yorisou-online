@@ -25,6 +25,12 @@
 - `OpenClaw` is the EC2 backend layer.
 - Ohio OpenClaw is the operational truth for backend voice endpoints, gateway/runtime, and artifact behavior.
 - Before debugging, decide first whether the issue belongs to frontend presentation or backend runtime.
+- For voice integration, classify the blocker before debugging:
+  - frontend UI
+  - frontend bridge
+  - Amplify env wiring
+  - Ohio backend service
+  - EC2 network exposure
 
 ## Rollout Phases
 - Phase 1
