@@ -19,7 +19,7 @@ function actionCopy(locale: SupportAssistantLocale, action: SupportNextActionTyp
         id: action,
         title: "Consultation",
         description: "Move into a calmer direct consultation.",
-        href: "/contact",
+        href: "/en/contact",
         label: "Contact Yorisou",
       };
     }
@@ -28,7 +28,7 @@ function actionCopy(locale: SupportAssistantLocale, action: SupportNextActionTyp
         id: action,
         title: "Product guidance",
         description: "Review product options that may fit daily mobility needs.",
-        href: "/products",
+        href: "/en/products",
         label: "View products",
       };
     }
@@ -37,7 +37,7 @@ function actionCopy(locale: SupportAssistantLocale, action: SupportNextActionTyp
         id: action,
         title: "Family support",
         description: "Continue with guidance that can be shared with family.",
-        href: "/support#family-share",
+        href: "/en/support#family-share",
         label: "View family support",
       };
     }
@@ -45,7 +45,7 @@ function actionCopy(locale: SupportAssistantLocale, action: SupportNextActionTyp
       id: action,
       title: "Implementation inquiry",
       description: "Talk about collaboration, pilots, or implementation support.",
-      href: "/contact",
+      href: "/en/contact",
       label: "Contact for collaboration",
     };
   }
