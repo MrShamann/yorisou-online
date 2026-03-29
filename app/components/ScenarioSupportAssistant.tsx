@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import SupportVoiceEntry from "@/app/components/SupportVoiceEntry";
+import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
 import type {
   SupportAssistantLocale,
   SupportConversationMessage,
@@ -11,13 +11,16 @@ import type {
   SupportIssueType,
   SupportScenarioResult,
 } from "@/lib/ai/support/scenario-engine";
-import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
-import type { VoiceSignalRecord } from "@/lib/voice/contracts";
+import type {
+  SupportVoiceTranscribeErrorCode,
+  SupportVoiceTranscribeResponse,
+  VoiceConfidenceLabel,
+  VoiceSignalRecord,
+} from "@/lib/voice/contracts";
 
 type ScenarioSupportAssistantProps = {
   locale: SupportAssistantLocale;
   onConversationStateChange?: (started: boolean) => void;
-  mode?: "entry" | "continuation";
 };
 
 type SendMessageOptions = {
@@ -36,116 +39,107 @@ type SupportChatResponse = {
   };
 };
 
-const identityOptions = {
-  ja: [
-    { value: "self" as const, label: "ご本人について" },
-    { value: "family" as const, label: "ご家族について" },
-    { value: "institution" as const, label: "地域・施設について" },
-  ],
-  en: [
-    { value: "self" as const, label: "About myself" },
-    { value: "family" as const, label: "About family" },
-    { value: "institution" as const, label: "About an organization" },
-  ],
+type ChatAttachment = {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
 };
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  apiContent: string;
+  attachments: ChatAttachment[];
+  voiceInteractionId?: string | null;
+};
+
+type VoiceStatus = "idle" | "recording" | "transcribing" | "sending" | "review";
 
 const starters = {
   ja: [
-    {
-      label: "最近の外出が少し不安です",
-      issueType: "mobility_anxiety" as const,
-      message: "最近の外出が少し不安です。",
-    },
-    {
-      label: "親の移動をどう支えればいいですか",
-      issueType: "family_mobility_support" as const,
-      message: "親の移動をどう支えればいいか相談したいです。",
-    },
-    {
-      label: "何が合うのか知りたいです",
-      issueType: "product_guidance" as const,
-      message: "どの製品やサービスが合うのか知りたいです。",
-    },
+    "最近の外出が少し不安です",
+    "親の通院をどう支えたらよいですか",
+    "この資料も見ながら相談したいです",
   ],
   en: [
-    {
-      label: "Going out feels difficult",
-      issueType: "mobility_anxiety" as const,
-      message: "Going out has started to feel difficult.",
-    },
-    {
-      label: "I need help supporting a parent",
-      issueType: "family_mobility_support" as const,
-      message: "I want help supporting a parent's mobility.",
-    },
-    {
-      label: "I want to know what fits",
-      issueType: "product_guidance" as const,
-      message: "I want to understand which services or products fit.",
-    },
+    "Going out has started to feel difficult.",
+    "How can I better support a parent's mobility?",
+    "I want to talk while sharing this document too.",
   ],
-};
+} as const;
 
 const copy = {
   ja: {
-    greeting:
-      "こんにちは。AI相談員 ひなたです。気になっていることを、そのまま話しかけてください。",
-    continuationGreeting:
-      "こんにちは。前回の続きからでも、いま気になっていることからでも大丈夫です。",
-    quietNote: "うまくまとまっていなくても大丈夫です。必要な整理は、ひなたが会話の中で少しずつ受け持ちます。",
-    continuationNote:
-      "前に話したことも踏まえながら、必要な整理はひなたが会話の中で静かに受け持ちます。",
-    promptLabel: "たとえば",
-    textareaLabel: "気になっていることを、そのままどうぞ",
-    placeholder:
-      "たとえば「最近の外出が少し不安です」「親の通院をどう支えればよいかわかりません」など、思いつくままで大丈夫です。",
-    submit: "ひなたに相談する",
-    continuationSubmit: "続きを話す",
-    loading: "ひなたが受け取っています...",
-    typing: "ひなたが考えています…",
-    detailToggleOpen: "必要なら立場を添える",
-    detailToggleClose: "立場を閉じる",
-    detailHint: "ご本人・ご家族・地域や施設のことなど、必要なときだけ添えられます。",
     assistantLabel: "ひなた",
     userLabel: "あなた",
+    emptyTitle: "そのまま話しかけてください",
+    emptyBody: "入力、音声、資料の添付をひとつの会話で続けられます。",
+    typing: "ひなたが考えています…",
+    placeholder: "メッセージを入力",
+    attachmentTitle: "添付したファイル",
+    attachmentButton: "ファイルを追加",
+    send: "送信",
+    voiceRecording: "録音中…",
+    voiceTranscribing: "音声を聞き取っています…",
+    voiceSending: "ひなたに伝えています…",
+    reviewTitle: "確認が必要そうな聞き取りです",
+    reviewHint: "短く直して送るか、録り直してください。",
+    retry: "録り直す",
+    useDraft: "入力欄に入れる",
+    sendTranscript: "この内容で送る",
+    unsupportedVoice: "この端末では音声入力がまだ使えません。",
+    attachmentOnlyMessage: "この添付ファイルも見ながら相談したいです。",
+    attachmentContextTitle: "添付ファイル",
     error: "ご案内の準備に失敗しました。少し時間をおいて、もう一度お試しください。",
-    actionsTitle: "必要なら、このあと",
-    continuationActionsTitle: "必要になったら",
-    continuationComposerNote: "このまま続けて話せます。短いひと言でも大丈夫です。",
-    threadStatus: "対話中",
-    continuationThreadStatus: "ひなたとの続き",
     voicePlayback: "音声で聞く",
     voicePlaybackLoading: "音声を準備しています…",
-    voicePlaybackError: "ひなたの音声をまだ準備できませんでした。文字の返信はそのまま使えます。",
+    voicePlaybackError: "ひなたの音声をまだ準備できませんでした。文字の返信はそのまま読めます。",
+    actionsTitle: "このまま進めるなら",
+    voiceErrors: {
+      missing_audio_file: "録音データが確認できませんでした。もう一度録音してください。",
+      voice_audio_too_short: "録音が短すぎました。もう少し長めに話してみてください。",
+      voice_backend_not_configured: "音声の文字起こし設定がまだ準備中です。今は文字入力で続けられます。",
+      voice_backend_unreachable: "音声の文字起こし先に今つながっていません。少し待ってからお試しください。",
+      voice_transcript_unrecognizable: "うまく聞き取れませんでした。短く区切って話すか、文字入力で続けてください。",
+      voice_transcription_failed: "音声の文字起こしに失敗しました。録り直すか、文字入力で続けられます。",
+    },
   },
   en: {
-    greeting: "Hello, I'm Hinata. You can just start by telling me what is on your mind.",
-    continuationGreeting:
-      "Welcome back. You can continue from where we left off, or start with what is on your mind now.",
-    quietNote: "It does not need to be organized first. Hinata will quietly help make sense of it as you talk.",
-    continuationNote:
-      "Hinata can continue from what you shared before and quietly help organize things as you talk.",
-    promptLabel: "For example",
-    textareaLabel: "What is on your mind",
-    placeholder: "A short natural message is enough to begin.",
-    submit: "Talk with Hinata",
-    continuationSubmit: "Continue",
-    loading: "Receiving your message...",
-    typing: "Hinata is thinking…",
-    detailToggleOpen: "Add context if helpful",
-    detailToggleClose: "Hide context",
-    detailHint: "Only if helpful. You can add whether this is about you, family, or a local organization.",
     assistantLabel: "Hinata",
     userLabel: "You",
+    emptyTitle: "Start naturally",
+    emptyBody: "Type, speak, or attach a file in one continuous conversation.",
+    typing: "Hinata is thinking…",
+    placeholder: "Message Hinata",
+    attachmentTitle: "Attached files",
+    attachmentButton: "Add files",
+    send: "Send",
+    voiceRecording: "Recording…",
+    voiceTranscribing: "Transcribing…",
+    voiceSending: "Passing that to Hinata…",
+    reviewTitle: "This transcript needs a quick check",
+    reviewHint: "You can edit it, retry, or send it as is.",
+    retry: "Retry",
+    useDraft: "Use as draft",
+    sendTranscript: "Send transcript",
+    unsupportedVoice: "Voice input is not available on this device yet.",
+    attachmentOnlyMessage: "I want to talk while also sharing these attached files.",
+    attachmentContextTitle: "Attached files",
     error: "We could not prepare guidance. Please try again.",
-    actionsTitle: "If helpful, next steps",
-    continuationActionsTitle: "If needed later",
-    continuationComposerNote: "You can continue naturally here. A short message is enough.",
-    threadStatus: "In conversation",
-    continuationThreadStatus: "Continuing with Hinata",
     voicePlayback: "Play voice",
     voicePlaybackLoading: "Preparing audio…",
     voicePlaybackError: "Hinata voice playback is not ready yet. The text reply is still available.",
+    actionsTitle: "Helpful next steps",
+    voiceErrors: {
+      missing_audio_file: "We could not find the recording. Please try again.",
+      voice_audio_too_short: "That recording was too short. Please try again with a slightly longer phrase.",
+      voice_backend_not_configured: "Voice transcription is not configured yet. You can continue in text for now.",
+      voice_backend_unreachable: "The voice transcription service is not reachable right now. Please try again or continue in text.",
+      voice_transcript_unrecognizable: "We could not understand that recording clearly enough. A shorter retry or text fallback is recommended.",
+      voice_transcription_failed: "We could not transcribe that recording yet. Please retry or continue in text.",
+    },
   },
 } as const;
 
@@ -154,15 +148,24 @@ const institutionHints = ["自治体", "施設", "介護", "事業者", "病院"
 const bookingHints = ["相談したい", "予約", "面談", "話を聞いてほしい", "直接"];
 const productHints = ["製品", "車いす", "電動", "カート", "何が合う", "比較"];
 const browserVoiceEnabled = process.env.NEXT_PUBLIC_HINATA_BROWSER_TTS !== "0";
-const hinataPreferredJapaneseVoicePatterns = [
-  /google\s*日本語/i,
-  /nanami/i,
-  /sayaka/i,
-  /haruka/i,
-  /kyoko/i,
-  /ja[-_]?jp/i,
-];
+const ACCEPTED_FILE_TYPES =
+  "image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.rtf,.odt,.ods,.ppt,.pptx,.json,.log";
+const hinataPreferredJapaneseVoicePatterns = [/google\s*日本語/i, /nanami/i, /sayaka/i, /haruka/i, /kyoko/i, /ja[-_]?jp/i];
 const hinataAvoidJapaneseVoicePatterns = [/otoya/i, /ichiro/i, /male/i, /man/i];
+
+function createId(prefix: string) {
+  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function formatFileSize(size: number) {
+  if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  if (size >= 1024) {
+    return `${Math.round(size / 1024)} KB`;
+  }
+  return `${size} B`;
+}
 
 function getVoiceDescriptor(voice: SpeechSynthesisVoice | null) {
   if (!voice) {
@@ -211,49 +214,137 @@ function selectHinataBrowserVoice(voices: SpeechSynthesisVoice[], locale: Suppor
   return preferredPool[0] || null;
 }
 
+function inferIdentityFromMessage(message: string): SupportIdentity {
+  if (institutionHints.some((keyword) => message.includes(keyword))) {
+    return "institution";
+  }
+  if (familyHints.some((keyword) => message.includes(keyword))) {
+    return "family";
+  }
+  return "self";
+}
+
+function inferIssueTypeFromMessage(message: string): SupportIssueType {
+  if (institutionHints.some((keyword) => message.includes(keyword))) {
+    return "institutional_inquiry";
+  }
+  if (bookingHints.some((keyword) => message.includes(keyword))) {
+    return "consultation_booking";
+  }
+  if (productHints.some((keyword) => message.includes(keyword))) {
+    return "product_guidance";
+  }
+  if (familyHints.some((keyword) => message.includes(keyword))) {
+    return "family_mobility_support";
+  }
+  return "mobility_anxiety";
+}
+
+function getVoiceErrorFlags(error: SupportVoiceTranscribeErrorCode) {
+  switch (error) {
+    case "voice_audio_too_short":
+      return ["audio_too_short"];
+    case "voice_backend_not_configured":
+      return ["backend_not_configured"];
+    case "voice_backend_unreachable":
+      return ["backend_unreachable"];
+    case "voice_transcript_unrecognizable":
+      return ["transcript_unrecognizable"];
+    case "missing_audio_file":
+      return ["missing_audio_file"];
+    case "voice_transcription_failed":
+    default:
+      return ["transcription_unavailable"];
+  }
+}
+
+function buildOutgoingMessage(
+  locale: SupportAssistantLocale,
+  message: string,
+  attachments: ChatAttachment[],
+) {
+  const trimmed = message.trim();
+  const base = trimmed || copy[locale].attachmentOnlyMessage;
+  if (attachments.length === 0) {
+    return { visibleContent: base, apiContent: base };
+  }
+
+  const attachmentSummary = attachments
+    .map((file) => `- ${file.name} (${file.type || "file"}, ${formatFileSize(file.size)})`)
+    .join("\n");
+  const attachmentHeader = locale === "ja" ? "添付ファイル" : "Attached files";
+
+  return {
+    visibleContent: base,
+    apiContent: `${base}\n\n[${attachmentHeader}]\n${attachmentSummary}`,
+  };
+}
+
 export default function ScenarioSupportAssistant({
   locale,
   onConversationStateChange,
-  mode = "entry",
 }: ScenarioSupportAssistantProps) {
   const t = copy[locale];
-  const isContinuationMode = mode === "continuation";
   const threadRef = useRef<HTMLDivElement | null>(null);
-  const endRef = useRef<HTMLDivElement | null>(null);
-  const [identity, setIdentity] = useState<SupportIdentity>("self");
-  const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<SupportConversationMessage[]>([]);
-  const [recommendedActions, setRecommendedActions] = useState<SupportRecommendedAction[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [identityTouched, setIdentityTouched] = useState(false);
-  const [scenarioResult, setScenarioResult] = useState<SupportScenarioResult | null>(null);
-  const [voicePlaybackKey, setVoicePlaybackKey] = useState<string | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const detailOptions = identityOptions[locale];
-  const starterOptions = starters[locale];
-  const hasStarted = messages.length > 0;
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [draft, setDraft] = useState("");
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const [recommendedActions, setRecommendedActions] = useState<SupportRecommendedAction[]>([]);
+  const [scenarioResult, setScenarioResult] = useState<SupportScenarioResult | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState<VoiceStatus>("idle");
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [voiceOriginalTranscript, setVoiceOriginalTranscript] = useState("");
+  const [voiceInteractionId, setVoiceInteractionId] = useState<string | null>(null);
+  const [voiceRetryCount, setVoiceRetryCount] = useState(0);
+  const [voiceConfidenceLabel, setVoiceConfidenceLabel] = useState<VoiceConfidenceLabel>("unknown");
+  const [voiceUncertaintyFlags, setVoiceUncertaintyFlags] = useState<string[]>([]);
+  const [voiceProvider, setVoiceProvider] = useState<string | null>(null);
+  const [voicePlaybackKey, setVoicePlaybackKey] = useState<string | null>(null);
 
   useEffect(() => {
-    onConversationStateChange?.(hasStarted);
-  }, [hasStarted, onConversationStateChange]);
+    setVoiceSupported(
+      typeof window !== "undefined" &&
+        typeof MediaRecorder !== "undefined" &&
+        Boolean(navigator.mediaDevices?.getUserMedia),
+    );
+  }, []);
 
   useEffect(() => {
-    if (threadRef.current && hasStarted) {
-      threadRef.current.scrollTop = threadRef.current.scrollHeight;
+    onConversationStateChange?.(messages.length > 0);
+  }, [messages.length, onConversationStateChange]);
+
+  useEffect(() => {
+    if (!threadRef.current) {
+      return;
     }
-    if (endRef.current && hasStarted) {
-      endRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    threadRef.current.scrollTop = threadRef.current.scrollHeight;
+  }, [messages, isSubmitting, recommendedActions.length, voiceStatus]);
+
+  useEffect(() => {
+    const textarea = composerRef.current;
+    if (!textarea) {
+      return;
     }
-  }, [hasStarted, messages, isSubmitting, recommendedActions.length]);
+    textarea.style.height = "0px";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  }, [draft]);
 
   useEffect(() => {
     return () => {
       audioRef.current?.pause();
       audioRef.current = null;
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -261,39 +352,7 @@ export default function ScenarioSupportAssistant({
     };
   }, []);
 
-  function inferIdentityFromMessage(message: string): SupportIdentity {
-    if (identityTouched) {
-      return identity;
-    }
-
-    if (institutionHints.some((keyword) => message.includes(keyword))) {
-      return "institution";
-    }
-
-    if (familyHints.some((keyword) => message.includes(keyword))) {
-      return "family";
-    }
-
-    return "self";
-  }
-
-  function inferIssueTypeFromMessage(message: string): SupportIssueType {
-    if (institutionHints.some((keyword) => message.includes(keyword))) {
-      return "institutional_inquiry";
-    }
-    if (bookingHints.some((keyword) => message.includes(keyword))) {
-      return "consultation_booking";
-    }
-    if (productHints.some((keyword) => message.includes(keyword))) {
-      return "product_guidance";
-    }
-    if (familyHints.some((keyword) => message.includes(keyword))) {
-      return "family_mobility_support";
-    }
-    return "mobility_anxiety";
-  }
-
-  async function logVoicePlaybackEvent(payload: Omit<VoiceSignalRecord, "id" | "createdAt">) {
+  async function logVoiceEvent(payload: Omit<VoiceSignalRecord, "id" | "createdAt">) {
     try {
       await fetch("/api/support/voice/event", {
         method: "POST",
@@ -302,6 +361,19 @@ export default function ScenarioSupportAssistant({
       });
     } catch {
       // Best-effort only.
+    }
+  }
+
+  function resetVoiceDraft(options?: { preserveRetryCount?: boolean }) {
+    setVoiceStatus("idle");
+    setVoiceTranscript("");
+    setVoiceOriginalTranscript("");
+    setVoiceInteractionId(null);
+    setVoiceConfidenceLabel("unknown");
+    setVoiceUncertaintyFlags([]);
+    setVoiceProvider(null);
+    if (!options?.preserveRetryCount) {
+      setVoiceRetryCount(0);
     }
   }
 
@@ -382,7 +454,7 @@ export default function ScenarioSupportAssistant({
       setError("");
     }
 
-    await logVoicePlaybackEvent({
+    await logVoiceEvent({
       interactionId: options?.interactionId || null,
       locale,
       eventType: "voice_reply_requested",
@@ -400,7 +472,7 @@ export default function ScenarioSupportAssistant({
 
     const playbackResult = await playBrowserVoiceReply(messageKey, text);
     if (playbackResult.success) {
-      await logVoicePlaybackEvent({
+      await logVoiceEvent({
         interactionId: options?.interactionId || null,
         locale,
         eventType: "voice_reply_played",
@@ -418,7 +490,7 @@ export default function ScenarioSupportAssistant({
       return;
     }
 
-    await logVoicePlaybackEvent({
+    await logVoiceEvent({
       interactionId: options?.interactionId || null,
       locale,
       eventType: "voice_reply_failed",
@@ -440,9 +512,11 @@ export default function ScenarioSupportAssistant({
     }
   }
 
-  async function sendMessage(rawMessage: string, preferredIssueType?: SupportIssueType, options?: SendMessageOptions) {
-    const nextUserMessage = rawMessage.trim();
-    if (!nextUserMessage || isSubmitting) {
+  async function sendMessage(rawMessage: string, options?: SendMessageOptions) {
+    const outgoingAttachments = [...attachments];
+    const composed = buildOutgoingMessage(locale, rawMessage, outgoingAttachments);
+
+    if ((!composed.visibleContent.trim() && outgoingAttachments.length === 0) || isSubmitting) {
       return;
     }
 
@@ -450,15 +524,27 @@ export default function ScenarioSupportAssistant({
     setIsSubmitting(true);
     setRecommendedActions([]);
     setScenarioResult(null);
-    setDetailsOpen(false);
 
-    const resolvedIdentity = inferIdentityFromMessage(nextUserMessage);
-    const resolvedIssueType = preferredIssueType || inferIssueTypeFromMessage(nextUserMessage);
-    const history = [...messages];
-    const nextMessages = [...history, { role: "user" as const, content: nextUserMessage }];
+    const resolvedIdentity = inferIdentityFromMessage(composed.visibleContent);
+    const resolvedIssueType = inferIssueTypeFromMessage(composed.visibleContent);
+    const history: SupportConversationMessage[] = messages.map((message) => ({
+      role: message.role,
+      content: message.apiContent,
+    }));
+
+    const userMessage: ChatMessage = {
+      id: createId("message"),
+      role: "user",
+      content: composed.visibleContent,
+      apiContent: composed.apiContent,
+      attachments: outgoingAttachments,
+      voiceInteractionId: options?.voiceInteractionId || null,
+    };
+    const nextMessages = [...messages, userMessage];
 
     setMessages(nextMessages);
     setDraft("");
+    setAttachments([]);
 
     try {
       const response = await fetch("/api/support/chat", {
@@ -468,7 +554,7 @@ export default function ScenarioSupportAssistant({
           locale,
           identity: resolvedIdentity,
           issueType: resolvedIssueType,
-          message: nextUserMessage,
+          message: composed.apiContent,
           messages: history,
         }),
       });
@@ -478,13 +564,21 @@ export default function ScenarioSupportAssistant({
       }
 
       const result = (await response.json()) as SupportChatResponse;
-      const assistantMessageKey = `assistant-${nextMessages.length}`;
-      setMessages((current) => [...current, { role: "assistant", content: result.assistantMessage }]);
+      const assistantMessage: ChatMessage = {
+        id: createId("message"),
+        role: "assistant",
+        content: result.assistantMessage,
+        apiContent: result.assistantMessage,
+        attachments: [],
+        voiceInteractionId: options?.voiceInteractionId || null,
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
       setRecommendedActions(result.recommendedActions);
       setScenarioResult(result.scenarioResult);
-      setIdentity(result.scenarioResult.persona);
+
       if (options?.originatedFromVoice) {
-        void playAssistantReply(assistantMessageKey, result.assistantMessage, {
+        void playAssistantReply(assistantMessage.id, result.assistantMessage, {
           interactionId: options.voiceInteractionId,
           source: "auto",
           surfaceError: false,
@@ -492,10 +586,248 @@ export default function ScenarioSupportAssistant({
       }
     } catch {
       setError(t.error);
-      setMessages((current) => [...current, { role: "assistant", content: t.error }]);
+      setMessages((current) => [
+        ...current,
+        {
+          id: createId("message"),
+          role: "assistant",
+          content: t.error,
+          apiContent: t.error,
+          attachments: [],
+        },
+      ]);
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function autoSendTranscript(result: Extract<SupportVoiceTranscribeResponse, { success: true }>) {
+    setVoiceStatus("sending");
+    setVoiceInteractionId(result.interactionId);
+    setVoiceTranscript(result.transcript);
+    setVoiceOriginalTranscript(result.transcript);
+    setVoiceConfidenceLabel(result.confidenceLabel);
+    setVoiceUncertaintyFlags(result.uncertaintyFlags);
+    setVoiceProvider(result.provider);
+
+    await logVoiceEvent({
+      interactionId: result.interactionId,
+      locale,
+      eventType: "transcript_confirmed",
+      interactionMode: "voice_auto_send",
+      provider: result.provider,
+      transcriptConfidence: result.transcriptConfidence,
+      confidenceLabel: result.confidenceLabel,
+      retryCount: result.retryCount,
+      correctionCount: 0,
+      transcriptLength: result.transcript.length,
+      uncertaintyFlags: result.uncertaintyFlags,
+      switchedToText: false,
+      notes: "auto_sent_after_transcription",
+    });
+
+    await sendMessage(result.transcript, {
+      voiceInteractionId: result.interactionId,
+      originatedFromVoice: true,
+    });
+    resetVoiceDraft();
+  }
+
+  async function transcribeRecording(blob: Blob) {
+    setVoiceStatus("transcribing");
+    setError("");
+
+    const formData = new FormData();
+    formData.append("audio", new File([blob], "hinata-voice.webm", { type: blob.type || "audio/webm" }));
+    formData.append("locale", locale);
+    formData.append("retryCount", String(voiceRetryCount));
+
+    try {
+      const response = await fetch("/api/support/voice/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await response.json()) as SupportVoiceTranscribeResponse;
+
+      if (!response.ok || !result.success) {
+        const errorCode = result.success ? "voice_transcription_failed" : result.error;
+        setVoiceStatus("idle");
+        setError(result.success ? t.voiceErrors.voice_transcription_failed : t.voiceErrors[errorCode] || result.fallbackMessage || t.voiceErrors.voice_transcription_failed);
+        await logVoiceEvent({
+          interactionId: voiceInteractionId,
+          locale,
+          eventType: "voice_to_text_fallback",
+          interactionMode: "text_only_after_voice",
+          provider: null,
+          transcriptConfidence: null,
+          confidenceLabel: "unknown",
+          retryCount: voiceRetryCount,
+          correctionCount: 0,
+          transcriptLength: null,
+          uncertaintyFlags: getVoiceErrorFlags(errorCode),
+          switchedToText: true,
+          notes: errorCode,
+        });
+        return;
+      }
+
+      setVoiceInteractionId(result.interactionId);
+      setVoiceTranscript(result.transcript);
+      setVoiceOriginalTranscript(result.transcript);
+      setVoiceConfidenceLabel(result.confidenceLabel);
+      setVoiceUncertaintyFlags(result.uncertaintyFlags);
+      setVoiceProvider(result.provider);
+
+      if (result.requiresConfirmation) {
+        setVoiceStatus("review");
+        return;
+      }
+
+      await autoSendTranscript(result);
+    } catch {
+      setVoiceStatus("idle");
+      setError(t.voiceErrors.voice_backend_unreachable);
+    }
+  }
+
+  async function startRecording() {
+    if (!voiceSupported || isSubmitting) {
+      return;
+    }
+
+    try {
+      setError("");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+      recorder.onstop = async () => {
+        const mimeType = recorder.mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        mediaRecorderRef.current = null;
+        if (blob.size > 0) {
+          await transcribeRecording(blob);
+        } else {
+          setVoiceStatus("idle");
+        }
+      };
+
+      await logVoiceEvent({
+        interactionId: voiceInteractionId,
+        locale,
+        eventType: "recording_started",
+        interactionMode: "voice_live_capture",
+        provider: voiceProvider,
+        transcriptConfidence: null,
+        confidenceLabel: "unknown",
+        retryCount: voiceRetryCount,
+        correctionCount: 0,
+        transcriptLength: null,
+        uncertaintyFlags: [],
+        switchedToText: false,
+        notes: null,
+      });
+
+      recorder.start();
+      setVoiceStatus("recording");
+    } catch {
+      setError(voiceSupported ? t.voiceErrors.voice_transcription_failed : t.unsupportedVoice);
+      setVoiceStatus("idle");
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+  }
+
+  async function handleVoiceRetry() {
+    await logVoiceEvent({
+      interactionId: voiceInteractionId,
+      locale,
+      eventType: "transcript_retry_requested",
+      interactionMode: "voice_pending_confirmation",
+      provider: voiceProvider,
+      transcriptConfidence: null,
+      confidenceLabel: voiceConfidenceLabel,
+      retryCount: voiceRetryCount,
+      correctionCount: 0,
+      transcriptLength: voiceTranscript.length || null,
+      uncertaintyFlags: voiceUncertaintyFlags,
+      switchedToText: false,
+      notes: "retry_requested",
+    });
+
+    setVoiceRetryCount((current) => current + 1);
+    resetVoiceDraft({ preserveRetryCount: true });
+  }
+
+  async function finalizeVoiceTranscript(mode: "draft" | "send") {
+    const nextTranscript = voiceTranscript.trim();
+    const correctionCount = nextTranscript && nextTranscript !== voiceOriginalTranscript ? 1 : 0;
+
+    await logVoiceEvent({
+      interactionId: voiceInteractionId,
+      locale,
+      eventType: correctionCount > 0 ? "transcript_corrected" : "transcript_confirmed",
+      interactionMode: "voice_to_text",
+      provider: voiceProvider,
+      transcriptConfidence: null,
+      confidenceLabel: voiceConfidenceLabel,
+      retryCount: voiceRetryCount,
+      correctionCount,
+      transcriptLength: nextTranscript.length,
+      uncertaintyFlags: voiceUncertaintyFlags,
+      switchedToText: mode === "draft",
+      notes: mode === "draft" ? "copied_to_text_draft" : "sent_after_confirmation",
+    });
+
+    if (mode === "draft") {
+      setDraft(nextTranscript);
+      composerRef.current?.focus();
+      resetVoiceDraft();
+      return;
+    }
+
+    await sendMessage(nextTranscript, {
+      voiceInteractionId,
+      originatedFromVoice: true,
+    });
+    resetVoiceDraft();
+  }
+
+  function openAttachmentPicker() {
+    fileInputRef.current?.click();
+  }
+
+  function handleAttachmentSelection(event: React.ChangeEvent<HTMLInputElement>) {
+    const nextFiles = Array.from(event.target.files || []).map((file) => ({
+      id: createId("attachment"),
+      name: file.name,
+      size: file.size,
+      type: file.type || "file",
+    }));
+
+    if (nextFiles.length > 0) {
+      setAttachments((current) => [...current, ...nextFiles]);
+    }
+
+    event.target.value = "";
+  }
+
+  function removeAttachment(id: string) {
+    setAttachments((current) => current.filter((file) => file.id !== id));
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -510,242 +842,279 @@ export default function ScenarioSupportAssistant({
     }
   }
 
-  async function handlePlayVoice(messageKey: string, text: string) {
-    await playAssistantReply(messageKey, text, {
-      source: "manual",
-      surfaceError: true,
-    });
-  }
-
   return (
-    <section
-      id="scenario-assistant"
-      className="overflow-hidden rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] shadow-[0_18px_38px_rgba(47,35,33,0.05)]"
-    >
-      <div className="border-b border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.95)] px-4 py-4 md:px-6">
-        <div className="mx-auto flex max-w-3xl items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-base text-[var(--accent-sage-text)]">
-            ひ
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">AI相談員</div>
-            <div className="mt-1 text-base text-[var(--text)]">{t.assistantLabel}</div>
-          </div>
-          {hasStarted && (
-            <div className="ml-auto text-xs text-[var(--accent-sage-text)]">
-              {isContinuationMode ? t.continuationThreadStatus : t.threadStatus}
+    <section className="flex min-h-[72vh] w-full flex-col bg-transparent md:min-h-[80vh]">
+      <div ref={threadRef} className="flex-1 overflow-y-auto px-4 pb-44 pt-4 md:px-8 md:pb-48 md:pt-6">
+        <div className="mx-auto flex max-w-4xl flex-col gap-5">
+          {messages.length === 0 ? (
+            <div className="flex min-h-[52vh] flex-col items-center justify-center px-2 text-center">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--surface-sage)] text-xl text-[var(--accent-sage-text)]">
+                ひ
+              </div>
+              <h2 className="text-2xl text-[var(--text)] md:text-3xl">{t.emptyTitle}</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">{t.emptyBody}</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2.5">
+                {starters[locale].map((starter) => (
+                  <button
+                    key={starter}
+                    type="button"
+                    onClick={() => void sendMessage(starter)}
+                    className="rounded-full border border-[color:var(--line-soft)] bg-white/80 px-4 py-2.5 text-sm text-[var(--accent-sage-text)] transition hover:bg-white"
+                  >
+                    {starter}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            messages.map((message) => {
+              const isAssistant = message.role === "assistant";
+
+              return (
+                <div key={message.id} className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}>
+                  <div className={`flex max-w-[48rem] gap-3 ${isAssistant ? "" : "flex-row-reverse"}`}>
+                    <div
+                      className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${
+                        isAssistant
+                          ? "bg-[var(--surface-sage)] text-[var(--accent-sage-text)]"
+                          : "bg-[rgba(58,38,33,0.12)] text-[var(--text)]"
+                      }`}
+                    >
+                      {isAssistant ? "ひ" : locale === "ja" ? "あ" : "Y"}
+                    </div>
+                    <div
+                      className={`rounded-[1.6rem] px-4 py-4 text-sm leading-8 md:px-5 ${
+                        isAssistant
+                          ? "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.98)] text-[var(--text)] shadow-[0_10px_24px_rgba(47,35,33,0.05)]"
+                          : "bg-[var(--accent)] text-white shadow-[0_12px_24px_rgba(47,35,33,0.12)]"
+                      }`}
+                    >
+                      <div className={`text-[11px] tracking-[0.14em] ${isAssistant ? "text-[var(--muted)]" : "text-[rgba(255,255,255,0.72)]"}`}>
+                        {isAssistant ? t.assistantLabel : t.userLabel}
+                      </div>
+
+                      {message.attachments.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {message.attachments.map((attachment) => (
+                            <div
+                              key={attachment.id}
+                              className={`rounded-[1rem] border px-3 py-2 text-xs leading-6 ${
+                                isAssistant
+                                  ? "border-[color:var(--line-soft)] bg-[var(--surface-sage)]/50 text-[var(--accent-sage-text)]"
+                                  : "border-[rgba(255,255,255,0.22)] bg-[rgba(255,255,255,0.12)] text-white"
+                              }`}
+                            >
+                              <div className="font-medium">{attachment.name}</div>
+                              <div className={isAssistant ? "text-[var(--muted)]" : "text-[rgba(255,255,255,0.72)]"}>
+                                {formatFileSize(attachment.size)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {message.content && <p className="mt-2 whitespace-pre-wrap">{message.content}</p>}
+
+                      {isAssistant && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void playAssistantReply(message.id, message.content, {
+                              interactionId: message.voiceInteractionId || null,
+                              source: "manual",
+                              surfaceError: true,
+                            })
+                          }
+                          className="mt-3 text-xs text-[var(--accent-sage-text)] underline underline-offset-4"
+                        >
+                          {voicePlaybackKey === message.id ? t.voicePlaybackLoading : t.voicePlayback}
+                        </button>
+                      )}
+
+                      {isAssistant && messages[messages.length - 1]?.id === message.id && scenarioResult && recommendedActions.length > 0 && !isSubmitting && (
+                        <div className="mt-4 border-t border-[color:var(--line-soft)] pt-4">
+                          <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.actionsTitle}</div>
+                          <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1">
+                            {recommendedActions.map((action) => (
+                              <Link
+                                key={action.id}
+                                href={action.href}
+                                className="min-w-[13.5rem] shrink-0 snap-start rounded-[1rem] border border-[color:var(--line-sage)] bg-[var(--surface-sage)]/72 px-3.5 py-3 text-sm text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage)]"
+                              >
+                                <div className="font-medium text-[var(--text)]">{action.title}</div>
+                                <div className="mt-1 line-clamp-3 leading-7">{action.description}</div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+
+          {isSubmitting && (
+            <div className="flex justify-start">
+              <div className="flex max-w-[42rem] gap-3">
+                <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-sm text-[var(--accent-sage-text)]">
+                  ひ
+                </div>
+                <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] px-4 py-4 text-sm text-[var(--muted)]">
+                  {t.typing}
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex min-h-[72vh] flex-col md:min-h-[78vh]">
-        <div
-          ref={threadRef}
-          className={`flex-1 overflow-y-auto px-4 py-5 md:px-6 ${
-            hasStarted ? "bg-[linear-gradient(180deg,rgba(247,244,238,0.38)_0%,rgba(252,250,245,0.9)_100%)]" : "bg-[linear-gradient(180deg,rgba(255,255,255,0.62)_0%,rgba(247,244,238,0.48)_100%)]"
-          }`}
-        >
-          {hasStarted ? (
-            <div className="mx-auto flex max-w-3xl flex-col gap-4 pb-5">
-              {messages.map((message, index) => {
-                const isAssistant = message.role === "assistant";
-
-                return (
-                  <div key={`${message.role}-${index}`} className={`flex ${isAssistant ? "justify-start" : "justify-end"}`}>
-                    <div className={`flex max-w-[44rem] gap-3 ${isAssistant ? "" : "flex-row-reverse"}`}>
-                      <div
-                        className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${
-                          isAssistant
-                            ? "bg-[var(--surface-sage)] text-[var(--accent-sage-text)]"
-                            : "bg-[rgba(58,38,33,0.12)] text-[var(--text)]"
-                        }`}
-                      >
-                        {isAssistant ? "ひ" : "あ"}
-                      </div>
-                      <div
-                        className={`rounded-[1.6rem] px-4 py-4 text-sm leading-8 md:px-5 ${
-                          isAssistant
-                            ? index === messages.length - 1
-                              ? "border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.98)] text-[var(--text)] shadow-[0_14px_28px_rgba(47,35,33,0.07)]"
-                              : "border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] text-[var(--text)] shadow-[0_8px_18px_rgba(47,35,33,0.04)]"
-                            : "bg-[var(--accent)] text-white shadow-[0_10px_20px_rgba(47,35,33,0.12)]"
-                        }`}
-                      >
-                        <div className={`text-[11px] tracking-[0.14em] ${isAssistant ? "text-[var(--muted)]" : "text-[rgba(255,255,255,0.72)]"}`}>
-                          {isAssistant ? t.assistantLabel : t.userLabel}
-                        </div>
-                        <p className="mt-2 whitespace-pre-wrap">{message.content}</p>
-                        {isAssistant && (
-                          <button
-                            type="button"
-                            onClick={() => void handlePlayVoice(`${message.role}-${index}`, message.content)}
-                            className="mt-3 text-xs text-[var(--accent-sage-text)] underline underline-offset-4"
-                          >
-                            {voicePlaybackKey === `${message.role}-${index}` ? t.voicePlaybackLoading : t.voicePlayback}
-                          </button>
-                        )}
-
-                        {isAssistant && index === messages.length - 1 && scenarioResult && recommendedActions.length > 0 && !isSubmitting && (
-                          <div className="mt-4 border-t border-[color:var(--line-soft)] pt-4">
-                            <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">
-                              {isContinuationMode ? t.continuationActionsTitle : t.actionsTitle}
-                            </div>
-                            <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1">
-                              {recommendedActions.map((action) => (
-                                <Link
-                                  key={action.id}
-                                  href={action.href}
-                                  className="min-w-[13.5rem] shrink-0 snap-start rounded-[1rem] border border-[color:var(--line-sage)] bg-[var(--surface-sage)]/72 px-3.5 py-3 text-sm text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage)]"
-                                >
-                                  <div className="font-medium text-[var(--text)]">{action.title}</div>
-                                  <div className="mt-1 line-clamp-3 leading-7">{action.description}</div>
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {isSubmitting && (
-                <div className="flex justify-start">
-                  <div className="flex max-w-[42rem] gap-3">
-                    <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-sm text-[var(--accent-sage-text)]">
-                      ひ
-                    </div>
-                    <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] px-4 py-4 text-sm text-[var(--muted)]">
-                      {t.typing}
-                    </div>
-                  </div>
-                </div>
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 md:px-6 md:pb-6">
+        <div className="pointer-events-auto mx-auto max-w-4xl">
+          {(error || voiceStatus === "transcribing" || voiceStatus === "sending" || voiceStatus === "recording") && (
+            <div className="mb-3 rounded-[1.1rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.96)] px-4 py-3 text-sm shadow-[0_10px_24px_rgba(47,35,33,0.05)]">
+              {error ? (
+                <p className="text-[#9A3B2F]">{error}</p>
+              ) : (
+                <p className="text-[var(--muted)]">
+                  {voiceStatus === "recording"
+                    ? t.voiceRecording
+                    : voiceStatus === "transcribing"
+                      ? t.voiceTranscribing
+                      : t.voiceSending}
+                </p>
               )}
-              <div ref={endRef} />
             </div>
-          ) : (
-            <div className="mx-auto flex h-full max-w-3xl flex-col justify-center gap-5 pb-4 pt-2">
-              <div className="flex justify-start">
-                <div className="flex max-w-[44rem] gap-3">
-                  <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface-sage)] text-sm text-[var(--accent-sage-text)]">
-                    ひ
-                  </div>
-                  <div className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.96)] px-4 py-4 text-sm leading-8 text-[var(--text)] shadow-[0_8px_18px_rgba(47,35,33,0.04)] md:px-5">
-                    <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.assistantLabel}</div>
-                    <p className="mt-2 whitespace-pre-wrap">
-                      {isContinuationMode ? t.continuationGreeting : t.greeting}
-                    </p>
-                    <p className="mt-3 text-[var(--muted)]">
-                      {isContinuationMode ? t.continuationNote : t.quietNote}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="text-[11px] tracking-[0.14em] text-[var(--muted)]">{t.promptLabel}</div>
-                <div className="mt-3 flex flex-wrap gap-2.5">
-                  {starterOptions.map((starter) => (
-                    <button
-                      key={starter.label}
-                      type="button"
-                      onClick={() => void sendMessage(starter.message, starter.issueType)}
-                      className="rounded-full border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.92)] px-4 py-2.5 text-sm text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage)]"
-                    >
-                      {starter.label}
-                    </button>
-                  ))}
-                </div>
+          )}
+
+          {voiceStatus === "review" && (
+            <div className="mb-3 rounded-[1.25rem] border border-[color:var(--line-sage)] bg-[var(--surface-sage)]/76 px-4 py-4 shadow-[0_12px_28px_rgba(47,35,33,0.06)]">
+              <div className="text-sm text-[var(--accent-sage-text)]">{t.reviewTitle}</div>
+              <textarea
+                value={voiceTranscript}
+                onChange={(event) => setVoiceTranscript(event.target.value)}
+                className="mt-3 min-h-[88px] w-full resize-none rounded-[1rem] border border-[color:var(--line-sage)] bg-white px-3 py-3 text-sm leading-8 text-[var(--text)] outline-none"
+              />
+              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{t.reviewHint}</p>
+              <div className="mt-3 flex flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => void handleVoiceRetry()}
+                  className="rounded-full border border-[color:var(--line-sage)] bg-white px-4 py-2.5 text-sm text-[var(--accent-sage-text)]"
+                >
+                  {t.retry}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void finalizeVoiceTranscript("draft")}
+                  className="rounded-full border border-[color:var(--line-sage)] bg-white px-4 py-2.5 text-sm text-[var(--accent-sage-text)]"
+                >
+                  {t.useDraft}
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmitting || voiceTranscript.trim().length === 0}
+                  onClick={() => void finalizeVoiceTranscript("send")}
+                  className="rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t.sendTranscript}
+                </button>
               </div>
             </div>
           )}
-        </div>
 
-        <form onSubmit={handleSubmit} className="border-t border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.98)] px-4 py-4 backdrop-blur-sm md:px-6">
-          <div className="mx-auto max-w-3xl">
-            {hasStarted && isContinuationMode && (
-              <p className="mb-3 text-sm leading-7 text-[var(--muted)]">{t.continuationComposerNote}</p>
-            )}
-            <SupportVoiceEntry
-              locale={locale}
-              disabled={isSubmitting}
-              onUseTranscript={(transcript) => {
-                setDraft(transcript);
-                setError("");
-              }}
-              onSendTranscript={async (transcript, options) => {
-                await sendMessage(transcript, undefined, {
-                  voiceInteractionId: options?.interactionId || null,
-                  originatedFromVoice: options?.originatedFromVoice || false,
-                });
-              }}
-            />
-            {detailsOpen && (
-              <div className="mb-3 rounded-[1.2rem] bg-[var(--surface-sage)]/72 px-4 py-4">
-                <div className="text-sm leading-7 text-[var(--accent-sage-text)]">{t.detailHint}</div>
-                <div className="mt-3 flex flex-wrap gap-2.5">
-                  {detailOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setIdentityTouched(true);
-                        setIdentity(option.value);
-                      }}
-                      className={`rounded-full px-4 py-2.5 text-sm transition ${
-                        identity === option.value
-                          ? "bg-[var(--accent)] text-white"
-                          : "border border-[color:var(--line-sage)] bg-[rgba(252,250,245,0.9)] text-[var(--accent-sage-text)]"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-white/92 px-4 py-4 shadow-[0_10px_22px_rgba(47,35,33,0.04)]">
-              <textarea
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={(event) => void handleComposerKeyDown(event)}
-                placeholder={t.placeholder}
-                className="min-h-[88px] w-full resize-none bg-transparent text-sm leading-8 text-[var(--text)] outline-none md:text-base"
-              />
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setDetailsOpen((value) => !value)}
-                  className="text-sm text-[var(--accent-sage-text)] underline underline-offset-4"
-                >
-                  {detailsOpen ? t.detailToggleClose : t.detailToggleOpen}
-                </button>
-                <div className="flex items-center gap-3">
-                  {identityTouched && (
-                    <div className="hidden text-sm text-[var(--muted)] md:block">
-                      {detailOptions.find((option) => option.value === identity)?.label}
-                    </div>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || draft.trim().length === 0}
-                    className="rounded-[1.15rem] bg-[var(--accent)] px-5 py-3 text-sm text-white shadow-[0_12px_24px_rgba(47,35,33,0.12)] transition hover:translate-y-[-1px] hover:bg-[var(--cta-main-hover)] disabled:cursor-not-allowed disabled:opacity-65"
+          {attachments.length > 0 && (
+            <div className="mb-3 rounded-[1.15rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.96)] px-4 py-3 shadow-[0_10px_24px_rgba(47,35,33,0.05)]">
+              <div className="text-xs tracking-[0.14em] text-[var(--muted)]">{t.attachmentTitle}</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {attachments.map((attachment) => (
+                  <div
+                    key={attachment.id}
+                    className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line-soft)] bg-white px-3 py-2 text-sm text-[var(--accent-sage-text)]"
                   >
-                    {isSubmitting
-                      ? t.loading
-                      : isContinuationMode
-                        ? t.continuationSubmit
-                        : t.submit}
-                  </button>
-                </div>
+                    <span className="max-w-[14rem] truncate">{attachment.name}</span>
+                    <span className="text-xs text-[var(--muted)]">{formatFileSize(attachment.size)}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(attachment.id)}
+                      className="text-[var(--muted)] transition hover:text-[#9A3B2F]"
+                      aria-label={`Remove ${attachment.name}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
+          )}
 
-            {error && <p className="mt-3 text-sm text-[#9A3B2F]">{error}</p>}
-          </div>
-        </form>
+          <form onSubmit={handleSubmit} className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.98)] p-3 shadow-[0_18px_44px_rgba(47,35,33,0.08)] backdrop-blur">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept={ACCEPTED_FILE_TYPES}
+              className="hidden"
+              onChange={handleAttachmentSelection}
+            />
+
+            <div className="flex items-end gap-3">
+              <button
+                type="button"
+                onClick={openAttachmentPicker}
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[color:var(--line-soft)] bg-white text-[var(--accent-sage-text)] transition hover:bg-[var(--surface-sage)]"
+                aria-label={t.attachmentButton}
+                title={t.attachmentButton}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5 stroke-current" fill="none" strokeWidth="2" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                </svg>
+              </button>
+
+              <div className="min-w-0 flex-1">
+                <textarea
+                  ref={composerRef}
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={(event) => void handleComposerKeyDown(event)}
+                  placeholder={t.placeholder}
+                  rows={1}
+                  className="max-h-[180px] min-h-[48px] w-full resize-none bg-transparent px-1 py-3 text-sm leading-7 text-[var(--text)] outline-none md:text-base"
+                />
+              </div>
+
+              <button
+                type="button"
+                title={voiceStatus === "recording" ? t.voiceRecording : voiceSupported ? t.voiceTranscribing.replace("…", "").replace(" your recording", "") : t.unsupportedVoice}
+                aria-label={voiceStatus === "recording" ? t.voiceRecording : voiceSupported ? t.voiceTranscribing.replace("…", "").replace(" your recording", "") : t.unsupportedVoice}
+                disabled={!voiceSupported || isSubmitting || voiceStatus === "transcribing" || voiceStatus === "sending"}
+                onClick={() => (voiceStatus === "recording" ? stopRecording() : void startRecording())}
+                className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition ${
+                  voiceStatus === "recording"
+                    ? "border-[#9A3B2F] bg-[#9A3B2F] text-white shadow-[0_10px_24px_rgba(154,59,47,0.2)]"
+                    : "border-[color:var(--line-soft)] bg-white text-[var(--accent-sage-text)] hover:bg-[var(--surface-sage)]"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+                  {voiceStatus === "recording" ? <rect x="7" y="7" width="10" height="10" rx="2" /> : <path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.07A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0Z" />}
+                </svg>
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || (draft.trim().length === 0 && attachments.length === 0)}
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_12px_24px_rgba(47,35,33,0.14)] transition hover:translate-y-[-1px] hover:bg-[var(--cta-main-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label={t.send}
+                title={t.send}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+                  <path d="M3.4 20.4 21 12 3.4 3.6 3 10l12 2-12 2 .4 6.4Z" />
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </section>
   );
