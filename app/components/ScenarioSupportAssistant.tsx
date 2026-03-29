@@ -12,12 +12,17 @@ import type {
   SupportScenarioResult,
 } from "@/lib/ai/support/scenario-engine";
 import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
-import type { SupportVoiceSpeakResponse } from "@/lib/voice/contracts";
+import type { VoiceSignalRecord } from "@/lib/voice/contracts";
 
 type ScenarioSupportAssistantProps = {
   locale: SupportAssistantLocale;
   onConversationStateChange?: (started: boolean) => void;
   mode?: "entry" | "continuation";
+};
+
+type SendMessageOptions = {
+  voiceInteractionId?: string | null;
+  originatedFromVoice?: boolean;
 };
 
 type SupportChatResponse = {
@@ -148,6 +153,63 @@ const familyHints = ["親", "母", "父", "祖母", "祖父", "家族", "夫", "
 const institutionHints = ["自治体", "施設", "介護", "事業者", "病院", "地域", "導入", "連携"];
 const bookingHints = ["相談したい", "予約", "面談", "話を聞いてほしい", "直接"];
 const productHints = ["製品", "車いす", "電動", "カート", "何が合う", "比較"];
+const browserVoiceEnabled = process.env.NEXT_PUBLIC_HINATA_BROWSER_TTS !== "0";
+const hinataPreferredJapaneseVoicePatterns = [
+  /google\s*日本語/i,
+  /nanami/i,
+  /sayaka/i,
+  /haruka/i,
+  /kyoko/i,
+  /ja[-_]?jp/i,
+];
+const hinataAvoidJapaneseVoicePatterns = [/otoya/i, /ichiro/i, /male/i, /man/i];
+
+function getVoiceDescriptor(voice: SpeechSynthesisVoice | null) {
+  if (!voice) {
+    return "browser_speech:default";
+  }
+
+  return `browser_speech:${voice.name}`;
+}
+
+async function loadSpeechVoices() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return [] as SpeechSynthesisVoice[];
+  }
+
+  const initial = window.speechSynthesis.getVoices();
+  if (initial.length > 0) {
+    return initial;
+  }
+
+  await new Promise((resolve) => window.setTimeout(resolve, 250));
+  return window.speechSynthesis.getVoices();
+}
+
+function selectHinataBrowserVoice(voices: SpeechSynthesisVoice[], locale: SupportAssistantLocale) {
+  const localePrefix = locale === "ja" ? "ja" : "en";
+  const localeVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith(localePrefix));
+  const candidates = localeVoices.length > 0 ? localeVoices : voices;
+
+  if (locale !== "ja") {
+    return candidates[0] || null;
+  }
+
+  const filtered = candidates.filter((voice) => {
+    const descriptor = `${voice.name} ${voice.voiceURI}`.toLowerCase();
+    return hinataAvoidJapaneseVoicePatterns.every((pattern) => !pattern.test(descriptor));
+  });
+  const preferredPool = filtered.length > 0 ? filtered : candidates;
+
+  for (const pattern of hinataPreferredJapaneseVoicePatterns) {
+    const match = preferredPool.find((voice) => pattern.test(`${voice.name} ${voice.voiceURI}`));
+    if (match) {
+      return match;
+    }
+  }
+
+  return preferredPool[0] || null;
+}
 
 export default function ScenarioSupportAssistant({
   locale,
@@ -169,6 +231,7 @@ export default function ScenarioSupportAssistant({
   const [scenarioResult, setScenarioResult] = useState<SupportScenarioResult | null>(null);
   const [voicePlaybackKey, setVoicePlaybackKey] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const detailOptions = identityOptions[locale];
   const starterOptions = starters[locale];
@@ -186,6 +249,17 @@ export default function ScenarioSupportAssistant({
       endRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [hasStarted, messages, isSubmitting, recommendedActions.length]);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      speechSynthesisRef.current = null;
+    };
+  }, []);
 
   function inferIdentityFromMessage(message: string): SupportIdentity {
     if (identityTouched) {
@@ -219,7 +293,154 @@ export default function ScenarioSupportAssistant({
     return "mobility_anxiety";
   }
 
-  async function sendMessage(rawMessage: string, preferredIssueType?: SupportIssueType) {
+  async function logVoicePlaybackEvent(payload: Omit<VoiceSignalRecord, "id" | "createdAt">) {
+    try {
+      await fetch("/api/support/voice/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      // Best-effort only.
+    }
+  }
+
+  async function playBrowserVoiceReply(messageKey: string, text: string) {
+    if (!browserVoiceEnabled) {
+      return { success: false as const, reason: "browser_tts_disabled" };
+    }
+
+    if (typeof window === "undefined" || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+      return { success: false as const, reason: "browser_speech_unavailable" };
+    }
+
+    const trimmedText = text.trim();
+    if (!trimmedText) {
+      return { success: false as const, reason: "missing_text" };
+    }
+
+    audioRef.current?.pause();
+    audioRef.current = null;
+    window.speechSynthesis.cancel();
+
+    const voices = await loadSpeechVoices();
+    const selectedVoice = selectHinataBrowserVoice(voices, locale);
+
+    return await new Promise<
+      | { success: true; provider: string }
+      | { success: false; reason: string; provider?: string }
+    >((resolve) => {
+      try {
+        const utterance = new SpeechSynthesisUtterance(trimmedText);
+        utterance.lang = locale === "ja" ? "ja-JP" : "en-US";
+        utterance.rate = locale === "ja" ? 0.96 : 0.98;
+        utterance.pitch = locale === "ja" ? 1.04 : 1.0;
+        utterance.volume = 1;
+
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+
+        speechSynthesisRef.current = utterance;
+        utterance.onend = () => {
+          speechSynthesisRef.current = null;
+          setVoicePlaybackKey((current) => (current === messageKey ? null : current));
+          resolve({ success: true, provider: getVoiceDescriptor(selectedVoice) });
+        };
+        utterance.onerror = () => {
+          speechSynthesisRef.current = null;
+          setVoicePlaybackKey((current) => (current === messageKey ? null : current));
+          resolve({ success: false, reason: "browser_speech_failed", provider: getVoiceDescriptor(selectedVoice) });
+        };
+
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        speechSynthesisRef.current = null;
+        setVoicePlaybackKey((current) => (current === messageKey ? null : current));
+        resolve({ success: false, reason: "browser_speech_failed", provider: getVoiceDescriptor(selectedVoice) });
+      }
+    });
+  }
+
+  async function playAssistantReply(
+    messageKey: string,
+    text: string,
+    options?: {
+      interactionId?: string | null;
+      source?: "manual" | "auto";
+      surfaceError?: boolean;
+    },
+  ) {
+    if (!text.trim()) {
+      return;
+    }
+
+    const source = options?.source || "manual";
+    const interactionMode = source === "auto" ? "voice_auto_send" : "playback_only";
+    setVoicePlaybackKey(messageKey);
+    if (source === "manual") {
+      setError("");
+    }
+
+    await logVoicePlaybackEvent({
+      interactionId: options?.interactionId || null,
+      locale,
+      eventType: "voice_reply_requested",
+      interactionMode,
+      provider: "browser_speech",
+      transcriptConfidence: null,
+      confidenceLabel: "unknown",
+      retryCount: 0,
+      correctionCount: 0,
+      transcriptLength: text.length,
+      uncertaintyFlags: [],
+      switchedToText: false,
+      notes: `source=${source}`,
+    });
+
+    const playbackResult = await playBrowserVoiceReply(messageKey, text);
+    if (playbackResult.success) {
+      await logVoicePlaybackEvent({
+        interactionId: options?.interactionId || null,
+        locale,
+        eventType: "voice_reply_played",
+        interactionMode,
+        provider: playbackResult.provider,
+        transcriptConfidence: null,
+        confidenceLabel: "unknown",
+        retryCount: 0,
+        correctionCount: 0,
+        transcriptLength: text.length,
+        uncertaintyFlags: [],
+        switchedToText: false,
+        notes: `source=${source};message_key=${messageKey}`,
+      });
+      return;
+    }
+
+    await logVoicePlaybackEvent({
+      interactionId: options?.interactionId || null,
+      locale,
+      eventType: "voice_reply_failed",
+      interactionMode,
+      provider: playbackResult.provider || "browser_speech",
+      transcriptConfidence: null,
+      confidenceLabel: "unknown",
+      retryCount: 0,
+      correctionCount: 0,
+      transcriptLength: text.length,
+      uncertaintyFlags: [playbackResult.reason],
+      switchedToText: false,
+      notes: `source=${source};message_key=${messageKey};reason=${playbackResult.reason}`,
+    });
+    setVoicePlaybackKey((current) => (current === messageKey ? null : current));
+
+    if (options?.surfaceError) {
+      setError(t.voicePlaybackError);
+    }
+  }
+
+  async function sendMessage(rawMessage: string, preferredIssueType?: SupportIssueType, options?: SendMessageOptions) {
     const nextUserMessage = rawMessage.trim();
     if (!nextUserMessage || isSubmitting) {
       return;
@@ -257,10 +478,18 @@ export default function ScenarioSupportAssistant({
       }
 
       const result = (await response.json()) as SupportChatResponse;
+      const assistantMessageKey = `assistant-${nextMessages.length}`;
       setMessages((current) => [...current, { role: "assistant", content: result.assistantMessage }]);
       setRecommendedActions(result.recommendedActions);
       setScenarioResult(result.scenarioResult);
       setIdentity(result.scenarioResult.persona);
+      if (options?.originatedFromVoice) {
+        void playAssistantReply(assistantMessageKey, result.assistantMessage, {
+          interactionId: options.voiceInteractionId,
+          source: "auto",
+          surfaceError: false,
+        });
+      }
     } catch {
       setError(t.error);
       setMessages((current) => [...current, { role: "assistant", content: t.error }]);
@@ -282,55 +511,10 @@ export default function ScenarioSupportAssistant({
   }
 
   async function handlePlayVoice(messageKey: string, text: string) {
-    if (!text.trim()) {
-      return;
-    }
-
-    setVoicePlaybackKey(messageKey);
-    setError("");
-
-    try {
-      const response = await fetch("/api/support/voice/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          locale,
-        }),
-      });
-      const result = (await response.json()) as SupportVoiceSpeakResponse;
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.success ? "voice_playback_failed" : result.error);
-      }
-
-      audioRef.current?.pause();
-      audioRef.current = new Audio(`data:${result.mimeType};base64,${result.audioBase64}`);
-      await audioRef.current.play();
-      await fetch("/api/support/voice/event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          interactionId: null,
-          locale,
-          eventType: "voice_reply_played",
-          interactionMode: "playback_only",
-          provider: result.provider,
-          transcriptConfidence: null,
-          confidenceLabel: "unknown",
-          retryCount: 0,
-          correctionCount: 0,
-          transcriptLength: text.length,
-          uncertaintyFlags: [],
-          switchedToText: false,
-          notes: `assistant_message_key=${messageKey}`,
-        }),
-      });
-    } catch {
-      setError(t.voicePlaybackError);
-    } finally {
-      setVoicePlaybackKey(null);
-    }
+    await playAssistantReply(messageKey, text, {
+      source: "manual",
+      surfaceError: true,
+    });
   }
 
   return (
@@ -490,8 +674,11 @@ export default function ScenarioSupportAssistant({
                 setDraft(transcript);
                 setError("");
               }}
-              onSendTranscript={async (transcript) => {
-                await sendMessage(transcript);
+              onSendTranscript={async (transcript, options) => {
+                await sendMessage(transcript, undefined, {
+                  voiceInteractionId: options?.interactionId || null,
+                  originatedFromVoice: options?.originatedFromVoice || false,
+                });
               }}
             />
             {detailsOpen && (

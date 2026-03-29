@@ -12,6 +12,7 @@ export type VoiceSignalEventType =
   | "transcript_corrected"
   | "voice_reply_requested"
   | "voice_reply_played"
+  | "voice_reply_failed"
   | "voice_to_text_fallback";
 
 export type VoiceInteractionMode =

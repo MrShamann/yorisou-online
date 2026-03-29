@@ -14,7 +14,13 @@ type SupportVoiceEntryProps = {
   locale: SupportAssistantLocale;
   disabled?: boolean;
   onUseTranscript: (transcript: string) => void;
-  onSendTranscript: (transcript: string) => Promise<void>;
+  onSendTranscript: (
+    transcript: string,
+    options?: {
+      interactionId?: string | null;
+      originatedFromVoice?: boolean;
+    },
+  ) => Promise<void>;
 };
 
 type VoiceStatus = "idle" | "recording" | "transcribing" | "sending" | "ready";
@@ -167,7 +173,10 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
       notes: "auto_sent_after_transcription",
     });
 
-    await onSendTranscript(result.transcript);
+    await onSendTranscript(result.transcript, {
+      interactionId: result.interactionId,
+      originatedFromVoice: true,
+    });
     resetDraft();
   }
 
@@ -331,7 +340,10 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
     if (mode === "draft") {
       onUseTranscript(nextTranscript);
     } else {
-      await onSendTranscript(nextTranscript);
+      await onSendTranscript(nextTranscript, {
+        interactionId,
+        originatedFromVoice: true,
+      });
     }
 
     resetDraft();
