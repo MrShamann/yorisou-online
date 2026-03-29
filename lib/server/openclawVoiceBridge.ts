@@ -14,6 +14,7 @@ const voiceBaseUrl = process.env.OPENCLAW_VOICE_BASE_URL?.trim() || "";
 const voiceToken = process.env.OPENCLAW_VOICE_TOKEN?.trim() || "";
 const supportChatUrl = process.env.OPENCLOUD_SUPPORT_CHAT_URL?.trim() || "";
 const supportChatToken = process.env.OPENCLOUD_SUPPORT_CHAT_TOKEN?.trim() || "";
+const openClawOhioVoiceFallbackUrl = "https://loop-some-hawk-trinity.trycloudflare.com";
 
 export class OpenClawVoiceBridgeError extends Error {
   constructor(
@@ -44,8 +45,10 @@ function getVoiceBridgeBaseCandidates() {
     return [voiceBaseUrl];
   }
 
+  const fallbackCandidates = [openClawOhioVoiceFallbackUrl].filter(Boolean);
+
   if (!supportChatUrl) {
-    return [];
+    return fallbackCandidates;
   }
 
   try {
@@ -70,9 +73,9 @@ function getVoiceBridgeBaseCandidates() {
       candidates.add(`${source.origin}${path}`);
     }
 
-    return Array.from(candidates).filter(Boolean);
+    return [...fallbackCandidates, ...Array.from(candidates).filter(Boolean)];
   } catch {
-    return [];
+    return fallbackCandidates;
   }
 }
 
