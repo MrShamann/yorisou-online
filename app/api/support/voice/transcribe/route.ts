@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createVoiceInteractionId, transcribeSupportVoice } from "@/lib/server/openclawVoiceBridge";
+import { interpretSupportVoiceTranscription } from "@/lib/server/openclawVoiceInterpretation";
 import { recordOpenClawVoiceSignal } from "@/lib/server/openclawVoiceSignals";
 import type { SupportAssistantLocale } from "@/lib/ai/support/scenario-engine";
 import type { SupportVoiceTranscribeErrorCode } from "@/lib/voice/contracts";
@@ -37,6 +38,14 @@ function getFallbackUncertaintyFlags(error: SupportVoiceTranscribeErrorCode) {
     default:
       return ["transcription_unavailable"];
   }
+}
+
+function truncateForNotes(value: string, maxLength = 160) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, maxLength - 1)}…`;
 }
 
 export async function POST(request: Request) {
@@ -80,25 +89,32 @@ export async function POST(request: Request) {
       return NextResponse.json(result, { status: getErrorStatus(result.error) });
     }
 
+    const interpreted = interpretSupportVoiceTranscription(locale as SupportAssistantLocale, result);
+    const resolvedInteractionId = interpreted.result.interactionId || interactionId;
     await recordOpenClawVoiceSignal({
-      interactionId: result.interactionId || interactionId,
+      interactionId: resolvedInteractionId,
       locale,
       eventType: "transcription_ready",
-      interactionMode: "voice_pending_confirmation",
-      provider: result.provider,
-      transcriptConfidence: result.transcriptConfidence,
-      confidenceLabel: result.confidenceLabel,
-      retryCount: result.retryCount,
-      correctionCount: result.correctionCount,
-      transcriptLength: result.transcript.length,
-      uncertaintyFlags: result.uncertaintyFlags,
+      interactionMode: interpreted.result.requiresConfirmation ? "voice_pending_confirmation" : "voice_auto_send",
+      provider: interpreted.result.provider,
+      transcriptConfidence: interpreted.result.transcriptConfidence,
+      confidenceLabel: interpreted.result.confidenceLabel,
+      retryCount: interpreted.result.retryCount,
+      correctionCount: interpreted.result.correctionCount,
+      transcriptLength: interpreted.result.transcript.length,
+      uncertaintyFlags: interpreted.result.uncertaintyFlags,
       switchedToText: false,
-      notes: result.segmentedUtteranceSuggested ? "segmented_utterance_suggested" : null,
+      notes: JSON.stringify({
+        state: interpreted.result.requiresConfirmation ? "review_required" : "auto_send_ready",
+        segmentedUtteranceSuggested: interpreted.result.segmentedUtteranceSuggested,
+        rawTranscript: truncateForNotes(interpreted.rawTranscript),
+        effectiveTranscript: truncateForNotes(interpreted.result.transcript),
+      }),
     });
 
     return NextResponse.json({
-      ...result,
-      interactionId: result.interactionId || interactionId,
+      ...interpreted.result,
+      interactionId: resolvedInteractionId,
     });
   } catch (error) {
     console.error("voice transcribe route error:", error);

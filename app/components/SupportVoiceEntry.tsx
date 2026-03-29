@@ -17,18 +17,19 @@ type SupportVoiceEntryProps = {
   onSendTranscript: (transcript: string) => Promise<void>;
 };
 
-type VoiceStatus = "idle" | "recording" | "transcribing" | "ready";
+type VoiceStatus = "idle" | "recording" | "transcribing" | "sending" | "ready";
 
 const copy = {
   ja: {
     title: "声で話す",
-    subtitle: "話した内容を確認してから送れます。",
+    subtitle: "聞き取りが十分なら、そのままひなたに伝わります。必要なときだけ確認できます。",
     unsupported: "この端末では音声入力がまだ使えません。文字入力はそのまま使えます。",
     record: "録音を始める",
     stop: "録音を止める",
-    transcribing: "音声を文字にしています…",
-    preview: "認識された内容",
-    editHint: "送り間違いを避けるため、送信前に確認や修正ができます。",
+    transcribing: "音声を聞き取っています…",
+    sending: "ひなたに伝えています…",
+    preview: "確認が必要そうな内容",
+    editHint: "この音声は一度確認してから送れます。必要ならそのまま直せます。",
     lowConfidence: "聞き取りがあいまいそうです。短く区切って話すか、そのまま直して送ってください。",
     retry: "録り直す",
     useDraft: "下書きに入れる",
@@ -47,13 +48,14 @@ const copy = {
   },
   en: {
     title: "Speak to Hinata",
-    subtitle: "You can confirm the transcript before sending.",
+    subtitle: "When the transcript is clear enough, Hinata continues right away. Only uncertain cases need review.",
     unsupported: "Voice input is not available on this device yet. Text is still available.",
     record: "Start recording",
     stop: "Stop recording",
     transcribing: "Transcribing your recording…",
-    preview: "Transcript draft",
-    editHint: "You can confirm or edit the transcript before sending.",
+    sending: "Passing that to Hinata…",
+    preview: "Transcript that needs review",
+    editHint: "This transcript needs a quick check before it is sent. You can edit it if needed.",
     lowConfidence: "Recognition looks uncertain. A shorter retry or a quick edit is recommended.",
     retry: "Retry",
     useDraft: "Use as draft",
@@ -71,10 +73,6 @@ const copy = {
     },
   },
 } as const;
-
-function confidenceNeedsExtraConfirmation(confidenceLabel: VoiceConfidenceLabel, uncertaintyFlags: string[]) {
-  return confidenceLabel === "low" || uncertaintyFlags.length > 0;
-}
 
 function getVoiceErrorFlags(error: SupportVoiceTranscribeErrorCode) {
   switch (error) {
@@ -130,7 +128,7 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
     }
   }
 
-  function resetDraft() {
+  function resetDraft(options?: { preserveRetryCount?: boolean }) {
     setStatus("idle");
     setTranscript("");
     setOriginalTranscript("");
@@ -139,6 +137,38 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
     setProvider(null);
     setInteractionId(null);
     setError("");
+    if (!options?.preserveRetryCount) {
+      setRetryCount(0);
+    }
+  }
+
+  async function autoSendTranscript(result: Extract<SupportVoiceTranscribeResponse, { success: true }>) {
+    setStatus("sending");
+    setInteractionId(result.interactionId);
+    setTranscript(result.transcript);
+    setOriginalTranscript(result.transcript);
+    setConfidenceLabel(result.confidenceLabel);
+    setUncertaintyFlags(result.uncertaintyFlags);
+    setProvider(result.provider);
+
+    await logEvent({
+      interactionId: result.interactionId,
+      locale,
+      eventType: "transcript_confirmed",
+      interactionMode: "voice_auto_send",
+      provider: result.provider,
+      transcriptConfidence: result.transcriptConfidence,
+      confidenceLabel: result.confidenceLabel,
+      retryCount: result.retryCount,
+      correctionCount: 0,
+      transcriptLength: result.transcript.length,
+      uncertaintyFlags: result.uncertaintyFlags,
+      switchedToText: false,
+      notes: "auto_sent_after_transcription",
+    });
+
+    await onSendTranscript(result.transcript);
+    resetDraft();
   }
 
   async function transcribeRecording(blob: Blob) {
@@ -179,13 +209,18 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
         return;
       }
 
-      setStatus("ready");
-      setInteractionId(result.interactionId);
-      setTranscript(result.transcript);
-      setOriginalTranscript(result.transcript);
-      setConfidenceLabel(result.confidenceLabel);
-      setUncertaintyFlags(result.uncertaintyFlags);
-      setProvider(result.provider);
+      if (result.requiresConfirmation) {
+        setStatus("ready");
+        setInteractionId(result.interactionId);
+        setTranscript(result.transcript);
+        setOriginalTranscript(result.transcript);
+        setConfidenceLabel(result.confidenceLabel);
+        setUncertaintyFlags(result.uncertaintyFlags);
+        setProvider(result.provider);
+        return;
+      }
+
+      await autoSendTranscript(result);
     } catch {
       setStatus("idle");
       setError(t.errorByCode.voice_backend_unreachable);
@@ -228,7 +263,7 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
         interactionId,
         locale,
         eventType: "recording_started",
-        interactionMode: "voice_pending_confirmation",
+        interactionMode: "voice_live_capture",
         provider,
         transcriptConfidence: null,
         confidenceLabel: "unknown",
@@ -270,7 +305,7 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
       notes: "retry_requested",
     });
     setRetryCount((current) => current + 1);
-    resetDraft();
+    resetDraft({ preserveRetryCount: true });
   }
 
   async function finalizeTranscript(mode: "draft" | "send") {
@@ -327,6 +362,7 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
 
       {!isSupported && <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{t.unsupported}</p>}
       {status === "transcribing" && <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{t.transcribing}</p>}
+      {status === "sending" && <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{t.sending}</p>}
       {error && <p className="mt-3 text-sm text-[#9A3B2F]">{error}</p>}
 
       {status === "ready" && (
@@ -337,9 +373,7 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
             onChange={(event) => setTranscript(event.target.value)}
             className="mt-3 min-h-[88px] w-full resize-none rounded-[1rem] border border-[color:var(--line-sage)] bg-white px-3 py-3 text-sm leading-8 text-[var(--text)] outline-none"
           />
-          <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-            {confidenceNeedsExtraConfirmation(confidenceLabel, uncertaintyFlags) ? t.lowConfidence : t.editHint}
-          </p>
+          <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{confidenceLabel === "low" ? t.lowConfidence : t.editHint}</p>
           <div className="mt-3 flex flex-wrap gap-2.5">
             <button
               type="button"

@@ -14,7 +14,13 @@ export type VoiceSignalEventType =
   | "voice_reply_played"
   | "voice_to_text_fallback";
 
-export type VoiceInteractionMode = "voice_pending_confirmation" | "voice_to_text" | "text_only_after_voice" | "playback_only";
+export type VoiceInteractionMode =
+  | "voice_live_capture"
+  | "voice_pending_confirmation"
+  | "voice_auto_send"
+  | "voice_to_text"
+  | "text_only_after_voice"
+  | "playback_only";
 
 export type VoiceTranscriptionInput = {
   audioBase64: string;
@@ -32,7 +38,7 @@ export type VoiceTranscriptionResult = {
   transcriptConfidence: number | null;
   confidenceLabel: VoiceConfidenceLabel;
   uncertaintyFlags: string[];
-  requiresConfirmation: true;
+  requiresConfirmation: boolean;
   segmentedUtteranceSuggested: boolean;
   correctionCount: number;
   retryCount: number;
