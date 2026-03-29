@@ -16,7 +16,8 @@ const voiceToken = process.env.OPENCLAW_VOICE_TOKEN?.trim() || "";
 export class OpenClawVoiceBridgeError extends Error {
   constructor(
     message: string,
-    public readonly code: "not_configured" | "request_failed" | "invalid_response",
+    public readonly code: "not_configured" | "unreachable" | "request_failed" | "invalid_response",
+    public readonly remoteError?: string,
   ) {
     super(message);
   }
@@ -41,28 +42,40 @@ function requireVoiceBridgeConfig() {
 async function performVoiceBridgeRequest<T>(pathname: string, payload: unknown) {
   requireVoiceBridgeConfig();
 
-  const response = await fetch(`${voiceBaseUrl}${pathname}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(voiceToken ? { Authorization: `Bearer ${voiceToken}` } : {}),
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${voiceBaseUrl}${pathname}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(voiceToken ? { Authorization: `Bearer ${voiceToken}` } : {}),
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch (error) {
+    throw new OpenClawVoiceBridgeError(
+      `voice bridge is unreachable for ${pathname}: ${error instanceof Error ? error.message : "unknown fetch error"}`,
+      "unreachable",
+    );
+  }
 
   if (!response.ok) {
-    let errorPayload: { error?: string } | null = null;
+    let errorPayload: { error?: string; fallbackMessage?: string } | null = null;
 
     try {
-      errorPayload = (await response.json()) as { error?: string } | null;
+      errorPayload = (await response.json()) as { error?: string; fallbackMessage?: string } | null;
     } catch {
       errorPayload = null;
     }
 
     const errorCode = errorPayload?.error || "";
     if (errorCode === "voice_stt_not_configured" || errorCode === "voice_tts_not_configured") {
-      throw new OpenClawVoiceBridgeError(`voice bridge not configured: ${errorCode}`, "not_configured");
+      throw new OpenClawVoiceBridgeError(`voice bridge not configured: ${errorCode}`, "not_configured", errorCode);
+    }
+
+    if (errorCode) {
+      throw new OpenClawVoiceBridgeError(`voice bridge request failed: ${response.status} ${errorCode}`, "request_failed", errorCode);
     }
 
     throw new OpenClawVoiceBridgeError(`voice bridge request failed: ${response.status}`, "request_failed");
@@ -112,12 +125,46 @@ export async function transcribeSupportVoice(input: VoiceTranscriptionInput): Pr
     const result = await provider.transcribe(input);
     return { success: true, ...result };
   } catch (error) {
-    if (error instanceof OpenClawVoiceBridgeError && error.code === "not_configured") {
-      return {
-        success: false,
-        error: "voice_backend_not_configured",
-        fallbackMessage: "Voice transcription is not configured yet. Please keep using text for now.",
-      };
+    if (error instanceof OpenClawVoiceBridgeError) {
+      if (error.code === "not_configured") {
+        return {
+          success: false,
+          error: "voice_backend_not_configured",
+          fallbackMessage: "Voice transcription is not configured yet. Please keep using text for now.",
+        };
+      }
+
+      if (error.code === "unreachable") {
+        return {
+          success: false,
+          error: "voice_backend_unreachable",
+          fallbackMessage: "The voice transcription service is not reachable yet. Please retry or continue in text.",
+        };
+      }
+
+      if (error.remoteError === "voice_audio_too_short") {
+        return {
+          success: false,
+          error: "voice_audio_too_short",
+          fallbackMessage: "That recording was too short to transcribe. Please try again with a slightly longer phrase.",
+        };
+      }
+
+      if (error.remoteError === "voice_backend_unreachable") {
+        return {
+          success: false,
+          error: "voice_backend_unreachable",
+          fallbackMessage: "The voice transcription service is not reachable yet. Please retry or continue in text.",
+        };
+      }
+
+      if (error.remoteError === "voice_transcript_unrecognizable") {
+        return {
+          success: false,
+          error: "voice_transcript_unrecognizable",
+          fallbackMessage: "We could not understand that recording clearly enough yet. Please retry, or edit after a clearer attempt.",
+        };
+      }
     }
 
     console.error("transcribeSupportVoice error:", error);

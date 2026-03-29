@@ -59,3 +59,19 @@
   - voice-to-text fallback
   - playback usage
 - These signals later feed product, service, vocabulary, and elder-needs review without treating recognition output as certain.
+
+## Phase 1 Live Transcribe Truth
+- Current Phase 1 STT path is `mistral_voxtral` on Ohio OpenClaw.
+- `Yorisou` reaches it through:
+  - `OPENCLAW_VOICE_BASE_URL`
+  - `OPENCLAW_VOICE_TOKEN`
+- Current transcribe error meanings:
+  - `voice_backend_not_configured`
+    - frontend bridge/env is not wired yet
+  - `voice_backend_unreachable`
+    - Yorisou could not reach Ohio or Ohio could not reach the provider
+  - `voice_audio_too_short`
+    - recording was too short to transcribe reliably
+  - `voice_transcript_unrecognizable`
+    - provider ran but did not return a usable transcript
+- Transcript confirmation remains mandatory even when STT succeeds.

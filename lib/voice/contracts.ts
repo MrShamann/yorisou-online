@@ -38,6 +38,14 @@ export type VoiceTranscriptionResult = {
   retryCount: number;
 };
 
+export type SupportVoiceTranscribeErrorCode =
+  | "missing_audio_file"
+  | "voice_audio_too_short"
+  | "voice_backend_not_configured"
+  | "voice_backend_unreachable"
+  | "voice_transcript_unrecognizable"
+  | "voice_transcription_failed";
+
 export type VoiceSynthesisInput = {
   text: string;
   locale: HinataVoiceLocale;
@@ -74,9 +82,8 @@ export type VoiceSignalRecord = {
 
 export type SupportVoiceTranscribeResponse =
   | ({ success: true } & VoiceTranscriptionResult)
-  | { success: false; error: string; fallbackMessage?: string };
+  | { success: false; error: SupportVoiceTranscribeErrorCode; fallbackMessage?: string };
 
 export type SupportVoiceSpeakResponse =
   | ({ success: true } & VoiceSynthesisResult)
   | { success: false; error: string; fallbackMessage?: string };
-

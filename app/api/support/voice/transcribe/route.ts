@@ -3,6 +3,41 @@ import { NextResponse } from "next/server";
 import { createVoiceInteractionId, transcribeSupportVoice } from "@/lib/server/openclawVoiceBridge";
 import { recordOpenClawVoiceSignal } from "@/lib/server/openclawVoiceSignals";
 import type { SupportAssistantLocale } from "@/lib/ai/support/scenario-engine";
+import type { SupportVoiceTranscribeErrorCode } from "@/lib/voice/contracts";
+
+function getErrorStatus(error: SupportVoiceTranscribeErrorCode) {
+  switch (error) {
+    case "missing_audio_file":
+    case "voice_audio_too_short":
+      return 400;
+    case "voice_transcript_unrecognizable":
+      return 422;
+    case "voice_backend_not_configured":
+    case "voice_backend_unreachable":
+      return 503;
+    case "voice_transcription_failed":
+    default:
+      return 502;
+  }
+}
+
+function getFallbackUncertaintyFlags(error: SupportVoiceTranscribeErrorCode) {
+  switch (error) {
+    case "voice_audio_too_short":
+      return ["audio_too_short"];
+    case "voice_backend_not_configured":
+      return ["backend_not_configured"];
+    case "voice_backend_unreachable":
+      return ["backend_unreachable"];
+    case "voice_transcript_unrecognizable":
+      return ["transcript_unrecognizable"];
+    case "missing_audio_file":
+      return ["missing_audio_file"];
+    case "voice_transcription_failed":
+    default:
+      return ["transcription_unavailable"];
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -38,11 +73,11 @@ export async function POST(request: Request) {
         retryCount,
         correctionCount: 0,
         transcriptLength: null,
-        uncertaintyFlags: ["transcription_unavailable"],
+        uncertaintyFlags: getFallbackUncertaintyFlags(result.error),
         switchedToText: true,
         notes: result.error,
       });
-      return NextResponse.json(result, { status: 503 });
+      return NextResponse.json(result, { status: getErrorStatus(result.error) });
     }
 
     await recordOpenClawVoiceSignal({
@@ -70,4 +105,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });
   }
 }
-

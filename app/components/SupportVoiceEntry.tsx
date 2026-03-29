@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { SupportAssistantLocale } from "@/lib/ai/support/scenario-engine";
-import type { SupportVoiceTranscribeResponse, VoiceConfidenceLabel, VoiceSignalRecord } from "@/lib/voice/contracts";
+import type {
+  SupportVoiceTranscribeErrorCode,
+  SupportVoiceTranscribeResponse,
+  VoiceConfidenceLabel,
+  VoiceSignalRecord,
+} from "@/lib/voice/contracts";
 
 type SupportVoiceEntryProps = {
   locale: SupportAssistantLocale;
@@ -31,6 +36,14 @@ const copy = {
     sendFallback: "文字で続ける",
     permissionError: "マイクにアクセスできませんでした。文字入力に切り替えられます。",
     transcribeError: "音声の文字起こしがまだ使えません。文字入力で続けられます。",
+    errorByCode: {
+      missing_audio_file: "録音データが確認できませんでした。もう一度録音してください。",
+      voice_audio_too_short: "録音が短すぎました。もう少し長めに話してみてください。",
+      voice_backend_not_configured: "音声の文字起こし設定がまだ準備中です。今は文字入力で続けられます。",
+      voice_backend_unreachable: "音声の文字起こし先に今つながっていません。少し待ってから再度お試しください。",
+      voice_transcript_unrecognizable: "うまく聞き取れませんでした。短く区切って話すか、文字入力で続けてください。",
+      voice_transcription_failed: "音声の文字起こしに失敗しました。録り直すか、文字入力で続けられます。",
+    },
   },
   en: {
     title: "Speak to Hinata",
@@ -48,11 +61,37 @@ const copy = {
     sendFallback: "Continue in text",
     permissionError: "We could not access the microphone. You can continue in text.",
     transcribeError: "Voice transcription is not ready yet. You can continue in text.",
+    errorByCode: {
+      missing_audio_file: "We could not find the recording. Please try recording again.",
+      voice_audio_too_short: "That recording was too short. Please try again with a slightly longer phrase.",
+      voice_backend_not_configured: "Voice transcription is not configured yet. You can continue in text for now.",
+      voice_backend_unreachable: "The voice transcription service is not reachable right now. Please try again or continue in text.",
+      voice_transcript_unrecognizable: "We could not understand that recording clearly enough. A shorter retry or text fallback is recommended.",
+      voice_transcription_failed: "We could not transcribe that recording yet. Please retry or continue in text.",
+    },
   },
 } as const;
 
 function confidenceNeedsExtraConfirmation(confidenceLabel: VoiceConfidenceLabel, uncertaintyFlags: string[]) {
   return confidenceLabel === "low" || uncertaintyFlags.length > 0;
+}
+
+function getVoiceErrorFlags(error: SupportVoiceTranscribeErrorCode) {
+  switch (error) {
+    case "voice_audio_too_short":
+      return ["audio_too_short"];
+    case "voice_backend_not_configured":
+      return ["backend_not_configured"];
+    case "voice_backend_unreachable":
+      return ["backend_unreachable"];
+    case "voice_transcript_unrecognizable":
+      return ["transcript_unrecognizable"];
+    case "missing_audio_file":
+      return ["missing_audio_file"];
+    case "voice_transcription_failed":
+    default:
+      return ["transcription_unavailable"];
+  }
 }
 
 export default function SupportVoiceEntry({ locale, disabled = false, onUseTranscript, onSendTranscript }: SupportVoiceEntryProps) {
@@ -120,7 +159,8 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
 
       if (!response.ok || !result.success) {
         setStatus("idle");
-        setError(result.success ? t.transcribeError : result.fallbackMessage || t.transcribeError);
+        const errorCode = result.success ? "voice_transcription_failed" : result.error;
+        setError(result.success ? t.transcribeError : t.errorByCode[errorCode] || result.fallbackMessage || t.transcribeError);
         await logEvent({
           interactionId: interactionId,
           locale,
@@ -132,9 +172,9 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
           retryCount,
           correctionCount: 0,
           transcriptLength: null,
-          uncertaintyFlags: ["transcription_unavailable"],
+          uncertaintyFlags: getVoiceErrorFlags(errorCode),
           switchedToText: true,
-          notes: "transcribe_route_unavailable",
+          notes: errorCode,
         });
         return;
       }
@@ -148,7 +188,7 @@ export default function SupportVoiceEntry({ locale, disabled = false, onUseTrans
       setProvider(result.provider);
     } catch {
       setStatus("idle");
-      setError(t.transcribeError);
+      setError(t.errorByCode.voice_backend_unreachable);
     }
   }
 
