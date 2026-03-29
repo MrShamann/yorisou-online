@@ -12,6 +12,8 @@ import type {
 
 const voiceBaseUrl = process.env.OPENCLAW_VOICE_BASE_URL?.trim() || "";
 const voiceToken = process.env.OPENCLAW_VOICE_TOKEN?.trim() || "";
+const supportChatUrl = process.env.OPENCLOUD_SUPPORT_CHAT_URL?.trim() || "";
+const supportChatToken = process.env.OPENCLOUD_SUPPORT_CHAT_TOKEN?.trim() || "";
 
 export class OpenClawVoiceBridgeError extends Error {
   constructor(
@@ -33,60 +35,127 @@ export interface OpenClawTextToSpeechProvider {
   synthesize(input: VoiceSynthesisInput): Promise<VoiceSynthesisResult>;
 }
 
+function getVoiceBridgeToken() {
+  return voiceToken || supportChatToken;
+}
+
+function getVoiceBridgeBaseCandidates() {
+  if (voiceBaseUrl) {
+    return [voiceBaseUrl];
+  }
+
+  if (!supportChatUrl) {
+    return [];
+  }
+
+  try {
+    const source = new URL(supportChatUrl);
+    const candidates = new Set<string>();
+    const normalizedPath = source.pathname.replace(/\/+$/, "");
+    const pathVariants = new Set<string>([""]);
+
+    if (normalizedPath) {
+      pathVariants.add(normalizedPath);
+      pathVariants.add(normalizedPath.replace(/\/support\/chat$/i, ""));
+      pathVariants.add(normalizedPath.replace(/\/chat$/i, ""));
+
+      const lastSlash = normalizedPath.lastIndexOf("/");
+      if (lastSlash > 0) {
+        pathVariants.add(normalizedPath.slice(0, lastSlash));
+      }
+    }
+
+    for (const variant of pathVariants) {
+      const path = variant.replace(/\/+$/, "");
+      candidates.add(`${source.origin}${path}`);
+    }
+
+    return Array.from(candidates).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 function requireVoiceBridgeConfig() {
-  if (!voiceBaseUrl) {
+  if (getVoiceBridgeBaseCandidates().length === 0) {
     throw new OpenClawVoiceBridgeError("voice bridge base URL is not configured", "not_configured");
   }
 }
 
 async function performVoiceBridgeRequest<T>(pathname: string, payload: unknown) {
   requireVoiceBridgeConfig();
+  const token = getVoiceBridgeToken();
+  const candidates = getVoiceBridgeBaseCandidates();
+  let lastError: OpenClawVoiceBridgeError | null = null;
 
-  let response: Response;
-  try {
-    response = await fetch(`${voiceBaseUrl}${pathname}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(voiceToken ? { Authorization: `Bearer ${voiceToken}` } : {}),
-      },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-  } catch (error) {
-    throw new OpenClawVoiceBridgeError(
-      `voice bridge is unreachable for ${pathname}: ${error instanceof Error ? error.message : "unknown fetch error"}`,
-      "unreachable",
-    );
-  }
-
-  if (!response.ok) {
-    let errorPayload: { error?: string; fallbackMessage?: string } | null = null;
-
+  for (const candidate of candidates) {
+    let response: Response;
     try {
-      errorPayload = (await response.json()) as { error?: string; fallbackMessage?: string } | null;
-    } catch {
-      errorPayload = null;
+      response = await fetch(`${candidate}${pathname}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+      });
+    } catch (error) {
+      lastError = new OpenClawVoiceBridgeError(
+        `voice bridge is unreachable for ${pathname}: ${error instanceof Error ? error.message : "unknown fetch error"}`,
+        "unreachable",
+      );
+      continue;
     }
 
-    const errorCode = errorPayload?.error || "";
-    if (errorCode === "voice_stt_not_configured" || errorCode === "voice_tts_not_configured") {
-      throw new OpenClawVoiceBridgeError(`voice bridge not configured: ${errorCode}`, "not_configured", errorCode);
+    if (!response.ok) {
+      let errorPayload: { error?: string; fallbackMessage?: string } | null = null;
+
+      try {
+        errorPayload = (await response.json()) as { error?: string; fallbackMessage?: string } | null;
+      } catch {
+        errorPayload = null;
+      }
+
+      const errorCode = errorPayload?.error || "";
+      if (errorCode === "voice_stt_not_configured" || errorCode === "voice_tts_not_configured") {
+        throw new OpenClawVoiceBridgeError(`voice bridge not configured: ${errorCode}`, "not_configured", errorCode);
+      }
+
+      if (errorCode === "voice_audio_too_short" || errorCode === "voice_backend_unreachable" || errorCode === "voice_transcript_unrecognizable") {
+        throw new OpenClawVoiceBridgeError(`voice bridge request failed: ${response.status} ${errorCode}`, "request_failed", errorCode);
+      }
+
+      if (response.status === 401 || response.status === 403 || response.status === 404) {
+        lastError = new OpenClawVoiceBridgeError(
+          `voice bridge request failed: ${response.status}${errorCode ? ` ${errorCode}` : ""}`,
+          "request_failed",
+          errorCode || undefined,
+        );
+        continue;
+      }
+
+      throw new OpenClawVoiceBridgeError(
+        `voice bridge request failed: ${response.status}${errorCode ? ` ${errorCode}` : ""}`,
+        "request_failed",
+        errorCode || undefined,
+      );
     }
 
-    if (errorCode) {
-      throw new OpenClawVoiceBridgeError(`voice bridge request failed: ${response.status} ${errorCode}`, "request_failed", errorCode);
+    const result = (await response.json()) as T | null;
+    if (!result) {
+      lastError = new OpenClawVoiceBridgeError("voice bridge returned an empty response", "invalid_response");
+      continue;
     }
 
-    throw new OpenClawVoiceBridgeError(`voice bridge request failed: ${response.status}`, "request_failed");
+    return result;
   }
 
-  const result = (await response.json()) as T | null;
-  if (!result) {
-    throw new OpenClawVoiceBridgeError("voice bridge returned an empty response", "invalid_response");
+  if (lastError) {
+    throw lastError;
   }
 
-  return result;
+  throw new OpenClawVoiceBridgeError("voice bridge base URL is not configured", "not_configured");
 }
 
 class HttpOpenClawSpeechToTextProvider implements OpenClawSpeechToTextProvider {
@@ -106,14 +175,14 @@ class HttpOpenClawTextToSpeechProvider implements OpenClawTextToSpeechProvider {
 }
 
 function getSpeechToTextProvider() {
-  if (!voiceBaseUrl) {
+  if (getVoiceBridgeBaseCandidates().length === 0) {
     throw new OpenClawVoiceBridgeError("voice bridge base URL is not configured", "not_configured");
   }
   return new HttpOpenClawSpeechToTextProvider();
 }
 
 function getTextToSpeechProvider() {
-  if (!voiceBaseUrl) {
+  if (getVoiceBridgeBaseCandidates().length === 0) {
     throw new OpenClawVoiceBridgeError("voice bridge base URL is not configured", "not_configured");
   }
   return new HttpOpenClawTextToSpeechProvider();
@@ -200,7 +269,7 @@ export async function synthesizeSupportVoice(input: VoiceSynthesisInput): Promis
 }
 
 export async function forwardVoiceSignalToOpenClaw(signal: VoiceSignalRecord) {
-  if (!voiceBaseUrl) {
+  if (getVoiceBridgeBaseCandidates().length === 0) {
     return false;
   }
 
