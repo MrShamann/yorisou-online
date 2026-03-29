@@ -7,6 +7,7 @@ const DEFAULT_SHARED_REGION = "us-east-2";
 const ARTIFACT_PREFIX = "phase1/openclaw-artifacts";
 const productionDataDir = path.join("/tmp", "yorisou-phase1");
 const localDataDir = path.join(process.cwd(), "data");
+export type OpenClawArtifactKind = "reflections" | "needs-signals" | "voice-signals";
 
 const sharedStoreBucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
 const sharedStoreRegion = process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
@@ -38,17 +39,22 @@ function isMissingObjectError(error: unknown) {
   );
 }
 
-function artifactKey(kind: "reflections" | "needs-signals", artifactId: string) {
+function artifactKey(kind: OpenClawArtifactKind, artifactId: string) {
   return `${ARTIFACT_PREFIX}/${kind}/${artifactId}.json`;
 }
 
-export function getOpenClawArtifactLocalFiles(kind: "reflections" | "needs-signals") {
-  const filename = kind === "reflections" ? "phase1-openclaw-reflections.json" : "phase1-openclaw-needs-signals.json";
+export function getOpenClawArtifactLocalFiles(kind: OpenClawArtifactKind) {
+  const filename =
+    kind === "reflections"
+      ? "phase1-openclaw-reflections.json"
+      : kind === "needs-signals"
+        ? "phase1-openclaw-needs-signals.json"
+        : "phase1-openclaw-voice-signals.json";
   return [...new Set([path.join(getOpenClawArtifactDataDir(), filename), path.join(productionDataDir, filename), path.join(localDataDir, filename)])];
 }
 
 export async function mirrorOpenClawArtifact<T extends { id: string }>(
-  kind: "reflections" | "needs-signals",
+  kind: OpenClawArtifactKind,
   artifact: T,
 ) {
   const client = getSharedStoreClient();
@@ -68,7 +74,7 @@ export async function mirrorOpenClawArtifact<T extends { id: string }>(
   return true;
 }
 
-export async function listMirroredOpenClawArtifacts<T>(kind: "reflections" | "needs-signals") {
+export async function listMirroredOpenClawArtifacts<T>(kind: OpenClawArtifactKind) {
   const client = getSharedStoreClient();
   if (!client || !sharedStoreBucket) {
     return [];
@@ -122,6 +128,7 @@ export function getOpenClawArtifactStoreStatus() {
     localRuntimeFiles: {
       reflections: getOpenClawArtifactLocalFiles("reflections"),
       needsSignals: getOpenClawArtifactLocalFiles("needs-signals"),
+      voiceSignals: getOpenClawArtifactLocalFiles("voice-signals"),
     },
     sharedStoreEnabled: shouldUseSharedStore,
     sharedStoreBucketConfigured: shouldUseSharedStore,

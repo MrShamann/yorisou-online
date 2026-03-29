@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import SupportVoiceEntry from "@/app/components/SupportVoiceEntry";
 import type {
   SupportAssistantLocale,
   SupportConversationMessage,
@@ -11,6 +12,7 @@ import type {
   SupportScenarioResult,
 } from "@/lib/ai/support/scenario-engine";
 import type { SupportRecommendedAction } from "@/lib/ai/support/action-router";
+import type { SupportVoiceSpeakResponse } from "@/lib/voice/contracts";
 
 type ScenarioSupportAssistantProps = {
   locale: SupportAssistantLocale;
@@ -107,6 +109,9 @@ const copy = {
     continuationComposerNote: "このまま続けて話せます。短いひと言でも大丈夫です。",
     threadStatus: "対話中",
     continuationThreadStatus: "ひなたとの続き",
+    voicePlayback: "音声で聞く",
+    voicePlaybackLoading: "音声を準備しています…",
+    voicePlaybackError: "ひなたの音声をまだ準備できませんでした。文字の返信はそのまま使えます。",
   },
   en: {
     greeting: "Hello, I'm Hinata. You can just start by telling me what is on your mind.",
@@ -133,6 +138,9 @@ const copy = {
     continuationComposerNote: "You can continue naturally here. A short message is enough.",
     threadStatus: "In conversation",
     continuationThreadStatus: "Continuing with Hinata",
+    voicePlayback: "Play voice",
+    voicePlaybackLoading: "Preparing audio…",
+    voicePlaybackError: "Hinata voice playback is not ready yet. The text reply is still available.",
   },
 } as const;
 
@@ -159,6 +167,8 @@ export default function ScenarioSupportAssistant({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [identityTouched, setIdentityTouched] = useState(false);
   const [scenarioResult, setScenarioResult] = useState<SupportScenarioResult | null>(null);
+  const [voicePlaybackKey, setVoicePlaybackKey] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const detailOptions = identityOptions[locale];
   const starterOptions = starters[locale];
@@ -271,6 +281,58 @@ export default function ScenarioSupportAssistant({
     }
   }
 
+  async function handlePlayVoice(messageKey: string, text: string) {
+    if (!text.trim()) {
+      return;
+    }
+
+    setVoicePlaybackKey(messageKey);
+    setError("");
+
+    try {
+      const response = await fetch("/api/support/voice/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          locale,
+        }),
+      });
+      const result = (await response.json()) as SupportVoiceSpeakResponse;
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.success ? "voice_playback_failed" : result.error);
+      }
+
+      audioRef.current?.pause();
+      audioRef.current = new Audio(`data:${result.mimeType};base64,${result.audioBase64}`);
+      await audioRef.current.play();
+      await fetch("/api/support/voice/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          interactionId: null,
+          locale,
+          eventType: "voice_reply_played",
+          interactionMode: "playback_only",
+          provider: result.provider,
+          transcriptConfidence: null,
+          confidenceLabel: "unknown",
+          retryCount: 0,
+          correctionCount: 0,
+          transcriptLength: text.length,
+          uncertaintyFlags: [],
+          switchedToText: false,
+          notes: `assistant_message_key=${messageKey}`,
+        }),
+      });
+    } catch {
+      setError(t.voicePlaybackError);
+    } finally {
+      setVoicePlaybackKey(null);
+    }
+  }
+
   return (
     <section
       id="scenario-assistant"
@@ -330,6 +392,15 @@ export default function ScenarioSupportAssistant({
                           {isAssistant ? t.assistantLabel : t.userLabel}
                         </div>
                         <p className="mt-2 whitespace-pre-wrap">{message.content}</p>
+                        {isAssistant && (
+                          <button
+                            type="button"
+                            onClick={() => void handlePlayVoice(`${message.role}-${index}`, message.content)}
+                            className="mt-3 text-xs text-[var(--accent-sage-text)] underline underline-offset-4"
+                          >
+                            {voicePlaybackKey === `${message.role}-${index}` ? t.voicePlaybackLoading : t.voicePlayback}
+                          </button>
+                        )}
 
                         {isAssistant && index === messages.length - 1 && scenarioResult && recommendedActions.length > 0 && !isSubmitting && (
                           <div className="mt-4 border-t border-[color:var(--line-soft)] pt-4">
@@ -412,6 +483,17 @@ export default function ScenarioSupportAssistant({
             {hasStarted && isContinuationMode && (
               <p className="mb-3 text-sm leading-7 text-[var(--muted)]">{t.continuationComposerNote}</p>
             )}
+            <SupportVoiceEntry
+              locale={locale}
+              disabled={isSubmitting}
+              onUseTranscript={(transcript) => {
+                setDraft(transcript);
+                setError("");
+              }}
+              onSendTranscript={async (transcript) => {
+                await sendMessage(transcript);
+              }}
+            />
             {detailsOpen && (
               <div className="mb-3 rounded-[1.2rem] bg-[var(--surface-sage)]/72 px-4 py-4">
                 <div className="text-sm leading-7 text-[var(--accent-sage-text)]">{t.detailHint}</div>

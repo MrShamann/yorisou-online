@@ -25,6 +25,8 @@ frontend:
         - printf "OPENAI_API_KEY=%s\n" "$OPENAI_API_KEY" >> .env.production
         - printf "OPENAI_MODEL=%s\n" "${OPENAI_MODEL:-gpt-4.1-mini}" >> .env.production
         - printf "OPENCLAW_ARTIFACT_READ_TOKEN=%s\n" "${OPENCLAW_ARTIFACT_READ_TOKEN:-}" >> .env.production
+        - printf "OPENCLAW_VOICE_BASE_URL=%s\n" "${OPENCLAW_VOICE_BASE_URL:-}" >> .env.production
+        - printf "OPENCLAW_VOICE_TOKEN=%s\n" "${OPENCLAW_VOICE_TOKEN:-}" >> .env.production
         - npm ci
     build:
       commands:
