@@ -21,15 +21,17 @@ export default async function RootLayout({
   const headerStore = await headers();
   const cookieStore = await cookies();
   const localeHeader = headerStore.get("x-yorisou-locale");
+  const pathname = headerStore.get("x-yorisou-pathname") || "/";
   const localeCookie = cookieStore.get("yorisou_locale")?.value;
   const locale = localeHeader === "en" || localeCookie === "en" ? "en" : "ja";
+  const isSupportWorkspaceRoute = pathname === "/support" || pathname === "/en/support";
   return (
     <html lang={locale}>
       <body>
         <div id="yorisou-release" hidden data-release={releaseMarker} />
-        <SiteHeader />
+        {!isSupportWorkspaceRoute && <SiteHeader />}
         {children}
-        <SiteFooter />
+        {!isSupportWorkspaceRoute && <SiteFooter />}
       </body>
     </html>
   );

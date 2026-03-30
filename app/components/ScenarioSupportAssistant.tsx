@@ -74,8 +74,8 @@ const copy = {
   ja: {
     assistantLabel: "ひなた",
     userLabel: "あなた",
-    emptyTitle: "そのまま話しかけてください",
-    emptyBody: "入力、音声、資料の添付をひとつの会話で続けられます。",
+    emptyTitle: "ひなたにメッセージを送る",
+    emptyBody: "入力、音声、添付をひとつの会話で続けられます。",
     typing: "ひなたが考えています…",
     placeholder: "メッセージを入力",
     attachmentTitle: "添付したファイル",
@@ -109,7 +109,7 @@ const copy = {
   en: {
     assistantLabel: "Hinata",
     userLabel: "You",
-    emptyTitle: "Start naturally",
+    emptyTitle: "Message Hinata",
     emptyBody: "Type, speak, or attach a file in one continuous conversation.",
     typing: "Hinata is thinking…",
     placeholder: "Message Hinata",
@@ -843,16 +843,16 @@ export default function ScenarioSupportAssistant({
   }
 
   return (
-    <section className="flex min-h-[72vh] w-full flex-col bg-transparent md:min-h-[80vh]">
-      <div ref={threadRef} className="flex-1 overflow-y-auto px-4 pb-44 pt-4 md:px-8 md:pb-48 md:pt-6">
+    <section className="flex min-h-screen w-full flex-col bg-transparent">
+      <div ref={threadRef} className="flex-1 overflow-y-auto px-4 pb-44 pt-20 md:px-8 md:pb-48 md:pt-24">
         <div className="mx-auto flex max-w-4xl flex-col gap-5">
           {messages.length === 0 ? (
-            <div className="flex min-h-[52vh] flex-col items-center justify-center px-2 text-center">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--surface-sage)] text-xl text-[var(--accent-sage-text)]">
+            <div className="flex min-h-[60vh] flex-col items-center justify-center px-2 text-center">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-sage)] text-lg text-[var(--accent-sage-text)]">
                 ひ
               </div>
-              <h2 className="text-2xl text-[var(--text)] md:text-3xl">{t.emptyTitle}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-8 text-[var(--muted)] md:text-base">{t.emptyBody}</p>
+              <h2 className="text-xl text-[var(--text)] md:text-2xl">{t.emptyTitle}</h2>
+              <p className="mt-2 max-w-xl text-sm leading-7 text-[var(--muted)]">{t.emptyBody}</p>
               <div className="mt-6 flex flex-wrap justify-center gap-2.5">
                 {starters[locale].map((starter) => (
                   <button
@@ -970,7 +970,7 @@ export default function ScenarioSupportAssistant({
         </div>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-4 md:px-6 md:pb-6">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-3 pb-3 md:px-6 md:pb-6">
         <div className="pointer-events-auto mx-auto max-w-4xl">
           {(error || voiceStatus === "transcribing" || voiceStatus === "sending" || voiceStatus === "recording") && (
             <div className="mb-3 rounded-[1.1rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.96)] px-4 py-3 text-sm shadow-[0_10px_24px_rgba(47,35,33,0.05)]">

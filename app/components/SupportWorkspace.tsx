@@ -77,15 +77,11 @@ type SupportWorkspaceProps = {
 
 const copy = {
   ja: {
-    label: "AI相談員 ひなた",
-    title: "ひなたとそのまま話す",
-    subtitle: "入力、音声、ファイルをひとつの会話でそのまま続けられます。",
+    label: "ひなた",
     localeToggle: "English",
   },
   en: {
     label: "Hinata",
-    title: "Talk with Hinata directly",
-    subtitle: "Type, speak, or attach a file in one continuous conversation.",
     localeToggle: "日本語",
   },
 } as const;
@@ -95,23 +91,21 @@ export default function SupportWorkspace({ locale }: SupportWorkspaceProps) {
   const alternateHref = locale === "ja" ? "/en/support" : "/support";
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f6f3ec_0%,#efe8db_100%)] text-[var(--text)]">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-4 md:px-6">
-        <header className="mb-4 flex items-center justify-between gap-4 rounded-[1.4rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.84)] px-4 py-3 backdrop-blur md:px-5">
-          <div className="min-w-0">
-            <div className="text-[11px] tracking-[0.18em] text-[var(--muted)]">{t.label}</div>
-            <h1 className="mt-1 text-lg text-[var(--text)] md:text-xl">{t.title}</h1>
-            <p className="mt-1 hidden text-sm text-[var(--muted)] md:block">{t.subtitle}</p>
+    <main className="min-h-screen bg-[linear-gradient(180deg,#f8f5ef_0%,#efe8db_100%)] text-[var(--text)]">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-0 py-0 md:px-0">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-between px-4 pt-4 md:px-6">
+          <div className="pointer-events-auto rounded-full border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.92)] px-3 py-1.5 text-[11px] tracking-[0.18em] text-[var(--muted)] shadow-[0_10px_24px_rgba(47,35,33,0.05)] backdrop-blur">
+            {t.label}
           </div>
           <Link
             href={alternateHref}
-            className="shrink-0 rounded-full border border-[color:var(--line-soft)] bg-white/80 px-4 py-2 text-sm text-[var(--accent-sage-text)] transition hover:bg-white"
+            className="pointer-events-auto rounded-full border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.92)] px-4 py-2 text-sm text-[var(--accent-sage-text)] shadow-[0_10px_24px_rgba(47,35,33,0.05)] transition hover:bg-white"
           >
             {t.localeToggle}
           </Link>
-        </header>
+        </div>
 
-        <div className="flex flex-1 overflow-hidden rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.86)] shadow-[0_20px_60px_rgba(47,35,33,0.08)] backdrop-blur">
+        <div className="flex min-h-screen flex-1 overflow-hidden bg-transparent">
           <ScenarioSupportAssistant locale={locale} />
         </div>
       </div>
