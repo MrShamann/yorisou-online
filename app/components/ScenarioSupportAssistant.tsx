@@ -95,7 +95,7 @@ const copy = {
     error: "ご案内の準備に失敗しました。少し時間をおいて、もう一度お試しください。",
     voicePlayback: "音声で聞く",
     voicePlaybackLoading: "音声を準備しています…",
-    voicePlaybackError: "ひなたの音声をまだ準備できませんでした。文字の返信はそのまま読めます。",
+    voicePlaybackError: "この端末ではひなたに合う音声をまだ使えません。文字の返信はそのまま読めます。",
     actionsTitle: "このまま進めるなら",
     voiceErrors: {
       missing_audio_file: "録音データが確認できませんでした。もう一度録音してください。",
@@ -130,7 +130,7 @@ const copy = {
     error: "We could not prepare guidance. Please try again.",
     voicePlayback: "Play voice",
     voicePlaybackLoading: "Preparing audio…",
-    voicePlaybackError: "Hinata voice playback is not ready yet. The text reply is still available.",
+    voicePlaybackError: "This device does not have a suitable Hinata voice yet. The text reply is still available.",
     actionsTitle: "Helpful next steps",
     voiceErrors: {
       missing_audio_file: "We could not find the recording. Please try again.",
@@ -150,8 +150,31 @@ const productHints = ["製品", "車いす", "電動", "カート", "何が合�
 const browserVoiceEnabled = process.env.NEXT_PUBLIC_HINATA_BROWSER_TTS !== "0";
 const ACCEPTED_FILE_TYPES =
   "image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.rtf,.odt,.ods,.ppt,.pptx,.json,.log";
-const hinataPreferredJapaneseVoicePatterns = [/google\s*日本語/i, /nanami/i, /sayaka/i, /haruka/i, /kyoko/i, /ja[-_]?jp/i];
-const hinataAvoidJapaneseVoicePatterns = [/otoya/i, /ichiro/i, /male/i, /man/i];
+const hinataPreferredJapaneseVoicePatterns = [
+  /google\s*日本語/i,
+  /nanami/i,
+  /sayaka/i,
+  /haruka/i,
+  /kyoko/i,
+  /ja[-_]?jp/i,
+  /japanese/i,
+  /female/i,
+];
+const hinataPreferredEnglishVoicePatterns = [
+  /samantha/i,
+  /victoria/i,
+  /karen/i,
+  /moira/i,
+  /allison/i,
+  /ava/i,
+  /aria/i,
+  /jenny/i,
+  /sara/i,
+  /zira/i,
+  /female/i,
+  /woman/i,
+];
+const hinataAvoidVoicePatterns = [/otoya/i, /ichiro/i, /male/i, /\bman\b/i, /\bguy\b/i, /david/i, /alex/i, /tom/i];
 
 function createId(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
@@ -191,27 +214,26 @@ async function loadSpeechVoices() {
 
 function selectHinataBrowserVoice(voices: SpeechSynthesisVoice[], locale: SupportAssistantLocale) {
   const localePrefix = locale === "ja" ? "ja" : "en";
+  const preferredPatterns =
+    locale === "ja" ? hinataPreferredJapaneseVoicePatterns : hinataPreferredEnglishVoicePatterns;
   const localeVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith(localePrefix));
-  const candidates = localeVoices.length > 0 ? localeVoices : voices;
+  const filtered = localeVoices.filter((voice) => {
+    const descriptor = `${voice.name} ${voice.voiceURI}`.toLowerCase();
+    return hinataAvoidVoicePatterns.every((pattern) => !pattern.test(descriptor));
+  });
 
-  if (locale !== "ja") {
-    return candidates[0] || null;
+  if (filtered.length === 0) {
+    return null;
   }
 
-  const filtered = candidates.filter((voice) => {
-    const descriptor = `${voice.name} ${voice.voiceURI}`.toLowerCase();
-    return hinataAvoidJapaneseVoicePatterns.every((pattern) => !pattern.test(descriptor));
-  });
-  const preferredPool = filtered.length > 0 ? filtered : candidates;
-
-  for (const pattern of hinataPreferredJapaneseVoicePatterns) {
-    const match = preferredPool.find((voice) => pattern.test(`${voice.name} ${voice.voiceURI}`));
+  for (const pattern of preferredPatterns) {
+    const match = filtered.find((voice) => pattern.test(`${voice.name} ${voice.voiceURI}`));
     if (match) {
       return match;
     }
   }
 
-  return preferredPool[0] || null;
+  return null;
 }
 
 function inferIdentityFromMessage(message: string): SupportIdentity {
@@ -397,6 +419,10 @@ export default function ScenarioSupportAssistant({
 
     const voices = await loadSpeechVoices();
     const selectedVoice = selectHinataBrowserVoice(voices, locale);
+
+    if (!selectedVoice) {
+      return { success: false as const, reason: "persona_voice_unavailable" };
+    }
 
     return await new Promise<
       | { success: true; provider: string }

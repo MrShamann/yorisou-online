@@ -1,2 +1,2 @@
-Commit: hinata-live-support-chatgpt-shell-pass
-Timestamp: 2026-03-30 19:48:37 CST
+Commit: hinata-agent-hierarchy-lock-and-voice-pass
+Timestamp: 2026-03-30 21:28:00 CST
