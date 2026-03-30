@@ -81,6 +81,9 @@ const copy = {
     attachmentTitle: "添付したファイル",
     attachmentButton: "ファイルを追加",
     send: "送信",
+    voiceStartLabel: "話す",
+    voiceStopLabel: "止める",
+    voiceRetryLabel: "録り直す",
     voiceRecording: "録音中…",
     voiceTranscribing: "音声を聞き取っています…",
     voiceSending: "ひなたに伝えています…",
@@ -114,6 +117,9 @@ const copy = {
     attachmentTitle: "Attached files",
     attachmentButton: "Add files",
     send: "Send",
+    voiceStartLabel: "Speak",
+    voiceStopLabel: "Stop",
+    voiceRetryLabel: "Record again",
     voiceRecording: "Recording…",
     voiceTranscribing: "Transcribing…",
     voiceSending: "Passing that to Hinata…",
@@ -867,6 +873,21 @@ export default function ScenarioSupportAssistant({
     }
   }
 
+  const micButtonLabel =
+    voiceStatus === "review"
+      ? t.voiceRetryLabel
+      : voiceStatus === "recording"
+        ? t.voiceStopLabel
+        : t.voiceStartLabel;
+  const micButtonTitle =
+    voiceStatus === "review"
+      ? t.voiceRetryLabel
+      : voiceStatus === "recording"
+        ? t.voiceRecording
+        : voiceSupported
+          ? t.voiceStartLabel
+          : t.unsupportedVoice;
+
   return (
     <section className="flex min-h-screen w-full flex-col bg-transparent">
       <div ref={threadRef} className="flex-1 overflow-y-auto px-4 pb-44 pt-20 md:px-8 md:pb-48 md:pt-24">
@@ -1089,24 +1110,8 @@ export default function ScenarioSupportAssistant({
 
               <button
                 type="button"
-                title={
-                  voiceStatus === "review"
-                    ? t.retry
-                    : voiceStatus === "recording"
-                      ? t.voiceRecording
-                      : voiceSupported
-                        ? t.voiceTranscribing.replace("…", "").replace(" your recording", "")
-                        : t.unsupportedVoice
-                }
-                aria-label={
-                  voiceStatus === "review"
-                    ? t.retry
-                    : voiceStatus === "recording"
-                      ? t.voiceRecording
-                      : voiceSupported
-                        ? t.voiceTranscribing.replace("…", "").replace(" your recording", "")
-                        : t.unsupportedVoice
-                }
+                title={micButtonTitle}
+                aria-label={micButtonLabel}
                 disabled={!voiceSupported || isSubmitting || voiceStatus === "transcribing" || voiceStatus === "sending"}
                 onClick={() => {
                   if (voiceStatus === "recording") {
@@ -1119,9 +1124,11 @@ export default function ScenarioSupportAssistant({
                   }
                   void startRecording();
                 }}
-                className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition ${
+                className={`inline-flex h-12 shrink-0 items-center gap-2 rounded-full border px-3 transition ${
                   voiceStatus === "recording"
                     ? "border-[#9A3B2F] bg-[#9A3B2F] text-white shadow-[0_10px_24px_rgba(154,59,47,0.2)]"
+                    : voiceStatus === "review"
+                      ? "border-[color:var(--line-sage)] bg-[var(--surface-sage)] text-[var(--accent-sage-text)] shadow-[0_10px_24px_rgba(47,35,33,0.05)]"
                     : "border-[color:var(--line-soft)] bg-white text-[var(--accent-sage-text)] hover:bg-[var(--surface-sage)]"
                 } disabled:cursor-not-allowed disabled:opacity-60`}
               >
@@ -1132,6 +1139,7 @@ export default function ScenarioSupportAssistant({
                     <path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.07A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0Z" />
                   )}
                 </svg>
+                <span className="text-sm">{micButtonLabel}</span>
               </button>
 
               <button
