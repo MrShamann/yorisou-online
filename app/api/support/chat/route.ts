@@ -14,6 +14,7 @@ import {
 } from "@/lib/ai/support/scenario-engine";
 import { getHinataMemorySnapshot, upsertHinataMemory } from "@/lib/server/hinataMemory";
 import { buildOpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
+import { buildOpenClawFoundationLearningFeed, forwardLearningFeedToOpenClaw } from "@/lib/server/openclawLearningFeedBridge";
 import { getHinataKnowledgePacket } from "@/lib/server/hinataKnowledge";
 import { recordOpenClawReflection } from "@/lib/server/openclawReflection";
 import { ensureViewerSession, getViewerContext, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
@@ -140,7 +141,7 @@ export async function POST(request: Request) {
       assistantMessage,
       actions: recommendedActions,
     });
-    await recordOpenClawReflection({
+    const learningArtifacts = await recordOpenClawReflection({
       scenario: scenarioResult,
       userMessage,
       assistantMessage,
@@ -157,6 +158,28 @@ export async function POST(request: Request) {
       capabilityPlan,
       actions: recommendedActions,
     });
+    const foundationFeed = buildOpenClawFoundationLearningFeed({
+      locale,
+      scenario: scenarioResult.scenario,
+      profile: memoryWrite.profile,
+      thread: memoryWrite.thread,
+      userMessage,
+      assistantMessage,
+      actionIds: recommendedActions.map((action) => action.id),
+      eventId: `support_turn_${learningArtifacts.reflection.id}`,
+    });
+
+    await Promise.race([
+      forwardLearningFeedToOpenClaw({
+        reflections: [learningArtifacts.reflection],
+        needsSignals: learningArtifacts.needsSignal ? [learningArtifacts.needsSignal] : [],
+        foundation: foundationFeed,
+      }).catch((error) => {
+        console.error("support chat learning feed bridge error:", error);
+        return false;
+      }),
+      new Promise<false>((resolve) => setTimeout(() => resolve(false), 1500)),
+    ]);
 
     const response = NextResponse.json({
       success: true,

@@ -12,7 +12,7 @@ import {
   mirrorOpenClawArtifact,
 } from "@/lib/server/openclawArtifactStore";
 import type { HinataMemorySnapshot } from "@/lib/server/hinataMemory";
-import { recordNeedsSignalArtifact } from "@/lib/server/openclawNeedsInsight";
+import { recordNeedsSignalArtifact, type OpenClawNeedsSignalArtifact } from "@/lib/server/openclawNeedsInsight";
 import type { OpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
 
 export type OpenClawReflectionArtifact = {
@@ -32,6 +32,11 @@ export type OpenClawReflectionArtifact = {
   candidateSkills: string[];
   actions: string[];
   capabilityPrimary: string;
+};
+
+export type OpenClawReflectionRecordResult = {
+  reflection: OpenClawReflectionArtifact;
+  needsSignal: OpenClawNeedsSignalArtifact | null;
 };
 
 export type OpenClawReflectionIssueTag =
@@ -219,7 +224,7 @@ export async function recordOpenClawReflection(input: {
   memory?: HinataMemorySnapshot | null;
   capabilityPlan: OpenClawCapabilityPlan;
   actions: SupportRecommendedAction[];
-}) {
+}): Promise<OpenClawReflectionRecordResult> {
   const previousAssistant = input.memory?.thread?.latestAssistantMessage?.toLowerCase().trim() || "";
   const nextAssistant = input.assistantMessage.toLowerCase().trim();
   const repetitionRisk = previousAssistant.length > 0 && previousAssistant === nextAssistant;
@@ -258,7 +263,7 @@ export async function recordOpenClawReflection(input: {
   artifacts.unshift(artifact);
   await writeArtifacts(artifacts);
   await mirrorOpenClawArtifact("reflections", artifact).catch(() => false);
-  await recordNeedsSignalArtifact({
+  const needsSignal = await recordNeedsSignalArtifact({
     latestUserMessage: input.userMessage,
     history: input.history,
     threadId: input.memory?.thread?.id || null,
@@ -266,7 +271,10 @@ export async function recordOpenClawReflection(input: {
     scenario: input.scenario.scenario,
     locale: input.memory?.thread?.locale || null,
   });
-  return artifact;
+  return {
+    reflection: artifact,
+    needsSignal,
+  };
 }
 
 export async function readOpenClawReflectionArtifacts() {
