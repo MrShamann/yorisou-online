@@ -1050,18 +1050,9 @@ export default function ScenarioSupportAssistant({
 
             {voiceStatus === "review" && (
               <div className="mb-3 rounded-[1.15rem] border border-[color:var(--line-sage)] bg-[var(--surface-sage)]/72 px-4 py-3 shadow-[0_10px_24px_rgba(47,35,33,0.05)]">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm text-[var(--accent-sage-text)]">{t.reviewTitle}</div>
-                    <p className="mt-1 text-sm leading-7 text-[var(--muted)]">{t.reviewHint}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void handleVoiceRetry()}
-                    className="rounded-full border border-[color:var(--line-sage)] bg-white px-4 py-2 text-sm text-[var(--accent-sage-text)]"
-                  >
-                    {t.retry}
-                  </button>
+                <div className="min-w-0">
+                  <div className="text-sm text-[var(--accent-sage-text)]">{t.reviewTitle}</div>
+                  <p className="mt-1 text-sm leading-7 text-[var(--muted)]">{t.reviewHint}</p>
                 </div>
               </div>
             )}
