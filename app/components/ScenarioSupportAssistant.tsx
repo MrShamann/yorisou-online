@@ -85,10 +85,8 @@ const copy = {
     voiceTranscribing: "音声を聞き取っています…",
     voiceSending: "ひなたに伝えています…",
     reviewTitle: "確認が必要そうな聞き取りです",
-    reviewHint: "短く直して送るか、録り直してください。",
+    reviewHint: "入力欄で短く整えて、そのまま送れます。",
     retry: "録り直す",
-    useDraft: "入力欄に入れる",
-    sendTranscript: "この内容で送る",
     unsupportedVoice: "この端末では音声入力がまだ使えません。",
     attachmentOnlyMessage: "この添付ファイルも見ながら相談したいです。",
     attachmentContextTitle: "添付ファイル",
@@ -120,10 +118,8 @@ const copy = {
     voiceTranscribing: "Transcribing…",
     voiceSending: "Passing that to Hinata…",
     reviewTitle: "This transcript needs a quick check",
-    reviewHint: "You can edit it, retry, or send it as is.",
+    reviewHint: "Make a quick edit in the composer, then send once.",
     retry: "Retry",
-    useDraft: "Use as draft",
-    sendTranscript: "Send transcript",
     unsupportedVoice: "Voice input is not available on this device yet.",
     attachmentOnlyMessage: "I want to talk while also sharing these attached files.",
     attachmentContextTitle: "Attached files",
@@ -705,7 +701,9 @@ export default function ScenarioSupportAssistant({
       setVoiceProvider(result.provider);
 
       if (result.requiresConfirmation) {
+        setDraft(result.transcript);
         setVoiceStatus("review");
+        window.setTimeout(() => composerRef.current?.focus(), 0);
         return;
       }
 
@@ -799,8 +797,8 @@ export default function ScenarioSupportAssistant({
     resetVoiceDraft({ preserveRetryCount: true });
   }
 
-  async function finalizeVoiceTranscript(mode: "draft" | "send") {
-    const nextTranscript = voiceTranscript.trim();
+  async function finalizeVoiceTranscript() {
+    const nextTranscript = draft.trim();
     const correctionCount = nextTranscript && nextTranscript !== voiceOriginalTranscript ? 1 : 0;
 
     await logVoiceEvent({
@@ -815,16 +813,9 @@ export default function ScenarioSupportAssistant({
       correctionCount,
       transcriptLength: nextTranscript.length,
       uncertaintyFlags: voiceUncertaintyFlags,
-      switchedToText: mode === "draft",
-      notes: mode === "draft" ? "copied_to_text_draft" : "sent_after_confirmation",
+      switchedToText: false,
+      notes: "sent_after_confirmation",
     });
-
-    if (mode === "draft") {
-      setDraft(nextTranscript);
-      composerRef.current?.focus();
-      resetVoiceDraft();
-      return;
-    }
 
     await sendMessage(nextTranscript, {
       voiceInteractionId,
@@ -858,12 +849,20 @@ export default function ScenarioSupportAssistant({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (voiceStatus === "review") {
+      await finalizeVoiceTranscript();
+      return;
+    }
     await sendMessage(draft);
   }
 
   async function handleComposerKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
+      if (voiceStatus === "review") {
+        await finalizeVoiceTranscript();
+        return;
+      }
       await sendMessage(draft);
     }
   }
@@ -1014,42 +1013,6 @@ export default function ScenarioSupportAssistant({
             </div>
           )}
 
-          {voiceStatus === "review" && (
-            <div className="mb-3 rounded-[1.25rem] border border-[color:var(--line-sage)] bg-[var(--surface-sage)]/76 px-4 py-4 shadow-[0_12px_28px_rgba(47,35,33,0.06)]">
-              <div className="text-sm text-[var(--accent-sage-text)]">{t.reviewTitle}</div>
-              <textarea
-                value={voiceTranscript}
-                onChange={(event) => setVoiceTranscript(event.target.value)}
-                className="mt-3 min-h-[88px] w-full resize-none rounded-[1rem] border border-[color:var(--line-sage)] bg-white px-3 py-3 text-sm leading-8 text-[var(--text)] outline-none"
-              />
-              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{t.reviewHint}</p>
-              <div className="mt-3 flex flex-wrap gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => void handleVoiceRetry()}
-                  className="rounded-full border border-[color:var(--line-sage)] bg-white px-4 py-2.5 text-sm text-[var(--accent-sage-text)]"
-                >
-                  {t.retry}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void finalizeVoiceTranscript("draft")}
-                  className="rounded-full border border-[color:var(--line-sage)] bg-white px-4 py-2.5 text-sm text-[var(--accent-sage-text)]"
-                >
-                  {t.useDraft}
-                </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting || voiceTranscript.trim().length === 0}
-                  onClick={() => void finalizeVoiceTranscript("send")}
-                  className="rounded-full bg-[var(--accent)] px-4 py-2.5 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {t.sendTranscript}
-                </button>
-              </div>
-            </div>
-          )}
-
           {attachments.length > 0 && (
             <div className="mb-3 rounded-[1.15rem] border border-[color:var(--line-soft)] bg-[rgba(255,252,247,0.96)] px-4 py-3 shadow-[0_10px_24px_rgba(47,35,33,0.05)]">
               <div className="text-xs tracking-[0.14em] text-[var(--muted)]">{t.attachmentTitle}</div>
@@ -1085,6 +1048,24 @@ export default function ScenarioSupportAssistant({
               onChange={handleAttachmentSelection}
             />
 
+            {voiceStatus === "review" && (
+              <div className="mb-3 rounded-[1.15rem] border border-[color:var(--line-sage)] bg-[var(--surface-sage)]/72 px-4 py-3 shadow-[0_10px_24px_rgba(47,35,33,0.05)]">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-[var(--accent-sage-text)]">{t.reviewTitle}</div>
+                    <p className="mt-1 text-sm leading-7 text-[var(--muted)]">{t.reviewHint}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleVoiceRetry()}
+                    className="rounded-full border border-[color:var(--line-sage)] bg-white px-4 py-2 text-sm text-[var(--accent-sage-text)]"
+                  >
+                    {t.retry}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-end gap-3">
               <button
                 type="button"
@@ -1102,7 +1083,12 @@ export default function ScenarioSupportAssistant({
                 <textarea
                   ref={composerRef}
                   value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
+                  onChange={(event) => {
+                    setDraft(event.target.value);
+                    if (voiceStatus === "review") {
+                      setVoiceTranscript(event.target.value);
+                    }
+                  }}
                   onKeyDown={(event) => void handleComposerKeyDown(event)}
                   placeholder={t.placeholder}
                   rows={1}
@@ -1112,10 +1098,36 @@ export default function ScenarioSupportAssistant({
 
               <button
                 type="button"
-                title={voiceStatus === "recording" ? t.voiceRecording : voiceSupported ? t.voiceTranscribing.replace("…", "").replace(" your recording", "") : t.unsupportedVoice}
-                aria-label={voiceStatus === "recording" ? t.voiceRecording : voiceSupported ? t.voiceTranscribing.replace("…", "").replace(" your recording", "") : t.unsupportedVoice}
+                title={
+                  voiceStatus === "review"
+                    ? t.retry
+                    : voiceStatus === "recording"
+                      ? t.voiceRecording
+                      : voiceSupported
+                        ? t.voiceTranscribing.replace("…", "").replace(" your recording", "")
+                        : t.unsupportedVoice
+                }
+                aria-label={
+                  voiceStatus === "review"
+                    ? t.retry
+                    : voiceStatus === "recording"
+                      ? t.voiceRecording
+                      : voiceSupported
+                        ? t.voiceTranscribing.replace("…", "").replace(" your recording", "")
+                        : t.unsupportedVoice
+                }
                 disabled={!voiceSupported || isSubmitting || voiceStatus === "transcribing" || voiceStatus === "sending"}
-                onClick={() => (voiceStatus === "recording" ? stopRecording() : void startRecording())}
+                onClick={() => {
+                  if (voiceStatus === "recording") {
+                    stopRecording();
+                    return;
+                  }
+                  if (voiceStatus === "review") {
+                    void handleVoiceRetry();
+                    return;
+                  }
+                  void startRecording();
+                }}
                 className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition ${
                   voiceStatus === "recording"
                     ? "border-[#9A3B2F] bg-[#9A3B2F] text-white shadow-[0_10px_24px_rgba(154,59,47,0.2)]"
@@ -1123,16 +1135,20 @@ export default function ScenarioSupportAssistant({
                 } disabled:cursor-not-allowed disabled:opacity-60`}
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
-                  {voiceStatus === "recording" ? <rect x="7" y="7" width="10" height="10" rx="2" /> : <path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.07A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0Z" />}
+                  {voiceStatus === "recording" ? (
+                    <rect x="7" y="7" width="10" height="10" rx="2" />
+                  ) : (
+                    <path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.07A7 7 0 0 1 5 12a1 1 0 1 1 2 0 5 5 0 0 0 10 0Z" />
+                  )}
                 </svg>
               </button>
 
               <button
                 type="submit"
-                disabled={isSubmitting || (draft.trim().length === 0 && attachments.length === 0)}
+                disabled={isSubmitting || draft.trim().length === 0}
                 className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_12px_24px_rgba(47,35,33,0.14)] transition hover:translate-y-[-1px] hover:bg-[var(--cta-main-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-                aria-label={t.send}
-                title={t.send}
+                aria-label={voiceStatus === "review" ? t.reviewTitle : t.send}
+                title={voiceStatus === "review" ? t.reviewTitle : t.send}
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
                   <path d="M3.4 20.4 21 12 3.4 3.6 3 10l12 2-12 2 .4 6.4Z" />

@@ -1,2 +1,2 @@
-Commit: hinata-agent-hierarchy-lock-and-voice-pass
-Timestamp: 2026-03-30 21:28:00 CST
+Commit: hinata-voice-review-composer-pass
+Timestamp: 2026-03-30 21:58:00 CST
