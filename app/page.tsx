@@ -78,6 +78,21 @@ const entryLanes = [
   },
 ];
 
+const platformPillars = [
+  {
+    title: "相談の入口",
+    text: "移動や暮らしの不安を、曖昧なままでも相談から始められます。",
+  },
+  {
+    title: "支援の比較",
+    text: "製品、サービス、地域での続けやすさを落ち着いて見比べられます。",
+  },
+  {
+    title: "家族との継続",
+    text: "LINEやアカウントを通じて、あとから家族と共有しながら続けられます。",
+  },
+];
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -132,6 +147,51 @@ export default function HomePage() {
                 />
               </div>
             </div>
+          </MotionReveal>
+        </div>
+      </section>
+
+      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.52)] px-6 py-10 md:px-10 md:py-12">
+        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.94fr_1.06fr] lg:items-stretch">
+          <MotionReveal delay={40} distance={18}>
+            <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6 shadow-[0_10px_24px_rgba(47,35,33,0.04)]">
+              <div className="service-kicker">Yorisouを短くつかむ</div>
+              <h2 className="display-serif mt-4 max-w-[14em] text-[1.66rem] leading-[1.62] md:text-[2rem]">
+                相談、支援比較、家族共有までを
+                <span className="block md:whitespace-nowrap">ひとつの流れで扱う基盤です。</span>
+              </h2>
+              <p className="mt-4 page-copy">
+                まず相談し、必要な支援を見極め、ご家族とも共有しながら続ける。Yorisouは、その流れを分断せずに支えるためのプラットフォームです。
+              </p>
+              <div className="mt-6 grid gap-3">
+                {platformPillars.map((pillar, index) => (
+                  <MotionReveal key={pillar.title} delay={100 + index * 60} distance={16}>
+                    <div className="platform-pill rounded-[1.2rem] border border-[color:var(--line-soft)] bg-[rgba(247,244,238,0.88)] px-4 py-4">
+                      <div className="platform-pill-title">{pillar.title}</div>
+                      <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{pillar.text}</p>
+                    </div>
+                  </MotionReveal>
+                ))}
+              </div>
+            </article>
+          </MotionReveal>
+
+          <MotionReveal delay={120} distance={20} scale={0.99}>
+            <article className="motion-card video-placeholder-card rounded-[1.8rem] border border-[color:var(--line-sage)] px-6 py-6">
+              <div className="service-kicker text-[var(--accent-sage-text)]">紹介映像エリア</div>
+              <h2 className="display-serif mt-4 max-w-[13em] text-[1.58rem] leading-[1.62] md:text-[1.92rem]">
+                将来の案内映像は、ここで静かに全体像を補います。
+              </h2>
+              <p className="mt-4 page-copy text-[var(--accent-sage-text)]">
+                いまは、相談から継続支援までの流れを文字で理解できる構成を優先しています。今後は、ご本人、ご家族、地域の支援者が使う流れを短い紹介映像としてここに置く予定です。
+              </p>
+              <div className="mt-6 video-placeholder-frame rounded-[1.5rem] border border-dashed border-[color:rgba(85,98,82,0.34)] bg-[rgba(255,255,255,0.52)] px-5 py-6">
+                <div className="text-sm font-medium text-[var(--accent-sage-text)]">準備中の紹介映像</div>
+                <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">
+                  Yorisouが何を整理し、どこへつなぎ、どう継続支援につなげるかを1〜2分で案内するための予約領域です。
+                </p>
+              </div>
+            </article>
           </MotionReveal>
         </div>
       </section>
