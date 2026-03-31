@@ -8,6 +8,49 @@ const concerns = [
   "どの製品やサービスが合うのかわからない",
 ];
 
+const journeySteps = [
+  {
+    label: "1. 困りごとの入口",
+    title: "通院、買い物、外出の不安を、まず状況として受け取ります。",
+    problem: "何に困っているのかがまだ曖昧なままでも、移動の負担や暮らしの不安をそのまま話せます。",
+    action: "Yorisouがすること",
+    detail: "ひなたが最初の相談窓口として、ご本人、ご家族、生活導線、通院頻度などを静かに整理します。",
+    outcome: "次に何を考えるべきかが見え始めます。",
+  },
+  {
+    label: "2. 状況整理",
+    title: "いま必要なのが相談なのか、比較なのか、地域導入なのかを分けていきます。",
+    problem: "製品を探す前に、生活のどこで困るのか、家族がどこで支えるのかが整理されていないことが多くあります。",
+    action: "Yorisouがすること",
+    detail: "相談内容を、支援内容、読みもの、導入・実証、継続相談のどこへつなぐべきか見極めます。",
+    outcome: "情報が増えすぎず、その人に合う入口だけを選べます。",
+  },
+  {
+    label: "3. 合う支え方の提案",
+    title: "移動手段だけでなく、続けやすさまで含めて考えます。",
+    problem: "比較表だけでは、毎日の動線やご家族の負担に本当に合うかが分かりません。",
+    action: "Yorisouがすること",
+    detail: "支援内容や読みものを通じて、使い方、安全性、費用感、地域で続く運用を見ながら提案します。",
+    outcome: "選択肢が『使えそうか』ではなく『続けられそうか』で見えてきます。",
+  },
+  {
+    label: "4. 家族と共有",
+    title: "ご本人だけでなく、ご家族も安心できる形へつなげます。",
+    problem: "本人は使いたい、ご家族は不安、というすれ違いが起きやすい領域です。",
+    action: "Yorisouがすること",
+    detail: "相談の続きはLINEやアカウントで受け取れ、あとから家族と共有しながら見返せます。",
+    outcome: "その場の会話で終わらず、家族も同じ理解で動きやすくなります。",
+  },
+  {
+    label: "5. 継続支援",
+    title: "一度の相談で終わらず、導入やその後の支え方まで続けられます。",
+    problem: "移動支援は、始めるより続けるほうが難しいことがあります。",
+    action: "Yorisouがすること",
+    detail: "必要に応じて、支援内容の比較、導入・実証の相談、読みもの、継続相談へ落ち着いてつなぎます。",
+    outcome: "Yorisouが、単発の相談ではなく長く寄り添う支援基盤として機能します。",
+  },
+];
+
 const entryLanes = [
   {
     title: "相談から始める",
@@ -96,24 +139,41 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
           <MotionReveal className="max-w-[40rem]" delay={30}>
-            <div className="service-kicker">こんなお悩みはありませんか</div>
+            <div className="service-kicker">Yorisouで進む流れ</div>
             <h2 className="display-serif mt-4 max-w-[13.5em] text-[1.76rem] leading-[1.62] md:text-[2.16rem]">
-              <span className="block md:whitespace-nowrap">まずは、いま気になることを</span>
-              <span className="block md:whitespace-nowrap">そのまま話せれば十分です。</span>
+              <span className="block md:whitespace-nowrap">困りごとから継続支援まで、</span>
+              <span className="block md:whitespace-nowrap">順番に理解できる流れがあります。</span>
             </h2>
             <p className="mt-4 page-copy">
-              ひなたとのやりとりの中で、移動のことも暮らしのことも、必要な整理を少しずつ受け持っていきます。
+              ただ相談するだけではなく、何に困っていて、Yorisouが何をし、どこへつながるのかをスクロールの中で自然に理解できる構成にしています。
             </p>
           </MotionReveal>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {concerns.map((item, index) => (
-              <MotionReveal key={item} delay={80 + index * 70} distance={18}>
-                <article
-                key={item}
-                className="motion-card rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.72)] px-6 py-5 text-[15px] leading-8 text-[var(--muted)]"
-              >
-                <span className="block h-2 w-2 rounded-full bg-[var(--accent-sage-text)]/55" />
-                <span className="mt-4 block">{item}</span>
+          <div className="mt-8 space-y-4">
+            {journeySteps.map((step, index) => (
+              <MotionReveal key={step.label} delay={80 + index * 65} distance={20}>
+                <article className="journey-step motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.82)] px-6 py-6">
+                  <div className="journey-grid">
+                    <div>
+                      <div className="service-kicker text-[var(--accent-sage-text)]">{step.label}</div>
+                      <h3 className="display-serif mt-3 text-[1.34rem] leading-[1.62] text-[var(--text)] md:text-[1.56rem]">
+                        {step.title}
+                      </h3>
+                    </div>
+                    <div className="journey-copy">
+                      <div className="journey-block">
+                        <div className="journey-block-label">いま起きがちなこと</div>
+                        <p>{step.problem}</p>
+                      </div>
+                      <div className="journey-block">
+                        <div className="journey-block-label">{step.action}</div>
+                        <p>{step.detail}</p>
+                      </div>
+                      <div className="journey-block journey-outcome">
+                        <div className="journey-block-label">つぎに見えること</div>
+                        <p>{step.outcome}</p>
+                      </div>
+                    </div>
+                  </div>
                 </article>
               </MotionReveal>
             ))}
@@ -124,12 +184,12 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.46)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
           <MotionReveal className="max-w-[42rem]" delay={30}>
-            <div className="service-kicker">どこから始めるか</div>
+            <div className="service-kicker">困り方に合わせた入口</div>
             <h2 className="display-serif mt-4 max-w-[15em] text-[1.72rem] leading-[1.6] md:text-[2.08rem]">
-              相談、支援内容、導入・実証、読みものの4つの入口を用意しています。
+              理解が進んだあとに、そのまま次の入口へ進めます。
             </h2>
             <p className="mt-4 page-copy">
-              先に資料を読みたい方も、すぐ相談したい方も、あとからLINEやアカウントで続けたい方も、同じYorisouの中で落ち着いて進められます。
+              相談から始める方も、先に支援内容や読みものを確かめる方も、導入・実証を見たい地域の方も、それぞれの入口を同じ流れの中に置いています。
             </p>
           </MotionReveal>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -157,13 +217,13 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.06fr_0.94fr]">
           <MotionReveal delay={30}>
             <div className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6">
-            <div className="service-kicker">相談のあとにできること</div>
+            <div className="service-kicker">ご本人とご家族のその先</div>
             <h2 className="display-serif mt-4 max-w-[14.5em] text-[1.7rem] leading-[1.64] md:text-[2.04rem]">
-              相談だけで終わらず、支援内容の確認や地域導入の検討までつなげられます。
+              Yorisouは、状況整理から家族共有、支援内容の比較までつなげる継続支援です。
             </h2>
             <div className="mt-5 page-copy">
-              <p>すぐに何かを決める必要はありません。まず状況を聞き、必要なら家族共有、継続相談、支援内容の比較へ進めます。</p>
-              <p className="mt-3">自治体や施設、地域事業者の方には、導入・実証の入口としても使えます。</p>
+              <p>すぐに何かを決める必要はありません。まず状況を聞き、必要ならご家族と見返しながら、相談の続きを静かに進められます。</p>
+              <p className="mt-3">自治体や施設、地域事業者の方には、現場導入や実証の相談基盤としても同じ流れを使えます。</p>
             </div>
           </div>
           </MotionReveal>

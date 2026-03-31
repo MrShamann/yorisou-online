@@ -264,6 +264,58 @@ main {
   pointer-events: none;
 }
 
+.journey-step {
+  position: relative;
+}
+
+.journey-step::after {
+  content: "";
+  position: absolute;
+  left: 30px;
+  bottom: -22px;
+  width: 1px;
+  height: 22px;
+  background: linear-gradient(180deg, rgba(201, 211, 195, 0.9), rgba(201, 211, 195, 0));
+}
+
+.journey-step:last-child::after {
+  display: none;
+}
+
+.journey-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.journey-copy {
+  display: grid;
+  gap: 12px;
+}
+
+.journey-block {
+  border-left: 2px solid rgba(201, 211, 195, 0.72);
+  padding-left: 14px;
+}
+
+.journey-outcome {
+  border-left-color: rgba(85, 98, 82, 0.46);
+}
+
+.journey-block-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.journey-block p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.9;
+}
+
 @keyframes heroPortraitFloat {
   0%,
   100% {
@@ -305,6 +357,17 @@ main {
 
   .section-title {
     max-width: none;
+  }
+
+  .journey-step::after {
+    left: 22px;
+  }
+}
+
+@media (min-width: 881px) {
+  .journey-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
   }
 }
 
