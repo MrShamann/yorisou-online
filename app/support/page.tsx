@@ -35,6 +35,7 @@ export default async function SupportPage({
       initialLineReadiness={lineReadiness}
       initialAccessAccountability={data.accessAccountability}
       initialConsultations={data.consultations}
+      initialCanonicalSupportHistory={data.canonicalSupportHistory}
       initialLatestLineEvent={data.latestLineEvent}
       lineAuthReady={lineAuthReady}
       lineMessagingReady={lineMessagingReady}

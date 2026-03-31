@@ -1,8 +1,8 @@
 import { createFoundationId, nowIso } from "@/lib/server/foundation/ids";
 import { getAiAssistHooksForChannel } from "@/lib/server/foundation/aiAssistHooks";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
-import type { BindingState, Channel, Conversation, MessageEvent, Source } from "@/lib/server/foundation/schema";
-import { getFoundationRecord, listConversations, listMessageEvents, putFoundationRecord } from "@/lib/server/foundation/store";
+import type { BindingState, Channel, Conversation, MessageEvent, Source, SupportCase } from "@/lib/server/foundation/schema";
+import { getFoundationRecord, listConversations, listMessageEvents, listSupportCases, putFoundationRecord } from "@/lib/server/foundation/store";
 import { supportCaseService } from "@/lib/server/foundation/supportCaseService";
 import type { ConsultationRecord, LineWebhookEventRecord } from "@/lib/server/yorisouData";
 
@@ -64,13 +64,15 @@ export class TimelineService {
     const timestamp = nowIso();
     const existing =
       conversations.find((entry) => entry.externalIdentityKey === input.externalIdentityKey) ||
-      conversations.find(
-        (entry) =>
-          entry.channel === input.channel &&
-          entry.userProfileId === input.userProfileId &&
-          entry.authIdentityId === input.authIdentityId &&
-          entry.conversationStatus === "active",
-      ) ||
+      ((input.userProfileId || input.authIdentityId)
+        ? conversations.find(
+            (entry) =>
+              entry.channel === input.channel &&
+              entry.userProfileId === input.userProfileId &&
+              entry.authIdentityId === input.authIdentityId &&
+              entry.conversationStatus === "active",
+          )
+        : null) ||
       null;
 
     if (existing) {
@@ -435,6 +437,53 @@ export class TimelineService {
   async listTimelineByExternalIdentityKey(externalIdentityKey: string) {
     const events = await listMessageEvents();
     return events.filter((entry) => entry.externalIdentityKey === externalIdentityKey);
+  }
+
+  async getSupportWorkspaceHistory(input: {
+    sessionId?: string | null;
+    userProfileId?: string | null;
+    limit?: number;
+  }): Promise<{
+    conversation: Conversation | null;
+    supportCase: SupportCase | null;
+    events: MessageEvent[];
+    source: "canonical" | "none";
+  }> {
+    const conversations = await listConversations();
+    const candidateKeys = [
+      input.userProfileId ? makeExternalKey({ channel: "support_web", identityKey: `user:${input.userProfileId}` }) : null,
+      input.sessionId ? makeExternalKey({ channel: "support_web", identityKey: `session:${input.sessionId}` }) : null,
+    ].filter((entry): entry is string => Boolean(entry));
+
+    const conversation =
+      conversations.find((entry) => candidateKeys.includes(entry.externalIdentityKey) && entry.channel === "support_web") || null;
+
+    if (!conversation) {
+      return {
+        conversation: null,
+        supportCase: null,
+        events: [],
+        source: "none",
+      };
+    }
+
+    const allEvents = await listMessageEvents();
+    const events = allEvents
+      .filter((entry) => entry.conversationId === conversation.conversationId)
+      .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+    const supportCases = await listSupportCases();
+    const supportCase =
+      supportCases.find((entry) => entry.supportCaseId === conversation.supportCaseId) ||
+      supportCases.find((entry) => entry.conversationId === conversation.conversationId) ||
+      null;
+    const limit = input.limit && input.limit > 0 ? input.limit : 12;
+
+    return {
+      conversation,
+      supportCase,
+      events: events.slice(-limit),
+      source: "canonical",
+    };
   }
 
   async getLatestActivitySummary(input: { userProfileId?: string; authIdentityId?: string }) {

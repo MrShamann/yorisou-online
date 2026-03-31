@@ -20,6 +20,20 @@ import type {
 
 type ScenarioSupportAssistantProps = {
   locale: SupportAssistantLocale;
+  initialCanonicalSupportHistory?: {
+    source: "canonical" | "none";
+    conversationId: string | null;
+    supportCaseId: string | null;
+    supportCaseTitle: string | null;
+    latestActivityAt: string | null;
+    messages: Array<{
+      id: string;
+      role: "user" | "assistant";
+      content: string;
+      apiContent: string;
+      createdAt: string;
+    }>;
+  };
   onConversationStateChange?: (started: boolean) => void;
 };
 
@@ -312,6 +326,7 @@ function buildOutgoingMessage(
 
 export default function ScenarioSupportAssistant({
   locale,
+  initialCanonicalSupportHistory,
   onConversationStateChange,
 }: ScenarioSupportAssistantProps) {
   const t = copy[locale];
@@ -324,7 +339,15 @@ export default function ScenarioSupportAssistant({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    (initialCanonicalSupportHistory?.messages || []).map((message) => ({
+      id: message.id,
+      role: message.role,
+      content: message.content,
+      apiContent: message.apiContent,
+      attachments: [],
+    })),
+  );
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [recommendedActions, setRecommendedActions] = useState<SupportRecommendedAction[]>([]);

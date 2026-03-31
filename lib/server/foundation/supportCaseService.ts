@@ -38,13 +38,16 @@ export class SupportCaseService {
     const cases = await listSupportCases();
     const existing =
       cases.find((entry) => entry.conversationId && input.conversationId && entry.conversationId === input.conversationId) ||
-      cases.find(
-        (entry) =>
-          entry.userProfileId === input.userProfileId &&
-          entry.channel === input.channel &&
-          entry.status !== "resolved" &&
-          entry.title === input.title,
-      ) ||
+      ((input.userProfileId || input.authIdentityId)
+        ? cases.find(
+            (entry) =>
+              entry.userProfileId === input.userProfileId &&
+              entry.authIdentityId === input.authIdentityId &&
+              entry.channel === input.channel &&
+              entry.status !== "resolved" &&
+              entry.title === input.title,
+          )
+        : null) ||
       null;
     const timestamp = nowIso();
 
