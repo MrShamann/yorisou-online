@@ -79,12 +79,17 @@ async function listLocalRecords<T>(collection: FoundationCollection) {
   const filenames = await fs.readdir(localCollectionDir(collection));
   const records = await Promise.all(
     filenames.filter((name) => name.endsWith(".json")).map(async (name) => {
-      const content = await fs.readFile(path.join(localCollectionDir(collection), name), "utf8");
-      return JSON.parse(content) as T;
+      try {
+        const content = await fs.readFile(path.join(localCollectionDir(collection), name), "utf8");
+        return JSON.parse(content) as T;
+      } catch (error) {
+        console.error(`foundation local record parse error: ${collection}/${name}`, error);
+        return null;
+      }
     }),
   );
 
-  return records;
+  return records.flatMap((record) => (record ? [record as T] : []));
 }
 
 async function writeLocalRecord<T>(collection: FoundationCollection, recordId: string, value: T) {
@@ -147,9 +152,14 @@ async function listSharedRecords<T>(collection: FoundationCollection) {
 
   const records = await Promise.all(
     keys.map(async (key) => {
-      const response = await client.send(new GetObjectCommand({ Bucket: sharedStoreBucket, Key: key }));
-      const content = await response.Body?.transformToString();
-      return content ? (JSON.parse(content) as T) : null;
+      try {
+        const response = await client.send(new GetObjectCommand({ Bucket: sharedStoreBucket, Key: key }));
+        const content = await response.Body?.transformToString();
+        return content ? (JSON.parse(content) as T) : null;
+      } catch (error) {
+        console.error(`foundation shared record parse error: ${key}`, error);
+        return null;
+      }
     }),
   );
 

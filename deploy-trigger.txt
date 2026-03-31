@@ -1,2 +1,2 @@
-Commit: yorisou-support-canonical-history-api-pass
-Timestamp: 2026-03-31 22:52:00 CST
+Commit: yorisou-support-canonical-history-parse-guard-pass
+Timestamp: 2026-03-31 23:03:00 CST
