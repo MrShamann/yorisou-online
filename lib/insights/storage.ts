@@ -31,6 +31,17 @@ function deriveDraftSlug(item: InsightDraft) {
   return `insight-${fromUrl || item.id}`;
 }
 
+function sanitizeDraft(item: InsightDraft): InsightDraft {
+  return {
+    ...item,
+    slug: item.slug || deriveDraftSlug(item),
+    sourceUrl: normalizeSourceUrl(item.sourceUrl),
+    analysisVersion: item.analysisVersion || "v1",
+    featured: item.featured || false,
+    homepageFeatured: item.homepageFeatured || false,
+  };
+}
+
 async function ensureDraftStorage() {
   await fs.mkdir(dataDir, { recursive: true });
 
@@ -59,15 +70,7 @@ export async function readInsightDrafts() {
 
   try {
     const parsed = JSON.parse(content) as InsightDraft[];
-    return Array.isArray(parsed)
-      ? parsed.map((item) => ({
-          ...item,
-          slug: item.slug || deriveDraftSlug(item),
-          analysisVersion: item.analysisVersion || "v1",
-          featured: item.featured || false,
-          homepageFeatured: item.homepageFeatured || false,
-        }))
-      : [];
+    return Array.isArray(parsed) ? parsed.map(sanitizeDraft) : [];
   } catch {
     return [];
   }
@@ -75,7 +78,7 @@ export async function readInsightDrafts() {
 
 export async function writeInsightDrafts(drafts: InsightDraft[]) {
   await ensureDraftStorage();
-  await fs.writeFile(draftsPath, JSON.stringify(drafts, null, 2) + "\n", "utf8");
+  await fs.writeFile(draftsPath, JSON.stringify(drafts.map(sanitizeDraft), null, 2) + "\n", "utf8");
 }
 
 export async function upsertInsightDrafts(incoming: InsightDraft[]) {
@@ -83,12 +86,10 @@ export async function upsertInsightDrafts(incoming: InsightDraft[]) {
   const map = new Map<string, InsightDraft>(existing.map((item) => [`${normalizeSourceUrl(item.sourceUrl)}::${item.slug}`, item]));
 
   incoming.forEach((item) => {
-    const key = `${normalizeSourceUrl(item.sourceUrl)}::${item.slug}`;
+    const normalized = sanitizeDraft(item);
+    const key = `${normalized.sourceUrl}::${normalized.slug}`;
     if (!map.has(key)) {
-      map.set(key, {
-        ...item,
-        sourceUrl: normalizeSourceUrl(item.sourceUrl),
-      });
+      map.set(key, normalized);
     }
   });
 

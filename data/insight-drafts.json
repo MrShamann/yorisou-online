@@ -1,44 +1,44 @@
 [
   {
-    "id": "insight_1773909553051_vlgi59",
-    "slug": "",
+    "id": "insight_1774950806806_btv4i6",
+    "slug": "insight-w-mlit-go-jp-report-press-kanbo08-hh-001319-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/kanbo04_hh_000151.html",
-    "publishedAt": "2026-03-18T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/kanbo08_hh_001319.html",
+    "publishedAt": "2026-03-30T20:00:00.000Z",
+    "fetchedAt": "2026-03-31T09:53:26.801Z",
     "category": "local-transport",
     "region": "japan",
     "tags": [
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
+    "rawTitle": "第６期国土交通省技術基本計画を策定しました！～「イノベーション・エコシステム」の確立による国土交通分野の発展を目指して～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
-        "summary": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～に関する話題です。「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
-        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "title": "第６期国土交通省技術基本計画を策定しました！～「イノベーション・エコシステム」の確立による国土交通分野の発展を目指して～",
+        "summary": "第６期国土交通省技術基本計画を策定しました！～「イノベーション・エコシステム」の確立による国土交通分野の発展を目指して～について、地域の交通課題の観点から確認しておきたい論点が含まれています。",
+        "whyItMatters": "地域の交通課題の論点では、地域ごとの交通空白や生活導線の分断が重要です。制度や発表の内容を追うだけでなく、現場でどの負担が減るのかを具体的に見る必要があります。",
         "yorisouView": [
-          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+          "Yorisouでは、この話題を地域の交通課題における実務上の示唆として捉えます。",
+          "第６期国土交通省技術基本計画を策定しました！～「イノベーション・エコシステム」の確立による国土交通分野の発展を目指して～のような動きは、利用者側の利便性だけでなく、地域ごとの交通空白や生活導線の分断を見直すきっかけになります。",
+          "ご本人、ご家族、地域の関係者は、利用頻度、時間帯、目的地の偏りを具体的に捉えるという視点で読み解くことが重要です。"
         ],
         "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+          "地域ごとの交通空白や生活導線の分断を、利用場面ごとに言語化しておく。",
+          "利用頻度、時間帯、目的地の偏りを具体的に捉えるという順番で相談や比較を進める。",
+          "地域の運行設計や実証テーマを具体化しやすくなるため、実証や試乗では現場条件を必ず合わせて確認する。"
         ],
         "whatThisMeans": {
-          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+          "seniors": "ご本人にとっては、地域ごとの交通空白や生活導線の分断が日々の外出意欲や安心感にどう影響するかを見ておくことが大切です。",
+          "families": "ご家族は、利用頻度、時間帯、目的地の偏りを具体的に捉えるという視点で、送迎や見守り負担がどう変わるかを確認すると判断しやすくなります。",
+          "localCommunities": "地域側では、地域の運行設計や実証テーマを具体化しやすくなるための運用設計や説明体制まで含めて整理することが重要です。",
+          "operators": "運営者や実証パートナーは、利用頻度、時間帯、目的地の偏りを具体的に捉えるという観点で導入条件と継続運用の両方を確認する必要があります。"
         }
       },
       "en": {
-        "title": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
-        "summary": "This item relates to 「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～. 「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
+        "title": "第６期国土交通省技術基本計画を策定しました！～「イノベーション・エコシステム」の確立による国土交通分野の発展を目指して～",
+        "summary": "This item relates to 第６期国土交通省技術基本計画を策定しました！～「イノベーション・エコシステム」の確立による国土交通分野の発展を目指して～. 第６期国土交通省技術基本計画を策定しました！～「イノベーション・エコシステム」の確立による国土交通分野の発展を目指して～",
         "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
         "yorisouView": [
           "Yorisou reads this as a practical local transport issue.",
@@ -61,48 +61,51 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v2-ja-editorial",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_wz11vk",
-    "slug": "193",
+    "id": "insight_1774950806806_rg9agb",
+    "slug": "lixil",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/kaiji04_hh_000384.html",
-    "publishedAt": "2026-03-18T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/house05_hh_001130.html",
+    "publishedAt": "2026-03-30T20:00:00.000Z",
+    "fetchedAt": "2026-03-31T09:53:26.801Z",
     "category": "local-transport",
     "region": "japan",
     "tags": [
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
+    "rawTitle": "株式会社LIXILが製造・出荷した防火設備（防火戸）における国土交通大臣認定仕様への不適合について",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
-        "summary": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～に関する話題です。船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
-        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "title": "株式会社LIXILが製造・出荷した防火設備（防火戸）における国土交通大臣認定仕様への不適合について",
+        "summary": "株式会社LIXILが製造・出荷した防火設備（防火戸）における国土交通大臣認定仕様への不適合についてについて、地域の交通課題の観点から確認しておきたい論点が含まれています。",
+        "whyItMatters": "地域の交通課題の論点では、地域ごとの交通空白や生活導線の分断が重要です。制度や発表の内容を追うだけでなく、現場でどの負担が減るのかを具体的に見る必要があります。",
         "yorisouView": [
-          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+          "Yorisouでは、この話題を地域の交通課題における実務上の示唆として捉えます。",
+          "株式会社LIXILが製造・出荷した防火設備（防火戸）における国土交通大臣認定仕様への不適合についてのような動きは、利用者側の利便性だけでなく、地域ごとの交通空白や生活導線の分断を見直すきっかけになります。",
+          "ご本人、ご家族、地域の関係者は、利用頻度、時間帯、目的地の偏りを具体的に捉えるという視点で読み解くことが重要です。"
         ],
         "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+          "地域ごとの交通空白や生活導線の分断を、利用場面ごとに言語化しておく。",
+          "利用頻度、時間帯、目的地の偏りを具体的に捉えるという順番で相談や比較を進める。",
+          "地域の運行設計や実証テーマを具体化しやすくなるため、実証や試乗では現場条件を必ず合わせて確認する。"
         ],
         "whatThisMeans": {
-          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+          "seniors": "ご本人にとっては、地域ごとの交通空白や生活導線の分断が日々の外出意欲や安心感にどう影響するかを見ておくことが大切です。",
+          "families": "ご家族は、利用頻度、時間帯、目的地の偏りを具体的に捉えるという視点で、送迎や見守り負担がどう変わるかを確認すると判断しやすくなります。",
+          "localCommunities": "地域側では、地域の運行設計や実証テーマを具体化しやすくなるための運用設計や説明体制まで含めて整理することが重要です。",
+          "operators": "運営者や実証パートナーは、利用頻度、時間帯、目的地の偏りを具体的に捉えるという観点で導入条件と継続運用の両方を確認する必要があります。"
         }
       },
       "en": {
-        "title": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
-        "summary": "This item relates to 船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～. 船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
+        "title": "株式会社LIXILが製造・出荷した防火設備（防火戸）における国土交通大臣認定仕様への不適合について",
+        "summary": "This item relates to 株式会社LIXILが製造・出荷した防火設備（防火戸）における国土交通大臣認定仕様への不適合について. 株式会社LIXILが製造・出荷した防火設備（防火戸）における国土交通大臣認定仕様への不適合について",
         "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
         "yorisouView": [
           "Yorisou reads this as a practical local transport issue.",
@@ -125,112 +128,51 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v2-ja-editorial",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_hqd9h3",
-    "slug": "",
+    "id": "insight_1774950806806_mdxm07",
+    "slug": "dx-commmmons-2025",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/jidosha10_hh_000340.html",
-    "publishedAt": "2026-03-18T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "local-transport",
-    "region": "japan",
-    "tags": [
-      "国交省",
-      "地域交通"
-    ],
-    "rawTitle": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
-    "rawExcerpt": "",
-    "content": {
-      "ja": {
-        "title": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
-        "summary": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催についてに関する話題です。交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
-        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
-        "yorisouView": [
-          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
-        ],
-        "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
-        ],
-        "whatThisMeans": {
-          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
-        }
-      },
-      "en": {
-        "title": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
-        "summary": "This item relates to 交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について. 交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
-        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
-        "yorisouView": [
-          "Yorisou reads this as a practical local transport issue.",
-          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
-          "Users, families, and local partners should review operating context and support setup alongside specifications."
-        ],
-        "practicalTakeaways": [
-          "Interpret the topic through real daily routes.",
-          "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a local transport lens."
-        ],
-        "whatThisMeans": {
-          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
-          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
-          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
-          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
-        }
-      }
-    },
-    "reviewStatus": "draft",
-    "approvedForPublic": false,
-    "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
-  },
-  {
-    "id": "insight_1773909553051_9mpaw4",
-    "slug": "",
-    "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/road01_hh_002070.html",
-    "publishedAt": "2026-03-18T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/sogo12_hh_000511.html",
+    "publishedAt": "2026-03-30T20:00:00.000Z",
+    "fetchedAt": "2026-03-31T09:53:26.800Z",
     "category": "community-transport",
     "region": "japan",
     "tags": [
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
+    "rawTitle": "地域交通DX推進プロジェクト「COMmmmONS（コモンズ）」 2025年度の取組成果を公開します！",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
-        "summary": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～に関する話題です。地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
-        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
+        "title": "地域交通DX推進プロジェクト「COMmmmONS（コモンズ）」 2025年度の取組成果を公開します！",
+        "summary": "地域交通DX推進プロジェクト「COMmmmONS（コモンズ）」 2025年度の取組成果を公開します！について、地域交通の観点から確認しておきたい論点が含まれています。",
+        "whyItMatters": "地域交通の論点では、地域内で移動支援が継続運用できるかどうかが重要です。制度や発表の内容を追うだけでなく、現場でどの負担が減るのかを具体的に見る必要があります。",
         "yorisouView": [
-          "Yorisouは、この話題を地域交通の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+          "Yorisouでは、この話題を地域交通における実務上の示唆として捉えます。",
+          "地域交通DX推進プロジェクト「COMmmmONS（コモンズ）」 2025年度の取組成果を公開します！のような動きは、利用者側の利便性だけでなく、地域内で移動支援が継続運用できるかどうかを見直すきっかけになります。",
+          "ご本人、ご家族、地域の関係者は、導入前に窓口・保管・説明・安全確認の役割分担を整えるという視点で読み解くことが重要です。"
         ],
         "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
+          "地域内で移動支援が継続運用できるかどうかを、利用場面ごとに言語化しておく。",
+          "導入前に窓口・保管・説明・安全確認の役割分担を整えるという順番で相談や比較を進める。",
+          "地域交通の実証や小規模導入の現実性を判断しやすくなるため、実証や試乗では現場条件を必ず合わせて確認する。"
         ],
         "whatThisMeans": {
-          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+          "seniors": "ご本人にとっては、地域内で移動支援が継続運用できるかどうかが日々の外出意欲や安心感にどう影響するかを見ておくことが大切です。",
+          "families": "ご家族は、導入前に窓口・保管・説明・安全確認の役割分担を整えるという視点で、送迎や見守り負担がどう変わるかを確認すると判断しやすくなります。",
+          "localCommunities": "地域側では、地域交通の実証や小規模導入の現実性を判断しやすくなるための運用設計や説明体制まで含めて整理することが重要です。",
+          "operators": "運営者や実証パートナーは、導入前に窓口・保管・説明・安全確認の役割分担を整えるという観点で導入条件と継続運用の両方を確認する必要があります。"
         }
       },
       "en": {
-        "title": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
-        "summary": "This item relates to 地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～. 地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
+        "title": "地域交通DX推進プロジェクト「COMmmmONS（コモンズ）」 2025年度の取組成果を公開します！",
+        "summary": "This item relates to 地域交通DX推進プロジェクト「COMmmmONS（コモンズ）」 2025年度の取組成果を公開します！. 地域交通DX推進プロジェクト「COMmmmONS（コモンズ）」 2025年度の取組成果を公開します！",
         "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
         "yorisouView": [
           "Yorisou reads this as a practical community transport issue.",
@@ -253,61 +195,64 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v2-ja-editorial",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_zqtxyn",
-    "slug": "ict",
+    "id": "insight_1774950806806_p5ntns",
+    "slug": "mobility-update-portal",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/tochi_fudousan_kensetsugyo13_hh_000001_00339.html",
-    "publishedAt": "2026-03-18T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "local-transport",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/sogo12_hh_000510.html",
+    "publishedAt": "2026-03-29T20:00:00.000Z",
+    "fetchedAt": "2026-03-31T09:53:26.801Z",
+    "category": "community-transport",
     "region": "japan",
     "tags": [
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
+    "rawTitle": "地域交通のためのポータルサイト「MOBILITY UPDATE PORTAL」を本公開～「交通空白」解消に向け、地域公共交通計画のアップデートを後押し～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
-        "summary": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～に関する話題です。建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
-        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "title": "地域交通のためのポータルサイト「MOBILITY UPDATE PORTAL」を本公開～「交通空白」解消に向け、地域公共交通計画のアップデートを後押し～",
+        "summary": "地域交通のためのポータルサイト「MOBILITY UPDATE PORTAL」を本公開～「交通空白」解消に向け、地域公共交通計画のアップデートを後押し～について、地域交通の観点から確認しておきたい論点が含まれています。",
+        "whyItMatters": "地域交通の論点では、地域内で移動支援が継続運用できるかどうかが重要です。制度や発表の内容を追うだけでなく、現場でどの負担が減るのかを具体的に見る必要があります。",
         "yorisouView": [
-          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+          "Yorisouでは、この話題を地域交通における実務上の示唆として捉えます。",
+          "地域交通のためのポータルサイト「MOBILITY UPDATE PORTAL」を本公開～「交通空白」解消に向け、地域公共交通計画のアップデートを後押し～のような動きは、利用者側の利便性だけでなく、地域内で移動支援が継続運用できるかどうかを見直すきっかけになります。",
+          "ご本人、ご家族、地域の関係者は、導入前に窓口・保管・説明・安全確認の役割分担を整えるという視点で読み解くことが重要です。"
         ],
         "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+          "地域内で移動支援が継続運用できるかどうかを、利用場面ごとに言語化しておく。",
+          "導入前に窓口・保管・説明・安全確認の役割分担を整えるという順番で相談や比較を進める。",
+          "地域交通の実証や小規模導入の現実性を判断しやすくなるため、実証や試乗では現場条件を必ず合わせて確認する。"
         ],
         "whatThisMeans": {
-          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+          "seniors": "ご本人にとっては、地域内で移動支援が継続運用できるかどうかが日々の外出意欲や安心感にどう影響するかを見ておくことが大切です。",
+          "families": "ご家族は、導入前に窓口・保管・説明・安全確認の役割分担を整えるという視点で、送迎や見守り負担がどう変わるかを確認すると判断しやすくなります。",
+          "localCommunities": "地域側では、地域交通の実証や小規模導入の現実性を判断しやすくなるための運用設計や説明体制まで含めて整理することが重要です。",
+          "operators": "運営者や実証パートナーは、導入前に窓口・保管・説明・安全確認の役割分担を整えるという観点で導入条件と継続運用の両方を確認する必要があります。"
         }
       },
       "en": {
-        "title": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
-        "summary": "This item relates to 建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～. 建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
-        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "title": "地域交通のためのポータルサイト「MOBILITY UPDATE PORTAL」を本公開～「交通空白」解消に向け、地域公共交通計画のアップデートを後押し～",
+        "summary": "This item relates to 地域交通のためのポータルサイト「MOBILITY UPDATE PORTAL」を本公開～「交通空白」解消に向け、地域公共交通計画のアップデートを後押し～. 地域交通のためのポータルサイト「MOBILITY UPDATE PORTAL」を本公開～「交通空白」解消に向け、地域公共交通計画のアップデートを後押し～",
+        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
         "yorisouView": [
-          "Yorisou reads this as a practical local transport issue.",
+          "Yorisou reads this as a practical community transport issue.",
           "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
           "Users, families, and local partners should review operating context and support setup alongside specifications."
         ],
         "practicalTakeaways": [
           "Interpret the topic through real daily routes.",
           "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a local transport lens."
+          "This can be translated into trial or consultation questions through a community transport lens."
         ],
         "whatThisMeans": {
-          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
           "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
           "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
           "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
@@ -317,7 +262,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v2-ja-editorial",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_75j4e8",
@@ -381,14 +329,17 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_esi3x9",
-    "slug": "35-ai",
+    "id": "insight_1773909553051_zqtxyn",
+    "slug": "ict",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/kanbo08_hh_001316.html",
-    "publishedAt": "2026-03-17T20:00:00.000Z",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/tochi_fudousan_kensetsugyo13_hh_000001_00339.html",
+    "publishedAt": "2026-03-18T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
     "category": "local-transport",
     "region": "japan",
@@ -396,12 +347,12 @@
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
+    "rawTitle": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
-        "summary": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～に関する話題です。国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
+        "title": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
+        "summary": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～に関する話題です。建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
         "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
         "yorisouView": [
           "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
@@ -421,8 +372,8 @@
         }
       },
       "en": {
-        "title": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
-        "summary": "This item relates to 国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～. 国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
+        "title": "建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
+        "summary": "This item relates to 建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～. 建設市場整備推進事業費補助金の募集開始及びオンライン説明会の開催について～「地域の守り手」となる建設業のICT活用促進に向けて～",
         "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
         "yorisouView": [
           "Yorisou reads this as a practical local transport issue.",
@@ -445,14 +396,17 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_ea64n3",
-    "slug": "",
+    "id": "insight_1773909553051_9mpaw4",
+    "slug": "insight-ww-mlit-go-jp-report-press-road01-hh-002070-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/jidosha01_hh_000123.html",
-    "publishedAt": "2026-03-17T20:00:00.000Z",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/road01_hh_002070.html",
+    "publishedAt": "2026-03-18T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
     "category": "community-transport",
     "region": "japan",
@@ -460,12 +414,12 @@
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+    "rawTitle": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
-        "summary": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～に関する話題です。令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+        "title": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
+        "summary": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～に関する話題です。地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
         "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
         "yorisouView": [
           "Yorisouは、この話題を地域交通の実務課題として見ています。",
@@ -485,8 +439,8 @@
         }
       },
       "en": {
-        "title": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
-        "summary": "This item relates to 令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～. 令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+        "title": "地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
+        "summary": "This item relates to 地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～. 地方公共団体の道路除雪費支援に過去最大の支援を実施～今冬の道路除雪費用を追加配分～",
         "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
         "yorisouView": [
           "Yorisou reads this as a practical community transport issue.",
@@ -509,27 +463,232 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_p97hmy",
-    "slug": "",
+    "id": "insight_1773909553051_hqd9h3",
+    "slug": "insight-mlit-go-jp-report-press-jidosha10-hh-000340-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/tokatsu01_hh_000989.html",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/jidosha10_hh_000340.html",
+    "publishedAt": "2026-03-18T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "local-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
+        "summary": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催についてに関する話題です。交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
+        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
+        "summary": "This item relates to 交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について. 交通政策審議会陸上交通分科会自動車部会 「技術安全ワーキンググループ」（第３回）の開催について",
+        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "yorisouView": [
+          "Yorisou reads this as a practical local transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a local transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_wz11vk",
+    "slug": "193",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/kaiji04_hh_000384.html",
+    "publishedAt": "2026-03-18T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "local-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
+        "summary": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～に関する話題です。船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
+        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
+        "summary": "This item relates to 船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～. 船員手帳に関する政令の制定等について審議を行います～交通政策審議会海事分科会第193回船員部会を開催～",
+        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "yorisouView": [
+          "Yorisou reads this as a practical local transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a local transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_vlgi59",
+    "slug": "insight-w-mlit-go-jp-report-press-kanbo04-hh-000151-html",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/kanbo04_hh_000151.html",
+    "publishedAt": "2026-03-18T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "local-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
+        "summary": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～に関する話題です。「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
+        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
+        "summary": "This item relates to 「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～. 「国土交通省組織令の一部を改正する政令」が閣議決定～経済安全保障の推進に向けた体制強化～",
+        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "yorisouView": [
+          "Yorisou reads this as a practical local transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a local transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_0272ma",
+    "slug": "insight-ww-mlit-go-jp-report-press-sogo09-hh-000433-html",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/sogo09_hh_000433.html",
     "publishedAt": "2026-03-17T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
     "category": "community-transport",
     "region": "japan",
     "tags": [
       "国交省",
-      "地域交通"
+      "地域交通",
+      "バリアフリー"
     ],
-    "rawTitle": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+    "rawTitle": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
-        "summary": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定についてに関する話題です。デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+        "title": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
+        "summary": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～に関する話題です。令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
         "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
         "yorisouView": [
           "Yorisouは、この話題を地域交通の実務課題として見ています。",
@@ -549,8 +708,8 @@
         }
       },
       "en": {
-        "title": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
-        "summary": "This item relates to デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について. デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+        "title": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
+        "summary": "This item relates to 令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～. 令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
         "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
         "yorisouView": [
           "Yorisou reads this as a practical community transport issue.",
@@ -573,61 +732,64 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_inwfin",
-    "slug": "",
+    "id": "insight_1773909553051_f2sk4i",
+    "slug": "insight-ww-mlit-go-jp-report-press-sogo12-hh-000508-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/tokatsu01_hh_000990.html",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/sogo12_hh_000508.html",
     "publishedAt": "2026-03-17T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "community-transport",
+    "category": "local-transport",
     "region": "japan",
     "tags": [
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
+    "rawTitle": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
-        "summary": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定についてに関する話題です。中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
-        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
+        "title": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
+        "summary": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～に関する話題です。松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
+        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
         "yorisouView": [
-          "Yorisouは、この話題を地域交通の実務課題として見ています。",
+          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
           "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
           "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
         ],
         "practicalTakeaways": [
           "実際の利用導線に引き寄せて読む。",
           "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
+          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
         ],
         "whatThisMeans": {
-          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
           "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
           "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
           "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
         }
       },
       "en": {
-        "title": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
-        "summary": "This item relates to 中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について. 中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
-        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
+        "title": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
+        "summary": "This item relates to 松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～. 松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
+        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
         "yorisouView": [
-          "Yorisou reads this as a practical community transport issue.",
+          "Yorisou reads this as a practical local transport issue.",
           "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
           "Users, families, and local partners should review operating context and support setup alongside specifications."
         ],
         "practicalTakeaways": [
           "Interpret the topic through real daily routes.",
           "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a community transport lens."
+          "This can be translated into trial or consultation questions through a local transport lens."
         ],
         "whatThisMeans": {
-          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
+          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
           "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
           "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
           "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
@@ -637,199 +799,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
-  },
-  {
-    "id": "insight_1773909553051_652rsc",
-    "slug": "",
-    "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/tokatsu01_hh_000991.html",
-    "publishedAt": "2026-03-17T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "community-transport",
-    "region": "japan",
-    "tags": [
-      "国交省",
-      "地域交通"
-    ],
-    "rawTitle": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
-    "rawExcerpt": "",
-    "content": {
-      "ja": {
-        "title": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
-        "summary": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定についてに関する話題です。中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
-        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
-        "yorisouView": [
-          "Yorisouは、この話題を地域交通の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
-        ],
-        "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
-        ],
-        "whatThisMeans": {
-          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
-        }
-      },
-      "en": {
-        "title": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
-        "summary": "This item relates to 中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について. 中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
-        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
-        "yorisouView": [
-          "Yorisou reads this as a practical community transport issue.",
-          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
-          "Users, families, and local partners should review operating context and support setup alongside specifications."
-        ],
-        "practicalTakeaways": [
-          "Interpret the topic through real daily routes.",
-          "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a community transport lens."
-        ],
-        "whatThisMeans": {
-          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
-          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
-          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
-          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
-        }
-      }
-    },
-    "reviewStatus": "draft",
-    "approvedForPublic": false,
-    "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
-  },
-  {
-    "id": "insight_1773909553051_a1zc9t",
-    "slug": "",
-    "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/tetsudo07_hh_000322.html",
-    "publishedAt": "2026-03-17T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "community-transport",
-    "region": "japan",
-    "tags": [
-      "国交省",
-      "地域交通"
-    ],
-    "rawTitle": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
-    "rawExcerpt": "",
-    "content": {
-      "ja": {
-        "title": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
-        "summary": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催についてに関する話題です。第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
-        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
-        "yorisouView": [
-          "Yorisouは、この話題を地域交通の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
-        ],
-        "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
-        ],
-        "whatThisMeans": {
-          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
-        }
-      },
-      "en": {
-        "title": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
-        "summary": "This item relates to 第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について. 第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
-        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
-        "yorisouView": [
-          "Yorisou reads this as a practical community transport issue.",
-          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
-          "Users, families, and local partners should review operating context and support setup alongside specifications."
-        ],
-        "practicalTakeaways": [
-          "Interpret the topic through real daily routes.",
-          "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a community transport lens."
-        ],
-        "whatThisMeans": {
-          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
-          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
-          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
-          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
-        }
-      }
-    },
-    "reviewStatus": "draft",
-    "approvedForPublic": false,
-    "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
-  },
-  {
-    "id": "insight_1773909553051_9wb6m1",
-    "slug": "",
-    "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/road01_hh_002065.html",
-    "publishedAt": "2026-03-17T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "micro-mobility",
-    "region": "japan",
-    "tags": [
-      "国交省",
-      "地域交通"
-    ],
-    "rawTitle": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
-    "rawExcerpt": "",
-    "content": {
-      "ja": {
-        "title": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
-        "summary": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～に関する話題です。「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
-        "whyItMatters": "マイクロモビリティの導入は、地域条件や高齢者利用との相性確認が欠かせません。",
-        "yorisouView": [
-          "Yorisouは、この話題をマイクロモビリティの実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
-        ],
-        "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouではマイクロモビリティの観点から試乗・導入相談につなげて整理できます。"
-        ],
-        "whatThisMeans": {
-          "seniors": "マイクロモビリティの話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
-        }
-      },
-      "en": {
-        "title": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
-        "summary": "This item relates to 「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～. 「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
-        "whyItMatters": "Micro mobility topics need to be checked against real local conditions and senior use cases.",
-        "yorisouView": [
-          "Yorisou reads this as a practical micro mobility issue.",
-          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
-          "Users, families, and local partners should review operating context and support setup alongside specifications."
-        ],
-        "practicalTakeaways": [
-          "Interpret the topic through real daily routes.",
-          "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a micro mobility lens."
-        ],
-        "whatThisMeans": {
-          "seniors": "As a micro mobility topic, the key question is how daily movement burden may change in practice.",
-          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
-          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
-          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
-        }
-      }
-    },
-    "reviewStatus": "draft",
-    "approvedForPublic": false,
-    "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_rmvdkh",
@@ -893,61 +866,64 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_f2sk4i",
-    "slug": "",
+    "id": "insight_1773909553051_9wb6m1",
+    "slug": "insight-ww-mlit-go-jp-report-press-road01-hh-002065-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/sogo12_hh_000508.html",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/road01_hh_002065.html",
     "publishedAt": "2026-03-17T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "local-transport",
+    "category": "micro-mobility",
     "region": "japan",
     "tags": [
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
+    "rawTitle": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
-        "summary": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～に関する話題です。松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
-        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "title": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
+        "summary": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～に関する話題です。「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
+        "whyItMatters": "マイクロモビリティの導入は、地域条件や高齢者利用との相性確認が欠かせません。",
         "yorisouView": [
-          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
+          "Yorisouは、この話題をマイクロモビリティの実務課題として見ています。",
           "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
           "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
         ],
         "practicalTakeaways": [
           "実際の利用導線に引き寄せて読む。",
           "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+          "Yorisouではマイクロモビリティの観点から試乗・導入相談につなげて整理できます。"
         ],
         "whatThisMeans": {
-          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "seniors": "マイクロモビリティの話題として、日々の移動負担がどう変わるかを見ることが大切です。",
           "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
           "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
           "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
         }
       },
       "en": {
-        "title": "松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
-        "summary": "This item relates to 松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～. 松江地区にて松江市交通局と一畑バスによる共同経営がスタートします～路線の共同運行、等間隔運行、市街地ゾーン内均一制運賃の導入等による最適なサービスの提供～",
-        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "title": "「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
+        "summary": "This item relates to 「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～. 「第４回 自動運転インフラ検討会」の開催について～自動運転に資するインフラの在り方について議論します～",
+        "whyItMatters": "Micro mobility topics need to be checked against real local conditions and senior use cases.",
         "yorisouView": [
-          "Yorisou reads this as a practical local transport issue.",
+          "Yorisou reads this as a practical micro mobility issue.",
           "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
           "Users, families, and local partners should review operating context and support setup alongside specifications."
         ],
         "practicalTakeaways": [
           "Interpret the topic through real daily routes.",
           "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a local transport lens."
+          "This can be translated into trial or consultation questions through a micro mobility lens."
         ],
         "whatThisMeans": {
-          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "seniors": "As a micro mobility topic, the key question is how daily movement burden may change in practice.",
           "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
           "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
           "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
@@ -957,28 +933,30 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_0272ma",
-    "slug": "",
+    "id": "insight_1773909553051_a1zc9t",
+    "slug": "insight-mlit-go-jp-report-press-tetsudo07-hh-000322-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/sogo09_hh_000433.html",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/tetsudo07_hh_000322.html",
     "publishedAt": "2026-03-17T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
     "category": "community-transport",
     "region": "japan",
     "tags": [
       "国交省",
-      "地域交通",
-      "バリアフリー"
+      "地域交通"
     ],
-    "rawTitle": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
+    "rawTitle": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
-        "summary": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～に関する話題です。令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
+        "title": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
+        "summary": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催についてに関する話題です。第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
         "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
         "yorisouView": [
           "Yorisouは、この話題を地域交通の実務課題として見ています。",
@@ -998,8 +976,8 @@
         }
       },
       "en": {
-        "title": "令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
-        "summary": "This item relates to 令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～. 令和７年度第２回「公共交通機関のバリアフリー基準等に関する検討会」（ウェブ会議）の開催について～公共交通機関の更なるバリアフリー水準向上のためガイドラインの見直し等について検討～",
+        "title": "第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
+        "summary": "This item relates to 第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について. 第２２回「超電導磁気浮上式鉄道実用技術評価委員会」の開催について",
         "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
         "yorisouView": [
           "Yorisou reads this as a practical community transport issue.",
@@ -1022,14 +1000,17 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_bkhnvz",
-    "slug": "",
+    "id": "insight_1773909553051_652rsc",
+    "slug": "insight-mlit-go-jp-report-press-tokatsu01-hh-000991-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/tetsudo08_hh_000116.html",
-    "publishedAt": "2026-03-16T20:00:00.000Z",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/tokatsu01_hh_000991.html",
+    "publishedAt": "2026-03-17T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
     "category": "community-transport",
     "region": "japan",
@@ -1037,12 +1018,12 @@
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+    "rawTitle": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
-        "summary": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～に関する話題です。鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+        "title": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
+        "summary": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定についてに関する話題です。中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
         "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
         "yorisouView": [
           "Yorisouは、この話題を地域交通の実務課題として見ています。",
@@ -1062,8 +1043,8 @@
         }
       },
       "en": {
-        "title": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
-        "summary": "This item relates to 鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～. 鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+        "title": "中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
+        "summary": "This item relates to 中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について. 中小物流事業者の労働生産性向上事業費補助金（共同輸配送や帰り荷確保等のための物流データ連携促進支援事業）に係る執行団体の決定について",
         "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
         "yorisouView": [
           "Yorisou reads this as a practical community transport issue.",
@@ -1086,14 +1067,218 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
-    "id": "insight_1773909553051_x4fhkd",
-    "slug": "",
+    "id": "insight_1773909553051_inwfin",
+    "slug": "insight-mlit-go-jp-report-press-tokatsu01-hh-000990-html",
     "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/house04_hh_001330.html",
-    "publishedAt": "2026-03-16T20:00:00.000Z",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/tokatsu01_hh_000990.html",
+    "publishedAt": "2026-03-17T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "community-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
+        "summary": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定についてに関する話題です。中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
+        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域交通の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
+        "summary": "This item relates to 中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について. 中小物流事業者の労働生産性向上事業費補助金（荷役等の効率化に向けた「標準仕様パレット」の利用促進支援事業）に係る 執行団体の決定について",
+        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
+        "yorisouView": [
+          "Yorisou reads this as a practical community transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a community transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_p97hmy",
+    "slug": "insight-mlit-go-jp-report-press-tokatsu01-hh-000989-html",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/tokatsu01_hh_000989.html",
+    "publishedAt": "2026-03-17T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "community-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+        "summary": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定についてに関する話題です。デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域交通の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+        "summary": "This item relates to デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について. デジタル技術を活用した荷主・物流事業者の行動変容促進事業費補助金に係る執行団体の決定について",
+        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
+        "yorisouView": [
+          "Yorisou reads this as a practical community transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a community transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_ea64n3",
+    "slug": "insight-mlit-go-jp-report-press-jidosha01-hh-000123-html",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/jidosha01_hh_000123.html",
+    "publishedAt": "2026-03-17T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "community-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+        "summary": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～に関する話題です。令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域交通の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+        "summary": "This item relates to 令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～. 令和７年度第２回「事業用自動車に係る総合的安全対策検討委員会」の開催～次期事業用自動車総合安全プランの策定に向けた議論を行います～",
+        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
+        "yorisouView": [
+          "Yorisou reads this as a practical community transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a community transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_esi3x9",
+    "slug": "35-ai",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/kanbo08_hh_001316.html",
+    "publishedAt": "2026-03-17T20:00:00.000Z",
     "fetchedAt": "2026-03-19T08:39:13.047Z",
     "category": "local-transport",
     "region": "japan",
@@ -1101,12 +1286,12 @@
       "国交省",
       "地域交通"
     ],
-    "rawTitle": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+    "rawTitle": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
     "rawExcerpt": "",
     "content": {
       "ja": {
-        "title": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
-        "summary": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～に関する話題です。災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+        "title": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
+        "summary": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～に関する話題です。国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
         "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
         "yorisouView": [
           "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
@@ -1126,8 +1311,8 @@
         }
       },
       "en": {
-        "title": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
-        "summary": "This item relates to 災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～. 災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+        "title": "国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
+        "summary": "This item relates to 国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～. 国土交通データプラットフォームの新バージョンをリリース～データ連携35システムへ拡大、AI活用と実証成果で利便性向上～",
         "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
         "yorisouView": [
           "Yorisou reads this as a practical local transport issue.",
@@ -1150,75 +1335,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
-  },
-  {
-    "id": "insight_1773909553051_spugnr",
-    "slug": "",
-    "sourceName": "国土交通省 報道発表",
-    "sourceUrl": "http://www.mlit.go.jp/report/press/tochi_fudousan_kensetsugyo13_hh_000001_00338.html",
-    "publishedAt": "2026-03-16T20:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "local-transport",
-    "region": "japan",
-    "tags": [
-      "国交省",
-      "地域交通"
-    ],
-    "rawTitle": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
-    "rawExcerpt": "",
-    "content": {
-      "ja": {
-        "title": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
-        "summary": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～に関する話題です。建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
-        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
-        "yorisouView": [
-          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
-        ],
-        "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
-        ],
-        "whatThisMeans": {
-          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
-        }
-      },
-      "en": {
-        "title": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
-        "summary": "This item relates to 建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～. 建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
-        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
-        "yorisouView": [
-          "Yorisou reads this as a practical local transport issue.",
-          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
-          "Users, families, and local partners should review operating context and support setup alongside specifications."
-        ],
-        "practicalTakeaways": [
-          "Interpret the topic through real daily routes.",
-          "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a local transport lens."
-        ],
-        "whatThisMeans": {
-          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
-          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
-          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
-          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
-        }
-      }
-    },
-    "reviewStatus": "draft",
-    "approvedForPublic": false,
-    "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_xnp3y8",
-    "slug": "",
+    "slug": "insight-ww-mlit-go-jp-report-press-sogo10-hh-000373-html",
     "sourceName": "国土交通省 報道発表",
     "sourceUrl": "http://www.mlit.go.jp/report/press/sogo10_hh_000373.html",
     "publishedAt": "2026-03-16T20:00:00.000Z",
@@ -1278,11 +1402,215 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed."
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_spugnr",
+    "slug": "insight-ochi-fudousan-kensetsugyo13-hh-000001-00338-html",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/tochi_fudousan_kensetsugyo13_hh_000001_00338.html",
+    "publishedAt": "2026-03-16T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "local-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
+        "summary": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～に関する話題です。建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
+        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
+        "summary": "This item relates to 建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～. 建設業の賃金引上げや生産性向上の推進について意見交換します～国土交通大臣と建設業団体の意見交換会の開催～",
+        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "yorisouView": [
+          "Yorisou reads this as a practical local transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a local transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_x4fhkd",
+    "slug": "insight-w-mlit-go-jp-report-press-house04-hh-001330-html",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/house04_hh_001330.html",
+    "publishedAt": "2026-03-16T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "local-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+        "summary": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～に関する話題です。災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+        "summary": "This item relates to 災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～. 災害発生に備えてモデル的取組を行う地域の住宅生産事業者等のグループを支援します！～暮らし維持のための安全・安心確保モデル事業(広域モデル策定型)の公募開始～",
+        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "yorisouView": [
+          "Yorisou reads this as a practical local transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a local transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_bkhnvz",
+    "slug": "insight-mlit-go-jp-report-press-tetsudo08-hh-000116-html",
+    "sourceName": "国土交通省 報道発表",
+    "sourceUrl": "http://www.mlit.go.jp/report/press/tetsudo08_hh_000116.html",
+    "publishedAt": "2026-03-16T20:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "community-transport",
+    "region": "japan",
+    "tags": [
+      "国交省",
+      "地域交通"
+    ],
+    "rawTitle": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+        "summary": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～に関する話題です。鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+        "whyItMatters": "地域交通の話題は、自治体や施設がどこまで持続的に運用できるかに直結します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域交通の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域交通の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域交通の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+        "summary": "This item relates to 鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～. 鉄道の安全利用に関する多言語ポスターについて～訪日外国人の鉄道事故防止に向けて～",
+        "whyItMatters": "Community transport topics directly affect whether local programs can operate sustainably.",
+        "yorisouView": [
+          "Yorisou reads this as a practical community transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a community transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a community transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Mobility-relevant items are filtered from the broader MLIT press feed.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_4bvw6y",
-    "slug": "",
+    "slug": "insight-i-go-jp-press-20260311-buturyu-yousei-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20260311_buturyu_yousei_press.html",
     "publishedAt": "2026-03-11T06:00:00.000Z",
@@ -1342,7 +1670,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_cruyt3",
@@ -1407,7 +1738,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_kdsqdo",
@@ -1472,7 +1806,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_dmhf35",
@@ -1537,7 +1874,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_9dvuu2",
@@ -1601,7 +1941,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_9jqxcb",
@@ -1666,7 +2009,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_7b7kdq",
@@ -1731,11 +2077,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_beb8e2",
-    "slug": "",
+    "slug": "insight--meti-go-jp-press-20260129sightseeing-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20260129sightseeing_press.html",
     "publishedAt": "2026-01-29T06:00:00.000Z",
@@ -1796,7 +2145,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_mg8607",
@@ -1861,7 +2213,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_ln04rc",
@@ -1926,72 +2281,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
-  },
-  {
-    "id": "insight_1773909553051_dwnll3",
-    "slug": "kanto-meti-innovation-meetup-4weeks",
-    "sourceName": "関東経済産業局 新着情報",
-    "sourceUrl": "https://www.kanto.meti.go.jp/press/20260126venture_press.html",
-    "publishedAt": "2026-01-26T02:00:00.000Z",
-    "fetchedAt": "2026-03-19T08:39:13.047Z",
-    "category": "local-transport",
-    "region": "local-community",
-    "tags": [
-      "経産局",
-      "地域実装",
-      "地域交通"
-    ],
-    "rawTitle": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
-    "rawExcerpt": "",
-    "content": {
-      "ja": {
-        "title": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
-        "summary": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！に関する話題です。地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
-        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
-        "yorisouView": [
-          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
-          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
-          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
-        ],
-        "practicalTakeaways": [
-          "実際の利用導線に引き寄せて読む。",
-          "ご家族や付き添い側の負担変化も合わせて考える。",
-          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
-        ],
-        "whatThisMeans": {
-          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
-          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
-          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
-          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
-        }
-      },
-      "en": {
-        "title": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
-        "summary": "This item relates to 地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！. 地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
-        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
-        "yorisouView": [
-          "Yorisou reads this as a practical local transport issue.",
-          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
-          "Users, families, and local partners should review operating context and support setup alongside specifications."
-        ],
-        "practicalTakeaways": [
-          "Interpret the topic through real daily routes.",
-          "Include likely impact on family or accompaniment burden.",
-          "This can be translated into trial or consultation questions through a local transport lens."
-        ],
-        "whatThisMeans": {
-          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
-          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
-          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
-          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
-        }
-      }
-    },
-    "reviewStatus": "draft",
-    "approvedForPublic": false,
-    "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_5zl9rq",
@@ -2056,7 +2349,78 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
+  },
+  {
+    "id": "insight_1773909553051_dwnll3",
+    "slug": "kanto-meti-innovation-meetup-4weeks",
+    "sourceName": "関東経済産業局 新着情報",
+    "sourceUrl": "https://www.kanto.meti.go.jp/press/20260126venture_press.html",
+    "publishedAt": "2026-01-26T02:00:00.000Z",
+    "fetchedAt": "2026-03-19T08:39:13.047Z",
+    "category": "local-transport",
+    "region": "local-community",
+    "tags": [
+      "経産局",
+      "地域実装",
+      "地域交通"
+    ],
+    "rawTitle": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
+    "rawExcerpt": "",
+    "content": {
+      "ja": {
+        "title": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
+        "summary": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！に関する話題です。地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
+        "whyItMatters": "地域の交通課題は、生活導線の分断や移動空白の埋め方と関係します。",
+        "yorisouView": [
+          "Yorisouは、この話題を地域の交通課題の実務課題として見ています。",
+          "日本では導入可否だけでなく、日常導線に沿って継続利用できるかが重要です。",
+          "ご本人・ご家族・地域関係者は、性能だけでなく相談体制や利用環境まで含めて確認する必要があります。"
+        ],
+        "practicalTakeaways": [
+          "実際の利用導線に引き寄せて読む。",
+          "ご家族や付き添い側の負担変化も合わせて考える。",
+          "Yorisouでは地域の交通課題の観点から試乗・導入相談につなげて整理できます。"
+        ],
+        "whatThisMeans": {
+          "seniors": "地域の交通課題の話題として、日々の移動負担がどう変わるかを見ることが大切です。",
+          "families": "制度や導入の話題でも、実際には送迎や見守り負担にどう影響するかを確認する必要があります。",
+          "localCommunities": "地域実装の視点では、車両導入だけでなく説明・保管・相談窓口まで含めた設計が重要です。",
+          "operators": "実証や導入判断では、利用導線・安全運用・継続体制に引き寄せて読むことが求められます。"
+        }
+      },
+      "en": {
+        "title": "地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
+        "summary": "This item relates to 地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！. 地域企業の「稼ぐ力」の強化を促進する「KANTO METI INNOVATION MEETUP 4WEEKS！」を開催します！",
+        "whyItMatters": "Local transport challenges are closely tied to route fragmentation and mobility gaps.",
+        "yorisouView": [
+          "Yorisou reads this as a practical local transport issue.",
+          "In Japan, the real question is not only whether something can be introduced, but whether it can remain usable in daily life.",
+          "Users, families, and local partners should review operating context and support setup alongside specifications."
+        ],
+        "practicalTakeaways": [
+          "Interpret the topic through real daily routes.",
+          "Include likely impact on family or accompaniment burden.",
+          "This can be translated into trial or consultation questions through a local transport lens."
+        ],
+        "whatThisMeans": {
+          "seniors": "As a local transport topic, the key question is how daily movement burden may change in practice.",
+          "families": "Even policy or pilot news should be read through its likely effect on accompaniment and family reassurance.",
+          "localCommunities": "For local implementation, support design matters alongside vehicle introduction.",
+          "operators": "Pilots and deployment decisions should be read through route fit, safe operation, and continuity."
+        }
+      }
+    },
+    "reviewStatus": "draft",
+    "approvedForPublic": false,
+    "createdFrom": "rss",
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_0dggxg",
@@ -2121,7 +2485,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_erummm",
@@ -2186,7 +2553,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_ejz4x4",
@@ -2251,11 +2621,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_wf4v0k",
-    "slug": "",
+    "slug": "insight--jp-seisaku-chizai-r7fy-relay-program-koubo-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/seisaku/chizai/r7fy_relay_program_koubo.html",
     "publishedAt": "2025-09-09T06:00:00.000Z",
@@ -2316,7 +2689,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_al8h7y",
@@ -2381,7 +2757,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_6lls7s",
@@ -2446,7 +2825,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_r4t75t",
@@ -2511,7 +2893,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_rbge6g",
@@ -2576,7 +2961,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_4epzmq",
@@ -2641,11 +3029,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_un5gpm",
-    "slug": "",
+    "slug": "insight-anto-meti-go-jp-press-20250609buturyu-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20250609buturyu_press.html",
     "publishedAt": "2025-06-09T06:00:00.000Z",
@@ -2705,7 +3096,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_pj00ma",
@@ -2770,7 +3164,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_tvpeqe",
@@ -2835,11 +3232,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_yb6smh",
-    "slug": "",
+    "slug": "insight--go-jp-press-20250220-buturyu-kyoryokuyosei-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20250220_buturyu_kyoryokuyosei.html",
     "publishedAt": "2025-02-20T06:00:00.000Z",
@@ -2899,7 +3299,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_esqiks",
@@ -2964,7 +3367,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_oe1owr",
@@ -3029,7 +3435,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_0qygr6",
@@ -3094,7 +3503,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_veu92o",
@@ -3159,7 +3571,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_3iuqz8",
@@ -3224,11 +3639,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_93jc2q",
-    "slug": "",
+    "slug": "insight-kanto-meti-go-jp-press-20250114jinzai-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20250114jinzai_press.html",
     "publishedAt": "2025-01-14T06:00:00.000Z",
@@ -3289,7 +3707,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_cs2nwl",
@@ -3354,11 +3775,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_qrzael",
-    "slug": "",
+    "slug": "insight-kanto-meti-go-jp-press-20241101jinzai-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20241101jinzai_press.html",
     "publishedAt": "2024-11-01T06:00:00.000Z",
@@ -3419,7 +3843,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_7xul7g",
@@ -3484,11 +3911,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_ns8f0n",
-    "slug": "",
+    "slug": "insight--meti-go-jp-press-20240925mirai-pitch-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20240925mirai_pitch_press.html",
     "publishedAt": "2024-09-25T05:00:00.000Z",
@@ -3549,7 +3979,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_bfvw7r",
@@ -3614,11 +4047,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_dt93yw",
-    "slug": "",
+    "slug": "insight-www-kanto-meti-go-jp-press-231222ridcevent-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/231222ridcevent.html",
     "publishedAt": "2023-12-04T06:00:00.000Z",
@@ -3679,11 +4115,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_spnix4",
-    "slug": "",
+    "slug": "insight--kanto-meti-go-jp-press-20231006soumu-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20231006soumu_press.html",
     "publishedAt": "2023-10-06T05:00:00.000Z",
@@ -3744,7 +4183,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_tz5oxk",
@@ -3809,11 +4251,14 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_uirog9",
-    "slug": "",
+    "slug": "insight-anto-meti-go-jp-press-20230531-ryutsu-press-html",
     "sourceName": "関東経済産業局 新着情報",
     "sourceUrl": "https://www.kanto.meti.go.jp/press/20230531_ryutsu_press.html",
     "publishedAt": "2023-05-31T06:00:00.000Z",
@@ -3874,7 +4319,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_t7ovft",
@@ -3939,7 +4387,10 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   },
   {
     "id": "insight_1773909553051_xjkljb",
@@ -4004,6 +4455,9 @@
     "reviewStatus": "draft",
     "approvedForPublic": false,
     "createdFrom": "rss",
-    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics."
+    "ingestionNotes": "Used selectively for practical regional mobility and last-mile topics.",
+    "analysisVersion": "v1",
+    "featured": false,
+    "homepageFeatured": false
   }
 ]
