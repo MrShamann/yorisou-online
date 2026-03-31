@@ -12,12 +12,14 @@ import {
   type SupportIdentity,
   type SupportIssueType,
 } from "@/lib/ai/support/scenario-engine";
+import { identityFoundationService } from "@/lib/server/foundation/identityService";
+import { timelineService } from "@/lib/server/foundation/timelineService";
 import { getHinataMemorySnapshot, upsertHinataMemory } from "@/lib/server/hinataMemory";
 import { buildOpenClawCapabilityPlan } from "@/lib/server/openclawCapabilities";
 import { buildOpenClawFoundationLearningFeed, forwardLearningFeedToOpenClaw } from "@/lib/server/openclawLearningFeedBridge";
 import { getHinataKnowledgePacket } from "@/lib/server/hinataKnowledge";
 import { recordOpenClawReflection } from "@/lib/server/openclawReflection";
-import { ensureViewerSession, getViewerContext, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
+import { ensureViewerSession, getViewerContext, setViewerSessionCookie, type ViewerContext } from "@/lib/server/yorisouAuth";
 
 type SupportChatRequest = {
   locale?: SupportAssistantLocale;
@@ -41,6 +43,32 @@ function isValidIssueType(value: string | undefined): value is SupportIssueType 
   );
 }
 
+function getLegacyViewerAccount(viewer: ViewerContext) {
+  return viewer.legacyAccount || viewer.account;
+}
+
+async function resolveSupportWorkspaceFoundationIdentity(viewer: ViewerContext) {
+  const legacyAccount = getLegacyViewerAccount(viewer);
+
+  if (!legacyAccount) {
+    return {
+      userProfileId: null,
+      authIdentityId: null,
+    };
+  }
+
+  await identityFoundationService.ensureCanonicalUserForAccount(legacyAccount, "support_workspace");
+
+  const authIdentity =
+    (legacyAccount.email ? await identityFoundationService.getAuthIdentityByEmail(legacyAccount.email) : null) ||
+    (legacyAccount.lineUserId ? await identityFoundationService.getAuthIdentityByLineUserId(legacyAccount.lineUserId) : null);
+
+  return {
+    userProfileId: viewer.principal?.userProfileId || legacyAccount.id,
+    authIdentityId: authIdentity?.authIdentityId || null,
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const viewer = await getViewerContext();
@@ -62,6 +90,16 @@ export async function POST(request: Request) {
       : [];
     const userMessage = typeof payload.message === "string" ? payload.message.trim() : "";
     const locale = detectConversationLocale(userMessage, messages, requestedLocale);
+    let foundationIdentity = {
+      userProfileId: null as string | null,
+      authIdentityId: null as string | null,
+    };
+
+    try {
+      foundationIdentity = await resolveSupportWorkspaceFoundationIdentity(viewer);
+    } catch (foundationError) {
+      console.error("support chat canonical identity error:", foundationError);
+    }
 
     const memory = await getHinataMemorySnapshot({
       viewer,
@@ -75,6 +113,30 @@ export async function POST(request: Request) {
       message: userMessage,
       messages,
     });
+    let foundationContext:
+      | Awaited<ReturnType<typeof timelineService.ensureSupportWorkspaceContext>>
+      | null = null;
+
+    try {
+      foundationContext = await timelineService.ensureSupportWorkspaceContext({
+        sessionId: session.id,
+        locale,
+        userProfileId: foundationIdentity.userProfileId,
+        authIdentityId: foundationIdentity.authIdentityId,
+        currentTopic: memory.thread?.currentTopic || null,
+        scenario: scenarioResult.scenario,
+        issueType: payload.issueType,
+        latestUserMessage: userMessage,
+      });
+      await timelineService.recordSupportWorkspaceMessage({
+        context: foundationContext,
+        direction: "inbound",
+        contentText: userMessage,
+      });
+    } catch (foundationError) {
+      foundationContext = null;
+      console.error("support chat canonical inbound event error:", foundationError);
+    }
     const policy = getConversationPolicy(scenarioResult, locale);
     const recommendedActions = shouldOfferActions({
       locale,
@@ -141,6 +203,27 @@ export async function POST(request: Request) {
       assistantMessage,
       actions: recommendedActions,
     });
+    try {
+      const assistantContext = await timelineService.ensureSupportWorkspaceContext({
+        sessionId: session.id,
+        locale,
+        userProfileId: foundationIdentity.userProfileId,
+        authIdentityId: foundationIdentity.authIdentityId,
+        currentTopic: memoryWrite.thread.currentTopic || null,
+        scenario: scenarioResult.scenario,
+        issueType: payload.issueType,
+        latestUserMessage: userMessage,
+        latestAssistantMessage: assistantMessage,
+      });
+      await timelineService.recordSupportWorkspaceMessage({
+        context: assistantContext,
+        direction: "outbound",
+        contentText: assistantMessage,
+        replyStatus: "sent",
+      });
+    } catch (foundationError) {
+      console.error("support chat canonical outbound event error:", foundationError);
+    }
     const learningArtifacts = await recordOpenClawReflection({
       scenario: scenarioResult,
       userMessage,

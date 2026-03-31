@@ -10,6 +10,41 @@ function makeExternalKey(input: { channel: Channel; identityKey: string }) {
   return `${input.channel}:${input.identityKey}`;
 }
 
+function buildSupportWorkspaceTitle(input: {
+  locale: "ja" | "en";
+  scenario: string;
+  issueType: string;
+  currentTopic?: string | null;
+}) {
+  if (input.currentTopic?.trim()) {
+    return input.currentTopic.trim();
+  }
+
+  const labels = {
+    mobility_anxiety: input.locale === "en" ? "Mobility anxiety support" : "移動不安の相談",
+    family_mobility_support: input.locale === "en" ? "Family mobility support" : "家族の移動支援相談",
+    product_guidance: input.locale === "en" ? "Mobility solution guidance" : "支援手段の比較相談",
+    consultation_booking: input.locale === "en" ? "Consultation follow-up" : "継続相談の整理",
+    institutional_inquiry: input.locale === "en" ? "Institutional support inquiry" : "地域・施設からの相談",
+  } as const;
+
+  return labels[input.issueType as keyof typeof labels] || input.scenario || (input.locale === "en" ? "Support workspace" : "サポート相談");
+}
+
+function buildSupportWorkspaceSummary(input: {
+  userMessage: string;
+  assistantMessage?: string;
+}) {
+  const user = input.userMessage.trim().replace(/\s+/g, " ").slice(0, 240);
+  const assistant = input.assistantMessage?.trim().replace(/\s+/g, " ").slice(0, 240) || "";
+
+  if (assistant) {
+    return `${user}\n---\n${assistant}`;
+  }
+
+  return user;
+}
+
 export class TimelineService {
   async getConversationById(conversationId: string) {
     return getFoundationRecord<Conversation>("conversations", conversationId);
@@ -107,6 +142,132 @@ export class TimelineService {
     });
 
     return messageEvent;
+  }
+
+  async ensureSupportWorkspaceContext(input: {
+    sessionId: string;
+    locale: "ja" | "en";
+    userProfileId: string | null;
+    authIdentityId: string | null;
+    currentTopic?: string | null;
+    scenario: string;
+    issueType: string;
+    latestUserMessage: string;
+    latestAssistantMessage?: string;
+  }) {
+    const channel: Channel = "support_web";
+    const source: Source = "support_workspace";
+    const bindingState: BindingState = input.userProfileId ? "bound" : "unbound";
+    const externalIdentityKey = input.userProfileId
+      ? makeExternalKey({ channel, identityKey: `user:${input.userProfileId}` })
+      : makeExternalKey({ channel, identityKey: `session:${input.sessionId}` });
+    const title = buildSupportWorkspaceTitle({
+      locale: input.locale,
+      scenario: input.scenario,
+      issueType: input.issueType,
+      currentTopic: input.currentTopic,
+    });
+    const summary = buildSupportWorkspaceSummary({
+      userMessage: input.latestUserMessage,
+      assistantMessage: input.latestAssistantMessage,
+    });
+
+    const conversation = await this.ensureConversation({
+      userProfileId: input.userProfileId,
+      authIdentityId: input.authIdentityId,
+      channel,
+      source,
+      bindingState,
+      externalIdentityKey,
+      externalIdentityKeyHint: input.userProfileId || input.sessionId,
+      subject: title,
+    });
+    const supportCase = await supportCaseService.ensureCase({
+      userProfileId: input.userProfileId,
+      authIdentityId: input.authIdentityId,
+      conversationId: conversation.conversationId,
+      channel,
+      source,
+      bindingState,
+      title,
+      summary,
+    });
+
+    if (conversation.supportCaseId !== supportCase.supportCaseId) {
+      await putFoundationRecord("conversations", conversation.conversationId, {
+        ...conversation,
+        supportCaseId: supportCase.supportCaseId,
+        latestActivityAt: nowIso(),
+        updatedAt: nowIso(),
+      });
+    }
+
+    return {
+      conversationId: conversation.conversationId,
+      supportCaseId: supportCase.supportCaseId,
+      userProfileId: input.userProfileId,
+      authIdentityId: input.authIdentityId,
+      channel,
+      source,
+      bindingState,
+      externalIdentityKey,
+      externalIdentityKeyHint: input.userProfileId || input.sessionId,
+      title,
+    };
+  }
+
+  async recordSupportWorkspaceMessage(input: {
+    context: Awaited<ReturnType<TimelineService["ensureSupportWorkspaceContext"]>>;
+    direction: "inbound" | "outbound";
+    contentText: string;
+    occurredAt?: string;
+    recordedAt?: string;
+    replyStatus?: MessageEvent["replyStatus"];
+  }) {
+    const timestamp = input.recordedAt || nowIso();
+    const messageEvent: MessageEvent = {
+      messageEventId: createFoundationId("mevt"),
+      conversationId: input.context.conversationId,
+      supportCaseId: input.context.supportCaseId,
+      userProfileId: input.context.userProfileId,
+      authIdentityId: input.context.authIdentityId,
+      channel: input.context.channel,
+      source: input.context.source,
+      direction: input.direction,
+      bindingState: input.context.bindingState,
+      eventType: "message",
+      messageType: "text",
+      externalIdentityKey: input.context.externalIdentityKey,
+      externalEventId: null,
+      externalMessageId: null,
+      replyTokenPresent: false,
+      replyStatus: input.replyStatus || (input.direction === "outbound" ? "sent" : "not_applicable"),
+      replyErrorCode: null,
+      deliveryMode: "web",
+      isRedelivery: false,
+      sourceType: "support_chat",
+      contentText: input.contentText,
+      contentPayloadRef: null,
+      occurredAt: input.occurredAt || timestamp,
+      recordedAt: timestamp,
+      aiAssist: getAiAssistHooksForChannel("support_web"),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    const created = await this.putMessageEvent(messageEvent);
+    const supportCase = await supportCaseService.getById(input.context.supportCaseId);
+
+    if (supportCase) {
+      await putFoundationRecord("support-cases", supportCase.supportCaseId, {
+        ...supportCase,
+        latestMessageEventId: created.messageEventId,
+        latestActivityAt: created.recordedAt,
+        updatedAt: created.updatedAt,
+      });
+    }
+
+    return created;
   }
 
   async recordSupportConsultationEvent(input: {
