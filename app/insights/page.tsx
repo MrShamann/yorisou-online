@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import InsightCard from "@/app/components/InsightCard";
 import { fetchNews } from "@/lib/insights/service";
+import { getAllInsights } from "@/lib/insights/index";
 import type { InsightEntry } from "@/lib/insights/types";
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function InsightsPage() {
-  const insights = await fetchNews("ja");
+  const insights = await loadSafeInsights();
   const topics = buildTopicHighlights(insights);
 
   return (
@@ -69,6 +70,32 @@ export default async function InsightsPage() {
       </section>
     </main>
   );
+}
+
+async function loadSafeInsights(): Promise<InsightEntry[]> {
+  try {
+    const insights = sanitizeInsights(await fetchNews("ja"));
+    return insights.length > 0 ? insights : getAllInsights("ja");
+  } catch {
+    return getAllInsights("ja");
+  }
+}
+
+function sanitizeInsights(insights: InsightEntry[]) {
+  return insights.filter((item) => {
+    return Boolean(
+      item &&
+        item.slug &&
+        item.title &&
+        item.summary &&
+        item.whyItMatters &&
+        item.categoryLabel &&
+        item.regionLabel &&
+        Array.isArray(item.tags) &&
+        Array.isArray(item.yorisouView) &&
+        !Number.isNaN(new Date(item.publishedAt).getTime())
+    );
+  });
 }
 
 function buildTopicHighlights(insights: InsightEntry[]) {
