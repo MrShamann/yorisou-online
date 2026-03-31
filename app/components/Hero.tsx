@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import MotionReveal from "./MotionReveal";
 
 type HeroProps = {
   eyebrow?: string;
@@ -21,9 +22,9 @@ export default function Hero({
   secondaryLabel,
 }: HeroProps) {
   return (
-    <section className="border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.97),_rgba(247,244,238,0.99)_60%)]">
+    <section className="section-wash border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.97),_rgba(247,244,238,0.99)_60%)]">
       <div className="container py-11 md:py-13">
-        <div className="max-w-[48rem]">
+        <MotionReveal className="max-w-[48rem]" delay={40} distance={24}>
           <div className="service-kicker">{eyebrow}</div>
           <h1 className="display-serif mt-4 max-w-[15.4em] text-[1.62rem] leading-[1.68] text-[var(--text)] md:text-[2.04rem]">
             {title}
@@ -31,9 +32,9 @@ export default function Hero({
           <p className="mt-4 max-w-[40rem] text-sm leading-8 text-[var(--muted)] md:text-[0.97rem]">
             {subtitle}
           </p>
-        </div>
+        </MotionReveal>
         {(primaryHref || secondaryHref) && (
-          <div className="mt-6 flex flex-wrap gap-3">
+          <MotionReveal className="mt-6 flex flex-wrap gap-3" delay={140} distance={18}>
             {primaryHref && primaryLabel && (
               <Link href={primaryHref} className="btn btn-primary">
                 {primaryLabel}
@@ -44,7 +45,7 @@ export default function Hero({
                 {secondaryLabel}
               </Link>
             )}
-          </div>
+          </MotionReveal>
         )}
       </div>
     </section>

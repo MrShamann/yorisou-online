@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import Hero from "../components/Hero";
+import MotionReveal from "../components/MotionReveal";
 
 const principles = [
   "まず話を聞き、急いで答えを決めないこと。",
@@ -38,46 +39,51 @@ export default function AboutPage() {
         secondaryLabel="支援内容を見る"
       />
 
-      <section className="section">
+      <section className="section section-wash">
         <div className="container">
-          <div className="section-header">
+          <MotionReveal className="section-header" delay={30}>
             <p className="section-label">Yorisouの考え方</p>
             <h2 className="section-title">移動の不安を減らし、年齢を重ねても自分らしく暮らせる社会へ。</h2>
             <p className="page-copy" style={{ marginTop: 10 }}>
               私たちは、移動手段そのものだけではなく、その先にある暮らしの安心まで見ています。ご本人の気持ち、ご家族の納得、地域で続けやすい運用を重ねながら、無理のない支え方を整えていきます。
             </p>
-          </div>
+          </MotionReveal>
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section section-wash" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.02fr_0.98fr]">
-            <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+            <MotionReveal delay={40}>
+              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
               <div className="service-kicker">大切にしていること</div>
               <ul className="list-clean page-copy" style={{ marginTop: 16, display: "grid", gap: 12 }}>
                 {principles.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </div>
+              </div>
+            </MotionReveal>
 
-            <div className="panel-sage rounded-[1.7rem] px-6 py-6">
+            <MotionReveal delay={120} distance={18}>
+              <div className="motion-card panel-sage rounded-[1.7rem] px-6 py-6">
               <div className="service-kicker text-[var(--accent-sage-text)]">支え方の土台</div>
               <ul className="list-clean page-copy" style={{ marginTop: 16, display: "grid", gap: 12, color: "var(--accent-sage-text)" }}>
                 {trustPoints.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-            </div>
+              </div>
+            </MotionReveal>
           </div>
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section section-wash" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+            <MotionReveal delay={40}>
+              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
               <div className="service-kicker">代表について</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 相談の入口と、地域での学びをつなぎ続けるために。
@@ -88,9 +94,11 @@ export default function AboutPage() {
               <p className="page-copy" style={{ marginTop: 12 }}>
                 福岡での対話や導入検証を重ねながら、日本の高齢社会に本当に合う支援の形を丁寧に育てていきます。
               </p>
-            </div>
+              </div>
+            </MotionReveal>
 
-            <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+            <MotionReveal delay={130} distance={18}>
+              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
               <div className="service-kicker">代表略歴</div>
               <ul className="list-clean page-copy" style={{ marginTop: 16, display: "grid", gap: 10 }}>
                 <li>自動車産業で20年以上の国際事業経験</li>
@@ -103,7 +111,8 @@ export default function AboutPage() {
                   お問い合わせ
                 </Link>
               </div>
-            </div>
+              </div>
+            </MotionReveal>
           </div>
         </div>
       </section>

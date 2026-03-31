@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import Hero from "../components/Hero";
+import MotionReveal from "../components/MotionReveal";
 
 const supportSteps = [
   {
@@ -41,31 +42,34 @@ export default function ServicesPage() {
         secondaryLabel="導入・実証について"
       />
 
-      <section className="section">
+      <section className="section section-wash">
         <div className="container">
-          <div className="section-header">
+          <MotionReveal className="section-header" delay={30}>
             <p className="section-label">支え方の流れ</p>
             <h2 className="section-title">話を聞くことから、その先の支え方まで。</h2>
             <p className="page-copy" style={{ marginTop: 10 }}>
               一度の案内で終わらせず、ご本人、ご家族、地域の状況に応じて、続けやすい形を少しずつ整えていきます。
             </p>
-          </div>
+          </MotionReveal>
 
           <div className="grid gap-4 md:grid-cols-3">
-            {supportSteps.map((item) => (
-              <article key={item.title} className="rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-5 py-5">
-                <h3 className="text-[1.08rem] font-medium leading-8 text-[var(--text)]">{item.title}</h3>
-                <p className="page-copy" style={{ marginTop: 8, fontSize: 14 }}>{item.text}</p>
-              </article>
+            {supportSteps.map((item, index) => (
+              <MotionReveal key={item.title} delay={80 + index * 70} distance={16}>
+                <article key={item.title} className="motion-card rounded-[1.5rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-5 py-5">
+                  <h3 className="text-[1.08rem] font-medium leading-8 text-[var(--text)]">{item.title}</h3>
+                  <p className="page-copy" style={{ marginTop: 8, fontSize: 14 }}>{item.text}</p>
+                </article>
+              </MotionReveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section section-wash" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+            <MotionReveal delay={40}>
+              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
               <div className="service-kicker">ご本人とご家族へ</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 まずは、不安を落ち着いて整理したい方へ。
@@ -78,9 +82,11 @@ export default function ServicesPage() {
                   ひなたと話し始める
                 </Link>
               </div>
-            </div>
+              </div>
+            </MotionReveal>
 
-            <div className="panel-sage rounded-[1.7rem] px-6 py-6">
+            <MotionReveal delay={120} distance={18}>
+              <div className="motion-card panel-sage rounded-[1.7rem] px-6 py-6">
               <div className="service-kicker text-[var(--accent-sage-text)]">地域・事業者の方へ</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 導入や実証を、暮らしに合う形で考えたい方へ。
@@ -96,7 +102,8 @@ export default function ServicesPage() {
                   お問い合わせ
                 </Link>
               </div>
-            </div>
+              </div>
+            </MotionReveal>
           </div>
         </div>
       </section>

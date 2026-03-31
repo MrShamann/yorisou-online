@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import Hero from "../components/Hero";
+import MotionReveal from "../components/MotionReveal";
 
 const themes = [
   "ご本人、ご家族、地域の関係者が無理なく相談を始められるかを見ること。",
@@ -38,30 +39,33 @@ export default function PilotPage() {
         secondaryLabel="支援内容を見る"
       />
 
-      <section className="section">
+      <section className="section section-wash">
         <div className="container">
-          <div className="section-header">
+          <MotionReveal className="section-header" delay={30}>
             <p className="section-label">大切にしていること</p>
             <h2 className="section-title">制度や計画だけでなく、暮らしの実感まで見ていきます。</h2>
             <p className="page-copy" style={{ marginTop: 10 }}>
               実際に使う方、ご家族、運営する方の無理のなさを同時に見ながら、地域で続く形を一緒に確かめます。
             </p>
-          </div>
+          </MotionReveal>
 
-          <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+          <MotionReveal delay={90}>
+            <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
             <ul className="list-clean page-copy" style={{ display: "grid", gap: 12, margin: 0 }}>
               {themes.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
-          </div>
+            </div>
+          </MotionReveal>
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: 0 }}>
+      <section className="section section-wash" style={{ paddingTop: 0 }}>
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.02fr_0.98fr]">
-            <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+            <MotionReveal delay={40}>
+              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
               <div className="service-kicker">進め方</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 ご相談から実施までを、急がずに整えます。
@@ -71,9 +75,11 @@ export default function PilotPage() {
                   <li key={item}>{item}</li>
                 ))}
               </ol>
-            </div>
+              </div>
+            </MotionReveal>
 
-            <div className="panel-sage rounded-[1.7rem] px-6 py-6">
+            <MotionReveal delay={120} distance={18}>
+              <div className="motion-card panel-sage rounded-[1.7rem] px-6 py-6">
               <div className="service-kicker text-[var(--accent-sage-text)]">ご一緒できること</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 導入・実証で、具体的にお手伝いできること。
@@ -88,7 +94,8 @@ export default function PilotPage() {
                   お問い合わせ
                 </Link>
               </div>
-            </div>
+              </div>
+            </MotionReveal>
           </div>
         </div>
       </section>

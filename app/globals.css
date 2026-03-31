@@ -40,6 +40,7 @@ body {
   font-family: var(--font-sans);
   line-height: 1.8;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 a {
@@ -107,7 +108,7 @@ main {
   font-weight: 600;
   text-decoration: none;
   border: 1px solid transparent;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.24s ease, background 0.24s ease, border-color 0.24s ease, color 0.24s ease, opacity 0.24s ease, box-shadow 0.24s ease;
 }
 
 .btn-primary {
@@ -125,11 +126,18 @@ main {
 
 .btn:hover {
   opacity: 0.98;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 30px rgba(47, 35, 33, 0.12);
 }
 
 .btn-primary:hover {
   background: var(--cta-main-hover);
+}
+
+.btn:focus-visible,
+.soft-link:focus-visible {
+  outline: 2px solid rgba(85, 98, 82, 0.42);
+  outline-offset: 3px;
 }
 
 .eyebrow {
@@ -178,11 +186,92 @@ main {
 .soft-link {
   color: var(--accent-sage-text);
   text-decoration: none;
+  transition: color 0.2s ease, opacity 0.2s ease, text-underline-offset 0.2s ease;
 }
 
 .soft-link:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+.motion-reveal {
+  opacity: 0;
+  transform: translate3d(0, var(--motion-distance, 20px), 0) scale(var(--motion-scale, 0.985));
+  transition:
+    opacity 720ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--motion-delay, 0ms),
+    transform 720ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--motion-delay, 0ms),
+    filter 720ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--motion-delay, 0ms);
+  filter: blur(8px);
+  will-change: transform, opacity, filter;
+}
+
+.motion-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
+.motion-card {
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease,
+    background-color 0.28s ease;
+}
+
+.motion-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(47, 35, 33, 0.08);
+}
+
+.hero-portrait-frame {
+  animation: heroPortraitFloat 7.5s ease-in-out infinite;
+  transform-origin: center top;
+}
+
+.lane-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.lane-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.14) 44%, transparent 100%);
+  opacity: 0;
+  transform: translateX(-18%);
+  transition: opacity 0.32s ease, transform 0.44s ease;
+  pointer-events: none;
+}
+
+.lane-card:hover::after {
+  opacity: 1;
+  transform: translateX(0%);
+}
+
+.section-wash {
+  position: relative;
+}
+
+.section-wash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.4), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+  pointer-events: none;
+}
+
+@keyframes heroPortraitFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
 }
 
 .list-clean {
@@ -216,5 +305,23 @@ main {
 
   .section-title {
     max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .soft-link,
+  .motion-card,
+  .motion-reveal,
+  .hero-portrait-frame,
+  .lane-card::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .motion-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import MotionReveal from "./components/MotionReveal";
 
 const concerns = [
   "外出したいが、移動手段に不安がある",
@@ -37,9 +38,9 @@ const entryLanes = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <section className="border-b border-[color:var(--line-soft)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.98),_rgba(247,244,238,0.99)_60%)]">
+      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.98),_rgba(247,244,238,0.99)_60%)]">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[1.18fr_0.82fr] lg:items-center lg:gap-12">
-          <div className="order-2 lg:order-1">
+          <MotionReveal className="order-2 lg:order-1" delay={40} distance={28}>
             <div className="service-kicker">高齢者とご家族の移動支援プラットフォーム</div>
             <h1 className="display-serif mt-5 max-w-[9.6em] text-[2.18rem] leading-[1.24] md:text-[3.02rem] lg:text-[3.36rem]">
               <span className="block md:whitespace-nowrap">移動の不安から、</span>
@@ -73,10 +74,10 @@ export default function HomePage() {
                 LINE・アカウントで続ける
               </Link>
             </div>
-          </div>
+          </MotionReveal>
 
-          <div className="order-1 lg:order-2">
-            <div className="mx-auto max-w-[21rem] overflow-hidden rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] p-2 shadow-[0_14px_28px_rgba(47,35,33,0.05)] lg:mr-8">
+          <MotionReveal className="order-1 lg:order-2" delay={160} distance={22} scale={0.99}>
+            <div className="hero-portrait-frame mx-auto max-w-[21rem] overflow-hidden rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] p-2 shadow-[0_14px_28px_rgba(47,35,33,0.05)] lg:mr-8">
               <div className="overflow-hidden rounded-[1.7rem] bg-[var(--surface-soft-strong)]">
                 <Image
                   src="/images/hinata-portrait.png"
@@ -88,13 +89,13 @@ export default function HomePage() {
                 />
               </div>
             </div>
-          </div>
+          </MotionReveal>
         </div>
       </section>
 
-      <section className="border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
+      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-[40rem]">
+          <MotionReveal className="max-w-[40rem]" delay={30}>
             <div className="service-kicker">こんなお悩みはありませんか</div>
             <h2 className="display-serif mt-4 max-w-[13.5em] text-[1.76rem] leading-[1.62] md:text-[2.16rem]">
               <span className="block md:whitespace-nowrap">まずは、いま気になることを</span>
@@ -103,24 +104,26 @@ export default function HomePage() {
             <p className="mt-4 page-copy">
               ひなたとのやりとりの中で、移動のことも暮らしのことも、必要な整理を少しずつ受け持っていきます。
             </p>
-          </div>
+          </MotionReveal>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {concerns.map((item) => (
-              <article
+            {concerns.map((item, index) => (
+              <MotionReveal key={item} delay={80 + index * 70} distance={18}>
+                <article
                 key={item}
-                className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.72)] px-6 py-5 text-[15px] leading-8 text-[var(--muted)]"
+                className="motion-card rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.72)] px-6 py-5 text-[15px] leading-8 text-[var(--muted)]"
               >
                 <span className="block h-2 w-2 rounded-full bg-[var(--accent-sage-text)]/55" />
                 <span className="mt-4 block">{item}</span>
-              </article>
+                </article>
+              </MotionReveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.46)] px-6 py-12 md:px-10 md:py-14">
+      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.46)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-[42rem]">
+          <MotionReveal className="max-w-[42rem]" delay={30}>
             <div className="service-kicker">どこから始めるか</div>
             <h2 className="display-serif mt-4 max-w-[15em] text-[1.72rem] leading-[1.6] md:text-[2.08rem]">
               相談、支援内容、導入・実証、読みものの4つの入口を用意しています。
@@ -128,12 +131,13 @@ export default function HomePage() {
             <p className="mt-4 page-copy">
               先に資料を読みたい方も、すぐ相談したい方も、あとからLINEやアカウントで続けたい方も、同じYorisouの中で落ち着いて進められます。
             </p>
-          </div>
+          </MotionReveal>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {entryLanes.map((item) => (
-              <article
+            {entryLanes.map((item, index) => (
+              <MotionReveal key={item.title} delay={90 + index * 75} distance={18}>
+                <article
                 key={item.title}
-                className="rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-5 shadow-[0_10px_24px_rgba(47,35,33,0.04)]"
+                className="motion-card lane-card rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-5 shadow-[0_10px_24px_rgba(47,35,33,0.04)]"
               >
                 <h3 className="text-base font-medium text-[var(--text)]">{item.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{item.text}</p>
@@ -142,15 +146,17 @@ export default function HomePage() {
                     {item.cta}
                   </Link>
                 </div>
-              </article>
+                </article>
+              </MotionReveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-[rgba(255,255,255,0.22)] px-6 py-12 md:px-10 md:py-14">
+      <section className="section-wash bg-[rgba(255,255,255,0.22)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.06fr_0.94fr]">
-          <div className="rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6">
+          <MotionReveal delay={30}>
+            <div className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6">
             <div className="service-kicker">相談のあとにできること</div>
             <h2 className="display-serif mt-4 max-w-[14.5em] text-[1.7rem] leading-[1.64] md:text-[2.04rem]">
               相談だけで終わらず、支援内容の確認や地域導入の検討までつなげられます。
@@ -160,8 +166,10 @@ export default function HomePage() {
               <p className="mt-3">自治体や施設、地域事業者の方には、導入・実証の入口としても使えます。</p>
             </div>
           </div>
+          </MotionReveal>
 
-          <div className="panel-sage rounded-[1.8rem] px-6 py-6">
+          <MotionReveal delay={120} distance={18}>
+            <div className="motion-card panel-sage rounded-[1.8rem] px-6 py-6">
             <div className="service-kicker text-[var(--accent-sage-text)]">その先も、無理のない形で</div>
             <p className="mt-4 text-sm leading-8 md:text-base">
               相談の続きはLINEまたはアカウントで受け取れます。まず相談を始めてから、あとで落ち着いてつなぎ方を選ぶこともできます。
@@ -178,6 +186,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+          </MotionReveal>
         </div>
       </section>
     </main>

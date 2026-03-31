@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import InsightsPreview from "../components/InsightsPreview";
+import MotionReveal from "../components/MotionReveal";
 
 const trustPoints = [
   "Mobility consultation for seniors and families",
@@ -34,10 +35,10 @@ const entryLinks = [
 export default function HomePageEn() {
   return (
     <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
-      <section className="relative overflow-hidden border-b border-[#D6C3A3]/30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.84),_rgba(245,241,232,0.96)_58%)]">
+      <section className="section-wash relative overflow-hidden border-b border-[#D6C3A3]/30 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.84),_rgba(245,241,232,0.96)_58%)]">
         <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/60 to-transparent" />
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
-          <div className="shell-card p-8 md:p-12">
+          <MotionReveal className="shell-card p-8 md:p-12" delay={40} distance={26}>
             <div className="eyebrow">Mobility and Support Platform / Japan</div>
             <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
               Yorisou helps seniors,
@@ -73,10 +74,11 @@ export default function HomePageEn() {
                 </div>
               ))}
             </div>
-          </div>
+          </MotionReveal>
 
           <div className="grid gap-5">
-            <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-[0_24px_60px_rgba(59,47,47,0.06)]">
+            <MotionReveal delay={120} distance={18}>
+              <div className="motion-card rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-[0_24px_60px_rgba(59,47,47,0.06)]">
               <div className="eyebrow">When Yorisou Helps</div>
               <div className="mt-4 grid gap-3">
                 <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
@@ -89,9 +91,11 @@ export default function HomePageEn() {
                   A local pilot is needed, but the rollout and operating model are still unclear.
                 </div>
               </div>
-            </div>
+              </div>
+            </MotionReveal>
 
-            <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-7 shadow-sm">
+            <MotionReveal delay={180} distance={16}>
+              <div className="motion-card rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-7 shadow-sm">
               <div className="eyebrow">Continuation</div>
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
                 If someone wants to continue later more quietly, Yorisou also supports LINE or account-based continuation without changing the conversation-first entry.
@@ -104,21 +108,23 @@ export default function HomePageEn() {
                   Continue with account
                 </Link>
               </div>
-            </div>
+              </div>
+            </MotionReveal>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-[#D6C3A3]/30 bg-white/50 px-6 py-14 md:px-10 md:py-16">
+      <section className="section-wash border-b border-[#D6C3A3]/30 bg-white/50 px-6 py-14 md:px-10 md:py-16">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-8 max-w-3xl">
+          <MotionReveal className="mb-8 max-w-3xl" delay={30}>
             <div className="eyebrow">What Yorisou Offers</div>
             <h2 className="mt-3 text-3xl font-light leading-tight">The entry point is conversation. From there, support can extend into products or local implementation.</h2>
-          </div>
+          </MotionReveal>
 
           <div className="grid gap-6 md:grid-cols-2">
-            {serviceCards.map((item) => (
-              <div key={item.title} className="rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
+            {serviceCards.map((item, index) => (
+              <MotionReveal key={item.title} delay={90 + index * 70} distance={16}>
+                <div key={item.title} className="motion-card rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
                 <h3 className="text-2xl font-light">{item.title}</h3>
                 <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
                 <div className="mt-6">
@@ -126,7 +132,8 @@ export default function HomePageEn() {
                     {item.cta}
                   </Link>
                 </div>
-              </div>
+                </div>
+              </MotionReveal>
             ))}
           </div>
         </div>
@@ -134,8 +141,8 @@ export default function HomePageEn() {
 
       <InsightsPreview locale="en" />
 
-      <section className="border-t border-[#D6C3A3]/30 bg-white/50 px-6 py-16 md:px-10">
-        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-8 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur">
+      <section className="section-wash border-t border-[#D6C3A3]/30 bg-white/50 px-6 py-16 md:px-10">
+        <MotionReveal className="mx-auto max-w-7xl rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-8 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur" delay={40}>
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl">
               <div className="eyebrow">For Organizations</div>
@@ -153,7 +160,7 @@ export default function HomePageEn() {
               </Link>
             </div>
           </div>
-        </div>
+        </MotionReveal>
       </section>
     </main>
   );
