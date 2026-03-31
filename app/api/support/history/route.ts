@@ -6,25 +6,55 @@ import { getViewerContext, resolveSupportWorkspaceViewerLookup } from "@/lib/ser
 export async function GET() {
   try {
     const viewer = await getViewerContext();
-    const viewerLookup = resolveSupportWorkspaceViewerLookup(viewer);
-    const canonicalSupportHistory = await timelineService.getSupportWorkspaceHistory({
-      sessionId: viewer.session?.id || null,
-      userProfileId: viewerLookup.supportReadTargetUserProfileId,
-      limit: 12,
-    });
+    let canonicalSupportHistory:
+      | Awaited<ReturnType<typeof timelineService.getSupportWorkspaceHistory>>
+      | null = null;
+
+    if (viewer.session?.id) {
+      try {
+        canonicalSupportHistory = await timelineService.getSupportWorkspaceHistory({
+          sessionId: viewer.session.id,
+          limit: 12,
+        });
+      } catch (error) {
+        console.error("support history session lookup error:", error);
+      }
+    }
+
+    if (!canonicalSupportHistory || canonicalSupportHistory.source !== "canonical") {
+      const viewerLookup = resolveSupportWorkspaceViewerLookup(viewer);
+
+      if (viewerLookup.supportReadTargetUserProfileId) {
+        try {
+          canonicalSupportHistory = await timelineService.getSupportWorkspaceHistory({
+            userProfileId: viewerLookup.supportReadTargetUserProfileId,
+            limit: 12,
+          });
+        } catch (error) {
+          console.error("support history user lookup error:", error);
+        }
+      }
+    }
+
+    const resolvedHistory = canonicalSupportHistory || {
+      source: "none" as const,
+      conversation: null,
+      supportCase: null,
+      events: [],
+    };
 
     return NextResponse.json({
       success: true,
       history: {
-        source: canonicalSupportHistory.source,
-        conversationId: canonicalSupportHistory.conversation?.conversationId || null,
-        supportCaseId: canonicalSupportHistory.supportCase?.supportCaseId || null,
-        supportCaseTitle: canonicalSupportHistory.supportCase?.title || null,
+        source: resolvedHistory.source,
+        conversationId: resolvedHistory.conversation?.conversationId || null,
+        supportCaseId: resolvedHistory.supportCase?.supportCaseId || null,
+        supportCaseTitle: resolvedHistory.supportCase?.title || null,
         latestActivityAt:
-          canonicalSupportHistory.supportCase?.latestActivityAt ||
-          canonicalSupportHistory.conversation?.latestActivityAt ||
+          resolvedHistory.supportCase?.latestActivityAt ||
+          resolvedHistory.conversation?.latestActivityAt ||
           null,
-        messages: canonicalSupportHistory.events
+        messages: resolvedHistory.events
           .filter((entry) => entry.eventType === "message" && typeof entry.contentText === "string" && entry.contentText.trim().length > 0)
           .map((entry) => ({
             id: entry.messageEventId,
