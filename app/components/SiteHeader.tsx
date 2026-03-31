@@ -8,13 +8,14 @@ import { useMemo, useState } from "react";
 const primaryNavJa = [
   { href: "/about", label: "Yorisouとは" },
   { href: "/services", label: "支援内容" },
+  { href: "/support", label: "相談する" },
   { href: "/insights", label: "読みもの" },
 ];
 
 const primaryNavEn = [
+  { href: "/about", label: "About" },
+  { href: "/services", label: "Services" },
   { href: "/support", label: "Consult" },
-  { href: "/products", label: "Products" },
-  { href: "/services", label: "Implementation" },
 ];
 
 const secondaryNavJa = [
@@ -24,7 +25,7 @@ const secondaryNavJa = [
 
 const secondaryNavEn = [
   { href: "/insights", label: "Insights" },
-  { href: "/about", label: "About" },
+  { href: "/pilot", label: "Pilot" },
   { href: "/contact", label: "Contact" },
 ];
 

@@ -76,6 +76,9 @@ const copy = {
     userLabel: "あなた",
     emptyTitle: "ひなたにメッセージを送る",
     emptyBody: "入力、音声、添付をひとつの会話で続けられます。",
+    continuationHint: "相談の続きはLINEまたはアカウントで受け取れます。",
+    continuationLine: "LINEで続ける",
+    continuationAccount: "アカウントで続ける",
     typing: "ひなたが考えています…",
     placeholder: "メッセージを入力",
     attachmentTitle: "添付したファイル",
@@ -112,6 +115,9 @@ const copy = {
     userLabel: "You",
     emptyTitle: "Message Hinata",
     emptyBody: "Type, speak, or attach a file in one continuous conversation.",
+    continuationHint: "You can continue later through LINE or an account.",
+    continuationLine: "Continue with LINE",
+    continuationAccount: "Continue with account",
     typing: "Hinata is thinking…",
     placeholder: "Message Hinata",
     attachmentTitle: "Attached files",
@@ -910,6 +916,15 @@ export default function ScenarioSupportAssistant({
                     {starter}
                   </button>
                 ))}
+              </div>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-[var(--muted)]">
+                <span>{t.continuationHint}</span>
+                <Link href={locale === "ja" ? "/login#line-entry" : "/en/login#line-entry"} className="soft-link">
+                  {t.continuationLine}
+                </Link>
+                <Link href={locale === "ja" ? "/login" : "/en/login"} className="soft-link">
+                  {t.continuationAccount}
+                </Link>
               </div>
             </div>
           ) : (

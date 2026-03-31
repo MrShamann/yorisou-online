@@ -10,17 +10,25 @@ const trustPoints = [
 
 const serviceCards = [
   {
-    title: "Talk with Hinata",
-    text: "Start with a calm conversation. Hinata helps make sense of the concern first, then helps with the next step only when needed.",
+    title: "Consultation entry",
+    text: "Start with a calm conversation. Hinata is the support interface, helping organize the concern before the next step is chosen.",
     href: "/en/support#scenario-assistant",
-    cta: "Talk with Hinata",
+    cta: "Start consultation",
   },
   {
-    title: "Pilot and implementation support",
-    text: "For municipalities, facilities, and operators, Yorisou can support small local pilots and operating design.",
+    title: "Services and implementation",
+    text: "For families, operators, facilities, and municipalities, Yorisou can support service choice, pilot planning, and operating design.",
     href: "/en/services",
     cta: "View services",
   },
+];
+
+const entryLinks = [
+  { href: "/en/about", label: "About the platform" },
+  { href: "/en/services", label: "Services" },
+  { href: "/en/pilot", label: "Pilot" },
+  { href: "/en/insights", label: "Insights" },
+  { href: "/en/login#line-entry", label: "Continue with LINE or account" },
 ];
 
 export default function HomePageEn() {
@@ -30,25 +38,32 @@ export default function HomePageEn() {
         <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/60 to-transparent" />
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
           <div className="shell-card p-8 md:p-12">
-            <div className="eyebrow">Senior-Friendly Mobility / Japan</div>
+            <div className="eyebrow">Mobility and Support Platform / Japan</div>
             <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
-              Practical mobility choices,
-              <span className="block text-[#6B5A4A]">organized for seniors, families, and communities.</span>
+              Yorisou helps seniors,
+              <span className="block text-[#6B5A4A]">families, and communities organize the next practical step.</span>
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisou is a calm support service for mobility and daily life in Japan. The main entry is a conversation with Hinata, and from there support can extend into products, family support, and local implementation when needed.
+              Yorisou is a Japan-focused mobility and support platform for older adults, family members, and local operators. Hinata is the conversation interface, not the platform identity.
             </p>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
-              It is fine to begin before everything is clear. You can simply start talking, and the structure can come later.
+              You can start with consultation, read insights first, review service options, or move toward a pilot and implementation conversation.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link href="/en/support#scenario-assistant" className="btn btn-primary">
-                Talk with Hinata
+                Start consultation
               </Link>
-              <Link href="/en/contact" className="btn btn-secondary">
-                Contact Yorisou
+              <Link href="/en/services" className="btn btn-secondary">
+                View services
               </Link>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-[#6B5A4A]">
+              {entryLinks.map((item) => (
+                <Link key={item.href} href={item.href} className="soft-link">
+                  {item.label}
+                </Link>
+              ))}
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -77,10 +92,18 @@ export default function HomePageEn() {
             </div>
 
             <div className="rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-7 shadow-sm">
-              <div className="eyebrow">Yorisou View</div>
+              <div className="eyebrow">Continuation</div>
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
-                The focus is not only on vehicle choice. Yorisou looks at daily routes, family burden, clarity of explanation, and whether the option can remain workable over time.
+                If someone wants to continue later more quietly, Yorisou also supports LINE or account-based continuation without changing the conversation-first entry.
               </p>
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+                <Link href="/en/login#line-entry" className="soft-link">
+                  Continue with LINE
+                </Link>
+                <Link href="/en/login" className="soft-link">
+                  Continue with account
+                </Link>
+              </div>
             </div>
           </div>
         </div>
