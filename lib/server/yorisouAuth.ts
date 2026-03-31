@@ -17,7 +17,6 @@ import {
   type SessionPrincipalLanding,
   type SessionRecord,
 } from "@/lib/server/yorisouData";
-import { timelineService } from "@/lib/server/foundation/timelineService";
 
 export const SESSION_COOKIE = "yorisou_session";
 export const ACCOUNT_COOKIE = "yorisou_account";
@@ -757,13 +756,8 @@ export async function getSupportWorkspaceData(locale: "ja" | "en") {
     sessionId: authenticatedViewer.session?.id || null,
     locale,
   });
-  const canonicalSupportHistory = await timelineService.getSupportWorkspaceHistory({
-    sessionId: authenticatedViewer.session?.id || null,
-    userProfileId: viewerLookup.supportReadTargetUserProfileId,
-    limit: 12,
-  });
   const latestLineEvent = account ? await getLatestLineWebhookEventForAccount(account.id) : null;
-  const supportSource = canonicalSupportHistory.source === "canonical" ? "canonical" : account ? "compatibility_mirror" : "unresolved";
+  const supportSource = account ? "compatibility_mirror" : "unresolved";
 
   return {
     ...authenticatedViewer,
@@ -784,25 +778,6 @@ export async function getSupportWorkspaceData(locale: "ja" | "en") {
       readFallbackActive: Boolean(account),
     }),
     consultations,
-    canonicalSupportHistory: {
-      source: canonicalSupportHistory.source,
-      conversationId: canonicalSupportHistory.conversation?.conversationId || null,
-      supportCaseId: canonicalSupportHistory.supportCase?.supportCaseId || null,
-      supportCaseTitle: canonicalSupportHistory.supportCase?.title || null,
-      latestActivityAt:
-        canonicalSupportHistory.supportCase?.latestActivityAt ||
-        canonicalSupportHistory.conversation?.latestActivityAt ||
-        null,
-      messages: canonicalSupportHistory.events
-        .filter((entry) => entry.eventType === "message" && typeof entry.contentText === "string" && entry.contentText.trim().length > 0)
-        .map((entry) => ({
-          id: entry.messageEventId,
-          role: entry.direction === "outbound" ? ("assistant" as const) : ("user" as const),
-          content: entry.contentText || "",
-          apiContent: entry.contentText || "",
-          createdAt: entry.recordedAt,
-        })),
-    },
     latestLineEvent,
     accessAccountability: composeAccessAccountabilityViewModel({
       accessType: "support_self_view",

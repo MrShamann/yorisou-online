@@ -20,20 +20,6 @@ import type {
 
 type ScenarioSupportAssistantProps = {
   locale: SupportAssistantLocale;
-  initialCanonicalSupportHistory?: {
-    source: "canonical" | "none";
-    conversationId: string | null;
-    supportCaseId: string | null;
-    supportCaseTitle: string | null;
-    latestActivityAt: string | null;
-    messages: Array<{
-      id: string;
-      role: "user" | "assistant";
-      content: string;
-      apiContent: string;
-      createdAt: string;
-    }>;
-  };
   onConversationStateChange?: (started: boolean) => void;
 };
 
@@ -326,7 +312,6 @@ function buildOutgoingMessage(
 
 export default function ScenarioSupportAssistant({
   locale,
-  initialCanonicalSupportHistory,
   onConversationStateChange,
 }: ScenarioSupportAssistantProps) {
   const t = copy[locale];
@@ -339,15 +324,7 @@ export default function ScenarioSupportAssistant({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    (initialCanonicalSupportHistory?.messages || []).map((message) => ({
-      id: message.id,
-      role: message.role,
-      content: message.content,
-      apiContent: message.apiContent,
-      attachments: [],
-    })),
-  );
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [recommendedActions, setRecommendedActions] = useState<SupportRecommendedAction[]>([]);
@@ -364,6 +341,7 @@ export default function ScenarioSupportAssistant({
   const [voiceUncertaintyFlags, setVoiceUncertaintyFlags] = useState<string[]>([]);
   const [voiceProvider, setVoiceProvider] = useState<string | null>(null);
   const [voicePlaybackKey, setVoicePlaybackKey] = useState<string | null>(null);
+  const didLoadCanonicalHistoryRef = useRef(false);
 
   useEffect(() => {
     setVoiceSupported(
@@ -372,6 +350,61 @@ export default function ScenarioSupportAssistant({
         Boolean(navigator.mediaDevices?.getUserMedia),
     );
   }, []);
+
+  useEffect(() => {
+    if (didLoadCanonicalHistoryRef.current || messages.length > 0) {
+      return;
+    }
+
+    didLoadCanonicalHistoryRef.current = true;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/support/history", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const result = (await response.json()) as {
+          success: boolean;
+          history?: {
+            source: "canonical" | "none";
+            messages: Array<{
+              id: string;
+              role: "user" | "assistant";
+              content: string;
+              apiContent: string;
+            }>;
+          };
+        };
+
+        if (!result.success || !result.history || result.history.source !== "canonical" || result.history.messages.length === 0) {
+          return;
+        }
+
+        setMessages((current) => {
+          if (current.length > 0) {
+            return current;
+          }
+
+          return result.history!.messages.map((message) => ({
+            id: message.id,
+            role: message.role,
+            content: message.content,
+            apiContent: message.apiContent,
+            attachments: [],
+          }));
+        });
+      } catch {
+        // Keep the empty workspace if continuity cannot be restored.
+      }
+    })();
+  }, [messages.length]);
 
   useEffect(() => {
     onConversationStateChange?.(messages.length > 0);

@@ -68,20 +68,6 @@ type SupportWorkspaceProps = {
   initialLineReadiness: LineReadiness;
   initialAccessAccountability: AccessAccountability;
   initialConsultations: ConsultationRecord[];
-  initialCanonicalSupportHistory: {
-    source: "canonical" | "none";
-    conversationId: string | null;
-    supportCaseId: string | null;
-    supportCaseTitle: string | null;
-    latestActivityAt: string | null;
-    messages: Array<{
-      id: string;
-      role: "user" | "assistant";
-      content: string;
-      apiContent: string;
-      createdAt: string;
-    }>;
-  };
   initialLatestLineEvent: LineWebhookEventRecord | null;
   lineAuthReady: boolean;
   lineMessagingReady: boolean;
@@ -100,7 +86,7 @@ const copy = {
   },
 } as const;
 
-export default function SupportWorkspace({ locale, initialCanonicalSupportHistory }: SupportWorkspaceProps) {
+export default function SupportWorkspace({ locale }: SupportWorkspaceProps) {
   const t = copy[locale];
   const alternateHref = locale === "ja" ? "/en/support" : "/support";
 
@@ -120,7 +106,7 @@ export default function SupportWorkspace({ locale, initialCanonicalSupportHistor
         </div>
 
         <div className="flex min-h-screen flex-1 overflow-hidden bg-transparent">
-          <ScenarioSupportAssistant locale={locale} initialCanonicalSupportHistory={initialCanonicalSupportHistory} />
+          <ScenarioSupportAssistant locale={locale} />
         </div>
       </div>
     </main>
