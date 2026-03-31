@@ -25,6 +25,10 @@ const shouldUseSharedStore = Boolean(sharedStoreBucket);
 
 let sharedStoreClient: S3Client | null = null;
 
+function hasStringField(value: unknown, key: string) {
+  return typeof value === "object" && value !== null && typeof (value as Record<string, unknown>)[key] === "string";
+}
+
 function getSharedStoreClient() {
   if (!shouldUseSharedStore) {
     return null;
@@ -252,36 +256,50 @@ export function getFoundationStoreStatus() {
 }
 
 export async function listUserProfiles(): Promise<UserProfile[]> {
-  const entries = (await listFoundationRecords<UserProfile>("user-profiles")).filter((entry): entry is UserProfile => Boolean(entry));
+  const entries = (await listFoundationRecords<UserProfile>("user-profiles")).filter(
+    (entry): entry is UserProfile => hasStringField(entry, "userProfileId") && hasStringField(entry, "createdAt"),
+  );
   return entries.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function listAuthIdentities(): Promise<AuthIdentity[]> {
-  const entries = (await listFoundationRecords<AuthIdentity>("auth-identities")).filter((entry): entry is AuthIdentity => Boolean(entry));
+  const entries = (await listFoundationRecords<AuthIdentity>("auth-identities")).filter(
+    (entry): entry is AuthIdentity => hasStringField(entry, "authIdentityId") && hasStringField(entry, "createdAt"),
+  );
   return entries.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function listConversations(): Promise<Conversation[]> {
-  const entries = (await listFoundationRecords<Conversation>("conversations")).filter((entry): entry is Conversation => Boolean(entry));
+  const entries = (await listFoundationRecords<Conversation>("conversations")).filter(
+    (entry): entry is Conversation => hasStringField(entry, "conversationId") && hasStringField(entry, "latestActivityAt"),
+  );
   return entries.sort((a, b) => b.latestActivityAt.localeCompare(a.latestActivityAt));
 }
 
 export async function listMessageEvents(): Promise<MessageEvent[]> {
-  const entries = (await listFoundationRecords<MessageEvent>("message-events")).filter((entry): entry is MessageEvent => Boolean(entry));
+  const entries = (await listFoundationRecords<MessageEvent>("message-events")).filter(
+    (entry): entry is MessageEvent => hasStringField(entry, "messageEventId") && hasStringField(entry, "recordedAt"),
+  );
   return entries.sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
 }
 
 export async function listSupportCases(): Promise<SupportCase[]> {
-  const entries = (await listFoundationRecords<SupportCase>("support-cases")).filter((entry): entry is SupportCase => Boolean(entry));
+  const entries = (await listFoundationRecords<SupportCase>("support-cases")).filter(
+    (entry): entry is SupportCase => hasStringField(entry, "supportCaseId") && hasStringField(entry, "latestActivityAt"),
+  );
   return entries.sort((a, b) => b.latestActivityAt.localeCompare(a.latestActivityAt));
 }
 
 export async function listConsentLogs(): Promise<ConsentLog[]> {
-  const entries = (await listFoundationRecords<ConsentLog>("consent-logs")).filter((entry): entry is ConsentLog => Boolean(entry));
+  const entries = (await listFoundationRecords<ConsentLog>("consent-logs")).filter(
+    (entry): entry is ConsentLog => hasStringField(entry, "consentLogId") && hasStringField(entry, "timestamp"),
+  );
   return entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
 export async function listAuditLogs(): Promise<AuditLog[]> {
-  const entries = (await listFoundationRecords<AuditLog>("audit-logs")).filter((entry): entry is AuditLog => Boolean(entry));
+  const entries = (await listFoundationRecords<AuditLog>("audit-logs")).filter(
+    (entry): entry is AuditLog => hasStringField(entry, "auditLogId") && hasStringField(entry, "createdAt"),
+  );
   return entries.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
