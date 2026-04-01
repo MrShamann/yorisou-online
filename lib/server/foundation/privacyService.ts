@@ -1,8 +1,11 @@
 import { headers } from "next/headers";
 
 import { createFoundationId, createIpHash, nowIso } from "@/lib/server/foundation/ids";
+import {
+  foundationAuditLogRepository,
+  foundationConsentLogRepository,
+} from "@/lib/server/foundation/repositories";
 import type { AuditAction, AuditActorType, BindingState, Channel, ConsentLog, ConsentType, Source, AuditLog } from "@/lib/server/foundation/schema";
-import { listAuditLogs, listConsentLogs, putFoundationRecord } from "@/lib/server/foundation/store";
 
 function getPolicyVersion() {
   return process.env.YORISOU_POLICY_VERSION?.trim() || "phase1-baseline";
@@ -46,7 +49,7 @@ export class PrivacyAuditService {
       updatedAt: timestamp,
     };
 
-    await putFoundationRecord("consent-logs", record.consentLogId, record);
+    await foundationConsentLogRepository.save(record);
     return record;
   }
 
@@ -84,17 +87,17 @@ export class PrivacyAuditService {
       updatedAt: createdAt,
     };
 
-    await putFoundationRecord("audit-logs", record.auditLogId, record);
+    await foundationAuditLogRepository.save(record);
     return record;
   }
 
   async listRecentAuditEntries(limit = 20) {
-    const entries = await listAuditLogs();
+    const entries = await foundationAuditLogRepository.list();
     return entries.slice(0, limit);
   }
 
   async listRecentConsentEntries(limit = 20) {
-    const entries = await listConsentLogs();
+    const entries = await foundationConsentLogRepository.list();
     return entries.slice(0, limit);
   }
 }

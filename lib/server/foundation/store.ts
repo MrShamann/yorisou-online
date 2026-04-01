@@ -14,6 +14,11 @@ export type FoundationCollection =
   | "consent-logs"
   | "audit-logs";
 
+export type FoundationIndexNamespace =
+  | "conversation-by-external-identity"
+  | "support-case-by-conversation"
+  | "message-events-by-conversation";
+
 const DEFAULT_SHARED_REGION = process.env.YORISOU_SHARED_STORE_REGION || "us-east-2";
 const PRIMARY_FOUNDATION_PREFIX = process.env.YORISOU_FOUNDATION_STORE_PREFIX?.trim() || "phase1/foundation-v1";
 const LEGACY_FOUNDATION_PREFIX = "foundation-v1";
@@ -54,6 +59,10 @@ function getFoundationReadPrefixes() {
 
 function foundationKey(prefix: string, collection: FoundationCollection, recordId: string) {
   return `${prefix}/${collection}/${recordId}.json`;
+}
+
+function foundationIndexKey(prefix: string, namespace: FoundationIndexNamespace, recordId: string) {
+  return `${prefix}/indexes/${namespace}/${recordId}.json`;
 }
 
 function localCollectionDir(collection: FoundationCollection) {
@@ -125,6 +134,34 @@ async function readSharedRecord<T>(collection: FoundationCollection, recordId: s
         new GetObjectCommand({
           Bucket: sharedStoreBucket,
           Key: foundationKey(prefix, collection, recordId),
+        }),
+      );
+      const content = await response.Body?.transformToString();
+      return content ? (JSON.parse(content) as T) : null;
+    } catch (error) {
+      if (isMissingObjectError(error)) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  return null;
+}
+
+async function readSharedIndexRecord<T>(namespace: FoundationIndexNamespace, recordId: string) {
+  const client = getSharedStoreClient();
+
+  if (!client || !sharedStoreBucket) {
+    return null;
+  }
+
+  for (const prefix of getFoundationReadPrefixes()) {
+    try {
+      const response = await client.send(
+        new GetObjectCommand({
+          Bucket: sharedStoreBucket,
+          Key: foundationIndexKey(prefix, namespace, recordId),
         }),
       );
       const content = await response.Body?.transformToString();
@@ -213,12 +250,44 @@ async function writeSharedRecord<T>(collection: FoundationCollection, recordId: 
   );
 }
 
+async function writeSharedIndexRecord<T>(namespace: FoundationIndexNamespace, recordId: string, value: T) {
+  const client = getSharedStoreClient();
+
+  if (!client || !sharedStoreBucket) {
+    throw new Error("shared_store_not_configured");
+  }
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: sharedStoreBucket,
+      Key: foundationIndexKey(PRIMARY_FOUNDATION_PREFIX, namespace, recordId),
+      Body: JSON.stringify(value, null, 2) + "\n",
+      ContentType: "application/json",
+    }),
+  );
+}
+
 export async function getFoundationRecord<T>(collection: FoundationCollection, recordId: string) {
   if (shouldUseSharedStore) {
     return readSharedRecord<T>(collection, recordId);
   }
 
   return readLocalRecord<T>(collection, recordId);
+}
+
+export async function getFoundationIndexRecord<T>(namespace: FoundationIndexNamespace, recordId: string) {
+  if (shouldUseSharedStore) {
+    return readSharedIndexRecord<T>(namespace, recordId);
+  }
+
+  await fs.mkdir(path.join(foundationDataDir, "indexes", namespace), { recursive: true });
+
+  try {
+    const content = await fs.readFile(path.join(foundationDataDir, "indexes", namespace, `${recordId}.json`), "utf8");
+    return JSON.parse(content) as T;
+  } catch {
+    return null;
+  }
 }
 
 export async function listFoundationRecords<T>(collection: FoundationCollection) {
@@ -236,6 +305,18 @@ export async function putFoundationRecord<T>(collection: FoundationCollection, r
   }
 
   await writeLocalRecord(collection, recordId, value);
+  return value;
+}
+
+export async function putFoundationIndexRecord<T>(namespace: FoundationIndexNamespace, recordId: string, value: T) {
+  if (shouldUseSharedStore) {
+    await writeSharedIndexRecord(namespace, recordId, value);
+    return value;
+  }
+
+  const dir = path.join(foundationDataDir, "indexes", namespace);
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(path.join(dir, `${recordId}.json`), JSON.stringify(value, null, 2) + "\n", "utf8");
   return value;
 }
 

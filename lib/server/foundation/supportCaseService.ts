@@ -1,27 +1,25 @@
 import { createFoundationId, nowIso } from "@/lib/server/foundation/ids";
 import { createEmptyAiAssistHooks, getAiAssistHooksForChannel } from "@/lib/server/foundation/aiAssistHooks";
+import { foundationSupportCaseRepository } from "@/lib/server/foundation/repositories";
 import type { BindingState, Channel, Source, SupportCase, SupportCaseStatus } from "@/lib/server/foundation/schema";
-import { getFoundationRecord, listSupportCases, putFoundationRecord } from "@/lib/server/foundation/store";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
 
 export class SupportCaseService {
   async getById(supportCaseId: string) {
-    return getFoundationRecord<SupportCase>("support-cases", supportCaseId);
+    return foundationSupportCaseRepository.getById(supportCaseId);
   }
 
   async getLatestByUserProfileId(userProfileId: string) {
-    const cases = await listSupportCases();
+    const cases = await foundationSupportCaseRepository.listByUserProfileId(userProfileId);
     return cases.find((entry) => entry.userProfileId === userProfileId) || null;
   }
 
   async listByUserProfileId(userProfileId: string) {
-    const cases = await listSupportCases();
-    return cases.filter((entry) => entry.userProfileId === userProfileId);
+    return foundationSupportCaseRepository.listByUserProfileId(userProfileId);
   }
 
   async listByAuthIdentityId(authIdentityId: string) {
-    const cases = await listSupportCases();
-    return cases.filter((entry) => entry.authIdentityId === authIdentityId);
+    return foundationSupportCaseRepository.listByAuthIdentityId(authIdentityId);
   }
 
   async ensureCase(input: {
@@ -35,7 +33,7 @@ export class SupportCaseService {
     summary?: string | null;
     latestMessageEventId?: string | null;
   }) {
-    const cases = await listSupportCases();
+    const cases = await foundationSupportCaseRepository.list();
     const existing =
       cases.find((entry) => entry.conversationId && input.conversationId && entry.conversationId === input.conversationId) ||
       ((input.userProfileId || input.authIdentityId)
@@ -63,7 +61,7 @@ export class SupportCaseService {
         bindingState: input.bindingState,
         updatedAt: timestamp,
       };
-      await putFoundationRecord("support-cases", updated.supportCaseId, updated);
+      await foundationSupportCaseRepository.save(updated);
       return updated;
     }
 
@@ -84,7 +82,7 @@ export class SupportCaseService {
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-    await putFoundationRecord("support-cases", supportCase.supportCaseId, supportCase);
+    await foundationSupportCaseRepository.save(supportCase);
     return supportCase;
   }
 
@@ -106,7 +104,7 @@ export class SupportCaseService {
       latestActivityAt: nowIso(),
       updatedAt: nowIso(),
     };
-    await putFoundationRecord("support-cases", updated.supportCaseId, updated);
+    await foundationSupportCaseRepository.save(updated);
     await privacyAuditService.recordAudit({
       actorType: input.actorUserProfileId ? "admin" : "system",
       actorUserProfileId: input.actorUserProfileId,

@@ -2,8 +2,14 @@ import { default as assert } from "assert";
 
 import { createAuthIdentityId, getEmailIdentityHint, getLineIdentityHint } from "@/lib/server/midBackend/utils";
 import { createFoundationId, createDeterministicPlaceholderEmail, createHashedKey, isPlaceholderEmail, nowIso } from "@/lib/server/foundation/ids";
+import {
+  foundationAuthIdentityRepository,
+  foundationConversationRepository,
+  foundationMessageEventRepository,
+  foundationSupportCaseRepository,
+  foundationUserProfileRepository,
+} from "@/lib/server/foundation/repositories";
 import type { AuthIdentity, BindingState, Source, UserProfile } from "@/lib/server/foundation/schema";
-import { deleteFoundationRecord, listAuthIdentities, listConversations, listMessageEvents, listSupportCases, listUserProfiles, putFoundationRecord } from "@/lib/server/foundation/store";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
 import {
   defaultSupportProfile,
@@ -18,6 +24,10 @@ import {
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
+}
+
+function makeChannelExternalIdentityKey(input: { channel: "support_web" | "line"; subjectKey: string }) {
+  return `${input.channel}:${input.subjectKey}`;
 }
 
 function buildUserProfileFromAccount(account: AccountRecord, source: Source): UserProfile {
@@ -191,46 +201,107 @@ function buildLineOnlyAccount(input: {
 
 export class IdentityFoundationService {
   async getUserProfileById(userProfileId: string) {
-    const profiles = await listUserProfiles();
-    return profiles.find((entry) => entry.userProfileId === userProfileId) || null;
+    return foundationUserProfileRepository.getById(userProfileId);
   }
 
   async getUserProfileByLegacyAccountId(legacyAccountId: string) {
-    const profiles = await listUserProfiles();
-    return profiles.find((entry) => entry.legacyAccountId === legacyAccountId) || null;
+    return foundationUserProfileRepository.getByLegacyAccountId(legacyAccountId);
   }
 
   async getAuthIdentityById(authIdentityId: string) {
-    const identities = await listAuthIdentities();
-    return identities.find((entry) => entry.authIdentityId === authIdentityId) || null;
+    return foundationAuthIdentityRepository.getById(authIdentityId);
   }
 
   async getAuthIdentityByEmail(email: string) {
-    const emailNormalized = normalizeEmail(email);
-    const identities = await listAuthIdentities();
-    return identities.find((entry) => entry.identityType === "email_password" && entry.emailNormalized === emailNormalized) || null;
+    return foundationAuthIdentityRepository.getByEmail(normalizeEmail(email));
   }
 
   async getAuthIdentityByLineUserId(lineUserId: string) {
-    const identities = await listAuthIdentities();
-    return identities.find((entry) => entry.identityType === "line" && entry.lineUserId === lineUserId) || null;
+    return foundationAuthIdentityRepository.getByLineUserId(lineUserId);
   }
 
   async getAuthIdentitiesByUserProfileId(userProfileId: string) {
-    const identities = await listAuthIdentities();
-    return identities.filter((entry) => entry.userProfileId === userProfileId);
+    return foundationAuthIdentityRepository.listByUserProfileId(userProfileId);
+  }
+
+  async getUserByEmailIdentity(email: string) {
+    const identity = await this.getAuthIdentityByEmail(email);
+    const userProfile = identity?.userProfileId ? await this.getUserProfileById(identity.userProfileId) : null;
+
+    return {
+      identity,
+      userProfile,
+      bindingState: identity?.userProfileId ? "bound" : "unbound",
+    } as const;
+  }
+
+  async getUserByLineProviderSubject(lineUserId: string) {
+    const identity = await this.getAuthIdentityByLineUserId(lineUserId);
+    const userProfile = identity?.userProfileId ? await this.getUserProfileById(identity.userProfileId) : null;
+
+    return {
+      identity,
+      userProfile,
+      bindingState: identity?.userProfileId ? "bound" : "unbound",
+    } as const;
+  }
+
+  async getUnboundLineSubject(lineUserId: string) {
+    const identity = await this.getAuthIdentityByLineUserId(lineUserId);
+
+    if (!identity || identity.userProfileId) {
+      return null;
+    }
+
+    const [conversations, events, supportCases] = await Promise.all([
+      foundationConversationRepository.listByAuthIdentityId(identity.authIdentityId),
+      foundationMessageEventRepository.listByAuthIdentityId(identity.authIdentityId),
+      foundationSupportCaseRepository.listUnboundByAuthIdentityId(identity.authIdentityId),
+    ]);
+
+    return {
+      identity,
+      conversations,
+      events,
+      supportCases,
+    } as const;
+  }
+
+  async getUnboundSupportSubject(sessionId: string) {
+    const externalIdentityKey = makeChannelExternalIdentityKey({
+      channel: "support_web",
+      subjectKey: `session:${sessionId}`,
+    });
+    const [conversations, events] = await Promise.all([
+      foundationConversationRepository.listUnboundByExternalIdentityKey(externalIdentityKey),
+      foundationMessageEventRepository.listUnboundByExternalIdentityKey(externalIdentityKey),
+    ]);
+    const conversationIds = new Set(conversations.map((entry) => entry.conversationId));
+    const allCases = await foundationSupportCaseRepository.list();
+    const supportCases = allCases.filter((entry) => entry.conversationId && conversationIds.has(entry.conversationId));
+
+    if (!conversations.length && !events.length && !supportCases.length) {
+      return null;
+    }
+
+    return {
+      externalIdentityKey,
+      conversations,
+      events,
+      supportCases,
+    } as const;
   }
 
   async ensureCanonicalUserForAccount(account: AccountRecord, source: Source = "email_password") {
     const profile = buildUserProfileFromAccount(account, source);
-    await putFoundationRecord("user-profiles", profile.userProfileId, profile);
+    await foundationUserProfileRepository.save(profile);
 
     if (account.email) {
       const emailIdentity = buildEmailIdentity(account, source);
       if (isPlaceholderEmail(account.email)) {
-        await deleteFoundationRecord("auth-identities", emailIdentity.authIdentityId);
+        await foundationAuthIdentityRepository.delete(emailIdentity.authIdentityId);
       } else {
-        await putFoundationRecord("auth-identities", emailIdentity.authIdentityId, emailIdentity);
+        await foundationAuthIdentityRepository.save(emailIdentity);
       }
     }
 
@@ -257,7 +328,7 @@ export class IdentityFoundationService {
             createdAt: account.lineConnectedAt || account.createdAt,
           });
 
-      await putFoundationRecord("auth-identities", lineIdentity.authIdentityId, lineIdentity);
+      await foundationAuthIdentityRepository.save(lineIdentity);
     }
 
     return profile;
@@ -307,7 +378,7 @@ export class IdentityFoundationService {
       updatedAt: nowIso(),
     };
 
-    await putFoundationRecord("user-profiles", updatedProfile.userProfileId, updatedProfile);
+    await foundationUserProfileRepository.save(updatedProfile);
 
     const compatibilityAccount = updatedProfile.legacyAccountId
       ? await updateSupportProfile(updatedProfile.legacyAccountId, buildSupportProfileFromCanonicalProfile(updatedProfile, input.fallbackAccount || null))
@@ -338,7 +409,7 @@ export class IdentityFoundationService {
         lastSeenAt: nowIso(),
         updatedAt: nowIso(),
       } satisfies AuthIdentity;
-      await putFoundationRecord("auth-identities", updated.authIdentityId, updated);
+      await foundationAuthIdentityRepository.save(updated);
       return updated;
     }
 
@@ -353,7 +424,7 @@ export class IdentityFoundationService {
       bindingState: "unbound",
     });
 
-    await putFoundationRecord("auth-identities", identity.authIdentityId, identity);
+    await foundationAuthIdentityRepository.save(identity);
     return identity;
   }
 
@@ -405,10 +476,19 @@ export class IdentityFoundationService {
           lineIdTokenSubject: input.lineIdTokenSubject,
           source: input.source,
           bindingState: "bound",
-        });
+    });
 
-    await putFoundationRecord("auth-identities", identity.authIdentityId, identity);
-    await this.rebindUnboundActivity(identity.authIdentityId, input.userProfileId);
+    await foundationAuthIdentityRepository.save(identity);
+    await this.rebindUnboundActivity({
+      authIdentityId: identity.authIdentityId,
+      userProfileId: input.userProfileId,
+      actorUserProfileId: input.actorUserProfileId,
+      actorAuthIdentityId: identity.authIdentityId,
+      source: input.source,
+      channel: "line",
+      preserveExternalIdentityKey: true,
+      summary: "Bound LINE identity and reattached prior unbound activity",
+    });
     await privacyAuditService.recordConsent({
       userProfileId: input.userProfileId,
       authIdentityId: identity.authIdentityId,
@@ -580,7 +660,7 @@ export class IdentityFoundationService {
         lastSeenAt: nowIso(),
         updatedAt: nowIso(),
       } satisfies AuthIdentity;
-      await putFoundationRecord("auth-identities", updatedIdentity.authIdentityId, updatedIdentity);
+      await foundationAuthIdentityRepository.save(updatedIdentity);
       return { ok: true as const, identity: updatedIdentity };
     }
 
@@ -610,7 +690,17 @@ export class IdentityFoundationService {
       updatedAt: nowIso(),
     };
 
-    await putFoundationRecord("auth-identities", identity.authIdentityId, identity);
+    await foundationAuthIdentityRepository.save(identity);
+    await this.rebindUnboundActivity({
+      authIdentityId: identity.authIdentityId,
+      userProfileId: input.userProfileId,
+      actorUserProfileId: input.actorUserProfileId,
+      actorAuthIdentityId: identity.authIdentityId,
+      source: input.source,
+      channel: "email",
+      preserveExternalIdentityKey: true,
+      summary: "Attached email identity and reattached prior unbound activity",
+    });
     await privacyAuditService.recordConsent({
       userProfileId: input.userProfileId,
       authIdentityId: identity.authIdentityId,
@@ -707,20 +797,83 @@ export class IdentityFoundationService {
     };
   }
 
-  async rebindUnboundActivity(authIdentityId: string, userProfileId: string) {
+  async attachSupportSessionToUserProfile(input: {
+    sessionId: string;
+    userProfileId: string;
+    authIdentityId: string | null;
+    actorUserProfileId: string | null;
+    actorAuthIdentityId: string | null;
+    source: Source;
+  }) {
+    return this.rebindUnboundActivity({
+      externalIdentityKey: makeChannelExternalIdentityKey({
+        channel: "support_web",
+        subjectKey: `session:${input.sessionId}`,
+      }),
+      nextExternalIdentityKey: makeChannelExternalIdentityKey({
+        channel: "support_web",
+        subjectKey: `user:${input.userProfileId}`,
+      }),
+      userProfileId: input.userProfileId,
+      authIdentityId: input.authIdentityId,
+      actorUserProfileId: input.actorUserProfileId,
+      actorAuthIdentityId: input.actorAuthIdentityId,
+      source: input.source,
+      channel: "support_web",
+      preserveExternalIdentityKey: false,
+      summary: "Attached support-web session activity to canonical user profile",
+    });
+  }
+
+  async rebindUnboundActivity(input: {
+    authIdentityId?: string | null;
+    externalIdentityKey?: string | null;
+    nextExternalIdentityKey?: string | null;
+    userProfileId: string;
+    actorUserProfileId: string | null;
+    actorAuthIdentityId: string | null;
+    source: Source;
+    channel: "email" | "line" | "support_web";
+    preserveExternalIdentityKey: boolean;
+    summary: string;
+  }) {
     const [conversations, messageEvents, supportCases] = await Promise.all([
-      listConversations(),
-      listMessageEvents(),
-      listSupportCases(),
+      foundationConversationRepository.list(),
+      foundationMessageEventRepository.list(),
+      foundationSupportCaseRepository.list(),
     ]);
+    const matchedConversations = conversations.filter(
+      (entry) =>
+        (!entry.userProfileId || entry.bindingState === "unbound") &&
+        ((input.authIdentityId && entry.authIdentityId === input.authIdentityId) ||
+          (input.externalIdentityKey && entry.externalIdentityKey === input.externalIdentityKey)),
+    );
+    const matchedConversationIds = new Set(matchedConversations.map((entry) => entry.conversationId));
+    const matchedMessageEvents = messageEvents.filter(
+      (entry) =>
+        (!entry.userProfileId || entry.bindingState === "unbound") &&
+        ((input.authIdentityId && entry.authIdentityId === input.authIdentityId) ||
+          (input.externalIdentityKey && entry.externalIdentityKey === input.externalIdentityKey) ||
+          (entry.conversationId ? matchedConversationIds.has(entry.conversationId) : false)),
+    );
+    const matchedSupportCases = supportCases.filter(
+      (entry) =>
+        (!entry.userProfileId || entry.bindingState === "unbound") &&
+        ((input.authIdentityId && entry.authIdentityId === input.authIdentityId) ||
+          (entry.conversationId ? matchedConversationIds.has(entry.conversationId) : false)),
+    );
+    const externalIdentityKey =
+      input.preserveExternalIdentityKey || !input.nextExternalIdentityKey
+        ? input.externalIdentityKey || null
+        : input.nextExternalIdentityKey;
 
     await Promise.all(
-      conversations
-        .filter((entry) => entry.authIdentityId === authIdentityId && !entry.userProfileId)
-        .map((entry) =>
-          putFoundationRecord("conversations", entry.conversationId, {
+      matchedConversations.map((entry) =>
+          foundationConversationRepository.save({
             ...entry,
-            userProfileId,
+            userProfileId: input.userProfileId,
+            authIdentityId: input.authIdentityId ?? entry.authIdentityId,
+            externalIdentityKey: externalIdentityKey || entry.externalIdentityKey,
             bindingState: "bound" as const,
             updatedAt: nowIso(),
           }),
@@ -728,12 +881,12 @@ export class IdentityFoundationService {
     );
 
     await Promise.all(
-      messageEvents
-        .filter((entry) => entry.authIdentityId === authIdentityId && !entry.userProfileId)
-        .map((entry) =>
-          putFoundationRecord("message-events", entry.messageEventId, {
+      matchedMessageEvents.map((entry) =>
+          foundationMessageEventRepository.save({
             ...entry,
-            userProfileId,
+            userProfileId: input.userProfileId,
+            authIdentityId: input.authIdentityId ?? entry.authIdentityId,
+            externalIdentityKey: externalIdentityKey || entry.externalIdentityKey,
             bindingState: "bound" as const,
             updatedAt: nowIso(),
           }),
@@ -741,17 +894,45 @@ export class IdentityFoundationService {
     );
 
     await Promise.all(
-      supportCases
-        .filter((entry) => entry.authIdentityId === authIdentityId && !entry.userProfileId)
-        .map((entry) =>
-          putFoundationRecord("support-cases", entry.supportCaseId, {
+      matchedSupportCases.map((entry) =>
+          foundationSupportCaseRepository.save({
             ...entry,
-            userProfileId,
+            userProfileId: input.userProfileId,
+            authIdentityId: input.authIdentityId ?? entry.authIdentityId,
             bindingState: "bound" as const,
             updatedAt: nowIso(),
           }),
         ),
     );
+
+    if (matchedConversations.length || matchedMessageEvents.length || matchedSupportCases.length) {
+      await privacyAuditService.recordAudit({
+        actorType: input.actorUserProfileId ? "user" : "system",
+        actorUserProfileId: input.actorUserProfileId,
+        actorAuthIdentityId: input.actorAuthIdentityId,
+        action: "identity.merge",
+        resourceType: "user_profile",
+        resourceId: input.userProfileId,
+        channel: input.channel,
+        source: input.source,
+        bindingState: "bound",
+        summary: input.summary,
+        metadata: {
+          authIdentityId: input.authIdentityId || null,
+          externalIdentityKey: input.externalIdentityKey || null,
+          nextExternalIdentityKey: input.nextExternalIdentityKey || null,
+          conversationCount: String(matchedConversations.length),
+          messageEventCount: String(matchedMessageEvents.length),
+          supportCaseCount: String(matchedSupportCases.length),
+        },
+      });
+    }
+
+    return {
+      conversationCount: matchedConversations.length,
+      messageEventCount: matchedMessageEvents.length,
+      supportCaseCount: matchedSupportCases.length,
+    } as const;
   }
 
   async syncAllLegacyAccounts() {

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "insights:ingest": "tsx scripts/insights-ingest.ts",
     "eval:hinata": "tsx scripts/eval-hinata.ts",
-    "review:needs": "node --import tsx scripts/review-needs.ts"
+    "review:needs": "node --import tsx scripts/review-needs.ts",
+    "validate:foundation": "tsx scripts/validate-foundation-repositories.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1014.0",

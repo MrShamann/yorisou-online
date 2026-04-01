@@ -1,7 +1,12 @@
 import { findAccountById, listAccounts, listLineWebhookEvents, listConsultations } from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
-import { listAuthIdentities, listSupportCases, listUserProfiles, getFoundationStoreStatus } from "@/lib/server/foundation/store";
+import {
+  foundationAuthIdentityRepository,
+  foundationSupportCaseRepository,
+  foundationUserProfileRepository,
+} from "@/lib/server/foundation/repositories";
+import { getFoundationStoreStatus } from "@/lib/server/foundation/store";
 import { timelineService } from "@/lib/server/foundation/timelineService";
 import type { AuditLog, AuthIdentity, ConsentLog, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
 
@@ -14,14 +19,14 @@ export class AdminFoundationService {
 
   async getUserList(query?: string) {
     await this.ensureLegacyBackfillForAccounts();
-    const profiles = (await listUserProfiles()).filter((entry): entry is UserProfile => Boolean(entry));
+    const profiles = (await foundationUserProfileRepository.list()).filter((entry): entry is UserProfile => Boolean(entry));
     const normalizedQuery = query?.trim().toLowerCase() || "";
 
     if (!normalizedQuery) {
       return profiles;
     }
 
-    const identities = (await listAuthIdentities()).filter((entry): entry is AuthIdentity => Boolean(entry));
+    const identities = (await foundationAuthIdentityRepository.list()).filter((entry): entry is AuthIdentity => Boolean(entry));
     return profiles.filter((profile) => {
       const profileMatch =
         profile.profile.displayName.toLowerCase().includes(normalizedQuery) ||
@@ -44,11 +49,10 @@ export class AdminFoundationService {
 
   async getUserDetail(userProfileId: string, actor: { actorUserProfileId: string | null; actorAuthIdentityId: string | null }) {
     await this.ensureLegacyBackfillForAccounts();
-    const [profile, identities, timeline, supportCases, recentConsent, latestSummary] = await Promise.all([
+    const [profile, identities, timelineBundle, recentConsent, latestSummary] = await Promise.all([
       identityFoundationService.getUserProfileById(userProfileId),
       identityFoundationService.getAuthIdentitiesByUserProfileId(userProfileId),
-      timelineService.listTimelineByUserProfileId(userProfileId),
-      (await listSupportCases()).filter((entry): entry is SupportCase => Boolean(entry)).filter((entry) => entry.userProfileId === userProfileId),
+      timelineService.getUnifiedTimelineByUserProfileId(userProfileId),
       privacyAuditService.listRecentConsentEntries(10),
       timelineService.getLatestActivitySummary({ userProfileId }),
     ]);
@@ -77,8 +81,9 @@ export class AdminFoundationService {
     return {
       profile,
       identities,
-      timeline,
-      supportCases,
+      timeline: timelineBundle.events,
+      timelineBundle,
+      supportCases: timelineBundle.supportCases,
       recentConsent: recentConsent.filter((entry): entry is ConsentLog => Boolean(entry)).filter((entry) => entry.userProfileId === userProfileId),
       latestSummary,
       legacyAccount: account,
@@ -87,13 +92,79 @@ export class AdminFoundationService {
     };
   }
 
+  async getTimelineSubjectDetail(input: {
+    userProfileId?: string | null;
+    authIdentityId?: string | null;
+    sessionId?: string | null;
+    lineUserId?: string | null;
+  }) {
+    await this.ensureLegacyBackfillForAccounts();
+
+    if (input.userProfileId) {
+      const [profile, identities, timelineBundle] = await Promise.all([
+        identityFoundationService.getUserProfileById(input.userProfileId),
+        identityFoundationService.getAuthIdentitiesByUserProfileId(input.userProfileId),
+        timelineService.getUnifiedTimelineByUserProfileId(input.userProfileId),
+      ]);
+
+      return {
+        subjectType: "user_profile" as const,
+        profile,
+        identities,
+        timelineBundle,
+      };
+    }
+
+    if (input.authIdentityId) {
+      const [identity, timelineBundle] = await Promise.all([
+        identityFoundationService.getAuthIdentityById(input.authIdentityId),
+        timelineService.getUnifiedTimelineByAuthIdentityId(input.authIdentityId),
+      ]);
+      const profile = identity?.userProfileId ? await identityFoundationService.getUserProfileById(identity.userProfileId) : null;
+
+      return {
+        subjectType: "auth_identity" as const,
+        profile,
+        identities: identity ? [identity] : [],
+        timelineBundle,
+      };
+    }
+
+    if (input.lineUserId) {
+      const [lineSnapshot, timelineBundle] = await Promise.all([
+        identityFoundationService.getUserByLineProviderSubject(input.lineUserId),
+        timelineService.getUnifiedTimelineByLineSubject(input.lineUserId),
+      ]);
+
+      return {
+        subjectType: "line_subject" as const,
+        profile: lineSnapshot.userProfile,
+        identities: lineSnapshot.identity ? [lineSnapshot.identity] : [],
+        timelineBundle,
+      };
+    }
+
+    if (input.sessionId) {
+      const timelineBundle = await timelineService.getUnifiedTimelineBySupportSessionId(input.sessionId);
+
+      return {
+        subjectType: "support_session" as const,
+        profile: null,
+        identities: [],
+        timelineBundle,
+      };
+    }
+
+    return null;
+  }
+
   async getDashboardSummary() {
     await this.ensureLegacyBackfillForAccounts();
     const [profiles, supportCases, auditEntries, identities] = await Promise.all([
-      listUserProfiles(),
-      listSupportCases(),
+      foundationUserProfileRepository.list(),
+      foundationSupportCaseRepository.list(),
       privacyAuditService.listRecentAuditEntries(20),
-      listAuthIdentities(),
+      foundationAuthIdentityRepository.list(),
     ]);
     const safeProfiles = profiles.filter((entry): entry is UserProfile => Boolean(entry));
     const safeSupportCases = supportCases.filter((entry): entry is SupportCase => Boolean(entry));

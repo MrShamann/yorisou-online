@@ -1,8 +1,12 @@
 import { createFoundationId, nowIso } from "@/lib/server/foundation/ids";
 import { getAiAssistHooksForChannel } from "@/lib/server/foundation/aiAssistHooks";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
+import {
+  foundationConversationRepository,
+  foundationMessageEventRepository,
+  foundationSupportCaseRepository,
+} from "@/lib/server/foundation/repositories";
 import type { BindingState, Channel, Conversation, MessageEvent, Source, SupportCase } from "@/lib/server/foundation/schema";
-import { getFoundationRecord, listConversations, listMessageEvents, listSupportCases, putFoundationRecord } from "@/lib/server/foundation/store";
 import { supportCaseService } from "@/lib/server/foundation/supportCaseService";
 import type { ConsultationRecord, LineWebhookEventRecord } from "@/lib/server/yorisouData";
 
@@ -45,9 +49,21 @@ function buildSupportWorkspaceSummary(input: {
   return user;
 }
 
+function sortTimelineEvents(events: MessageEvent[]) {
+  return [...events].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+}
+
+function sortConversations(conversations: Conversation[]) {
+  return [...conversations].sort((a, b) => a.latestActivityAt.localeCompare(b.latestActivityAt));
+}
+
+function sortSupportCases(supportCases: SupportCase[]) {
+  return [...supportCases].sort((a, b) => a.latestActivityAt.localeCompare(b.latestActivityAt));
+}
+
 export class TimelineService {
   async getConversationById(conversationId: string) {
-    return getFoundationRecord<Conversation>("conversations", conversationId);
+    return foundationConversationRepository.getById(conversationId);
   }
 
   async ensureConversation(input: {
@@ -60,7 +76,7 @@ export class TimelineService {
     externalIdentityKeyHint?: string | null;
     subject?: string | null;
   }) {
-    const conversations = await listConversations();
+    const conversations = await foundationConversationRepository.list();
     const timestamp = nowIso();
     const existing =
       conversations.find((entry) => entry.externalIdentityKey === input.externalIdentityKey) ||
@@ -85,7 +101,7 @@ export class TimelineService {
         latestActivityAt: timestamp,
         updatedAt: timestamp,
       };
-      await putFoundationRecord("conversations", updated.conversationId, updated);
+      await foundationConversationRepository.save(updated);
       return updated;
     }
 
@@ -106,18 +122,18 @@ export class TimelineService {
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-    await putFoundationRecord("conversations", conversation.conversationId, conversation);
+    await foundationConversationRepository.save(conversation);
     return conversation;
   }
 
   async putMessageEvent(messageEvent: MessageEvent) {
-    await putFoundationRecord("message-events", messageEvent.messageEventId, messageEvent);
+    await foundationMessageEventRepository.save(messageEvent);
 
     if (messageEvent.conversationId) {
       const conversation = await this.getConversationById(messageEvent.conversationId);
 
       if (conversation) {
-        await putFoundationRecord("conversations", conversation.conversationId, {
+        await foundationConversationRepository.save({
           ...conversation,
           latestMessageEventId: messageEvent.messageEventId,
           latestActivityAt: messageEvent.recordedAt,
@@ -196,7 +212,7 @@ export class TimelineService {
     });
 
     if (conversation.supportCaseId !== supportCase.supportCaseId) {
-      await putFoundationRecord("conversations", conversation.conversationId, {
+      await foundationConversationRepository.save({
         ...conversation,
         supportCaseId: supportCase.supportCaseId,
         latestActivityAt: nowIso(),
@@ -261,7 +277,7 @@ export class TimelineService {
     const supportCase = await supportCaseService.getById(input.context.supportCaseId);
 
     if (supportCase) {
-      await putFoundationRecord("support-cases", supportCase.supportCaseId, {
+      await foundationSupportCaseRepository.save({
         ...supportCase,
         latestMessageEventId: created.messageEventId,
         latestActivityAt: created.recordedAt,
@@ -332,14 +348,14 @@ export class TimelineService {
     };
 
     const created = await this.putMessageEvent(messageEvent);
-    await putFoundationRecord("conversations", conversation.conversationId, {
+    await foundationConversationRepository.save({
       ...conversation,
       supportCaseId: supportCase.supportCaseId,
       latestMessageEventId: created.messageEventId,
       latestActivityAt: recordedAt,
       updatedAt: recordedAt,
     });
-    await putFoundationRecord("support-cases", supportCase.supportCaseId, {
+    await foundationSupportCaseRepository.save({
       ...supportCase,
       latestMessageEventId: created.messageEventId,
       latestActivityAt: recordedAt,
@@ -408,14 +424,14 @@ export class TimelineService {
     };
 
     const created = await this.putMessageEvent(messageEvent);
-    await putFoundationRecord("conversations", conversation.conversationId, {
+    await foundationConversationRepository.save({
       ...conversation,
       supportCaseId: supportCase.supportCaseId,
       latestMessageEventId: created.messageEventId,
       latestActivityAt: created.recordedAt,
       updatedAt: created.updatedAt,
     });
-    await putFoundationRecord("support-cases", supportCase.supportCaseId, {
+    await foundationSupportCaseRepository.save({
       ...supportCase,
       latestMessageEventId: created.messageEventId,
       latestActivityAt: created.recordedAt,
@@ -425,18 +441,92 @@ export class TimelineService {
   }
 
   async listTimelineByUserProfileId(userProfileId: string) {
-    const events = await listMessageEvents();
-    return events.filter((entry) => entry.userProfileId === userProfileId);
+    return foundationMessageEventRepository.listByUserProfileId(userProfileId);
   }
 
   async listTimelineByAuthIdentityId(authIdentityId: string) {
-    const events = await listMessageEvents();
-    return events.filter((entry) => entry.authIdentityId === authIdentityId);
+    return foundationMessageEventRepository.listByAuthIdentityId(authIdentityId);
   }
 
   async listTimelineByExternalIdentityKey(externalIdentityKey: string) {
-    const events = await listMessageEvents();
-    return events.filter((entry) => entry.externalIdentityKey === externalIdentityKey);
+    return foundationMessageEventRepository.listByExternalIdentityKey(externalIdentityKey);
+  }
+
+  async listTimelineBySupportSessionId(sessionId: string) {
+    return foundationMessageEventRepository.listByExternalIdentityKey(makeExternalKey({ channel: "support_web", identityKey: `session:${sessionId}` }));
+  }
+
+  async listConversationHistoryBySupportSessionId(sessionId: string) {
+    return foundationConversationRepository.listByExternalIdentityKey(makeExternalKey({ channel: "support_web", identityKey: `session:${sessionId}` }));
+  }
+
+  async listTimelineByLineSubject(lineUserId: string) {
+    return foundationMessageEventRepository.listByExternalIdentityKey(makeExternalKey({ channel: "line", identityKey: lineUserId }));
+  }
+
+  async getUnifiedTimelineByUserProfileId(userProfileId: string) {
+    const [conversations, events, supportCases] = await Promise.all([
+      foundationConversationRepository.listByUserProfileId(userProfileId),
+      foundationMessageEventRepository.listByUserProfileId(userProfileId),
+      foundationSupportCaseRepository.listByUserProfileId(userProfileId),
+    ]);
+
+    return {
+      subject: {
+        type: "user_profile" as const,
+        userProfileId,
+      },
+      conversations: sortConversations(conversations),
+      events: sortTimelineEvents(events),
+      supportCases: sortSupportCases(supportCases),
+      source: "canonical" as const,
+    };
+  }
+
+  async getUnifiedTimelineByAuthIdentityId(authIdentityId: string) {
+    const [conversations, events, supportCases] = await Promise.all([
+      foundationConversationRepository.listByAuthIdentityId(authIdentityId),
+      foundationMessageEventRepository.listByAuthIdentityId(authIdentityId),
+      foundationSupportCaseRepository.listByAuthIdentityId(authIdentityId),
+    ]);
+
+    return {
+      subject: {
+        type: "auth_identity" as const,
+        authIdentityId,
+      },
+      conversations: sortConversations(conversations),
+      events: sortTimelineEvents(events),
+      supportCases: sortSupportCases(supportCases),
+      source: conversations.length || events.length || supportCases.length ? ("canonical" as const) : ("none" as const),
+    };
+  }
+
+  async getUnifiedTimelineByExternalIdentityKey(externalIdentityKey: string) {
+    const [conversations, events] = await Promise.all([
+      foundationConversationRepository.listByExternalIdentityKey(externalIdentityKey),
+      foundationMessageEventRepository.listByExternalIdentityKey(externalIdentityKey),
+    ]);
+    const supportCases = await foundationSupportCaseRepository.listByConversationIds(conversations.map((entry) => entry.conversationId));
+
+    return {
+      subject: {
+        type: "external_identity" as const,
+        externalIdentityKey,
+      },
+      conversations: sortConversations(conversations),
+      events: sortTimelineEvents(events),
+      supportCases: sortSupportCases(supportCases),
+      source: conversations.length || events.length || supportCases.length ? ("canonical" as const) : ("none" as const),
+    };
+  }
+
+  async getUnifiedTimelineBySupportSessionId(sessionId: string) {
+    return this.getUnifiedTimelineByExternalIdentityKey(makeExternalKey({ channel: "support_web", identityKey: `session:${sessionId}` }));
+  }
+
+  async getUnifiedTimelineByLineSubject(lineUserId: string) {
+    return this.getUnifiedTimelineByExternalIdentityKey(makeExternalKey({ channel: "line", identityKey: lineUserId }));
   }
 
   async getSupportWorkspaceHistory(input: {
@@ -449,14 +539,19 @@ export class TimelineService {
     events: MessageEvent[];
     source: "canonical" | "none";
   }> {
-    const conversations = await listConversations();
     const candidateKeys = [
       input.userProfileId ? makeExternalKey({ channel: "support_web", identityKey: `user:${input.userProfileId}` }) : null,
       input.sessionId ? makeExternalKey({ channel: "support_web", identityKey: `session:${input.sessionId}` }) : null,
     ].filter((entry): entry is string => Boolean(entry));
+    let conversation: Conversation | null = null;
 
-    const conversation =
-      conversations.find((entry) => candidateKeys.includes(entry.externalIdentityKey) && entry.channel === "support_web") || null;
+    for (const candidateKey of candidateKeys) {
+      const resolved = await foundationConversationRepository.findByExternalIdentityKey(candidateKey);
+      if (resolved?.channel === "support_web") {
+        conversation = resolved;
+        break;
+      }
+    }
 
     if (!conversation) {
       return {
@@ -467,14 +562,12 @@ export class TimelineService {
       };
     }
 
-    const allEvents = await listMessageEvents();
-    const events = allEvents
-      .filter((entry) => entry.conversationId === conversation.conversationId)
-      .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
-    const supportCases = await listSupportCases();
+    const events = (await foundationMessageEventRepository.listByConversationId(conversation.conversationId)).sort((a, b) =>
+      a.recordedAt.localeCompare(b.recordedAt),
+    );
     const supportCase =
-      supportCases.find((entry) => entry.supportCaseId === conversation.supportCaseId) ||
-      supportCases.find((entry) => entry.conversationId === conversation.conversationId) ||
+      (conversation.supportCaseId ? await foundationSupportCaseRepository.getById(conversation.supportCaseId) : null) ||
+      (await foundationSupportCaseRepository.getByConversationId(conversation.conversationId)) ||
       null;
     const limit = input.limit && input.limit > 0 ? input.limit : 12;
 

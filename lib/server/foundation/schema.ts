@@ -22,6 +22,7 @@ export type ConsentType = "account_registration" | "line_identity_binding" | "li
 export type AuditActorType = "user" | "admin" | "system";
 export type AuditAction =
   | "identity.bind"
+  | "identity.merge"
   | "identity.line_primary_login"
   | "identity.email_register"
   | "identity.email_attach"
@@ -252,3 +253,184 @@ export const AUDIT_LOG_FIELD_DEFINITIONS = [
   { field: "containsSensitiveAccess", sensitivity: "system" },
   { field: "ipHash", sensitivity: "sensitive" },
 ] satisfies Array<{ field: string; sensitivity: SensitivityLevel }>;
+
+export type CanonicalFoundationEntityDefinition = {
+  entity: "UserProfile" | "AuthIdentity" | "Conversation" | "MessageEvent" | "SupportCase" | "ConsentLog" | "AuditLog";
+  collection:
+    | "user-profiles"
+    | "auth-identities"
+    | "conversations"
+    | "message-events"
+    | "support-cases"
+    | "consent-logs"
+    | "audit-logs";
+  primaryKey: string;
+  sortKey: string;
+  ownership: {
+    primaryOwner: "Identity" | "CRM" | "Messaging" | "Privacy" | "Support Operations";
+    supportingOwners: Array<"Identity" | "CRM" | "Messaging" | "Privacy" | "Support Operations">;
+  };
+  relationships: Array<{
+    field: string;
+    references:
+      | "UserProfile"
+      | "AuthIdentity"
+      | "Conversation"
+      | "MessageEvent"
+      | "SupportCase"
+      | "ConsentLog"
+      | "AuditLog";
+    cardinality: "one" | "many" | "optional";
+  }>;
+  queryPatterns: string[];
+};
+
+export const CANONICAL_FOUNDATION_MODEL = [
+  {
+    entity: "UserProfile",
+    collection: "user-profiles",
+    primaryKey: "userProfileId",
+    sortKey: "createdAt",
+    ownership: {
+      primaryOwner: "Identity",
+      supportingOwners: ["CRM", "Support Operations", "Privacy"],
+    },
+    relationships: [
+      { field: "legacyAccountId", references: "UserProfile", cardinality: "optional" },
+      { field: "userProfileId", references: "AuthIdentity", cardinality: "many" },
+      { field: "userProfileId", references: "Conversation", cardinality: "many" },
+      { field: "userProfileId", references: "MessageEvent", cardinality: "many" },
+      { field: "userProfileId", references: "SupportCase", cardinality: "many" },
+      { field: "userProfileId", references: "ConsentLog", cardinality: "many" },
+      { field: "actorUserProfileId", references: "AuditLog", cardinality: "many" },
+    ],
+    queryPatterns: [
+      "Lookup by userProfileId",
+      "Lookup by legacyAccountId",
+      "Load latest support cases, timeline, and consent state for a user",
+    ],
+  },
+  {
+    entity: "AuthIdentity",
+    collection: "auth-identities",
+    primaryKey: "authIdentityId",
+    sortKey: "createdAt",
+    ownership: {
+      primaryOwner: "Identity",
+      supportingOwners: ["Privacy", "Support Operations"],
+    },
+    relationships: [
+      { field: "userProfileId", references: "UserProfile", cardinality: "optional" },
+      { field: "authIdentityId", references: "Conversation", cardinality: "many" },
+      { field: "authIdentityId", references: "MessageEvent", cardinality: "many" },
+      { field: "authIdentityId", references: "SupportCase", cardinality: "many" },
+      { field: "authIdentityId", references: "ConsentLog", cardinality: "many" },
+      { field: "actorAuthIdentityId", references: "AuditLog", cardinality: "many" },
+    ],
+    queryPatterns: [
+      "Lookup by authIdentityId",
+      "Lookup by normalized email",
+      "Lookup by lineUserId",
+      "Find all identities bound to a canonical user",
+    ],
+  },
+  {
+    entity: "Conversation",
+    collection: "conversations",
+    primaryKey: "conversationId",
+    sortKey: "latestActivityAt",
+    ownership: {
+      primaryOwner: "Messaging",
+      supportingOwners: ["CRM", "Support Operations", "Identity"],
+    },
+    relationships: [
+      { field: "userProfileId", references: "UserProfile", cardinality: "optional" },
+      { field: "authIdentityId", references: "AuthIdentity", cardinality: "optional" },
+      { field: "supportCaseId", references: "SupportCase", cardinality: "optional" },
+      { field: "latestMessageEventId", references: "MessageEvent", cardinality: "optional" },
+    ],
+    queryPatterns: [
+      "Lookup active conversation by externalIdentityKey",
+      "List recent conversations by userProfileId",
+      "Resume support workspace continuity by session or bound user",
+    ],
+  },
+  {
+    entity: "MessageEvent",
+    collection: "message-events",
+    primaryKey: "messageEventId",
+    sortKey: "recordedAt",
+    ownership: {
+      primaryOwner: "Messaging",
+      supportingOwners: ["CRM", "Support Operations", "Privacy"],
+    },
+    relationships: [
+      { field: "conversationId", references: "Conversation", cardinality: "optional" },
+      { field: "supportCaseId", references: "SupportCase", cardinality: "optional" },
+      { field: "userProfileId", references: "UserProfile", cardinality: "optional" },
+      { field: "authIdentityId", references: "AuthIdentity", cardinality: "optional" },
+    ],
+    queryPatterns: [
+      "Load conversation timeline ordered by recordedAt",
+      "Load all events tied to a supportCaseId",
+      "Audit inbound/outbound support interactions by channel and source",
+    ],
+  },
+  {
+    entity: "SupportCase",
+    collection: "support-cases",
+    primaryKey: "supportCaseId",
+    sortKey: "latestActivityAt",
+    ownership: {
+      primaryOwner: "Support Operations",
+      supportingOwners: ["CRM", "Messaging", "Identity"],
+    },
+    relationships: [
+      { field: "userProfileId", references: "UserProfile", cardinality: "optional" },
+      { field: "authIdentityId", references: "AuthIdentity", cardinality: "optional" },
+      { field: "conversationId", references: "Conversation", cardinality: "optional" },
+      { field: "latestMessageEventId", references: "MessageEvent", cardinality: "optional" },
+    ],
+    queryPatterns: [
+      "Find open case by conversationId",
+      "List latest cases by userProfileId",
+      "Track ongoing support state, summary, and operator handoff context",
+    ],
+  },
+  {
+    entity: "ConsentLog",
+    collection: "consent-logs",
+    primaryKey: "consentLogId",
+    sortKey: "timestamp",
+    ownership: {
+      primaryOwner: "Privacy",
+      supportingOwners: ["Identity", "Support Operations"],
+    },
+    relationships: [
+      { field: "userProfileId", references: "UserProfile", cardinality: "optional" },
+      { field: "authIdentityId", references: "AuthIdentity", cardinality: "optional" },
+    ],
+    queryPatterns: [
+      "List recent consent state for a user",
+      "Audit policy acceptance by consentType and policyVersion",
+    ],
+  },
+  {
+    entity: "AuditLog",
+    collection: "audit-logs",
+    primaryKey: "auditLogId",
+    sortKey: "createdAt",
+    ownership: {
+      primaryOwner: "Privacy",
+      supportingOwners: ["Identity", "Messaging", "Support Operations", "CRM"],
+    },
+    relationships: [
+      { field: "actorUserProfileId", references: "UserProfile", cardinality: "optional" },
+      { field: "actorAuthIdentityId", references: "AuthIdentity", cardinality: "optional" },
+    ],
+    queryPatterns: [
+      "Audit sensitive access and timeline writes",
+      "Trace actions on a resourceId across admin and system actors",
+    ],
+  },
+] satisfies CanonicalFoundationEntityDefinition[];
