@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { timelineService } from "@/lib/server/foundation/timelineService";
-import { getViewerContext, resolveSupportWorkspaceViewerLookup } from "@/lib/server/yorisouAuth";
+import { getViewerContext, inspectEncodedSessionCookieForAudit, resolveSupportWorkspaceViewerLookup, SESSION_COOKIE } from "@/lib/server/yorisouAuth";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url);
+    const includeDebug = url.searchParams.get("debug") === "1";
     const viewer = await getViewerContext();
+    const viewerLookup = resolveSupportWorkspaceViewerLookup(viewer);
     let canonicalSupportHistory:
       | Awaited<ReturnType<typeof timelineService.getSupportWorkspaceHistory>>
       | null = null;
@@ -22,8 +25,6 @@ export async function GET() {
     }
 
     if (!canonicalSupportHistory || canonicalSupportHistory.source !== "canonical") {
-      const viewerLookup = resolveSupportWorkspaceViewerLookup(viewer);
-
       if (viewerLookup.supportReadTargetUserProfileId) {
         try {
           canonicalSupportHistory = await timelineService.getSupportWorkspaceHistory({
@@ -42,6 +43,20 @@ export async function GET() {
       supportCase: null,
       events: [],
     };
+    const rawSessionCookie =
+      request.headers
+        .get("cookie")
+        ?.split(";")
+        .map((entry) => entry.trim())
+        .find((entry) => entry.startsWith(`${SESSION_COOKIE}=`))
+        ?.split("=")
+        .slice(1)
+        .join("=") || undefined;
+    const debugSession = includeDebug
+      ? await inspectEncodedSessionCookieForAudit({
+          encodedSessionCookie: rawSessionCookie,
+        })
+      : null;
 
     return NextResponse.json({
       success: true,
@@ -64,6 +79,19 @@ export async function GET() {
             createdAt: entry.recordedAt,
           })),
       },
+      ...(includeDebug
+        ? {
+            debug: {
+              viewerSessionId: viewer.session?.id || null,
+              viewerUserId: viewer.session?.userId || null,
+              rawSessionCookiePresent: Boolean(rawSessionCookie),
+              cookieDecoded: debugSession?.cookieDecoded || false,
+              cookieSessionId: debugSession?.sessionPayload?.id || null,
+              viewerLookup,
+              resolvedHistorySource: resolvedHistory.source,
+            },
+          }
+        : {}),
     });
   } catch (error) {
     console.error("support history route error:", error);

@@ -71,6 +71,8 @@ async function resolveSupportWorkspaceFoundationIdentity(viewer: ViewerContext) 
 
 export async function POST(request: Request) {
   try {
+    const url = new URL(request.url);
+    const includeDebug = url.searchParams.get("debug") === "1";
     const viewer = await getViewerContext();
     const session = viewer.session || (await ensureViewerSession());
     const payload = (await request.json()) as SupportChatRequest;
@@ -116,6 +118,7 @@ export async function POST(request: Request) {
     let foundationContext:
       | Awaited<ReturnType<typeof timelineService.ensureSupportWorkspaceContext>>
       | null = null;
+    let foundationInboundWriteOk = false;
 
     try {
       foundationContext = await timelineService.ensureSupportWorkspaceContext({
@@ -133,6 +136,7 @@ export async function POST(request: Request) {
         direction: "inbound",
         contentText: userMessage,
       });
+      foundationInboundWriteOk = true;
     } catch (foundationError) {
       foundationContext = null;
       console.error("support chat canonical inbound event error:", foundationError);
@@ -221,6 +225,9 @@ export async function POST(request: Request) {
         contentText: assistantMessage,
         replyStatus: "sent",
       });
+      if (!foundationContext) {
+        foundationContext = assistantContext;
+      }
     } catch (foundationError) {
       console.error("support chat canonical outbound event error:", foundationError);
     }
@@ -281,6 +288,16 @@ export async function POST(request: Request) {
         outputChars: deterministic.message.length,
         fallbackUsed: Boolean(gatewayResult) === false,
       },
+      ...(includeDebug
+        ? {
+            debug: {
+              sessionId: session.id,
+              foundationIdentity,
+              foundationContext,
+              foundationInboundWriteOk,
+            },
+          }
+        : {}),
     });
     setViewerSessionCookie(response, session);
     return response;
