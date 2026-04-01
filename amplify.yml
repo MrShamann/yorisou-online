@@ -5,6 +5,7 @@ frontend:
       commands:
         - printf "YORISOU_SHARED_STORE_BUCKET=%s\n" "$YORISOU_SHARED_STORE_BUCKET" > .env.production
         - printf "YORISOU_SHARED_STORE_REGION=%s\n" "${YORISOU_SHARED_STORE_REGION:-us-east-2}" >> .env.production
+        - printf "YORISOU_FOUNDATION_STORE_PREFIX=%s\n" "${YORISOU_FOUNDATION_STORE_PREFIX:-phase1/foundation-v1}" >> .env.production
         - printf "LINE_CHANNEL_ID=%s\n" "$LINE_CHANNEL_ID" >> .env.production
         - printf "LINE_CHANNEL_SECRET=%s\n" "$LINE_CHANNEL_SECRET" >> .env.production
         - printf "LINE_LOGIN_CHANNEL_SECRET=%s\n" "${LINE_LOGIN_CHANNEL_SECRET:-$LINE_CHANNEL_SECRET}" >> .env.production

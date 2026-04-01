@@ -15,7 +15,8 @@ export type FoundationCollection =
   | "audit-logs";
 
 const DEFAULT_SHARED_REGION = process.env.YORISOU_SHARED_STORE_REGION || "us-east-2";
-const FOUNDATION_PREFIX = process.env.YORISOU_FOUNDATION_STORE_PREFIX?.trim() || "foundation-v1";
+const PRIMARY_FOUNDATION_PREFIX = process.env.YORISOU_FOUNDATION_STORE_PREFIX?.trim() || "phase1/foundation-v1";
+const LEGACY_FOUNDATION_PREFIX = "foundation-v1";
 const foundationDataDir =
   process.env.YORISOU_FOUNDATION_DATA_DIR ||
   (process.env.NODE_ENV === "production" ? path.join("/tmp", "yorisou-foundation") : path.join(process.cwd(), "data", "foundation"));
@@ -41,8 +42,18 @@ function getSharedStoreClient() {
   return sharedStoreClient;
 }
 
-function foundationKey(collection: FoundationCollection, recordId: string) {
-  return `${FOUNDATION_PREFIX}/${collection}/${recordId}.json`;
+function getFoundationReadPrefixes() {
+  const prefixes = [PRIMARY_FOUNDATION_PREFIX];
+
+  if (PRIMARY_FOUNDATION_PREFIX !== LEGACY_FOUNDATION_PREFIX) {
+    prefixes.push(LEGACY_FOUNDATION_PREFIX);
+  }
+
+  return prefixes;
+}
+
+function foundationKey(prefix: string, collection: FoundationCollection, recordId: string) {
+  return `${prefix}/${collection}/${recordId}.json`;
 }
 
 function localCollectionDir(collection: FoundationCollection) {
@@ -108,21 +119,25 @@ async function readSharedRecord<T>(collection: FoundationCollection, recordId: s
     return null;
   }
 
-  try {
-    const response = await client.send(
-      new GetObjectCommand({
-        Bucket: sharedStoreBucket,
-        Key: foundationKey(collection, recordId),
-      }),
-    );
-    const content = await response.Body?.transformToString();
-    return content ? (JSON.parse(content) as T) : null;
-  } catch (error) {
-    if (isMissingObjectError(error)) {
-      return null;
+  for (const prefix of getFoundationReadPrefixes()) {
+    try {
+      const response = await client.send(
+        new GetObjectCommand({
+          Bucket: sharedStoreBucket,
+          Key: foundationKey(prefix, collection, recordId),
+        }),
+      );
+      const content = await response.Body?.transformToString();
+      return content ? (JSON.parse(content) as T) : null;
+    } catch (error) {
+      if (isMissingObjectError(error)) {
+        continue;
+      }
+      throw error;
     }
-    throw error;
   }
+
+  return null;
 }
 
 async function listSharedRecords<T>(collection: FoundationCollection) {
@@ -132,30 +147,33 @@ async function listSharedRecords<T>(collection: FoundationCollection) {
     return [];
   }
 
-  const prefix = `${FOUNDATION_PREFIX}/${collection}/`;
-  const keys: string[] = [];
-  let continuationToken: string | undefined;
+  const keys = new Set<string>();
 
-  do {
-    const response = await client.send(
-      new ListObjectsV2Command({
-        Bucket: sharedStoreBucket,
-        Prefix: prefix,
-        ContinuationToken: continuationToken,
-      }),
-    );
+  for (const prefixRoot of getFoundationReadPrefixes()) {
+    const prefix = `${prefixRoot}/${collection}/`;
+    let continuationToken: string | undefined;
 
-    for (const entry of response.Contents || []) {
-      if (entry.Key) {
-        keys.push(entry.Key);
+    do {
+      const response = await client.send(
+        new ListObjectsV2Command({
+          Bucket: sharedStoreBucket,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+        }),
+      );
+
+      for (const entry of response.Contents || []) {
+        if (entry.Key) {
+          keys.add(entry.Key);
+        }
       }
-    }
 
-    continuationToken = response.IsTruncated ? response.NextContinuationToken : undefined;
-  } while (continuationToken);
+      continuationToken = response.IsTruncated ? response.NextContinuationToken : undefined;
+    } while (continuationToken);
+  }
 
   const records = await Promise.all(
-    keys.map(async (key) => {
+    [...keys].map(async (key) => {
       try {
         const response = await client.send(new GetObjectCommand({ Bucket: sharedStoreBucket, Key: key }));
         const content = await response.Body?.transformToString();
@@ -188,7 +206,7 @@ async function writeSharedRecord<T>(collection: FoundationCollection, recordId: 
   await client.send(
     new PutObjectCommand({
       Bucket: sharedStoreBucket,
-      Key: foundationKey(collection, recordId),
+      Key: foundationKey(PRIMARY_FOUNDATION_PREFIX, collection, recordId),
       Body: JSON.stringify(value, null, 2) + "\n",
       ContentType: "application/json",
     }),
@@ -232,7 +250,7 @@ export async function deleteFoundationRecord(collection: FoundationCollection, r
     await client.send(
       new DeleteObjectCommand({
         Bucket: sharedStoreBucket,
-        Key: foundationKey(collection, recordId),
+        Key: foundationKey(PRIMARY_FOUNDATION_PREFIX, collection, recordId),
       }),
     );
     return;
@@ -250,7 +268,8 @@ export function getFoundationStoreStatus() {
     mode: shouldUseSharedStore ? "shared_s3" : "local_file",
     sharedStoreBucketConfigured: shouldUseSharedStore,
     sharedStoreRegion,
-    foundationPrefix: FOUNDATION_PREFIX,
+    foundationPrefix: PRIMARY_FOUNDATION_PREFIX,
+    foundationReadPrefixes: getFoundationReadPrefixes(),
     localDataDir: foundationDataDir,
   } as const;
 }
