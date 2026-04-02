@@ -1,4 +1,4 @@
-import { findAccountById, listAccounts, listLineWebhookEvents, listConsultations } from "@/lib/server/yorisouData";
+import { findAccountById, listAccounts, listConsultations, listLineWebhookEvents, listRecentLineWebhookSubjects } from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
 import {
@@ -12,20 +12,18 @@ import type { AuditLog, AuthIdentity, ConsentLog, SupportCase, UserProfile } fro
 
 export class AdminFoundationService {
   async listRecentLineWebhookSubjects(limit = 10) {
-    const events = (await listLineWebhookEvents())
-      .filter((entry) => entry.lineUserId)
-      .slice(0, Math.max(1, limit));
+    const events = await listRecentLineWebhookSubjects(limit);
 
     return Promise.all(
       events.map(async (event) => {
-        const lineUserId = event.lineUserId!;
+        const lineUserId = event.lineUserId;
         const [lineSnapshot, timelineBundle] = await Promise.all([
           identityFoundationService.getUserByLineProviderSubject(lineUserId),
           timelineService.getUnifiedTimelineByLineSubject(lineUserId),
         ]);
 
         return {
-          eventId: event.id,
+          eventId: event.eventId,
           webhookEventId: event.webhookEventId,
           lineUserId,
           accountId: event.accountId,

@@ -105,6 +105,20 @@ export type LineWebhookEventRecord = {
   receivedAt: string;
 };
 
+export type RecentLineWebhookSubjectRecord = {
+  eventId: string;
+  webhookEventId: string | null;
+  lineUserId: string;
+  accountId: string | null;
+  sourceType: string | null;
+  eventType: string;
+  messageType: string | null;
+  messageText: string | null;
+  postbackData: string | null;
+  eventTimestamp: string | null;
+  receivedAt: string;
+};
+
 type DataFile<T> = {
   path: string;
   fallback: T;
@@ -160,6 +174,10 @@ const passwordResetTokensFile: DataFile<PasswordResetTokenRecord[]> = {
 };
 const lineWebhookEventsFile: DataFile<LineWebhookEventRecord[]> = {
   path: path.join(dataDir, "phase1-line-webhook-events.json"),
+  fallback: [],
+};
+const recentLineWebhookSubjectsFile: DataFile<RecentLineWebhookSubjectRecord[]> = {
+  path: path.join(dataDir, "phase1-line-webhook-recent-subjects.json"),
   fallback: [],
 };
 
@@ -263,6 +281,10 @@ function lineUserLookupKey(lineUserId: string) {
 
 function lineWebhookEventKey(id: string) {
   return `${SHARED_PREFIX}/line-events/${id}.json`;
+}
+
+function recentLineWebhookSubjectsKey() {
+  return `${SHARED_PREFIX}/line-events/admin-recent-subjects.json`;
 }
 
 function hashResetToken(token: string) {
@@ -534,8 +556,66 @@ async function putSharedLineWebhookEvent(record: LineWebhookEventRecord) {
   return record;
 }
 
+async function getSharedRecentLineWebhookSubjects() {
+  return (await sharedReadJson<RecentLineWebhookSubjectRecord[]>(recentLineWebhookSubjectsKey())) || [];
+}
+
+async function putSharedRecentLineWebhookSubjects(records: RecentLineWebhookSubjectRecord[]) {
+  await sharedWriteJson(recentLineWebhookSubjectsKey(), records);
+  return records;
+}
+
 async function getSharedLineWebhookEventById(id: string) {
   return sharedReadJson<LineWebhookEventRecord>(lineWebhookEventKey(id));
+}
+
+function toRecentLineWebhookSubjectRecord(record: LineWebhookEventRecord): RecentLineWebhookSubjectRecord | null {
+  if (!record.lineUserId) {
+    return null;
+  }
+
+  return {
+    eventId: record.id,
+    webhookEventId: record.webhookEventId,
+    lineUserId: record.lineUserId,
+    accountId: record.accountId,
+    sourceType: record.sourceType,
+    eventType: record.eventType,
+    messageType: record.messageType,
+    messageText: record.messageText,
+    postbackData: record.postbackData,
+    eventTimestamp: record.eventTimestamp,
+    receivedAt: record.receivedAt,
+  };
+}
+
+function mergeRecentLineWebhookSubjectRecords(
+  records: RecentLineWebhookSubjectRecord[],
+  incoming: RecentLineWebhookSubjectRecord,
+  limit = 20,
+) {
+  const next = [incoming, ...records.filter((entry) => entry.eventId !== incoming.eventId)];
+  return next
+    .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
+    .slice(0, Math.max(1, limit));
+}
+
+async function updateRecentLineWebhookSubjectIndex(record: LineWebhookEventRecord) {
+  const recentRecord = toRecentLineWebhookSubjectRecord(record);
+
+  if (!recentRecord) {
+    return;
+  }
+
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    const existing = await getSharedRecentLineWebhookSubjects();
+    await putSharedRecentLineWebhookSubjects(mergeRecentLineWebhookSubjectRecords(existing, recentRecord));
+    return;
+  }
+
+  const existing = await readLocalJson(recentLineWebhookSubjectsFile);
+  await writeLocalJson(recentLineWebhookSubjectsFile, mergeRecentLineWebhookSubjectRecords(existing, recentRecord));
 }
 
 async function ensureSharedStoreReady() {
@@ -943,6 +1023,7 @@ async function upsertLineWebhookEvent(record: LineWebhookEventRecord) {
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     await putSharedLineWebhookEvent(record);
+    await updateRecentLineWebhookSubjectIndex(record);
     return record;
   }
 
@@ -957,6 +1038,7 @@ async function upsertLineWebhookEvent(record: LineWebhookEventRecord) {
   }
 
   await writeLocalJson(lineWebhookEventsFile, nextRecords);
+  await updateRecentLineWebhookSubjectIndex(record);
   return record;
 }
 
@@ -976,6 +1058,17 @@ export async function createLineWebhookEvent(
 export async function listLineWebhookEventsForAccount(accountId: string) {
   const records = await listLineWebhookEvents();
   return records.filter((record) => record.accountId === accountId);
+}
+
+export async function listRecentLineWebhookSubjects(limit = 10): Promise<RecentLineWebhookSubjectRecord[]> {
+  const effectiveLimit = Math.max(1, limit);
+
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    return (await getSharedRecentLineWebhookSubjects()).slice(0, effectiveLimit);
+  }
+
+  return (await readLocalJson(recentLineWebhookSubjectsFile)).slice(0, effectiveLimit);
 }
 
 export async function getLatestLineWebhookEventForAccount(accountId: string) {
