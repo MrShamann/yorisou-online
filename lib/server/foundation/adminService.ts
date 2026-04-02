@@ -16,16 +16,10 @@ export class AdminFoundationService {
 
     return Promise.all(
       events.map(async (event) => {
-        const lineUserId = event.lineUserId;
-        const [lineSnapshot, timelineBundle] = await Promise.all([
-          identityFoundationService.getUserByLineProviderSubject(lineUserId),
-          timelineService.getUnifiedTimelineByLineSubject(lineUserId),
-        ]);
-
-        return {
+        const baseEvent = {
           eventId: event.eventId,
           webhookEventId: event.webhookEventId,
-          lineUserId,
+          lineUserId: event.lineUserId,
           accountId: event.accountId,
           eventType: event.eventType,
           messageType: event.messageType,
@@ -33,18 +27,37 @@ export class AdminFoundationService {
           postbackData: event.postbackData,
           receivedAt: event.receivedAt,
           eventTimestamp: event.eventTimestamp,
-          canonical: {
-            source: timelineBundle.source,
-            authIdentityId: lineSnapshot.identity?.authIdentityId || null,
-            userProfileId: lineSnapshot.userProfile?.userProfileId || null,
-            bindingState: lineSnapshot.bindingState,
-            conversationCount: timelineBundle.conversations.length,
-            eventCount: timelineBundle.events.length,
-            supportCaseCount: timelineBundle.supportCases.length,
-            latestConversationId: timelineBundle.conversations[0]?.conversationId || null,
-            latestSupportCaseId: timelineBundle.supportCases[0]?.supportCaseId || null,
-          },
         };
+
+        try {
+          const lineUserId = event.lineUserId;
+          const [lineSnapshot, timelineBundle] = await Promise.all([
+            identityFoundationService.getUserByLineProviderSubject(lineUserId),
+            timelineService.getUnifiedTimelineByLineSubject(lineUserId),
+          ]);
+
+          return {
+            ...baseEvent,
+            canonical: {
+              source: timelineBundle.source,
+              authIdentityId: lineSnapshot.identity?.authIdentityId || null,
+              userProfileId: lineSnapshot.userProfile?.userProfileId || null,
+              bindingState: lineSnapshot.bindingState,
+              conversationCount: timelineBundle.conversations.length,
+              eventCount: timelineBundle.events.length,
+              supportCaseCount: timelineBundle.supportCases.length,
+              latestConversationId: timelineBundle.conversations[0]?.conversationId || null,
+              latestSupportCaseId: timelineBundle.supportCases[0]?.supportCaseId || null,
+            },
+            canonicalError: null,
+          };
+        } catch (error) {
+          return {
+            ...baseEvent,
+            canonical: null,
+            canonicalError: error instanceof Error ? error.message : "recent_line_webhook_subject_resolution_failed",
+          };
+        }
       }),
     );
   }
