@@ -33,20 +33,9 @@ export class SupportCaseService {
     summary?: string | null;
     latestMessageEventId?: string | null;
   }) {
-    const cases = await foundationSupportCaseRepository.list();
-    const existing =
-      cases.find((entry) => entry.conversationId && input.conversationId && entry.conversationId === input.conversationId) ||
-      ((input.userProfileId || input.authIdentityId)
-        ? cases.find(
-            (entry) =>
-              entry.userProfileId === input.userProfileId &&
-              entry.authIdentityId === input.authIdentityId &&
-              entry.channel === input.channel &&
-              entry.status !== "resolved" &&
-              entry.title === input.title,
-          )
-        : null) ||
-      null;
+    const existing = input.conversationId
+      ? await foundationSupportCaseRepository.getByConversationId(input.conversationId)
+      : null;
     const timestamp = nowIso();
 
     if (existing) {

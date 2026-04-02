@@ -76,20 +76,8 @@ export class TimelineService {
     externalIdentityKeyHint?: string | null;
     subject?: string | null;
   }) {
-    const conversations = await foundationConversationRepository.list();
     const timestamp = nowIso();
-    const existing =
-      conversations.find((entry) => entry.externalIdentityKey === input.externalIdentityKey) ||
-      ((input.userProfileId || input.authIdentityId)
-        ? conversations.find(
-            (entry) =>
-              entry.channel === input.channel &&
-              entry.userProfileId === input.userProfileId &&
-              entry.authIdentityId === input.authIdentityId &&
-              entry.conversationStatus === "active",
-          )
-        : null) ||
-      null;
+    const existing = await foundationConversationRepository.getByExternalIdentityKey(input.externalIdentityKey);
 
     if (existing) {
       const updated: Conversation = {
