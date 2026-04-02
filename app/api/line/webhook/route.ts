@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
+import type { LineWebhookEventRecord } from "@/lib/server/yorisouData";
 import { createLineWebhookEvent, findAccountByLineUserId, findLineWebhookEventById } from "@/lib/server/yorisouData";
+import { identityFoundationService } from "@/lib/server/foundation/identityService";
+import { timelineService } from "@/lib/server/foundation/timelineService";
 import {
   getLineMessagingConfigStatus,
   isLineMessagingConfigured,
@@ -61,6 +64,40 @@ function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
     : "YORISOUです。メッセージを受け取りました。必要に応じて /support の LINE Connect からアカウント連携してください。";
 }
 
+async function syncLineWebhookEventToCanonical(record: LineWebhookEventRecord) {
+  const lineUserId = record.lineUserId;
+
+  if (!lineUserId) {
+    return { ok: true as const, skipped: "missing_line_user_id" as const };
+  }
+
+  const matchedAccount = await findAccountByLineUserId(lineUserId);
+
+  if (matchedAccount) {
+    await identityFoundationService.ensureCanonicalUserForAccount(matchedAccount, "line_webhook");
+  }
+
+  const ensuredIdentity =
+    (await identityFoundationService.getAuthIdentityByLineUserId(lineUserId)) ||
+    (await identityFoundationService.ensureUnboundLineIdentity({
+      lineUserId,
+      source: "line_webhook",
+    }));
+
+  await timelineService.recordLineWebhookEvent({
+    event: record,
+    authIdentityId: ensuredIdentity.authIdentityId,
+    userProfileId: ensuredIdentity.userProfileId,
+  });
+
+  return {
+    ok: true as const,
+    skipped: null,
+    authIdentityId: ensuredIdentity.authIdentityId,
+    userProfileId: ensuredIdentity.userProfileId,
+  };
+}
+
 export async function GET() {
   return NextResponse.json({
     ok: true,
@@ -102,6 +139,12 @@ export async function POST(request: Request) {
       const existing = await findLineWebhookEventById(event.webhookEventId);
 
       if (existing) {
+        try {
+          await syncLineWebhookEventToCanonical(existing);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "line_webhook_canonical_sync_failed";
+          return NextResponse.json({ ok: false, error: message }, { status: 500 });
+        }
         continue;
       }
     }
@@ -131,7 +174,7 @@ export async function POST(request: Request) {
       }
     }
 
-    await createLineWebhookEvent({
+    const createdRecord = await createLineWebhookEvent({
       id: event.webhookEventId || undefined,
       accountId,
       lineUserId,
@@ -148,6 +191,13 @@ export async function POST(request: Request) {
       isRedelivery: Boolean(event.deliveryContext?.isRedelivery),
       eventTimestamp: eventTimestampToIso(event.timestamp),
     });
+
+    try {
+      await syncLineWebhookEventToCanonical(createdRecord);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "line_webhook_canonical_sync_failed";
+      return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true, eventCount: events.length });
