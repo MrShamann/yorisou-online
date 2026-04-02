@@ -77,7 +77,14 @@ export class TimelineService {
     subject?: string | null;
   }) {
     const timestamp = nowIso();
-    const existing = await foundationConversationRepository.getByExternalIdentityKey(input.externalIdentityKey);
+    let existing: Conversation | null = null;
+
+    try {
+      existing = await foundationConversationRepository.getByExternalIdentityKey(input.externalIdentityKey);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_conversation_lookup_error";
+      throw new Error(`support_conversation_lookup_failed:${message}`);
+    }
 
     if (existing) {
       const updated: Conversation = {
@@ -89,7 +96,12 @@ export class TimelineService {
         latestActivityAt: timestamp,
         updatedAt: timestamp,
       };
-      await foundationConversationRepository.save(updated);
+      try {
+        await foundationConversationRepository.save(updated);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "unknown_conversation_update_error";
+        throw new Error(`support_conversation_update_failed:${message}`);
+      }
       return updated;
     }
 
@@ -110,7 +122,12 @@ export class TimelineService {
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-    await foundationConversationRepository.save(conversation);
+    try {
+      await foundationConversationRepository.save(conversation);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_conversation_create_error";
+      throw new Error(`support_conversation_create_failed:${message}`);
+    }
     return conversation;
   }
 
@@ -188,24 +205,36 @@ export class TimelineService {
       externalIdentityKeyHint: input.userProfileId || input.sessionId,
       subject: title,
     });
-    const supportCase = await supportCaseService.ensureCase({
-      userProfileId: input.userProfileId,
-      authIdentityId: input.authIdentityId,
-      conversationId: conversation.conversationId,
-      channel,
-      source,
-      bindingState,
-      title,
-      summary,
-    });
+    let supportCase: SupportCase;
+
+    try {
+      supportCase = await supportCaseService.ensureCase({
+        userProfileId: input.userProfileId,
+        authIdentityId: input.authIdentityId,
+        conversationId: conversation.conversationId,
+        channel,
+        source,
+        bindingState,
+        title,
+        summary,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_support_case_error";
+      throw new Error(`support_case_context_failed:${message}`);
+    }
 
     if (conversation.supportCaseId !== supportCase.supportCaseId) {
-      await foundationConversationRepository.save({
-        ...conversation,
-        supportCaseId: supportCase.supportCaseId,
-        latestActivityAt: nowIso(),
-        updatedAt: nowIso(),
-      });
+      try {
+        await foundationConversationRepository.save({
+          ...conversation,
+          supportCaseId: supportCase.supportCaseId,
+          latestActivityAt: nowIso(),
+          updatedAt: nowIso(),
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "unknown_conversation_case_link_error";
+        throw new Error(`support_conversation_case_link_failed:${message}`);
+      }
     }
 
     return {
@@ -261,16 +290,36 @@ export class TimelineService {
       updatedAt: timestamp,
     };
 
-    const created = await this.putMessageEvent(messageEvent);
-    const supportCase = await supportCaseService.getById(input.context.supportCaseId);
+    let created: MessageEvent;
+
+    try {
+      created = await this.putMessageEvent(messageEvent);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_message_event_write_error";
+      throw new Error(`support_message_event_write_failed:${message}`);
+    }
+
+    let supportCase: SupportCase | null = null;
+
+    try {
+      supportCase = await supportCaseService.getById(input.context.supportCaseId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_support_case_read_error";
+      throw new Error(`support_case_reload_failed:${message}`);
+    }
 
     if (supportCase) {
-      await foundationSupportCaseRepository.save({
-        ...supportCase,
-        latestMessageEventId: created.messageEventId,
-        latestActivityAt: created.recordedAt,
-        updatedAt: created.updatedAt,
-      });
+      try {
+        await foundationSupportCaseRepository.save({
+          ...supportCase,
+          latestMessageEventId: created.messageEventId,
+          latestActivityAt: created.recordedAt,
+          updatedAt: created.updatedAt,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "unknown_support_case_update_error";
+        throw new Error(`support_case_latest_message_update_failed:${message}`);
+      }
     }
 
     return created;

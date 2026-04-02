@@ -33,9 +33,16 @@ export class SupportCaseService {
     summary?: string | null;
     latestMessageEventId?: string | null;
   }) {
-    const existing = input.conversationId
-      ? await foundationSupportCaseRepository.getByConversationId(input.conversationId)
-      : null;
+    let existing: SupportCase | null = null;
+
+    if (input.conversationId) {
+      try {
+        existing = await foundationSupportCaseRepository.getByConversationId(input.conversationId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "unknown_support_case_lookup_error";
+        throw new Error(`support_case_lookup_failed:${message}`);
+      }
+    }
     const timestamp = nowIso();
 
     if (existing) {
@@ -50,7 +57,12 @@ export class SupportCaseService {
         bindingState: input.bindingState,
         updatedAt: timestamp,
       };
-      await foundationSupportCaseRepository.save(updated);
+      try {
+        await foundationSupportCaseRepository.save(updated);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "unknown_support_case_update_error";
+        throw new Error(`support_case_update_failed:${message}`);
+      }
       return updated;
     }
 
@@ -71,7 +83,12 @@ export class SupportCaseService {
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-    await foundationSupportCaseRepository.save(supportCase);
+    try {
+      await foundationSupportCaseRepository.save(supportCase);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_support_case_create_error";
+      throw new Error(`support_case_create_failed:${message}`);
+    }
     return supportCase;
   }
 
