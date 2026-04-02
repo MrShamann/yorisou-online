@@ -11,6 +11,46 @@ import { timelineService } from "@/lib/server/foundation/timelineService";
 import type { AuditLog, AuthIdentity, ConsentLog, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
 
 export class AdminFoundationService {
+  async listRecentLineWebhookSubjects(limit = 10) {
+    const events = (await listLineWebhookEvents())
+      .filter((entry) => entry.lineUserId)
+      .slice(0, Math.max(1, limit));
+
+    return Promise.all(
+      events.map(async (event) => {
+        const lineUserId = event.lineUserId!;
+        const [lineSnapshot, timelineBundle] = await Promise.all([
+          identityFoundationService.getUserByLineProviderSubject(lineUserId),
+          timelineService.getUnifiedTimelineByLineSubject(lineUserId),
+        ]);
+
+        return {
+          eventId: event.id,
+          webhookEventId: event.webhookEventId,
+          lineUserId,
+          accountId: event.accountId,
+          eventType: event.eventType,
+          messageType: event.messageType,
+          messageText: event.messageText,
+          postbackData: event.postbackData,
+          receivedAt: event.receivedAt,
+          eventTimestamp: event.eventTimestamp,
+          canonical: {
+            source: timelineBundle.source,
+            authIdentityId: lineSnapshot.identity?.authIdentityId || null,
+            userProfileId: lineSnapshot.userProfile?.userProfileId || null,
+            bindingState: lineSnapshot.bindingState,
+            conversationCount: timelineBundle.conversations.length,
+            eventCount: timelineBundle.events.length,
+            supportCaseCount: timelineBundle.supportCases.length,
+            latestConversationId: timelineBundle.conversations[0]?.conversationId || null,
+            latestSupportCaseId: timelineBundle.supportCases[0]?.supportCaseId || null,
+          },
+        };
+      }),
+    );
+  }
+
   async ensureLegacyBackfillForAccounts() {
     const accounts = await listAccounts();
     await Promise.all(accounts.map((account) => identityFoundationService.ensureCanonicalUserForAccount(account, account.lineUserId ? "line_login" : "email_password")));

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAdminRequestViewer } from "@/lib/server/foundation/access";
+import { adminFoundationService } from "@/lib/server/foundation/adminService";
 import { timelineService } from "@/lib/server/foundation/timelineService";
 
 export async function GET(request: Request) {
@@ -15,6 +16,17 @@ export async function GET(request: Request) {
   const authIdentityId = url.searchParams.get("authIdentityId");
   const sessionId = url.searchParams.get("sessionId");
   const lineUserId = url.searchParams.get("lineUserId");
+  const recentLineWebhook = url.searchParams.get("recentLineWebhook");
+  const limit = Number(url.searchParams.get("limit") || "10");
+
+  if (recentLineWebhook === "1") {
+    const events = await adminFoundationService.listRecentLineWebhookSubjects(limit);
+    return NextResponse.json({
+      success: true,
+      mode: "recent_line_webhook_subjects",
+      events,
+    });
+  }
 
   if (!userProfileId && !authIdentityId && !sessionId && !lineUserId) {
     return NextResponse.json({ success: false, error: "missing_query" }, { status: 400 });
