@@ -119,6 +119,7 @@ export async function POST(request: Request) {
       | Awaited<ReturnType<typeof timelineService.ensureSupportWorkspaceContext>>
       | null = null;
     let foundationInboundWriteOk = false;
+    let foundationInboundError: string | null = null;
 
     try {
       foundationContext = await timelineService.ensureSupportWorkspaceContext({
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
       foundationInboundWriteOk = true;
     } catch (foundationError) {
       foundationContext = null;
+      foundationInboundError = foundationError instanceof Error ? foundationError.message : "unknown_foundation_inbound_error";
       console.error("support chat canonical inbound event error:", foundationError);
     }
     const policy = getConversationPolicy(scenarioResult, locale);
@@ -229,6 +231,9 @@ export async function POST(request: Request) {
         foundationContext = assistantContext;
       }
     } catch (foundationError) {
+      if (!foundationInboundError) {
+        foundationInboundError = foundationError instanceof Error ? foundationError.message : "unknown_foundation_outbound_error";
+      }
       console.error("support chat canonical outbound event error:", foundationError);
     }
     const learningArtifacts = await recordOpenClawReflection({
@@ -295,6 +300,7 @@ export async function POST(request: Request) {
               foundationIdentity,
               foundationContext,
               foundationInboundWriteOk,
+              foundationInboundError,
             },
           }
         : {}),
