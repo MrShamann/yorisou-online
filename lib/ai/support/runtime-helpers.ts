@@ -125,10 +125,18 @@ export function shouldOfferLineContinuationAction(input: {
   const trimmed = input.userMessage.trim();
   const lower = trimmed.toLowerCase();
   const lastAssistantMessage = [...input.history].reverse().find((entry) => entry.role === "assistant")?.content.trim() || "";
+  const recentUserMessages = input.history
+    .filter((entry) => entry.role === "user")
+    .slice(-2)
+    .map((entry) => entry.content.trim());
   const assistantInvitedLine =
     input.locale === "en"
       ? /line/i.test(lastAssistantMessage) && /(prefer|ready|continue|easier|link|invitation)/i.test(lastAssistantMessage)
       : /LINE|ライン/.test(lastAssistantMessage) && /(続け|つなが|案内|リンク|招待)/.test(lastAssistantMessage);
+  const recentUserAskedForLine =
+    input.locale === "en"
+      ? recentUserMessages.some((message) => lineContinuationKeywordsEn.some((keyword) => message.toLowerCase().includes(keyword)))
+      : recentUserMessages.some((message) => lineContinuationKeywordsJa.some((keyword) => message.includes(keyword)));
 
   const explicitLineIntent =
     input.locale === "en"
@@ -139,7 +147,7 @@ export function shouldOfferLineContinuationAction(input: {
     return true;
   }
 
-  if (!assistantInvitedLine) {
+  if (!assistantInvitedLine && !recentUserAskedForLine) {
     return false;
   }
 
