@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     : authIdentityId
       ? await timelineService.getUnifiedTimelineByAuthIdentityId(authIdentityId)
       : sessionId
-        ? await timelineService.getUnifiedTimelineBySupportSessionId(sessionId)
+        ? await timelineService.getUnifiedSupportWorkspaceTimelineBySessionId(sessionId)
         : await timelineService.getUnifiedTimelineByLineSubject(lineUserId!);
 
   return NextResponse.json({

@@ -562,6 +562,25 @@ export class TimelineService {
     return this.getUnifiedTimelineByExternalIdentityKey(makeExternalKey({ channel: "support_web", identityKey: `session:${sessionId}` }));
   }
 
+  async getUnifiedSupportWorkspaceTimelineBySessionId(sessionId: string) {
+    const history = await this.getSupportWorkspaceHistory({
+      sessionId,
+      limit: 200,
+    });
+
+    return {
+      subject: {
+        type: "support_session" as const,
+        sessionId,
+        externalIdentityKey: makeExternalKey({ channel: "support_web", identityKey: `session:${sessionId}` }),
+      },
+      conversations: history.conversation ? [history.conversation] : [],
+      events: history.events,
+      supportCases: history.supportCase ? [history.supportCase] : [],
+      source: history.source,
+    };
+  }
+
   async getUnifiedTimelineByLineSubject(lineUserId: string) {
     return this.getUnifiedTimelineByExternalIdentityKey(makeExternalKey({ channel: "line", identityKey: lineUserId }));
   }

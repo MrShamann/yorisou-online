@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { getAdminAccessStatus, getViewerAdminEmailCandidates, requireAdminViewer } from "@/lib/server/foundation/access";
 import { adminFoundationService } from "@/lib/server/foundation/adminService";
+import { getFoundationStoreStatus } from "@/lib/server/foundation/store";
 import { getLineMessagingConfigStatus } from "@/lib/server/yorisouLine";
 import type { AuditLog, AuthIdentity, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
 
@@ -10,7 +11,24 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
   const viewer = await requireAdminViewer();
-  const summary = await adminFoundationService.getDashboardSummary();
+  let dashboardLoadError: string | null = null;
+  const summary = await adminFoundationService.getDashboardSummary().catch((error) => {
+    dashboardLoadError = error instanceof Error ? error.message : "unknown_admin_dashboard_error";
+    return {
+      latestUsers: [],
+      recentCases: [],
+      recentAudit: [],
+      unboundIdentities: [],
+      latestSyncStatus: {
+        store: getFoundationStoreStatus(),
+        latestProfileSyncAt: null,
+        latestCaseSyncAt: null,
+        latestAuditAt: null,
+        activeUserCount: 0,
+        unboundIdentityCount: 0,
+      },
+    };
+  });
   const latestUsers = summary.latestUsers.filter((entry): entry is UserProfile => Boolean(entry));
   const recentAudit = summary.recentAudit.filter((entry): entry is AuditLog => Boolean(entry));
   const recentCases = summary.recentCases.filter((entry): entry is SupportCase => Boolean(entry));
@@ -42,6 +60,13 @@ export default async function AdminHomePage() {
             <Link href="/admin/audit" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">Audit</Link>
           </div>
         </header>
+
+        {dashboardLoadError ? (
+          <section className="rounded-2xl border border-[#D6C3A3]/35 bg-white/82 p-5 text-sm text-[#6E5D4D]">
+            Dashboard listing is temporarily limited in production because broad shared-store listing is not fully available yet.
+            Use the timeline inspector with an exact `sessionId`, `authIdentityId`, `userProfileId`, or `lineUserId` to inspect canonical records directly.
+          </section>
+        ) : null}
 
         <section className="grid gap-4 md:grid-cols-3">
           <Card title="Active users" value={String(summary.latestSyncStatus.activeUserCount)} note={`Store mode: ${summary.latestSyncStatus.store.mode}`} />

@@ -98,6 +98,17 @@ export class AdminFoundationService {
     sessionId?: string | null;
     lineUserId?: string | null;
   }) {
+    if (input.sessionId) {
+      const timelineBundle = await timelineService.getUnifiedSupportWorkspaceTimelineBySessionId(input.sessionId);
+
+      return {
+        subjectType: "support_session" as const,
+        profile: null,
+        identities: [],
+        timelineBundle,
+      };
+    }
+
     await this.ensureLegacyBackfillForAccounts();
 
     if (input.userProfileId) {
@@ -140,17 +151,6 @@ export class AdminFoundationService {
         subjectType: "line_subject" as const,
         profile: lineSnapshot.userProfile,
         identities: lineSnapshot.identity ? [lineSnapshot.identity] : [],
-        timelineBundle,
-      };
-    }
-
-    if (input.sessionId) {
-      const timelineBundle = await timelineService.getUnifiedTimelineBySupportSessionId(input.sessionId);
-
-      return {
-        subjectType: "support_session" as const,
-        profile: null,
-        identities: [],
         timelineBundle,
       };
     }
