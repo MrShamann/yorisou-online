@@ -55,13 +55,13 @@ function eventTimestampToIso(timestamp: number | undefined) {
 function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
   if (input.accountMatched) {
     return input.eventType === "follow"
-      ? "YORISOUです。アカウント連携を確認しました。メッセージを受け付けています。"
-      : "YORISOUです。メッセージを受け取りました。担当確認後にご連絡します。";
+      ? "Yorisouの相談窓口、ひなたです。アカウント連携を確認しました。こちらでメッセージを受け付けています。"
+      : "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。担当確認後にご連絡します。";
   }
 
   return input.eventType === "follow"
-    ? "YORISOUです。メッセージを受け取りました。/support の LINE Connect からアカウント連携できます。"
-    : "YORISOUです。メッセージを受け取りました。必要に応じて /support の LINE Connect からアカウント連携してください。";
+    ? "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。/support の LINE Connect からアカウント連携できます。"
+    : "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。必要に応じて /support の LINE Connect からアカウント連携してください。";
 }
 
 async function syncLineWebhookEventToCanonical(record: LineWebhookEventRecord) {

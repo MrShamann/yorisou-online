@@ -115,7 +115,7 @@ export default function AccountEntryForm({
               </p>
               <div className="panel-sage mt-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
                 <div>{locale === "ja" ? "ご本人でも、ご家族でも、無理のない形で続けられます。" : "This entry works for older adults and family members."}</div>
-                <div className="mt-2">{locale === "ja" ? "LINEで受け取りたい方も、メールで見返したい方も、あとから静かに選べます。" : "You can choose LINE or email later, whichever feels easier."}</div>
+                <div className="mt-2">{locale === "ja" ? "Yorisouの相談窓口「ひなた」との続き方として、LINEでもメールでも、あとから静かに選べます。" : "You can choose LINE or email later, whichever feels easier."}</div>
               </div>
               {initialAccount && (
                 <div className="panel-sage mt-6 rounded-[2rem] px-6 py-6 text-sm leading-7">
@@ -146,7 +146,7 @@ export default function AccountEntryForm({
                   <div className="service-kicker text-[#64705f]">{locale === "ja" ? "あとから受け取りたい方へ" : "Continue with LINE"}</div>
                   <p className="mt-3 text-sm leading-7 text-[var(--accent-sage-text)]">
                     {locale === "ja"
-                      ? "相談の続きやご案内を、必要なときだけLINEで受け取りたい方に向いています。"
+                      ? "Yorisouの相談窓口「ひなた」との続きやご案内を、必要なときだけLINEで受け取りたい方に向いています。"
                       : "A calm and simple way for older adults and families to begin."}
                   </p>
                   <div className="mt-4">
@@ -157,7 +157,7 @@ export default function AccountEntryForm({
                   </div>
                   <p className="mt-3 text-xs leading-6 text-[#64705f]">
                     {locale === "ja"
-                      ? "まずは相談を始めて、あとから落ち着いて整えたい方にも使えます。"
+                      ? "まずはひなたに相談を始めて、あとからLINEで落ち着いて続けたい方にも使えます。"
                       : "A calm and simple way for older adults and families to begin."}
                   </p>
                 </div>

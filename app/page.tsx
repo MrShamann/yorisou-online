@@ -89,7 +89,7 @@ const platformPillars = [
   },
   {
     title: "家族との継続",
-    text: "LINEやアカウントを通じて、あとから家族と共有しながら続けられます。",
+    text: "Yorisouの相談窓口「ひなた」とのやりとりを、LINEやアカウントを通じてあとから家族と共有しながら続けられます。",
   },
 ];
 
@@ -129,7 +129,7 @@ export default function HomePage() {
                 読みもの
               </Link>
               <Link href="/login#line-entry" className="soft-link">
-                LINE・アカウントで続ける
+                ひなたとの相談をLINE・アカウントで続ける
               </Link>
             </div>
           </MotionReveal>
@@ -292,7 +292,7 @@ export default function HomePage() {
             <div className="motion-card panel-sage rounded-[1.8rem] px-6 py-6">
             <div className="service-kicker text-[var(--accent-sage-text)]">その先も、無理のない形で</div>
             <p className="mt-4 text-sm leading-8 md:text-base">
-              相談の続きはLINEまたはアカウントで受け取れます。まず相談を始めてから、あとで落ち着いてつなぎ方を選ぶこともできます。
+              ひなたとの相談の続きは、YorisouのLINEまたはアカウントで受け取れます。まず相談を始めてから、あとで落ち着いてつなぎ方を選ぶこともできます。
             </p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
               <Link href="/login#line-entry" className="soft-link">

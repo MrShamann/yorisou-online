@@ -76,7 +76,7 @@ const copy = {
     userLabel: "あなた",
     emptyTitle: "ひなたにメッセージを送る",
     emptyBody: "入力、音声、添付をひとつの会話で続けられます。",
-    continuationHint: "相談の続きはLINEまたはアカウントで受け取れます。",
+    continuationHint: "ひなたとの相談の続きは、YorisouのLINEまたはアカウントで受け取れます。",
     continuationLine: "LINEで続ける",
     continuationAccount: "アカウントで続ける",
     typing: "ひなたが考えています…",
