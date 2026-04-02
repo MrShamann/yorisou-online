@@ -3,8 +3,6 @@ import {
   findAccountByLineUserId,
   findLineWebhookEventById,
   listAccounts,
-  listConsultations,
-  listLineWebhookEvents,
   listRecentLineWebhookSubjects,
   type ConsultationRecord,
   type LineWebhookEventRecord,
@@ -183,8 +181,8 @@ export class AdminFoundationService {
     };
     let recentConsent: ConsentLog[] = [];
     let latestSummary: Awaited<ReturnType<typeof timelineService.getLatestActivitySummary>> = null;
-    let recentLegacyConsultations: ConsultationRecord[] = [];
-    let recentLegacyLineEvents: LineWebhookEventRecord[] = [];
+    const recentLegacyConsultations: ConsultationRecord[] = [];
+    const recentLegacyLineEvents: LineWebhookEventRecord[] = [];
 
     try {
       [profile, identities, timelineBundle, recentConsent, latestSummary] = await Promise.all([
@@ -194,8 +192,6 @@ export class AdminFoundationService {
         privacyAuditService.listRecentConsentEntries(10),
         timelineService.getLatestActivitySummary({ userProfileId }),
       ]);
-      recentLegacyConsultations = (await listConsultations()).filter((entry) => entry.userId === userProfileId).slice(0, 5);
-      recentLegacyLineEvents = (await listLineWebhookEvents()).filter((entry) => entry.accountId === userProfileId).slice(0, 5);
     } catch (error) {
       if (!isListBucketPermissionError(error)) {
         throw error;
@@ -224,8 +220,6 @@ export class AdminFoundationService {
           }
         : null;
       recentConsent = [];
-      recentLegacyConsultations = [];
-      recentLegacyLineEvents = [];
     }
 
     await privacyAuditService.recordAudit({

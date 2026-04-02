@@ -37,6 +37,10 @@ export default async function AdminUserDetailPage({
   const timeline = detail.timeline.filter((entry): entry is MessageEvent => Boolean(entry));
   const supportCases = detail.supportCases.filter((entry): entry is SupportCase => Boolean(entry));
   const recentConsent = detail.recentConsent.filter((entry): entry is ConsentLog => Boolean(entry));
+  const boundLineIdentity = identities.find((entry) => entry.identityType === "line" && entry.bindingState === "bound") || null;
+  const canonicalPrimary = detail.timelineBundle.source === "canonical";
+  const latestTimelineEntry = timeline[timeline.length - 1] || null;
+  const latestSupportCase = supportCases[0] || null;
 
   if (!detail.profile) {
     return (
@@ -83,6 +87,16 @@ export default async function AdminUserDetailPage({
     loginConfigured: isLineLoginConfigured(),
     messagingConfigured: getLineMessagingConfigStatus().messagingConfigured,
   });
+  const compatibilityActive = supportDiagnostics.summaryState !== "canonical_healthy";
+  const showCompatibilityDiagnostics = compatibilityActive || !canonicalPrimary;
+  const showLegacyCompatibility =
+    detail.recentLegacyConsultations.length > 0 || detail.recentLegacyLineEvents.length > 0 || (!canonicalPrimary && !timeline.length);
+  const operatorSourceValue = canonicalPrimary ? "canonical" : sourceLabel(lineReadiness.source);
+  const operatorSourceTone = canonicalPrimary ? "ok" : lineReadiness.source === "canonical" ? "ok" : "warn";
+  const operatorContinuityValue =
+    canonicalPrimary && boundLineIdentity ? "Ready" : lineContinuityLabel(lineReadiness.continuityStatus);
+  const operatorContinuityTone =
+    canonicalPrimary && boundLineIdentity ? "ok" : lineReadiness.continuityStatus === "ready" ? "ok" : "warn";
 
   return (
     <main className="min-h-screen bg-[#F5F1E8] px-6 py-10 text-[#3B2F2F]">
@@ -150,24 +164,61 @@ export default async function AdminUserDetailPage({
               />
               <AdminStatusTile
                 label="Support continuity"
-                value={lineContinuityLabel(lineReadiness.continuityStatus)}
-                source={lineReadiness.principalResolved ? "principal-resolved LINE linkage" : "principal linkage not fully resolved"}
-                tone={lineReadiness.continuityStatus === "ready" ? "ok" : "warn"}
+                value={operatorContinuityValue}
+                source={canonicalPrimary ? "canonical timeline and support cases available" : lineReadiness.principalResolved ? "principal-resolved LINE linkage" : "principal linkage not fully resolved"}
+                tone={operatorContinuityTone}
               />
               <AdminStatusTile
                 label="Source truth"
-                value={sourceLabel(lineReadiness.source)}
-                source={lineReadiness.compatibilityOrFallbackActive ? "compatibility or fallback still in use" : "canonical source confirmed"}
-                tone={lineReadiness.source === "canonical" ? "ok" : "warn"}
+                value={operatorSourceValue}
+                source={canonicalPrimary ? "canonical timeline is the operator-facing source of truth" : lineReadiness.compatibilityOrFallbackActive ? "compatibility or fallback still in use" : "canonical source confirmed"}
+                tone={operatorSourceTone}
               />
             </div>
           </div>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <Panel title="Support canonical diagnostics" id="support-canonical-diagnostics">
-            <AdminDiagnosticsCard diagnostics={supportDiagnostics} />
+          <Panel title="Canonical operator view" id="support-canonical-diagnostics">
+            <div className="grid gap-3 md:grid-cols-2">
+              <AdminStatusTile
+                label="Canonical source"
+                value={detail.timelineBundle.source}
+                source={canonicalPrimary ? "canonical identities, timeline, and case state are loaded" : "canonical bundle not yet available for this record"}
+                tone={canonicalPrimary ? "ok" : "warn"}
+              />
+              <AdminStatusTile
+                label="Bound channels"
+                value={boundLineIdentity ? "email + LINE" : identities.some((entry) => entry.identityType === "email_password") ? "email only" : "limited"}
+                source={boundLineIdentity ? "bound LINE identity visible in canonical auth-identities" : "LINE identity not yet modeled as bound"}
+                tone={boundLineIdentity ? "ok" : "warn"}
+              />
+              <AdminStatusTile
+                label="Timeline coverage"
+                value={`${timeline.length} events / ${detail.timelineBundle.conversations.length} conversations`}
+                source={latestTimelineEntry ? `${latestTimelineEntry.channel} ${latestTimelineEntry.eventType} at ${formatDateTime(latestTimelineEntry.recordedAt)}` : "no canonical timeline entries yet"}
+                tone={timeline.length ? "ok" : "warn"}
+              />
+              <AdminStatusTile
+                label="Support case state"
+                value={latestSupportCase ? latestSupportCase.status : "none"}
+                source={latestSupportCase ? `${latestSupportCase.title} via ${latestSupportCase.channel}` : "no canonical support case linked yet"}
+                tone={latestSupportCase ? "ok" : "warn"}
+              />
+            </div>
           </Panel>
+
+          {showCompatibilityDiagnostics ? (
+            <Panel title="Compatibility diagnostics">
+              <AdminDiagnosticsCard diagnostics={supportDiagnostics} />
+            </Panel>
+          ) : (
+            <Panel title="Compatibility diagnostics">
+              <div className="rounded-xl border border-[#D6C3A3]/35 bg-[#FCFAF6] px-4 py-4 text-sm text-[#6E5D4D]">
+                Canonical-first read path is healthy for this record. Compatibility diagnostics are currently secondary only.
+              </div>
+            </Panel>
+          )}
 
           <Panel title="Profile">
             <dl className="grid gap-2 text-sm">
@@ -198,13 +249,15 @@ export default async function AdminUserDetailPage({
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <Panel title="Recent timeline">
+          <Panel title="Unified interaction history">
             <div className="space-y-3">
               {timeline.map((entry) => (
                 <div key={entry.messageEventId} className="rounded-xl border border-[#D6C3A3]/35 bg-white/85 px-4 py-3 text-sm">
                   <div className="font-medium">{entry.channel} / {entry.eventType}</div>
                   <div>{entry.contentText || entry.contentPayloadRef || "No content"}</div>
-                  <div className="text-xs text-[#8A7764]">{entry.recordedAt}</div>
+                  <div className="text-xs text-[#8A7764]">
+                    {entry.source} / {entry.bindingState} / {entry.recordedAt}
+                  </div>
                 </div>
               ))}
             </div>
@@ -249,46 +302,37 @@ export default async function AdminUserDetailPage({
           <Panel title="Recent consent">
             <pre className="overflow-x-auto rounded-xl bg-[#FCFAF6] p-4 text-xs">{JSON.stringify(recentConsent, null, 2)}</pre>
           </Panel>
-          <Panel title="Latest sync / legacy context">
+          <Panel title={showLegacyCompatibility ? "Legacy compatibility appendix" : "Latest canonical summary"}>
             <div className="space-y-4">
               <div className="rounded-xl border border-[#D6C3A3]/35 bg-[#FCFAF6] px-4 py-4 text-sm">
-                <div className="font-medium">Latest LINE event check</div>
-                {detail.recentLegacyLineEvents[0] ? (
+                <div className="font-medium">Latest canonical activity</div>
+                {detail.latestSummary ? (
                   <div className="mt-3 space-y-1 text-[#6E5D4D]">
-                    <div>event: {detail.recentLegacyLineEvents[0].eventType}</div>
-                    <div>received: {detail.recentLegacyLineEvents[0].receivedAt}</div>
-                    <div>
-                      reply:{" "}
-                      <span
-                        className={
-                          detail.recentLegacyLineEvents[0].replyStatus === "sent"
-                            ? "text-[#2E5B3C]"
-                            : detail.recentLegacyLineEvents[0].replyStatus === "failed"
-                              ? "text-[#9A3B2F]"
-                              : ""
-                        }
-                      >
-                        {detail.recentLegacyLineEvents[0].replyStatus}
-                      </span>
-                      {detail.recentLegacyLineEvents[0].replyError ? ` (${detail.recentLegacyLineEvents[0].replyError})` : ""}
-                    </div>
-                    <div className="text-xs text-[#8A7764]">Send a LINE message, then refresh this page to verify the latest event/result.</div>
+                    <div>channel: {detail.latestSummary.latestChannel}</div>
+                    <div>event: {detail.latestSummary.latestEventType}</div>
+                    <div>binding: {detail.latestSummary.latestBindingState}</div>
+                    <div>at: {detail.latestSummary.latestActivityAt}</div>
                   </div>
                 ) : (
-                  <div className="mt-3 text-[#6E5D4D]">No LINE webhook event has been recorded for this record yet.</div>
+                  <div className="mt-3 text-[#6E5D4D]">No canonical activity summary is available yet.</div>
                 )}
               </div>
-              <pre className="overflow-x-auto rounded-xl bg-[#FCFAF6] p-4 text-xs">
-                {JSON.stringify(
-                  {
-                    latestSummary: detail.latestSummary,
-                    recentLegacyConsultations: detail.recentLegacyConsultations,
-                    recentLegacyLineEvents: detail.recentLegacyLineEvents,
-                  },
-                  null,
-                  2,
-                )}
-              </pre>
+              {showLegacyCompatibility ? (
+                <pre className="overflow-x-auto rounded-xl bg-[#FCFAF6] p-4 text-xs">
+                  {JSON.stringify(
+                    {
+                      recentLegacyConsultations: detail.recentLegacyConsultations,
+                      recentLegacyLineEvents: detail.recentLegacyLineEvents,
+                    },
+                    null,
+                    2,
+                  )}
+                </pre>
+              ) : (
+                <div className="rounded-xl border border-[#D6C3A3]/35 bg-[#FCFAF6] px-4 py-4 text-sm text-[#6E5D4D]">
+                  Legacy compatibility sections are currently hidden because canonical timeline and case data are already available for this record.
+                </div>
+              )}
             </div>
           </Panel>
         </section>
