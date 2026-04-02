@@ -5,6 +5,8 @@ const englishSignalPattern = /[A-Za-z]/;
 const japaneseSignalPattern = /[\u3040-\u30ff\u3400-\u9fff]/;
 const earlyActionKeywordsJa = ["予約", "相談したい", "詳しく話したい", "製品", "比較", "導入", "連携"];
 const earlyActionKeywordsEn = ["book", "consult", "consultation", "product", "products", "compare", "implementation"];
+const lineContinuationKeywordsJa = ["line", "LINE", "ライン", "lineで", "lineに", "lineへ", "line続", "line で"];
+const lineContinuationKeywordsEn = ["line", "line app", "continue on line", "talk on line", "move to line", "switch to line"];
 
 function detectTextLocale(text: string) {
   const trimmed = text.trim();
@@ -113,4 +115,33 @@ export function shouldOfferActions(input: {
   }
 
   return true;
+}
+
+export function shouldOfferLineContinuationAction(input: {
+  locale: SupportAssistantLocale;
+  userMessage: string;
+  history: SupportConversationMessage[];
+}) {
+  const trimmed = input.userMessage.trim();
+  const lower = trimmed.toLowerCase();
+  const lastAssistantMessage = [...input.history].reverse().find((entry) => entry.role === "assistant")?.content.trim() || "";
+  const assistantInvitedLine =
+    input.locale === "en"
+      ? /line/i.test(lastAssistantMessage) && /(prefer|ready|continue|easier|link|invitation)/i.test(lastAssistantMessage)
+      : /LINE|ライン/.test(lastAssistantMessage) && /(続け|つなが|案内|リンク|招待)/.test(lastAssistantMessage);
+
+  const explicitLineIntent =
+    input.locale === "en"
+      ? lineContinuationKeywordsEn.some((keyword) => lower.includes(keyword))
+      : lineContinuationKeywordsJa.some((keyword) => trimmed.includes(keyword));
+
+  if (explicitLineIntent) {
+    return true;
+  }
+
+  if (!assistantInvitedLine) {
+    return false;
+  }
+
+  return /^(yes|yeah|yep|sure|please|ok|okay|let'?s do that)$/i.test(lower) || /^(はい|お願いします|ぜひ|いいです|それで|うん)$/i.test(trimmed);
 }

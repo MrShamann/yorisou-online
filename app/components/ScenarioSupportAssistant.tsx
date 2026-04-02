@@ -1060,6 +1060,9 @@ export default function ScenarioSupportAssistant({
                               >
                                 <div className="font-medium text-[var(--text)]">{action.title}</div>
                                 <div className="mt-1 line-clamp-3 leading-7">{action.description}</div>
+                                <div className="mt-3 inline-flex rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-medium text-white">
+                                  {action.label}
+                                </div>
                               </Link>
                             ))}
                           </div>

@@ -14,6 +14,7 @@ export type SupportRiskLevel = "low" | "medium" | "high";
 export type SupportToneMode = "gentle_reassuring" | "family_supportive" | "concise_partnership";
 
 export type SupportNextActionType =
+  | "continue_on_line"
   | "offer_consultation"
   | "suggest_products"
   | "family_support_info"

@@ -4,7 +4,11 @@ import { routeSupportActions } from "@/lib/ai/support/action-router";
 import { getConversationPolicy } from "@/lib/ai/support/conversation-policy";
 import { generateSupportAssistantText } from "@/lib/ai/support/model-gateway";
 import { buildDeterministicSupportReply, buildSupportAssistantPrompt } from "@/lib/ai/support/prompt-builder";
-import { detectConversationLocale, shouldOfferActions } from "@/lib/ai/support/runtime-helpers";
+import {
+  detectConversationLocale,
+  shouldOfferActions,
+  shouldOfferLineContinuationAction,
+} from "@/lib/ai/support/runtime-helpers";
 import {
   classifySupportScenario,
   type SupportAssistantLocale,
@@ -153,6 +157,18 @@ export async function POST(request: Request) {
     })
       ? routeSupportActions(scenarioResult, locale)
       : [];
+    if (shouldOfferLineContinuationAction({ locale, userMessage, history: messages })) {
+      const lineContinuationAction = routeSupportActions(
+        {
+          ...scenarioResult,
+          nextActions: ["continue_on_line"],
+        },
+        locale,
+      )[0];
+      if (lineContinuationAction && !recommendedActions.some((action) => action.id === lineContinuationAction.id)) {
+        recommendedActions.unshift(lineContinuationAction);
+      }
+    }
     const capabilityPlan = buildOpenClawCapabilityPlan({
       scenario: scenarioResult,
       policy,

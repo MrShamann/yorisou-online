@@ -14,6 +14,15 @@ export type SupportRecommendedAction = {
 
 function actionCopy(locale: SupportAssistantLocale, action: SupportNextActionType): SupportRecommendedAction {
   if (locale === "en") {
+    if (action === "continue_on_line") {
+      return {
+        id: action,
+        title: "Continue with LINE",
+        description: "Connect to Yorisou on LINE and continue with Hinata there.",
+        href: "/api/line/auth/start?locale=en&intent=support&returnTo=/en/support",
+        label: "Open LINE continuation",
+      };
+    }
     if (action === "offer_consultation") {
       return {
         id: action,
@@ -50,6 +59,15 @@ function actionCopy(locale: SupportAssistantLocale, action: SupportNextActionTyp
     };
   }
 
+  if (action === "continue_on_line") {
+    return {
+      id: action,
+      title: "LINEで相談を続ける",
+      description: "Yorisouの相談窓口「ひなた」と、LINEでそのまま続けられます。",
+      href: "/api/line/auth/start?locale=ja&intent=support&returnTo=/support",
+      label: "LINEで続ける",
+    };
+  }
   if (action === "offer_consultation") {
     return {
       id: action,
