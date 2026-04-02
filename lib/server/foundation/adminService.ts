@@ -1,4 +1,4 @@
-import { findAccountById, listAccounts, listConsultations, listLineWebhookEvents, listRecentLineWebhookSubjects } from "@/lib/server/yorisouData";
+import { findAccountById, listAccounts, listConsultations, listLineWebhookEvents, listRecentLineWebhookSubjects, type ConsultationRecord, type LineWebhookEventRecord } from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
 import {
@@ -8,7 +8,11 @@ import {
 } from "@/lib/server/foundation/repositories";
 import { getFoundationStoreStatus } from "@/lib/server/foundation/store";
 import { timelineService } from "@/lib/server/foundation/timelineService";
-import type { AuditLog, AuthIdentity, ConsentLog, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
+import type { AuditLog, AuthIdentity, ConsentLog, MessageEvent, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
+
+function isListBucketPermissionError(error: unknown) {
+  return error instanceof Error && error.message.includes("s3:ListBucket");
+}
 
 export class AdminFoundationService {
   async listRecentLineWebhookSubjects(limit = 10) {
@@ -100,17 +104,71 @@ export class AdminFoundationService {
 
   async getUserDetail(userProfileId: string, actor: { actorUserProfileId: string | null; actorAuthIdentityId: string | null }) {
     await this.ensureLegacyBackfillForAccounts();
-    const [profile, identities, timelineBundle, recentConsent, latestSummary] = await Promise.all([
-      identityFoundationService.getUserProfileById(userProfileId),
-      identityFoundationService.getAuthIdentitiesByUserProfileId(userProfileId),
-      timelineService.getUnifiedTimelineByUserProfileId(userProfileId),
-      privacyAuditService.listRecentConsentEntries(10),
-      timelineService.getLatestActivitySummary({ userProfileId }),
-    ]);
-
     const account = await findAccountById(userProfileId);
-    const recentLegacyConsultations = (await listConsultations()).filter((entry) => entry.userId === userProfileId).slice(0, 5);
-    const recentLegacyLineEvents = (await listLineWebhookEvents()).filter((entry) => entry.accountId === userProfileId).slice(0, 5);
+    let profile: UserProfile | null = null;
+    let identities: AuthIdentity[] = [];
+    let timelineBundle: {
+      subject: { type: "user_profile"; userProfileId: string } | { type: "external_identity"; externalIdentityKey: string };
+      conversations: Awaited<ReturnType<typeof timelineService.getUnifiedTimelineByUserProfileId>>["conversations"];
+      events: MessageEvent[];
+      supportCases: SupportCase[];
+      source: "canonical" | "none";
+    } = {
+      subject: {
+        type: "user_profile" as const,
+        userProfileId,
+      },
+      conversations: [],
+      events: [],
+      supportCases: [],
+      source: "none" as const,
+    };
+    let recentConsent: ConsentLog[] = [];
+    let latestSummary: Awaited<ReturnType<typeof timelineService.getLatestActivitySummary>> = null;
+    let recentLegacyConsultations: ConsultationRecord[] = [];
+    let recentLegacyLineEvents: LineWebhookEventRecord[] = [];
+
+    try {
+      [profile, identities, timelineBundle, recentConsent, latestSummary] = await Promise.all([
+        identityFoundationService.getUserProfileById(userProfileId),
+        identityFoundationService.getAuthIdentitiesByUserProfileId(userProfileId),
+        timelineService.getUnifiedTimelineByUserProfileId(userProfileId),
+        privacyAuditService.listRecentConsentEntries(10),
+        timelineService.getLatestActivitySummary({ userProfileId }),
+      ]);
+      recentLegacyConsultations = (await listConsultations()).filter((entry) => entry.userId === userProfileId).slice(0, 5);
+      recentLegacyLineEvents = (await listLineWebhookEvents()).filter((entry) => entry.accountId === userProfileId).slice(0, 5);
+    } catch (error) {
+      if (!isListBucketPermissionError(error)) {
+        throw error;
+      }
+
+      profile = await identityFoundationService.getUserProfileById(userProfileId);
+
+      const identityEntries = await Promise.all([
+        account?.email ? identityFoundationService.getAuthIdentityByEmail(account.email) : Promise.resolve(null),
+        account?.lineUserId ? identityFoundationService.getAuthIdentityByLineUserId(account.lineUserId) : Promise.resolve(null),
+      ]);
+      identities = identityEntries.flatMap((entry) => (entry ? [entry] : []));
+
+      if (account?.lineUserId) {
+        timelineBundle = await timelineService.getUnifiedTimelineByLineSubject(account.lineUserId);
+      }
+
+      const latestEvent = timelineBundle.events[timelineBundle.events.length - 1] || null;
+      latestSummary = latestEvent
+        ? {
+            latestMessageEventId: latestEvent.messageEventId,
+            latestActivityAt: latestEvent.recordedAt,
+            latestChannel: latestEvent.channel,
+            latestEventType: latestEvent.eventType,
+            latestBindingState: latestEvent.bindingState,
+          }
+        : null;
+      recentConsent = [];
+      recentLegacyConsultations = [];
+      recentLegacyLineEvents = [];
+    }
 
     await privacyAuditService.recordAudit({
       actorType: "admin",

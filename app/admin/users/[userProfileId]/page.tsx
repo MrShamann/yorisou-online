@@ -49,7 +49,18 @@ export default async function AdminUserDetailPage({
   const supportDisplaySnapshot = await getSupportDisplaySnapshot({
     userProfileId: detail.profile.userProfileId,
     fallbackAccount: detail.legacyAccount || null,
-  });
+  }).catch(() => ({
+    userIdentitySnapshot: null,
+    latestLineMessageEventSnapshot: null,
+    supportProfile: detail.legacyAccount?.supportProfile || null,
+    readModelSource: "fallback_account" as const,
+    supportProfileSource: detail.legacyAccount ? ("legacy_fallback" as const) : ("unresolved" as const),
+    lineBindingStatusSource: detail.legacyAccount ? ("legacy_fallback" as const) : ("unresolved" as const),
+    preferencesStorageSource: detail.legacyAccount ? ("legacy_fallback" as const) : ("unresolved" as const),
+    readFallbackActive: true,
+    account: detail.legacyAccount || null,
+    latestLineEvent: null,
+  }));
   const supportDiagnostics = composeSupportDiagnosticsViewModel({
     hasPrincipal: true,
     principalMatched: true,

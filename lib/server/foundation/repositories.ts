@@ -1,4 +1,5 @@
 import type { AuditLog, AuthIdentity, ConsentLog, Conversation, MessageEvent, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
+import { createAuthIdentityId } from "@/lib/server/midBackend/utils";
 import {
   deleteFoundationRecord,
   getFoundationRecord,
@@ -137,15 +138,21 @@ export const foundationAuthIdentityRepository = {
     return getFoundationRecord<AuthIdentity>("auth-identities", authIdentityId);
   },
   async getByEmail(emailNormalized: string) {
-    const entries = await listAuthIdentities();
     const normalized = emailNormalized.trim().toLowerCase();
-    return entries.find((entry) => entry.identityType === "email_password" && entry.emailNormalized === normalized) || null;
+    return getFoundationRecord<AuthIdentity>("auth-identities", createAuthIdentityId("email_password", normalized));
   },
   async getByLineUserId(lineUserId: string) {
-    const entries = await listAuthIdentities();
-    return entries.find((entry) => entry.identityType === "line" && entry.lineUserId === lineUserId) || null;
+    return getFoundationRecord<AuthIdentity>("auth-identities", createAuthIdentityId("line", lineUserId));
   },
   async getByExternalIdentityKey(externalIdentityKey: string) {
+    if (externalIdentityKey.startsWith("line:")) {
+      return this.getByLineUserId(externalIdentityKey.slice("line:".length));
+    }
+
+    if (externalIdentityKey.startsWith("email:")) {
+      return this.getByEmail(externalIdentityKey.slice("email:".length));
+    }
+
     const entries = await listAuthIdentities();
     return entries.find((entry) => entry.externalIdentityKey === externalIdentityKey) || null;
   },
@@ -198,12 +205,15 @@ export const foundationConversationRepository = {
     return entries.filter((entry) => entry.authIdentityId === authIdentityId);
   },
   async listByExternalIdentityKey(externalIdentityKey: string) {
-    const entries = await listConversations();
-    return entries.filter((entry) => entry.externalIdentityKey === externalIdentityKey);
+    const entry = await this.getByExternalIdentityKey(externalIdentityKey);
+    return entry ? [entry] : [];
   },
   async listUnboundByExternalIdentityKey(externalIdentityKey: string) {
-    const entries = await listConversations();
-    return entries.filter((entry) => entry.externalIdentityKey === externalIdentityKey && (!entry.userProfileId || entry.bindingState === "unbound"));
+    const entry = await this.getByExternalIdentityKey(externalIdentityKey);
+    if (!entry || (entry.userProfileId && entry.bindingState !== "unbound")) {
+      return [];
+    }
+    return [entry];
   },
   async findByExternalIdentityKey(externalIdentityKey: string) {
     return this.getByExternalIdentityKey(externalIdentityKey);
@@ -249,12 +259,22 @@ export const foundationMessageEventRepository = {
     return entries.filter((entry) => entry.authIdentityId === authIdentityId);
   },
   async listByExternalIdentityKey(externalIdentityKey: string) {
-    const entries = await listMessageEvents();
-    return entries.filter((entry) => entry.externalIdentityKey === externalIdentityKey);
+    const conversation = await foundationConversationRepository.getByExternalIdentityKey(externalIdentityKey);
+
+    if (!conversation) {
+      return [];
+    }
+
+    return this.listByConversationId(conversation.conversationId);
   },
   async listUnboundByExternalIdentityKey(externalIdentityKey: string) {
-    const entries = await listMessageEvents();
-    return entries.filter((entry) => entry.externalIdentityKey === externalIdentityKey && (!entry.userProfileId || entry.bindingState === "unbound"));
+    const conversation = await foundationConversationRepository.getByExternalIdentityKey(externalIdentityKey);
+
+    if (!conversation || (conversation.userProfileId && conversation.bindingState !== "unbound")) {
+      return [];
+    }
+
+    return this.listByConversationId(conversation.conversationId);
   },
   async getByExternalEventId(externalEventId: string) {
     const entries = await listMessageEvents();
@@ -311,16 +331,15 @@ export const foundationSupportCaseRepository = {
     return entries.filter((entry) => entry.authIdentityId === authIdentityId);
   },
   async listByConversationId(conversationId: string) {
-    const entries = await listSupportCases();
-    return entries.filter((entry) => entry.conversationId === conversationId);
+    const entry = await this.getByConversationId(conversationId);
+    return entry ? [entry] : [];
   },
   async listByConversationIds(conversationIds: string[]) {
     if (!conversationIds.length) {
       return [];
     }
-    const wanted = new Set(conversationIds);
-    const entries = await listSupportCases();
-    return entries.filter((entry) => entry.conversationId && wanted.has(entry.conversationId));
+    const entries = await Promise.all(conversationIds.map((conversationId) => this.getByConversationId(conversationId)));
+    return entries.flatMap((entry) => (entry ? [entry] : []));
   },
   async listUnboundByAuthIdentityId(authIdentityId: string) {
     const entries = await listSupportCases();
