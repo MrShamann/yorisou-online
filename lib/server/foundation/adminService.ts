@@ -1,4 +1,14 @@
-import { findAccountById, listAccounts, listConsultations, listLineWebhookEvents, listRecentLineWebhookSubjects, type ConsultationRecord, type LineWebhookEventRecord } from "@/lib/server/yorisouData";
+import {
+  findAccountById,
+  findAccountByLineUserId,
+  findLineWebhookEventById,
+  listAccounts,
+  listConsultations,
+  listLineWebhookEvents,
+  listRecentLineWebhookSubjects,
+  type ConsultationRecord,
+  type LineWebhookEventRecord,
+} from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
 import {
@@ -15,6 +25,57 @@ function isListBucketPermissionError(error: unknown) {
 }
 
 export class AdminFoundationService {
+  private async ensureCanonicalLineTimelineForLineUserId(lineUserId: string) {
+    let [lineSnapshot, timelineBundle] = await Promise.all([
+      identityFoundationService.getUserByLineProviderSubject(lineUserId),
+      timelineService.getUnifiedTimelineByLineSubject(lineUserId),
+    ]);
+
+    if (timelineBundle.source !== "none") {
+      return { lineSnapshot, timelineBundle };
+    }
+
+    const recentSubjects = await listRecentLineWebhookSubjects(20);
+    const recentSubject = recentSubjects.find((entry) => entry.lineUserId === lineUserId);
+
+    if (!recentSubject?.eventId) {
+      return { lineSnapshot, timelineBundle };
+    }
+
+    const legacyEvent = await findLineWebhookEventById(recentSubject.eventId);
+
+    if (!legacyEvent) {
+      return { lineSnapshot, timelineBundle };
+    }
+
+    const matchedAccount = await findAccountByLineUserId(lineUserId);
+
+    if (matchedAccount) {
+      await identityFoundationService.ensureCanonicalUserForAccount(matchedAccount, "line_webhook");
+    }
+
+    const ensuredIdentity =
+      lineSnapshot.identity ||
+      (await identityFoundationService.getAuthIdentityByLineUserId(lineUserId)) ||
+      (await identityFoundationService.ensureUnboundLineIdentity({
+        lineUserId,
+        source: "line_webhook",
+      }));
+
+    await timelineService.recordLineWebhookEvent({
+      event: legacyEvent,
+      authIdentityId: ensuredIdentity.authIdentityId,
+      userProfileId: ensuredIdentity.userProfileId,
+    });
+
+    [lineSnapshot, timelineBundle] = await Promise.all([
+      identityFoundationService.getUserByLineProviderSubject(lineUserId),
+      timelineService.getUnifiedTimelineByLineSubject(lineUserId),
+    ]);
+
+    return { lineSnapshot, timelineBundle };
+  }
+
   async listRecentLineWebhookSubjects(limit = 10) {
     const events = await listRecentLineWebhookSubjects(limit);
 
@@ -35,10 +96,7 @@ export class AdminFoundationService {
 
         try {
           const lineUserId = event.lineUserId;
-          const [lineSnapshot, timelineBundle] = await Promise.all([
-            identityFoundationService.getUserByLineProviderSubject(lineUserId),
-            timelineService.getUnifiedTimelineByLineSubject(lineUserId),
-          ]);
+          const { lineSnapshot, timelineBundle } = await this.ensureCanonicalLineTimelineForLineUserId(lineUserId);
 
           return {
             ...baseEvent,
@@ -152,7 +210,7 @@ export class AdminFoundationService {
       identities = identityEntries.flatMap((entry) => (entry ? [entry] : []));
 
       if (account?.lineUserId) {
-        timelineBundle = await timelineService.getUnifiedTimelineByLineSubject(account.lineUserId);
+        timelineBundle = (await this.ensureCanonicalLineTimelineForLineUserId(account.lineUserId)).timelineBundle;
       }
 
       const latestEvent = timelineBundle.events[timelineBundle.events.length - 1] || null;
@@ -251,10 +309,7 @@ export class AdminFoundationService {
     }
 
     if (input.lineUserId) {
-      const [lineSnapshot, timelineBundle] = await Promise.all([
-        identityFoundationService.getUserByLineProviderSubject(input.lineUserId),
-        timelineService.getUnifiedTimelineByLineSubject(input.lineUserId),
-      ]);
+      const { lineSnapshot, timelineBundle } = await this.ensureCanonicalLineTimelineForLineUserId(input.lineUserId);
 
       return {
         subjectType: "line_subject" as const,
