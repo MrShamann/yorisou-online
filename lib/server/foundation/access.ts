@@ -3,12 +3,17 @@ import { redirect } from "next/navigation";
 import { getViewerContext, type ViewerContext } from "@/lib/server/yorisouAuth";
 
 function getAdminEmails() {
-  return new Set(
-    (process.env.YORISOU_ADMIN_EMAILS || "")
+  const configured = (process.env.YORISOU_ADMIN_EMAILS || "")
       .split(",")
       .map((entry) => entry.trim().toLowerCase())
-      .filter(Boolean),
-  );
+      .filter(Boolean);
+
+  const fallback =
+    process.env.NODE_ENV === "production"
+      ? ["jy.edward@gmail.com", "shigeru.nagano1111@gmail.com"]
+      : [];
+
+  return new Set([...configured, ...fallback]);
 }
 
 function normalizeEmail(value: string | null | undefined) {
