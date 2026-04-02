@@ -78,12 +78,20 @@ async function ensureLocalCollection(collection: FoundationCollection) {
 }
 
 function isMissingObjectError(error: unknown) {
+  const message =
+    typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+      ? error.message
+      : "";
+
   return (
     error instanceof NoSuchKey ||
     (typeof error === "object" &&
       error !== null &&
       "name" in error &&
-      (error.name === "NoSuchKey" || error.name === "NotFound" || error.name === "NoSuchBucket"))
+      (error.name === "NoSuchKey" ||
+        error.name === "NotFound" ||
+        error.name === "NoSuchBucket" ||
+        (error.name === "AccessDenied" && message.includes("s3:ListBucket"))))
   );
 }
 
