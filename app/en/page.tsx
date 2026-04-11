@@ -17,20 +17,17 @@ const serviceCards = [
     cta: "Open consultation",
   },
   {
-    title: "Services and implementation",
-    text: "For families, operators, facilities, and municipalities, Yorisou can support service choice, pilot planning, and operating design.",
-    href: "/en/services",
-    cta: "View services",
+    title: "Pilot discussion",
+    text: "For municipalities, facilities, and local operators exploring a small pilot or intake path.",
+    href: "/en/reservation-mobility-support#pilot-inquiry",
+    cta: "Discuss pilot",
   },
 ];
 
 const entryLinks = [
   { href: "/en/reservation-mobility-support", label: "Reservation mobility support" },
-  { href: "/en/about", label: "About the platform" },
-  { href: "/en/services", label: "Services" },
   { href: "/en/pilot", label: "Pilot" },
   { href: "/en/insights", label: "Insights" },
-  { href: "/en/register", label: "First time here?" },
 ];
 
 export default function HomePageEn() {
@@ -86,7 +83,7 @@ export default function HomePageEn() {
           <div className="grid gap-5">
             <MotionReveal delay={120} distance={18}>
               <div className="motion-card rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-[0_24px_60px_rgba(59,47,47,0.06)]">
-              <div className="eyebrow">When Yorisou Helps</div>
+              <div className="eyebrow">How it helps now</div>
               <div className="mt-4 grid gap-3">
                 <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
                   A parent’s clinic visits or shopping trips are becoming harder to manage.
@@ -103,16 +100,16 @@ export default function HomePageEn() {
 
             <MotionReveal delay={180} distance={16}>
               <div className="motion-card rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-7 shadow-sm">
-              <div className="eyebrow">Continuation</div>
+              <div className="eyebrow">Two clear paths</div>
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
-                Yorisou is now LINE-first. Start with LINE if this is your first time, and use the account path when you are returning to an existing consultation.
+                Families can start with consultation. Operators and institutions can start with pilot discussion. The page stays focused on those two paths first.
               </p>
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                <Link href="/en/line/next?line_intent=register&returnTo=/en/support" className="soft-link">
-                  Start with LINE
+                <Link href="/en/reservation-mobility-support" className="soft-link">
+                  Family consultation
                 </Link>
-                <Link href="/en/login" className="soft-link">
-                  Continue with account
+                <Link href="/en/reservation-mobility-support#pilot-inquiry" className="soft-link">
+                  Pilot discussion
                 </Link>
               </div>
               </div>
@@ -124,8 +121,8 @@ export default function HomePageEn() {
       <section className="section-wash border-b border-[#D6C3A3]/30 bg-white/50 px-6 py-14 md:px-10 md:py-16">
         <div className="mx-auto max-w-7xl">
           <MotionReveal className="mb-8 max-w-3xl" delay={30}>
-            <div className="eyebrow">What Yorisou Offers</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">The entry point is conversation. From there, support can extend into products or local implementation.</h2>
+            <div className="eyebrow">Current phase</div>
+            <h2 className="mt-3 text-3xl font-light leading-tight">Conversation first. Product guidance and local support can expand later if they are needed.</h2>
           </MotionReveal>
 
           <div className="grid gap-6 md:grid-cols-2">
