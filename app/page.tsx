@@ -11,86 +11,58 @@ const concerns = [
 
 const journeySteps = [
   {
-    label: "1. 困りごとの入口",
-    title: "通院、買い物、外出の不安を、まず状況として受け取ります。",
-    problem: "何に困っているのかがまだ曖昧なままでも、移動の負担や暮らしの不安をそのまま話せます。",
+    label: "1. 相談の入口",
+    title: "予約前の不安を、まず家族の状況として受け取ります。",
+    problem: "まだ言葉になっていなくても、外出や送迎の困りごとをそのまま話せます。",
     action: "ひなたが整理すること",
-    detail: "最初の相談窓口として、ご本人、ご家族、生活導線、通院頻度などを静かに整理します。",
-    outcome: "次に何を考えるべきかが見え始めます。",
+    detail: "本人、家族、移動条件を短く整理し、最初の入口を見つけます。",
+    outcome: "次に進む先が見えます。",
   },
   {
-    label: "2. 状況整理",
-    title: "いま必要なのが相談なのか、比較なのか、地域導入なのかを分けていきます。",
-    problem: "製品を探す前に、生活のどこで困るのか、家族がどこで支えるのかが整理されていないことが多くあります。",
-    action: "ひなたが進めること",
-    detail: "相談内容を、支援内容、読みもの、導入・実証、継続相談のどこへつなぐべきか見極めます。",
-    outcome: "情報が増えすぎず、その人に合う入口だけを選べます。",
+    label: "2. 家族で共有",
+    title: "確認したいことを、あとで見直しやすい形にまとめます。",
+    problem: "予約の前に、家族でそろえておきたい確認が残りやすい領域です。",
+    action: "ひなたが返すこと",
+    detail: "電話、LINE、アプリのどこから入っても、家族の確認に戻せる形にします。",
+    outcome: "説明のやり直しが減ります。",
   },
   {
-    label: "3. 合う支え方の提案",
-    title: "移動手段だけでなく、続けやすさまで含めて考えます。",
-    problem: "比較表だけでは、毎日の動線やご家族の負担に本当に合うかが分かりません。",
-    action: "ひなたが伝えること",
-    detail: "支援内容や読みものを通じて、使い方、安全性、費用感、地域で続く運用を見ながら提案します。",
-    outcome: "選択肢が『使えそうか』ではなく『続けられそうか』で見えてきます。",
-  },
-  {
-    label: "4. 家族と共有",
-    title: "ご本人だけでなく、ご家族も安心できる形へつなげます。",
-    problem: "本人は使いたい、ご家族は不安、というすれ違いが起きやすい領域です。",
-    action: "ひなたが整えること",
-    detail: "相談の続きはLINEやアカウントで受け取れ、あとから家族と共有しながら見返せます。",
-    outcome: "その場の会話で終わらず、家族も同じ理解で動きやすくなります。",
-  },
-  {
-    label: "5. 継続支援",
-    title: "一度の相談で終わらず、導入やその後の支え方まで続けられます。",
-    problem: "移動支援は、始めるより続けるほうが難しいことがあります。",
-    action: "ひなたがつなぐこと",
-    detail: "必要に応じて、支援内容の比較、導入・実証の相談、読みもの、継続相談へ落ち着いてつなぎます。",
-    outcome: "Yorisouが、単発の相談ではなく長く寄り添う支援基盤として機能します。",
+    label: "3. 必要な先へ",
+    title: "相談で終わらず、必要な入口へ静かにつなぎます。",
+    problem: "家庭向けの相談と、導入・実証の相談は、最初に分けて考えるほうが落ち着きます。",
+    action: "ひなたが案内すること",
+    detail: "家族向け相談と、運営側の小さな導入相談を分けて案内します。",
+    outcome: "今の段階に合う次の一歩だけが残ります。",
   },
 ];
 
 const entryLanes = [
   {
-    title: "予約型移動の相談をする",
+    title: "家族・利用者の相談",
     text: "予約前の不安や確認事項を、家族目線で整理できます。",
     href: "/reservation-mobility-support",
     cta: "相談ページへ",
   },
   {
-    title: "導入・実証を相談する",
+    title: "導入・実証の相談",
     text: "自治体、施設、事業者の小さなパイロット相談につながります。",
     href: "/reservation-mobility-support#pilot-inquiry",
     cta: "導入相談へ",
-  },
-  {
-    title: "実証・相談から始める",
-    text: "気になる製品やサービスを、相談や実証の入口につなげられます。",
-    href: "/insights/validate",
-    cta: "実証・相談へ",
-  },
-  {
-    title: "連絡して確かめる",
-    text: "詳しい案内や次の相談先が必要なときは、連絡窓口へ進めます。",
-    href: "/contact",
-    cta: "連絡窓口へ",
   },
 ];
 
 const platformPillars = [
   {
-    title: "相談の入口",
-    text: "予約前の不安を、曖昧なままでも相談から始められます。",
+    title: "予約前の確認",
+    text: "乗り降りや付き添いの不安を、相談前に整理できます。",
   },
   {
-    title: "支援の比較",
-    text: "電話、LINE、アプリのどれで入るかを落ち着いて整えられます。",
+    title: "家族の共有",
+    text: "家族が確認したい点を、あとで見直しやすくまとめます。",
   },
   {
-    title: "家族との継続",
-    text: "ひなたとのやりとりを、あとから家族と共有しながら続けられます。",
+    title: "小さな導入相談",
+    text: "自治体や施設の入口だけを、静かに確かめられます。",
   },
 ];
 
@@ -137,17 +109,11 @@ export default function HomePage() {
               <Link href="/reservation-mobility-support" className="soft-link">
                 予約型移動相談
               </Link>
-              <Link href="/about" className="soft-link">
-                Yorisouについて
-              </Link>
               <Link href="/pilot" className="soft-link">
                 導入・実証
               </Link>
               <Link href="/insights" className="soft-link">
                 読みもの
-              </Link>
-              <Link href="/register" className="soft-link">
-                はじめて使う方へ
               </Link>
             </div>
           </MotionReveal>
@@ -178,9 +144,7 @@ export default function HomePage() {
                 予約前の相談から、家族共有までを
                 <span className="block md:whitespace-nowrap">静かにつなぐ入口です。</span>
               </h2>
-              <p className="mt-4 page-copy">
-                まず相談し、必要な支援を見極め、ご家族とも共有しながら続ける。その流れを分断せずに支えます。
-              </p>
+              <p className="mt-4 page-copy">予約前の確認から家族共有までを、ひと続きの相談として受け取れます。</p>
               <div className="mt-6 grid gap-3">
                 {platformPillars.map((pillar, index) => (
                   <MotionReveal key={pillar.title} delay={100 + index * 60} distance={16}>
@@ -226,14 +190,12 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
           <MotionReveal className="max-w-[40rem]" delay={30}>
-            <div className="service-kicker">予約前から始まる流れ</div>
+            <div className="service-kicker">予約前の流れ</div>
             <h2 className="display-serif mt-4 max-w-[13.5em] text-[1.76rem] leading-[1.62] md:text-[2.16rem]">
-              <span className="block md:whitespace-nowrap">まず予約前の確認を整え、</span>
+              <span className="block md:whitespace-nowrap">確認を整え、</span>
               <span className="block md:whitespace-nowrap">必要な先へ静かにつなぎます。</span>
             </h2>
-            <p className="mt-4 page-copy">
-              何に困っていて、どの入口に進むかを、短い流れの中で自然に理解できる構成にしています。
-            </p>
+            <p className="mt-4 page-copy">長い説明は置かず、今の段階で必要な流れだけを示します。</p>
           </MotionReveal>
           <div className="mt-8 space-y-4">
             {journeySteps.map((step, index) => (
@@ -273,13 +235,11 @@ export default function HomePage() {
           <MotionReveal className="max-w-[42rem]" delay={30}>
               <div className="service-kicker">今の入口</div>
               <h2 className="display-serif mt-4 max-w-[15em] text-[1.72rem] leading-[1.6] md:text-[2.08rem]">
-                理解が進んだあとに、そのまま次の入口へ進めます。
+                相談と導入の入口だけを、まず見える場所に置いています。
               </h2>
-              <p className="mt-4 page-copy">
-              相談から始める方と、導入・実証を見たい方の入口を、同じ流れの中に置いています。
-              </p>
+              <p className="mt-4 page-copy">家族向け相談と、導入・実証相談を、最小限の選択肢で案内します。</p>
           </MotionReveal>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
             {entryLanes.map((item, index) => (
               <MotionReveal key={item.title} delay={90 + index * 75} distance={18}>
                 <article
@@ -300,36 +260,36 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section-wash bg-[rgba(255,255,255,0.22)] px-6 py-12 md:px-10 md:py-14">
+      <section className="section-wash bg-[rgba(255,255,255,0.22)] px-6 py-10 md:px-10 md:py-12">
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.06fr_0.94fr]">
           <MotionReveal delay={30}>
             <div className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6">
             <div className="service-kicker">ご本人とご家族のその先</div>
             <h2 className="display-serif mt-4 max-w-[14.5em] text-[1.7rem] leading-[1.64] md:text-[2.04rem]">
-              Yorisouは、状況整理から家族共有、支援内容の比較までつなげる継続支援です。
+              まずは予約前の相談に必要なことだけを、静かに整えられます。
             </h2>
             <div className="mt-5 page-copy">
-              <p>すぐに何かを決める必要はありません。まず状況を聞き、必要ならご家族と見返しながら、相談の続きを静かに進められます。</p>
-              <p className="mt-3">自治体や施設、地域事業者の方には、現場導入や実証の相談基盤としても同じ流れを使えます。</p>
+              <p>すぐに決めなくても大丈夫です。必要な確認をまとめ、ご家族と見返しながら、次の一歩を進められます。</p>
+              <p className="mt-3">自治体や施設、地域事業者の方にも、導入や実証の入口として同じ流れを使えます。</p>
             </div>
           </div>
           </MotionReveal>
 
           <MotionReveal delay={120} distance={18}>
-            <div className="motion-card panel-sage rounded-[1.8rem] px-6 py-6">
-            <div className="service-kicker text-[var(--accent-sage-text)]">その先も、無理のない形で</div>
-            <p className="mt-4 text-sm leading-8 md:text-base">
-              Yorisouは LINE を第一入口にしながら、Web で相談内容の確認や継続を支えます。はじめての方は LINE から、すでに使っている方はアカウントから続けられます。
+            <div className="motion-card panel-sage rounded-[1.8rem] px-6 py-5">
+            <div className="service-kicker text-[var(--accent-sage-text)]">そのあとで使える入口</div>
+            <p className="mt-3 text-sm leading-8 md:text-base">
+              LINE、アカウント、Web は、必要な人だけが続きとして使えます。
             </p>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm">
               <Link href="/line/next?locale=ja&line_intent=register&returnTo=/support" className="soft-link">
-                LINEではじめる
+                LINE
               </Link>
               <Link href="/login" className="soft-link">
-                アカウントで続ける
+                アカウント
               </Link>
               <Link href="/support" className="soft-link">
-                Webで相談を確認する
+                Web
               </Link>
             </div>
           </div>
