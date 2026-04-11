@@ -8,19 +8,18 @@ import { useMemo, useState } from "react";
 const primaryNavJa = [
   { href: "/reservation-mobility-support", label: "予約型移動相談" },
   { href: "/support", label: "相談する" },
-  { href: "/insights", label: "読みもの" },
 ];
 
 const primaryNavEn = [
   { href: "/reservation-mobility-support", label: "Reservation mobility consultation" },
   { href: "/support", label: "Consult" },
-  { href: "/insights", label: "Insights" },
 ];
 
 const secondaryNavJa = [
   { href: "/about", label: "Yorisouとは" },
   { href: "/services", label: "支援内容" },
   { href: "/pilot", label: "導入・実証" },
+  { href: "/insights", label: "読みもの" },
   { href: "/contact", label: "お問い合わせ" },
 ];
 
@@ -28,6 +27,7 @@ const secondaryNavEn = [
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
   { href: "/pilot", label: "Pilot" },
+  { href: "/insights", label: "Insights" },
   { href: "/contact", label: "Contact" },
 ];
 
