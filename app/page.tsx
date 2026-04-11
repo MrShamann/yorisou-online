@@ -82,15 +82,15 @@ const entryLanes = [
 const platformPillars = [
   {
     title: "相談の入口",
-    text: "移動や暮らしの不安を、曖昧なままでも相談から始められます。",
+    text: "予約前の不安を、曖昧なままでも相談から始められます。",
   },
   {
     title: "支援の比較",
-    text: "製品、サービス、地域での続けやすさを落ち着いて見比べられます。",
+    text: "電話、LINE、アプリのどれで入るかを落ち着いて整えられます。",
   },
   {
     title: "家族との継続",
-    text: "Yorisouの相談窓口「ひなた」とのやりとりを、LINEやアカウントを通じてあとから家族と共有しながら続けられます。",
+    text: "ひなたとのやりとりを、あとから家族と共有しながら続けられます。",
   },
 ];
 
@@ -226,13 +226,13 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
           <MotionReveal className="max-w-[40rem]" delay={30}>
-            <div className="service-kicker">Yorisouで進む流れ</div>
+            <div className="service-kicker">予約前から始まる流れ</div>
             <h2 className="display-serif mt-4 max-w-[13.5em] text-[1.76rem] leading-[1.62] md:text-[2.16rem]">
-              <span className="block md:whitespace-nowrap">困りごとから継続支援まで、</span>
-              <span className="block md:whitespace-nowrap">順番に理解できる流れがあります。</span>
+              <span className="block md:whitespace-nowrap">まず予約前の確認を整え、</span>
+              <span className="block md:whitespace-nowrap">必要な先へ静かにつなぎます。</span>
             </h2>
             <p className="mt-4 page-copy">
-              ただ相談するだけではなく、何に困っていて、Yorisouが何をし、どこへつながるのかをスクロールの中で自然に理解できる構成にしています。
+              何に困っていて、どの入口に進むかを、短い流れの中で自然に理解できる構成にしています。
             </p>
           </MotionReveal>
           <div className="mt-8 space-y-4">
@@ -271,13 +271,13 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.46)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
           <MotionReveal className="max-w-[42rem]" delay={30}>
-            <div className="service-kicker">困り方に合わせた入口</div>
-            <h2 className="display-serif mt-4 max-w-[15em] text-[1.72rem] leading-[1.6] md:text-[2.08rem]">
-              理解が進んだあとに、そのまま次の入口へ進めます。
-            </h2>
-            <p className="mt-4 page-copy">
-              相談から始める方も、先に支援内容や読みものを確かめる方も、導入・実証を見たい地域の方も、それぞれの入口を同じ流れの中に置いています。
-            </p>
+              <div className="service-kicker">今の入口</div>
+              <h2 className="display-serif mt-4 max-w-[15em] text-[1.72rem] leading-[1.6] md:text-[2.08rem]">
+                理解が進んだあとに、そのまま次の入口へ進めます。
+              </h2>
+              <p className="mt-4 page-copy">
+              相談から始める方と、導入・実証を見たい方の入口を、同じ流れの中に置いています。
+              </p>
           </MotionReveal>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {entryLanes.map((item, index) => (
