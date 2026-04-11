@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import MotionReveal from "./components/MotionReveal";
+import InsightsPreview from "./components/InsightsPreview";
 
 const concerns = [
-  "外出したいが、移動手段に不安がある",
-  "親の移動をどう支えればよいかわからない",
-  "どの製品やサービスが合うのかわからない",
+  "予約型の送迎を使う前に、家族で確認したいことがある",
+  "電話・LINE・アプリのどれで頼むか迷っている",
+  "乗り降り、付き添い、待ち合わせの整理が必要",
 ];
 
 const journeySteps = [
@@ -13,15 +14,15 @@ const journeySteps = [
     label: "1. 困りごとの入口",
     title: "通院、買い物、外出の不安を、まず状況として受け取ります。",
     problem: "何に困っているのかがまだ曖昧なままでも、移動の負担や暮らしの不安をそのまま話せます。",
-    action: "Yorisouがすること",
-    detail: "ひなたが最初の相談窓口として、ご本人、ご家族、生活導線、通院頻度などを静かに整理します。",
+    action: "ひなたが整理すること",
+    detail: "最初の相談窓口として、ご本人、ご家族、生活導線、通院頻度などを静かに整理します。",
     outcome: "次に何を考えるべきかが見え始めます。",
   },
   {
     label: "2. 状況整理",
     title: "いま必要なのが相談なのか、比較なのか、地域導入なのかを分けていきます。",
     problem: "製品を探す前に、生活のどこで困るのか、家族がどこで支えるのかが整理されていないことが多くあります。",
-    action: "Yorisouがすること",
+    action: "ひなたが進めること",
     detail: "相談内容を、支援内容、読みもの、導入・実証、継続相談のどこへつなぐべきか見極めます。",
     outcome: "情報が増えすぎず、その人に合う入口だけを選べます。",
   },
@@ -29,7 +30,7 @@ const journeySteps = [
     label: "3. 合う支え方の提案",
     title: "移動手段だけでなく、続けやすさまで含めて考えます。",
     problem: "比較表だけでは、毎日の動線やご家族の負担に本当に合うかが分かりません。",
-    action: "Yorisouがすること",
+    action: "ひなたが伝えること",
     detail: "支援内容や読みものを通じて、使い方、安全性、費用感、地域で続く運用を見ながら提案します。",
     outcome: "選択肢が『使えそうか』ではなく『続けられそうか』で見えてきます。",
   },
@@ -37,7 +38,7 @@ const journeySteps = [
     label: "4. 家族と共有",
     title: "ご本人だけでなく、ご家族も安心できる形へつなげます。",
     problem: "本人は使いたい、ご家族は不安、というすれ違いが起きやすい領域です。",
-    action: "Yorisouがすること",
+    action: "ひなたが整えること",
     detail: "相談の続きはLINEやアカウントで受け取れ、あとから家族と共有しながら見返せます。",
     outcome: "その場の会話で終わらず、家族も同じ理解で動きやすくなります。",
   },
@@ -45,7 +46,7 @@ const journeySteps = [
     label: "5. 継続支援",
     title: "一度の相談で終わらず、導入やその後の支え方まで続けられます。",
     problem: "移動支援は、始めるより続けるほうが難しいことがあります。",
-    action: "Yorisouがすること",
+    action: "ひなたがつなぐこと",
     detail: "必要に応じて、支援内容の比較、導入・実証の相談、読みもの、継続相談へ落ち着いてつなぎます。",
     outcome: "Yorisouが、単発の相談ではなく長く寄り添う支援基盤として機能します。",
   },
@@ -53,28 +54,28 @@ const journeySteps = [
 
 const entryLanes = [
   {
-    title: "相談から始める",
-    text: "まずは、移動や暮らしの不安をひなたにそのまま相談できます。",
-    href: "/support#scenario-assistant",
-    cta: "相談を始める",
+    title: "予約型移動の相談をする",
+    text: "予約前の不安や確認事項を、家族目線で整理できます。",
+    href: "/reservation-mobility-support",
+    cta: "相談ページへ",
   },
   {
-    title: "支援内容を知る",
-    text: "高齢者、ご家族、地域の運営側それぞれに向けた支援内容を見られます。",
-    href: "/services",
-    cta: "支援内容を見る",
+    title: "導入・実証を相談する",
+    text: "自治体、施設、事業者の小さなパイロット相談につながります。",
+    href: "/reservation-mobility-support#pilot-inquiry",
+    cta: "導入相談へ",
   },
   {
-    title: "導入・実証を見る",
-    text: "地域や事業者向けの小さな導入・実証の進め方を確認できます。",
-    href: "/pilot",
-    cta: "導入・実証を見る",
+    title: "実証・相談から始める",
+    text: "気になる製品やサービスを、相談や実証の入口につなげられます。",
+    href: "/insights/validate",
+    cta: "実証・相談へ",
   },
   {
-    title: "読みものを読む",
-    text: "高齢者の移動や地域支援の考え方を、読みものとして確かめられます。",
-    href: "/insights",
-    cta: "読みものを見る",
+    title: "連絡して確かめる",
+    text: "詳しい案内や次の相談先が必要なときは、連絡窓口へ進めます。",
+    href: "/contact",
+    cta: "連絡窓口へ",
   },
 ];
 
@@ -99,26 +100,43 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.98),_rgba(247,244,238,0.99)_60%)]">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[1.18fr_0.82fr] lg:items-center lg:gap-12">
           <MotionReveal className="order-2 lg:order-1" delay={40} distance={28}>
-            <div className="service-kicker">高齢者とご家族の移動支援プラットフォーム</div>
+            <div className="service-kicker">予約前の相談入口</div>
             <h1 className="display-serif mt-5 max-w-[9.6em] text-[2.18rem] leading-[1.24] md:text-[3.02rem] lg:text-[3.36rem]">
-              <span className="block md:whitespace-nowrap">移動の不安から、</span>
-              <span className="block text-[#79685f] md:whitespace-nowrap">暮らしの安心へ。</span>
+              <span className="block md:whitespace-nowrap">予約型移動の前に、</span>
+              <span className="block text-[#79685f] md:whitespace-nowrap">家族の不安をひとつずつ整える。</span>
             </h1>
             <p className="mt-6 max-w-[34rem] text-base leading-9 text-[var(--muted)] md:text-lg">
-              Yorisouは、日本の高齢者とご家族の移動・通院・買い物・地域での暮らしを支えるための相談と支援の入口です。
+              Yorisouは、予約型の移動サービスを使う前に、家族の不安や確認事項を静かに整理する入口です。
+              電話、LINE、アプリ予約の前に、何を確認すればよいかをひなたと一緒に整えられます。
             </p>
             <p className="mt-4 max-w-[33rem] text-sm leading-8 text-[var(--muted)] md:text-base">
-              ひなたは最初の相談窓口として状況整理を手伝い、その先を支援内容、導入・実証、読みもの、継続相談へ静かにつなぎます。
+              ひなたは、長い説明を求めません。ご家族の心配や、運営側が確認したい点を1つ伝えるだけで、次の一歩を落ち着いて返します。
             </p>
+            <div className="mt-6 rounded-[1.4rem] border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.88)] px-5 py-5 text-sm leading-7 text-[var(--accent-sage-text)]">
+              <div className="service-kicker text-[var(--accent-sage-text)]">最初の入口</div>
+              <p className="mt-2">
+                まずは、予約前の相談から始められます。ご家族向けの確認整理も、運営側の小さな導入相談も、同じ入口で受け取ります。
+              </p>
+            </div>
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <Link href="/support#scenario-assistant" className="btn btn-primary">
-                相談を始める
+              <Link href="/reservation-mobility-support" className="btn btn-primary">
+                予約型移動の相談へ
               </Link>
-              <Link href="/services" className="btn btn-secondary">
-                支援内容を見る
+              <Link href="/reservation-mobility-support#pilot-inquiry" className="btn btn-secondary">
+                導入・実証を相談する
               </Link>
             </div>
+            <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted)]">
+              {concerns.map((item) => (
+                <span key={item} className="rounded-full border border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.72)] px-3 py-1.5">
+                  {item}
+                </span>
+              ))}
+            </div>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+              <Link href="/reservation-mobility-support" className="soft-link">
+                予約型移動相談
+              </Link>
               <Link href="/about" className="soft-link">
                 Yorisouについて
               </Link>
@@ -128,8 +146,8 @@ export default function HomePage() {
               <Link href="/insights" className="soft-link">
                 読みもの
               </Link>
-              <Link href="/login#line-entry" className="soft-link">
-                ひなたとの相談をLINE・アカウントで続ける
+              <Link href="/register" className="soft-link">
+                はじめて使う方へ
               </Link>
             </div>
           </MotionReveal>
@@ -177,24 +195,34 @@ export default function HomePage() {
           </MotionReveal>
 
           <MotionReveal delay={120} distance={20} scale={0.99}>
-            <article className="motion-card video-placeholder-card rounded-[1.8rem] border border-[color:var(--line-sage)] px-6 py-6">
-              <div className="service-kicker text-[var(--accent-sage-text)]">紹介映像エリア</div>
+            <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-sage)] px-6 py-6">
+              <div className="service-kicker text-[var(--accent-sage-text)]">使う前にわかること</div>
               <h2 className="display-serif mt-4 max-w-[13em] text-[1.58rem] leading-[1.62] md:text-[1.92rem]">
-                将来の案内映像は、ここで静かに全体像を補います。
+                読みもの、製品の見え方、相談の入口をひとつにつなげています。
               </h2>
               <p className="mt-4 page-copy text-[var(--accent-sage-text)]">
-                いまは、相談から継続支援までの流れを文字で理解できる構成を優先しています。今後は、ご本人、ご家族、地域の支援者が使う流れを短い紹介映像としてここに置く予定です。
+                ご本人、ご家族、地域の支援者が、今の動きと次の一歩を無理なく見つけられるようにしています。
               </p>
-              <div className="mt-6 video-placeholder-frame rounded-[1.5rem] border border-dashed border-[color:rgba(85,98,82,0.34)] bg-[rgba(255,255,255,0.52)] px-5 py-6">
-                <div className="text-sm font-medium text-[var(--accent-sage-text)]">準備中の紹介映像</div>
-                <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">
-                  Yorisouが何を整理し、どこへつなぎ、どう継続支援につなげるかを1〜2分で案内するための予約領域です。
-                </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
+                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">ご本人</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">歩く負担や外出の不安を、そのまま相談できます。</p>
+                </div>
+                <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
+                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">ご家族</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">比較の視点や次の判断を、家族で共有しやすくなります。</p>
+                </div>
+                <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
+                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">地域の方</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">実証や導入の入口を、落ち着いて確かめられます。</p>
+                </div>
               </div>
             </article>
           </MotionReveal>
         </div>
       </section>
+
+      <InsightsPreview locale="ja" />
 
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
@@ -292,17 +320,17 @@ export default function HomePage() {
             <div className="motion-card panel-sage rounded-[1.8rem] px-6 py-6">
             <div className="service-kicker text-[var(--accent-sage-text)]">その先も、無理のない形で</div>
             <p className="mt-4 text-sm leading-8 md:text-base">
-              ひなたとの相談の続きは、YorisouのLINEまたはアカウントで受け取れます。まず相談を始めてから、あとで落ち着いてつなぎ方を選ぶこともできます。
+              Yorisouは LINE を第一入口にしながら、Web で相談内容の確認や継続を支えます。はじめての方は LINE から、すでに使っている方はアカウントから続けられます。
             </p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-              <Link href="/login#line-entry" className="soft-link">
-                LINEで続ける
+              <Link href="/line/next?locale=ja&line_intent=register&returnTo=/support" className="soft-link">
+                LINEではじめる
               </Link>
               <Link href="/login" className="soft-link">
                 アカウントで続ける
               </Link>
-              <Link href="/insights" className="soft-link">
-                読みものを見る
+              <Link href="/support" className="soft-link">
+                Webで相談を確認する
               </Link>
             </div>
           </div>

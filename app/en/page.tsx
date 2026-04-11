@@ -4,17 +4,17 @@ import InsightsPreview from "../components/InsightsPreview";
 import MotionReveal from "../components/MotionReveal";
 
 const trustPoints = [
-  "Mobility consultation for seniors and families",
-  "Small local pilot planning",
-  "Support that considers real operations",
+  "Reservation-based transport",
+  "Family coordination before booking",
+  "Pilot intake for operators",
 ];
 
 const serviceCards = [
   {
-    title: "Consultation entry",
-    text: "Start with a calm conversation. Hinata is the support interface, helping organize the concern before the next step is chosen.",
-    href: "/en/support#scenario-assistant",
-    cta: "Start consultation",
+    title: "Reservation mobility consultation",
+    text: "Start with the mobility concern, family questions, and booking checks before the trip is booked.",
+    href: "/en/reservation-mobility-support",
+    cta: "Open consultation",
   },
   {
     title: "Services and implementation",
@@ -25,11 +25,12 @@ const serviceCards = [
 ];
 
 const entryLinks = [
+  { href: "/en/reservation-mobility-support", label: "Reservation mobility support" },
   { href: "/en/about", label: "About the platform" },
   { href: "/en/services", label: "Services" },
   { href: "/en/pilot", label: "Pilot" },
   { href: "/en/insights", label: "Insights" },
-  { href: "/en/login#line-entry", label: "Continue with LINE or account" },
+  { href: "/en/register", label: "First time here?" },
 ];
 
 export default function HomePageEn() {
@@ -39,25 +40,38 @@ export default function HomePageEn() {
         <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/60 to-transparent" />
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
           <MotionReveal className="shell-card p-8 md:p-12" delay={40} distance={26}>
-            <div className="eyebrow">Mobility and Support Platform / Japan</div>
+            <div className="eyebrow">Reservation consultation entry</div>
             <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
-              Yorisou helps seniors,
-              <span className="block text-[#6B5A4A]">families, and communities organize the next practical step.</span>
+              Before reservation-based transport starts,
+              <span className="block text-[#6B5A4A]">Hinata helps organize family concerns and pilot questions.</span>
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisou is a Japan-focused mobility and support platform for older adults, family members, and local operators. Hinata is the conversation interface, not the platform identity.
+              Start with the concern, not the booking system. Yorisou gives families and local operators a calm entry point before phone, LINE, or app booking.
             </p>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
-              You can start with consultation, read insights first, review service options, or move toward a pilot and implementation conversation.
+              Hinata narrows the practical next step first, then keeps the context so you can continue later if needed.
             </p>
+            <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/82 px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
+              <div className="eyebrow">Primary entry</div>
+              <p className="mt-2">
+                The natural first step is to talk about reservation-based mobility before the booking flow starts. It can continue later without starting over.
+              </p>
+            </div>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link href="/en/support#scenario-assistant" className="btn btn-primary">
-                Start consultation
+              <Link href="/en/reservation-mobility-support" className="btn btn-primary">
+                Reservation mobility consultation
               </Link>
-              <Link href="/en/services" className="btn btn-secondary">
-                View services
+              <Link href="/en/reservation-mobility-support#pilot-inquiry" className="btn btn-secondary">
+                Discuss pilot use
               </Link>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {trustPoints.map((item) => (
+                <div key={item} className="rounded-full border border-[#D6C3A3]/35 bg-[#FCFAF6] px-4 py-2 text-sm text-[#5A4B3E]">
+                  {item}
+                </div>
+              ))}
             </div>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-[#6B5A4A]">
               {entryLinks.map((item) => (
@@ -67,13 +81,6 @@ export default function HomePageEn() {
               ))}
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              {trustPoints.map((item) => (
-                <div key={item} className="rounded-full border border-[#D6C3A3]/35 bg-[#FCFAF6] px-4 py-2 text-sm text-[#5A4B3E]">
-                  {item}
-                </div>
-              ))}
-            </div>
           </MotionReveal>
 
           <div className="grid gap-5">
@@ -98,11 +105,11 @@ export default function HomePageEn() {
               <div className="motion-card rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-7 shadow-sm">
               <div className="eyebrow">Continuation</div>
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
-                If someone wants to continue later more quietly, Yorisou also supports LINE or account-based continuation without changing the conversation-first entry.
+                Yorisou is now LINE-first. Start with LINE if this is your first time, and use the account path when you are returning to an existing consultation.
               </p>
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                <Link href="/en/login#line-entry" className="soft-link">
-                  Continue with LINE
+                <Link href="/en/line/next?line_intent=register&returnTo=/en/support" className="soft-link">
+                  Start with LINE
                 </Link>
                 <Link href="/en/login" className="soft-link">
                   Continue with account

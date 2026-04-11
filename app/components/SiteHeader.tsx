@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
+  { href: "/reservation-mobility-support", label: "予約型移動相談" },
   { href: "/about", label: "Yorisouとは" },
   { href: "/services", label: "支援内容" },
   { href: "/support", label: "相談する" },
@@ -13,6 +14,7 @@ const primaryNavJa = [
 ];
 
 const primaryNavEn = [
+  { href: "/reservation-mobility-support", label: "Reservation mobility consultation" },
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
   { href: "/support", label: "Consult" },
@@ -33,7 +35,7 @@ function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(base)) return base;
+    if (["/", "/reservation-mobility-support", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -42,7 +44,7 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (["/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
+  if (["/reservation-mobility-support", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 
