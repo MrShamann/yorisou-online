@@ -173,13 +173,13 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.94fr_1.06fr] lg:items-stretch">
           <MotionReveal delay={40} distance={18}>
             <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6 shadow-[0_10px_24px_rgba(47,35,33,0.04)]">
-              <div className="service-kicker">Yorisouを短くつかむ</div>
+              <div className="service-kicker">予約前の相談を起点に</div>
               <h2 className="display-serif mt-4 max-w-[14em] text-[1.66rem] leading-[1.62] md:text-[2rem]">
-                相談、支援比較、家族共有までを
-                <span className="block md:whitespace-nowrap">ひとつの流れで扱う基盤です。</span>
+                予約前の相談から、家族共有までを
+                <span className="block md:whitespace-nowrap">静かにつなぐ入口です。</span>
               </h2>
               <p className="mt-4 page-copy">
-                まず相談し、必要な支援を見極め、ご家族とも共有しながら続ける。Yorisouは、その流れを分断せずに支えるためのプラットフォームです。
+                まず相談し、必要な支援を見極め、ご家族とも共有しながら続ける。その流れを分断せずに支えます。
               </p>
               <div className="mt-6 grid gap-3">
                 {platformPillars.map((pillar, index) => (
@@ -196,13 +196,12 @@ export default function HomePage() {
 
           <MotionReveal delay={120} distance={20} scale={0.99}>
             <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-sage)] px-6 py-6">
-              <div className="service-kicker text-[var(--accent-sage-text)]">使う前にわかること</div>
+              <div className="service-kicker text-[var(--accent-sage-text)]">予約前に確認したいこと</div>
               <h2 className="display-serif mt-4 max-w-[13em] text-[1.58rem] leading-[1.62] md:text-[1.92rem]">
-                読みもの、製品の見え方、相談の入口をひとつにつなげています。
+                ご本人、ご家族、地域の支援者が、
+                <span className="block md:whitespace-nowrap">次の一歩を無理なく見つけられるようにしています。</span>
               </h2>
-              <p className="mt-4 page-copy text-[var(--accent-sage-text)]">
-                ご本人、ご家族、地域の支援者が、今の動きと次の一歩を無理なく見つけられるようにしています。
-              </p>
+              <p className="mt-4 page-copy text-[var(--accent-sage-text)]">予約前の確認を先に整えることで、家族も運営側も落ち着いて次へ進めます。</p>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
                   <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">ご本人</div>

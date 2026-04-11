@@ -16,16 +16,16 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
           <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl">
               <h2 className="text-3xl font-light leading-tight text-[#3B2F2F]">
-                {locale === "ja" ? "Yorisouの読みもの" : "Selected thinking from Yorisou"}
+                {locale === "ja" ? "相談に役立つ参考記事" : "Reference articles"}
               </h2>
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
                 {locale === "ja"
-                  ? "今、まず読んでおきたいことを、Yorisouの視点で選んでいます。"
-                  : "A calm editorial selection around aging, mobility, and care, shaped by the questions Yorisou sees on the ground."}
+                  ? "予約前の確認や、家族の整理に役立つ記事だけを静かに置いています。"
+                  : "A small set of articles that help with pre-booking questions and family coordination."}
               </p>
             </div>
             <Link href={href} className="rounded-full border border-[#3B2F2F]/16 bg-white/72 px-6 py-3 text-sm transition hover:bg-white">
-              {locale === "ja" ? "インサイト一覧へ" : "View all insights"}
+              {locale === "ja" ? "参考記事を見る" : "View reference articles"}
             </Link>
           </div>
 
