@@ -1,4 +1,4 @@
-import { insightSources } from "@/lib/insights/sources";
+import { getInsightSourceConfigById } from "@/lib/insights/sources";
 import type { FetchedInsightItem, InsightCategory, InsightDraft, InsightRegion } from "@/lib/insights/types";
 
 const keywordCategoryMap: Array<{ keywords: string[]; category: InsightCategory }> = [
@@ -54,13 +54,45 @@ function matchesKeywords(value: string, includeKeywords: string[], excludeKeywor
   return included && !excluded;
 }
 
-function matchesJapanMobilityContext(text: string) {
+function matchesMobilityContext(text: string) {
   const lower = text.toLowerCase();
-  const japanSignals = ["国土交通", "厚生労働", "経済産業", "日本", "国内", "都道府県", "自治体", "地域", "jr", "鉄道", "バス", "道路", "高齢", "福祉", "介護", "通院"];
-  const mobilitySignals = ["交通", "移動", "移動支援", "モビリティ", "ラストマイル", "バリアフリー", "アクセシビリティ", "物流", "公共交通", "自動車", "ev", "電動"];
+  const signals = [
+    "交通",
+    "移動",
+    "移動支援",
+    "モビリティ",
+    "ラストマイル",
+    "バリアフリー",
+    "アクセシビリティ",
+    "公共交通",
+    "自動車",
+    "EV",
+    "電動",
+    "walk",
+    "walker",
+    "rollator",
+    "mobility",
+    "transport",
+    "transit",
+    "older adult",
+    "older adults",
+    "elderly",
+    "senior",
+    "accessibility",
+    "barrier-free",
+    "barrierefrei",
+    "mobilität",
+    "verkehr",
+    "bewegung",
+    "出行",
+    "步行",
+    "移动",
+    "老年",
+    "高龄",
+    "无障碍",
+  ];
 
-  return japanSignals.some((keyword) => lower.includes(keyword.toLowerCase())) &&
-    mobilitySignals.some((keyword) => lower.includes(keyword.toLowerCase()));
+  return signals.some((keyword) => lower.includes(keyword.toLowerCase()));
 }
 
 function inferCategory(text: string, defaultCategory: InsightCategory) {
@@ -70,7 +102,7 @@ function inferCategory(text: string, defaultCategory: InsightCategory) {
 }
 
 export function normalizeFetchedItem(item: FetchedInsightItem): NormalizedInsightCandidate | null {
-  const source = insightSources.find((entry) => entry.id === item.sourceId);
+  const source = getInsightSourceConfigById(item.sourceId);
 
   if (!source) {
     return null;
@@ -78,7 +110,7 @@ export function normalizeFetchedItem(item: FetchedInsightItem): NormalizedInsigh
 
   const haystack = `${item.title} ${item.excerpt}`;
 
-  if (!matchesKeywords(haystack, source.includeKeywords, source.excludeKeywords) || !matchesJapanMobilityContext(haystack)) {
+  if (!matchesKeywords(haystack, source.includeKeywords, source.excludeKeywords) || !matchesMobilityContext(haystack)) {
     return null;
   }
 
@@ -112,6 +144,11 @@ function extractTags(text: string) {
   if (text.includes("通院")) tags.push("通院");
   if (text.includes("モビリティ")) tags.push("モビリティ");
   if (text.includes("ラストマイル")) tags.push("ラストマイル");
+  if (/mobility/i.test(text)) tags.push("mobility");
+  if (/transport/i.test(text)) tags.push("transport");
+  if (/older adults?/i.test(text)) tags.push("older adults");
+  if (/safety/i.test(text)) tags.push("safety");
+  if (/barrierefrei|barrier-free/i.test(text)) tags.push("accessibility");
 
   return tags;
 }

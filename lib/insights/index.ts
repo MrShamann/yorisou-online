@@ -58,11 +58,15 @@ function toEntry(seed: InsightSeed, locale: Locale): InsightEntry {
     featured: seed.featured || false,
     featuredRank: seed.featuredRank,
     homepageFeatured: seed.homepageFeatured || false,
+    freshnessScore: undefined,
+    urgencyScore: undefined,
+    signalType: undefined,
   };
 }
 
 function draftToEntry(draft: InsightDraft, locale: Locale): InsightEntry {
   const localized = draft.content[locale];
+  const publicStage = draft.publicStage || (draft.featured ? "public_featured" : "public_background");
 
   return {
     slug: draft.slug,
@@ -85,6 +89,10 @@ function draftToEntry(draft: InsightDraft, locale: Locale): InsightEntry {
     featured: draft.featured || false,
     featuredRank: draft.featuredRank,
     homepageFeatured: draft.homepageFeatured || false,
+    publicStage,
+    freshnessScore: draft.freshnessScore,
+    urgencyScore: draft.urgencyScore,
+    signalType: draft.signalType,
   };
 }
 
@@ -96,10 +104,27 @@ function compareInsights(a: InsightEntry, b: InsightEntry) {
     return priorityA - priorityB;
   }
 
+  const stageRank = {
+    public_featured: 0,
+    public_fresh: 1,
+    public_background: 2,
+  } as const;
+  const stageA = a.publicStage ? stageRank[a.publicStage] : 2;
+  const stageB = b.publicStage ? stageRank[b.publicStage] : 2;
+  if (stageA !== stageB) {
+    return stageA - stageB;
+  }
+
   const rankA = a.featuredRank ?? Number.MAX_SAFE_INTEGER;
   const rankB = b.featuredRank ?? Number.MAX_SAFE_INTEGER;
   if (rankA !== rankB) {
     return rankA - rankB;
+  }
+
+  const freshnessA = a.freshnessScore ?? 0;
+  const freshnessB = b.freshnessScore ?? 0;
+  if (freshnessA !== freshnessB) {
+    return freshnessB - freshnessA;
   }
 
   return a.publishedAt < b.publishedAt ? 1 : -1;
