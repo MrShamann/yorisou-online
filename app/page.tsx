@@ -12,24 +12,24 @@ const concerns = [
 const journeySteps = [
   {
     label: "1. 相談の入口",
-    title: "予約前の不安を、まず家族の状況として受け取ります。",
-    problem: "まだ言葉になっていなくても、外出や送迎の困りごとをそのまま話せます。",
+    title: "予約前の不安を、家族の状況として受け取ります。",
+    problem: "外出や送迎の困りごとを、そのまま話せます。",
     action: "ひなたが整理すること",
-    detail: "本人、家族、移動条件を短く整理し、最初の入口を見つけます。",
+    detail: "本人、家族、移動条件を短く整理します。",
     outcome: "次に進む先が見えます。",
   },
   {
     label: "2. 家族で共有",
-    title: "確認したいことを、あとで見直しやすい形にまとめます。",
+    title: "確認したいことを、あとで見直しやすくまとめます。",
     problem: "予約の前に、家族でそろえておきたい確認が残りやすい領域です。",
     action: "ひなたが返すこと",
-    detail: "電話、LINE、アプリのどこから入っても、家族の確認に戻せる形にします。",
+    detail: "電話、LINE、アプリのどこから入っても、家族の確認に戻せます。",
     outcome: "説明のやり直しが減ります。",
   },
   {
     label: "3. 必要な先へ",
-    title: "相談で終わらず、必要な入口へ静かにつなぎます。",
-    problem: "家庭向けの相談と、導入・実証の相談は、最初に分けて考えるほうが落ち着きます。",
+    title: "必要な入口へ静かにつなぎます。",
+    problem: "家庭向けの相談と、導入・実証の相談は、最初に分けるほうが落ち着きます。",
     action: "ひなたが案内すること",
     detail: "家族向け相談と、運営側の小さな導入相談を分けて案内します。",
     outcome: "今の段階に合う次の一歩だけが残ります。",
@@ -79,7 +79,7 @@ export default function HomePage() {
             </h1>
             <p className="mt-6 max-w-[34rem] text-base leading-9 text-[var(--muted)] md:text-lg">
               Yorisouは、予約型の移動サービスを使う前に、家族の不安や確認事項を静かに整理する入口です。
-              既存の電話、LINE、アプリ予約を置き換えるのではなく、その前に何を確認すればよいかをひなたと一緒に整えられます。
+              電話、LINE、アプリ予約の前に、何を確認すればよいかをひなたと一緒に整えられます。
             </p>
             <p className="mt-4 max-w-[33rem] text-sm leading-8 text-[var(--muted)] md:text-base">
               ひなたは、長い説明を求めません。ご家族の心配や、運営側が確認したい点を1つ伝えるだけで、次の一歩を落ち着いて返します。
@@ -111,9 +111,6 @@ export default function HomePage() {
               </Link>
               <Link href="/pilot" className="soft-link">
                 導入・実証
-              </Link>
-              <Link href="/insights" className="soft-link">
-                読みもの
               </Link>
             </div>
           </MotionReveal>

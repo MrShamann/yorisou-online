@@ -26,7 +26,7 @@ const hinataTasks = [
   "Organize the mobility concern, the person using the service, and the family context.",
   "Summarize what should be confirmed before booking or inquiry.",
   "Help decide whether the first step should be phone, LINE, app, or a simple inquiry.",
-  "Connect the conversation to existing consultation, pilot, or contact flows when needed.",
+  "Connect the conversation to existing consultation, pilot, or contact routes when needed.",
 ];
 
 const familyPoints = [

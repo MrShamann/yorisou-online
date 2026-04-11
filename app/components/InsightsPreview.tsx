@@ -5,7 +5,7 @@ import type { Locale } from "@/lib/insights/types";
 
 export default async function InsightsPreview({ locale }: { locale: Locale }) {
   try {
-    const { hero, secondary } = await fetchHomepageInsights(locale, 1, 2);
+    const { hero, secondary } = await fetchHomepageInsights(locale, 1, 1);
     const heroItem = hero[0] || secondary[0];
     const secondaryItems = hero[0] ? secondary : secondary.slice(1);
     const href = locale === "ja" ? "/insights" : "/en/insights";
@@ -16,16 +16,16 @@ export default async function InsightsPreview({ locale }: { locale: Locale }) {
           <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl">
               <h2 className="text-3xl font-light leading-tight text-[#3B2F2F]">
-                {locale === "ja" ? "相談に役立つ参考記事" : "Reference articles"}
+                {locale === "ja" ? "参考記事" : "Reference notes"}
               </h2>
               <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
                 {locale === "ja"
-                  ? "予約前の確認や、家族の整理に役立つ記事だけを静かに置いています。"
-                  : "A small set of articles that help with pre-booking questions and family coordination."}
+                  ? "予約前の確認に役立つものだけを、必要な分だけ置いています。"
+                  : "Only a small set of notes that may help before booking."}
               </p>
             </div>
             <Link href={href} className="rounded-full border border-[#3B2F2F]/16 bg-white/72 px-6 py-3 text-sm transition hover:bg-white">
-              {locale === "ja" ? "参考記事を見る" : "View reference articles"}
+              {locale === "ja" ? "一覧を見る" : "See notes"}
             </Link>
           </div>
 
