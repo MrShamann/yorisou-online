@@ -1,13 +1,33 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { GetObjectCommand, PutObjectCommand, S3Client, NoSuchKey } from "@aws-sdk/client-s3";
 
 import { normalizeSourceUrl } from "@/lib/insights/normalize";
-import type { InsightDraft, InsightIngestionRun, ReviewStatus } from "@/lib/insights/types";
+import type { InsightDraft, InsightIngestionRun, InsightPublicStage, ReviewStatus } from "@/lib/insights/types";
 
-const dataDir = path.join(process.cwd(), "data");
+const DEFAULT_SHARED_REGION = "us-east-2";
+const SHARED_PREFIX = "phase1/insights";
+const dataDir = process.env.YORISOU_INSIGHTS_DATA_DIR || (process.env.NODE_ENV === "production" ? path.join("/tmp", "yorisou-phase1") : path.join(process.cwd(), "data"));
 const draftsPath = path.join(dataDir, "insight-drafts.json");
 const runStatusPath = path.join(dataDir, "insight-ingestion-status.json");
 const runHistoryPath = path.join(dataDir, "insight-ingestion-runs.json");
+const sharedStoreBucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
+const sharedStoreRegion = process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
+const shouldUseSharedStore = Boolean(sharedStoreBucket);
+
+let sharedStoreClient: S3Client | null = null;
+
+function getSharedStoreClient() {
+  if (!shouldUseSharedStore) {
+    return null;
+  }
+
+  if (!sharedStoreClient) {
+    sharedStoreClient = new S3Client({ region: sharedStoreRegion });
+  }
+
+  return sharedStoreClient;
+}
 
 function deriveDraftSlug(item: InsightDraft) {
   const fromTitle = `${item.sourceName}-${item.rawTitle}`
@@ -64,7 +84,85 @@ async function ensureDraftStorage() {
   }
 }
 
+function insightKey(name: string) {
+  return `${SHARED_PREFIX}/${name}.json`;
+}
+
+function isMissingObjectError(error: unknown) {
+  return (
+    error instanceof NoSuchKey ||
+    (typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      (error.name === "NoSuchKey" || error.name === "NotFound" || error.name === "NoSuchBucket"))
+  );
+}
+
+function isCredentialOrConfigError(error: unknown) {
+  const name =
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    typeof (error as { name?: unknown }).name === "string"
+      ? (error as { name: string }).name
+      : "";
+
+  return (
+    name.length > 0 &&
+    ["CredentialsProviderError", "ConfigError", "Missing credentials in config", "MissingRegionError"].some((needle) =>
+      name.includes(needle),
+    )
+  );
+}
+
+async function readSharedJson<T>(name: string, fallback: T) {
+  const client = getSharedStoreClient();
+  if (!client || !sharedStoreBucket) {
+    return fallback;
+  }
+
+  try {
+    const response = await client.send(
+      new GetObjectCommand({
+        Bucket: sharedStoreBucket,
+        Key: insightKey(name),
+      }),
+    );
+    const content = await response.Body?.transformToString();
+    return content ? (JSON.parse(content) as T) : fallback;
+  } catch (error) {
+    if (isMissingObjectError(error)) {
+      return fallback;
+    }
+    if (isCredentialOrConfigError(error)) {
+      return fallback;
+    }
+    throw error;
+  }
+}
+
+async function writeSharedJson<T>(name: string, value: T) {
+  const client = getSharedStoreClient();
+  if (!client || !sharedStoreBucket) {
+    throw new Error("shared_store_not_configured");
+  }
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: sharedStoreBucket,
+      Key: insightKey(name),
+      Body: JSON.stringify(value, null, 2) + "\n",
+      ContentType: "application/json",
+    }),
+  );
+}
+
 export async function readInsightDrafts() {
+  if (shouldUseSharedStore) {
+    const parsed = await readSharedJson<InsightDraft[]>("insight-drafts", []);
+    return Array.isArray(parsed) ? parsed.map(sanitizeDraft) : [];
+  }
+
   await ensureDraftStorage();
   const content = await fs.readFile(draftsPath, "utf8");
 
@@ -77,6 +175,11 @@ export async function readInsightDrafts() {
 }
 
 export async function writeInsightDrafts(drafts: InsightDraft[]) {
+  if (shouldUseSharedStore) {
+    await writeSharedJson("insight-drafts", drafts.map(sanitizeDraft));
+    return;
+  }
+
   await ensureDraftStorage();
   await fs.writeFile(draftsPath, JSON.stringify(drafts.map(sanitizeDraft), null, 2) + "\n", "utf8");
 }
@@ -88,12 +191,14 @@ export async function upsertInsightDrafts(incoming: InsightDraft[]) {
   incoming.forEach((item) => {
     const normalized = sanitizeDraft(item);
     const key = `${normalized.sourceUrl}::${normalized.slug}`;
-    if (!map.has(key)) {
-      map.set(key, normalized);
-    }
+    map.set(key, normalized);
   });
 
-  const merged = [...map.values()].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
+  const merged = [...map.values()].sort((a, b) => {
+    const aTime = a.fetchedAt || a.publishedAt || "";
+    const bTime = b.fetchedAt || b.publishedAt || "";
+    return aTime < bTime ? 1 : -1;
+  });
   await writeInsightDrafts(merged);
   return merged;
 }
@@ -104,9 +209,11 @@ export async function updateInsightDraftReviewState(
     reviewStatus?: ReviewStatus;
     approvedForPublic?: boolean;
     reviewedBy?: string;
+    reviewNote?: string;
     featured?: boolean;
     featuredRank?: number;
     homepageFeatured?: boolean;
+    publicStage?: InsightPublicStage;
   }
 ) {
   const drafts = await readInsightDrafts();
@@ -143,6 +250,7 @@ export async function updateInsightDraftReviewState(
         : canBeFeatured
           ? item.homepageFeatured || false
           : false;
+    const publicStage = update.publicStage || item.publicStage;
     const featuredRank =
       featured
         ? typeof update.featuredRank === "number"
@@ -154,12 +262,30 @@ export async function updateInsightDraftReviewState(
       ...item,
       reviewStatus,
       approvedForPublic,
-      reviewedAt: update.reviewStatus ? now : item.reviewedAt,
+      reviewedAt:
+        update.reviewStatus ||
+        typeof update.approvedForPublic === "boolean" ||
+        typeof update.reviewNote === "string" ||
+        typeof update.publicStage === "string" ||
+        typeof update.featured === "boolean" ||
+        typeof update.homepageFeatured === "boolean"
+          ? now
+          : item.reviewedAt,
       publicAt: approvedForPublic ? now : typeof update.approvedForPublic === "boolean" ? undefined : item.publicAt,
-      reviewedBy: update.reviewStatus || typeof update.approvedForPublic === "boolean" ? update.reviewedBy || "local-editor" : item.reviewedBy,
+      reviewedBy:
+        update.reviewStatus ||
+        typeof update.approvedForPublic === "boolean" ||
+        typeof update.reviewNote === "string" ||
+        typeof update.publicStage === "string" ||
+        typeof update.featured === "boolean" ||
+        typeof update.homepageFeatured === "boolean"
+          ? update.reviewedBy || "local-editor"
+          : item.reviewedBy,
+      reviewNote: typeof update.reviewNote === "string" ? update.reviewNote : item.reviewNote,
       featured,
       homepageFeatured: featured ? homepageFeatured : false,
       featuredRank,
+      publicStage: canBeFeatured ? publicStage : item.publicStage,
     };
   });
 
@@ -172,6 +298,10 @@ export function getInsightDraftStoragePath() {
 }
 
 export async function readInsightIngestionStatus() {
+  if (shouldUseSharedStore) {
+    return readSharedJson<InsightIngestionRun | Record<string, never>>("insight-ingestion-status", {});
+  }
+
   await ensureDraftStorage();
   const content = await fs.readFile(runStatusPath, "utf8");
 
@@ -183,6 +313,11 @@ export async function readInsightIngestionStatus() {
 }
 
 export async function readInsightIngestionRuns() {
+  if (shouldUseSharedStore) {
+    const parsed = await readSharedJson<InsightIngestionRun[]>("insight-ingestion-runs", []);
+    return Array.isArray(parsed) ? parsed : [];
+  }
+
   await ensureDraftStorage();
   const content = await fs.readFile(runHistoryPath, "utf8");
 
@@ -195,6 +330,14 @@ export async function readInsightIngestionRuns() {
 }
 
 export async function recordInsightIngestionRun(run: InsightIngestionRun) {
+  if (shouldUseSharedStore) {
+    const history = await readInsightIngestionRuns();
+    const nextHistory = [run, ...history].slice(0, 30);
+    await writeSharedJson("insight-ingestion-status", run);
+    await writeSharedJson("insight-ingestion-runs", nextHistory);
+    return;
+  }
+
   const history = await readInsightIngestionRuns();
   const nextHistory = [run, ...history].slice(0, 30);
   await fs.writeFile(runStatusPath, JSON.stringify(run, null, 2) + "\n", "utf8");
