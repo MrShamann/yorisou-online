@@ -46,7 +46,7 @@ export default function HomePageEn() {
               <span className="block text-[#6B5A4A]">Hinata helps organize family concerns and pilot questions.</span>
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Start with the concern, not the booking system. Yorisou gives families and local operators a calm entry point before phone, LINE, or app booking.
+              Start with the concern, not the booking system. Yorisou does not replace existing transport systems; it helps families and local operators organize what to confirm before phone, LINE, or app booking.
             </p>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
               Hinata narrows the practical next step first, then keeps the context so you can continue later if needed.

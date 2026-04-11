@@ -79,7 +79,7 @@ export default function HomePage() {
             </h1>
             <p className="mt-6 max-w-[34rem] text-base leading-9 text-[var(--muted)] md:text-lg">
               Yorisouは、予約型の移動サービスを使う前に、家族の不安や確認事項を静かに整理する入口です。
-              電話、LINE、アプリ予約の前に、何を確認すればよいかをひなたと一緒に整えられます。
+              既存の電話、LINE、アプリ予約を置き換えるのではなく、その前に何を確認すればよいかをひなたと一緒に整えられます。
             </p>
             <p className="mt-4 max-w-[33rem] text-sm leading-8 text-[var(--muted)] md:text-base">
               ひなたは、長い説明を求めません。ご家族の心配や、運営側が確認したい点を1つ伝えるだけで、次の一歩を落ち着いて返します。
