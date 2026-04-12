@@ -24,14 +24,21 @@ export default async function RootLayout({
   const pathname = headerStore.get("x-yorisou-pathname") || "/";
   const localeCookie = cookieStore.get("yorisou_locale")?.value;
   const locale = localeHeader === "en" || localeCookie === "en" ? "en" : "ja";
-  const isSupportWorkspaceRoute = pathname === "/support" || pathname === "/en/support";
+  const isFlowWorkspaceRoute =
+    pathname === "/support" ||
+    pathname === "/en/support" ||
+    pathname === "/check-in" ||
+    pathname === "/line/next" ||
+    pathname === "/en/line/next" ||
+    pathname === "/line/open" ||
+    pathname === "/en/line/open";
   return (
     <html lang={locale}>
       <body>
         <div id="yorisou-release" hidden data-release={releaseMarker} />
-        {!isSupportWorkspaceRoute && <SiteHeader />}
+        {!isFlowWorkspaceRoute && <SiteHeader />}
         {children}
-        {!isSupportWorkspaceRoute && <SiteFooter />}
+        {!isFlowWorkspaceRoute && <SiteFooter />}
       </body>
     </html>
   );
