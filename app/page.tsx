@@ -1,13 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import MotionReveal from "./components/MotionReveal";
 import InsightsPreview from "./components/InsightsPreview";
 
 const concerns = [
-  "予約型の送迎を使う前に、家族で確認したいことがある",
-  "電話・LINE・アプリのどれで頼むか迷っている",
-  "乗り降り、付き添い、待ち合わせの整理が必要",
+  "5問・1〜2分で終わる",
+  "小さな結果が返る",
+  "低圧で、そのまま始められる",
 ];
+
+export const metadata: Metadata = {
+  title: "今日の寄り添い方チェック | Yorisou",
+  description:
+    "5問・1〜2分で、いまの寄り添い方を軽く確かめる入口です。小さな結果を受け取って、必要なときは従来の相談にも進めます。",
+};
 
 const journeySteps = [
   {
@@ -53,16 +60,16 @@ const entryLanes = [
 
 const platformPillars = [
   {
-    title: "予約前の確認",
-    text: "乗り降りや付き添いの不安を、相談前に整理できます。",
+    title: "5問だけ",
+    text: "短い選択肢に答えるだけで進めます。",
   },
   {
-    title: "家族の共有",
-    text: "家族が確認したい点を、あとで見直しやすくまとめます。",
+    title: "小さな結果",
+    text: "今の寄り添い方に合う一言結果が返ります。",
   },
   {
-    title: "小さな導入相談",
-    text: "自治体や施設の入口だけを、静かに確かめられます。",
+    title: "必要なときは相談",
+    text: "従来の相談入口も、必要な人だけに残します。",
   },
 ];
 
@@ -72,42 +79,24 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.98),_rgba(247,244,238,0.99)_60%)]">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[1.18fr_0.82fr] lg:items-center lg:gap-12">
           <MotionReveal className="order-2 lg:order-1" delay={40} distance={28}>
-            <div className="service-kicker">予約前の相談入口</div>
+            <div className="service-kicker">今日の軽い入口</div>
             <h1 className="display-serif mt-5 max-w-[9.6em] text-[2.18rem] leading-[1.24] md:text-[3.02rem] lg:text-[3.36rem]">
-              <span className="block md:whitespace-nowrap">予約型移動の前に、</span>
-              <span className="block text-[#79685f] md:whitespace-nowrap">家族の不安をひとつずつ整える。</span>
+              <span className="block md:whitespace-nowrap">5問・1〜2分で、</span>
+              <span className="block text-[#79685f] md:whitespace-nowrap">いまの寄り添い方を軽く整える。</span>
             </h1>
             <p className="mt-6 max-w-[34rem] text-base leading-9 text-[var(--muted)] md:text-lg">
-              Yorisouは、予約型の移動サービスを使う前に、家族の不安や確認事項を静かに整理する入口です。
-              電話、LINE、アプリ予約の前に、何を確認すればよいかをひなたと一緒に整えられます。
+              Yorisouは、短いチェックから始める寄り添いの入口です。5問だけ答えると、小さな結果と次の一歩が返ります。
             </p>
             <p className="mt-4 max-w-[33rem] text-sm leading-8 text-[var(--muted)] md:text-base">
-              ひなたは、長い説明を求めません。ご家族の心配や、運営側が確認したい点を1つ伝えるだけで、次の一歩を落ち着いて返します。
+              長い説明はいりません。低圧で始められて、必要な人だけが次へ進めます。
             </p>
-            <div className="mt-6 rounded-[1.4rem] border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.88)] px-5 py-5 text-sm leading-7 text-[var(--accent-sage-text)]">
-              <div className="service-kicker text-[var(--accent-sage-text)]">最初の入口</div>
-              <p className="mt-2">
-                まずは、予約前の相談から始められます。ご家族向けの確認整理も、運営側の小さな導入相談も、同じ入口で受け取ります。
-              </p>
-            </div>
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <Link href="/reservation-mobility-support" className="btn btn-primary">
-                予約型移動の相談へ
+              <Link href="/check-in" className="btn btn-primary">
+                今日の寄り添い方チェックへ
               </Link>
-              <Link href="/reservation-mobility-support#pilot-inquiry" className="btn btn-secondary">
-                導入・実証を相談する
+              <Link href="/reservation-mobility-support" className="btn btn-secondary">
+                従来の相談を見る
               </Link>
-            </div>
-            <div className="mt-5 rounded-[1.4rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.32)] px-5 py-4">
-              <div className="service-kicker text-[var(--accent-sage-text)]">新しい軽い入口</div>
-              <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">
-                5問・1〜2分で、いまの寄り添い方を軽く確かめるチェックもあります。小さな結果を受け取って、次の一歩だけ見つけられます。
-              </p>
-              <div className="mt-4">
-                <Link href="/check-in" className="soft-link">
-                  今日の寄り添い方チェックへ
-                </Link>
-              </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted)]">
               {concerns.map((item) => (
@@ -147,12 +136,11 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.94fr_1.06fr] lg:items-stretch">
           <MotionReveal delay={40} distance={18}>
             <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6 shadow-[0_10px_24px_rgba(47,35,33,0.04)]">
-              <div className="service-kicker">予約前の相談を起点に</div>
+              <div className="service-kicker">今日のチェックについて</div>
               <h2 className="display-serif mt-4 max-w-[14em] text-[1.66rem] leading-[1.62] md:text-[2rem]">
-                予約前の相談から、家族共有までを
-                <span className="block md:whitespace-nowrap">静かにつなぐ入口です。</span>
+                5問・1〜2分で、軽く確かめる入口です。
               </h2>
-              <p className="mt-4 page-copy">予約前の確認から家族共有までを、ひと続きの相談として受け取れます。</p>
+              <p className="mt-4 page-copy">小さな結果と次の一歩だけを返すので、重い相談に入る前の入口として使えます。</p>
               <div className="mt-6 grid gap-3">
                 {platformPillars.map((pillar, index) => (
                   <MotionReveal key={pillar.title} delay={100 + index * 60} distance={16}>
@@ -168,24 +156,23 @@ export default function HomePage() {
 
           <MotionReveal delay={120} distance={20} scale={0.99}>
             <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-sage)] px-6 py-6">
-              <div className="service-kicker text-[var(--accent-sage-text)]">予約前に確認したいこと</div>
+              <div className="service-kicker text-[var(--accent-sage-text)]">チェックで返るもの</div>
               <h2 className="display-serif mt-4 max-w-[13em] text-[1.58rem] leading-[1.62] md:text-[1.92rem]">
-                ご本人、ご家族、地域の支援者が、
-                <span className="block md:whitespace-nowrap">次の一歩を無理なく見つけられるようにしています。</span>
+                ご本人もご家族も、今の状態に合う小さな一歩を見つけやすくなります。
               </h2>
-              <p className="mt-4 page-copy text-[var(--accent-sage-text)]">予約前の確認を先に整えることで、家族も運営側も落ち着いて次へ進めます。</p>
+              <p className="mt-4 page-copy text-[var(--accent-sage-text)]">5問で返るのは、長い解説ではなく、気持ちを軽くする短い結果です。</p>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
-                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">ご本人</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">歩く負担や外出の不安を、そのまま相談できます。</p>
+                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">5問だけ</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">短い選択肢で、気負わずに進めます。</p>
                 </div>
                 <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
-                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">ご家族</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">比較の視点や次の判断を、家族で共有しやすくなります。</p>
+                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">小さな結果</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">今の寄り添い方に合う一言結果が返ります。</p>
                 </div>
                 <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
-                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">地域の方</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">実証や導入の入口を、落ち着いて確かめられます。</p>
+                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">次の一歩</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">必要な人だけが、次の相談に進めます。</p>
                 </div>
               </div>
             </article>
@@ -198,12 +185,12 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
           <MotionReveal className="max-w-[40rem]" delay={30}>
-            <div className="service-kicker">予約前の流れ</div>
+            <div className="service-kicker">従来の相談の流れ</div>
             <h2 className="display-serif mt-4 max-w-[13.5em] text-[1.76rem] leading-[1.62] md:text-[2.16rem]">
-              <span className="block md:whitespace-nowrap">確認を整え、</span>
-              <span className="block md:whitespace-nowrap">必要な先へ静かにつなぎます。</span>
+              <span className="block md:whitespace-nowrap">必要なときだけ、</span>
+              <span className="block md:whitespace-nowrap">従来の相談入口も使えます。</span>
             </h2>
-            <p className="mt-4 page-copy">長い説明は置かず、今の段階で必要な流れだけを示します。</p>
+            <p className="mt-4 page-copy">ここは残しつつ、主役ではなく従来の入口として見せます。</p>
           </MotionReveal>
           <div className="mt-8 space-y-4">
             {journeySteps.map((step, index) => (
@@ -241,11 +228,11 @@ export default function HomePage() {
       <section className="section-wash border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.46)] px-6 py-12 md:px-10 md:py-14">
         <div className="mx-auto max-w-6xl">
           <MotionReveal className="max-w-[42rem]" delay={30}>
-              <div className="service-kicker">今の入口</div>
+              <div className="service-kicker">必要なときの従来の入口</div>
               <h2 className="display-serif mt-4 max-w-[15em] text-[1.72rem] leading-[1.6] md:text-[2.08rem]">
-                相談と導入の入口だけを、まず見える場所に置いています。
+                従来の相談や導入相談は、下の入口にまとめています。
               </h2>
-              <p className="mt-4 page-copy">家族向け相談と、導入・実証相談を、最小限の選択肢で案内します。</p>
+              <p className="mt-4 page-copy">新しい入口を主役にしつつ、必要な人には従来の相談先も残します。</p>
           </MotionReveal>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {entryLanes.map((item, index) => (
@@ -272,13 +259,13 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.06fr_0.94fr]">
           <MotionReveal delay={30}>
             <div className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6">
-            <div className="service-kicker">ご本人とご家族のその先</div>
+            <div className="service-kicker">必要な人だけが続きへ</div>
             <h2 className="display-serif mt-4 max-w-[14.5em] text-[1.7rem] leading-[1.64] md:text-[2.04rem]">
-              まずは予約前の相談に必要なことだけを、静かに整えられます。
+              まずは軽いチェックから始めて、必要な人だけが次の入口へ進めます。
             </h2>
             <div className="mt-5 page-copy">
-              <p>すぐに決めなくても大丈夫です。必要な確認をまとめ、ご家族と見返しながら、次の一歩を進められます。</p>
-              <p className="mt-3">自治体や施設、地域事業者の方にも、導入や実証の入口として同じ流れを使えます。</p>
+              <p>すぐに重い相談へ進む必要はありません。短いチェックのあとに、必要な人だけが従来の相談や導入相談を選べます。</p>
+              <p className="mt-3">自治体や施設、地域事業者の方も、必要な場合だけ下の入口を使えます。</p>
             </div>
           </div>
           </MotionReveal>
