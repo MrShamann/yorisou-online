@@ -98,6 +98,17 @@ export default function HomePage() {
                 導入・実証を相談する
               </Link>
             </div>
+            <div className="mt-5 rounded-[1.4rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.32)] px-5 py-4">
+              <div className="service-kicker text-[var(--accent-sage-text)]">新しい軽い入口</div>
+              <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">
+                5問・1〜2分で、いまの寄り添い方を軽く確かめるチェックもあります。小さな結果を受け取って、次の一歩だけ見つけられます。
+              </p>
+              <div className="mt-4">
+                <Link href="/check-in" className="soft-link">
+                  今日の寄り添い方チェックへ
+                </Link>
+              </div>
+            </div>
             <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted)]">
               {concerns.map((item) => (
                 <span key={item} className="rounded-full border border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.72)] px-3 py-1.5">
