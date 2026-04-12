@@ -9,9 +9,11 @@ import {
   type CompanionCheckResult,
   type CompanionCheckResultKey,
 } from "@/lib/yorisouCompanionCheck";
+import type { CheckInTrafficSource } from "@/lib/checkInAttribution";
 
 type CompanionCheckFlowProps = {
   initialResultKey?: CompanionCheckResultKey | null;
+  trafficSource: CheckInTrafficSource;
 };
 
 type TrackEventName =
@@ -30,7 +32,7 @@ function buildShareText(result: CompanionCheckResult) {
   return `${result.shareCopy} ${routePath}`;
 }
 
-export default function CompanionCheckFlow({ initialResultKey = null }: CompanionCheckFlowProps) {
+export default function CompanionCheckFlow({ initialResultKey = null, trafficSource }: CompanionCheckFlowProps) {
   const hasInitialResult = Boolean(initialResultKey && companionCheckResults[initialResultKey]);
   const [phase, setPhase] = useState<"landing" | "quiz" | "result">(hasInitialResult ? "result" : "landing");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -52,10 +54,10 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
 
   useEffect(() => {
     if (phase === "landing") {
-      void trackEvent("landing_viewed", { source: "landing" });
+      void trackEvent("landing_viewed");
     }
     if (phase === "result" && resultKey) {
-      void trackEvent("result_viewed", { source: "result_view", resultKey });
+      void trackEvent("result_viewed", { resultKey });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, resultKey]);
@@ -74,15 +76,11 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
         keepalive: true,
         body: JSON.stringify({
           event,
-          source: typeof extra.source === "string" ? extra.source : "check-in",
+          source: trafficSource,
           timestamp: new Date().toISOString(),
           sessionId: flowId,
           ...(typeof extra.questionIndex === "number" ? { questionIndex: extra.questionIndex } : {}),
           ...(typeof extra.resultKey === "string" ? { resultKey: extra.resultKey } : {}),
-          ...(typeof extra.unitType === "string" ? { unitType: extra.unitType } : {}),
-          ...(typeof extra.followUpIndex === "number" ? { followUpIndex: extra.followUpIndex } : {}),
-          ...(typeof extra.status === "string" ? { status: extra.status } : {}),
-          ...(typeof extra.reason === "string" ? { reason: extra.reason } : {}),
         }),
       });
     } catch {
@@ -95,7 +93,7 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
     setCurrentIndex(0);
     setAnswers({});
     setSelectedOptionId(null);
-    void trackEvent("quiz_started", { source: "landing_primary_cta" });
+    void trackEvent("quiz_started");
   }
 
   function selectOption(optionId: string) {
@@ -116,7 +114,7 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
       [currentQuestion.id]: selectedOptionId,
     };
     setAnswers(nextAnswers);
-    void trackEvent("question_progressed", { source: "quiz_step", questionIndex: currentIndex });
+    void trackEvent("question_progressed", { questionIndex: currentIndex });
     const nextIndex = currentIndex + 1;
     if (nextIndex < totalQuestions) {
       setCurrentIndex(nextIndex);
@@ -128,12 +126,10 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
     setResultKey(nextResult.key);
     setPhase("result");
     const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("source", trafficSource);
     nextUrl.searchParams.set("result", nextResult.key);
     window.history.replaceState({}, "", nextUrl.toString());
-    void trackEvent("quiz_completed", {
-      source: "quiz_complete",
-      resultKey: nextResult.key,
-    });
+    void trackEvent("quiz_completed", { resultKey: nextResult.key });
   }
 
   function goBack() {
@@ -156,6 +152,7 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
     setPhase("landing");
     setShareState("idle");
     const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("source", trafficSource);
     nextUrl.searchParams.delete("result");
     window.history.replaceState({}, "", nextUrl.toString());
   }
@@ -176,7 +173,7 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
     } catch {
       // Swallow share failures. The flow should remain usable.
     }
-    void trackEvent("share_save_clicked", { source: "result_share", resultKey: result.key });
+    void trackEvent("share_save_clicked", { resultKey: result.key });
   }
 
   const resultExample = companionCheckResults.watchful;
@@ -312,7 +309,7 @@ export default function CompanionCheckFlow({ initialResultKey = null }: Companio
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <a
                   href={lineContinuationHref}
-                  onClick={() => void trackEvent("line_cta_clicked", { source: "result_line_cta", resultKey: result.key })}
+                  onClick={() => void trackEvent("line_continuation_clicked", { resultKey: result.key })}
                   className="btn btn-primary"
                 >
                   LINEで続ける

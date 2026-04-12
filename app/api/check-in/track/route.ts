@@ -8,7 +8,10 @@ const allowedEvents = new Set([
   "question_progressed",
   "quiz_completed",
   "result_viewed",
+  "homepage_checkin_cta_clicked",
+  "homepage_support_cta_clicked",
   "line_cta_clicked",
+  "line_continuation_clicked",
   "share_save_clicked",
 ]);
 

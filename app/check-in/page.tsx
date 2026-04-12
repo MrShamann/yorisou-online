@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { companionCheckResults, type CompanionCheckResultKey } from "@/lib/yorisouCompanionCheck";
+import { normalizeCheckInTrafficSource } from "@/lib/checkInAttribution";
 
 import CompanionCheckFlow from "./CompanionCheckFlow";
 
@@ -14,10 +15,11 @@ export default async function CheckInPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = (await searchParams) || {};
+  const trafficSource = normalizeCheckInTrafficSource(params.source);
   const initialResultKey =
     typeof params.result === "string" && params.result in companionCheckResults
       ? (params.result as CompanionCheckResultKey)
       : null;
 
-  return <CompanionCheckFlow initialResultKey={initialResultKey} />;
+  return <CompanionCheckFlow initialResultKey={initialResultKey} trafficSource={trafficSource} />;
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import MotionReveal from "./components/MotionReveal";
 import InsightsPreview from "./components/InsightsPreview";
+import TrackableHomepageLink from "./components/TrackableHomepageLink";
 
 const concerns = [
   "5問・1〜2分で終わる",
@@ -91,12 +92,22 @@ export default function HomePage() {
               長い説明はいりません。低圧で始められて、必要な人だけが次へ進めます。
             </p>
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <Link href="/check-in" className="btn btn-primary">
+              <TrackableHomepageLink
+                href="/check-in?source=homepage_primary"
+                eventName="homepage_checkin_cta_clicked"
+                source="homepage_primary"
+                className="btn btn-primary"
+              >
                 今日の寄り添い方チェックへ
-              </Link>
-              <Link href="/reservation-mobility-support" className="btn btn-secondary">
+              </TrackableHomepageLink>
+              <TrackableHomepageLink
+                href="/reservation-mobility-support"
+                eventName="homepage_support_cta_clicked"
+                source="homepage_secondary"
+                className="btn btn-secondary"
+              >
                 従来の相談を見る
-              </Link>
+              </TrackableHomepageLink>
             </div>
             <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted)]">
               {concerns.map((item) => (
@@ -106,12 +117,22 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-              <Link href="/reservation-mobility-support" className="soft-link">
+              <TrackableHomepageLink
+                href="/reservation-mobility-support"
+                eventName="homepage_support_cta_clicked"
+                source="homepage_secondary"
+                className="soft-link"
+              >
                 予約型移動相談
-              </Link>
-              <Link href="/pilot" className="soft-link">
+              </TrackableHomepageLink>
+              <TrackableHomepageLink
+                href="/pilot"
+                eventName="homepage_support_cta_clicked"
+                source="homepage_secondary"
+                className="soft-link"
+              >
                 導入・実証
-              </Link>
+              </TrackableHomepageLink>
             </div>
           </MotionReveal>
 
