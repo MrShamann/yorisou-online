@@ -1,0 +1,742 @@
+{
+  "date": "2026-04-13",
+  "scope": "canonical output contract for the result system",
+  "result_object": {
+    "session_id": "string",
+    "user_id_or_anonymous_session_key": "string",
+    "result_version": "v1",
+    "scoring_version": "v1",
+    "persona_id": "P01-P31 enum",
+    "final_locked_label_jp": "string",
+    "final_locked_subtitle_jp": "string",
+    "working_name": "string",
+    "teaser_result": "object",
+    "share_card_result": "object",
+    "deep_report_stub": "object",
+    "core_dimension_signature": [
+      "Dxx"
+    ],
+    "supporting_dimensions": [
+      "Dxx"
+    ],
+    "neighboring_persona_risk_flags": [
+      "Pxx"
+    ],
+    "hotspot_cluster_flag": "boolean or cluster id",
+    "confidence_or_distinction_signal": "number or enum",
+    "paywall_state": "object",
+    "deep_report_unlock_state": "object",
+    "share_card_state": "object",
+    "progression_state": "object",
+    "created_at": "ISO-8601 timestamp",
+    "updated_at": "ISO-8601 timestamp"
+  },
+  "subobjects": {
+    "persona_identity": {
+      "purpose": "Lock the persona identity and its structural meaning.",
+      "required_fields": [
+        "persona_id",
+        "working_name",
+        "final_locked_label_jp",
+        "final_locked_subtitle_jp",
+        "core_dimension_signature",
+        "supporting_dimensions",
+        "neighboring_persona_risk_flags",
+        "hotspot_cluster_flag"
+      ],
+      "optional_fields": [
+        "structural_summary",
+        "lock_reference"
+      ],
+      "may_read": [
+        "teaser_payload",
+        "share_card_payload",
+        "deep_report_payload",
+        "analytics_metadata",
+        "rendering_guardrails"
+      ],
+      "may_not_override": [
+        "persona structure",
+        "dimension meaning",
+        "locked naming"
+      ]
+    },
+    "teaser_payload": {
+      "purpose": "Provide the short result teaser for LIFF/mobile and lightweight sharing.",
+      "required_fields": [
+        "teaser_result",
+        "teaser_state"
+      ],
+      "optional_fields": [
+        "teaser_line_jp",
+        "teaser_line_en_logic_gloss",
+        "teaser_score"
+      ],
+      "may_read": [
+        "persona_identity",
+        "share_card_payload",
+        "rendering_guardrails"
+      ],
+      "may_not_override": [
+        "persona structure",
+        "final_locked_label_jp",
+        "final_locked_subtitle_jp"
+      ]
+    },
+    "share_card_payload": {
+      "purpose": "Provide the compressed shareable result output.",
+      "required_fields": [
+        "share_card_result",
+        "share_card_state"
+      ],
+      "optional_fields": [
+        "share_card_line_jp",
+        "share_card_line_en_logic_gloss",
+        "share_card_score"
+      ],
+      "may_read": [
+        "persona_identity",
+        "teaser_payload",
+        "rendering_guardrails"
+      ],
+      "may_not_override": [
+        "locked naming",
+        "persona boundaries",
+        "dimension meaning"
+      ]
+    },
+    "deep_report_payload": {
+      "purpose": "Provide unlockable premium report scaffold and state.",
+      "required_fields": [
+        "deep_report_stub",
+        "deep_report_unlock_state"
+      ],
+      "optional_fields": [
+        "deep_report_sections",
+        "unlock_reason",
+        "premium_state"
+      ],
+      "may_read": [
+        "persona_identity",
+        "teaser_payload",
+        "share_card_payload",
+        "progression_payload",
+        "rendering_guardrails"
+      ],
+      "may_not_override": [
+        "persona structure",
+        "locked naming",
+        "dimension meanings"
+      ]
+    },
+    "paywall_payload": {
+      "purpose": "Represent access gating for premium report content.",
+      "required_fields": [
+        "paywall_state"
+      ],
+      "optional_fields": [
+        "entitlement_state",
+        "price_state",
+        "unlock_offer_state"
+      ],
+      "may_read": [
+        "deep_report_payload",
+        "persona_identity",
+        "analytics_metadata"
+      ],
+      "may_not_override": [
+        "result meaning",
+        "persona identity",
+        "locked naming"
+      ]
+    },
+    "progression_payload": {
+      "purpose": "Track recurring companion / progression loop state.",
+      "required_fields": [
+        "progression_state"
+      ],
+      "optional_fields": [
+        "next_session_recommendation",
+        "repeat_sequence_state",
+        "retention_state"
+      ],
+      "may_read": [
+        "persona_identity",
+        "analytics_metadata",
+        "rendering_guardrails"
+      ],
+      "may_not_override": [
+        "persona structure",
+        "scoring logic",
+        "locked naming"
+      ]
+    },
+    "analytics_metadata": {
+      "purpose": "Capture non-user-facing analytics and audit data.",
+      "required_fields": [
+        "session_id",
+        "result_version",
+        "scoring_version",
+        "created_at",
+        "updated_at"
+      ],
+      "optional_fields": [
+        "variant_id",
+        "experiment_id",
+        "trace_id",
+        "device_class"
+      ],
+      "may_read": [
+        "all subobjects"
+      ],
+      "may_not_override": [
+        "rendered payload meaning",
+        "persona structure",
+        "locked naming"
+      ]
+    },
+    "rendering_guardrails": {
+      "purpose": "Prevent downstream consumers from mutating structure or labels.",
+      "required_fields": [
+        "locked_source_reference",
+        "non_override_rules"
+      ],
+      "optional_fields": [
+        "hotspot_warning_flags",
+        "subtitle_mandatory_flags"
+      ],
+      "may_read": [
+        "persona_identity",
+        "teaser_payload",
+        "share_card_payload",
+        "deep_report_payload"
+      ],
+      "may_not_override": [
+        "persona structure",
+        "dimension meaning",
+        "locked naming",
+        "payload version"
+      ]
+    }
+  },
+  "downstream_consumers": [
+    {
+      "name": "LIFF/mobile result rendering",
+      "use": "Render teaser/share outputs from the contract and respect hotspot subtitles.",
+      "may_read": [
+        "persona_identity",
+        "teaser_payload",
+        "share_card_payload",
+        "rendering_guardrails"
+      ]
+    },
+    {
+      "name": "website secondary result pages",
+      "use": "Render secondary result explanations and paid prompts without changing labels.",
+      "may_read": [
+        "persona_identity",
+        "share_card_payload",
+        "deep_report_payload",
+        "paywall_payload"
+      ]
+    },
+    {
+      "name": "share-card generation",
+      "use": "Create compressed share output from locked naming only.",
+      "may_read": [
+        "persona_identity",
+        "teaser_payload",
+        "share_card_payload",
+        "rendering_guardrails"
+      ]
+    },
+    {
+      "name": "deep-report unlock flow",
+      "use": "Unlock and expand the premium scaffold without mutating structural meaning.",
+      "may_read": [
+        "persona_identity",
+        "deep_report_payload",
+        "paywall_payload",
+        "analytics_metadata"
+      ]
+    },
+    {
+      "name": "future payment logic",
+      "use": "Manage entitlement and unlock state only.",
+      "may_read": [
+        "paywall_payload",
+        "deep_report_payload",
+        "analytics_metadata"
+      ]
+    },
+    {
+      "name": "future progression / companion loop",
+      "use": "Use result state for recurring companion guidance and next-session suggestions.",
+      "may_read": [
+        "persona_identity",
+        "progression_payload",
+        "analytics_metadata",
+        "rendering_guardrails"
+      ]
+    }
+  ],
+  "guardrails": [
+    "No old naming files may be used as live source.",
+    "No candidate, review, or revision naming docs may be treated as live source.",
+    "No frontend layer may invent alternate persona labels.",
+    "No payment layer may create parallel result states.",
+    "No share-card layer may diverge from locked naming.",
+    "No deep-report layer may redefine persona boundaries."
+  ],
+  "canonical_source_references": [
+    "canonical 31-persona master",
+    "locked canonical 21-dimension backbone",
+    "result structure spec",
+    "teaser result layer",
+    "share-card logic layer",
+    "deep-report scaffold",
+    "canonical final naming lock"
+  ],
+  "payload_versioning_rule": "bump result_version and scoring_version only through a new explicit review batch",
+  "non_override_rule": "downstream consumers may render and route the payload, but may not change the locked structural meaning",
+  "migration_rule": "future payload versions must be introduced alongside a new contract file and a documented compatibility decision",
+  "hotspot_clusters": {
+    "P01/P02": [
+      "P01",
+      "P02"
+    ],
+    "P11/P12/P26/P29": [
+      "P11",
+      "P12",
+      "P26",
+      "P29"
+    ],
+    "P13/P20/P21": [
+      "P13",
+      "P20",
+      "P21"
+    ],
+    "P04/P06/P27": [
+      "P04",
+      "P06",
+      "P27"
+    ],
+    "P07/P24": [
+      "P07",
+      "P24"
+    ],
+    "P09/P25": [
+      "P09",
+      "P25"
+    ],
+    "P18/P31": [
+      "P18",
+      "P31"
+    ]
+  },
+  "entries": [
+    {
+      "persona_id": "P01",
+      "working_name": "朝型・段取り型",
+      "final_locked_label_jp": "暁導の段取り",
+      "final_locked_subtitle_jp": "朝の起動と出発準備の流れ",
+      "short_english_logic_gloss": "Morning start and departure prep flow",
+      "structural_summary": "朝の最初の動きと出発準備を、順番よく整える。",
+      "do_not_confuse_with": "P02, P22",
+      "structural_preservation_note": "朝起動と段取りを前面に出し、決断圧力を後ろに置く。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P01/P02",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P02",
+      "working_name": "段取り型・慎重型",
+      "final_locked_label_jp": "風岐の段取り",
+      "final_locked_subtitle_jp": "準備順と変更耐性の確認",
+      "short_english_logic_gloss": "Prep order and change tolerance",
+      "structural_summary": "出発前に順番と変更耐性を先に見たい。",
+      "do_not_confuse_with": "P01, P13",
+      "structural_preservation_note": "準備順と変更耐性が中心で、朝の起動だけに吸収されない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P01/P02",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P03",
+      "working_name": "実務型・体力優先型",
+      "final_locked_label_jp": "担順の実務",
+      "final_locked_subtitle_jp": "用事の切替と負荷配分",
+      "short_english_logic_gloss": "Errand switching and load distribution",
+      "structural_summary": "用事の切り替えと負荷を、体力目線でさばく。",
+      "do_not_confuse_with": "P15, P23",
+      "structural_preservation_note": "切替と配分を残し、忙しいだけのラベルにしない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P04",
+      "working_name": "生活実務型・気分回復型",
+      "final_locked_label_jp": "月彩の買い回し",
+      "final_locked_subtitle_jp": "買い物実務と小回復",
+      "short_english_logic_gloss": "Shopping errands with a small lift",
+      "structural_summary": "買い物の実務と小さな気分回復を両立したい。",
+      "do_not_confuse_with": "P06, P27",
+      "structural_preservation_note": "買い物実務を核にし、片付けやご褒美へ流しすぎない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P05",
+      "working_name": "慎重型・負担回避型",
+      "final_locked_label_jp": "雨避の歩み",
+      "final_locked_subtitle_jp": "天候と段差の負担回避",
+      "short_english_logic_gloss": "Avoiding weather and step friction",
+      "structural_summary": "雨や段差の負荷を見て、無理を減らしたい。",
+      "do_not_confuse_with": "P07, P24",
+      "structural_preservation_note": "摩擦回避が核で、安全一般に吸収されない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P06",
+      "working_name": "整理型・見た目整え型",
+      "final_locked_label_jp": "置整の片付け",
+      "final_locked_subtitle_jp": "順番と置き場所の整え",
+      "short_english_logic_gloss": "Order and placement cleanup",
+      "structural_summary": "片付けの順番と置き場所で、見た目を整える。",
+      "do_not_confuse_with": "P04, P27",
+      "structural_preservation_note": "収納動作を核にして、買い物やご褒美へ寄せない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P07",
+      "working_name": "安全優先型・慎重型",
+      "final_locked_label_jp": "守門の確認",
+      "final_locked_subtitle_jp": "家の危険と先回り確認",
+      "short_english_logic_gloss": "Home hazard and pre-checking",
+      "structural_summary": "家の中の小さな危険と、先回りの確認を見ている。",
+      "do_not_confuse_with": "P24, P05",
+      "structural_preservation_note": "家の危険チェックを前に立て、単なる慎重系にしない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P08",
+      "working_name": "慎重型・現実調整型",
+      "final_locked_label_jp": "風足の現実調整",
+      "final_locked_subtitle_jp": "変化後の着地と様子見",
+      "short_english_logic_gloss": "Landing and waiting after change",
+      "structural_summary": "変化が来たとき、動くか様子を見るかを現実で調整する。",
+      "do_not_confuse_with": "P13, P20, P21",
+      "structural_preservation_note": "変化後の調整を保ち、決断系に吸収されない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P09",
+      "working_name": "連絡丁寧型・即返し型",
+      "final_locked_label_jp": "迅礼の返し",
+      "final_locked_subtitle_jp": "LINE相手への返信温度",
+      "short_english_logic_gloss": "Reply warmth to the person on LINE",
+      "structural_summary": "返事の温度とスピードを、LINEでちょうどよく合わせる。",
+      "do_not_confuse_with": "P25, P18",
+      "structural_preservation_note": "対人返信の温度を先に立て、場の返答と混ぜない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P10",
+      "working_name": "家族調整型・実務連絡型",
+      "final_locked_label_jp": "家連の一声",
+      "final_locked_subtitle_jp": "家族への一声相談",
+      "short_english_logic_gloss": "One-line consultation with family",
+      "structural_summary": "家族に一言で伝え、実務の流れをそろえる。",
+      "do_not_confuse_with": "P09, P28",
+      "structural_preservation_note": "家族調整が前面で、連絡一般にしない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P11",
+      "working_name": "内向回復型・静養型",
+      "final_locked_label_jp": "静月の回復",
+      "final_locked_subtitle_jp": "ひとり静かな回復",
+      "short_english_logic_gloss": "Quiet solo recovery",
+      "structural_summary": "ひとりの静かな時間で、気力を戻す。",
+      "do_not_confuse_with": "P12, P26, P29",
+      "structural_preservation_note": "ひとり静養を最優先に残し、夜型や週末静養へ寄せすぎない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P11/P12/P26/P29",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P12",
+      "working_name": "夜型・省エネ型",
+      "final_locked_label_jp": "夜省の余灯",
+      "final_locked_subtitle_jp": "夜の残量を使い切らない",
+      "short_english_logic_gloss": "Not using up the night reserve",
+      "structural_summary": "夜に残る気力を見ながら、省エネで過ごす。",
+      "do_not_confuse_with": "P11, P26, P29",
+      "structural_preservation_note": "夜の余力運用として保ち、静養そのものに吸収しない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P11/P12/P26/P29",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P13",
+      "working_name": "柔軟型・慎重型",
+      "final_locked_label_jp": "変後の収まり",
+      "final_locked_subtitle_jp": "変わったあとに無理なく収める",
+      "short_english_logic_gloss": "Settling after a change",
+      "structural_summary": "変化があったあと、無理なく収める方向を見たい。",
+      "do_not_confuse_with": "P20, P21, P08",
+      "structural_preservation_note": "変更後の収まりに絞り、決断や第一歩に吸われない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P13/P20/P21",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P14",
+      "working_name": "回復型・整理型",
+      "final_locked_label_jp": "片戻の立て直し",
+      "final_locked_subtitle_jp": "失敗日の片付けと回復",
+      "short_english_logic_gloss": "Cleanup and recovery after a rough day",
+      "structural_summary": "失敗した日ほど、片付けと立て直しで戻す。",
+      "do_not_confuse_with": "P17, P27, P06",
+      "structural_preservation_note": "片付けから戻る構造を核にし、ご褒美系と分ける。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P15",
+      "working_name": "多忙型・切替型",
+      "final_locked_label_jp": "連担の切替",
+      "final_locked_subtitle_jp": "仕事と家事の同時進行",
+      "short_english_logic_gloss": "Switching between work and home tasks",
+      "structural_summary": "仕事と家事を、切り替えながら同時にさばく。",
+      "do_not_confuse_with": "P03, P23",
+      "structural_preservation_note": "仕事と家事の両方を残し、ただの多忙にしない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P16",
+      "working_name": "回復型・交流型",
+      "final_locked_label_jp": "緩交の戻り",
+      "final_locked_subtitle_jp": "落ちたあとに軽い交流",
+      "short_english_logic_gloss": "Coming back through light contact",
+      "structural_summary": "落ちたあと、人との軽い交流で戻る。",
+      "do_not_confuse_with": "P11, P14, P31",
+      "structural_preservation_note": "交流の一歩を核にし、単独回復と切り分ける。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P17",
+      "working_name": "回復後ご褒美型",
+      "final_locked_label_jp": "点返のご褒美",
+      "final_locked_subtitle_jp": "失敗後に小さく点火",
+      "short_english_logic_gloss": "A small reward that relights you after failure",
+      "structural_summary": "失敗のあと、小さなご褒美で気持ちを点火し直す。",
+      "do_not_confuse_with": "P11, P26, P14",
+      "structural_preservation_note": "ご褒美を核にして、回復一般へ溶かさない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P18",
+      "working_name": "距離調整型・気遣い型",
+      "final_locked_label_jp": "間調の距離",
+      "final_locked_subtitle_jp": "近すぎず遠すぎず",
+      "short_english_logic_gloss": "Neither too close nor too far",
+      "structural_summary": "人との距離を、近すぎず遠すぎず整える。",
+      "do_not_confuse_with": "P31, P09, P28",
+      "structural_preservation_note": "一対一の間合いを残し、場全体の距離と分ける。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P19",
+      "working_name": "慎重型・確認型",
+      "final_locked_label_jp": "確護の確認",
+      "final_locked_subtitle_jp": "安心材料を集めてから進む",
+      "short_english_logic_gloss": "Gathering assurance before moving on",
+      "structural_summary": "安心材料を集めてから、次に進む。",
+      "do_not_confuse_with": "P24, P30, P07",
+      "structural_preservation_note": "確認の積み上げを主軸にし、安全確認や再段取りへ寄せない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P20",
+      "working_name": "決断型・保留型",
+      "final_locked_label_jp": "線引の決め方",
+      "final_locked_subtitle_jp": "決めるか保留かの線",
+      "short_english_logic_gloss": "Drawing the line between decide and hold",
+      "structural_summary": "決めるか保留するかを、最後にきちんと分けたい。",
+      "do_not_confuse_with": "P13, P21, P19",
+      "structural_preservation_note": "決断境界そのものを前面に出す。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P21",
+      "working_name": "即行動型・観察型",
+      "final_locked_label_jp": "動先の一歩",
+      "final_locked_subtitle_jp": "様子見より先に動く",
+      "short_english_logic_gloss": "Move first, then observe",
+      "structural_summary": "様子を見るより、まず動いて確かめたい。",
+      "do_not_confuse_with": "P20, P13, P08",
+      "structural_preservation_note": "行動閾値を前に出し、線引きや着地に吸われない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P22",
+      "working_name": "朝型・回復型",
+      "final_locked_label_jp": "朝戻の始動",
+      "final_locked_subtitle_jp": "朝の起動と回復",
+      "short_english_logic_gloss": "Morning start with recovery",
+      "structural_summary": "朝の起動を、回復と一緒にゆっくり整える。",
+      "do_not_confuse_with": "P01, P11, P26",
+      "structural_preservation_note": "朝の回復を残しつつ、朝段取りとは分ける。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P23",
+      "working_name": "実務型・負荷調整型",
+      "final_locked_label_jp": "負調のやりくり",
+      "final_locked_subtitle_jp": "負荷に合わせて調整",
+      "short_english_logic_gloss": "Adjusting to the workload",
+      "structural_summary": "実務の同時進行を、負荷に合わせて調整する。",
+      "do_not_confuse_with": "P03, P15, P12",
+      "structural_preservation_note": "負荷調整を核にし、単なる同時進行と区別する。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P24",
+      "working_name": "安全優先型・確認型",
+      "final_locked_label_jp": "二重確認",
+      "final_locked_subtitle_jp": "安全のため確認を重ねる",
+      "short_english_logic_gloss": "Double-checking for safety",
+      "structural_summary": "安全のために、確認を重ねてから進む。",
+      "do_not_confuse_with": "P07, P19, P05",
+      "structural_preservation_note": "反復確認を主役にし、generic safety label にしない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P07/P24",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P25",
+      "working_name": "グループ連絡・慎重返答型",
+      "final_locked_label_jp": "場流の返し",
+      "final_locked_subtitle_jp": "場と週末の流れを見る",
+      "short_english_logic_gloss": "Replying in step with the room flow",
+      "structural_summary": "場と週末の流れを見て、返事の温度を整える。",
+      "do_not_confuse_with": "P09, P18, P31",
+      "structural_preservation_note": "グループ / room rhythm を主役にして、一対一返信と分ける。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P09/P25",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P26",
+      "working_name": "夜型・回復型",
+      "final_locked_label_jp": "夜残の整え",
+      "final_locked_subtitle_jp": "夜の残量を見ながら回復",
+      "short_english_logic_gloss": "Adjusting what remains at night",
+      "structural_summary": "夜の残量を見ながら、静かに回復する。",
+      "do_not_confuse_with": "P11, P12, P29",
+      "structural_preservation_note": "夜残量管理を核にし、回復一般にしない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P11/P12/P26/P29",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P27",
+      "working_name": "気分回復型・整理型",
+      "final_locked_label_jp": "ご褒美のひと息",
+      "final_locked_subtitle_jp": "片付けのあとに小さなご褒美",
+      "short_english_logic_gloss": "A small treat after tidying",
+      "structural_summary": "片付けのあとに、小さなご褒美でひと息つく。",
+      "do_not_confuse_with": "P04, P06, P14, P17",
+      "structural_preservation_note": "ご褒美を主役にし、cleanup と混ぜない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P04/P06/P27",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P28",
+      "working_name": "気遣い型・家族調整型",
+      "final_locked_label_jp": "家和の調整",
+      "final_locked_subtitle_jp": "家族との調整と間合い",
+      "short_english_logic_gloss": "Balancing family adjustment and spacing",
+      "structural_summary": "家族との調整と人との間合いを、気遣いでそろえる。",
+      "do_not_confuse_with": "P10, P18, P31",
+      "structural_preservation_note": "家族調整の線を明確にして、距離一般へ広げない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P29",
+      "working_name": "週末静養・省エネ型",
+      "final_locked_label_jp": "週末の引き算",
+      "final_locked_subtitle_jp": "週末に負荷を落として整える",
+      "short_english_logic_gloss": "Subtracting load on the weekend",
+      "structural_summary": "週末は負荷を落として、静かに整える。",
+      "do_not_confuse_with": "P11, P12, P26",
+      "structural_preservation_note": "週末の負荷削減を主軸にし、夜回復と混同しない。",
+      "subtitle_mandatory_flag": true,
+      "hotspot_cluster_flag": "P11/P12/P26/P29",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P30",
+      "working_name": "現実調整・再段取り型",
+      "final_locked_label_jp": "岐整の再段取り",
+      "final_locked_subtitle_jp": "変更後に事実から組み直す",
+      "short_english_logic_gloss": "Re-planning from facts after changes",
+      "structural_summary": "変更後に、事実をそろえて再段取りする。",
+      "do_not_confuse_with": "P19, P13, P24",
+      "structural_preservation_note": "事実整理から組み直す流れを残し、確認や決断に寄せない。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    },
+    {
+      "persona_id": "P31",
+      "working_name": "場づくり・交流調整型",
+      "final_locked_label_jp": "場配の距離",
+      "final_locked_subtitle_jp": "グループや場の距離配分",
+      "short_english_logic_gloss": "Allocating distance in the room or group",
+      "structural_summary": "グループや場に合わせて、距離を配分する。",
+      "do_not_confuse_with": "P18, P25, P28",
+      "structural_preservation_note": "場全体の距離配分を主軸にして、一対一の間合いと分ける。",
+      "subtitle_mandatory_flag": false,
+      "hotspot_cluster_flag": "",
+      "lock_status": "LOCKED"
+    }
+  ]
+}

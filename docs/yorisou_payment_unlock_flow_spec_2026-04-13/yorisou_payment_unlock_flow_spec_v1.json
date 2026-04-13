@@ -1,0 +1,473 @@
+{
+  "date": "2026-04-13",
+  "scope": "canonical unlock-flow specification for result monetization",
+  "states": [
+    {
+      "name": "not_eligible",
+      "trigger": "session or persona is not eligible for deep-report monetization.",
+      "required_payload_fields": [
+        "persona_identity",
+        "deep_report_payload",
+        "paywall_payload"
+      ],
+      "required_rendering_behavior": "Hide checkout entry; show free result only and a neutral explanation.",
+      "cta_allowed": [
+        "back",
+        "continue"
+      ],
+      "cta_forbidden": [
+        "checkout",
+        "unlock purchase"
+      ],
+      "analytics_event_points": [
+        "paywall_not_eligible",
+        "result_view"
+      ],
+      "failure_retry_behavior": "No retry required; user may continue in free mode."
+    },
+    {
+      "name": "teaser_only",
+      "trigger": "teaser is available but the payload is not yet at paywall entry or entitlement boundary.",
+      "required_payload_fields": [
+        "persona_identity",
+        "teaser_payload",
+        "rendering_guardrails"
+      ],
+      "required_rendering_behavior": "Show teaser and locked naming; no purchase prompt beyond a soft preview.",
+      "cta_allowed": [
+        "continue",
+        "view result"
+      ],
+      "cta_forbidden": [
+        "checkout",
+        "unlock now"
+      ],
+      "analytics_event_points": [
+        "teaser_view"
+      ],
+      "failure_retry_behavior": "Proceed to result_ready or wait for paywall_visible depending on product path."
+    },
+    {
+      "name": "paywall_visible",
+      "trigger": "deep report exists and the user is eligible to see a monetized unlock prompt.",
+      "required_payload_fields": [
+        "persona_identity",
+        "deep_report_payload",
+        "paywall_payload",
+        "rendering_guardrails"
+      ],
+      "required_rendering_behavior": "Show paywall prompt, price/entitlement area, and locked deep-report teaser only.",
+      "cta_allowed": [
+        "checkout",
+        "back",
+        "later"
+      ],
+      "cta_forbidden": [
+        "show premium content",
+        "mutate label"
+      ],
+      "analytics_event_points": [
+        "paywall_impression"
+      ],
+      "failure_retry_behavior": "Allow retry to checkout or return to result without changing persona state."
+    },
+    {
+      "name": "checkout_initiated",
+      "trigger": "user taps checkout from paywall_visible.",
+      "required_payload_fields": [
+        "paywall_payload",
+        "persona_identity",
+        "analytics_metadata"
+      ],
+      "required_rendering_behavior": "Show checkout handoff / pending state; keep result text read-only.",
+      "cta_allowed": [
+        "cancel",
+        "retry checkout"
+      ],
+      "cta_forbidden": [
+        "unlock grant",
+        "edit persona"
+      ],
+      "analytics_event_points": [
+        "checkout_start"
+      ],
+      "failure_retry_behavior": "Return to paywall_visible or checkout_pending after handoff outcome."
+    },
+    {
+      "name": "checkout_pending",
+      "trigger": "provider callback or client confirmation is pending.",
+      "required_payload_fields": [
+        "paywall_payload",
+        "analytics_metadata"
+      ],
+      "required_rendering_behavior": "Show pending status and preserve all locked text fields.",
+      "cta_allowed": [
+        "wait",
+        "retry status"
+      ],
+      "cta_forbidden": [
+        "claim success",
+        "open premium report"
+      ],
+      "analytics_event_points": [
+        "checkout_pending"
+      ],
+      "failure_retry_behavior": "Poll or re-check confirmation; no state mutation until confirmed."
+    },
+    {
+      "name": "payment_succeeded",
+      "trigger": "provider confirmation indicates a successful payment.",
+      "required_payload_fields": [
+        "paywall_payload",
+        "analytics_metadata",
+        "deep_report_payload"
+      ],
+      "required_rendering_behavior": "Show success confirmation and transition to unlock_granted only after server-side validation.",
+      "cta_allowed": [
+        "continue",
+        "view unlocked report"
+      ],
+      "cta_forbidden": [
+        "edit receipt",
+        "reselect persona"
+      ],
+      "analytics_event_points": [
+        "payment_success_callback"
+      ],
+      "failure_retry_behavior": "If validation fails, fall back to unlock_failed; do not show premium body yet."
+    },
+    {
+      "name": "unlock_granted",
+      "trigger": "server-side validation confirms entitlement and unlock permission.",
+      "required_payload_fields": [
+        "deep_report_unlock_state",
+        "deep_report_payload",
+        "paywall_payload",
+        "persona_identity"
+      ],
+      "required_rendering_behavior": "Render unlocked deep-report content and preserve locked naming and dimension semantics.",
+      "cta_allowed": [
+        "open report",
+        "save",
+        "return"
+      ],
+      "cta_forbidden": [
+        "mutate label",
+        "re-score persona"
+      ],
+      "analytics_event_points": [
+        "deep_report_unlock_granted",
+        "deep_report_open"
+      ],
+      "failure_retry_behavior": "If report fields are missing, show fallback locked state and retry validation."
+    },
+    {
+      "name": "unlock_failed",
+      "trigger": "payment or entitlement validation fails.",
+      "required_payload_fields": [
+        "paywall_payload",
+        "deep_report_unlock_state",
+        "analytics_metadata"
+      ],
+      "required_rendering_behavior": "Show failure state with retry or support path; keep deep report locked.",
+      "cta_allowed": [
+        "retry",
+        "restore later",
+        "back"
+      ],
+      "cta_forbidden": [
+        "show premium content",
+        "claim unlock"
+      ],
+      "analytics_event_points": [
+        "deep_report_unlock_failed"
+      ],
+      "failure_retry_behavior": "Allow retry or restore path without mutating persona identity."
+    },
+    {
+      "name": "deep_report_available",
+      "trigger": "unlock_granted is confirmed and report content is present.",
+      "required_payload_fields": [
+        "deep_report_payload",
+        "deep_report_unlock_state",
+        "persona_identity"
+      ],
+      "required_rendering_behavior": "Render premium deep report sections in read-only form.",
+      "cta_allowed": [
+        "scroll",
+        "save",
+        "return"
+      ],
+      "cta_forbidden": [
+        "alter report text",
+        "choose another persona"
+      ],
+      "analytics_event_points": [
+        "deep_report_available",
+        "deep_report_view"
+      ],
+      "failure_retry_behavior": "If content is absent, fall back to unlock_granted/locked state with retry."
+    },
+    {
+      "name": "restore_purchase_available if applicable later",
+      "trigger": "future restore flow is supported by the product and entitlement record exists.",
+      "required_payload_fields": [
+        "paywall_payload",
+        "analytics_metadata"
+      ],
+      "required_rendering_behavior": "Show restore option only when later implementation supports it.",
+      "cta_allowed": [
+        "restore",
+        "back"
+      ],
+      "cta_forbidden": [
+        "purchase new entitlement if restore is enough"
+      ],
+      "analytics_event_points": [
+        "restore_available"
+      ],
+      "failure_retry_behavior": "If unsupported, hide restore and fall back to paywall_visible."
+    },
+    {
+      "name": "version_guard_blocked",
+      "trigger": "payload or unlock metadata version does not match the current contract.",
+      "required_payload_fields": [
+        "result_version",
+        "scoring_version",
+        "paywall_payload"
+      ],
+      "required_rendering_behavior": "Block unlock and ask for reload or refresh.",
+      "cta_allowed": [
+        "reload",
+        "back"
+      ],
+      "cta_forbidden": [
+        "checkout",
+        "unlock"
+      ],
+      "analytics_event_points": [
+        "unlock_version_guard_blocked"
+      ],
+      "failure_retry_behavior": "Reload the current contract before retrying."
+    },
+    {
+      "name": "invalid_session_blocked",
+      "trigger": "session or payload integrity is invalid or missing.",
+      "required_payload_fields": [
+        "session_id",
+        "user_id_or_anonymous_session_key"
+      ],
+      "required_rendering_behavior": "Block unlock flow and show safe recovery only.",
+      "cta_allowed": [
+        "retry session",
+        "restart"
+      ],
+      "cta_forbidden": [
+        "checkout",
+        "unlock"
+      ],
+      "analytics_event_points": [
+        "unlock_invalid_session_blocked"
+      ],
+      "failure_retry_behavior": "Restart session flow; do not attempt payment without a valid session."
+    }
+  ],
+  "free_paid_boundary": {
+    "free_teaser_result_mode": [
+      "locked label",
+      "locked subtitle",
+      "teaser result",
+      "minimal share hint"
+    ],
+    "paid_deep_report_only": [
+      "deep report sections",
+      "expanded interpretation",
+      "paid value explanation",
+      "premium progression hooks"
+    ],
+    "must_never_leak_before_unlock": [
+      "deep report body",
+      "premium expansion text",
+      "restore logic internals",
+      "alternate persona labels"
+    ],
+    "paywall_may_preview": [
+      "locked label",
+      "subtitle",
+      "brief report hook",
+      "unlock value statement"
+    ],
+    "must_remain_concealed_until_unlock_granted": [
+      "deep report sections",
+      "premium interpretive paragraphs",
+      "progression premium hooks"
+    ]
+  },
+  "unlock_flow": [
+    {
+      "step": "result_ready",
+      "source_state": "LIFF/result rendering contract result_ready",
+      "action": "user lands on result screen",
+      "destination_state": "teaser_visible / paywall_visible depending on entitlement",
+      "allowed_payload_mutations": [
+        "none except state pointers"
+      ],
+      "forbidden_mutations": [
+        "persona_id",
+        "final_locked_label_jp",
+        "final_locked_subtitle_jp",
+        "dimension meaning"
+      ],
+      "read_only_dependencies": [
+        "canonical final naming lock",
+        "result payload contract",
+        "LIFF/result rendering contract"
+      ]
+    },
+    {
+      "step": "teaser_visible",
+      "source_state": "teaser_only or result_ready",
+      "action": "show teaser and short result summary",
+      "destination_state": "paywall_visible or share_card_ready",
+      "allowed_payload_mutations": [
+        "teaser_view state flag only"
+      ],
+      "forbidden_mutations": [
+        "locked naming",
+        "teaser source text"
+      ],
+      "read_only_dependencies": [
+        "teaser result layer",
+        "share-card logic layer"
+      ]
+    },
+    {
+      "step": "paywall_visible",
+      "source_state": "paywall_visible",
+      "action": "show unlock prompt",
+      "destination_state": "checkout_initiated",
+      "allowed_payload_mutations": [
+        "paywall_state pointer"
+      ],
+      "forbidden_mutations": [
+        "persona structure",
+        "subtitle"
+      ],
+      "read_only_dependencies": [
+        "result payload contract",
+        "rendering contract"
+      ]
+    },
+    {
+      "step": "checkout_initiated",
+      "source_state": "paywall_visible",
+      "action": "start checkout handoff",
+      "destination_state": "checkout_pending",
+      "allowed_payload_mutations": [
+        "checkout trace id",
+        "pending flag"
+      ],
+      "forbidden_mutations": [
+        "result object rewrite"
+      ],
+      "read_only_dependencies": [
+        "paywall_payload",
+        "analytics_metadata"
+      ]
+    },
+    {
+      "step": "payment_result_received",
+      "source_state": "checkout_pending",
+      "action": "receive provider callback / confirmation",
+      "destination_state": "payment_succeeded or unlock_failed",
+      "allowed_payload_mutations": [
+        "payment status fields only"
+      ],
+      "forbidden_mutations": [
+        "persona_id",
+        "label",
+        "subtitle"
+      ],
+      "read_only_dependencies": [
+        "paywall_payload",
+        "analytics_metadata"
+      ]
+    },
+    {
+      "step": "unlock_state_updated",
+      "source_state": "payment_succeeded",
+      "action": "server validation updates unlock state",
+      "destination_state": "unlock_granted or unlock_failed",
+      "allowed_payload_mutations": [
+        "deep_report_unlock_state",
+        "paywall_state"
+      ],
+      "forbidden_mutations": [
+        "deep report text",
+        "dimension meaning"
+      ],
+      "read_only_dependencies": [
+        "deep-report scaffold",
+        "result payload contract"
+      ]
+    },
+    {
+      "step": "deep_report_unlocked_rendering",
+      "source_state": "unlock_granted",
+      "action": "render premium content",
+      "destination_state": "deep_report_available",
+      "allowed_payload_mutations": [
+        "view state flags only"
+      ],
+      "forbidden_mutations": [
+        "premium copy rewrite",
+        "alternate persona labels"
+      ],
+      "read_only_dependencies": [
+        "deep-report scaffold",
+        "final naming lock"
+      ]
+    },
+    {
+      "step": "later_revisit_restore_path",
+      "source_state": "future restore flow",
+      "action": "restore purchase or verify prior unlock",
+      "destination_state": "restore_purchase_available or unlock_granted",
+      "allowed_payload_mutations": [
+        "restore state only"
+      ],
+      "forbidden_mutations": [
+        "new alternate result object"
+      ],
+      "read_only_dependencies": [
+        "paywall_payload",
+        "analytics_metadata"
+      ]
+    }
+  ],
+  "non_override_rules": [
+    "No payment flow may mutate persona_id, label, subtitle, teaser text, or dimension meaning.",
+    "Payment flow may only change unlock-related state fields.",
+    "No website surface may become the primary unlock path unless explicitly approved later.",
+    "No downstream consumer may fork the result payload contract.",
+    "No payment state may create parallel alternate result objects."
+  ],
+  "future_payment_integration_boundary": [
+    "Provider-agnostic checkout interface assumptions",
+    "Callback / confirmation expectations",
+    "Idempotency expectations",
+    "Restore / retry expectations",
+    "Future binding to LIFF/mobile flow",
+    "Provider, pricing, tax, receipt, and wallet details are deferred to implementation"
+  ],
+  "canonical_source_references": [
+    "canonical final naming lock",
+    "result payload contract",
+    "LIFF/result rendering contract",
+    "canonical persona master",
+    "locked 21-dimension backbone",
+    "teaser result layer",
+    "share-card logic layer",
+    "deep-report scaffold"
+  ]
+}
