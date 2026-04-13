@@ -12,6 +12,12 @@ type LiffProfile = {
 
 type LiffRuntimeState = {
   phase: "idle" | "loading_sdk" | "initializing" | "ready" | "missing_config" | "error";
+  issue: "missing_config" | "endpoint_mismatch" | "sdk_load_failed" | "init_failed" | null;
+  liffId: string | null;
+  endpointUrl: string | null;
+  currentUrl: string | null;
+  currentPathname: string | null;
+  expectedEndpointPath: string | null;
   isInClient: boolean | null;
   isLoggedIn: boolean | null;
   profile: LiffProfile | null;
@@ -43,6 +49,41 @@ function getEnvLiffId() {
 
 function getEnvLiffEndpoint() {
   return (process.env.NEXT_PUBLIC_LIFF_ENDPOINT_URL || "").trim();
+}
+
+function normalizePathname(pathname: string) {
+  if (!pathname) {
+    return "/";
+  }
+
+  const normalized = pathname.replace(/\/+$/, "");
+  return normalized || "/";
+}
+
+function resolveEndpointCompatibility(endpointUrl: string, currentUrl: string) {
+  if (!endpointUrl) {
+    return {
+      compatible: false,
+      expectedEndpointPath: null,
+      currentPathname: normalizePathname(new URL(currentUrl).pathname),
+    };
+  }
+
+  try {
+    const expectedEndpointPath = normalizePathname(new URL(endpointUrl).pathname);
+    const currentPathname = normalizePathname(new URL(currentUrl).pathname);
+    return {
+      compatible: currentPathname === expectedEndpointPath,
+      expectedEndpointPath,
+      currentPathname,
+    };
+  } catch {
+    return {
+      compatible: false,
+      expectedEndpointPath: null,
+      currentPathname: null,
+    };
+  }
 }
 
 function loadLiffSdk() {
@@ -79,6 +120,12 @@ function loadLiffSdk() {
 export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) {
   const [state, setState] = useState<LiffRuntimeState>({
     phase: "idle",
+    issue: null,
+    liffId: null,
+    endpointUrl: null,
+    currentUrl: null,
+    currentPathname: null,
+    expectedEndpointPath: null,
     isInClient: null,
     isLoggedIn: null,
     profile: null,
@@ -129,34 +176,23 @@ export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) 
 
     const liffId = getEnvLiffId();
     const endpointUrl = getEnvLiffEndpoint();
+    const currentUrl = window.location.href;
+    const endpointStatus = resolveEndpointCompatibility(endpointUrl, currentUrl);
 
     if (!liffId) {
       setState({
         phase: "missing_config",
+        issue: "missing_config",
+        liffId: null,
+        endpointUrl: endpointUrl || null,
+        currentUrl,
+        currentPathname: endpointStatus.currentPathname,
+        expectedEndpointPath: endpointStatus.expectedEndpointPath,
         isInClient: null,
         isLoggedIn: null,
         profile: null,
         error: endpointUrl ? `endpoint:${endpointUrl}` : null,
-        endpointOk: false,
-      });
-      return;
-    }
-
-    let endpointOk = true;
-    try {
-      endpointOk = new URL(endpointUrl).pathname === "/result";
-    } catch {
-      endpointOk = false;
-    }
-
-    if (!endpointOk) {
-      setState({
-        phase: "error",
-        isInClient: null,
-        isLoggedIn: null,
-        profile: null,
-        error: "liff_endpoint_mismatch",
-        endpointOk: false,
+        endpointOk: endpointStatus.compatible,
       });
       return;
     }
@@ -167,11 +203,17 @@ export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) 
       try {
         setState({
           phase: "loading_sdk",
+          issue: endpointStatus.compatible ? null : "endpoint_mismatch",
+          liffId,
+          endpointUrl: endpointUrl || null,
+          currentUrl,
+          currentPathname: endpointStatus.currentPathname,
+          expectedEndpointPath: endpointStatus.expectedEndpointPath,
           isInClient: null,
           isLoggedIn: null,
           profile: null,
           error: null,
-          endpointOk: true,
+          endpointOk: endpointStatus.compatible,
         });
 
         await loadLiffSdk();
@@ -216,24 +258,44 @@ export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) 
 
         setState({
           phase: "ready",
+          issue: endpointStatus.compatible ? null : "endpoint_mismatch",
+          liffId,
+          endpointUrl: endpointUrl || null,
+          currentUrl,
+          currentPathname: endpointStatus.currentPathname,
+          expectedEndpointPath: endpointStatus.expectedEndpointPath,
           isInClient,
           isLoggedIn,
           profile,
           error: null,
-          endpointOk: true,
+          endpointOk: endpointStatus.compatible,
         });
       } catch (error) {
         if (cancelled) {
           return;
         }
 
+        const errorMessage = error instanceof Error ? error.message : "liff_initialization_failed";
+        const issue =
+          errorMessage === "liff_sdk_load_failed" || errorMessage === "liff_sdk_unavailable"
+            ? "sdk_load_failed"
+            : endpointStatus.compatible
+              ? "init_failed"
+              : "endpoint_mismatch";
+
         setState({
           phase: "error",
+          issue,
+          liffId,
+          endpointUrl: endpointUrl || null,
+          currentUrl,
+          currentPathname: endpointStatus.currentPathname,
+          expectedEndpointPath: endpointStatus.expectedEndpointPath,
           isInClient: null,
           isLoggedIn: null,
           profile: null,
-          error: error instanceof Error ? error.message : "liff_initialization_failed",
-          endpointOk: false,
+          error: errorMessage,
+          endpointOk: endpointStatus.compatible,
         });
       }
     }
@@ -260,7 +322,9 @@ export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) 
           : state.phase === "missing_config"
             ? t.missingConfig
             : state.phase === "error"
-              ? "LIFF error"
+              ? state.issue === "endpoint_mismatch"
+                ? "Endpoint mismatch"
+                : "LIFF error"
               : "Idle";
   const environmentLabel =
     state.isInClient === null ? "—" : state.isInClient ? t.inClient : t.external;
@@ -268,8 +332,17 @@ export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) 
     state.isLoggedIn === null ? "—" : state.isLoggedIn ? t.loggedIn : t.loggedOut;
   const profileLabel = state.profile?.displayName || t.profilePending;
   const endpointUrl = getEnvLiffEndpoint();
-  const endpointLabel =
-    state.endpointOk === null ? "—" : state.endpointOk ? "OK" : "Mismatch";
+  const endpointLabel = state.endpointOk === null ? "—" : state.endpointOk ? "OK" : "Mismatch";
+  const issueLabel =
+    state.issue === "missing_config"
+      ? "Missing config"
+      : state.issue === "endpoint_mismatch"
+        ? "Endpoint mismatch"
+        : state.issue === "sdk_load_failed"
+          ? "SDK load failed"
+          : state.issue === "init_failed"
+            ? "LIFF init failed"
+            : "None";
 
   return (
     <section className="mx-auto mt-6 max-w-6xl rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-6 py-5 shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
@@ -279,15 +352,34 @@ export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) 
         <RuntimeChip label="Context" value={environmentLabel} />
         <RuntimeChip label="Login" value={loginLabel} />
         <RuntimeChip label="Profile" value={profileLabel} />
+        <RuntimeChip label="LIFF ID" value={state.liffId || getEnvLiffId() || "—"} />
         <RuntimeChip label="Endpoint" value={endpointLabel} />
+        <RuntimeChip label="Issue" value={issueLabel} />
       </div>
       <p className="mt-3 text-xs leading-6 text-[var(--muted)]">{t.readOnly}</p>
       <div className="mt-4 text-[11px] leading-6 text-[var(--muted)]">
         <span className="font-semibold text-[var(--text)]">{t.endpoint}:</span>{" "}
         {endpointUrl || "NEXT_PUBLIC_LIFF_ENDPOINT_URL"}
       </div>
+      <div className="mt-2 grid gap-2 text-[11px] leading-6 text-[var(--muted)] sm:grid-cols-2">
+        <div>
+          <span className="font-semibold text-[var(--text)]">Current URL:</span>{" "}
+          {state.currentUrl || "window.location.href"}
+        </div>
+        <div>
+          <span className="font-semibold text-[var(--text)]">Current path:</span>{" "}
+          {state.currentPathname || "—"}
+        </div>
+        <div>
+          <span className="font-semibold text-[var(--text)]">Expected path:</span>{" "}
+          {state.expectedEndpointPath || "—"}
+        </div>
+      </div>
       {state.error ? (
-        <p className="mt-2 text-xs leading-6 text-[var(--muted)]">error: {state.error}</p>
+        <p className="mt-2 text-xs leading-6 text-[var(--muted)]">
+          error: {issueLabel}
+          {state.error ? ` — ${state.error}` : ""}
+        </p>
       ) : null}
     </section>
   );
