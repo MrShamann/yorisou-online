@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { ResultLabSnapshot } from "@/lib/result/rendering-contract-adapter";
-import { getCanonicalRenderingGuardrails } from "@/lib/result/rendering-contract-adapter";
 
 type Locale = "ja" | "en";
 
@@ -19,13 +18,9 @@ const copy = {
     subtitle: "ロック済みの名前・ティーザー・共有文・深い読みの手前までを、ひとつの結果として整えます。",
     lineContinue: "LINEで続ける",
     lineContinueHint: "この結果は、LINE認証が完了していれば同じ流れに戻れます。",
-    lockedLabel: "結果名",
-    lockedSubtitle: "サブタイトル",
     teaser: "ティーザー",
     shareCard: "共有カード",
     deepReport: "深い読み",
-    dimensionSignature: "次元の手がかり",
-    guardrails: "ロックガード",
     invalidTitle: "結果の受け取りに問題があります",
     invalidBody: "この状態では、結果をそのまま表示できません。payload または version を確認してください。",
     versionTitle: "バージョンが一致しません",
@@ -38,8 +33,6 @@ const copy = {
     lockedNotice: "名前・サブタイトル・次元の意味は変更しません。",
     currentState: "現在の状態",
     readOnly: "読み取り専用",
-    unlockedSections: "開放済みセクション",
-    lockedSections: "ロック中セクション",
     lineHint: "LINE続行は、同じ結果に戻るための入口です。",
   },
   en: {
@@ -47,13 +40,9 @@ const copy = {
     subtitle: "This surface keeps the locked name, teaser, share copy, and deep-report boundary in one read-only result view.",
     lineContinue: "Continue in LINE",
     lineContinueHint: "If LINE auth is configured, this result can return to the same flow.",
-    lockedLabel: "Result label",
-    lockedSubtitle: "Subtitle",
     teaser: "Teaser",
     shareCard: "Share card",
     deepReport: "Deep reading",
-    dimensionSignature: "Dimension clues",
-    guardrails: "Guardrails",
     invalidTitle: "There is a problem receiving this result",
     invalidBody: "This state cannot render the result as-is. Check the payload and version.",
     versionTitle: "Version mismatch",
@@ -66,8 +55,6 @@ const copy = {
     lockedNotice: "The label, subtitle, and dimension meaning remain locked.",
     currentState: "Current state",
     readOnly: "Read-only",
-    unlockedSections: "Unlocked sections",
-    lockedSections: "Locked sections",
     lineHint: "LINE continuation returns to the same result context.",
   },
 } as const;
@@ -106,8 +93,6 @@ function renderStateLabel(locale: Locale, snapshot: ResultLabSnapshot) {
 
 export default function CanonicalResultSurface({ locale, snapshot, currentPath }: Props) {
   const t = copy[locale];
-  const lockedSourceReferences =
-    snapshot.payload?.subobjects.rendering_guardrails.locked_source_reference || getCanonicalRenderingGuardrails().canonicalSourceReferences;
   const continueHref = lineContinueHref(locale, currentPath);
   const payload = snapshot.payload;
   const renderErrorState = snapshot.renderingState === "invalid_or_missing_payload" || snapshot.renderingState === "version_mismatch_guard";
@@ -126,11 +111,6 @@ export default function CanonicalResultSurface({ locale, snapshot, currentPath }
           <p className="mt-3 max-w-4xl text-[15px] leading-8 text-[var(--muted)] sm:text-base">
             {payload?.final_locked_subtitle_jp || (renderErrorState ? t.versionBody : t.subtitle)}
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <StateBadge label={t.currentState} value={renderStateLabel(locale, snapshot)} />
-            <StateBadge label="Unlock" value={snapshot.unlockState} />
-            <StateBadge label="Surface" value={snapshot.surfaceMode} />
-          </div>
           <div className="mt-4 rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-4 text-sm leading-7 text-[var(--muted)]">
             {t.lockedNotice}
           </div>
@@ -199,49 +179,6 @@ export default function CanonicalResultSurface({ locale, snapshot, currentPath }
               )}
             </Panel>
           </article>
-
-          <aside className="space-y-6">
-            <Panel title={t.dimensionSignature}>
-              <div className="space-y-3 text-sm leading-7 text-[var(--muted)]">
-                <p>Core: {payload?.core_dimension_signature.join(", ") || "n/a"}</p>
-                <p>Support: {payload?.supporting_dimensions.join(", ") || "n/a"}</p>
-                <p>Hotspot: {String(payload?.hotspot_cluster_flag ?? "none")}</p>
-              </div>
-            </Panel>
-
-            <Panel title={t.readOnly}>
-              <div className="space-y-2 text-sm leading-7 text-[var(--muted)]">
-                <p>Persona: {payload?.persona_id || "n/a"}</p>
-                <p>Working name: {payload?.working_name || "n/a"}</p>
-                <p>Locked subtitle: {payload?.final_locked_subtitle_jp || "n/a"}</p>
-                <p>Do not mutate: labels, subtitles, dimension meaning</p>
-              </div>
-            </Panel>
-
-            <Panel title={t.guardrails}>
-              <div className="space-y-2 text-sm leading-7 text-[var(--muted)]">
-                <p>Canonical rendering sources remain read-only.</p>
-                <p>Share, teaser, and deep-report text follow the locked docs only.</p>
-                <p>Payment remains stubbed; unlock flow does not mutate identity.</p>
-              </div>
-              <div className="mt-4 rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-4 text-xs leading-6 text-[var(--muted)]">
-                <div className="font-semibold text-[var(--text)]">Locked references</div>
-                <ul className="mt-2 space-y-1">
-                  {lockedSourceReferences.map((reference) => (
-                    <li key={reference}>• {reference}</li>
-                  ))}
-                </ul>
-              </div>
-            </Panel>
-
-            <Panel title={t.lockedSections}>
-              <div className="space-y-2 text-sm leading-7 text-[var(--muted)]">
-                <p>Deep-report state: {snapshot.payload?.deep_report_unlock_state.status || snapshot.unlockState}</p>
-                <p>Share-card state: {snapshot.payload?.share_card_state.status || "n/a"}</p>
-                <p>Progression state: {snapshot.payload?.progression_state.status || "n/a"}</p>
-              </div>
-            </Panel>
-          </aside>
         </section>
       </div>
     </main>
@@ -254,14 +191,5 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
       <div className="service-kicker">{title}</div>
       <div className="mt-4">{children}</div>
     </section>
-  );
-}
-
-function StateBadge({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-3">
-      <div className="text-[11px] tracking-[0.18em] text-[var(--muted)]">{label}</div>
-      <div className="mt-2 text-sm font-semibold text-[var(--text)]">{value}</div>
-    </div>
   );
 }
