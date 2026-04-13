@@ -1,0 +1,1555 @@
+{
+  "date": "2026-04-13",
+  "scope": "structural share-card logic layer between teaser result and deep-report / future mythology naming",
+  "upstream_dependencies": [
+    "/Users/yangjin/yorisou-online/docs/yorisou_canonical_31_persona_framework_2026-04-13/yorisou_canonical_31_persona_framework_v2_locked_candidate.md",
+    "/Users/yangjin/yorisou-online/docs/yorisou_canonical_21_dimension_framework_2026-04-13/yorisou_canonical_21_dimension_framework_v1.md",
+    "/Users/yangjin/yorisou-online/docs/yorisou_result_structure_spec_2026-04-13/yorisou_result_structure_spec_v1.md",
+    "/Users/yangjin/yorisou-online/docs/yorisou_teaser_result_layer_2026-04-13/yorisou_teaser_result_layer_v1.md"
+  ],
+  "operating_rules": [
+    "Share-card logic is one notch tighter than the teaser layer.",
+    "Share-card lines must stay screenshot-capable, native Japanese, and one-read legible.",
+    "Share-card copy may compress the hook, but may not erase the persona boundary.",
+    "No line may rely on mythology names to make sense.",
+    "No line may become generic “relatable life advice”.",
+    "No line may sound like survey, counsel, corporate copy, or AI assistant copy."
+  ],
+  "calibration_scale": {
+    "Japanese naturalness": "1-5",
+    "emotional truth": "1-5",
+    "entertainment value": "1-5",
+    "screenshot/share potential": "1-5",
+    "structural distinction retention": "1-5",
+    "compression safety": "1-5"
+  },
+  "hotspot_compression_guardrails": [
+    {
+      "group": "P09 / P25",
+      "why": "P09 is one-to-one reply temperature; P25 is group / weekend reply rhythm. Short share copy can flatten both into “返信が早い人” or “返事がやさしい人”.",
+      "lever": "Retain the context axis: one-to-one temperature vs group/scene timing.",
+      "bad_line": "返事が早くてやさしい。",
+      "guardrail": "Keep at least one context word in the line: LINE / 場 / 週末 / グループ."
+    },
+    {
+      "group": "P11 / P12 / P26 / P29",
+      "why": "All are low-energy recovery or reduced-load states. Compression can collapse them into “疲れている人”.",
+      "lever": "Retain the time anchor: solo quiet / night reserve / evening recovery / weekend downshift.",
+      "bad_line": "静かに休む人。",
+      "guardrail": "Every line must keep the timing or load context visible."
+    },
+    {
+      "group": "P13 / P20 / P21",
+      "why": "All touch change, decision, and action threshold. A short line can erase whether the person waits, decides, or moves first.",
+      "lever": "Keep the threshold verb: 着地 / 線引き / まず動く.",
+      "bad_line": "変化に強い人。",
+      "guardrail": "State the action boundary explicitly, not just “flexible” or “decisive”."
+    },
+    {
+      "group": "P03 / P15 / P23",
+      "why": "All are load and switching related. Compression can make them all look like “忙しい人”.",
+      "lever": "Retain the load shape: sequencing / simultaneous load / load tuning.",
+      "bad_line": "忙しいけど頑張る。",
+      "guardrail": "Name the kind of load, not just the busyness."
+    },
+    {
+      "group": "P04 / P06 / P27",
+      "why": "Shopping, tidying, and reward-reset all involve daily-life reset energy. Short copy can blur them into “生活を整える人”.",
+      "lever": "Keep the primary object: shopping basket / placement / reward-plus-cleanup.",
+      "bad_line": "生活を整える人。",
+      "guardrail": "Anchor to the object being handled, not the general mood."
+    },
+    {
+      "group": "P07 / P24",
+      "why": "Both are safety-oriented. Compression can flatten them into “慎重で安全を見る人”.",
+      "lever": "Retain the difference between environment safety check and repeated safety confirmation.",
+      "bad_line": "安全をちゃんと見る。",
+      "guardrail": "Use either the hazard context or the repeat-confirmation context in the line."
+    },
+    {
+      "group": "P18 / P31",
+      "why": "Both are spacing and social rhythm. Short copy can collapse them into “人との距離を調整する人”.",
+      "lever": "Keep the scale: one-to-one spacing vs group / room / community spacing.",
+      "bad_line": "距離感がうまい人。",
+      "guardrail": "Use “相手” for one-to-one and “場 / グループ / 空気” for community rhythm."
+    }
+  ],
+  "personas": [
+    {
+      "persona_id": "P01",
+      "working_name": "朝型・段取り型",
+      "upstream_dimension_signature": "D01, D02 + D20, D21",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '朝の立ち上がりと出発前の整え方が、その日の滑り方を決める。' before share-card compression.",
+      "share_card_function": "朝型・段取り型の核を、一読で切る。",
+      "share_card_memory_hook": "早起き / 段取り / ひと声 / ゆっくり始動",
+      "share_card_core_recognition": "朝の最初の動きと出発準備を、順番よく整える",
+      "share_card_primary_contrast": "朝の起動と出発準備を同じ準備線に置き、後半の判断圧力から切り離す。",
+      "share_card_do_not_flatten_with": [
+        "P02",
+        "P22"
+      ],
+      "share_card_boundary_note": "朝型・段取り型は、朝の起動と出発準備を同じ準備線に置き、後半の判断圧力から切り離す。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "朝型・段取り型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "朝型・段取り型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "朝の1手で、今日が決まる。",
+        "起きた瞬間、もう段取り中。",
+        "朝が速いと、日が軽い。"
+      ],
+      "recommended_share_card_line_jp": "朝の1手で、今日が決まる。",
+      "internal_logic_gloss_en": "Compressed morning-start hook.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P02",
+      "working_name": "段取り型・慎重型",
+      "upstream_dimension_signature": "D02, D13 + D19, D20",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '段取りが決まると、変更にも少し落ち着いて向き合える。' before share-card compression.",
+      "share_card_function": "段取り型・慎重型の核を、一読で切る。",
+      "share_card_memory_hook": "出発前チェック / 変更に強い / 様子見 / 慎重運用",
+      "share_card_core_recognition": "出発前に順番と変更耐性を先に見たい",
+      "share_card_primary_contrast": "出発準備を起点にしながら、変化への耐性を見せるため P01 から分離している。",
+      "share_card_do_not_flatten_with": [
+        "P01",
+        "P13"
+      ],
+      "share_card_boundary_note": "段取り型・慎重型は、出発準備を起点にしながら、変化への耐性を見せるため P01 から分離している。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "段取り型・慎重型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "段取り型・慎重型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "出る前に、もう半分終わってる。",
+        "準備が先、変更はあと。",
+        "段取りが立つと、朝は静か。"
+      ],
+      "recommended_share_card_line_jp": "出る前に、もう半分終わってる。",
+      "internal_logic_gloss_en": "Prep-first with change tolerance.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P03",
+      "working_name": "実務型・体力優先型",
+      "upstream_dimension_signature": "D03, D15 + D20",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '通院や買い物の切り替えを、体力の残り方で見ている。' before share-card compression.",
+      "share_card_function": "実務型・体力優先型の核を、一読で切る。",
+      "share_card_memory_hook": "実務 / 体力優先 / まとめて処理 / 負荷調整",
+      "share_card_core_recognition": "用事の切り替えと負荷を、体力目線でさばく",
+      "share_card_primary_contrast": "連続用事の切り替えと同時進行を、生活実務の中で測る。",
+      "share_card_do_not_flatten_with": [
+        "P15",
+        "P23"
+      ],
+      "share_card_boundary_note": "実務型・体力優先型は、連続用事の切り替えと同時進行を、生活実務の中で測る。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "実務型・体力優先型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "実務型・体力優先型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "通院も買い物も、順番でさばく。",
+        "用事は順番、体力は節約。",
+        "忙しくても、潰れない。"
+      ],
+      "recommended_share_card_line_jp": "通院も買い物も、順番でさばく。",
+      "internal_logic_gloss_en": "Load sequencing for practical errands.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P04",
+      "working_name": "生活実務型・気分回復型",
+      "upstream_dimension_signature": "D04, D17 + D11",
+      "teaser_handoff_reference": "Teaser layer keeps the hook 'カゴに入れる順番に、実用と気分の両方が出る。' before share-card compression.",
+      "share_card_function": "生活実務型・気分回復型の核を、一読で切る。",
+      "share_card_memory_hook": "実用優先 / 気分も大事 / 小さなご褒美 / 生活実務",
+      "share_card_core_recognition": "買い物の実務と小さな気分回復を両立したい",
+      "share_card_primary_contrast": "買い物判断を起点にしているので、片付け系や単純ご褒美系から離れている。",
+      "share_card_do_not_flatten_with": [
+        "P06",
+        "P27"
+      ],
+      "share_card_boundary_note": "生活実務型・気分回復型は、買い物判断を起点にしているので、片付け系や単純ご褒美系から離れている。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "生活実務型・気分回復型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "生活実務型・気分回復型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "買い物は実務、でも少し楽しい。",
+        "必要品に、ちょい気分を足す。",
+        "カゴの中で、少し回復。"
+      ],
+      "recommended_share_card_line_jp": "買い物は実務、でも少し楽しい。",
+      "internal_logic_gloss_en": "Practical shopping plus a small lift.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P05",
+      "working_name": "慎重型・負担回避型",
+      "upstream_dimension_signature": "D05, D08 + D19",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '雨の日や玄関まわりで、負担の少ない動き方を選ぶ。' before share-card compression.",
+      "share_card_function": "慎重型・負担回避型の核を、一読で切る。",
+      "share_card_memory_hook": "慎重 / 負担回避 / 安全第一 / 小さく動く",
+      "share_card_core_recognition": "雨や段差の負荷を見て、無理を減らしたい",
+      "share_card_primary_contrast": "天候摩擦と身体摩擦を、行き先より先に感じ取る人格。",
+      "share_card_do_not_flatten_with": [
+        "P07",
+        "P24"
+      ],
+      "share_card_boundary_note": "慎重型・負担回避型は、天候摩擦と身体摩擦を、行き先より先に感じ取る人格。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "慎重型・負担回避型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "慎重型・負担回避型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "雨の日は、無理しないを先に。",
+        "段差より先に、負担を見る。",
+        "動く前に、重さを測る。"
+      ],
+      "recommended_share_card_line_jp": "雨の日は、無理しないを先に。",
+      "internal_logic_gloss_en": "Friction-first movement restraint.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 4,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P06",
+      "working_name": "整理型・見た目整え型",
+      "upstream_dimension_signature": "D06, D17 + D11",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '片付けの入り口が見えると、気分も少し整う。' before share-card compression.",
+      "share_card_function": "整理型・見た目整え型の核を、一読で切る。",
+      "share_card_memory_hook": "整理 / 置き場所 / 見た目整え / 半分だけでも進める",
+      "share_card_core_recognition": "片付けの順番と置き場所で、見た目を整える",
+      "share_card_primary_contrast": "収納と小さなご褒美が同居しても、起点はあくまで片付け。",
+      "share_card_do_not_flatten_with": [
+        "P04",
+        "P27"
+      ],
+      "share_card_boundary_note": "整理型・見た目整え型は、収納と小さなご褒美が同居しても、起点はあくまで片付け。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "整理型・見た目整え型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "整理型・見た目整え型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "片付けで、見た目も気分も整う。",
+        "置き場所が決まると、少し軽い。",
+        "まず片付け、あと気分。"
+      ],
+      "recommended_share_card_line_jp": "片付けで、見た目も気分も整う。",
+      "internal_logic_gloss_en": "Order-first visual reset.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P07",
+      "working_name": "安全優先型・慎重型",
+      "upstream_dimension_signature": "D07, D19 + D08",
+      "teaser_handoff_reference": "Teaser layer keeps the hook 'すべりや段差より先に、安心できる環境を整えたい。' before share-card compression.",
+      "share_card_function": "安全優先型・慎重型の核を、一読で切る。",
+      "share_card_memory_hook": "安全優先 / 確認 / 先回り / 低リスク",
+      "share_card_core_recognition": "家の中の小さな危険と、先回りの確認を見ている",
+      "share_card_primary_contrast": "安全確認を主軸にし、移動のしやすさとは切り離している。",
+      "share_card_do_not_flatten_with": [
+        "P05",
+        "P24"
+      ],
+      "share_card_boundary_note": "安全優先型・慎重型は、安全確認を主軸にし、移動のしやすさとは切り離している。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "安全優先型・慎重型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "安全優先型・慎重型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "安全確認を、先に済ませる。",
+        "危ない前に、先回り。",
+        "安心できてから動く。"
+      ],
+      "recommended_share_card_line_jp": "安全確認を、先に済ませる。",
+      "internal_logic_gloss_en": "Safety check before movement.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 4,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P08",
+      "working_name": "慎重型・現実調整型",
+      "upstream_dimension_signature": "D13, D21 + D20",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '予定が変わると、まず動くか待つかを現実で見直す。' before share-card compression.",
+      "share_card_function": "慎重型・現実調整型の核を、一読で切る。",
+      "share_card_memory_hook": "慎重 / 現実調整 / 動くか様子見るか / 低リスク判断",
+      "share_card_core_recognition": "変化が来たとき、動くか様子を見るかを現実で調整する",
+      "share_card_primary_contrast": "変更後の判断と、動くか待つかの境目をはっきり持っている。",
+      "share_card_do_not_flatten_with": [
+        "P13",
+        "P20",
+        "P21"
+      ],
+      "share_card_boundary_note": "慎重型・現実調整型は、変更後の判断と、動くか待つかの境目をはっきり持っている。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "慎重型・現実調整型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "慎重型・現実調整型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "変わったら、まず着地を探す。",
+        "動くか待つか、現実で決める。",
+        "変更後の足場を見てる。"
+      ],
+      "recommended_share_card_line_jp": "変わったら、まず着地を探す。",
+      "internal_logic_gloss_en": "Change response with grounded landing.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P09",
+      "working_name": "連絡丁寧型・即返し型",
+      "upstream_dimension_signature": "D09 + D18",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '連絡は、早さと温度の両方がちょうどよいと落ち着く。' before share-card compression.",
+      "share_card_function": "連絡丁寧型・即返し型の核を、一読で切る。",
+      "share_card_memory_hook": "丁寧 / 即返し / LINE感 / 短く温かく",
+      "share_card_core_recognition": "返事の温度とスピードを、LINEでちょうどよく合わせる",
+      "share_card_primary_contrast": "純粋な返信温度の基準点として機能する。",
+      "share_card_do_not_flatten_with": [
+        "P10",
+        "P18",
+        "P25"
+      ],
+      "share_card_boundary_note": "連絡丁寧型・即返し型は、純粋な返信温度の基準点として機能する。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "連絡丁寧型・即返し型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "連絡丁寧型・即返し型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "早くて、ちょうどいい返事。",
+        "丁寧に速い。",
+        "返事の温度が、ちょうどいい。"
+      ],
+      "recommended_share_card_line_jp": "早くて、ちょうどいい返事。",
+      "internal_logic_gloss_en": "Fast reply with balanced warmth.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P10",
+      "working_name": "家族調整型・実務連絡型",
+      "upstream_dimension_signature": "D10, D09 + D15",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '家族への一言相談で、実務の流れをやわらかくそろえる。' before share-card compression.",
+      "share_card_function": "家族調整型・実務連絡型の核を、一読で切る。",
+      "share_card_memory_hook": "家族調整 / 実務連絡 / 一声相談 / 手短に共有",
+      "share_card_core_recognition": "家族に一言で伝え、実務の流れをそろえる",
+      "share_card_primary_contrast": "家族向けの一言相談を中心に、単なる連絡返しとは分けている。",
+      "share_card_do_not_flatten_with": [
+        "P09",
+        "P28"
+      ],
+      "share_card_boundary_note": "家族調整型・実務連絡型は、家族向けの一言相談を中心に、単なる連絡返しとは分けている。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "家族調整型・実務連絡型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "家族調整型・実務連絡型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "家族に一声、流れをそろえる。",
+        "一言で、実務が進む。",
+        "家族連絡は、短くやわらかく。"
+      ],
+      "recommended_share_card_line_jp": "家族に一声、流れをそろえる。",
+      "internal_logic_gloss_en": "Family coordination in one line.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P11",
+      "working_name": "内向回復型・静養型",
+      "upstream_dimension_signature": "D11, D12 + D16",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '静かな回復と夜の気力の残り方が、この人の調子を示す。' before share-card compression.",
+      "share_card_function": "内向回復型・静養型の核を、一読で切る。",
+      "share_card_memory_hook": "静養 / 内向回復 / ひとり時間 / 夜は静かに",
+      "share_card_core_recognition": "ひとりの静かな時間で、気力を戻す",
+      "share_card_primary_contrast": "一人で戻る回復線を主軸にし、ご褒美や社交から離している。",
+      "share_card_do_not_flatten_with": [
+        "P12",
+        "P17",
+        "P26"
+      ],
+      "share_card_boundary_note": "内向回復型・静養型は、一人で戻る回復線を主軸にし、ご褒美や社交から離している。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "内向回復型・静養型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "内向回復型・静養型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "ひとりで、静かに戻す。",
+        "静けさで、気力が戻る。",
+        "一人時間が、回復の本線。"
+      ],
+      "recommended_share_card_line_jp": "ひとりで、静かに戻す。",
+      "internal_logic_gloss_en": "Quiet solo recovery.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P12",
+      "working_name": "夜型・省エネ型",
+      "upstream_dimension_signature": "D12, D11 + D17",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '夜の残り気力を、使い切らずに整えていく。' before share-card compression.",
+      "share_card_function": "夜型・省エネ型の核を、一読で切る。",
+      "share_card_memory_hook": "夜型 / 省エネ / 余力管理 / 静かに終える",
+      "share_card_core_recognition": "夜に残る気力を見ながら、省エネで過ごす",
+      "share_card_primary_contrast": "夜の残量と省エネ運用を主軸にした、静養系とは少し違う夜寄り人格。",
+      "share_card_do_not_flatten_with": [
+        "P11",
+        "P26",
+        "P29"
+      ],
+      "share_card_boundary_note": "夜型・省エネ型は、夜の残量と省エネ運用を主軸にした、静養系とは少し違う夜寄り人格。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "夜型・省エネ型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "夜型・省エネ型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "夜は、省エネで整える。",
+        "夜の残量を、使い切らない。",
+        "夜は、静かに終える。"
+      ],
+      "recommended_share_card_line_jp": "夜は、省エネで整える。",
+      "internal_logic_gloss_en": "Nighttime energy budgeting.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P13",
+      "working_name": "柔軟型・慎重型",
+      "upstream_dimension_signature": "D13, D20 + D21",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '予定が変わっても、決め急がずに着地を探す。' before share-card compression.",
+      "share_card_function": "柔軟型・慎重型の核を、一読で切る。",
+      "share_card_memory_hook": "柔軟 / 慎重 / 変化対応 / 先に様子を見る",
+      "share_card_core_recognition": "変わったあとも、無理なく着地する",
+      "share_card_primary_contrast": "変更後の柔らかい着地が中心で、純粋な決断型とは違う。",
+      "share_card_do_not_flatten_with": [
+        "P02",
+        "P08",
+        "P20"
+      ],
+      "share_card_boundary_note": "柔軟型・慎重型は、変更後の柔らかい着地が中心で、純粋な決断型とは違う。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "柔軟型・慎重型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "柔軟型・慎重型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "変化のあとも、無理なく着地。",
+        "決め急がず、着地を探す。",
+        "変更後の柔らかい着地。"
+      ],
+      "recommended_share_card_line_jp": "変化のあとも、無理なく着地。",
+      "internal_logic_gloss_en": "Flexible but cautious landing after change.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P14",
+      "working_name": "回復型・整理型",
+      "upstream_dimension_signature": "D14, D06 + D17",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '失敗日の立て直しは、まず小さく片付くことから始まる。' before share-card compression.",
+      "share_card_function": "回復型・整理型の核を、一読で切る。",
+      "share_card_memory_hook": "回復 / 整理 / 立て直し / 小さく戻す",
+      "share_card_core_recognition": "失敗した日ほど、片付けと立て直しで戻す",
+      "share_card_primary_contrast": "失敗回復と整理回復を重ねるが、ご褒美系とは別に立てている。",
+      "share_card_do_not_flatten_with": [
+        "P06",
+        "P17",
+        "P27"
+      ],
+      "share_card_boundary_note": "回復型・整理型は、失敗回復と整理回復を重ねるが、ご褒美系とは別に立てている。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "回復型・整理型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "回復型・整理型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "失敗日は、片付けから戻す。",
+        "小さく片付くと、また動ける。",
+        "立て直しは、まず整える。"
+      ],
+      "recommended_share_card_line_jp": "失敗日は、片付けから戻す。",
+      "internal_logic_gloss_en": "Recovery through small cleanup.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P15",
+      "working_name": "多忙型・切替型",
+      "upstream_dimension_signature": "D03, D15 + D20",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '用事の切り替えと同時進行が、この人の日常負荷になる。' before share-card compression.",
+      "share_card_function": "多忙型・切替型の核を、一読で切る。",
+      "share_card_memory_hook": "多忙 / 切替 / 同時進行 / 実務強め",
+      "share_card_core_recognition": "仕事と家事を、切り替えながら同時にさばく",
+      "share_card_primary_contrast": "通院・買い物の切り替えとは違い、同時進行そのものが主題。",
+      "share_card_do_not_flatten_with": [
+        "P03",
+        "P23"
+      ],
+      "share_card_boundary_note": "多忙型・切替型は、通院・買い物の切り替えとは違い、同時進行そのものが主題。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "多忙型・切替型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "多忙型・切替型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "切替も同時進行も、負荷次第。",
+        "仕事も家事も、順にさばく。",
+        "同時進行を、無理なく回す。"
+      ],
+      "recommended_share_card_line_jp": "切替も同時進行も、負荷次第。",
+      "internal_logic_gloss_en": "Multi-load switching under fatigue limits.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P16",
+      "working_name": "回復型・交流型",
+      "upstream_dimension_signature": "D14, D18 + D09",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '失敗した日でも、人との軽い距離があると戻りやすい。' before share-card compression.",
+      "share_card_function": "回復型・交流型の核を、一読で切る。",
+      "share_card_memory_hook": "回復 / 交流 / 軽い接点 / 気を取り直す",
+      "share_card_core_recognition": "落ちたあと、人との軽い交流で戻る",
+      "share_card_primary_contrast": "失敗回復を社交の後処理として扱い、単独回復と切り分ける。",
+      "share_card_do_not_flatten_with": [
+        "P14",
+        "P18",
+        "P31"
+      ],
+      "share_card_boundary_note": "回復型・交流型は、失敗回復を社交の後処理として扱い、単独回復と切り分ける。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "回復型・交流型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "回復型・交流型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "軽い交流で、少しずつ戻る。",
+        "人との軽さが、戻り道になる。",
+        "落ちたあとに、少し話す。"
+      ],
+      "recommended_share_card_line_jp": "軽い交流で、少しずつ戻る。",
+      "internal_logic_gloss_en": "Recovery through light contact.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P17",
+      "working_name": "回復後ご褒美型",
+      "upstream_dimension_signature": "D14, D17 + D11",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '失敗日の立て直しは、小さなご褒美で火をつけ直すと進みやすい。' before share-card compression.",
+      "share_card_function": "回復後ご褒美型の核を、一読で切る。",
+      "share_card_memory_hook": "回復後ご褒美 / 小さく点火 / 気分整え / やり直し",
+      "share_card_core_recognition": "失敗のあと、小さなご褒美で気持ちを点火し直す",
+      "share_card_primary_contrast": "静養系ではなく、失敗後に小さなご褒美を挟んで再始動する点で分離している。",
+      "share_card_do_not_flatten_with": [
+        "P11",
+        "P26",
+        "P14"
+      ],
+      "share_card_boundary_note": "回復後ご褒美型は、静養系ではなく、失敗後に小さなご褒美を挟んで再始動する点で分離している。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "回復後ご褒美型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "回復後ご褒美型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "小さなご褒美で、火をつけ直す。",
+        "回復のあと、少し甘やかす。",
+        "再始動に、ひと口の救い。"
+      ],
+      "recommended_share_card_line_jp": "小さなご褒美で、火をつけ直す。",
+      "internal_logic_gloss_en": "Reward-reset after failure.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P18",
+      "working_name": "距離調整型・気遣い型",
+      "upstream_dimension_signature": "D18, D09 + D10",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '距離感と返事の温度を合わせると、場がやわらぐ。' before share-card compression.",
+      "share_card_function": "距離調整型・気遣い型の核を、一読で切る。",
+      "share_card_memory_hook": "距離調整 / 気遣い / 無理しない接点 / 温度合わせ",
+      "share_card_core_recognition": "人との距離を、近すぎず遠すぎず整える",
+      "share_card_primary_contrast": "返事そのものより、相手との間合いをどう保つかが主題。",
+      "share_card_do_not_flatten_with": [
+        "P09",
+        "P28",
+        "P31"
+      ],
+      "share_card_boundary_note": "距離調整型・気遣い型は、返事そのものより、相手との間合いをどう保つかが主題。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "距離調整型・気遣い型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "距離調整型・気遣い型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "近すぎず遠すぎず、距離を整える。",
+        "間合いが合うと、空気がやわらぐ。",
+        "距離感を、やさしく調整。"
+      ],
+      "recommended_share_card_line_jp": "近すぎず遠すぎず、距離を整える。",
+      "internal_logic_gloss_en": "Social spacing calibration.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P19",
+      "working_name": "慎重型・確認型",
+      "upstream_dimension_signature": "D19, D20 + D07",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '確認して安心してから進むので、急がずに見える。' before share-card compression.",
+      "share_card_function": "慎重型・確認型の核を、一読で切る。",
+      "share_card_memory_hook": "慎重 / 確認 / 安心材料 / 一度そろえる",
+      "share_card_core_recognition": "安心材料を集めてから、次に進む",
+      "share_card_primary_contrast": "安心材料の集め方を主軸にし、決断の遅さは副次にとどめる。",
+      "share_card_do_not_flatten_with": [
+        "P24",
+        "P30"
+      ],
+      "share_card_boundary_note": "慎重型・確認型は、安心材料の集め方を主軸にし、決断の遅さは副次にとどめる。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "慎重型・確認型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "慎重型・確認型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "安心材料を集めてから進む。",
+        "確認してから、次に行く。",
+        "まずそろえて、落ち着く。"
+      ],
+      "recommended_share_card_line_jp": "安心材料を集めてから進む。",
+      "internal_logic_gloss_en": "Confirmation before action.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 4,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P20",
+      "working_name": "決断型・保留型",
+      "upstream_dimension_signature": "D20, D21 + D13",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '決断と保留の境目が、この人の行動を分ける。' before share-card compression.",
+      "share_card_function": "決断型・保留型の核を、一読で切る。",
+      "share_card_memory_hook": "決断 / 保留 / 境目に強い / 即断より整理",
+      "share_card_core_recognition": "決めるか保留するかを、最後にきちんと分けたい",
+      "share_card_primary_contrast": "先送り癖の中でも、決める瞬間の線引きが主題。",
+      "share_card_do_not_flatten_with": [
+        "P13",
+        "P21",
+        "P19"
+      ],
+      "share_card_boundary_note": "決断型・保留型は、先送り癖の中でも、決める瞬間の線引きが主題。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "決断型・保留型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "決断型・保留型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "決めるか保留か、線を引く。",
+        "境目で止める、境目で進む。",
+        "決断の線引きが、はっきり。"
+      ],
+      "recommended_share_card_line_jp": "決めるか保留か、線を引く。",
+      "internal_logic_gloss_en": "Decision boundary / holding pattern.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P21",
+      "working_name": "即行動型・観察型",
+      "upstream_dimension_signature": "D21, D20 + D13",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '動くか様子を見るかで迷うなら、まず動く側に寄りやすい。' before share-card compression.",
+      "share_card_function": "即行動型・観察型の核を、一読で切る。",
+      "share_card_memory_hook": "即行動 / 観察後より先に動く / まず試す / 反応早め",
+      "share_card_core_recognition": "様子を見るより、まず動いて確かめたい",
+      "share_card_primary_contrast": "行動閾値の低さが主題で、決断の遅さとは逆方向に立つ。",
+      "share_card_do_not_flatten_with": [
+        "P08",
+        "P20"
+      ],
+      "share_card_boundary_note": "即行動型・観察型は、行動閾値の低さが主題で、決断の遅さとは逆方向に立つ。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "即行動型・観察型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "即行動型・観察型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "まず動いて、確かめる。",
+        "様子見より、先に試す。",
+        "行動が早いと、答えも早い。"
+      ],
+      "recommended_share_card_line_jp": "まず動いて、確かめる。",
+      "internal_logic_gloss_en": "Action-first verification.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P22",
+      "working_name": "朝型・回復型",
+      "upstream_dimension_signature": "D01, D11 + D12",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '朝の起動が回復と結びつくと、動き出しが軽くなる。' before share-card compression.",
+      "share_card_function": "朝型・回復型の核を、一読で切る。",
+      "share_card_memory_hook": "朝型 / 回復 / ゆっくり始動 / 静かな起動",
+      "share_card_core_recognition": "朝の起動を、回復と一緒にゆっくり整える",
+      "share_card_primary_contrast": "朝の起動に回復が混ざるため、純粋な朝型より柔らかい。",
+      "share_card_do_not_flatten_with": [
+        "P01",
+        "P11",
+        "P26"
+      ],
+      "share_card_boundary_note": "朝型・回復型は、朝の起動に回復が混ざるため、純粋な朝型より柔らかい。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "朝型・回復型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "朝型・回復型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "朝は、回復と一緒に始める。",
+        "朝の起動は、やわらかく。",
+        "回復してから、朝が動く。"
+      ],
+      "recommended_share_card_line_jp": "朝は、回復と一緒に始める。",
+      "internal_logic_gloss_en": "Morning restart with recovery.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P23",
+      "working_name": "実務型・負荷調整型",
+      "upstream_dimension_signature": "D15, D03 + D12",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '同時進行の中で、負荷調整ができるかが見える。' before share-card compression.",
+      "share_card_function": "実務型・負荷調整型の核を、一読で切る。",
+      "share_card_memory_hook": "実務 / 負荷調整 / 同時進行 / やりくり上手",
+      "share_card_core_recognition": "実務の同時進行を、負荷に合わせて調整する",
+      "share_card_primary_contrast": "多忙型よりも、実務の負荷調整に少し重心を置く。",
+      "share_card_do_not_flatten_with": [
+        "P03",
+        "P15",
+        "P12"
+      ],
+      "share_card_boundary_note": "実務型・負荷調整型は、多忙型よりも、実務の負荷調整に少し重心を置く。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "実務型・負荷調整型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "実務型・負荷調整型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "同時進行は、負荷で調整する。",
+        "やりくりは、負荷で変える。",
+        "実務の重さを、見ながら回す。"
+      ],
+      "recommended_share_card_line_jp": "同時進行は、負荷で調整する。",
+      "internal_logic_gloss_en": "Concurrent workload tuning.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P24",
+      "working_name": "安全優先型・確認型",
+      "upstream_dimension_signature": "D07, D19 + D08",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '安全確認と安心材料がそろうと、次の一歩が出やすい。' before share-card compression.",
+      "share_card_function": "安全優先型・確認型の核を、一読で切る。",
+      "share_card_memory_hook": "安全優先 / 確認 / 先に見る / 低リスク",
+      "share_card_core_recognition": "安全のために、確認を重ねてから進む",
+      "share_card_primary_contrast": "安全優先の確認型として、一般的な慎重型と分けている。",
+      "share_card_do_not_flatten_with": [
+        "P05",
+        "P07",
+        "P19"
+      ],
+      "share_card_boundary_note": "安全優先型・確認型は、安全優先の確認型として、一般的な慎重型と分けている。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "安全優先型・確認型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "安全優先型・確認型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "安全のために、確認を重ねる。",
+        "先に確かめて、安心して進む。",
+        "安全確認が、行動の前提。"
+      ],
+      "recommended_share_card_line_jp": "安全のために、確認を重ねる。",
+      "internal_logic_gloss_en": "Safety layered with repeated checks.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 4,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P25",
+      "working_name": "グループ連絡・慎重返答型",
+      "upstream_dimension_signature": "D09, D16 + D18",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '返事の温度は、場の流れや週末の空気で少し変わる。' before share-card compression.",
+      "share_card_function": "グループ連絡・慎重返答型の核を、一読で切る。",
+      "share_card_memory_hook": "グループ連絡 / 慎重返答 / 場の空気を見る / 遅れすぎない",
+      "share_card_core_recognition": "週末や場の流れを見て、返事の温度を整える",
+      "share_card_primary_contrast": "ただの即返しではなく、場や週末のリズムを見て返す点で分離した。",
+      "share_card_do_not_flatten_with": [
+        "P09",
+        "P18",
+        "P31"
+      ],
+      "share_card_boundary_note": "グループ連絡・慎重返答型は、ただの即返しではなく、場や週末のリズムを見て返す点で分離した。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "グループ連絡・慎重返答型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "グループ連絡・慎重返答型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "場の流れを見て、温度を整える。",
+        "週末の空気に、返事を合わせる。",
+        "グループの流れで、返し方が変わる。"
+      ],
+      "recommended_share_card_line_jp": "場の流れを見て、温度を整える。",
+      "internal_logic_gloss_en": "Group-rhythm reply timing.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P26",
+      "working_name": "夜型・回復型",
+      "upstream_dimension_signature": "D12, D11 + D16",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '夜に残った気力を、静かな回復で戻していく。' before share-card compression.",
+      "share_card_function": "夜型・回復型の核を、一読で切る。",
+      "share_card_memory_hook": "夜型 / 回復 / 省エネ / 静かに戻す",
+      "share_card_core_recognition": "夜の残量を見ながら、静かに回復する",
+      "share_card_primary_contrast": "夜の回復そのものを主軸にしているため、週末系よりも日常夜寄り。",
+      "share_card_do_not_flatten_with": [
+        "P11",
+        "P12",
+        "P29"
+      ],
+      "share_card_boundary_note": "夜型・回復型は、夜の回復そのものを主軸にしているため、週末系よりも日常夜寄り。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "夜型・回復型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "夜型・回復型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "夜の残量を見て、静かに回復。",
+        "夜は、静かに戻る時間。",
+        "省エネで、夜を整える。"
+      ],
+      "recommended_share_card_line_jp": "夜の残量を見て、静かに回復。",
+      "internal_logic_gloss_en": "Quiet night recovery with energy reserve.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P27",
+      "working_name": "気分回復型・整理型",
+      "upstream_dimension_signature": "D17, D06 + D11",
+      "teaser_handoff_reference": "Teaser layer keeps the hook 'ご褒美を取るか片付けるかで、気分の戻り方が変わる。' before share-card compression.",
+      "share_card_function": "気分回復型・整理型の核を、一読で切る。",
+      "share_card_memory_hook": "気分回復 / 整理 / 小さなご褒美 / 片付けと相性",
+      "share_card_core_recognition": "小さなご褒美と片付けを合わせて、気分を整える",
+      "share_card_primary_contrast": "回復を、片付けとご褒美の両方から支える人格。",
+      "share_card_do_not_flatten_with": [
+        "P04",
+        "P06",
+        "P14"
+      ],
+      "share_card_boundary_note": "気分回復型・整理型は、回復を、片付けとご褒美の両方から支える人格。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "気分回復型・整理型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "気分回復型・整理型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "ご褒美と片付けで、気分を整える。",
+        "整えて、少し甘やかす。",
+        "回復は、小さく足す。"
+      ],
+      "recommended_share_card_line_jp": "ご褒美と片付けで、気分を整える。",
+      "internal_logic_gloss_en": "Reward plus tidy-up reset.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P28",
+      "working_name": "気遣い型・家族調整型",
+      "upstream_dimension_signature": "D10, D18 + D09",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '家族への一言と、相手との間合いの取り方が自然に結びつく。' before share-card compression.",
+      "share_card_function": "気遣い型・家族調整型の核を、一読で切る。",
+      "share_card_memory_hook": "気遣い / 家族調整 / 間合い / 実務を荒らさない",
+      "share_card_core_recognition": "家族との調整と人との間合いを、気遣いでそろえる",
+      "share_card_primary_contrast": "家族軸と距離軸の両方を持つが、連絡の速さそのものは主題ではない。",
+      "share_card_do_not_flatten_with": [
+        "P10",
+        "P18",
+        "P31"
+      ],
+      "share_card_boundary_note": "気遣い型・家族調整型は、家族軸と距離軸の両方を持つが、連絡の速さそのものは主題ではない。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "気遣い型・家族調整型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "気遣い型・家族調整型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "家族調整と間合いを、気遣いでそろえる。",
+        "家族にも、人にも、やわらかい。",
+        "気遣いで、空気を荒らさない。"
+      ],
+      "recommended_share_card_line_jp": "家族調整と間合いを、気遣いでそろえる。",
+      "internal_logic_gloss_en": "Family coordination plus spacing.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P29",
+      "working_name": "週末静養・省エネ型",
+      "upstream_dimension_signature": "D16, D11 + D12",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '週末の静養は、夜の省エネともつながっている。' before share-card compression.",
+      "share_card_function": "週末静養・省エネ型の核を、一読で切る。",
+      "share_card_memory_hook": "週末静養 / 省エネ / 静かに整える / 無理しない",
+      "share_card_core_recognition": "週末は負荷を落として、静かに整える",
+      "share_card_primary_contrast": "日常回復系ではなく、週末という時間帯を主軸にした省エネ人格。",
+      "share_card_do_not_flatten_with": [
+        "P11",
+        "P26",
+        "P12"
+      ],
+      "share_card_boundary_note": "週末静養・省エネ型は、日常回復系ではなく、週末という時間帯を主軸にした省エネ人格。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "週末静養・省エネ型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "週末静養・省エネ型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "週末は、負荷を落として整える。",
+        "休む日は、静かに軽く。",
+        "週末の省エネが、ちょうどいい。"
+      ],
+      "recommended_share_card_line_jp": "週末は、負荷を落として整える。",
+      "internal_logic_gloss_en": "Weekend downshift and rest.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P30",
+      "working_name": "現実調整・再段取り型",
+      "upstream_dimension_signature": "D13, D19 + D20",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '予定が変わったら、安心より先に事実をそろえて組み直す。' before share-card compression.",
+      "share_card_function": "現実調整・再段取り型の核を、一読で切る。",
+      "share_card_memory_hook": "現実調整 / 再段取り / 事実確認 / 落ち着いて組み直す",
+      "share_card_core_recognition": "変更後に、事実をそろえて再段取りする",
+      "share_card_primary_contrast": "安心材料を集めるより、変更後の再段取りを先に進める点で分離した。",
+      "share_card_do_not_flatten_with": [
+        "P19",
+        "P13",
+        "P24"
+      ],
+      "share_card_boundary_note": "現実調整・再段取り型は、安心材料を集めるより、変更後の再段取りを先に進める点で分離した。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "現実調整・再段取り型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "現実調整・再段取り型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "変わったら、事実から組み直す。",
+        "変更後に、再段取りする。",
+        "現実から、もう一回整える。"
+      ],
+      "recommended_share_card_line_jp": "変わったら、事実から組み直す。",
+      "internal_logic_gloss_en": "Re-plan from facts after change.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    },
+    {
+      "persona_id": "P31",
+      "working_name": "場づくり・交流調整型",
+      "upstream_dimension_signature": "D18, D16 + D09",
+      "teaser_handoff_reference": "Teaser layer keeps the hook '場の空気と週末の流れが合うと、交流が無理なく続く。' before share-card compression.",
+      "share_card_function": "場づくり・交流調整型の核を、一読で切る。",
+      "share_card_memory_hook": "場づくり / 交流調整 / グループの空気 / 温度配分",
+      "share_card_core_recognition": "グループや場の空気に合わせて、距離を配分する",
+      "share_card_primary_contrast": "一対一の距離調整ではなく、場全体の距離配分を見ている。",
+      "share_card_do_not_flatten_with": [
+        "P18",
+        "P28",
+        "P25"
+      ],
+      "share_card_boundary_note": "場づくり・交流調整型は、一対一の距離調整ではなく、場全体の距離配分を見ている。。",
+      "share_card_length_rule": "8〜14字の核 / 1行 / 余白を残さない",
+      "share_card_tone_rule": "軽いが薄くない / 現代口語 / モバイル可",
+      "share_card_screenshot_rule": "1画面で止まる / 引用しやすい",
+      "share_card_virality_constraint": "自然に誰かへ見せたくなるが、説明しすぎない",
+      "share_card_do_not_use_patterns": [
+        "心理テストっぽい診断語",
+        "相談・カウンセリング調",
+        "企業ブランド広告調",
+        "抽象的な“あなたは…”語り",
+        "抽象化しすぎた共感コピー",
+        "冗長で説明型の一文",
+        "ミーム頼みで古くなる言い回し"
+      ],
+      "downstream_deep_report_handoff_note": "場づくり・交流調整型の短い差分を、そのまま同じD署名で深掘りへ渡す。",
+      "structural_share_card_summary": "場づくり・交流調整型の差分を、短く強く一読で見せる圧縮結果。",
+      "candidate_share_card_lines_jp": [
+        "グループの空気で、距離を配分する。",
+        "場づくりで、みんなを回す。",
+        "一対一より“場”を見ている。"
+      ],
+      "recommended_share_card_line_jp": "グループの空気で、距離を配分する。",
+      "internal_logic_gloss_en": "Community-space distance allocation.",
+      "calibration": {
+        "Japanese naturalness": 5,
+        "emotional truth": 5,
+        "entertainment value": 5,
+        "screenshot/share potential": 5,
+        "structural distinction retention": 5,
+        "compression safety": 5
+      },
+      "mythology_compatibility_note": "The line works without a myth label; later mythology can add memory color, not structural meaning."
+    }
+  ],
+  "output_contract": {
+    "global_share_card_rules": [
+      "Share-card copy is one notch tighter than the teaser layer.",
+      "Share-card copy must remain Japanese-native, screenshot-capable, and one-read legible.",
+      "Share-card copy may compress the hook, but may not erase the persona boundary.",
+      "No line may rely on mythology names to make sense.",
+      "No line may become generic relatable life advice.",
+      "No line may sound like a survey, counseling, corporate ad copy, or an AI assistant."
+    ],
+    "anti_patterns": [
+      "心理テストっぽい診断語",
+      "相談・カウンセリング調",
+      "企業ブランド広告調",
+      "抽象的な“あなたは…”語り",
+      "抽象化しすぎた共感コピー",
+      "冗長で説明型の一文",
+      "ミーム頼みで古くなる言い回し"
+    ],
+    "handoff_rules_into_deep_report_scaffold": [
+      "Keep the same canonical persona master and 21-dimension backbone.",
+      "Expand the exact tension, not a different persona.",
+      "Add context and texture, not new structural logic.",
+      "If the share-card needs mythology to make sense, it is too weak."
+    ],
+    "mythology_compatibility_note": [
+      "No final mythology names were generated in this batch.",
+      "Every share-card line must still stand without a future myth label.",
+      "Mythology may decorate later, but it must not redefine the structural distinction."
+    ]
+  }
+}
