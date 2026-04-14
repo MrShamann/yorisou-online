@@ -1,15 +1,27 @@
 import { NextResponse } from "next/server";
 
 import type { LineWebhookEventRecord } from "@/lib/server/yorisouData";
-import { createLineWebhookEvent, findAccountByLineUserId, findLineWebhookEventById } from "@/lib/server/yorisouData";
+import {
+  createLineWebhookEvent,
+  findAccountByLineUserId,
+  findLineWebhookEventById,
+  updateLineWebhookEventMessageText,
+  updateLineWebhookEventReplyState,
+} from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { timelineService } from "@/lib/server/foundation/timelineService";
 import {
+  buildYorisouCompanionLineReply,
+  buildYorisouCompanionVoiceFallbackReply,
+} from "@/lib/server/yorisouCompanionLineReply";
+import {
+  downloadLineMessageContent,
   getLineMessagingConfigStatus,
   isLineMessagingConfigured,
   sendLineReplyMessage,
   verifyLineWebhookSignature,
 } from "@/lib/server/yorisouLine";
+import { transcribeSupportVoice } from "@/lib/server/openclawVoiceBridge";
 
 export const runtime = "nodejs";
 
@@ -25,6 +37,10 @@ type LineWebhookEvent = {
   message?: {
     type?: string;
     text?: string;
+    id?: string;
+    contentProvider?: {
+      type?: string;
+    };
   };
   source?: {
     type?: string;
@@ -53,15 +69,18 @@ function eventTimestampToIso(timestamp: number | undefined) {
 }
 
 function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
-  if (input.accountMatched) {
-    return input.eventType === "follow"
-      ? "Yorisouの相談窓口、ひなたです。アカウント連携を確認しました。こちらでメッセージを受け付けています。"
-      : "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。担当確認後にご連絡します。";
-  }
+  return buildYorisouCompanionLineReply({
+    eventType: input.eventType as "follow" | "message" | "postback",
+    accountMatched: input.accountMatched,
+    locale: "ja",
+  });
+}
 
-  return input.eventType === "follow"
-    ? "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。/support の LINE Connect からアカウント連携できます。"
-    : "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。必要に応じて /support の LINE Connect からアカウント連携してください。";
+function buildLineVoiceFallbackReply(input: { accountMatched: boolean }) {
+  return buildYorisouCompanionVoiceFallbackReply({
+    accountMatched: input.accountMatched,
+    locale: "ja",
+  });
 }
 
 async function syncLineWebhookEventToCanonical(record: LineWebhookEventRecord) {
@@ -96,6 +115,10 @@ async function syncLineWebhookEventToCanonical(record: LineWebhookEventRecord) {
     authIdentityId: ensuredIdentity.authIdentityId,
     userProfileId: ensuredIdentity.userProfileId,
   };
+}
+
+function getLineWebhookDedupeId(event: LineWebhookEvent) {
+  return event.webhookEventId || event.message?.id || null;
 }
 
 export async function GET() {
@@ -135,8 +158,10 @@ export async function POST(request: Request) {
       continue;
     }
 
-    if (event.webhookEventId) {
-      const existing = await findLineWebhookEventById(event.webhookEventId);
+    const dedupeId = getLineWebhookDedupeId(event);
+
+    if (dedupeId) {
+      const existing = await findLineWebhookEventById(dedupeId);
 
       if (existing) {
         try {
@@ -154,49 +179,109 @@ export async function POST(request: Request) {
     const accountMatched = Boolean(account);
     const accountId = account?.id || null;
     const shouldReply = Boolean(event.replyToken && (eventType === "message" || eventType === "follow" || eventType === "postback"));
-    let replyStatus: "not_attempted" | "sent" | "failed" = "not_attempted";
-    let replyError: string | null = null;
-
-    if (shouldReply && event.replyToken) {
-      const reply = await sendLineReplyMessage({
-        replyToken: event.replyToken,
-        text: buildReplyText({
-          eventType,
-          accountMatched,
-        }),
-      });
-
-      if (reply.ok) {
-        replyStatus = "sent";
-      } else {
-        replyStatus = "failed";
-        replyError = reply.reason === "reply_failed" ? `status=${reply.status}` : reply.reason;
-      }
-    }
-
-    const createdRecord = await createLineWebhookEvent({
-      id: event.webhookEventId || undefined,
+    const isAudioMessage = eventType === "message" && event.message?.type === "audio";
+    const eventId = dedupeId || undefined;
+    let messageText = event.message?.text || null;
+    let createdRecord = await createLineWebhookEvent({
+      id: eventId,
       accountId,
       lineUserId,
       sourceType: event.source?.type || null,
       eventType,
       messageType: event.message?.type || null,
-      messageText: event.message?.text || null,
+      messageText: isAudioMessage ? null : messageText,
       postbackData: event.postback?.data || null,
       replyTokenPresent: Boolean(event.replyToken),
-      replyStatus,
-      replyError,
+      replyStatus: "not_attempted",
+      replyError: null,
       webhookEventId: event.webhookEventId || null,
       deliveryMode: event.mode || null,
       isRedelivery: Boolean(event.deliveryContext?.isRedelivery),
       eventTimestamp: eventTimestampToIso(event.timestamp),
     });
 
+    if (isAudioMessage && event.message?.id) {
+      try {
+        const audio = await downloadLineMessageContent({ messageId: event.message.id });
+        const transcription = await transcribeSupportVoice({
+          audioBase64: audio.audioBase64,
+          mimeType: audio.mimeType,
+          fileName: audio.fileName,
+          locale: "ja",
+          retryCount: 0,
+          utteranceIndex: null,
+        });
+
+        if (transcription.success) {
+          messageText = transcription.transcript;
+          const updated = await updateLineWebhookEventMessageText({
+            id: createdRecord.id,
+            messageText,
+          });
+          if (updated) {
+            createdRecord = updated;
+          }
+        } else {
+          messageText = null;
+        }
+      } catch (error) {
+        console.error("line webhook voice transcription failed:", error);
+        messageText = null;
+      }
+    }
+
     try {
       await syncLineWebhookEventToCanonical(createdRecord);
     } catch (error) {
       const message = error instanceof Error ? error.message : "line_webhook_canonical_sync_failed";
       return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    }
+
+    if (shouldReply && event.replyToken) {
+      let replyText = buildReplyText({
+        eventType,
+        accountMatched,
+      });
+
+      const replySourceMessage = messageText || event.message?.text || "";
+      const shouldUseTranscriptReply = eventType === "message" && replySourceMessage.trim().length > 0;
+
+      if (shouldUseTranscriptReply) {
+        try {
+          replyText = buildYorisouCompanionLineReply({
+            eventType,
+            accountMatched,
+            locale: "ja",
+          });
+        } catch (error) {
+          console.error("line webhook companion reply error:", error);
+          if (isAudioMessage) {
+            replyText = buildLineVoiceFallbackReply({ accountMatched });
+          }
+        }
+      } else if (isAudioMessage) {
+        replyText = buildLineVoiceFallbackReply({ accountMatched });
+      }
+
+      const reply = await sendLineReplyMessage({
+        replyToken: event.replyToken,
+        text: replyText,
+      });
+
+      if (reply.ok) {
+        await updateLineWebhookEventReplyState({
+          id: createdRecord.id,
+          replyStatus: "sent",
+          replyError: null,
+        });
+      } else {
+        const replyError = reply.reason === "reply_failed" ? `status=${reply.status}` : reply.reason;
+        await updateLineWebhookEventReplyState({
+          id: createdRecord.id,
+          replyStatus: "failed",
+          replyError,
+        });
+      }
     }
   }
 
