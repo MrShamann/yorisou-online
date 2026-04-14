@@ -101,6 +101,16 @@ export default function CanonicalResultSurface({ locale, snapshot, currentPath }
     snapshot.unlockState === "unlock_granted" ||
     snapshot.unlockState === "payment_succeeded" ||
     snapshot.unlockState === "deep_report_available";
+  const deepReportFallbackMessage =
+    snapshot.renderingState === "version_mismatch_guard"
+      ? t.versionBody
+      : snapshot.renderingState === "invalid_or_missing_payload"
+        ? t.invalidBody
+        : snapshot.renderingState === "teaser_only"
+          ? t.deepLocked
+          : locale === "en"
+            ? "Deep reading is locked for this result."
+            : "深い読みはこの結果ではロック中です。";
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-5 py-8 text-[var(--text)] sm:px-6 lg:px-8">
@@ -174,7 +184,7 @@ export default function CanonicalResultSurface({ locale, snapshot, currentPath }
                 </div>
               ) : (
                 <div className="rounded-[1.4rem] border border-dashed border-[color:var(--line-soft)] bg-white/60 px-5 py-6 text-sm leading-7 text-[var(--muted)]">
-                  {snapshot.renderingState === "teaser_only" ? t.deepLocked : t.invalidBody}
+                  {deepReportFallbackMessage}
                 </div>
               )}
             </Panel>
