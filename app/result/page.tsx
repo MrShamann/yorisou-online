@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import CanonicalResultSurface from "@/app/components/CanonicalResultSurface";
-import ResultLiffBridge from "@/app/components/ResultLiffBridge";
 import {
   buildResultLabSnapshot,
   getLabScenarioOptions,
@@ -75,9 +74,6 @@ export default async function ResultPage({
   });
 
   return (
-    <>
-      <ResultLiffBridge currentPath={currentPath} />
-      <CanonicalResultSurface locale="ja" snapshot={snapshot} currentPath={currentPath} />
-    </>
+    <CanonicalResultSurface locale="ja" snapshot={snapshot} currentPath={currentPath} />
   );
 }
