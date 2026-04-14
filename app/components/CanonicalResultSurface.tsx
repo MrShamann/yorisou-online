@@ -9,17 +9,16 @@ type Locale = "ja" | "en";
 type Props = {
   locale: Locale;
   snapshot: ResultLabSnapshot;
-  currentPath: string;
 };
 
 const copy = {
   ja: {
-    label: "RESULT",
-    subtitle: "ロック済みの名前・ティーザー・共有文・深い読みの手前までを、ひとつの結果として整えます。",
-    lineContinue: "LINEで続ける",
-    lineContinueHint: "この結果は、LINE認証が完了していれば同じ流れに戻れます。",
+    label: "あなたの結果",
+    subtitle: "今の寄り添い方を、ひとつの結果としてわかりやすくまとめます。",
+    lineContinue: "もう一度チェックする",
+    lineContinueHint: "LINE MINI App の最初に戻って、もう一度はじめられます。",
     teaser: "ティーザー",
-    shareCard: "共有カード",
+    shareCard: "友だちに送りやすい一言",
     deepReport: "深い読み",
     invalidTitle: "結果の受け取りに問題があります",
     invalidBody: "この状態では、結果をそのまま表示できません。payload または version を確認してください。",
@@ -30,18 +29,18 @@ const copy = {
     deepUnlocked: "深い読みを開いています",
     resultReady: "結果は準備できています",
     shareReady: "共有カードは準備できています",
-    lockedNotice: "名前・サブタイトル・次元の意味は変更しません。",
+    lockedNotice: "表示は読み取り専用です。結果はそのまま保存して戻れます。",
     currentState: "現在の状態",
     readOnly: "読み取り専用",
-    lineHint: "LINE続行は、同じ結果に戻るための入口です。",
+    lineHint: "LINE続行は、同じ流れに戻るための入口です。",
   },
   en: {
-    label: "RESULT",
-    subtitle: "This surface keeps the locked name, teaser, share copy, and deep-report boundary in one read-only result view.",
-    lineContinue: "Continue in LINE",
-    lineContinueHint: "If LINE auth is configured, this result can return to the same flow.",
+    label: "Your result",
+    subtitle: "A clear result view that summarizes the support pattern that fits you right now.",
+    lineContinue: "Check again",
+    lineContinueHint: "Returns to the LINE MINI App start so you can try again.",
     teaser: "Teaser",
-    shareCard: "Share card",
+    shareCard: "A line to share",
     deepReport: "Deep reading",
     invalidTitle: "There is a problem receiving this result",
     invalidBody: "This state cannot render the result as-is. Check the payload and version.",
@@ -52,20 +51,15 @@ const copy = {
     deepUnlocked: "Deep reading is open",
     resultReady: "The result is ready",
     shareReady: "Share card is ready",
-    lockedNotice: "The label, subtitle, and dimension meaning remain locked.",
+    lockedNotice: "This view is read-only. Your result stays the same when you come back.",
     currentState: "Current state",
     readOnly: "Read-only",
-    lineHint: "LINE continuation returns to the same result context.",
+    lineHint: "LINE continuation returns to the same flow.",
   },
 } as const;
 
-function lineContinueHref(locale: Locale, currentPath: string) {
-  const params = new URLSearchParams({
-    locale,
-    intent: "support",
-    returnTo: currentPath,
-  });
-  return `/api/line/auth/start?${params.toString()}`;
+function lineContinueHref(locale: Locale) {
+  return locale === "en" ? "/en/line/mini-app" : "/line/mini-app";
 }
 
 function renderStateLabel(locale: Locale, snapshot: ResultLabSnapshot) {
@@ -91,9 +85,9 @@ function renderStateLabel(locale: Locale, snapshot: ResultLabSnapshot) {
   return t.resultReady;
 }
 
-export default function CanonicalResultSurface({ locale, snapshot, currentPath }: Props) {
+export default function CanonicalResultSurface({ locale, snapshot }: Props) {
   const t = copy[locale];
-  const continueHref = lineContinueHref(locale, currentPath);
+  const continueHref = lineContinueHref(locale);
   const payload = snapshot.payload;
   const renderErrorState = snapshot.renderingState === "invalid_or_missing_payload" || snapshot.renderingState === "version_mismatch_guard";
   const canRenderDeepReport =
@@ -113,15 +107,23 @@ export default function CanonicalResultSurface({ locale, snapshot, currentPath }
             : "深い読みはこの結果ではロック中です。";
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-5 py-8 text-[var(--text)] sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-6 py-6 shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
+    <main className="min-h-screen bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-5 py-6 text-[var(--text)] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl">
+        <header className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-5 py-6 shadow-[0_14px_28px_rgba(47,35,33,0.04)] sm:px-6">
           <div className="service-kicker">{t.label}</div>
-          <h1 className="display-serif mt-3 text-[2rem] leading-[1.34] sm:text-[2.5rem]">{payload?.final_locked_label_jp || t.invalidTitle}</h1>
+          <h1 className="display-serif mt-3 text-[2rem] leading-[1.34] sm:text-[2.5rem]">
+            {payload?.share_card_result.share_card_line_jp || payload?.teaser_result.teaser_line_jp || payload?.final_locked_label_jp || t.invalidTitle}
+          </h1>
           <p className="mt-3 max-w-4xl text-[15px] leading-8 text-[var(--muted)] sm:text-base">
             {payload?.final_locked_subtitle_jp || (renderErrorState ? t.versionBody : t.subtitle)}
           </p>
-          <div className="mt-4 rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-4 text-sm leading-7 text-[var(--muted)]">
+          <div className="mt-4 rounded-[1.4rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.32)] px-4 py-4">
+            <div className="service-kicker text-[var(--accent-sage-text)]">{locale === "en" ? "Result name" : "結果名"}</div>
+            <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">
+              {payload?.final_locked_label_jp || t.invalidTitle}
+            </p>
+          </div>
+          <div className="mt-5 rounded-[1.4rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-4 text-sm leading-7 text-[var(--muted)]">
             {t.lockedNotice}
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -131,14 +133,14 @@ export default function CanonicalResultSurface({ locale, snapshot, currentPath }
             >
               {t.lineContinue}
             </Link>
-            <a
-              href={locale === "en" ? "/en/support" : "/support"}
-              className="inline-flex items-center justify-center rounded-[1.2rem] border border-[color:var(--line-soft)] bg-white/80 px-5 py-3 text-sm text-[var(--muted)] transition hover:bg-white"
-            >
-              {locale === "en" ? "Back to support" : "相談に戻る"}
-            </a>
           </div>
           <p className="mt-3 text-xs leading-6 text-[var(--muted)]">{t.lineContinueHint}</p>
+          <a
+            href={locale === "en" ? "/en/support" : "/support"}
+            className="mt-3 inline-flex text-sm text-[var(--muted)] underline underline-offset-4 transition hover:text-[var(--text)]"
+          >
+            {locale === "en" ? "Open support page" : "相談ページを見る"}
+          </a>
         </header>
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -152,14 +154,14 @@ export default function CanonicalResultSurface({ locale, snapshot, currentPath }
               ) : (
                 <div className="rounded-[1.4rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.34)] px-5 py-5">
                   <div className="service-kicker text-[var(--accent-sage-text)]">{t.teaser}</div>
-                  <p className="mt-3 text-sm leading-8 text-[var(--accent-sage-text)]">{payload?.teaser_result.teaser_line_jp || "—"}</p>
+                  <p className="mt-3 text-lg leading-8 text-[var(--accent-sage-text)]">{payload?.teaser_result.teaser_line_jp || "—"}</p>
                 </div>
               )}
             </Panel>
 
             <Panel title={t.shareCard}>
               <div className="rounded-[1.4rem] border border-[color:var(--line-soft)] bg-white/80 px-5 py-5">
-                <p className="text-sm leading-8 text-[var(--muted)]">{payload?.share_card_result.share_card_line_jp || "—"}</p>
+                <p className="text-lg leading-8 text-[var(--text)]">{payload?.share_card_result.share_card_line_jp || "—"}</p>
                 <p className="mt-2 text-xs leading-6 text-[var(--muted)]">
                   {snapshot.payload?.share_card_state.status === "share_card_ready" ? t.shareReady : copy[locale].lockedNotice}
                 </p>

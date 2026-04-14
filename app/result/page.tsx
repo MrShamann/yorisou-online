@@ -12,8 +12,8 @@ import {
 } from "@/lib/result/rendering-contract-adapter";
 
 export const metadata: Metadata = {
-  title: "結果 | Yorisou",
-  description: "ロック済みの結果名、ティーザー、共有文、深い読みをひとつの結果として確認するページです。",
+  title: "あなたの結果 | Yorisou",
+  description: "今の寄り添い方を、ひとつの見やすい結果として表示するページです。",
 };
 
 type SearchParams = Promise<{
@@ -23,22 +23,6 @@ type SearchParams = Promise<{
   sessionMode?: string;
   versionMode?: string;
 }>;
-
-function buildCurrentPath(input: {
-  persona: string;
-  scenario: LabScenario;
-  surface: LabSurfaceMode;
-  sessionMode: "anonymous" | "bound";
-  versionMode: "valid" | "mismatch";
-}) {
-  const params = new URLSearchParams();
-  params.set("persona", input.persona);
-  params.set("scenario", input.scenario);
-  params.set("surface", input.surface);
-  params.set("sessionMode", input.sessionMode);
-  params.set("versionMode", input.versionMode);
-  return `/result?${params.toString()}`;
-}
 
 export default async function ResultPage({
   searchParams,
@@ -65,15 +49,5 @@ export default async function ResultPage({
     versionMode,
   });
 
-  const currentPath = buildCurrentPath({
-    persona: personaId,
-    scenario,
-    surface,
-    sessionMode,
-    versionMode,
-  });
-
-  return (
-    <CanonicalResultSurface locale="ja" snapshot={snapshot} currentPath={currentPath} />
-  );
+  return <CanonicalResultSurface locale="ja" snapshot={snapshot} />;
 }

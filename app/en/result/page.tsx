@@ -12,8 +12,8 @@ import {
 } from "@/lib/result/rendering-contract-adapter";
 
 export const metadata: Metadata = {
-  title: "Result | Yorisou",
-  description: "Review the locked result label, teaser, share copy, and deep-reading boundary in one read-only result view.",
+  title: "Your result | Yorisou",
+  description: "A clear, read-only result view that shows the support pattern that fits you right now.",
 };
 
 type SearchParams = Promise<{
@@ -23,22 +23,6 @@ type SearchParams = Promise<{
   sessionMode?: string;
   versionMode?: string;
 }>;
-
-function buildCurrentPath(input: {
-  persona: string;
-  scenario: LabScenario;
-  surface: LabSurfaceMode;
-  sessionMode: "anonymous" | "bound";
-  versionMode: "valid" | "mismatch";
-}) {
-  const params = new URLSearchParams();
-  params.set("persona", input.persona);
-  params.set("scenario", input.scenario);
-  params.set("surface", input.surface);
-  params.set("sessionMode", input.sessionMode);
-  params.set("versionMode", input.versionMode);
-  return `/en/result?${params.toString()}`;
-}
 
 export default async function EnglishResultPage({
   searchParams,
@@ -65,13 +49,5 @@ export default async function EnglishResultPage({
     versionMode,
   });
 
-  const currentPath = buildCurrentPath({
-    persona: personaId,
-    scenario,
-    surface,
-    sessionMode,
-    versionMode,
-  });
-
-  return <CanonicalResultSurface locale="en" snapshot={snapshot} currentPath={currentPath} />;
+  return <CanonicalResultSurface locale="en" snapshot={snapshot} />;
 }
