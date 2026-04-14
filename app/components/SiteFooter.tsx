@@ -8,7 +8,8 @@ export default function SiteFooter() {
   const pathname = usePathname() || "/";
   const isEn = pathname === "/en" || pathname.startsWith("/en/");
 
-  const legalHref = isEn ? "/en/legal" : "/legal";
+  const termsHref = "/terms";
+  const privacyHref = "/privacy";
   const contactHref = isEn ? "/en/contact" : "/contact";
   const aboutHref = isEn ? "/en/about" : "/about";
   const insightsHref = isEn ? "/en/insights" : "/insights";
@@ -51,7 +52,8 @@ export default function SiteFooter() {
                 <Link href={supportHref}>{isEn ? "Talk with Hinata" : "ひなたとの対話"}</Link>
                 <Link href={loginHref}>{isEn ? "Continue your account" : "ログイン・アカウント"}</Link>
                 <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>
-                <Link href={legalHref}>{isEn ? "Terms & Privacy" : "利用規約・プライバシーポリシー"}</Link>
+                <Link href={termsHref}>{isEn ? "Terms" : "利用規約"}</Link>
+                <Link href={privacyHref}>{isEn ? "Privacy Policy" : "プライバシーポリシー"}</Link>
               </div>
             </div>
           </div>
