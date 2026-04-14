@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { buildMiniAppResultHandoffHref } from "@/lib/server/miniAppEntryRouting";
+import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
 
 export const metadata: Metadata = {
   title: "LINE Mini App | Yorisou",
-  description: "Yorisou formal LINE Mini App entry shell.",
+  description: "Yorisou formal LINE Mini App entry shell. It routes into the mobile check-in flow.",
 };
 
 export default function EnglishMiniAppEntryPage({
@@ -13,5 +13,5 @@ export default function EnglishMiniAppEntryPage({
 }: {
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  redirect(buildMiniAppResultHandoffHref({ locale: "en", searchParams: searchParams || {} }));
+  redirect(buildMiniAppCheckInHandoffHref({ locale: "en", searchParams: searchParams || {} }));
 }

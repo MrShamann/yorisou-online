@@ -28,6 +28,7 @@ export default async function RootLayout({
     pathname === "/support" ||
     pathname === "/en/support" ||
     pathname === "/check-in" ||
+    pathname === "/en/check-in" ||
     pathname === "/result" ||
     pathname === "/en/result" ||
     pathname === "/line/mini-app" ||
