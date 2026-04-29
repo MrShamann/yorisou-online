@@ -95,3 +95,18 @@ export function buildDynamicTestResultHref(input: {
   const path = input.locale === "en" ? "/en/result" : "/result";
   return `${path}?${params.toString()}`;
 }
+
+export function buildDynamicTestContinuationHref(input: {
+  locale: "ja" | "en";
+  completionId: string;
+  openedAt?: number | string | null;
+}) {
+  const params = new URLSearchParams();
+  params.set("completionId", input.completionId);
+  if (typeof input.openedAt === "number" || typeof input.openedAt === "string") {
+    params.set("openedAt", String(input.openedAt));
+  }
+
+  const path = input.locale === "en" ? "/en/result/continue" : "/result/continue";
+  return `${path}?${params.toString()}`;
+}

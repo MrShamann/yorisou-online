@@ -1,0 +1,318 @@
+{
+  "batch_id": "targeted_batch_01_2",
+  "batch_date": "2026-04-12",
+  "summary": {
+    "total_candidates": 9,
+    "focus_dimensions": [
+      "D02",
+      "D18"
+    ],
+    "secondary_dimensions": [
+      "D10",
+      "D11",
+      "D16",
+      "D17",
+      "D19"
+    ]
+  },
+  "items": [
+    {
+      "candidate_id": "TB12-01",
+      "dimension_id": "D02",
+      "dimension_label": "出発前の段取り",
+      "pool": "first-time",
+      "session_position": "opener",
+      "tone_depth": "light",
+      "scenario_family": "玄関での出発準備",
+      "question": "家を出る前、いちばん落ち着くのはどれ？",
+      "options": [
+        {
+          "id": "A",
+          "label": "鍵と財布をもう一度見る"
+        },
+        {
+          "id": "B",
+          "label": "靴をそろえてから出る"
+        },
+        {
+          "id": "C",
+          "label": "出る時間を先に決める"
+        },
+        {
+          "id": "D",
+          "label": "家の人にひと声かける"
+        },
+        {
+          "id": "E",
+          "label": "玄関で1回深呼吸してから出る"
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-02",
+      "dimension_id": "D02",
+      "dimension_label": "出発前の段取り",
+      "pool": "returning",
+      "session_position": "middle",
+      "tone_depth": "quiet_returning",
+      "scenario_family": "急ぎ気味の朝の出発",
+      "question": "前より少し急ぎたい朝は、どこから整える？",
+      "options": [
+        {
+          "id": "A",
+          "label": "持ち物だけ先にそろえる"
+        },
+        {
+          "id": "B",
+          "label": "服を決めてから動く"
+        },
+        {
+          "id": "C",
+          "label": "出発時間を固定する"
+        },
+        {
+          "id": "D",
+          "label": "家族に一声だけ入れる"
+        },
+        {
+          "id": "E",
+          "label": "玄関で気持ちを落ち着ける"
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-03",
+      "dimension_id": "D18",
+      "dimension_label": "周囲との距離感",
+      "pool": "first-time",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "scenario_family": "職場の雑談",
+      "question": "職場の雑談で、ちょうどいい距離は？",
+      "options": [
+        {
+          "id": "A",
+          "label": "用件だけきっちり返す"
+        },
+        {
+          "id": "B",
+          "label": "あいさつは明るめにする"
+        },
+        {
+          "id": "C",
+          "label": "少し雑談を足す"
+        },
+        {
+          "id": "D",
+          "label": "相手の様子に合わせる"
+        },
+        {
+          "id": "E",
+          "label": "今日は静かに引いておく"
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-04",
+      "dimension_id": "D18",
+      "dimension_label": "周囲との距離感",
+      "pool": "returning",
+      "session_position": "middle",
+      "tone_depth": "quiet_returning",
+      "scenario_family": "LINEグループの空気",
+      "question": "LINEグループで、今日はどの距離がいちばん楽？",
+      "options": [
+        {
+          "id": "A",
+          "label": "反応だけして様子を見る"
+        },
+        {
+          "id": "B",
+          "label": "必要なことだけ書く"
+        },
+        {
+          "id": "C",
+          "label": "ひとこと雑談を足す"
+        },
+        {
+          "id": "D",
+          "label": "誰かの流れに合わせる"
+        },
+        {
+          "id": "E",
+          "label": "今日は読んでおくだけにする"
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-05",
+      "dimension_id": "D10",
+      "dimension_label": "家族への一言相談",
+      "pool": "first-time",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "scenario_family": "家族との短い相談",
+      "question": "家族に短く相談するなら、いちばん自然なのは？",
+      "options": [
+        {
+          "id": "A",
+          "label": "先に予定だけ共有する",
+          "signal": ""
+        },
+        {
+          "id": "B",
+          "label": "手伝いを1つだけ頼む",
+          "signal": ""
+        },
+        {
+          "id": "C",
+          "label": "まだ決めずに見守ってもらう",
+          "signal": ""
+        },
+        {
+          "id": "D",
+          "label": "今回は自分でやる",
+          "signal": ""
+        },
+        {
+          "id": "E",
+          "label": "夜にまとめて話す",
+          "signal": ""
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-06",
+      "dimension_id": "D11",
+      "dimension_label": "ひとり時間の回復",
+      "pool": "first-time",
+      "session_position": "middle",
+      "tone_depth": "light_plus",
+      "scenario_family": "人と会ったあとの回復",
+      "question": "人と会ったあと、いちばん回復しやすいのは？",
+      "options": [
+        {
+          "id": "A",
+          "label": "1人で静かに座る"
+        },
+        {
+          "id": "B",
+          "label": "温かい飲み物を飲む"
+        },
+        {
+          "id": "C",
+          "label": "スマホを置いて休む"
+        },
+        {
+          "id": "D",
+          "label": "すぐ別の用事に移る"
+        },
+        {
+          "id": "E",
+          "label": "誰かに少し話して切り替える"
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-07",
+      "dimension_id": "D16",
+      "dimension_label": "週末の過ごし方",
+      "pool": "first-time",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "scenario_family": "週末のゆるい予定",
+      "question": "週末にいちばん近い過ごし方は？",
+      "options": [
+        {
+          "id": "A",
+          "label": "友だちと会って空気を変えたい"
+        },
+        {
+          "id": "B",
+          "label": "家で整えたい"
+        },
+        {
+          "id": "C",
+          "label": "予定を詰めすぎたくない"
+        },
+        {
+          "id": "D",
+          "label": "近場だけふらっと出たい"
+        },
+        {
+          "id": "E",
+          "label": "何も決めず流れたい"
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-08",
+      "dimension_id": "D17",
+      "dimension_label": "小さなご褒美の選び方",
+      "pool": "returning",
+      "session_position": "closer",
+      "tone_depth": "quiet_returning",
+      "scenario_family": "人に会った日のご褒美",
+      "question": "人に会った日のあと、自分にあげたいご褒美は？",
+      "options": [
+        {
+          "id": "A",
+          "label": "おいしいものを少し食べる"
+        },
+        {
+          "id": "B",
+          "label": "早めにひとり時間を取る"
+        },
+        {
+          "id": "C",
+          "label": "好きな音楽を流す"
+        },
+        {
+          "id": "D",
+          "label": "何もしない時間を作る"
+        },
+        {
+          "id": "E",
+          "label": "今日はご褒美なしで寝る"
+        }
+      ]
+    },
+    {
+      "candidate_id": "TB12-09",
+      "dimension_id": "D19",
+      "dimension_label": "安心材料の集め方",
+      "pool": "first-time",
+      "session_position": "stabilizer",
+      "tone_depth": "light_plus",
+      "scenario_family": "不安がふくらんだ夜",
+      "question": "少し不安がふくらんだ夜、最初に欲しいのは？",
+      "options": [
+        {
+          "id": "A",
+          "label": "明日の予定の確認",
+          "signal": ""
+        },
+        {
+          "id": "B",
+          "label": "誰かのひとこと",
+          "signal": ""
+        },
+        {
+          "id": "C",
+          "label": "前にうまくいった例",
+          "signal": ""
+        },
+        {
+          "id": "D",
+          "label": "ひと呼吸つく時間",
+          "signal": ""
+        },
+        {
+          "id": "E",
+          "label": "まだ情報はいらない",
+          "signal": ""
+        }
+      ]
+    }
+  ]
+}

@@ -7,9 +7,8 @@ import {
   buildResultLabSnapshot,
   getCanonicalPersonaOptions,
 } from "@/lib/result/rendering-contract-adapter";
-import { buildDynamicTestContinuationHref, resolveDynamicTestRevealContext } from "@/lib/dynamicTestEngineSession";
+import { buildDynamicTestContinuationHref } from "@/lib/dynamicTestEngineSession";
 import { getResultVisualAssetResolution } from "@/lib/server/resultVisualAssetRegistry";
-import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { getDynamicTestCompletionRecord } from "@/lib/server/dynamicTestCompletionStore";
 import { getCanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
 import { resolveOracleLineForResult } from "@/lib/yorisou/dte/oracle/oracle-line-result-resolver";
@@ -39,20 +38,12 @@ export default async function ResultPage({
   const params = (await searchParams) || {};
   const completionId = typeof params.completionId === "string" ? params.completionId : "";
   const unlockTarget = typeof params.unlock === "string" ? params.unlock : "";
-  const viewer = await getViewerContext();
   const completion = completionId ? await getDynamicTestCompletionRecord(completionId) : null;
   const renderAt = new Date().getTime();
   const personaOptions = getCanonicalPersonaOptions();
   const fallbackPersonaId = personaOptions[0]?.personaId || "P01";
-  const truth = resolveDynamicTestRevealContext({
-    locale: "ja",
-    completionId,
-    completion,
-    session: viewer.session,
-    fallbackPersonaId,
-  });
-  const isValidCompletion = truth.source !== "invalid";
-  const personaId = truth.personaId;
+  const isValidCompletion = Boolean(completion);
+  const personaId = completion?.personaId || fallbackPersonaId;
   const snapshot = buildResultLabSnapshot({
     personaId,
     scenario: isValidCompletion ? "result_ready" : "invalid_or_missing_payload",
@@ -79,7 +70,7 @@ export default async function ResultPage({
     traitChips: publicIdentity.traitChipsJa,
   });
   const shareViewHref = isValidCompletion
-    ? `/result/share?completionId=${encodeURIComponent(truth.completionId || completionId || "")}`
+    ? `/result/share?completionId=${encodeURIComponent(completion?.id || completionId || "")}`
     : `/result/share?personaId=${encodeURIComponent(personaId)}`;
   const personaShell = getCanonicalPublicPersonaShell(personaId);
   const currentModeKey = completion?.currentModeKey || null;
@@ -96,9 +87,9 @@ export default async function ResultPage({
       {isValidCompletion && unlockTarget === "deep_report" ? (
         <DteEventTracker
           event="unlock_succeeded"
-          completionId={truth.completionId || null}
-          personaId={truth.personaId || null}
-          sessionId={truth.sessionId || null}
+          completionId={completion?.id || null}
+          personaId={completion?.personaId || null}
+          sessionId={completion?.sessionId || null}
           locale="ja"
           branchId="yorisou_dte"
           sourceBranchId="yorisou_dte"
@@ -114,11 +105,11 @@ export default async function ResultPage({
       ) : null}
       <DteEventTracker
         event="result_revealed"
-        completionId={isValidCompletion ? truth.completionId || null : null}
-        personaId={isValidCompletion ? truth.personaId || null : null}
-        sessionId={isValidCompletion ? truth.sessionId || null : null}
+        completionId={isValidCompletion ? completion?.id || null : null}
+        personaId={isValidCompletion ? completion?.personaId || null : null}
+        sessionId={isValidCompletion ? completion?.sessionId || null : null}
         locale="ja"
-        durationMs={isValidCompletion && truth.completedAt ? Math.max(0, renderAt - new Date(truth.completedAt).getTime()) : null}
+        durationMs={isValidCompletion && completion?.completedAt ? Math.max(0, renderAt - new Date(completion.completedAt).getTime()) : null}
         branchId="yorisou_dte"
         sourceBranchId="yorisou_dte"
         visibilityPolicy="public"
@@ -143,7 +134,7 @@ export default async function ResultPage({
           isValidCompletion
             ? buildDynamicTestContinuationHref({
                 locale: "ja",
-                completionId: truth.completionId,
+                completionId: completion?.id || completionId,
                 openedAt: renderAt,
               })
             : undefined

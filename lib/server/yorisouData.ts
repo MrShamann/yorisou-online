@@ -1055,6 +1055,44 @@ export async function createLineWebhookEvent(
   return record;
 }
 
+export async function updateLineWebhookEventReplyState(input: {
+  id: string;
+  replyStatus: LineWebhookEventRecord["replyStatus"];
+  replyError: string | null;
+}) {
+  const existing = await findLineWebhookEventById(input.id);
+  if (!existing) {
+    return null;
+  }
+
+  const nextRecord: LineWebhookEventRecord = {
+    ...existing,
+    replyStatus: input.replyStatus,
+    replyError: input.replyError,
+  };
+
+  await upsertLineWebhookEvent(nextRecord);
+  return nextRecord;
+}
+
+export async function updateLineWebhookEventMessageText(input: {
+  id: string;
+  messageText: string | null;
+}) {
+  const existing = await findLineWebhookEventById(input.id);
+  if (!existing) {
+    return null;
+  }
+
+  const nextRecord: LineWebhookEventRecord = {
+    ...existing,
+    messageText: input.messageText,
+  };
+
+  await upsertLineWebhookEvent(nextRecord);
+  return nextRecord;
+}
+
 export async function listLineWebhookEventsForAccount(accountId: string) {
   const records = await listLineWebhookEvents();
   return records.filter((record) => record.accountId === accountId);

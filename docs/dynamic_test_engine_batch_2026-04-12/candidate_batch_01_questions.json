@@ -1,0 +1,1137 @@
+{
+  "batch_id": "candidate_batch_01",
+  "batch_date": "2026-04-12",
+  "locked_constraints": {
+    "dimensions": 21,
+    "personas": 31,
+    "session_questions": 33,
+    "answer_options_per_question": 5,
+    "channel_logic": "LINE-first",
+    "locale_logic": "ja"
+  },
+  "summary": {
+    "total_candidates": 26,
+    "first_time_pool_candidates": 21,
+    "returning_user_pool_candidates": 5
+  },
+  "items": [
+    {
+      "candidate_id": "CB01-01",
+      "dimension_id": "D01",
+      "dimension_label": "朝の立ち上がり",
+      "pool": "first-time",
+      "scenario_family": "朝の支度",
+      "session_position": "opener",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "朝型",
+        "段取り型"
+      ],
+      "question": "朝いちばん、いちばん自然なのはどれ？",
+      "helper_text": "朝の起動の仕方を、直感で1つ選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "目が覚めたらすぐ顔を洗う",
+          "signal": "即起動"
+        },
+        {
+          "id": "B",
+          "label": "お茶を飲んでから動く",
+          "signal": "ゆる起動"
+        },
+        {
+          "id": "C",
+          "label": "スマホで予定を見てから動く",
+          "signal": "段取り確認"
+        },
+        {
+          "id": "D",
+          "label": "誰かに「おはよう」を送ってから始める",
+          "signal": "対話起動"
+        },
+        {
+          "id": "E",
+          "label": "今日はゆっくり始める",
+          "signal": "低速開始"
+        }
+      ],
+      "calibration_notes": "朝の立ち上がり方で、起動の速さと余白の取り方を見分ける。"
+    },
+    {
+      "candidate_id": "CB01-02",
+      "dimension_id": "D02",
+      "dimension_label": "出発前の段取り",
+      "pool": "first-time",
+      "scenario_family": "出発前の玄関まわり",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "段取り型",
+        "慎重型"
+      ],
+      "question": "出かける前、気分が整うのはどれ？",
+      "helper_text": "出発前にいちばん落ち着く流れを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "鍵と財布を先に確認する",
+          "signal": "物の確認"
+        },
+        {
+          "id": "B",
+          "label": "服を決めてから考える",
+          "signal": "先に見た目"
+        },
+        {
+          "id": "C",
+          "label": "玄関を出る時間だけ先に決める",
+          "signal": "時間先決め"
+        },
+        {
+          "id": "D",
+          "label": "家の人に一声かける",
+          "signal": "声かけ準備"
+        },
+        {
+          "id": "E",
+          "label": "途中で整えればいいと思う",
+          "signal": "現地調整"
+        }
+      ],
+      "calibration_notes": "出発準備の型で、段取り先行か柔軟運用かを拾う。"
+    },
+    {
+      "candidate_id": "CB01-03",
+      "dimension_id": "D03",
+      "dimension_label": "通院・買い物の切り替え",
+      "pool": "first-time",
+      "scenario_family": "通院と買い物の切り替え",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "実務型",
+        "体力優先型"
+      ],
+      "question": "通院と買い物が同じ日に重なったら、先に片づけたいのは？",
+      "helper_text": "今日の用事の重さに近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "通院を先に済ませたい",
+          "signal": "通院先行"
+        },
+        {
+          "id": "B",
+          "label": "買い物はついでに寄りたい",
+          "signal": "ついで型"
+        },
+        {
+          "id": "C",
+          "label": "体力しだいで決めたい",
+          "signal": "体力判断"
+        },
+        {
+          "id": "D",
+          "label": "家族の都合に合わせたい",
+          "signal": "家族調整"
+        },
+        {
+          "id": "E",
+          "label": "今日はどちらか片方だけにしたい",
+          "signal": "短縮志向"
+        }
+      ],
+      "calibration_notes": "用事の優先の置き方と、体力ベースの判断を分ける。"
+    },
+    {
+      "candidate_id": "CB01-04",
+      "dimension_id": "D04",
+      "dimension_label": "買い物の優先付け",
+      "pool": "first-time",
+      "scenario_family": "スーパー・日用品",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "生活実務型",
+        "気分回復型"
+      ],
+      "question": "スーパーで先にカゴに入れたくなるのは？",
+      "helper_text": "買い物の優先順を、いちばん近いものから選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "今日すぐ使うもの",
+          "signal": "即日使用"
+        },
+        {
+          "id": "B",
+          "label": "冷蔵庫の空きを埋めるもの",
+          "signal": "在庫補充"
+        },
+        {
+          "id": "C",
+          "label": "ちょっと気分が上がるもの",
+          "signal": "気分優先"
+        },
+        {
+          "id": "D",
+          "label": "家族が好きなもの",
+          "signal": "家族配慮"
+        },
+        {
+          "id": "E",
+          "label": "買わずにやめることもある",
+          "signal": "見送り"
+        }
+      ],
+      "calibration_notes": "買い物の目的が実務寄りか気分寄りかを見たい。"
+    },
+    {
+      "candidate_id": "CB01-05",
+      "dimension_id": "D05",
+      "dimension_label": "雨の日の移動",
+      "pool": "first-time",
+      "scenario_family": "雨の日の外出",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "慎重型",
+        "負担回避型"
+      ],
+      "question": "雨の日の外出、いちばん気になるのは？",
+      "helper_text": "雨の日に先に気になるポイントを1つ選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "足元のすべり",
+          "signal": "転倒注意"
+        },
+        {
+          "id": "B",
+          "label": "荷物が増えること",
+          "signal": "荷物負担"
+        },
+        {
+          "id": "C",
+          "label": "傘で手がふさがること",
+          "signal": "手が塞がる"
+        },
+        {
+          "id": "D",
+          "label": "早く帰れるかどうか",
+          "signal": "滞在短縮"
+        },
+        {
+          "id": "E",
+          "label": "今日は外に出ない",
+          "signal": "回避"
+        }
+      ],
+      "calibration_notes": "天候ストレスに対する回避・調整・強行の差を拾う。"
+    },
+    {
+      "candidate_id": "CB01-06",
+      "dimension_id": "D06",
+      "dimension_label": "片付けと収納",
+      "pool": "first-time",
+      "scenario_family": "部屋の片付け",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "整理型",
+        "見た目整え型"
+      ],
+      "question": "片付けで気分が乗るのは？",
+      "helper_text": "片付けの始め方として近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "見える場所から消す",
+          "signal": "視界整理"
+        },
+        {
+          "id": "B",
+          "label": "使う順に並べる",
+          "signal": "使用順"
+        },
+        {
+          "id": "C",
+          "label": "収納場所を先に決める",
+          "signal": "場所先決め"
+        },
+        {
+          "id": "D",
+          "label": "人に見られる前に整える",
+          "signal": "対人意識"
+        },
+        {
+          "id": "E",
+          "label": "今日は半分だけやる",
+          "signal": "部分完了"
+        }
+      ],
+      "calibration_notes": "片付けの開始点と、完了の基準を見分ける。"
+    },
+    {
+      "candidate_id": "CB01-07",
+      "dimension_id": "D07",
+      "dimension_label": "家の中の安全確認",
+      "pool": "first-time",
+      "scenario_family": "家の中の安全確認",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "安全優先型",
+        "慎重型"
+      ],
+      "question": "家の中で先に気になるのは？",
+      "helper_text": "家の中の安全で、まず目に入るものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "床のすべり",
+          "signal": "床注意"
+        },
+        {
+          "id": "B",
+          "label": "段差やマット",
+          "signal": "段差注意"
+        },
+        {
+          "id": "C",
+          "label": "手すりやつかまり場",
+          "signal": "支え確認"
+        },
+        {
+          "id": "D",
+          "label": "夜の暗さ",
+          "signal": "照明注意"
+        },
+        {
+          "id": "E",
+          "label": "ひとまず現状維持",
+          "signal": "現状維持"
+        }
+      ],
+      "calibration_notes": "安全感の取り方が、先回り型か現状維持型かを見たい。"
+    },
+    {
+      "candidate_id": "CB01-08",
+      "dimension_id": "D08",
+      "dimension_label": "段差・階段・玄関",
+      "pool": "first-time",
+      "scenario_family": "出入りの小さな段差",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "慎重型",
+        "現実調整型"
+      ],
+      "question": "出入りでいちばん引っかかるのは？",
+      "helper_text": "玄関まわりでいちばん気になりやすいところを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "玄関の上がり下がり",
+          "signal": "玄関段差"
+        },
+        {
+          "id": "B",
+          "label": "階段の上り下り",
+          "signal": "階段負荷"
+        },
+        {
+          "id": "C",
+          "label": "ドアの開け閉め",
+          "signal": "動作負担"
+        },
+        {
+          "id": "D",
+          "label": "荷物を持ったまま動くこと",
+          "signal": "荷物同時"
+        },
+        {
+          "id": "E",
+          "label": "今日は出入り回数を減らしたい",
+          "signal": "回数抑制"
+        }
+      ],
+      "calibration_notes": "玄関まわりの負荷がどこに出るかを確認する。"
+    },
+    {
+      "candidate_id": "CB01-09",
+      "dimension_id": "D09",
+      "dimension_label": "連絡・返事の温度",
+      "pool": "first-time",
+      "scenario_family": "LINE・返事",
+      "session_position": "stabilizer",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "連絡丁寧型",
+        "即返し型"
+      ],
+      "question": "LINEや返事でちょうどいい温度は？",
+      "helper_text": "返事の温度感にいちばん近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "すぐ短く返す",
+          "signal": "即返答"
+        },
+        {
+          "id": "B",
+          "label": "少し整えてから返す",
+          "signal": "整えて返信"
+        },
+        {
+          "id": "C",
+          "label": "用件だけ先に返す",
+          "signal": "用件先出し"
+        },
+        {
+          "id": "D",
+          "label": "気持ちを添えて返す",
+          "signal": "感情添え"
+        },
+        {
+          "id": "E",
+          "label": "返事はあとでまとめて返す",
+          "signal": "まとめ返信"
+        }
+      ],
+      "calibration_notes": "返事の温度感を、速度・丁寧さ・保留で分ける。"
+    },
+    {
+      "candidate_id": "CB01-10",
+      "dimension_id": "D10",
+      "dimension_label": "家族への一言相談",
+      "pool": "first-time",
+      "scenario_family": "家族連絡",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "家族調整型",
+        "実務連絡型"
+      ],
+      "question": "家族にちょっと頼むなら、いちばん自然なのは？",
+      "helper_text": "家族への伝え方として、いちばん近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "先に予定だけ共有する",
+          "signal": "事前共有"
+        },
+        {
+          "id": "B",
+          "label": "手伝いを1つだけ頼む",
+          "signal": "具体依頼"
+        },
+        {
+          "id": "C",
+          "label": "まだ決めずに見守ってもらう",
+          "signal": "見守り依頼"
+        },
+        {
+          "id": "D",
+          "label": "今回は自分でやる",
+          "signal": "自走優先"
+        },
+        {
+          "id": "E",
+          "label": "夜にまとめて話す",
+          "signal": "後まとめ"
+        }
+      ],
+      "calibration_notes": "家族との距離感と、頼み方の具体性を確認する。"
+    },
+    {
+      "candidate_id": "CB01-11",
+      "dimension_id": "D11",
+      "dimension_label": "ひとり時間の回復",
+      "pool": "first-time",
+      "scenario_family": "ひとり時間",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "内向回復型",
+        "静養型"
+      ],
+      "question": "ひとり時間で回復しやすいのは？",
+      "helper_text": "回復のしかたにいちばん近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "静かにぼーっとする",
+          "signal": "静養"
+        },
+        {
+          "id": "B",
+          "label": "スマホを置いて休む",
+          "signal": "デジタル休憩"
+        },
+        {
+          "id": "C",
+          "label": "甘いものを少し食べる",
+          "signal": "小さな補給"
+        },
+        {
+          "id": "D",
+          "label": "好きな動画を1本見る",
+          "signal": "軽い刺激"
+        },
+        {
+          "id": "E",
+          "label": "誰かと少し話す",
+          "signal": "会話回復"
+        }
+      ],
+      "calibration_notes": "回復の仕方が、静養型か刺激回復型かを見たい。"
+    },
+    {
+      "candidate_id": "CB01-12",
+      "dimension_id": "D12",
+      "dimension_label": "夜の気力の残り方",
+      "pool": "first-time",
+      "scenario_family": "夜の片付けと回復",
+      "session_position": "closer",
+      "tone_depth": "light_plus",
+      "persona_fit_hint": [
+        "夜型",
+        "省エネ型"
+      ],
+      "question": "夜、残っている気力の使い方は？",
+      "helper_text": "夜の残力の使い道に近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "もう寝る準備に入る",
+          "signal": "早寝"
+        },
+        {
+          "id": "B",
+          "label": "軽い片付けだけする",
+          "signal": "軽整頓"
+        },
+        {
+          "id": "C",
+          "label": "明日の準備を少しする",
+          "signal": "先回り準備"
+        },
+        {
+          "id": "D",
+          "label": "友だちに1通だけ返す",
+          "signal": "夜返信"
+        },
+        {
+          "id": "E",
+          "label": "まだ何もしたくない",
+          "signal": "完全休止"
+        }
+      ],
+      "calibration_notes": "夜の残力を、整理・交流・休息で切り分ける。"
+    },
+    {
+      "candidate_id": "CB01-13",
+      "dimension_id": "D13",
+      "dimension_label": "予定変更への耐性",
+      "pool": "first-time",
+      "scenario_family": "予定変更",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "柔軟型",
+        "慎重型"
+      ],
+      "question": "予定が急にずれた日、まずやりがちなのは？",
+      "helper_text": "予定変更が起きたときの最初の動きに近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "全体を見直す",
+          "signal": "全体再確認"
+        },
+        {
+          "id": "B",
+          "label": "代わりの案をすぐ出す",
+          "signal": "代案即出し"
+        },
+        {
+          "id": "C",
+          "label": "いったん様子を見る",
+          "signal": "様子見"
+        },
+        {
+          "id": "D",
+          "label": "誰かに相談する",
+          "signal": "相談先行"
+        },
+        {
+          "id": "E",
+          "label": "今日は切り替えない",
+          "signal": "切替拒否"
+        }
+      ],
+      "calibration_notes": "予定変更時の反応を、即応・保留・相談で分ける。"
+    },
+    {
+      "candidate_id": "CB01-14",
+      "dimension_id": "D14",
+      "dimension_label": "失敗日の立て直し",
+      "pool": "first-time",
+      "scenario_family": "やり直し",
+      "session_position": "middle",
+      "tone_depth": "light_plus",
+      "persona_fit_hint": [
+        "回復型",
+        "整理型"
+      ],
+      "question": "うまくいかなかった日の立て直し方は？",
+      "helper_text": "失敗のあとに、まずやりやすいことを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "できたことを1つ数える",
+          "signal": "成功確認"
+        },
+        {
+          "id": "B",
+          "label": "失敗の原因を整理する",
+          "signal": "原因整理"
+        },
+        {
+          "id": "C",
+          "label": "すぐやり直す",
+          "signal": "再挑戦"
+        },
+        {
+          "id": "D",
+          "label": "誰かに聞いてもらう",
+          "signal": "共有回復"
+        },
+        {
+          "id": "E",
+          "label": "今日は早めに切り上げる",
+          "signal": "撤収優先"
+        }
+      ],
+      "calibration_notes": "失敗後の再起動が、整理型か感情調整型かを見たい。"
+    },
+    {
+      "candidate_id": "CB01-15",
+      "dimension_id": "D15",
+      "dimension_label": "仕事と家事の同時進行",
+      "pool": "first-time",
+      "scenario_family": "同時進行",
+      "session_position": "middle",
+      "tone_depth": "light_plus",
+      "persona_fit_hint": [
+        "多忙型",
+        "切替型"
+      ],
+      "question": "仕事帰りに家のことも重なった日、先に優先しやすいのは？",
+      "helper_text": "仕事と家事が重なったときの流れに近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "仕事を先に片づける",
+          "signal": "仕事優先"
+        },
+        {
+          "id": "B",
+          "label": "家のことを先に済ませる",
+          "signal": "家事優先"
+        },
+        {
+          "id": "C",
+          "label": "短く区切って交互にやる",
+          "signal": "交互処理"
+        },
+        {
+          "id": "D",
+          "label": "どちらかを誰かに頼む",
+          "signal": "委任"
+        },
+        {
+          "id": "E",
+          "label": "今日は両方ゆるめる",
+          "signal": "負荷調整"
+        }
+      ],
+      "calibration_notes": "複数タスクの圧縮のしかたを確認する。"
+    },
+    {
+      "candidate_id": "CB01-16",
+      "dimension_id": "D16",
+      "dimension_label": "週末の過ごし方",
+      "pool": "first-time",
+      "scenario_family": "週末",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "回復型",
+        "交流型"
+      ],
+      "question": "週末の気分に近いのは？",
+      "helper_text": "週末の過ごし方として、いちばん近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "出かけて切り替えたい",
+          "signal": "外出切替"
+        },
+        {
+          "id": "B",
+          "label": "家で整えたい",
+          "signal": "家回復"
+        },
+        {
+          "id": "C",
+          "label": "予定を詰めすぎたくない",
+          "signal": "余白重視"
+        },
+        {
+          "id": "D",
+          "label": "誰かと会いたい",
+          "signal": "交流志向"
+        },
+        {
+          "id": "E",
+          "label": "何も決めず流れたい",
+          "signal": "流れ任せ"
+        }
+      ],
+      "calibration_notes": "週末の回復志向と交流志向の差を見る。"
+    },
+    {
+      "candidate_id": "CB01-17",
+      "dimension_id": "D17",
+      "dimension_label": "小さなご褒美の選び方",
+      "pool": "first-time",
+      "scenario_family": "自分へのご褒美",
+      "session_position": "closer",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "回復型",
+        "気分整え型"
+      ],
+      "question": "自分へのご褒美を選ぶなら？",
+      "helper_text": "今の気分にいちばん合うご褒美を選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "おいしいもの",
+          "signal": "食べるご褒美"
+        },
+        {
+          "id": "B",
+          "label": "ちょっといい日用品",
+          "signal": "実用品ご褒美"
+        },
+        {
+          "id": "C",
+          "label": "休む時間",
+          "signal": "休息ご褒美"
+        },
+        {
+          "id": "D",
+          "label": "推しの動画や音楽",
+          "signal": "推し回復"
+        },
+        {
+          "id": "E",
+          "label": "何も買わない",
+          "signal": "無消費"
+        }
+      ],
+      "calibration_notes": "ご褒美が消費型か回復型かを見たい。"
+    },
+    {
+      "candidate_id": "CB01-18",
+      "dimension_id": "D18",
+      "dimension_label": "周囲との距離感",
+      "pool": "first-time",
+      "scenario_family": "人との距離",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "距離調整型",
+        "気遣い型"
+      ],
+      "question": "人との距離でちょうどいいのは？",
+      "helper_text": "人との間合いとして、いちばん楽なものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "近すぎず遠すぎず",
+          "signal": "中間距離"
+        },
+        {
+          "id": "B",
+          "label": "用件だけしっかり",
+          "signal": "実務距離"
+        },
+        {
+          "id": "C",
+          "label": "気楽に雑談もしたい",
+          "signal": "雑談歓迎"
+        },
+        {
+          "id": "D",
+          "label": "相手を優先したい",
+          "signal": "相手優先"
+        },
+        {
+          "id": "E",
+          "label": "今日は静かにしていたい",
+          "signal": "静かな距離"
+        }
+      ],
+      "calibration_notes": "対人温度の基準を、雑談・実務・静けさで切る。"
+    },
+    {
+      "candidate_id": "CB01-19",
+      "dimension_id": "D19",
+      "dimension_label": "安心材料の集め方",
+      "pool": "first-time",
+      "scenario_family": "不安がふくらんだとき",
+      "session_position": "middle",
+      "tone_depth": "light_plus",
+      "persona_fit_hint": [
+        "慎重型",
+        "確認型"
+      ],
+      "question": "不安がふくらんだとき、先に欲しいのは？",
+      "helper_text": "安心の入口として、いちばん近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "数字や予定の確認",
+          "signal": "情報確認"
+        },
+        {
+          "id": "B",
+          "label": "誰かのひとこと",
+          "signal": "言葉の安心"
+        },
+        {
+          "id": "C",
+          "label": "事例や前例",
+          "signal": "前例確認"
+        },
+        {
+          "id": "D",
+          "label": "ひと呼吸つく時間",
+          "signal": "間を置く"
+        },
+        {
+          "id": "E",
+          "label": "まだ情報はいらない",
+          "signal": "情報保留"
+        }
+      ],
+      "calibration_notes": "安心の入口が情報型か関係型かを確認する。"
+    },
+    {
+      "candidate_id": "CB01-20",
+      "dimension_id": "D20",
+      "dimension_label": "先送り/決断の癖",
+      "pool": "first-time",
+      "scenario_family": "決めごと",
+      "session_position": "middle",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "決断型",
+        "保留型"
+      ],
+      "question": "決めるとき、どうなりやすい？",
+      "helper_text": "決めごとの進め方にいちばん近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "すぐ決める",
+          "signal": "即決"
+        },
+        {
+          "id": "B",
+          "label": "ぎりぎりまで考える",
+          "signal": "熟考"
+        },
+        {
+          "id": "C",
+          "label": "誰かの意見を待つ",
+          "signal": "他者待ち"
+        },
+        {
+          "id": "D",
+          "label": "メモしてあとで決める",
+          "signal": "保留メモ"
+        },
+        {
+          "id": "E",
+          "label": "今日は保留にする",
+          "signal": "完全保留"
+        }
+      ],
+      "calibration_notes": "決断の速度と、保留の使い方を分ける。"
+    },
+    {
+      "candidate_id": "CB01-21",
+      "dimension_id": "D21",
+      "dimension_label": "動く vs 様子を見る",
+      "pool": "first-time",
+      "scenario_family": "迷った場面",
+      "session_position": "opener",
+      "tone_depth": "light",
+      "persona_fit_hint": [
+        "即行動型",
+        "観察型"
+      ],
+      "question": "迷った朝、最初にやりがちなのは？",
+      "helper_text": "迷ったときの最初の動きに近いものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "まず1つだけ動く",
+          "signal": "試行先行"
+        },
+        {
+          "id": "B",
+          "label": "少し情報を足してから決める",
+          "signal": "様子見"
+        },
+        {
+          "id": "C",
+          "label": "周りの反応を見てから動く",
+          "signal": "周囲確認"
+        },
+        {
+          "id": "D",
+          "label": "準備だけ進めておく",
+          "signal": "準備先行"
+        },
+        {
+          "id": "E",
+          "label": "今日は見送っておく",
+          "signal": "不動"
+        }
+      ],
+      "calibration_notes": "行動開始のしきい値を、試行・観察・保留で分ける。"
+    },
+    {
+      "candidate_id": "CB01-22",
+      "dimension_id": "D01",
+      "dimension_label": "朝の立ち上がり",
+      "pool": "returning",
+      "scenario_family": "前日疲れの翌朝",
+      "session_position": "middle",
+      "tone_depth": "quiet_returning",
+      "persona_fit_hint": [
+        "朝型",
+        "回復型"
+      ],
+      "question": "前の日が少し重かった朝、立ち上がりやすいのは？",
+      "helper_text": "前日コンテキストがある朝の入り方を選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "まずカーテンを開ける",
+          "signal": "光で起動"
+        },
+        {
+          "id": "B",
+          "label": "予定を3つだけ見る",
+          "signal": "最小確認"
+        },
+        {
+          "id": "C",
+          "label": "LINEを1通だけ返す",
+          "signal": "会話起動"
+        },
+        {
+          "id": "D",
+          "label": "洗顔より先に深呼吸する",
+          "signal": "呼吸起動"
+        },
+        {
+          "id": "E",
+          "label": "今日は起動に時間をかける",
+          "signal": "遅起動"
+        }
+      ],
+      "calibration_notes": "前日コンテキストで、回復までの助走の長さを確認する。"
+    },
+    {
+      "candidate_id": "CB01-23",
+      "dimension_id": "D03",
+      "dimension_label": "通院・買い物の切り替え",
+      "pool": "returning",
+      "scenario_family": "忙しい日の切り替え",
+      "session_position": "middle",
+      "tone_depth": "quiet_returning",
+      "persona_fit_hint": [
+        "実務型",
+        "負荷調整型"
+      ],
+      "question": "仕事と家の用事が重なった日、先に切り替えたいのは？",
+      "helper_text": "繰り返しの忙しさに対して、今日の選び方を選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "通院だけ先に終わらせる",
+          "signal": "通院先行"
+        },
+        {
+          "id": "B",
+          "label": "買い物は最小限にする",
+          "signal": "最小買い物"
+        },
+        {
+          "id": "C",
+          "label": "体調で順番を変える",
+          "signal": "体調調整"
+        },
+        {
+          "id": "D",
+          "label": "誰かに一緒に行ってもらう",
+          "signal": "同行依頼"
+        },
+        {
+          "id": "E",
+          "label": "予定を減らして様子を見る",
+          "signal": "予定圧縮"
+        }
+      ],
+      "calibration_notes": "再訪時の最適化として、負荷調整の仕方を確認する。"
+    },
+    {
+      "candidate_id": "CB01-24",
+      "dimension_id": "D07",
+      "dimension_label": "家の中の安全確認",
+      "pool": "returning",
+      "scenario_family": "前に気になった場所の再確認",
+      "session_position": "middle",
+      "tone_depth": "quiet_returning",
+      "persona_fit_hint": [
+        "安全優先型",
+        "確認型"
+      ],
+      "question": "前から少し気になっていた家の場所、今日はどう見る？",
+      "helper_text": "再確認したい家の場所を1つ選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "玄関まわりを先に見る",
+          "signal": "玄関確認"
+        },
+        {
+          "id": "B",
+          "label": "トイレや廊下を先に見る",
+          "signal": "動線確認"
+        },
+        {
+          "id": "C",
+          "label": "いつもの動線だけ見る",
+          "signal": "通常確認"
+        },
+        {
+          "id": "D",
+          "label": "家族に一緒に見てもらう",
+          "signal": "共同確認"
+        },
+        {
+          "id": "E",
+          "label": "今日はメモだけ残す",
+          "signal": "記録優先"
+        }
+      ],
+      "calibration_notes": "再訪時の確認癖と、安心を得る順番を拾う。"
+    },
+    {
+      "candidate_id": "CB01-25",
+      "dimension_id": "D09",
+      "dimension_label": "連絡・返事の温度",
+      "pool": "returning",
+      "scenario_family": "既読スルー気味の再訪",
+      "session_position": "stabilizer",
+      "tone_depth": "quiet_returning",
+      "persona_fit_hint": [
+        "連絡丁寧型",
+        "慎重返答型"
+      ],
+      "question": "前に少し雑だった返信があった夜、今日はどう返す？",
+      "helper_text": "返事を再開するなら、いちばん近い形を選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "一言だけ返す",
+          "signal": "最小返信"
+        },
+        {
+          "id": "B",
+          "label": "絵文字で空気を足す",
+          "signal": "空気返信"
+        },
+        {
+          "id": "C",
+          "label": "用件だけ返す",
+          "signal": "用件返信"
+        },
+        {
+          "id": "D",
+          "label": "夜に落ち着いて返す",
+          "signal": "夜返信"
+        },
+        {
+          "id": "E",
+          "label": "今回は送らず様子を見る",
+          "signal": "静観"
+        }
+      ],
+      "calibration_notes": "再訪時の温度調整と、返答の再開しやすさを見る。"
+    },
+    {
+      "candidate_id": "CB01-26",
+      "dimension_id": "D12",
+      "dimension_label": "夜の気力の残り方",
+      "pool": "returning",
+      "scenario_family": "長い一日のあと",
+      "session_position": "closer",
+      "tone_depth": "quiet_returning",
+      "persona_fit_hint": [
+        "夜型",
+        "回復型"
+      ],
+      "question": "夜ふかし気味だった翌朝、いちばん残したいのは？",
+      "helper_text": "長い一日のあとに、最後まで残したいものを選んでください。",
+      "options": [
+        {
+          "id": "A",
+          "label": "まずカーテンを開ける",
+          "signal": "静けさ確保"
+        },
+        {
+          "id": "B",
+          "label": "お茶を飲んでから動く",
+          "signal": "翌朝準備"
+        },
+        {
+          "id": "C",
+          "label": "予定を3つだけ見る",
+          "signal": "夜の一報"
+        },
+        {
+          "id": "D",
+          "label": "深呼吸をしてから洗面台へ行く",
+          "signal": "机整理"
+        },
+        {
+          "id": "E",
+          "label": "今日は起動に時間をかける",
+          "signal": "休息優先"
+        }
+      ],
+      "calibration_notes": "再訪時の優先順位を、回復と完了のどちらに寄せるか見る。"
+    }
+  ]
+}

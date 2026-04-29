@@ -3,9 +3,7 @@ import type { Metadata } from "next";
 import ResultShareCard from "@/app/components/ResultShareCard";
 import { buildPublicResultIdentity } from "@/lib/result/public-result-identity";
 import { buildResultLabSnapshot, getCanonicalPersonaOptions } from "@/lib/result/rendering-contract-adapter";
-import { resolveDynamicTestRevealContext } from "@/lib/dynamicTestEngineSession";
 import { getResultVisualAssetResolution } from "@/lib/server/resultVisualAssetRegistry";
-import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { getDynamicTestCompletionRecord } from "@/lib/server/dynamicTestCompletionStore";
 import { getCanonicalPublicPersonaShell, resolveCanonicalPublicPersonaModeLabel } from "@/lib/yorisou/dte/public-persona-shell";
 
@@ -30,21 +28,13 @@ export default async function ResultSharePage({
   const params = (await searchParams) || {};
   const completionId = typeof params.completionId === "string" ? params.completionId : "";
   const requestedPersonaId = typeof params.personaId === "string" ? params.personaId : "";
-  const viewer = await getViewerContext();
   const completion = completionId ? await getDynamicTestCompletionRecord(completionId) : null;
   const personaOptions = getCanonicalPersonaOptions();
   const fallbackPersonaId = requestedPersonaId || personaOptions[0]?.personaId || "P01";
-  const truth = resolveDynamicTestRevealContext({
-    locale: "ja",
-    completionId,
-    completion,
-    session: viewer.session,
-    fallbackPersonaId,
-  });
-  const personaId = truth.personaId;
+  const personaId = completion?.personaId || fallbackPersonaId;
   const snapshot = buildResultLabSnapshot({
     personaId,
-    scenario: truth.source !== "invalid" ? "result_ready" : "invalid_or_missing_payload",
+    scenario: completion ? "result_ready" : "invalid_or_missing_payload",
     surfaceMode: "primary",
     sessionMode: "anonymous",
     versionMode: "valid",

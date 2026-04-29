@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 
+import { getBranchDefaultReturnPath, resolveBranchContext, validateBranchRedirectTarget, type BranchId } from "@/lib/server/branchRegistry";
 import type { AccountRecord, SessionRecord } from "@/lib/server/yorisouData";
 
 export const LINE_AUTH_COOKIE = "yorisou_line_auth";
@@ -8,6 +9,7 @@ const MAX_PENDING_LINE_AUTH_STATES = 6;
 type LineAuthCookiePayload = {
   accountId: string | null;
   sessionId: string | null;
+  branchId: BranchId;
   state: string;
   nonce: string;
   intent: "login" | "register" | "support";
@@ -16,7 +18,12 @@ type LineAuthCookiePayload = {
   failureRedirect: string;
   locale: "ja" | "en";
   createdAt: string;
+  sourceBranchId: BranchId | null;
+  visibilityPolicy: "public" | "branch_internal" | "internal";
+  crossBranchAccessPolicy: "same_branch_only" | "explicit_bridge" | "read_only_archive";
 };
+
+export type LineFriendshipStatus = "friend" | "not_friend" | "unknown";
 
 type LineIdTokenPayload = {
   iss?: string;
@@ -31,13 +38,42 @@ type LineIdTokenPayload = {
 const AUTH_COOKIE_SECRET = process.env.YORISOU_AUTH_COOKIE_SECRET || "yorisou-phase1-auth-cookie-secret";
 const AUTH_COOKIE_KEY = createHash("sha256").update(AUTH_COOKIE_SECRET).digest();
 const DEFAULT_SCOPE = "openid profile";
+const DEFAULT_LINE_OFFICIAL_ACCOUNT_ID = "@247rinzu";
 
 function getLineLoginChannelSecret() {
   return process.env.LINE_LOGIN_CHANNEL_SECRET || process.env.LINE_CHANNEL_SECRET || null;
 }
 
 function getLineMessagingChannelSecret() {
-  return process.env.LINE_MESSAGING_CHANNEL_SECRET || null;
+  return process.env.LINE_MESSAGING_CHANNEL_SECRET || process.env.LINE_CHANNEL_SECRET || null;
+}
+
+function getLineOfficialAccountId() {
+  const raw =
+    process.env.LINE_OFFICIAL_ACCOUNT_ID ||
+    process.env.LINE_OFFICIAL_ACCOUNT_BASIC_ID ||
+    DEFAULT_LINE_OFFICIAL_ACCOUNT_ID;
+
+  return raw.startsWith("@") ? raw : `@${raw}`;
+}
+
+export function getLineOfficialAccountUrls() {
+  const accountId = getLineOfficialAccountId();
+  const defaultUrl = `https://line.me/R/ti/p/${encodeURIComponent(accountId)}`;
+
+  return {
+    accountId,
+    addFriendUrl: process.env.LINE_OFFICIAL_ACCOUNT_ADD_FRIEND_URL || defaultUrl,
+    chatUrl: process.env.LINE_OFFICIAL_ACCOUNT_CHAT_URL || defaultUrl,
+  };
+}
+
+function resolveLineBotPrompt(intent: LineAuthCookiePayload["intent"]) {
+  if (intent === "login") {
+    return "normal";
+  }
+
+  return "aggressive";
 }
 
 function createLineAuthState(locale: "ja" | "en") {
@@ -74,22 +110,34 @@ export function createLineAuthCookiePayload(input: {
   account: AccountRecord | null;
   session: SessionRecord | null;
   intent: "login" | "register" | "support";
+  branchId?: BranchId | null;
   returnTo: string;
   successRedirect: string;
   failureRedirect: string;
   locale: "ja" | "en";
 }) {
+  const branch = resolveBranchContext({
+    branchId: input.branchId,
+    returnTo: input.returnTo,
+    intent: input.intent,
+    fallbackBranchId: "website_brand",
+  });
+  const defaultReturn = getBranchDefaultReturnPath(branch.branchId, input.locale);
   return {
     accountId: input.account?.id || null,
     sessionId: input.session?.id || null,
+    branchId: branch.branchId,
     state: createLineAuthState(input.locale),
     nonce: randomBytes(16).toString("hex"),
     intent: input.intent,
-    returnTo: input.returnTo,
-    successRedirect: input.successRedirect,
-    failureRedirect: input.failureRedirect,
+    returnTo: validateBranchRedirectTarget(branch.branchId, input.returnTo, defaultReturn),
+    successRedirect: validateBranchRedirectTarget(branch.branchId, input.successRedirect, defaultReturn),
+    failureRedirect: validateBranchRedirectTarget(branch.branchId, input.failureRedirect, defaultReturn),
     locale: input.locale,
     createdAt: new Date().toISOString(),
+    sourceBranchId: branch.sourceBranchId,
+    visibilityPolicy: branch.visibilityPolicy,
+    crossBranchAccessPolicy: branch.crossBranchAccessPolicy,
   } satisfies LineAuthCookiePayload;
 }
 
@@ -180,6 +228,7 @@ export function buildLineAuthorizeUrl(payload: LineAuthCookiePayload) {
   url.searchParams.set("state", payload.state);
   url.searchParams.set("scope", scope);
   url.searchParams.set("nonce", payload.nonce);
+  url.searchParams.set("bot_prompt", resolveLineBotPrompt(payload.intent));
   return url.toString();
 }
 
@@ -189,6 +238,36 @@ export function isLineLoginConfigured() {
 
 export function isLineMessagingConfigured() {
   return Boolean(getLineMessagingChannelSecret() && process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN);
+}
+
+export async function downloadLineMessageContent(input: { messageId: string }) {
+  const channelAccessToken = process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN;
+
+  if (!channelAccessToken) {
+    throw new Error("line_messaging_not_configured");
+  }
+
+  const response = await fetch(`https://api-data.line.me/v2/bot/message/${encodeURIComponent(input.messageId)}/content`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${channelAccessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`line_message_content_failed:${response.status}:${errorText.slice(0, 120)}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const contentType = response.headers.get("content-type") || "audio/m4a";
+
+  return {
+    audioBase64: buffer.toString("base64"),
+    mimeType: contentType,
+    fileName: input.messageId,
+  };
 }
 
 export function getLineMessagingConfigStatus() {
@@ -292,22 +371,86 @@ export async function fetchLineProfile(accessToken: string) {
   };
 }
 
+export async function fetchLineFriendshipStatus(accessToken: string) {
+  const response = await fetch("https://api.line.me/friendship/v1/status", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("line_friendship_status_failed");
+  }
+
+  const payload = (await response.json()) as {
+    friendFlag?: boolean;
+  };
+
+  return {
+    status: payload.friendFlag === true ? ("friend" as const) : ("not_friend" as const),
+    source: "api" as const,
+  };
+}
+
 export function verifyLineWebhookSignature(input: { body: string; signature: string | null }) {
-  const channelSecret = getLineMessagingChannelSecret();
+  const channelSecrets = [
+    { source: "LINE_MESSAGING_CHANNEL_SECRET", value: process.env.LINE_MESSAGING_CHANNEL_SECRET },
+    { source: "LINE_CHANNEL_SECRET", value: process.env.LINE_CHANNEL_SECRET },
+    { source: "LINE_LOGIN_CHANNEL_SECRET", value: process.env.LINE_LOGIN_CHANNEL_SECRET },
+  ].filter((entry): entry is { source: string; value: string } => Boolean(entry.value && entry.value.trim()));
 
-  if (!channelSecret || !input.signature) {
+  if (channelSecrets.length === 0 || !input.signature) {
     return false;
   }
 
-  const expected = createHmac("sha256", channelSecret).update(input.body, "utf8").digest("base64");
   const actualBuffer = Buffer.from(input.signature);
-  const expectedBuffer = Buffer.from(expected);
 
-  if (actualBuffer.length !== expectedBuffer.length) {
-    return false;
+  return channelSecrets.some((entry) => {
+    const expected = createHmac("sha256", entry.value).update(input.body, "utf8").digest("base64");
+    const expectedBuffer = Buffer.from(expected);
+
+    if (actualBuffer.length !== expectedBuffer.length) {
+      return false;
+    }
+
+    return timingSafeEqual(actualBuffer, expectedBuffer);
+  });
+}
+
+export function getLineWebhookSignatureDebugStatus(input: { body: string; signature: string | null }) {
+  const channelSecrets = [
+    { source: "LINE_MESSAGING_CHANNEL_SECRET", value: process.env.LINE_MESSAGING_CHANNEL_SECRET },
+    { source: "LINE_CHANNEL_SECRET", value: process.env.LINE_CHANNEL_SECRET },
+    { source: "LINE_LOGIN_CHANNEL_SECRET", value: process.env.LINE_LOGIN_CHANNEL_SECRET },
+  ].filter((entry): entry is { source: string; value: string } => Boolean(entry.value && entry.value.trim()));
+
+  if (!input.signature) {
+    return {
+      signaturePresent: false,
+      candidateSecretSources: channelSecrets.map((entry) => entry.source),
+      matchedSecretSource: null as string | null,
+    };
   }
 
-  return timingSafeEqual(actualBuffer, expectedBuffer);
+  const actualBuffer = Buffer.from(input.signature);
+  let matchedSecretSource: string | null = null;
+
+  for (const entry of channelSecrets) {
+    const expected = createHmac("sha256", entry.value).update(input.body, "utf8").digest("base64");
+    const expectedBuffer = Buffer.from(expected);
+
+    if (actualBuffer.length === expectedBuffer.length && timingSafeEqual(actualBuffer, expectedBuffer)) {
+      matchedSecretSource = entry.source;
+      break;
+    }
+  }
+
+  return {
+    signaturePresent: true,
+    candidateSecretSources: channelSecrets.map((entry) => entry.source),
+    matchedSecretSource,
+  };
 }
 
 export async function sendLineReplyMessage(input: { replyToken: string; text: string }) {

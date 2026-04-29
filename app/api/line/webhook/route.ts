@@ -68,7 +68,7 @@ function eventTimestampToIso(timestamp: number | undefined) {
   return new Date(timestamp).toISOString();
 }
 
-function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
+async function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
   return buildYorisouCompanionLineReply({
     eventType: input.eventType as "follow" | "message" | "postback",
     accountMatched: input.accountMatched,
@@ -76,7 +76,7 @@ function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
   });
 }
 
-function buildLineVoiceFallbackReply(input: { accountMatched: boolean }) {
+async function buildLineVoiceFallbackReply(input: { accountMatched: boolean }) {
   return buildYorisouCompanionVoiceFallbackReply({
     accountMatched: input.accountMatched,
     locale: "ja",
@@ -238,7 +238,7 @@ export async function POST(request: Request) {
     }
 
     if (shouldReply && event.replyToken) {
-      let replyText = buildReplyText({
+      let replyText = await buildReplyText({
         eventType,
         accountMatched,
       });
@@ -248,7 +248,7 @@ export async function POST(request: Request) {
 
       if (shouldUseTranscriptReply) {
         try {
-          replyText = buildYorisouCompanionLineReply({
+          replyText = await buildYorisouCompanionLineReply({
             eventType,
             accountMatched,
             locale: "ja",
@@ -256,11 +256,11 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error("line webhook companion reply error:", error);
           if (isAudioMessage) {
-            replyText = buildLineVoiceFallbackReply({ accountMatched });
+            replyText = await buildLineVoiceFallbackReply({ accountMatched });
           }
         }
       } else if (isAudioMessage) {
-        replyText = buildLineVoiceFallbackReply({ accountMatched });
+        replyText = await buildLineVoiceFallbackReply({ accountMatched });
       }
 
       const reply = await sendLineReplyMessage({
