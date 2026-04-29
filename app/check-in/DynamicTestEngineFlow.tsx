@@ -114,9 +114,9 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-5 py-6 text-[var(--text)] sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-5 flex items-center justify-between gap-3 text-xs tracking-[0.2em] text-[var(--muted)]">
+    <main className="min-h-[100svh] bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-4 py-3 text-[var(--text)] sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100svh-1.5rem)] max-w-2xl flex-col">
+        <div className="mb-3 flex items-center justify-between gap-3 text-[10px] tracking-[0.18em] text-[var(--muted)]">
           <div>{t.pretitle}</div>
           <div>{t.progressLabel}</div>
         </div>
@@ -140,55 +140,59 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
         )}
 
         {phase === "quiz" && currentQuestion && (
-          <section className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-5 py-6 shadow-[0_14px_28px_rgba(47,35,33,0.04)] sm:px-7 sm:py-8">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="service-kicker">{t.progressLabel}</div>
-                <h1 className="display-serif mt-2 text-[1.9rem] leading-[1.38] sm:text-[2.3rem]">{currentQuestion.question}</h1>
-                <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{currentQuestion.helper_text}</p>
-              </div>
-              <div className="shrink-0 rounded-full border border-[color:var(--line-soft)] bg-white/80 px-3 py-1.5 text-xs tracking-[0.18em] text-[var(--muted)]">
-                {t.progressLabel} {progress}
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.9rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
+            <div className="px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="service-kicker text-[10px] tracking-[0.16em]">{t.progressLabel}</div>
+                  <h1 className="display-serif mt-1.5 text-[1.58rem] leading-[1.24] sm:text-[2.1rem]">{currentQuestion.question}</h1>
+                  <p className="mt-2 text-[12px] leading-5 text-[var(--muted)] sm:text-sm sm:leading-6">{currentQuestion.helper_text}</p>
+                </div>
+                <div className="shrink-0 rounded-full border border-[color:var(--line-soft)] bg-white/80 px-3 py-1.5 text-[10px] tracking-[0.16em] text-[var(--muted)]">
+                  {t.progressLabel} {progress}
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3">
-              {currentQuestion.options.map((option) => {
-                const active = selectedOptionId === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => selectOption(option.id)}
-                    className={[
-                      "min-h-[68px] rounded-[1.1rem] border px-4 py-4 text-left transition",
-                      active
-                        ? "border-[color:var(--cta-main)] bg-[rgba(58,38,33,0.06)] shadow-[0_8px_18px_rgba(47,35,33,0.08)]"
-                        : "border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.76)] hover:border-[color:var(--line-sage)] hover:bg-[rgba(225,232,219,0.26)]",
-                    ].join(" ")}
-                  >
-                    <div className="text-sm font-semibold text-[var(--text)]">{option.label}</div>
-                  </button>
-                );
-              })}
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3 sm:px-6">
+              <div className="grid gap-2.5 sm:gap-3">
+                {currentQuestion.options.map((option) => {
+                  const active = selectedOptionId === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => selectOption(option.id)}
+                      className={[
+                        "min-h-[58px] rounded-[1rem] border px-4 py-3 text-left transition",
+                        active
+                          ? "border-[color:var(--cta-main)] bg-[rgba(58,38,33,0.06)] shadow-[0_8px_18px_rgba(47,35,33,0.08)]"
+                          : "border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.76)] hover:border-[color:var(--line-sage)] hover:bg-[rgba(225,232,219,0.26)]",
+                      ].join(" ")}
+                    >
+                      <div className="text-[13px] font-semibold leading-5 text-[var(--text)] sm:text-sm">{option.label}</div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <button type="button" onClick={goBack} className="btn btn-secondary">
-                {t.back}
-              </button>
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={!selectedOptionId}
-                className="btn btn-primary disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {progress === totalQuestions ? t.result : t.next}
-              </button>
+            <div className="border-t border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.98)] px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-6">
+              <div className="flex gap-2 sm:gap-3">
+                <button type="button" onClick={goBack} className="btn btn-secondary min-h-[48px] flex-1">
+                  {t.back}
+                </button>
+                <button
+                  type="button"
+                  onClick={goNext}
+                  disabled={!selectedOptionId}
+                  className="btn btn-primary min-h-[48px] flex-1 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {progress === totalQuestions ? t.result : t.next}
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">{t.choiceHint}</p>
             </div>
-            <p className="mt-4 text-xs leading-6 text-[var(--muted)]">
-              {t.choiceHint}
-            </p>
           </section>
         )}
 
