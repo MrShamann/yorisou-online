@@ -15,12 +15,12 @@ type Props = {
 };
 
 const SURFACE_COPY: Record<Surface, { title: string; subtitle: string }> = {
-  home: { title: "PERSONA FRAME", subtitle: "Approved visual frame" },
-  checkin: { title: "SCENE FRAME", subtitle: "Question-ready visual frame" },
-  result: { title: "RESULT FRAME", subtitle: "Reveal-ready frame" },
-  share: { title: "SHARE FRAME", subtitle: "Screenshot-ready frame" },
-  oracle: { title: "AFTERTASTE FRAME", subtitle: "余韻の視覚置き場" },
-  question: { title: "SCENE FRAME", subtitle: "Scene accent frame" },
+  home: { title: "YORISOU VISUAL", subtitle: "Official public presentation" },
+  checkin: { title: "QUESTION VISUAL", subtitle: "Question-ready presentation" },
+  result: { title: "RESULT VISUAL", subtitle: "Reveal-ready presentation" },
+  share: { title: "SHARE VISUAL", subtitle: "Screenshot-ready presentation" },
+  oracle: { title: "AFTERTASTE", subtitle: "静かな余韻の視覚" },
+  question: { title: "QUESTION VISUAL", subtitle: "Question accent visual" },
 };
 
 function paletteForPersonaId(personaId: string) {
@@ -67,12 +67,12 @@ function visualBadge(status: PersonaAssetRecord["status"], surface: Surface) {
     return surface === "share" ? "SHARE READY" : "READY";
   }
   if (status === "needs_review") {
-    return "PENDING";
+    return "REVIEW";
   }
   if (status === "missing") {
     return "PREVIEW";
   }
-  return "FRAME";
+  return surface === "share" ? "SHARE READY" : "READY";
 }
 
 export default function PersonaAssetFrame({
@@ -119,7 +119,7 @@ export default function PersonaAssetFrame({
         <div className={`mt-3 rounded-[1.45rem] border border-[rgba(255,255,255,0.72)] bg-gradient-to-b ${palette.inner} p-3 shadow-[0_10px_22px_rgba(47,35,33,0.06)]`}>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">PERSONA</div>
+              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">RESULT</div>
               <p className="mt-1 text-[1.22rem] font-semibold leading-[1.06] text-[var(--text)]">{displayName}</p>
             </div>
             <div className="rounded-full border border-[rgba(125,141,121,0.18)] bg-white/78 px-3 py-1 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
