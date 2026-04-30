@@ -174,14 +174,16 @@ export default function ResultShareActions({
   };
 
   return (
-    <section className="space-y-3 rounded-[1.45rem] border border-[rgba(125,141,121,0.14)] bg-[rgba(255,252,247,0.84)] p-4">
+    <section className="space-y-3 rounded-[1.55rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,19,18,0.96)_0%,rgba(28,40,36,0.95)_100%)] p-4 text-white shadow-[0_18px_34px_rgba(10,16,14,0.16)]">
       <div className="space-y-1">
-        <div className="text-[10px] tracking-[0.24em] text-[var(--muted)]">共有</div>
-        <div className="text-[15px] font-semibold text-[var(--accent-sage-text)]">
-          まずは共有メニューを開く
+        <div className="inline-flex rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[10px] tracking-[0.24em] text-white/84">
+          共有
         </div>
-        <p className="text-[12px] leading-6 text-[var(--muted)]">
-          端末の共有メニューを開いて、LINEやX、メモなどへそのまま送れます。
+        <div className="text-[16px] font-semibold text-white">
+          共有メニューを開く
+        </div>
+        <p className="text-[12px] leading-6 text-white/72">
+          端末の共有シートから、LINEやX、メモへそのまま送れます。
         </p>
       </div>
 
@@ -189,64 +191,64 @@ export default function ResultShareActions({
         <button
           type="button"
           onClick={handleShare}
-          className="inline-flex min-h-[46px] items-center justify-center rounded-[0.95rem] bg-[var(--accent-sage-text)] px-4 py-3 text-[14px] font-semibold text-white"
+          className="inline-flex min-h-[50px] items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(239,244,237,0.96)_100%)] px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_28px_rgba(4,8,7,0.18)]"
         >
           {shareSheetLabel}
         </button>
         <button
           type="button"
           onClick={handleSaveImage}
-          className="inline-flex min-h-[46px] items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/80 px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)]"
+          className="inline-flex min-h-[46px] items-center justify-center rounded-[0.95rem] border border-white/12 bg-white/8 px-4 py-3 text-[14px] font-semibold text-white"
         >
           {imageSaveLabel}
         </button>
         <a
           href={shareCardTargetUrl}
           onClick={() => emit("share_card_opened", "share_card_opened", "share_card")}
-          className="inline-flex min-h-[46px] items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/80 px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)]"
+          className="inline-flex min-h-[46px] items-center justify-center rounded-[0.95rem] border border-white/12 bg-white/8 px-4 py-3 text-[14px] font-semibold text-white"
         >
           {cardLabel}
         </a>
       </div>
 
       {showFallback || !hasNativeShare ? (
-        <details open className="space-y-2 rounded-[1.2rem] border border-[rgba(125,141,121,0.12)] bg-white/72 p-3">
-          <summary className="cursor-pointer list-none text-[12px] font-semibold text-[var(--accent-sage-text)]">
+        <details open className="space-y-2 rounded-[1.2rem] border border-white/12 bg-white/8 p-3 text-white">
+          <summary className="cursor-pointer list-none text-[12px] font-semibold text-white/84">
             その他の共有
           </summary>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <button
               type="button"
               onClick={handleCopyPost}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(125,141,121,0.18)] bg-white/84 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[13px] font-medium text-white"
             >
               投稿文をコピー
             </button>
             <button
               type="button"
               onClick={handleCopy}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(125,141,121,0.18)] bg-white/84 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[13px] font-medium text-white"
             >
               リンクをコピー
             </button>
             <button
               type="button"
               onClick={handleXShare}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(125,141,121,0.18)] bg-white/84 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[13px] font-medium text-white"
             >
               Xで開く
             </button>
             <button
               type="button"
               onClick={handleLineShare}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(125,141,121,0.18)] bg-white/84 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[13px] font-medium text-white"
             >
               LINEで送る
             </button>
             <button
               type="button"
               onClick={handleFacebookShare}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(125,141,121,0.18)] bg-white/84 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[13px] font-medium text-white"
             >
               Facebook
             </button>
@@ -254,7 +256,7 @@ export default function ResultShareActions({
         </details>
       ) : null}
 
-      <div className="text-[11px] leading-5 text-[var(--muted)]">
+      <div className="text-[11px] leading-5 text-white/68">
         {copyState === "copied" && copyNote ? `${copyNote}` : null}
         {copyState === "error" ? "コピーに失敗しました。共有メニューから再度お試しください。" : null}
         {copyState === "idle" && !hasNativeShare ? "この端末では共有メニューが使えないため、下の方法をご利用ください。" : null}

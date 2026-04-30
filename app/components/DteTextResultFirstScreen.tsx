@@ -33,12 +33,14 @@ const copy = {
     sign: "しるし",
     mode: "いまのモード",
     traits: "出やすい動き",
+    recognition: "いまのあなたをひとことで受け取る",
   },
   en: {
     label: "Your result",
     sign: "Sign",
     mode: "Current mode",
     traits: "Behavior traits",
+    recognition: "A one-line read of you right now",
   },
 } as const;
 
@@ -68,102 +70,111 @@ export default function DteTextResultFirstScreen({
   const publicSign = personaShell?.publicSign || fallbackPublicSign;
   const resolvedCurrentModeLabel = resolveCanonicalPublicPersonaModeLabel(personaShell, currentModeKey, currentModeLabel);
   const chips = traitChips.slice(0, 3);
-  const signHelperLine = locale === "en"
-    ? fallbackSubtitle
-    : personaShell?.shareCardHookDirection || fallbackSubtitle;
+  const recognitionLine = socialLine || subtitle || fallbackSubtitle;
+  const detailLine = subtitle && subtitle !== recognitionLine ? subtitle : null;
+  const hasHeroNote = Boolean(oraclePreviewLine && !renderErrorState);
 
   return (
-    <section className="flex min-h-[calc(100dvh-2rem)] flex-col justify-center" data-result-shell="canonical">
-      <div className="rounded-[1.65rem] border border-[rgba(42,63,56,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.99)_0%,rgba(244,247,242,0.98)_100%)] px-4 py-4 shadow-[0_18px_38px_rgba(47,35,33,0.1)]">
-        <div className="flex items-center justify-between gap-3">
-          <div className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.88)] px-3 py-1 text-[10px] tracking-[0.18em] text-[var(--accent-sage-text)]">
-            {t.label}
-          </div>
-          {!renderErrorState && oraclePreviewLine ? (
-            <div className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(255,255,255,0.92)] px-3 py-1 text-[10px] tracking-[0.14em] text-[var(--accent-sage-text)]">
-              結果のひとこと
+    <section className="flex min-h-[calc(100dvh-1rem)] flex-col justify-center" data-result-shell="canonical">
+      <div className="overflow-hidden rounded-[2.2rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.98)_0%,rgba(24,35,31,0.98)_44%,rgba(34,48,43,0.96)_68%,rgba(242,246,239,0.99)_100%)] shadow-[0_24px_60px_rgba(15,22,20,0.18)]">
+        <div className="px-4 pt-4 text-white">
+          <div className="flex items-center justify-between gap-3">
+            <div className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.24em] text-white/86">
+              {t.label}
             </div>
-          ) : null}
-        </div>
-        <div className="mt-3 grid gap-3 md:grid-cols-[1fr_7.5rem] md:items-start">
-          <div>
-            <h1
-              className="display-serif hero-name text-[2.44rem] leading-[1.01] tracking-[-0.05em] text-[var(--text)]"
-              data-official-public-persona-name={resultName}
-              data-persona-id={personaShell?.personaId || "fallback"}
-            >
-              {resultName}
-            </h1>
-            {socialLine ? (
-              <p className="mt-2 rounded-[1rem] bg-[rgba(39,52,49,0.06)] px-3 py-2 text-[14px] font-semibold leading-6 text-[var(--accent-sage-text)]" data-social-handle={socialLine}>
-                {socialLine}
-              </p>
-            ) : null}
-            {subtitle ? (
-              <p className="mt-2 text-[13px] leading-6 text-[var(--muted)]" data-functional-subtitle={subtitle}>
-                {subtitle}
-              </p>
+            {!renderErrorState && hasHeroNote ? (
+              <div className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.16em] text-white/78">
+                ひとこと
+              </div>
             ) : null}
           </div>
-          <PersonaAssetSlot
-            personaId={personaShell?.personaId || "P01"}
-            officialPublicPersonaName={resultName}
-            surface="result"
-            compact
-          />
-        </div>
-        {!renderErrorState && oraclePreviewLine ? (
-          <div className="mt-3 rounded-[1rem] border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.42)] px-3 py-3">
-            <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">余韻の一文</div>
-            <p className="mt-1 text-[13px] leading-6 text-[var(--accent-sage-text)]" data-oracle-preview-line={oraclePreviewLine}>
-              {oraclePreviewLine}
-            </p>
-          </div>
-        ) : null}
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          {publicSign ? (
-            <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-white/82 px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-public-sign={publicSign}>
-              {t.sign}: {publicSign}
-            </span>
-          ) : null}
-          {resolvedCurrentModeLabel ? (
-            <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.88)] px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-current-mode-label={resolvedCurrentModeLabel}>
-              {t.mode}: {resolvedCurrentModeLabel}
-            </span>
-          ) : null}
-        </div>
-        {signHelperLine ? (
-          <p className="mt-2 text-[12px] leading-5 text-[var(--muted)]" data-public-sign-helper={signHelperLine}>
-            {signHelperLine}
-          </p>
-        ) : null}
+          <div className="mt-4 grid gap-4 md:grid-cols-[1.06fr_0.94fr] md:items-stretch">
+            <div className="space-y-4">
+              <div className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.2em] text-white/86">
+                {renderErrorState ? "結果を開けません" : "結果の核"}
+              </div>
 
-        {chips.length > 0 ? (
-          <div className="mt-4">
-            <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">{t.traits}</div>
-            <div className="mt-2 grid gap-2">
-              {chips.map((trait) => (
-                <div
-                  key={trait}
-                  className="rounded-[0.8rem] border border-[rgba(42,63,56,0.12)] bg-white/82 px-3 py-2 text-[13px] leading-5 text-[var(--text)]"
-                  data-trait-chip={trait}
-                >
-                  {trait}
+              <h1
+                className="display-serif hero-name max-w-[11ch] text-[clamp(2.55rem,14vw,4.25rem)] leading-[0.95] tracking-[-0.06em] text-white"
+                data-official-public-persona-name={resultName}
+                data-persona-id={personaShell?.personaId || "fallback"}
+              >
+                {resultName}
+              </h1>
+
+              {recognitionLine ? (
+                <div className="space-y-2">
+                  <div className="text-[10px] tracking-[0.2em] text-white/56">{t.recognition}</div>
+                  <div
+                    className="max-w-[28rem] rounded-[1.3rem] border border-white/12 bg-white/10 px-4 py-3 text-[15px] font-semibold leading-6 text-white shadow-[0_14px_24px_rgba(6,12,10,0.12)]"
+                    data-social-handle={recognitionLine}
+                  >
+                    {recognitionLine}
+                  </div>
                 </div>
-              ))}
+              ) : null}
+
+              {detailLine ? (
+                <p className="max-w-[28rem] text-[13px] leading-6 text-white/72" data-functional-subtitle={detailLine}>
+                  {detailLine}
+                </p>
+              ) : null}
+
+              <div className="flex flex-wrap gap-2">
+                {publicSign ? (
+                  <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[11px] leading-5 text-white/92" data-public-sign={publicSign}>
+                    {t.sign}: {publicSign}
+                  </span>
+                ) : null}
+                {resolvedCurrentModeLabel ? (
+                  <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[11px] leading-5 text-white/92" data-current-mode-label={resolvedCurrentModeLabel}>
+                    {t.mode}: {resolvedCurrentModeLabel}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-[10px] tracking-[0.2em] text-white/56">{t.traits}</div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                {chips.map((trait) => (
+                  <div
+                    key={trait}
+                    className="rounded-[1rem] border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-3 text-[13px] font-medium leading-5 text-white/92 shadow-[0_10px_18px_rgba(6,12,10,0.08)]"
+                    data-trait-chip={trait}
+                  >
+                    {trait}
+                  </div>
+                ))}
+                </div>
+              </div>
+
+              {hasHeroNote && oraclePreviewLine ? (
+                <p className="max-w-[28rem] rounded-[1.05rem] border border-white/12 bg-white/8 px-3 py-3 text-[12px] leading-6 text-white/70" data-oracle-preview-line={oraclePreviewLine}>
+                  {oraclePreviewLine}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="relative overflow-hidden rounded-[1.8rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_100%)] p-3 shadow-[0_18px_32px_rgba(10,16,14,0.14)]">
+              <PersonaAssetSlot
+                personaId={personaShell?.personaId || "P01"}
+                officialPublicPersonaName={resultName}
+                surface="result"
+                compact
+              />
             </div>
           </div>
-        ) : null}
+        </div>
 
-        <div className="mt-5 space-y-2.5">
+        <div className="border-t border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(248,250,245,1)_0%,rgba(242,246,239,1)_100%)] px-4 py-4">
           {actionArea ? (
-            <>{actionArea}</>
+            <div className="space-y-3">{actionArea}</div>
           ) : (
-            <>
+            <div className="space-y-3">
               <Link
                 href={primaryHref}
-                className="inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(36,45,43,1)_0%,rgba(18,20,19,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.16)]"
+                className="inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(18,20,19,1)_0%,rgba(31,44,39,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_16px_28px_rgba(20,28,25,0.24)]"
               >
                 {primaryLabel}
               </Link>
@@ -172,14 +183,14 @@ export default function DteTextResultFirstScreen({
                   href={secondaryHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(42,63,56,0.12)] bg-white/72 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(36,45,43,0.12)] bg-white/76 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
                 >
                   {secondaryLabel}
                 </a>
               ) : null}
-            </>
+            </div>
           )}
-          {detailLink ? <div>{detailLink}</div> : null}
+          {detailLink ? <div className="mt-3">{detailLink}</div> : null}
         </div>
       </div>
     </section>

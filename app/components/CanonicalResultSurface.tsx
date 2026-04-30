@@ -31,24 +31,24 @@ const copy = {
     invalidBody: "完了した結果を、もう一度開いてください。",
     versionBody: "最新の結果ページから開き直してください。",
     detailsCta: "結果のつづきを開く",
-    detailsTitle: "もう少し見る",
-    detailsSummary: "まずは結果の核を受け取り、深い読みは下で開ける。",
+    detailsTitle: "さらに深く見る",
+    detailsSummary: "まずは結果の核を受け取り、読み解きは下で開く。",
     screenLabel: "結果",
     closureTitle: "ひとこと",
     supportLabel: "いまの答え",
-    belowFoldLabel: "次に開くもの",
+    belowFoldLabel: "深く見る",
   },
   en: {
     invalidTitle: "Result unavailable",
     invalidBody: "Please reopen the result from the completed session.",
     versionBody: "Please reopen the latest result page.",
     detailsCta: "Continue reading",
-    detailsTitle: "Result recapped",
+    detailsTitle: "Read deeper",
     detailsSummary: "Take the core read first and deepen it below.",
     screenLabel: "Result",
     closureTitle: "Core line",
     supportLabel: "Current read",
-    belowFoldLabel: "What to open next",
+    belowFoldLabel: "Read deeper",
   },
 } as const;
 
@@ -117,8 +117,8 @@ export default function CanonicalResultSurface({
     nextStepLabel || (locale === "ja" ? identity?.stepCopy.resultPrimaryCtaJa : undefined) || t.detailsCta;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(210,228,222,0.92)_0%,rgba(249,250,247,1)_34%,rgba(236,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.3)_0%,rgba(255,255,255,0)_28%,rgba(223,233,227,0.24)_100%)]" />
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(12,18,17,0.98)_0%,rgba(25,37,33,0.98)_20%,rgba(244,246,240,1)_70%,rgba(237,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_26%,rgba(223,233,227,0.18)_100%)]" />
       <div className="mx-auto max-w-md space-y-4">
         <DteTextResultFirstScreen
           locale={locale}
@@ -164,9 +164,11 @@ export default function CanonicalResultSurface({
 
         <section className="space-y-3" id="result-details">
           <div className="px-1 text-[10px] tracking-[0.2em] text-[var(--muted)]">{t.belowFoldLabel}</div>
-          <section className="rounded-[1.7rem] border border-[rgba(42,63,56,0.12)] bg-[rgba(255,255,255,0.82)] px-4 py-4 shadow-[0_10px_24px_rgba(47,35,33,0.06)]">
-            <div className="text-[11px] tracking-[0.18em] text-[var(--muted)]">{t.detailsTitle}</div>
-            <p className="mt-2 text-[15px] font-semibold leading-7 text-[var(--accent-sage-text)]">
+          <section className="rounded-[1.7rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] px-4 py-4 shadow-[0_14px_28px_rgba(47,35,33,0.08)]">
+            <div className="inline-flex rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.9)] px-3 py-1 text-[11px] tracking-[0.18em] text-[var(--accent-sage-text)]">
+              {t.detailsTitle}
+            </div>
+            <p className="mt-3 text-[15px] font-semibold leading-7 text-[var(--accent-sage-text)]">
               {locale === "en" ? socialLine : identity?.nextMoveLineJa || socialLine}
             </p>
             <div className="mt-3 text-[11px] tracking-[0.18em] text-[var(--muted)]">{t.closureTitle}</div>
@@ -176,7 +178,7 @@ export default function CanonicalResultSurface({
                 {nextStepHref ? (
                   <a
                     href={nextStepHref}
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-[0.95rem] border border-[rgba(42,63,56,0.12)] bg-white/78 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-[0.95rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(22,24,24,1)_0%,rgba(31,44,39,1)_100%)] px-4 py-2 text-[13px] font-medium text-white shadow-[0_12px_20px_rgba(20,28,25,0.18)]"
                   >
                     {secondaryLabel}
                   </a>
