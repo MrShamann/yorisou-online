@@ -312,7 +312,7 @@ const PERSONA_PACK: Record<string, PersonaPackSeed> = {
     publicResultLabelEn: "Landing adjuster",
     publicSubtitleEn: "You settle change by choosing the clean landing over the noisy rush.",
     shortResultHookEn: "Change is won at the landing.",
-    shareLineEn: "You settle the aftertaste of change.",
+    shareLineEn: "You settle into the shape of change.",
     teaserLineEn: "See how you land after the turn.",
     paywallTeaseEn: "Read how you settle after change without forcing speed.",
   },

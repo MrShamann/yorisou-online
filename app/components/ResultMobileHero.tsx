@@ -136,7 +136,7 @@ export default function ResultMobileHero({
 
           {compact || !showMemoryLine ? null : memoryHook && memoryHook !== punchLine ? (
             <div className="rounded-[1.15rem] border border-[rgba(125,141,121,0.1)] bg-[rgba(255,253,249,0.78)] px-3 py-2.5">
-              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">{locale === "en" ? "RESULT LINE" : "送れるひとこと"}</div>
+              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">{locale === "en" ? "Result line" : "送れるひとこと"}</div>
               <p className="mt-1 text-[12px] leading-5 text-[var(--accent-sage-text)]">{memoryHook}</p>
             </div>
           ) : null}

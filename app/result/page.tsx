@@ -11,7 +11,6 @@ import { buildDynamicTestContinuationHref } from "@/lib/dynamicTestEngineSession
 import { getResultVisualAssetResolution } from "@/lib/server/resultVisualAssetRegistry";
 import { getDynamicTestCompletionRecord } from "@/lib/server/dynamicTestCompletionStore";
 import { getCanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
-import { resolveOracleLineForResult } from "@/lib/yorisou/dte/oracle/oracle-line-result-resolver";
 
 export const metadata: Metadata = {
   title: "結果 | Yorisou",
@@ -80,13 +79,6 @@ export default async function ResultPage({
   const personaShell = getCanonicalPublicPersonaShell(personaId);
   const currentModeKey = completion?.currentModeKey || null;
   const currentModeLabel = completion?.currentModeLabelJa || null;
-  const oracleResolution = resolveOracleLineForResult({
-    personaId,
-    currentMode: currentModeLabel,
-    resultSource: completion ? "live" : "fallback",
-  });
-  const oracleRecord = completion ? oracleResolution.oracleRecord : null;
-
   return (
     <>
       {completion && unlockTarget === "deep_report" ? (
@@ -150,8 +142,6 @@ export default async function ResultPage({
         personaShell={personaShell}
         currentModeKey={currentModeKey}
         currentModeLabel={currentModeLabel}
-        oracleRecord={oracleRecord}
-        showFallbackOracle={hasRenderableResult}
       />
     </>
   );

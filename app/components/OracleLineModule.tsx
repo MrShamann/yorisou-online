@@ -22,7 +22,7 @@ export default function OracleLineModule({ record, fallback = null }: Props) {
     <section
       className="overflow-hidden rounded-[1.55rem] border border-[rgba(125,141,121,0.18)] bg-[linear-gradient(180deg,rgba(255,252,247,0.98)_0%,rgba(237,230,216,0.96)_100%)] px-4 py-4 shadow-[0_16px_32px_rgba(47,35,33,0.08)]"
       data-oracle-line-module
-      data-oracle-id={record?.oracleId || fallback?.oracleId || "fallback-aftertaste"}
+      data-oracle-id={record?.oracleId || fallback?.oracleId || "fallback-oracle"}
       data-oracle-status={record?.status || "fallback"}
       data-persona-id={record?.personaId || "fallback"}
       data-current-mode={record?.currentMode || fallback?.currentMode || "fallback"}
@@ -33,7 +33,7 @@ export default function OracleLineModule({ record, fallback = null }: Props) {
           <p className="mt-1 text-[12px] font-medium leading-5 text-[var(--accent-sage-text)]">結果のあとに、もう半歩だけ残る言葉。</p>
         </div>
         <span className="rounded-full border border-[rgba(125,141,121,0.18)] bg-[rgba(255,253,249,0.86)] px-3 py-1 text-[10px] tracking-[0.14em] text-[var(--accent-sage-text)]">
-          aftertaste
+          余韻
         </span>
       </div>
       <p className="mt-3 text-[1.02rem] font-semibold leading-7 text-[var(--text)]" data-oracle-line={source.oracleLine}>

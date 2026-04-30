@@ -11,10 +11,6 @@ import {
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { timelineService } from "@/lib/server/foundation/timelineService";
 import {
-  buildYorisouCompanionLineReply,
-  buildYorisouCompanionVoiceFallbackReply,
-} from "@/lib/server/yorisouCompanionLineReply";
-import {
   downloadLineMessageContent,
   getLineMessagingConfigStatus,
   isLineMessagingConfigured,
@@ -24,6 +20,8 @@ import {
 import { transcribeSupportVoice } from "@/lib/server/openclawVoiceBridge";
 
 export const runtime = "nodejs";
+
+const PUBLIC_LINE_MINI_APP_URL = "https://yorisou.online/line/mini-app";
 
 type LineWebhookEvent = {
   type?: string;
@@ -68,19 +66,14 @@ function eventTimestampToIso(timestamp: number | undefined) {
   return new Date(timestamp).toISOString();
 }
 
-async function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
-  return buildYorisouCompanionLineReply({
-    eventType: input.eventType as "follow" | "message" | "postback",
-    accountMatched: input.accountMatched,
-    locale: "ja",
-  });
-}
+function buildFastPublicReplyText(input: { eventType: string; accountMatched: boolean }) {
+  if (input.eventType === "follow") {
+    return input.accountMatched
+      ? `おかえりなさい。YorisouのLINE Mini Appはこちらです。すぐに33問チェックを始められます: ${PUBLIC_LINE_MINI_APP_URL}`
+      : `YorisouのLINE Mini Appはこちらです。33問チェックをすぐ始められます: ${PUBLIC_LINE_MINI_APP_URL}`;
+  }
 
-async function buildLineVoiceFallbackReply(input: { accountMatched: boolean }) {
-  return buildYorisouCompanionVoiceFallbackReply({
-    accountMatched: input.accountMatched,
-    locale: "ja",
-  });
+  return `YorisouのLINE Mini Appはこちらです。33問チェックをすぐ始められます: ${PUBLIC_LINE_MINI_APP_URL}`;
 }
 
 async function syncLineWebhookEventToCanonical(record: LineWebhookEventRecord) {
@@ -230,38 +223,11 @@ export async function POST(request: Request) {
       }
     }
 
-    try {
-      await syncLineWebhookEventToCanonical(createdRecord);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "line_webhook_canonical_sync_failed";
-      return NextResponse.json({ ok: false, error: message }, { status: 500 });
-    }
-
     if (shouldReply && event.replyToken) {
-      let replyText = await buildReplyText({
+      const replyText = buildFastPublicReplyText({
         eventType,
         accountMatched,
       });
-
-      const replySourceMessage = messageText || event.message?.text || "";
-      const shouldUseTranscriptReply = eventType === "message" && replySourceMessage.trim().length > 0;
-
-      if (shouldUseTranscriptReply) {
-        try {
-          replyText = await buildYorisouCompanionLineReply({
-            eventType,
-            accountMatched,
-            locale: "ja",
-          });
-        } catch (error) {
-          console.error("line webhook companion reply error:", error);
-          if (isAudioMessage) {
-            replyText = await buildLineVoiceFallbackReply({ accountMatched });
-          }
-        }
-      } else if (isAudioMessage) {
-        replyText = await buildLineVoiceFallbackReply({ accountMatched });
-      }
 
       const reply = await sendLineReplyMessage({
         replyToken: event.replyToken,
@@ -282,6 +248,13 @@ export async function POST(request: Request) {
           replyError,
         });
       }
+    }
+
+    try {
+      await syncLineWebhookEventToCanonical(createdRecord);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "line_webhook_canonical_sync_failed";
+      return NextResponse.json({ ok: false, error: message }, { status: 500 });
     }
   }
 

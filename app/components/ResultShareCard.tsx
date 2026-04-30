@@ -52,7 +52,7 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
             />
 
             <div className="rounded-[2rem] border border-white/70 bg-[rgba(255,255,255,0.46)] px-4 py-4 shadow-[0_12px_28px_rgba(47,35,33,0.08)]">
-              <div className="text-[11px] tracking-[0.16em] text-[var(--muted)]">{locale === "en" ? "RESULT" : "結果名"}</div>
+              <div className="text-[11px] tracking-[0.16em] text-[var(--muted)]">{locale === "en" ? "Result" : "結果名"}</div>
               <h1 className="mt-1 display-serif text-[2.18rem] leading-[1.02] tracking-[-0.04em] text-[var(--text)]" data-official-public-persona-name={officialName} data-persona-id={personaShell?.personaId || "fallback"}>
                 {officialName}
               </h1>

@@ -120,7 +120,7 @@ export default function PersonaAssetFrame({
         <div className={`mt-3 rounded-[1.45rem] border border-[rgba(255,255,255,0.72)] bg-gradient-to-b ${palette.inner} p-3 shadow-[0_10px_22px_rgba(47,35,33,0.06)]`}>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">RESULT</div>
+              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">結果</div>
               <p className="mt-1 text-[1.22rem] font-semibold leading-[1.06] text-[var(--text)]">{displayName}</p>
             </div>
             <div className="rounded-full border border-[rgba(125,141,121,0.18)] bg-white/78 px-3 py-1 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">

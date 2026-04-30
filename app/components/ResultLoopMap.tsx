@@ -10,7 +10,7 @@ type Props = {
 
 const copy = {
   ja: {
-    title: "RESULT LOOP",
+    title: "次の流れ",
     summary: "結果を受け取ってから、次はひとつずつでいい。",
     steps: {
       result: "結果",
@@ -20,7 +20,7 @@ const copy = {
     },
   },
   en: {
-    title: "RESULT LOOP",
+    title: "Next steps",
     summary: "Once the result lands, the next steps only need to be one at a time.",
     steps: {
       result: "Result",
