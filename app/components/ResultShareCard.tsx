@@ -28,30 +28,30 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
   const shortUrl = "yorisou.online/line/mini-app";
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(210,228,222,0.98)_0%,rgba(250,250,247,1)_36%,rgba(236,242,235,1)_100%)] px-4 py-5 text-[var(--text)]">
-      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-md items-center justify-center">
-        <section className="relative w-full overflow-hidden rounded-[2.4rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.99)_0%,rgba(246,249,244,0.98)_100%)] shadow-[0_22px_46px_rgba(47,35,33,0.12)]">
-          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(88,121,112,0.08)_0%,rgba(22,24,24,0.88)_50%,rgba(88,121,112,0.08)_100%)]" />
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.97)_34%,rgba(243,246,239,1)_100%)] px-4 py-4 text-[var(--text)]">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-md items-center justify-center">
+        <section className="relative w-full overflow-hidden rounded-[2.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_57%,rgba(242,246,239,0.99)_100%)] shadow-[0_24px_52px_rgba(10,16,14,0.18)]">
+          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(157,184,170,0.16)_0%,rgba(255,255,255,0.88)_50%,rgba(157,184,170,0.16)_100%)]" />
           <div className="relative space-y-4 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <BrandSigil label="YORISOU" className="shrink-0" />
-                <span className="rounded-full border border-[rgba(36,45,43,0.12)] bg-white/90 px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
+                <span className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] tracking-[0.14em] text-white/84">
                   {locale === "en" ? "Share card" : "あなたの結果"}
                 </span>
               </div>
-              <span className="rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.9)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
+              <span className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] tracking-[0.14em] text-white/84">
                 {categoryTag}
               </span>
             </div>
 
-            <div className="overflow-hidden rounded-[1.8rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(25,31,29,0.98)_0%,rgba(39,52,49,0.98)_58%,rgba(245,248,243,1)_100%)] p-4 text-white shadow-[0_18px_34px_rgba(24,30,28,0.18)]">
+            <div className="overflow-hidden rounded-[1.8rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_34%,rgba(245,248,243,1)_100%)] p-4 text-white shadow-[0_18px_34px_rgba(24,30,28,0.18)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-2">
                   <div className="inline-flex rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[10px] tracking-[0.2em] text-white/84">
                     {locale === "en" ? "Your result" : "あなたの結果"}
                   </div>
-                  <h1 className="display-serif text-[2.55rem] leading-[0.98] tracking-[-0.05em] text-white" data-official-public-persona-name={officialName} data-persona-id={personaShell?.personaId || "fallback"}>
+                  <h1 className="display-serif text-[2.45rem] leading-[0.98] tracking-[-0.06em] text-white" data-official-public-persona-name={officialName} data-persona-id={personaShell?.personaId || "fallback"}>
                     {officialName}
                   </h1>
                   {socialHandle ? (
@@ -61,7 +61,7 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
                   ) : null}
                 </div>
                 <div className="rounded-[1.25rem] border border-white/12 bg-white/10 px-3 py-2 text-right text-[11px] tracking-[0.16em] text-white/76">
-                  <div>{locale === "en" ? "Preview" : "共有向け"}</div>
+                  <div>{locale === "en" ? "Preview" : "結果カード"}</div>
                   <div className="mt-2 rounded-full border border-white/12 bg-white/10 px-2.5 py-1 text-[10px] tracking-[0.12em] text-white/84">
                     {currentModeLabel || "Mode"}
                   </div>
@@ -98,15 +98,15 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
               ))}
             </div>
 
-            <div className="rounded-[1.3rem] border border-[rgba(36,45,43,0.12)] bg-[rgba(245,248,243,0.96)] px-4 py-3">
-              <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">あなたも診断する</div>
+            <div className="rounded-[1.3rem] border border-white/10 bg-[linear-gradient(180deg,rgba(18,20,19,0.96)_0%,rgba(31,44,39,0.96)_100%)] px-4 py-3 text-white shadow-[0_12px_22px_rgba(20,28,25,0.16)]">
+              <div className="text-[10px] tracking-[0.18em] text-white/60">あなたも診断する</div>
               <Link
                 href={shareLink}
-                className="mt-2 inline-flex min-h-[48px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(22,24,24,1)_0%,rgba(31,44,39,1)_100%)] px-4 py-3 text-[14px] font-semibold text-white shadow-[0_16px_28px_rgba(20,28,25,0.24)]"
+                className="mt-2 inline-flex min-h-[48px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_28px_rgba(20,28,25,0.24)]"
               >
-                LINEでひらく
+                あなたも診断する
               </Link>
-              <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">{shortUrl}</p>
+              <p className="mt-2 text-[11px] leading-5 text-white/62">{shortUrl}</p>
             </div>
           </div>
         </section>
