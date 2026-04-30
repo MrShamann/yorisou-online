@@ -38,7 +38,7 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
           <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(180,106,72,0.18)_0%,rgba(79,105,98,0.84)_50%,rgba(180,106,72,0.18)_100%)]" />
           <div className="relative space-y-3.5">
             <div className="flex items-center justify-between gap-3">
-              <BrandSigil label={locale === "en" ? "SHARE CARD" : "結果カード"} className="shrink-0" />
+              <BrandSigil label={locale === "en" ? "共有カード" : "結果カード"} className="shrink-0" />
               <span className="rounded-full border border-[rgba(125,141,121,0.24)] bg-[rgba(255,253,249,0.88)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
                 {categoryTag}
               </span>

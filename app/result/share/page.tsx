@@ -32,9 +32,10 @@ export default async function ResultSharePage({
   const personaOptions = getCanonicalPersonaOptions();
   const fallbackPersonaId = requestedPersonaId || personaOptions[0]?.personaId || "P01";
   const personaId = completion?.personaId || fallbackPersonaId;
+  const hasRenderableResult = Boolean(completion) || Boolean(requestedPersonaId);
   const snapshot = buildResultLabSnapshot({
     personaId,
-    scenario: completion ? "result_ready" : "invalid_or_missing_payload",
+    scenario: hasRenderableResult ? "result_ready" : "invalid_or_missing_payload",
     surfaceMode: "primary",
     sessionMode: "anonymous",
     versionMode: "valid",

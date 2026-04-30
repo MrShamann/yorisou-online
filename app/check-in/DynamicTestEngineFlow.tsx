@@ -45,6 +45,14 @@ const copy = {
   },
 } as const;
 
+function createClientSessionId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `dte_session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function DynamicTestEngineFlow({ locale }: Props) {
   const t = copy[locale];
   const [phase, setPhase] = useState<"intro" | "quiz" | "redirecting">("intro");
@@ -52,6 +60,9 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
   const [answers, setAnswers] = useState<Record<string, string | undefined>>({});
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const autoAdvanceTimerRef = useRef<number | null>(null);
+  const sessionIdRef = useRef(createClientSessionId());
+  const advancingLockRef = useRef(false);
+  const completionSubmitLockRef = useRef(false);
 
   const totalQuestions = dynamicTestSessionQuestions.length;
   const currentQuestion = dynamicTestSessionQuestions[currentIndex] || null;
@@ -78,8 +89,36 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     }
   }
 
+  async function persistCompletionRecord(personaId: string) {
+    const response = await fetch("/api/dynamic-test/completion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sessionId: sessionIdRef.current,
+        locale,
+        personaId,
+        totalQuestions,
+        answeredQuestions: totalQuestions,
+        sourceSurface: "mini_app",
+        entrySource: "mini_app",
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as { completionId?: string | null } | null;
+    return typeof data?.completionId === "string" && data.completionId.length > 0 ? data.completionId : null;
+  }
+
   function beginSession() {
     clearAutoAdvanceTimer();
+    advancingLockRef.current = false;
+    completionSubmitLockRef.current = false;
+    sessionIdRef.current = createClientSessionId();
     setAnswers({});
     setCurrentIndex(0);
     setSelectedOptionId(null);
@@ -88,6 +127,9 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
 
   function selectOption(optionId: string) {
     clearAutoAdvanceTimer();
+    if (advancingLockRef.current) {
+      return;
+    }
     setSelectedOptionId(optionId);
     if (currentQuestion) {
       setAnswers((current) => ({
@@ -99,13 +141,14 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     if (currentQuestion) {
       autoAdvanceTimerRef.current = window.setTimeout(() => {
         autoAdvanceTimerRef.current = null;
-        goNext();
+        void goNext(optionId);
       }, 200);
     }
   }
 
   function goBack() {
     clearAutoAdvanceTimer();
+    advancingLockRef.current = false;
     if (currentIndex === 0) {
       setPhase("intro");
       return;
@@ -117,13 +160,20 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     setSelectedOptionId(previousQuestion ? answers[previousQuestion.candidate_id] || null : null);
   }
 
-  function goNext() {
+  async function goNext(selectedOptionIdOverride?: string) {
     clearAutoAdvanceTimer();
-    if (!currentQuestion || !selectedOptionId) return;
+    if (advancingLockRef.current) {
+      return;
+    }
+
+    const effectiveSelectedOptionId = selectedOptionIdOverride || selectedOptionId;
+    if (!currentQuestion || !effectiveSelectedOptionId) return;
+
+    advancingLockRef.current = true;
 
     const nextAnswers = {
       ...answers,
-      [currentQuestion.candidate_id]: selectedOptionId,
+      [currentQuestion.candidate_id]: effectiveSelectedOptionId,
     };
     setAnswers(nextAnswers);
 
@@ -131,17 +181,34 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     if (nextIndex < totalQuestions) {
       setCurrentIndex(nextIndex);
       setSelectedOptionId(nextAnswers[dynamicTestSessionQuestions[nextIndex]?.candidate_id || ""] || null);
+      advancingLockRef.current = false;
       return;
     }
 
     const personaId = deriveDynamicTestPersonaId(nextAnswers);
-    const nextHref = buildDynamicTestResultHref({ locale, personaId, source: "mini_app" });
+    let completionId: string | null = null;
+
+    if (!completionSubmitLockRef.current) {
+      completionSubmitLockRef.current = true;
+      try {
+        completionId = await persistCompletionRecord(personaId);
+      } catch {
+        completionId = null;
+      }
+    }
+
+    const nextHref = buildDynamicTestResultHref({
+      locale,
+      personaId,
+      source: "mini_app",
+      completionId,
+    });
     setPhase("redirecting");
     window.location.assign(nextHref);
   }
 
   function handleNextClick() {
-    goNext();
+    void goNext();
   }
 
   return (

@@ -83,6 +83,7 @@ export function buildDynamicTestResultHref(input: {
   locale: "ja" | "en";
   personaId: string;
   source?: string;
+  completionId?: string | null;
 }) {
   const params = new URLSearchParams();
   params.set("persona", input.personaId);
@@ -91,6 +92,9 @@ export function buildDynamicTestResultHref(input: {
   params.set("sessionMode", "anonymous");
   params.set("versionMode", "valid");
   params.set("entry_source", input.source || "mini_app");
+  if (input.completionId) {
+    params.set("completionId", input.completionId);
+  }
 
   const path = input.locale === "en" ? "/en/result" : "/result";
   return `${path}?${params.toString()}`;

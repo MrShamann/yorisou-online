@@ -29,8 +29,8 @@ type Props = {
 
 const copy = {
   ja: {
-    invalidTitle: "結果を表示できません",
-    invalidBody: "完了した結果を開き直してください。",
+    invalidTitle: "結果を読み込めません",
+    invalidBody: "完了した結果をもう一度開いてください。",
     versionBody: "最新の結果ページから開き直してください。",
     primaryDefault: "この結果のつづきを開く",
     primaryHint: "次の一歩だけを、下で開けます。",
@@ -87,7 +87,7 @@ export default function CanonicalResultSurface({
       : identity?.mythArchetypeLabelJa || identity?.publicResultLabelJa || payload?.final_locked_label_jp || t.invalidTitle;
   const socialLine = renderErrorState
     ? locale === "en"
-      ? "A finished result could not be loaded."
+      ? "The completed result could not be loaded."
       : "完了した結果を読み込めませんでした。"
     : locale === "en"
       ? identity?.shareLineEn || payload?.share_card_result.share_card_line_en_logic_gloss || payload?.share_card_result.share_card_summary || ""

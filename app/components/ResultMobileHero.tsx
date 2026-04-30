@@ -71,8 +71,8 @@ export default function ResultMobileHero({
           <div className="grid gap-3 md:grid-cols-[1fr_7.5rem] md:items-start">
             <div className="space-y-1.5">
               <div className="flex flex-wrap gap-2">
-                <span className="visual-chip rounded-full px-3 py-1 text-[10px] tracking-[0.14em]">RESULT</span>
-                <span className="visual-chip rounded-full px-3 py-1 text-[10px] tracking-[0.14em]">SINGLE REVEAL</span>
+                <span className="visual-chip rounded-full px-3 py-1 text-[10px] tracking-[0.14em]">結果</span>
+                <span className="visual-chip rounded-full px-3 py-1 text-[10px] tracking-[0.14em]">単独表示</span>
               </div>
               <h1
                 className={`${compact ? "text-[1.84rem]" : "text-[2.42rem]"} display-serif hero-name leading-[1.01] text-[var(--text)]`}
@@ -102,7 +102,7 @@ export default function ResultMobileHero({
               <div className="relative min-h-[164px]">
                 <PersonaHeroPortrait familyKey={pack?.familyKey || "recovery"} variant="result" />
                 <div className="absolute left-3 top-3 rounded-full border border-[rgba(125,141,121,0.18)] bg-[rgba(255,253,249,0.84)] px-3 py-1 text-[10px] tracking-[0.14em] text-[var(--accent-sage-text)]">
-                  VISUAL
+                  表示
                 </div>
               </div>
             </div>

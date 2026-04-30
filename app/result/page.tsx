@@ -27,6 +27,7 @@ export const metadata: Metadata = {
 
 type SearchParams = Promise<{
   completionId?: string;
+  persona?: string;
   unlock?: string;
 }>;
 
@@ -37,16 +38,17 @@ export default async function ResultPage({
 }) {
   const params = (await searchParams) || {};
   const completionId = typeof params.completionId === "string" ? params.completionId : "";
+  const requestedPersonaId = typeof params.persona === "string" ? params.persona : "";
   const unlockTarget = typeof params.unlock === "string" ? params.unlock : "";
   const completion = completionId ? await getDynamicTestCompletionRecord(completionId) : null;
   const renderAt = new Date().getTime();
   const personaOptions = getCanonicalPersonaOptions();
   const fallbackPersonaId = personaOptions[0]?.personaId || "P01";
-  const isValidCompletion = Boolean(completion);
-  const personaId = completion?.personaId || fallbackPersonaId;
+  const hasRenderableResult = Boolean(completion) || Boolean(requestedPersonaId);
+  const personaId = completion?.personaId || requestedPersonaId || fallbackPersonaId;
   const snapshot = buildResultLabSnapshot({
     personaId,
-    scenario: isValidCompletion ? "result_ready" : "invalid_or_missing_payload",
+    scenario: hasRenderableResult ? "result_ready" : "invalid_or_missing_payload",
     surfaceMode: "primary",
     sessionMode: "anonymous",
     versionMode: "valid",
@@ -69,22 +71,25 @@ export default async function ResultPage({
     hookLine: publicIdentity.hookLineJa,
     traitChips: publicIdentity.traitChipsJa,
   });
-  const shareViewHref = isValidCompletion
-    ? `/result/share?completionId=${encodeURIComponent(completion?.id || completionId || "")}`
-    : `/result/share?personaId=${encodeURIComponent(personaId)}`;
+  const shareViewSearchParams = new URLSearchParams();
+  shareViewSearchParams.set("personaId", personaId);
+  if (completion?.id || completionId) {
+    shareViewSearchParams.set("completionId", completion?.id || completionId || "");
+  }
+  const shareViewHref = `/result/share?${shareViewSearchParams.toString()}`;
   const personaShell = getCanonicalPublicPersonaShell(personaId);
   const currentModeKey = completion?.currentModeKey || null;
   const currentModeLabel = completion?.currentModeLabelJa || null;
   const oracleResolution = resolveOracleLineForResult({
     personaId,
     currentMode: currentModeLabel,
-    resultSource: isValidCompletion ? "live" : "fallback",
+    resultSource: completion ? "live" : "fallback",
   });
-  const oracleRecord = isValidCompletion ? oracleResolution.oracleRecord : null;
+  const oracleRecord = completion ? oracleResolution.oracleRecord : null;
 
   return (
     <>
-      {isValidCompletion && unlockTarget === "deep_report" ? (
+      {completion && unlockTarget === "deep_report" ? (
         <DteEventTracker
           event="unlock_succeeded"
           completionId={completion?.id || null}
@@ -105,11 +110,11 @@ export default async function ResultPage({
       ) : null}
       <DteEventTracker
         event="result_revealed"
-        completionId={isValidCompletion ? completion?.id || null : null}
-        personaId={isValidCompletion ? completion?.personaId || null : null}
-        sessionId={isValidCompletion ? completion?.sessionId || null : null}
+        completionId={completion ? completion.id || null : null}
+        personaId={completion ? completion.personaId || null : null}
+        sessionId={completion ? completion.sessionId || null : null}
         locale="ja"
-        durationMs={isValidCompletion && completion?.completedAt ? Math.max(0, renderAt - new Date(completion.completedAt).getTime()) : null}
+        durationMs={completion && completion.completedAt ? Math.max(0, renderAt - new Date(completion.completedAt).getTime()) : null}
         branchId="yorisou_dte"
         sourceBranchId="yorisou_dte"
         visibilityPolicy="public"
@@ -120,7 +125,7 @@ export default async function ResultPage({
         source="result"
         surface="result"
         action="view"
-        enabled={isValidCompletion}
+        enabled={Boolean(completion)}
         publicResultLabel={publicIdentity.publicResultLabelJa}
         resultVariantIds={snapshot.payload?.subobjects?.analytics_metadata?.variant_id ? [snapshot.payload?.subobjects?.analytics_metadata?.variant_id] : null}
         shareCardVariant={snapshot.payload?.subobjects?.analytics_metadata?.variant_id || null}
@@ -131,7 +136,7 @@ export default async function ResultPage({
         publicIdentity={publicIdentity}
         visualAssetPack={visualAssetResolution.pack}
         nextStepHref={
-          isValidCompletion
+          completion
             ? buildDynamicTestContinuationHref({
                 locale: "ja",
                 completionId: completion?.id || completionId,
@@ -139,14 +144,14 @@ export default async function ResultPage({
               })
             : undefined
         }
-        nextStepLabel={isValidCompletion ? publicIdentity.stepCopy.resultPrimaryCtaJa : undefined}
-        nextStepHint={isValidCompletion ? publicIdentity.stepCopy.resultPrimaryHintJa : undefined}
+        nextStepLabel={completion ? publicIdentity.stepCopy.resultPrimaryCtaJa : undefined}
+        nextStepHint={completion ? publicIdentity.stepCopy.resultPrimaryHintJa : undefined}
         shareViewHref={shareViewHref}
         personaShell={personaShell}
         currentModeKey={currentModeKey}
         currentModeLabel={currentModeLabel}
         oracleRecord={oracleRecord}
-        showFallbackOracle={isValidCompletion}
+        showFallbackOracle={hasRenderableResult}
       />
     </>
   );

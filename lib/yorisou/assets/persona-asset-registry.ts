@@ -15,7 +15,7 @@ function buildFallbackRecord(personaId: string, officialPublicPersonaName: strin
     source: "fallback_css",
     aspectRatio: "4:5",
     mobileSafe: true,
-    riskNote: "A quiet visual frame keeps the result visually settled.",
+    riskNote: "公開表示は静かに整えています。",
   };
 }
 
