@@ -28,27 +28,37 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
   const shortUrl = "yorisou.online/line/mini-app";
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(221,232,217,0.96)_0%,rgba(247,244,238,1)_36%,rgba(244,239,231,1)_100%)] px-4 py-5 text-[var(--text)]">
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(211,228,221,0.98)_0%,rgba(250,250,247,1)_36%,rgba(235,240,233,1)_100%)] px-4 py-5 text-[var(--text)]">
       <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-md items-center justify-center">
-        <section className="relative w-full overflow-hidden rounded-[2.35rem] border border-[color:var(--line-strong)] bg-[linear-gradient(180deg,rgba(255,252,247,0.98)_0%,rgba(242,234,223,0.98)_100%)] p-4 shadow-[0_20px_46px_rgba(47,35,33,0.14)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(180,106,72,0.18)_0%,rgba(79,105,98,0.84)_50%,rgba(180,106,72,0.18)_100%)]" />
+        <section className="relative w-full overflow-hidden rounded-[2.35rem] border border-[rgba(42,63,56,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.99)_0%,rgba(245,248,243,0.98)_100%)] p-4 shadow-[0_22px_46px_rgba(47,35,33,0.12)]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(88,121,112,0.15)_0%,rgba(24,24,24,0.82)_50%,rgba(88,121,112,0.15)_100%)]" />
           <div className="relative space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <BrandSigil label={locale === "en" ? "シェアカード" : "結果カード"} className="shrink-0" />
-              <span className="rounded-full border border-[rgba(125,141,121,0.24)] bg-[rgba(255,253,249,0.88)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
+              <div className="flex items-center gap-2">
+                <BrandSigil label="YORISOU" className="shrink-0" />
+                <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(255,255,255,0.88)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
+                  {locale === "en" ? "Share card" : "あなたの結果"}
+                </span>
+              </div>
+              <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.88)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
                 {categoryTag}
               </span>
             </div>
 
             <PersonaAssetSlot personaId={personaShell?.personaId || "P01"} officialPublicPersonaName={officialName} surface="share" compact />
 
-            <div className="rounded-[2rem] border border-white/70 bg-[rgba(255,255,255,0.5)] px-4 py-4 shadow-[0_12px_28px_rgba(47,35,33,0.08)]">
-              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">{locale === "en" ? "Result" : "結果名"}</div>
-              <h1 className="mt-1 display-serif text-[2.08rem] leading-[1.02] tracking-[-0.04em] text-[var(--text)]" data-official-public-persona-name={officialName} data-persona-id={personaShell?.personaId || "fallback"}>
+            <div className="rounded-[1.95rem] border border-[rgba(42,63,56,0.1)] bg-white/88 px-4 py-4 shadow-[0_14px_28px_rgba(47,35,33,0.08)]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">{locale === "en" ? "Your result" : "あなたの結果"}</div>
+                <div className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.88)] px-2.5 py-1 text-[10px] tracking-[0.14em] text-[var(--accent-sage-text)]">
+                  {locale === "en" ? "Preview" : "共有向け"}
+                </div>
+              </div>
+              <h1 className="mt-2 display-serif text-[2.28rem] leading-[1.02] tracking-[-0.05em] text-[var(--text)]" data-official-public-persona-name={officialName} data-persona-id={personaShell?.personaId || "fallback"}>
                 {officialName}
               </h1>
               {socialHandle ? (
-                <p className="mt-2 rounded-[1rem] bg-[rgba(220,230,216,0.46)] px-3 py-2 text-[0.95rem] font-semibold leading-6 text-[var(--accent-sage-text)]" data-social-handle={socialHandle}>
+                <p className="mt-2 rounded-[1rem] bg-[rgba(39,52,49,0.06)] px-3 py-2 text-[0.95rem] font-semibold leading-6 text-[var(--accent-sage-text)]" data-social-handle={socialHandle}>
                   {socialHandle}
                 </p>
               ) : null}
@@ -58,12 +68,12 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
               {publicSign || currentModeLabel ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {publicSign ? (
-                    <span className="rounded-full border border-[rgba(125,141,121,0.2)] bg-[rgba(255,253,249,0.82)] px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-public-sign={publicSign}>
+                    <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(255,255,255,0.88)] px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-public-sign={publicSign}>
                       {locale === "en" ? "Sign" : "しるし"}: {publicSign}
                     </span>
                   ) : null}
                   {currentModeLabel ? (
-                    <span className="rounded-full border border-[rgba(125,141,121,0.2)] bg-[rgba(235,240,230,0.8)] px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-current-mode-label={currentModeLabel}>
+                    <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.88)] px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-current-mode-label={currentModeLabel}>
                       {locale === "en" ? "Mode" : "今のモード"}: {currentModeLabel}
                     </span>
                   ) : null}
@@ -76,7 +86,7 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
                 {traits.map((trait) => (
                   <span
                     key={trait}
-                    className="rounded-full border border-[rgba(125,141,121,0.24)] bg-[rgba(255,253,249,0.92)] px-3 py-1.5 text-[12px] leading-5 text-[var(--accent-sage-text)] shadow-[0_6px_14px_rgba(47,35,33,0.04)]"
+                    className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(255,255,255,0.92)] px-3 py-1.5 text-[12px] leading-5 text-[var(--accent-sage-text)] shadow-[0_6px_14px_rgba(47,35,33,0.04)]"
                     data-trait-chip={trait}
                   >
                     {trait}
@@ -85,11 +95,11 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
               </div>
             ) : null}
 
-            <div className="rounded-[1.4rem] border border-[rgba(125,141,121,0.12)] bg-[rgba(255,253,249,0.82)] px-4 py-3">
+            <div className="rounded-[1.4rem] border border-[rgba(42,63,56,0.12)] bg-[rgba(246,249,244,0.92)] px-4 py-3">
               <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">あなたも診断する</div>
               <Link
                 href={shareLink}
-                className="mt-2 inline-flex min-h-[46px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(57,35,30,1)_0%,rgba(27,17,14,1)_100%)] px-4 py-3 text-[14px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.12)]"
+                className="mt-2 inline-flex min-h-[46px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(36,45,43,1)_0%,rgba(18,20,19,1)_100%)] px-4 py-3 text-[14px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.16)]"
               >
                 LINEでひらく
               </Link>

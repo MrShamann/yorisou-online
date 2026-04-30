@@ -110,7 +110,6 @@ export default function CanonicalResultSurface({
     locale,
     publicResultName,
     socialLine,
-    subtitle,
     ctaLine: locale === "en" ? "What kind of support fits you?" : "あなたは今、どの寄り添い方？",
   });
   const secondaryHref = nextStepHref || "#result-details";
@@ -118,8 +117,8 @@ export default function CanonicalResultSurface({
     nextStepLabel || (locale === "ja" ? identity?.stepCopy.resultPrimaryCtaJa : undefined) || t.detailsCta;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(214,228,208,0.9)_0%,rgba(247,244,238,1)_32%,rgba(244,239,231,1)_100%)] px-4 py-4 text-[var(--text)]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0)_28%,rgba(233,224,212,0.22)_100%)]" />
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(210,228,222,0.92)_0%,rgba(249,250,247,1)_34%,rgba(236,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.3)_0%,rgba(255,255,255,0)_28%,rgba(223,233,227,0.24)_100%)]" />
       <div className="mx-auto max-w-md space-y-4">
         <DteTextResultFirstScreen
           locale={locale}
@@ -165,7 +164,7 @@ export default function CanonicalResultSurface({
 
         <section className="space-y-3" id="result-details">
           <div className="px-1 text-[10px] tracking-[0.2em] text-[var(--muted)]">{t.belowFoldLabel}</div>
-          <section className="rounded-[1.7rem] border border-[rgba(125,141,121,0.14)] bg-[rgba(255,252,247,0.76)] px-4 py-4">
+          <section className="rounded-[1.7rem] border border-[rgba(42,63,56,0.12)] bg-[rgba(255,255,255,0.82)] px-4 py-4 shadow-[0_10px_24px_rgba(47,35,33,0.06)]">
             <div className="text-[11px] tracking-[0.18em] text-[var(--muted)]">{t.detailsTitle}</div>
             <p className="mt-2 text-[15px] font-semibold leading-7 text-[var(--accent-sage-text)]">
               {locale === "en" ? socialLine : identity?.nextMoveLineJa || socialLine}
@@ -177,7 +176,7 @@ export default function CanonicalResultSurface({
                 {nextStepHref ? (
                   <a
                     href={nextStepHref}
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/64 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-[0.95rem] border border-[rgba(42,63,56,0.12)] bg-white/78 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
                   >
                     {secondaryLabel}
                   </a>

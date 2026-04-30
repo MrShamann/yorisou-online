@@ -11,24 +11,56 @@ import { buildDynamicTestContinuationHref } from "@/lib/dynamicTestEngineSession
 import { getResultVisualAssetResolution } from "@/lib/server/resultVisualAssetRegistry";
 import { getDynamicTestCompletionRecord } from "@/lib/server/dynamicTestCompletionStore";
 import { getCanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
-
-export const metadata: Metadata = {
-  title: "結果 | Yorisou",
-  description: "完了した結果をひと目で受け取り、次の一歩まで迷わず開けるページです。",
-  alternates: {
-    canonical: "/result",
-  },
-  robots: {
-    index: false,
-    follow: true,
-  },
-};
+import { buildResultSharePreviewMetadata } from "@/lib/result/share-preview-metadata";
 
 type SearchParams = Promise<{
   completionId?: string;
   persona?: string;
   unlock?: string;
 }>;
+
+function getPublicShareUrl(personaId: string) {
+  const safePersonaId = personaId.trim() || "P01";
+  return `/result/share?personaId=${encodeURIComponent(safePersonaId)}`;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}): Promise<Metadata> {
+  const params = (await searchParams) || {};
+  const completionId = typeof params.completionId === "string" ? params.completionId : "";
+  const requestedPersonaId = typeof params.persona === "string" ? params.persona : "";
+  const completion = completionId ? await getDynamicTestCompletionRecord(completionId) : null;
+  const personaOptions = getCanonicalPersonaOptions();
+  const fallbackPersonaId = personaOptions[0]?.personaId || "P01";
+  const personaId = completion?.personaId || requestedPersonaId || fallbackPersonaId;
+  const snapshot = buildResultLabSnapshot({
+    personaId,
+    scenario: completion || requestedPersonaId ? "result_ready" : "invalid_or_missing_payload",
+    surfaceMode: "primary",
+    sessionMode: "anonymous",
+    versionMode: "valid",
+  });
+  const publicIdentity = buildPublicResultIdentity({
+    personaId,
+    payload: snapshot.payload,
+    sourceResultLabel: snapshot.payload?.final_locked_label_jp,
+    sourceResultSummary: snapshot.payload?.final_locked_subtitle_jp || snapshot.payload?.share_card_result.share_card_summary || null,
+    sourceShareLine: snapshot.payload?.share_card_result.share_card_line_jp || null,
+    sourceTeaserLine: snapshot.payload?.teaser_result.teaser_line_jp || null,
+    sourcePaywallTease: snapshot.payload?.deep_report_stub.deep_report_intro_jp || null,
+  });
+  const personaShell = getCanonicalPublicPersonaShell(personaId);
+  return buildResultSharePreviewMetadata({
+    personaName: publicIdentity.publicResultLabelJa || personaShell?.officialPublicPersonaName || "Yorisou",
+    socialHandle: publicIdentity.shareSocialHookJa || publicIdentity.shareSendLineJa || personaShell?.socialHandle || publicIdentity.shareLineJa || "",
+    publicUrl: getPublicShareUrl(personaId),
+    canonicalUrl: getPublicShareUrl(personaId),
+    imageUrl: `/result/opengraph-image?personaId=${encodeURIComponent(personaId)}`,
+  });
+}
 
 export default async function ResultPage({
   searchParams,
@@ -72,14 +104,8 @@ export default async function ResultPage({
   });
   const shareViewSearchParams = new URLSearchParams();
   shareViewSearchParams.set("personaId", personaId);
-  if (completion?.id || completionId) {
-    shareViewSearchParams.set("completionId", completion?.id || completionId || "");
-  }
   const shareViewHref = `/result/share?${shareViewSearchParams.toString()}`;
-  const shareHref =
-    completion?.id || completionId
-      ? `/result?completionId=${encodeURIComponent((completion?.id || completionId || "").trim())}`
-      : "/line/mini-app";
+  const shareHref = shareViewHref;
   const personaShell = getCanonicalPublicPersonaShell(personaId);
   const currentModeKey = completion?.currentModeKey || null;
   const currentModeLabel = completion?.currentModeLabelJa || null;

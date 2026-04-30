@@ -15,12 +15,12 @@ type Props = {
 };
 
 const SURFACE_COPY: Record<Surface, { title: string; subtitle: string }> = {
-  home: { title: "公開ビジュアル", subtitle: "YORISOUの公開表示" },
-  checkin: { title: "質問ビジュアル", subtitle: "答えやすい質問画面" },
-  result: { title: "結果ビジュアル", subtitle: "結果を受け取る表示" },
-  share: { title: "共有ビジュアル", subtitle: "共有しやすい表示" },
-  oracle: { title: "余韻", subtitle: "静かな余韻の視覚" },
-  question: { title: "質問ビジュアル", subtitle: "答えやすい表示" },
+  home: { title: "公開トップ", subtitle: "YORISOUの入口" },
+  checkin: { title: "質問画面", subtitle: "答えやすい導線" },
+  result: { title: "公開結果", subtitle: "結果の見え方" },
+  share: { title: "共有カード", subtitle: "SNSへ送る見え方" },
+  oracle: { title: "余韻表示", subtitle: "静かな一言の見え方" },
+  question: { title: "質問画面", subtitle: "答えやすい導線" },
 };
 
 function paletteForPersonaId(personaId: string) {
@@ -65,12 +65,12 @@ function paletteForPersonaId(personaId: string) {
 function visualBadge(surface: Surface) {
   switch (surface) {
     case "share":
-      return "共有表示";
+      return "共有向け";
     case "result":
-      return "結果表示";
+      return "公開結果";
     case "checkin":
     case "question":
-      return "質問表示";
+      return "質問画面";
     default:
       return "公開表示";
   }
@@ -120,7 +120,7 @@ export default function PersonaAssetFrame({
         <div className={`mt-3 rounded-[1.45rem] border border-[rgba(255,255,255,0.72)] bg-gradient-to-b ${palette.inner} p-3 shadow-[0_10px_22px_rgba(47,35,33,0.06)]`}>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">結果</div>
+              <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">公開名</div>
               <p className="mt-1 text-[1.22rem] font-semibold leading-[1.06] text-[var(--text)]">{displayName}</p>
             </div>
             <div className="rounded-full border border-[rgba(125,141,121,0.18)] bg-white/78 px-3 py-1 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
@@ -138,20 +138,20 @@ export default function PersonaAssetFrame({
               </div>
               <div className="absolute inset-x-4 bottom-4 flex items-end justify-between">
               <div>
-                  <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">表示の安定</div>
+                  <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">公開用</div>
                   <p className="mt-1 text-[12px] font-medium leading-5 text-[var(--accent-sage-text)]">
-                    {surface === "share" ? "共有時も見え方が安定するよう整えています。" : "表示は安定して受け取れます。"}
+                    {surface === "share" ? "SNSで見せやすい公開カードとして整えています。" : "公開用の見え方として整えています。"}
                   </p>
                 </div>
                 <div className="rounded-full border border-[rgba(125,141,121,0.18)] bg-white/74 px-3 py-1 text-[10px] tracking-[0.14em] text-[var(--accent-sage-text)]">
-                  {palette.accent === "rgba(180,106,72,0.92)" ? "あたたかい" : "やわらかい"}
+                  {palette.accent === "rgba(180,106,72,0.92)" ? "あたたかい" : "すっきり"}
                 </div>
               </div>
             </div>
 
             <div className="flex w-[4.8rem] flex-col justify-between rounded-[1.2rem] border border-[rgba(125,141,121,0.15)] bg-[rgba(255,253,249,0.76)] px-3 py-3">
               <div className="rounded-full border border-[rgba(125,141,121,0.18)] bg-white/78 px-2 py-1 text-center text-[10px] tracking-[0.12em] text-[var(--accent-sage-text)]">
-                表示
+                公開
               </div>
               <div className="space-y-2">
                 <div className="h-2 rounded-full bg-[rgba(86,104,94,0.22)]" />
@@ -159,13 +159,13 @@ export default function PersonaAssetFrame({
                 <div className="h-2 rounded-full bg-[rgba(86,104,94,0.14)]" />
               </div>
               <div className="rounded-[0.9rem] border border-[rgba(125,141,121,0.12)] bg-[rgba(255,255,255,0.74)] px-2 py-2 text-center text-[10px] leading-4 text-[var(--muted)]">
-                {record.mobileSafe ? "モバイル対応" : "要確認"}
+                {record.mobileSafe ? "公開可" : "要確認"}
               </div>
             </div>
           </div>
         </div>
 
-        <p className="mt-3 text-[11px] leading-5 text-[var(--muted)]">公開表示は静かに整っています。</p>
+        <p className="mt-3 text-[11px] leading-5 text-[var(--muted)]">公開カードとして、見せやすく整えています。</p>
       </div>
     </section>
   );

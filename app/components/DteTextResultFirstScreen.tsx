@@ -74,11 +74,13 @@ export default function DteTextResultFirstScreen({
 
   return (
     <section className="flex min-h-[calc(100dvh-2rem)] flex-col justify-center" data-result-shell="canonical">
-      <div className="rounded-[1.65rem] border border-[rgba(125,141,121,0.18)] bg-[linear-gradient(180deg,rgba(255,252,247,0.98)_0%,rgba(242,234,223,0.98)_100%)] px-4 py-4 shadow-[0_18px_38px_rgba(47,35,33,0.1)]">
+      <div className="rounded-[1.65rem] border border-[rgba(42,63,56,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.99)_0%,rgba(244,247,242,0.98)_100%)] px-4 py-4 shadow-[0_18px_38px_rgba(47,35,33,0.1)]">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">{t.label}</div>
+          <div className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.88)] px-3 py-1 text-[10px] tracking-[0.18em] text-[var(--accent-sage-text)]">
+            {t.label}
+          </div>
           {!renderErrorState && oraclePreviewLine ? (
-            <div className="rounded-full border border-[rgba(125,141,121,0.18)] bg-[rgba(255,253,249,0.92)] px-3 py-1 text-[10px] tracking-[0.14em] text-[var(--accent-sage-text)]">
+            <div className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(255,255,255,0.92)] px-3 py-1 text-[10px] tracking-[0.14em] text-[var(--accent-sage-text)]">
               結果のひとこと
             </div>
           ) : null}
@@ -86,14 +88,14 @@ export default function DteTextResultFirstScreen({
         <div className="mt-3 grid gap-3 md:grid-cols-[1fr_7.5rem] md:items-start">
           <div>
             <h1
-              className="display-serif hero-name text-[2.28rem] leading-[1.02] text-[var(--text)]"
+              className="display-serif hero-name text-[2.44rem] leading-[1.01] tracking-[-0.05em] text-[var(--text)]"
               data-official-public-persona-name={resultName}
               data-persona-id={personaShell?.personaId || "fallback"}
             >
               {resultName}
             </h1>
             {socialLine ? (
-              <p className="mt-2 text-[14px] font-semibold leading-6 text-[var(--accent-sage-text)]" data-social-handle={socialLine}>
+              <p className="mt-2 rounded-[1rem] bg-[rgba(39,52,49,0.06)] px-3 py-2 text-[14px] font-semibold leading-6 text-[var(--accent-sage-text)]" data-social-handle={socialLine}>
                 {socialLine}
               </p>
             ) : null}
@@ -111,7 +113,7 @@ export default function DteTextResultFirstScreen({
           />
         </div>
         {!renderErrorState && oraclePreviewLine ? (
-          <div className="mt-3 rounded-[1rem] border border-[rgba(125,141,121,0.14)] bg-[rgba(220,230,216,0.34)] px-3 py-3">
+          <div className="mt-3 rounded-[1rem] border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.42)] px-3 py-3">
             <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">余韻の一文</div>
             <p className="mt-1 text-[13px] leading-6 text-[var(--accent-sage-text)]" data-oracle-preview-line={oraclePreviewLine}>
               {oraclePreviewLine}
@@ -121,12 +123,12 @@ export default function DteTextResultFirstScreen({
 
         <div className="mt-3 flex flex-wrap gap-2">
           {publicSign ? (
-            <span className="rounded-full border border-[rgba(125,141,121,0.18)] bg-white/74 px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-public-sign={publicSign}>
+            <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-white/82 px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-public-sign={publicSign}>
               {t.sign}: {publicSign}
             </span>
           ) : null}
           {resolvedCurrentModeLabel ? (
-            <span className="rounded-full border border-[rgba(125,141,121,0.18)] bg-[rgba(235,240,230,0.72)] px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-current-mode-label={resolvedCurrentModeLabel}>
+            <span className="rounded-full border border-[rgba(42,63,56,0.12)] bg-[rgba(235,241,234,0.88)] px-3 py-1 text-[11px] leading-5 text-[var(--accent-sage-text)]" data-current-mode-label={resolvedCurrentModeLabel}>
               {t.mode}: {resolvedCurrentModeLabel}
             </span>
           ) : null}
@@ -144,7 +146,7 @@ export default function DteTextResultFirstScreen({
               {chips.map((trait) => (
                 <div
                   key={trait}
-                  className="rounded-[0.8rem] border border-[rgba(125,141,121,0.14)] bg-white/70 px-3 py-2 text-[13px] leading-5 text-[var(--text)]"
+                  className="rounded-[0.8rem] border border-[rgba(42,63,56,0.12)] bg-white/82 px-3 py-2 text-[13px] leading-5 text-[var(--text)]"
                   data-trait-chip={trait}
                 >
                   {trait}
@@ -161,7 +163,7 @@ export default function DteTextResultFirstScreen({
             <>
               <Link
                 href={primaryHref}
-                className="inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(57,35,30,1)_0%,rgba(27,17,14,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.12)]"
+                className="inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(36,45,43,1)_0%,rgba(18,20,19,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.16)]"
               >
                 {primaryLabel}
               </Link>
@@ -170,7 +172,7 @@ export default function DteTextResultFirstScreen({
                   href={secondaryHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/64 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(42,63,56,0.12)] bg-white/72 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
                 >
                   {secondaryLabel}
                 </a>

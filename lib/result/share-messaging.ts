@@ -4,7 +4,6 @@ type Input = {
   locale: Locale;
   publicResultName: string;
   socialLine: string;
-  subtitle: string;
   ctaLine?: string | null;
 };
 
@@ -17,7 +16,6 @@ export function buildResultShareMessaging(input: Input) {
   const shareText = [
     shareTitle,
     input.socialLine,
-    input.subtitle,
     input.ctaLine || (input.locale === "en" ? "What kind of support fits you?" : "あなたは今、どの寄り添い方？"),
     "#Yorisou #寄り添い診断",
   ]
