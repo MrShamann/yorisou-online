@@ -174,23 +174,23 @@ export default function ResultShareActions({
   };
 
   return (
-    <section className="space-y-3 rounded-[1.35rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,19,18,0.96)_0%,rgba(24,35,31,0.96)_100%)] p-3.5 text-white shadow-[0_18px_34px_rgba(10,16,14,0.16)]">
+    <section className="space-y-2.5 rounded-[1.3rem] border border-white/10 bg-[linear-gradient(180deg,rgba(13,19,18,0.96)_0%,rgba(24,35,31,0.96)_100%)] p-3 text-white shadow-[0_18px_34px_rgba(10,16,14,0.16)]">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="inline-flex rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[10px] tracking-[0.24em] text-white/84">
             共有
           </div>
-          <div className="text-[15px] font-semibold text-white">
+          <div className="text-[14px] font-semibold text-white">
             シェアする
           </div>
-          <p className="text-[11px] leading-5 text-white/68">
+          <p className="text-[10px] leading-5 text-white/62">
             端末の共有シートが開きます。
           </p>
         </div>
         <a
           href={shareCardTargetUrl}
           onClick={() => emit("share_card_opened", "share_card_opened", "share_card")}
-          className="rounded-full border border-white/12 bg-white/8 px-3 py-2 text-[11px] font-semibold text-white/88"
+          className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-[10px] font-semibold text-white/84"
         >
           共有カード
         </a>
@@ -200,29 +200,29 @@ export default function ResultShareActions({
         <button
           type="button"
           onClick={handleShare}
-          className="inline-flex min-h-[52px] items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_28px_rgba(4,8,7,0.18)]"
+          className="inline-flex min-h-[50px] items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_28px_rgba(4,8,7,0.18)]"
         >
           {shareSheetLabel}
         </button>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           <button
             type="button"
             onClick={handleSaveImage}
-            className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/8 px-3 py-2 text-[12px] font-medium text-white"
+            className="inline-flex min-h-[38px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/8 px-2.5 py-2 text-[11px] font-medium text-white"
           >
             {imageSaveLabel}
           </button>
           <button
             type="button"
             onClick={handleCopyPost}
-            className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/8 px-3 py-2 text-[12px] font-medium text-white"
+            className="inline-flex min-h-[38px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/8 px-2.5 py-2 text-[11px] font-medium text-white"
           >
             文案コピー
           </button>
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/8 px-3 py-2 text-[12px] font-medium text-white"
+            className="inline-flex min-h-[38px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/8 px-2.5 py-2 text-[11px] font-medium text-white"
           >
             リンクコピー
           </button>
@@ -230,36 +230,36 @@ export default function ResultShareActions({
       </div>
 
       {showFallback || !hasNativeShare ? (
-        <details open className="space-y-2 rounded-[1.1rem] border border-white/12 bg-white/8 p-3 text-white">
-          <summary className="cursor-pointer list-none text-[12px] font-semibold text-white/84">
+        <details open className="space-y-2 rounded-[1.05rem] border border-white/12 bg-white/8 p-2.5 text-white">
+          <summary className="cursor-pointer list-none text-[11px] font-semibold text-white/80">
             その他の共有
           </summary>
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="mt-2.5 grid grid-cols-2 gap-1.5">
             <button
               type="button"
               onClick={handleXShare}
-              className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[12px] font-medium text-white"
+              className="inline-flex min-h-[38px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-3 py-2 text-[11px] font-medium text-white"
             >
               Xで開く
             </button>
             <button
               type="button"
               onClick={handleLineShare}
-              className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[12px] font-medium text-white"
+              className="inline-flex min-h-[38px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-3 py-2 text-[11px] font-medium text-white"
             >
               LINEで送る
             </button>
             <button
               type="button"
               onClick={handleFacebookShare}
-              className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[12px] font-medium text-white"
+              className="inline-flex min-h-[38px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-3 py-2 text-[11px] font-medium text-white"
             >
               Facebook
             </button>
             <button
               type="button"
               onClick={() => emit("share_card_opened", "share_card_opened", "share_card")}
-              className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-4 py-2 text-[12px] font-medium text-white"
+              className="inline-flex min-h-[38px] items-center justify-center rounded-[0.9rem] border border-white/12 bg-white/10 px-3 py-2 text-[11px] font-medium text-white"
             >
               {cardLabel}
             </button>

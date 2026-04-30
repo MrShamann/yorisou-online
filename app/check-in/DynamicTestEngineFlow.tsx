@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import BrandSigil from "@/app/components/BrandSigil";
 import { trackDteEvent } from "@/app/components/DteEventTracker";
 import { buildDynamicTestResultHref, deriveDynamicTestPersonaId, dynamicTestSessionQuestions } from "@/lib/dynamicTestEngineSession";
 
@@ -244,41 +245,79 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
   }
 
   return (
-    <main className="min-h-[100svh] overflow-x-hidden bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-4 py-3 text-[var(--text)] sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full min-h-[calc(100svh-1.5rem)] max-w-2xl flex-col">
-        <div className="mb-3 flex items-center justify-between gap-3 text-[10px] tracking-[0.18em] text-[var(--muted)]">
-          <div>{t.pretitle}</div>
+    <main className="min-h-[100svh] overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(9,14,13,0.98)_0%,rgba(20,32,28,0.97)_36%,rgba(243,246,239,1)_100%)] px-4 py-4 text-[var(--text)] sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full min-h-[calc(100svh-2rem)] max-w-2xl flex-col">
+        <div className="mb-3 flex items-center justify-between gap-3 text-[10px] tracking-[0.18em] text-white/62">
+          <BrandSigil label="YORISOU" />
           <div>{t.progressLabel}</div>
         </div>
 
         {phase === "intro" && (
-          <section className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-5 py-7 shadow-[0_14px_28px_rgba(47,35,33,0.04)] sm:px-8 sm:py-9">
-            <div className="service-kicker">LINE MINI App</div>
-            <h1 className="display-serif mt-4 text-[2rem] leading-[1.26] sm:text-[2.6rem]">{t.title}</h1>
-            <p className="mt-5 text-[15px] leading-8 text-[var(--muted)] sm:text-base">{t.body}</p>
-            <div className="mt-6 grid gap-3 text-sm text-[var(--muted)] sm:grid-cols-3">
-              <span className="rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/75 px-4 py-3 text-center">{t.duration}</span>
-              <span className="rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/75 px-4 py-3 text-center">{t.benefitOne}</span>
-              <span className="rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/75 px-4 py-3 text-center">{t.benefitThree}</span>
+          <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(22,34,29,0.98)_55%,rgba(242,246,239,0.99)_100%)] shadow-[0_24px_54px_rgba(10,16,14,0.18)]">
+            <div className="px-4 pt-4 text-white">
+              <div className="flex items-center justify-between gap-3">
+                <BrandSigil label="YORISOU" className="shrink-0" />
+                <span className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] tracking-[0.14em] text-white/84">
+                  LINE MINI App
+                </span>
+              </div>
+
+              <div className="mt-4 rounded-[1.8rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_100%)] px-4 py-4 shadow-[0_16px_30px_rgba(5,10,9,0.12)]">
+                <div className="inline-flex rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[10px] tracking-[0.22em] text-white/82">
+                  YORISOU / LINE
+                </div>
+                <h1 className="display-serif mt-4 text-[2.35rem] leading-[0.98] tracking-[-0.06em] text-white sm:text-[2.55rem]">
+                  {t.title}
+                </h1>
+                <p className="mt-3 text-[14px] leading-7 text-white/74 sm:text-[15px]">{t.body}</p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    t.duration,
+                    t.benefitOne,
+                    t.benefitTwo,
+                    t.benefitThree,
+                  ].map((label) => (
+                    <span
+                      key={label}
+                      className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] leading-5 text-white/88"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+
+                <button type="button" onClick={beginSession} className="mt-5 inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[15px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_30px_rgba(5,10,9,0.18)]">
+                  {t.start}
+                </button>
+                <p className="mt-2 text-[11px] leading-5 text-white/60">{t.duration} / 5択 / 33問</p>
+              </div>
             </div>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button type="button" onClick={beginSession} className="btn btn-primary min-h-[52px]">
-                {t.start}
-              </button>
+
+            <div className="border-t border-white/10 bg-[linear-gradient(180deg,rgba(245,248,243,0.98)_0%,rgba(238,243,236,1)_100%)] px-4 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">{t.result}</div>
+                  <p className="mt-1 text-[14px] font-medium leading-6 text-[var(--text)]">一問ずつ答えて、そのまま結果まで進みます。</p>
+                </div>
+                <div className="rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.96)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
+                  {t.result}
+                </div>
+              </div>
             </div>
           </section>
         )}
 
         {phase === "quiz" && currentQuestion && (
-          <section className="flex w-full min-h-0 flex-1 flex-col overflow-hidden rounded-[1.9rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
+          <section className="flex w-full min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_58%,rgba(241,245,238,0.99)_100%)] shadow-[0_24px_52px_rgba(10,16,14,0.16)]">
             <div className="px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="service-kicker text-[10px] tracking-[0.16em]">{t.progressLabel}</div>
-                  <h1 className="display-serif mt-1.5 text-[1.58rem] leading-[1.24] sm:text-[2.1rem]">{currentQuestion.question}</h1>
-                  <p className="mt-2 text-[12px] leading-5 text-[var(--muted)] sm:text-sm sm:leading-6">{currentQuestion.helper_text}</p>
+                  <div className="inline-flex rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[10px] tracking-[0.16em] text-white/82">{t.progressLabel}</div>
+                  <h1 className="display-serif mt-2 text-[1.52rem] leading-[1.22] tracking-[-0.03em] text-white sm:text-[1.92rem]">{currentQuestion.question}</h1>
+                  <p className="mt-2 text-[12px] leading-5 text-white/72 sm:text-sm sm:leading-6">{currentQuestion.helper_text}</p>
                 </div>
-                <div className="shrink-0 rounded-full border border-[color:var(--line-soft)] bg-white/80 px-3 py-1.5 text-[10px] tracking-[0.16em] text-[var(--muted)]">
+                <div className="shrink-0 rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[10px] tracking-[0.16em] text-white/76">
                   {t.progressLabel} {progress}
                 </div>
               </div>
@@ -294,42 +333,42 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
                       type="button"
                       onClick={() => selectOption(option.id)}
                       className={[
-                        "min-h-[58px] rounded-[1rem] border px-4 py-3 text-left transition",
+                        "min-h-[56px] rounded-[1rem] border px-4 py-3 text-left transition",
                         active
-                          ? "border-[color:var(--cta-main)] bg-[rgba(58,38,33,0.06)] shadow-[0_8px_18px_rgba(47,35,33,0.08)]"
-                          : "border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.76)] hover:border-[color:var(--line-sage)] hover:bg-[rgba(225,232,219,0.26)]",
+                          ? "border-[rgba(242,248,241,0.9)] bg-[linear-gradient(180deg,rgba(242,248,241,0.98)_0%,rgba(224,234,224,0.98)_100%)] shadow-[0_10px_20px_rgba(10,16,14,0.18)]"
+                          : "border-white/12 bg-white/8 hover:border-white/20 hover:bg-white/12",
                       ].join(" ")}
                     >
-                      <div className="text-[13px] font-semibold leading-5 text-[var(--text)] sm:text-sm">{option.label}</div>
+                      <div className={["text-[13px] font-semibold leading-5 sm:text-sm", active ? "text-[var(--accent-sage-text)]" : "text-white/92"].join(" ")}>{option.label}</div>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="border-t border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.98)] px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-6">
+            <div className="border-t border-white/10 bg-[linear-gradient(180deg,rgba(15,22,20,0.96)_0%,rgba(24,35,31,0.96)_100%)] px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-6">
               <div className="flex gap-2 sm:gap-3">
-                <button type="button" onClick={goBack} className="btn btn-secondary min-h-[48px] flex-1">
+                <button type="button" onClick={goBack} className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-[0.95rem] border border-white/12 bg-white/8 px-4 py-3 text-[14px] font-medium text-white/86 shadow-[0_10px_18px_rgba(10,16,14,0.1)]">
                   {t.back}
                 </button>
                 <button
                   type="button"
                   onClick={handleNextClick}
                   disabled={!selectedOptionId}
-                  className="btn btn-primary min-h-[48px] flex-1 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-[0.95rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)] shadow-[0_14px_24px_rgba(10,16,14,0.16)] disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {progress === totalQuestions ? t.result : t.next}
                 </button>
               </div>
-              <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">{t.choiceHint}</p>
+              <p className="mt-2 text-[11px] leading-5 text-white/62">{t.choiceHint}</p>
             </div>
           </section>
         )}
 
         {phase === "redirecting" && (
-          <section className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-6 py-8 text-center shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
+          <section className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_100%)] px-6 py-8 text-center text-white shadow-[0_24px_52px_rgba(10,16,14,0.16)]">
             <div className="service-kicker">{t.completeLabel}</div>
-            <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
+            <p className="mt-4 text-sm leading-7 text-white/72">
               {locale === "ja" ? "ロック済みの結果画面へ移動しています。" : "Moving to the locked result surface."}
             </p>
           </section>

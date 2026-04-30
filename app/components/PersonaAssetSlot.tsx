@@ -110,14 +110,14 @@ export default function PersonaAssetFrame({
         <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-[10px] tracking-[0.18em] text-white/68">{title}</div>
-              <p className="mt-1 text-[13px] font-medium leading-5 text-white/88">{subtitle}</p>
+              <p className="mt-1 text-[12px] font-medium leading-5 text-white/84">{subtitle}</p>
             </div>
             <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.12em] text-white/88">
             {visualBadge(surface)}
             </span>
           </div>
 
-        <div className={`mt-3 rounded-[1.45rem] border border-[rgba(255,255,255,0.74)] bg-gradient-to-b ${palette.inner} p-3 shadow-[0_10px_22px_rgba(47,35,33,0.06)]`}>
+        <div className={`mt-3 rounded-[1.35rem] border border-[rgba(255,255,255,0.74)] bg-gradient-to-b ${palette.inner} p-3 shadow-[0_10px_22px_rgba(47,35,33,0.06)]`}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">公開名</div>
@@ -129,9 +129,9 @@ export default function PersonaAssetFrame({
           </div>
 
           <div className="mt-3 grid grid-cols-[1fr_auto] gap-3">
-            <div className="relative min-h-[132px] overflow-hidden rounded-[1.2rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.96)_0%,rgba(33,45,42,0.96)_100%)]">
+            <div className="relative min-h-[108px] overflow-hidden rounded-[1.15rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.96)_0%,rgba(33,45,42,0.96)_100%)]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.68)_0%,rgba(255,255,255,0.2)_34%,rgba(255,255,255,0)_64%)]" />
-              <div className="absolute left-4 top-4 h-16 w-16 rounded-full border border-white/18 bg-[rgba(255,255,255,0.08)] shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
+              <div className="absolute left-4 top-4 h-14 w-14 rounded-full border border-white/18 bg-[rgba(255,255,255,0.08)] shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
                 <div className="absolute inset-[18%] rounded-full border border-white/18" />
                 <div className="absolute inset-y-[20%] left-1/2 w-px -translate-x-1/2 bg-[rgba(255,255,255,0.54)]" />
                 <div className="absolute left-1/2 top-1/2 h-[42%] w-[42%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(255,255,255,0.16)]" />
@@ -139,7 +139,7 @@ export default function PersonaAssetFrame({
               <div className="absolute inset-x-4 bottom-4 flex items-end justify-between">
               <div>
                   <div className="text-[10px] tracking-[0.16em] text-white/60">公開用</div>
-                  <p className="mt-1 text-[12px] font-medium leading-5 text-white/88">
+                  <p className="mt-1 text-[11px] font-medium leading-5 text-white/84">
                     {surface === "share" ? "SNSで見せやすい共有カードとして整えています。" : "公開用の見え方として整えています。"}
                   </p>
                 </div>
@@ -149,7 +149,7 @@ export default function PersonaAssetFrame({
               </div>
             </div>
 
-            <div className="flex w-[4.8rem] flex-col justify-between rounded-[1.2rem] border border-[rgba(36,45,43,0.12)] bg-[rgba(255,255,255,0.86)] px-3 py-3">
+            <div className="flex w-[4.4rem] flex-col justify-between rounded-[1.2rem] border border-[rgba(36,45,43,0.12)] bg-[rgba(255,255,255,0.86)] px-2.5 py-2.5">
               <div className="rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.86)] px-2 py-1 text-center text-[10px] tracking-[0.12em] text-[var(--accent-sage-text)]">
                 見せやすい
               </div>

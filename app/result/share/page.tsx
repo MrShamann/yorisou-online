@@ -135,7 +135,7 @@ export default async function ResultSharePage({
         personaShell={personaShell}
         currentModeLabel={currentModeLabel}
       />
-      <div className="mx-auto max-w-md px-4 pb-8 pt-4">
+      <div className="mx-auto max-w-md px-4 pb-6 pt-3">
         <ResultShareActions
           locale="ja"
           shareUrl={shareHref}

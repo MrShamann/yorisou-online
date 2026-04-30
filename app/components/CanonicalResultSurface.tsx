@@ -119,7 +119,7 @@ export default function CanonicalResultSurface({
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(12,18,17,0.98)_0%,rgba(25,37,33,0.98)_20%,rgba(244,246,240,1)_70%,rgba(237,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_26%,rgba(223,233,227,0.18)_100%)]" />
-      <div className="mx-auto max-w-md space-y-4">
+      <div className="mx-auto max-w-md space-y-3">
         <DteTextResultFirstScreen
           locale={locale}
           personaShell={renderErrorState ? null : personaShell}
@@ -164,7 +164,7 @@ export default function CanonicalResultSurface({
 
         <section className="space-y-3" id="result-details">
           <div className="px-1 text-[10px] tracking-[0.2em] text-[var(--muted)]">{t.belowFoldLabel}</div>
-          <section className="rounded-[1.7rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] px-4 py-4 shadow-[0_14px_28px_rgba(47,35,33,0.08)]">
+          <section className="rounded-[1.65rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] px-4 py-3.5 shadow-[0_14px_28px_rgba(47,35,33,0.08)]">
             <div className="inline-flex rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.9)] px-3 py-1 text-[11px] tracking-[0.18em] text-[var(--accent-sage-text)]">
               {t.detailsTitle}
             </div>
