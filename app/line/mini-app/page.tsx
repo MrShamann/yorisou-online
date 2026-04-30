@@ -20,6 +20,7 @@ const landingCopy = {
   resultLabel: "結果イメージ",
   resultBody: "最後まで進むと、こんな雰囲気で結果が開きます。",
   resultNote: "共有しやすい",
+  startNote: "Q1からそのまま始まります。",
 } as const;
 
 function getStartHref(searchParams?: Record<string, string | string[] | undefined>) {
@@ -77,34 +78,12 @@ export default function MiniAppEntryPage({
 
               <Link
                 href={startHref}
-                className="mt-5 inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[15px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_30px_rgba(5,10,9,0.18)]"
+                className="mt-5 inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] border border-white/12 bg-[linear-gradient(180deg,rgba(26,39,34,1)_0%,rgba(11,16,15,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_16px_30px_rgba(5,10,9,0.28)] ring-1 ring-[rgba(157,184,170,0.18)]"
               >
                 {landingCopy.start}
               </Link>
-              <p className="mt-2 text-[11px] leading-5 text-white/60">{landingCopy.duration} / 5択 / 33問</p>
-            </div>
-          </div>
-
-          <div className="relative border-t border-white/10 bg-[linear-gradient(180deg,rgba(245,248,243,0.98)_0%,rgba(238,243,236,1)_100%)] px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">{landingCopy.resultLabel}</div>
-                <p className="mt-1 text-[14px] font-medium leading-6 text-[var(--text)]">{landingCopy.resultBody}</p>
-              </div>
-              <div className="rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.96)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
-                {landingCopy.resultNote}
-              </div>
-            </div>
-
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <div className="rounded-[1rem] border border-[rgba(36,45,43,0.12)] bg-[rgba(255,255,255,0.9)] px-3 py-3 shadow-[0_10px_18px_rgba(47,35,33,0.05)]">
-                <div className="text-[10px] tracking-[0.16em] text-[var(--muted)]">次に進む</div>
-                <p className="mt-1 text-[13px] leading-5 text-[var(--text)]">1つずつ答えるだけで、そのまま結果まで進みます。</p>
-              </div>
-              <div className="rounded-[1rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(24,35,31,0.98)_0%,rgba(34,48,43,0.98)_100%)] px-3 py-3 text-white shadow-[0_10px_18px_rgba(47,35,33,0.08)]">
-                <div className="text-[10px] tracking-[0.16em] text-white/60">見え方</div>
-                <p className="mt-1 text-[13px] leading-5 text-white/84">結果は、そのままシェアしやすい見え方で返ります。</p>
-              </div>
+              <p className="mt-2 text-[11px] leading-5 text-white/68">{landingCopy.startNote}</p>
+              <p className="mt-3 text-[11px] leading-5 text-white/56">{landingCopy.duration} / 5択 / 33問</p>
             </div>
           </div>
         </section>

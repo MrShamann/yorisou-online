@@ -10,6 +10,7 @@ type Locale = "ja" | "en";
 
 type Props = {
   locale: Locale;
+  entrySource?: string | null;
 };
 
 const copy = {
@@ -55,9 +56,10 @@ function createClientSessionId() {
   return `dte_session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export default function DynamicTestEngineFlow({ locale }: Props) {
+export default function DynamicTestEngineFlow({ locale, entrySource = null }: Props) {
   const t = copy[locale];
-  const [phase, setPhase] = useState<"intro" | "quiz" | "redirecting">("intro");
+  const miniAppEntry = entrySource === "mini_app";
+  const [phase, setPhase] = useState<"intro" | "quiz" | "redirecting">(miniAppEntry ? "quiz" : "intro");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | undefined>>({});
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -183,6 +185,10 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     clearAutoAdvanceTimer();
     advancingLockRef.current = false;
     if (currentIndex === 0) {
+      if (miniAppEntry) {
+        window.location.assign("/line/mini-app");
+        return;
+      }
       setPhase("intro");
       return;
     }
@@ -287,22 +293,10 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
                   ))}
                 </div>
 
-                <button type="button" onClick={beginSession} className="mt-5 inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[15px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_30px_rgba(5,10,9,0.18)]">
+              <button type="button" onClick={beginSession} className="mt-5 inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] border border-white/12 bg-[linear-gradient(180deg,rgba(26,39,34,1)_0%,rgba(11,16,15,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_16px_30px_rgba(5,10,9,0.28)] ring-1 ring-[rgba(157,184,170,0.18)]">
                   {t.start}
-                </button>
-                <p className="mt-2 text-[11px] leading-5 text-white/60">{t.duration} / 5択 / 33問</p>
-              </div>
-            </div>
-
-            <div className="border-t border-white/10 bg-[linear-gradient(180deg,rgba(245,248,243,0.98)_0%,rgba(238,243,236,1)_100%)] px-4 py-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-[10px] tracking-[0.18em] text-[var(--muted)]">{t.result}</div>
-                  <p className="mt-1 text-[14px] font-medium leading-6 text-[var(--text)]">一問ずつ答えて、そのまま結果まで進みます。</p>
-                </div>
-                <div className="rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.96)] px-3 py-1.5 text-[11px] tracking-[0.14em] text-[var(--accent-sage-text)]">
-                  {t.result}
-                </div>
+              </button>
+                <p className="mt-2 text-[11px] leading-5 text-white/60">{t.duration} / 5択 / 33問 / Q1からそのまま開始</p>
               </div>
             </div>
           </section>

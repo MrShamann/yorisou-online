@@ -129,7 +129,7 @@ export default function PersonaAssetFrame({
           </div>
 
           <div className="mt-3 grid grid-cols-[1fr_auto] gap-3">
-            <div className="relative min-h-[108px] overflow-hidden rounded-[1.15rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.96)_0%,rgba(33,45,42,0.96)_100%)]">
+            <div className="relative min-h-[92px] overflow-hidden rounded-[1.15rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.96)_0%,rgba(33,45,42,0.96)_100%)]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.68)_0%,rgba(255,255,255,0.2)_34%,rgba(255,255,255,0)_64%)]" />
               <div className="absolute left-4 top-4 h-14 w-14 rounded-full border border-white/18 bg-[rgba(255,255,255,0.08)] shadow-[0_12px_24px_rgba(0,0,0,0.12)]">
                 <div className="absolute inset-[18%] rounded-full border border-white/18" />

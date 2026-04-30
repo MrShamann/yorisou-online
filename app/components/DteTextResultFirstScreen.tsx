@@ -75,9 +75,9 @@ export default function DteTextResultFirstScreen({
   const hasHeroNote = Boolean(oraclePreviewLine && !renderErrorState);
 
   return (
-    <section className="flex min-h-[calc(100svh-0.5rem)] flex-col justify-start pt-1" data-result-shell="canonical">
-      <div className="overflow-hidden rounded-[2.1rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.98)_0%,rgba(24,35,31,0.98)_44%,rgba(34,48,43,0.96)_68%,rgba(242,246,239,0.99)_100%)] shadow-[0_24px_60px_rgba(15,22,20,0.18)]">
-        <div className="px-4 pt-4 text-white">
+    <section className="flex flex-col justify-start pt-0.5" data-result-shell="canonical">
+      <div className="overflow-hidden rounded-[2rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.98)_0%,rgba(24,35,31,0.98)_44%,rgba(34,48,43,0.96)_68%,rgba(242,246,239,0.99)_100%)] shadow-[0_24px_60px_rgba(15,22,20,0.18)]">
+        <div className="px-4 pt-3.5 text-white">
           <div className="flex items-center justify-between gap-3">
             <div className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.24em] text-white/86">
               {t.label}
@@ -89,14 +89,14 @@ export default function DteTextResultFirstScreen({
             ) : null}
           </div>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-[1.06fr_0.94fr] md:items-stretch">
-            <div className="space-y-3.5">
+          <div className="mt-3.5 grid gap-2.5 md:grid-cols-[1.06fr_0.94fr] md:items-stretch">
+            <div className="space-y-3">
               <div className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.2em] text-white/86">
                 {renderErrorState ? "結果を開けません" : "結果の核"}
               </div>
 
               <h1
-                className="display-serif hero-name max-w-[11ch] text-[clamp(2.35rem,13.2vw,3.9rem)] leading-[0.95] tracking-[-0.06em] text-white"
+                className="display-serif hero-name max-w-[11ch] text-[clamp(2.25rem,12.6vw,3.6rem)] leading-[0.94] tracking-[-0.06em] text-white"
                 data-official-public-persona-name={resultName}
                 data-persona-id={personaShell?.personaId || "fallback"}
               >
@@ -106,7 +106,7 @@ export default function DteTextResultFirstScreen({
               {recognitionLine ? (
                 <div className="space-y-2">
                   <div className="text-[10px] tracking-[0.2em] text-white/56">{t.recognition}</div>
-                  <div className="max-w-[28rem] rounded-[1.18rem] border border-white/12 bg-white/10 px-4 py-3 text-[15px] font-semibold leading-6 text-white shadow-[0_14px_24px_rgba(6,12,10,0.12)]" data-social-handle={recognitionLine}>
+                  <div className="max-w-[28rem] rounded-[1.15rem] border border-white/12 bg-white/10 px-4 py-2.5 text-[14px] font-semibold leading-6 text-white shadow-[0_14px_24px_rgba(6,12,10,0.12)]" data-social-handle={recognitionLine}>
                     {recognitionLine}
                   </div>
                 </div>
@@ -131,13 +131,13 @@ export default function DteTextResultFirstScreen({
                 ) : null}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="text-[10px] tracking-[0.2em] text-white/56">{t.traits}</div>
                 <div className="grid gap-2 sm:grid-cols-3">
                 {chips.map((trait) => (
                   <div
                     key={trait}
-                    className="rounded-[1rem] border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-2.5 text-[12.5px] font-medium leading-5 text-white/92 shadow-[0_10px_18px_rgba(6,12,10,0.08)]"
+                    className="rounded-[1rem] border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-2 text-[12px] font-medium leading-5 text-white/92 shadow-[0_10px_18px_rgba(6,12,10,0.08)]"
                     data-trait-chip={trait}
                   >
                     {trait}
@@ -153,7 +153,7 @@ export default function DteTextResultFirstScreen({
               ) : null}
             </div>
 
-            <div className="relative overflow-hidden rounded-[1.72rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_100%)] p-2.5 shadow-[0_18px_32px_rgba(10,16,14,0.14)]">
+            <div className="relative overflow-hidden rounded-[1.72rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_100%)] p-2 shadow-[0_18px_32px_rgba(10,16,14,0.14)]">
               <PersonaAssetSlot
                 personaId={personaShell?.personaId || "P01"}
                 officialPublicPersonaName={resultName}

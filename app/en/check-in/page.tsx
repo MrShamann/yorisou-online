@@ -6,9 +6,12 @@ export const metadata: Metadata = {
 };
 
 export default async function EnglishCheckInPage({
+  searchParams,
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const params = (await searchParams) || {};
+  const entrySource = typeof params.entry_source === "string" ? params.entry_source : typeof params.source === "string" ? params.source : null;
   const { default: DynamicTestEngineFlow } = await import("@/app/check-in/DynamicTestEngineFlow");
-  return <DynamicTestEngineFlow locale="en" />;
+  return <DynamicTestEngineFlow locale="en" entrySource={entrySource} />;
 }
