@@ -7,7 +7,6 @@ import {
   buildResultLabSnapshot,
   getCanonicalPersonaOptions,
 } from "@/lib/result/rendering-contract-adapter";
-import { buildDynamicTestContinuationHref } from "@/lib/dynamicTestEngineSession";
 import { getResultVisualAssetResolution } from "@/lib/server/resultVisualAssetRegistry";
 import { getDynamicTestCompletionRecord } from "@/lib/server/dynamicTestCompletionStore";
 import { getCanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
@@ -157,17 +156,6 @@ export default async function ResultPage({
         snapshot={snapshot}
         publicIdentity={publicIdentity}
         visualAssetPack={visualAssetResolution.pack}
-        nextStepHref={
-          completion
-            ? buildDynamicTestContinuationHref({
-                locale: "ja",
-                completionId: completion?.id || completionId,
-                openedAt: renderAt,
-              })
-            : undefined
-        }
-        nextStepLabel={completion ? publicIdentity.stepCopy.resultPrimaryCtaJa : undefined}
-        nextStepHint={completion ? publicIdentity.stepCopy.resultPrimaryHintJa : undefined}
         shareViewHref={shareViewHref}
         shareHref={shareHref}
         completionId={completion?.id || completionId || null}
