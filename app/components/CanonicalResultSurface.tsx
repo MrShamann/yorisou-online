@@ -18,6 +18,7 @@ type Props = {
   nextStepHint?: string;
   visualAssetPack?: ResultStaticPack | null;
   shareViewHref?: string;
+  shareHref?: string | null;
   completionId?: string | null;
   personaShell?: CanonicalPublicPersonaShell | null;
   currentModeKey?: string | null;
@@ -58,6 +59,7 @@ export default function CanonicalResultSurface({
   nextStepHref,
   nextStepLabel,
   shareViewHref,
+  shareHref = null,
   completionId = null,
   personaShell = null,
   currentModeKey = null,
@@ -97,7 +99,13 @@ export default function CanonicalResultSurface({
     : locale === "en"
       ? buildCoreTraitLabels(snapshot, 3).map((trait) => trait.label)
       : identity?.traitChipsJa || buildCoreTraitLabels(snapshot, 3).map((trait) => trait.label);
-  const shareHref = shareViewHref || "#";
+  const primaryShareHref =
+    shareHref && shareHref.trim()
+      ? shareHref.trim()
+      : completionId && completionId.trim()
+        ? `/result?completionId=${encodeURIComponent(completionId.trim())}`
+        : "/line/mini-app";
+  const shareCardHref = shareViewHref || primaryShareHref;
   const shareMessaging = buildResultShareMessaging({
     locale,
     publicResultName,
@@ -123,7 +131,7 @@ export default function CanonicalResultSurface({
           currentModeKey={currentModeKey}
           traitChips={coreTraits}
           currentModeLabel={currentModeLabel}
-          primaryHref={shareHref}
+          primaryHref={primaryShareHref}
           primaryLabel={shareMessaging.shareTitle}
           secondaryHref={secondaryHref}
           secondaryLabel={secondaryLabel}
@@ -133,13 +141,13 @@ export default function CanonicalResultSurface({
             !renderErrorState ? (
               <ResultShareActions
                 locale={locale}
-                shareUrl={shareHref}
+                shareUrl={primaryShareHref}
                 shareTitle={shareMessaging.shareTitle}
                 shareText={shareMessaging.shareText}
                 completionId={completionId}
                 personaId={personaShell?.personaId || null}
                 shareSurface="result_first_screen"
-                shareCardUrl={shareHref}
+                shareCardUrl={shareCardHref}
               />
             ) : null
           }

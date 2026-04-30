@@ -76,6 +76,10 @@ export default async function ResultPage({
     shareViewSearchParams.set("completionId", completion?.id || completionId || "");
   }
   const shareViewHref = `/result/share?${shareViewSearchParams.toString()}`;
+  const shareHref =
+    completion?.id || completionId
+      ? `/result?completionId=${encodeURIComponent((completion?.id || completionId || "").trim())}`
+      : "/line/mini-app";
   const personaShell = getCanonicalPublicPersonaShell(personaId);
   const currentModeKey = completion?.currentModeKey || null;
   const currentModeLabel = completion?.currentModeLabelJa || null;
@@ -139,6 +143,7 @@ export default async function ResultPage({
         nextStepLabel={completion ? publicIdentity.stepCopy.resultPrimaryCtaJa : undefined}
         nextStepHint={completion ? publicIdentity.stepCopy.resultPrimaryHintJa : undefined}
         shareViewHref={shareViewHref}
+        shareHref={shareHref}
         completionId={completion?.id || completionId || null}
         personaShell={personaShell}
         currentModeKey={currentModeKey}

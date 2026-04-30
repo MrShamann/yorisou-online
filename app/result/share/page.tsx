@@ -69,6 +69,10 @@ export default async function ResultSharePage({
     shareViewSearchParams.set("completionId", completion?.id || completionId || "");
   }
   const shareViewHref = `/result/share?${shareViewSearchParams.toString()}`;
+  const shareHref =
+    completion?.id || completionId
+      ? `/result?completionId=${encodeURIComponent((completion?.id || completionId || "").trim())}`
+      : "/line/mini-app";
   const shareMessaging = buildResultShareMessaging({
     locale: "ja",
     publicResultName: publicIdentity.publicResultLabelJa || personaShell?.officialPublicPersonaName || "Yorisou",
@@ -105,7 +109,7 @@ export default async function ResultSharePage({
       <div className="mx-auto max-w-md px-4 pb-8 pt-4">
         <ResultShareActions
           locale="ja"
-          shareUrl={shareViewHref}
+          shareUrl={shareHref}
           shareTitle={shareMessaging.shareTitle}
           shareText={shareMessaging.shareText}
           completionId={completion?.id || completionId || null}
