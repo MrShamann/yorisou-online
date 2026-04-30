@@ -86,7 +86,15 @@ function createId(prefix: string) {
 }
 
 function getDataDir() {
-  return process.env.YORISOU_DATA_DIR || path.join(process.cwd(), "data");
+  if (process.env.YORISOU_DATA_DIR) {
+    return process.env.YORISOU_DATA_DIR;
+  }
+
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    return path.join("/tmp", "yorisou-online-data");
+  }
+
+  return path.join(process.cwd(), "data");
 }
 
 function getRegistryPath() {

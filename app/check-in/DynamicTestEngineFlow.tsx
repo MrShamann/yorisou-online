@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { buildDynamicTestResultHref, deriveDynamicTestPersonaId, dynamicTestSessionQuestions } from "@/lib/dynamicTestEngineSession";
 
@@ -51,6 +51,7 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | undefined>>({});
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const autoAdvanceTimerRef = useRef<number | null>(null);
 
   const totalQuestions = dynamicTestSessionQuestions.length;
   const currentQuestion = dynamicTestSessionQuestions[currentIndex] || null;
@@ -62,7 +63,23 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     }
   }, [phase, currentIndex]);
 
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimerRef.current !== null) {
+        window.clearTimeout(autoAdvanceTimerRef.current);
+      }
+    };
+  }, []);
+
+  function clearAutoAdvanceTimer() {
+    if (autoAdvanceTimerRef.current !== null) {
+      window.clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+  }
+
   function beginSession() {
+    clearAutoAdvanceTimer();
     setAnswers({});
     setCurrentIndex(0);
     setSelectedOptionId(null);
@@ -70,6 +87,7 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
   }
 
   function selectOption(optionId: string) {
+    clearAutoAdvanceTimer();
     setSelectedOptionId(optionId);
     if (currentQuestion) {
       setAnswers((current) => ({
@@ -77,9 +95,17 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
         [currentQuestion.candidate_id]: optionId,
       }));
     }
+
+    if (currentQuestion) {
+      autoAdvanceTimerRef.current = window.setTimeout(() => {
+        autoAdvanceTimerRef.current = null;
+        goNext();
+      }, 200);
+    }
   }
 
   function goBack() {
+    clearAutoAdvanceTimer();
     if (currentIndex === 0) {
       setPhase("intro");
       return;
@@ -92,6 +118,7 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
   }
 
   function goNext() {
+    clearAutoAdvanceTimer();
     if (!currentQuestion || !selectedOptionId) return;
 
     const nextAnswers = {
@@ -113,9 +140,13 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     window.location.assign(nextHref);
   }
 
+  function handleNextClick() {
+    goNext();
+  }
+
   return (
-    <main className="min-h-[100svh] bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-4 py-3 text-[var(--text)] sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100svh-1.5rem)] max-w-2xl flex-col">
+    <main className="min-h-[100svh] overflow-x-hidden bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-4 py-3 text-[var(--text)] sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full min-h-[calc(100svh-1.5rem)] max-w-2xl flex-col">
         <div className="mb-3 flex items-center justify-between gap-3 text-[10px] tracking-[0.18em] text-[var(--muted)]">
           <div>{t.pretitle}</div>
           <div>{t.progressLabel}</div>
@@ -140,7 +171,7 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
         )}
 
         {phase === "quiz" && currentQuestion && (
-          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.9rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
+          <section className="flex w-full min-h-0 flex-1 flex-col overflow-hidden rounded-[1.9rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
             <div className="px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -184,7 +215,7 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
                 </button>
                 <button
                   type="button"
-                  onClick={goNext}
+                  onClick={handleNextClick}
                   disabled={!selectedOptionId}
                   className="btn btn-primary min-h-[48px] flex-1 disabled:cursor-not-allowed disabled:opacity-50"
                 >
