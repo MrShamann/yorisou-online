@@ -1,5 +1,7 @@
 import DteTextResultFirstScreen from "./DteTextResultFirstScreen";
+import ResultShareActions from "./ResultShareActions";
 import { buildCoreTraitLabels } from "@/lib/result/result-traits";
+import { buildResultShareMessaging } from "@/lib/result/share-messaging";
 import type { PublicResultIdentity } from "@/lib/result/public-result-identity";
 import type { ResultLabSnapshot } from "@/lib/result/rendering-contract-adapter";
 import type { ResultStaticPack } from "@/lib/result/visual-asset-chain";
@@ -16,6 +18,7 @@ type Props = {
   nextStepHint?: string;
   visualAssetPack?: ResultStaticPack | null;
   shareViewHref?: string;
+  completionId?: string | null;
   personaShell?: CanonicalPublicPersonaShell | null;
   currentModeKey?: string | null;
   currentModeLabel?: string | null;
@@ -26,32 +29,24 @@ const copy = {
     invalidTitle: "結果を開けません",
     invalidBody: "完了した結果を、もう一度開いてください。",
     versionBody: "最新の結果ページから開き直してください。",
-    primaryDefault: "共有カードを見る",
-    primaryHint: "結果の画像版を先に開けます。",
     detailsCta: "結果のつづきを開く",
-    detailsTitle: "受け取った結果",
-    detailsSummary: "まずは核を受け取って、深い読みはあとで開ける。",
+    detailsTitle: "もう少し見る",
+    detailsSummary: "まずは結果の核を受け取り、深い読みは下で開ける。",
     screenLabel: "結果",
-    closureTitle: "受け取った核",
+    closureTitle: "ひとこと",
     supportLabel: "いまの答え",
-    primarySubcopy: "結果を先に見せる。深い読みはそのあとでいい。",
-    secondaryCta: "結果のつづきを開く",
     belowFoldLabel: "次に開くもの",
   },
   en: {
     invalidTitle: "Result unavailable",
     invalidBody: "Please reopen the result from the completed session.",
     versionBody: "Please reopen the latest result page.",
-    primaryDefault: "Open share card",
-    primaryHint: "Open the visual result first.",
     detailsCta: "Continue reading",
     detailsTitle: "Result recapped",
     detailsSummary: "Take the core read first and deepen it below.",
     screenLabel: "Result",
     closureTitle: "Core line",
     supportLabel: "Current read",
-    primarySubcopy: "Take the result first. Then only one next move matters.",
-    secondaryCta: "Continue reading",
     belowFoldLabel: "What to open next",
   },
 } as const;
@@ -63,6 +58,7 @@ export default function CanonicalResultSurface({
   nextStepHref,
   nextStepLabel,
   shareViewHref,
+  completionId = null,
   personaShell = null,
   currentModeKey = null,
   currentModeLabel = null,
@@ -102,8 +98,13 @@ export default function CanonicalResultSurface({
       ? buildCoreTraitLabels(snapshot, 3).map((trait) => trait.label)
       : identity?.traitChipsJa || buildCoreTraitLabels(snapshot, 3).map((trait) => trait.label);
   const shareHref = shareViewHref || "#";
-  const primaryHref = shareHref;
-  const primaryLabel = t.primaryDefault;
+  const shareMessaging = buildResultShareMessaging({
+    locale,
+    publicResultName,
+    socialLine,
+    subtitle,
+    ctaLine: locale === "en" ? "What kind of support fits you?" : "あなたは今、どの寄り添い方？",
+  });
   const secondaryHref = nextStepHref || "#result-details";
   const secondaryLabel =
     nextStepLabel || (locale === "ja" ? identity?.stepCopy.resultPrimaryCtaJa : undefined) || t.detailsCta;
@@ -113,22 +114,46 @@ export default function CanonicalResultSurface({
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0)_28%,rgba(233,224,212,0.22)_100%)]" />
       <div className="mx-auto max-w-md space-y-4">
         <DteTextResultFirstScreen
-            locale={locale}
-            personaShell={renderErrorState ? null : personaShell}
-            fallbackName={publicResultName}
-            fallbackSubtitle={subtitle}
-            fallbackSocialLine={socialLine}
-            fallbackPublicSign={personaShell?.publicSign || identity?.shareCategoryTagJa || null}
-            currentModeKey={currentModeKey}
-            traitChips={coreTraits}
-            currentModeLabel={currentModeLabel}
-            primaryHref={primaryHref}
-            primaryLabel={primaryLabel}
-            secondaryHref={secondaryHref}
-            secondaryLabel={secondaryLabel}
-            renderErrorState={renderErrorState}
-            oraclePreviewLine={null}
-          />
+          locale={locale}
+          personaShell={renderErrorState ? null : personaShell}
+          fallbackName={publicResultName}
+          fallbackSubtitle={subtitle}
+          fallbackSocialLine={socialLine}
+          fallbackPublicSign={personaShell?.publicSign || identity?.shareCategoryTagJa || null}
+          currentModeKey={currentModeKey}
+          traitChips={coreTraits}
+          currentModeLabel={currentModeLabel}
+          primaryHref={shareHref}
+          primaryLabel={shareMessaging.shareTitle}
+          secondaryHref={secondaryHref}
+          secondaryLabel={secondaryLabel}
+          renderErrorState={renderErrorState}
+          oraclePreviewLine={null}
+          actionArea={
+            !renderErrorState ? (
+              <ResultShareActions
+                locale={locale}
+                shareUrl={shareHref}
+                shareTitle={shareMessaging.shareTitle}
+                shareText={shareMessaging.shareText}
+                completionId={completionId}
+                personaId={personaShell?.personaId || null}
+                shareSurface="result_first_screen"
+                shareCardUrl={shareHref}
+              />
+            ) : null
+          }
+          detailLink={
+            !renderErrorState ? (
+              <a
+                href="#result-details"
+                className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/64 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+              >
+                詳しく見る
+              </a>
+            ) : null
+          }
+        />
 
         <section className="space-y-3" id="result-details">
           <div className="px-1 text-[10px] tracking-[0.2em] text-[var(--muted)]">{t.belowFoldLabel}</div>
@@ -141,12 +166,6 @@ export default function CanonicalResultSurface({
             <p className="mt-2 text-[13px] leading-6 text-[var(--muted)]">{detailCopy}</p>
             {!renderErrorState ? (
               <div className="mt-4 flex flex-col gap-2">
-                <a
-                  href={shareHref}
-                  className="inline-flex min-h-[48px] items-center justify-center rounded-[0.95rem] bg-[linear-gradient(180deg,rgba(57,35,30,1)_0%,rgba(27,17,14,1)_100%)] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.12)]"
-                >
-                  {t.detailsCta}
-                </a>
                 {nextStepHref ? (
                   <a
                     href={nextStepHref}

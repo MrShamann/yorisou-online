@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import PersonaAssetSlot from "./PersonaAssetSlot";
 import type { CanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
@@ -20,6 +21,8 @@ type Props = {
   primaryLabel: string;
   secondaryHref?: string;
   secondaryLabel?: string;
+  actionArea?: ReactNode;
+  detailLink?: ReactNode;
   renderErrorState?: boolean;
   oraclePreviewLine?: string | null;
 };
@@ -53,6 +56,8 @@ export default function DteTextResultFirstScreen({
   primaryLabel,
   secondaryHref,
   secondaryLabel,
+  actionArea = null,
+  detailLink = null,
   renderErrorState = false,
   oraclePreviewLine = null,
 }: Props) {
@@ -150,22 +155,29 @@ export default function DteTextResultFirstScreen({
         ) : null}
 
         <div className="mt-5 space-y-2.5">
-          <Link
-            href={primaryHref}
-            className="inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(57,35,30,1)_0%,rgba(27,17,14,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.12)]"
-          >
-            {primaryLabel}
-          </Link>
-          {!renderErrorState && secondaryHref && secondaryLabel ? (
-            <a
-              href={secondaryHref}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/64 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
-            >
-              {secondaryLabel}
-            </a>
-          ) : null}
+          {actionArea ? (
+            <>{actionArea}</>
+          ) : (
+            <>
+              <Link
+                href={primaryHref}
+                className="inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(57,35,30,1)_0%,rgba(27,17,14,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_14px_24px_rgba(47,35,33,0.12)]"
+              >
+                {primaryLabel}
+              </Link>
+              {!renderErrorState && secondaryHref && secondaryLabel ? (
+                <a
+                  href={secondaryHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/64 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
+                >
+                  {secondaryLabel}
+                </a>
+              ) : null}
+            </>
+          )}
+          {detailLink ? <div>{detailLink}</div> : null}
         </div>
       </div>
     </section>

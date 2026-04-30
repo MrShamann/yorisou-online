@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { recordDteLaunchEvent } from "@/lib/server/dteLaunchEventStore";
 import { recordDynamicTestCompletion } from "@/lib/server/dynamicTestCompletionStore";
 
 export const runtime = "nodejs";
@@ -44,6 +45,23 @@ export async function POST(request: Request) {
     answeredQuestions,
     sourceSurface,
     entrySource,
+  });
+
+  await recordDteLaunchEvent({
+    event: "test_completed",
+    completionId: record.id,
+    sessionId: record.sessionId,
+    personaId: record.personaId,
+    locale,
+    entrySource,
+    totalQuestionsAnswered: answeredQuestions,
+    branchId: "yorisou_dte",
+    sourceBranchId: "yorisou_dte",
+    visibilityPolicy: "public",
+    crossBranchAccessPolicy: "explicit_bridge",
+    source: "result",
+    surface: "result",
+    action: "complete",
   });
 
   return NextResponse.json({

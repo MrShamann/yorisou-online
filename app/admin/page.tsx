@@ -57,6 +57,7 @@ export default async function AdminHomePage() {
           <div className="flex gap-3">
             <Link href="/admin/users" className="rounded-full bg-[#3B2F2F] px-5 py-2 text-sm text-white">Users</Link>
             <Link href="/admin/timeline" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">Timeline</Link>
+            <Link href="/admin/dte-launch-dashboard" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">DTE Launch</Link>
             <Link href="/admin/audit" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">Audit</Link>
           </div>
         </header>

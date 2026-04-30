@@ -139,6 +139,7 @@ export default async function ResultPage({
         nextStepLabel={completion ? publicIdentity.stepCopy.resultPrimaryCtaJa : undefined}
         nextStepHint={completion ? publicIdentity.stepCopy.resultPrimaryHintJa : undefined}
         shareViewHref={shareViewHref}
+        completionId={completion?.id || completionId || null}
         personaShell={personaShell}
         currentModeKey={currentModeKey}
         currentModeLabel={currentModeLabel}

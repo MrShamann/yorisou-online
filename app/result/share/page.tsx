@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
+import DteEventTracker from "@/app/components/DteEventTracker";
 import ResultShareCard from "@/app/components/ResultShareCard";
+import ResultShareActions from "@/app/components/ResultShareActions";
 import { buildPublicResultIdentity } from "@/lib/result/public-result-identity";
 import { buildResultLabSnapshot, getCanonicalPersonaOptions } from "@/lib/result/rendering-contract-adapter";
+import { buildResultShareMessaging } from "@/lib/result/share-messaging";
 import { getResultVisualAssetResolution } from "@/lib/server/resultVisualAssetRegistry";
 import { getDynamicTestCompletionRecord } from "@/lib/server/dynamicTestCompletionStore";
 import { getCanonicalPublicPersonaShell, resolveCanonicalPublicPersonaModeLabel } from "@/lib/yorisou/dte/public-persona-shell";
@@ -60,14 +63,57 @@ export default async function ResultSharePage({
   });
   const personaShell = getCanonicalPublicPersonaShell(personaId);
   const currentModeLabel = resolveCanonicalPublicPersonaModeLabel(personaShell, completion?.currentModeKey || null, completion?.currentModeLabelJa || null);
+  const shareViewSearchParams = new URLSearchParams();
+  shareViewSearchParams.set("personaId", personaId);
+  if (completion?.id || completionId) {
+    shareViewSearchParams.set("completionId", completion?.id || completionId || "");
+  }
+  const shareViewHref = `/result/share?${shareViewSearchParams.toString()}`;
+  const shareMessaging = buildResultShareMessaging({
+    locale: "ja",
+    publicResultName: publicIdentity.publicResultLabelJa || personaShell?.officialPublicPersonaName || "Yorisou",
+    socialLine: publicIdentity.shareLineJa || publicIdentity.shareSendLineJa || "",
+    subtitle: publicIdentity.publicSubtitleJa || personaShell?.functionalSubtitle || "",
+    ctaLine: "あなたは今、どの寄り添い方？",
+  });
 
   return (
-    <ResultShareCard
-      locale="ja"
-      identity={publicIdentity}
-      pack={visualAssetResolution.pack}
-      personaShell={personaShell}
-      currentModeLabel={currentModeLabel}
-    />
+    <>
+      <DteEventTracker
+        event="share_page_opened"
+        completionId={completion?.id || completionId || null}
+        personaId={personaId}
+        sessionId={completion?.sessionId || null}
+        locale="ja"
+        shareSurface="result_share_page"
+        source="result"
+        surface="result"
+        action="open"
+        branchId="yorisou_dte"
+        sourceBranchId="yorisou_dte"
+        visibilityPolicy="public"
+        crossBranchAccessPolicy="explicit_bridge"
+        enabled={Boolean(completion || personaId)}
+      />
+      <ResultShareCard
+        locale="ja"
+        identity={publicIdentity}
+        pack={visualAssetResolution.pack}
+        personaShell={personaShell}
+        currentModeLabel={currentModeLabel}
+      />
+      <div className="mx-auto max-w-md px-4 pb-8 pt-4">
+        <ResultShareActions
+          locale="ja"
+          shareUrl={shareViewHref}
+          shareTitle={shareMessaging.shareTitle}
+          shareText={shareMessaging.shareText}
+          completionId={completion?.id || completionId || null}
+          personaId={personaId}
+          shareSurface="result_share_page"
+          shareCardUrl={shareViewHref}
+        />
+      </div>
+    </>
   );
 }

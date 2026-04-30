@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { trackDteEvent } from "@/app/components/DteEventTracker";
 import { buildDynamicTestResultHref, deriveDynamicTestPersonaId, dynamicTestSessionQuestions } from "@/lib/dynamicTestEngineSession";
 
 type Locale = "ja" | "en";
@@ -123,6 +124,20 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
     setCurrentIndex(0);
     setSelectedOptionId(null);
     setPhase("quiz");
+
+    void trackDteEvent({
+      event: "session_started",
+      sessionId: sessionIdRef.current,
+      locale,
+      entrySource: "mini_app",
+      source: "check_in",
+      surface: "check_in",
+      action: "start",
+      branchId: "yorisou_dte",
+      sourceBranchId: "yorisou_dte",
+      visibilityPolicy: "public",
+      crossBranchAccessPolicy: "explicit_bridge",
+    });
   }
 
   function selectOption(optionId: string) {
@@ -136,6 +151,23 @@ export default function DynamicTestEngineFlow({ locale }: Props) {
         ...current,
         [currentQuestion.candidate_id]: optionId,
       }));
+
+      void trackDteEvent({
+        event: "question_answered",
+        sessionId: sessionIdRef.current,
+        locale,
+        entrySource: "mini_app",
+        questionPosition: progress,
+        questionId: currentQuestion.candidate_id,
+        totalQuestionsAnswered: currentIndex + 1,
+        source: "check_in",
+        surface: "check_in",
+        action: "answer",
+        branchId: "yorisou_dte",
+        sourceBranchId: "yorisou_dte",
+        visibilityPolicy: "public",
+        crossBranchAccessPolicy: "explicit_bridge",
+      });
     }
 
     if (currentQuestion) {
