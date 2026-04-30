@@ -112,10 +112,6 @@ export default function CanonicalResultSurface({
     socialLine,
     ctaLine: locale === "en" ? "What kind of support fits you?" : "あなたは今、どの寄り添い方？",
   });
-  const secondaryHref = nextStepHref || "#result-details";
-  const secondaryLabel =
-    nextStepLabel || (locale === "ja" ? identity?.stepCopy.resultPrimaryCtaJa : undefined) || t.detailsCta;
-
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(12,18,17,0.98)_0%,rgba(25,37,33,0.98)_20%,rgba(244,246,240,1)_70%,rgba(237,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_26%,rgba(223,233,227,0.18)_100%)]" />
@@ -132,8 +128,6 @@ export default function CanonicalResultSurface({
           currentModeLabel={currentModeLabel}
           primaryHref={primaryShareHref}
           primaryLabel={shareMessaging.shareTitle}
-          secondaryHref={secondaryHref}
-          secondaryLabel={secondaryLabel}
           renderErrorState={renderErrorState}
           oraclePreviewLine={null}
           actionArea={
@@ -173,18 +167,7 @@ export default function CanonicalResultSurface({
             </p>
             <div className="mt-3 text-[11px] tracking-[0.18em] text-[var(--muted)]">{t.closureTitle}</div>
             <p className="mt-2 text-[13px] leading-6 text-[var(--muted)]">{detailCopy}</p>
-            {!renderErrorState ? (
-              <div className="mt-4 flex flex-col gap-2">
-                {nextStepHref ? (
-                  <a
-                    href={nextStepHref}
-                    className="inline-flex min-h-[44px] items-center justify-center rounded-[0.95rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(22,24,24,1)_0%,rgba(31,44,39,1)_100%)] px-4 py-2 text-[13px] font-medium text-white shadow-[0_12px_20px_rgba(20,28,25,0.18)]"
-                  >
-                    {secondaryLabel}
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
+            {!renderErrorState ? null : null}
           </section>
         </section>
       </div>
