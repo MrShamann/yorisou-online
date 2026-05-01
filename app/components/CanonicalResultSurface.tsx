@@ -63,15 +63,23 @@ function lineContinueHref(locale: Locale) {
   return locale === "en" ? "/en/line/mini-app" : "/line/mini-app";
 }
 
-const P01_RENDERABLE_STATUSES = new Set(["manual_candidate", "approved_static"] as const);
+type VisualSamplePersonaId = "P01" | "P02" | "P03";
+
+const VISUAL_SAMPLE_PERSONA_IDS = new Set<VisualSamplePersonaId>(["P01", "P02", "P03"]);
+const RENDERABLE_STATUSES = new Set(["manual_candidate", "approved_static"] as const);
 
 function getRenderablePersonaAsset(personaId: string, kind: YorisouPersonaAssetKind) {
-  if (personaId !== "P01") {
+  if (!VISUAL_SAMPLE_PERSONA_IDS.has(personaId as VisualSamplePersonaId)) {
     return null;
   }
 
-  const record = yorisouPersonaAssetRegistry.P01.assets[kind];
-  if (!record || !P01_RENDERABLE_STATUSES.has(record.status as "manual_candidate" | "approved_static")) {
+  const registryEntry = yorisouPersonaAssetRegistry[personaId as VisualSamplePersonaId];
+  if (!registryEntry) {
+    return null;
+  }
+
+  const record = registryEntry.assets[kind];
+  if (!record || !RENDERABLE_STATUSES.has(record.status as "manual_candidate" | "approved_static")) {
     return null;
   }
 
