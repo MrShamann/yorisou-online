@@ -37,6 +37,7 @@ yarn-error.log*
 data/phase1-accounts.json
 data/phase1-sessions.json
 data/phase1-consultations.json
+data/result-visual-asset-registry.json
 
 # vercel
 .vercel
