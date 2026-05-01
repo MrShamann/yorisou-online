@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import BrandSigil from "@/app/components/BrandSigil";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
+import MiniAppEntrySignals from "./MiniAppEntrySignals";
 
 export const metadata: Metadata = {
   title: "今の寄り添い方を見つける | Yorisou",
@@ -76,12 +76,7 @@ export default function MiniAppEntryPage({
                 ))}
               </div>
 
-              <Link
-                href={startHref}
-                className="mt-5 inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] border border-white/12 bg-[linear-gradient(180deg,rgba(26,39,34,1)_0%,rgba(11,16,15,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_16px_30px_rgba(5,10,9,0.28)] ring-1 ring-[rgba(157,184,170,0.18)]"
-              >
-                {landingCopy.start}
-              </Link>
+              <MiniAppEntrySignals href={startHref} locale="ja" label={landingCopy.start} />
               <p className="mt-2 text-[11px] leading-5 text-white/68">{landingCopy.startNote}</p>
               <p className="mt-3 text-[11px] leading-5 text-white/56">{landingCopy.duration} / 5択 / 33問</p>
             </div>

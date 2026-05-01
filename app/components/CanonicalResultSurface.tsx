@@ -1,3 +1,4 @@
+import DteEventTracker from "./DteEventTracker";
 import DteTextResultFirstScreen from "./DteTextResultFirstScreen";
 import ResultShareActions from "./ResultShareActions";
 import { buildCoreTraitLabels } from "@/lib/result/result-traits";
@@ -114,6 +115,22 @@ export default function CanonicalResultSurface({
   });
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(12,18,17,0.98)_0%,rgba(25,37,33,0.98)_20%,rgba(244,246,240,1)_70%,rgba(237,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
+      {renderErrorState ? (
+        <DteEventTracker
+          event="result_render_failed"
+          completionId={completionId}
+          personaId={personaShell?.personaId || null}
+          locale={locale}
+          source="result"
+          surface="result"
+          action="view"
+          branchId="yorisou_dte"
+          sourceBranchId="yorisou_dte"
+          visibilityPolicy="public"
+          crossBranchAccessPolicy="explicit_bridge"
+          enabled={true}
+        />
+      ) : null}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_26%,rgba(223,233,227,0.18)_100%)]" />
       <div className="mx-auto max-w-md space-y-3">
         <DteTextResultFirstScreen

@@ -67,6 +67,8 @@ export default function DynamicTestEngineFlow({ locale, entrySource = null }: Pr
   const sessionIdRef = useRef(createClientSessionId());
   const advancingLockRef = useRef(false);
   const completionSubmitLockRef = useRef(false);
+  const q1TrackedRef = useRef(false);
+  const progressTrackedIndexRef = useRef<number | null>(null);
 
   const totalQuestions = dynamicTestSessionQuestions.length;
   const currentQuestion = dynamicTestSessionQuestions[currentIndex] || null;
@@ -77,6 +79,51 @@ export default function DynamicTestEngineFlow({ locale, entrySource = null }: Pr
       window.scrollTo({ top: 0, behavior: "auto" });
     }
   }, [phase, currentIndex]);
+
+  useEffect(() => {
+    if (phase !== "quiz" || !currentQuestion) {
+      return;
+    }
+
+    if (currentIndex === 0 && !q1TrackedRef.current) {
+      q1TrackedRef.current = true;
+      void trackDteEvent({
+        event: "q1_reached",
+        sessionId: sessionIdRef.current,
+        locale,
+        entrySource: "mini_app",
+        questionPosition: 1,
+        questionId: currentQuestion.candidate_id,
+        source: "check_in",
+        surface: "check_in",
+        action: "view",
+        branchId: "yorisou_dte",
+        sourceBranchId: "yorisou_dte",
+        visibilityPolicy: "public",
+        crossBranchAccessPolicy: "explicit_bridge",
+      });
+    }
+
+    if (progressTrackedIndexRef.current !== currentIndex) {
+      progressTrackedIndexRef.current = currentIndex;
+      void trackDteEvent({
+        event: "question_progress",
+        sessionId: sessionIdRef.current,
+        locale,
+        entrySource: "mini_app",
+        questionPosition: progress,
+        questionId: currentQuestion.candidate_id,
+        totalQuestionsAnswered: currentIndex,
+        source: "check_in",
+        surface: "check_in",
+        action: "view",
+        branchId: "yorisou_dte",
+        sourceBranchId: "yorisou_dte",
+        visibilityPolicy: "public",
+        crossBranchAccessPolicy: "explicit_bridge",
+      });
+    }
+  }, [currentIndex, currentQuestion, locale, phase, progress]);
 
   useEffect(() => {
     return () => {
@@ -122,6 +169,8 @@ export default function DynamicTestEngineFlow({ locale, entrySource = null }: Pr
     clearAutoAdvanceTimer();
     advancingLockRef.current = false;
     completionSubmitLockRef.current = false;
+    q1TrackedRef.current = false;
+    progressTrackedIndexRef.current = null;
     sessionIdRef.current = createClientSessionId();
     setAnswers({});
     setCurrentIndex(0);
@@ -166,6 +215,22 @@ export default function DynamicTestEngineFlow({ locale, entrySource = null }: Pr
         source: "check_in",
         surface: "check_in",
         action: "answer",
+        branchId: "yorisou_dte",
+        sourceBranchId: "yorisou_dte",
+        visibilityPolicy: "public",
+        crossBranchAccessPolicy: "explicit_bridge",
+      });
+      void trackDteEvent({
+        event: "question_completed",
+        sessionId: sessionIdRef.current,
+        locale,
+        entrySource: "mini_app",
+        questionPosition: progress,
+        questionId: currentQuestion.candidate_id,
+        totalQuestionsAnswered: currentIndex + 1,
+        source: "check_in",
+        surface: "check_in",
+        action: "complete",
         branchId: "yorisou_dte",
         sourceBranchId: "yorisou_dte",
         visibilityPolicy: "public",
@@ -235,6 +300,25 @@ export default function DynamicTestEngineFlow({ locale, entrySource = null }: Pr
         completionId = null;
       }
     }
+
+    void trackDteEvent({
+      event: "test_completed",
+      sessionId: sessionIdRef.current,
+      completionId,
+      locale,
+      entrySource: "mini_app",
+      questionPosition: totalQuestions,
+      totalQuestionsAnswered: totalQuestions,
+      completionTimestamp: new Date().toISOString(),
+      publicResultLabel: personaId,
+      source: "check_in",
+      surface: "check_in",
+      action: "complete",
+      branchId: "yorisou_dte",
+      sourceBranchId: "yorisou_dte",
+      visibilityPolicy: "public",
+      crossBranchAccessPolicy: "explicit_bridge",
+    });
 
     const nextHref = buildDynamicTestResultHref({
       locale,

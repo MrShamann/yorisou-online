@@ -106,6 +106,7 @@ export default function ResultShareActions({
 
   const handleShare = async () => {
     const resolvedShareUrl = resolvePublicUrl(shareTargetUrl);
+    emit("share_clicked", "share_click", "primary");
     emit("share_native_opened", "share_native", "native");
 
     if (hasNativeShare) {

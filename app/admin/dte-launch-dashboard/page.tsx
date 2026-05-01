@@ -17,6 +17,10 @@ function countBy<T>(items: T[], getter: (item: T) => string) {
   return [...counts.entries()].sort((left, right) => right[1] - left[1]);
 }
 
+function countEvent(items: { payload: { event?: string | null } }[], eventName: string) {
+  return items.filter((entry) => entry.payload.event === eventName).length;
+}
+
 export default async function DteLaunchDashboardPage() {
   await requireAdminViewer();
 
@@ -34,22 +38,56 @@ export default async function DteLaunchDashboardPage() {
     vercelBranch: process.env.VERCEL_GIT_COMMIT_REF || null,
     productionDomain: process.env.VERCEL_PROJECT_PRODUCTION_URL || "yorisou.online",
   };
+  const storeModeNote =
+    storeStatus.mode === "shared_s3"
+      ? "production-persistent shared store"
+      : "local file fallback; ephemeral on Vercel serverless";
 
-  const eventCounts = countBy(launchEvents, (entry) => entry.payload.event || "unknown");
   const shareCounts = countBy(
     launchEvents.filter((entry) =>
-      ["share_clicked", "copy_link_clicked", "x_share_clicked", "line_share_clicked", "facebook_share_clicked", "save_image_clicked"].includes(
+      [
+        "share_clicked",
+        "share_native_opened",
+        "share_native_completed",
+        "share_native_cancelled",
+        "share_native_failed",
+        "share_native_fallback",
+        "share_image_save_intent",
+        "share_copy_text",
+        "share_copy_link",
+        "share_card_opened",
+        "share_page_opened",
+        "x_share_clicked",
+        "line_share_clicked",
+        "facebook_share_clicked",
+      ].includes(
         entry.payload.event,
       ),
     ),
     (entry) => entry.payload.action || entry.payload.event || "unknown",
   );
-  const resultRenderCount = launchEvents.filter((entry) => entry.payload.event === "result_rendered").length;
-  const questionAnswerCount = launchEvents.filter((entry) => entry.payload.event === "question_answered").length;
-  const sessionStartCount = launchEvents.filter((entry) => entry.payload.event === "session_started").length;
+  const miniAppLandingCount = countEvent(launchEvents, "mini_app_landing_rendered");
+  const startButtonCount = countEvent(launchEvents, "start_button_tapped");
+  const sessionStartCount = countEvent(launchEvents, "session_started");
+  const q1ReachedCount = countEvent(launchEvents, "q1_reached");
+  const questionProgressCount = countEvent(launchEvents, "question_progress");
+  const questionAnswerCount = countEvent(launchEvents, "question_answered");
+  const questionCompletedCount = countEvent(launchEvents, "question_completed");
+  const testCompletedCount = countEvent(launchEvents, "test_completed");
   const completionSuccessCount = completions.filter((entry) => entry.answeredQuestions >= 33 && entry.totalQuestions >= 33).length;
-  const resultRenderSuccessCount = resultRenderCount;
-  const sharePageOpenCount = launchEvents.filter((entry) => entry.payload.event === "share_page_opened").length;
+  const resultRevealCount = countEvent(launchEvents, "result_revealed");
+  const resultRenderFailedCount = countEvent(launchEvents, "result_render_failed");
+  const shareClickedCount = countEvent(launchEvents, "share_clicked");
+  const shareNativeAttemptCount = countEvent(launchEvents, "share_native_opened");
+  const shareNativeCompletedCount = countEvent(launchEvents, "share_native_completed");
+  const shareNativeCancelledCount = countEvent(launchEvents, "share_native_cancelled");
+  const shareNativeFailedCount = countEvent(launchEvents, "share_native_failed");
+  const shareNativeFallbackCount = countEvent(launchEvents, "share_native_fallback");
+  const shareCopyTextCount = countEvent(launchEvents, "share_copy_text");
+  const shareCopyLinkCount = countEvent(launchEvents, "share_copy_link");
+  const shareCardOpenCount = countEvent(launchEvents, "share_card_opened");
+  const sharePageOpenCount = countEvent(launchEvents, "share_page_opened");
+  const fallbackErrorCount = resultRenderFailedCount + shareNativeFailedCount + shareNativeFallbackCount;
   const latestCompletions = completions.slice(0, 8);
   const personaDistribution = countBy(completions, (entry) => entry.personaId).slice(0, 8);
   const latestEvents = launchEvents.slice(0, 20);
@@ -57,37 +95,37 @@ export default async function DteLaunchDashboardPage() {
   const launchChecks = [
     {
       label: "33問セッション完了",
-      status: completionSuccessCount > 0 ? "pass" : "manual",
+      status: completionSuccessCount > 0 ? "REAL" : "MANUAL",
       note: completionSuccessCount > 0 ? `完了記録 ${completionSuccessCount} 件` : "完了記録はまだありません。",
     },
     {
       label: "結果ページ表示",
-      status: resultRenderSuccessCount > 0 ? "pass" : "manual",
-      note: resultRenderSuccessCount > 0 ? `result_rendered ${resultRenderSuccessCount} 件` : "結果表示イベントはまだありません。",
+      status: resultRevealCount > 0 ? "REAL" : "MANUAL",
+      note: resultRevealCount > 0 ? `result_revealed ${resultRevealCount} 件` : "結果表示イベントはまだありません。",
     },
     {
       label: "共有ページ表示",
-      status: sharePageOpenCount > 0 ? "pass" : "manual",
+      status: sharePageOpenCount > 0 ? "REAL" : "MANUAL",
       note: sharePageOpenCount > 0 ? `share_page_opened ${sharePageOpenCount} 件` : "共有ページ表示イベントはまだありません。",
     },
     {
       label: "公開リークなし",
-      status: "manual",
+      status: "MANUAL",
       note: "コードレビューと実機確認で継続確認してください。",
     },
     {
       label: "LINE返信待ち体感",
-      status: "manual",
+      status: "MANUAL",
       note: "現時点では返信遅延の定量計測は未実装です。",
     },
     {
       label: "結果ファーストビュー",
-      status: "manual",
+      status: "MANUAL",
       note: "実機スクリーンショットでのレビュー対象です。",
     },
     {
       label: "管理画面保護",
-      status: "pass",
+      status: "REAL",
       note: "requireAdminViewer を利用しています。",
     },
   ] as const;
@@ -114,26 +152,33 @@ export default async function DteLaunchDashboardPage() {
           <Card title="Environment" value={runtimeInfo.vercelEnv || "local"} note={`branch: ${runtimeInfo.vercelBranch || "n/a"}`} />
           <Card title="Commit" value={runtimeInfo.vercelCommit || "n/a"} note={runtimeInfo.vercelUrl || "no vercel url"} />
           <Card title="Production" value={runtimeInfo.productionDomain} note="LINE entry target" />
-          <Card title="Store mode" value={storeStatus.mode} note={storeStatus.sharedStoreBucketConfigured ? "shared store configured" : "local file fallback"} />
+          <Card title="Store mode" value={storeStatus.mode} note={storeModeNote} />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
           <Panel title="LINE entry">
             <dl className="grid gap-2 text-sm">
+              <Row label="Mini-app rendered">{miniAppLandingCount > 0 ? `REAL · ${miniAppLandingCount}` : "MANUAL"}</Row>
+              <Row label="Start tapped">{startButtonCount > 0 ? `REAL · ${startButtonCount}` : "MANUAL"}</Row>
               <Row label="Login configured">{lineConfig.loginConfigured ? "yes" : "no"}</Row>
               <Row label="Messaging configured">{lineConfig.messagingConfigured ? "yes" : "no"}</Row>
               <Row label="Channel secret">{lineConfig.channelSecretPresent ? "present" : "missing"}</Row>
               <Row label="Channel token">{lineConfig.channelAccessTokenPresent ? "present" : "missing"}</Row>
-              <Row label="Reply telemetry">{launchEvents.some((entry) => entry.payload.event === "line_entry_reply_sent") ? "instrumented" : "not yet instrumented"}</Row>
+              <Row label="Reply telemetry">{countEvent(launchEvents, "line_entry_reply_sent") > 0 ? `REAL · ${countEvent(launchEvents, "line_entry_reply_sent")}` : "NOT TRACKED"}</Row>
             </dl>
           </Panel>
 
           <Panel title="Session funnel">
             <div className="grid gap-3 sm:grid-cols-2">
               <Stat label="session_started" value={String(sessionStartCount)} />
+              <Stat label="q1_reached" value={String(q1ReachedCount)} />
+              <Stat label="question_progress" value={String(questionProgressCount)} />
               <Stat label="question_answered" value={String(questionAnswerCount)} />
+              <Stat label="question_completed" value={String(questionCompletedCount)} />
+              <Stat label="test_completed" value={String(testCompletedCount)} />
               <Stat label="completion_success" value={String(completionSuccessCount)} />
-              <Stat label="result_render_success" value={String(resultRenderSuccessCount)} />
+              <Stat label="result_revealed" value={String(resultRevealCount)} />
+              <Stat label="result_render_failed" value={String(resultRenderFailedCount)} />
             </div>
           </Panel>
         </section>
@@ -169,10 +214,15 @@ export default async function DteLaunchDashboardPage() {
 
           <Panel title="Share / growth">
             <div className="grid gap-3 sm:grid-cols-2">
-              <Stat label="share_clicked" value={String(eventCounts.find(([label]) => label === "share_clicked")?.[1] || 0)} />
-              <Stat label="copy_link_clicked" value={String(eventCounts.find(([label]) => label === "copy_link_clicked")?.[1] || 0)} />
-              <Stat label="x / line / facebook" value={String(eventCounts.filter(([label]) => ["x_share_clicked", "line_share_clicked", "facebook_share_clicked"].includes(label)).reduce((sum, [, count]) => sum + count, 0))} />
-              <Stat label="save_image_clicked" value={String(eventCounts.find(([label]) => label === "save_image_clicked")?.[1] || 0)} />
+              <Stat label="share_clicked" value={String(shareClickedCount)} />
+              <Stat label="share_native_opened" value={String(shareNativeAttemptCount)} />
+              <Stat label="share_native_completed" value={String(shareNativeCompletedCount)} />
+              <Stat label="share_native_cancelled" value={String(shareNativeCancelledCount)} />
+              <Stat label="share_native_failed" value={String(shareNativeFailedCount)} />
+              <Stat label="share_copy_text" value={String(shareCopyTextCount)} />
+              <Stat label="share_copy_link" value={String(shareCopyLinkCount)} />
+              <Stat label="share_card_opened" value={String(shareCardOpenCount)} />
+              <Stat label="fallback/error" value={String(fallbackErrorCount)} />
             </div>
             <div className="mt-4 space-y-2">
               {shareCounts.length ? (
