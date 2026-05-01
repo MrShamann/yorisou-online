@@ -180,9 +180,8 @@ export default function CanonicalResultSurface({
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,19,18,0.14)_0%,rgba(15,19,18,0.1)_40%,rgba(15,19,18,0.4)_100%)]" />
                 <div className="relative flex min-h-[12.5rem] flex-col justify-between gap-4 p-4 sm:min-h-[15rem] sm:p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-[rgba(15,19,18,0.34)] px-3 py-2 text-[11px] font-semibold tracking-[0.18em] text-white backdrop-blur-sm">
-                      <span>{personaId}</span>
-                      <span className="opacity-70">manual preview</span>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-[rgba(15,19,18,0.34)] px-3 py-2 text-[11px] font-semibold tracking-[0.14em] text-white backdrop-blur-sm">
+                      <span>{locale === "en" ? "Your type" : "あなたのタイプ"}</span>
                     </div>
                     {sampleCrest ? (
                       <div className="flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(255,255,255,0.14)] px-3 py-2 text-sm font-medium text-white backdrop-blur-sm">
@@ -191,15 +190,17 @@ export default function CanonicalResultSurface({
                           alt="crest"
                           className="h-8 w-8 rounded-full border border-white/20 bg-white/70 object-contain p-1"
                         />
-                        <span className="hidden text-xs tracking-[0.16em] sm:inline">visual sample</span>
+                        <span className="hidden text-xs tracking-[0.14em] sm:inline">
+                          {locale === "en" ? "Result mood" : "結果の雰囲気"}
+                        </span>
                       </div>
                     ) : null}
                   </div>
                   <div className="flex items-end justify-between gap-4">
                     <div className="max-w-[20rem] rounded-[1.2rem] border border-white/14 bg-[rgba(15,19,18,0.32)] px-4 py-3 text-sm leading-7 text-white backdrop-blur-sm">
                       {locale === "en"
-                        ? "Static preview assets render from the current manual candidate registry."
-                        : "静的プレビュー資産を、現在の manual_candidate registry から表示しています。"}
+                        ? "A quiet visual impression of this result."
+                        : "いまのあなたに近い空気感を、静かに映しています。"}
                     </div>
                     {samplePortrait ? (
                       <img
