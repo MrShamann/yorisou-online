@@ -42,6 +42,18 @@ function createFallbackAsset(
   };
 }
 
+function createManualCandidateAsset(
+  kind: YorisouPersonaAssetKind,
+  assetPath: string,
+): YorisouPersonaAssetRecord {
+  return {
+    kind,
+    status: "manual_candidate",
+    path: assetPath,
+    expectedPath: assetPath,
+  };
+}
+
 export const yorisouPersonaAssetRegistry = {
   P01: {
     personaId: "P01",
@@ -51,25 +63,25 @@ export const yorisouPersonaAssetRegistry = {
     visualFamily: "tide_moon",
     expectedAssetBase: "P01_kebaiyomi",
     assets: {
-      portrait: createFallbackAsset(
+      portrait: createManualCandidateAsset(
         "portrait",
-        "/assets/yorisou/personas/portraits/P01_kebaiyomi_portrait_g00_core_v01.png",
+        "/assets/yorisou/personas/portraits/P01_kebaiyomi_portrait_g00_core_v07.png",
       ),
-      crest: createFallbackAsset(
+      crest: createManualCandidateAsset(
         "crest",
-        "/assets/yorisou/personas/crests/P01_kebaiyomi_crest_g00_core_v01.svg",
+        "/assets/yorisou/personas/crests/P01_kebaiyomi_crest_g00_core_v03.png",
       ),
-      result_hero: createFallbackAsset(
+      result_hero: createManualCandidateAsset(
         "result_hero",
         "/assets/yorisou/personas/result-heroes/P01_kebaiyomi_result_hero_g00_core_v01.png",
       ),
-      share_accent: createFallbackAsset(
+      share_accent: createManualCandidateAsset(
         "share_accent",
         "/assets/yorisou/personas/share-accents/P01_kebaiyomi_share_accent_g00_core_v01.png",
       ),
-      oracle_motif: createFallbackAsset(
+      oracle_motif: createManualCandidateAsset(
         "oracle_motif",
-        "/assets/yorisou/personas/oracle-motifs/P01_kebaiyomi_oracle_motif_g00_core_v01.svg",
+        "/assets/yorisou/personas/oracle-motifs/P01_kebaiyomi_oracle_motif_g00_core_v01.png",
       ),
       motion_seed: createFallbackAsset(
         "motion_seed",

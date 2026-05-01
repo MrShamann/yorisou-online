@@ -814,10 +814,10 @@ export function createCheckoutStub() {
 export function getCanonicalRenderingGuardrails() {
   return {
     canonicalSourceReferences: [
-      "/Users/yangjin/yorisou-online/docs/yorisou_canonical_final_naming_lock_2026-04-13/yorisou_canonical_final_naming_lock_v1.md",
-      "/Users/yangjin/yorisou-online/docs/yorisou_result_payload_contract_2026-04-13/yorisou_result_payload_contract_v1.md",
-      "/Users/yangjin/yorisou-online/docs/yorisou_liff_result_rendering_contract_2026-04-13/yorisou_liff_result_rendering_contract_v1.md",
-      "/Users/yangjin/yorisou-online/docs/yorisou_payment_unlock_flow_spec_2026-04-13/yorisou_payment_unlock_flow_spec_v1.md",
+      "docs/yorisou_canonical_final_naming_lock_2026-04-13/yorisou_canonical_final_naming_lock_v1.md",
+      "docs/yorisou_result_payload_contract_2026-04-13/yorisou_result_payload_contract_v1.md",
+      "docs/yorisou_liff_result_rendering_contract_2026-04-13/yorisou_liff_result_rendering_contract_v1.md",
+      "docs/yorisou_payment_unlock_flow_spec_2026-04-13/yorisou_payment_unlock_flow_spec_v1.md",
     ],
     nonOverrideRules: renderingContract.non_override_rules,
     hotspotWarnings: finalNamingLock.entries

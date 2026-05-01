@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { ResultLabSnapshot } from "@/lib/result/rendering-contract-adapter";
+import { yorisouPersonaAssetRegistry, type YorisouPersonaAssetKind } from "@/lib/yorisou/persona-asset-registry";
 
 type Locale = "ja" | "en";
 
@@ -62,6 +63,25 @@ function lineContinueHref(locale: Locale) {
   return locale === "en" ? "/en/line/mini-app" : "/line/mini-app";
 }
 
+const P01_RENDERABLE_STATUSES = new Set(["manual_candidate", "approved_static"] as const);
+
+function getRenderablePersonaAsset(personaId: string, kind: YorisouPersonaAssetKind) {
+  if (personaId !== "P01") {
+    return null;
+  }
+
+  const record = yorisouPersonaAssetRegistry.P01.assets[kind];
+  if (!record || !P01_RENDERABLE_STATUSES.has(record.status as "manual_candidate" | "approved_static")) {
+    return null;
+  }
+
+  if (!record.path) {
+    return null;
+  }
+
+  return record;
+}
+
 function renderStateLabel(locale: Locale, snapshot: ResultLabSnapshot) {
   const t = copy[locale];
   if (snapshot.renderingState === "version_mismatch_guard") {
@@ -89,6 +109,10 @@ export default function CanonicalResultSurface({ locale, snapshot }: Props) {
   const t = copy[locale];
   const continueHref = lineContinueHref(locale);
   const payload = snapshot.payload;
+  const personaId = snapshot.personaId;
+  const p01ResultHero = getRenderablePersonaAsset(personaId, "result_hero");
+  const p01Crest = getRenderablePersonaAsset(personaId, "crest");
+  const p01Portrait = getRenderablePersonaAsset(personaId, "portrait");
   const renderErrorState = snapshot.renderingState === "invalid_or_missing_payload" || snapshot.renderingState === "version_mismatch_guard";
   const canRenderDeepReport =
     snapshot.renderingState === "deep_report_unlocked" ||
@@ -110,10 +134,63 @@ export default function CanonicalResultSurface({ locale, snapshot }: Props) {
     <main className="min-h-screen bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-5 py-6 text-[var(--text)] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <header className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-5 py-6 shadow-[0_14px_28px_rgba(47,35,33,0.04)] sm:px-6">
+          {p01ResultHero ? (
+            <div className="relative mb-5 overflow-hidden rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[rgba(244,240,232,0.92)] shadow-[0_16px_34px_rgba(47,35,33,0.08)]">
+              <img
+                src={p01ResultHero.path}
+                alt="P01 kebaiyomi result hero"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,19,18,0.18)_0%,rgba(15,19,18,0.12)_40%,rgba(15,19,18,0.44)_100%)]" />
+              <div className="relative flex min-h-[14rem] flex-col justify-between gap-4 p-4 sm:min-h-[16rem] sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-[rgba(15,19,18,0.34)] px-3 py-2 text-[11px] font-semibold tracking-[0.18em] text-white backdrop-blur-sm">
+                    <span>P01</span>
+                    <span className="opacity-70">manual preview</span>
+                  </div>
+                  {p01Crest ? (
+                    <div className="flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(255,255,255,0.14)] px-3 py-2 text-sm font-medium text-white backdrop-blur-sm">
+                      <img
+                        src={p01Crest.path}
+                        alt="P01 kebaiyomi crest"
+                        className="h-8 w-8 rounded-full border border-white/20 bg-white/70 object-contain p-1"
+                      />
+                      <span className="hidden text-xs tracking-[0.16em] sm:inline">気配読み</span>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="flex items-end justify-between gap-4">
+                  <div className="max-w-[24rem] rounded-[1.4rem] border border-white/14 bg-[rgba(15,19,18,0.32)] px-4 py-3 text-sm leading-7 text-white backdrop-blur-sm">
+                    {locale === "en"
+                      ? "P01 static preview assets are being rendered from the current manual candidate registry."
+                      : "P01 の静的プレビュー資産を、現在の manual_candidate registry から表示しています。"}
+                  </div>
+                  {p01Portrait ? (
+                    <img
+                      src={p01Portrait.path}
+                      alt="P01 kebaiyomi portrait"
+                      className="hidden h-24 w-24 rounded-[1.35rem] border border-white/18 object-cover shadow-[0_10px_24px_rgba(15,19,18,0.24)] sm:block"
+                    />
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
           <div className="service-kicker">{t.label}</div>
-          <h1 className="display-serif mt-3 text-[2rem] leading-[1.34] sm:text-[2.5rem]">
-            {payload?.share_card_result.share_card_line_jp || payload?.teaser_result.teaser_line_jp || payload?.final_locked_label_jp || t.invalidTitle}
-          </h1>
+          <div className="mt-3 flex items-start gap-3">
+            <h1 className="display-serif text-[2rem] leading-[1.34] sm:text-[2.5rem]">
+              {payload?.share_card_result.share_card_line_jp || payload?.teaser_result.teaser_line_jp || payload?.final_locked_label_jp || t.invalidTitle}
+            </h1>
+            {p01Crest ? (
+              <div className="mt-1 shrink-0 rounded-[1rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.44)] p-2 shadow-[0_10px_20px_rgba(47,35,33,0.05)]">
+                <img
+                  src={p01Crest.path}
+                  alt="P01 kebaiyomi crest"
+                  className="h-10 w-10 rounded-[0.75rem] object-contain"
+                />
+              </div>
+            ) : null}
+          </div>
           <p className="mt-3 max-w-4xl text-[15px] leading-8 text-[var(--muted)] sm:text-base">
             {payload?.final_locked_subtitle_jp || (renderErrorState ? t.versionBody : t.subtitle)}
           </p>
