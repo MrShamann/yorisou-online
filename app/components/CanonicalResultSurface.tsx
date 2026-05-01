@@ -6,6 +6,7 @@ import { buildResultShareMessaging } from "@/lib/result/share-messaging";
 import type { PublicResultIdentity } from "@/lib/result/public-result-identity";
 import type { ResultLabSnapshot } from "@/lib/result/rendering-contract-adapter";
 import type { ResultStaticPack } from "@/lib/result/visual-asset-chain";
+import { yorisouPersonaAssetRegistry, type YorisouPersonaAssetKind } from "@/lib/yorisou/persona-asset-registry";
 import type { CanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
 
 type Locale = "ja" | "en";
@@ -53,6 +54,33 @@ const copy = {
   },
 } as const;
 
+type VisualSamplePersonaId = "P01" | "P02" | "P03";
+
+const VISUAL_SAMPLE_PERSONA_IDS = new Set<VisualSamplePersonaId>(["P01", "P02", "P03"]);
+const RENDERABLE_STATUSES = new Set(["manual_candidate", "approved_static"] as const);
+
+function getRenderablePersonaAsset(personaId: string, kind: YorisouPersonaAssetKind) {
+  if (!VISUAL_SAMPLE_PERSONA_IDS.has(personaId as VisualSamplePersonaId)) {
+    return null;
+  }
+
+  const registryEntry = yorisouPersonaAssetRegistry[personaId as VisualSamplePersonaId];
+  if (!registryEntry) {
+    return null;
+  }
+
+  const record = registryEntry.assets[kind];
+  if (!record || !RENDERABLE_STATUSES.has(record.status as "manual_candidate" | "approved_static")) {
+    return null;
+  }
+
+  if (!record.path) {
+    return null;
+  }
+
+  return record;
+}
+
 export default function CanonicalResultSurface({
   locale,
   snapshot,
@@ -69,6 +97,13 @@ export default function CanonicalResultSurface({
   const t = copy[locale];
   const payload = snapshot.payload;
   const identity = publicIdentity;
+  const personaId = snapshot.personaId;
+  const sampleResultHero = getRenderablePersonaAsset(personaId, "result_hero");
+  const sampleCrest = getRenderablePersonaAsset(personaId, "crest");
+  const samplePortrait = getRenderablePersonaAsset(personaId, "portrait");
+  const sampleResultHeroPath = sampleResultHero?.path ?? "";
+  const sampleCrestPath = sampleCrest?.path ?? "";
+  const samplePortraitPath = samplePortrait?.path ?? "";
   const renderErrorState =
     snapshot.renderingState === "invalid_or_missing_payload" || snapshot.renderingState === "version_mismatch_guard";
   const publicResultName = renderErrorState
@@ -133,6 +168,53 @@ export default function CanonicalResultSurface({
       ) : null}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_26%,rgba(223,233,227,0.18)_100%)]" />
       <div className="mx-auto max-w-md space-y-3">
+        {!renderErrorState && (sampleResultHero || sampleCrest || samplePortrait) ? (
+          <section className="overflow-hidden rounded-[1.65rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] shadow-[0_14px_28px_rgba(47,35,33,0.08)]">
+            {sampleResultHero ? (
+              <div className="relative overflow-hidden">
+                <img
+                  src={sampleResultHeroPath}
+                  alt="result hero"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,19,18,0.14)_0%,rgba(15,19,18,0.1)_40%,rgba(15,19,18,0.4)_100%)]" />
+                <div className="relative flex min-h-[12.5rem] flex-col justify-between gap-4 p-4 sm:min-h-[15rem] sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-[rgba(15,19,18,0.34)] px-3 py-2 text-[11px] font-semibold tracking-[0.18em] text-white backdrop-blur-sm">
+                      <span>{personaId}</span>
+                      <span className="opacity-70">manual preview</span>
+                    </div>
+                    {sampleCrest ? (
+                      <div className="flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(255,255,255,0.14)] px-3 py-2 text-sm font-medium text-white backdrop-blur-sm">
+                        <img
+                          src={sampleCrestPath}
+                          alt="crest"
+                          className="h-8 w-8 rounded-full border border-white/20 bg-white/70 object-contain p-1"
+                        />
+                        <span className="hidden text-xs tracking-[0.16em] sm:inline">visual sample</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex items-end justify-between gap-4">
+                    <div className="max-w-[20rem] rounded-[1.2rem] border border-white/14 bg-[rgba(15,19,18,0.32)] px-4 py-3 text-sm leading-7 text-white backdrop-blur-sm">
+                      {locale === "en"
+                        ? "Static preview assets render from the current manual candidate registry."
+                        : "静的プレビュー資産を、現在の manual_candidate registry から表示しています。"}
+                    </div>
+                    {samplePortrait ? (
+                      <img
+                        src={samplePortraitPath}
+                        alt="portrait"
+                        className="hidden h-24 w-24 rounded-[1.35rem] border border-white/18 object-cover shadow-[0_10px_24px_rgba(15,19,18,0.24)] sm:block"
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
         <DteTextResultFirstScreen
           locale={locale}
           personaShell={renderErrorState ? null : personaShell}
