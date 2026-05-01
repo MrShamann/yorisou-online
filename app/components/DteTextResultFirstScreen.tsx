@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import PersonaAssetSlot from "./PersonaAssetSlot";
 import type { CanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
 import { resolveCanonicalPublicPersonaModeLabel } from "@/lib/yorisou/dte/public-persona-shell";
 
@@ -76,7 +75,7 @@ export default function DteTextResultFirstScreen({
 
   return (
     <section className="flex flex-col justify-start pt-0.5" data-result-shell="canonical">
-      <div className="overflow-hidden rounded-[2rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(12,18,17,0.98)_0%,rgba(24,35,31,0.98)_44%,rgba(34,48,43,0.96)_68%,rgba(242,246,239,0.99)_100%)] shadow-[0_24px_60px_rgba(15,22,20,0.18)]">
+      <div className="overflow-hidden rounded-[2rem] border border-[rgba(36,45,43,0.1)] bg-[linear-gradient(180deg,rgba(12,18,17,0.98)_0%,rgba(24,35,31,0.98)_44%,rgba(34,48,43,0.96)_68%,rgba(242,246,239,0.99)_100%)] shadow-[0_20px_46px_rgba(15,22,20,0.15)]">
         <div className="px-4 pt-3.5 text-white">
           <div className="flex items-center justify-between gap-3">
             <div className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.24em] text-white/86">
@@ -89,7 +88,7 @@ export default function DteTextResultFirstScreen({
             ) : null}
           </div>
 
-          <div className="mt-3.5 grid gap-2.5 md:grid-cols-[1.06fr_0.94fr] md:items-stretch">
+          <div className="mt-3.5 grid gap-3 md:grid-cols-[1.06fr_0.94fr] md:items-stretch">
             <div className="space-y-3">
               <div className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.2em] text-white/86">
                 {renderErrorState ? "結果を開けません" : "結果の核"}
@@ -104,28 +103,28 @@ export default function DteTextResultFirstScreen({
               </h1>
 
               {recognitionLine ? (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <div className="text-[10px] tracking-[0.2em] text-white/56">{t.recognition}</div>
-                  <div className="max-w-[28rem] rounded-[1.15rem] border border-white/12 bg-white/10 px-4 py-2.5 text-[14px] font-semibold leading-6 text-white shadow-[0_14px_24px_rgba(6,12,10,0.12)]" data-social-handle={recognitionLine}>
+                  <div className="max-w-[28rem] rounded-[1.15rem] border border-white/12 bg-white/10 px-4 py-2.5 text-[14px] font-semibold leading-7 text-white shadow-[0_14px_24px_rgba(6,12,10,0.12)]" data-social-handle={recognitionLine}>
                     {recognitionLine}
                   </div>
                 </div>
               ) : null}
 
               {detailLine ? (
-                <p className="max-w-[28rem] text-[13px] leading-6 text-white/72" data-functional-subtitle={detailLine}>
+                <p className="max-w-[28rem] text-[13px] leading-7 text-white/74" data-functional-subtitle={detailLine}>
                   {detailLine}
                 </p>
               ) : null}
 
               <div className="flex flex-wrap gap-2">
                 {publicSign ? (
-                  <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[11px] leading-5 text-white/92" data-public-sign={publicSign}>
+                  <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5 text-[10px] leading-5 text-white/92" data-public-sign={publicSign}>
                     {t.sign}: {publicSign}
                   </span>
                 ) : null}
                 {resolvedCurrentModeLabel ? (
-                  <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[11px] leading-5 text-white/92" data-current-mode-label={resolvedCurrentModeLabel}>
+                  <span className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5 text-[10px] leading-5 text-white/92" data-current-mode-label={resolvedCurrentModeLabel}>
                     {t.mode}: {resolvedCurrentModeLabel}
                   </span>
                 ) : null}
@@ -137,7 +136,7 @@ export default function DteTextResultFirstScreen({
                 {chips.map((trait) => (
                   <div
                     key={trait}
-                    className="rounded-[1rem] border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-2 text-[12px] font-medium leading-5 text-white/92 shadow-[0_10px_18px_rgba(6,12,10,0.08)]"
+                    className="flex min-h-[46px] items-center rounded-[1rem] border border-white/12 bg-[rgba(255,255,255,0.08)] px-3.5 py-2.5 text-[12.5px] font-medium leading-5 text-white/92 shadow-[0_10px_18px_rgba(6,12,10,0.08)]"
                     data-trait-chip={trait}
                   >
                     {trait}
@@ -147,19 +146,37 @@ export default function DteTextResultFirstScreen({
               </div>
 
               {hasHeroNote && oraclePreviewLine ? (
-                <p className="max-w-[28rem] rounded-[1.05rem] border border-white/12 bg-white/8 px-3 py-3 text-[12px] leading-6 text-white/70" data-oracle-preview-line={oraclePreviewLine}>
+                <p className="max-w-[28rem] rounded-[1.05rem] border border-white/12 bg-white/8 px-3 py-3 text-[12px] leading-7 text-white/72" data-oracle-preview-line={oraclePreviewLine}>
                   {oraclePreviewLine}
                 </p>
               ) : null}
             </div>
 
-            <div className="relative overflow-hidden rounded-[1.72rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_100%)] p-2 shadow-[0_18px_32px_rgba(10,16,14,0.14)]">
-              <PersonaAssetSlot
-                personaId={personaShell?.personaId || "P01"}
-                officialPublicPersonaName={resultName}
-                surface="result"
-                compact
-              />
+            <div className="relative overflow-hidden rounded-[1.5rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.05)_36%,rgba(246,249,243,0.08)_100%)] p-3 shadow-[0_16px_28px_rgba(10,16,14,0.12)]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[10px] tracking-[0.18em] text-white/82">
+                  {locale === "en" ? "Public view" : "公開用の見え方"}
+                </div>
+                <div className="rounded-full border border-white/14 bg-white/10 px-2.5 py-1 text-[10px] tracking-[0.14em] text-white/78">
+                  {locale === "en" ? "Calm" : "静か"}
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div className="space-y-2">
+                  <div className="h-28 rounded-[1.2rem] border border-white/12 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.08)_34%,rgba(12,18,17,0.92)_100%)]" />
+                  <p className="max-w-[18rem] text-[12px] leading-6 text-white/76">
+                    {locale === "en"
+                      ? "Made to read clearly in a public result view."
+                      : "公開結果の見え方として、読みやすく整えています。"}
+                  </p>
+                </div>
+                <div className="hidden sm:flex h-full flex-col items-end justify-end gap-2">
+                  <div className="h-14 w-14 rounded-full border border-white/16 bg-white/10 shadow-[0_12px_24px_rgba(0,0,0,0.12)]" />
+                  <div className="h-2.5 w-20 rounded-full bg-white/14" />
+                  <div className="h-2.5 w-14 rounded-full bg-white/12" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

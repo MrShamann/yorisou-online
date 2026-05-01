@@ -169,7 +169,7 @@ export default function CanonicalResultSurface({
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_26%,rgba(223,233,227,0.18)_100%)]" />
       <div className="mx-auto max-w-md space-y-3">
         {!renderErrorState && (sampleResultHero || sampleCrest || samplePortrait) ? (
-          <section className="overflow-hidden rounded-[1.65rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] shadow-[0_14px_28px_rgba(47,35,33,0.08)]">
+          <section className="overflow-hidden rounded-[1.45rem] border border-[rgba(36,45,43,0.1)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] shadow-[0_10px_22px_rgba(47,35,33,0.06)]">
             {sampleResultHero ? (
               <div className="relative overflow-hidden">
                 <img
@@ -178,26 +178,26 @@ export default function CanonicalResultSurface({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,19,18,0.14)_0%,rgba(15,19,18,0.1)_40%,rgba(15,19,18,0.4)_100%)]" />
-                <div className="relative flex min-h-[12.5rem] flex-col justify-between gap-4 p-4 sm:min-h-[15rem] sm:p-5">
+                <div className="relative flex min-h-[11.25rem] flex-col justify-between gap-3 p-3.5 sm:min-h-[13.5rem] sm:p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-[rgba(15,19,18,0.34)] px-3 py-2 text-[11px] font-semibold tracking-[0.14em] text-white backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(15,19,18,0.32)] px-2.5 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-white backdrop-blur-sm">
                       <span>{locale === "en" ? "Your type" : "あなたのタイプ"}</span>
                     </div>
                     {sampleCrest ? (
-                      <div className="flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(255,255,255,0.14)] px-3 py-2 text-sm font-medium text-white backdrop-blur-sm">
+                      <div className="flex items-center gap-2 rounded-full border border-white/14 bg-[rgba(255,255,255,0.12)] px-2.5 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
                         <img
                           src={sampleCrestPath}
                           alt="crest"
-                          className="h-8 w-8 rounded-full border border-white/20 bg-white/70 object-contain p-1"
+                          className="h-7 w-7 rounded-full border border-white/20 bg-white/70 object-contain p-1"
                         />
-                        <span className="hidden text-xs tracking-[0.14em] sm:inline">
+                        <span className="hidden text-[10px] tracking-[0.14em] sm:inline">
                           {locale === "en" ? "Result mood" : "結果の雰囲気"}
                         </span>
                       </div>
                     ) : null}
                   </div>
                   <div className="flex items-end justify-between gap-4">
-                    <div className="max-w-[20rem] rounded-[1.2rem] border border-white/14 bg-[rgba(15,19,18,0.32)] px-4 py-3 text-sm leading-7 text-white backdrop-blur-sm">
+                    <div className="max-w-[16.5rem] rounded-[1rem] border border-white/14 bg-[rgba(15,19,18,0.28)] px-3 py-2.5 text-[12px] leading-5 text-white/94 backdrop-blur-sm">
                       {locale === "en"
                         ? "A quiet visual impression of this result."
                         : "いまのあなたに近い空気感を、静かに映しています。"}
@@ -206,7 +206,7 @@ export default function CanonicalResultSurface({
                       <img
                         src={samplePortraitPath}
                         alt="portrait"
-                        className="hidden h-24 w-24 rounded-[1.35rem] border border-white/18 object-cover shadow-[0_10px_24px_rgba(15,19,18,0.24)] sm:block"
+                        className="h-20 w-20 rounded-[1.2rem] border border-white/18 object-cover shadow-[0_10px_24px_rgba(15,19,18,0.22)] sm:h-24 sm:w-24"
                       />
                     ) : null}
                   </div>
