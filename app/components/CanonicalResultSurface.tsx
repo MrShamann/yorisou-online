@@ -1,6 +1,7 @@
 import DteEventTracker from "./DteEventTracker";
 import DteTextResultFirstScreen from "./DteTextResultFirstScreen";
 import ResultShareActions from "./ResultShareActions";
+import Link from "next/link";
 import { buildCoreTraitLabels } from "@/lib/result/result-traits";
 import { buildResultShareMessaging } from "@/lib/result/share-messaging";
 import type { PublicResultIdentity } from "@/lib/result/public-result-identity";
@@ -87,6 +88,7 @@ export default function CanonicalResultSurface({
   publicIdentity,
   nextStepHref,
   nextStepLabel,
+  nextStepHint,
   shareViewHref,
   shareHref = null,
   completionId = null,
@@ -148,6 +150,9 @@ export default function CanonicalResultSurface({
     socialLine,
     ctaLine: locale === "en" ? "What kind of support fits you?" : "あなたは今、どの寄り添い方？",
   });
+  const detailLinkHref = nextStepHref?.trim() || "#result-details";
+  const detailLinkLabel = nextStepLabel?.trim() || t.detailsCta;
+  const detailLinkHint = nextStepHint?.trim() || t.detailsSummary;
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(12,18,17,0.98)_0%,rgba(25,37,33,0.98)_20%,rgba(244,246,240,1)_70%,rgba(237,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
       {renderErrorState ? (
@@ -246,12 +251,23 @@ export default function CanonicalResultSurface({
           }
           detailLink={
             !renderErrorState ? (
-              <a
-                href="#result-details"
-                className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/64 px-4 py-2 text-[13px] font-medium text-[var(--accent-sage-text)]"
-              >
-                詳しく見る
-              </a>
+              nextStepHref ? (
+                <Link
+                  href={detailLinkHref}
+                  className="grid min-h-[54px] w-full gap-1 rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/72 px-4 py-3 text-[var(--accent-sage-text)]"
+                >
+                  <span className="text-[14px] font-semibold">{detailLinkLabel}</span>
+                  <span className="text-[11px] leading-5 text-[rgba(84,101,89,0.82)]">{detailLinkHint}</span>
+                </Link>
+              ) : (
+                <a
+                  href={detailLinkHref}
+                  className="grid min-h-[54px] w-full gap-1 rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/72 px-4 py-3 text-[var(--accent-sage-text)]"
+                >
+                  <span className="text-[14px] font-semibold">{detailLinkLabel}</span>
+                  <span className="text-[11px] leading-5 text-[rgba(84,101,89,0.82)]">{detailLinkHint}</span>
+                </a>
+              )
             ) : null
           }
         />

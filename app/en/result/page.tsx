@@ -48,6 +48,7 @@ export default async function EnglishResultPage({
     sessionMode,
     versionMode,
   });
+  const nextStepHref = `/en/result/continue?persona=${encodeURIComponent(personaId)}`;
 
-  return <CanonicalResultSurface locale="en" snapshot={snapshot} />;
+  return <CanonicalResultSurface locale="en" snapshot={snapshot} nextStepHref={nextStepHref} nextStepLabel="Continue reading" nextStepHint="Read the deeper continuation" />;
 }

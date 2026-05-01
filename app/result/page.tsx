@@ -105,6 +105,9 @@ export default async function ResultPage({
   shareViewSearchParams.set("personaId", personaId);
   const shareViewHref = `/result/share?${shareViewSearchParams.toString()}`;
   const shareHref = shareViewHref;
+  const nextStepHref = `/result/continue?persona=${encodeURIComponent(personaId)}`;
+  const nextStepLabel = "詳しく見る";
+  const nextStepHint = "結果のつづきを読む";
   const personaShell = getCanonicalPublicPersonaShell(personaId);
   const currentModeKey = completion?.currentModeKey || null;
   const currentModeLabel = completion?.currentModeLabelJa || null;
@@ -158,6 +161,9 @@ export default async function ResultPage({
         visualAssetPack={visualAssetResolution.pack}
         shareViewHref={shareViewHref}
         shareHref={shareHref}
+        nextStepHref={nextStepHref}
+        nextStepLabel={nextStepLabel}
+        nextStepHint={nextStepHint}
         completionId={completion?.id || completionId || null}
         personaShell={personaShell}
         currentModeKey={currentModeKey}
