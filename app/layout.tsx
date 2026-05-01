@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import "./globals.css";
-import SiteHeader from "./components/SiteHeader";
-import SiteFooter from "./components/SiteFooter";
+import AppShell from "./components/AppShell";
 import { getReleaseMarker } from "@/lib/releaseMarker";
 
 export const metadata: Metadata = {
@@ -21,33 +20,13 @@ export default async function RootLayout({
   const headerStore = await headers();
   const cookieStore = await cookies();
   const localeHeader = headerStore.get("x-yorisou-locale");
-  const pathname = headerStore.get("x-yorisou-pathname") || "/";
   const localeCookie = cookieStore.get("yorisou_locale")?.value;
   const locale = localeHeader === "en" || localeCookie === "en" ? "en" : "ja";
-  const isFlowWorkspaceRoute =
-    pathname === "/support" ||
-    pathname === "/en/support" ||
-    pathname === "/check-in" ||
-    pathname === "/en/check-in" ||
-    pathname === "/result" ||
-    pathname === "/en/result" ||
-    pathname === "/result/share" ||
-    pathname === "/en/result/share" ||
-    pathname === "/line/mini-app" ||
-    pathname === "/en/line/mini-app" ||
-    pathname === "/line/mini-app/result" ||
-    pathname === "/en/line/mini-app/result" ||
-    pathname === "/line/next" ||
-    pathname === "/en/line/next" ||
-    pathname === "/line/open" ||
-    pathname === "/en/line/open";
   return (
     <html lang={locale}>
       <body>
         <div id="yorisou-release" hidden data-release={releaseMarker} />
-        {!isFlowWorkspaceRoute && <SiteHeader />}
-        {children}
-        {!isFlowWorkspaceRoute && <SiteFooter />}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
