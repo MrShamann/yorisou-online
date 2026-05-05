@@ -237,7 +237,14 @@ export function composeLineReadinessViewModel(input: {
   };
 }
 
-const AUTH_COOKIE_SECRET = process.env.YORISOU_AUTH_COOKIE_SECRET || "yorisou-phase1-auth-cookie-secret";
+const AUTH_COOKIE_SECRET =
+  process.env.YORISOU_AUTH_COOKIE_SECRET ||
+  (process.env.NODE_ENV === "production" ? null : randomBytes(32).toString("hex"));
+
+if (!AUTH_COOKIE_SECRET) {
+  throw new Error("YORISOU_AUTH_COOKIE_SECRET is required in production");
+}
+
 const AUTH_COOKIE_KEY = createHash("sha256").update(AUTH_COOKIE_SECRET).digest();
 
 function encryptCookieValue(value: string) {
@@ -579,68 +586,84 @@ export function setViewerAccountCookie(response: NextResponse, account: AccountR
 }
 
 export async function getViewerContext(): Promise<ViewerContext> {
-  const cookieStore = await cookies();
-  const rawSessionValue = cookieStore.get(SESSION_COOKIE)?.value;
-  const sessionCookie = decodeSessionCookie(rawSessionValue);
-  const accountCookie = decodeAccountCookie(cookieStore.get(ACCOUNT_COOKIE)?.value);
+  try {
+    const cookieStore = await cookies();
+    const rawSessionValue = cookieStore.get(SESSION_COOKIE)?.value;
+    const sessionCookie = decodeSessionCookie(rawSessionValue);
+    const accountCookie = decodeAccountCookie(cookieStore.get(ACCOUNT_COOKIE)?.value);
 
-  if (sessionCookie) {
-    const storedSession = await findSessionById(sessionCookie.id);
-    const session =
-      storedSession
-        ? ((await touchSession(
-            sessionCookie.id,
-            sessionCookie.userId,
-            sessionCookie.principalLanding === undefined ? undefined : sessionCookie.principalLanding || null,
-          )) || storedSession)
-        : createSyntheticSession(sessionCookie);
-    const principalLanding = resolveSessionPrincipalLandingContext({
-      sessionUserId: session.userId,
-      contractValue: session.principalLanding || sessionCookie.principalLanding || null,
-    });
-    const accountId =
-      session.userId ||
-      sessionCookie.userId ||
-      (principalLanding.restoreSource === "contract_legacy_account" ? principalLanding.contract?.legacyAccountId || null : null);
-    const account = accountId ? (await findAccountById(accountId)) || (accountCookie?.id === accountId ? accountCookie : null) : null;
-    return {
-      session,
-      account,
-      legacyAccount: account,
-      principal: toViewerPrincipal(account),
-      principalLanding,
-    };
-  }
-
-  if (rawSessionValue) {
-    const session = await findSessionById(rawSessionValue);
-    if (session) {
-      const touchedSession = (await touchSession(session.id, session.userId)) || session;
-      const account = touchedSession.userId ? await findAccountById(touchedSession.userId) : null;
+    if (sessionCookie) {
+      const storedSession = await findSessionById(sessionCookie.id);
+      const session =
+        storedSession
+          ? ((await touchSession(
+              sessionCookie.id,
+              sessionCookie.userId,
+              sessionCookie.principalLanding === undefined ? undefined : sessionCookie.principalLanding || null,
+            )) || storedSession)
+          : createSyntheticSession(sessionCookie);
+      const principalLanding = resolveSessionPrincipalLandingContext({
+        sessionUserId: session.userId,
+        contractValue: session.principalLanding || sessionCookie.principalLanding || null,
+      });
+      const accountId =
+        session.userId ||
+        sessionCookie.userId ||
+        (principalLanding.restoreSource === "contract_legacy_account" ? principalLanding.contract?.legacyAccountId || null : null);
+      const account = accountId ? (await findAccountById(accountId)) || (accountCookie?.id === accountId ? accountCookie : null) : null;
       return {
-        session: touchedSession,
+        session,
         account,
         legacyAccount: account,
         principal: toViewerPrincipal(account),
-        principalLanding: resolveSessionPrincipalLandingContext({
-          sessionUserId: touchedSession.userId,
-          contractValue: touchedSession.principalLanding,
-        }),
+        principalLanding,
       };
     }
-  }
 
-  return {
-    session: null,
-    account: accountCookie || null,
-    legacyAccount: accountCookie || null,
-    principal: toViewerPrincipal(accountCookie || null),
-    principalLanding: {
-      contract: null,
-      contractStatus: "absent",
-      restoreSource: "none",
-    },
-  };
+    if (rawSessionValue) {
+      const session = await findSessionById(rawSessionValue);
+      if (session) {
+        const touchedSession = (await touchSession(session.id, session.userId)) || session;
+        const account = touchedSession.userId ? await findAccountById(touchedSession.userId) : null;
+        return {
+          session: touchedSession,
+          account,
+          legacyAccount: account,
+          principal: toViewerPrincipal(account),
+          principalLanding: resolveSessionPrincipalLandingContext({
+            sessionUserId: touchedSession.userId,
+            contractValue: touchedSession.principalLanding,
+          }),
+        };
+      }
+    }
+
+    return {
+      session: null,
+      account: accountCookie || null,
+      legacyAccount: accountCookie || null,
+      principal: toViewerPrincipal(accountCookie || null),
+      principalLanding: {
+        contract: null,
+        contractStatus: "absent",
+        restoreSource: "none",
+      },
+    };
+  } catch (error) {
+    console.error("viewer context resolution error:", error);
+    // Fail closed to an anonymous viewer if cookie/session lookup or store reads fail.
+    return {
+      session: null,
+      account: null,
+      legacyAccount: null,
+      principal: null,
+      principalLanding: {
+        contract: null,
+        contractStatus: "absent",
+        restoreSource: "none",
+      },
+    };
+  }
 }
 
 export async function ensureViewerSession() {
