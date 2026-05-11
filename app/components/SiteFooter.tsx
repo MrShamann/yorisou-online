@@ -6,59 +6,45 @@ import { usePathname } from "next/navigation";
 
 export default function SiteFooter() {
   const pathname = usePathname() || "/";
-  const isEn = pathname === "/en" || pathname.startsWith("/en/");
 
-  const termsHref = "/terms";
-  const privacyHref = "/privacy";
-  const contactHref = isEn ? "/en/contact" : "/contact";
-  const aboutHref = isEn ? "/en/about" : "/about";
-  const insightsHref = isEn ? "/en/insights" : "/insights";
-  const servicesHref = isEn ? "/en/services" : "/services";
-  const supportHref = isEn ? "/en/support" : "/support";
-  const loginHref = isEn ? "/en/login" : "/login";
-  const pilotHref = isEn ? "/en/pilot" : "/pilot";
+  if (
+    pathname === "/check-in" ||
+    pathname === "/report-loading" ||
+    pathname === "/result" ||
+    pathname === "/report-preview" ||
+    pathname === "/recommendations"
+  ) {
+    return null;
+  }
 
   return (
     <footer className="mt-[64px] border-t border-[var(--line)] bg-[rgba(252,250,245,0.92)]">
-      <div className="container py-12">
-        <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start">
-          <div className="flex gap-5">
-            <div className="flex items-start justify-center pt-1">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={70} height={70} className="h-auto w-[70px] object-contain" />
+      <div className="container py-10">
+        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+          <div className="flex gap-4">
+            <div className="relative h-[68px] w-[140px] shrink-0 overflow-hidden">
+              <Image
+                src="/images/brand/yorisou-logo-primary-v01.png"
+                alt="Yorisou"
+                fill
+                sizes="140px"
+                className="object-cover"
+              />
             </div>
             <div className="max-w-xl">
-              <div className="display-serif text-[1.6rem] font-semibold tracking-[0.08em]">YORISOU</div>
               <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-                {isEn
-                  ? "A calmer support service for mobility and daily living in Japan."
-                  : "移動の不安から、暮らしの安心へ。高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添います。"}
+                小さなチェックインから始めて、今の状態をやさしく受け取るための入口です。
               </p>
             </div>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2">
-            <div>
-              <div className="service-kicker">{isEn ? "Yorisou" : "Yorisou"}</div>
-              <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
-                <Link href={aboutHref}> {isEn ? "About" : "Yorisouとは"} </Link>
-                <Link href={servicesHref}> {isEn ? "Support" : "支援内容"} </Link>
-                <Link href={pilotHref}> {isEn ? "Implementation" : "導入・実証"} </Link>
-                <Link href={insightsHref}> {isEn ? "Reading" : "読みもの"} </Link>
-              </div>
-            </div>
-            <div>
-              <div className="service-kicker">{isEn ? "Continue" : "つづけ方"}</div>
-              <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
-                <Link href={supportHref}>{isEn ? "Talk with Hinata" : "ひなたとの対話"}</Link>
-                <Link href={loginHref}>{isEn ? "Continue your account" : "ログイン・アカウント"}</Link>
-                <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>
-                <Link href={termsHref}>{isEn ? "Terms" : "利用規約"}</Link>
-                <Link href={privacyHref}>{isEn ? "Privacy Policy" : "プライバシーポリシー"}</Link>
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
+            <Link href="/methodology">方法</Link>
+            <Link href="/privacy">プライバシー</Link>
           </div>
         </div>
-        <div className="mt-10 border-t border-[var(--line-soft)] pt-5 text-xs text-[var(--muted)]">
+
+        <div className="mt-8 border-t border-[var(--line-soft)] pt-5 text-xs text-[var(--muted)]">
           © {new Date().getFullYear()} YORISOU. All rights reserved.
         </div>
       </div>

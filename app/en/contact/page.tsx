@@ -31,11 +31,11 @@ export default function ContactPageEn() {
             <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#D6C3A3]/60 bg-white/60 px-4 py-2 text-sm tracking-wide text-[#6B5A4A] backdrop-blur">
               <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D6C3A3]/40 bg-white/80 shadow-sm">
                 <Image
-                  src="/images/brand/tsuru-logo.png"
+                  src="/images/brand/yorisou-logo-primary-v01.png"
                   alt="Yorisou logo"
-                  width={24}
-                  height={24}
-                  className="h-6 w-6 object-contain"
+                  width={1254}
+                  height={1254}
+                  className="h-6 w-8 object-cover"
                 />
               </span>
               Yorisou · Contact
@@ -65,11 +65,11 @@ export default function ContactPageEn() {
                   </div>
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6C3A3]/50 bg-white shadow-sm">
                     <Image
-                      src="/images/brand/tsuru-logo.png"
+                      src="/images/brand/yorisou-logo-primary-v01.png"
                       alt="Yorisou brand mark"
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 object-contain"
+                      width={1254}
+                      height={1254}
+                      className="h-10 w-12 object-cover"
                     />
                   </div>
                 </div>
