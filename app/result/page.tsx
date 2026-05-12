@@ -41,6 +41,8 @@ export default async function ResultPage({
     confidenceBand,
     payloadKey,
   } as const;
+  const reportPreviewHref = buildT6PublicResultHref("/report-preview", routeContext);
+  const recommendationsHref = buildT6PublicResultHref("/recommendations", routeContext);
   const resultShareHref = buildT6PublicResultHref("/result/share", routeContext);
   const resultPath = buildT6PublicResultHref("/result", routeContext);
   const continuePath = buildT6PublicResultHref("/result/continue", routeContext);
@@ -89,9 +91,15 @@ export default async function ResultPage({
 
               <div className="flex flex-col gap-2.5 sm:flex-row">
                 <MvpActionLink
-                  href="/report-preview"
+                  href={reportPreviewHref}
                   label="この結果をもう少し詳しく見る"
                   className="min-h-[56px] rounded-full !border-[#173B35] !bg-[#173B35] text-[16px] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.24)] hover:!bg-[#0F2F2B]"
+                />
+                <MvpActionLink
+                  href={recommendationsHref}
+                  label="次の入口を見る"
+                  tone="secondary"
+                  className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
                 />
                 <MvpActionLink
                   href={resultShareHref}

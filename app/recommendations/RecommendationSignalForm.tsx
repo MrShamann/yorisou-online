@@ -50,10 +50,19 @@ export function getRecommendationSignalOptions() {
   return SIGNAL_OPTIONS;
 }
 
+type RecommendationSignalContext = {
+  resultId?: string;
+  overlayId?: string;
+  confidenceBand?: "low" | "medium";
+  payloadKey?: string;
+};
+
 export default function RecommendationSignalForm({
   options = SIGNAL_OPTIONS,
+  resultContext,
 }: {
   options?: SignalOption[];
+  resultContext?: RecommendationSignalContext;
 }) {
   const storedSignal = useSyncExternalStore(subscribeRecommendationSignal, readRecommendationSignal, () => null);
   const [selectedSignal, setSelectedSignal] = useState<RecommendationSignalValue | "">(
@@ -76,6 +85,10 @@ export default function RecommendationSignalForm({
       source: "local-browser",
       version: "v0.2",
       path: "/recommendations",
+      ...(resultContext?.resultId ? { resultId: resultContext.resultId } : {}),
+      ...(resultContext?.overlayId ? { overlayId: resultContext.overlayId } : {}),
+      ...(resultContext?.confidenceBand ? { confidenceBand: resultContext.confidenceBand } : {}),
+      ...(resultContext?.payloadKey ? { payloadKey: resultContext.payloadKey } : {}),
     });
   };
 

@@ -14,6 +14,10 @@ export type RecommendationSignalRecord = {
   source: "local-browser";
   version: "v0.2";
   path: "/recommendations";
+  resultId?: string;
+  overlayId?: string;
+  confidenceBand?: "low" | "medium";
+  payloadKey?: string;
 };
 
 let cachedRecommendationSignalRaw: string | null = null;
@@ -34,7 +38,31 @@ function parseRecommendationSignal(rawValue: string | null): RecommendationSigna
       parsed.version === "v0.2" &&
       parsed.path === "/recommendations"
     ) {
-      return parsed as RecommendationSignalRecord;
+      const record: RecommendationSignalRecord = {
+        submittedAt: parsed.submittedAt,
+        selectedSignal: parsed.selectedSignal as RecommendationSignalValue,
+        source: parsed.source,
+        version: parsed.version,
+        path: parsed.path,
+      };
+
+      if (typeof parsed.resultId === "string") {
+        record.resultId = parsed.resultId;
+      }
+
+      if (typeof parsed.overlayId === "string") {
+        record.overlayId = parsed.overlayId;
+      }
+
+      if (parsed.confidenceBand === "low" || parsed.confidenceBand === "medium") {
+        record.confidenceBand = parsed.confidenceBand;
+      }
+
+      if (typeof parsed.payloadKey === "string") {
+        record.payloadKey = parsed.payloadKey;
+      }
+
+      return record;
     }
   } catch {
     return null;
