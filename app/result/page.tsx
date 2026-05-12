@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import LocalResultSave from "./LocalResultSave";
 import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../check-in/currentStateCheckV1";
+import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
 
 export const metadata: Metadata = {
   title: "無料結果 | Yorisou",
@@ -26,6 +27,7 @@ export default async function ResultPage({
   const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
   const overlayId = readParam(params, "overlayId");
   const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
+  const payloadKey = readParam(params, "payloadKey");
 
   const result =
     getCurrentStateResult(resultId) ??
@@ -33,6 +35,15 @@ export default async function ResultPage({
   const overlay =
     getCurrentStateOverlay(overlayId) ??
     currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
+  const routeContext = {
+    resultId: result.id,
+    overlayId: overlay.id,
+    confidenceBand,
+    payloadKey,
+  } as const;
+  const resultShareHref = buildT6PublicResultHref("/result/share", routeContext);
+  const resultPath = buildT6PublicResultHref("/result", routeContext);
+  const continuePath = buildT6PublicResultHref("/result/continue", routeContext);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_50%_0%,_rgba(221,236,242,0.72),_transparent_34%),radial-gradient(circle_at_12%_12%,_rgba(233,120,99,0.14),_transparent_28%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_46%,_#F4FAF7_100%)] text-[#2F2A28]">
@@ -83,7 +94,7 @@ export default async function ResultPage({
                   className="min-h-[56px] rounded-full !border-[#173B35] !bg-[#173B35] text-[16px] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.24)] hover:!bg-[#0F2F2B]"
                 />
                 <MvpActionLink
-                  href="/result/share"
+                  href={resultShareHref}
                   label="シェア"
                   tone="secondary"
                   className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
@@ -103,8 +114,11 @@ export default async function ResultPage({
                 baseResultId={result.id}
                 overlayId={overlay.id}
                 confidenceBand={confidenceBand}
+                payloadKey={payloadKey ?? undefined}
                 traitChips={result.traitChips}
                 context="public-result"
+                resultPath={resultPath}
+                continuePath={continuePath}
                 className="rounded-[0.95rem] border border-[rgba(23,59,53,0.06)] bg-[rgba(248,250,246,0.9)] p-4"
               />
 

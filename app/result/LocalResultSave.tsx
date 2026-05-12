@@ -12,8 +12,11 @@ type LocalResultSaveProps = {
   baseResultId?: string;
   overlayId?: string;
   confidenceBand?: "low" | "medium";
+  payloadKey?: string;
   traitChips?: [string, string, string];
   recognitionLine?: string;
+  resultPath?: string;
+  continuePath?: string;
   className?: string;
 };
 
@@ -24,8 +27,11 @@ export default function LocalResultSave({
   baseResultId,
   overlayId,
   confidenceBand,
+  payloadKey,
   traitChips,
   recognitionLine,
+  resultPath = "/result",
+  continuePath = "/result/continue",
   className = "",
 }: LocalResultSaveProps) {
   const savedRecord = useSyncExternalStore(subscribeSavedResult, readSavedResultRecord, () => null);
@@ -39,12 +45,13 @@ export default function LocalResultSave({
       baseResultId,
       overlayId,
       confidenceBand,
+      payloadKey,
       traitChips,
       recognitionLine,
       source: "local-browser",
       version: "v0.2",
-      resultPath: "/result",
-      continuePath: "/result/continue",
+      resultPath,
+      continuePath,
       context,
     });
   };

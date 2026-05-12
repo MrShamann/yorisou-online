@@ -8,6 +8,7 @@ export type SavedResultRecord = {
   baseResultId?: string;
   overlayId?: string;
   confidenceBand?: "low" | "medium";
+  payloadKey?: string;
   recognitionLine?: string;
   traitChips?: [string, string, string];
   source: "local-browser";
@@ -35,6 +36,7 @@ function parseSavedResultRecord(rawValue: string | null): SavedResultRecord | nu
       (typeof parsed.baseResultId === "undefined" || typeof parsed.baseResultId === "string") &&
       (typeof parsed.overlayId === "undefined" || typeof parsed.overlayId === "string") &&
       (parsed.confidenceBand === undefined || parsed.confidenceBand === "low" || parsed.confidenceBand === "medium") &&
+      (typeof parsed.payloadKey === "undefined" || typeof parsed.payloadKey === "string") &&
       (typeof parsed.recognitionLine === "undefined" || typeof parsed.recognitionLine === "string") &&
       (typeof parsed.traitChips === "undefined" ||
         (Array.isArray(parsed.traitChips) &&

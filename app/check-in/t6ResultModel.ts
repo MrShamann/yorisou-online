@@ -1,4 +1,4 @@
-import type { T6OverlayModel, T6ResultModel } from "./t6Types";
+import type { T6ConfidenceBand, T6OverlayModel, T6ResultModel } from "./t6Types";
 
 export const T6_BASE_RESULTS: T6ResultModel[] = [
   {
@@ -93,3 +93,36 @@ export const T6_RESULT_BY_ID = new Map<string, T6ResultModel>(
 
 export const T6_OVERLAY_BY_ID = new Map<string, T6OverlayModel>(T6_OVERLAYS.map((overlay) => [overlay.id, overlay]));
 
+export type T6PublicResultRouteContext = {
+  resultId?: string | null;
+  overlayId?: string | null;
+  confidenceBand?: T6ConfidenceBand | null;
+  payloadKey?: string | null;
+};
+
+export function buildT6PublicResultSearchParams(context: T6PublicResultRouteContext) {
+  const params = new URLSearchParams();
+
+  if (context.resultId) {
+    params.set("resultId", context.resultId);
+  }
+
+  if (context.overlayId) {
+    params.set("overlayId", context.overlayId);
+  }
+
+  if (context.confidenceBand) {
+    params.set("confidence", context.confidenceBand);
+  }
+
+  if (context.payloadKey) {
+    params.set("payloadKey", context.payloadKey);
+  }
+
+  return params.toString();
+}
+
+export function buildT6PublicResultHref(pathname: string, context: T6PublicResultRouteContext) {
+  const query = buildT6PublicResultSearchParams(context);
+  return query ? `${pathname}?${query}` : pathname;
+}

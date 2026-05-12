@@ -1,32 +1,12 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import ResultContinueSurface from "@/app/components/ResultContinueSurface";
-import { getYorisouDeepResultContent } from "@/lib/yorisou/persona-deep-result-content";
+import { buildT6PublicResultSearchParams } from "../../check-in/t6ResultModel";
 
-type SearchParams = Promise<{
-  persona?: string;
-  completionId?: string;
-}>;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-const copy = {
-  ja: {
-    title: "結果のつづき | Yorisou",
-    description: "P01-P03 の深い読みを、やさしく続けて読めるページです。",
-  },
-} as const;
-
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams?: SearchParams;
-}): Promise<Metadata> {
-  const params = (await searchParams) || {};
-  const personaId = typeof params.persona === "string" ? params.persona : "P01";
-  const content = getYorisouDeepResultContent(personaId, "ja");
-  return {
-    title: content ? `${content.official_public_name} | Yorisou` : copy.ja.title,
-    description: content ? content.deep_report_teaser : copy.ja.description,
-  };
+function readParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  return typeof value === "string" ? value : null;
 }
 
 export default async function ResultContinuePage({
@@ -35,8 +15,22 @@ export default async function ResultContinuePage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const personaId = typeof params.persona === "string" ? params.persona : "P01";
-  const content = getYorisouDeepResultContent(personaId, "ja");
-  return <ResultContinueSurface locale="ja" personaId={personaId} content={content} backHref={`/result?persona=${encodeURIComponent(personaId)}`} />;
-}
+  const routeState = {
+    resultId: readParam(params, "resultId"),
+    overlayId: readParam(params, "overlayId"),
+    confidenceBand:
+      readParam(params, "confidence") === "medium"
+        ? "medium"
+        : readParam(params, "confidence") === "low"
+          ? "low"
+          : null,
+    payloadKey: readParam(params, "payloadKey"),
+  } as const;
 
+  const query = buildT6PublicResultSearchParams(routeState);
+  if (query) {
+    redirect(`/result?${query}`);
+  }
+
+  redirect("/saved");
+}

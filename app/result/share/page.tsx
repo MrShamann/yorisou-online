@@ -1,62 +1,20 @@
 import type { Metadata } from "next";
 
-import DteEventTracker from "@/app/components/DteEventTracker";
-import ResultShareCard from "@/app/components/ResultShareCard";
-import ResultShareActions from "@/app/components/ResultShareActions";
-import { buildPublicResultIdentity } from "@/lib/result/public-result-identity";
-import { buildResultLabSnapshot, getCanonicalPersonaOptions } from "@/lib/result/rendering-contract-adapter";
-import { buildResultShareMessaging } from "@/lib/result/share-messaging";
-import { buildResultSharePreviewMetadata } from "@/lib/result/share-preview-metadata";
-import { getResultVisualAssetResolution } from "@/lib/server/resultVisualAssetRegistry";
-import { getDynamicTestCompletionRecord } from "@/lib/server/dynamicTestCompletionStore";
-import { getCanonicalPublicPersonaShell, resolveCanonicalPublicPersonaModeLabel } from "@/lib/yorisou/dte/public-persona-shell";
+import { MvpActionLink, MvpCard, MvpPill } from "../../components/MvpSurface";
+import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../../check-in/currentStateCheckV1";
+import { buildT6PublicResultHref } from "../../check-in/t6ResultModel";
 
-type SearchParams = Promise<{
-  completionId?: string;
-  personaId?: string;
-}>;
+export const metadata: Metadata = {
+  title: "共有カード | Yorisou",
+  description:
+    "公開結果だけを、落ち着いたカードとして見返せる Yorisou の共有ページです。",
+};
 
-function getPublicShareUrl(personaId: string) {
-  const safePersonaId = personaId.trim() || "P01";
-  return `/result/share?personaId=${encodeURIComponent(safePersonaId)}`;
-}
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams?: SearchParams;
-}): Promise<Metadata> {
-  const params = (await searchParams) || {};
-  const requestedPersonaId = typeof params.personaId === "string" ? params.personaId : "";
-  const completionId = typeof params.completionId === "string" ? params.completionId : "";
-  const completion = completionId ? await getDynamicTestCompletionRecord(completionId) : null;
-  const personaOptions = getCanonicalPersonaOptions();
-  const fallbackPersonaId = requestedPersonaId || personaOptions[0]?.personaId || "P01";
-  const personaId = completion?.personaId || fallbackPersonaId;
-  const snapshot = buildResultLabSnapshot({
-    personaId,
-    scenario: completion || requestedPersonaId ? "result_ready" : "invalid_or_missing_payload",
-    surfaceMode: "primary",
-    sessionMode: "anonymous",
-    versionMode: "valid",
-  });
-  const publicIdentity = buildPublicResultIdentity({
-    personaId,
-    payload: snapshot.payload,
-    sourceResultLabel: snapshot.payload?.final_locked_label_jp,
-    sourceResultSummary: snapshot.payload?.final_locked_subtitle_jp || snapshot.payload?.share_card_result.share_card_summary || null,
-    sourceShareLine: snapshot.payload?.share_card_result.share_card_line_jp || null,
-    sourceTeaserLine: snapshot.payload?.teaser_result.teaser_line_jp || null,
-    sourcePaywallTease: snapshot.payload?.deep_report_stub.deep_report_intro_jp || null,
-  });
-  const personaShell = getCanonicalPublicPersonaShell(personaId);
-  return buildResultSharePreviewMetadata({
-    personaName: publicIdentity.publicResultLabelJa || personaShell?.officialPublicPersonaName || "Yorisou",
-    socialHandle: publicIdentity.shareSocialHookJa || publicIdentity.shareSendLineJa || personaShell?.socialHandle || publicIdentity.shareLineJa || "",
-    publicUrl: getPublicShareUrl(personaId),
-    canonicalUrl: getPublicShareUrl(personaId),
-    imageUrl: `/result/share/opengraph-image?personaId=${encodeURIComponent(personaId)}`,
-  });
+function readParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  return typeof value === "string" ? value : null;
 }
 
 export default async function ResultSharePage({
@@ -65,88 +23,71 @@ export default async function ResultSharePage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const completionId = typeof params.completionId === "string" ? params.completionId : "";
-  const requestedPersonaId = typeof params.personaId === "string" ? params.personaId : "";
-  const completion = completionId ? await getDynamicTestCompletionRecord(completionId) : null;
-  const personaOptions = getCanonicalPersonaOptions();
-  const fallbackPersonaId = requestedPersonaId || personaOptions[0]?.personaId || "P01";
-  const personaId = completion?.personaId || fallbackPersonaId;
-  const hasRenderableResult = Boolean(completion) || Boolean(requestedPersonaId);
-  const snapshot = buildResultLabSnapshot({
-    personaId,
-    scenario: hasRenderableResult ? "result_ready" : "invalid_or_missing_payload",
-    surfaceMode: "primary",
-    sessionMode: "anonymous",
-    versionMode: "valid",
-  });
-  const publicIdentity = buildPublicResultIdentity({
-    personaId,
-    payload: snapshot.payload,
-    sourceResultLabel: snapshot.payload?.final_locked_label_jp,
-    sourceResultSummary: snapshot.payload?.final_locked_subtitle_jp || snapshot.payload?.share_card_result.share_card_summary || null,
-    sourceShareLine: snapshot.payload?.share_card_result.share_card_line_jp || null,
-    sourceTeaserLine: snapshot.payload?.teaser_result.teaser_line_jp || null,
-    sourcePaywallTease: snapshot.payload?.deep_report_stub.deep_report_intro_jp || null,
-  });
-  const visualAssetResolution = await getResultVisualAssetResolution({
-    personaId,
-    surfaceTarget: "result_first_screen",
-    mythArchetypeLabel: publicIdentity.mythArchetypeLabelJa,
-    contemporaryLabel: publicIdentity.contemporarySocialLabelJa,
-    functionalSubtitle: publicIdentity.functionalSubtitleJa,
-    hookLine: publicIdentity.hookLineJa,
-    traitChips: publicIdentity.traitChipsJa,
-  });
-  const personaShell = getCanonicalPublicPersonaShell(personaId);
-  const currentModeLabel = resolveCanonicalPublicPersonaModeLabel(personaShell, completion?.currentModeKey || null, completion?.currentModeLabelJa || null);
-  const shareViewSearchParams = new URLSearchParams();
-  shareViewSearchParams.set("personaId", personaId);
-  const shareViewHref = `/result/share?${shareViewSearchParams.toString()}`;
-  const shareHref = shareViewHref;
-  const shareMessaging = buildResultShareMessaging({
-    locale: "ja",
-    publicResultName: publicIdentity.publicResultLabelJa || personaShell?.officialPublicPersonaName || "Yorisou",
-    socialLine: publicIdentity.shareLineJa || publicIdentity.shareSendLineJa || "",
-    ctaLine: "あなたは今、どの寄り添い方？",
-  });
+  const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
+  const overlayId = readParam(params, "overlayId");
+  const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
+  const payloadKey = readParam(params, "payloadKey");
+
+  const result = getCurrentStateResult(resultId) ?? currentStateCheckV1.fallbackResult;
+  const overlay = getCurrentStateOverlay(overlayId) ?? currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
+  const routeContext = {
+    resultId: result.id,
+    overlayId: overlay.id,
+    confidenceBand,
+    payloadKey,
+  } as const;
+  const resultHref = buildT6PublicResultHref("/result", routeContext);
+  const reportPreviewHref = buildT6PublicResultHref("/report-preview", routeContext);
 
   return (
-    <>
-      <DteEventTracker
-        event="share_page_opened"
-        completionId={completion?.id || completionId || null}
-        personaId={personaId}
-        sessionId={completion?.sessionId || null}
-        locale="ja"
-        shareSurface="result_share_page"
-        source="result"
-        surface="result"
-        action="open"
-        branchId="yorisou_dte"
-        sourceBranchId="yorisou_dte"
-        visibilityPolicy="public"
-        crossBranchAccessPolicy="explicit_bridge"
-        enabled={Boolean(completion || personaId)}
-      />
-      <ResultShareCard
-        locale="ja"
-        identity={publicIdentity}
-        pack={visualAssetResolution.pack}
-        personaShell={personaShell}
-        currentModeLabel={currentModeLabel}
-      />
-      <div className="mx-auto max-w-md px-4 pb-6 pt-3">
-        <ResultShareActions
-          locale="ja"
-          shareUrl={shareHref}
-          shareTitle={shareMessaging.shareTitle}
-          shareText={shareMessaging.shareText}
-          completionId={completion?.id || completionId || null}
-          personaId={personaId}
-          shareSurface="result_share_page"
-          shareCardUrl={shareViewHref}
-        />
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,20,19,0.98)_0%,_rgba(28,40,36,0.96)_26%,_rgba(243,246,239,1)_100%)] px-4 py-4 text-[var(--text)]">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[42rem] items-center">
+        <MvpCard className="w-full space-y-5 border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_56%,rgba(242,246,239,0.99)_100%)] text-white shadow-[0_24px_52px_rgba(10,16,14,0.18)]">
+          <div className="flex flex-wrap gap-2">
+            <MvpPill>{result.publicName}</MvpPill>
+            <MvpPill>{overlay.publicLabel}</MvpPill>
+            <MvpPill>公開結果のみ</MvpPill>
+          </div>
+          <div className="space-y-3">
+            <p className="service-kicker text-white/68">公開結果カード</p>
+            <h1 className="display-serif text-[2.2rem] leading-[1.04] text-white md:text-[2.8rem]">
+              {result.publicName}
+            </h1>
+            <p className="max-w-[30rem] text-[15px] leading-8 text-white/78">
+              共有カードには、公開結果だけを入れます。{overlay.publicLabel}として見えている今の傾向を、静かに渡します。
+            </p>
+          </div>
+
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/8 p-4">
+            <div className="text-[11px] tracking-[0.2em] text-white/64">認識の一行</div>
+            <p className="mt-3 text-[15px] leading-8 text-white">{result.recognitionLine}</p>
+            <p className="mt-2 text-[14px] leading-7 text-white/78">{overlay.publicLine}</p>
+            <div className="mt-4 grid gap-2">
+              {result.traitChips.map((trait) => (
+                <span
+                  key={trait}
+                  className="rounded-[1rem] border border-white/10 bg-white/10 px-3 py-2 text-[13px] leading-7 text-white/90"
+                >
+                  {trait}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[1.25rem] border border-white/10 bg-white/8 p-4">
+            <div className="text-[10px] tracking-[0.18em] text-white/64">共有の範囲</div>
+            <p className="mt-2 text-[14px] leading-7 text-white/82">
+              公開結果だけを静かに渡します。自分だけのヒント、回答内容、深い報告は入れません。
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <MvpActionLink href={resultHref} label="結果へ戻る" />
+            <MvpActionLink href={reportPreviewHref} label="もう少し詳しく見る" tone="secondary" />
+            <MvpActionLink href="/privacy" label="共有の境界" tone="ghost" />
+          </div>
+        </MvpCard>
       </div>
-    </>
+    </main>
   );
 }
