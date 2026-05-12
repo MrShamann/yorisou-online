@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
@@ -17,6 +17,7 @@ import {
 } from "./currentStateCheckV1";
 
 type Phase = "intro" | "quiz";
+const AUTO_ADVANCE_DELAY_MS = 320;
 
 const INTRO_PILLS = ["24問のクイックチェック", "3分ほど", "無料結果あり", "診断ではありません"] as const;
 const RESULT_PROMISES = [
@@ -37,6 +38,8 @@ export default function MiniTestFlow() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<CurrentStateAnswerMap>({});
+  const autoAdvanceTimerRef = useRef<number | null>(null);
+  const resultNavigationStartedRef = useRef(false);
 
   const totalQuestions = currentStateQuestions.length;
   const currentQuestion = currentStateQuestions[currentIndex];
@@ -52,7 +55,58 @@ export default function MiniTestFlow() {
     [answers],
   );
 
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimerRef.current) {
+        window.clearTimeout(autoAdvanceTimerRef.current);
+      }
+    };
+  }, []);
+
+  function clearAutoAdvanceTimer() {
+    if (autoAdvanceTimerRef.current) {
+      window.clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
+  }
+
+  function routeToResult(nextAnswers: CurrentStateAnswerMap) {
+    if (resultNavigationStartedRef.current) {
+      return;
+    }
+
+    resultNavigationStartedRef.current = true;
+    const scoring = scoreCurrentStateCheck(nextAnswers);
+    const payload = buildCurrentStateResultPayload(scoring, nextAnswers);
+    saveCurrentStateResult(payload);
+
+    const query = new URLSearchParams({
+      resultId: scoring.resultId,
+      overlayId: scoring.overlayId,
+      confidence: scoring.confidenceBand,
+      payloadKey: scoring.payloadKey,
+    });
+
+    router.push(`/report-loading?${query.toString()}`);
+  }
+
+  function advanceAfterSelection(nextAnswers: CurrentStateAnswerMap) {
+    clearAutoAdvanceTimer();
+    autoAdvanceTimerRef.current = window.setTimeout(() => {
+      autoAdvanceTimerRef.current = null;
+
+      if (currentIndex === totalQuestions - 1) {
+        routeToResult(nextAnswers);
+        return;
+      }
+
+      setCurrentIndex((value) => Math.min(value + 1, totalQuestions - 1));
+    }, AUTO_ADVANCE_DELAY_MS);
+  }
+
   function begin() {
+    clearAutoAdvanceTimer();
+    resultNavigationStartedRef.current = false;
     setPhase("quiz");
     setCurrentIndex(0);
     setAnswers({});
@@ -63,13 +117,17 @@ export default function MiniTestFlow() {
       return;
     }
 
-    setAnswers((current) => ({
-      ...current,
+    const nextAnswers = {
+      ...answers,
       [currentQuestion.id]: optionId,
-    }));
+    };
+
+    setAnswers(nextAnswers);
+    advanceAfterSelection(nextAnswers);
   }
 
   function goBack() {
+    clearAutoAdvanceTimer();
     if (currentIndex === 0) {
       setPhase("intro");
       return;
@@ -84,21 +142,11 @@ export default function MiniTestFlow() {
     }
 
     if (currentIndex === totalQuestions - 1) {
-      const scoring = scoreCurrentStateCheck(answers);
-      const payload = buildCurrentStateResultPayload(scoring, answers);
-      saveCurrentStateResult(payload);
-
-      const query = new URLSearchParams({
-        resultId: scoring.resultId,
-        overlayId: scoring.overlayId,
-        confidence: scoring.confidenceBand,
-        payloadKey: scoring.payloadKey,
-      });
-
-      router.push(`/report-loading?${query.toString()}`);
+      routeToResult(answers);
       return;
     }
 
+    clearAutoAdvanceTimer();
     setCurrentIndex((value) => value + 1);
   }
 
@@ -208,7 +256,7 @@ export default function MiniTestFlow() {
                     <p className="text-[13px] font-medium leading-7 text-[var(--muted)]">
                       {currentQuestion.format === "AB"
                         ? "A / B と、どちらともいえないの3択です。"
-                        : "ひとつ選ぶと、次へ進めます。"}
+                        : "ひとつ選ぶと、少し間を置いて次へ進みます。"}
                     </p>
                   </div>
 
@@ -260,7 +308,7 @@ export default function MiniTestFlow() {
                       disabled={!currentAnswer}
                       className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full border border-transparent bg-[#173B35] px-4 py-3 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] hover:opacity-95 disabled:cursor-not-allowed disabled:bg-[rgba(111,98,92,0.28)] disabled:text-white disabled:shadow-none"
                     >
-                      {currentIndex === totalQuestions - 1 ? "無料結果を見る" : "次へ"}
+                      {currentIndex === totalQuestions - 1 ? "無料結果へ進む" : "すぐ次へ"}
                     </button>
                   </div>
                 </div>
