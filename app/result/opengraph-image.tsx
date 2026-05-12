@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../check-in/currentStateCheckV1";
+
 export const runtime = "edge";
 export const size = {
   width: 1200,
@@ -7,9 +9,25 @@ export const size = {
 };
 export const contentType = "image/png";
 
-const traits = ["静かな整理型", "一人で抱えやすい", "判断は慎重で深い"];
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export default function Image() {
+function readParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  return typeof value === "string" ? value : null;
+}
+
+export default async function Image({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
+  const params = (await searchParams) || {};
+  const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
+  const overlayId = readParam(params, "overlayId");
+  const result = getCurrentStateResult(resultId) ?? currentStateCheckV1.fallbackResult;
+  const overlay = getCurrentStateOverlay(overlayId) ?? currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
+  const traits = result.traitChips.slice(0, 2);
+
   return new ImageResponse(
     (
       <div
@@ -50,9 +68,9 @@ export default function Image() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
             <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "#7a897d" }}>RESULT TYPE</div>
-            <div style={{ fontSize: "80px", lineHeight: 1.02, fontWeight: 700, letterSpacing: "-0.05em" }}>整え直しの入口</div>
+            <div style={{ fontSize: "80px", lineHeight: 1.02, fontWeight: 700 }}>{result.publicName}</div>
             <div style={{ fontSize: "36px", lineHeight: 1.45, color: "#31413c", maxWidth: "920px" }}>
-              いまは、答えを急ぐより整え直すほうが合っています。
+              {result.recognitionLine}
             </div>
           </div>
         </div>
@@ -75,7 +93,7 @@ export default function Image() {
               </div>
             ))}
           </div>
-          <div style={{ fontSize: "24px", color: "#597065", letterSpacing: "0.1em" }}>Yorisou v0.2 / Public-safe result</div>
+          <div style={{ fontSize: "24px", color: "#597065", letterSpacing: "0.1em" }}>{overlay.publicLine}</div>
         </div>
       </div>
     ),

@@ -115,8 +115,8 @@ export default function SavedResultView() {
               まずは結果ページで保存すると、この端末からあとで見返せるようになります。
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <MvpActionLink href="/result" label="結果を見る" />
-              <MvpActionLink href="/check-in" label="チェックインをはじめる" tone="secondary" />
+              <MvpActionLink href="/check-in" label="チェックインをはじめる" />
+              <MvpActionLink href="/methodology" label="方法を見る" tone="secondary" />
             </div>
           </MvpCard>
         )}

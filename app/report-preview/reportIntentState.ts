@@ -7,6 +7,10 @@ export type ReportIntentRecord = {
   source: "local-browser";
   version: "v0.2";
   path: "/report-preview";
+  resultId?: string;
+  overlayId?: string;
+  confidenceBand?: "low" | "medium";
+  payloadKey?: string;
 };
 
 let cachedReportIntentRaw: string | null = null;
@@ -27,7 +31,31 @@ function parseReportIntent(rawValue: string | null): ReportIntentRecord | null {
       parsed.version === "v0.2" &&
       parsed.path === "/report-preview"
     ) {
-      return parsed as ReportIntentRecord;
+      const record: ReportIntentRecord = {
+        expressedAt: parsed.expressedAt,
+        reportType: parsed.reportType,
+        source: parsed.source,
+        version: parsed.version,
+        path: parsed.path,
+      };
+
+      if (typeof parsed.resultId === "string") {
+        record.resultId = parsed.resultId;
+      }
+
+      if (typeof parsed.overlayId === "string") {
+        record.overlayId = parsed.overlayId;
+      }
+
+      if (parsed.confidenceBand === "low" || parsed.confidenceBand === "medium") {
+        record.confidenceBand = parsed.confidenceBand;
+      }
+
+      if (typeof parsed.payloadKey === "string") {
+        record.payloadKey = parsed.payloadKey;
+      }
+
+      return record;
     }
   } catch {
     return null;

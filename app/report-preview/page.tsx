@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../check-in/currentStateCheckV1";
+import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
 import ReportIntentAction from "./ReportIntentAction";
 
 export const metadata: Metadata = {
@@ -25,12 +26,22 @@ export default async function ReportPreviewPage({
   const params = (await searchParams) || {};
   const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
   const overlayId = readParam(params, "overlayId");
+  const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
+  const payloadKey = readParam(params, "payloadKey");
   const result =
     getCurrentStateResult(resultId) ??
     currentStateCheckV1.fallbackResult;
   const overlay =
     getCurrentStateOverlay(overlayId) ??
     currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
+  const routeContext = {
+    resultId: result.id,
+    overlayId: overlay.id,
+    confidenceBand,
+    payloadKey,
+  } as const;
+  const resultHref = buildT6PublicResultHref("/result", routeContext);
+  const formalCheckHref = buildT6PublicResultHref("/formal-check", routeContext);
 
   const previewPoints = [
     {
@@ -42,7 +53,7 @@ export default async function ReportPreviewPage({
       promise: "今の結果を、もう少し細かい見方で読み直すための案内です。",
     },
     {
-      title: "少し深い見立て",
+      title: "少し詳しい見方",
       promise: "無料結果よりも少しだけ詳しい見方を、準備中の範囲で案内します。",
     },
     {
@@ -86,7 +97,16 @@ export default async function ReportPreviewPage({
                 </MvpCard>
               ))}
             </div>
-            <ReportIntentAction backHref={`/result?resultId=${result.id}&overlayId=${overlay.id}`} nextHref="/formal-check" />
+            <ReportIntentAction
+              backHref={resultHref}
+              nextHref={formalCheckHref}
+              resultContext={{
+                resultId: result.id,
+                overlayId: overlay.id,
+                confidenceBand,
+                ...(payloadKey ? { payloadKey } : {}),
+              }}
+            />
           </div>
           <div className="hidden gap-3 lg:grid">
             <MvpCard className="space-y-2.5 rounded-[1.05rem] bg-white/90">
@@ -114,12 +134,12 @@ export default async function ReportPreviewPage({
         </div>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <MvpActionLink
-            href="/formal-check"
+            href={formalCheckHref}
             label="正式版の案内を見る"
             className="rounded-full !border-[#173B35] !bg-[#173B35] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)]"
           />
           <MvpActionLink
-            href={`/result?resultId=${result.id}&overlayId=${overlay.id}`}
+            href={resultHref}
             label="無料結果に戻る"
             tone="secondary"
             className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"

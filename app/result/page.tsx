@@ -84,8 +84,8 @@ export default async function ResultPage({
               <div className="rounded-[1rem] border border-[rgba(217,164,65,0.18)] bg-[#FFF7F1] px-4 py-3">
                 <p className="text-[13px] leading-7 text-[#6F625C]">
                   {confidenceBand === "medium"
-                    ? "今見えている範囲の傾向です。"
-                    : "今見えている範囲の傾向です。"}
+                    ? "今回は、今見えている範囲の中では少し輪郭が出ています。"
+                    : "今回は、今見えている範囲の傾向として軽く受け取ってください。"}
                 </p>
               </div>
 
