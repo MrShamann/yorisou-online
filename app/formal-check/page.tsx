@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 };
 
 const previewPoints = [
-  "72問で、もう少し広く見る",
-  "もう少し丁寧に読む",
-  "A/B と 5段の見方",
-  "準備中",
-  "診断ではありません",
+  "72問版は準備中",
+  "24問結果をもとに広く読む",
+  "リズム・距離・戻り方を見る",
+  "今は回答画面ではありません",
+  "固定したラベルではありません",
 ] as const;
 
 export default function FormalCheckPage() {
@@ -28,13 +28,13 @@ export default function FormalCheckPage() {
 
           <MvpCard className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
             <div className="space-y-3 rounded-[1.15rem] bg-[radial-gradient(circle_at_18%_0%,_rgba(255,226,181,0.5),_transparent_44%),linear-gradient(135deg,_#FFF7F1,_#F4FAF7)] px-4 py-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.62)]">
-              <p className="service-kicker text-[#315F50]">72問の正式版は準備中です</p>
+              <p className="service-kicker text-[#315F50]">72問版は準備中です</p>
               <h1 className="display-serif text-[2rem] leading-[1.1] text-[#2F2A28] md:text-[3rem]">
-                これからの正式版は、
-                <span className="block text-[#173B35]">もう少し広く、もう少し丁寧に読む設計です。</span>
+                今はまだ受けられません。
+                <span className="block text-[#173B35]">でも、どんな読み物になるかは先に見られます。</span>
               </h1>
               <p className="text-[15px] font-medium leading-7 text-[#6F625C] md:leading-8">
-                いまはまだ動くテストではありません。クイックチェックの先にある、正式版の設計方向だけを先に見せています。
+                24問の無料結果はこのまま使えます。72問版は、今の結果を土台にして、生活リズムや人との距離、戻り方をもう少し広く読むための準備中ページです。
               </p>
             </div>
 
@@ -51,7 +51,7 @@ export default function FormalCheckPage() {
 
             <div className="rounded-[0.95rem] border border-[rgba(217,164,65,0.2)] bg-[#FFF7F1] px-4 py-3">
               <p className="text-[13px] leading-7 text-[#6F625C]">
-                クイックチェックは入口です。72問で、もう少し広く見る案内はあとで整えます。
+                このページでは72問への回答は始まりません。まずは24問の結果を保存したり、次にほしいヒントを選んだりしながら、今の読みを持ち帰れます。
               </p>
             </div>
 

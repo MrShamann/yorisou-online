@@ -54,7 +54,7 @@ export default function ReportIntentAction({
       </div>
       <div className="rounded-[0.95rem] border border-[rgba(233,120,99,0.12)] bg-[#FFF7F1] px-4 py-3">
         <p className="text-[12px] leading-6 text-[#6F625C]">
-          これは正式版を始める操作ではありません。現在は案内を見たいという希望だけを、この端末に残します。
+          これは72問版を始める操作ではありません。今は「あとで詳しく読みたい」という希望だけを、この端末に残します。
         </p>
       </div>
       {hasIntent ? (

@@ -6,9 +6,9 @@ import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
 import ReportIntentAction from "./ReportIntentAction";
 
 export const metadata: Metadata = {
-  title: "詳しいレポート | Yorisou",
+  title: "72問版プレビュー | Yorisou",
   description:
-    "無料結果のあとで、もう少し深く読みたいときの入口だけを静かに見られる Yorisou のページです。",
+    "24問の無料結果をもとに、72問版でどんなテーマを広く読みたいかを確認する準備ページです。",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -45,20 +45,20 @@ export default async function ReportPreviewPage({
 
   const previewPoints = [
     {
-      title: "72問で、もう少し広く見る",
-      promise: "24問よりも広い範囲で、流れの見え方を静かに整理します。",
+      title: "72問版は準備中",
+      promise: "ここでは、今すぐ受けるテストではなく、広く読むための方向だけを確認できます。",
     },
     {
-      title: "もう少し丁寧に読む",
-      promise: "今の結果を、もう少し細かい見方で読み直すための案内です。",
+      title: "24問結果を土台にする",
+      promise: `${result.publicName}として見えた流れを、あとでどの角度から読みたいか整理します。`,
     },
     {
-      title: "少し詳しい見方",
-      promise: "無料結果よりも少しだけ詳しい見方を、準備中の範囲で案内します。",
+      title: "読みたいテーマを残せる",
+      promise: "正式版の前に、あとで読みたいという希望だけをこの端末に残せます。",
     },
     {
-      title: "まだ準備中",
-      promise: "いまは公開前の案内だけを置いています。動く正式版ではありません。",
+      title: "結果はまだ生成しません",
+      promise: "このページでは、72問の回答画面や詳しい本文は出しません。",
     },
   ] as const;
 
@@ -72,13 +72,13 @@ export default async function ReportPreviewPage({
               <MvpPill>72問は準備中</MvpPill>
             </div>
             <div className="space-y-3">
-              <p className="service-kicker">{result.publicName}の詳しい見え方</p>
+              <p className="service-kicker">{result.publicName}から広く読む準備</p>
               <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.13] text-[#2F2A28] md:text-[3rem]">
-                もう少し広く、
-                <span className="block text-[#173B35]">もう少し丁寧に読むための入口です。</span>
+                72問版は準備中です。
+                <span className="block text-[#173B35]">今は、読みたい方向だけ残せます。</span>
               </h1>
               <p className="max-w-[36rem] text-[15px] font-medium leading-7 text-[#6F625C] md:leading-8">
-                ここでは、無料結果のあとに見える正式版の案内だけを静かに置いています。72問は準備中で、動く本番ではありません。
+                24問の結果をもとに、より広く読むための準備ページです。まだ回答は始まりません。今は「あとで詳しく読みたい」テーマを静かに残すだけです。
               </p>
             </div>
             <div className="grid gap-2.5">
