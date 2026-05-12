@@ -54,13 +54,13 @@ export default async function ResultSharePage({
               {result.publicName}
             </h1>
             <p className="max-w-[30rem] text-[15px] leading-8 text-white/78">
-              共有カードには、公開結果だけを入れます。{overlay.publicLabel}として見えている今の傾向を、静かに渡します。
+              {result.shareLine} {overlay.publicLabel}として見えている今の流れを、公開できる範囲だけで渡します。
             </p>
           </div>
 
           <div className="rounded-[1.4rem] border border-white/10 bg-white/8 p-4">
             <div className="text-[11px] tracking-[0.2em] text-white/64">認識の一行</div>
-            <p className="mt-3 text-[15px] leading-8 text-white">{result.recognitionLine}</p>
+            <p className="mt-3 text-[15px] leading-8 text-white">{result.recognitionHook}</p>
             <p className="mt-2 text-[14px] leading-7 text-white/78">{overlay.publicLine}</p>
             <div className="mt-4 grid gap-2">
               {result.traitChips.map((trait) => (

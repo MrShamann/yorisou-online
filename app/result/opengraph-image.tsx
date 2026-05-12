@@ -70,7 +70,7 @@ export default async function Image({
             <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "#7a897d" }}>RESULT TYPE</div>
             <div style={{ fontSize: "80px", lineHeight: 1.02, fontWeight: 700 }}>{result.publicName}</div>
             <div style={{ fontSize: "36px", lineHeight: 1.45, color: "#31413c", maxWidth: "920px" }}>
-              {result.recognitionLine}
+              {result.shareLine}
             </div>
           </div>
         </div>

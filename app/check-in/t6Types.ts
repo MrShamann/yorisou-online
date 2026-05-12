@@ -71,6 +71,12 @@ export type T6ResultModel = {
   internalCode: string;
   publicName: string;
   recognitionLine: string;
+  recognitionHook: string;
+  summary: [string, string, string];
+  dailyPattern: string;
+  frictionPoint: string;
+  nextStep: [string, string];
+  shareLine: string;
   traitChips: [string, string, string];
   shortSummary: string;
 };
@@ -79,6 +85,8 @@ export type T6OverlayModel = {
   id: T6OverlayId;
   publicLabel: string;
   publicLine: string;
+  resultSheetLine: string;
+  nextStepCue: string;
   privateLine: string;
 };
 

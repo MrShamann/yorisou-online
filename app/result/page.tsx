@@ -46,6 +46,28 @@ export default async function ResultPage({
   const resultShareHref = buildT6PublicResultHref("/result/share", routeContext);
   const resultPath = buildT6PublicResultHref("/result", routeContext);
   const continuePath = buildT6PublicResultHref("/result/continue", routeContext);
+  const resultSections = [
+    {
+      label: "いま見えている傾向",
+      title: "まず、いまのあなたに近い流れ",
+      body: result.summary,
+    },
+    {
+      label: "日常で出やすい動き方",
+      title: "ふだんの場面では、こう出やすい",
+      body: [result.dailyPattern],
+    },
+    {
+      label: "つまずきやすいところ",
+      title: "疲れやすくなるポイント",
+      body: [result.frictionPoint],
+    },
+    {
+      label: "次に試すとよいこと",
+      title: "今日から軽く試せること",
+      body: result.nextStep,
+    },
+  ] as const;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_50%_0%,_rgba(221,236,242,0.72),_transparent_34%),radial-gradient(circle_at_12%_12%,_rgba(233,120,99,0.14),_transparent_28%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_46%,_#F4FAF7_100%)] text-[#2F2A28]">
@@ -59,34 +81,69 @@ export default async function ResultPage({
             </div>
 
             <MvpCard className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
-              <div className="rounded-[1.18rem] bg-[radial-gradient(circle_at_20%_0%,_rgba(217,164,65,0.22),_transparent_42%),linear-gradient(135deg,_#FFF7F1,_#F4FAF7)] px-4 py-4">
+              <div className="space-y-4 rounded-[1.18rem] bg-[radial-gradient(circle_at_20%_0%,_rgba(217,164,65,0.22),_transparent_42%),linear-gradient(135deg,_#FFF7F1,_#F4FAF7)] px-4 py-4">
                 <p className="service-kicker">クイックチェックの無料結果</p>
                 <h1 className="display-serif mt-2 text-[2.28rem] leading-[1.06] text-[#2F2A28] md:text-[3rem]">
                   {result.publicName}
                 </h1>
-                <p className="mt-3 text-[15px] font-semibold leading-8 text-[#4A3E39]">
-                  {result.recognitionLine}
+                <p className="text-[16px] font-semibold leading-8 text-[#4A3E39]">
+                  {result.recognitionHook}
                 </p>
-                <p className="mt-3 text-[13px] leading-7 text-[#6F625C]">{overlay.publicLine}</p>
+                <p className="text-[14px] leading-7 text-[#6F625C]">{result.recognitionLine}</p>
               </div>
 
-              <div className="grid gap-2.5">
+              <div className="grid gap-2.5 sm:grid-cols-3">
                 {result.traitChips.map((bullet) => (
                   <div
                     key={bullet}
-                    className="rounded-[1rem] border border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] px-4 py-3 text-[14px] font-semibold leading-7 text-[#315F50]"
+                    className="rounded-[1rem] border border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] px-4 py-3 text-[13px] font-semibold leading-6 text-[#315F50]"
                   >
                     {bullet}
                   </div>
                 ))}
               </div>
 
-              <div className="rounded-[1rem] border border-[rgba(217,164,65,0.18)] bg-[#FFF7F1] px-4 py-3">
-                <p className="text-[13px] leading-7 text-[#6F625C]">
-                  {confidenceBand === "medium"
-                    ? "今回は、今見えている範囲の中では少し輪郭が出ています。"
-                    : "今回は、今見えている範囲の傾向として軽く受け取ってください。"}
-                </p>
+              <div className="grid gap-3">
+                <div className="rounded-[1.08rem] border border-[rgba(217,164,65,0.18)] bg-[#FFF7F1] px-4 py-3">
+                  <div className="service-kicker">{overlay.publicLabel}</div>
+                  <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{overlay.resultSheetLine}</p>
+                  <p className="mt-2 text-[12px] font-semibold leading-6 text-[#8A6D3F]">{overlay.nextStepCue}</p>
+                </div>
+                <div className="rounded-[1rem] border border-[rgba(217,164,65,0.18)] bg-white/82 px-4 py-3">
+                  <p className="text-[13px] leading-7 text-[#6F625C]">
+                    {confidenceBand === "medium"
+                      ? "今回は、今見えている範囲の中では少し輪郭が出ています。"
+                      : "今回は、今見えている範囲の流れとして軽く受け取ってください。"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {resultSections.map((section, index) => (
+                  <section
+                    key={section.label}
+                    className="rounded-[1.12rem] border border-[rgba(105,151,130,0.16)] bg-white/92 p-4 shadow-[0_12px_28px_rgba(23,59,53,0.055)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EAF7F1] text-[13px] font-bold text-[#315F50]">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0 space-y-2">
+                        <div className="service-kicker">{section.label}</div>
+                        <h2 className="display-serif text-[1.35rem] leading-[1.34] text-[#2F2A28]">
+                          {section.title}
+                        </h2>
+                        <div className="space-y-2.5">
+                          {section.body.map((paragraph) => (
+                            <p key={paragraph} className="text-[14px] leading-7 text-[#4A3E39]">
+                              {paragraph}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                ))}
               </div>
 
               <div className="flex flex-col gap-2.5 sm:flex-row">
@@ -131,7 +188,7 @@ export default async function ResultPage({
               />
 
               <p className="rounded-[0.95rem] bg-[#FFF7F1] px-3.5 py-2.5 text-[12px] leading-6 text-[#6F625C]">
-                これは24問のクイックチェック結果です。無料結果では今の流れを短く受け取れます。正式版の72問は準備中です。
+                これは24問のクイックチェック結果です。72問版は準備中で、今の24問結果をもとに、より広く読むための準備ページだけを見られます。
               </p>
             </MvpCard>
           </div>

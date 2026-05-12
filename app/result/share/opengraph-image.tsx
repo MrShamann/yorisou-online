@@ -70,7 +70,7 @@ export default async function Image({
             <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "rgba(255,255,255,0.66)" }}>公開結果カード</div>
             <div style={{ fontSize: "78px", lineHeight: 1.02, fontWeight: 700 }}>{result.publicName}</div>
             <div style={{ fontSize: "36px", lineHeight: 1.45, color: "rgba(255,255,255,0.8)", maxWidth: "920px" }}>
-              {result.recognitionLine}
+              {result.shareLine}
             </div>
           </div>
         </div>
