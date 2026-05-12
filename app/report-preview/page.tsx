@@ -50,7 +50,7 @@ export default async function ReportPreviewPage({
     },
     {
       title: "24問結果を土台にする",
-      promise: `${result.publicName}として見えた流れを、あとでどの角度から読みたいか整理します。`,
+      promise: result.reportPreviewBridge ?? result.recognitionLine,
     },
     {
       title: "読みたいテーマを残せる",

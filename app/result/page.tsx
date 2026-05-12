@@ -49,22 +49,22 @@ export default async function ResultPage({
   const resultSections = [
     {
       label: "いま見えている傾向",
-      title: "まず、いまのあなたに近い流れ",
-      body: result.summary,
+      title: result.currentTendencyTitle ?? "まず、いまのあなたに近い流れ",
+      body: result.currentTendencyBody ? [result.currentTendencyBody] : result.summary,
     },
     {
       label: "日常で出やすい動き方",
-      title: "ふだんの場面では、こう出やすい",
-      body: [result.dailyPattern],
+      title: result.dailyPatternTitle ?? "ふだんの場面では、こう出やすい",
+      body: result.dailyPattern ? [result.dailyPattern] : [],
     },
     {
       label: "つまずきやすいところ",
-      title: "疲れやすくなるポイント",
-      body: [result.frictionPoint],
+      title: result.frictionTitle ?? "疲れやすくなるポイント",
+      body: result.frictionPoint ? [result.frictionPoint] : [],
     },
     {
       label: "次に試すとよいこと",
-      title: "今日から軽く試せること",
+      title: result.nextStepTitle ?? "今日から軽く試せること",
       body: result.nextStep,
     },
   ] as const;
@@ -77,7 +77,7 @@ export default async function ResultPage({
             <div className="flex flex-wrap gap-1.5">
               <MvpPill>24問のチェック結果</MvpPill>
               <MvpPill>{overlay.publicLabel}</MvpPill>
-              <MvpPill>今見えている範囲の傾向です</MvpPill>
+              <MvpPill>今の状態から見える傾向です</MvpPill>
             </div>
 
             <MvpCard className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
@@ -112,8 +112,8 @@ export default async function ResultPage({
                 <div className="rounded-[1rem] border border-[rgba(217,164,65,0.18)] bg-white/82 px-4 py-3">
                   <p className="text-[13px] leading-7 text-[#6F625C]">
                     {confidenceBand === "medium"
-                      ? "今回は、今見えている範囲の中では少し輪郭が出ています。"
-                      : "今回は、今見えている範囲の流れとして軽く受け取ってください。"}
+                      ? "今回は、今の状態が少し見えやすくなっています。"
+                      : "今回は、今の状態から見える傾向として軽く受け取ってください。"}
                   </p>
                 </div>
               </div>
@@ -154,7 +154,7 @@ export default async function ResultPage({
                 />
                 <MvpActionLink
                   href={recommendationsHref}
-                  label="次の入口を見る"
+                  label="ほかの見方を試す"
                   tone="secondary"
                   className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
                 />
