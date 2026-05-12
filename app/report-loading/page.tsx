@@ -20,6 +20,9 @@ export default function ReportLoadingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const resultId = searchParams.get("resultId") || currentStateCheckV1.scoring.fallbackResultId;
+  const overlayId = searchParams.get("overlayId") || "balancing";
+  const confidence = searchParams.get("confidence") === "medium" ? "medium" : "low";
+  const payloadKey = searchParams.get("payloadKey") || "";
   const [activeStep, setActiveStep] = useState(0);
 
   const progress = useMemo(() => ((activeStep + 1) / LOADING_STEPS.length) * 100, [activeStep]);
@@ -30,14 +33,24 @@ export default function ReportLoadingPage() {
     }, STEP_DURATION_MS);
 
     const redirectTimer = window.setTimeout(() => {
-      router.replace(`/result?resultId=${resultId}`);
+      const query = new URLSearchParams({
+        resultId,
+        overlayId,
+        confidence,
+      });
+
+      if (payloadKey) {
+        query.set("payloadKey", payloadKey);
+      }
+
+      router.replace(`/result?${query.toString()}`);
     }, REDIRECT_DELAY_MS);
 
     return () => {
       window.clearInterval(stepTimer);
       window.clearTimeout(redirectTimer);
     };
-  }, [resultId, router]);
+  }, [confidence, overlayId, payloadKey, resultId, router]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.99),_rgba(247,244,238,0.98)_42%,_rgba(240,244,236,0.98)_100%)] text-[var(--text)]">
@@ -50,12 +63,10 @@ export default function ReportLoadingPage() {
 
           <MvpCard className="space-y-5 p-5 sm:p-6">
             <div className="space-y-3">
-              <p className="service-kicker">結果を整理しています</p>
-              <h1 className="display-serif text-[2.1rem] leading-[1.16] md:text-[2.8rem]">
-                結果を整理しています
-              </h1>
+              <p className="service-kicker">24問の無料結果を整理しています</p>
+              <h1 className="display-serif text-[2.1rem] leading-[1.16] md:text-[2.8rem]">結果を整理しています</h1>
               <p className="text-[14px] leading-7 text-[var(--muted)]">
-                今の回答を静かにまとめています。少し待つと、無料結果が表示されます。
+                今の回答を静かにまとめています。少し待つと、24問の無料結果が表示されます。
               </p>
             </div>
 

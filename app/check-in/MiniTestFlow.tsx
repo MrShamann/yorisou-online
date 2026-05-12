@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
 import {
+  buildCurrentStateResultPayload,
   currentStateCheckV1,
   currentStateQuestions,
   getCurrentStateMilestone,
   getCurrentStateSegmentLabel,
+  saveCurrentStateResult,
   scoreCurrentStateCheck,
+  type CurrentStateQuestion,
   type CurrentStateAnswerMap,
 } from "./currentStateCheckV1";
 
@@ -55,7 +58,7 @@ export default function MiniTestFlow() {
     setAnswers({});
   }
 
-  function selectOption(optionId: string) {
+  function selectOption(optionId: CurrentStateQuestion["options"][number]["id"]) {
     if (!currentQuestion) {
       return;
     }
@@ -82,7 +85,17 @@ export default function MiniTestFlow() {
 
     if (currentIndex === totalQuestions - 1) {
       const scoring = scoreCurrentStateCheck(answers);
-      router.push(`/report-loading?resultId=${scoring.resultId}`);
+      const payload = buildCurrentStateResultPayload(scoring, answers);
+      saveCurrentStateResult(payload);
+
+      const query = new URLSearchParams({
+        resultId: scoring.resultId,
+        overlayId: scoring.overlayId,
+        confidence: scoring.confidenceBand,
+        payloadKey: scoring.payloadKey,
+      });
+
+      router.push(`/report-loading?${query.toString()}`);
       return;
     }
 
@@ -192,10 +205,14 @@ export default function MiniTestFlow() {
                     <h2 className="display-serif text-[1.52rem] leading-[1.32] text-[#2F2A28] md:text-[2.4rem]">
                       {currentQuestion.prompt}
                     </h2>
-                    <p className="text-[13px] font-medium leading-7 text-[var(--muted)]">ひとつ選ぶと、次へ進めます。</p>
+                    <p className="text-[13px] font-medium leading-7 text-[var(--muted)]">
+                      {currentQuestion.format === "AB"
+                        ? "A / B と、どちらともいえないの3択です。"
+                        : "ひとつ選ぶと、次へ進めます。"}
+                    </p>
                   </div>
 
-                  <div className="grid gap-2.5">
+                  <div className={`grid gap-2.5 ${currentQuestion.format === "AB" ? "sm:grid-cols-3" : ""}`}>
                     {currentQuestion.options.map((option) => {
                       const selected = currentAnswer === option.id;
 

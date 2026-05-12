@@ -9,10 +9,9 @@ export const metadata: Metadata = {
 };
 
 const previewPoints = [
-  "72問",
-  "3パート構成",
-  "A/B pair + 5段傾向",
-  "約12〜15分",
+  "72問で、もう少し広く見る",
+  "もう少し丁寧に読む",
+  "A/B と 5段の見方",
   "準備中",
   "診断ではありません",
 ] as const;
@@ -32,7 +31,7 @@ export default function FormalCheckPage() {
               <p className="service-kicker text-[#315F50]">72問の正式版は準備中です</p>
               <h1 className="display-serif text-[2rem] leading-[1.1] text-[#2F2A28] md:text-[3rem]">
                 これからの正式版は、
-                <span className="block text-[#173B35]">もっと丁寧に進める設計です。</span>
+                <span className="block text-[#173B35]">もう少し広く、もう少し丁寧に読む設計です。</span>
               </h1>
               <p className="text-[15px] font-medium leading-7 text-[#6F625C] md:leading-8">
                 いまはまだ動くテストではありません。クイックチェックの先にある、正式版の設計方向だけを先に見せています。
@@ -52,7 +51,7 @@ export default function FormalCheckPage() {
 
             <div className="rounded-[0.95rem] border border-[rgba(217,164,65,0.2)] bg-[#FFF7F1] px-4 py-3">
               <p className="text-[13px] leading-7 text-[#6F625C]">
-                クイックチェックは入口です。正式版はあとで案内します。
+                クイックチェックは入口です。72問で、もう少し広く見る案内はあとで整えます。
               </p>
             </div>
 

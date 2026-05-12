@@ -5,6 +5,11 @@ export type SavedResultRecord = {
   savedAt: string;
   resultType: string;
   resultLabel: string;
+  baseResultId?: string;
+  overlayId?: string;
+  confidenceBand?: "low" | "medium";
+  recognitionLine?: string;
+  traitChips?: [string, string, string];
   source: "local-browser";
   version: "v0.2";
   resultPath: string;
@@ -27,6 +32,14 @@ function parseSavedResultRecord(rawValue: string | null): SavedResultRecord | nu
       typeof parsed.savedAt === "string" &&
       typeof parsed.resultType === "string" &&
       typeof parsed.resultLabel === "string" &&
+      (typeof parsed.baseResultId === "undefined" || typeof parsed.baseResultId === "string") &&
+      (typeof parsed.overlayId === "undefined" || typeof parsed.overlayId === "string") &&
+      (parsed.confidenceBand === undefined || parsed.confidenceBand === "low" || parsed.confidenceBand === "medium") &&
+      (typeof parsed.recognitionLine === "undefined" || typeof parsed.recognitionLine === "string") &&
+      (typeof parsed.traitChips === "undefined" ||
+        (Array.isArray(parsed.traitChips) &&
+          parsed.traitChips.length === 3 &&
+          parsed.traitChips.every((item) => typeof item === "string"))) &&
       parsed.source === "local-browser" &&
       parsed.version === "v0.2" &&
       typeof parsed.resultPath === "string" &&

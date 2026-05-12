@@ -9,6 +9,11 @@ type LocalResultSaveProps = {
   resultType: string;
   resultLabel: string;
   context: SavedResultRecord["context"];
+  baseResultId?: string;
+  overlayId?: string;
+  confidenceBand?: "low" | "medium";
+  traitChips?: [string, string, string];
+  recognitionLine?: string;
   className?: string;
 };
 
@@ -16,6 +21,11 @@ export default function LocalResultSave({
   resultType,
   resultLabel,
   context,
+  baseResultId,
+  overlayId,
+  confidenceBand,
+  traitChips,
+  recognitionLine,
   className = "",
 }: LocalResultSaveProps) {
   const savedRecord = useSyncExternalStore(subscribeSavedResult, readSavedResultRecord, () => null);
@@ -26,6 +36,11 @@ export default function LocalResultSave({
       savedAt: new Date().toISOString(),
       resultType,
       resultLabel,
+      baseResultId,
+      overlayId,
+      confidenceBand,
+      traitChips,
+      recognitionLine,
       source: "local-browser",
       version: "v0.2",
       resultPath: "/result",
@@ -43,7 +58,7 @@ export default function LocalResultSave({
           data-save-action="local-browser-save"
           className="inline-flex min-h-[48px] items-center justify-center rounded-[1.1rem] border border-[rgba(201,211,195,0.72)] bg-[rgba(252,250,245,0.9)] px-4 py-3 text-[14px] font-semibold text-[var(--text)] shadow-[0_6px_14px_rgba(47,35,33,0.03)] transition hover:-translate-y-0.5 hover:opacity-95"
         >
-          {hasSaved ? "この端末に保存しました" : "あとで見返すために保存する"}
+          {hasSaved ? "この端末に残しています" : "この端末に残す"}
         </button>
         <Link
           href="/saved"
@@ -53,7 +68,7 @@ export default function LocalResultSave({
         </Link>
       </div>
       <p className="text-[12px] leading-7 text-[var(--muted)]">
-        この保存はブラウザ内の簡易保存です。保存した結果は、あとで自分のリズムを見返すための小さな記録になります。
+        この保存はブラウザ内の簡易保存です。アカウント保存やLINE連携ではありません。あとで自分のリズムを見返すための小さな記録になります。
       </p>
     </div>
   );

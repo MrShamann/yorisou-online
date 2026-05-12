@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
-import { currentStateCheckV1, getCurrentStateResult } from "../check-in/currentStateCheckV1";
+import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../check-in/currentStateCheckV1";
 import ReportIntentAction from "./ReportIntentAction";
 
 export const metadata: Metadata = {
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-function readResultId(params: Record<string, string | string[] | undefined>) {
-  const value = params.resultId;
+function readParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
   return typeof value === "string" ? value : null;
 }
 
@@ -23,30 +23,31 @@ export default async function ReportPreviewPage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readResultId(params) ?? currentStateCheckV1.scoring.fallbackResultId;
+  const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
+  const overlayId = readParam(params, "overlayId");
   const result =
     getCurrentStateResult(resultId) ??
-    currentStateCheckV1.results.find((item) => item.id === currentStateCheckV1.scoring.fallbackResultId)!;
-  const lockedSections = [
+    currentStateCheckV1.fallbackResult;
+  const overlay =
+    getCurrentStateOverlay(overlayId) ??
+    currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
+
+  const previewPoints = [
     {
-      title: "いまの状態の見え方",
-      promise: "今の反応や選び方の傾向を整理します。",
+      title: "72問で、もう少し広く見る",
+      promise: "24問よりも広い範囲で、流れの見え方を静かに整理します。",
     },
     {
-      title: "人との距離感",
-      promise: "近づき方、離れ方、安心しやすい距離を見ます。",
+      title: "もう少し丁寧に読む",
+      promise: "今の結果を、もう少し細かい見方で読み直すための案内です。",
     },
     {
-      title: "仕事・学び方のリズム",
-      promise: "集中しやすい流れや疲れやすい場面を整理します。",
+      title: "少し深い見立て",
+      promise: "無料結果よりも少しだけ詳しい見方を、準備中の範囲で案内します。",
     },
     {
-      title: "休み方・戻り方",
-      promise: "気持ちを戻すための小さなヒントを出します。",
-    },
-    {
-      title: "次に見るとよさそうなもの",
-      promise: "今の状態に合う次のチェックと正式版の案内を提案します。",
+      title: "まだ準備中",
+      promise: "いまは公開前の案内だけを置いています。動く正式版ではありません。",
     },
   ] as const;
 
@@ -57,23 +58,26 @@ export default async function ReportPreviewPage({
           <div className="space-y-4">
             <div className="flex flex-wrap gap-1.5">
               <MvpPill>クイックチェックの先</MvpPill>
-              <MvpPill>正式版は準備中</MvpPill>
+              <MvpPill>72問は準備中</MvpPill>
             </div>
             <div className="space-y-3">
-              <p className="service-kicker">{result.displayName}の詳しい見え方</p>
+              <p className="service-kicker">{result.publicName}の詳しい見え方</p>
               <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.13] text-[#2F2A28] md:text-[3rem]">
-                レポートの構成を、
-                <span className="block text-[#173B35]">先に静かに見られます。</span>
+                もう少し広く、
+                <span className="block text-[#173B35]">もう少し丁寧に読むための入口です。</span>
               </h1>
               <p className="max-w-[36rem] text-[15px] font-medium leading-7 text-[#6F625C] md:leading-8">
-                ここでは章の形だけを確認できます。24問は入口で、もっと正式な読み取りは72問の正式版で進める想定です。
+                ここでは、無料結果のあとに見える正式版の案内だけを静かに置いています。72問は準備中で、動く本番ではありません。
               </p>
             </div>
             <div className="grid gap-2.5">
-              {lockedSections.slice(0, 3).map((section) => (
-                <MvpCard key={section.title} className="flex items-start gap-3 rounded-[1.18rem] border-[rgba(23,59,53,0.1)] bg-white/93 p-3.5 shadow-[0_18px_38px_rgba(23,59,53,0.08)]">
+              {previewPoints.slice(0, 2).map((section) => (
+                <MvpCard
+                  key={section.title}
+                  className="flex items-start gap-3 rounded-[1.18rem] border-[rgba(23,59,53,0.1)] bg-white/93 p-3.5 shadow-[0_18px_38px_rgba(23,59,53,0.08)]"
+                >
                   <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDE8DD] text-[13px] font-semibold text-[#D95F4E]">
-                    鍵
+                    72
                   </span>
                   <div className="min-w-0">
                     <div className="text-[14px] font-bold leading-6 text-[#2F2A28]">{section.title}</div>
@@ -82,10 +86,14 @@ export default async function ReportPreviewPage({
                 </MvpCard>
               ))}
             </div>
-            <ReportIntentAction backHref={`/result?resultId=${result.id}`} nextHref="/formal-check" />
+            <ReportIntentAction backHref={`/result?resultId=${result.id}&overlayId=${overlay.id}`} nextHref="/formal-check" />
           </div>
           <div className="hidden gap-3 lg:grid">
-            {lockedSections.slice(0, 3).map((section) => (
+            <MvpCard className="space-y-2.5 rounded-[1.05rem] bg-white/90">
+              <div className="service-kicker">{overlay.publicLabel}</div>
+              <p className="text-[15px] leading-8 text-[var(--text)]">{overlay.publicLine}</p>
+            </MvpCard>
+            {previewPoints.slice(2).map((section) => (
               <MvpCard key={section.title} className="space-y-2.5 rounded-[1.05rem] bg-white/90">
                 <div className="service-kicker">{section.title}</div>
                 <p className="text-[15px] leading-8 text-[var(--text)]">{section.promise}</p>
@@ -97,7 +105,7 @@ export default async function ReportPreviewPage({
 
       <section className="container py-7 md:py-12">
         <div className="grid gap-3 md:grid-cols-2">
-          {lockedSections.slice(3).map((section) => (
+          {previewPoints.slice(2).map((section) => (
             <MvpCard key={section.title} className="space-y-2.5 rounded-[1.05rem] bg-white/90">
               <div className="service-kicker">{section.title}</div>
               <p className="text-[14px] leading-7 text-[var(--text)] md:text-[15px] md:leading-8">{section.promise}</p>
@@ -105,8 +113,17 @@ export default async function ReportPreviewPage({
           ))}
         </div>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <MvpActionLink href="/formal-check" label="正式版の案内を見る" className="rounded-full !border-[#173B35] !bg-[#173B35] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)]" />
-          <MvpActionLink href={`/result?resultId=${result.id}`} label="無料結果に戻る" tone="secondary" className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none" />
+          <MvpActionLink
+            href="/formal-check"
+            label="正式版の案内を見る"
+            className="rounded-full !border-[#173B35] !bg-[#173B35] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)]"
+          />
+          <MvpActionLink
+            href={`/result?resultId=${result.id}&overlayId=${overlay.id}`}
+            label="無料結果に戻る"
+            tone="secondary"
+            className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
+          />
         </div>
       </section>
     </main>
