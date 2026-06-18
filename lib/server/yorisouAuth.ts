@@ -237,19 +237,38 @@ export function composeLineReadinessViewModel(input: {
   };
 }
 
-const AUTH_COOKIE_SECRET =
-  process.env.YORISOU_AUTH_COOKIE_SECRET ||
-  (process.env.NODE_ENV === "production" ? null : randomBytes(32).toString("hex"));
+const DEVELOPMENT_AUTH_COOKIE_SECRET =
+  process.env.NODE_ENV === "production" ? null : randomBytes(32).toString("hex");
 
-if (!AUTH_COOKIE_SECRET) {
-  throw new Error("YORISOU_AUTH_COOKIE_SECRET is required in production");
+let cachedAuthCookieKey: Buffer | null | undefined;
+
+function getConfiguredAuthCookieSecret() {
+  return process.env.YORISOU_AUTH_COOKIE_SECRET || DEVELOPMENT_AUTH_COOKIE_SECRET;
 }
 
-const AUTH_COOKIE_KEY = createHash("sha256").update(AUTH_COOKIE_SECRET).digest();
+function getAuthCookieKey() {
+  if (cachedAuthCookieKey !== undefined) {
+    return cachedAuthCookieKey;
+  }
+
+  const secret = getConfiguredAuthCookieSecret();
+  cachedAuthCookieKey = secret ? createHash("sha256").update(secret).digest() : null;
+  return cachedAuthCookieKey;
+}
+
+function requireAuthCookieKey() {
+  const authCookieKey = getAuthCookieKey();
+
+  if (!authCookieKey) {
+    throw new Error("YORISOU_AUTH_COOKIE_SECRET is required in production");
+  }
+
+  return authCookieKey;
+}
 
 function encryptCookieValue(value: string) {
   const iv = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", AUTH_COOKIE_KEY, iv);
+  const cipher = createCipheriv("aes-256-gcm", requireAuthCookieKey(), iv);
   const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, encrypted]).toString("base64url");
@@ -257,6 +276,11 @@ function encryptCookieValue(value: string) {
 
 function decryptCookieValue(value: string) {
   try {
+    const authCookieKey = getAuthCookieKey();
+    if (!authCookieKey) {
+      return null;
+    }
+
     const buffer = Buffer.from(value, "base64url");
     if (buffer.length <= 28) {
       return null;
@@ -265,7 +289,7 @@ function decryptCookieValue(value: string) {
     const iv = buffer.subarray(0, 12);
     const tag = buffer.subarray(12, 28);
     const encrypted = buffer.subarray(28);
-    const decipher = createDecipheriv("aes-256-gcm", AUTH_COOKIE_KEY, iv);
+    const decipher = createDecipheriv("aes-256-gcm", authCookieKey, iv);
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
   } catch {
