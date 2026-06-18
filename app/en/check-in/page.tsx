@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Find your support pattern | Yorisou",
-  description: "A mobile-first LINE MINI App flow that helps you find the kind of support that fits you right now.",
+  description: "A web-first self-reflection check to help you understand your current state and receive a light Yorisou result. It is not a diagnosis or fortune-telling service.",
 };
 
 export default async function EnglishCheckInPage({

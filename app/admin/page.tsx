@@ -11,24 +11,29 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
   const viewer = await requireAdminViewer();
-  let dashboardLoadError: string | null = null;
-  const summary = await adminFoundationService.getDashboardSummary().catch((error) => {
-    dashboardLoadError = error instanceof Error ? error.message : "unknown_admin_dashboard_error";
-    return {
-      latestUsers: [],
-      recentCases: [],
-      recentAudit: [],
-      unboundIdentities: [],
-      latestSyncStatus: {
-        store: getFoundationStoreStatus(),
-        latestProfileSyncAt: null,
-        latestCaseSyncAt: null,
-        latestAuditAt: null,
-        activeUserCount: 0,
-        unboundIdentityCount: 0,
+  const { summary, dashboardLoadError } = await adminFoundationService
+    .getDashboardSummary()
+    .then((resolvedSummary) => ({
+      summary: resolvedSummary,
+      dashboardLoadError: null,
+    }))
+    .catch((error) => ({
+      dashboardLoadError: error instanceof Error ? error.message : "unknown_admin_dashboard_error",
+      summary: {
+        latestUsers: [],
+        recentCases: [],
+        recentAudit: [],
+        unboundIdentities: [],
+        latestSyncStatus: {
+          store: getFoundationStoreStatus(),
+          latestProfileSyncAt: null,
+          latestCaseSyncAt: null,
+          latestAuditAt: null,
+          activeUserCount: 0,
+          unboundIdentityCount: 0,
+        },
       },
-    };
-  });
+    }));
   const latestUsers = summary.latestUsers.filter((entry): entry is UserProfile => Boolean(entry));
   const recentAudit = summary.recentAudit.filter((entry): entry is AuditLog => Boolean(entry));
   const recentCases = summary.recentCases.filter((entry): entry is SupportCase => Boolean(entry));

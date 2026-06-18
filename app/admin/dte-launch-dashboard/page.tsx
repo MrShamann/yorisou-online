@@ -36,7 +36,7 @@ export default async function DteLaunchDashboardPage() {
     vercelUrl: process.env.VERCEL_URL || null,
     vercelCommit: process.env.VERCEL_GIT_COMMIT_SHA || null,
     vercelBranch: process.env.VERCEL_GIT_COMMIT_REF || null,
-    productionDomain: process.env.VERCEL_PROJECT_PRODUCTION_URL || "yorisou.online",
+    productionDomain: process.env.VERCEL_PROJECT_PRODUCTION_URL || "UNKNOWN_NEEDS_CONFIRMATION",
   };
   const storeModeNote =
     storeStatus.mode === "shared_s3"
@@ -151,7 +151,7 @@ export default async function DteLaunchDashboardPage() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card title="Environment" value={runtimeInfo.vercelEnv || "local"} note={`branch: ${runtimeInfo.vercelBranch || "n/a"}`} />
           <Card title="Commit" value={runtimeInfo.vercelCommit || "n/a"} note={runtimeInfo.vercelUrl || "no vercel url"} />
-          <Card title="Production" value={runtimeInfo.productionDomain} note="LINE entry target" />
+          <Card title="Intended production domain" value={runtimeInfo.productionDomain} note="repo-evidenced Vercel target; manual confirmation required" />
           <Card title="Store mode" value={storeStatus.mode} note={storeModeNote} />
         </section>
 

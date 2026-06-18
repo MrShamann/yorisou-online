@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const landingCopy = {
   title: "今の寄り添い方を、LINEで見つける。",
-  body: "短い質問にひとつずつ答えるだけ。33問の流れの先で、今の気分に合う寄り添い方と、共有しやすい結果が返ってきます。",
+  body: "短い質問にひとつずつ答えるだけ。24問の流れの先で、今の気分に合う寄り添い方と、共有しやすい結果が返ってきます。",
   duration: "約5分",
   benefitOne: "LINE内で完結",
   benefitTwo: "1問ずつ進む",
@@ -27,12 +27,13 @@ function getStartHref(searchParams?: Record<string, string | string[] | undefine
   return buildMiniAppCheckInHandoffHref({ locale: "ja", searchParams: searchParams || {} });
 }
 
-export default function MiniAppEntryPage({
+export default async function MiniAppEntryPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const startHref = getStartHref(searchParams);
+  const resolvedSearchParams = await searchParams;
+  const startHref = getStartHref(resolvedSearchParams);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(9,14,13,0.98)_0%,rgba(20,32,28,0.97)_34%,rgba(243,246,239,1)_100%)] px-4 py-4 text-[var(--text)]">
@@ -78,7 +79,7 @@ export default function MiniAppEntryPage({
 
               <MiniAppEntrySignals href={startHref} locale="ja" label={landingCopy.start} />
               <p className="mt-2 text-[11px] leading-5 text-white/68">{landingCopy.startNote}</p>
-              <p className="mt-3 text-[11px] leading-5 text-white/56">{landingCopy.duration} / 5択 / 33問</p>
+              <p className="mt-3 text-[11px] leading-5 text-white/56">{landingCopy.duration} / 5択 / 24問</p>
             </div>
           </div>
         </section>

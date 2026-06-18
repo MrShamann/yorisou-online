@@ -8,9 +8,9 @@ import { getAllInsights } from "@/lib/insights/index";
 import type { InsightEntry } from "@/lib/insights/types";
 
 export const metadata: Metadata = {
-  title: "Yorisouの読みもの | 移動と暮らしを考える",
+  title: "Yorisou Insights | 今の自分を知るための読みもの",
   description:
-    "高齢社会と移動、暮らしの支え方、地域での導入の考え方を、Yorisouの視点で静かに読み進められる一覧です。",
+    "Yorisou Insightsは、ライフステート、セルフリフレクション、デジタルレポート、推薦・マッチング支援について考えるための読みものです。",
 };
 
 export default async function InsightsPage() {
@@ -24,8 +24,7 @@ export default async function InsightsPage() {
           <MotionReveal className="max-w-[44rem]" delay={30}>
             <div className="service-kicker">Yorisouの読みもの</div>
             <h1 className="display-serif mt-4 max-w-[14.5em] text-[1.72rem] leading-[1.66] md:text-[2.08rem]">
-              <span className="block md:whitespace-nowrap">移動と暮らしを考えるための、</span>
-              <span className="block md:whitespace-nowrap">静かな読みもの。</span>
+              今の自分を知るための、静かな読みもの。
             </h1>
             <p className="mt-4 page-copy">
               ひなたとの対話の前にも後にも、気になる論点だけを静かに拾えるように並べています。

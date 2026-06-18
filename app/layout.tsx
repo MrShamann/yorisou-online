@@ -6,9 +6,9 @@ import AppShell from "./components/AppShell";
 import { getReleaseMarker } from "@/lib/releaseMarker";
 
 export const metadata: Metadata = {
-  title: "YORISOU | 高齢者とご家族の移動と暮らしに寄り添う支援サービス",
+  title: "Yorisou | 今の自分を知る24問チェック",
   description:
-    "YORISOUは、日本の高齢者とご家族の移動と暮らしに寄り添う支援サービスです。AI相談員 ひなたとの対話から不安をやさしく整理し、必要に応じて製品、導入、継続支援へ丁寧につないでいきます。",
+    "Yorisouは、今の気持ちや生活リズムを24問でふり返り、自分の状態と次の一歩を見つけるためのLINE/Web-firstセルフリフレクションサービスです。診断や占いではありません。",
 };
 
 export default async function RootLayout({

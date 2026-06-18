@@ -1,33 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-import InsightsPreview from "../components/InsightsPreview";
 import MotionReveal from "../components/MotionReveal";
 
-const trustPoints = [
-  "Reservation-based transport",
-  "Family coordination before booking",
-  "Pilot intake for operators",
-];
-
-const serviceCards = [
-  {
-    title: "Reservation mobility consultation",
-    text: "Start with the mobility concern, family questions, and booking checks before the trip is booked.",
-    href: "/en/reservation-mobility-support",
-    cta: "Open consultation",
-  },
-  {
-    title: "Pilot discussion",
-    text: "For municipalities, facilities, and local operators exploring a small pilot or intake path.",
-    href: "/en/reservation-mobility-support#pilot-inquiry",
-    cta: "Discuss pilot",
-  },
-];
-
-const entryLinks = [
-  { href: "/en/reservation-mobility-support", label: "Reservation mobility support" },
-  { href: "/en/pilot", label: "Pilot" },
-];
+export const metadata: Metadata = {
+  title: "Yorisou | A Life-State Check for Understanding Where You Are Now",
+  description:
+    "Yorisou is a LINE/Web-first life-state check that helps people reflect on their current state, receive a public-safe result, and continue toward private hints and gentle recommendations.",
+};
 
 export default function HomePageEn() {
   return (
@@ -36,81 +16,46 @@ export default function HomePageEn() {
         <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/60 to-transparent" />
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
           <MotionReveal className="shell-card p-8 md:p-12" delay={40} distance={26}>
-            <div className="eyebrow">Reservation consultation entry</div>
+            <div className="eyebrow">Yorisou</div>
             <h1 className="mt-4 text-4xl font-light leading-tight md:text-6xl">
-              Before reservation-based transport starts,
-              <span className="block text-[#6B5A4A]">Hinata helps organize family concerns and pilot questions.</span>
+              A lighter way to understand
+              <span className="block text-[#6B5A4A]">where you are now.</span>
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Start with the concern, not the booking system. Yorisou does not replace existing transport systems; it helps families and local operators organize what to confirm before booking begins.
+              Yorisou helps you reflect on your current life state through a short check, then separates what is safe to share from what is meant only for you.
             </p>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#6B5A4A] md:text-base">
-              Hinata narrows the practical next step first, then keeps the context so you can continue later if needed.
-            </p>
-            <div className="mt-6 rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/82 px-5 py-5 text-sm leading-7 text-[#5A4B3E]">
-              <div className="eyebrow">Primary entry</div>
-              <p className="mt-2">
-                The natural first step is to talk about reservation-based mobility before the booking flow starts. It can continue later without starting over.
-              </p>
-            </div>
-
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link href="/en/reservation-mobility-support" className="btn btn-primary">
-                Reservation mobility consultation
+              <Link href="/en/check-in" className="btn btn-primary">
+                Start the check-in
               </Link>
-              <Link href="/en/reservation-mobility-support#pilot-inquiry" className="btn btn-secondary">
-                Discuss pilot use
+              <Link href="/en/about" className="btn btn-secondary">
+                Learn about Yorisou
               </Link>
             </div>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {trustPoints.map((item) => (
-                <div key={item} className="rounded-full border border-[#D6C3A3]/35 bg-[#FCFAF6] px-4 py-2 text-sm text-[#5A4B3E]">
-                  {item}
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-[#6B5A4A]">
-              {entryLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="soft-link">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-
           </MotionReveal>
 
           <div className="grid gap-5">
             <MotionReveal delay={120} distance={18}>
               <div className="motion-card rounded-[2rem] border border-[#D6C3A3]/35 bg-white/85 p-7 shadow-[0_24px_60px_rgba(59,47,47,0.06)]">
-              <div className="eyebrow">How it helps now</div>
-              <div className="mt-4 grid gap-3">
-                <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-                  A parent’s clinic visits or shopping trips are becoming harder to manage.
-                </div>
-                <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-                  A product comparison alone does not show which mobility option fits real daily routes.
-                </div>
-                <div className="rounded-2xl bg-[#FCFAF6] px-4 py-4 text-sm leading-7 text-[#5A4B3E]">
-                  A local pilot is needed, but the rollout and operating model are still unclear.
-                </div>
-              </div>
+                <div className="eyebrow">Reflection first, recommendations later</div>
+                <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
+                  Yorisou is a mobile-first product for understanding your current state: your rhythm, preferences, friction, and small signals from everyday life.
+                </p>
+                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
+                  It starts with a check-in, gives you a public-safe result, and then guides you toward private hints, report previews, and carefully scoped recommendations.
+                </p>
               </div>
             </MotionReveal>
 
             <MotionReveal delay={180} distance={16}>
               <div className="motion-card rounded-[2rem] border border-[#D6C3A3]/35 bg-[#FCFAF6] p-7 shadow-sm">
-              <div className="eyebrow">Two clear paths</div>
-              <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
-                Families can start with consultation. Operators and institutions can start with pilot discussion. The page stays focused on those two paths first.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                <Link href="/en/reservation-mobility-support" className="soft-link">
-                  Family consultation
-                </Link>
-                <Link href="/en/reservation-mobility-support#pilot-inquiry" className="soft-link">
-                  Pilot discussion
-                </Link>
-              </div>
+                <div className="eyebrow">Public-safe by design</div>
+                <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">
+                  Your first result is written to be safe enough to view, save, or share. It does not include private vulnerabilities, personal history, recommendation records, or deeper report content.
+                </p>
+                <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">
+                  More personal interpretation belongs in private spaces.
+                </p>
               </div>
             </MotionReveal>
           </div>
@@ -120,21 +65,31 @@ export default function HomePageEn() {
       <section className="section-wash border-b border-[#D6C3A3]/30 bg-white/50 px-6 py-14 md:px-10 md:py-16">
         <div className="mx-auto max-w-7xl">
           <MotionReveal className="mb-8 max-w-3xl" delay={30}>
-            <div className="eyebrow">Current phase</div>
-            <h2 className="mt-3 text-3xl font-light leading-tight">Conversation first. Product guidance and local support can expand later if they are needed.</h2>
+            <div className="eyebrow">The basic flow</div>
+            <h2 className="mt-3 text-3xl font-light leading-tight">
+              Take the check. See your current state. Read what is safe to share. Continue privately if you want more depth.
+            </h2>
           </MotionReveal>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {serviceCards.map((item, index) => (
-              <MotionReveal key={item.title} delay={90 + index * 70} distance={16}>
-                <div key={item.title} className="motion-card rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
-                <h3 className="text-2xl font-light">{item.title}</h3>
-                <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
-                <div className="mt-6">
-                  <Link href={item.href} className="btn btn-secondary">
-                    {item.cta}
-                  </Link>
-                </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                label: "A small next step, not a marketplace",
+                text: "Yorisou recommendations are meant to be narrow, explained, and useful. They may include reports, content, resources, or future paths — not a crowded catalog or a hidden sales funnel.",
+              },
+              {
+                label: "What Yorisou is not",
+                text: "Yorisou is not a medical, clinical, psychological, legal, financial, mobility, care, or government service. It is not fortune-telling, and it is not an AI that decides your life for you.",
+              },
+              {
+                label: "Save and return",
+                text: "Save or return through LINE/Web as the product grows. The experience is designed to continue at your own pace.",
+              },
+            ].map((item, index) => (
+              <MotionReveal key={item.label} delay={90 + index * 70} distance={16}>
+                <div className="motion-card rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
+                  <div className="eyebrow">{item.label}</div>
+                  <p className="mt-4 text-sm leading-7 text-[#5A4B3E]">{item.text}</p>
                 </div>
               </MotionReveal>
             ))}
@@ -142,24 +97,24 @@ export default function HomePageEn() {
         </div>
       </section>
 
-      <InsightsPreview locale="en" />
-
       <section className="section-wash border-t border-[#D6C3A3]/30 bg-white/50 px-6 py-16 md:px-10">
-        <MotionReveal className="mx-auto max-w-7xl rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-8 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur" delay={40}>
+        <MotionReveal
+          className="mx-auto max-w-7xl rounded-[2rem] border border-[#D6C3A3]/40 bg-white/75 p-8 shadow-[0_20px_60px_rgba(59,47,47,0.06)] backdrop-blur"
+          delay={40}
+        >
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl">
-              <div className="eyebrow">For Organizations</div>
-              <h2 className="mt-3 text-3xl font-light leading-tight">For regional pilots and operator support, contact Yorisou directly.</h2>
-              <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
-                Municipalities, facilities, and community operators can use the contact route for pilot planning and implementation support.
-              </p>
+              <div className="eyebrow">Start with the current check-in</div>
+              <h2 className="mt-3 text-3xl font-light leading-tight">
+                Begin with the current public check-in, then move at your own pace.
+              </h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/en/contact" className="btn btn-primary">
-                Contact
+              <Link href="/en/check-in" className="btn btn-primary">
+                Start the check-in
               </Link>
-              <Link href="/en/pilot" className="btn btn-secondary">
-                View pilot program
+              <Link href="/en/about" className="btn btn-secondary">
+                About Yorisou
               </Link>
             </div>
           </div>

@@ -6,7 +6,7 @@ import Section from "../components/Section";
 export const metadata: Metadata = {
   title: "利用規約 | Yorisou",
   description:
-    "Yorisouの利用規約です。Yorisouの診断コンテンツ、結果表示、アカウント、LINE連携その他の利用条件を定めています。",
+    "Yorisouのチェックコンテンツ、結果表示、アカウント、保存機能、サポート機能の利用条件を定めます。Yorisouは医療・心理診断・法律・金融・その他専門助言を提供するものではありません。",
 };
 
 export default function TermsPage() {

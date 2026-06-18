@@ -12,7 +12,7 @@ const inquiryNotes = [
 
 export const metadata: Metadata = {
   title: "お問い合わせ | Yorisou",
-  description: "ご本人やご家族のご相談から、導入・実証に関するお問い合わせまで、Yorisouの窓口で落ち着いてお受けしています。",
+  description: "Yorisouのチェック体験、サポート機能、デジタルレポート、推薦・マッチング支援に関するお問い合わせを受け付けています。",
 };
 
 export default function ContactPage() {
@@ -64,9 +64,6 @@ export default function ContactPage() {
               <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
                 <Link href="/support#scenario-assistant" className="soft-link">
                   ひなたと話し始める
-                </Link>
-                <Link href="/pilot" className="soft-link">
-                  導入・実証について
                 </Link>
               </div>
             </div>

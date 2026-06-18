@@ -99,12 +99,12 @@ export default function ResultShareCard({ locale, identity, pack = null, persona
             </div>
 
             <div className="rounded-[1.3rem] border border-white/10 bg-[linear-gradient(180deg,rgba(18,20,19,0.96)_0%,rgba(31,44,39,0.96)_100%)] px-3.5 py-3 text-white shadow-[0_12px_22px_rgba(20,28,25,0.16)]">
-              <div className="text-[10px] tracking-[0.18em] text-white/60">あなたも診断する</div>
+              <div className="text-[10px] tracking-[0.18em] text-white/60">あなたもチェックする</div>
               <Link
                 href={shareLink}
                 className="mt-2 inline-flex min-h-[46px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(242,248,241,1)_0%,rgba(224,234,224,1)_100%)] px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)] shadow-[0_16px_28px_rgba(20,28,25,0.24)]"
               >
-                あなたも診断する
+                あなたもチェックする
               </Link>
               <p className="mt-2 text-[11px] leading-5 text-white/62">{shortUrl}</p>
             </div>

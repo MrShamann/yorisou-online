@@ -45,3 +45,13 @@ data/result-visual-asset-registry.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local Claude/QA/runtime artifacts
+.claude/
+artifacts/
+test-results/
+result_*.png
+yorisou_phase1_*.md
+yorisou_phase1_*.zip
+Yorisou_Batch_D_Public_Page_Copy_Package*.zip
+data/insight-ingestion-*.json
