@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import MotionReveal from "./components/MotionReveal";
 import { MvpActionLink, MvpCard, MvpSection } from "./components/MvpSurface";
+import { PRODUCT_CARDS, type ProductCard } from "./data/productCards";
 
 export const metadata: Metadata = {
   title: "Yorisou | 24問のクイックチェック",
@@ -166,6 +168,128 @@ export default function HomePage() {
           </div>
         </MvpCard>
       </MvpSection>
+
+      {/* ── Phase 2R: product shell sections ── */}
+      <ProductShellSection cards={PRODUCT_CARDS} />
+      <LineContinuationSection />
+      <ReportPreviewSection />
     </main>
+  );
+}
+
+/* ────────────────────────────────────────────
+   Product shell — static, no backend
+   ──────────────────────────────────────────── */
+
+function ProductShellSection({ cards }: { cards: readonly ProductCard[] }) {
+  return (
+    <MvpSection
+      eyebrow="整理したいこと"
+      title="いま、何を整理したいですか？"
+      lead="ひとつだけ選んで大丈夫です。まずは今の自分を広く見ることも、人間関係の疲れから見ることもできます。"
+    >
+      <p className="-mt-2 text-[13px] leading-6 text-[#7A7068]">
+        結果は公開しても安心な内容と、自分だけで読む内容を分けて扱います。
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((card) => (
+          <ProductCardItem key={card.id} card={card} />
+        ))}
+      </div>
+    </MvpSection>
+  );
+}
+
+function ProductCardItem({ card }: { card: ProductCard }) {
+  const isActive = card.status === "primary";
+  const isComingSoon = card.status === "ready_for_review";
+  const isHeld = !isActive && !isComingSoon;
+
+  const cardClasses = `flex flex-col gap-3 rounded-[1.45rem] border bg-white/90 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.06)] transition ${
+    isActive
+      ? "border-[rgba(23,59,53,0.2)] hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(23,59,53,0.1)]"
+      : isComingSoon
+        ? "border-[rgba(23,59,53,0.12)]"
+        : "border-[rgba(23,59,53,0.07)] opacity-70"
+  }`;
+
+  return (
+    <div className={cardClasses}>
+      <div className="flex flex-wrap gap-1.5">
+        {card.badges.map((badge) => (
+          <span
+            key={badge}
+            className="inline-flex rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold leading-4 text-[#3D6058]"
+          >
+            {badge}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex-1 space-y-1.5">
+        <h3 className="display-serif text-[1.2rem] leading-[1.4] text-[#2F2A28]">{card.title_ja}</h3>
+        <p className="text-[13px] leading-6 text-[#5F5750]">{card.subtitle_ja}</p>
+      </div>
+
+      <p className="text-[11px] leading-5 text-[#8A7E78]">{card.public_boundary_note}</p>
+
+      {isActive && card.route_placeholder ? (
+        <Link
+          href={card.route_placeholder}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 text-[13px] font-semibold text-white shadow-[0_14px_24px_rgba(23,59,53,0.2)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
+        >
+          {card.primary_cta}
+        </Link>
+      ) : isComingSoon ? (
+        <span className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.18)] bg-[#F3FAF6] px-4 text-[13px] font-semibold text-[#49615B]">
+          近日公開
+        </span>
+      ) : (
+        <span className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.1)] bg-[#F8F7F4] px-4 text-[13px] font-semibold text-[#9A918B]">
+          準備中
+        </span>
+      )}
+    </div>
+  );
+}
+
+function LineContinuationSection() {
+  return (
+    <MvpSection
+      eyebrow="続き方"
+      title="あとから、また戻ってこられるように。"
+      lead="一度のチェックで、今の状態をすべて決める必要はありません。Yorisouでは、結果を見返したり、時間を置いてもう一度ふり返ったりしやすい導線を整えていきます。"
+    >
+      <MvpCard className="space-y-4">
+        <p className="text-[13px] leading-6 text-[#7A7068]">
+          LINEでの保存・通知・比較には、それぞれ確認と同意が必要です。
+        </p>
+        <MvpActionLink
+          href="/line/mini-app"
+          label="LINEで続きやすくする"
+          tone="secondary"
+          className="rounded-full"
+        />
+      </MvpCard>
+    </MvpSection>
+  );
+}
+
+function ReportPreviewSection() {
+  return (
+    <MvpSection
+      eyebrow="レポート"
+      title="もっと深く読みたいときのレポート。"
+      lead="無料結果では、公開しても安心なタイプ名、短い認識の言葉、軽い次の一歩を表示します。レポートでは、自分だけで読める形で、疲れやすい場面、回復しやすい距離、小さな行動のヒントを整理します。"
+    >
+      <MvpCard className="space-y-3">
+        <div className="inline-flex rounded-full bg-[#F8F7F4] px-3 py-1.5 text-[12px] font-semibold text-[#7A7068]">
+          準備中
+        </div>
+        <p className="text-[14px] leading-7 text-[#5F5750]">
+          急いで読む必要はありません。必要だと感じたときに、自分のペースで確認できます。
+        </p>
+      </MvpCard>
+    </MvpSection>
   );
 }
