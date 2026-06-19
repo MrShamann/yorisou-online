@@ -55,7 +55,7 @@ export default function SiteHeader() {
                   : "bg-[#173B35] !text-white shadow-[0_10px_18px_rgba(23,59,53,0.16)] hover:bg-[#0F2F2B]"
               }`}
             >
-              テストをはじめる
+              チェックをはじめる
             </Link>
           </nav>
         </div>

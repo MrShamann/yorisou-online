@@ -187,7 +187,7 @@ export default function HomePage() {
                 <p className="text-[12px] leading-5 text-[#7A7068]">{card.body}</p>
               </div>
               <span className="inline-flex items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F8F7F4] px-4 py-2 text-[12px] font-semibold text-[#8A8078]">
-                読めることを見る →
+                レポートの内容を見る →
               </span>
             </Link>
           ))}
