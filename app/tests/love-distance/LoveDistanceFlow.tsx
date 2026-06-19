@@ -14,7 +14,14 @@ import ResultConversionCommunity from "../../components/ResultConversionCommunit
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
 
-const INTRO_PILLS = ["18問のチェック", "約3〜5分", "無料結果あり", "チェックです"] as const;
+const INTRO_PILLS = ["18問", "約3〜5分", "無料結果あり", "医療的判定ではありません"] as const;
+
+const WHAT_YOU_GET = [
+  "今の距離感のパターン",
+  "待つ時間の負担ヒント",
+  "伝える前に整えること",
+  "今日の小さな一歩",
+] as const;
 
 export default function LoveDistanceFlow() {
   const [phase, setPhase] = useState<Phase>("intro");
@@ -126,19 +133,21 @@ export default function LoveDistanceFlow() {
                 </p>
               </div>
 
+              {/* 終わると見えること */}
               <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-5 shadow-[0_16px_36px_rgba(23,59,53,0.07)] space-y-3">
-                <p className="text-[13px] font-semibold leading-7 text-[#49615B]">チェック結果に含まれること</p>
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">終わると見えること</p>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {["今の距離感のパターン", "待つ時間の負担ヒント", "伝える前に整えること", "小さな次の一歩"].map((item) => (
+                  {WHAT_YOU_GET.map((item) => (
                     <div
                       key={item}
-                      className="rounded-[0.9rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-4 py-2.5 text-[13px] font-semibold leading-7 text-[#315F50]"
+                      className="flex items-center gap-2 rounded-[0.9rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-3.5 py-2.5"
                     >
-                      {item}
+                      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#173B35] text-[10px] text-white">✓</span>
+                      <span className="text-[13px] font-semibold leading-6 text-[#315F50]">{item}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-[12px] leading-7 text-[#7A7068]">
+                <p className="text-[12px] leading-6 text-[#7A7068]">
                   ログインなし。回答は送信されません。相手の気持ちや関係の結論を判断するものではありません。
                 </p>
               </div>
