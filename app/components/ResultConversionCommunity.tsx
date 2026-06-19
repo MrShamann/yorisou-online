@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function ResultConversionCommunity({ moduleId, reportTeaser }: Props) {
-  const { communityVoices, reportPreview, nextChecks, lineSaveCopy } = CONVERSION_DATA[moduleId];
+  const { communityVoices, reportPreview, reportHref, nextChecks, lineSaveCopy } = CONVERSION_DATA[moduleId];
   const [nearClicked, setNearClicked] = useState(false);
 
   return (
@@ -36,9 +36,12 @@ export default function ResultConversionCommunity({ moduleId, reportTeaser }: Pr
           </ul>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.16)] bg-[#F8F7F4] px-4 py-2 text-[13px] font-semibold text-[#8A8078]">
-            プレビューを見る（準備中）
-          </span>
+          <Link
+            href={reportHref}
+            className="inline-flex rounded-full border border-[rgba(23,59,53,0.18)] bg-white px-4 py-2 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
+          >
+            読めることを見る →
+          </Link>
           <span className="text-[12px] text-[#9A918B]">無料結果だけで終えても大丈夫です。</span>
         </div>
         <p className="text-[11px] leading-5 text-[#9A918B]">

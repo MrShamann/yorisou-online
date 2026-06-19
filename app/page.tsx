@@ -66,6 +66,25 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── LINE entry ── */}
+      <section className="container py-0 pb-6 md:pb-8">
+        <div className="mx-auto max-w-[52rem]">
+          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1 space-y-1">
+              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">LINEで続けたい方へ</p>
+              <p className="text-[14px] font-semibold leading-6 text-[#2F2A28]">結果をあとで見返しやすくする</p>
+              <p className="text-[12px] leading-5 text-[#7A7068]">LINEでの保存・通知には確認と同意が必要です。現在準備中です。</p>
+            </div>
+            <Link
+              href="/line/mini-app"
+              className="inline-flex min-h-[42px] shrink-0 items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
+            >
+              LINEで続きやすくする
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── What you get ── */}
       <MvpSection
         eyebrow="無料結果で見えること"
@@ -143,7 +162,7 @@ export default function HomePage() {
       >
         <div className="grid gap-3 md:grid-cols-3">
           {REPORT_CARDS.map((card) => (
-            <MvpCard key={card.title} className="flex flex-col gap-3 rounded-[1.35rem] border-[rgba(23,59,53,0.1)] bg-white/90 shadow-[0_10px_24px_rgba(23,59,53,0.06)]">
+            <Link key={card.title} href={card.href} className="group flex flex-col gap-3 rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 shadow-[0_10px_24px_rgba(23,59,53,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(23,59,53,0.2)] hover:bg-white">
               <span className="inline-flex self-start rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold text-[#3D6058]">
                 {card.badge}
               </span>
@@ -152,9 +171,9 @@ export default function HomePage() {
                 <p className="text-[12px] leading-5 text-[#7A7068]">{card.body}</p>
               </div>
               <span className="inline-flex items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F8F7F4] px-4 py-2 text-[12px] font-semibold text-[#8A8078]">
-                準備中
+                読めることを見る →
               </span>
-            </MvpCard>
+            </Link>
           ))}
         </div>
         <p className="text-[12px] leading-5 text-[#9A918B]">
@@ -243,16 +262,19 @@ const REPORT_CARDS = [
     badge: "自分理解",
     title: "今の自分を深く読む",
     body: "今の状態の流れ、回復のリズム、人との距離感を整理します。",
+    href: "/reports/self",
   },
   {
     badge: "関係の疲れ",
     title: "人間関係の疲れを深く読む",
     body: "返信・予定・気づかいの負担を分けて回復しやすい距離を見つけます。",
+    href: "/reports/relationship-fatigue",
   },
   {
     badge: "距離感",
     title: "恋愛の距離感を深く読む",
     body: "待ち方・近づき方・伝える前に整えたいことを自分側から整理します。",
+    href: "/reports/love-distance",
   },
 ] as const;
 

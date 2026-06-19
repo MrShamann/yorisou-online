@@ -20,12 +20,14 @@ export type NextCheckLink = {
 export type ModuleConversionData = {
   communityVoices: readonly CommunityVoice[];
   reportPreview: ReportPreviewData;
+  reportHref: string;
   nextChecks: readonly NextCheckLink[];
   lineSaveCopy: string;
 };
 
 export const CONVERSION_DATA: Record<ModuleId, ModuleConversionData> = {
   "relationship-fatigue": {
+    reportHref: "/reports/relationship-fatigue",
     communityVoices: [
       { text: "人が嫌いなわけではなくても、返すことや合わせることが重い日がある。" },
       { text: "会ったあとは楽しかったのに、帰ってからどっと疲れることがある。" },
@@ -52,6 +54,7 @@ export const CONVERSION_DATA: Record<ModuleId, ModuleConversionData> = {
     lineSaveCopy: "結果をあとで見返しやすくする",
   },
   "love-distance": {
+    reportHref: "/reports/love-distance",
     communityVoices: [
       { text: "返事を待つ時間に、自分の気持ちまで揺れてしまうことがある。" },
       { text: "近づきたいけれど、急ぎすぎるのも少し怖い。" },

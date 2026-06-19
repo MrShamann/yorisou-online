@@ -13,7 +13,7 @@ const landingCopy = {
   title: "今の寄り添い方を、LINEで見つける。",
   body: "短い質問にひとつずつ答えるだけ。24問の流れの先で、今の気分に合う寄り添い方と、共有しやすい結果が返ってきます。",
   duration: "約5分",
-  benefitOne: "LINE内で完結",
+  benefitOne: "LINEで見返しやすい",
   benefitTwo: "1問ずつ進む",
   benefitThree: "結果は共有しやすい",
   start: "はじめる",
