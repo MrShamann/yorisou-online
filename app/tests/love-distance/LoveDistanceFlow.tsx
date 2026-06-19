@@ -9,6 +9,7 @@ import {
   type AnswerMap,
   type LDResult,
 } from "./data";
+import ResultConversionCommunity from "../../components/ResultConversionCommunity";
 
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
@@ -337,33 +338,11 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
             </div>
           )}
 
-          {/* Paid report preview */}
-          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/80 p-5 space-y-3">
-            <p className="text-[13px] font-semibold text-[#49615B]">もっと深く整理したいときに</p>
-            <p className="text-[14px] leading-7 text-[#5F5750]">
-              無料結果よりも少し深く、今の距離感・待ち方・伝える前に整えたいことを整理します。
-              相手の本心や関係の結論を示すものではなく、自分の気持ちを扱いやすくするためのレポートです。
-            </p>
-            <div className="rounded-[0.9rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-3">
-              <p className="text-[12px] font-semibold text-[#49615B]">レポートに含まれること（準備中）</p>
-              <ul className="mt-1.5 space-y-1 text-[13px] leading-7 text-[#5F5750]">
-                <li>· {archetype.reportTeaser}</li>
-                <li>· 7日間の小さな選択肢</li>
-                <li>· 次回チェックで見たい変化</li>
-              </ul>
-            </div>
-            <p className="text-[12px] leading-6 text-[#7A7068]">
-              このレポートは医療的・専門的判断、カウンセリング、対人関係の専門助言ではありません。自己理解の参考としてお使いください。現在準備中です。
-            </p>
-          </div>
-
-          {/* LINE static CTA */}
-          <div className="rounded-[1.25rem] border border-[rgba(217,130,86,0.14)] bg-[#FFF7EC]/70 px-5 py-4 space-y-1.5">
-            <p className="text-[13px] font-semibold text-[#6B4E3F]">LINEでチェック結果をあとから見返す（準備中）</p>
-            <p className="text-[12px] leading-6 text-[#7A7068]">
-              LINEでの保存・通知・見返しには、それぞれ確認と同意が必要です。現在準備中です。
-            </p>
-          </div>
+          {/* Phase 2U: community + report + LINE + next checks */}
+          <ResultConversionCommunity
+            moduleId="love-distance"
+            reportTeaser={archetype.reportTeaser}
+          />
 
           {/* Safety note */}
           <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">

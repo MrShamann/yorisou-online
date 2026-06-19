@@ -258,11 +258,18 @@ function LineContinuationSection() {
     <MvpSection
       eyebrow="続き方"
       title="あとから、また戻ってこられるように。"
-      lead="一度のチェックで、今の状態をすべて決める必要はありません。Yorisouでは、結果を見返したり、時間を置いてもう一度ふり返ったりしやすい導線を整えていきます。"
+      lead="一度のチェックで、今の状態をすべて決める必要はありません。結果を見返したり、時間を置いてもう一度ふり返ったりしやすい導線を整えていきます。"
     >
       <MvpCard className="space-y-4">
-        <p className="text-[13px] leading-6 text-[#7A7068]">
-          LINEでの保存・通知・比較には、それぞれ確認と同意が必要です。
+        <div className="grid gap-2 text-[14px] leading-7 text-[#2F2A28] sm:grid-cols-3">
+          {(["あとで見返す", "またチェックインする", "今は保存だけする"] as const).map((t) => (
+            <div key={t} className="rounded-[1rem] border border-[rgba(23,59,53,0.1)] bg-white/80 px-4 py-3 text-[13px] text-[#5F5750]">
+              {t}
+            </div>
+          ))}
+        </div>
+        <p className="text-[12px] leading-6 text-[#7A7068]">
+          LINEでの保存・通知・見返しには、それぞれ確認と同意が必要です。
         </p>
         <MvpActionLink
           href="/line/mini-app"
@@ -276,20 +283,77 @@ function LineContinuationSection() {
 }
 
 function ReportPreviewSection() {
+  const reportCards = [
+    {
+      badge: "自分理解",
+      title: "今の自分を深く読む",
+      body: "今の状態の流れ、回復のリズム、人との距離をもう少し細かく整理します。",
+      cta: "読めることを見る",
+    },
+    {
+      badge: "関係の疲れ",
+      title: "人間関係の疲れを深く読む",
+      body: "返信・予定・気づかいの負担を分けて、回復しやすい距離を見つけます。",
+      cta: "プレビューを見る",
+    },
+    {
+      badge: "距離感",
+      title: "恋愛の距離感を深く読む",
+      body: "待ち方、近づき方、伝える前に整えたいことを、自分側から整理します。",
+      cta: "プレビューを見る",
+    },
+  ] as const;
+
   return (
-    <MvpSection
-      eyebrow="レポート"
-      title="もっと深く読みたいときのレポート。"
-      lead="無料結果では、公開しても安心なタイプ名、短い認識の言葉、軽い次の一歩を表示します。レポートでは、自分だけで読める形で、疲れやすい場面、回復しやすい距離、小さな行動のヒントを整理します。"
-    >
-      <MvpCard className="space-y-3">
-        <div className="inline-flex rounded-full bg-[#F8F7F4] px-3 py-1.5 text-[12px] font-semibold text-[#7A7068]">
-          準備中
+    <>
+      <MvpSection
+        eyebrow="必要なら、もう少し深く。"
+        title="無料結果だけで終えても大丈夫です。"
+        lead="もっと整理したいときは、自分だけで読めるレポートや、近い感覚の声を見ることができます。"
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          {reportCards.map((card) => (
+            <MvpCard key={card.title} className="flex flex-col gap-3 rounded-[1.35rem] border-[rgba(23,59,53,0.1)] bg-white/92 shadow-[0_12px_28px_rgba(23,59,53,0.06)]">
+              <span className="inline-flex self-start rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold text-[#3D6058]">
+                {card.badge}
+              </span>
+              <div className="flex-1 space-y-1.5">
+                <h3 className="text-[14px] font-semibold leading-6 text-[#2F2A28]">{card.title}</h3>
+                <p className="text-[13px] leading-6 text-[#5F5750]">{card.body}</p>
+              </div>
+              <span className="inline-flex items-center justify-center rounded-full border border-[rgba(23,59,53,0.16)] bg-[#F8F7F4] px-4 py-2 text-[13px] font-semibold text-[#7A7068]">
+                {card.cta}（準備中）
+              </span>
+            </MvpCard>
+          ))}
         </div>
-        <p className="text-[14px] leading-7 text-[#5F5750]">
-          急いで読む必要はありません。必要だと感じたときに、自分のペースで確認できます。
+        <p className="text-[12px] leading-6 text-[#7A7068]">
+          レポートは医療的・専門的判断ではありません。購入や申込みではありません。興味の確認だけです。
         </p>
-      </MvpCard>
-    </MvpSection>
+      </MvpSection>
+
+      <MvpSection
+        eyebrow="同じような人の声"
+        title="今の状態に近い声を見るだけでも大丈夫です。"
+        lead="ここは公開投稿の場所ではありません。参加したり、何かを書いたりする必要はありません。"
+      >
+        <MvpCard className="space-y-4">
+          <div className="space-y-2.5">
+            {([
+              "返すことや合わせることが重い日がある。そう気づくだけで、少し楽になることがある。",
+              "待つ時間に気持ちが揺れる。それは自分が弱いのではなく、今の状態が正直に出ているだけかもしれない。",
+              "今月の小さな問い: 今、少し軽くしたいものは何ですか？返信、予定、距離、休む時間。ひとつだけで大丈夫です。",
+            ] as const).map((v, i) => (
+              <div key={i} className="rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-[#F3FAF6] px-4 py-3">
+                <p className="text-[14px] leading-7 text-[#2F2A28]">「{v}」</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] leading-5 text-[#9A918B]">
+            表示される声は編集されたサンプルです。個人の投稿ではありません。
+          </p>
+        </MvpCard>
+      </MvpSection>
+    </>
   );
 }
