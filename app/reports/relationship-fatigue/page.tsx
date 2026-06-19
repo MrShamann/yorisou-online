@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -77,6 +78,21 @@ export default function ReportRelationshipFatiguePage() {
               className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[14px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
             >
               人間関係の疲れチェックを始める
+            </Link>
+          </div>
+
+          {/* LINE CTA */}
+          <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.1)] bg-white/80 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="hidden sm:block shrink-0 rounded-[0.7rem] border border-[rgba(23,59,53,0.1)] bg-white p-1.5">
+              <Image src="/line/yorisou-line-miniapp-qr.png" alt="Yorisou LINE QR" width={72} height={72} className="rounded-[0.3rem]" unoptimized />
+            </div>
+            <div className="flex-1 space-y-1">
+              <p className="text-[12px] font-semibold tracking-[0.1em] text-[#49615B]">必要なら、もう少し深く読めます。</p>
+              <p className="text-[13px] leading-6 text-[#5F5750]">LINEでYorisouを開いて、結果をあとから見返す。</p>
+              <p className="text-[11px] leading-5 text-[#9A918B]">購入や申込みではありません。保存や通知は確認と同意のあとで使えます。</p>
+            </div>
+            <Link href="/line/mini-app" className="inline-flex min-h-[40px] shrink-0 items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-4 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]">
+              LINEで開く
             </Link>
           </div>
 

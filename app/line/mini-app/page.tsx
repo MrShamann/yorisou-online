@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import BrandSigil from "@/app/components/BrandSigil";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
@@ -80,6 +81,25 @@ export default async function MiniAppEntryPage({
               <MiniAppEntrySignals href={startHref} locale="ja" label={landingCopy.start} />
               <p className="mt-2 text-[11px] leading-5 text-white/68">{landingCopy.startNote}</p>
               <p className="mt-3 text-[11px] leading-5 text-white/56">{landingCopy.duration} / 5択 / 24問</p>
+
+              {/* QR for desktop / offline */}
+              <div className="mt-5 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-4">
+                <div className="rounded-[0.7rem] border border-white/12 bg-white p-1.5">
+                  <Image
+                    src="/line/yorisou-line-miniapp-qr.png"
+                    alt="YorisouのLINE Mini Appに繋がるQRコード"
+                    width={80}
+                    height={80}
+                    className="rounded-[0.3rem]"
+                    unoptimized
+                  />
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-semibold text-white/82">スマホでQRを読み取る</p>
+                  <p className="text-[11px] leading-5 text-white/56">LINEで結果をあとで見返す</p>
+                  <p className="text-[11px] leading-5 text-white/44">保存や通知は確認・同意のあと</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

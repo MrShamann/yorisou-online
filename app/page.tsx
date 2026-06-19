@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import MotionReveal from "./components/MotionReveal";
@@ -69,18 +70,33 @@ export default function HomePage() {
       {/* ── LINE entry ── */}
       <section className="container py-0 pb-6 md:pb-8">
         <div className="mx-auto max-w-[52rem]">
-          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1 space-y-1">
-              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">LINEで続けたい方へ</p>
-              <p className="text-[14px] font-semibold leading-6 text-[#2F2A28]">結果をあとで見返しやすくする</p>
-              <p className="text-[12px] leading-5 text-[#7A7068]">LINEでの保存・通知には確認と同意が必要です。現在準備中です。</p>
+          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 py-5 flex flex-col sm:flex-row sm:items-start gap-5">
+            {/* QR — desktop only */}
+            <div className="hidden sm:flex shrink-0 flex-col items-center gap-1.5">
+              <div className="rounded-[0.85rem] border border-[rgba(23,59,53,0.1)] bg-white p-2 shadow-[0_4px_12px_rgba(23,59,53,0.07)]">
+                <Image
+                  src="/line/yorisou-line-miniapp-qr.png"
+                  alt="YorisouのLINE Mini Appに繋がるQRコード"
+                  width={96}
+                  height={96}
+                  className="rounded-[0.4rem]"
+                  unoptimized
+                />
+              </div>
+              <p className="text-[10px] leading-4 text-[#8A8078] text-center">スマホでQRを読み取る</p>
             </div>
-            <Link
-              href="/line/mini-app"
-              className="inline-flex min-h-[42px] shrink-0 items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
-            >
-              LINEで続きやすくする
-            </Link>
+            {/* Copy */}
+            <div className="flex-1 space-y-1.5">
+              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">LINEで続けたい方へ</p>
+              <p className="text-[14px] font-semibold leading-6 text-[#2F2A28]">LINEで結果をあとから見返す</p>
+              <p className="text-[12px] leading-5 text-[#7A7068]">保存や通知は、確認と同意のあとで使えます。現在準備中です。</p>
+              <Link
+                href="/line/mini-app"
+                className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
+              >
+                LINEでYorisouを開く
+              </Link>
+            </div>
           </div>
         </div>
       </section>
