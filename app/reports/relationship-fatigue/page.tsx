@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "人間関係の疲れを、もう少し深く読む | Yorisou",
-  description: "返信・予定・距離・回復の視点から、今の疲れ方を静かに読み直すレポートです。医療・心理診断ではありません。",
+  description: "返信・予定・距離・回復の視点から、今の疲れ方を静かに読み直すレポートです。先行案内を受け取れます。医療・心理診断ではありません。",
 };
 
 const REPORT_SECTIONS = [
@@ -66,7 +66,7 @@ export default function ReportRelationshipFatiguePage() {
               無料結果で見えた疲れ方を、返信・予定・距離・回復の視点から静かに読み直すレポートです。関係を決めつけるものではなく、今の自分に必要な余白を見つけるために使えます。
             </p>
             <div className="rounded-[0.85rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-4 py-2.5 inline-flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-[#49615B]">このページでは、支払いは発生しません。まずは内容のイメージを確認できます。</span>
+              <span className="text-[11px] font-semibold text-[#49615B]">このページでは、支払いは発生しません。まずはレポートの内容イメージと、今後の案内を確認できます。</span>
             </div>
           </div>
 
@@ -157,12 +157,19 @@ export default function ReportRelationshipFatiguePage() {
             </div>
           </div>
 
-          {/* ── 6. LINE CTA ── */}
-          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/80 px-5 py-5 space-y-4">
+          {/* ── 6. Interest-validation block ── */}
+          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.14)] bg-white/90 p-6 space-y-4">
             <div className="space-y-1">
-              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">LINEで結果をあとから見返す</p>
-              <p className="text-[14px] font-semibold leading-6 text-[#2F2A28]">LINEであとから見返す</p>
+              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">先行案内を受け取る</p>
+              <p className="text-[16px] font-semibold leading-7 text-[#2F2A28]">
+                公開されたら、LINEで先に知らせてほしい
+              </p>
+              <p className="text-[13px] leading-6 text-[#5F5750]">
+                このレポートは有料版として準備中です。内容、提供方法、価格が整った段階で、LINEから先に案内を受け取れる形を準備しています。
+              </p>
             </div>
+
+            {/* QR + CTA row */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="hidden sm:block shrink-0 rounded-[0.7rem] border border-[rgba(23,59,53,0.1)] bg-white p-1.5">
                 <Image
@@ -174,46 +181,41 @@ export default function ReportRelationshipFatiguePage() {
                   unoptimized
                 />
               </div>
-              <div className="flex-1 space-y-1">
-                <p className="text-[13px] leading-6 text-[#5F5750]">LINEでYorisouを開いて、今日の結果を保存する。</p>
-                <p className="text-[11px] leading-5 text-[#9A918B]">保存や通知は、確認と同意のあとで使えます。現在準備中です。</p>
+              <div className="flex-1 space-y-3">
+                <Link
+                  href="/line/mini-app"
+                  className="inline-flex min-h-[46px] w-full sm:w-auto items-center justify-center rounded-full bg-[#173B35] px-6 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(23,59,53,0.16)] transition hover:bg-[#0F2F2B]"
+                >
+                  LINEで案内を受け取る
+                </Link>
+                <div className="space-y-0.5">
+                  <p className="text-[11px] leading-5 text-[#8A8078]">このページでは、支払いは発生しません。</p>
+                  <p className="text-[11px] leading-5 text-[#8A8078]">価格は準備中です。内容、提供方法、安心して読める導線を整えたうえでお知らせします。</p>
+                  <p className="text-[11px] leading-5 text-[#8A8078]">保存や通知は、確認と同意のあとで使えます。</p>
+                </div>
               </div>
-              <Link
-                href="/line/mini-app"
-                className="inline-flex min-h-[42px] shrink-0 items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
-              >
-                LINEでYorisouを開く
-              </Link>
             </div>
           </div>
 
-          {/* ── 7. Start quiz CTA ── */}
-          <div className="space-y-3">
-            <Link
-              href="/tests/relationship-fatigue"
-              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-[#173B35] px-6 text-[14px] font-bold text-white shadow-[0_10px_24px_rgba(23,59,53,0.18)] transition hover:bg-[#0F2F2B]"
-            >
-              無料チェックを始める
+          {/* ── 7. Not-now path ── */}
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link href="/tests/relationship-fatigue" className="text-[12px] text-[#7A7068] hover:underline">
+              今は無料結果だけ見る
             </Link>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Link href="/tests/relationship-fatigue" className="text-[12px] text-[#7A7068] hover:underline">
-                今は無料結果だけ見る
-              </Link>
-              <span className="text-[#D4CCC6]">·</span>
-              <Link href="/" className="text-[12px] text-[#7A7068] hover:underline">
-                今日はここまでにする
-              </Link>
-              <span className="text-[#D4CCC6]">·</span>
-              <Link href="/" className="text-[12px] text-[#7A7068] hover:underline">
-                必要になったら、あとで深く読む
-              </Link>
-            </div>
+            <span className="text-[#D4CCC6]">·</span>
+            <Link href="/" className="text-[12px] text-[#7A7068] hover:underline">
+              今日はここまでにする
+            </Link>
+            <span className="text-[#D4CCC6]">·</span>
+            <Link href="/" className="text-[12px] text-[#7A7068] hover:underline">
+              必要になったら、あとで深く読む
+            </Link>
           </div>
 
           {/* ── 8. Safety note ── */}
           <div className="rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">
             <p className="text-[11px] leading-6 text-[#8A8078]">
-              このレポートは、医療・心理診断、治療、カウンセリング、専門的な対人関係の助言ではありません。つらさが強い、長く続く、生活に影響している場合は、信頼できる人や確認済みの相談先につながることも選択肢です。
+              このレポートは、医療・心理診断、治療、カウンセリング、専門的な対人関係の助言ではありません。つらさが強い、長く続く、生活に影響している場合は、Yorisouの結果だけで抱え込まず、信頼できる人や確認済みの相談先につながることも選択肢です。
             </p>
           </div>
 
