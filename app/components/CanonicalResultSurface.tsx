@@ -1,195 +1,292 @@
+import DteEventTracker from "./DteEventTracker";
+import DteTextResultFirstScreen from "./DteTextResultFirstScreen";
+import ResultShareActions from "./ResultShareActions";
 import Link from "next/link";
-
-import type { ReactNode } from "react";
-
+import { buildCoreTraitLabels } from "@/lib/result/result-traits";
+import { buildResultShareMessaging } from "@/lib/result/share-messaging";
+import type { PublicResultIdentity } from "@/lib/result/public-result-identity";
 import type { ResultLabSnapshot } from "@/lib/result/rendering-contract-adapter";
+import type { ResultStaticPack } from "@/lib/result/visual-asset-chain";
+import { yorisouPersonaAssetRegistry, type YorisouPersonaAssetKind } from "@/lib/yorisou/persona-asset-registry";
+import type { CanonicalPublicPersonaShell } from "@/lib/yorisou/dte/public-persona-shell";
 
 type Locale = "ja" | "en";
 
 type Props = {
   locale: Locale;
   snapshot: ResultLabSnapshot;
-  currentPath: string;
+  publicIdentity?: PublicResultIdentity;
+  nextStepHref?: string;
+  nextStepLabel?: string;
+  nextStepHint?: string;
+  visualAssetPack?: ResultStaticPack | null;
+  shareViewHref?: string;
+  shareHref?: string | null;
+  completionId?: string | null;
+  personaShell?: CanonicalPublicPersonaShell | null;
+  currentModeKey?: string | null;
+  currentModeLabel?: string | null;
 };
 
 const copy = {
   ja: {
-    label: "RESULT",
-    subtitle: "ロック済みの名前・ティーザー・共有文・深い読みの手前までを、ひとつの結果として整えます。",
-    lineContinue: "LINEで続ける",
-    lineContinueHint: "この結果は、LINE認証が完了していれば同じ流れに戻れます。",
-    teaser: "ティーザー",
-    shareCard: "共有カード",
-    deepReport: "深い読み",
-    invalidTitle: "結果の受け取りに問題があります",
-    invalidBody: "この状態では、結果をそのまま表示できません。payload または version を確認してください。",
-    versionTitle: "バージョンが一致しません",
-    versionBody: "スコア版または結果版がロックされた仕様と合っていません。古いデータは使いません。",
-    teaserOnly: "ティーザーだけを先に表示します",
-    deepLocked: "深い読みはまだロック中です",
-    deepUnlocked: "深い読みを開いています",
-    resultReady: "結果は準備できています",
-    shareReady: "共有カードは準備できています",
-    lockedNotice: "名前・サブタイトル・次元の意味は変更しません。",
-    currentState: "現在の状態",
-    readOnly: "読み取り専用",
-    lineHint: "LINE続行は、同じ結果に戻るための入口です。",
+    invalidTitle: "結果を開けません",
+    invalidBody: "完了した結果を、もう一度開いてください。",
+    versionBody: "最新の結果ページから開き直してください。",
+    detailsCta: "結果のつづきを開く",
+    detailsTitle: "さらに深く見る",
+    detailsSummary: "まずは結果の核を受け取り、読み解きは下で開く。",
+    screenLabel: "結果",
+    closureTitle: "ひとこと",
+    supportLabel: "いまの答え",
+    belowFoldLabel: "深く見る",
   },
   en: {
-    label: "RESULT",
-    subtitle: "This surface keeps the locked name, teaser, share copy, and deep-report boundary in one read-only result view.",
-    lineContinue: "Continue in LINE",
-    lineContinueHint: "If LINE auth is configured, this result can return to the same flow.",
-    teaser: "Teaser",
-    shareCard: "Share card",
-    deepReport: "Deep reading",
-    invalidTitle: "There is a problem receiving this result",
-    invalidBody: "This state cannot render the result as-is. Check the payload and version.",
-    versionTitle: "Version mismatch",
-    versionBody: "The score version or result version does not match the locked spec. Old data is ignored.",
-    teaserOnly: "Showing teaser only for now",
-    deepLocked: "Deep reading is still locked",
-    deepUnlocked: "Deep reading is open",
-    resultReady: "The result is ready",
-    shareReady: "Share card is ready",
-    lockedNotice: "The label, subtitle, and dimension meaning remain locked.",
-    currentState: "Current state",
-    readOnly: "Read-only",
-    lineHint: "LINE continuation returns to the same result context.",
+    invalidTitle: "Result unavailable",
+    invalidBody: "Please reopen the result from the completed session.",
+    versionBody: "Please reopen the latest result page.",
+    detailsCta: "Continue reading",
+    detailsTitle: "Read deeper",
+    detailsSummary: "Take the core read first and deepen it below.",
+    screenLabel: "Result",
+    closureTitle: "Core line",
+    supportLabel: "Current read",
+    belowFoldLabel: "Read deeper",
   },
 } as const;
 
-function lineContinueHref(locale: Locale, currentPath: string) {
-  const params = new URLSearchParams({
-    locale,
-    intent: "support",
-    returnTo: currentPath,
-  });
-  return `/api/line/auth/start?${params.toString()}`;
+type VisualSamplePersonaId = "P01" | "P02" | "P03";
+
+const VISUAL_SAMPLE_PERSONA_IDS = new Set<VisualSamplePersonaId>(["P01", "P02", "P03"]);
+const RENDERABLE_STATUSES = new Set(["manual_candidate", "approved_static"] as const);
+
+function getRenderablePersonaAsset(personaId: string, kind: YorisouPersonaAssetKind) {
+  if (!VISUAL_SAMPLE_PERSONA_IDS.has(personaId as VisualSamplePersonaId)) {
+    return null;
+  }
+
+  const registryEntry = yorisouPersonaAssetRegistry[personaId as VisualSamplePersonaId];
+  if (!registryEntry) {
+    return null;
+  }
+
+  const record = registryEntry.assets[kind];
+  if (!record || !RENDERABLE_STATUSES.has(record.status as "manual_candidate" | "approved_static")) {
+    return null;
+  }
+
+  if (!record.path) {
+    return null;
+  }
+
+  return record;
 }
 
-function renderStateLabel(locale: Locale, snapshot: ResultLabSnapshot) {
+export default function CanonicalResultSurface({
+  locale,
+  snapshot,
+  publicIdentity,
+  nextStepHref,
+  nextStepLabel,
+  nextStepHint,
+  shareViewHref,
+  shareHref = null,
+  completionId = null,
+  personaShell = null,
+  currentModeKey = null,
+  currentModeLabel = null,
+}: Props) {
   const t = copy[locale];
-  if (snapshot.renderingState === "version_mismatch_guard") {
-    return t.versionTitle;
-  }
-  if (snapshot.renderingState === "invalid_or_missing_payload") {
-    return t.invalidTitle;
-  }
-  if (snapshot.renderingState === "teaser_only") {
-    return t.teaserOnly;
-  }
-  if (snapshot.renderingState === "deep_report_locked") {
-    return t.deepLocked;
-  }
-  if (snapshot.renderingState === "deep_report_unlocked") {
-    return t.deepUnlocked;
-  }
-  if (snapshot.renderingState === "share_card_ready") {
-    return t.shareReady;
-  }
-  return t.resultReady;
-}
-
-export default function CanonicalResultSurface({ locale, snapshot, currentPath }: Props) {
-  const t = copy[locale];
-  const continueHref = lineContinueHref(locale, currentPath);
   const payload = snapshot.payload;
-  const renderErrorState = snapshot.renderingState === "invalid_or_missing_payload" || snapshot.renderingState === "version_mismatch_guard";
-  const canRenderDeepReport =
-    snapshot.renderingState === "deep_report_unlocked" ||
-    snapshot.unlockState === "unlock_granted" ||
-    snapshot.unlockState === "payment_succeeded" ||
-    snapshot.unlockState === "deep_report_available";
-
+  const identity = publicIdentity;
+  const personaId = snapshot.personaId;
+  const sampleResultHero = getRenderablePersonaAsset(personaId, "result_hero");
+  const sampleCrest = getRenderablePersonaAsset(personaId, "crest");
+  const samplePortrait = getRenderablePersonaAsset(personaId, "portrait");
+  const sampleResultHeroPath = sampleResultHero?.path ?? "";
+  const sampleCrestPath = sampleCrest?.path ?? "";
+  const samplePortraitPath = samplePortrait?.path ?? "";
+  const renderErrorState =
+    snapshot.renderingState === "invalid_or_missing_payload" || snapshot.renderingState === "version_mismatch_guard";
+  const publicResultName = renderErrorState
+    ? t.invalidTitle
+    : locale === "en"
+      ? identity?.publicResultLabelEn || payload?.final_locked_label_jp || t.invalidTitle
+      : identity?.mythArchetypeLabelJa || identity?.publicResultLabelJa || payload?.final_locked_label_jp || t.invalidTitle;
+  const socialLine = renderErrorState
+    ? locale === "en"
+      ? "The completed result could not be loaded."
+      : "完了した結果を読み込めませんでした。"
+    : locale === "en"
+      ? identity?.shareLineEn || payload?.share_card_result.share_card_line_en_logic_gloss || payload?.share_card_result.share_card_summary || ""
+      : identity?.contemporarySocialLabelJa || identity?.shareSendLineJa || identity?.shareLineJa || payload?.share_card_result.share_card_line_jp || payload?.share_card_result.share_card_summary || "";
+  const subtitle = renderErrorState
+    ? snapshot.renderingState === "version_mismatch_guard"
+      ? t.versionBody
+      : t.invalidBody
+    : locale === "en"
+      ? identity?.publicSubtitleEn || payload?.final_locked_subtitle_jp || ""
+      : identity?.functionalSubtitleJa || identity?.publicSubtitleJa || payload?.final_locked_subtitle_jp || "";
+  const detailCopy = renderErrorState
+    ? subtitle
+    : locale === "en"
+      ? identity?.paywallTeaseEn || payload?.deep_report_stub.deep_report_intro_jp || t.detailsSummary
+      : identity?.paywallTeaseJa || payload?.deep_report_stub.deep_report_intro_jp || t.detailsSummary;
+  const coreTraits = renderErrorState
+    ? buildCoreTraitLabels(snapshot, 3).map((trait) => trait.label)
+    : locale === "en"
+      ? buildCoreTraitLabels(snapshot, 3).map((trait) => trait.label)
+      : identity?.traitChipsJa || buildCoreTraitLabels(snapshot, 3).map((trait) => trait.label);
+  const primaryShareHref =
+    shareHref && shareHref.trim()
+      ? shareHref.trim()
+      : completionId && completionId.trim()
+        ? `/result?completionId=${encodeURIComponent(completionId.trim())}`
+        : "/line/mini-app";
+  const shareCardHref = shareViewHref || primaryShareHref;
+  const shareMessaging = buildResultShareMessaging({
+    locale,
+    publicResultName,
+    socialLine,
+    ctaLine: locale === "en" ? "What kind of support fits you?" : "あなたは今、どの寄り添い方？",
+  });
+  const detailLinkHref = nextStepHref?.trim() || "#result-details";
+  const detailLinkLabel = nextStepLabel?.trim() || t.detailsCta;
+  const detailLinkHint = nextStepHint?.trim() || t.detailsSummary;
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,rgba(247,244,238,1)_0%,rgba(242,238,229,1)_100%)] px-5 py-8 text-[var(--text)] sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-6 py-6 shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
-          <div className="service-kicker">{t.label}</div>
-          <h1 className="display-serif mt-3 text-[2rem] leading-[1.34] sm:text-[2.5rem]">{payload?.final_locked_label_jp || t.invalidTitle}</h1>
-          <p className="mt-3 max-w-4xl text-[15px] leading-8 text-[var(--muted)] sm:text-base">
-            {payload?.final_locked_subtitle_jp || (renderErrorState ? t.versionBody : t.subtitle)}
-          </p>
-          <div className="mt-4 rounded-[1.1rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-4 text-sm leading-7 text-[var(--muted)]">
-            {t.lockedNotice}
-          </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href={continueHref}
-              className="inline-flex items-center justify-center rounded-[1.2rem] border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.92)] px-5 py-3 text-sm font-semibold text-[var(--accent-sage-text)] transition hover:bg-white"
-            >
-              {t.lineContinue}
-            </Link>
-            <a
-              href={locale === "en" ? "/en/support" : "/support"}
-              className="inline-flex items-center justify-center rounded-[1.2rem] border border-[color:var(--line-soft)] bg-white/80 px-5 py-3 text-sm text-[var(--muted)] transition hover:bg-white"
-            >
-              {locale === "en" ? "Back to support" : "相談に戻る"}
-            </a>
-          </div>
-          <p className="mt-3 text-xs leading-6 text-[var(--muted)]">{t.lineContinueHint}</p>
-        </header>
-
-        <section className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <article className="space-y-6">
-            <Panel title={t.teaser}>
-              {renderErrorState ? (
-                <div className="rounded-[1.4rem] border border-dashed border-[color:var(--line-soft)] bg-white/60 px-5 py-6 text-sm leading-7 text-[var(--muted)]">
-                  {renderStateLabel(locale, snapshot)}
-                  <p className="mt-2">{renderErrorState ? t.versionBody : t.invalidBody}</p>
-                </div>
-              ) : (
-                <div className="rounded-[1.4rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.34)] px-5 py-5">
-                  <div className="service-kicker text-[var(--accent-sage-text)]">{t.teaser}</div>
-                  <p className="mt-3 text-sm leading-8 text-[var(--accent-sage-text)]">{payload?.teaser_result.teaser_line_jp || "—"}</p>
-                </div>
-              )}
-            </Panel>
-
-            <Panel title={t.shareCard}>
-              <div className="rounded-[1.4rem] border border-[color:var(--line-soft)] bg-white/80 px-5 py-5">
-                <p className="text-sm leading-8 text-[var(--muted)]">{payload?.share_card_result.share_card_line_jp || "—"}</p>
-                <p className="mt-2 text-xs leading-6 text-[var(--muted)]">
-                  {snapshot.payload?.share_card_state.status === "share_card_ready" ? t.shareReady : copy[locale].lockedNotice}
-                </p>
-              </div>
-            </Panel>
-
-            <Panel title={t.deepReport}>
-              {canRenderDeepReport && payload ? (
-                <div className="space-y-3 rounded-[1.4rem] border border-[color:var(--line-soft)] bg-white/80 px-5 py-5 text-sm leading-7 text-[var(--muted)]">
-                  <p className="font-semibold text-[var(--text)]">{payload.deep_report_stub.deep_report_title_jp}</p>
-                  <p>{payload.deep_report_stub.deep_report_intro_jp}</p>
-                  {payload.subobjects.deep_report_payload.deep_report_sections ? (
-                    <div className="mt-3 space-y-2">
-                      {Object.entries(payload.subobjects.deep_report_payload.deep_report_sections).map(([key, value]) => (
-                        <div key={key} className="rounded-[1rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.88)] px-4 py-3">
-                          <div className="text-[11px] tracking-[0.18em] text-[var(--muted)]">{key}</div>
-                          <div className="mt-1">{value}</div>
-                        </div>
-                      ))}
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(12,18,17,0.98)_0%,rgba(25,37,33,0.98)_20%,rgba(244,246,240,1)_70%,rgba(237,242,235,1)_100%)] px-4 py-4 text-[var(--text)]">
+      {renderErrorState ? (
+        <DteEventTracker
+          event="result_render_failed"
+          completionId={completionId}
+          personaId={personaShell?.personaId || null}
+          locale={locale}
+          source="result"
+          surface="result"
+          action="view"
+          branchId="yorisou_dte"
+          sourceBranchId="yorisou_dte"
+          visibilityPolicy="public"
+          crossBranchAccessPolicy="explicit_bridge"
+          enabled={true}
+        />
+      ) : null}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0)_26%,rgba(223,233,227,0.18)_100%)]" />
+      <div className="mx-auto max-w-md space-y-3">
+        {!renderErrorState && (sampleResultHero || sampleCrest || samplePortrait) ? (
+          <section className="overflow-hidden rounded-[1.45rem] border border-[rgba(36,45,43,0.1)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] shadow-[0_10px_22px_rgba(47,35,33,0.06)]">
+            {sampleResultHero ? (
+              <div className="relative overflow-hidden">
+                <img
+                  src={sampleResultHeroPath}
+                  alt="result hero"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,19,18,0.14)_0%,rgba(15,19,18,0.1)_40%,rgba(15,19,18,0.4)_100%)]" />
+                <div className="relative flex min-h-[11.25rem] flex-col justify-between gap-3 p-3.5 sm:min-h-[13.5rem] sm:p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(15,19,18,0.32)] px-2.5 py-1.5 text-[10px] font-semibold tracking-[0.14em] text-white backdrop-blur-sm">
+                      <span>{locale === "en" ? "Your type" : "あなたのタイプ"}</span>
                     </div>
-                  ) : null}
+                    {sampleCrest ? (
+                      <div className="flex items-center gap-2 rounded-full border border-white/14 bg-[rgba(255,255,255,0.12)] px-2.5 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
+                        <img
+                          src={sampleCrestPath}
+                          alt="crest"
+                          className="h-7 w-7 rounded-full border border-white/20 bg-white/70 object-contain p-1"
+                        />
+                        <span className="hidden text-[10px] tracking-[0.14em] sm:inline">
+                          {locale === "en" ? "Result mood" : "結果の雰囲気"}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex items-end justify-between gap-4">
+                    <div className="max-w-[16.5rem] rounded-[1rem] border border-white/14 bg-[rgba(15,19,18,0.28)] px-3 py-2.5 text-[12px] leading-5 text-white/94 backdrop-blur-sm">
+                      {locale === "en"
+                        ? "A quiet visual impression of this result."
+                        : "いまのあなたに近い空気感を、静かに映しています。"}
+                    </div>
+                    {samplePortrait ? (
+                      <img
+                        src={samplePortraitPath}
+                        alt="portrait"
+                        className="h-20 w-20 rounded-[1.2rem] border border-white/18 object-cover shadow-[0_10px_24px_rgba(15,19,18,0.22)] sm:h-24 sm:w-24"
+                      />
+                    ) : null}
+                  </div>
                 </div>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        <DteTextResultFirstScreen
+          locale={locale}
+          personaShell={renderErrorState ? null : personaShell}
+          fallbackName={publicResultName}
+          fallbackSubtitle={subtitle}
+          fallbackSocialLine={socialLine}
+          fallbackPublicSign={personaShell?.publicSign || identity?.shareCategoryTagJa || null}
+          currentModeKey={currentModeKey}
+          traitChips={coreTraits}
+          currentModeLabel={currentModeLabel}
+          primaryHref={primaryShareHref}
+          primaryLabel={shareMessaging.shareTitle}
+          renderErrorState={renderErrorState}
+          oraclePreviewLine={null}
+          actionArea={
+            !renderErrorState ? (
+              <ResultShareActions
+                locale={locale}
+                shareUrl={primaryShareHref}
+                shareTitle={shareMessaging.shareTitle}
+                shareText={shareMessaging.shareText}
+                completionId={completionId}
+                personaId={personaShell?.personaId || null}
+                shareSurface="result_first_screen"
+                shareCardUrl={shareCardHref}
+              />
+            ) : null
+          }
+          detailLink={
+            !renderErrorState ? (
+              nextStepHref ? (
+                <Link
+                  href={detailLinkHref}
+                  className="grid min-h-[54px] w-full gap-1 rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/72 px-4 py-3 text-[var(--accent-sage-text)]"
+                >
+                  <span className="text-[14px] font-semibold">{detailLinkLabel}</span>
+                  <span className="text-[11px] leading-5 text-[rgba(84,101,89,0.82)]">{detailLinkHint}</span>
+                </Link>
               ) : (
-                <div className="rounded-[1.4rem] border border-dashed border-[color:var(--line-soft)] bg-white/60 px-5 py-6 text-sm leading-7 text-[var(--muted)]">
-                  {snapshot.renderingState === "teaser_only" ? t.deepLocked : t.invalidBody}
-                </div>
-              )}
-            </Panel>
-          </article>
+                <a
+                  href={detailLinkHref}
+                  className="grid min-h-[54px] w-full gap-1 rounded-[0.95rem] border border-[rgba(125,141,121,0.18)] bg-white/72 px-4 py-3 text-[var(--accent-sage-text)]"
+                >
+                  <span className="text-[14px] font-semibold">{detailLinkLabel}</span>
+                  <span className="text-[11px] leading-5 text-[rgba(84,101,89,0.82)]">{detailLinkHint}</span>
+                </a>
+              )
+            ) : null
+          }
+        />
+
+        <section className="space-y-3" id="result-details">
+          <div className="px-1 text-[10px] tracking-[0.2em] text-[var(--muted)]">{t.belowFoldLabel}</div>
+          <section className="rounded-[1.65rem] border border-[rgba(36,45,43,0.12)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(245,248,243,0.97)_100%)] px-4 py-3.5 shadow-[0_14px_28px_rgba(47,35,33,0.08)]">
+            <div className="inline-flex rounded-full border border-[rgba(36,45,43,0.12)] bg-[rgba(235,241,234,0.9)] px-3 py-1 text-[11px] tracking-[0.18em] text-[var(--accent-sage-text)]">
+              {t.detailsTitle}
+            </div>
+            <p className="mt-3 text-[15px] font-semibold leading-7 text-[var(--accent-sage-text)]">
+              {locale === "en" ? socialLine : identity?.nextMoveLineJa || socialLine}
+            </p>
+            <div className="mt-3 text-[11px] tracking-[0.18em] text-[var(--muted)]">{t.closureTitle}</div>
+            <p className="mt-2 text-[13px] leading-6 text-[var(--muted)]">{detailCopy}</p>
+            {!renderErrorState ? null : null}
+          </section>
         </section>
       </div>
     </main>
-  );
-}
-
-function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-6 py-6 shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
-      <div className="service-kicker">{title}</div>
-      <div className="mt-4">{children}</div>
-    </section>
   );
 }
