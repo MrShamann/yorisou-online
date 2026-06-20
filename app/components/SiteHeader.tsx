@@ -6,12 +6,12 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
-  { href: "/reservation-mobility-support", label: "予約型移動相談" },
+  { href: "/check-in", label: "チェックを始める" },
   { href: "/pilot", label: "導入・実証" },
 ];
 
 const primaryNavEn = [
-  { href: "/reservation-mobility-support", label: "Reservation mobility consultation" },
+  { href: "/en/check-in", label: "Start the check-in" },
   { href: "/pilot", label: "Pilot" },
 ];
 
