@@ -6,7 +6,7 @@ import { getLineMessagingConfigStatus, isLineLoginConfigured } from "@/lib/serve
 
 export const metadata: Metadata = {
   title: "Talk with Hinata | Yorisou",
-  description: "Talk with Hinata about mobility or daily life, and let the next step become clearer through conversation.",
+  description: "Reflect on your current state, daily rhythm, and Yorisou check results with Hinata. This is a self-reflection support space, not medical, psychological, legal, or professional advice.",
 };
 
 export default async function SupportPageEn({
