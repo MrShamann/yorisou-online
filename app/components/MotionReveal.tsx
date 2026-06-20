@@ -20,13 +20,14 @@ export default function MotionReveal({
 }: MotionRevealProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
+  const prefersReducedMotion =
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
 
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
+    if (prefersReducedMotion) {
       return;
     }
 
@@ -43,7 +44,7 @@ export default function MotionReveal({
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [prefersReducedMotion]);
 
   const style = {
     "--motion-delay": `${delay}ms`,
@@ -55,7 +56,7 @@ export default function MotionReveal({
     <div
       ref={ref}
       style={style}
-      data-visible={visible ? "true" : "false"}
+      data-visible={visible || prefersReducedMotion ? "true" : "false"}
       className={["motion-reveal", className].filter(Boolean).join(" ")}
     >
       {children}

@@ -344,6 +344,10 @@ export default function ResultLiffBridge({ locale = "ja", currentPath }: Props) 
             ? "LIFF init failed"
             : "None";
 
+  if (process.env.NODE_ENV === "production") {
+    return null;
+  }
+
   return (
     <section className="mx-auto mt-6 max-w-6xl rounded-[2rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.96)] px-6 py-5 shadow-[0_14px_28px_rgba(47,35,33,0.04)]">
       <div className="service-kicker">{t.title}</div>
