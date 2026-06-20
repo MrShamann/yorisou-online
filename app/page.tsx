@@ -1,317 +1,301 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata } from "next";
-import MotionReveal from "./components/MotionReveal";
-import InsightsPreview from "./components/InsightsPreview";
-import TrackableHomepageLink from "./components/TrackableHomepageLink";
 
-const concerns = [
-  "5問・1〜2分で終わる",
-  "小さな結果が返る",
-  "低圧で、そのまま始められる",
-];
+import MotionReveal from "./components/MotionReveal";
+import { MvpCard, MvpSection } from "./components/MvpSurface";
+import { PRODUCT_CARDS, type ProductCard } from "./data/productCards";
 
 export const metadata: Metadata = {
-  title: "今日の寄り添い方チェック | Yorisou",
+  title: "Yorisou | 今の状態チェック",
   description:
-    "5問・1〜2分で、いまの寄り添い方を軽く確かめる入口です。小さな結果を受け取って、必要なときは従来の相談にも進めます。",
+    "今の自分、人間関係の疲れ、恋愛の距離感。気になるテーマをひとつ選んで、無料結果だけ確認できます。ログインなし。",
 };
 
-const journeySteps = [
-  {
-    label: "1. 相談の入口",
-    title: "予約前の不安を、家族の状況として受け取ります。",
-    problem: "外出や送迎の困りごとを、そのまま話せます。",
-    action: "ひなたが整理すること",
-    detail: "本人、家族、移動条件を短く整理します。",
-    outcome: "次に進む先が見えます。",
-  },
-  {
-    label: "2. 家族で共有",
-    title: "確認したいことを、あとで見直しやすくまとめます。",
-    problem: "予約の前に、家族でそろえておきたい確認が残りやすい領域です。",
-    action: "ひなたが返すこと",
-    detail: "電話、LINE、アプリのどこから入っても、家族の確認に戻せます。",
-    outcome: "説明のやり直しが減ります。",
-  },
-  {
-    label: "3. 必要な先へ",
-    title: "必要な入口へ静かにつなぎます。",
-    problem: "家庭向けの相談と、導入・実証の相談は、最初に分けるほうが落ち着きます。",
-    action: "ひなたが案内すること",
-    detail: "家族向け相談と、運営側の小さな導入相談を分けて案内します。",
-    outcome: "今の段階に合う次の一歩だけが残ります。",
-  },
-];
-
-const entryLanes = [
-  {
-    title: "家族・利用者の相談",
-    text: "予約前の不安や確認事項を、家族目線で整理できます。",
-    href: "/reservation-mobility-support",
-    cta: "相談ページへ",
-  },
-  {
-    title: "導入・実証の相談",
-    text: "自治体、施設、事業者の小さなパイロット相談につながります。",
-    href: "/reservation-mobility-support#pilot-inquiry",
-    cta: "導入相談へ",
-  },
-];
-
-const platformPillars = [
-  {
-    title: "5問だけ",
-    text: "短い選択肢に答えるだけで進めます。",
-  },
-  {
-    title: "小さな結果",
-    text: "今の寄り添い方に合う一言結果が返ります。",
-  },
-  {
-    title: "必要なときは相談",
-    text: "従来の相談入口も、必要な人だけに残します。",
-  },
-];
+const RESULT_PREVIEWS = [
+  { label: "今の状態に近いタイプ", note: "公開しても安心な言葉で表示" },
+  { label: "整えやすい方向のヒント", note: "小さな次の一歩を提案" },
+  { label: "必要なら深く読むレポート", note: "無料結果のあとに選べます" },
+] as const;
 
 export default function HomePage() {
-  return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.98),_rgba(247,244,238,0.99)_60%)]">
-        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:px-10 md:py-16 lg:grid-cols-[1.18fr_0.82fr] lg:items-center lg:gap-12">
-          <MotionReveal className="order-2 lg:order-1" delay={40} distance={28}>
-            <div className="service-kicker">今日の軽い入口</div>
-            <h1 className="display-serif mt-5 max-w-[9.6em] text-[2.18rem] leading-[1.24] md:text-[3.02rem] lg:text-[3.36rem]">
-              <span className="block md:whitespace-nowrap">5問・1〜2分で、</span>
-              <span className="block text-[#79685f] md:whitespace-nowrap">いまの寄り添い方を軽く整える。</span>
-            </h1>
-            <p className="mt-6 max-w-[34rem] text-base leading-9 text-[var(--muted)] md:text-lg">
-              Yorisouは、短いチェックから始める寄り添いの入口です。5問だけ答えると、小さな結果と次の一歩が返ります。
-            </p>
-            <p className="mt-4 max-w-[33rem] text-sm leading-8 text-[var(--muted)] md:text-base">
-              長い説明はいりません。低圧で始められて、必要な人だけが次へ進めます。
-            </p>
-            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <TrackableHomepageLink
-                href="/check-in?source=homepage_primary"
-                eventName="homepage_checkin_cta_clicked"
-                source="homepage_primary"
-                className="btn btn-primary"
-              >
-                今日の寄り添い方チェックへ
-              </TrackableHomepageLink>
-              <TrackableHomepageLink
-                href="/reservation-mobility-support"
-                eventName="homepage_support_cta_clicked"
-                source="homepage_secondary"
-                className="btn btn-secondary"
-              >
-                従来の相談を見る
-              </TrackableHomepageLink>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2 text-sm text-[var(--muted)]">
-              {concerns.map((item) => (
-                <span key={item} className="rounded-full border border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.72)] px-3 py-1.5">
-                  {item}
-                </span>
-              ))}
-            </div>
-            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-              <TrackableHomepageLink
-                href="/reservation-mobility-support"
-                eventName="homepage_support_cta_clicked"
-                source="homepage_secondary"
-                className="soft-link"
-              >
-                予約型移動相談
-              </TrackableHomepageLink>
-              <TrackableHomepageLink
-                href="/pilot"
-                eventName="homepage_support_cta_clicked"
-                source="homepage_secondary"
-                className="soft-link"
-              >
-                導入・実証
-              </TrackableHomepageLink>
-            </div>
-          </MotionReveal>
+  const activeCards = PRODUCT_CARDS.filter((c) => c.status === "primary");
+  const futureCards = PRODUCT_CARDS.filter((c) => c.status !== "primary");
 
-          <MotionReveal className="order-1 lg:order-2" delay={160} distance={22} scale={0.99}>
-            <div className="hero-portrait-frame mx-auto max-w-[21rem] overflow-hidden rounded-[2rem] border border-[color:var(--line-soft)] bg-[var(--surface)] p-2 shadow-[0_14px_28px_rgba(47,35,33,0.05)] lg:mr-8">
-              <div className="overflow-hidden rounded-[1.7rem] bg-[var(--surface-soft-strong)]">
+  return (
+    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_42%,_#F3FAF6_100%)] text-[#2F2A28]">
+
+      {/* ── Hero ── */}
+      <section className="border-b border-[rgba(23,59,53,0.08)] bg-[radial-gradient(circle_at_14%_0%,_rgba(217,130,86,0.11),_transparent_30%),radial-gradient(circle_at_88%_7%,_rgba(223,238,235,0.75),_transparent_34%),linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_60%,_#F3FAF6_100%)]">
+        <div className="container pb-6 pt-5 md:pb-10 md:pt-12">
+          <MotionReveal
+            className="mx-auto max-w-[42rem] space-y-3 md:text-center"
+            delay={20}
+            distance={18}
+          >
+            <p className="service-kicker">Yorisou</p>
+            <h1 className="display-serif text-[1.9rem] leading-[1.18] text-[#2F2A28] md:text-[3.1rem]">
+              今、気になっていることを<br className="hidden md:block" />
+              <span className="text-[#173B35]">ひとつだけ選んで整理する。</span>
+            </h1>
+            <p className="max-w-[34rem] text-[15px] leading-7 text-[#5F5750] md:mx-auto">
+              ログインなし。答えたあとに無料結果だけ確認できます。医療・心理的な判定ではありません。
+            </p>
+          </MotionReveal>
+        </div>
+      </section>
+
+      {/* ── 3-choice entry selector ── */}
+      <section className="container py-8 md:py-12">
+        <div className="mx-auto max-w-[52rem] space-y-5">
+          <div className="space-y-1 md:text-center">
+            <p className="text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">今日、整理したいことを選んでください</p>
+            <p className="text-[13px] leading-6 text-[#7A7068]">
+              ひとつだけで大丈夫です。すべて答える必要はありません。
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {activeCards.map((card) => (
+              <ActiveChoiceCard key={card.id} card={card} />
+            ))}
+          </div>
+
+          <p className="text-[12px] leading-6 text-[#8A7E78] md:text-center">
+            結果は無料で表示されます。回答は送信されません。
+          </p>
+        </div>
+      </section>
+
+      {/* ── LINE entry ── */}
+      <section className="container py-0 pb-6 md:pb-8">
+        <div className="mx-auto max-w-[52rem]">
+          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 py-5 flex flex-col sm:flex-row sm:items-start gap-5">
+            {/* QR — desktop only */}
+            <div className="hidden sm:flex shrink-0 flex-col items-center gap-1.5">
+              <div className="rounded-[0.85rem] border border-[rgba(23,59,53,0.1)] bg-white p-2 shadow-[0_4px_12px_rgba(23,59,53,0.07)]">
                 <Image
-                  src="/images/hinata-portrait.png"
-                  alt="AI相談員 ひなた"
-                  width={1200}
-                  height={1500}
-                  priority
-                  className="h-auto w-full object-cover object-top"
+                  src="/line/yorisou-line-miniapp-qr.png"
+                  alt="YorisouのLINE Mini Appに繋がるQRコード"
+                  width={96}
+                  height={96}
+                  className="rounded-[0.4rem]"
+                  unoptimized
                 />
               </div>
+              <p className="text-[10px] leading-4 text-[#8A8078] text-center">スマホでQRを読み取る</p>
             </div>
-          </MotionReveal>
-        </div>
-      </section>
-
-      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.52)] px-6 py-10 md:px-10 md:py-12">
-        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.94fr_1.06fr] lg:items-stretch">
-          <MotionReveal delay={40} distance={18}>
-            <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6 shadow-[0_10px_24px_rgba(47,35,33,0.04)]">
-              <div className="service-kicker">今日のチェックについて</div>
-              <h2 className="display-serif mt-4 max-w-[14em] text-[1.66rem] leading-[1.62] md:text-[2rem]">
-                5問・1〜2分で、軽く確かめる入口です。
-              </h2>
-              <p className="mt-4 page-copy">小さな結果と次の一歩だけを返すので、重い相談に入る前の入口として使えます。</p>
-              <div className="mt-6 grid gap-3">
-                {platformPillars.map((pillar, index) => (
-                  <MotionReveal key={pillar.title} delay={100 + index * 60} distance={16}>
-                    <div className="platform-pill rounded-[1.2rem] border border-[color:var(--line-soft)] bg-[rgba(247,244,238,0.88)] px-4 py-4">
-                      <div className="platform-pill-title">{pillar.title}</div>
-                      <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{pillar.text}</p>
-                    </div>
-                  </MotionReveal>
-                ))}
-              </div>
-            </article>
-          </MotionReveal>
-
-          <MotionReveal delay={120} distance={20} scale={0.99}>
-            <article className="motion-card rounded-[1.8rem] border border-[color:var(--line-sage)] px-6 py-6">
-              <div className="service-kicker text-[var(--accent-sage-text)]">チェックで返るもの</div>
-              <h2 className="display-serif mt-4 max-w-[13em] text-[1.58rem] leading-[1.62] md:text-[1.92rem]">
-                ご本人もご家族も、今の状態に合う小さな一歩を見つけやすくなります。
-              </h2>
-              <p className="mt-4 page-copy text-[var(--accent-sage-text)]">5問で返るのは、長い解説ではなく、気持ちを軽くする短い結果です。</p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
-                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">5問だけ</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">短い選択肢で、気負わずに進めます。</p>
-                </div>
-                <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
-                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">小さな結果</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">今の寄り添い方に合う一言結果が返ります。</p>
-                </div>
-                <div className="rounded-[1.25rem] bg-[rgba(255,255,255,0.6)] px-4 py-4">
-                  <div className="text-xs tracking-[0.18em] text-[var(--accent-sage-text)]">次の一歩</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--accent-sage-text)]">必要な人だけが、次の相談に進めます。</p>
-                </div>
-              </div>
-            </article>
-          </MotionReveal>
-        </div>
-      </section>
-
-      <InsightsPreview locale="ja" />
-
-      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-6 py-12 md:px-10 md:py-14">
-        <div className="mx-auto max-w-6xl">
-          <MotionReveal className="max-w-[40rem]" delay={30}>
-            <div className="service-kicker">従来の相談の流れ</div>
-            <h2 className="display-serif mt-4 max-w-[13.5em] text-[1.76rem] leading-[1.62] md:text-[2.16rem]">
-              <span className="block md:whitespace-nowrap">必要なときだけ、</span>
-              <span className="block md:whitespace-nowrap">従来の相談入口も使えます。</span>
-            </h2>
-            <p className="mt-4 page-copy">ここは残しつつ、主役ではなく従来の入口として見せます。</p>
-          </MotionReveal>
-          <div className="mt-8 space-y-4">
-            {journeySteps.map((step, index) => (
-              <MotionReveal key={step.label} delay={80 + index * 65} distance={20}>
-                <article className="journey-step motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.82)] px-6 py-6">
-                  <div className="journey-grid">
-                    <div>
-                      <div className="service-kicker text-[var(--accent-sage-text)]">{step.label}</div>
-                      <h3 className="display-serif mt-3 text-[1.34rem] leading-[1.62] text-[var(--text)] md:text-[1.56rem]">
-                        {step.title}
-                      </h3>
-                    </div>
-                    <div className="journey-copy">
-                      <div className="journey-block">
-                        <div className="journey-block-label">いま起きがちなこと</div>
-                        <p>{step.problem}</p>
-                      </div>
-                      <div className="journey-block">
-                        <div className="journey-block-label">{step.action}</div>
-                        <p>{step.detail}</p>
-                      </div>
-                      <div className="journey-block journey-outcome">
-                        <div className="journey-block-label">つぎに見えること</div>
-                        <p>{step.outcome}</p>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              </MotionReveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section-wash border-b border-[color:var(--line-soft)] bg-[rgba(255,255,255,0.46)] px-6 py-12 md:px-10 md:py-14">
-        <div className="mx-auto max-w-6xl">
-          <MotionReveal className="max-w-[42rem]" delay={30}>
-              <div className="service-kicker">必要なときの従来の入口</div>
-              <h2 className="display-serif mt-4 max-w-[15em] text-[1.72rem] leading-[1.6] md:text-[2.08rem]">
-                従来の相談や導入相談は、下の入口にまとめています。
-              </h2>
-              <p className="mt-4 page-copy">新しい入口を主役にしつつ、必要な人には従来の相談先も残します。</p>
-          </MotionReveal>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {entryLanes.map((item, index) => (
-              <MotionReveal key={item.title} delay={90 + index * 75} distance={18}>
-                <article
-                key={item.title}
-                className="motion-card lane-card rounded-[1.6rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-5 py-5 shadow-[0_10px_24px_rgba(47,35,33,0.04)]"
+            {/* Copy */}
+            <div className="flex-1 space-y-1.5">
+              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">LINEで続けたい方へ</p>
+              <p className="text-[14px] font-semibold leading-6 text-[#2F2A28]">LINEで結果をあとから見返す</p>
+              <p className="text-[12px] leading-5 text-[#7A7068]">保存や通知は、確認と同意のあとで使えます。現在準備中です。</p>
+              <Link
+                href="/line/mini-app"
+                className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
               >
-                <h3 className="text-base font-medium text-[var(--text)]">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{item.text}</p>
-                <div className="mt-4">
-                  <Link href={item.href} className="soft-link">
-                    {item.cta}
-                  </Link>
-                </div>
-                </article>
-              </MotionReveal>
+                LINEでYorisouを開く
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── What you get ── */}
+      <MvpSection
+        eyebrow="無料結果で見えること"
+        title="チェックを終えると見えるもの。"
+        lead="長い説明より、答えたあとに受け取れることを先にお伝えします。"
+        className="!py-8 md:!py-10"
+      >
+        <div className="grid gap-2.5 md:grid-cols-3">
+          {RESULT_PREVIEWS.map((item, i) => (
+            <MvpCard
+              key={item.label}
+              className="flex gap-3 rounded-[1.15rem] border-[rgba(23,59,53,0.1)] bg-white/94 p-4 shadow-[0_12px_26px_rgba(23,59,53,0.06)] md:block md:space-y-2"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F3FAF6] text-[13px] font-semibold text-[#49615B] md:mb-2.5">
+                {i + 1}
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[14px] font-semibold leading-6 text-[#173B35]">{item.label}</p>
+                <p className="text-[12px] leading-5 text-[#7A7068]">{item.note}</p>
+              </div>
+            </MvpCard>
+          ))}
+        </div>
+      </MvpSection>
+
+      {/* ── Future / coming soon ── */}
+      {futureCards.length > 0 && (
+        <MvpSection
+          eyebrow="今後のチェック"
+          title="準備中のテーマ。"
+          lead="今後追加していく予定のチェックです。今は上の3つをご利用ください。"
+          className="!py-6 md:!py-8"
+        >
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {futureCards.map((card) => (
+              <FutureCard key={card.id} card={card} />
             ))}
           </div>
-        </div>
-      </section>
+        </MvpSection>
+      )}
 
-      <section className="section-wash bg-[rgba(255,255,255,0.22)] px-6 py-10 md:px-10 md:py-12">
-        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1.06fr_0.94fr]">
-          <MotionReveal delay={30}>
-            <div className="motion-card rounded-[1.8rem] border border-[color:var(--line-soft)] bg-[var(--surface)] px-6 py-6">
-            <div className="service-kicker">必要な人だけが続きへ</div>
-            <h2 className="display-serif mt-4 max-w-[14.5em] text-[1.7rem] leading-[1.64] md:text-[2.04rem]">
-              まずは軽いチェックから始めて、必要な人だけが次の入口へ進めます。
-            </h2>
-            <div className="mt-5 page-copy">
-              <p>すぐに重い相談へ進む必要はありません。短いチェックのあとに、必要な人だけが従来の相談や導入相談を選べます。</p>
-              <p className="mt-3">自治体や施設、地域事業者の方も、必要な場合だけ下の入口を使えます。</p>
-            </div>
+      {/* ── Continuation ── */}
+      <MvpSection
+        eyebrow="あとで見返す"
+        title="一度で終わりにしなくていい。"
+        lead="チェックの結果は、時間を置いてもう一度見直すと、少し違って見えることがあります。LINEで保存して続きやすくする導線を整えています。"
+        className="!py-8"
+      >
+        <MvpCard className="space-y-4">
+          <div className="grid gap-2 sm:grid-cols-3 text-[13px] text-[#5F5750]">
+            {(["今日の結果を保存する", "あとで見返す", "また気になったときに戻る"] as const).map((t) => (
+              <div key={t} className="rounded-[1rem] border border-[rgba(23,59,53,0.1)] bg-white/80 px-4 py-3">
+                {t}
+              </div>
+            ))}
           </div>
-          </MotionReveal>
+          <p className="text-[12px] leading-6 text-[#7A7068]">
+            LINEでの保存・通知・見返しには、それぞれ確認と同意が必要です。現在準備中です。
+          </p>
+          <Link
+            href="/line/mini-app"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[14px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
+          >
+            LINEで続きやすくする
+          </Link>
+        </MvpCard>
+      </MvpSection>
 
-          <MotionReveal delay={120} distance={18}>
-            <div className="motion-card panel-sage rounded-[1.8rem] px-6 py-5">
-            <div className="service-kicker text-[var(--accent-sage-text)]">そのあとで使える入口</div>
-            <p className="mt-3 text-sm leading-8 md:text-base">
-              LINE、アカウント、Web は、必要な人だけが続きとして使えます。
-            </p>
-            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-              <Link href="/line/next?locale=ja&line_intent=register&returnTo=/support" className="soft-link">
-                LINE
-              </Link>
-              <Link href="/login" className="soft-link">
-                アカウント
-              </Link>
-              <Link href="/support" className="soft-link">
-                Web
-              </Link>
-            </div>
-          </div>
-          </MotionReveal>
+      {/* ── Report preview ── */}
+      <MvpSection
+        eyebrow="必要なら、もう少し深く"
+        title="無料結果だけで終えても大丈夫です。"
+        lead="もっと整理したいときに自分だけで読めるレポートを準備しています。急いで読む必要はありません。"
+        className="!py-8"
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          {REPORT_CARDS.map((card) => (
+            <Link key={card.title} href={card.href} className="group flex flex-col gap-3 rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 shadow-[0_10px_24px_rgba(23,59,53,0.06)] transition hover:-translate-y-0.5 hover:border-[rgba(23,59,53,0.2)] hover:bg-white">
+              <span className="inline-flex self-start rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold text-[#3D6058]">
+                {card.badge}
+              </span>
+              <div className="flex-1 space-y-1">
+                <p className="text-[13px] font-semibold leading-6 text-[#2F2A28]">{card.title}</p>
+                <p className="text-[12px] leading-5 text-[#7A7068]">{card.body}</p>
+              </div>
+              <span className="inline-flex items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F8F7F4] px-4 py-2 text-[12px] font-semibold text-[#8A8078]">
+                レポートの内容を見る →
+              </span>
+            </Link>
+          ))}
         </div>
-      </section>
+        <p className="text-[12px] leading-5 text-[#9A918B]">
+          レポートは医療的・専門的判断ではありません。購入や申込みではありません。
+        </p>
+      </MvpSection>
+
+      {/* ── Community preview ── */}
+      <MvpSection
+        eyebrow="同じような人の声"
+        title="見るだけでも大丈夫です。"
+        lead="ここは投稿や相談の場所ではありません。近い状態のサンプルを見ることができます。"
+        className="!py-8 md:!pb-14"
+      >
+        <MvpCard className="space-y-4">
+          <div className="space-y-2">
+            {COMMUNITY_SAMPLES.map((v, i) => (
+              <div key={i} className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-3">
+                <p className="text-[13px] leading-7 text-[#2F2A28]">「{v}」</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] leading-5 text-[#9A918B]">
+            表示される声は編集されたサンプルです。個人の投稿ではありません。
+          </p>
+        </MvpCard>
+      </MvpSection>
+
     </main>
   );
 }
+
+/* ─── Active choice card ─── */
+
+function ActiveChoiceCard({ card }: { card: ProductCard }) {
+  return (
+    <Link
+      href={card.route_placeholder!}
+      className="group flex flex-col gap-3 rounded-[1.55rem] border border-[rgba(23,59,53,0.18)] bg-white/96 p-5 shadow-[0_14px_32px_rgba(23,59,53,0.08)] transition hover:-translate-y-0.5 hover:border-[#173B35] hover:shadow-[0_20px_40px_rgba(23,59,53,0.12)]"
+    >
+      <div className="flex flex-wrap gap-1.5">
+        {card.badges.map((badge) => (
+          <span
+            key={badge}
+            className="inline-flex rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold leading-4 text-[#3D6058]"
+          >
+            {badge}
+          </span>
+        ))}
+      </div>
+
+      <div className="flex-1 space-y-1.5">
+        <h2 className="display-serif text-[1.25rem] leading-[1.38] text-[#2F2A28]">{card.title_ja}</h2>
+        <p className="text-[13px] leading-6 text-[#5F5750]">{card.subtitle_ja}</p>
+      </div>
+
+      <p className="text-[11px] leading-5 text-[#9A918B]">{card.public_boundary_note}</p>
+
+      <div className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-[#173B35] px-4 text-[13px] font-bold text-white shadow-[0_12px_24px_rgba(23,59,53,0.18)] transition group-hover:bg-[#0F2F2B]">
+        {card.primary_cta}
+      </div>
+    </Link>
+  );
+}
+
+/* ─── Future / coming-soon card ─── */
+
+function FutureCard({ card }: { card: ProductCard }) {
+  return (
+    <div className="flex flex-col gap-2.5 rounded-[1.35rem] border border-[rgba(23,59,53,0.07)] bg-white/70 p-4 opacity-65">
+      <div className="flex-1 space-y-1">
+        <h3 className="text-[14px] font-semibold leading-6 text-[#5F5750]">{card.title_ja}</h3>
+        <p className="text-[12px] leading-5 text-[#8A7E78]">{card.subtitle_ja}</p>
+      </div>
+      <span className="inline-flex self-start rounded-full border border-[rgba(23,59,53,0.1)] bg-[#F8F7F4] px-3 py-1 text-[11px] font-semibold text-[#9A918B]">
+        準備中
+      </span>
+    </div>
+  );
+}
+
+/* ─── Static data ─── */
+
+const REPORT_CARDS = [
+  {
+    badge: "自分理解",
+    title: "今の自分を深く読む",
+    body: "今の状態の流れ、回復のリズム、人との距離感を整理します。",
+    href: "/reports/self",
+  },
+  {
+    badge: "関係の疲れ",
+    title: "人間関係の疲れを深く読む",
+    body: "返信・予定・気づかいの負担を分けて回復しやすい距離を見つけます。",
+    href: "/reports/relationship-fatigue",
+  },
+  {
+    badge: "距離感",
+    title: "恋愛の距離感を深く読む",
+    body: "待ち方・近づき方・伝える前に整えたいことを自分側から整理します。",
+    href: "/reports/love-distance",
+  },
+] as const;
+
+const COMMUNITY_SAMPLES = [
+  "返すことや合わせることが重い日がある。そう気づくだけで、少し楽になることがある。",
+  "待つ時間に気持ちが揺れる。それは自分が弱いのではなく、今の状態が出ているだけかもしれない。",
+  "今月の小さな問い: 少し軽くしたいものは何ですか？返信、予定、距離、休む時間。ひとつだけで大丈夫です。",
+] as const;
