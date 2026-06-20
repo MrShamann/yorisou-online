@@ -1,0 +1,489 @@
+{
+  "date": "2026-04-13",
+  "framework_name": "Yorisou Canonical 21 Dimension Framework v1",
+  "dimensions": [
+    {
+      "dimension_id": "D01",
+      "dimension_name": "朝の立ち上がり",
+      "definition": "How a person starts the day when the first hour still has room to set the tone.",
+      "positive_pole": "Smooth, self-starting, lightly structured mornings",
+      "negative_pole": "Slow, hesitant, hard-to-start mornings",
+      "what_it_measures": ["start-up rhythm", "morning activation", "first-step ease"],
+      "what_it_does_not_measure": ["sleep quality as a medical topic", "productivity in the abstract"],
+      "allowed_scenario_families": ["getting out of bed", "morning prep", "first coffee/tea", "first message", "opening the curtains"],
+      "best_option_families": ["direct action vs pause", "quick start vs gradual start", "self-led vs other-led"],
+      "scoring_notes": "Score the first movement, not the whole day; avoid turning it into sleep hygiene advice.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D02",
+          "guard": "Keep the focus before leaving home, and avoid departure prep details."
+        },
+        {
+          "neighbor_dimension_id": "D12",
+          "guard": "Do not center evening fatigue or end-of-day reserve."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Helps separate fast starter, soft starter, and warm-up-needed persona tendencies."
+    },
+    {
+      "dimension_id": "D02",
+      "dimension_name": "出発前の段取り",
+      "definition": "How someone organizes the moments before leaving home.",
+      "positive_pole": "Ready, sorted, route-aware departure prep",
+      "negative_pole": "Scattered, delayed, last-minute departure prep",
+      "what_it_measures": ["preparation order", "readiness behavior", "object handling before departure"],
+      "what_it_does_not_measure": ["travel preference", "long-distance planning", "route optimization"],
+      "allowed_scenario_families": ["玄関まわり", "bag check", "wallet/keys", "leaving for errands", "leaving for appointments"],
+      "best_option_families": ["concrete choice vs flexible choice", "checklist vs improvisation"],
+      "scoring_notes": "Judge whether the person wants order first or movement first.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D08",
+          "guard": "Stay about prep, not steps or thresholds."
+        },
+        {
+          "neighbor_dimension_id": "D20",
+          "guard": "Do not turn it into decision-making in general."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Distinguishes prepared planner, move-when-ready, and needs-a-nudge personas."
+    },
+    {
+      "dimension_id": "D03",
+      "dimension_name": "通院・買い物の切り替え",
+      "definition": "How someone shifts between a necessary appointment and a practical errand.",
+      "positive_pole": "Clean switching, efficient combining, fatigue-aware sequencing",
+      "negative_pole": "Confused, overloaded, resistant to switching tasks",
+      "what_it_measures": ["task switching", "bodily load management", "practical sequencing"],
+      "what_it_does_not_measure": ["medical severity", "shopping budget theory", "route efficiency"],
+      "allowed_scenario_families": ["clinic + supermarket", "pharmacy + store", "one-stop errands", "small outing bundles"],
+      "best_option_families": ["practical vs comfort-seeking", "narrow plan vs flexible plan"],
+      "scoring_notes": "Keep it about switching and load, not about the details of the illness or purchases.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D04",
+          "guard": "Do not focus on what to buy."
+        },
+        {
+          "neighbor_dimension_id": "D13",
+          "guard": "Do not focus on unexpected change."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Differentiates sequential loader, combine-and-go, and fatigue-aware planner personas."
+    },
+    {
+      "dimension_id": "D04",
+      "dimension_name": "買い物の優先付け",
+      "definition": "How someone decides what should go into the basket first or be left out.",
+      "positive_pole": "Prioritizes function, necessity, and immediate use",
+      "negative_pole": "Drifts, indulges, hesitates, or overbuys",
+      "what_it_measures": ["priority setting", "need sorting", "practical restraint"],
+      "what_it_does_not_measure": ["general consumption habits", "financial status", "diet ideology"],
+      "allowed_scenario_families": ["supermarket", "convenience store", "home supplies", "small shopping choices"],
+      "best_option_families": ["concrete choice vs soft choice", "practical vs comfort-seeking"],
+      "scoring_notes": "Look for whether the item sorts needs, not whether the person likes shopping.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D03",
+          "guard": "Stay inside the shopping moment."
+        },
+        {
+          "neighbor_dimension_id": "D17",
+          "guard": "Do not center reward or treat value."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Helps separate efficient buyer, comfort buyer, and planned restraint personas."
+    },
+    {
+      "dimension_id": "D05",
+      "dimension_name": "雨の日の移動",
+      "definition": "How someone handles movement when rain adds friction.",
+      "positive_pole": "Prepared, adaptive, protected, low-friction movement",
+      "negative_pole": "Avoidant, disrupted, annoyed, easily slowed by weather",
+      "what_it_measures": ["weather friction response", "mobility adjustment", "small resilience"],
+      "what_it_does_not_measure": ["general mood", "seasonal preference", "outdoor sports"],
+      "allowed_scenario_families": ["umbrella use", "slippery ground", "bag protection", "short trip", "local errands in rain"],
+      "best_option_families": ["direct action vs pause", "practical vs comfort-seeking"],
+      "scoring_notes": "Score weather adaptation, not weather liking.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D08",
+          "guard": "Keep it weather-specific rather than threshold-specific."
+        },
+        {
+          "neighbor_dimension_id": "D13",
+          "guard": "Do not center schedule change."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Differentiates weather-adaptive, rain-avoidant, and careful-mover personas."
+    },
+    {
+      "dimension_id": "D06",
+      "dimension_name": "片付けと収納",
+      "definition": "How someone manages visible clutter and places items back into order.",
+      "positive_pole": "Tidy, sequence-aware, placement-oriented",
+      "negative_pole": "Mess-tolerant, delayed, reactive, or easily overwhelmed",
+      "what_it_measures": ["organization impulse", "placement logic", "recovery from clutter"],
+      "what_it_does_not_measure": ["cleaning intensity", "perfectionism", "home design taste"],
+      "allowed_scenario_families": ["room tidying", "shelf/box use", "putting things away", "clearing surfaces"],
+      "best_option_families": ["concrete choice vs narrow plan", "self-led vs other-led"],
+      "scoring_notes": "Judge whether the person wants order now or later; do not make it about cleaning labor.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D07",
+          "guard": "Stay with clutter and placement, not danger."
+        },
+        {
+          "neighbor_dimension_id": "D15",
+          "guard": "Do not add work overload."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates order keeper, good-enough organizer, and clutter-accepting personas."
+    },
+    {
+      "dimension_id": "D07",
+      "dimension_name": "家の中の安全確認",
+      "definition": "How someone notices and responds to small safety conditions at home.",
+      "positive_pole": "Watchful, preventive, environment-aware",
+      "negative_pole": "Unconcerned, reactive, or blind to small hazards",
+      "what_it_measures": ["home hazard awareness", "preventive checking", "calm caution"],
+      "what_it_does_not_measure": ["fearfulness", "medical anxiety", "home surveillance"],
+      "allowed_scenario_families": ["floor slips", "mats", "handholds", "lighting", "doorway safety", "daily home checks"],
+      "best_option_families": ["practical vs cautious", "self-led vs other-led"],
+      "scoring_notes": "Score prevention style, not anxiety volume.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D08",
+          "guard": "Keep it about home conditions rather than movement thresholds."
+        },
+        {
+          "neighbor_dimension_id": "D19",
+          "guard": "Do not make it about reassurance-seeking."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates safety checker, low-alert home dweller, and prevention-minded personas."
+    },
+    {
+      "dimension_id": "D08",
+      "dimension_name": "段差・階段・玄関",
+      "definition": "How someone handles thresholds, steps, and entry/exit friction.",
+      "positive_pole": "Stable, careful, confident at thresholds",
+      "negative_pole": "Clumsy, cautious, slowed, or uneasy at thresholds",
+      "what_it_measures": ["physical transition handling", "small mobility friction", "threshold confidence"],
+      "what_it_does_not_measure": ["general exercise ability", "fear of going out", "home safety broadly"],
+      "allowed_scenario_families": ["entrance step", "stairs", "doorway", "carrying items through thresholds"],
+      "best_option_families": ["direct action vs pause", "concrete choice vs flexible choice"],
+      "scoring_notes": "Keep the scene body-level and local; use concrete thresholds only.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D02",
+          "guard": "Do not focus on packing or departure prep."
+        },
+        {
+          "neighbor_dimension_id": "D05",
+          "guard": "Do not make weather the main cause."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates threshold-confident, slow-step, and needs-handhold personas."
+    },
+    {
+      "dimension_id": "D09",
+      "dimension_name": "連絡・返事の温度",
+      "definition": "How someone chooses the tone and timing of replies in LINE-like communication.",
+      "positive_pole": "Prompt, appropriately warm, calibrated reply behavior",
+      "negative_pole": "Cold, delayed, overdone, or avoidant reply behavior",
+      "what_it_measures": ["reply tone", "timing sensitivity", "message warmth"],
+      "what_it_does_not_measure": ["social media strategy", "etiquette theory", "relationship diagnosis"],
+      "allowed_scenario_families": ["LINE reply", "text response", "short check-in", "brief coordination"],
+      "best_option_families": ["quick response vs delayed response", "direct action vs pause"],
+      "scoring_notes": "Score tone and timing together; do not overread one emoji.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D10",
+          "guard": "Stay in message response rather than asking family directly."
+        },
+        {
+          "neighbor_dimension_id": "D18",
+          "guard": "Do not make it about distance broadly."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates fast responder, measured responder, and warm-but-late responder personas."
+    },
+    {
+      "dimension_id": "D10",
+      "dimension_name": "家族への一言相談",
+      "definition": "How someone asks family for a small, practical piece of help or confirmation.",
+      "positive_pole": "Clear, direct, appropriately leaning on family",
+      "negative_pole": "Avoidant, vague, over-independent, or overburdening",
+      "what_it_measures": ["help-seeking style", "family coordination", "micro-dependence"],
+      "what_it_does_not_measure": ["family structure", "therapy", "parenting style"],
+      "allowed_scenario_families": ["asking one favor", "sharing a plan", "confirming timing", "small household coordination"],
+      "best_option_families": ["self-led vs other-led", "concrete choice vs soft choice"],
+      "scoring_notes": "Judge whether the ask is small and natural, not whether the family relationship is ideal.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D09",
+          "guard": "Keep it family-directed rather than reply-directed."
+        },
+        {
+          "neighbor_dimension_id": "D15",
+          "guard": "Do not make it about workload stacking."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates asks-cleanly, holds-back, and checks-first personas."
+    },
+    {
+      "dimension_id": "D11",
+      "dimension_name": "ひとり時間の回復",
+      "definition": "How someone restores energy when alone and off duty.",
+      "positive_pole": "Restorative, quiet, self-regulating alone time",
+      "negative_pole": "Empty, restless, or unable to recover alone",
+      "what_it_measures": ["recovery preference", "solitude quality", "quiet reset"],
+      "what_it_does_not_measure": ["loneliness diagnosis", "introversion theory", "mental health assessment"],
+      "allowed_scenario_families": ["sitting alone", "tea break", "scrolling pause", "simple quiet reset", "short downtime"],
+      "best_option_families": ["practical vs comfort-seeking", "direct action vs pause"],
+      "scoring_notes": "Score whether the solitude restores, not whether it is fashionable.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D12",
+          "guard": "Keep it earlier in the day than the late-day energy tail."
+        },
+        {
+          "neighbor_dimension_id": "D19",
+          "guard": "Do not make it reassurance-centric."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates quiet restorer, outside-load person, and needs-spare-time personas."
+    },
+    {
+      "dimension_id": "D12",
+      "dimension_name": "夜の気力の残り方",
+      "definition": "How much usable energy remains by the end of the day.",
+      "positive_pole": "Still has some usable energy, can do a small final action",
+      "negative_pole": "Drained, flat, or unable to add anything more",
+      "what_it_measures": ["end-of-day reserve", "closing energy", "final-action capacity"],
+      "what_it_does_not_measure": ["sleep disorder", "burnout diagnosis", "insomnia", "recovery medicine"],
+      "allowed_scenario_families": ["after dinner", "late evening", "final cleanup", "evening message", "night routine"],
+      "best_option_families": ["narrow plan vs flexible plan", "quick response vs delayed response"],
+      "scoring_notes": "Score remaining usable energy, not total tiredness.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D11",
+          "guard": "Keep it later in the day."
+        },
+        {
+          "neighbor_dimension_id": "D14",
+          "guard": "Do not make it about failure recovery."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates evening-capable, evening-fragile, and shutdown-prone personas."
+    },
+    {
+      "dimension_id": "D13",
+      "dimension_name": "予定変更への耐性",
+      "definition": "How someone responds when a plan changes after it was already set.",
+      "positive_pole": "Flexible, adaptive, low-friction with change",
+      "negative_pole": "Resistant, stressed, thrown off, or rigid",
+      "what_it_measures": ["schedule-change tolerance", "re-planning ease", "disappointment handling"],
+      "what_it_does_not_measure": ["general pessimism", "long-term instability", "life chaos"],
+      "allowed_scenario_families": ["canceled appointment", "timing shift", "changed errands", "changed meeting time"],
+      "best_option_families": ["concrete choice vs flexible choice", "move now vs observe first"],
+      "scoring_notes": "Judge response to change itself, not whether the original plan was good.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D20",
+          "guard": "Keep it about change after a plan exists, not decision habit in general."
+        },
+        {
+          "neighbor_dimension_id": "D02",
+          "guard": "Do not focus on departure prep."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates adaptable planner, change-sensitive, and plan-protective personas."
+    },
+    {
+      "dimension_id": "D14",
+      "dimension_name": "失敗日の立て直し",
+      "definition": "How someone recovers after a day goes badly or a small mistake lands hard.",
+      "positive_pole": "Self-repairing, gentle reset, quick emotional recovery",
+      "negative_pole": "Self-blaming, stuck, or unable to restart the day",
+      "what_it_measures": ["failure recovery", "emotional reset", "self-restart style"],
+      "what_it_does_not_measure": ["clinical depression", "moral judgment", "perfectionism theory"],
+      "allowed_scenario_families": ["missed errand", "wrong purchase", "small mistake", "awkward day", "disappointed day"],
+      "best_option_families": ["self-led vs other-led", "practical vs comfort-seeking"],
+      "scoring_notes": "Score the reset move, not the size of the failure.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D13",
+          "guard": "Keep it after the failure happened."
+        },
+        {
+          "neighbor_dimension_id": "D17",
+          "guard": "Do not turn it into a reward question."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates recoverer, linger-on-failure, and reset-by-action personas."
+    },
+    {
+      "dimension_id": "D15",
+      "dimension_name": "仕事と家事の同時進行",
+      "definition": "How someone handles two practical demands at once without losing rhythm.",
+      "positive_pole": "Balanced, multitask-capable, sequence-aware",
+      "negative_pole": "Overloaded, scattered, or forced into one-track mode",
+      "what_it_measures": ["load balancing", "simultaneous task handling", "practical prioritization"],
+      "what_it_does_not_measure": ["career ambition", "household division politics", "productivity ideology"],
+      "allowed_scenario_families": ["working while cooking", "chores during breaks", "juggling tasks", "daily load stacking"],
+      "best_option_families": ["narrow plan vs flexible plan", "practical vs comfort-seeking"],
+      "scoring_notes": "Score how the person handles concurrent load, not how hard they work.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D03",
+          "guard": "Do not make it about appointment-versus-shopping switching."
+        },
+        {
+          "neighbor_dimension_id": "D06",
+          "guard": "Do not center tidying alone."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates load balancer, single-tasker, and practical juggler personas."
+    },
+    {
+      "dimension_id": "D16",
+      "dimension_name": "週末の過ごし方",
+      "definition": "How someone shapes the feel of an ordinary weekend.",
+      "positive_pole": "Gentle structure, restorative use of weekend time",
+      "negative_pole": "Aimless, overpacked, or unable to settle into weekend rhythm",
+      "what_it_measures": ["weekend pacing", "recovery rhythm", "leisure structure"],
+      "what_it_does_not_measure": ["travel planning", "special-event behavior", "vacation mode"],
+      "allowed_scenario_families": ["home weekend", "local outing", "slow errand day", "quiet reset day"],
+      "best_option_families": ["practical vs comfort-seeking", "narrow plan vs flexible plan"],
+      "scoring_notes": "Score the weekend feel, not special holiday energy.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D11",
+          "guard": "Do not make it about alone-time only."
+        },
+        {
+          "neighbor_dimension_id": "D17",
+          "guard": "Do not center treat behavior."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates restful weekend, active weekend, and drift weekend personas."
+    },
+    {
+      "dimension_id": "D17",
+      "dimension_name": "小さなご褒美の選び方",
+      "definition": "How someone chooses a small reward after effort or as a mood lift.",
+      "positive_pole": "Thoughtful, measured, appropriately self-kind",
+      "negative_pole": "Excessive, guilt-driven, or unable to choose a reward",
+      "what_it_measures": ["reward taste", "self-kindness", "recovery by small pleasure"],
+      "what_it_does_not_measure": ["spending power", "luxury behavior", "indulgence as a moral issue"],
+      "allowed_scenario_families": ["snack choice", "drink choice", "short treat", "small purchase", "tiny self-care"],
+      "best_option_families": ["practical vs comfort-seeking", "concrete choice vs soft choice"],
+      "scoring_notes": "Keep it small and daily, not aspirational or status-based.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D04",
+          "guard": "Do not make it about shopping priority."
+        },
+        {
+          "neighbor_dimension_id": "D14",
+          "guard": "Do not make it about failure recovery directly."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates small-reward seeker, no-reward minimalist, and measured treat chooser personas."
+    },
+    {
+      "dimension_id": "D18",
+      "dimension_name": "周囲との距離感",
+      "definition": "How someone keeps comfortable space with other people in daily life.",
+      "positive_pole": "Calibrated, respectful, neither too close nor too distant",
+      "negative_pole": "Over-involved, withdrawn, or socially awkward in spacing",
+      "what_it_measures": ["social spacing", "contact calibration", "comfort with proximity"],
+      "what_it_does_not_measure": ["attachment diagnosis", "extroversion theory", "conflict counseling"],
+      "allowed_scenario_families": ["neighbors", "LINE groups", "workplace/hobby distance", "small social encounters"],
+      "best_option_families": ["self-led vs other-led", "quick response vs delayed response"],
+      "scoring_notes": "Score the space between self and others, not friendliness alone.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D09",
+          "guard": "Do not focus on message timing alone."
+        },
+        {
+          "neighbor_dimension_id": "D10",
+          "guard": "Do not make it family-specific."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates good-distance keeper, too-close, and too-far personas."
+    },
+    {
+      "dimension_id": "D19",
+      "dimension_name": "安心材料の集め方",
+      "definition": "How someone gathers reassurance before moving forward or settling down.",
+      "positive_pole": "Uses concrete reassurance, checks facts, settles calmly",
+      "negative_pole": "Needs repeated reassurance, spirals, or cannot settle",
+      "what_it_measures": ["reassurance-seeking style", "fact-checking", "calm-building"],
+      "what_it_does_not_measure": ["medical anxiety", "paranoia", "general knowledge habits"],
+      "allowed_scenario_families": ["checking notes", "confirming schedule", "asking once", "keeping reminders", "preparing backups"],
+      "best_option_families": ["practical vs comfort-seeking", "direct action vs pause"],
+      "scoring_notes": "Score how reassurance is collected and used, not the amount of worry.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D07",
+          "guard": "Stay outside hazard checking."
+        },
+        {
+          "neighbor_dimension_id": "D11",
+          "guard": "Do not center solitude recovery."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates fact checker, comfort seeker, and one-confirmation-person personas."
+    },
+    {
+      "dimension_id": "D20",
+      "dimension_name": "先送り/決断の癖",
+      "definition": "How someone tends to delay, decide, or keep decisions pending.",
+      "positive_pole": "Decisive, timely, low-friction decision behavior",
+      "negative_pole": "Delaying, deferring, or over-waiting",
+      "what_it_measures": ["decision latency", "postponement tendency", "closure readiness"],
+      "what_it_does_not_measure": ["procrastination as a moral label", "executive function diagnosis"],
+      "allowed_scenario_families": ["small choice points", "tasks waiting", "later behavior", "deciding on ordinary errands"],
+      "best_option_families": ["move now vs observe first", "concrete choice vs flexible choice"],
+      "scoring_notes": "Judge the pattern of closure, not whether the decision was correct.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D13",
+          "guard": "Keep it about decision habit rather than changed circumstances."
+        },
+        {
+          "neighbor_dimension_id": "D21",
+          "guard": "Do not make it a direct action-vs-observe scene unless the scene is specifically about choice pressure."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates decider, waiter, and postponer personas."
+    },
+    {
+      "dimension_id": "D21",
+      "dimension_name": "動く vs 様子を見る",
+      "definition": "How someone chooses between acting now and watching a little longer.",
+      "positive_pole": "Act-now, contact-first, movement-oriented",
+      "negative_pole": "Observe-first, hold-back, delay-for-signal behavior",
+      "what_it_measures": ["action threshold", "hesitation style", "first-move preference"],
+      "what_it_does_not_measure": ["impulsivity diagnosis", "risk theory", "general confidence claims"],
+      "allowed_scenario_families": ["errands", "messages", "small chores", "social prompts", "timing decisions"],
+      "best_option_families": ["move now vs observe first", "direct action vs pause"],
+      "scoring_notes": "This is a clean polarity dimension; keep the choice pressure visible.",
+      "closest_neighbors_and_drift_guard": [
+        {
+          "neighbor_dimension_id": "D20",
+          "guard": "Keep it in a concrete moment of action pressure."
+        },
+        {
+          "neighbor_dimension_id": "D13",
+          "guard": "Do not make it about a changed plan after the fact."
+        }
+      ],
+      "relevance_to_31_persona_framework": "Separates action-first, wait-and-watch, and situational mover personas."
+    }
+  ]
+}
