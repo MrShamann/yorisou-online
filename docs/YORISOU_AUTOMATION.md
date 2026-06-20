@@ -135,6 +135,23 @@ Yorisou automation script (scripts/)
 Yorisou owns the trigger layer. OpenClaw and Hermes own their own runtimes.
 Destructive or external-facing actions require Telegram approval before execution.
 
+## Legacy Lint Debt Policy
+
+PR #1 intentionally does not fix pre-existing product lint errors surfaced by the newly added full-repo lint gate.
+
+Full-repo lint currently runs as **visibility/report-only** in CI (exit code is forced to 0 with `|| true`). This means lint output appears in CI logs for visibility but does not block the build.
+
+A dedicated product-code cleanup PR should fix the following files before full-repo lint is promoted to a hard gate:
+
+- `app/admin/page.tsx` — `react-hooks/immutability`: variable reassigned after render
+- `app/components/InsightsPreview.tsx` — `react-hooks/error-boundaries`: JSX constructed inside try/catch
+- `app/components/MotionReveal.tsx` — setState called synchronously inside an effect
+- `app/components/SupportWorkspace.tsx` — additional lint errors (see CI run logs)
+- `app/en/reservation-mobility-support/page.tsx` — additional lint errors (see CI run logs)
+- `lib/insights/*.ts` — additional lint errors (see CI run logs)
+
+After that cleanup PR lands and CI is green on a hard lint gate, remove the `|| true` from `.github/workflows/yorisou-check.yml` and update this section.
+
 ## Files Added
 
 ```
