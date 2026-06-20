@@ -29,8 +29,8 @@ export default function SiteFooter() {
               <div className="display-serif text-[1.6rem] font-semibold tracking-[0.08em]">YORISOU</div>
               <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
                 {isEn
-                  ? "A calmer support service for mobility and daily living in Japan."
-                  : "移動の不安から、暮らしの安心へ。高齢者とご家族の移動と暮らしに、やさしく、誠実に寄り添います。"}
+                  ? "Understand your current state and find useful next steps."
+                  : "いまの自分を理解し、次の一歩を見つける。"}
               </p>
             </div>
           </div>

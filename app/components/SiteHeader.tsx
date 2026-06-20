@@ -87,7 +87,7 @@ export default function SiteHeader() {
             <div className="min-w-0">
               <div className="display-serif text-[1.78rem] font-semibold tracking-[0.09em] text-[var(--text)] md:text-[2.12rem]">YORISOU</div>
               <div className="mt-0.5 hidden text-[0.82rem] leading-7 text-[var(--muted)] md:block">
-                {isEn ? "Calm mobility support for seniors and families in Japan" : "移動の不安から、暮らしの安心へ。"}
+                {isEn ? "Understand your current state and find useful next steps." : "いまの自分を理解し、次の一歩を見つける。"}
               </div>
             </div>
           </Link>
