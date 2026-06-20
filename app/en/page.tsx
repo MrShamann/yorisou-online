@@ -25,7 +25,7 @@ export default function HomePageEn() {
               Yorisou helps you reflect on your current life state through a short check, then separates what is safe to share from what is meant only for you.
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <Link href="/en/check-in" className="btn btn-primary">
+              <Link href="/check-in" className="btn btn-primary">
                 Start the check-in
               </Link>
               <Link href="/en/about" className="btn btn-secondary">
@@ -110,7 +110,7 @@ export default function HomePageEn() {
               </h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/en/check-in" className="btn btn-primary">
+              <Link href="/check-in" className="btn btn-primary">
                 Start the check-in
               </Link>
               <Link href="/en/about" className="btn btn-secondary">
