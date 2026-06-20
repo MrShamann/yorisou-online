@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 
-import BrandSigil from "@/app/components/BrandSigil";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
 import MiniAppEntrySignals from "./MiniAppEntrySignals";
 
@@ -45,7 +44,7 @@ export default async function MiniAppEntryPage({
 
           <div className="relative px-4 pt-4 text-white">
             <div className="flex items-center justify-between gap-3">
-              <BrandSigil label="YORISOU" className="shrink-0" />
+              <span className="shrink-0 text-[13px] font-bold tracking-[0.18em] text-white/90">YORISOU</span>
               <span className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] tracking-[0.14em] text-white/84">
                 LINE MINI App
               </span>
