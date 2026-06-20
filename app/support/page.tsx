@@ -6,7 +6,7 @@ import { getLineMessagingConfigStatus, isLineLoginConfigured } from "@/lib/serve
 
 export const metadata: Metadata = {
   title: "ひなたに相談する | Yorisou",
-  description: "AI相談員 ひなたと話しながら、移動や暮らしのお悩みをやさしく整理し、その方に合う支え方へつなげられるYorisouの対話ページです。",
+  description: "Hinataと一緒に、今の気持ちや生活リズムを静かに整理し、Yorisouのチェック結果や次の一歩をふり返るためのサポートページです。医療・心理診断・専門助言ではありません。",
 };
 
 export default async function SupportPage({

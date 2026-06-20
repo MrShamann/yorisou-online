@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "会社情報 | Yorisou",
+  description: "Yorisou合同会社は、LINE/Web-firstのセルフリフレクション体験、ライフステート理解、デジタルレポート、推薦・マッチング支援の開発と運営を行います。",
+};
+
 export default function CompanyPage() {
     return (
       <main
@@ -36,7 +43,7 @@ export default function CompanyPage() {
               <tr>
                 <td style={tdLeft}>事業内容</td>
                 <td style={tdRight}>
-                  地域モビリティ設計・実証プログラム運営
+                  セルフリフレクションサービス、ライフステート理解、デジタルレポート、推薦・マッチング支援の企画・開発・運営
                 </td>
               </tr>
             </tbody>
