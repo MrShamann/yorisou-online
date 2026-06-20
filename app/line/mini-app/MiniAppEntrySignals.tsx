@@ -8,7 +8,7 @@ type Props = {
   label: string;
 };
 
-export default function MiniAppEntrySignals({ href, locale: _locale, label }: Props) {
+export default function MiniAppEntrySignals({ href, label }: Props) {
   return (
     <Link
       href={href}

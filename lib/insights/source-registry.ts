@@ -77,19 +77,6 @@ function scoreSource(sourceClass: InsightSourceClass, country: MobilityKnowledge
   return Math.max(0, Math.min(100, score));
 }
 
-function sourceClassForUrl(url: string): InsightSourceClass {
-  if (/\.go\.jp|gov\.cn|cdc\.gov|bmbfsfj\.bund\.de|mlit\.go\.jp|fhwa\.dot\.gov/i.test(url)) {
-    return "official_public";
-  }
-  if (/made-in-china|yutengmed|ageally|relcaremobility|excellentwheelchairs/i.test(url)) {
-    return "manufacturer";
-  }
-  if (/ipros\.com|kindcare|nordic-care|trionic|zler|matsunaga|actionjapan|kawamura-cycle/i.test(url)) {
-    return "product_page";
-  }
-  return "specialist_media";
-}
-
 export const insightSourceRegistry: InsightSourceRegistryEntry[] = [
   makeEntry({
     id: "jp-mlit-press",
