@@ -44,7 +44,7 @@ function getLegacyViewerAccount(viewer: ViewerContext) {
   return viewer.legacyAccount || viewer.account;
 }
 
-export function resolveAiAdvisorViewerAuthority(viewer: ViewerContext) {
+function resolveAiAdvisorViewerAuthority(viewer: ViewerContext) {
   const legacyAccount = getLegacyViewerAccount(viewer);
 
   if (!legacyAccount) {

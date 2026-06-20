@@ -25,7 +25,7 @@ function getLegacyViewerAccount(viewer: ViewerContext) {
   return viewer.legacyAccount || viewer.account;
 }
 
-export function resolveSupportPreferencesViewerAuthority(viewer: ViewerContext) {
+function resolveSupportPreferencesViewerAuthority(viewer: ViewerContext) {
   const legacyAccount = getLegacyViewerAccount(viewer);
 
   if (!legacyAccount) {
@@ -61,7 +61,7 @@ export function resolveSupportPreferencesViewerAuthority(viewer: ViewerContext) 
   } as const;
 }
 
-export async function resolveSupportPreferencesMutationTarget(viewer: ViewerContext) {
+async function resolveSupportPreferencesMutationTarget(viewer: ViewerContext) {
   const viewerAuthority = resolveSupportPreferencesViewerAuthority(viewer);
 
   if (!viewerAuthority.authorized || !viewerAuthority.effectiveLegacyAccountId) {

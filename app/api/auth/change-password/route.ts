@@ -22,7 +22,7 @@ function getLegacyViewerAccount(viewer: ViewerContext) {
   return viewer.legacyAccount || viewer.account;
 }
 
-export function resolveChangePasswordViewerAuthority(viewer: ViewerContext) {
+function resolveChangePasswordViewerAuthority(viewer: ViewerContext) {
   const legacyAccount = getLegacyViewerAccount(viewer);
 
   if (!legacyAccount) {

@@ -49,7 +49,7 @@ function getLegacyViewerAccount(viewer: ViewerContext) {
   return viewer.legacyAccount || viewer.account;
 }
 
-export function resolveAiAdvisorLeadViewerAuthority(viewer: ViewerContext) {
+function resolveAiAdvisorLeadViewerAuthority(viewer: ViewerContext) {
   const legacyAccount = getLegacyViewerAccount(viewer);
 
   if (!legacyAccount) {

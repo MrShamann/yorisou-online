@@ -58,7 +58,7 @@ function getViewerLegacyAccount(viewer: ViewerContext) {
   return viewer.account;
 }
 
-export function resolveLineCallbackBindAuthorization(viewer: ViewerContext, expectedLegacyAccountId: string) {
+function resolveLineCallbackBindAuthorization(viewer: ViewerContext, expectedLegacyAccountId: string) {
   const legacyAccount = getViewerLegacyAccount(viewer);
   const legacyCandidate = legacyAccount?.id || null;
   const principalMatched = false;
