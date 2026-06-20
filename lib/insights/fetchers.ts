@@ -22,10 +22,6 @@ function decodeHtmlEntities(value: string) {
     .replace(/&gt;/gi, ">");
 }
 
-function stripTags(value: string) {
-  return decodeHtmlEntities(value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
-}
-
 function firstMatch(value: string, patterns: RegExp[]) {
   for (const pattern of patterns) {
     const match = value.match(pattern);

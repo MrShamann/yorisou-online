@@ -55,3 +55,6 @@ yorisou_phase1_*.md
 yorisou_phase1_*.zip
 Yorisou_Batch_D_Public_Page_Copy_Package*.zip
 data/insight-ingestion-*.json
+
+# Local generated types (stale next-typecheck output; excluded from vercel uploads)
+tmp/
