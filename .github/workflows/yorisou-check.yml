@@ -1,0 +1,84 @@
+name: Yorisou Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Lint, Build & Env Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Env check (informational)
+        run: npm run check:env
+        # Exits 0 even when vars are missing — informational only in CI
+        continue-on-error: false
+
+      - name: Build
+        run: npm run build
+        env:
+          # Provide safe defaults so build doesn't fail on missing optional vars
+          YORISOU_SHARED_STORE_REGION: us-east-2
+          OPENAI_MODEL: gpt-4.1-mini
+          MISTRAL_MODEL: mistral-small-latest
+
+  smoke-openclaw:
+    name: OpenClaw Webhook Smoke
+    runs-on: ubuntu-latest
+    needs: check
+    if: vars.OPENCLAW_SMOKE_ENABLED == 'true'
+    # Enable by setting repository variable OPENCLAW_SMOKE_ENABLED=true
+    # and repository secrets OPENCLAW_WEBHOOK_URL + OPENCLAW_WEBHOOK_TOKEN
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: OpenClaw smoke
+        run: node scripts/openclaw-webhook-smoke.mjs
+        env:
+          OPENCLAW_WEBHOOK_URL: ${{ secrets.OPENCLAW_WEBHOOK_URL }}
+          OPENCLAW_WEBHOOK_TOKEN: ${{ secrets.OPENCLAW_WEBHOOK_TOKEN }}
+
+  smoke-hermes:
+    name: Hermes Webhook Smoke
+    runs-on: ubuntu-latest
+    needs: check
+    if: vars.HERMES_SMOKE_ENABLED == 'true'
+    # Enable by setting repository variable HERMES_SMOKE_ENABLED=true
+    # and repository secrets HERMES_WEBHOOK_URL + HERMES_WEBHOOK_TOKEN
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Hermes smoke
+        run: node scripts/hermes-webhook-smoke.mjs
+        env:
+          HERMES_WEBHOOK_URL: ${{ secrets.HERMES_WEBHOOK_URL }}
+          HERMES_WEBHOOK_TOKEN: ${{ secrets.HERMES_WEBHOOK_TOKEN }}
