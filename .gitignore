@@ -37,6 +37,7 @@ yarn-error.log*
 data/phase1-accounts.json
 data/phase1-sessions.json
 data/phase1-consultations.json
+data/result-visual-asset-registry.json
 
 # vercel
 .vercel
@@ -44,3 +45,13 @@ data/phase1-consultations.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local Claude/QA/runtime artifacts
+.claude/
+artifacts/
+test-results/
+result_*.png
+yorisou_phase1_*.md
+yorisou_phase1_*.zip
+Yorisou_Batch_D_Public_Page_Copy_Package*.zip
+data/insight-ingestion-*.json
