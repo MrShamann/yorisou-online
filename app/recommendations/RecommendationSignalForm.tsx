@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { MvpCard } from "../components/MvpSurface";
 import {
@@ -68,6 +68,11 @@ export default function RecommendationSignalForm({
   const [selectedSignal, setSelectedSignal] = useState<RecommendationSignalValue | "">(
     storedSignal?.selectedSignal ?? "",
   );
+
+  useEffect(() => {
+    if (!storedSignal?.selectedSignal) return;
+    setSelectedSignal((current) => current || storedSignal.selectedSignal);
+  }, [storedSignal?.selectedSignal]);
 
   const selectedOption = useMemo(
     () => options.find((option) => option.value === selectedSignal) ?? null,
