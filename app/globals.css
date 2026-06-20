@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Explicit source globs prevent Tailwind v4 from scanning docs/, artifacts/,
+   data/, and other non-source trees that are large and slow on iCloud Drive. */
+@source "../app/**/*.{ts,tsx,js,jsx}";
+@source "../lib/**/*.{ts,tsx,js,jsx}";
+@source "../components/**/*.{ts,tsx,js,jsx}";
+
 :root {
   --bg-base: #f7f4ee;
   --bg-soft: #e1e8db;
