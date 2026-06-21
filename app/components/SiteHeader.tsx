@@ -6,32 +6,32 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
-  { href: "/check-in", label: "チェックを始める" },
-  { href: "/pilot", label: "導入・実証" },
+  { href: "/check-in", label: "クイックチェック" },
+  { href: "/tests", label: "テスト一覧" },
 ];
 
 const primaryNavEn = [
-  { href: "/en/check-in", label: "Start the check-in" },
-  { href: "/pilot", label: "Pilot" },
+  { href: "/en/check-in", label: "Quick Check" },
+  { href: "/tests", label: "Tests" },
 ];
 
 const secondaryNavJa = [
   { href: "/about", label: "Yorisouとは" },
-  { href: "/insights", label: "読みもの" },
+  { href: "/support", label: "ひなた" },
   { href: "/contact", label: "お問い合わせ" },
 ];
 
 const secondaryNavEn = [
-  { href: "/about", label: "About" },
-  { href: "/insights", label: "Insights" },
-  { href: "/contact", label: "Contact" },
+  { href: "/en/about", label: "About Yorisou" },
+  { href: "/en/support", label: "Hinata" },
+  { href: "/en/contact", label: "Contact" },
 ];
 
 function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/reservation-mobility-support", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(base)) return base;
+    if (["/", "/reservation-mobility-support", "/about", "/services", "/tests", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -40,7 +40,7 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (["/reservation-mobility-support", "/about", "/services", "/pilot", "/progress", "/partners", "/contact", "/legal", "/ai-advisor", "/insights", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
+  if (["/reservation-mobility-support", "/about", "/services", "/tests", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 
