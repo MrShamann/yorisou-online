@@ -48,6 +48,7 @@ export default function SiteFooter() {
             <div>
               <div className="service-kicker">{isEn ? "Continue" : "つづけ方"}</div>
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
+                <Link href={isEn ? "/en/check-in" : "/check-in"}>{isEn ? "Start the check-in" : "チェックを始める"}</Link>
                 <Link href={supportHref}>{isEn ? "Talk with Hinata" : "ひなたとの対話"}</Link>
                 <Link href={loginHref}>{isEn ? "Continue your account" : "ログイン・アカウント"}</Link>
                 <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>
