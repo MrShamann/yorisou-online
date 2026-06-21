@@ -41,7 +41,6 @@ export default async function ResultPage({
     confidenceBand,
     payloadKey,
   } as const;
-  const reportPreviewHref = buildT6PublicResultHref("/report-preview", routeContext);
   const recommendationsHref = buildT6PublicResultHref("/recommendations", routeContext);
   const resultShareHref = buildT6PublicResultHref("/result/share", routeContext);
   const resultPath = buildT6PublicResultHref("/result", routeContext);
@@ -148,15 +147,9 @@ export default async function ResultPage({
 
               <div className="flex flex-col gap-2.5 sm:flex-row">
                 <MvpActionLink
-                  href={reportPreviewHref}
-                  label="この結果をもう少し詳しく見る"
-                  className="min-h-[56px] rounded-full !border-[#173B35] !bg-[#173B35] text-[16px] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.24)] hover:!bg-[#0F2F2B]"
-                />
-                <MvpActionLink
                   href={recommendationsHref}
-                  label="ほかの見方を試す"
-                  tone="secondary"
-                  className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
+                  label="次のヒントを見る"
+                  className="min-h-[56px] rounded-full !border-[#173B35] !bg-[#173B35] text-[16px] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.24)] hover:!bg-[#0F2F2B]"
                 />
                 <MvpActionLink
                   href={resultShareHref}
@@ -166,7 +159,7 @@ export default async function ResultPage({
                 />
                 <MvpActionLink
                   href="/check-in"
-                  label="もう一度チェック"
+                  label="もう一度チェックする"
                   tone="ghost"
                   className="rounded-full !text-[#315F50]"
                 />
@@ -187,9 +180,7 @@ export default async function ResultPage({
                 className="rounded-[0.95rem] border border-[rgba(23,59,53,0.06)] bg-[rgba(248,250,246,0.9)] p-4"
               />
 
-              <p className="rounded-[0.95rem] bg-[#FFF7F1] px-3.5 py-2.5 text-[12px] leading-6 text-[#6F625C]">
-                これは24問のクイックチェック結果です。72問版は準備中で、今の24問結果をもとに、より広く読むための準備ページだけを見られます。
-              </p>
+
             </MvpCard>
           </div>
         </div>

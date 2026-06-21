@@ -24,7 +24,7 @@ const RESULT_PROMISES = [
   "今のあなたに近いモード",
   "短い認識の一行",
   "やさしい次のヒント",
-  "正式版はあとで進めます",
+  "次のヒントへ進めます",
 ] as const;
 
 function getRemainingMinutes(currentIndex: number) {
@@ -176,7 +176,7 @@ export default function MiniTestFlow() {
                   </h1>
                   <p className="max-w-[35rem] text-[15px] font-medium leading-7 text-[#6F625C] md:leading-8">
                     今の感覚に近いものを、その場でひとつずつ選ぶだけです。正解はありません。
-                    答え終えると、今のあなたに近い無料結果が表示されます。正式版の 72 問は準備中です。
+                    答え終えると、今のあなたに近い無料結果が表示されます。
                   </p>
                 </div>
 
@@ -193,7 +193,7 @@ export default function MiniTestFlow() {
                     ))}
                   </div>
                   <p className="text-[13px] leading-7 text-[var(--muted)]">
-                    最初に見えるのは無料結果です。そのあとで、必要なら正式版の案内や次のヒントへ進めます。
+                    答え終えると無料結果が表示されます。そのあとで、次のヒントへ進めます。
                   </p>
                 </MvpCard>
 
@@ -206,14 +206,12 @@ export default function MiniTestFlow() {
                     クイックチェックを始める
                   </button>
                   <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] leading-7 text-[var(--muted)]">
-                    <MvpActionLink href="/formal-check" label="正式版の案内を見る" tone="ghost" />
                     <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
                   </div>
                 </div>
 
                 <p className="text-[12px] leading-7 text-[var(--muted)]">
                   ログインなしで始められます。今の状態を見返すための無料結果で、診断や固定的なラベルづけではありません。
-                  24問は入口で、正式版はあとで進めます。
                 </p>
               </div>
             ) : null}
