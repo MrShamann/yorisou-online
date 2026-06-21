@@ -28,7 +28,7 @@ export default function ResultConversionCommunity({ moduleId, reportTeaser }: Pr
           <p className="text-[13px] leading-6 text-[#5F5750]">{reportTeaser}</p>
         )}
         <div className="rounded-[0.9rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-3">
-          <p className="text-[12px] font-semibold text-[#49615B]">レポートに含まれること（準備中）</p>
+          <p className="text-[12px] font-semibold text-[#49615B]">レポートに含まれること</p>
           <ul className="mt-1.5 space-y-1 text-[13px] leading-7 text-[#5F5750]">
             {reportPreview.lockedSections.map((s) => (
               <li key={s}>· {s}</li>
@@ -89,10 +89,10 @@ export default function ResultConversionCommunity({ moduleId, reportTeaser }: Pr
 
       {/* ── 3. LINE save ── */}
       <div className="rounded-[1.25rem] border border-[rgba(217,130,86,0.12)] bg-[#FFF7EC]/70 px-5 py-4 space-y-1.5">
-        <p className="text-[13px] font-semibold text-[#6B4E3F]">LINEで{lineSaveCopy}（準備中）</p>
+        <p className="text-[13px] font-semibold text-[#6B4E3F]">LINEで{lineSaveCopy}</p>
         <p className="text-[12px] leading-6 text-[#7A7068]">
           今の結果は、あとから見返すと少し違って見えることがあります。
-          LINEでの保存・通知・見返しには、それぞれ確認と同意が必要です。現在準備中です。
+          LINEでの保存・通知・見返しには、それぞれ確認と同意が必要です。
         </p>
       </div>
 
