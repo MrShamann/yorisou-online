@@ -6,9 +6,9 @@ import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
 import ReportIntentAction from "./ReportIntentAction";
 
 export const metadata: Metadata = {
-  title: "72問版プレビュー | Yorisou",
+  title: "詳細レポート | Yorisou",
   description:
-    "24問の無料結果をもとに、72問版でどんなテーマを広く読みたいかを確認する準備ページです。",
+    "無料結果をもとに、あとで詳しく読みたい方向だけをブラウザ内に残せる Yorisou のページです。",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -41,24 +41,23 @@ export default async function ReportPreviewPage({
     payloadKey,
   } as const;
   const resultHref = buildT6PublicResultHref("/result", routeContext);
-  const formalCheckHref = buildT6PublicResultHref("/formal-check", routeContext);
 
   const previewPoints = [
     {
-      title: "72問版は準備中",
-      promise: "ここでは、今すぐ受けるテストではなく、広く読むための方向だけを確認できます。",
-    },
-    {
-      title: "24問結果を土台にする",
+      title: "今の結果をもとに読む",
       promise: result.reportPreviewBridge ?? result.recognitionLine,
     },
     {
-      title: "読みたいテーマを残せる",
-      promise: "正式版の前に、あとで読みたいという希望だけをこの端末に残せます。",
+      title: "深く読むための方向を確認する",
+      promise: "生活リズム、人との距離、気持ちの戻り方など、今の状態から広げて読めるテーマを先に選べます。",
     },
     {
-      title: "結果はまだ生成しません",
-      promise: "このページでは、72問の回答画面や詳しい本文は出しません。",
+      title: "方向だけを残す",
+      promise: "このページでは回答や購入は始まりません。あとで詳しく読みたいという方向だけをブラウザ内に残せます。",
+    },
+    {
+      title: "固定したラベルではありません",
+      promise: "今の状態から見える傾向をもとにしています。日を変えて読むと、また少し違う入口が見えることがあります。",
     },
   ] as const;
 
@@ -69,16 +68,16 @@ export default async function ReportPreviewPage({
           <div className="space-y-4">
             <div className="flex flex-wrap gap-1.5">
               <MvpPill>クイックチェックの先</MvpPill>
-              <MvpPill>72問は準備中</MvpPill>
+              <MvpPill>詳しく読む</MvpPill>
             </div>
             <div className="space-y-3">
-              <p className="service-kicker">{result.publicName}から広く読む準備</p>
+              <p className="service-kicker">{result.publicName}から深く読む</p>
               <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.13] text-[#2F2A28] md:text-[3rem]">
-                72問版は準備中です。
-                <span className="block text-[#173B35]">今は、読みたい方向だけ残せます。</span>
+                {result.publicName}をもとに、
+                <span className="block text-[#173B35]">もう少し深く読む。</span>
               </h1>
               <p className="max-w-[36rem] text-[15px] font-medium leading-7 text-[#6F625C] md:leading-8">
-                24問の結果をもとに、より広く読むための準備ページです。まだ回答は始まりません。今は「あとで詳しく読みたい」テーマを静かに残すだけです。
+                無料結果をもとに、あとで詳しく読みたい方向だけをブラウザ内に残せます。購入や申込みではありません。
               </p>
             </div>
             <div className="grid gap-2.5">
@@ -87,8 +86,8 @@ export default async function ReportPreviewPage({
                   key={section.title}
                   className="flex items-start gap-3 rounded-[1.18rem] border-[rgba(23,59,53,0.1)] bg-white/93 p-3.5 shadow-[0_18px_38px_rgba(23,59,53,0.08)]"
                 >
-                  <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDE8DD] text-[13px] font-semibold text-[#D95F4E]">
-                    72
+                  <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EAF7F1] text-[13px] font-semibold text-[#315F50]">
+                    ↓
                   </span>
                   <div className="min-w-0">
                     <div className="text-[14px] font-bold leading-6 text-[#2F2A28]">{section.title}</div>
@@ -99,7 +98,6 @@ export default async function ReportPreviewPage({
             </div>
             <ReportIntentAction
               backHref={resultHref}
-              nextHref={formalCheckHref}
               resultContext={{
                 resultId: result.id,
                 overlayId: overlay.id,
@@ -134,15 +132,16 @@ export default async function ReportPreviewPage({
         </div>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <MvpActionLink
-            href={formalCheckHref}
-            label="正式版の案内を見る"
-            className="rounded-full !border-[#173B35] !bg-[#173B35] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)]"
-          />
-          <MvpActionLink
             href={resultHref}
             label="無料結果に戻る"
             tone="secondary"
             className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
+          />
+          <MvpActionLink
+            href="/check-in"
+            label="もう一度チェックする"
+            tone="ghost"
+            className="rounded-full !text-[#315F50]"
           />
         </div>
       </section>
