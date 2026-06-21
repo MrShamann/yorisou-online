@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
-import { MvpActionLink, MvpCard } from "../components/MvpSurface";
+import { trackDteEvent } from "../components/DteEventTracker";
 import { readReportIntent, saveReportIntent, subscribeReportIntent } from "./reportIntentState";
 
 type ReportIntentContext = {
@@ -14,9 +15,11 @@ type ReportIntentContext = {
 
 export default function ReportIntentAction({
   backHref,
+  sampleHref,
   resultContext,
 }: {
   backHref: string;
+  sampleHref?: string;
   resultContext?: ReportIntentContext;
 }) {
   const intentRecord = useSyncExternalStore(subscribeReportIntent, readReportIntent, () => null);
@@ -34,39 +37,75 @@ export default function ReportIntentAction({
       ...(resultContext?.confidenceBand ? { confidenceBand: resultContext.confidenceBand } : {}),
       ...(resultContext?.payloadKey ? { payloadKey: resultContext.payloadKey } : {}),
     });
+    void trackDteEvent({
+      event: "report_interest_saved",
+      surface: "report_preview",
+      source: "intent_cta",
+      locale: "ja",
+      ...(resultContext?.resultId ? { resultKey: resultContext.resultId } : {}),
+    });
   };
 
   return (
-    <MvpCard className="space-y-3.5 rounded-[1.22rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_20px_42px_rgba(23,59,53,0.09)] md:p-5">
-      <div className="service-kicker">方向を残す</div>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={handleExpressIntent}
-          data-report-intent="express-interest"
-          className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 py-3 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.24)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] hover:opacity-95"
-        >
-          {hasIntent ? "方向を記録しました" : "詳しく読みたい方向を残す"}
-        </button>
-      </div>
-      <div className="rounded-[0.95rem] border border-[rgba(23,59,53,0.1)] bg-[#F4FAF7] px-4 py-3">
-        <p className="text-[12px] leading-6 text-[#6F625C]">
-          これは購入や申込みではありません。方向だけをこの端末に残します。
-        </p>
-      </div>
+    <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/95 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
+      <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">詳細レポートへの関心を残す</p>
+
+      <button
+        type="button"
+        onClick={handleExpressIntent}
+        data-report-intent="express-interest"
+        className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 py-3 text-[15px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
+      >
+        {hasIntent ? "興味を保存しました" : "詳細レポートに興味を保存する"}
+      </button>
+
       {hasIntent ? (
         <div className="rounded-[1rem] border border-[rgba(105,151,130,0.24)] bg-[#F4FAF7] px-4 py-3">
-          <p className="text-[15px] font-bold leading-7 text-[#315F50]">方向を記録しました</p>
-          <p className="mt-1 text-[12px] leading-6 text-[#315F50]">
-            記録はブラウザ内だけに残ります。
+          <p className="text-[14px] font-semibold leading-7 text-[#315F50]">興味を保存しました</p>
+          <p className="mt-0.5 text-[12px] leading-6 text-[#315F50]">
+            記録はこの端末のブラウザ内だけに残ります。購入や申込みではありません。
           </p>
         </div>
       ) : (
-        <p className="text-[14px] leading-7 text-[#2F2A28]">
-          今の結果をもとに、あとで詳しく読みたいという方向を残せます。
-        </p>
+        <div className="rounded-[0.95rem] border border-[rgba(23,59,53,0.08)] bg-[#F4FAF7] px-4 py-3">
+          <p className="text-[12px] leading-6 text-[#6F625C]">
+            これは購入や申込みではありません。詳細レポートへの関心だけをこの端末に残します。
+          </p>
+        </div>
       )}
-      <MvpActionLink href={backHref} label="無料結果に戻る" tone="secondary" className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none" />
-    </MvpCard>
+
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+        {sampleHref ? (
+          <Link
+            href={sampleHref}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] px-5 text-[13px] font-semibold text-[#315F50] transition hover:-translate-y-0.5 hover:bg-[#ddf0e8]"
+            onClick={() => {
+              void trackDteEvent({
+                event: "sample_report_opened",
+                surface: "report_preview",
+                source: "intent_cta",
+                locale: "ja",
+              });
+            }}
+          >
+            サンプルを読む
+          </Link>
+        ) : null}
+        <Link
+          href={backHref}
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 text-[13px] font-medium text-[#6F625C] transition hover:bg-white"
+          onClick={() => {
+            void trackDteEvent({
+              event: "not_now_clicked",
+              surface: "report_preview",
+              source: "intent_cta",
+              locale: "ja",
+            });
+          }}
+        >
+          今は無料結果だけ見る
+        </Link>
+      </div>
+    </div>
   );
 }
