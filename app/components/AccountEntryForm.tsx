@@ -84,14 +84,14 @@ export default function AccountEntryForm({
         <div className="mx-auto max-w-5xl">
           <div className="grid gap-8 lg:grid-cols-[0.78fr_1.08fr] lg:items-start">
             <div className="px-1 py-2 md:pr-6">
-              <div className="service-kicker">{locale === "ja" ? "相談のつづき" : "Continue your consultation"}</div>
+              <div className="service-kicker">{locale === "ja" ? "Yorisouのつづき" : "Continue with Yorisou"}</div>
               <h1 className="display-serif mt-4 max-w-[13.5em] text-[1.7rem] leading-[1.66] md:text-[2.08rem]">
                 {mode === "login"
                   ? locale === "ja"
                     ? (
                       <>
-                        <span className="block md:whitespace-nowrap">ひなたとのやりとりを、</span>
-                        <span className="block md:whitespace-nowrap">落ち着いて続けられます。</span>
+                        <span className="block md:whitespace-nowrap">チェックの記録を、</span>
+                        <span className="block md:whitespace-nowrap">あとから見返せます。</span>
                       </>
                     )
                     : "Log in to review your support"
@@ -107,15 +107,15 @@ export default function AccountEntryForm({
               <p className="mt-5 max-w-xl text-sm leading-8 text-[var(--muted)] md:text-base">
                 {mode === "login"
                   ? locale === "ja"
-                    ? "ひなたとの対話やご案内を、あとから見返したいときに使えます。"
+                    ? "チェックの記録やご案内を、あとから見返したいときに使えます。"
                     : "The support page brings together consultation history, recommendation notes, family sharing, and follow-up status."
                   : locale === "ja"
-                    ? "登録しておくと、ひなたとのやりとりやご案内を、ひとつの場所でやさしく続けやすくなります。"
+                    ? "登録しておくと、チェックの記録やご案内を、ひとつの場所でやさしく続けやすくなります。"
                     : "Create one account to keep consultations and recommendations together."}
               </p>
               <div className="panel-sage mt-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
                 <div>{locale === "ja" ? "ご本人でも、ご家族でも、無理のない形で続けられます。" : "This entry works for older adults and family members."}</div>
-                <div className="mt-2">{locale === "ja" ? "Yorisouの相談窓口「ひなた」との続き方として、LINEでもメールでも、あとから静かに選べます。" : "You can choose LINE or email later, whichever feels easier."}</div>
+                <div className="mt-2">{locale === "ja" ? "LINEでもメールでも、あとから静かに選べます。" : "You can choose LINE or email later, whichever feels easier."}</div>
               </div>
               {initialAccount && (
                 <div className="panel-sage mt-6 rounded-[2rem] px-6 py-6 text-sm leading-7">
@@ -146,7 +146,7 @@ export default function AccountEntryForm({
                   <div className="service-kicker text-[#64705f]">{locale === "ja" ? "あとから受け取りたい方へ" : "Continue with LINE"}</div>
                   <p className="mt-3 text-sm leading-7 text-[var(--accent-sage-text)]">
                     {locale === "ja"
-                      ? "Yorisouの相談窓口「ひなた」との続きやご案内を、必要なときだけLINEで受け取りたい方に向いています。"
+                      ? "チェックの続きやご案内を、必要なときだけLINEで受け取りたい方に向いています。"
                       : "A calm and simple way for older adults and families to begin."}
                   </p>
                   <div className="mt-4">
@@ -157,7 +157,7 @@ export default function AccountEntryForm({
                   </div>
                   <p className="mt-3 text-xs leading-6 text-[#64705f]">
                     {locale === "ja"
-                      ? "まずはひなたに相談を始めて、あとからLINEで落ち着いて続けたい方にも使えます。"
+                      ? "まずはチェックを始めて、あとからLINEで落ち着いて続けたい方にも使えます。"
                       : "A calm and simple way for older adults and families to begin."}
                   </p>
                 </div>
@@ -172,7 +172,7 @@ export default function AccountEntryForm({
                     <p className="mt-2">
                       {mode === "login"
                         ? locale === "ja"
-                          ? "メールアドレスとパスワードで、ひなたとのやりとりを見返したい方はこちらをお使いください。"
+                          ? "メールアドレスとパスワードで、チェックの記録を見返したい方はこちらをお使いください。"
                           : "Use this if you want to sign in with your email address and password."
                         : locale === "ja"
                           ? "LINEを使わずに始めたい場合も、こちらから落ち着いて登録できます。"
