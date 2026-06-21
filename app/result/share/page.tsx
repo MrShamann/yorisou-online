@@ -37,7 +37,6 @@ export default async function ResultSharePage({
     payloadKey,
   } as const;
   const resultHref = buildT6PublicResultHref("/result", routeContext);
-  const reportPreviewHref = buildT6PublicResultHref("/report-preview", routeContext);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,20,19,0.98)_0%,_rgba(28,40,36,0.96)_26%,_rgba(243,246,239,1)_100%)] px-4 py-4 text-[var(--text)]">
@@ -83,7 +82,6 @@ export default async function ResultSharePage({
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <MvpActionLink href={resultHref} label="結果へ戻る" />
-            <MvpActionLink href={reportPreviewHref} label="もう少し詳しく見る" tone="secondary" />
             <MvpActionLink href="/privacy" label="共有の境界" tone="ghost" />
           </div>
         </MvpCard>

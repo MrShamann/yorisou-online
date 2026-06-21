@@ -19,8 +19,8 @@ type SignalOption = {
 const SIGNAL_OPTIONS: SignalOption[] = [
   {
     value: "self-understanding-reading",
-    label: "正式版の案内を見る",
-    hint: "あとで正式版を見たい",
+    label: "もう少し詳しく読む",
+    hint: "あとで詳しく読みたい",
   },
   {
     value: "distance-and-relationships",
