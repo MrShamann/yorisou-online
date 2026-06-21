@@ -52,16 +52,17 @@ function eventTimestampToIso(timestamp: number | undefined) {
   return new Date(timestamp).toISOString();
 }
 
+const PUBLIC_CHECK_IN_URL = "https://yorisou.online/check-in";
+const PUBLIC_LINE_MINI_APP_URL = "https://yorisou.online/line/mini-app";
+
 function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
-  if (input.accountMatched) {
-    return input.eventType === "follow"
-      ? "Yorisouの相談窓口、ひなたです。アカウント連携を確認しました。こちらでメッセージを受け付けています。"
-      : "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。担当確認後にご連絡します。";
+  if (input.eventType === "follow") {
+    return input.accountMatched
+      ? `おかえりなさい。\nクイックチェックの続きはここから始められます。\n\nチェックを始める：\n${PUBLIC_CHECK_IN_URL}\n\nLINEミニアプリ入口：\n${PUBLIC_LINE_MINI_APP_URL}`
+      : `Yorisouへようこそ。\n今の自分の状態を軽く整理するクイックチェックを始められます。\n診断や固定的なラベルづけではなく、今の状態を理解するための入口です。\n\nチェックを始める：\n${PUBLIC_CHECK_IN_URL}\n\nLINEミニアプリ入口：\n${PUBLIC_LINE_MINI_APP_URL}`;
   }
 
-  return input.eventType === "follow"
-    ? "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。/support の LINE Connect からアカウント連携できます。"
-    : "Yorisouの相談窓口、ひなたです。メッセージを受け取りました。必要に応じて /support の LINE Connect からアカウント連携してください。";
+  return `YorisouのLINEミニアプリから、クイックチェックをすぐ始められます。\n${PUBLIC_LINE_MINI_APP_URL}`;
 }
 
 async function syncLineWebhookEventToCanonical(record: LineWebhookEventRecord) {
