@@ -42,7 +42,7 @@ export default function ContactPage() {
                 ご相談から導入のお話まで、このままお送りいただけます。
               </h2>
               <p className="page-copy" style={{ marginTop: 12 }}>
-                内容に応じて順次ご連絡します。ひなたとのやりとりの延長として使いたい場合も、そのままお送りください。
+                内容に応じて順次ご連絡します。チェック結果や今後の使い方について共有したい場合も、そのままお送りください。
               </p>
               <div style={{ marginTop: 20 }}>
                 <ContactForm locale="ja" />
