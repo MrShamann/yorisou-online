@@ -6,8 +6,8 @@ import Hero from "../components/Hero";
 
 const inquiryNotes = [
   "ご相談内容がまだ曖昧でも、気になることからお話しいただけます。",
-  "ご高齢の方やご家族にも伝わりやすいご案内を心がけています。",
-  "必要に応じて、ひなたとの対話や導入相談につながる形で整理します。",
+  "Yorisouのチェック体験や、ひなたの使い方についてもこちらからお気軽にどうぞ。",
+  "内容に応じて順次ご案内します。返信まで少しお時間をいただく場合があります。",
 ];
 
 export const metadata: Metadata = {
@@ -29,8 +29,8 @@ export default function ContactPage() {
         subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
         primaryHref="/support#scenario-assistant"
         primaryLabel="ひなたに相談する"
-        secondaryHref="/services"
-        secondaryLabel="支援内容を見る"
+        secondaryHref="/tests"
+        secondaryLabel="テスト一覧を見る"
       />
 
       <section className="section">
@@ -39,7 +39,7 @@ export default function ContactPage() {
             <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
               <div className="service-kicker">お問い合わせフォーム</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
-                ご相談から導入のお話まで、このままお送りいただけます。
+                チェック結果の使い方からYorisouについての質問まで、このままお送りいただけます。
               </h2>
               <p className="page-copy" style={{ marginTop: 12 }}>
                 内容に応じて順次ご連絡します。チェック結果や今後の使い方について共有したい場合も、そのままお送りください。

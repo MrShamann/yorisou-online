@@ -12,7 +12,7 @@ export default function MiniAppEntrySignals({ href, label }: Props) {
   return (
     <Link
       href={href}
-      className="mt-5 inline-flex min-h-[54px] w-full items-center justify-center rounded-[1rem] border border-white/12 bg-[linear-gradient(180deg,rgba(26,39,34,1)_0%,rgba(11,16,15,1)_100%)] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_16px_30px_rgba(5,10,9,0.28)] ring-1 ring-[rgba(157,184,170,0.18)]"
+      className="mt-4 inline-flex min-h-[54px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_14px_28px_rgba(23,59,53,0.22)] transition hover:bg-[#0F2F2B]"
     >
       {label}
     </Link>

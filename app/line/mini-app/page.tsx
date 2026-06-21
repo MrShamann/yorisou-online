@@ -1,31 +1,32 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import Link from "next/link";
 
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
 import MiniAppEntrySignals from "./MiniAppEntrySignals";
 
 export const metadata: Metadata = {
-  title: "今の寄り添い方を見つける | Yorisou",
-  description: "YorisouのLINE Mini Appで、今の気分に合う寄り添い方を見つける入口です。",
+  title: "Yorisou | チェックを始める",
+  description: "今の状態に合う入口を選んで、軽く整理するチェックを始められます。",
 };
 
-const landingCopy = {
-  title: "今の寄り添い方を、LINEで見つける。",
-  body: "短い質問にひとつずつ答えるだけ。24問の流れの先で、今の気分に合う寄り添い方と、共有しやすい結果が返ってきます。",
-  duration: "約5分",
-  benefitOne: "LINEで見返しやすい",
-  benefitTwo: "1問ずつ進む",
-  benefitThree: "結果は共有しやすい",
-  start: "はじめる",
-  resultLabel: "結果イメージ",
-  resultBody: "最後まで進むと、こんな雰囲気で結果が開きます。",
-  resultNote: "共有しやすい",
-  startNote: "Q1からそのまま始まります。",
-} as const;
-
-function getStartHref(searchParams?: Record<string, string | string[] | undefined>) {
-  return buildMiniAppCheckInHandoffHref({ locale: "ja", searchParams: searchParams || {} });
-}
+const secondaryTests = [
+  {
+    id: "relationship-fatigue",
+    kicker: "関係疲れチェック",
+    title: "人との距離感や疲れ方を見直す",
+    description: "人との関わり方や疲れのパターンを、今の状態から小さく整理するための入口です。",
+    href: "/tests/relationship-fatigue",
+    pills: ["関係・距離感"],
+  },
+  {
+    id: "love-distance",
+    kicker: "恋愛距離チェック",
+    title: "恋愛や親密さの距離感を整理する",
+    description: "恋愛や親密さの距離感を、今の自分の感覚から静かに確認できます。",
+    href: "/tests/love-distance",
+    pills: ["恋愛・距離感"],
+  },
+] as const;
 
 export default async function MiniAppEntryPage({
   searchParams,
@@ -33,75 +34,89 @@ export default async function MiniAppEntryPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const startHref = getStartHref(resolvedSearchParams);
+  const startHref = buildMiniAppCheckInHandoffHref({ locale: "ja", searchParams: resolvedSearchParams || {} });
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,rgba(9,14,13,0.98)_0%,rgba(20,32,28,0.97)_34%,rgba(243,246,239,1)_100%)] px-4 py-4 text-[var(--text)]">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0)_28%,rgba(223,233,227,0.16)_100%)]" />
-      <div className="mx-auto flex min-h-[calc(100svh-2rem)] max-w-md items-center">
-        <section className="relative w-full overflow-hidden rounded-[2.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(21,32,28,0.98)_54%,rgba(241,245,238,0.99)_100%)] shadow-[0_28px_60px_rgba(10,16,14,0.18)]">
-          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(157,184,170,0.18)_0%,rgba(255,255,255,0.9)_50%,rgba(157,184,170,0.18)_100%)]" />
+    <main
+      className="min-h-screen bg-[linear-gradient(180deg,#FAFAF8_0%,#F4FAF7_100%)] text-[#2F2A28]"
+      style={{ paddingBottom: "max(24px, env(safe-area-inset-bottom, 0px))" }}
+    >
+      <div className="mx-auto max-w-md px-4 py-6">
+        {/* Header */}
+        <div className="mb-5 flex items-center justify-between">
+          <div className="display-serif text-[1.25rem] font-semibold tracking-[0.09em] text-[#2F2A28]">YORISOU</div>
+          <span className="rounded-full border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] px-3 py-1 text-[11px] font-semibold tracking-[0.12em] text-[#315F50]">
+            LINE
+          </span>
+        </div>
 
-          <div className="relative px-4 pt-4 text-white">
-            <div className="flex items-center justify-between gap-3">
-              <span className="shrink-0 text-[13px] font-bold tracking-[0.18em] text-white/90">YORISOU</span>
-              <span className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] tracking-[0.14em] text-white/84">
-                LINE MINI App
+        {/* Hero copy */}
+        <div className="mb-5">
+          <p className="service-kicker">今の状態に合う入口を選ぶ</p>
+          <h1 className="display-serif mt-2 text-[1.7rem] leading-[1.26] text-[#2F2A28]">
+            まずは短いチェックから。
+          </h1>
+          <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">
+            答えた内容に合わせて、今の自分を少し整理できます。
+          </p>
+        </div>
+
+        {/* Primary CTA card */}
+        <div className="mb-3 rounded-[1.35rem] border border-[rgba(23,59,53,0.16)] bg-white/96 p-5 shadow-[0_16px_32px_rgba(23,59,53,0.09)]">
+          <div className="flex flex-wrap gap-1.5">
+            {(["24問", "無料", "3分ほど"] as const).map((pill) => (
+              <span
+                key={pill}
+                className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold text-[#315F50]"
+              >
+                {pill}
               </span>
-            </div>
-
-            <div className="mt-4 rounded-[1.8rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.04)_100%)] px-4 py-4 shadow-[0_16px_30px_rgba(5,10,9,0.12)]">
-              <div className="inline-flex rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[10px] tracking-[0.22em] text-white/82">
-                YORISOU / LINE
-              </div>
-              <h1 className="display-serif mt-4 text-[2.45rem] leading-[0.96] tracking-[-0.06em] text-white">
-                {landingCopy.title}
-              </h1>
-              <p className="mt-3 text-[14px] leading-7 text-white/74">
-                {landingCopy.body}
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {[
-                  landingCopy.duration,
-                  landingCopy.benefitOne,
-                  landingCopy.benefitTwo,
-                  landingCopy.benefitThree,
-                ].map((label) => (
-                  <span
-                    key={label}
-                    className="rounded-full border border-white/12 bg-white/10 px-3 py-1.5 text-[11px] leading-5 text-white/88"
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-
-              <MiniAppEntrySignals href={startHref} locale="ja" label={landingCopy.start} />
-              <p className="mt-2 text-[11px] leading-5 text-white/68">{landingCopy.startNote}</p>
-              <p className="mt-3 text-[11px] leading-5 text-white/56">{landingCopy.duration} / 5択 / 24問</p>
-
-              {/* QR for desktop / offline */}
-              <div className="mt-5 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-4">
-                <div className="rounded-[0.7rem] border border-white/12 bg-white p-1.5">
-                  <Image
-                    src="/line/yorisou-line-miniapp-qr.png"
-                    alt="YorisouのLINE Mini Appに繋がるQRコード"
-                    width={80}
-                    height={80}
-                    className="rounded-[0.3rem]"
-                    unoptimized
-                  />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[11px] font-semibold text-white/82">スマホでQRを読み取る</p>
-                  <p className="text-[11px] leading-5 text-white/56">LINEで結果をあとで見返す</p>
-                  <p className="text-[11px] leading-5 text-white/44">保存や通知は確認・同意のあと</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
-        </section>
+          <p className="service-kicker mt-3">クイックチェック</p>
+          <h2 className="display-serif mt-1 text-[1.22rem] leading-[1.38] text-[#2F2A28]">
+            今の自分の流れを軽く整理する
+          </h2>
+          <p className="mt-2 text-[13px] leading-6 text-[#6F625C]">24問のクイックチェックです。今の感覚に近いものをひとつずつ選ぶだけ。答えると無料結果が返ってきます。</p>
+          <MiniAppEntrySignals href={startHref} locale="ja" label="クイックチェックを始める" />
+        </div>
+
+        {/* Secondary test cards */}
+        <div className="grid gap-2.5">
+          {secondaryTests.map((test) => (
+            <Link
+              key={test.id}
+              href={test.href}
+              className="block rounded-[1.15rem] border border-[rgba(23,59,53,0.1)] bg-white/88 p-4 shadow-[0_8px_18px_rgba(23,59,53,0.05)] transition hover:bg-white"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap gap-1.5">
+                    {([...test.pills] as string[]).map((pill) => (
+                      <span
+                        key={pill}
+                        className="inline-flex rounded-full border border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] px-2.5 py-0.5 text-[10px] font-semibold text-[#315F50]"
+                      >
+                        {pill}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="service-kicker mt-2 text-[10px]">{test.kicker}</p>
+                  <h2 className="mt-1 text-[14px] font-semibold leading-[1.46] text-[#2F2A28]">
+                    {test.title}
+                  </h2>
+                  <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">{test.description}</p>
+                </div>
+                <span className="mt-1 shrink-0 text-[#315F50]">›</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Footer note */}
+        <p className="mt-5 text-center text-[11px] leading-6 text-[#8A7764]">
+          ログインなしで始められます。診断ではありません。
+        </p>
       </div>
     </main>
   );
