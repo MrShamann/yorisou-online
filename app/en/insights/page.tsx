@@ -101,7 +101,7 @@ export default function InsightsPageEn() {
               Reading relationship fatigue a little deeper
             </p>
             <p className="text-sm leading-7 text-[#5A4B3E]">
-              A preview of the deeper report — replies, plans, distance, and recovery. Prior notice available. No payment yet.
+              A preview of the deeper report — replies, plans, distance, and recovery.
             </p>
             <span className="mt-1 text-xs text-[#8A7764] group-hover:text-[#3B2F2F]">View report →</span>
           </Link>
