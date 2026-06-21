@@ -102,16 +102,16 @@ export default function AccountEntryForm({
                         <span className="block md:whitespace-nowrap">受け取り方を整えます。</span>
                       </>
                     )
-                    : "Create an account for ongoing support"}
+                    : "Save your check-in records to review later."}
               </h1>
               <p className="mt-5 max-w-xl text-sm leading-8 text-[var(--muted)] md:text-base">
                 {mode === "login"
                   ? locale === "ja"
                     ? "チェックの記録やご案内を、あとから見返したいときに使えます。"
-                    : "The support page brings together consultation history, recommendation notes, family sharing, and follow-up status."
+                    : "Log in to review your check-in records and follow-up notes."
                   : locale === "ja"
                     ? "登録しておくと、チェックの記録やご案内を、ひとつの場所でやさしく続けやすくなります。"
-                    : "Create one account to keep consultations and recommendations together."}
+                    : "Create one account to keep your check-in records and follow-up notes together."}
               </p>
               <div className="panel-sage mt-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
                 <div>{locale === "ja" ? "ご本人でも、ご家族でも、無理のない形で続けられます。" : "This entry works for older adults and family members."}</div>
