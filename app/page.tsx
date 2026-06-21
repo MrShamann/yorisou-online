@@ -20,7 +20,6 @@ const RESULT_PREVIEWS = [
 
 export default function HomePage() {
   const activeCards = PRODUCT_CARDS.filter((c) => c.status === "primary");
-  const futureCards = PRODUCT_CARDS.filter((c) => c.status !== "primary");
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_42%,_#F3FAF6_100%)] text-[#2F2A28]">
@@ -89,7 +88,7 @@ export default function HomePage() {
             <div className="flex-1 space-y-1.5">
               <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">LINEで続けたい方へ</p>
               <p className="text-[14px] font-semibold leading-6 text-[#2F2A28]">LINEで結果をあとから見返す</p>
-              <p className="text-[12px] leading-5 text-[#7A7068]">保存や通知は、確認と同意のあとで使えます。現在準備中です。</p>
+              <p className="text-[12px] leading-5 text-[#7A7068]">LINEからも、今の状態チェックをすぐに始められます。</p>
               <Link
                 href="/line/mini-app"
                 className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-5 text-[13px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
@@ -126,22 +125,6 @@ export default function HomePage() {
         </div>
       </MvpSection>
 
-      {/* ── Future / coming soon ── */}
-      {futureCards.length > 0 && (
-        <MvpSection
-          eyebrow="今後のチェック"
-          title="準備中のテーマ。"
-          lead="今後追加していく予定のチェックです。今は上の3つをご利用ください。"
-          className="!py-6 md:!py-8"
-        >
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {futureCards.map((card) => (
-              <FutureCard key={card.id} card={card} />
-            ))}
-          </div>
-        </MvpSection>
-      )}
-
       {/* ── Continuation ── */}
       <MvpSection
         eyebrow="あとで見返す"
@@ -158,7 +141,7 @@ export default function HomePage() {
             ))}
           </div>
           <p className="text-[12px] leading-6 text-[#7A7068]">
-            LINEでの保存・通知・見返しには、それぞれ確認と同意が必要です。現在準備中です。
+            LINEで続きやすくする入口を整えています。
           </p>
           <Link
             href="/line/mini-app"
@@ -252,22 +235,6 @@ function ActiveChoiceCard({ card }: { card: ProductCard }) {
         {card.primary_cta}
       </div>
     </Link>
-  );
-}
-
-/* ─── Future / coming-soon card ─── */
-
-function FutureCard({ card }: { card: ProductCard }) {
-  return (
-    <div className="flex flex-col gap-2.5 rounded-[1.35rem] border border-[rgba(23,59,53,0.07)] bg-white/70 p-4 opacity-65">
-      <div className="flex-1 space-y-1">
-        <h3 className="text-[14px] font-semibold leading-6 text-[#5F5750]">{card.title_ja}</h3>
-        <p className="text-[12px] leading-5 text-[#8A7E78]">{card.subtitle_ja}</p>
-      </div>
-      <span className="inline-flex self-start rounded-full border border-[rgba(23,59,53,0.1)] bg-[#F8F7F4] px-3 py-1 text-[11px] font-semibold text-[#9A918B]">
-        準備中
-      </span>
-    </div>
   );
 }
 
