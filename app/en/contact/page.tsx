@@ -3,16 +3,16 @@ import ContactForm from "../../components/ContactForm";
 
 const inquiryCards = [
   {
-    title: "Experience Inquiry",
-    text: "We welcome calm first conversations for personal review, family consultation, and introductory experience requests.",
+    title: "Check Experience",
+    text: "Questions about the quick check, your results, or how to use Hinata — we're happy to hear from you.",
   },
   {
-    title: "Partnership / Pilot Inquiry",
-    text: "Municipalities, local groups, care facilities, and partners can contact us about pilot collaboration.",
+    title: "About Yorisou",
+    text: "Reach out with broader questions about Yorisou, how the service works, or what might suit your situation.",
   },
   {
     title: "General Contact",
-    text: "You are welcome to reach out with broader questions about Yorisou and our future direction.",
+    text: "Not sure which category fits? That's fine — just send us a message and we'll respond in kind.",
   },
 ];
 
@@ -92,7 +92,7 @@ export default function ContactPageEn() {
             <div className="text-sm tracking-[0.18em] text-[#8A7764]">How We Can Help</div>
             <h2 className="mt-3 text-3xl font-light leading-tight">Ways to contact Yorisou</h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
-              We welcome everything from personal ride interest to local pilot and partnership discussions.
+              Whether it's about the check experience, Hinata, or Yorisou in general — we're here.
             </p>
           </div>
 
