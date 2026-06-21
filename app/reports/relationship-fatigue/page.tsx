@@ -70,13 +70,6 @@ export default function ReportRelationshipFatiguePage() {
             </div>
           </div>
 
-          {/* ── 2. Preparation note ── */}
-          <div className="rounded-[1.1rem] border border-[rgba(23,59,53,0.1)] bg-white/70 px-5 py-3.5">
-            <p className="text-[12px] leading-6 text-[#7A7068]">
-              このレポートは、今後の有料レポート候補として準備中です。表示内容や価格は、レビュー後に変更される場合があります。
-            </p>
-          </div>
-
           {/* ── 3. What this report helps you read ── */}
           <div className="space-y-4">
             <div className="space-y-0.5">
@@ -152,20 +145,20 @@ export default function ReportRelationshipFatiguePage() {
 
             <div className="rounded-[0.9rem] border border-[rgba(23,59,53,0.07)] bg-[#F3FAF6] px-4 py-3">
               <p className="text-[12px] leading-6 text-[#7A7068]">
-                これはサンプルプレビューです。実際のレポートは、あなたの回答結果にもとづいて構成されます。現在準備中です。
+                これはサンプルプレビューです。実際のレポートは、あなたの回答結果にもとづいて構成されます。
               </p>
             </div>
           </div>
 
-          {/* ── 6. Interest-validation block ── */}
+          {/* ── 6. LINE CTA ── */}
           <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.14)] bg-white/90 p-6 space-y-4">
             <div className="space-y-1">
-              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">先行案内を受け取る</p>
+              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">あとで深く読む</p>
               <p className="text-[16px] font-semibold leading-7 text-[#2F2A28]">
-                公開されたら、LINEで先に知らせてほしい
+                LINEで結果をあとから見返す
               </p>
               <p className="text-[13px] leading-6 text-[#5F5750]">
-                このレポートは有料版として準備中です。内容、提供方法、価格が整った段階で、LINEから先に案内を受け取れる形を準備しています。
+                深く読む準備ができたとき、LINEからすぐ戻れます。購入や申込みではありません。
               </p>
             </div>
 
@@ -186,11 +179,10 @@ export default function ReportRelationshipFatiguePage() {
                   href="/line/mini-app"
                   className="inline-flex min-h-[46px] w-full sm:w-auto items-center justify-center rounded-full bg-[#173B35] px-6 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(23,59,53,0.16)] transition hover:bg-[#0F2F2B]"
                 >
-                  LINEで案内を受け取る
+                  LINEで開く
                 </Link>
                 <div className="space-y-0.5">
                   <p className="text-[11px] leading-5 text-[#8A8078]">このページでは、支払いは発生しません。</p>
-                  <p className="text-[11px] leading-5 text-[#8A8078]">価格は準備中です。内容、提供方法、安心して読める導線を整えたうえでお知らせします。</p>
                   <p className="text-[11px] leading-5 text-[#8A8078]">保存や通知は、確認と同意のあとで使えます。</p>
                 </div>
               </div>

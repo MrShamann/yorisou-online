@@ -48,7 +48,7 @@ export default function ReportLoveDistancePage() {
               相手の気持ちを読むものではなく、あなた自身の距離感を整理するレポートです。連絡や関係の結論を急がず、今の自分を少し落ち着いて見たいときに読めます。
             </p>
 
-            <p className="text-[13px] font-semibold tracking-[0.12em] text-[#49615B]">レポートに含まれること（準備中）</p>
+            <p className="text-[13px] font-semibold tracking-[0.12em] text-[#49615B]">レポートに含まれること</p>
             <ul className="space-y-2.5">
               {SECTIONS.map((s) => (
                 <li key={s} className="flex items-start gap-2.5 text-[14px] leading-7 text-[#2F2A28]">
@@ -65,13 +65,10 @@ export default function ReportLoveDistancePage() {
             </div>
           </div>
 
-          {/* Status + CTA */}
+          {/* CTA */}
           <div className="space-y-3">
-            <div className="inline-flex rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F8F7F4] px-4 py-2 text-[13px] font-semibold text-[#8A8078]">
-              現在準備中です
-            </div>
             <p className="text-[13px] leading-6 text-[#7A7068]">
-              今は無料チェックだけ受けられます。チェックを終えると、結果のあとにここへのリンクが表示されます。
+              まずは無料チェックを受けてみてください。チェックを終えると、結果のあとにここへのリンクが表示されます。
             </p>
             <Link
               href="/tests/love-distance"
