@@ -151,7 +151,7 @@ export default function InsightsPage() {
                 今日の気持ちを、あとからLINEで静かに見返す。急いで結論を出さなくていい。
               </p>
               <p className="text-[11px] leading-5 text-[#9A918B]">
-                保存や通知は、確認と同意のあとで使えます。現在準備中です。
+                保存や通知は、確認と同意のあとで使えます。
               </p>
               <Link
                 href="/line/mini-app"
