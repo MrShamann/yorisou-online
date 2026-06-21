@@ -291,7 +291,7 @@ export default function MiniTestFlow() {
                   </div>
                 </MvpCard>
 
-                <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.1)] bg-[rgba(255,247,241,0.96)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0">
+                <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.1)] bg-[rgba(255,247,241,0.96)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
                   <div className="flex gap-2.5 sm:justify-between">
                     <button
                       type="button"
