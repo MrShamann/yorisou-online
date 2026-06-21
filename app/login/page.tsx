@@ -5,8 +5,8 @@ import AccountEntryForm from "@/app/components/AccountEntryForm";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 
 export const metadata: Metadata = {
-  title: "相談のつづき | Yorisou",
-  description: "ひなたとのやりとりやご案内を、あとから落ち着いて見返し、続けたいときのためのログインページです。",
+  title: "ログイン | Yorisou",
+  description: "Yorisouのチェック結果や記録を、あとから見返すためのログインページです。",
 };
 
 function getErrorMessage(code: string | undefined) {
