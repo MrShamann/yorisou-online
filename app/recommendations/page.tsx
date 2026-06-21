@@ -56,7 +56,6 @@ export default async function RecommendationsPage({
     confidenceBand,
     payloadKey,
   } as const;
-  const reportPreviewHref = buildT6PublicResultHref("/report-preview", routeContext);
   const savedHref = buildT6PublicResultHref("/saved", routeContext);
   const confidenceLabel = confidenceBand === "medium" ? "少し見えやすい範囲" : "今見えている範囲";
 
@@ -98,24 +97,6 @@ export default async function RecommendationsPage({
             </MvpCard>
 
             <div className="grid gap-3">
-              <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.12)] bg-[radial-gradient(circle_at_16%_0%,_rgba(217,164,65,0.2),_transparent_46%),linear-gradient(180deg,_#fffefd,_#F4FAF7)] shadow-[0_22px_44px_rgba(23,59,53,0.1)]">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="service-kicker">もう少し詳しく読む</div>
-                  <MvpPill>プレビュー</MvpPill>
-                </div>
-                <h2 className="display-serif text-[1.48rem] leading-[1.3] text-[#2F2A28]">
-                  今の傾向を、短いレポートで見る
-                </h2>
-                <p className="text-[14px] font-medium leading-7 text-[#4A3E39]">
-                  {result.publicName}と{overlay.publicLabel}の文脈を引き継いで、準備中の詳しい読み物の入口だけを確認できます。
-                </p>
-                <MvpActionLink
-                  href={reportPreviewHref}
-                  label="レポートプレビューを見る"
-                  className="rounded-full !border-[#173B35] !bg-[#173B35] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] hover:!bg-[#0F2F2B]"
-                />
-              </MvpCard>
-
               <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
                 <div className="service-kicker">今の傾向を保存する</div>
                 <h2 className="display-serif text-[1.36rem] leading-[1.38]">あとで同じ流れに戻る</h2>
@@ -163,7 +144,7 @@ export default async function RecommendationsPage({
               {
                 value: "self-understanding-reading",
                 label: "もう少し詳しく読む",
-                hint: "レポートプレビューを先に見たい",
+                hint: "あとで詳しく読みたい",
               },
               {
                 value: "rest-and-recovery",
