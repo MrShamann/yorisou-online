@@ -17,14 +17,15 @@ const primaryNavEn = [
 
 const secondaryNavJa = [
   { href: "/about", label: "Yorisouとは" },
-  { href: "/support", label: "ひなた" },
   { href: "/contact", label: "お問い合わせ" },
+  { href: "/legal", label: "利用規約" },
+  { href: "/privacy", label: "プライバシーポリシー" },
 ];
 
 const secondaryNavEn = [
   { href: "/en/about", label: "About Yorisou" },
-  { href: "/en/support", label: "Hinata" },
   { href: "/en/contact", label: "Contact" },
+  { href: "/en/legal", label: "Terms" },
 ];
 
 function toJapanesePath(pathname: string): string {
@@ -55,16 +56,12 @@ export default function SiteHeader() {
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
   const languageHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
-  const loginHref = localizedHref("/login");
 
   function localizedHref(path: string) {
     return isEn ? toEnglishPath(path) : path;
   }
 
   function isActive(path: string) {
-    if (path === "/login") {
-      return ["/login", "/register", "/support"].includes(normalizedCurrent);
-    }
     const normalizedHref = path.replace(/\/$/, "") || "/";
     return normalizedCurrent === normalizedHref || normalizedCurrent.startsWith(`${normalizedHref}/`);
   }
@@ -149,9 +146,6 @@ export default function SiteHeader() {
             </nav>
 
             <div className="header-actions">
-              <Link href={loginHref} className={`login-link ${isActive("/login") ? "active" : ""}`} onClick={() => setOpen(false)}>
-                {isEn ? "Login" : "ログイン"}
-              </Link>
               <Link href={languageHref} className="locale-switch" onClick={() => setOpen(false)}>
                 <span className="locale-current">{isEn ? "EN" : "JP"}</span>
                 <span className="locale-target">{isEn ? "日本語" : "EN"}</span>
