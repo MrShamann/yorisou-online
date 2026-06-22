@@ -6,7 +6,7 @@ import Hero from "../components/Hero";
 
 const inquiryNotes = [
   "ご相談内容がまだ曖昧でも、気になることからお話しいただけます。",
-  "Yorisouのチェック体験や、ひなたの使い方についてもこちらからお気軽にどうぞ。",
+  "Yorisouのチェック体験や使い方についても、こちらからお気軽にどうぞ。",
   "内容に応じて順次ご案内します。返信まで少しお時間をいただく場合があります。",
 ];
 
@@ -27,8 +27,8 @@ export default function ContactPage() {
           </>
         }
         subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
-        primaryHref="/support#scenario-assistant"
-        primaryLabel="ひなたに相談する"
+        primaryHref="/check-in"
+        primaryLabel="クイックチェックを始める"
         secondaryHref="/tests"
         secondaryLabel="テスト一覧を見る"
       />
@@ -62,8 +62,8 @@ export default function ContactPage() {
                 ))}
               </div>
               <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                <Link href="/support#scenario-assistant" className="soft-link">
-                  ひなたと話し始める
+                <Link href="/check-in" className="soft-link">
+                  クイックチェックを始める
                 </Link>
               </div>
             </div>

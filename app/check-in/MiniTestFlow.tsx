@@ -152,16 +152,29 @@ export default function MiniTestFlow() {
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_15%_0%,_rgba(221,236,242,0.68),_transparent_34%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_46%,_#F4FAF7_100%)] text-[#2F2A28]">
+      {/* Minimal top bar — orientation anchor in shell-suppressed context */}
+      <div className="sticky top-0 z-30 border-b border-[rgba(23,59,53,0.08)] bg-[rgba(255,247,241,0.95)] backdrop-blur-sm">
+        <div className="container flex items-center justify-between py-3">
+          <span className="display-serif text-[1.1rem] font-semibold tracking-[0.09em] text-[#2F2A28]">YORISOU</span>
+          {phase === "quiz" ? (
+            <span className="rounded-full bg-[rgba(23,59,53,0.08)] px-3 py-1 text-[12px] font-semibold text-[#315F50]">
+              {stepLabel}
+            </span>
+          ) : (
+            <span className="rounded-full bg-[rgba(23,59,53,0.08)] px-3 py-1 text-[11px] font-semibold text-[#315F50]">クイックチェック</span>
+          )}
+        </div>
+      </div>
       <section className="border-b border-[rgba(23,59,53,0.1)]">
-        <div className="container py-5 md:py-10">
+        <div className="container py-5 md:py-8">
           <div className="mx-auto max-w-[40rem]">
             {phase === "intro" ? (
-              <div className="grid gap-5">
+              <div className="grid gap-4">
                 <div className="flex flex-wrap gap-1.5">
                   {INTRO_PILLS.map((pill) => (
                     <span
                       key={pill}
-                      className="inline-flex rounded-full border border-[rgba(233,120,99,0.18)] bg-white/78 px-3 py-1.5 text-[12px] font-semibold leading-5 text-[#6F625C] shadow-[0_8px_18px_rgba(233,120,99,0.06)]"
+                      className="inline-flex rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold leading-5 text-[#315F50]"
                     >
                       {pill}
                     </span>
@@ -267,7 +280,7 @@ export default function MiniTestFlow() {
                           key={option.id}
                           type="button"
                           onClick={() => selectOption(option.id)}
-                          className={`rounded-[1.05rem] border px-4 py-3.5 text-left transition ${
+                          className={`answer-btn rounded-[1.05rem] border px-4 py-3.5 text-left ${
                             selected
                               ? "border-[#173B35] bg-[#F4FAF7] shadow-[0_12px_24px_rgba(23,59,53,0.12)]"
                               : "border-[rgba(111,98,92,0.14)] bg-white/90 hover:-translate-y-0.5 hover:bg-white"

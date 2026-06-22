@@ -81,36 +81,21 @@ export default async function MiniAppEntryPage({
           <MiniAppEntrySignals href={startHref} locale="ja" label="クイックチェックを始める" />
         </div>
 
-        {/* Secondary test cards */}
-        <div className="grid gap-2.5">
-          {secondaryTests.map((test) => (
-            <Link
-              key={test.id}
-              href={test.href}
-              className="block rounded-[1.15rem] border border-[rgba(23,59,53,0.1)] bg-white/88 p-4 shadow-[0_8px_18px_rgba(23,59,53,0.05)] transition hover:bg-white"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap gap-1.5">
-                    {([...test.pills] as string[]).map((pill) => (
-                      <span
-                        key={pill}
-                        className="inline-flex rounded-full border border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] px-2.5 py-0.5 text-[10px] font-semibold text-[#315F50]"
-                      >
-                        {pill}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="service-kicker mt-2 text-[10px]">{test.kicker}</p>
-                  <h2 className="mt-1 text-[14px] font-semibold leading-[1.46] text-[#2F2A28]">
-                    {test.title}
-                  </h2>
-                  <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">{test.description}</p>
-                </div>
-                <span className="mt-1 shrink-0 text-[#315F50]">›</span>
-              </div>
-            </Link>
-          ))}
+        {/* Secondary test cards — visually lighter to keep focus on クイックチェック */}
+        <div className="mt-1 border-t border-[rgba(23,59,53,0.07)] pt-3">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8A7764]">その他のチェック</p>
+          <div className="grid gap-1.5">
+            {secondaryTests.map((test) => (
+              <Link
+                key={test.id}
+                href={test.href}
+                className="flex items-center justify-between gap-3 rounded-[0.9rem] border border-[rgba(23,59,53,0.07)] bg-white/70 px-4 py-3 text-[13px] transition hover:bg-white/90"
+              >
+                <span className="font-medium text-[#4A3E39]">{test.title}</span>
+                <span className="shrink-0 text-[#8A7764]">›</span>
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Footer note */}
