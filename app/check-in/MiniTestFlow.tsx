@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
@@ -9,7 +9,6 @@ import {
   currentStateCheckV1,
   currentStateQuestions,
   getCurrentStateMilestone,
-  getCurrentStateSegmentLabel,
   saveCurrentStateResult,
   scoreCurrentStateCheck,
   type CurrentStateQuestion,
@@ -19,13 +18,7 @@ import {
 type Phase = "intro" | "quiz";
 const AUTO_ADVANCE_DELAY_MS = 320;
 
-const INTRO_PILLS = ["24問のクイックチェック", "3分ほど", "無料結果あり", "診断ではありません"] as const;
-const RESULT_PROMISES = [
-  "今のあなたに近いモード",
-  "短い認識の一行",
-  "やさしい次のヒント",
-  "次のヒントへ進めます",
-] as const;
+const INTRO_FACTS = "24問 · 3分ほど · 無料 · ログインなし" as const;
 
 function getRemainingMinutes(currentIndex: number) {
   const answered = currentIndex + 1;
@@ -46,14 +39,8 @@ export default function MiniTestFlow() {
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] ?? "" : "";
   const stepLabel = `${Math.min(currentIndex + 1, totalQuestions)} / ${totalQuestions}`;
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
-  const segmentLabel = getCurrentStateSegmentLabel(currentIndex);
   const milestone = getCurrentStateMilestone(currentIndex);
   const remainingMinutes = getRemainingMinutes(currentIndex);
-
-  const selectedCount = useMemo(
-    () => Object.keys(answers).filter((questionId) => Boolean(answers[questionId])).length,
-    [answers],
-  );
 
   useEffect(() => {
     return () => {
@@ -169,90 +156,62 @@ export default function MiniTestFlow() {
         <div className="container py-5 md:py-8">
           <div className="mx-auto max-w-[40rem]">
             {phase === "intro" ? (
-              <div className="grid gap-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {INTRO_PILLS.map((pill) => (
-                    <span
-                      key={pill}
-                      className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold leading-5"
-                      style={{ borderColor: "rgba(23,59,53,0.12)", background: "rgba(23,59,53,0.05)", color: "#4D7A69" }}
-                    >
-                      {pill}
-                    </span>
-                  ))}
-                </div>
-
+              <div className="grid gap-5">
                 <div className="space-y-3">
                   <p className="service-kicker" style={{ color: "#4D7A69" }}>クイックチェック</p>
-                  <h1 className="display-serif max-w-[11em] text-[2.05rem] leading-[1.14] text-[#22201D] md:text-[2.95rem]">
-                    いまの自分の流れを、
-                    <span className="block text-[#D95F4E]">24問のクイックチェックで静かに見る。</span>
+                  <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.6rem]">
+                    今の感覚を、24問で静かに整理する。
                   </h1>
-                  <p className="max-w-[35rem] text-[15px] font-medium leading-7 text-[#6F6760] md:leading-8">
-                    今の感覚に近いものを、その場でひとつずつ選ぶだけです。正解はありません。
-                    答え終えると、今のあなたに近い無料結果が表示されます。
+                  <p className="text-[11px] tracking-[0.06em] text-[#9A9088]">{INTRO_FACTS}</p>
+                  <p className="max-w-[35rem] text-[14px] leading-7 text-[#6F6760]">
+                    今の感覚に近いものをひとつずつ選ぶだけです。正解はありません。
                   </p>
                 </div>
 
-                <div className="space-y-3">
+                <div>
                   <button
                     type="button"
                     onClick={begin}
-                    className="inline-flex min-h-[58px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] text-white transition hover:opacity-95 active:scale-[0.975] sm:w-auto"
-                    style={{ background: "#173B35", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
+                    className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] transition hover:opacity-95 active:scale-[0.975]"
+                    style={{ background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
                   >
-                    クイックチェックを始める
+                    はじめる
                   </button>
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] leading-7 text-[var(--muted)]">
-                    <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
-                  </div>
+                  <p className="mt-2.5 text-[11px] leading-6 text-[#9A9088]">
+                    診断ではありません · <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
+                  </p>
                 </div>
 
-                <div className="rounded-[1rem] px-4 py-3.5" style={{ background: "rgba(23,59,53,0.04)", border: "1px solid rgba(23,59,53,0.07)" }}>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: "#9A9088" }}>答えたあとに見えること</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {RESULT_PROMISES.map((item) => (
-                      <span
-                        key={item}
-                        className="inline-flex rounded-full px-3 py-1 text-[12px] font-semibold"
-                        style={{ background: "rgba(23,59,53,0.07)", color: "#4D7A69" }}
-                      >
-                        {item}
-                      </span>
-                    ))}
+                {/* Transition cue — lightweight signal strip */}
+                <div
+                  className="rounded-[1rem] px-4 py-3"
+                  style={{ background: "rgba(23,59,53,0.04)", border: "1px solid rgba(23,59,53,0.07)" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="signal-orb" aria-hidden="true" />
+                    <p className="text-[12px] leading-6 text-[#6F6760]">
+                      24問で、今の流れを少しずつ見ていきます。
+                    </p>
                   </div>
                 </div>
-
-                <p className="text-[12px] leading-7 text-[#9A9088]">
-                  ログインなしで始められます。今の状態を見返すための無料結果で、診断や固定的なラベルづけではありません。
-                </p>
               </div>
             ) : null}
 
             {phase === "quiz" && currentQuestion ? (
               <div className="grid gap-4">
-                <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.12)] bg-white/90 p-3.5 shadow-[0_18px_38px_rgba(23,59,53,0.08)]">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-semibold tracking-[0.14em] text-[#6F6760]">{segmentLabel}</div>
-                      <div className="mt-1 text-[14px] font-bold text-[#22201D]">Q{Math.min(currentIndex + 1, totalQuestions)} / {totalQuestions}</div>
-                    </div>
-                    <div className="rounded-full bg-[#FDE8DD] px-3 py-1 text-[12px] font-semibold text-[#D95F4E]">
-                      残り約{remainingMinutes}分
-                    </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[12px] text-[#9A9088]">
+                    <span>{stepLabel}</span>
+                    <span>残り約{remainingMinutes}分</span>
                   </div>
-                  <div className="mt-3 h-2.5 rounded-full bg-[rgba(23,59,53,0.12)]">
+                  <div className="h-1.5 rounded-full bg-[rgba(23,59,53,0.1)]">
                     <div
                       className="h-full rounded-full bg-[#173B35] transition-all"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-[12px] leading-6 text-[var(--muted)]">
-                    <span>{stepLabel}</span>
-                    <span>{selectedCount} / {totalQuestions} 回答済み</span>
-                  </div>
                   {milestone ? (
-                    <div className="mt-3 rounded-[0.9rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.58)] px-3.5 py-2 text-[13px] leading-7 text-[var(--accent-sage-text)]">
+                    <div className="mt-2 rounded-[0.9rem] border border-[color:var(--line-sage)] bg-[rgba(225,232,219,0.58)] px-3.5 py-2 text-[13px] leading-7 text-[var(--accent-sage-text)]">
                       {milestone}
                     </div>
                   ) : null}
@@ -280,23 +239,22 @@ export default function MiniTestFlow() {
                           key={option.id}
                           type="button"
                           onClick={() => selectOption(option.id)}
-                          className={`answer-btn rounded-[1.05rem] border px-4 py-3.5 text-left ${
+                          className={`answer-btn w-full rounded-[1.05rem] border px-4 py-3.5 text-left ${
                             selected
                               ? "border-[#173B35] bg-[#F4FAF7] shadow-[0_12px_24px_rgba(23,59,53,0.12)]"
                               : "border-[rgba(111,98,92,0.14)] bg-white/90 hover:-translate-y-0.5 hover:bg-white"
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-4">
-                            <span className="text-[15px] font-semibold leading-7 text-[var(--text)]">{option.label}</span>
-                            <span
-                              className={`mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                                selected
-                                  ? "border-[#173B35] bg-[#173B35] text-white"
-                                  : "border-[rgba(201,211,195,0.78)] bg-white"
-                              }`}
-                            >
-                              {selected ? "✓" : ""}
-                            </span>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-[15px] font-semibold leading-7 text-[#22201D]">{option.label}</span>
+                            {selected && (
+                              <span
+                                className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                                style={{ background: "#173B35", color: "#fff" }}
+                              >
+                                ✓
+                              </span>
+                            )}
                           </div>
                         </button>
                       );
@@ -318,8 +276,8 @@ export default function MiniTestFlow() {
                       type="button"
                       onClick={goNext}
                       disabled={!currentAnswer}
-                      className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full px-4 py-3 text-[16px] text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:text-white disabled:shadow-none"
-                      style={currentAnswer ? { background: "#173B35", fontWeight: 800, boxShadow: "0 14px 28px rgba(23,59,53,0.26)" } : { background: "rgba(34,32,29,0.18)", fontWeight: 700 }}
+                      className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full px-4 py-3 text-[16px] transition hover:opacity-95 disabled:cursor-not-allowed disabled:shadow-none"
+                      style={currentAnswer ? { background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 28px rgba(23,59,53,0.26)" } : { background: "rgba(34,32,29,0.18)", color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
                     >
                       {currentIndex === totalQuestions - 1 ? "無料結果へ進む" : "すぐ次へ"}
                     </button>

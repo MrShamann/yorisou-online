@@ -7,12 +7,12 @@ export const metadata: Metadata = {
     "いまの状態を、いくつかの入口から軽く整理できます。診断や固定的なラベルづけではなく、自分の状態を見直すための小さなチェックです。",
 };
 
-const tests = [
+const activeTests = [
   {
     id: "quick-check",
     kicker: "クイックチェック",
     title: "今の自分の流れを軽く整理する",
-    description: "今の状態を軽く整理する24問のチェックです。正解はなく、今の感覚に近いものをひとつずつ選ぶだけです。答えると無料結果が返ってきます。",
+    description: "今の状態を軽く整理する24問のチェックです。今の感覚に近いものをひとつずつ選ぶだけ。答えると無料結果が返ってきます。",
     href: "/check-in",
     ctaLabel: "はじめる",
     pills: ["24問", "無料結果あり", "ログイン不要"],
@@ -40,9 +40,17 @@ const tests = [
   },
 ] as const;
 
+const comingSoonTests = [
+  { id: "work-rhythm", label: "仕事・リズム", description: "仕事のペースや消耗感を整理する" },
+  { id: "learning", label: "学び・選び方", description: "学びの傾向や選択スタイルを見直す" },
+  { id: "life-recovery", label: "生活・回復", description: "日常の回復感や生活リズムを確認する" },
+  { id: "monthly", label: "月次チェック", description: "月ごとの変化を継続的に記録する" },
+  { id: "compatibility", label: "相性", description: "相性のパターンを静かに整理する" },
+] as const;
+
 export default function TestsPage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_50%_0%,rgba(221,236,242,0.6),transparent_36%),linear-gradient(180deg,#FFF7F1_0%,#fffdf9_46%,#F4FAF7_100%)] text-[#2F2A28]">
+    <main className="min-h-screen bg-[#FBFAF6] text-[#2F2A28]">
       <section className="border-b border-[rgba(23,59,53,0.1)]">
         <div className="container py-10 md:py-16">
           <div className="mx-auto max-w-[42rem]">
@@ -57,54 +65,103 @@ export default function TestsPage() {
         </div>
       </section>
 
-      <section className="container py-8 md:py-12">
-        <div className="mx-auto grid max-w-[42rem] gap-4">
-          {tests.map((test) => (
-            <div
-              key={test.id}
-              className={`rounded-[1.35rem] border p-5 shadow-[0_18px_38px_rgba(23,59,53,0.07)] md:p-6 ${
-                test.primary
-                  ? "border-[rgba(23,59,53,0.16)] bg-white/96"
-                  : "border-[rgba(23,59,53,0.1)] bg-white/88"
-              }`}
-            >
-              <div className="flex flex-wrap gap-1.5">
-                {test.pills.map((pill) => (
-                  <span
-                    key={pill}
-                    className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold text-[#315F50]"
+      {/* Active tests */}
+      <section className="container py-8 md:py-10">
+        <div className="mx-auto max-w-[42rem]">
+          <p
+            className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em]"
+            style={{ color: "#9A9088" }}
+          >
+            今使えるチェック
+          </p>
+          <div className="grid gap-4">
+            {activeTests.map((test) => (
+              <div
+                key={test.id}
+                className={`rounded-[1.35rem] border p-5 shadow-[0_18px_38px_rgba(23,59,53,0.07)] md:p-6 ${
+                  test.primary
+                    ? "border-[rgba(23,59,53,0.16)] bg-white/96"
+                    : "border-[rgba(23,59,53,0.1)] bg-white/88"
+                }`}
+              >
+                <div className="flex flex-wrap gap-1.5">
+                  {test.pills.map((pill) => (
+                    <span
+                      key={pill}
+                      className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold text-[#315F50]"
+                    >
+                      {pill}
+                    </span>
+                  ))}
+                </div>
+                <p className="service-kicker mt-3">{test.kicker}</p>
+                <h2 className="display-serif mt-2 text-[1.3rem] leading-[1.38] text-[#2F2A28] md:text-[1.55rem]">
+                  {test.title}
+                </h2>
+                <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{test.description}</p>
+                <div className="mt-4">
+                  <Link
+                    href={test.href}
+                    className={`inline-flex min-h-[50px] items-center justify-center rounded-full px-6 py-3 text-[15px] font-semibold transition hover:-translate-y-0.5 ${
+                      test.primary
+                        ? "border border-[#173B35] bg-[#173B35] shadow-[0_14px_28px_rgba(23,59,53,0.22)] hover:bg-[#0F2F2B]"
+                        : "border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] text-[#315F50] hover:bg-[#ddf0e8]"
+                    }`}
+                    style={test.primary ? { color: "#fff" } : undefined}
                   >
-                    {pill}
-                  </span>
-                ))}
+                    {test.ctaLabel}
+                  </Link>
+                </div>
               </div>
-              <p className="service-kicker mt-3">{test.kicker}</p>
-              <h2 className="display-serif mt-2 text-[1.3rem] leading-[1.38] text-[#2F2A28] md:text-[1.55rem]">
-                {test.title}
-              </h2>
-              <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{test.description}</p>
-              <div className="mt-4">
-                <Link
-                  href={test.href}
-                  className={`inline-flex min-h-[50px] items-center justify-center rounded-full px-6 py-3 text-[15px] font-semibold transition hover:-translate-y-0.5 ${
-                    test.primary
-                      ? "border border-[#173B35] bg-[#173B35] text-white shadow-[0_14px_28px_rgba(23,59,53,0.22)] hover:bg-[#0F2F2B]"
-                      : "border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] text-[#315F50] hover:bg-[#ddf0e8]"
-                  }`}
-                >
-                  {test.ctaLabel}
-                </Link>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+      </section>
 
-        <div className="mx-auto mt-8 max-w-[42rem]">
+      {/* Coming soon */}
+      <section className="container pb-12 md:pb-16">
+        <div className="mx-auto max-w-[42rem]">
+          <div className="border-t pt-8" style={{ borderColor: "rgba(23,59,53,0.08)" }}>
+            <p
+              className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em]"
+              style={{ color: "#9A9088" }}
+            >
+              これから増えるチェック
+            </p>
+            <div className="grid gap-2.5">
+              {comingSoonTests.map((test) => (
+                <div
+                  key={test.id}
+                  className="flex items-center justify-between rounded-[1.1rem] px-5 py-4"
+                  style={{
+                    background: "rgba(23,59,53,0.03)",
+                    border: "1px solid rgba(23,59,53,0.07)",
+                  }}
+                >
+                  <div>
+                    <p className="text-[14px] font-semibold text-[#6F625C]">{test.label}</p>
+                    <p className="mt-0.5 text-[12px] leading-6 text-[#B0A89E]">{test.description}</p>
+                  </div>
+                  <span
+                    className="ml-4 shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold"
+                    style={{ background: "rgba(23,59,53,0.06)", color: "#9A9088" }}
+                  >
+                    準備中
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="container pb-8">
+        <div className="mx-auto max-w-[42rem]">
           <p className="text-[12px] leading-7 text-[#8A7764]">
             いずれも診断や評価ではありません。今の状態の傾向を理解するための入口です。
           </p>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
