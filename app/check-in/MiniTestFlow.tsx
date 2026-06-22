@@ -151,11 +151,11 @@ export default function MiniTestFlow() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_15%_0%,_rgba(221,236,242,0.68),_transparent_34%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_46%,_#F4FAF7_100%)] text-[#2F2A28]">
+    <main className="min-h-screen bg-[#FBFAF6] text-[#22201D]">
       {/* Minimal top bar — orientation anchor in shell-suppressed context */}
-      <div className="sticky top-0 z-30 border-b border-[rgba(23,59,53,0.08)] bg-[rgba(255,247,241,0.95)] backdrop-blur-sm">
+      <div className="sticky top-0 z-30 border-b border-[rgba(23,59,53,0.06)] bg-[rgba(251,250,246,0.96)] backdrop-blur-sm">
         <div className="container flex items-center justify-between py-3">
-          <span className="display-serif text-[1.1rem] font-semibold tracking-[0.09em] text-[#2F2A28]">YORISOU</span>
+          <span className="display-serif text-[1.1rem] font-semibold tracking-[0.09em] text-[#22201D]">YORISOU</span>
           {phase === "quiz" ? (
             <span className="rounded-full bg-[rgba(23,59,53,0.08)] px-3 py-1 text-[12px] font-semibold text-[#315F50]">
               {stepLabel}
@@ -174,7 +174,8 @@ export default function MiniTestFlow() {
                   {INTRO_PILLS.map((pill) => (
                     <span
                       key={pill}
-                      className="inline-flex rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold leading-5 text-[#315F50]"
+                      className="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold leading-5"
+                      style={{ borderColor: "rgba(23,59,53,0.12)", background: "rgba(23,59,53,0.05)", color: "#4D7A69" }}
                     >
                       {pill}
                     </span>
@@ -182,12 +183,12 @@ export default function MiniTestFlow() {
                 </div>
 
                 <div className="space-y-3">
-                  <p className="service-kicker">クイックチェック</p>
-                  <h1 className="display-serif max-w-[11em] text-[2.05rem] leading-[1.14] text-[#2F2A28] md:text-[2.95rem]">
+                  <p className="service-kicker" style={{ color: "#4D7A69" }}>クイックチェック</p>
+                  <h1 className="display-serif max-w-[11em] text-[2.05rem] leading-[1.14] text-[#22201D] md:text-[2.95rem]">
                     いまの自分の流れを、
                     <span className="block text-[#D95F4E]">24問のクイックチェックで静かに見る。</span>
                   </h1>
-                  <p className="max-w-[35rem] text-[15px] font-medium leading-7 text-[#6F625C] md:leading-8">
+                  <p className="max-w-[35rem] text-[15px] font-medium leading-7 text-[#6F6760] md:leading-8">
                     今の感覚に近いものを、その場でひとつずつ選ぶだけです。正解はありません。
                     答え終えると、今のあなたに近い無料結果が表示されます。
                   </p>
@@ -197,7 +198,8 @@ export default function MiniTestFlow() {
                   <button
                     type="button"
                     onClick={begin}
-                    className="inline-flex min-h-[58px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 py-3 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.24)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] hover:opacity-95 sm:w-auto"
+                    className="inline-flex min-h-[58px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] text-white transition hover:opacity-95 active:scale-[0.975] sm:w-auto"
+                    style={{ background: "#173B35", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
                   >
                     クイックチェックを始める
                   </button>
@@ -206,21 +208,22 @@ export default function MiniTestFlow() {
                   </div>
                 </div>
 
-                <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.08)] bg-white/80 shadow-none">
-                  <div className="service-kicker">答えたあとに見えること</div>
+                <div className="rounded-[1rem] px-4 py-3.5" style={{ background: "rgba(23,59,53,0.04)", border: "1px solid rgba(23,59,53,0.07)" }}>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: "#9A9088" }}>答えたあとに見えること</p>
                   <div className="flex flex-wrap gap-1.5">
                     {RESULT_PROMISES.map((item) => (
                       <span
                         key={item}
-                        className="inline-flex rounded-full border border-[rgba(105,151,130,0.16)] bg-[#F4FAF7] px-3 py-1 text-[12px] font-semibold text-[#315F50]"
+                        className="inline-flex rounded-full px-3 py-1 text-[12px] font-semibold"
+                        style={{ background: "rgba(23,59,53,0.07)", color: "#4D7A69" }}
                       >
                         {item}
                       </span>
                     ))}
                   </div>
-                </MvpCard>
+                </div>
 
-                <p className="text-[12px] leading-7 text-[var(--muted)]">
+                <p className="text-[12px] leading-7 text-[#9A9088]">
                   ログインなしで始められます。今の状態を見返すための無料結果で、診断や固定的なラベルづけではありません。
                 </p>
               </div>
@@ -231,8 +234,8 @@ export default function MiniTestFlow() {
                 <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.12)] bg-white/90 p-3.5 shadow-[0_18px_38px_rgba(23,59,53,0.08)]">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-[11px] font-semibold tracking-[0.14em] text-[#6F625C]">{segmentLabel}</div>
-                      <div className="mt-1 text-[14px] font-bold text-[#2F2A28]">Q{Math.min(currentIndex + 1, totalQuestions)} / {totalQuestions}</div>
+                      <div className="text-[11px] font-semibold tracking-[0.14em] text-[#6F6760]">{segmentLabel}</div>
+                      <div className="mt-1 text-[14px] font-bold text-[#22201D]">Q{Math.min(currentIndex + 1, totalQuestions)} / {totalQuestions}</div>
                     </div>
                     <div className="rounded-full bg-[#FDE8DD] px-3 py-1 text-[12px] font-semibold text-[#D95F4E]">
                       残り約{remainingMinutes}分
@@ -257,8 +260,8 @@ export default function MiniTestFlow() {
 
                 <MvpCard className="space-y-4 rounded-[1.3rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_22px_44px_rgba(23,59,53,0.09)] md:p-6">
                   <div className="space-y-3">
-                    <p className="service-kicker">今の感覚に近いものをひとつ選んでください</p>
-                    <h2 className="display-serif text-[1.52rem] leading-[1.32] text-[#2F2A28] md:text-[2.4rem]">
+                    <p className="service-kicker" style={{ color: "#4D7A69" }}>今の感覚に近いものをひとつ選んでください</p>
+                    <h2 className="display-serif text-[1.52rem] leading-[1.32] text-[#22201D] md:text-[2.4rem]">
                       {currentQuestion.prompt}
                     </h2>
                     <p className="text-[13px] font-medium leading-7 text-[var(--muted)]">
@@ -301,12 +304,13 @@ export default function MiniTestFlow() {
                   </div>
                 </MvpCard>
 
-                <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.1)] bg-[rgba(255,247,241,0.96)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
+                <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.07)] bg-[rgba(251,250,246,0.97)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
                   <div className="flex gap-2.5 sm:justify-between">
                     <button
                       type="button"
                       onClick={goBack}
-                      className="inline-flex min-h-[50px] w-[34%] items-center justify-center rounded-full border border-[rgba(105,151,130,0.24)] bg-[#EAF7F1] px-4 py-3 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5 hover:opacity-95 sm:w-auto"
+                      className="inline-flex min-h-[50px] w-[34%] items-center justify-center rounded-full border px-4 py-3 text-[14px] font-semibold transition hover:opacity-95 sm:w-auto"
+                      style={{ borderColor: "rgba(23,59,53,0.16)", background: "rgba(23,59,53,0.05)", color: "#4D7A69" }}
                     >
                       戻る
                     </button>
@@ -314,7 +318,8 @@ export default function MiniTestFlow() {
                       type="button"
                       onClick={goNext}
                       disabled={!currentAnswer}
-                      className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full border border-transparent bg-[#173B35] px-4 py-3 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] hover:opacity-95 disabled:cursor-not-allowed disabled:bg-[rgba(111,98,92,0.28)] disabled:text-white disabled:shadow-none"
+                      className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full px-4 py-3 text-[16px] text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:text-white disabled:shadow-none"
+                      style={currentAnswer ? { background: "#173B35", fontWeight: 800, boxShadow: "0 14px 28px rgba(23,59,53,0.26)" } : { background: "rgba(34,32,29,0.18)", fontWeight: 700 }}
                     >
                       {currentIndex === totalQuestions - 1 ? "無料結果へ進む" : "すぐ次へ"}
                     </button>

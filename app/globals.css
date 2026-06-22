@@ -443,13 +443,29 @@ main {
   }
 }
 
+.signal-orb {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #173B35;
+  flex-shrink: 0;
+  animation: signal-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes signal-pulse {
+  0%, 100% { opacity: 0.32; transform: scale(0.88); }
+  50% { opacity: 0.78; transform: scale(1.18); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn,
   .soft-link,
   .motion-card,
   .motion-reveal,
   .hero-portrait-frame,
-  .lane-card::after {
+  .lane-card::after,
+  .signal-orb {
     animation: none !important;
     transition: none !important;
   }
@@ -458,5 +474,9 @@ main {
     opacity: 1;
     transform: none;
     filter: none;
+  }
+
+  .signal-orb {
+    opacity: 0.55;
   }
 }
