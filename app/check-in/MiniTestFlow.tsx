@@ -182,7 +182,7 @@ export default function MiniTestFlow() {
                 </div>
 
                 <div className="space-y-3">
-                  <p className="service-kicker">今の状態チェック v1</p>
+                  <p className="service-kicker">クイックチェック</p>
                   <h1 className="display-serif max-w-[11em] text-[2.05rem] leading-[1.14] text-[#2F2A28] md:text-[2.95rem]">
                     いまの自分の流れを、
                     <span className="block text-[#D95F4E]">24問のクイックチェックで静かに見る。</span>
@@ -192,23 +192,6 @@ export default function MiniTestFlow() {
                     答え終えると、今のあなたに近い無料結果が表示されます。
                   </p>
                 </div>
-
-                <MvpCard className="space-y-4 rounded-[1.2rem] border-[rgba(233,120,99,0.12)] bg-white/90 shadow-[0_16px_34px_rgba(233,120,99,0.08)]">
-                  <div className="service-kicker">答えたあとに見えること</div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {RESULT_PROMISES.map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-[0.95rem] border border-[rgba(105,151,130,0.16)] bg-[#F4FAF7] px-4 py-2.5 text-[14px] font-semibold leading-7 text-[#315F50]"
-                      >
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[13px] leading-7 text-[var(--muted)]">
-                    答え終えると無料結果が表示されます。そのあとで、次のヒントへ進めます。
-                  </p>
-                </MvpCard>
 
                 <div className="space-y-3">
                   <button
@@ -222,6 +205,20 @@ export default function MiniTestFlow() {
                     <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
                   </div>
                 </div>
+
+                <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.08)] bg-white/80 shadow-none">
+                  <div className="service-kicker">答えたあとに見えること</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {RESULT_PROMISES.map((item) => (
+                      <span
+                        key={item}
+                        className="inline-flex rounded-full border border-[rgba(105,151,130,0.16)] bg-[#F4FAF7] px-3 py-1 text-[12px] font-semibold text-[#315F50]"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </MvpCard>
 
                 <p className="text-[12px] leading-7 text-[var(--muted)]">
                   ログインなしで始められます。今の状態を見返すための無料結果で、診断や固定的なラベルづけではありません。
