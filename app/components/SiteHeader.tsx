@@ -47,7 +47,6 @@ function toEnglishPath(pathname: string): string {
 
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const pathname = usePathname() || "/";
   const isEn = pathname === "/en" || pathname.startsWith("/en/");
   const homeHref = isEn ? "/en" : "/";
@@ -114,34 +113,17 @@ export default function SiteHeader() {
                 );
               })}
 
-              <div className="more-wrap">
-                <button
-                  type="button"
-                  className={`more-button ${secondaryNav.some((item) => isActive(item.href)) ? "active" : ""}`}
-                  onClick={() => setMoreOpen((value) => !value)}
-                  aria-label={isEn ? "More" : "補助メニュー"}
-                >
-                  <span className="menu-icon" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </span>
-                </button>
-                <div className={`more-menu ${moreOpen ? "open" : ""}`}>
-                  {secondaryNav.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={localizedHref(item.href)}
-                      className={`more-link ${isActive(item.href) ? "active" : ""}`}
-                      onClick={() => {
-                        setOpen(false);
-                        setMoreOpen(false);
-                      }}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
+              <div className="secondary-nav-wrap">
+                {secondaryNav.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={localizedHref(item.href)}
+                    className={`nav-link secondary-nav-link ${isActive(item.href) ? "active" : ""}`}
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </div>
             </nav>
 
@@ -183,16 +165,8 @@ export default function SiteHeader() {
           white-space: nowrap;
           cursor: pointer;
         }
-        .more-button {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 42px;
-        }
         .nav-link:hover,
-        .nav-link.active,
-        .more-button:hover,
-        .more-button.active {
+        .nav-link.active {
           background: rgba(225, 232, 219, 0.82);
           color: var(--accent-sage-text);
         }
@@ -212,37 +186,8 @@ export default function SiteHeader() {
           border-radius: 999px;
           background: currentColor;
         }
-        .more-wrap {
-          position: relative;
-        }
-        .more-menu {
-          position: absolute;
-          right: 0;
-          top: calc(100% + 10px);
-          min-width: 220px;
+        .secondary-nav-wrap {
           display: none;
-          flex-direction: column;
-          gap: 4px;
-          padding: 10px;
-          border-radius: 18px;
-          background: rgba(252, 250, 245, 0.97);
-          border: 1px solid rgba(201, 211, 195, 0.65);
-          box-shadow: 0 16px 28px rgba(59, 47, 47, 0.1);
-        }
-        .more-menu.open {
-          display: flex;
-        }
-        .more-link {
-          text-decoration: none;
-          color: var(--text);
-          padding: 10px 12px;
-          border-radius: 12px;
-          font-size: 13px;
-        }
-        .more-link:hover,
-        .more-link.active {
-          background: rgba(225, 232, 219, 0.82);
-          color: var(--accent-sage-text);
         }
         .header-actions {
           display: flex;
@@ -327,24 +272,16 @@ export default function SiteHeader() {
             padding: 8px;
             box-shadow: none;
           }
-          .nav-link,
-          .more-button,
-          .more-link {
+          .nav-link {
             border-radius: 12px;
             padding: 14px 16px;
             font-size: 13px;
           }
-          .more-button {
-            justify-content: space-between;
-            min-width: 0;
+          .secondary-nav-wrap {
+            display: contents;
           }
-          .more-menu {
-            position: static;
-            min-width: 0;
-            margin-top: 6px;
-            box-shadow: none;
-            border-radius: 16px;
-            background: #fcfaf6;
+          .secondary-nav-link {
+            opacity: 0.72;
           }
           .header-actions {
             justify-content: stretch;

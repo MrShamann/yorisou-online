@@ -17,6 +17,7 @@ const SHELL_SUPPRESSED_EXACT = new Set([
   "/en/support",
   "/check-in",
   "/report-loading",
+  "/result",
 ]);
 
 const SHELL_SUPPRESSED_PREFIXES = ["/line"];

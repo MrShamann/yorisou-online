@@ -21,6 +21,8 @@
   --text-soft: #74645b;
   --cta-main: #3a2621;
   --cta-main-hover: #2f1f1b;
+  --cta-pilot: #173B35;
+  --cta-pilot-hover: #0F2F2B;
   --accent-soft: #e9e0d4;
   --accent-sage: #d8e1d2;
   --accent-sage-text: #556252;
@@ -128,6 +130,32 @@ main {
   color: var(--text);
   border-color: rgba(201, 211, 195, 0.72);
   box-shadow: 0 6px 14px rgba(47, 35, 33, 0.03);
+}
+
+.btn-pilot {
+  background: var(--cta-pilot);
+  color: #fff;
+  border-radius: 999px;
+  border-color: var(--cta-pilot);
+  box-shadow: 0 18px 34px rgba(23, 59, 53, 0.24);
+  width: 100%;
+  min-height: 58px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.btn-pilot:hover {
+  background: var(--cta-pilot-hover);
+  border-color: var(--cta-pilot-hover);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .answer-btn {
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  }
+  .answer-btn:active {
+    transform: scale(0.97);
+  }
 }
 
 .btn:hover {
@@ -415,13 +443,29 @@ main {
   }
 }
 
+.signal-orb {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #173B35;
+  flex-shrink: 0;
+  animation: signal-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes signal-pulse {
+  0%, 100% { opacity: 0.32; transform: scale(0.88); }
+  50% { opacity: 0.78; transform: scale(1.18); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn,
   .soft-link,
   .motion-card,
   .motion-reveal,
   .hero-portrait-frame,
-  .lane-card::after {
+  .lane-card::after,
+  .signal-orb {
     animation: none !important;
     transition: none !important;
   }
@@ -430,5 +474,9 @@ main {
     opacity: 1;
     transform: none;
     filter: none;
+  }
+
+  .signal-orb {
+    opacity: 0.55;
   }
 }
