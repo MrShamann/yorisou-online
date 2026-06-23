@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import LocalResultSave from "./LocalResultSave";
+import ResultShareActions from "../components/ResultShareActions";
 import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../check-in/currentStateCheckV1";
 import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
 
@@ -41,7 +42,6 @@ export default async function ResultPage({
     confidenceBand,
     payloadKey,
   } as const;
-  const recommendationsHref = buildT6PublicResultHref("/recommendations", routeContext);
   const resultShareHref = buildT6PublicResultHref("/result/share", routeContext);
   const resultPath = buildT6PublicResultHref("/result", routeContext);
   const continuePath = buildT6PublicResultHref("/result/continue", routeContext);
@@ -69,7 +69,7 @@ export default async function ResultPage({
   ] as const;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_50%_0%,_rgba(221,236,242,0.72),_transparent_34%),radial-gradient(circle_at_12%_12%,_rgba(233,120,99,0.14),_transparent_28%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_46%,_#F4FAF7_100%)] text-[#2F2A28]">
+    <main className="min-h-screen bg-[#FBFAF6] text-[#2F2A28]">
       <section className="border-b border-[rgba(23,59,53,0.1)]">
         <div className="container py-5 md:py-12">
           <div className="mx-auto grid max-w-[42rem] gap-4">
@@ -80,7 +80,14 @@ export default async function ResultPage({
             </div>
 
             <MvpCard className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
-              <div className="space-y-4 rounded-[1.18rem] bg-[radial-gradient(circle_at_20%_0%,_rgba(217,164,65,0.22),_transparent_42%),linear-gradient(135deg,_#FFF7F1,_#F4FAF7)] px-4 py-4">
+              {/* A. Identity card */}
+              <div
+                className="space-y-4 rounded-[1.18rem] px-4 py-4"
+                style={{
+                  background: "linear-gradient(135deg, #F4FAF7 0%, #fff 100%)",
+                  border: "1px solid rgba(23,59,53,0.1)",
+                }}
+              >
                 <p className="service-kicker">クイックチェックの無料結果</p>
                 <h1 className="display-serif mt-2 text-[2.28rem] leading-[1.06] text-[#2F2A28] md:text-[3rem]">
                   {result.publicName}
@@ -102,13 +109,147 @@ export default async function ResultPage({
                 ))}
               </div>
 
+              {/* B. Save / share / continue zone */}
+              <LocalResultSave
+                resultType="24Q結果"
+                resultLabel={result.publicName}
+                recognitionLine={result.recognitionLine}
+                baseResultId={result.id}
+                overlayId={overlay.id}
+                confidenceBand={confidenceBand}
+                payloadKey={payloadKey ?? undefined}
+                traitChips={result.traitChips}
+                context="public-result"
+                resultPath={resultPath}
+                continuePath={continuePath}
+                className="rounded-[0.95rem] border border-[rgba(23,59,53,0.06)] bg-[rgba(248,250,246,0.9)] p-4"
+              />
+
+              <ResultShareActions
+                shareUrl="/line/mini-app"
+                shareTitle="Yorisou — 今の状態チェック"
+                shareText={"Yorisouで今の状態をチェックしました。\n短いチェックで、自分の今の流れを整理できます。"}
+                shareCardUrl={resultShareHref}
+                personaId={result.id}
+                shareSurface="result-page"
+              />
+
+              {/* Instagram-oriented card — screenshot-save path */}
+              <details className="overflow-hidden rounded-[1.18rem] border border-[rgba(23,59,53,0.1)] bg-white/95">
+                <summary
+                  className="flex cursor-pointer list-none items-center justify-between px-4 py-3.5"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A9088]">
+                      Instagram用カード
+                    </p>
+                    <p className="mt-0.5 text-[13px] leading-6 text-[#6F625C]">
+                      スクリーンショットして投稿できます
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[18px] leading-none text-[#B0A89E]">›</span>
+                </summary>
+
+                <div className="px-4 pb-5 pt-1">
+                  <p className="mb-3 text-[12px] leading-6 text-[#9A9088]">
+                    このカードをスクリーンショットして、Instagramストーリーズや投稿で共有できます。
+                  </p>
+
+                  {/* Screenshottable card */}
+                  <div
+                    className="rounded-[1.3rem] px-5 py-6"
+                    style={{ background: "#173B35" }}
+                  >
+                    <p
+                      className="text-[10px] font-semibold tracking-[0.22em]"
+                      style={{ color: "rgba(255,255,255,0.5)" }}
+                    >
+                      YORISOU
+                    </p>
+                    <h2
+                      className="display-serif mt-3 leading-[1.18]"
+                      style={{ fontSize: "1.65rem", color: "#fff" }}
+                    >
+                      {result.publicName}
+                    </h2>
+                    <p
+                      className="mt-2 text-[13px] leading-[1.75]"
+                      style={{ color: "rgba(255,255,255,0.72)" }}
+                    >
+                      {result.recognitionHook}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {result.traitChips.map((chip) => (
+                        <span
+                          key={chip}
+                          className="rounded-full px-2.5 py-1 text-[11px]"
+                          style={{
+                            border: "1px solid rgba(255,255,255,0.18)",
+                            color: "rgba(255,255,255,0.65)",
+                          }}
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                    <p
+                      className="mt-5 text-[10px] tracking-[0.1em]"
+                      style={{ color: "rgba(255,255,255,0.32)" }}
+                    >
+                      yorisou.online
+                    </p>
+                  </div>
+                </div>
+              </details>
+
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                <MvpActionLink
+                  href="/tests"
+                  label="ほかの入口を見る"
+                  tone="secondary"
+                  className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
+                />
+                <MvpActionLink
+                  href="/check-in"
+                  label="もう一度チェックする"
+                  tone="ghost"
+                  className="rounded-full !text-[#315F50]"
+                />
+              </div>
+
+              {/* C. Report teaser */}
+              <div
+                className="rounded-[1rem] px-4 py-3.5"
+                style={{
+                  background: "rgba(23,59,53,0.03)",
+                  border: "1px solid rgba(23,59,53,0.07)",
+                }}
+              >
+                <p className="text-[12px] font-semibold text-[#6F625C]">くわしいレポートは準備中</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#9A9088]">今は無料の結果だけ見られます。</p>
+              </div>
+
+              {/* Overlay context */}
               <div className="grid gap-3">
-                <div className="rounded-[1.08rem] border border-[rgba(217,164,65,0.18)] bg-[#FFF7F1] px-4 py-3">
+                <div
+                  className="rounded-[1.08rem] px-4 py-3"
+                  style={{
+                    background: "#F4FAF7",
+                    border: "1px solid rgba(23,59,53,0.1)",
+                  }}
+                >
                   <div className="service-kicker">{overlay.publicLabel}</div>
                   <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{overlay.resultSheetLine}</p>
-                  <p className="mt-2 text-[12px] font-semibold leading-6 text-[#8A6D3F]">{overlay.nextStepCue}</p>
+                  <p className="mt-2 text-[12px] font-semibold leading-6 text-[#4D7A69]">{overlay.nextStepCue}</p>
                 </div>
-                <div className="rounded-[1rem] border border-[rgba(217,164,65,0.18)] bg-white/82 px-4 py-3">
+                <div
+                  className="rounded-[1rem] px-4 py-3"
+                  style={{
+                    background: "rgba(255,255,255,0.82)",
+                    border: "1px solid rgba(23,59,53,0.08)",
+                  }}
+                >
                   <p className="text-[13px] leading-7 text-[#6F625C]">
                     {confidenceBand === "medium"
                       ? "今回は、今の状態が少し見えやすくなっています。"
@@ -117,6 +258,7 @@ export default async function ResultPage({
                 </div>
               </div>
 
+              {/* Detail sections */}
               <div className="space-y-3">
                 {resultSections.map((section, index) => (
                   <section
@@ -144,43 +286,6 @@ export default async function ResultPage({
                   </section>
                 ))}
               </div>
-
-              <div className="flex flex-col gap-2.5 sm:flex-row">
-                <MvpActionLink
-                  href={recommendationsHref}
-                  label="次のヒントを見る"
-                  className="min-h-[56px] rounded-full !border-[#173B35] !bg-[#173B35] text-[16px] !text-white shadow-[0_18px_34px_rgba(23,59,53,0.24)] hover:!bg-[#0F2F2B]"
-                />
-                <MvpActionLink
-                  href={resultShareHref}
-                  label="シェア"
-                  tone="secondary"
-                  className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
-                />
-                <MvpActionLink
-                  href="/check-in"
-                  label="もう一度チェックする"
-                  tone="ghost"
-                  className="rounded-full !text-[#315F50]"
-                />
-              </div>
-
-              <LocalResultSave
-                resultType="24Q結果"
-                resultLabel={result.publicName}
-                recognitionLine={result.recognitionLine}
-                baseResultId={result.id}
-                overlayId={overlay.id}
-                confidenceBand={confidenceBand}
-                payloadKey={payloadKey ?? undefined}
-                traitChips={result.traitChips}
-                context="public-result"
-                resultPath={resultPath}
-                continuePath={continuePath}
-                className="rounded-[0.95rem] border border-[rgba(23,59,53,0.06)] bg-[rgba(248,250,246,0.9)] p-4"
-              />
-
-
             </MvpCard>
           </div>
         </div>
