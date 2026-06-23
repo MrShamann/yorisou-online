@@ -15,10 +15,6 @@ type Props = {
   shareSurface?: string | null;
 };
 
-function encodeShareUrl(value: string) {
-  return encodeURIComponent(value);
-}
-
 function resolvePublicUrl(value: string) {
   if (!value) {
     return "https://yorisou.online/line/mini-app";
@@ -63,7 +59,6 @@ export default function ResultShareActions({
   shareUrl,
   shareTitle,
   shareText,
-  shareCardUrl,
   completionId = null,
   personaId = null,
   shareSurface = null,
@@ -71,17 +66,10 @@ export default function ResultShareActions({
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
   const [copyNote, setCopyNote] = useState<string | null>(null);
   const shareTargetUrl = useMemo(() => shareUrl, [shareUrl]);
-  const shareCardTargetUrl = useMemo(() => shareCardUrl || shareUrl, [shareCardUrl, shareUrl]);
   const shareMessage = useMemo(() => shareText, [shareText]);
   const hasNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
   const shareSheetLabel = locale === "en" ? "Share" : "シェアする";
-
-  const openWindow = (url: string) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+  const copyLinkLabel = locale === "en" ? "Copy link" : "リンクをコピー";
 
   const emit = (event: string, action: string, target: string | null = null) => {
     void trackDteEvent({
@@ -138,105 +126,38 @@ export default function ResultShareActions({
     setCopyNote(copied ? "リンクをコピーしました" : null);
   };
 
-  const handleCopyPost = async () => {
-    const resolvedShareUrl = resolvePublicUrl(shareTargetUrl);
-    emit("share_copy_text", "copy_text", "clipboard");
-    const copied = await copyText(`${shareText}\n${resolvedShareUrl}`.trim());
-    setCopyState(copied ? "copied" : "error");
-    setCopyNote(copied ? "投稿文をコピーしました" : null);
-  };
-
-  const handleXShare = () => {
-    const resolvedShareUrl = resolvePublicUrl(shareTargetUrl);
-    emit("share_target_selected", "x_share", "x");
-    openWindow(`https://x.com/intent/tweet?text=${encodeShareUrl(shareMessage)}&url=${encodeShareUrl(resolvedShareUrl)}`);
-  };
-
-  const handleLineShare = () => {
-    const resolvedShareUrl = resolvePublicUrl(shareTargetUrl);
-    emit("share_target_selected", "line_share", "line");
-    openWindow(`https://social-plugins.line.me/lineit/share?url=${encodeShareUrl(resolvedShareUrl)}`);
-  };
-
-  const handleFacebookShare = () => {
-    const resolvedShareUrl = resolvePublicUrl(shareTargetUrl);
-    emit("share_target_selected", "facebook_share", "facebook");
-    openWindow(`https://www.facebook.com/sharer/sharer.php?u=${encodeShareUrl(resolvedShareUrl)}`);
-  };
-
   return (
-    <section className="space-y-2.5 rounded-[1.3rem] border border-[rgba(201,211,195,0.82)] bg-[linear-gradient(180deg,rgba(248,250,245,0.98)_0%,rgba(239,244,237,0.98)_100%)] p-3 text-[var(--text)] shadow-[0_12px_24px_rgba(47,35,33,0.05)]">
-      <div className="flex items-center justify-between gap-3">
-        <div className="inline-flex rounded-full border border-[rgba(201,211,195,0.9)] bg-white/70 px-3 py-1 text-[10px] tracking-[0.24em] text-[var(--accent-sage-text)]">
-          共有
-        </div>
-        <a
-          href={shareCardTargetUrl}
-          onClick={() => emit("share_card_opened", "share_card_opened", "share_card")}
-          className="rounded-full border border-[rgba(201,211,195,0.88)] bg-white/76 px-3 py-1.5 text-[10px] font-semibold text-[var(--accent-sage-text)]"
-        >
-          共有カード
-        </a>
-      </div>
-
-      {/* Primary Web Share API button */}
+    <div className="space-y-2">
+      {/* Primary: Web Share API */}
       <button
         type="button"
         onClick={handleShare}
-        className="inline-flex min-h-[50px] w-full items-center justify-center rounded-[1rem] bg-[linear-gradient(180deg,rgba(34,48,43,1)_0%,rgba(18,20,19,1)_100%)] px-4 py-3 text-[14px] font-semibold text-white shadow-[0_16px_28px_rgba(4,8,7,0.18)]"
+        className="inline-flex min-h-[52px] w-full items-center justify-center rounded-[1rem] px-4 py-3 text-[15px] font-semibold text-white shadow-[0_14px_28px_rgba(23,59,53,0.24)] transition active:scale-[0.975]"
+        style={{ background: "#173B35" }}
       >
         {shareSheetLabel}
       </button>
 
-      {/* Social channels — always visible */}
-      <div className="grid grid-cols-3 gap-1.5">
-        <button
-          type="button"
-          onClick={handleLineShare}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(201,211,195,0.9)] bg-white/82 px-2.5 py-2 text-[11px] font-semibold text-[var(--text)]"
-        >
-          LINEで共有
-        </button>
-        <button
-          type="button"
-          onClick={handleXShare}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(201,211,195,0.9)] bg-white/82 px-2.5 py-2 text-[11px] font-semibold text-[var(--text)]"
-        >
-          Xで共有
-        </button>
-        <button
-          type="button"
-          onClick={handleFacebookShare}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-[0.9rem] border border-[rgba(201,211,195,0.9)] bg-white/82 px-2.5 py-2 text-[11px] font-semibold text-[var(--text)]"
-        >
-          Facebook
-        </button>
-      </div>
-
-      {/* Utility: copy options */}
-      <div className="grid grid-cols-2 gap-1.5">
-        <button
-          type="button"
-          onClick={handleCopyPost}
-          className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-[rgba(201,211,195,0.9)] bg-white/82 px-2.5 py-2 text-[11px] font-medium text-[var(--text)]"
-        >
-          文案コピー
-        </button>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="inline-flex min-h-[40px] items-center justify-center rounded-[0.9rem] border border-[rgba(201,211,195,0.9)] bg-white/82 px-2.5 py-2 text-[11px] font-medium text-[var(--text)]"
-        >
-          リンクコピー
-        </button>
-      </div>
+      {/* Secondary: copy link fallback */}
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[1rem] border px-4 py-2.5 text-[13px] font-semibold transition active:scale-[0.975]"
+        style={{
+          borderColor: "rgba(23,59,53,0.14)",
+          background: "rgba(23,59,53,0.04)",
+          color: "#315F50",
+        }}
+      >
+        {copyLinkLabel}
+      </button>
 
       {copyState !== "idle" ? (
-        <div className="text-[11px] leading-6 text-[var(--muted)]">
+        <p className="text-center text-[11px] leading-6 text-[#9A9088]">
           {copyState === "copied" && copyNote ? copyNote : null}
-          {copyState === "error" ? "コピーに失敗しました。共有メニューから再度お試しください。" : null}
-        </div>
+          {copyState === "error" ? "コピーに失敗しました。" : null}
+        </p>
       ) : null}
-    </section>
+    </div>
   );
 }

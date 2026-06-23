@@ -161,24 +161,29 @@ export default async function ResultPage({
                     className="rounded-[1.3rem] px-5 py-6"
                     style={{ background: "#173B35" }}
                   >
-                    <p
-                      className="text-[10px] font-semibold tracking-[0.22em]"
-                      style={{ color: "rgba(255,255,255,0.5)" }}
-                    >
-                      YORISOU
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p
+                        className="text-[10px] font-semibold tracking-[0.22em]"
+                        style={{ color: "rgba(255,255,255,0.5)" }}
+                      >
+                        YORISOU
+                      </p>
+                      <span
+                        className="rounded-full px-2.5 py-0.5 text-[9px] font-semibold tracking-[0.12em]"
+                        style={{
+                          border: "1px solid rgba(255,255,255,0.16)",
+                          color: "rgba(255,255,255,0.45)",
+                        }}
+                      >
+                        公開結果カード
+                      </span>
+                    </div>
                     <h2
-                      className="display-serif mt-3 leading-[1.18]"
+                      className="display-serif mt-4 leading-[1.18]"
                       style={{ fontSize: "1.65rem", color: "#fff" }}
                     >
                       {result.publicName}
                     </h2>
-                    <p
-                      className="mt-2 text-[13px] leading-[1.75]"
-                      style={{ color: "rgba(255,255,255,0.72)" }}
-                    >
-                      {result.recognitionHook}
-                    </p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {result.traitChips.map((chip) => (
                         <span
