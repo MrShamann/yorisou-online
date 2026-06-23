@@ -152,11 +152,7 @@ export default async function ResultPage({
                 </summary>
 
                 <div className="px-4 pb-5 pt-1">
-                  <p className="mb-3 text-[12px] leading-6 text-[#9A9088]">
-                    このカードをスクリーンショットして、Instagramストーリーズや投稿で共有できます。
-                  </p>
-
-                  {/* Screenshottable card */}
+                  {/* Card preview */}
                   <div
                     className="rounded-[1.3rem] px-5 py-6"
                     style={{ background: "#173B35" }}
@@ -205,6 +201,21 @@ export default async function ResultPage({
                       yorisou.online
                     </p>
                   </div>
+
+                  {/* Open story card page */}
+                  <a
+                    href={`/result/share?story=1&resultId=${encodeURIComponent(result.id)}&overlayId=${encodeURIComponent(overlay.id)}&confidence=${confidenceBand}`}
+                    className="mt-3 flex min-h-[48px] w-full items-center justify-center rounded-[1rem] text-[14px] font-semibold transition active:scale-[0.975]"
+                    style={{
+                      background: "#173B35",
+                      color: "#fff",
+                    }}
+                  >
+                    カードページを開く →
+                  </a>
+                  <p className="mt-2 text-center text-[11px] leading-6 text-[#9A9088]">
+                    スクリーンショットしてInstagramストーリーズに投稿できます
+                  </p>
                 </div>
               </details>
 
