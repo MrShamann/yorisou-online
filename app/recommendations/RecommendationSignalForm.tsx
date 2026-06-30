@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 import { MvpCard } from "../components/MvpSurface";
 import {
@@ -68,25 +68,21 @@ export default function RecommendationSignalForm({
   const [selectedSignal, setSelectedSignal] = useState<RecommendationSignalValue | "">(
     storedSignal?.selectedSignal ?? "",
   );
-
-  useEffect(() => {
-    if (!storedSignal?.selectedSignal) return;
-    setSelectedSignal((current) => current || storedSignal.selectedSignal);
-  }, [storedSignal?.selectedSignal]);
+  const resolvedSelectedSignal = selectedSignal || storedSignal?.selectedSignal || "";
 
   const selectedOption = useMemo(
-    () => options.find((option) => option.value === selectedSignal) ?? null,
-    [options, selectedSignal],
+    () => options.find((option) => option.value === resolvedSelectedSignal) ?? null,
+    [options, resolvedSelectedSignal],
   );
 
   const handleSubmit = () => {
-    if (!selectedSignal) {
+    if (!resolvedSelectedSignal) {
       return;
     }
 
     saveRecommendationSignal({
       submittedAt: new Date().toISOString(),
-      selectedSignal,
+      selectedSignal: resolvedSelectedSignal,
       source: "local-browser",
       version: "v0.2",
       path: "/recommendations",
@@ -122,7 +118,7 @@ export default function RecommendationSignalForm({
                 type="radio"
                 name="recommendation-signal"
                 value={option.value}
-                checked={selectedSignal === option.value}
+                checked={resolvedSelectedSignal === option.value}
                 onChange={() => setSelectedSignal(option.value)}
                 className="sr-only"
               />
@@ -137,17 +133,17 @@ export default function RecommendationSignalForm({
           type="button"
           onClick={handleSubmit}
           data-recommendation-signal="submit"
-          disabled={!selectedSignal}
+          disabled={!resolvedSelectedSignal}
           className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 py-3 text-[15px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.2)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] hover:opacity-95 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[rgba(111,98,92,0.28)] disabled:text-white disabled:shadow-none"
         >
-          {storedSignal && storedSignal.selectedSignal === selectedSignal && selectedOption
+          {storedSignal && storedSignal.selectedSignal === resolvedSelectedSignal && selectedOption
             ? "記録しました"
             : "選んだ方向を記録する"}
         </button>
       </div>
       <div className="rounded-[0.95rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-2.5">
         <p className="text-[12px] leading-6 text-[var(--muted)]">
-          {storedSignal && storedSignal.selectedSignal === selectedSignal && selectedOption
+          {storedSignal && storedSignal.selectedSignal === resolvedSelectedSignal && selectedOption
             ? "この端末内の簡易記録です。"
             : "あとで見返すための簡易記録です。"}
         </p>

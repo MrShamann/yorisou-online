@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../../components/MvpSurface";
-import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../../check-in/currentStateCheckV1";
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../../check-in/resultCompatibility";
 
 export const metadata: Metadata = {
   title: "Instagramカード | Yorisou",
   description:
-    "公開結果カードをスクリーンショットしてInstagramストーリーズに投稿できます。",
+    "公開結果の互換カードをスクリーンショットして共有できる Yorisou のページです。",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -23,22 +23,20 @@ export default async function ResultSharePage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
+  const resultId = readParam(params, "resultId");
   const overlayId = readParam(params, "overlayId");
   const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
+  const payloadKey = readParam(params, "payloadKey");
   const isStoryMode = readParam(params, "story") === "1";
+  const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
+  const compatibility = getTemporary120QResultCompatibility(routeContext);
+  const genericTraitChips = ["120問ベース", "分類保留", "互換表示"] as const;
+  const resultHref = buildPublicResultHref("/result", {
+    resultId,
+    overlayId,
+    confidenceBand,
+  });
 
-  const result = getCurrentStateResult(resultId) ?? currentStateCheckV1.fallbackResult;
-  const overlay =
-    getCurrentStateOverlay(overlayId) ??
-    currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
-
-  // Public-safe back link — no payloadKey
-  const resultHref = `/result?resultId=${encodeURIComponent(result.id)}&overlayId=${encodeURIComponent(overlay.id)}&confidence=${confidenceBand}`;
-
-  // ── Story mode ──────────────────────────────────────────────────────────────
-  // Full-screen fixed overlay covers any site header/footer chrome.
-  // User screenshots the phone to get the Story card image.
   if (isStoryMode) {
     return (
       <div
@@ -53,7 +51,6 @@ export default async function ResultSharePage({
           WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
         }}
       >
-        {/* ── Instruction strip (subtle, sits above card) ── */}
         <div
           style={{
             paddingTop: "max(env(safe-area-inset-top, 0px), 14px)",
@@ -78,7 +75,6 @@ export default async function ResultSharePage({
           </p>
         </div>
 
-        {/* ── Card body — fills remaining viewport height ── */}
         <div
           style={{
             flex: 1,
@@ -88,7 +84,6 @@ export default async function ResultSharePage({
             padding: "24px 28px 20px",
           }}
         >
-          {/* Top: wordmark + kicker */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <p
               style={{
@@ -116,7 +111,6 @@ export default async function ResultSharePage({
             </p>
           </div>
 
-          {/* Center: title + share line + chips */}
           <div style={{ padding: "28px 0" }}>
             <h1
               className="display-serif"
@@ -127,7 +121,7 @@ export default async function ResultSharePage({
                 lineHeight: 1.12,
               }}
             >
-              {result.publicName}
+              120問結果の互換カード
             </h1>
             <p
               style={{
@@ -137,7 +131,7 @@ export default async function ResultSharePage({
                 lineHeight: 1.88,
               }}
             >
-              {result.shareLine}
+              {compatibility.placeholderText}
             </p>
             <div
               style={{
@@ -147,7 +141,7 @@ export default async function ResultSharePage({
                 gap: "8px",
               }}
             >
-              {result.traitChips.map((chip) => (
+              {genericTraitChips.map((chip) => (
                 <span
                   key={chip}
                   style={{
@@ -164,7 +158,6 @@ export default async function ResultSharePage({
             </div>
           </div>
 
-          {/* Bottom: domain */}
           <p
             style={{
               margin: 0,
@@ -177,7 +170,6 @@ export default async function ResultSharePage({
           </p>
         </div>
 
-        {/* ── Footer: back link ── */}
         <div
           style={{
             padding: "8px 20px",
@@ -200,13 +192,12 @@ export default async function ResultSharePage({
     );
   }
 
-  // ── Normal mode ─────────────────────────────────────────────────────────────
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,20,19,0.98)_0%,_rgba(28,40,36,0.96)_26%,_rgba(243,246,239,1)_100%)] px-4 py-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[42rem] items-center">
         <MvpCard className="w-full space-y-5 border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_56%,rgba(242,246,239,0.99)_100%)] text-white shadow-[0_24px_52px_rgba(10,16,14,0.18)]">
           <div className="flex flex-wrap gap-2">
-            <MvpPill>{result.publicName}</MvpPill>
+            <MvpPill>120問結果互換表示</MvpPill>
             <MvpPill>公開結果のみ</MvpPill>
           </div>
 
@@ -218,13 +209,13 @@ export default async function ResultSharePage({
               公開結果カード
             </p>
             <h1 className="display-serif text-[2.2rem] leading-[1.04] text-white md:text-[2.7rem]">
-              {result.publicName}
+              120問結果の互換カード
             </h1>
             <p
               className="text-[15px] leading-8"
               style={{ color: "rgba(255,255,255,0.76)" }}
             >
-              {result.shareLine}
+              {compatibility.placeholderText}
             </p>
           </div>
 
@@ -236,7 +227,7 @@ export default async function ResultSharePage({
             }}
           >
             <div className="flex flex-wrap gap-2">
-              {result.traitChips.map((chip) => (
+              {genericTraitChips.map((chip) => (
                 <span
                   key={chip}
                   className="rounded-full px-3 py-1.5 text-[13px]"
