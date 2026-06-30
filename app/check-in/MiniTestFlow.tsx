@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
 import {
   buildCurrentStateResultPayload,
-  currentStateCheckV1,
   currentStateQuestions,
   getCurrentStateMilestone,
   saveCurrentStateResult,
@@ -18,12 +17,8 @@ import {
 type Phase = "intro" | "quiz";
 const AUTO_ADVANCE_DELAY_MS = 320;
 
-const INTRO_FACTS = "24問 · 3分ほど · 無料 · ログインなし" as const;
-
-function getRemainingMinutes(currentIndex: number) {
-  const answered = currentIndex + 1;
-  const remainingRatio = Math.max(currentStateQuestions.length - answered, 0) / currentStateQuestions.length;
-  return Math.max(1, Math.ceil(remainingRatio * currentStateCheckV1.estimatedMinutes));
+function getIntroFacts(totalQuestions: number) {
+  return `${totalQuestions}問 · 無料 · ログインなし`;
 }
 
 export default function MiniTestFlow() {
@@ -40,7 +35,7 @@ export default function MiniTestFlow() {
   const stepLabel = `${Math.min(currentIndex + 1, totalQuestions)} / ${totalQuestions}`;
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
   const milestone = getCurrentStateMilestone(currentIndex);
-  const remainingMinutes = getRemainingMinutes(currentIndex);
+  const remainingQuestions = Math.max(totalQuestions - currentIndex - 1, 0);
 
   useEffect(() => {
     return () => {
@@ -160,9 +155,9 @@ export default function MiniTestFlow() {
                 <div className="space-y-3">
                   <p className="service-kicker" style={{ color: "#4D7A69" }}>クイックチェック</p>
                   <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.6rem]">
-                    今の感覚を、24問で静かに整理する。
+                    今の感覚を、120問で静かに整理する。
                   </h1>
-                  <p className="text-[11px] tracking-[0.06em] text-[#9A9088]">{INTRO_FACTS}</p>
+                  <p className="text-[11px] tracking-[0.06em] text-[#9A9088]">{getIntroFacts(totalQuestions)}</p>
                   <p className="max-w-[35rem] text-[14px] leading-7 text-[#6F6760]">
                     今の感覚に近いものをひとつずつ選ぶだけです。正解はありません。
                   </p>
@@ -190,7 +185,7 @@ export default function MiniTestFlow() {
                   <div className="flex items-center gap-2">
                     <span className="signal-orb" aria-hidden="true" />
                     <p className="text-[12px] leading-6 text-[#6F6760]">
-                      24問で、今の流れを少しずつ見ていきます。
+                      120問で、今の流れを少しずつ見ていきます。
                     </p>
                   </div>
                 </div>
@@ -202,7 +197,7 @@ export default function MiniTestFlow() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[12px] text-[#9A9088]">
                     <span>{stepLabel}</span>
-                    <span>残り約{remainingMinutes}分</span>
+                    <span>残り{remainingQuestions}問</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-[rgba(23,59,53,0.1)]">
                     <div
@@ -224,13 +219,11 @@ export default function MiniTestFlow() {
                       {currentQuestion.prompt}
                     </h2>
                     <p className="text-[13px] font-medium leading-7 text-[var(--muted)]">
-                      {currentQuestion.format === "AB"
-                        ? "A / B と、どちらともいえないの3択です。"
-                        : "ひとつ選ぶと、少し間を置いて次へ進みます。"}
+                      ひとつ選ぶと、少し間を置いて次へ進みます。
                     </p>
                   </div>
 
-                  <div className={`grid gap-2.5 ${currentQuestion.format === "AB" ? "sm:grid-cols-3" : ""}`}>
+                  <div className="grid gap-2.5">
                     {currentQuestion.options.map((option) => {
                       const selected = currentAnswer === option.id;
 
@@ -279,7 +272,7 @@ export default function MiniTestFlow() {
                       className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full px-4 py-3 text-[16px] transition hover:opacity-95 disabled:cursor-not-allowed disabled:shadow-none"
                       style={currentAnswer ? { background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 28px rgba(23,59,53,0.26)" } : { background: "rgba(34,32,29,0.18)", color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
                     >
-                      {currentIndex === totalQuestions - 1 ? "無料結果へ進む" : "すぐ次へ"}
+                      {currentIndex === totalQuestions - 1 ? "結果へ進む" : "すぐ次へ"}
                     </button>
                   </div>
                 </div>

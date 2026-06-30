@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import DteEventTracker from "../components/DteEventTracker";
-import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../check-in/currentStateCheckV1";
-import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ReportIntentAction from "./ReportIntentAction";
 
 export const metadata: Metadata = {
   title: "詳細レポート | Yorisou",
   description:
-    "クイックチェックの結果をもとに、感情・関係・行動・回復の視点から今の状態を整理する詳細レポートです。",
+    "120問結果の正式レポート承認前に、導線互換表示だけを確認できる Yorisou のレポートプレビューページです。",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -20,51 +19,33 @@ function readParam(params: Record<string, string | string[] | undefined>, key: s
 }
 
 const tocItems = [
-  { n: 1, title: "今の状態の要約", status: "visible" as const },
-  { n: 2, title: "深い状態解釈", status: "partial" as const },
-  { n: 3, title: "感情の負荷分析", status: "locked" as const },
-  { n: 4, title: "人間関係・距離感のレンズ", status: "locked" as const },
-  { n: 5, title: "行動と先延ばしのパターン", status: "locked" as const },
-  { n: 6, title: "内側の葛藤マップ", status: "locked" as const },
-  { n: 7, title: "回復しやすい整え方", status: "locked" as const },
-  { n: 8, title: "7日間の小さな行動計画", status: "locked" as const },
-  { n: 9, title: "30日間の方向性", status: "locked" as const },
-  { n: 10, title: "振り返りの問い", status: "locked" as const },
-  { n: 11, title: "推薦・リソースのヒント", status: "locked" as const },
-  { n: 12, title: "次に見るべき変化", status: "locked" as const },
-  { n: 13, title: "注意書き・限界", status: "visible" as const },
-  { n: 14, title: "保存用まとめ", status: "locked" as const },
+  { n: 1, title: "結果契約の確認", status: "visible" as const },
+  { n: 2, title: "正式分類の差し替え", status: "partial" as const },
+  { n: 3, title: "詳細レポート本文", status: "locked" as const },
+  { n: 4, title: "行動提案セクション", status: "locked" as const },
+  { n: 5, title: "保存用まとめ", status: "locked" as const },
 ] as const;
 
 const lockedCards = [
   {
-    title: "感情の負荷分析",
-    description: "どの場面でエネルギーが消費されやすいか、感情的な負荷のパターンを整理します。",
+    title: "詳細レポート本文",
+    description: "正式な120問レポート本文は、Control Agent 承認後に差し替えます。",
   },
   {
-    title: "人間関係・距離感のレンズ",
-    description: "今の人との距離の取り方が、自分にとってどんな意味を持っているかを読み解きます。",
+    title: "行動提案セクション",
+    description: "承認前のため、個別の提案や解釈はここでは表示しません。",
   },
   {
-    title: "7日間の小さな行動計画",
-    description: "今の状態に合わせた、7日間の具体的な小さな行動案を提示します。",
-  },
-  {
-    title: "30日間の方向性",
-    description: "1ヶ月のスパンで、今の状態をどの方向に整えていくかの見通しを整理します。",
-  },
-  {
-    title: "推薦・リソースのヒント",
-    description: "今のあなたの状態に合わせて参照できる考え方や整理の入口を提案します。",
+    title: "保存用まとめ",
+    description: "正式仕様が固まるまで、共有・保存向けの最終本文は公開しません。",
   },
 ] as const;
 
 const receiveBullets = [
-  "今の状態の深い読み解き",
-  "感情・関係・行動のパターン整理",
-  "7日間の小さな行動計画",
-  "30日間の見直しポイント",
-  "次に見るべき変化のサイン",
+  "120問フローの完了導線",
+  "公開結果ページへの戻り導線",
+  "承認待ち状態の明示",
+  "保存・共有の互換動作",
 ] as const;
 
 export default async function ReportPreviewPage({
@@ -73,26 +54,21 @@ export default async function ReportPreviewPage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
+  const resultId = readParam(params, "resultId");
   const overlayId = readParam(params, "overlayId");
   const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
   const payloadKey = readParam(params, "payloadKey");
-  const result =
-    getCurrentStateResult(resultId) ?? currentStateCheckV1.fallbackResult;
-  const overlay =
-    getCurrentStateOverlay(overlayId) ??
-    currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
   const routeContext = {
-    resultId: result.id,
-    overlayId: overlay.id,
+    resultId,
+    overlayId,
     confidenceBand,
     payloadKey,
   } as const;
-  const resultHref = buildT6PublicResultHref("/result", routeContext);
+  const compatibility = getTemporary120QResultCompatibility(routeContext);
+  const resultHref = buildPublicResultHref("/result", routeContext);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_90%_0%,_rgba(221,236,242,0.6),_transparent_32%),linear-gradient(180deg,#FFF7F1_0%,#fffdf9_44%,#F4FAF7_100%)] text-[#2F2A28]">
-      {/* Page-level event tracking */}
       <DteEventTracker
         event="report_preview_viewed"
         surface="report_preview"
@@ -106,7 +82,6 @@ export default async function ReportPreviewPage({
         locale="ja"
       />
 
-      {/* ── 1. Hero ── */}
       <section className="border-b border-[rgba(23,59,53,0.1)]">
         <div className="container py-9 md:py-14">
           <div className="mx-auto max-w-[44rem] space-y-5">
@@ -115,24 +90,23 @@ export default async function ReportPreviewPage({
                 詳細レポート
               </span>
               <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.1)] bg-white/80 px-3 py-1 text-[11px] font-semibold text-[#6F625C]">
-                プロトタイプ / サンプル表示
+                RESULT_TAXONOMY_NOT_APPROVED
               </span>
             </div>
 
             <div className="space-y-3">
-              <p className="service-kicker">あなたの詳細レポートを確認できます</p>
+              <p className="service-kicker">120問結果の次に進む導線を確認できます</p>
               <h1 className="display-serif text-[2rem] leading-[1.18] text-[#2F2A28] md:text-[2.8rem]">
-                クイックチェックの結果をもとに、<br className="hidden sm:block" />
-                <span className="text-[#173B35]">今の状態を深く整理する。</span>
+                120問結果の正式レポートは、<br className="hidden sm:block" />
+                <span className="text-[#173B35]">承認後に差し替え予定です。</span>
               </h1>
               <p className="max-w-[38rem] text-[15px] leading-8 text-[#6F625C]">
-                感情・関係・行動・回復の視点から整理します。
+                {compatibility.placeholderText}
               </p>
             </div>
 
-            {/* Volume badges */}
             <div className="flex flex-wrap gap-2">
-              {(["約10,000字", "14セクション", "7日間・30日間の行動整理", "保存して見返せる構成"] as const).map((label) => (
+              {(["120問ベース", "互換表示", "分類保留", "詳細仕様待ち"] as const).map((label) => (
                 <span
                   key={label}
                   className="inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/90 px-3 py-1.5 text-[12px] font-medium text-[#49615B] shadow-[0_4px_10px_rgba(23,59,53,0.04)]"
@@ -147,25 +121,22 @@ export default async function ReportPreviewPage({
 
       <div className="container py-8 md:py-12">
         <div className="mx-auto max-w-[44rem] space-y-10">
-
-          {/* ── 2. Visible summary ── */}
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">今の状態の要約</p>
+            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">今の状態</p>
             <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_14px_28px_rgba(23,59,53,0.06)] md:p-6">
               <p className="text-[15px] leading-8 text-[#2F2A28]">
-                今のあなたは、人との関わりを避けたいというより、関係を大切にしようとする中で、返信・予定・気づかいの負荷が少し重なっている状態かもしれません。すぐに大きな判断をするより、まずは「どの場面で疲れが出やすいか」を分けて見ることが助けになります。
+                正式な結果分類と詳細レポート本文はまだ承認されていません。この画面では、120問フロー完了後の互換導線だけを維持しています。
               </p>
             </div>
           </div>
 
-          {/* ── 3. Table of contents ── */}
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">レポートの構成（14セクション）</p>
-            <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 divide-y divide-[rgba(23,59,53,0.06)] overflow-hidden shadow-[0_12px_28px_rgba(23,59,53,0.05)]">
+            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">レポート導線の互換状態</p>
+            <div className="rounded-[1.35rem] overflow-hidden border border-[rgba(23,59,53,0.1)] bg-white/90 shadow-[0_12px_28px_rgba(23,59,53,0.05)]">
               {tocItems.map((item) => (
                 <div
                   key={item.n}
-                  className="flex items-center gap-3 px-4 py-3"
+                  className="flex items-center gap-3 border-b border-[rgba(23,59,53,0.06)] px-4 py-3 last:border-b-0"
                 >
                   <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
                     item.status === "locked"
@@ -183,65 +154,57 @@ export default async function ReportPreviewPage({
                     item.status === "visible"
                       ? "text-[#315F50]"
                       : item.status === "partial"
-                      ? "text-[#7A9A8E]"
-                      : "text-[#C4BCB6]"
+                        ? "text-[#7A9A8E]"
+                        : "text-[#C4BCB6]"
                   }`}>
-                    {item.status === "visible"
-                      ? "表示中"
-                      : item.status === "partial"
-                      ? "一部表示"
-                      : "詳細レポートで読めます"}
+                    {item.status === "visible" ? "互換表示" : item.status === "partial" ? "保留中" : "承認後に開放予定"}
                   </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── 4. Partial deeper section with fade ── */}
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">深い状態解釈 — 一部表示</p>
-            <div className="relative rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/92 overflow-hidden shadow-[0_14px_28px_rgba(23,59,53,0.06)]">
+            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">詳細本文の状態</p>
+            <div className="relative overflow-hidden rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/92 shadow-[0_14px_28px_rgba(23,59,53,0.06)]">
               <div className="p-5 md:p-6">
                 <p className="text-[15px] leading-8 text-[#2F2A28]">
-                  あなたの回答では、「関係を雑にしたくない気持ち」と「少し距離を置いて整えたい感覚」が同時に見えています。これは矛盾ではなく、今の状態を理解するうえで大切な手がかりです。
+                  120問の結果契約はこの時点で有効ですが、公開用の分類名・章本文・詳細レポート文面は承認前です。
                 </p>
                 <p className="mt-4 text-[15px] leading-8 text-[#2F2A28] opacity-60">
-                  この状態は、疲れた人間関係を断ち切ろうとしているのではなく、今の関わり方のリズムを少し変えたいというサインである可能性が高くあります。距離を取ることと、関係を終わらせることは、まったく…
+                  そのため、この画面では導線確認用のプレースホルダーだけを表示し、個別解釈や有料レポート本文は出しません。
                 </p>
               </div>
-              {/* Fade overlay */}
               <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[rgba(252,250,245,0.96)] to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 flex items-end justify-center pb-4">
                 <span className="rounded-full border border-[rgba(23,59,53,0.12)] bg-white/96 px-4 py-2 text-[12px] font-semibold text-[#315F50] shadow-[0_6px_16px_rgba(23,59,53,0.1)]">
-                  この先は詳細レポートで読めます
+                  正式本文は承認後に差し替えます
                 </span>
               </div>
             </div>
           </div>
 
-          {/* ── 5. Locked preview cards ── */}
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">詳細レポートで読める章</p>
+            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">保留中の章</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {lockedCards.map((card) => (
                 <div
                   key={card.title}
-                  className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/80 p-4 space-y-2"
+                  className="space-y-2 rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/80 p-4"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-[15px] opacity-50">🔒</span>
                     <p className="text-[13px] font-semibold text-[#49615B]">{card.title}</p>
                   </div>
                   <p className="text-[12px] leading-6 text-[#7A7068]">{card.description}</p>
-                  <p className="text-[11px] font-medium text-[#A09890]">この章は詳細レポートで読めます</p>
+                  <p className="text-[11px] font-medium text-[#A09890]">正式仕様承認後に有効化予定です</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── 6. What you will receive ── */}
-          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.05)] md:p-6 space-y-4">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">詳細レポートで読めること</p>
+          <div className="space-y-4 rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.05)] md:p-6">
+            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">正式レポート承認後に差し替わる項目</p>
             <ul className="space-y-2.5">
               {receiveBullets.map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-[14px] leading-7 text-[#2F2A28]">
@@ -252,19 +215,17 @@ export default async function ReportPreviewPage({
             </ul>
           </div>
 
-          {/* ── 7. Intent CTA ── */}
           <ReportIntentAction
             backHref={resultHref}
             sampleHref="/reports/sample"
             resultContext={{
-              resultId: result.id,
-              overlayId: overlay.id,
+              ...(resultId ? { resultId } : {}),
+              ...(overlayId ? { overlayId } : {}),
               confidenceBand,
               ...(payloadKey ? { payloadKey } : {}),
             }}
           />
 
-          {/* ── 8. Not-now links ── */}
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[12px] text-[#8A7764]">
             <Link href={resultHref} className="hover:underline" data-report-preview="not-now-free-result">
               今は無料結果だけ見る
@@ -279,13 +240,11 @@ export default async function ReportPreviewPage({
             </Link>
           </div>
 
-          {/* ── 9. Safety note ── */}
           <div className="rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">
             <p className="text-[11px] leading-7 text-[#8A8078]">
-              このレポートは、医療・心理診断、治療、カウンセリング、未来予測ではありません。今の状態を整理し、小さな次の行動を考えるための自己理解レポートです。つらさが強い、長く続く、生活に影響している場合は、信頼できる人や専門の相談先につながることも選択肢です。
+              このプレビューは正式な結果分類や有料レポート本文の代わりではありません。現在は、120問フロー後の安全な互換導線だけを維持しています。
             </p>
           </div>
-
         </div>
       </div>
     </main>

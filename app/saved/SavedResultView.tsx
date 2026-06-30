@@ -3,8 +3,8 @@
 import { useSyncExternalStore } from "react";
 
 import { MvpActionLink, MvpCard, MvpPill, MvpSection } from "../components/MvpSurface";
+import { buildPublicResultHref } from "../check-in/resultCompatibility";
 import { readSavedResultRecord, subscribeSavedResult, type SavedResultRecord } from "../result/saveState";
-import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
 
 function formatSavedAt(isoString: string) {
   const date = new Date(isoString);
@@ -52,8 +52,8 @@ function buildSavedResultHref(record: SavedResultRecord | null, kind: "result" |
     return storedPath;
   }
 
-  const hasRecoverableT6Context = Boolean(record.baseResultId || record.overlayId || record.payloadKey);
-  if (!hasRecoverableT6Context) {
+  const hasRecoverableContext = Boolean(record.baseResultId || record.overlayId || record.payloadKey);
+  if (!hasRecoverableContext) {
     return storedPath || (kind === "result" ? "/result" : "/result/continue");
   }
 
@@ -64,7 +64,7 @@ function buildSavedResultHref(record: SavedResultRecord | null, kind: "result" |
     payloadKey: record.payloadKey ?? null,
   } as const;
 
-  const derivedPath = buildT6PublicResultHref(kind === "result" ? "/result" : "/result/continue", routeContext);
+  const derivedPath = buildPublicResultHref(kind === "result" ? "/result" : "/result/continue", routeContext);
   if (derivedPath.includes("?")) {
     return derivedPath;
   }

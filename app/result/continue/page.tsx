@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { buildT6PublicResultSearchParams } from "../../check-in/t6ResultModel";
+import { buildPublicResultSearchParams } from "../../check-in/resultCompatibility";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -27,7 +27,7 @@ export default async function ResultContinuePage({
     payloadKey: readParam(params, "payloadKey"),
   } as const;
 
-  const query = buildT6PublicResultSearchParams(routeState);
+  const query = buildPublicResultSearchParams(routeState);
   if (query) {
     redirect(`/result?${query}`);
   }
