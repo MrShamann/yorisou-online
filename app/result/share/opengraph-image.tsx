@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../../check-in/currentStateCheckV1";
+import { getTemporary120QResultCompatibility } from "../../check-in/resultCompatibility";
 
 export const runtime = "edge";
 export const size = {
@@ -22,11 +22,15 @@ export default async function Image({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
+  const resultId = readParam(params, "resultId");
   const overlayId = readParam(params, "overlayId");
-  const result = getCurrentStateResult(resultId) ?? currentStateCheckV1.fallbackResult;
-  const overlay = getCurrentStateOverlay(overlayId) ?? currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
-  const traits = result.traitChips.slice(0, 2);
+  const payloadKey = readParam(params, "payloadKey");
+  const compatibility = getTemporary120QResultCompatibility({
+    resultId,
+    overlayId,
+    payloadKey,
+  });
+  const traits = ["120問ベース", "互換表示"] as const;
 
   return new ImageResponse(
     (
@@ -46,7 +50,7 @@ export default async function Image({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "22px", maxWidth: "860px" }}>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {["Share card", overlay.publicLabel, "Public only"].map((label) => (
+            {["Share card", compatibility.taxonomyStatus, "Public only"].map((label) => (
               <div
                 key={label}
                 style={{
@@ -68,9 +72,9 @@ export default async function Image({
 
           <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
             <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "rgba(255,255,255,0.66)" }}>公開結果カード</div>
-            <div style={{ fontSize: "78px", lineHeight: 1.02, fontWeight: 700 }}>{result.publicName}</div>
+            <div style={{ fontSize: "78px", lineHeight: 1.02, fontWeight: 700 }}>120Q Placeholder Result</div>
             <div style={{ fontSize: "36px", lineHeight: 1.45, color: "rgba(255,255,255,0.8)", maxWidth: "920px" }}>
-              {result.shareLine}
+              {compatibility.placeholderText}
             </div>
           </div>
         </div>
@@ -94,7 +98,7 @@ export default async function Image({
             ))}
           </div>
           <div style={{ fontSize: "24px", color: "rgba(255,255,255,0.72)", letterSpacing: "0.1em" }}>
-            {overlay.publicLine}
+            {compatibility.taxonomyStatus}
           </div>
         </div>
       </div>
