@@ -1,5 +1,6 @@
 import questionBankJson from "@/data/yorisou/120q-question-bank.generated.json";
 import scoringMasterJson from "@/data/yorisou/120q-scoring-master.generated.json";
+import { assignPublicArchetype, PUBLIC_RESULT_PLACEHOLDER_CODE } from "@/lib/yorisou/public-result";
 import { aggregateInternal120QSelections } from "@/lib/yorisou/scoring/aggregator";
 import { mapUserAnswersToOptionScores } from "@/lib/yorisou/scoring/mapper";
 import type {
@@ -196,7 +197,7 @@ export const currentStateQuestions: CurrentStateQuestion[] = questionBank.map((q
 
 export const currentStateCheckV1 = {
   testId: "current_state_check_v120",
-  testName: "今の状態チェック",
+  testName: "いま色テスト by よりそう",
   estimatedMinutes: 12,
   requiredAnswerCount: currentStateQuestions.length,
   dimensions: [] as Array<{ id: string; displayName: string }>,
@@ -306,7 +307,14 @@ export function scoreCurrentStateCheck(
   const scoringOutput = aggregateInternal120QSelections(selectedRows);
 
   return {
-    resultId: PLACEHOLDER_RESULT.id,
+    resultId:
+      assignPublicArchetype({
+        answerCount: input.answers.length,
+        groupedBySubdimension: scoringOutput.groupedBySubdimension,
+        groupedByPrimarySignal: scoringOutput.groupedByPrimarySignal,
+        safetyRoutingSummary: scoringOutput.safetyRoutingSummary,
+        formulaStatus: scoringOutput.formulaStatus,
+      }).assignment?.publicCode ?? PUBLIC_RESULT_PLACEHOLDER_CODE,
     overlayId: PLACEHOLDER_OVERLAY.id,
     confidenceBand: "low",
     confidenceCue: "RESULT_TAXONOMY_NOT_APPROVED",

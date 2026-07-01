@@ -30,7 +30,6 @@ export default async function Image({
     overlayId,
     payloadKey,
   });
-  const traits = ["120問ベース", "分類保留"] as const;
 
   return new ImageResponse(
     (
@@ -50,7 +49,7 @@ export default async function Image({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "820px" }}>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {["Public result", "Share-safe", "Public only"].map((label) => (
+            {[compatibility.brandedTestName, "Public result", compatibility.currentStateNote].map((label) => (
               <div
                 key={label}
                 style={{
@@ -71,17 +70,22 @@ export default async function Image({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "#7a897d" }}>RESULT TYPE</div>
-            <div style={{ fontSize: "80px", lineHeight: 1.02, fontWeight: 700 }}>120Q Placeholder Result</div>
+            <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "#7a897d" }}>{compatibility.currentStateNote}</div>
+            <div style={{ fontSize: "80px", lineHeight: 1.02, fontWeight: 700 }}>{compatibility.displayLine}</div>
+            {compatibility.codeLine ? (
+              <div style={{ fontSize: "32px", lineHeight: 1.2, color: "#31413c", fontWeight: 600 }}>
+                {compatibility.codeLine}
+              </div>
+            ) : null}
             <div style={{ fontSize: "36px", lineHeight: 1.45, color: "#31413c", maxWidth: "920px" }}>
-              {compatibility.placeholderText}
+              {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
             </div>
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {traits.map((trait) => (
+            {compatibility.heroChips.map((trait) => (
               <div
                 key={trait}
                 style={{
@@ -97,7 +101,9 @@ export default async function Image({
               </div>
             ))}
           </div>
-          <div style={{ fontSize: "24px", color: "#597065", letterSpacing: "0.1em" }}>{compatibility.taxonomyStatus}</div>
+          <div style={{ fontSize: "24px", color: "#597065", letterSpacing: "0.1em" }}>
+            {compatibility.taxonomyStatus}
+          </div>
         </div>
       </div>
     ),

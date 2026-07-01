@@ -30,7 +30,6 @@ export default async function Image({
     overlayId,
     payloadKey,
   });
-  const traits = ["120問ベース", "互換表示"] as const;
 
   return new ImageResponse(
     (
@@ -50,7 +49,7 @@ export default async function Image({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "22px", maxWidth: "860px" }}>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {["Share card", compatibility.taxonomyStatus, "Public only"].map((label) => (
+            {["Share card", compatibility.brandedTestName, "Public only"].map((label) => (
               <div
                 key={label}
                 style={{
@@ -71,17 +70,24 @@ export default async function Image({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-            <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "rgba(255,255,255,0.66)" }}>公開結果カード</div>
-            <div style={{ fontSize: "78px", lineHeight: 1.02, fontWeight: 700 }}>120Q Placeholder Result</div>
+            <div style={{ fontSize: "28px", letterSpacing: "0.16em", color: "rgba(255,255,255,0.66)" }}>
+              {compatibility.currentStateNote}
+            </div>
+            <div style={{ fontSize: "78px", lineHeight: 1.02, fontWeight: 700 }}>{compatibility.shareLine}</div>
+            {compatibility.codeLine ? (
+              <div style={{ fontSize: "30px", lineHeight: 1.2, color: "rgba(255,255,255,0.86)", fontWeight: 600 }}>
+                {compatibility.codeLine}
+              </div>
+            ) : null}
             <div style={{ fontSize: "36px", lineHeight: 1.45, color: "rgba(255,255,255,0.8)", maxWidth: "920px" }}>
-              {compatibility.placeholderText}
+              {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
             </div>
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            {traits.map((trait) => (
+            {compatibility.heroChips.map((trait) => (
               <div
                 key={trait}
                 style={{

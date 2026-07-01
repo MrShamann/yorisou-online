@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import MiniTestFlow from "./MiniTestFlow";
 
 export const metadata: Metadata = {
-  title: "チェックインをはじめる | Yorisou",
+  title: "いま色テスト by よりそう | Yorisou",
   description:
-    "120問の今の状態チェックから、今のあなたに近い結果準備状態へ進む Yorisou のチェックインページです。",
+    "今の動き方を、24の色と名前で見てみるテスト。120Qをもとにしています。",
 };
 
 export default function CheckInPage() {
