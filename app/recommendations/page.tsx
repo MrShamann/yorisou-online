@@ -53,7 +53,7 @@ export default async function RecommendationsPage({
   const confidenceLabel = confidenceBand === "medium" ? "公開結果を確認中" : "公開結果を表示中";
   const genericTraitChips = compatibility.assignment
     ? compatibility.heroChips
-    : ["120問ベース", "分類保留", "互換表示"];
+    : ["120問ベース", "今の動き方", "準備中"];
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_88%_0%,_rgba(221,236,242,0.72),_transparent_34%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_44%,_#F4FAF7_100%)] text-[#2F2A28]">
@@ -76,13 +76,13 @@ export default async function RecommendationsPage({
             </div>
             <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(23,59,53,0.1)] bg-white/92 shadow-[0_16px_34px_rgba(23,59,53,0.07)]">
               <div className="flex flex-wrap gap-1.5">
-                <MvpPill>{compatibility.assignment ? compatibility.taxonomyStatus : "公開結果プレースホルダー"}</MvpPill>
+                <MvpPill>{compatibility.assignment ? compatibility.assignment.publicCode : "今の見え方"}</MvpPill>
                 <MvpPill>{confidenceLabel}</MvpPill>
               </div>
               <p className="text-[13px] leading-7 text-[#4A3E39]">
                 {compatibility.assignment
                   ? compatibility.currentStateNote
-                  : "公開結果がまだ出せないときは、この画面でもプレースホルダー導線だけを残します。"}
+                  : "今の見方を整えながら、結果の入口だけを先に保っています。"}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {genericTraitChips.map((chip) => (
@@ -143,8 +143,8 @@ export default async function RecommendationsPage({
             options={[
               {
                 value: "self-understanding-reading",
-                label: "承認後に詳しく読む",
-                hint: "正式仕様の反映後に見返したい",
+                label: "あとで詳しく読む",
+                hint: "落ち着いたときに見返したい",
               },
               {
                 value: "rest-and-recovery",

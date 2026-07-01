@@ -48,6 +48,8 @@ export const PUBLIC_RESULT_SUBHEADLINE =
 export const PUBLIC_RESULT_CTA_LABEL = "いま色テストをはじめる" as const;
 export const PUBLIC_RESULT_LOADING_LINE =
   "24の色から、今の動き方を照らしています。" as const;
+export const PUBLIC_RESULT_PREPARING_NOTE =
+  "詳しい読み解きは準備中です。今は、結果の見方と次のヒントだけを先にお届けします。" as const;
 
 function buildBaseCompatibility() {
   return {
@@ -122,8 +124,7 @@ export function getTemporary120QResultCompatibility(
     displayLine: PUBLIC_RESULT_HEADLINE,
     codeLine: null,
     shareLine: "私はどんな“いま色”になる？",
-    heroChips: ["120問ベース", "公開調整中", "プレースホルダー"],
-    placeholderText:
-      "公開できるいま色は、今はまだ静かに調整中です。結果は固定タイプではなく、120Qから見た今の動き方として扱います。",
+    heroChips: ["120問ベース", "今の動き方", "準備中"],
+    placeholderText: PUBLIC_RESULT_PREPARING_NOTE,
   };
 }

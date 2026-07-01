@@ -201,6 +201,14 @@ export function runPublicAssignmentValidationTest() {
     path.join(process.cwd(), "app/result/share/page.tsx"),
     "utf8",
   );
+  const reportPreviewSource = fs.readFileSync(
+    path.join(process.cwd(), "app/report-preview/page.tsx"),
+    "utf8",
+  );
+  const recommendationsSource = fs.readFileSync(
+    path.join(process.cwd(), "app/recommendations/page.tsx"),
+    "utf8",
+  );
   const assignmentSource = fs.readFileSync(
     path.join(process.cwd(), "lib/yorisou/public-result/assignment.ts"),
     "utf8",
@@ -210,6 +218,10 @@ export function runPublicAssignmentValidationTest() {
   assert.equal(resultShareSource.includes("あなたはMS-KIです"), false);
   assert.equal(resultPageSource.includes('metadataBase: new URL("https://yorisou.online")'), true);
   assert.equal(resultShareSource.includes('metadataBase: new URL("https://yorisou.online")'), true);
+  assert.equal(resultPageSource.includes("公開結果プレースホルダー"), false);
+  assert.equal(reportPreviewSource.includes("Control Agent"), false);
+  assert.equal(reportPreviewSource.includes("承認後"), false);
+  assert.equal(recommendationsSource.includes("公開結果プレースホルダー"), false);
   assert.equal(assignmentSource.includes("signalStrengthSummary"), false);
   assert.equal(assignmentSource.includes("signalStrength"), false);
 

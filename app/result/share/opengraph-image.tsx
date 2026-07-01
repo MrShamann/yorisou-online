@@ -104,7 +104,7 @@ export default async function Image({
             ))}
           </div>
           <div style={{ fontSize: "24px", color: "rgba(255,255,255,0.72)", letterSpacing: "0.1em" }}>
-            {compatibility.taxonomyStatus}
+            yorisou.online
           </div>
         </div>
       </div>
