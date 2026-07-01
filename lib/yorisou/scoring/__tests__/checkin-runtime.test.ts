@@ -37,8 +37,10 @@ export function runCheckInRuntimeValidationTest() {
 
   assert.equal(scoring.answerCount, 120);
   assert.equal(payload.answerCount, 120);
+  assert.equal(payload.resultId, scoring.resultId);
   assert.equal(payload.resultTaxonomyStatus, "RESULT_TAXONOMY_NOT_APPROVED");
   assert.equal(payload.rawScoringDataStored, false);
+  assert.equal(currentStateCheckV1.testName, "いま色テスト by よりそう");
 
   const checkInSource = fs.readFileSync(
     path.join(process.cwd(), "app/check-in/currentStateCheckV1.ts"),
@@ -52,6 +54,7 @@ export function runCheckInRuntimeValidationTest() {
   assert.equal(checkInSource.includes("t6QuestionBank"), false);
   assert.equal(checkInSource.includes("t6Scoring"), false);
   assert.equal(miniFlowSource.includes("24問で、今の流れを少しずつ見ていきます。"), false);
+  assert.equal(miniFlowSource.includes("いま色テストをはじめる"), true);
 
   return {
     totalQuestions: currentStateQuestions.length,

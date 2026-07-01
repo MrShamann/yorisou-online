@@ -7,7 +7,7 @@ import RecommendationSignalForm from "./RecommendationSignalForm";
 export const metadata: Metadata = {
   title: "次にほしいヒント | Yorisou",
   description:
-    "120問結果の互換表示のあとで、次の入口だけを静かに選べる Yorisou のページです。",
+    "いま色テスト by よりそう の公開結果のあとで、次の入口だけを静かに選べるページです。",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -50,8 +50,10 @@ export default async function RecommendationsPage({
   } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
   const savedHref = buildPublicResultHref("/saved", routeContext);
-  const confidenceLabel = confidenceBand === "medium" ? "互換状態を確認中" : "暫定導線を維持中";
-  const genericTraitChips = ["120問ベース", "分類保留", "互換表示"] as const;
+  const confidenceLabel = confidenceBand === "medium" ? "公開結果を確認中" : "公開結果を表示中";
+  const genericTraitChips = compatibility.assignment
+    ? compatibility.heroChips
+    : ["120問ベース", "分類保留", "互換表示"];
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_88%_0%,_rgba(221,236,242,0.72),_transparent_34%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_44%,_#F4FAF7_100%)] text-[#2F2A28]">
@@ -63,21 +65,25 @@ export default async function RecommendationsPage({
               <MvpPill>120問互換表示</MvpPill>
             </div>
             <div className="space-y-3">
-              <p className="service-kicker">120問結果互換表示の次に見るもの</p>
+              <p className="service-kicker">{compatibility.brandedTestName}</p>
               <h1 className="display-serif max-w-[11em] text-[2rem] leading-[1.13] text-[#2F2A28] md:text-[2.72rem]">
-                互換表示のあとで、
+                {compatibility.displayLine}
                 <span className="block text-[#173B35]">次の入口を選ぶ。</span>
               </h1>
               <p className="max-w-[34rem] text-[15px] font-medium leading-7 text-[#6F625C]">
-                {compatibility.placeholderText}
+                {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
               </p>
             </div>
             <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(23,59,53,0.1)] bg-white/92 shadow-[0_16px_34px_rgba(23,59,53,0.07)]">
               <div className="flex flex-wrap gap-1.5">
-                <MvpPill>{compatibility.taxonomyStatus}</MvpPill>
+                <MvpPill>{compatibility.assignment ? compatibility.taxonomyStatus : "公開結果プレースホルダー"}</MvpPill>
                 <MvpPill>{confidenceLabel}</MvpPill>
               </div>
-              <p className="text-[13px] leading-7 text-[#4A3E39]">正式な分類名と解釈文は承認待ちのため、この画面では互換導線だけを残しています。</p>
+              <p className="text-[13px] leading-7 text-[#4A3E39]">
+                {compatibility.assignment
+                  ? compatibility.currentStateNote
+                  : "公開結果がまだ出せないときは、この画面でもプレースホルダー導線だけを残します。"}
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {genericTraitChips.map((chip) => (
                   <span

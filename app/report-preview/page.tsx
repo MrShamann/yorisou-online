@@ -8,7 +8,7 @@ import ReportIntentAction from "./ReportIntentAction";
 export const metadata: Metadata = {
   title: "詳細レポート | Yorisou",
   description:
-    "120問結果の正式レポート承認前に、導線互換表示だけを確認できる Yorisou のレポートプレビューページです。",
+    "いま色テスト by よりそう の公開結果から、詳細レポート案内だけを確認できるページです。",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -90,23 +90,26 @@ export default async function ReportPreviewPage({
                 詳細レポート
               </span>
               <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.1)] bg-white/80 px-3 py-1 text-[11px] font-semibold text-[#6F625C]">
-                RESULT_TAXONOMY_NOT_APPROVED
+                {compatibility.assignment ? compatibility.taxonomyStatus : "公開結果プレースホルダー"}
               </span>
             </div>
 
             <div className="space-y-3">
-              <p className="service-kicker">120問結果の次に進む導線を確認できます</p>
+              <p className="service-kicker">{compatibility.brandedTestName}</p>
               <h1 className="display-serif text-[2rem] leading-[1.18] text-[#2F2A28] md:text-[2.8rem]">
-                120問結果の正式レポートは、<br className="hidden sm:block" />
-                <span className="text-[#173B35]">承認後に差し替え予定です。</span>
+                {compatibility.displayLine}
+                <br className="hidden sm:block" />
+                <span className="text-[#173B35]">{compatibility.currentStateNote}</span>
               </h1>
               <p className="max-w-[38rem] text-[15px] leading-8 text-[#6F625C]">
-                {compatibility.placeholderText}
+                {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {(["120問ベース", "互換表示", "分類保留", "詳細仕様待ち"] as const).map((label) => (
+              {(compatibility.assignment
+                ? [...compatibility.heroChips, "詳細仕様待ち"]
+                : ["120問ベース", "互換表示", "分類保留", "詳細仕様待ち"] as const).map((label) => (
                 <span
                   key={label}
                   className="inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/90 px-3 py-1.5 text-[12px] font-medium text-[#49615B] shadow-[0_4px_10px_rgba(23,59,53,0.04)]"
