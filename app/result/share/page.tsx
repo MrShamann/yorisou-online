@@ -5,6 +5,7 @@ import { MvpActionLink, MvpCard, MvpPill } from "../../components/MvpSurface";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../../check-in/resultCompatibility";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://yorisou.online"),
   title: "いま色シェアカード | Yorisou",
   description:
     "いま色テスト by よりそう の公開結果カードを、スクリーンショットして共有できるページです。",

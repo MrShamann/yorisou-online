@@ -6,6 +6,7 @@ import AppShell from "./components/AppShell";
 import { getReleaseMarker } from "@/lib/releaseMarker";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://yorisou.online"),
   title: "Yorisou | 今の自分を知る24問チェック",
   description:
     "Yorisouは、今の気持ちや生活リズムを24問でふり返り、自分の状態と次の一歩を見つけるためのLINE/Web-firstセルフリフレクションサービスです。診断や占いではありません。",

@@ -6,6 +6,7 @@ import ResultShareActions from "../components/ResultShareActions";
 import LocalResultSave from "./LocalResultSave";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://yorisou.online"),
   title: "いま色テストの結果 | Yorisou",
   description:
     "今の動き方を、24の色と名前で見てみるテスト。120Qをもとにした公開結果ページです。",
