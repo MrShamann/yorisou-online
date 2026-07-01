@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
-import LocalResultSave from "./LocalResultSave";
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ResultShareActions from "../components/ResultShareActions";
-import { currentStateCheckV1, getCurrentStateOverlay, getCurrentStateResult } from "../check-in/currentStateCheckV1";
-import { buildT6PublicResultHref } from "../check-in/t6ResultModel";
+import LocalResultSave from "./LocalResultSave";
 
 export const metadata: Metadata = {
   title: "無料結果 | Yorisou",
   description:
-    "今の状態チェックの無料結果として、今のあなたに近いモードと短い認識の一行を受け取れる Yorisou の結果ページです。",
+    "120問チェックイン後の互換表示として、安全なプレースホルダー結果を確認できる Yorisou の結果ページです。",
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -25,48 +24,47 @@ export default async function ResultPage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readParam(params, "resultId") ?? currentStateCheckV1.scoring.fallbackResultId;
+  const resultId = readParam(params, "resultId");
   const overlayId = readParam(params, "overlayId");
   const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
   const payloadKey = readParam(params, "payloadKey");
-
-  const result =
-    getCurrentStateResult(resultId) ??
-    currentStateCheckV1.fallbackResult;
-  const overlay =
-    getCurrentStateOverlay(overlayId) ??
-    currentStateCheckV1.overlays.find((item) => item.id === "balancing")!;
   const routeContext = {
-    resultId: result.id,
-    overlayId: overlay.id,
+    resultId,
+    overlayId,
     confidenceBand,
     payloadKey,
   } as const;
-  const resultShareHref = buildT6PublicResultHref("/result/share", routeContext);
-  const resultPath = buildT6PublicResultHref("/result", routeContext);
-  const continuePath = buildT6PublicResultHref("/result/continue", routeContext);
+  const compatibility = getTemporary120QResultCompatibility(routeContext);
+  const resultShareHref = buildPublicResultHref("/result/share", routeContext);
+  const resultPath = buildPublicResultHref("/result", routeContext);
+  const continuePath = buildPublicResultHref("/result/continue", routeContext);
+  const genericTraitChips = ["120問ベース", "分類保留", "互換表示"] as const;
   const resultSections = [
     {
-      label: "いま見えている傾向",
-      title: result.currentTendencyTitle ?? "まず、いまのあなたに近い流れ",
-      body: result.currentTendencyBody ? [result.currentTendencyBody] : result.summary,
+      label: "現在の表示状態",
+      title: "正式な結果分類はまだ公開していません",
+      body: [compatibility.placeholderText],
     },
     {
-      label: "日常で出やすい動き方",
-      title: result.dailyPatternTitle ?? "ふだんの場面では、こう出やすい",
-      body: result.dailyPattern ? [result.dailyPattern] : [],
+      label: "この画面で分かること",
+      title: "120問ベースの互換表示です",
+      body: ["回答は120問フローで受け取り済みです。承認前のため、分類名や個別の解釈文はここでは出しません。"],
     },
     {
-      label: "つまずきやすいところ",
-      title: result.frictionTitle ?? "疲れやすくなるポイント",
-      body: result.frictionPoint ? [result.frictionPoint] : [],
+      label: "保存について",
+      title: "この端末にだけ残せます",
+      body: ["簡易保存では公開向けの互換状態だけを残します。回答内容や未承認の詳細分類は保存しません。"],
     },
     {
-      label: "次に試すとよいこと",
-      title: result.nextStepTitle ?? "今日から軽く試せること",
-      body: result.nextStep,
+      label: "次の段階",
+      title: "正式仕様の承認後に結果面を更新します",
+      body: ["Edward / Control Agent の承認後に、120問の正式結果契約へ差し替える予定です。"],
     },
   ] as const;
+  const storyHref = buildPublicResultHref("/result/share", {
+    ...routeContext,
+    payloadKey,
+  });
 
   return (
     <main className="min-h-screen bg-[#FBFAF6] text-[#2F2A28]">
@@ -74,13 +72,12 @@ export default async function ResultPage({
         <div className="container py-5 md:py-12">
           <div className="mx-auto grid max-w-[42rem] gap-4">
             <div className="flex flex-wrap gap-1.5">
-              <MvpPill>24問のチェック結果</MvpPill>
-              <MvpPill>{overlay.publicLabel}</MvpPill>
-              <MvpPill>今の状態から見える傾向です</MvpPill>
+              <MvpPill>120問の互換表示</MvpPill>
+              <MvpPill>{compatibility.taxonomyStatus}</MvpPill>
+              <MvpPill>公開分類は保留中です</MvpPill>
             </div>
 
             <MvpCard className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
-              {/* A. Identity card */}
               <div
                 className="space-y-4 rounded-[1.18rem] px-4 py-4"
                 style={{
@@ -88,18 +85,18 @@ export default async function ResultPage({
                   border: "1px solid rgba(23,59,53,0.1)",
                 }}
               >
-                <p className="service-kicker">クイックチェックの無料結果</p>
+                <p className="service-kicker">120問チェックインの暫定結果表示</p>
                 <h1 className="display-serif mt-2 text-[2.28rem] leading-[1.06] text-[#2F2A28] md:text-[3rem]">
-                  {result.publicName}
+                  120問結果の互換表示
                 </h1>
                 <p className="text-[16px] font-semibold leading-8 text-[#4A3E39]">
-                  {result.recognitionHook}
+                  正式な結果分類はまだ承認されていません。
                 </p>
-                <p className="text-[14px] leading-7 text-[#6F625C]">{result.recognitionLine}</p>
+                <p className="text-[14px] leading-7 text-[#6F625C]">{compatibility.placeholderText}</p>
               </div>
 
               <div className="grid gap-2.5 sm:grid-cols-3">
-                {result.traitChips.map((bullet) => (
+                {genericTraitChips.map((bullet) => (
                   <div
                     key={bullet}
                     className="rounded-[1rem] border border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] px-4 py-3 text-[13px] font-semibold leading-6 text-[#315F50]"
@@ -109,16 +106,15 @@ export default async function ResultPage({
                 ))}
               </div>
 
-              {/* B. Save / share / continue zone */}
               <LocalResultSave
-                resultType="24Q結果"
-                resultLabel={result.publicName}
-                recognitionLine={result.recognitionLine}
-                baseResultId={result.id}
-                overlayId={overlay.id}
+                resultType="120Q結果互換表示"
+                resultLabel="120問結果（分類保留）"
+                recognitionLine={compatibility.placeholderText}
+                baseResultId={resultId ?? undefined}
+                overlayId={overlayId ?? undefined}
                 confidenceBand={confidenceBand}
                 payloadKey={payloadKey ?? undefined}
-                traitChips={result.traitChips}
+                traitChips={[...genericTraitChips]}
                 context="public-result"
                 resultPath={resultPath}
                 continuePath={continuePath}
@@ -127,14 +123,13 @@ export default async function ResultPage({
 
               <ResultShareActions
                 shareUrl="/line/mini-app"
-                shareTitle="Yorisou — 今の状態チェック"
-                shareText={"Yorisouで今の状態をチェックしました。\n短いチェックで、自分の今の流れを整理できます。"}
+                shareTitle="Yorisou — 120問結果互換表示"
+                shareText={"Yorisouで120問チェックインを完了しました。\n正式な結果分類は承認待ちのため、現在は互換表示のみを共有します。"}
                 shareCardUrl={resultShareHref}
-                personaId={result.id}
+                personaId={resultId ?? "yorisou-120q-placeholder"}
                 shareSurface="result-page"
               />
 
-              {/* Instagram-oriented card — screenshot-save path */}
               <details className="overflow-hidden rounded-[1.18rem] border border-[rgba(23,59,53,0.1)] bg-white/95">
                 <summary
                   className="flex cursor-pointer list-none items-center justify-between px-4 py-3.5"
@@ -152,7 +147,6 @@ export default async function ResultPage({
                 </summary>
 
                 <div className="px-4 pb-5 pt-1">
-                  {/* Card preview */}
                   <div
                     className="rounded-[1.3rem] px-5 py-6"
                     style={{ background: "#173B35" }}
@@ -178,10 +172,10 @@ export default async function ResultPage({
                       className="display-serif mt-4 leading-[1.18]"
                       style={{ fontSize: "1.65rem", color: "#fff" }}
                     >
-                      {result.publicName}
+                      120問結果の互換カード
                     </h2>
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      {result.traitChips.map((chip) => (
+                      {genericTraitChips.map((chip) => (
                         <span
                           key={chip}
                           className="rounded-full px-2.5 py-1 text-[11px]"
@@ -202,9 +196,8 @@ export default async function ResultPage({
                     </p>
                   </div>
 
-                  {/* Open story card page */}
                   <a
-                    href={`/result/share?story=1&resultId=${encodeURIComponent(result.id)}&overlayId=${encodeURIComponent(overlay.id)}&confidence=${confidenceBand}`}
+                    href={`${storyHref}${storyHref.includes("?") ? "&" : "?"}story=1`}
                     className="mt-3 flex min-h-[48px] w-full items-center justify-center rounded-[1rem] text-[14px] font-semibold transition active:scale-[0.975]"
                     style={{
                       background: "#173B35",
@@ -234,7 +227,6 @@ export default async function ResultPage({
                 />
               </div>
 
-              {/* C. Report teaser */}
               <div
                 className="rounded-[1rem] px-4 py-3.5"
                 style={{
@@ -242,11 +234,10 @@ export default async function ResultPage({
                   border: "1px solid rgba(23,59,53,0.07)",
                 }}
               >
-                <p className="text-[12px] font-semibold text-[#6F625C]">くわしいレポートは準備中</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#9A9088]">今は無料の結果だけ見られます。</p>
+                <p className="text-[12px] font-semibold text-[#6F625C]">くわしいレポートは承認待ちです</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#9A9088]">今は安全な互換表示だけを維持しています。</p>
               </div>
 
-              {/* Overlay context */}
               <div className="grid gap-3">
                 <div
                   className="rounded-[1.08rem] px-4 py-3"
@@ -255,9 +246,11 @@ export default async function ResultPage({
                     border: "1px solid rgba(23,59,53,0.1)",
                   }}
                 >
-                  <div className="service-kicker">{overlay.publicLabel}</div>
-                  <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{overlay.resultSheetLine}</p>
-                  <p className="mt-2 text-[12px] font-semibold leading-6 text-[#4D7A69]">{overlay.nextStepCue}</p>
+                  <div className="service-kicker">互換状態の確認</div>
+                  <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{compatibility.placeholderText}</p>
+                  <p className="mt-2 text-[12px] font-semibold leading-6 text-[#4D7A69]">
+                    正式な結果分類は Edward / Control Agent 承認後に反映します。
+                  </p>
                 </div>
                 <div
                   className="rounded-[1rem] px-4 py-3"
@@ -268,13 +261,12 @@ export default async function ResultPage({
                 >
                   <p className="text-[13px] leading-7 text-[#6F625C]">
                     {confidenceBand === "medium"
-                      ? "今回は、今の状態が少し見えやすくなっています。"
-                      : "今回は、今の状態から見える傾向として軽く受け取ってください。"}
+                      ? "今回は互換表示の導線が安定して確認できる状態です。"
+                      : "今回は軽い導線確認として互換表示を受け取ってください。"}
                   </p>
                 </div>
               </div>
 
-              {/* Detail sections */}
               <div className="space-y-3">
                 {resultSections.map((section, index) => (
                   <section

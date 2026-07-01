@@ -17,6 +17,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "tsBuildInfoFile": "/tmp/yorisou-next/tsconfig.tsbuildinfo",
     "plugins": [
       {
         "name": "next"
@@ -36,7 +37,9 @@
     "**/*.mts",
     ".next/dev/types/**/*.ts",
     "/tmp/yorisou-next/types/**/*.ts",
-    "/tmp/yorisou-next/dev/types/**/*.ts"
+    "/tmp/yorisou-next/dev/types/**/*.ts",
+    "/tmp/yorisou-next/.next/types/**/*.ts",
+    "/tmp/yorisou-next/.next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

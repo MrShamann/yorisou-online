@@ -63,10 +63,10 @@ export default function ReportLoadingPage() {
 
           <MvpCard className="space-y-5 p-5 sm:p-6">
             <div className="space-y-3">
-              <p className="service-kicker">24問の無料結果を整理しています</p>
+              <p className="service-kicker">120問の結果を整理しています</p>
               <h1 className="display-serif text-[2.1rem] leading-[1.16] md:text-[2.8rem]">結果を整理しています</h1>
               <p className="text-[14px] leading-7 text-[var(--muted)]">
-                今の回答を静かにまとめています。少し待つと、24問の無料結果が表示されます。
+                今の回答を静かにまとめています。少し待つと、120問の結果プレースホルダーが表示されます。
               </p>
             </div>
 
