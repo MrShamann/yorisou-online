@@ -208,6 +208,8 @@ export function runPublicAssignmentValidationTest() {
 
   assert.equal(resultPageSource.includes("あなたはMS-KIです"), false);
   assert.equal(resultShareSource.includes("あなたはMS-KIです"), false);
+  assert.equal(resultPageSource.includes('metadataBase: new URL("https://yorisou.online")'), true);
+  assert.equal(resultShareSource.includes('metadataBase: new URL("https://yorisou.online")'), true);
   assert.equal(assignmentSource.includes("signalStrengthSummary"), false);
   assert.equal(assignmentSource.includes("signalStrength"), false);
 
