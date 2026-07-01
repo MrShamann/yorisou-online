@@ -143,7 +143,7 @@ export default function MiniTestFlow() {
               {stepLabel}
             </span>
           ) : (
-            <span className="rounded-full bg-[rgba(23,59,53,0.08)] px-3 py-1 text-[11px] font-semibold text-[#315F50]">クイックチェック</span>
+            <span className="rounded-full bg-[rgba(23,59,53,0.08)] px-3 py-1 text-[11px] font-semibold text-[#315F50]">いま色テスト</span>
           )}
         </div>
       </div>
@@ -153,13 +153,13 @@ export default function MiniTestFlow() {
             {phase === "intro" ? (
               <div className="grid gap-5">
                 <div className="space-y-3">
-                  <p className="service-kicker" style={{ color: "#4D7A69" }}>クイックチェック</p>
+                  <p className="service-kicker" style={{ color: "#4D7A69" }}>いま色テスト by よりそう</p>
                   <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.6rem]">
-                    今の感覚を、120問で静かに整理する。
+                    今のあなたの“いま色”を見てみる
                   </h1>
                   <p className="text-[11px] tracking-[0.06em] text-[#9A9088]">{getIntroFacts(totalQuestions)}</p>
                   <p className="max-w-[35rem] text-[14px] leading-7 text-[#6F6760]">
-                    今の感覚に近いものをひとつずつ選ぶだけです。正解はありません。
+                    結果は固定タイプではなく、120Qから見た今の動き方です。
                   </p>
                 </div>
 
@@ -170,7 +170,7 @@ export default function MiniTestFlow() {
                     className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] transition hover:opacity-95 active:scale-[0.975]"
                     style={{ background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
                   >
-                    はじめる
+                    いま色テストをはじめる
                   </button>
                   <p className="mt-2.5 text-[11px] leading-6 text-[#9A9088]">
                     診断ではありません · <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
@@ -185,7 +185,7 @@ export default function MiniTestFlow() {
                   <div className="flex items-center gap-2">
                     <span className="signal-orb" aria-hidden="true" />
                     <p className="text-[12px] leading-6 text-[#6F6760]">
-                      120問で、今の流れを少しずつ見ていきます。
+                      今の動き方を、24の色と名前で見ていきます。
                     </p>
                   </div>
                 </div>
