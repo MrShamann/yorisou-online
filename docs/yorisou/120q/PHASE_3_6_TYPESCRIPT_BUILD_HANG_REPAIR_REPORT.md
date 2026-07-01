@@ -82,16 +82,16 @@ Assessment:
 
 ## Command results
 
-- `node --import tsx lib/yorisou/scoring/__tests__/run.ts`  
+- `node --import tsx lib/yorisou/scoring/__tests__/run.ts`
   Passed
 
-- `npm run lint -- lib/yorisou/scoring app/check-in app/en/check-in app/result app/report-preview app/report-loading app/saved app/recommendations`  
+- `npm run lint -- lib/yorisou/scoring app/check-in app/en/check-in app/result app/report-preview app/report-loading app/saved app/recommendations`
   Passed
 
-- `npx tsc --noEmit --pretty false`  
+- `npx tsc --noEmit --pretty false`
   Passed
 
-- `npm run build`  
+- `npm run build`
   Passed
 
 ## Remaining risks
