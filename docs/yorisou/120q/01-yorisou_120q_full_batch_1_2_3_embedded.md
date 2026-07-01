@@ -1,7 +1,7 @@
 # Yorisou 120Q Master Question Bank — Corrected Full Three-Batch Embedded Consolidation Input
 
-Status: CORRECTED_CONSOLIDATION_INPUT_PACKAGE  
-Purpose: Give the downstream Agent one clean Markdown file containing the true Batch 1, Batch 2, Batch 3 source texts, polish notes, and consolidation instructions.  
+Status: CORRECTED_CONSOLIDATION_INPUT_PACKAGE
+Purpose: Give the downstream Agent one clean Markdown file containing the true Batch 1, Batch 2, Batch 3 source texts, polish notes, and consolidation instructions.
 Important: This file is for methodology consolidation only. It is not implementation approval.
 
 ---
@@ -29,16 +29,16 @@ TASK MODE: FULL 120Q MASTER CONSOLIDATION + CROSS-BATCH POLISH PASS — USE ONLY
 
 You must consolidate the embedded Batch 1, Batch 2, and Batch 3 question banks into one coherent Yorisou 120Q Master Question Bank candidate.
 
-Do not ask for external files.  
-Do not rely on chat history.  
-Do not rely on hidden attachments.  
-Do not write code.  
-Do not change repo files.  
-Do not create scoring weights.  
-Do not create result taxonomy.  
-Do not write result copy.  
-Do not create report copy.  
-Do not approve implementation.  
+Do not ask for external files.
+Do not rely on chat history.
+Do not rely on hidden attachments.
+Do not write code.
+Do not change repo files.
+Do not create scoring weights.
+Do not create result taxonomy.
+Do not write result copy.
+Do not create report copy.
+Do not approve implementation.
 Do not approve launch.
 
 ---
@@ -3075,7 +3075,7 @@ Batch scope:
 * covered dimensions: RP, BD, SO
 * covered subdimensions: RP_RECOVERY_NEED, RP_RESTORATION_TRIGGER, BD_TAKING_ON_TOO_MUCH, BD_HOLDING_RESPONSE, BD_ROLE_DISTANCE, SO_NOTICING_STATE, SO_NAMING_PATTERN, SO_FEEDBACK_OPENNESS
 * total questions generated: 40
-* architecture status: 120Q master-first draft, not implementation-approved 
+* architecture status: 120Q master-first draft, not implementation-approved
 
 Global notes:
 
