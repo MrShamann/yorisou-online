@@ -15,11 +15,15 @@ type ReportIntentContext = {
 
 export default function ReportIntentAction({
   backHref,
-  sampleHref,
+  backLabel = "結果にもどる",
+  secondaryHref,
+  secondaryLabel,
   resultContext,
 }: {
   backHref: string;
-  sampleHref?: string;
+  backLabel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
   resultContext?: ReportIntentContext;
 }) {
   const intentRecord = useSyncExternalStore(subscribeReportIntent, readReportIntent, () => null);
@@ -48,7 +52,7 @@ export default function ReportIntentAction({
 
   return (
     <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/95 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
-      <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">詳細レポートへの関心を残す</p>
+      <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">あとで詳しく読みたいとき</p>
 
       <button
         type="button"
@@ -56,39 +60,39 @@ export default function ReportIntentAction({
         data-report-intent="express-interest"
         className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 py-3 text-[15px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
       >
-        {hasIntent ? "興味を保存しました" : "詳細レポートに興味を保存する"}
+        {hasIntent ? "あとで読みたいメモを残しました" : "あとで詳しく読む"}
       </button>
 
       {hasIntent ? (
         <div className="rounded-[1rem] border border-[rgba(105,151,130,0.24)] bg-[#F4FAF7] px-4 py-3">
-          <p className="text-[14px] font-semibold leading-7 text-[#315F50]">興味を保存しました</p>
+          <p className="text-[14px] font-semibold leading-7 text-[#315F50]">あとで見返したい気持ちを残しました</p>
           <p className="mt-0.5 text-[12px] leading-6 text-[#315F50]">
-            記録はこの端末のブラウザ内だけに残ります。購入や申込みではありません。
+            記録はこの端末のブラウザ内だけに残ります。軽いメモとして使えます。
           </p>
         </div>
       ) : (
         <div className="rounded-[0.95rem] border border-[rgba(23,59,53,0.08)] bg-[#F4FAF7] px-4 py-3">
           <p className="text-[12px] leading-6 text-[#6F625C]">
-            これは購入や申込みではありません。詳細レポートへの関心だけをこの端末に残します。
+            この場で詳しい本文は開きません。あとで見返したい気持ちだけを、この端末に静かに残します。
           </p>
         </div>
       )}
 
       <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-        {sampleHref ? (
+        {secondaryHref && secondaryLabel ? (
           <Link
-            href={sampleHref}
+            href={secondaryHref}
             className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] px-5 text-[13px] font-semibold text-[#315F50] transition hover:-translate-y-0.5 hover:bg-[#ddf0e8]"
             onClick={() => {
               void trackDteEvent({
-                event: "sample_report_opened",
+                event: "report_preview_secondary_opened",
                 surface: "report_preview",
                 source: "intent_cta",
                 locale: "ja",
               });
             }}
           >
-            サンプルを読む
+            {secondaryLabel}
           </Link>
         ) : null}
         <Link
@@ -103,7 +107,7 @@ export default function ReportIntentAction({
             });
           }}
         >
-          今は無料結果だけ見る
+          {backLabel}
         </Link>
       </div>
     </div>

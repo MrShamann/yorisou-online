@@ -131,93 +131,87 @@ export default async function ResultSharePage({
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,20,19,0.98)_0%,_rgba(28,40,36,0.96)_26%,_rgba(243,246,239,1)_100%)] px-4 py-8">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[42rem] items-center">
-        <MvpCard className="w-full space-y-5 border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_56%,rgba(242,246,239,0.99)_100%)] text-white shadow-[0_24px_52px_rgba(10,16,14,0.18)]">
-          <div className="flex flex-wrap gap-2">
-            <MvpPill>{compatibility.brandedTestName}</MvpPill>
-            <MvpPill>公開結果カード</MvpPill>
-          </div>
-
-          <div className="space-y-3">
-            <p
-              className="service-kicker"
-              style={{ color: "rgba(255,255,255,0.58)" }}
-            >
-              {compatibility.currentStateNote}
-            </p>
-            <h1 className="display-serif text-[2.2rem] leading-[1.04] text-white md:text-[2.7rem]">
-              {compatibility.shareLine}
-            </h1>
-            {compatibility.codeLine ? (
-              <p
-                className="text-[15px] font-semibold leading-8"
-                style={{ color: "rgba(255,255,255,0.82)" }}
-              >
-                {compatibility.codeLine}
-              </p>
-            ) : null}
-            <p
-              className="text-[15px] leading-8"
-              style={{ color: "rgba(255,255,255,0.76)" }}
-            >
-              {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
-            </p>
-          </div>
-
-          <div
-            className="rounded-[1.2rem] p-4"
-            style={{
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            <div className="flex flex-wrap gap-2">
-              {compatibility.heroChips.map((chip) => (
-                <span
-                  key={chip}
-                  className="rounded-full px-3 py-1.5 text-[13px]"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.16)",
-                    color: "rgba(255,255,255,0.8)",
-                  }}
-                >
-                  {chip}
-                </span>
-              ))}
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,20,19,0.98)_0%,_rgba(28,40,36,0.96)_26%,_rgba(243,246,239,1)_100%)] px-4 py-6 sm:py-8">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[42rem] items-center">
+        <div className="w-full space-y-4">
+          <div className="flex justify-center">
+            <div className="flex flex-wrap justify-center gap-2">
+              <MvpPill>{compatibility.brandedTestName}</MvpPill>
+              <MvpPill>シェア用</MvpPill>
             </div>
           </div>
 
-          <div
-            className="rounded-[1.1rem] p-4"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <p
-              className="text-[13px] leading-7"
-              style={{ color: "rgba(255,255,255,0.56)" }}
-            >
-              公開カードには、内部の採点情報や感度ルーティングは含めません。
-            </p>
-          </div>
+          <MvpCard className="w-full space-y-6 border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_56%,rgba(242,246,239,0.99)_100%)] px-5 py-6 text-white shadow-[0_24px_52px_rgba(10,16,14,0.18)] sm:px-7 sm:py-7">
+            <div className="space-y-3 text-center">
+              <p
+                className="service-kicker"
+                style={{ color: "rgba(255,255,255,0.58)" }}
+              >
+                {compatibility.currentStateNote}
+              </p>
+              <h1 className="display-serif text-[2.2rem] leading-[1.04] text-white md:text-[2.7rem]">
+                {compatibility.shareLine}
+              </h1>
+              {compatibility.codeLine ? (
+                <p
+                  className="text-[15px] font-semibold leading-8"
+                  style={{ color: "rgba(255,255,255,0.82)" }}
+                >
+                  {compatibility.codeLine}
+                </p>
+              ) : null}
+              <p
+                className="mx-auto max-w-[28rem] text-[15px] leading-8"
+                style={{ color: "rgba(255,255,255,0.76)" }}
+              >
+                {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
+              </p>
+            </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <MvpActionLink
-              href={`${resultHref}${resultHref.includes("?") ? "&" : "?"}story=1`}
-              label="ストーリーズ用に開く"
-              tone="primary"
-              className="rounded-full"
-            />
-            <MvpActionLink
-              href={resultHref}
-              label="結果ページに戻る"
-              tone="ghost"
-              className="rounded-full !text-white"
-            />
+            <div
+              className="rounded-[1.2rem] p-4"
+              style={{
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.05)",
+              }}
+            >
+              <div className="flex flex-wrap justify-center gap-2">
+                {compatibility.heroChips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-full px-3 py-1.5 text-[13px]"
+                    style={{
+                      border: "1px solid rgba(255,255,255,0.16)",
+                      color: "rgba(255,255,255,0.8)",
+                    }}
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </MvpCard>
+
+          <div className="space-y-2 text-center">
+            <p className="text-[12px] leading-6 text-[rgba(255,255,255,0.64)]">
+              そのまま保存したり、スクリーンショットしてシェアしやすい形にしています。
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <MvpActionLink
+                href={`${resultHref}${resultHref.includes("?") ? "&" : "?"}story=1`}
+                label="ストーリーズ用に開く"
+                tone="primary"
+                className="rounded-full"
+              />
+              <MvpActionLink
+                href={resultHref}
+                label="結果ページに戻る"
+                tone="ghost"
+                className="rounded-full !text-white"
+              />
+            </div>
           </div>
-        </MvpCard>
+        </div>
       </div>
     </main>
   );
