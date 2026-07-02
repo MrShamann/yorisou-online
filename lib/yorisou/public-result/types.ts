@@ -25,6 +25,7 @@ export type PublicAssignmentAggregateInput = {
   groupedByPrimarySignal?: Record<string, OptionScore[]>;
   safetyRoutingSummary?: SafetyRoutingSummary;
   formulaStatus?: typeof FORMULA_DRAFT_REQUIRES_EDWARD_APPROVAL;
+  publicResultBlocked?: boolean;
 };
 
 export type PublicResultAssignmentStatus =

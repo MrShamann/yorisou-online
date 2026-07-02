@@ -21,17 +21,6 @@ function countMatches(
   }, 0);
 }
 
-function hasSensitiveRouting(input: PublicAssignmentAggregateInput) {
-  const safety = input.safetyRoutingSummary;
-  if (!safety) return false;
-
-  return (
-    safety.sensitivityCounts.private_high > 0 ||
-    safety.reviewRoutingCounts.needs_review > 0 ||
-    safety.reviewRoutingCounts.needs_human_review_sensitive > 0
-  );
-}
-
 function selectClan(input: PublicAssignmentAggregateInput): PublicClanCode | null {
   const clanCandidates = PUBLIC_CLAN_RULES.map((rule) => ({
     clanCode: rule.clanCode,
@@ -47,7 +36,7 @@ function selectClan(input: PublicAssignmentAggregateInput): PublicClanCode | nul
 
   const maxSecondary = Math.max(...primaryLeaders.map((candidate) => candidate.secondaryCount));
   const secondaryLeaders = primaryLeaders.filter((candidate) => candidate.secondaryCount === maxSecondary);
-  return secondaryLeaders.length === 1 ? secondaryLeaders[0].clanCode : null;
+  return secondaryLeaders[0]?.clanCode ?? null;
 }
 
 function selectArchetype(
@@ -69,7 +58,7 @@ function selectArchetype(
 
   const maxSecondary = Math.max(...primaryLeaders.map((candidate) => candidate.secondaryCount));
   const secondaryLeaders = primaryLeaders.filter((candidate) => candidate.secondaryCount === maxSecondary);
-  return secondaryLeaders.length === 1 ? secondaryLeaders[0].archetype : null;
+  return secondaryLeaders[0]?.archetype ?? null;
 }
 
 function toPublicAssignment(archetype: PublicArchetypeDefinition): PublicResultAssignment {
@@ -118,7 +107,7 @@ export function assignPublicArchetype(
     return { assignment: null, status: "placeholder" };
   }
 
-  if (hasSensitiveRouting(input)) {
+  if (input.publicResultBlocked) {
     return { assignment: null, status: "placeholder" };
   }
 

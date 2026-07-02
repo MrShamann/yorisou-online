@@ -83,7 +83,7 @@ export default async function ResultSharePage({
               </p>
             ) : null}
             <p style={{ margin: 0, color: "rgba(255,255,255,0.72)", fontSize: "14px", lineHeight: 1.8 }}>
-              {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
+              {compatibility.recognitionLine}
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {compatibility.heroChips.map((chip) => (
@@ -164,7 +164,7 @@ export default async function ResultSharePage({
                 className="mx-auto max-w-[28rem] text-[15px] leading-8"
                 style={{ color: "rgba(255,255,255,0.76)" }}
               >
-                {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
+                {compatibility.recognitionLine}
               </p>
             </div>
 

@@ -6,9 +6,11 @@ import {
   buildCurrentStateResultPayload,
   currentStateCheckV1,
   currentStateQuestions,
+  readCurrentStateResult,
   scoreCurrentStateCheck,
   type CurrentStateAnswerMap,
 } from "@/app/check-in/currentStateCheckV1";
+import { PUBLIC_RESULT_MAPPING_VERSION, PUBLIC_RESULT_PLACEHOLDER_CODE } from "@/lib/yorisou/public-result";
 
 export function runCheckInRuntimeValidationTest() {
   assert.equal(currentStateQuestions.length, 120);
@@ -38,9 +40,11 @@ export function runCheckInRuntimeValidationTest() {
   assert.equal(scoring.answerCount, 120);
   assert.equal(payload.answerCount, 120);
   assert.equal(payload.resultId, scoring.resultId);
-  assert.equal(payload.resultTaxonomyStatus, "RESULT_TAXONOMY_NOT_APPROVED");
+  assert.notEqual(scoring.resultId, PUBLIC_RESULT_PLACEHOLDER_CODE);
+  assert.equal(payload.resultTaxonomyStatus, PUBLIC_RESULT_MAPPING_VERSION);
   assert.equal(payload.rawScoringDataStored, false);
   assert.equal(currentStateCheckV1.testName, "いま色テスト by よりそう");
+  assert.equal(readCurrentStateResult(null), null);
 
   const checkInSource = fs.readFileSync(
     path.join(process.cwd(), "app/check-in/currentStateCheckV1.ts"),
@@ -59,5 +63,6 @@ export function runCheckInRuntimeValidationTest() {
   return {
     totalQuestions: currentStateQuestions.length,
     payloadAnswerCount: payload.answerCount,
+    sampleResultId: scoring.resultId,
   };
 }

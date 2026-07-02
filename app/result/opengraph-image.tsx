@@ -78,7 +78,7 @@ export default async function Image({
               </div>
             ) : null}
             <div style={{ fontSize: "36px", lineHeight: 1.45, color: "#31413c", maxWidth: "920px" }}>
-              {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
+              {compatibility.recognitionLine}
             </div>
           </div>
         </div>

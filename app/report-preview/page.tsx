@@ -114,7 +114,7 @@ export default async function ReportPreviewPage({
                   {compatibility.displayLine}という見え方を起点に、今の動き方をやわらかく見返すための入口を整えています。
                 </p>
                 <p className="mt-3 text-[14px] leading-7 text-[#6F625C]">
-                  {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
+                  {compatibility.recognitionLine}
                 </p>
               </div>
             </div>
