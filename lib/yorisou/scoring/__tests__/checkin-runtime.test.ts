@@ -58,6 +58,10 @@ export function runCheckInRuntimeValidationTest() {
   assert.equal(miniAppHandoffHref.includes("nav=hard"), true);
   assert.equal(miniAppHandoffHref.includes(`v=${LINE_MINI_APP_NAV_VERSION}`), true);
   assert.equal(absoluteResultUrl.startsWith("https://yorisou.online/result?"), true);
+  assert.equal(absoluteResultUrl.includes(`resultId=${scoring.resultId}`), true);
+  assert.equal(absoluteResultUrl.includes("overlayId=balancing"), true);
+  assert.equal(absoluteResultUrl.includes("confidence=low"), true);
+  assert.equal(absoluteResultUrl.includes("payloadKey="), false);
 
   const checkInSource = fs.readFileSync(
     path.join(process.cwd(), "app/check-in/currentStateCheckV1.ts"),
@@ -79,8 +83,14 @@ export function runCheckInRuntimeValidationTest() {
   assert.equal(miniFlowSource.includes('searchParams.get("entry_source") === "line-mini-app"'), true);
   assert.equal(miniFlowSource.includes("window.location.assign(target.absoluteHref)"), true);
   assert.equal(miniFlowSource.includes("absoluteHref"), true);
-  assert.equal(miniFlowSource.includes("結果を見る"), true);
+  assert.equal(miniFlowSource.includes("lineMiniAppFinalResultHref"), true);
+  assert.equal(miniFlowSource.includes("href={lineMiniAppFinalResultHref}"), true);
+  assert.equal(miniFlowSource.includes("結果を見る"), false);
+  assert.equal(miniFlowSource.includes("結果へ進む"), true);
   assert.equal(miniFlowSource.includes("結果ページを開く"), true);
+  assert.equal(miniFlowSource.includes("進まない場合は、下のリンクから結果ページを開いてください。"), true);
+  assert.equal(miniFlowSource.includes("lineMiniAppReleaseMarker"), true);
+  assert.equal(miniFlowSource.includes("LINE_MINI_APP_NAV_VERSION"), true);
   assert.equal(loadingSource.includes("window.location.replace(resultHref)"), true);
   assert.equal(loadingSource.includes("結果ページを開く"), true);
 
