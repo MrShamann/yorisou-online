@@ -45,6 +45,7 @@ export const RESULT_PENDING_PUBLIC_RESULT = "RESULT_PENDING_PUBLIC_RESULT" as co
 export const PUBLIC_RESULT_GLOBAL_NOTE = "結果は固定タイプではなく、今の動き方です。" as const;
 export const PUBLIC_RESULT_TEST_NAME = "いま色テスト" as const;
 export const PUBLIC_RESULT_BRANDED_TEST_NAME = "いま色テスト by よりそう" as const;
+export const PUBLIC_RESULT_ORIGIN = "https://yorisou.online" as const;
 export const PUBLIC_RESULT_DESCRIPTION =
   "今の動き方を、24の色と名前で見てみるテスト。120Qをもとにしています。" as const;
 export const PUBLIC_RESULT_HEADLINE = "今のあなたの“いま色”を見てみる" as const;
@@ -109,6 +110,10 @@ export function buildPublicResultSearchParams(context: PublicResultRouteContext)
 export function buildPublicResultHref(pathname: string, context: PublicResultRouteContext) {
   const query = buildPublicResultSearchParams(context);
   return query ? `${pathname}?${query}` : pathname;
+}
+
+export function buildAbsolutePublicResultUrl(pathname: string, context: PublicResultRouteContext) {
+  return new URL(buildPublicResultHref(pathname, context), PUBLIC_RESULT_ORIGIN).toString();
 }
 
 export function getTemporary120QResultCompatibility(
