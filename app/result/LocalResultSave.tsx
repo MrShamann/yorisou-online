@@ -58,25 +58,28 @@ export default function LocalResultSave({
 
   return (
     <div className={`space-y-3 ${className}`}>
+      <div className="space-y-1.5">
+        <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">あとで見返す</p>
+        <p className="text-[12px] leading-6 text-[var(--muted)]">
+          この端末のブラウザ内にだけ、簡単に残せます。LINEアカウントとの連携ではありません。
+        </p>
+      </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <button
           type="button"
           onClick={handleSave}
           data-save-action="local-browser-save"
-          className="inline-flex min-h-[48px] items-center justify-center rounded-[1.1rem] border border-[rgba(201,211,195,0.72)] bg-[rgba(252,250,245,0.9)] px-4 py-3 text-[14px] font-semibold text-[var(--text)] shadow-[0_6px_14px_rgba(47,35,33,0.03)] transition hover:-translate-y-0.5 hover:opacity-95"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-[1rem] border border-[rgba(201,211,195,0.64)] bg-[rgba(255,253,249,0.72)] px-4 py-2.5 text-[13px] font-semibold text-[var(--text)] transition hover:-translate-y-0.5 hover:opacity-95"
         >
           {hasSaved ? "この端末に残しています" : "この端末に残す"}
         </button>
         <Link
           href="/saved"
-          className="inline-flex min-h-[48px] items-center justify-center rounded-[1.1rem] border border-transparent bg-transparent px-4 py-3 text-[14px] font-semibold text-[var(--accent-sage-text)] transition hover:-translate-y-0.5 hover:opacity-95"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-[1rem] border border-transparent bg-transparent px-4 py-2.5 text-[13px] font-semibold text-[var(--accent-sage-text)] transition hover:-translate-y-0.5 hover:opacity-95"
         >
-          あとで見返す
+          保存した結果を見る
         </Link>
       </div>
-      <p className="text-[12px] leading-7 text-[var(--muted)]">
-        この保存はブラウザ内の簡易保存です。アカウント保存やLINE連携ではありません。あとで自分のリズムを見返すための小さな記録になります。
-      </p>
     </div>
   );
 }
