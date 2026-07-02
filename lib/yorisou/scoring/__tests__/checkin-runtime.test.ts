@@ -10,6 +10,8 @@ import {
   scoreCurrentStateCheck,
   type CurrentStateAnswerMap,
 } from "@/app/check-in/currentStateCheckV1";
+import { buildAbsolutePublicResultUrl } from "@/app/check-in/resultCompatibility";
+import { buildMiniAppCheckInHandoffHref, LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import { PUBLIC_RESULT_MAPPING_VERSION, PUBLIC_RESULT_PLACEHOLDER_CODE } from "@/lib/yorisou/public-result";
 
 export function runCheckInRuntimeValidationTest() {
@@ -36,6 +38,12 @@ export function runCheckInRuntimeValidationTest() {
 
   const scoring = scoreCurrentStateCheck(answers);
   const payload = buildCurrentStateResultPayload(scoring, answers);
+  const miniAppHandoffHref = buildMiniAppCheckInHandoffHref({ locale: "ja", searchParams: {} });
+  const absoluteResultUrl = buildAbsolutePublicResultUrl("/result", {
+    resultId: scoring.resultId,
+    overlayId: scoring.overlayId,
+    confidenceBand: scoring.confidenceBand,
+  });
 
   assert.equal(scoring.answerCount, 120);
   assert.equal(payload.answerCount, 120);
@@ -45,6 +53,11 @@ export function runCheckInRuntimeValidationTest() {
   assert.equal(payload.rawScoringDataStored, false);
   assert.equal(currentStateCheckV1.testName, "いま色テスト by よりそう");
   assert.equal(readCurrentStateResult(null), null);
+  assert.equal(miniAppHandoffHref.includes("entry_source=line-mini-app"), true);
+  assert.equal(miniAppHandoffHref.includes("source=line"), true);
+  assert.equal(miniAppHandoffHref.includes("nav=hard"), true);
+  assert.equal(miniAppHandoffHref.includes(`v=${LINE_MINI_APP_NAV_VERSION}`), true);
+  assert.equal(absoluteResultUrl.startsWith("https://yorisou.online/result?"), true);
 
   const checkInSource = fs.readFileSync(
     path.join(process.cwd(), "app/check-in/currentStateCheckV1.ts"),
@@ -63,8 +76,10 @@ export function runCheckInRuntimeValidationTest() {
   assert.equal(checkInSource.includes("t6Scoring"), false);
   assert.equal(miniFlowSource.includes("24問で、今の流れを少しずつ見ていきます。"), false);
   assert.equal(miniFlowSource.includes("いま色テストをはじめる"), true);
-  assert.equal(miniFlowSource.includes('searchParams.get("entry_source") === "mini_app"'), true);
-  assert.equal(miniFlowSource.includes("window.location.assign(resultHref)"), true);
+  assert.equal(miniFlowSource.includes('searchParams.get("entry_source") === "line-mini-app"'), true);
+  assert.equal(miniFlowSource.includes("window.location.assign(target.absoluteHref)"), true);
+  assert.equal(miniFlowSource.includes("absoluteHref"), true);
+  assert.equal(miniFlowSource.includes("結果を見る"), true);
   assert.equal(miniFlowSource.includes("結果ページを開く"), true);
   assert.equal(loadingSource.includes("window.location.replace(resultHref)"), true);
   assert.equal(loadingSource.includes("結果ページを開く"), true);

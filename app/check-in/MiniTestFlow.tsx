@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
-import { buildPublicResultHref } from "./resultCompatibility";
+import { buildAbsolutePublicResultUrl, buildPublicResultHref } from "./resultCompatibility";
 import {
   buildCurrentStateResultPayload,
   currentStateQuestions,
@@ -19,6 +19,12 @@ type Phase = "intro" | "quiz";
 const AUTO_ADVANCE_DELAY_MS = 320;
 const RESULT_NAVIGATION_FALLBACK_DELAY_MS = 320;
 
+type PreparedResultNavigationTarget = {
+  absoluteHref: string;
+  relativeHref: string;
+  payload: ReturnType<typeof buildCurrentStateResultPayload>;
+};
+
 function getIntroFacts(totalQuestions: number) {
   return `${totalQuestions}問 · 無料 · ログインなし`;
 }
@@ -29,6 +35,7 @@ export default function MiniTestFlow() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<CurrentStateAnswerMap>({});
+  const [lineMiniAppReadyResult, setLineMiniAppReadyResult] = useState<PreparedResultNavigationTarget | null>(null);
   const [navigationFallbackHref, setNavigationFallbackHref] = useState<string | null>(null);
   const autoAdvanceTimerRef = useRef<number | null>(null);
   const navigationFallbackTimerRef = useRef<number | null>(null);
@@ -42,8 +49,11 @@ export default function MiniTestFlow() {
   const milestone = getCurrentStateMilestone(currentIndex);
   const remainingQuestions = Math.max(totalQuestions - currentIndex - 1, 0);
   const isMiniAppEntry =
+    searchParams.get("entry_source") === "line-mini-app" ||
     searchParams.get("entry_source") === "mini_app" ||
-    searchParams.get("source") === "mini_app";
+    searchParams.get("source") === "line" ||
+    searchParams.get("source") === "mini_app" ||
+    searchParams.get("nav") === "hard";
 
   useEffect(() => {
     return () => {
@@ -67,30 +77,43 @@ export default function MiniTestFlow() {
     }
   }
 
-  function routeToResult(nextAnswers: CurrentStateAnswerMap) {
-    if (resultNavigationStartedRef.current) {
-      return;
-    }
-
-    resultNavigationStartedRef.current = true;
+  function buildPreparedResultTarget(nextAnswers: CurrentStateAnswerMap): PreparedResultNavigationTarget {
     const scoring = scoreCurrentStateCheck(nextAnswers);
     const payload = buildCurrentStateResultPayload(scoring, nextAnswers);
-    saveCurrentStateResult(payload);
-
     const routeContext = {
       resultId: scoring.resultId,
       overlayId: scoring.overlayId,
       payloadKey: scoring.payloadKey,
       confidenceBand: scoring.confidenceBand,
     } as const;
-    const resultHref = buildPublicResultHref("/result", routeContext);
-    const loadingHref = buildPublicResultHref("/report-loading", routeContext);
+
+    return {
+      absoluteHref: buildAbsolutePublicResultUrl("/result", routeContext),
+      relativeHref: buildPublicResultHref("/result", routeContext),
+      payload,
+    };
+  }
+
+  function routeToResult(nextAnswers: CurrentStateAnswerMap, preparedTarget?: PreparedResultNavigationTarget) {
+    if (resultNavigationStartedRef.current) {
+      return;
+    }
+
+    resultNavigationStartedRef.current = true;
+    const target = preparedTarget ?? buildPreparedResultTarget(nextAnswers);
+    saveCurrentStateResult(target.payload);
+    const loadingHref = buildPublicResultHref("/report-loading", {
+      resultId: target.payload.resultId,
+      overlayId: target.payload.overlayId,
+      payloadKey: target.payload.payloadKey,
+      confidenceBand: target.payload.confidenceBand,
+    });
 
     setNavigationFallbackHref(null);
     clearNavigationFallbackTimer();
 
     if (typeof window !== "undefined" && isMiniAppEntry) {
-      window.location.assign(resultHref);
+      window.location.assign(target.absoluteHref);
       return;
     }
 
@@ -101,8 +124,8 @@ export default function MiniTestFlow() {
         navigationFallbackTimerRef.current = null;
         const { pathname } = window.location;
         if (pathname !== "/report-loading" && pathname !== "/result") {
-          setNavigationFallbackHref(resultHref);
-          window.location.assign(resultHref);
+          setNavigationFallbackHref(target.absoluteHref);
+          window.location.assign(target.absoluteHref);
         }
       }, RESULT_NAVIGATION_FALLBACK_DELAY_MS);
     }
@@ -126,6 +149,7 @@ export default function MiniTestFlow() {
     clearAutoAdvanceTimer();
     clearNavigationFallbackTimer();
     resultNavigationStartedRef.current = false;
+    setLineMiniAppReadyResult(null);
     setNavigationFallbackHref(null);
     setPhase("quiz");
     setCurrentIndex(0);
@@ -143,14 +167,25 @@ export default function MiniTestFlow() {
     };
 
     setAnswers(nextAnswers);
+
+    if (isMiniAppEntry && currentIndex === totalQuestions - 1) {
+      setLineMiniAppReadyResult(buildPreparedResultTarget(nextAnswers));
+      return;
+    }
+
     advanceAfterSelection(nextAnswers);
   }
 
   function goBack() {
     clearAutoAdvanceTimer();
     if (currentIndex === 0) {
+      setLineMiniAppReadyResult(null);
       setPhase("intro");
       return;
+    }
+
+    if (currentIndex === totalQuestions - 1) {
+      setLineMiniAppReadyResult(null);
     }
 
     setCurrentIndex((value) => value - 1);
@@ -162,7 +197,7 @@ export default function MiniTestFlow() {
     }
 
     if (currentIndex === totalQuestions - 1) {
-      routeToResult(answers);
+      routeToResult(answers, lineMiniAppReadyResult ?? undefined);
       return;
     }
 
@@ -316,15 +351,40 @@ export default function MiniTestFlow() {
                     >
                       戻る
                     </button>
-                    <button
-                      type="button"
-                      onClick={goNext}
-                      disabled={!currentAnswer}
-                      className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full px-4 py-3 text-[16px] transition hover:opacity-95 disabled:cursor-not-allowed disabled:shadow-none"
-                      style={currentAnswer ? { background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 28px rgba(23,59,53,0.26)" } : { background: "rgba(34,32,29,0.18)", color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
-                    >
-                      {currentIndex === totalQuestions - 1 ? "結果へ進む" : "すぐ次へ"}
-                    </button>
+                    {isMiniAppEntry && currentIndex === totalQuestions - 1 && lineMiniAppReadyResult ? (
+                      <div className="flex-1 space-y-2">
+                        <a
+                          href={lineMiniAppReadyResult.absoluteHref}
+                          onClick={() => saveCurrentStateResult(lineMiniAppReadyResult.payload)}
+                          className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full px-4 py-3 text-[16px] font-extrabold text-white transition hover:opacity-95"
+                          style={{ background: "#173B35", boxShadow: "0 14px 28px rgba(23,59,53,0.26)" }}
+                        >
+                          結果を見る
+                        </a>
+                        <div className="rounded-[0.95rem] border border-[rgba(23,59,53,0.08)] bg-white/92 px-4 py-3">
+                          <p className="text-[12px] leading-6 text-[#6F6760]">
+                            もし画面が進まない場合は、下の「結果ページを開く」を押してください。
+                          </p>
+                          <a
+                            href={lineMiniAppReadyResult.absoluteHref}
+                            onClick={() => saveCurrentStateResult(lineMiniAppReadyResult.payload)}
+                            className="mt-2 inline-flex min-h-[44px] items-center justify-center text-[13px] font-semibold text-[#315F50] underline underline-offset-4"
+                          >
+                            結果ページを開く
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={goNext}
+                        disabled={!currentAnswer}
+                        className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full px-4 py-3 text-[16px] transition hover:opacity-95 disabled:cursor-not-allowed disabled:shadow-none"
+                        style={currentAnswer ? { background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 28px rgba(23,59,53,0.26)" } : { background: "rgba(34,32,29,0.18)", color: "rgba(255,255,255,0.5)", fontWeight: 700 }}
+                      >
+                        {currentIndex === totalQuestions - 1 ? "結果へ進む" : "すぐ次へ"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

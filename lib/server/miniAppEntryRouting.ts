@@ -1,6 +1,7 @@
 type MiniAppLocale = "ja" | "en";
 
 type MiniAppSearchParams = Record<string, string | string[] | undefined>;
+export const LINE_MINI_APP_NAV_VERSION = "20260702-pr60" as const;
 
 function safeRedirectPath(value: string | null | undefined, fallback: string) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -25,7 +26,10 @@ export function buildMiniAppResultHandoffHref(input: {
   const targetPath = locale === "en" ? "/en/result" : "/result";
   const params = new URLSearchParams();
 
-  params.set("entry_source", "mini_app");
+  params.set("source", "line");
+  params.set("entry_source", "line-mini-app");
+  params.set("nav", "hard");
+  params.set("v", LINE_MINI_APP_NAV_VERSION);
 
   const returnTo = safeRedirectPath(
     readFirstString(input.searchParams.returnTo),
@@ -65,8 +69,10 @@ export function buildMiniAppCheckInHandoffHref(input: {
   const targetPath = locale === "en" ? "/en/check-in" : "/check-in";
   const params = new URLSearchParams();
 
-  params.set("source", "mini_app");
-  params.set("entry_source", "mini_app");
+  params.set("source", "line");
+  params.set("entry_source", "line-mini-app");
+  params.set("nav", "hard");
+  params.set("v", LINE_MINI_APP_NAV_VERSION);
 
   const sessionContextFlags = readFirstString(input.searchParams.session_context_flags);
   if (sessionContextFlags) {
