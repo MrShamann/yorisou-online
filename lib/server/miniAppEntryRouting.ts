@@ -1,7 +1,7 @@
 type MiniAppLocale = "ja" | "en";
 
 type MiniAppSearchParams = Record<string, string | string[] | undefined>;
-export const LINE_MINI_APP_NAV_VERSION = "20260702-pr60" as const;
+export const LINE_MINI_APP_NAV_VERSION = "20260702-pr61" as const;
 
 function safeRedirectPath(value: string | null | undefined, fallback: string) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
