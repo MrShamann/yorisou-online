@@ -135,7 +135,7 @@ export default async function ReportPreviewPage({
           </div>
 
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">今すぐ見やすい入口</p>
+            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">このあと見られるもの</p>
             <div className="grid gap-3 sm:grid-cols-3">
               {[
                 {
