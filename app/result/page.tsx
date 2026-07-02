@@ -73,7 +73,7 @@ export default async function ResultPage({
                   </p>
                 ) : null}
                 <p className="text-[14px] leading-7 text-[#6F625C]">
-                  {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
+                  {compatibility.recognitionLine}
                 </p>
               </div>
 
@@ -99,10 +99,24 @@ export default async function ResultPage({
                   <div className="service-kicker">今の見え方</div>
                   <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{compatibility.subheadline}</p>
                   <p className="mt-2 text-[12px] font-semibold leading-6 text-[#4D7A69]">
-                    {compatibility.assignment
-                      ? compatibility.assignment.secondaryBadge
-                      : "公開できるいま色が整うまでは、プレースホルダー表示のまま保ちます。"}
+                    {compatibility.assignment ? compatibility.assignment.secondaryBadge : compatibility.placeholderText}
                   </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {compatibility.highlights.map((item) => (
+                    <div
+                      key={`${item.label}:${item.text}`}
+                      className="rounded-[1.08rem] px-4 py-3"
+                      style={{
+                        background: "rgba(255,255,255,0.82)",
+                        border: "1px solid rgba(23,59,53,0.08)",
+                      }}
+                    >
+                      <p className="text-[12px] font-semibold text-[#49615B]">{item.label}</p>
+                      <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{item.text}</p>
+                    </div>
+                  ))}
                 </div>
 
                 <div
@@ -121,6 +135,7 @@ export default async function ResultPage({
 
               <div className="space-y-3 rounded-[1.08rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(248,250,246,0.9)] p-4">
                 <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">次の一歩</p>
+                <p className="text-[14px] leading-7 text-[#6F625C]">{compatibility.gentleNextStep}</p>
                 <div className="flex flex-col gap-2.5 sm:flex-row">
                   <MvpActionLink
                     href={recommendationHref}

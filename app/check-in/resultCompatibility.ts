@@ -1,7 +1,9 @@
 import {
   PUBLIC_RESULT_CURRENT_STATE_NOTE,
   PUBLIC_RESULT_MAPPING_VERSION,
+  findPublicArchetypeContentByCode,
   findPublicArchetypeByCode,
+  type PublicResultHighlight,
   type PublicResultAssignment,
 } from "@/lib/yorisou/public-result";
 
@@ -18,7 +20,7 @@ export type Temporary120QResultCompatibility = {
   resultStatus: "assigned" | "placeholder_ready" | "placeholder_pending";
   resultVersion: "phase-4c-2";
   sourceModel: "yorisou-120q";
-  taxonomyStatus: typeof PUBLIC_RESULT_MAPPING_VERSION | "RESULT_TAXONOMY_NOT_APPROVED";
+  taxonomyStatus: typeof PUBLIC_RESULT_MAPPING_VERSION | "RESULT_PENDING_PUBLIC_RESULT";
   assignment: PublicResultAssignment | null;
   brandedTestName: "いま色テスト by よりそう";
   testName: "いま色テスト";
@@ -27,6 +29,9 @@ export type Temporary120QResultCompatibility = {
   subheadline: string;
   displayLine: string;
   codeLine: string | null;
+  recognitionLine: string;
+  highlights: PublicResultHighlight[];
+  gentleNextStep: string;
   currentStateNote: typeof PUBLIC_RESULT_CURRENT_STATE_NOTE;
   shareLine: string;
   globalNote: "結果は固定タイプではなく、今の動き方です。";
@@ -36,7 +41,7 @@ export type Temporary120QResultCompatibility = {
   placeholderText: string;
 };
 
-export const RESULT_TAXONOMY_NOT_APPROVED = "RESULT_TAXONOMY_NOT_APPROVED" as const;
+export const RESULT_PENDING_PUBLIC_RESULT = "RESULT_PENDING_PUBLIC_RESULT" as const;
 export const PUBLIC_RESULT_GLOBAL_NOTE = "結果は固定タイプではなく、今の動き方です。" as const;
 export const PUBLIC_RESULT_TEST_NAME = "いま色テスト" as const;
 export const PUBLIC_RESULT_BRANDED_TEST_NAME = "いま色テスト by よりそう" as const;
@@ -49,7 +54,21 @@ export const PUBLIC_RESULT_CTA_LABEL = "いま色テストをはじめる" as co
 export const PUBLIC_RESULT_LOADING_LINE =
   "24の色から、今の動き方を照らしています。" as const;
 export const PUBLIC_RESULT_PREPARING_NOTE =
-  "詳しい読み解きは準備中です。今は、結果の見方と次のヒントだけを先にお届けします。" as const;
+  "結果の整理に少し時間が必要です。もう一度結果ページを開くと、今の見え方を確認できます。" as const;
+
+const PLACEHOLDER_HIGHLIGHTS = [
+  {
+    label: "見え方",
+    text: "今の動き方を、公開できる範囲でやわらかく整理しています。",
+  },
+  {
+    label: "次の一歩",
+    text: "少し時間を置いてから、結果のページをもう一度開いてみてください。",
+  },
+] as const;
+
+const PLACEHOLDER_NEXT_STEP =
+  "今日は、気になった感触をひとつだけメモしてから戻ってきてください。" as const;
 
 function buildBaseCompatibility() {
   return {
@@ -97,6 +116,7 @@ export function getTemporary120QResultCompatibility(
 ): Temporary120QResultCompatibility {
   const hasResultContext = Boolean(context.resultId || context.overlayId || context.payloadKey);
   const assignment = findPublicArchetypeByCode(context.resultId);
+  const content = findPublicArchetypeContentByCode(context.resultId);
 
   if (assignment) {
     return {
@@ -108,7 +128,12 @@ export function getTemporary120QResultCompatibility(
       subheadline: PUBLIC_RESULT_SUBHEADLINE,
       displayLine: `あなたのいま色は、${assignment.nickname}。`,
       codeLine: `${assignment.clanEnglish} / ${assignment.publicCode}`,
-      shareLine: `私は${assignment.nickname}。あなたは？`,
+      recognitionLine:
+        content?.recognitionLine ||
+        `${assignment.nickname}らしい今の動き方が、やわらかく表れています。`,
+      highlights: content?.highlights ? [...content.highlights] : [],
+      gentleNextStep: content?.gentleNextStep || PLACEHOLDER_NEXT_STEP,
+      shareLine: content?.shareLine || `私は${assignment.nickname}。あなたは？`,
       heroChips: [assignment.clanJapanese, assignment.secondaryBadge, assignment.publicCode],
       placeholderText: PUBLIC_RESULT_GLOBAL_NOTE,
     };
@@ -117,12 +142,15 @@ export function getTemporary120QResultCompatibility(
   return {
     ...buildBaseCompatibility(),
     resultStatus: hasResultContext ? "placeholder_ready" : "placeholder_pending",
-    taxonomyStatus: RESULT_TAXONOMY_NOT_APPROVED,
+    taxonomyStatus: RESULT_PENDING_PUBLIC_RESULT,
     assignment: null,
     headline: PUBLIC_RESULT_HEADLINE,
     subheadline: PUBLIC_RESULT_SUBHEADLINE,
     displayLine: PUBLIC_RESULT_HEADLINE,
     codeLine: null,
+    recognitionLine: PUBLIC_RESULT_PREPARING_NOTE,
+    highlights: [...PLACEHOLDER_HIGHLIGHTS],
+    gentleNextStep: PLACEHOLDER_NEXT_STEP,
     shareLine: "私はどんな“いま色”になる？",
     heroChips: ["120問ベース", "今の動き方", "準備中"],
     placeholderText: PUBLIC_RESULT_PREPARING_NOTE,

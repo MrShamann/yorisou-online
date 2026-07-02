@@ -1,6 +1,10 @@
 import questionBankJson from "@/data/yorisou/120q-question-bank.generated.json";
 import scoringMasterJson from "@/data/yorisou/120q-scoring-master.generated.json";
-import { assignPublicArchetype, PUBLIC_RESULT_PLACEHOLDER_CODE } from "@/lib/yorisou/public-result";
+import {
+  assignPublicArchetype,
+  PUBLIC_RESULT_MAPPING_VERSION,
+  PUBLIC_RESULT_PLACEHOLDER_CODE,
+} from "@/lib/yorisou/public-result";
 import { aggregateInternal120QSelections } from "@/lib/yorisou/scoring/aggregator";
 import { mapUserAnswersToOptionScores } from "@/lib/yorisou/scoring/mapper";
 import type {
@@ -96,7 +100,7 @@ export type CurrentStateStoredResultPayload = {
   safetyRoutingSummary: SafetyRoutingSummary;
   containmentWarnings: string[];
   rawScoringDataStored: false;
-  resultTaxonomyStatus: "RESULT_TAXONOMY_NOT_APPROVED";
+  resultTaxonomyStatus: typeof PUBLIC_RESULT_MAPPING_VERSION;
 };
 
 type CurrentStateScoredResult = {
@@ -111,6 +115,7 @@ type CurrentStateScoredResult = {
 
 const RESULT_STORAGE_PREFIX = "yorisou.120q.result.v1:";
 const LAST_RESULT_STORAGE_KEY = "yorisou.120q.lastResult.v1";
+const PUBLIC_RESULT_DEFAULT_OVERLAY_ID = "balancing" as const;
 
 const PLACEHOLDER_RESULT: CurrentStateResult = {
   id: "RESULT_TAXONOMY_NOT_APPROVED",
@@ -315,7 +320,7 @@ export function scoreCurrentStateCheck(
         safetyRoutingSummary: scoringOutput.safetyRoutingSummary,
         formulaStatus: scoringOutput.formulaStatus,
       }).assignment?.publicCode ?? PUBLIC_RESULT_PLACEHOLDER_CODE,
-    overlayId: PLACEHOLDER_OVERLAY.id,
+    overlayId: PUBLIC_RESULT_DEFAULT_OVERLAY_ID,
     confidenceBand: "low",
     confidenceCue: "RESULT_TAXONOMY_NOT_APPROVED",
     answerCount: input.answers.length,
@@ -357,7 +362,7 @@ export function buildCurrentStateResultPayload(
     safetyRoutingSummary: scoredResult.scoringOutput.safetyRoutingSummary,
     containmentWarnings: scoredResult.scoringOutput.internalWarnings,
     rawScoringDataStored: false,
-    resultTaxonomyStatus: "RESULT_TAXONOMY_NOT_APPROVED",
+    resultTaxonomyStatus: PUBLIC_RESULT_MAPPING_VERSION,
   };
 }
 

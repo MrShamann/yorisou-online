@@ -5,6 +5,7 @@ import path from "node:path";
 import { getTemporary120QResultCompatibility } from "@/app/check-in/resultCompatibility";
 import {
   assignPublicArchetype,
+  findPublicArchetypeContentByCode,
   PUBLIC_ARCHETYPE_RULES,
   PUBLIC_ARCHETYPE_TAXONOMY,
   PUBLIC_RESULT_CURRENT_STATE_NOTE,
@@ -121,7 +122,8 @@ export function runPublicAssignmentValidationTest() {
     }),
     formulaStatus: FORMULA_DRAFT_REQUIRES_EDWARD_APPROVAL,
   });
-  assert.equal(clanTieResolution.status, "placeholder");
+  assert.equal(clanTieResolution.status, "assigned");
+  assert.equal(clanTieResolution.assignment?.publicCode, "MS-KI");
 
   const archetypeTieResolution = assignPublicArchetype({
     answerCount: 120,
@@ -132,7 +134,8 @@ export function runPublicAssignmentValidationTest() {
     }),
     formulaStatus: FORMULA_DRAFT_REQUIRES_EDWARD_APPROVAL,
   });
-  assert.equal(archetypeTieResolution.status, "placeholder");
+  assert.equal(archetypeTieResolution.status, "assigned");
+  assert.equal(archetypeTieResolution.assignment?.publicCode, "MS-KI");
 
   const blockedResolution = assignPublicArchetype({
     answerCount: 120,
@@ -148,6 +151,7 @@ export function runPublicAssignmentValidationTest() {
         private_high: 1,
       },
     }),
+    publicResultBlocked: true,
     formulaStatus: FORMULA_DRAFT_REQUIRES_EDWARD_APPROVAL,
   });
   assert.equal(blockedResolution.status, "placeholder");
@@ -168,6 +172,7 @@ export function runPublicAssignmentValidationTest() {
   assert.equal(assignedResolution.assignment?.nickname, "気配読み");
   assert.equal(assignedResolution.assignment?.mappingVersion, PUBLIC_RESULT_MAPPING_VERSION);
   assert.equal(assignedResolution.assignment?.currentStateNote, PUBLIC_RESULT_CURRENT_STATE_NOTE);
+  assert.equal(findPublicArchetypeContentByCode("MS-KI")?.shareLine, "私は気配読み。あなたは？");
   assert.deepEqual(
     Object.keys(assignedResolution.assignment ?? {}).sort(),
     [
@@ -183,7 +188,7 @@ export function runPublicAssignmentValidationTest() {
 
   const compatibility = getTemporary120QResultCompatibility({
     resultId: assignedResolution.assignment?.publicCode,
-    overlayId: "RESULT_TAXONOMY_NOT_APPROVED",
+    overlayId: "balancing",
     confidenceBand: "low",
   });
   assert.equal(compatibility.resultStatus, "assigned");
@@ -192,6 +197,8 @@ export function runPublicAssignmentValidationTest() {
   assert.equal(compatibility.codeLine, "Mist / MS-KI");
   assert.equal(compatibility.shareLine, "私は気配読み。あなたは？");
   assert.equal(compatibility.currentStateNote, "120Qから見た、今の動き方");
+  assert.equal(compatibility.recognitionLine.includes("場の空気"), true);
+  assert.equal(compatibility.highlights.length >= 2, true);
 
   const resultPageSource = fs.readFileSync(
     path.join(process.cwd(), "app/result/page.tsx"),
