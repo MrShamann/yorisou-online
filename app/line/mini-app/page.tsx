@@ -95,16 +95,16 @@ export default async function MiniAppEntryPage({
             className="display-serif mt-3 leading-[1.22] text-[#22201D]"
             style={{ fontSize: "1.55rem" }}
           >
-            まずは24問で、<br />
-            今の自分を整理する。
+            まずは120問から、<br />
+            今の動き方を見ていく。
           </h1>
 
           <p className="mt-2 text-[13px] leading-[1.85] text-[#6F6760]">
-            今の感覚に近いものをひとつずつ選ぶだけ。答えると今のあなたに近い無料の結果が届きます。
+            今の感覚に近いものをひとつずつ選ぶだけ。答えると、今のあなたに近い無料の結果が届きます。
           </p>
 
           <p className="mt-2 text-[11px] tracking-[0.06em] text-[#9A9088]">
-            24問 · 3分ほど · 無料 · ログインなし
+            120問 · 無料 · ログインなし
           </p>
 
           <Link
