@@ -54,11 +54,20 @@ export function runCheckInRuntimeValidationTest() {
     path.join(process.cwd(), "app/check-in/MiniTestFlow.tsx"),
     "utf8",
   );
+  const loadingSource = fs.readFileSync(
+    path.join(process.cwd(), "app/report-loading/page.tsx"),
+    "utf8",
+  );
 
   assert.equal(checkInSource.includes("t6QuestionBank"), false);
   assert.equal(checkInSource.includes("t6Scoring"), false);
   assert.equal(miniFlowSource.includes("24問で、今の流れを少しずつ見ていきます。"), false);
   assert.equal(miniFlowSource.includes("いま色テストをはじめる"), true);
+  assert.equal(miniFlowSource.includes('searchParams.get("entry_source") === "mini_app"'), true);
+  assert.equal(miniFlowSource.includes("window.location.assign(resultHref)"), true);
+  assert.equal(miniFlowSource.includes("結果ページを開く"), true);
+  assert.equal(loadingSource.includes("window.location.replace(resultHref)"), true);
+  assert.equal(loadingSource.includes("結果ページを開く"), true);
 
   return {
     totalQuestions: currentStateQuestions.length,
