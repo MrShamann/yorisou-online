@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { buildPublicResultHref } from "../check-in/resultCompatibility";
 import { PUBLIC_RESULT_LOADING_LINE } from "../check-in/resultCompatibility";
 import { MvpCard, MvpPill } from "../components/MvpSurface";
 import { currentStateCheckV1 } from "../check-in/currentStateCheckV1";
@@ -16,6 +17,7 @@ const LOADING_STEPS = [
 
 const STEP_DURATION_MS = 900;
 const REDIRECT_DELAY_MS = 3900;
+const HARD_REDIRECT_DELAY_MS = 4400;
 
 export default function ReportLoadingPage() {
   const router = useRouter();
@@ -25,6 +27,16 @@ export default function ReportLoadingPage() {
   const confidence = searchParams.get("confidence") === "medium" ? "medium" : "low";
   const payloadKey = searchParams.get("payloadKey") || "";
   const [activeStep, setActiveStep] = useState(0);
+  const resultHref = useMemo(
+    () =>
+      buildPublicResultHref("/result", {
+        resultId,
+        overlayId,
+        confidenceBand: confidence,
+        payloadKey,
+      }),
+    [confidence, overlayId, payloadKey, resultId],
+  );
 
   const progress = useMemo(() => ((activeStep + 1) / LOADING_STEPS.length) * 100, [activeStep]);
 
@@ -34,24 +46,20 @@ export default function ReportLoadingPage() {
     }, STEP_DURATION_MS);
 
     const redirectTimer = window.setTimeout(() => {
-      const query = new URLSearchParams({
-        resultId,
-        overlayId,
-        confidence,
-      });
-
-      if (payloadKey) {
-        query.set("payloadKey", payloadKey);
-      }
-
-      router.replace(`/result?${query.toString()}`);
+      router.replace(resultHref);
     }, REDIRECT_DELAY_MS);
+
+    window.setTimeout(() => {
+      if (window.location.pathname !== "/result") {
+        window.location.replace(resultHref);
+      }
+    }, HARD_REDIRECT_DELAY_MS);
 
     return () => {
       window.clearInterval(stepTimer);
       window.clearTimeout(redirectTimer);
     };
-  }, [confidence, overlayId, payloadKey, resultId, router]);
+  }, [resultHref, router]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.99),_rgba(247,244,238,0.98)_42%,_rgba(240,244,236,0.98)_100%)] text-[var(--text)]">
@@ -112,6 +120,18 @@ export default function ReportLoadingPage() {
               <p className="text-[12px] leading-6 text-[var(--muted)]">
                 まもなく結果が表示されます。
               </p>
+            </div>
+
+            <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/84 px-4 py-3">
+              <p className="text-[13px] leading-6 text-[var(--muted)]">
+                結果の表示に少し時間がかかっています。進まない場合は、下のボタンから結果を開いてください。
+              </p>
+              <a
+                href={resultHref}
+                className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-[#173B35] px-4 py-3 text-[15px] font-extrabold text-white"
+              >
+                結果ページを開く
+              </a>
             </div>
           </MvpCard>
         </div>

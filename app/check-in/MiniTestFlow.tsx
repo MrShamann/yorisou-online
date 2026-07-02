@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
+import { buildPublicResultHref } from "./resultCompatibility";
 import {
   buildCurrentStateResultPayload,
   currentStateQuestions,
@@ -16,6 +17,7 @@ import {
 
 type Phase = "intro" | "quiz";
 const AUTO_ADVANCE_DELAY_MS = 320;
+const RESULT_NAVIGATION_FALLBACK_DELAY_MS = 320;
 
 function getIntroFacts(totalQuestions: number) {
   return `${totalQuestions}問 · 無料 · ログインなし`;
@@ -23,10 +25,13 @@ function getIntroFacts(totalQuestions: number) {
 
 export default function MiniTestFlow() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<CurrentStateAnswerMap>({});
+  const [navigationFallbackHref, setNavigationFallbackHref] = useState<string | null>(null);
   const autoAdvanceTimerRef = useRef<number | null>(null);
+  const navigationFallbackTimerRef = useRef<number | null>(null);
   const resultNavigationStartedRef = useRef(false);
 
   const totalQuestions = currentStateQuestions.length;
@@ -36,6 +41,9 @@ export default function MiniTestFlow() {
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
   const milestone = getCurrentStateMilestone(currentIndex);
   const remainingQuestions = Math.max(totalQuestions - currentIndex - 1, 0);
+  const isMiniAppEntry =
+    searchParams.get("entry_source") === "mini_app" ||
+    searchParams.get("source") === "mini_app";
 
   useEffect(() => {
     return () => {
@@ -52,6 +60,13 @@ export default function MiniTestFlow() {
     }
   }
 
+  function clearNavigationFallbackTimer() {
+    if (navigationFallbackTimerRef.current) {
+      window.clearTimeout(navigationFallbackTimerRef.current);
+      navigationFallbackTimerRef.current = null;
+    }
+  }
+
   function routeToResult(nextAnswers: CurrentStateAnswerMap) {
     if (resultNavigationStartedRef.current) {
       return;
@@ -62,14 +77,35 @@ export default function MiniTestFlow() {
     const payload = buildCurrentStateResultPayload(scoring, nextAnswers);
     saveCurrentStateResult(payload);
 
-    const query = new URLSearchParams({
+    const routeContext = {
       resultId: scoring.resultId,
       overlayId: scoring.overlayId,
-      confidence: scoring.confidenceBand,
       payloadKey: scoring.payloadKey,
-    });
+      confidenceBand: scoring.confidenceBand,
+    } as const;
+    const resultHref = buildPublicResultHref("/result", routeContext);
+    const loadingHref = buildPublicResultHref("/report-loading", routeContext);
 
-    router.push(`/report-loading?${query.toString()}`);
+    setNavigationFallbackHref(null);
+    clearNavigationFallbackTimer();
+
+    if (typeof window !== "undefined" && isMiniAppEntry) {
+      window.location.assign(resultHref);
+      return;
+    }
+
+    router.push(loadingHref);
+
+    if (typeof window !== "undefined") {
+      navigationFallbackTimerRef.current = window.setTimeout(() => {
+        navigationFallbackTimerRef.current = null;
+        const { pathname } = window.location;
+        if (pathname !== "/report-loading" && pathname !== "/result") {
+          setNavigationFallbackHref(resultHref);
+          window.location.assign(resultHref);
+        }
+      }, RESULT_NAVIGATION_FALLBACK_DELAY_MS);
+    }
   }
 
   function advanceAfterSelection(nextAnswers: CurrentStateAnswerMap) {
@@ -88,7 +124,9 @@ export default function MiniTestFlow() {
 
   function begin() {
     clearAutoAdvanceTimer();
+    clearNavigationFallbackTimer();
     resultNavigationStartedRef.current = false;
+    setNavigationFallbackHref(null);
     setPhase("quiz");
     setCurrentIndex(0);
     setAnswers({});
@@ -256,6 +294,19 @@ export default function MiniTestFlow() {
                 </MvpCard>
 
                 <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.07)] bg-[rgba(251,250,246,0.97)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
+                  {navigationFallbackHref ? (
+                    <div className="mb-3 rounded-[1rem] border border-[rgba(23,59,53,0.12)] bg-white px-4 py-3 shadow-[0_14px_28px_rgba(23,59,53,0.08)]">
+                      <p className="text-[13px] leading-6 text-[#6F6760]">
+                        結果の表示に少し時間がかかっています。進まない場合は、下のボタンから結果を開いてください。
+                      </p>
+                      <a
+                        href={navigationFallbackHref}
+                        className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-[#173B35] px-4 py-3 text-[15px] font-extrabold text-white"
+                      >
+                        結果ページを開く
+                      </a>
+                    </div>
+                  ) : null}
                   <div className="flex gap-2.5 sm:justify-between">
                     <button
                       type="button"
