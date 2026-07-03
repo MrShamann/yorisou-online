@@ -222,32 +222,29 @@ export default async function ReportPreviewPage({
             }}
           />
 
-          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[12px] text-[#8A7764]">
-            <Link href={resultHref} className="hover:underline" data-report-preview="not-now-free-result">
-              結果にもどる
-            </Link>
-            <span className="text-[#D4CCC6]">·</span>
-            <Link href={recommendationsHref} className="hover:underline">
-              今のヒントを見る
-            </Link>
-            <span className="text-[#D4CCC6]">·</span>
-            <Link href="/check-in" className="hover:underline">
-              もう一度チェックする
-            </Link>
-          </div>
-
           <div className="rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">
             <p className="text-[11px] leading-7 text-[#8A8078]">
               このページでは、詳しい本文そのものではなく、公開プレビューと次のヒントだけを先に整えています。
             </p>
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-[#8A7764]">
+              <Link href={resultHref} className="hover:underline" data-report-preview="not-now-free-result">
+                結果にもどる
+              </Link>
+              <span className="text-[#D4CCC6]">·</span>
+              <Link href={recommendationsHref} className="hover:underline">
+                今のヒントを見る
+              </Link>
+              <span className="text-[#D4CCC6]">·</span>
+              <Link href="/check-in" className="hover:underline">
+                もう一度チェックする
+              </Link>
+            </div>
           </div>
 
           <OpenTestingNotice
             body="公開テスト中のため、プレビュー体験そのもののわかりやすさも確認しています。ここで伝わりにくかった点や、本文へ進む導線で迷った点があればそのまま送ってください。"
             primaryHref="/contact?topic=open-testing"
             primaryLabel="プレビューの感想を送る"
-            secondaryHref={fullReportHref ?? resultHref}
-            secondaryLabel={fullReportHref ? "詳しいレポートを読む" : "結果にもどる"}
           />
         </div>
       </div>
