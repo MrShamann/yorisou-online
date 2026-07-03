@@ -13,6 +13,7 @@ type Props = {
   completionId?: string | null;
   personaId?: string | null;
   shareSurface?: string | null;
+  showCopyLink?: boolean;
 };
 
 function resolvePublicUrl(value: string) {
@@ -62,6 +63,7 @@ export default function ResultShareActions({
   completionId = null,
   personaId = null,
   shareSurface = null,
+  showCopyLink = true,
 }: Props) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
   const [copyNote, setCopyNote] = useState<string | null>(null);
@@ -128,7 +130,6 @@ export default function ResultShareActions({
 
   return (
     <div className="space-y-2">
-      {/* Primary: Web Share API */}
       <button
         type="button"
         onClick={handleShare}
@@ -138,19 +139,20 @@ export default function ResultShareActions({
         {shareSheetLabel}
       </button>
 
-      {/* Secondary: copy link fallback */}
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[1rem] border px-4 py-2.5 text-[13px] font-semibold transition active:scale-[0.975]"
-        style={{
-          borderColor: "rgba(23,59,53,0.14)",
-          background: "rgba(23,59,53,0.04)",
-          color: "#315F50",
-        }}
-      >
-        {copyLinkLabel}
-      </button>
+      {showCopyLink ? (
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="inline-flex min-h-[44px] w-full items-center justify-center rounded-[1rem] border px-4 py-2.5 text-[13px] font-semibold transition active:scale-[0.975]"
+          style={{
+            borderColor: "rgba(23,59,53,0.14)",
+            background: "rgba(23,59,53,0.04)",
+            color: "#315F50",
+          }}
+        >
+          {copyLinkLabel}
+        </button>
+      ) : null}
 
       {copyState !== "idle" ? (
         <p className="text-center text-[11px] leading-6 text-[#9A9088]">

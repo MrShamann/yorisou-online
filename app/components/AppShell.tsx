@@ -10,17 +10,16 @@ type Props = {
   children: ReactNode;
 };
 
-// Routes where the site shell (header + footer) should be suppressed.
-// Exact paths are matched directly; prefix entries match the path and all sub-paths.
 const SHELL_SUPPRESSED_EXACT = new Set([
   "/support",
   "/en/support",
   "/check-in",
   "/report-loading",
+  "/report-preview",
   "/result",
 ]);
 
-const SHELL_SUPPRESSED_PREFIXES = ["/line"];
+const SHELL_SUPPRESSED_PREFIXES = ["/line", "/reports/self-understanding"];
 
 function isSuppressedRoute(pathname: string | null): boolean {
   if (!pathname) return false;
