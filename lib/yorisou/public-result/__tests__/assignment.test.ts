@@ -194,7 +194,7 @@ export function runPublicAssignmentValidationTest() {
   assert.equal(compatibility.resultStatus, "assigned");
   assert.equal(compatibility.displayLine.includes("気配読み"), true);
   assert.equal(compatibility.displayLine.includes("MS-KI"), false);
-  assert.equal(compatibility.codeLine, "Mist / MS-KI");
+  assert.equal(compatibility.codeLine, `${assignedResolution.assignment?.clanJapanese}のタイプ`);
   assert.equal(compatibility.shareLine, "私は気配読み。あなたは？");
   assert.equal(compatibility.currentStateNote, "120Qから見た、今の動き方");
   assert.equal(compatibility.recognitionLine.includes("場の空気"), true);

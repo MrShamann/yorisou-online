@@ -231,7 +231,6 @@ Paid core候補: 5〜14章。ただしpaid final copyは未承認です。
 
 Advanced extension候補: 15〜18章。近いタイプ比較、7日間利用、公開安全抽出を含められます。
 
-Internal only: 19〜20章。レビュー観点と実装連携メモであり、ユーザー表示しません。
 
 
 

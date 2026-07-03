@@ -61,10 +61,20 @@ export function loadParsedSelfUnderstandingReportByCode(
   return parsed;
 }
 
+const INTERNAL_ONLY_PUBLIC_LINE_PATTERNS = [
+  /internal only/i,
+  /ユーザー表示しません/,
+  /実装連携メモ/,
+  /統合メモ/,
+  /review note/i,
+  /implementation memo/i,
+] as const;
+
 function sanitizePublicMarkdown(value: string) {
   return value
     .split(/\n/)
     .filter((line) => !/(purchaseStatus|contentStatus|codexExecutableNow|createdFor|visibility:)/i.test(line))
+    .filter((line) => !INTERNAL_ONLY_PUBLIC_LINE_PATTERNS.some((pattern) => pattern.test(line)))
     .join("\n")
     .trim();
 }
