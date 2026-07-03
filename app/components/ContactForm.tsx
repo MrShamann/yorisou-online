@@ -41,8 +41,8 @@ const labels = {
     success: "お問い合わせを受け付けました。内容を確認のうえ、順次ご連絡いたします。",
     error: "送信に失敗しました。恐れ入りますが、時間をおいて再度お試しください。",
     unavailable: "現在、お問い合わせ受付の設定を確認中です。しばらくしてから再度お試しください。",
-    orgOptions: ["自治体", "介護施設", "医療機関", "地域企業", "その他"],
-    inquiryOptions: ["実証実験のご相談", "連携のご相談", "資料請求", "その他"],
+    orgOptions: ["個人ユーザー", "自治体", "介護施設", "医療機関", "地域企業", "その他"],
+    inquiryOptions: ["公開テストの感想・不具合報告", "実証実験のご相談", "連携のご相談", "資料請求", "その他"],
     choose: "選択してください",
   },
   en: {
@@ -57,14 +57,26 @@ const labels = {
     success: "Your inquiry has been sent. We will get back to you as soon as possible.",
     error: "Submission failed. Please try again in a few moments.",
     unavailable: "The contact service is currently being configured. Please try again shortly.",
-    orgOptions: ["Municipality", "Care Facility", "Medical Institution", "Regional Company", "Other"],
-    inquiryOptions: ["Pilot Program", "Partnership", "Document Request", "Other"],
+    orgOptions: ["Individual User", "Municipality", "Care Facility", "Medical Institution", "Regional Company", "Other"],
+    inquiryOptions: ["Open Testing Feedback / Bug Report", "Pilot Program", "Partnership", "Document Request", "Other"],
     choose: "Please select",
   },
 };
 
-export default function ContactForm({ locale = "ja" }: { locale?: Locale }) {
-  const [form, setForm] = useState<FormState>(initialState);
+export default function ContactForm({
+  locale = "ja",
+  initialInquiryType,
+  initialMessage,
+}: {
+  locale?: Locale;
+  initialInquiryType?: string;
+  initialMessage?: string;
+}) {
+  const [form, setForm] = useState<FormState>({
+    ...initialState,
+    inquiryType: initialInquiryType ?? "",
+    message: initialMessage ?? "",
+  });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import MotionReveal from "./components/MotionReveal";
+import OpenTestingNotice from "./components/OpenTestingNotice";
 import { MvpCard, MvpSection } from "./components/MvpSurface";
 import { PRODUCT_CARDS, type ProductCard } from "./data/productCards";
 
@@ -16,6 +17,13 @@ const RESULT_PREVIEWS = [
   { label: "今の状態に近いタイプ", note: "公開しても安心な言葉で表示" },
   { label: "整えやすい方向のヒント", note: "小さな次の一歩を提案" },
   { label: "必要なら深く読むレポート", note: "無料結果のあとに選べます" },
+] as const;
+
+const OPEN_TESTING_STEPS = [
+  "120問に答える",
+  "今の結果を受け取る",
+  "詳しいレポートを読む",
+  "必要なら保存して見返す",
 ] as const;
 
 export default function HomePage() {
@@ -33,14 +41,27 @@ export default function HomePage() {
             distance={18}
           >
             <p className="service-kicker">Yorisou</p>
+            <div className="inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/84 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">
+              公開テスト中
+            </div>
             <h1 className="display-serif text-[1.9rem] leading-[1.18] text-[#2F2A28] md:text-[3.1rem]">
               今、気になっていることを<br className="hidden md:block" />
               <span className="text-[#173B35]">ひとつだけ選んで整理する。</span>
             </h1>
             <p className="max-w-[34rem] text-[15px] leading-7 text-[#5F5750] md:mx-auto">
-              ログインなし。答えたあとに無料結果だけ確認できます。医療・心理的な判定ではありません。
+              ログインなし。120問に答えると、今の動き方の結果とフルレポートまで続けて確認できます。医療・心理的な判定ではありません。
             </p>
           </MotionReveal>
+        </div>
+      </section>
+
+      <section className="container py-6 md:py-8">
+        <div className="mx-auto max-w-[52rem]">
+          <OpenTestingNotice
+            body="Yorisouは現在、最初の外部公開テスト中です。いま色テストを受けて、結果、詳しいレポート、保存導線まで一通り試せます。使いにくかった点や不具合は、そのまま感想として送っていただけます。"
+            secondaryHref="/contact?topic=open-testing"
+            secondaryLabel="感想や不具合を送る"
+          />
         </div>
       </section>
 
@@ -123,6 +144,30 @@ export default function HomePage() {
             </MvpCard>
           ))}
         </div>
+      </MvpSection>
+
+      <MvpSection
+        eyebrow="公開テストの流れ"
+        title="最初の体験として、ここまで進められます。"
+        lead="はじめてでも迷いにくいように、今の公開テストで受け取れる流れを先に並べています。"
+        className="!py-8"
+      >
+        <div className="grid gap-3 md:grid-cols-4">
+          {OPEN_TESTING_STEPS.map((step, index) => (
+            <MvpCard
+              key={step}
+              className="space-y-2 rounded-[1.15rem] border-[rgba(23,59,53,0.1)] bg-white/94 p-4 shadow-[0_12px_26px_rgba(23,59,53,0.06)]"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F3FAF6] text-[13px] font-semibold text-[#49615B]">
+                {index + 1}
+              </div>
+              <p className="text-[14px] font-semibold leading-6 text-[#173B35]">{step}</p>
+            </MvpCard>
+          ))}
+        </div>
+        <p className="text-[12px] leading-6 text-[#8A7E78]">
+          公開テスト中のため、詳しいレポート本文も現在は続けて読めます。使い心地の感想や不具合はお問い合わせから送れます。
+        </p>
       </MvpSection>
 
       {/* ── Continuation ── */}

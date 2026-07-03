@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
+import OpenTestingNotice from "../components/OpenTestingNotice";
 import { buildAbsolutePublicResultUrl, buildPublicResultHref } from "./resultCompatibility";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import {
@@ -259,6 +260,16 @@ export default function MiniTestFlow() {
                   </p>
                 </div>
 
+                <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.08)] bg-white/92 p-4 shadow-[0_12px_26px_rgba(23,59,53,0.06)]">
+                  <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">このあと受け取れるもの</p>
+                  <div className="grid gap-2 text-[13px] leading-6 text-[#6F6760] sm:grid-cols-2">
+                    <p>・24の結果から今の動き方を表示します。</p>
+                    <p>・公開テスト中の詳しいレポートまで続けて読めます。</p>
+                    <p>・レポートはこの端末に保存できます。</p>
+                    <p>・感想や不具合はあとで送れます。</p>
+                  </div>
+                </MvpCard>
+
                 {/* Transition cue — lightweight signal strip */}
                 <div
                   className="rounded-[1rem] px-4 py-3"
@@ -271,6 +282,12 @@ export default function MiniTestFlow() {
                     </p>
                   </div>
                 </div>
+
+                <OpenTestingNotice
+                  body="現在は最初の公開テスト中です。結果やレポートの見え方、わかりにくかった点、不具合があれば、あとでそのまま感想として送っていただけます。"
+                  primaryHref="/contact?topic=open-testing"
+                  primaryLabel="先に公開テストの連絡先を見る"
+                />
               </div>
             ) : null}
 

@@ -15,7 +15,30 @@ export const metadata: Metadata = {
   description: "Yorisouのチェック体験、サポート機能、デジタルレポート、推薦・マッチング支援に関するお問い合わせを受け付けています。",
 };
 
-export default function ContactPage() {
+function getInitialContactContext(topic: string | null) {
+  if (topic === "open-testing") {
+    return {
+      inquiryType: "公開テストの感想・不具合報告",
+      message:
+        "公開テストの感想や不具合報告を送ります。\n\n・どのページで気づいたか\n・よかった点 / わかりにくかった点\n・不具合があれば再現手順\n\n",
+    };
+  }
+
+  return {
+    inquiryType: undefined,
+    message: undefined,
+  };
+}
+
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = (await searchParams) || {};
+  const topicValue = typeof params.topic === "string" ? params.topic : null;
+  const initialContext = getInitialContactContext(topicValue);
+
   return (
     <main className="bg-[var(--bg)] text-[var(--text)]">
       <Hero
@@ -42,10 +65,14 @@ export default function ContactPage() {
                 チェック結果の使い方からYorisouについての質問まで、このままお送りいただけます。
               </h2>
               <p className="page-copy" style={{ marginTop: 12 }}>
-                内容に応じて順次ご連絡します。チェック結果や今後の使い方について共有したい場合も、そのままお送りください。
+                内容に応じて順次ご連絡します。公開テストの感想、わかりにくかった点、不具合報告もこのままお送りください。
               </p>
               <div style={{ marginTop: 20 }}>
-                <ContactForm locale="ja" />
+                <ContactForm
+                  locale="ja"
+                  initialInquiryType={initialContext.inquiryType}
+                  initialMessage={initialContext.message}
+                />
               </div>
             </div>
 
@@ -60,6 +87,9 @@ export default function ContactPage() {
                     {item}
                   </div>
                 ))}
+              </div>
+              <div className="mt-5 rounded-[1.2rem] bg-[rgba(252,250,245,0.82)] px-5 py-4 text-sm leading-8 text-[var(--accent-sage-text)]">
+                公開テスト中の感想や不具合報告は、組織ではなく個人ユーザーとしてそのまま送っていただけます。
               </div>
               <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
                 <Link href="/check-in" className="soft-link">

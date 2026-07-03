@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
+import OpenTestingNotice from "../components/OpenTestingNotice";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ResultShareActions from "../components/ResultShareActions";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
@@ -173,6 +174,14 @@ export default async function ResultPage({
                   showCopyLink={false}
                 />
               </div>
+
+              <OpenTestingNotice
+                body="現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。"
+                primaryHref="/contact?topic=open-testing"
+                primaryLabel="感想や不具合を送る"
+                secondaryHref={fullReportHref ?? recommendationHref}
+                secondaryLabel={fullReportHref ? "詳しいレポートへ進む" : "今のヒントを見る"}
+              />
             </MvpCard>
           </div>
         </div>
