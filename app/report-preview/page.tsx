@@ -4,6 +4,7 @@ import Link from "next/link";
 import DteEventTracker from "../components/DteEventTracker";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ReportIntentAction from "./ReportIntentAction";
+import { buildSelfUnderstandingPreviewByCode, buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 
 export const metadata: Metadata = {
   title: "詳細レポート | Yorisou",
@@ -43,6 +44,18 @@ export default async function ReportPreviewPage({
   const compatibility = getTemporary120QResultCompatibility(routeContext);
   const resultHref = buildPublicResultHref("/result", routeContext);
   const recommendationsHref = buildPublicResultHref("/recommendations", routeContext);
+  const fullReportHref = compatibility.assignment
+    ? buildSelfUnderstandingReportHref(compatibility.assignment.publicCode)
+    : null;
+  const reportPreview = compatibility.assignment
+    ? (() => {
+        try {
+          return buildSelfUnderstandingPreviewByCode(compatibility.assignment!.publicCode);
+        } catch {
+          return null;
+        }
+      })()
+    : null;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_90%_0%,_rgba(221,236,242,0.6),_transparent_32%),linear-gradient(180deg,#FFF7F1_0%,#fffdf9_44%,#F4FAF7_100%)] text-[#2F2A28]">
@@ -84,7 +97,7 @@ export default async function ReportPreviewPage({
                 今回の結果では、どんな場面で力を使いやすいか、どんなときに少し立ち止まりやすいか、次に整えるとよさそうな小さなヒントを見ています。
               </p>
               <p className="max-w-[38rem] text-[15px] leading-8 text-[#6F625C]">
-                詳しい読み解きは準備中です。今は、結果の見方と次のヒントだけを先にお届けします。
+                詳しい読み解きは公開プレビューだけを先に表示しています。本編や拡張は、このプレビュー画面ではまだ開きません。
               </p>
             </div>
 
@@ -110,12 +123,24 @@ export default async function ReportPreviewPage({
             <div className="space-y-3">
               <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">いま受け取れるもの</p>
               <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_14px_28px_rgba(23,59,53,0.06)] md:p-6">
-                <p className="text-[15px] leading-8 text-[#2F2A28]">
-                  {compatibility.displayLine}という見え方を起点に、今の動き方をやわらかく見返すための入口を整えています。
-                </p>
-                <p className="mt-3 text-[14px] leading-7 text-[#6F625C]">
-                  {compatibility.recognitionLine}
-                </p>
+                {reportPreview ? (
+                  <div className="space-y-3">
+                    {reportPreview.paragraphs.map((paragraph) => (
+                      <p key={paragraph} className="text-[14px] leading-8 text-[#5F5750]">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-[15px] leading-8 text-[#2F2A28]">
+                      {compatibility.displayLine}という見え方を起点に、今の動き方をやわらかく見返すための入口を整えています。
+                    </p>
+                    <p className="mt-3 text-[14px] leading-7 text-[#6F625C]">
+                      {compatibility.recognitionLine}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -162,6 +187,29 @@ export default async function ReportPreviewPage({
             </div>
           </div>
 
+          {fullReportHref ? (
+            <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.05)] md:p-6">
+              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">オープンテスト中の全文</p>
+              <p className="mt-3 text-[14px] leading-7 text-[#6F625C]">
+                現在はオープンテスト中のため、公開プレビューの先にある本編と拡張も読めます。内部メモは含みません。
+              </p>
+              <div className="mt-4 flex flex-col gap-2.5 sm:flex-row">
+                <Link
+                  href={fullReportHref}
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
+                >
+                  今の詳しいレポートを読む
+                </Link>
+                <Link
+                  href={resultHref}
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
+                >
+                  結果にもどる
+                </Link>
+              </div>
+            </div>
+          ) : null}
+
           <div className="space-y-3">
             <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">読み方のトーン</p>
             <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.05)] md:p-6">
@@ -177,8 +225,8 @@ export default async function ReportPreviewPage({
           <ReportIntentAction
             backHref={resultHref}
             backLabel="結果にもどる"
-            secondaryHref={recommendationsHref}
-            secondaryLabel="今のヒントを見る"
+            secondaryHref={fullReportHref ?? recommendationsHref}
+            secondaryLabel={fullReportHref ? "今の詳しいレポートを読む" : "今のヒントを見る"}
             resultContext={{
               ...(resultId ? { resultId } : {}),
               ...(overlayId ? { overlayId } : {}),
@@ -203,7 +251,7 @@ export default async function ReportPreviewPage({
 
           <div className="rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">
             <p className="text-[11px] leading-7 text-[#8A8078]">
-              このページでは、詳しい本文そのものではなく、結果の見方と次のヒントだけを先に整えています。
+              このページでは、詳しい本文そのものではなく、公開プレビューと次のヒントだけを先に整えています。
             </p>
           </div>
         </div>
