@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 
 import { MvpActionLink, MvpCard, MvpPill } from "@/app/components/MvpSurface";
+import OpenTestingNotice from "@/app/components/OpenTestingNotice";
 import { buildPublicResultHref } from "@/app/check-in/resultCompatibility";
 import { findPublicArchetypeContentByCode } from "@/lib/yorisou/public-result";
 import { PUBLIC_ARCHETYPE_TAXONOMY } from "@/lib/yorisou/public-result/taxonomy";
@@ -147,6 +148,14 @@ export default async function SelfUnderstandingReportPage({
               </p>
             </div>
           </MvpCard>
+
+          <OpenTestingNotice
+            body="このレポートは公開テスト中の全文表示です。読みにくかった箇所、保存しづらかった点、言葉の受け取りにくさや不具合があれば、そのまま感想として送ってください。"
+            primaryHref="/contact?topic=open-testing"
+            primaryLabel="レポートの感想を送る"
+            secondaryHref={downloadHref}
+            secondaryLabel="レポートを保存"
+          />
 
           {sectionEntries.map((section) => (
             <MvpCard key={section.key} className="space-y-4 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)] md:p-6">

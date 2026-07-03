@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import DteEventTracker from "../components/DteEventTracker";
+import OpenTestingNotice from "../components/OpenTestingNotice";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ReportIntentAction from "./ReportIntentAction";
 import { buildSelfUnderstandingPreviewByCode, buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
@@ -240,6 +241,14 @@ export default async function ReportPreviewPage({
               このページでは、詳しい本文そのものではなく、公開プレビューと次のヒントだけを先に整えています。
             </p>
           </div>
+
+          <OpenTestingNotice
+            body="公開テスト中のため、プレビュー体験そのもののわかりやすさも確認しています。ここで伝わりにくかった点や、本文へ進む導線で迷った点があればそのまま送ってください。"
+            primaryHref="/contact?topic=open-testing"
+            primaryLabel="プレビューの感想を送る"
+            secondaryHref={fullReportHref ?? resultHref}
+            secondaryLabel={fullReportHref ? "詳しいレポートを読む" : "結果にもどる"}
+          />
         </div>
       </div>
     </main>
