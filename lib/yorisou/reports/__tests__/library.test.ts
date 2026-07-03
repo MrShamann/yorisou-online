@@ -63,6 +63,11 @@ export function runSelfUnderstandingReportLibraryValidationTest() {
   assert.equal(publicReport.sections.paidCore?.includes("人との距離とコミュニケーション"), true);
   assert.equal(publicReport.sections.advancedExtension?.includes("Limitation Statement"), true);
   assert.equal(publicPayload.includes("Internal Review Notes"), false);
+  assert.equal(publicPayload.includes("Internal only:"), false);
+  assert.equal(publicPayload.includes("Internal Only"), false);
+  assert.equal(publicPayload.includes("ユーザー表示しません"), false);
+  assert.equal(publicPayload.includes("実装連携メモ"), false);
+  assert.equal(publicPayload.includes("統合メモ"), false);
   assert.equal(publicPayload.includes("purchaseStatus"), false);
   assert.equal(publicPayload.includes("contentStatus"), false);
   assert.equal(publicPayload.includes("codexExecutableNow"), false);
@@ -71,6 +76,7 @@ export function runSelfUnderstandingReportLibraryValidationTest() {
   assert.equal(preview.markdown.includes("このレポートについて"), true);
   assert.equal(preview.markdown.includes("人との距離とコミュニケーション"), false);
   assert.equal(preview.markdown.includes("Internal Review Notes"), false);
+  assert.equal(preview.markdown.includes("Internal only:"), false);
   assert.equal(preview.paragraphs.length > 0, true);
 
   const sanitizedMarkdown = buildSanitizedSelfUnderstandingReportMarkdown("EM-AK");
@@ -78,6 +84,11 @@ export function runSelfUnderstandingReportLibraryValidationTest() {
   assert.equal(sanitizedMarkdown.includes("contentStatus"), false);
   assert.equal(sanitizedMarkdown.includes("codexExecutableNow"), false);
   assert.equal(sanitizedMarkdown.includes("Internal Review Notes"), false);
+  assert.equal(sanitizedMarkdown.includes("Internal only:"), false);
+  assert.equal(sanitizedMarkdown.includes("Internal Only"), false);
+  assert.equal(sanitizedMarkdown.includes("ユーザー表示しません"), false);
+  assert.equal(sanitizedMarkdown.includes("実装連携メモ"), false);
+  assert.equal(sanitizedMarkdown.includes("統合メモ"), false);
   assert.equal(sanitizedMarkdown.includes("このレポートについて"), true);
   assert.equal(sanitizedMarkdown.includes("人との距離とコミュニケーション"), true);
 

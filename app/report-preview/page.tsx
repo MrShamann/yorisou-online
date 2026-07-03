@@ -19,6 +19,17 @@ function readParam(params: Record<string, string | string[] | undefined>, key: s
   return typeof value === "string" ? value : null;
 }
 
+function sanitizePreviewParagraphs(paragraphs: string[], publicCode: string, clanEnglish?: string) {
+  const identityPattern = clanEnglish ? `${clanEnglish} / ${publicCode}` : publicCode;
+
+  return paragraphs.filter((paragraph) => {
+    if (paragraph.includes(identityPattern)) return false;
+    if (paragraph.includes("コードは診断名ではなく")) return false;
+    if (/^Secondary badge:/i.test(paragraph)) return false;
+    return true;
+  });
+}
+
 const teaserBullets = [
   "どんな場面で力を使いやすいか",
   "どんなときに少し立ち止まりやすいか",
@@ -50,7 +61,15 @@ export default async function ReportPreviewPage({
   const reportPreview = compatibility.assignment
     ? (() => {
         try {
-          return buildSelfUnderstandingPreviewByCode(compatibility.assignment!.publicCode);
+          const preview = buildSelfUnderstandingPreviewByCode(compatibility.assignment!.publicCode);
+          return {
+            ...preview,
+            paragraphs: sanitizePreviewParagraphs(
+              preview.paragraphs,
+              compatibility.assignment!.publicCode,
+              compatibility.assignment!.clanEnglish,
+            ),
+          };
         } catch {
           return null;
         }
@@ -73,17 +92,12 @@ export default async function ReportPreviewPage({
       />
 
       <section className="border-b border-[rgba(23,59,53,0.1)]">
-        <div className="container py-9 md:py-14">
+        <div className="container py-7 md:py-10">
           <div className="mx-auto max-w-[44rem] space-y-5">
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold text-[#315F50]">
                 詳しい読み解き
               </span>
-              {compatibility.assignment ? (
-                <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.1)] bg-white/80 px-3 py-1 text-[11px] font-semibold text-[#6F625C]">
-                  {compatibility.assignment.publicCode}
-                </span>
-              ) : null}
             </div>
 
             <div className="space-y-3">
@@ -156,34 +170,6 @@ export default async function ReportPreviewPage({
                   ))}
                 </ul>
               </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">このあと見られるもの</p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                {
-                  title: "結果を見返す",
-                  description: "今の見え方を落ち着いて確かめたいときに。",
-                },
-                {
-                  title: "次のヒントを見る",
-                  description: "今日の動き方に合わせた小さな入口だけを先に。",
-                },
-                {
-                  title: "シェアで残す",
-                  description: "言葉を短く保ったまま、今の印象を持ち帰れます。",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/80 p-4"
-                >
-                  <p className="text-[13px] font-semibold text-[#49615B]">{item.title}</p>
-                  <p className="mt-2 text-[12px] leading-6 text-[#7A7068]">{item.description}</p>
-                </div>
-              ))}
             </div>
           </div>
 

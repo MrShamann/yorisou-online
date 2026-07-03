@@ -132,14 +132,14 @@ export function getTemporary120QResultCompatibility(
       headline: `あなたのいま色は、${assignment.nickname}。`,
       subheadline: PUBLIC_RESULT_SUBHEADLINE,
       displayLine: `あなたのいま色は、${assignment.nickname}。`,
-      codeLine: `${assignment.clanEnglish} / ${assignment.publicCode}`,
+      codeLine: `${assignment.clanJapanese}のタイプ`,
       recognitionLine:
         content?.recognitionLine ||
         `${assignment.nickname}らしい今の動き方が、やわらかく表れています。`,
       highlights: content?.highlights ? [...content.highlights] : [],
       gentleNextStep: content?.gentleNextStep || PLACEHOLDER_NEXT_STEP,
       shareLine: content?.shareLine || `私は${assignment.nickname}。あなたは？`,
-      heroChips: [assignment.clanJapanese, assignment.secondaryBadge, assignment.publicCode],
+      heroChips: [assignment.clanJapanese, assignment.secondaryBadge, "120問ベース"],
       placeholderText: PUBLIC_RESULT_GLOBAL_NOTE,
     };
   }

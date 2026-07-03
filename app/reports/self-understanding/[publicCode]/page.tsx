@@ -10,7 +10,6 @@ import { findPublicArchetypeContentByCode } from "@/lib/yorisou/public-result";
 import { PUBLIC_ARCHETYPE_TAXONOMY } from "@/lib/yorisou/public-result/taxonomy";
 import {
   buildSelfUnderstandingReportDownloadHref,
-  buildSelfUnderstandingReportHref,
   loadSelfUnderstandingPublicReportByCode,
 } from "@/lib/yorisou/reports/loader";
 
@@ -59,6 +58,21 @@ const markdownComponents: Components = {
   em: ({ children }) => <em className="text-[#49615B]">{children}</em>,
 };
 
+function sanitizeReportMarkdownForDisplay(markdown: string, publicCode: string, clanEnglish?: string) {
+  const identityPattern = clanEnglish ? `${clanEnglish} / ${publicCode}` : publicCode;
+
+  return markdown
+    .split(/\n\s*\n/)
+    .filter((block) => {
+      const normalized = block.trim();
+      if (!normalized) return false;
+      if (normalized.includes(identityPattern)) return false;
+      if (/^Secondary badge:/im.test(normalized)) return false;
+      return true;
+    })
+    .join("\n\n");
+}
+
 export default async function SelfUnderstandingReportPage({
   params,
 }: {
@@ -81,59 +95,61 @@ export default async function SelfUnderstandingReportPage({
   const resultHref = buildPublicResultHref("/result", {
     resultId: report.metadata.publicCode,
   });
-  const previewHref = buildPublicResultHref("/report-preview", {
-    resultId: report.metadata.publicCode,
-  });
   const downloadHref = buildSelfUnderstandingReportDownloadHref(report.metadata.publicCode);
+  const publicTypeLabel = `${report.metadata.clanJapanese ?? taxonomy?.clanJapanese ?? ""}のタイプ`;
   const sectionEntries = [
     { key: "free-preview", label: "公開プレビュー", markdown: report.sections.freePreview },
     { key: "paid-core", label: "本編", markdown: report.sections.paidCore },
     { key: "advanced-extension", label: "拡張", markdown: report.sections.advancedExtension },
-  ].filter((entry): entry is { key: string; label: string; markdown: string } => Boolean(entry.markdown));
+  ]
+    .filter((entry): entry is { key: string; label: string; markdown: string } => Boolean(entry.markdown))
+    .map((entry) => ({
+      ...entry,
+      markdown: sanitizeReportMarkdownForDisplay(
+        entry.markdown,
+        report.metadata.publicCode,
+        report.metadata.clanEnglish ?? taxonomy?.clanEnglish,
+      ),
+    }));
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#FFF9F2_0%,#fffdf8_42%,#F3FAF6_100%)] text-[#2F2A28]">
-      <div className="container py-8 md:py-12">
-        <div className="mx-auto max-w-[48rem] space-y-6">
+      <div className="container py-5 md:py-8">
+        <div className="mx-auto max-w-[48rem] space-y-5">
           <Link href={resultHref} className="inline-flex items-center gap-1.5 text-[13px] text-[#49615B] hover:underline">
             ← 結果ページへ戻る
           </Link>
 
           <div className="flex flex-wrap gap-2">
             <MvpPill>自分理解レポート</MvpPill>
-            <MvpPill>オープンテスト中</MvpPill>
-            <MvpPill>{report.metadata.publicCode}</MvpPill>
+            <MvpPill>公開テスト中</MvpPill>
           </div>
 
-          <MvpCard className="space-y-4 rounded-[1.5rem] border-[rgba(23,59,53,0.1)] bg-white/95 p-5 shadow-[0_20px_44px_rgba(23,59,53,0.08)] md:p-7">
-            <div className="space-y-3 rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-[linear-gradient(135deg,#F4FAF7_0%,#fff_100%)] px-5 py-5">
+          <MvpCard className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.1)] bg-white/95 p-4 shadow-[0_16px_34px_rgba(23,59,53,0.08)] md:p-6">
+            <div className="space-y-3 rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-[linear-gradient(135deg,#F4FAF7_0%,#fff_100%)] px-4 py-4">
               <p className="service-kicker">{report.metadata.currentStateNote ?? "120Qから見た、今の動き方"}</p>
-              <h1 className="display-serif text-[2rem] leading-[1.14] text-[#2F2A28] md:text-[2.7rem]">
+              <h1 className="display-serif text-[2rem] leading-[1.08] text-[#2F2A28] md:text-[2.4rem]">
                 {report.metadata.nicknameJa}
               </h1>
-              <p className="text-[15px] font-semibold leading-7 text-[#4A3E39]">
-                {report.metadata.clanEnglish ?? taxonomy?.clanEnglish ?? ""} / {report.metadata.publicCode}
-              </p>
+              <p className="text-[14px] font-semibold leading-6 text-[#4D7A69]">{publicTypeLabel}</p>
               {publicContent ? (
                 <p className="text-[14px] leading-7 text-[#6F625C]">{publicContent.recognitionLine}</p>
               ) : null}
             </div>
 
             <div className="flex flex-col gap-2.5 sm:flex-row">
-              <MvpActionLink href={downloadHref} label="Markdownを保存" tone="primary" className="rounded-full" />
-              <MvpActionLink href={previewHref} label="プレビューを見る" tone="secondary" className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none" />
-              <MvpActionLink href={buildSelfUnderstandingReportHref(report.metadata.publicCode)} label="このページを共有" tone="ghost" className="rounded-full !text-[#315F50]" />
+              <MvpActionLink href={downloadHref} label="レポートを保存" tone="primary" className="rounded-full" />
             </div>
 
             <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(248,250,246,0.82)] px-4 py-3">
               <p className="text-[12px] leading-6 text-[#6F625C]">
-                現在はオープンテスト中のため、公開プレビュー・本編・拡張を続けて読めます。内部メモや運用用の注記は含めていません。
+                現在は公開テスト中のため、プレビュー・本編・拡張を続けて読めます。内部メモや運用用の注記は含めていません。
               </p>
             </div>
           </MvpCard>
 
           {sectionEntries.map((section) => (
-            <MvpCard key={section.key} className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_14px_28px_rgba(23,59,53,0.06)] md:p-6">
+            <MvpCard key={section.key} className="space-y-4 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)] md:p-6">
               <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">{section.label}</p>
               <div className="space-y-3">
                 <ReactMarkdown components={markdownComponents}>{section.markdown}</ReactMarkdown>

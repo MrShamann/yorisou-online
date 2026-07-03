@@ -4,8 +4,6 @@ import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ResultShareActions from "../components/ResultShareActions";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
-import LocalResultSave from "./LocalResultSave";
-import ResultFeedbackPrompt from "./ResultFeedbackPrompt";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -46,21 +44,13 @@ export default async function ResultPage({
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
   const resultShareHref = buildPublicResultHref("/result/share", routeContext);
-  const resultPath = buildPublicResultHref("/result", routeContext);
-  const continuePath = buildPublicResultHref("/result/continue", routeContext);
-  const previewHref = buildPublicResultHref("/report-preview", routeContext);
   const recommendationHref = buildPublicResultHref("/recommendations", routeContext);
   const fullReportHref = compatibility.assignment
     ? buildSelfUnderstandingReportHref(compatibility.assignment.publicCode)
     : null;
   const highlightSummary = buildHighlightSummary(compatibility.highlights);
-  const traitChips = [
-    compatibility.heroChips[0] ?? compatibility.currentStateNote,
-    compatibility.heroChips[1] ?? compatibility.globalNote,
-    compatibility.heroChips[2] ?? compatibility.assignment?.publicCode ?? compatibility.testName,
-  ] as [string, string, string];
-  const resultLabel = compatibility.assignment
-    ? `${compatibility.assignment.nickname} (${compatibility.assignment.publicCode})`
+  const publicTypeLabel = compatibility.assignment
+    ? `${compatibility.assignment.clanJapanese}のタイプ`
     : "いま色テストの結果";
 
   return (
@@ -91,14 +81,19 @@ export default async function ResultPage({
                     </span>
                   ))}
                 </div>
-                <h1 className="display-serif text-[2.12rem] leading-[1.06] text-[#2F2A28] md:text-[3rem]">
-                  {compatibility.displayLine}
-                </h1>
-                {compatibility.codeLine ? (
-                  <p className="text-[15px] font-semibold leading-7 text-[#4A3E39]">
-                    {compatibility.codeLine}
-                  </p>
-                ) : null}
+                {compatibility.assignment ? (
+                  <>
+                    <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">あなたのいま色は、</p>
+                    <h1 className="display-serif text-[2.3rem] leading-[1.02] text-[#2F2A28] md:text-[3rem]">
+                      {compatibility.assignment.nickname}。
+                    </h1>
+                    <p className="text-[14px] font-semibold leading-6 text-[#4D7A69]">{publicTypeLabel}</p>
+                  </>
+                ) : (
+                  <h1 className="display-serif text-[2.12rem] leading-[1.06] text-[#2F2A28] md:text-[3rem]">
+                    {compatibility.displayLine}
+                  </h1>
+                )}
                 <p className="text-[14px] leading-7 text-[#6F625C]">
                   {compatibility.recognitionLine}
                 </p>
@@ -141,9 +136,9 @@ export default async function ResultPage({
               </div>
 
               <div className="space-y-3 rounded-[1.08rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(255,253,249,0.74)] p-4">
-                <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">このあと見られるもの</p>
+                <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">このあと読めるもの</p>
                 <p className="text-[13px] leading-6 text-[#7A7068]">
-                  結果の見方を落ち着いて確かめるか、今日のヒントだけを先に見にいけます。
+                  まずは詳しいレポートを開き、必要なら今日のヒントをあとから見返せます。
                 </p>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                   {fullReportHref ? (
@@ -160,19 +155,13 @@ export default async function ResultPage({
                     tone="secondary"
                     className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none"
                   />
-                  <MvpActionLink
-                    href={previewHref}
-                    label="結果の見方を読む"
-                    tone="ghost"
-                    className="rounded-full !text-[#315F50]"
-                  />
                 </div>
               </div>
 
               <div className="space-y-3 rounded-[1.08rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(255,255,255,0.78)] p-4">
                 <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">シェア</p>
                 <p className="text-[13px] leading-6 text-[#7A7068]">
-                  今の印象を短い言葉のまま残したいときは、ここからシェアできます。
+                  今の印象を短い言葉のまま残したいときだけ、ここからシェアできます。
                 </p>
                 <ResultShareActions
                   shareUrl={resultShareHref}
@@ -181,42 +170,8 @@ export default async function ResultPage({
                   shareCardUrl={resultShareHref}
                   personaId={resultId ?? "imairo-placeholder"}
                   shareSurface="result-page"
+                  showCopyLink={false}
                 />
-              </div>
-
-              <ResultFeedbackPrompt />
-
-              <LocalResultSave
-                resultType={compatibility.brandedTestName}
-                resultLabel={resultLabel}
-                recognitionLine={compatibility.currentStateNote}
-                baseResultId={resultId ?? undefined}
-                overlayId={overlayId ?? undefined}
-                confidenceBand={confidenceBand}
-                payloadKey={payloadKey ?? undefined}
-                traitChips={traitChips}
-                context="public-result"
-                resultPath={resultPath}
-                continuePath={continuePath}
-                className="rounded-[0.95rem] border border-[rgba(23,59,53,0.06)] bg-[rgba(248,250,246,0.72)] p-4"
-              />
-
-              <div className="space-y-3 border-t border-[rgba(23,59,53,0.08)] pt-4">
-                <p className="text-[12px] font-semibold tracking-[0.08em] text-[#7A7068]">ほかの入口</p>
-                <div className="flex flex-col gap-2.5 sm:flex-row">
-                  <MvpActionLink
-                    href="/tests"
-                    label="ほかの入口を見る"
-                    tone="secondary"
-                    className="rounded-full border-[rgba(105,151,130,0.16)] bg-transparent !text-[#315F50] shadow-none"
-                  />
-                  <MvpActionLink
-                    href="/check-in"
-                    label={compatibility.ctaLabel}
-                    tone="ghost"
-                    className="rounded-full !text-[#315F50]"
-                  />
-                </div>
               </div>
             </MvpCard>
           </div>
