@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ResultShareActions from "../components/ResultShareActions";
+import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import LocalResultSave from "./LocalResultSave";
 import ResultFeedbackPrompt from "./ResultFeedbackPrompt";
 
@@ -49,6 +50,9 @@ export default async function ResultPage({
   const continuePath = buildPublicResultHref("/result/continue", routeContext);
   const previewHref = buildPublicResultHref("/report-preview", routeContext);
   const recommendationHref = buildPublicResultHref("/recommendations", routeContext);
+  const fullReportHref = compatibility.assignment
+    ? buildSelfUnderstandingReportHref(compatibility.assignment.publicCode)
+    : null;
   const highlightSummary = buildHighlightSummary(compatibility.highlights);
   const traitChips = [
     compatibility.heroChips[0] ?? compatibility.currentStateNote,
@@ -141,7 +145,15 @@ export default async function ResultPage({
                 <p className="text-[13px] leading-6 text-[#7A7068]">
                   結果の見方を落ち着いて確かめるか、今日のヒントだけを先に見にいけます。
                 </p>
-                <div className="flex flex-col gap-2.5 sm:flex-row">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+                  {fullReportHref ? (
+                    <MvpActionLink
+                      href={fullReportHref}
+                      label="今の詳しいレポートを読む"
+                      tone="primary"
+                      className="rounded-full"
+                    />
+                  ) : null}
                   <MvpActionLink
                     href={recommendationHref}
                     label="今のヒントを見る"
