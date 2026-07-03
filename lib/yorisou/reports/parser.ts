@@ -62,6 +62,12 @@ function parseFrontmatter(data: Record<string, unknown>): SelfUnderstandingRepor
   };
 }
 
+function assertNoUnexpectedMarkers(value: string) {
+  if (ALL_MARKERS.some((marker) => value.includes(marker))) {
+    throw new Error("Malformed report markers: unexpected extra marker content");
+  }
+}
+
 function extractSection(
   body: string,
   startToken: string,
@@ -74,6 +80,8 @@ function extractSection(
     throw new Error(`Malformed report markers: missing ${startToken}`);
   }
 
+  assertNoUnexpectedMarkers(body.slice(fromIndex, startIndex));
+
   const contentStart = startIndex + startToken.length;
   const endIndex = body.indexOf(endToken, contentStart);
 
@@ -81,8 +89,11 @@ function extractSection(
     throw new Error(`Malformed report markers: missing ${endToken}`);
   }
 
+  const section = body.slice(contentStart, endIndex);
+  assertNoUnexpectedMarkers(section);
+
   return {
-    section: normalizeSection(body.slice(contentStart, endIndex)),
+    section: normalizeSection(section),
     nextIndex: endIndex + endToken.length,
   };
 }
@@ -122,10 +133,7 @@ function parseSections(body: string): SelfUnderstandingReportSections {
   );
   cursor = internalNotes.nextIndex;
 
-  const trailing = body.slice(cursor);
-  if (ALL_MARKERS.some((marker) => trailing.includes(marker))) {
-    throw new Error("Malformed report markers: unexpected extra marker content");
-  }
+  assertNoUnexpectedMarkers(body.slice(cursor));
 
   return {
     freePreview: freePreview.section,

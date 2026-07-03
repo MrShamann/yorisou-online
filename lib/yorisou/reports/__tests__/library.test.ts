@@ -35,6 +35,18 @@ export function runSelfUnderstandingReportLibraryValidationTest() {
     /Malformed report markers/,
   );
 
+  assert.throws(
+    () =>
+      parseSelfUnderstandingReportDocument(
+        sampleSource.replace(
+          "<!-- PAID_CORE_START -->",
+          "<!-- FREE_PREVIEW_START -->\n<!-- FREE_PREVIEW_END -->\n<!-- PAID_CORE_START -->",
+        ),
+        samplePath,
+      ),
+    /Malformed report markers/,
+  );
+
   const loaded = loadParsedSelfUnderstandingReportByCode("EM-AK");
   assert.equal(loaded.frontmatter.publicCode, "EM-AK");
   assert.equal(loaded.frontmatter.nicknameJa, "灯起こし");
