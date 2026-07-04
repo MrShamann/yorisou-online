@@ -32,7 +32,7 @@ export default function HomePage() {
               <span className="text-[#173B35]">次のよりそいを。</span>
             </h1>
             <p className="max-w-[43rem] text-[15px] leading-8 text-[#5F5750] md:mx-auto">
-              Yorisouは、短い診断とLINEでの振り返りを通じて、いまの状態、人との距離感、仕事や生活のリズムを見つめ直すためのサービスです。診断結果やフィードバックをもとに、深いレポート、役立つ情報、合いそうなサービスや商品アイデア、参加できる小さな取り組みを届けながら、あなたに合う次の一歩を一緒に探していきます。
+              Yorisouは、短い診断とLINEでの振り返りを通じて、いまの状態や人との距離感、仕事や生活のリズムを見つめ直すためのサービスです。診断結果やフィードバックをもとに、レポート、役立つ情報、合いそうな提案や参加の入口を届けながら、次の一歩を一緒に探していきます。
             </p>
             <p className="max-w-[40rem] text-[12px] leading-6 text-[#6F625C] md:mx-auto">
               医療・心理診断ではありません。自分を決めつけるためではなく、今の状態を見つめるための小さな手がかりです。
@@ -59,7 +59,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-[52rem]">
           <OpenTestingNotice
             title="いま試せること"
-            body="いまは、短い診断の入口、120問の公開テスト、結果ページ、深いレポート、LINE保存、感想送信まで一通り使えます。受け取った声をもとに、おすすめ、診断テーマ、Yorisou Select、Yorisou Designの提案候補を少しずつ育てています。"
+            body="いまは、短い診断の入口、120問の公開テスト、結果ページ、レポート、LINE保存、感想送信まで一通り使えます。受け取った声をもとに、おすすめや診断テーマも少しずつ育てています。"
             primaryHref="/contact?topic=open-testing"
             primaryLabel="感想や不具合を送る"
             secondaryHref="/open-testing"
@@ -71,8 +71,8 @@ export default function HomePage() {
       <MvpSection
         eyebrow="Yorisouがしていること"
         title="診断だけで終わらない、よりそいの入口。"
-        lead="Yorisouは、ひとつのテストやレポートだけを売る場所ではなく、今の状態を見つめ直し、次に合いそうな情報や参加の形までつなぐための軽い伴走面を目指しています。"
-        className="!py-8 md:!py-10"
+        lead="Yorisouは、ひとつのテストやレポートだけで終わらず、今の状態を見つめ直し、次に合いそうな情報や参加の入口へつなぐサービスを目指しています。"
+        className="!py-7 md:!py-9"
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {PLATFORM_PILLARS.map((pillar) => (
@@ -90,8 +90,8 @@ export default function HomePage() {
       <MvpSection
         eyebrow="入口の選び方"
         title="今日はどこから始めるか。"
-        lead="今すぐ診断したい人も、まず入口を見比べたい人も、LINEからゆるく続けたい人も、今の自分に合う入り方を選べます。"
-        className="!py-8"
+        lead="今すぐ診断したい人も、まず入口を見比べたい人も、LINEからゆるく続けたい人も、今の自分に合う始め方を選べます。"
+        className="!py-7 md:!py-8"
       >
         <div className="grid gap-3 md:grid-cols-3">
           {PLATFORM_ENTRY_LINKS.map((entry) => (
@@ -113,8 +113,8 @@ export default function HomePage() {
       <MvpSection
         eyebrow="LINEで、ゆるく続くよりそい"
         title="あとで見返せる、次もつながる。"
-        lead="診断結果をLINEに保存すると、あとから見返せます。必要に応じて、振り返りのきっかけ、次に試せる診断、深いレポート、あなたに合いそうな情報が届くことがあります。通知はいつでも止められるようにします。"
-        className="!py-8"
+        lead="診断結果をLINEに保存すると、あとから見返せます。必要に応じて、振り返りのきっかけや次に試せる入口、あなたに合いそうな情報が届くことがあります。通知はいつでも止められるようにします。"
+        className="!py-7 md:!py-8"
       >
         <MvpCard className="grid gap-4 rounded-[1.3rem] border-[rgba(23,59,53,0.12)] bg-white/92 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.06)] md:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-3">
@@ -145,15 +145,15 @@ export default function HomePage() {
         eyebrow="深く読みたいときのレポート"
         title="レポートは、Yorisouの一層です。"
         lead="無料結果だけでは見えにくい傾向や、関係・仕事・選び方のリズムを、もう少し具体的に整理します。レポートは、あなたの状態を決めつけるものではなく、次の選択肢を考えるための読みものです。"
-        className="!py-8 md:!py-10"
+        className="!py-7 md:!py-9"
       >
         <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
           <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)]">
             <p className="text-[14px] leading-7 text-[#5F5750]">
-              今の自分の流れ、関係の距離、仕事や生活で整えやすいペースを、無料結果より少し深く読むための導線があります。
+              今の自分の流れや関係の距離、仕事や生活で整えやすいペースを、無料結果より少し深く読むための入口があります。
             </p>
             <p className="text-[14px] leading-7 text-[#5F5750]">
-              いまは公開テスト中のため、実際の全文レポートと保存導線も確認できます。
+              いまは公開テスト中のため、全文レポートと保存導線も確認できます。
             </p>
             <div className="flex flex-col gap-2.5 sm:flex-row">
               <Link
@@ -166,7 +166,7 @@ export default function HomePage() {
                 href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
                 className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white/85 px-5 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
               >
-                レポート preview を見る
+                レポートの見本を見る
               </Link>
             </div>
           </MvpCard>
@@ -188,7 +188,7 @@ export default function HomePage() {
         eyebrow="Yorisou Select"
         title="今の状態に合いそうな選択肢を、少しずつ。"
         lead="診断結果やフィードバックをもとに、今の状態に合いそうな読みもの、道具、サービス、商品を少しずつ提案していきます。"
-        className="!py-8"
+        className="!py-7 md:!py-8"
       >
         <div className="grid gap-3 md:grid-cols-4">
           {SELECT_CARDS.map((item) => (
@@ -213,7 +213,7 @@ export default function HomePage() {
         eyebrow="Yorisou Design"
         title="あると助かるものを、声から育てる。"
         lead="診断やフィードバックから見えてきた「あると助かるもの」を、アイデア、試用、共創、商品化へと少しずつ育てていきます。"
-        className="!py-8"
+        className="!py-7 md:!py-8"
       >
         <div className="grid gap-3 md:grid-cols-3">
           {DESIGN_CARDS.map((item) => (
@@ -232,7 +232,7 @@ export default function HomePage() {
         eyebrow="小さく参加できる、よりそいの場"
         title="参加は任意で、声は次の改善につながる。"
         lead="気になるテーマには、フィードバック、試用、生活の観察、アイデアづくりとして参加できます。参加は任意です。あなたの声は、よりよい診断、レポート、おすすめ、サービスや商品アイデアにつながります。"
-        className="!py-8"
+        className="!py-7 md:!py-8"
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {COMMUNITY_CARDS.map((item) => (
@@ -251,7 +251,7 @@ export default function HomePage() {
         eyebrow="暮らしの困りごとも、少しずつ見える形に。"
         title="言葉にしにくい生活の困りごとも、関心の入口から。"
         lead="買い物、移動、家族のサポート、地域のつながり。日々の中で言葉にしにくい困りごとも、Yorisouでは関心や相談の入口として受け止め、必要な情報や選択肢を探すきっかけにしていきます。"
-        className="!py-8 md:!pb-14"
+        className="!py-7 md:!pb-14"
       >
         <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
           <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)]">
@@ -269,7 +269,7 @@ export default function HomePage() {
           </MvpCard>
           <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)]">
             <p className="text-[14px] leading-7 text-[#5F5750]">
-              いまは、暮らしの困りごとを直接提供するサービスではなく、関心や相談の入口、地域の生活シグナル、今後の責任あるマッチングや公共的な仮説づくりの材料として受け止めています。
+              いまは、暮らしの困りごとを直接提供するサービスではなく、関心や相談の入口として受け止めています。地域の生活シグナルや、生活の声を次の取り組みにつなげる材料として整理していく段階です。
             </p>
             <Link
               href="/contact?topic=open-testing"

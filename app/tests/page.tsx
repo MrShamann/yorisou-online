@@ -20,7 +20,7 @@ export default function TestsPage() {
               いまの自分に近い入口を選ぶ
             </h1>
             <p className="mt-4 max-w-[38rem] text-[15px] leading-8 text-[#6F625C]">
-              Yorisouの診断は、性格を決めつけるものではありません。今の状態、関係の距離感、仕事や生活のリズムを見つめるための入口です。
+              Yorisouの診断は、性格を決めつけるものではありません。今の状態や関係の距離感、仕事や生活のリズムを見つめるための入口です。
             </p>
             <p className="mt-3 max-w-[38rem] text-[12px] leading-6 text-[#8A7764]">
               公開中の入口はそのまま始められます。先行テーマは、関心やフィードバックを受け取りながら整えていきます。
@@ -92,7 +92,7 @@ export default function TestsPage() {
               <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
                 <p className="text-[14px] font-semibold text-[#173B35]">結果とレポート</p>
                 <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  無料結果だけで終わらず、必要なら深いレポート preview や関連導線へ進めます。
+                  無料結果だけで終わらず、必要ならレポートの見本や関連導線へ進めます。
                 </p>
               </div>
               <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
@@ -104,7 +104,7 @@ export default function TestsPage() {
               <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
                 <p className="text-[14px] font-semibold text-[#173B35]">次の提案</p>
                 <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  今後は、Yorisou SelectやDesignの提案候補もテーマごとに育てていきます。
+                  今後は、Yorisou SelectやDesignの提案もテーマごとに育てていきます。
                 </p>
               </div>
             </div>
