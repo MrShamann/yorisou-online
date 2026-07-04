@@ -14,9 +14,13 @@ type FormState = {
 
 type ApiErrorCode =
   | "invalid_payload"
-  | "contact_not_configured"
-  | "delivery_failed"
   | "unexpected_error";
+
+type ContactSuccessPayload = {
+  success?: boolean;
+  deliveryStatus?: "sent" | "failed";
+  notice?: string;
+};
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -38,9 +42,9 @@ const labels = {
     submit: "送信する",
     sending: "送信中...",
     validation: "入力内容をご確認ください。メールアドレスと本文を含め、必須項目を正しくご入力ください。",
-    success: "お問い合わせを受け付けました。内容を確認のうえ、順次ご連絡いたします。",
+    success: "お問い合わせを受け付けました。内容は記録されています。",
+    successEmailDelayed: "お問い合わせを受け付けました。内容は記録されています。返信通知の送信状況は運営側で確認します。",
     error: "送信に失敗しました。恐れ入りますが、時間をおいて再度お試しください。",
-    unavailable: "現在、お問い合わせ受付の設定を確認中です。しばらくしてから再度お試しください。",
     orgOptions: ["個人ユーザー", "自治体", "介護施設", "医療機関", "地域企業", "その他"],
     inquiryOptions: ["公開テストの感想・不具合報告", "実証実験のご相談", "連携のご相談", "資料請求", "その他"],
     choose: "選択してください",
@@ -54,9 +58,9 @@ const labels = {
     submit: "Send",
     sending: "Sending...",
     validation: "Please review your input. Required fields, email format, and a message of at least 10 characters are needed.",
-    success: "Your inquiry has been sent. We will get back to you as soon as possible.",
+    success: "Your inquiry has been received and recorded.",
+    successEmailDelayed: "Your inquiry has been received and recorded. The team will review the notification delivery status separately.",
     error: "Submission failed. Please try again in a few moments.",
-    unavailable: "The contact service is currently being configured. Please try again shortly.",
     orgOptions: ["Individual User", "Municipality", "Care Facility", "Medical Institution", "Regional Company", "Other"],
     inquiryOptions: ["Open Testing Feedback / Bug Report", "Pilot Program", "Partnership", "Document Request", "Other"],
     choose: "Please select",
@@ -80,6 +84,7 @@ export default function ContactForm({
     message: initialMessage ?? "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = labels[locale];
@@ -100,12 +105,14 @@ export default function ContactForm({
     if (!canSubmit) {
       setError(t.validation);
       setSubmitted(false);
+      setSuccessMessage("");
       return;
     }
 
     setIsSubmitting(true);
     setError("");
     setSubmitted(false);
+    setSuccessMessage("");
 
     try {
       const response = await fetch("/api/contact", {
@@ -122,24 +129,17 @@ export default function ContactForm({
         }),
       });
 
+      const result = (await response.json().catch(() => null)) as (ContactSuccessPayload & { error?: ApiErrorCode }) | null;
+
       if (!response.ok) {
-        const result = (await response.json().catch(() => null)) as { error?: ApiErrorCode } | null;
-
-        if (result?.error === "contact_not_configured") {
-          throw new Error("contact_not_configured");
-        }
-
         throw new Error(result?.error || "request_failed");
       }
 
       setSubmitted(true);
+      setSuccessMessage(result?.deliveryStatus === "failed" ? t.successEmailDelayed : t.success);
       setForm(initialState);
-    } catch (error) {
-      if (error instanceof Error && error.message === "contact_not_configured") {
-        setError(t.unavailable);
-      } else {
-        setError(t.error);
-      }
+    } catch {
+      setError(t.error);
     } finally {
       setIsSubmitting(false);
     }
@@ -226,7 +226,7 @@ export default function ContactForm({
 
       {submitted && (
         <p style={{ marginTop: 12, color: "#0f4c81", fontWeight: 700 }}>
-          {t.success}
+          {successMessage}
         </p>
       )}
     </div>

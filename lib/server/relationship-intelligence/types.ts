@@ -3,7 +3,8 @@ export type RelationshipUserStatus = "anonymous" | "relationship_active" | "inac
 export type RelationshipIdentityProvider = "line" | "web";
 export type RelationshipIdentityStatus = "active" | "blocked" | "unknown";
 export type DiagnosisSessionStatus = "started" | "completed" | "abandoned";
-export type FeedbackSubmissionStatus = "new" | "reviewed" | "archived";
+export type FeedbackSubmissionStatus = "received" | "reviewed" | "archived";
+export type FeedbackEmailDeliveryStatus = "not_requested" | "pending" | "sent" | "failed";
 export type RelationshipStatusValue = "active" | "paused" | "stopped" | "blocked";
 export type MessageLogStatus = "queued" | "sent" | "failed" | "skipped";
 export type ReportEventType = "preview_viewed" | "intent_clicked" | "full_viewed" | "downloaded";
@@ -66,9 +67,24 @@ export const OPEN_TESTING_EVENT_NAMES = [
   "line_relationship_activated",
 ] as const satisfies readonly OpenTestingEventName[];
 
+export const FEEDBACK_SUBMISSION_STATUSES = [
+  "received",
+  "reviewed",
+  "archived",
+] as const satisfies readonly FeedbackSubmissionStatus[];
+
+export const FEEDBACK_EMAIL_DELIVERY_STATUSES = [
+  "not_requested",
+  "pending",
+  "sent",
+  "failed",
+] as const satisfies readonly FeedbackEmailDeliveryStatus[];
+
 const reportEventTypeSet = new Set<string>(REPORT_EVENT_TYPES);
 const relationshipActivationSourceSet = new Set<string>(RELATIONSHIP_ACTIVATION_SOURCES);
 const openTestingEventNameSet = new Set<string>(OPEN_TESTING_EVENT_NAMES);
+const feedbackSubmissionStatusSet = new Set<string>(FEEDBACK_SUBMISSION_STATUSES);
+const feedbackEmailDeliveryStatusSet = new Set<string>(FEEDBACK_EMAIL_DELIVERY_STATUSES);
 
 export function isReportEventType(value: unknown): value is ReportEventType {
   return typeof value === "string" && reportEventTypeSet.has(value);
@@ -80,6 +96,14 @@ export function isRelationshipActivationSource(value: unknown): value is Relatio
 
 export function isOpenTestingEventName(value: unknown): value is OpenTestingEventName {
   return typeof value === "string" && openTestingEventNameSet.has(value);
+}
+
+export function isFeedbackSubmissionStatus(value: unknown): value is FeedbackSubmissionStatus {
+  return typeof value === "string" && feedbackSubmissionStatusSet.has(value);
+}
+
+export function isFeedbackEmailDeliveryStatus(value: unknown): value is FeedbackEmailDeliveryStatus {
+  return typeof value === "string" && feedbackEmailDeliveryStatusSet.has(value);
 }
 
 export type AnonymousSessionRecord = {
@@ -165,6 +189,7 @@ export type ReportEvent = {
   reportType: string;
   eventType: ReportEventType;
   route: string | null;
+  metadataJson: Record<string, string | number | boolean | null>;
   createdAt: string;
 };
 
@@ -182,6 +207,12 @@ export type FeedbackSubmission = {
   contactEmail: string | null;
   lineUserId: string | null;
   status: FeedbackSubmissionStatus;
+  emailDeliveryStatus: FeedbackEmailDeliveryStatus;
+  emailDeliveryError: string | null;
+  emailLastAttemptedAt: string | null;
+  metadataJson: Record<string, string | number | boolean | null>;
+  reviewedAt: string | null;
+  archivedAt: string | null;
   createdAt: string;
 };
 
