@@ -157,7 +157,7 @@ export default async function ResultPage({
                       href={fullReportHref}
                       tracking={{
                         reportEvent: {
-                          eventType: "full_viewed",
+                          eventType: "intent_clicked",
                           reportType: "self-understanding-v0.2.1",
                           route: "/result",
                           source: "result_page",

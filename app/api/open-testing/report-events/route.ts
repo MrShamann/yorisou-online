@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { OPEN_TESTING_SESSION_COOKIE, recordReportEvent } from "@/lib/server/relationship-intelligence/service";
-import type { ReportEventType } from "@/lib/server/relationship-intelligence/types";
+import { isReportEventType } from "@/lib/server/relationship-intelligence/types";
 
 function asString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -10,11 +10,14 @@ function asString(value: unknown) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
-    const eventType = asString(body.eventType) as ReportEventType | null;
+    const eventType = asString(body.eventType);
     const reportType = asString(body.reportType);
 
     if (!eventType || !reportType) {
       return NextResponse.json({ ok: false, error: "missing_report_event_fields" }, { status: 400 });
+    }
+    if (!isReportEventType(eventType)) {
+      return NextResponse.json({ ok: false, error: "invalid_report_event_type" }, { status: 400 });
     }
 
     const result = await recordReportEvent({

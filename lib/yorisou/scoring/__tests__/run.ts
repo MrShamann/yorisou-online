@@ -1,12 +1,13 @@
 import { runPublicAssignmentValidationTest } from "@/lib/yorisou/public-result/__tests__/assignment.test";
 import { runSelfUnderstandingReportLibraryValidationTest } from "@/lib/yorisou/reports/__tests__/library.test";
+import { runRelationshipIntelligenceEventSemanticsValidationTest } from "@/lib/server/relationship-intelligence/__tests__/event-semantics.test";
 import { runAggregationValidationTest } from "./aggregation.test";
 import { runCheckInRuntimeValidationTest } from "./checkin-runtime.test";
 import { runFoundationValidationTest } from "./foundation.test";
 import { runMapperValidationTest } from "./mapper.test";
 import { runSafetyAndIsolationValidationTest } from "./safety-routing.test";
 
-function main() {
+async function main() {
   const foundation = runFoundationValidationTest();
   const mapper = runMapperValidationTest();
   const aggregation = runAggregationValidationTest();
@@ -14,6 +15,7 @@ function main() {
   const checkinRuntime = runCheckInRuntimeValidationTest();
   const publicAssignment = runPublicAssignmentValidationTest();
   const reportLibrary = runSelfUnderstandingReportLibraryValidationTest();
+  const relationshipIntelligenceEventSemantics = await runRelationshipIntelligenceEventSemanticsValidationTest();
 
   const summary = {
     status: "ok",
@@ -24,9 +26,10 @@ function main() {
     checkinRuntime,
     publicAssignment,
     reportLibrary,
+    relationshipIntelligenceEventSemantics,
   };
 
   console.log(JSON.stringify(summary, null, 2));
 }
 
-main();
+void main();

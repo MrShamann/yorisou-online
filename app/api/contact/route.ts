@@ -39,19 +39,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
     }
 
-    await storeFeedbackSubmission({
-      topic: payload.topic || "open-testing-contact",
-      routeContext: payload.routeContext || "/contact",
-      resultId: payload.resultId || null,
-      overlayId: payload.overlayId || null,
-      confidence: payload.confidence || null,
-      message: payload.message || "",
-      contactEmail: payload.email || null,
-      lineUserId: payload.lineUserId || null,
-      source: "contact_form",
-      entrySource: payload.topic || "contact",
-    });
-
     const resendApiKey = process.env.RESEND_API_KEY;
     const contactToEmail = process.env.CONTACT_TO_EMAIL;
     const contactFromEmail = process.env.CONTACT_FROM_EMAIL;
@@ -110,6 +97,19 @@ export async function POST(request: Request) {
       console.error("Resend email delivery failed:", errorBody);
       return NextResponse.json({ success: false, error: "delivery_failed" }, { status: 502 });
     }
+
+    await storeFeedbackSubmission({
+      topic: payload.topic || "open-testing-contact",
+      routeContext: payload.routeContext || "/contact",
+      resultId: payload.resultId || null,
+      overlayId: payload.overlayId || null,
+      confidence: payload.confidence || null,
+      message: payload.message || "",
+      contactEmail: payload.email || null,
+      lineUserId: payload.lineUserId || null,
+      source: "contact_form",
+      entrySource: payload.topic || "contact",
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

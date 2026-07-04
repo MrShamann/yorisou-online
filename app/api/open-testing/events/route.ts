@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { OPEN_TESTING_SESSION_COOKIE, ensureOpenTestingAnonymousSession, recordOpenTestingEvent } from "@/lib/server/relationship-intelligence/service";
-import type { OpenTestingEventName } from "@/lib/server/relationship-intelligence/types";
+import { isOpenTestingEventName } from "@/lib/server/relationship-intelligence/types";
 
 export const runtime = "nodejs";
 
@@ -28,10 +28,13 @@ function asMetadata(value: unknown) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
-    const eventName = asString(body.eventName) as OpenTestingEventName | null;
+    const eventName = asString(body.eventName);
 
     if (!eventName) {
       return NextResponse.json({ ok: false, error: "missing_event_name" }, { status: 400 });
+    }
+    if (!isOpenTestingEventName(eventName)) {
+      return NextResponse.json({ ok: false, error: "invalid_event_name" }, { status: 400 });
     }
 
     const session = await ensureOpenTestingAnonymousSession({

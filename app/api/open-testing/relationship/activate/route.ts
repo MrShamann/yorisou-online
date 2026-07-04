@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { OPEN_TESTING_SESSION_COOKIE, activateRelationship } from "@/lib/server/relationship-intelligence/service";
-import type { RelationshipActivationSource } from "@/lib/server/relationship-intelligence/types";
+import { isRelationshipActivationSource } from "@/lib/server/relationship-intelligence/types";
 
 function asString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -10,10 +10,13 @@ function asString(value: unknown) {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
-    const source = asString(body.source) as RelationshipActivationSource | null;
+    const source = asString(body.source);
 
     if (!source) {
       return NextResponse.json({ ok: false, error: "missing_activation_source" }, { status: 400 });
+    }
+    if (!isRelationshipActivationSource(source)) {
+      return NextResponse.json({ ok: false, error: "invalid_activation_source" }, { status: 400 });
     }
 
     const result = await activateRelationship({

@@ -196,7 +196,7 @@ export default async function ReportPreviewPage({
                   href={fullReportHref}
                   tracking={{
                     reportEvent: {
-                      eventType: "full_viewed",
+                      eventType: "intent_clicked",
                       reportType: "self-understanding-v0.2.1",
                       route: "/report-preview",
                       source: "report_preview_page",
@@ -210,13 +210,12 @@ export default async function ReportPreviewPage({
                 >
                   今の詳しいレポートを読む
                 </OpenTestingTrackingLink>
-                <OpenTestingTrackingLink
+                <Link
                   href={resultHref}
-                  tracking={{ eventName: "result_viewed", route: "/report-preview", source: "report_preview_page", entrySource: "report-preview", resultId, overlayId, confidence: confidenceBand }}
                   className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
                 >
                   結果にもどる
-                </OpenTestingTrackingLink>
+                </Link>
               </div>
             </div>
           ) : null}

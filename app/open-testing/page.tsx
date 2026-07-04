@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { MvpCard, MvpSection } from "../components/MvpSurface";
@@ -128,23 +129,18 @@ export default function OpenTestingPage() {
           <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)]">
             <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">関連ページ</p>
             <div className="flex flex-col gap-2.5">
-              <OpenTestingTrackingLink
-                href="/contact?topic=open-testing"
-                tracking={{ eventName: "contact_feedback_submitted", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
-                className="text-[14px] font-semibold text-[#315F50] hover:underline"
-              >
+              <Link href="/contact?topic=open-testing" className="text-[14px] font-semibold text-[#315F50] hover:underline">
                 公開テストの感想・不具合報告を送る
-              </OpenTestingTrackingLink>
-              <OpenTestingTrackingLink
+              </Link>
+              <Link
                 href="/result?resultId=EM-AK&overlayId=balancing&confidence=low"
-                tracking={{ eventName: "result_viewed", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing", resultId: "EM-AK", overlayId: "balancing", confidence: "low" }}
                 className="text-[14px] font-semibold text-[#315F50] hover:underline"
               >
                 結果ページの見本を見る
-              </OpenTestingTrackingLink>
+              </Link>
               <OpenTestingTrackingLink
                 href="/reports/self-understanding/EM-AK"
-                tracking={{ reportEvent: { eventType: "full_viewed", reportType: "self-understanding-v0.2.1", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing", resultId: "EM-AK" } }}
+                tracking={{ reportEvent: { eventType: "intent_clicked", reportType: "self-understanding-v0.2.1", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing", resultId: "EM-AK" } }}
                 className="text-[14px] font-semibold text-[#315F50] hover:underline"
               >
                 詳しいレポートの見本を見る

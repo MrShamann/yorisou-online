@@ -32,6 +32,56 @@ export type OpenTestingEventName =
   | "line_save_clicked"
   | "line_relationship_activated";
 
+export const REPORT_EVENT_TYPES = [
+  "preview_viewed",
+  "intent_clicked",
+  "full_viewed",
+  "downloaded",
+] as const satisfies readonly ReportEventType[];
+
+export const RELATIONSHIP_ACTIVATION_SOURCES = [
+  "line_mini_app_entry",
+  "line_login_callback",
+  "line_webhook",
+  "line_save_clicked",
+  "feedback_with_line_context",
+] as const satisfies readonly RelationshipActivationSource[];
+
+export const OPEN_TESTING_EVENT_NAMES = [
+  "open_testing_viewed",
+  "open_testing_start_clicked",
+  "test_started",
+  "question_answered",
+  "test_completed",
+  "result_generated",
+  "result_viewed",
+  "result_feedback_submitted",
+  "report_preview_viewed",
+  "report_intent_clicked",
+  "full_report_viewed",
+  "report_downloaded",
+  "contact_feedback_submitted",
+  "line_entry_opened",
+  "line_save_clicked",
+  "line_relationship_activated",
+] as const satisfies readonly OpenTestingEventName[];
+
+const reportEventTypeSet = new Set<string>(REPORT_EVENT_TYPES);
+const relationshipActivationSourceSet = new Set<string>(RELATIONSHIP_ACTIVATION_SOURCES);
+const openTestingEventNameSet = new Set<string>(OPEN_TESTING_EVENT_NAMES);
+
+export function isReportEventType(value: unknown): value is ReportEventType {
+  return typeof value === "string" && reportEventTypeSet.has(value);
+}
+
+export function isRelationshipActivationSource(value: unknown): value is RelationshipActivationSource {
+  return typeof value === "string" && relationshipActivationSourceSet.has(value);
+}
+
+export function isOpenTestingEventName(value: unknown): value is OpenTestingEventName {
+  return typeof value === "string" && openTestingEventNameSet.has(value);
+}
+
 export type AnonymousSessionRecord = {
   anonymousSessionId: string;
   userProfileId: string | null;

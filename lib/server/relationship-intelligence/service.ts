@@ -40,6 +40,15 @@ function normalizeLanguage(value: string | null | undefined) {
   return value === "en" ? "en" : "ja";
 }
 
+async function readOpenTestingSessionCookie() {
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get(OPEN_TESTING_SESSION_COOKIE)?.value || null;
+  } catch {
+    return null;
+  }
+}
+
 function sanitizeMetadata(value: Record<string, unknown> | undefined) {
   const normalized: Record<string, string | number | boolean | null> = {};
 
@@ -95,8 +104,7 @@ export async function ensureOpenTestingAnonymousSession(input: {
   route?: string | null;
   preferredSessionId?: string | null;
 }) {
-  const cookieStore = await cookies();
-  const existingId = cookieStore.get(OPEN_TESTING_SESSION_COOKIE)?.value || input.preferredSessionId || null;
+  const existingId = (await readOpenTestingSessionCookie()) || input.preferredSessionId || null;
   const timestamp = nowIso();
   const identity = await resolveCanonicalIdentityForViewer();
   let record = existingId ? await getRelationshipRecord<AnonymousSessionRecord>("anonymous-sessions", existingId) : null;

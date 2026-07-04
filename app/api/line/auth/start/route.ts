@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { ensureViewerSession, getViewerContext, setViewerSessionCookie } from "@/lib/server/yorisouAuth";
-import { recordOpenTestingEvent } from "@/lib/server/relationship-intelligence/service";
 import {
   LINE_AUTH_COOKIE,
   buildLineAuthorizeUrl,
@@ -65,18 +64,6 @@ export async function GET(request: Request) {
   });
   const existingEntries = decodeLineAuthCookieEntries(request.headers.get("cookie")?.match(/(?:^|; )yorisou_line_auth=([^;]+)/)?.[1]);
   const nextEntries = upsertLineAuthCookieEntry(existingEntries, payload);
-  await recordOpenTestingEvent({
-    eventName: "line_save_clicked",
-    anonymousSessionId: session.id,
-    userProfileId: viewer.account?.id || null,
-    route: returnTo,
-    source: "line_auth_start",
-    entrySource: intent,
-    metadata: {
-      intent,
-      successRedirect,
-    },
-  });
 
   const response = NextResponse.redirect(buildLineAuthorizeUrl(payload), { status: 303 });
   setViewerSessionCookie(response, { ...session, userId: viewer.account?.id || null });
