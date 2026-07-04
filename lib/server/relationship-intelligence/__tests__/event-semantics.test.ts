@@ -8,9 +8,7 @@ async function readJsonBody(response: Response) {
 }
 
 export async function runRelationshipIntelligenceEventSemanticsValidationTest() {
-  const tempDir = path.join(os.tmpdir(), "yorisou-relationship-intelligence-event-semantics");
-  fs.rmSync(tempDir, { recursive: true, force: true });
-  fs.mkdirSync(tempDir, { recursive: true });
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "yorisou-relationship-intelligence-event-semantics-"));
   process.env.YORISOU_RELATIONSHIP_DATA_DIR = tempDir;
 
   const [{ POST: postOpenTestingEvent }, { POST: postReportEvent }, { POST: postRelationshipActivation }, service] =
