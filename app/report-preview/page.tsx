@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import DteEventTracker from "../components/DteEventTracker";
 import OpenTestingNotice from "../components/OpenTestingNotice";
+import { OpenTestingReportTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ReportIntentAction from "./ReportIntentAction";
 import { buildSelfUnderstandingPreviewByCode, buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
@@ -84,6 +85,16 @@ export default async function ReportPreviewPage({
         surface="report_preview"
         source="report_preview_page"
         locale="ja"
+      />
+      <OpenTestingReportTracker
+        eventType="preview_viewed"
+        reportType="self-understanding-v0.2.1"
+        route="/report-preview"
+        source="report_preview_page"
+        entrySource="report-preview"
+        resultId={resultId}
+        overlayId={overlayId}
+        confidence={confidenceBand}
       />
       <DteEventTracker
         event="paywall_visible"
@@ -181,12 +192,24 @@ export default async function ReportPreviewPage({
                 現在はオープンテスト中のため、公開プレビューの先にある本編と拡張も読めます。内部メモは含みません。
               </p>
               <div className="mt-4 flex flex-col gap-2.5 sm:flex-row">
-                <Link
+                <OpenTestingTrackingLink
                   href={fullReportHref}
+                  tracking={{
+                    reportEvent: {
+                      eventType: "intent_clicked",
+                      reportType: "self-understanding-v0.2.1",
+                      route: "/report-preview",
+                      source: "report_preview_page",
+                      entrySource: "report-preview",
+                      resultId,
+                      overlayId,
+                      confidence: confidenceBand,
+                    },
+                  }}
                   className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
                 >
                   今の詳しいレポートを読む
-                </Link>
+                </OpenTestingTrackingLink>
                 <Link
                   href={resultHref}
                   className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"

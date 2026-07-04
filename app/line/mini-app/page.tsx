@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
+import { OpenTestingPageTracker, OpenTestingTrackingLink } from "@/app/components/OpenTestingTracker";
 
 export const metadata: Metadata = {
   title: "Yorisou | チェックを始める",
@@ -42,6 +43,7 @@ export default async function MiniAppEntryPage({
       className="relative min-h-screen overflow-hidden bg-[#FBFAF6] text-[#22201D]"
       style={{ paddingBottom: "max(40px, env(safe-area-inset-bottom, 0px))" }}
     >
+      <OpenTestingPageTracker eventName="line_entry_opened" route="/line/mini-app" source="line_mini_app" entrySource="line-mini-app" />
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -107,8 +109,9 @@ export default async function MiniAppEntryPage({
             120問 · 無料 · ログインなし
           </p>
 
-          <Link
+          <OpenTestingTrackingLink
             href={startHref}
+            tracking={{ eventName: "open_testing_start_clicked", route: "/line/mini-app", source: "line_mini_app", entrySource: "line-mini-app" }}
             className="mt-4 flex min-h-[52px] w-full items-center justify-center rounded-full text-[15px] transition active:scale-[0.975]"
             style={{
               background: "#173B35",
@@ -118,10 +121,13 @@ export default async function MiniAppEntryPage({
             }}
           >
             はじめる
-          </Link>
+          </OpenTestingTrackingLink>
 
           <p className="mt-2.5 text-center text-[10px] text-[#9A9088]">
             診断ではありません
+          </p>
+          <p className="mt-2 text-[11px] leading-5 text-[#7A7068]">
+            LINEから結果を受け取ると、結果の確認や関連するお知らせをLINEで受け取れる状態が有効になることがあります。不要な場合は停止できます。
           </p>
         </div>
 

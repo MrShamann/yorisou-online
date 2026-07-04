@@ -1,4 +1,5 @@
 import { buildSanitizedSelfUnderstandingReportMarkdown } from "@/lib/yorisou/reports/loader";
+import { recordReportEvent } from "@/lib/server/relationship-intelligence/service";
 
 export async function GET(
   _request: Request,
@@ -7,6 +8,14 @@ export async function GET(
   const { publicCode } = await params;
 
   try {
+    await recordReportEvent({
+      eventType: "downloaded",
+      reportType: "self-understanding-v0.2.1",
+      route: `/reports/self-understanding/${publicCode}/download`,
+      source: "report_download_route",
+      entrySource: "download",
+      resultId: publicCode,
+    });
     const markdown = buildSanitizedSelfUnderstandingReportMarkdown(publicCode);
     const filename = `yorisou_report_${publicCode}_v0.2.1_public.md`;
 

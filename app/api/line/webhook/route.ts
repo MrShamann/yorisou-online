@@ -4,6 +4,7 @@ import type { LineWebhookEventRecord } from "@/lib/server/yorisouData";
 import { createLineWebhookEvent, findAccountByLineUserId, findLineWebhookEventById } from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { timelineService } from "@/lib/server/foundation/timelineService";
+import { activateRelationship, updateRelationshipStatusForLineUser } from "@/lib/server/relationship-intelligence/service";
 import {
   getLineMessagingConfigStatus,
   isLineMessagingConfigured,
@@ -89,6 +90,15 @@ async function syncLineWebhookEventToCanonical(record: LineWebhookEventRecord) {
     event: record,
     authIdentityId: ensuredIdentity.authIdentityId,
     userProfileId: ensuredIdentity.userProfileId,
+  });
+  await activateRelationship({
+    source: "line_webhook",
+    lineUserId,
+    lineAuthIdentityId: ensuredIdentity.authIdentityId,
+    userProfileId: ensuredIdentity.userProfileId,
+    route: "/api/line/webhook",
+    entrySource: "line-webhook",
+    sourceLabel: "line_webhook",
   });
 
   return {
@@ -194,6 +204,13 @@ export async function POST(request: Request) {
     });
 
     try {
+      if (lineUserId && eventType === "unfollow") {
+        await updateRelationshipStatusForLineUser({
+          lineUserId,
+          status: "stopped",
+          stopReason: "line_unfollow",
+        });
+      }
       await syncLineWebhookEventToCanonical(createdRecord);
     } catch (error) {
       const message = error instanceof Error ? error.message : "line_webhook_canonical_sync_failed";

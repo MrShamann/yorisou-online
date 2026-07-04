@@ -4,6 +4,7 @@ import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ResultShareActions from "../components/ResultShareActions";
+import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 
 export const metadata: Metadata = {
@@ -56,6 +57,15 @@ export default async function ResultPage({
 
   return (
     <main className="min-h-screen bg-[#FBFAF6] text-[#2F2A28]">
+      <OpenTestingPageTracker
+        eventName="result_viewed"
+        route="/result"
+        source="result_page"
+        entrySource={payloadKey ? "payload" : "public-result"}
+        resultId={resultId}
+        overlayId={overlayId}
+        confidence={confidenceBand}
+      />
       <section className="border-b border-[rgba(23,59,53,0.1)]">
         <div className="container py-6 md:py-12">
           <div className="mx-auto grid max-w-[42rem] gap-4">
@@ -143,12 +153,24 @@ export default async function ResultPage({
                 </p>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
                   {fullReportHref ? (
-                    <MvpActionLink
+                    <OpenTestingTrackingLink
                       href={fullReportHref}
-                      label="今の詳しいレポートを読む"
-                      tone="primary"
-                      className="rounded-full"
-                    />
+                      tracking={{
+                        reportEvent: {
+                          eventType: "intent_clicked",
+                          reportType: "self-understanding-v0.2.1",
+                          route: "/result",
+                          source: "result_page",
+                          entrySource: payloadKey ? "payload" : "public-result",
+                          resultId,
+                          overlayId,
+                          confidence: confidenceBand,
+                        },
+                      }}
+                      className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
+                    >
+                      今の詳しいレポートを読む
+                    </OpenTestingTrackingLink>
                   ) : null}
                   <MvpActionLink
                     href={recommendationHref}

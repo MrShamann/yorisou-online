@@ -10,6 +10,7 @@ import {
   type ViewerContext,
 } from "@/lib/server/yorisouAuth";
 import { bindLineIdentity, createAccount, findAccountById, findAccountByLineUserId } from "@/lib/server/yorisouData";
+import { activateRelationship } from "@/lib/server/relationship-intelligence/service";
 import {
   LINE_AUTH_COOKIE,
   decodeLineAuthCookieEntries,
@@ -180,6 +181,15 @@ export async function GET(request: Request) {
     const session = viewer.session || (await ensureViewerSession());
     await bindSessionToUser(session.id, account.id);
     const boundSession = { ...session, userId: account.id };
+    await activateRelationship({
+      source: "line_login_callback",
+      lineUserId: profile.userId,
+      lineDisplayName: profile.displayName || idToken.name || "LINE user",
+      userProfileId: account.id,
+      route: lineCookie.returnTo || "/support",
+      entrySource: "line-auth-callback",
+      sourceLabel: "line_auth_callback",
+    });
 
     const response = NextResponse.redirect(
       buildReturnUrl(request, withStatus(successPath, { line_status: "connected" })),

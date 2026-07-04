@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { storeFeedbackSubmission } from "@/lib/server/relationship-intelligence/service";
+
 type ContactPayload = {
   name?: string;
   organizationType?: string;
@@ -7,6 +9,12 @@ type ContactPayload = {
   inquiryType?: string;
   message?: string;
   locale?: "ja" | "en";
+  topic?: string;
+  routeContext?: string;
+  resultId?: string;
+  overlayId?: string;
+  confidence?: string;
+  lineUserId?: string;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -89,6 +97,19 @@ export async function POST(request: Request) {
       console.error("Resend email delivery failed:", errorBody);
       return NextResponse.json({ success: false, error: "delivery_failed" }, { status: 502 });
     }
+
+    await storeFeedbackSubmission({
+      topic: payload.topic || "open-testing-contact",
+      routeContext: payload.routeContext || "/contact",
+      resultId: payload.resultId || null,
+      overlayId: payload.overlayId || null,
+      confidence: payload.confidence || null,
+      message: payload.message || "",
+      contactEmail: payload.email || null,
+      lineUserId: payload.lineUserId || null,
+      source: "contact_form",
+      entrySource: payload.topic || "contact",
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
