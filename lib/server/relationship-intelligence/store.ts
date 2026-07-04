@@ -5,33 +5,53 @@ import { GetObjectCommand, ListObjectsV2Command, NoSuchKey, PutObjectCommand, S3
 
 import type { RelationshipCollection } from "@/lib/server/relationship-intelligence/types";
 
-const DEFAULT_SHARED_REGION = process.env.YORISOU_SHARED_STORE_REGION || "us-east-2";
-const STORE_PREFIX = process.env.YORISOU_RELATIONSHIP_STORE_PREFIX?.trim() || "phase1/relationship-intelligence-v1";
-const DATA_DIR =
-  process.env.YORISOU_RELATIONSHIP_DATA_DIR ||
-  (process.env.NODE_ENV === "production"
-    ? path.join("/tmp", "yorisou-relationship-intelligence")
-    : path.join(process.cwd(), "data", "relationship-intelligence"));
-const sharedStoreBucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
-const sharedStoreRegion = process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
-const shouldUseSharedStore = Boolean(sharedStoreBucket);
+const DEFAULT_SHARED_REGION = "us-east-2";
 
 let sharedStoreClient: S3Client | null = null;
+let sharedStoreClientRegion: string | null = null;
+
+function getRelationshipStorePrefix() {
+  return process.env.YORISOU_RELATIONSHIP_STORE_PREFIX?.trim() || "phase1/relationship-intelligence-v1";
+}
+
+function getRelationshipDataDir() {
+  return (
+    process.env.YORISOU_RELATIONSHIP_DATA_DIR ||
+    (process.env.NODE_ENV === "production"
+      ? path.join("/tmp", "yorisou-relationship-intelligence")
+      : path.join(process.cwd(), "data", "relationship-intelligence"))
+  );
+}
+
+function getSharedStoreBucket() {
+  return process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
+}
+
+function getSharedStoreRegion() {
+  return process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
+}
+
+function shouldUseSharedStore() {
+  return Boolean(getSharedStoreBucket());
+}
 
 function getSharedStoreClient() {
-  if (!shouldUseSharedStore) {
+  if (!shouldUseSharedStore()) {
     return null;
   }
 
-  if (!sharedStoreClient) {
-    sharedStoreClient = new S3Client({ region: sharedStoreRegion });
+  const region = getSharedStoreRegion();
+
+  if (!sharedStoreClient || sharedStoreClientRegion !== region) {
+    sharedStoreClient = new S3Client({ region });
+    sharedStoreClientRegion = region;
   }
 
   return sharedStoreClient;
 }
 
 function localCollectionDir(collection: RelationshipCollection) {
-  return path.join(DATA_DIR, collection);
+  return path.join(getRelationshipDataDir(), collection);
 }
 
 function localRecordPath(collection: RelationshipCollection, recordId: string) {
@@ -43,7 +63,7 @@ async function ensureLocalCollection(collection: RelationshipCollection) {
 }
 
 function sharedKey(collection: RelationshipCollection, recordId: string) {
-  return `${STORE_PREFIX}/${collection}/${recordId}.json`;
+  return `${getRelationshipStorePrefix()}/${collection}/${recordId}.json`;
 }
 
 function isMissingObjectError(error: unknown) {
@@ -93,6 +113,7 @@ async function listLocalRecords<T>(collection: RelationshipCollection) {
 
 async function readSharedRecord<T>(collection: RelationshipCollection, recordId: string) {
   const client = getSharedStoreClient();
+  const sharedStoreBucket = getSharedStoreBucket();
 
   if (!client || !sharedStoreBucket) {
     return null;
@@ -117,6 +138,7 @@ async function readSharedRecord<T>(collection: RelationshipCollection, recordId:
 
 async function writeSharedRecord<T>(collection: RelationshipCollection, recordId: string, value: T) {
   const client = getSharedStoreClient();
+  const sharedStoreBucket = getSharedStoreBucket();
 
   if (!client || !sharedStoreBucket) {
     throw new Error("shared_store_not_configured");
@@ -134,12 +156,13 @@ async function writeSharedRecord<T>(collection: RelationshipCollection, recordId
 
 async function listSharedRecords<T>(collection: RelationshipCollection) {
   const client = getSharedStoreClient();
+  const sharedStoreBucket = getSharedStoreBucket();
 
   if (!client || !sharedStoreBucket) {
     return [];
   }
 
-  const prefix = `${STORE_PREFIX}/${collection}/`;
+  const prefix = `${getRelationshipStorePrefix()}/${collection}/`;
   let continuationToken: string | undefined;
   const keys: string[] = [];
 
@@ -177,16 +200,18 @@ async function listSharedRecords<T>(collection: RelationshipCollection) {
 }
 
 export function getRelationshipStoreStatus() {
+  const sharedStoreBucket = getSharedStoreBucket();
+
   return {
-    mode: shouldUseSharedStore ? ("shared_s3" as const) : ("local_file" as const),
-    sharedStoreBucketConfigured: shouldUseSharedStore,
-    dataDir: DATA_DIR,
-    prefix: STORE_PREFIX,
+    mode: shouldUseSharedStore() ? ("shared_s3" as const) : ("local_file" as const),
+    sharedStoreBucketConfigured: Boolean(sharedStoreBucket),
+    dataDir: getRelationshipDataDir(),
+    prefix: getRelationshipStorePrefix(),
   };
 }
 
 export async function getRelationshipRecord<T>(collection: RelationshipCollection, recordId: string) {
-  if (shouldUseSharedStore) {
+  if (shouldUseSharedStore()) {
     return readSharedRecord<T>(collection, recordId);
   }
 
@@ -194,7 +219,7 @@ export async function getRelationshipRecord<T>(collection: RelationshipCollectio
 }
 
 export async function putRelationshipRecord<T>(collection: RelationshipCollection, recordId: string, value: T) {
-  if (shouldUseSharedStore) {
+  if (shouldUseSharedStore()) {
     await writeSharedRecord(collection, recordId, value);
     return value;
   }
@@ -204,7 +229,7 @@ export async function putRelationshipRecord<T>(collection: RelationshipCollectio
 }
 
 export async function listRelationshipRecords<T>(collection: RelationshipCollection) {
-  if (shouldUseSharedStore) {
+  if (shouldUseSharedStore()) {
     return listSharedRecords<T>(collection);
   }
 

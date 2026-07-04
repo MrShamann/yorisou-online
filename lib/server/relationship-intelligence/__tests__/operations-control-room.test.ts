@@ -11,9 +11,7 @@ async function readJsonBody(response: Response) {
 }
 
 export async function runRelationshipIntelligenceOperationsControlRoomValidationTest() {
-  const tempDir = path.join(os.tmpdir(), "yorisou-relationship-intelligence-operations-control-room");
-  fs.rmSync(tempDir, { recursive: true, force: true });
-  fs.mkdirSync(tempDir, { recursive: true });
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "yorisou-relationship-intelligence-operations-control-room-"));
   process.env.YORISOU_RELATIONSHIP_DATA_DIR = tempDir;
   delete process.env.YORISOU_SHARED_STORE_BUCKET;
   delete process.env.YORISOU_SHARED_STORE_REGION;
