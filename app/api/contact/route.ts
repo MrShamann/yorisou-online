@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { storeFeedbackSubmission } from "@/lib/server/relationship-intelligence/service";
+import { storeFeedbackSubmission, updateFeedbackEmailDeliveryStatus } from "@/lib/server/relationship-intelligence/service";
 
 type ContactPayload = {
   name?: string;
@@ -15,6 +15,7 @@ type ContactPayload = {
   overlayId?: string;
   confidence?: string;
   lineUserId?: string;
+  metadata?: Record<string, unknown>;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,14 +40,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "invalid_payload" }, { status: 400 });
     }
 
+    const feedback = await storeFeedbackSubmission({
+      topic: payload.topic || "open-testing-contact",
+      routeContext: payload.routeContext || "/contact",
+      resultId: payload.resultId || null,
+      overlayId: payload.overlayId || null,
+      confidence: payload.confidence || null,
+      message: payload.message || "",
+      contactEmail: payload.email || null,
+      lineUserId: payload.lineUserId || null,
+      source: "contact_form",
+      entrySource: payload.topic || "contact",
+      metadata: payload.metadata,
+      emailDeliveryStatus: "pending",
+    });
+
     const resendApiKey = process.env.RESEND_API_KEY;
     const contactToEmail = process.env.CONTACT_TO_EMAIL;
     const contactFromEmail = process.env.CONTACT_FROM_EMAIL;
-
-    if (!resendApiKey || !contactToEmail || !contactFromEmail) {
-      console.error("Contact form is not configured. Missing RESEND_API_KEY, CONTACT_TO_EMAIL, or CONTACT_FROM_EMAIL.");
-      return NextResponse.json({ success: false, error: "contact_not_configured" }, { status: 503 });
-    }
 
     const locale = payload.locale === "en" ? "en" : "ja";
     const normalizedEmail = payload.email!.trim();
@@ -76,6 +87,21 @@ export async function POST(request: Request) {
       </div>
     `;
 
+    if (!resendApiKey || !contactToEmail || !contactFromEmail) {
+      console.error("Contact form is not configured. Missing RESEND_API_KEY, CONTACT_TO_EMAIL, or CONTACT_FROM_EMAIL.");
+      await updateFeedbackEmailDeliveryStatus({
+        feedbackId: feedback.record.id,
+        status: "failed",
+        error: "contact_not_configured",
+      });
+      return NextResponse.json({
+        success: true,
+        feedbackId: feedback.record.id,
+        deliveryStatus: "failed",
+        notice: "feedback_received_email_not_configured",
+      });
+    }
+
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -95,23 +121,25 @@ export async function POST(request: Request) {
     if (!resendResponse.ok) {
       const errorBody = await resendResponse.text();
       console.error("Resend email delivery failed:", errorBody);
-      return NextResponse.json({ success: false, error: "delivery_failed" }, { status: 502 });
+      await updateFeedbackEmailDeliveryStatus({
+        feedbackId: feedback.record.id,
+        status: "failed",
+        error: errorBody || "delivery_failed",
+      });
+      return NextResponse.json({
+        success: true,
+        feedbackId: feedback.record.id,
+        deliveryStatus: "failed",
+        notice: "feedback_received_email_failed",
+      });
     }
 
-    await storeFeedbackSubmission({
-      topic: payload.topic || "open-testing-contact",
-      routeContext: payload.routeContext || "/contact",
-      resultId: payload.resultId || null,
-      overlayId: payload.overlayId || null,
-      confidence: payload.confidence || null,
-      message: payload.message || "",
-      contactEmail: payload.email || null,
-      lineUserId: payload.lineUserId || null,
-      source: "contact_form",
-      entrySource: payload.topic || "contact",
+    await updateFeedbackEmailDeliveryStatus({
+      feedbackId: feedback.record.id,
+      status: "sent",
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, feedbackId: feedback.record.id, deliveryStatus: "sent" });
   } catch (error) {
     console.error("Contact API error:", error);
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });

@@ -61,6 +61,26 @@ function sanitizeMetadata(value: Record<string, unknown> | undefined) {
   return normalized;
 }
 
+const TEST_MARKER_KEYS = [
+  "__review_test",
+  "__post_merge_review_test",
+  "__local_smoke_test",
+  "__pr68_review_test",
+] as const;
+
+function isMarkedTestMetadata(metadata: Record<string, string | number | boolean | null> | undefined) {
+  return TEST_MARKER_KEYS.some((key) => Boolean(metadata?.[key]));
+}
+
+function sortByNewest<T extends { createdAt: string }>(records: T[]) {
+  return [...records].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
+function lastSeenFromRecords(records: Array<{ createdAt: string }>) {
+  const latest = sortByNewest(records)[0];
+  return latest?.createdAt || null;
+}
+
 function buildResultSnapshot(input: { resultId: string | null; overlayId: string | null; confidence: string | null }) {
   return {
     resultId: input.resultId,
@@ -297,6 +317,7 @@ export async function recordReportEvent(input: {
   overlayId?: string | null;
   confidence?: string | null;
   reportType: string;
+  metadata?: Record<string, unknown>;
 }) {
   const session = await ensureOpenTestingAnonymousSession({
     source: input.source,
@@ -313,6 +334,7 @@ export async function recordReportEvent(input: {
     reportType: input.reportType,
     eventType: input.eventType,
     route: input.route || null,
+    metadataJson: sanitizeMetadata(input.metadata),
     createdAt: nowIso(),
   };
   await putRelationshipRecord("report-events", record.id, record);
@@ -338,6 +360,7 @@ export async function recordReportEvent(input: {
     overlayId: input.overlayId,
     confidence: input.confidence,
     reportType: input.reportType,
+    metadata: sanitizeMetadata(input.metadata),
   });
 
   return { record, session };
@@ -354,12 +377,17 @@ export async function storeFeedbackSubmission(input: {
   lineUserId?: string | null;
   source?: string | null;
   entrySource?: string | null;
+  metadata?: Record<string, unknown>;
+  emailDeliveryStatus?: FeedbackSubmission["emailDeliveryStatus"];
+  emailDeliveryError?: string | null;
 }) {
   const session = await ensureOpenTestingAnonymousSession({
     source: input.source,
     entrySource: input.entrySource,
     route: input.routeContext,
   });
+  const sanitizedMetadata = sanitizeMetadata(input.metadata);
+  const createdAt = nowIso();
   const record: FeedbackSubmission = {
     id: createId("feedback"),
     anonymousSessionId: session.record.anonymousSessionId,
@@ -373,8 +401,15 @@ export async function storeFeedbackSubmission(input: {
     message: input.message,
     contactEmail: input.contactEmail || null,
     lineUserId: input.lineUserId || null,
-    status: "new",
-    createdAt: nowIso(),
+    status: "received",
+    emailDeliveryStatus: input.emailDeliveryStatus || "not_requested",
+    emailDeliveryError: input.emailDeliveryError || null,
+    emailLastAttemptedAt:
+      input.emailDeliveryStatus && input.emailDeliveryStatus !== "not_requested" ? createdAt : null,
+    metadataJson: sanitizedMetadata,
+    reviewedAt: null,
+    archivedAt: null,
+    createdAt,
   };
   await putRelationshipRecord("feedback-submissions", record.id, record);
 
@@ -393,10 +428,53 @@ export async function storeFeedbackSubmission(input: {
       topic: input.topic,
       hasContactEmail: Boolean(input.contactEmail),
       hasLineContext: Boolean(input.lineUserId),
+      ...sanitizedMetadata,
     },
   });
 
   return { record, session };
+}
+
+export async function updateFeedbackSubmissionStatus(input: {
+  feedbackId: string;
+  status: FeedbackSubmission["status"];
+}) {
+  const existing = await getRelationshipRecord<FeedbackSubmission>("feedback-submissions", input.feedbackId);
+
+  if (!existing) {
+    throw new Error("feedback_not_found");
+  }
+
+  const timestamp = nowIso();
+  const updated: FeedbackSubmission = {
+    ...existing,
+    status: input.status,
+    reviewedAt: input.status === "reviewed" ? timestamp : input.status === "received" ? null : existing.reviewedAt,
+    archivedAt: input.status === "archived" ? timestamp : input.status === "received" ? null : existing.archivedAt,
+  };
+  await putRelationshipRecord("feedback-submissions", updated.id, updated);
+  return updated;
+}
+
+export async function updateFeedbackEmailDeliveryStatus(input: {
+  feedbackId: string;
+  status: FeedbackSubmission["emailDeliveryStatus"];
+  error?: string | null;
+}) {
+  const existing = await getRelationshipRecord<FeedbackSubmission>("feedback-submissions", input.feedbackId);
+
+  if (!existing) {
+    throw new Error("feedback_not_found");
+  }
+
+  const updated: FeedbackSubmission = {
+    ...existing,
+    emailDeliveryStatus: input.status,
+    emailDeliveryError: input.status === "failed" ? input.error || "delivery_failed" : null,
+    emailLastAttemptedAt: input.status === "not_requested" ? existing.emailLastAttemptedAt : nowIso(),
+  };
+  await putRelationshipRecord("feedback-submissions", updated.id, updated);
+  return updated;
 }
 
 export async function upsertRelationshipMirrorUser(input: {
@@ -626,17 +704,40 @@ export async function evaluateOpenTestingFollowUps(input?: { userProfileId?: str
     status: MessageLog["status"];
     skipReason: string | null;
   }> = [];
+  const skippedRelationships: Array<{
+    userProfileId: string;
+    status: RelationshipStatusRecord["status"];
+    reason: string;
+  }> = [];
 
   for (const relationship of relationships) {
     if (input?.userProfileId && input.userProfileId !== relationship.userProfileId) {
       continue;
     }
-    if (relationship.channel !== "line" || relationship.status !== "active") {
+    if (relationship.channel !== "line") {
+      skippedRelationships.push({
+        userProfileId: relationship.userProfileId,
+        status: relationship.status,
+        reason: "non_line_channel",
+      });
+      continue;
+    }
+    if (relationship.status !== "active") {
+      skippedRelationships.push({
+        userProfileId: relationship.userProfileId,
+        status: relationship.status,
+        reason: `relationship_${relationship.status}`,
+      });
       continue;
     }
 
     const userLogs = messageLogs.filter((entry) => entry.userProfileId === relationship.userProfileId);
     if (!hasFrequencyCapacity(userLogs)) {
+      skippedRelationships.push({
+        userProfileId: relationship.userProfileId,
+        status: relationship.status,
+        reason: "frequency_cap_reached",
+      });
       continue;
     }
 
@@ -682,6 +783,7 @@ export async function evaluateOpenTestingFollowUps(input?: { userProfileId?: str
     }
   }
 
+  const createdLogs: MessageLog[] = [];
   if (input?.createLogs) {
     await Promise.all(
       candidates.map(async (candidate) => {
@@ -699,18 +801,35 @@ export async function evaluateOpenTestingFollowUps(input?: { userProfileId?: str
           createdAt: nowIso(),
         };
         await putRelationshipRecord("message-logs", record.id, record);
+        createdLogs.push(record);
       }),
     );
   }
+
+  const queuedCount = candidates.filter((entry) => entry.status === "queued").length;
+  const skippedCount = candidates.filter((entry) => entry.status === "skipped").length;
 
   return {
     providerMode: sendDisabled ? "SEND_DISABLED_NO_PROVIDER" : "READY_TO_QUEUE",
     rules: followUpRules,
     candidates,
+    skippedRelationships,
+    summary: {
+      candidateCount: candidates.length,
+      queuedCount,
+      skippedCount,
+      activeRelationshipCount: relationships.filter((entry) => entry.channel === "line" && entry.status === "active").length,
+    },
+    createdLogs,
+    frequencyCaps: {
+      maxPer24Hours: 1,
+      maxPer7Days: 2,
+      maxPer30Days: 4,
+    },
   };
 }
 
-function countBy(values: string[]) {
+function countBy(values: string[]): Record<string, number> {
   const counts = new Map<string, number>();
 
   for (const value of values) {
@@ -728,32 +847,201 @@ export async function getOpenTestingDashboardSnapshot() {
     listRelationshipRecords<RelationshipStatusRecord>("relationship-statuses"),
     listRelationshipRecords<MessageLog>("message-logs"),
   ]);
+  const store = getRelationshipStoreStatus();
+  const lineConfig = getLineMessagingConfigStatus();
+  const realFunnelEvents = funnelEvents.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
+  const realReportEvents = reportEvents.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
+  const realFeedback = feedback.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
+  const testFunnelEvents = funnelEvents.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
+  const testReportEvents = reportEvents.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
+  const testFeedback = feedback.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
+  const funnelSummary = countBy(realFunnelEvents.map((entry) => entry.eventName));
+  const reportInterestSummary = countBy(realReportEvents.map((entry) => entry.eventType));
+  const messageSummary = countBy(messageLogs.map((entry) => entry.status));
+  const resultComboCounts = countBy(
+    realFunnelEvents
+      .filter((entry) => entry.resultId || entry.overlayId || entry.confidence)
+      .map((entry) => `${entry.resultId || "unknown"} / ${entry.overlayId || "unknown"} / ${entry.confidence || "unknown"}`),
+  );
+  const latestFunnelEvents = sortByNewest(realFunnelEvents);
+  const latestReportEvents = sortByNewest(realReportEvents);
+  const latestFeedback = sortByNewest(feedback);
+  const latestMessageLogs = sortByNewest(messageLogs);
+  const latestRelationshipStatuses = [...relationshipStatuses].sort(
+    (a, b) => Date.parse(b.lastInteractionAt) - Date.parse(a.lastInteractionAt),
+  );
+  const resultDistribution = {
+    resultId: countBy(realFunnelEvents.map((entry) => entry.resultId || "unknown")),
+    overlayId: countBy(realFunnelEvents.map((entry) => entry.overlayId || "unknown")),
+    confidence: countBy(realFunnelEvents.map((entry) => entry.confidence || "unknown")),
+  };
+  const executive = {
+    openTestingViews: funnelSummary.open_testing_viewed || 0,
+    testStarts: funnelSummary.test_started || 0,
+    testCompletions: funnelSummary.test_completed || 0,
+    completionRate:
+      (funnelSummary.test_started || 0) > 0
+        ? Number((((funnelSummary.test_completed || 0) / (funnelSummary.test_started || 0)) * 100).toFixed(1))
+        : null,
+    resultViews: funnelSummary.result_viewed || 0,
+    reportPreviewViews: reportInterestSummary.preview_viewed || 0,
+    fullReportViews: reportInterestSummary.full_viewed || 0,
+    feedbackCount: realFeedback.length,
+    activeLineRelationships: relationshipStatuses.filter((entry) => entry.channel === "line" && entry.status === "active").length,
+    queuedFollowUps: messageSummary.queued || 0,
+    skippedFollowUps: messageSummary.skipped || 0,
+    sentFollowUps: messageSummary.sent || 0,
+  };
+  const funnelSteps = [
+    ["open_testing_viewed", "Open testing viewed"],
+    ["open_testing_start_clicked", "Open testing start clicked"],
+    ["test_started", "Test started"],
+    ["test_completed", "Test completed"],
+    ["result_viewed", "Result viewed"],
+    ["report_preview_viewed", "Report preview viewed"],
+    ["report_intent_clicked", "Full report intent clicked"],
+    ["full_report_viewed", "Full report viewed"],
+    ["contact_feedback_submitted", "Feedback submitted"],
+  ] as const;
+  const funnelTable = funnelSteps.map(([eventName, label], index) => {
+    const currentCount = funnelSummary[eventName] || 0;
+    const previousCount = index > 0 ? funnelSummary[funnelSteps[index - 1][0]] || 0 : 0;
+    return {
+      eventName,
+      label,
+      count: currentCount,
+      lastSeen: lastSeenFromRecords(realFunnelEvents.filter((entry) => entry.eventName === eventName)),
+      conversionFromPrior:
+        index > 0 && previousCount > 0 ? Number(((currentCount / previousCount) * 100).toFixed(1)) : null,
+    };
+  });
+  const feedbackInbox = latestFeedback.slice(0, 40).map((entry) => ({
+    ...entry,
+    isTest: isMarkedTestMetadata(entry.metadataJson),
+  }));
+  const reportInterest: Record<string, number> & {
+    conversions: {
+      previewToIntent: number | null;
+      intentToFull: number | null;
+      fullToDownload: number | null;
+    };
+  } = Object.assign({}, reportInterestSummary, {
+    conversions: {
+      previewToIntent:
+        (reportInterestSummary.preview_viewed || 0) > 0
+          ? Number((((reportInterestSummary.intent_clicked || 0) / (reportInterestSummary.preview_viewed || 0)) * 100).toFixed(1))
+          : null,
+      intentToFull:
+        (reportInterestSummary.intent_clicked || 0) > 0
+          ? Number((((reportInterestSummary.full_viewed || 0) / (reportInterestSummary.intent_clicked || 0)) * 100).toFixed(1))
+          : null,
+      fullToDownload:
+        (reportInterestSummary.full_viewed || 0) > 0
+          ? Number((((reportInterestSummary.downloaded || 0) / (reportInterestSummary.full_viewed || 0)) * 100).toFixed(1))
+          : null,
+    },
+  });
+  const relationshipDetails = latestRelationshipStatuses.slice(0, 25).map((relationship) => {
+    const userFunnel = realFunnelEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
+    const userReports = realReportEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
+    const userFeedback = feedback.filter((entry) => entry.userProfileId === relationship.userProfileId);
+    const userMessages = messageLogs.filter((entry) => entry.userProfileId === relationship.userProfileId);
+    const latestResultEvent = sortByNewest(
+      userFunnel.filter((entry) => entry.resultId || entry.overlayId || entry.confidence),
+    )[0];
+
+    return {
+      userProfileId: relationship.userProfileId,
+      relationshipStatus: relationship.status,
+      channel: relationship.channel,
+      authIdentityId: relationship.authIdentityId,
+      activationSource: relationship.activationSource,
+      activatedAt: relationship.activatedAt,
+      lastSeenAt: relationship.lastInteractionAt,
+      stopReason: relationship.stopReason,
+      resultActivityCount: userFunnel.filter((entry) => entry.eventName === "result_viewed").length,
+      reportActivityCount: userReports.length,
+      feedbackCount: userFeedback.length,
+      messageLogSummary: countBy(userMessages.map((entry) => entry.status)),
+      latestResultSnapshot: latestResultEvent
+        ? {
+            resultId: latestResultEvent.resultId,
+            overlayId: latestResultEvent.overlayId,
+            confidence: latestResultEvent.confidence,
+          }
+        : null,
+    };
+  });
 
   return {
-    store: getRelationshipStoreStatus(),
-    funnelSummary: countBy(funnelEvents.map((entry) => entry.eventName)),
-    resultDistribution: {
-      resultId: countBy(funnelEvents.map((entry) => entry.resultId || "unknown")),
-      overlayId: countBy(funnelEvents.map((entry) => entry.overlayId || "unknown")),
-      confidence: countBy(funnelEvents.map((entry) => entry.confidence || "unknown")),
+    store,
+    dataQuality: {
+      defaultMode: "exclude_marked_tests",
+      testMarkers: TEST_MARKER_KEYS,
+      totalFunnelEvents: funnelEvents.length,
+      excludedTestFunnelEvents: testFunnelEvents.length,
+      totalReportEvents: reportEvents.length,
+      excludedTestReportEvents: testReportEvents.length,
+      totalFeedbackSubmissions: feedback.length,
+      excludedTestFeedbackSubmissions: testFeedback.length,
+      invalidRejectedCountAvailable: false,
+      invalidRejectedCount: null,
+      lastEventAt:
+        lastSeenFromRecords([...funnelEvents, ...reportEvents, ...feedback, ...messageLogs]) ||
+        latestRelationshipStatuses[0]?.lastInteractionAt ||
+        null,
+      storeMode: store.mode,
+      storagePath: store.dataDir,
+      followUpSendMode: lineConfig.messagingConfigured ? "READY_TO_QUEUE" : "SEND_DISABLED_NO_PROVIDER",
     },
-    reportInterest: countBy(reportEvents.map((entry) => entry.eventType)),
-    feedbackRecent: feedback.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 20),
+    executive,
+    funnelSummary,
+    funnelTable,
+    resultDistribution,
+    resultIntelligence: {
+      resultId: resultDistribution.resultId,
+      overlayId: resultDistribution.overlayId,
+      confidence: resultDistribution.confidence,
+      topResultReportCombos: Object.entries(resultComboCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+        .map(([key, count]) => ({ key, count })),
+    },
+    reportInterest,
+    feedbackRecent: sortByNewest(realFeedback).slice(0, 20),
+    feedbackInbox,
     relationshipSummary: {
       activeLineRelationships: relationshipStatuses.filter((entry) => entry.channel === "line" && entry.status === "active").length,
       pausedCount: relationshipStatuses.filter((entry) => entry.status === "paused").length,
       stoppedCount: relationshipStatuses.filter((entry) => entry.status === "stopped").length,
       blockedCount: relationshipStatuses.filter((entry) => entry.status === "blocked").length,
-      recentActivations: funnelEvents
+      recentActivations: latestFunnelEvents
         .filter((entry) => entry.eventName === "line_relationship_activated")
-        .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
         .slice(0, 10),
+      recentStops: latestRelationshipStatuses.filter((entry) => entry.status === "stopped").slice(0, 10),
+    },
+    relationshipDetails,
+    followUpOperations: {
+      providerMode: lineConfig.messagingConfigured ? "READY_TO_QUEUE" : "SEND_DISABLED_NO_PROVIDER",
+      recentLogs: latestMessageLogs.slice(0, 20),
+      counts: {
+        queued: messageSummary.queued || 0,
+        skipped: messageSummary.skipped || 0,
+        sent: messageSummary.sent || 0,
+        failed: messageSummary.failed || 0,
+      },
+      frequencyCaps: {
+        maxPer24Hours: 1,
+        maxPer7Days: 2,
+        maxPer30Days: 4,
+      },
     },
     recentActivity: {
-      funnel: funnelEvents.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 20),
-      report: reportEvents.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 20),
-      feedback: feedback.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 10),
-      messages: messageLogs.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 10),
+      funnel: latestFunnelEvents.slice(0, 20),
+      report: latestReportEvents.slice(0, 20),
+      feedback: latestFeedback.slice(0, 10),
+      relationships: latestRelationshipStatuses.slice(0, 10),
+      messages: latestMessageLogs.slice(0, 10),
     },
   };
 }

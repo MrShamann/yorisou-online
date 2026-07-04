@@ -60,7 +60,12 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
 
   const afterInvalidDashboard = await service.getOpenTestingDashboardSnapshot();
   assert.deepEqual(afterInvalidDashboard.funnelSummary, {});
-  assert.deepEqual(afterInvalidDashboard.reportInterest, {});
+  assert.equal(afterInvalidDashboard.reportInterest.intent_clicked, undefined);
+  assert.deepEqual(afterInvalidDashboard.reportInterest.conversions, {
+    previewToIntent: null,
+    intentToFull: null,
+    fullToDownload: null,
+  });
   assert.equal(afterInvalidDashboard.relationshipSummary.activeLineRelationships, 0);
 
   const validOpenTesting = await postOpenTestingEvent(
@@ -120,7 +125,7 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(fullReportPageSource.includes('eventType="full_viewed"'), true);
   assert.equal(lineAuthStartSource.includes('eventName: "line_save_clicked"'), false);
   assert.equal(
-    contactRouteSource.indexOf("await storeFeedbackSubmission") > contactRouteSource.indexOf("if (!resendResponse.ok)"),
+    contactRouteSource.indexOf("await storeFeedbackSubmission") < contactRouteSource.indexOf("if (!resendResponse.ok)"),
     true,
   );
 
