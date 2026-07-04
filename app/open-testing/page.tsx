@@ -41,7 +41,7 @@ export default function OpenTestingPage() {
       <section className="border-b border-[rgba(23,59,53,0.08)] bg-[radial-gradient(circle_at_14%_0%,_rgba(217,130,86,0.11),_transparent_30%),radial-gradient(circle_at_88%_7%,_rgba(223,238,235,0.75),_transparent_34%),linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_60%,_#F3FAF6_100%)]">
         <div className="container py-8 md:py-12">
           <div className="mx-auto max-w-[44rem] space-y-4">
-            <p className="service-kicker">Yorisou Open Testing</p>
+            <p className="service-kicker">公開テストのご案内</p>
             <div className="inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/84 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">
               公開テスト中
             </div>
