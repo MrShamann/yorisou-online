@@ -1,115 +1,81 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { DIAGNOSTIC_ENTRY_CARDS } from "../data/platformNarrative";
+
 export const metadata: Metadata = {
   title: "テスト一覧 | Yorisou",
   description:
-    "いまの状態を、いくつかの入口から軽く整理できます。診断や固定的なラベルづけではなく、自分の状態を見直すための小さなチェックです。",
+    "Yorisouの診断入口を一覧で見られるページです。今の状態、関係の距離感、仕事や生活のリズムを見つめるための入口から、いまの自分に近いテーマを選べます。",
 };
-
-const activeTests = [
-  {
-    id: "quick-check",
-    kicker: "クイックチェック",
-    title: "今の自分の流れを軽く整理する",
-    description: "今の状態を軽く整理する24問のチェックです。今の感覚に近いものをひとつずつ選ぶだけ。答えると無料結果が返ってきます。",
-    href: "/check-in",
-    ctaLabel: "はじめる",
-    pills: ["24問", "無料結果あり", "ログイン不要"],
-    primary: true,
-  },
-  {
-    id: "relationship-fatigue",
-    kicker: "関係疲れチェック",
-    title: "人との距離感や疲れ方を見直す",
-    description: "人との関わり方や疲れのパターンを、今の状態から小さく整理するための入口です。",
-    href: "/tests/relationship-fatigue",
-    ctaLabel: "内容を見る",
-    pills: ["関係・距離感", "無料"],
-    primary: false,
-  },
-  {
-    id: "love-distance",
-    kicker: "恋愛距離チェック",
-    title: "恋愛や親密さの距離感を整理する",
-    description: "恋愛や親密さの距離感を整理するための入口です。今の自分の感覚を静かに確認できます。",
-    href: "/tests/love-distance",
-    ctaLabel: "内容を見る",
-    pills: ["恋愛・距離感", "無料"],
-    primary: false,
-  },
-] as const;
-
-const comingSoonTests = [
-  { id: "work-rhythm", label: "仕事・リズム", description: "仕事のペースや消耗感を整理する" },
-  { id: "learning", label: "学び・選び方", description: "学びの傾向や選択スタイルを見直す" },
-  { id: "life-recovery", label: "生活・回復", description: "日常の回復感や生活リズムを確認する" },
-  { id: "monthly", label: "月次チェック", description: "月ごとの変化を継続的に記録する" },
-  { id: "compatibility", label: "相性", description: "相性のパターンを静かに整理する" },
-] as const;
 
 export default function TestsPage() {
   return (
     <main className="min-h-screen bg-[#FBFAF6] text-[#2F2A28]">
       <section className="border-b border-[rgba(23,59,53,0.1)]">
         <div className="container py-10 md:py-16">
-          <div className="mx-auto max-w-[42rem]">
-            <p className="service-kicker">Yorisou テスト一覧</p>
-            <h1 className="display-serif mt-4 text-[2rem] leading-[1.18] text-[#2F2A28] md:text-[2.8rem]">
-              今の状態に合う入口を、<span className="block text-[#315F50]">静かに選ぶ。</span>
+          <div className="mx-auto max-w-[46rem]">
+            <p className="service-kicker">Yorisou 診断入口</p>
+            <h1 className="display-serif mt-4 text-[2rem] leading-[1.18] text-[#2F2A28] md:text-[2.95rem]">
+              いまの自分に近い入口を選ぶ
             </h1>
-            <p className="mt-4 max-w-[34rem] text-[15px] leading-8 text-[#6F625C]">
-              いまの状態を、いくつかの入口から軽く整理できます。診断や固定的なラベルづけではなく、自分の状態を見直すための小さなチェックです。
+            <p className="mt-4 max-w-[38rem] text-[15px] leading-8 text-[#6F625C]">
+              Yorisouの診断は、性格を決めつけるものではありません。今の状態、関係の距離感、仕事や生活のリズムを見つめるための入口です。
+            </p>
+            <p className="mt-3 max-w-[38rem] text-[12px] leading-6 text-[#8A7764]">
+              公開中の入口はそのまま始められます。先行テーマは、関心やフィードバックを受け取りながら整えていきます。
             </p>
           </div>
         </div>
       </section>
 
-      {/* Active tests */}
       <section className="container py-8 md:py-10">
-        <div className="mx-auto max-w-[42rem]">
-          <p
-            className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            style={{ color: "#9A9088" }}
-          >
-            今使えるチェック
-          </p>
+        <div className="mx-auto max-w-[52rem]">
           <div className="grid gap-4">
-            {activeTests.map((test) => (
+            {DIAGNOSTIC_ENTRY_CARDS.map((test) => (
               <div
-                key={test.id}
-                className={`rounded-[1.35rem] border p-5 shadow-[0_18px_38px_rgba(23,59,53,0.07)] md:p-6 ${
-                  test.primary
+                key={test.title}
+                className={`rounded-[1.4rem] border p-5 shadow-[0_18px_38px_rgba(23,59,53,0.07)] md:p-6 ${
+                  test.availableNow
                     ? "border-[rgba(23,59,53,0.16)] bg-white/96"
                     : "border-[rgba(23,59,53,0.1)] bg-white/88"
                 }`}
               >
-                <div className="flex flex-wrap gap-1.5">
-                  {test.pills.map((pill) => (
-                    <span
-                      key={pill}
-                      className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold text-[#315F50]"
-                    >
-                      {pill}
-                    </span>
-                  ))}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold text-[#315F50]">
+                    {test.category}
+                  </span>
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${
+                      test.availableNow
+                        ? "bg-[#173B35] text-white"
+                        : "border border-[rgba(23,59,53,0.08)] bg-[rgba(23,59,53,0.04)] text-[#7A7068]"
+                    }`}
+                  >
+                    {test.status}
+                  </span>
+                  <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.08)] bg-white px-3 py-1 text-[11px] font-semibold text-[#8A7764]">
+                    {test.time}
+                  </span>
                 </div>
-                <p className="service-kicker mt-3">{test.kicker}</p>
-                <h2 className="display-serif mt-2 text-[1.3rem] leading-[1.38] text-[#2F2A28] md:text-[1.55rem]">
+                <h2 className="display-serif mt-4 text-[1.35rem] leading-[1.38] text-[#2F2A28] md:text-[1.62rem]">
                   {test.title}
                 </h2>
-                <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{test.description}</p>
+                <p className="mt-2 text-[14px] leading-7 text-[#5F5750]">{test.hook}</p>
+                <div className="mt-4 rounded-[1.05rem] border border-[rgba(23,59,53,0.08)] bg-[#F8F7F4] px-4 py-3">
+                  <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">この入口で受け取れるもの</p>
+                  <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{test.outcome}</p>
+                </div>
                 <div className="mt-4">
                   <Link
                     href={test.href}
                     className={`inline-flex min-h-[50px] items-center justify-center rounded-full px-6 py-3 text-[15px] font-semibold transition hover:-translate-y-0.5 ${
-                      test.primary
-                        ? "border border-[#173B35] bg-[#173B35] shadow-[0_14px_28px_rgba(23,59,53,0.22)] hover:bg-[#0F2F2B]"
+                      test.availableNow
+                        ? "border border-[#173B35] bg-[#173B35] text-white shadow-[0_14px_28px_rgba(23,59,53,0.22)] hover:bg-[#0F2F2B]"
                         : "border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] text-[#315F50] hover:bg-[#ddf0e8]"
                     }`}
-                    style={test.primary ? { color: "#fff" } : undefined}
                   >
-                    {test.ctaLabel}
+                    {test.label}
                   </Link>
                 </div>
               </div>
@@ -118,48 +84,50 @@ export default function TestsPage() {
         </div>
       </section>
 
-      {/* Coming soon */}
       <section className="container pb-12 md:pb-16">
-        <div className="mx-auto max-w-[42rem]">
-          <div className="border-t pt-8" style={{ borderColor: "rgba(23,59,53,0.08)" }}>
-            <p
-              className="mb-4 text-[11px] font-semibold uppercase tracking-[0.16em]"
-              style={{ color: "#9A9088" }}
-            >
-              これから増えるチェック
-            </p>
-            <div className="grid gap-2.5">
-              {comingSoonTests.map((test) => (
-                <div
-                  key={test.id}
-                  className="flex items-center justify-between rounded-[1.1rem] px-5 py-4"
-                  style={{
-                    background: "rgba(23,59,53,0.03)",
-                    border: "1px solid rgba(23,59,53,0.07)",
-                  }}
-                >
-                  <div>
-                    <p className="text-[14px] font-semibold text-[#6F625C]">{test.label}</p>
-                    <p className="mt-0.5 text-[12px] leading-6 text-[#B0A89E]">{test.description}</p>
-                  </div>
-                  <span
-                    className="ml-4 shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold"
-                    style={{ background: "rgba(23,59,53,0.06)", color: "#9A9088" }}
-                  >
-                    準備中
-                  </span>
-                </div>
-              ))}
+        <div className="mx-auto max-w-[52rem]">
+          <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.08)] bg-white/75 px-5 py-5">
+            <p className="service-kicker">入口の先でつながるもの</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">結果とレポート</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  無料結果だけで終わらず、必要なら深いレポート preview や関連導線へ進めます。
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">LINE保存</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  結果を見返したい人は、LINEから無理なく続けられる入口を選べます。
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">次の提案</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  今後は、Yorisou SelectやDesignの提案候補もテーマごとに育てていきます。
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <div className="container pb-8">
-        <div className="mx-auto max-w-[42rem]">
+        <div className="mx-auto max-w-[52rem]">
           <p className="text-[12px] leading-7 text-[#8A7764]">
-            いずれも診断や評価ではありません。今の状態の傾向を理解するための入口です。
+            いずれも医療・心理診断ではありません。今の状態を見直し、次の選択肢を考えるための入口です。
           </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/open-testing" className="text-[13px] font-semibold text-[#315F50] hover:underline">
+              公開中の入口を見る
+            </Link>
+            <Link href="/line/mini-app" className="text-[13px] font-semibold text-[#315F50] hover:underline">
+              LINE入口を見る
+            </Link>
+            <Link href="/contact?topic=open-testing" className="text-[13px] font-semibold text-[#315F50] hover:underline">
+              先行テーマへの関心を送る
+            </Link>
+          </div>
         </div>
       </div>
     </main>
