@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
 import { trackDteEvent } from "../components/DteEventTracker";
+import { trackOpenTestingReportEvent } from "../components/OpenTestingTracker";
 import { readReportIntent, saveReportIntent, subscribeReportIntent } from "./reportIntentState";
 
 type ReportIntentContext = {
@@ -47,6 +48,16 @@ export default function ReportIntentAction({
       source: "intent_cta",
       locale: "ja",
       ...(resultContext?.resultId ? { resultKey: resultContext.resultId } : {}),
+    });
+    void trackOpenTestingReportEvent({
+      eventType: "intent_clicked",
+      reportType: "self-understanding-v0.2.1",
+      route: "/report-preview",
+      source: "intent_cta",
+      entrySource: "report-preview",
+      resultId: resultContext?.resultId || null,
+      overlayId: resultContext?.overlayId || null,
+      confidence: resultContext?.confidenceBand || null,
     });
   };
 

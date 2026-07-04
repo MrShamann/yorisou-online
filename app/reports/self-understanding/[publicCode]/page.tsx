@@ -6,6 +6,7 @@ import type { Components } from "react-markdown";
 
 import { MvpActionLink, MvpCard, MvpPill } from "@/app/components/MvpSurface";
 import OpenTestingNotice from "@/app/components/OpenTestingNotice";
+import { OpenTestingReportTracker } from "@/app/components/OpenTestingTracker";
 import { buildPublicResultHref } from "@/app/check-in/resultCompatibility";
 import { findPublicArchetypeContentByCode } from "@/lib/yorisou/public-result";
 import { PUBLIC_ARCHETYPE_TAXONOMY } from "@/lib/yorisou/public-result/taxonomy";
@@ -115,6 +116,14 @@ export default async function SelfUnderstandingReportPage({
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#FFF9F2_0%,#fffdf8_42%,#F3FAF6_100%)] text-[#2F2A28]">
+      <OpenTestingReportTracker
+        eventType="full_viewed"
+        reportType="self-understanding-v0.2.1"
+        route={`/reports/self-understanding/${report.metadata.publicCode}`}
+        source="full_report_page"
+        entrySource="full-report"
+        resultId={report.metadata.publicCode}
+      />
       <div className="container py-5 md:py-8">
         <div className="mx-auto max-w-[48rem] space-y-5">
           <Link href={resultHref} className="inline-flex items-center gap-1.5 text-[13px] text-[#49615B] hover:underline">

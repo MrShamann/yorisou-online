@@ -67,10 +67,12 @@ export default function ContactForm({
   locale = "ja",
   initialInquiryType,
   initialMessage,
+  trackingTopic,
 }: {
   locale?: Locale;
   initialInquiryType?: string;
   initialMessage?: string;
+  trackingTopic?: string;
 }) {
   const [form, setForm] = useState<FormState>({
     ...initialState,
@@ -115,6 +117,8 @@ export default function ContactForm({
           ...form,
           email: form.email.trim(),
           locale,
+          topic: trackingTopic ?? "contact",
+          routeContext: typeof window !== "undefined" ? window.location.pathname + window.location.search : "/contact",
         }),
       });
 

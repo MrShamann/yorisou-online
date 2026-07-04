@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
+import { trackOpenTestingEvent } from "../components/OpenTestingTracker";
 import { buildAbsolutePublicResultUrl, buildPublicResultHref } from "./resultCompatibility";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import {
@@ -124,6 +125,26 @@ export default function MiniTestFlow() {
     resultNavigationStartedRef.current = true;
     const target = preparedTarget ?? buildPreparedResultTarget(nextAnswers);
     saveCurrentStateResult(target.payload);
+    void trackOpenTestingEvent({
+      eventName: "test_completed",
+      route: "/check-in",
+      source: "mini_test_flow",
+      entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
+      resultId: target.payload.resultId,
+      overlayId: target.payload.overlayId,
+      confidence: target.payload.confidenceBand,
+      testVersion: "120q-current-state-v1",
+    });
+    void trackOpenTestingEvent({
+      eventName: "result_generated",
+      route: "/check-in",
+      source: "mini_test_flow",
+      entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
+      resultId: target.payload.resultId,
+      overlayId: target.payload.overlayId,
+      confidence: target.payload.confidenceBand,
+      testVersion: "120q-current-state-v1",
+    });
 
     setNavigationFallbackHref(null);
     clearNavigationFallbackTimer();
@@ -169,6 +190,13 @@ export default function MiniTestFlow() {
     setPhase("quiz");
     setCurrentIndex(0);
     setAnswers({});
+    void trackOpenTestingEvent({
+      eventName: "test_started",
+      route: "/check-in",
+      source: "mini_test_flow",
+      entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
+      testVersion: "120q-current-state-v1",
+    });
   }
 
   function selectOption(optionId: CurrentStateQuestion["options"][number]["id"]) {
@@ -182,6 +210,17 @@ export default function MiniTestFlow() {
     };
 
     setAnswers(nextAnswers);
+    void trackOpenTestingEvent({
+      eventName: "question_answered",
+      route: "/check-in",
+      source: "mini_test_flow",
+      entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
+      testVersion: "120q-current-state-v1",
+      metadata: {
+        questionId: currentQuestion.id,
+        currentIndex,
+      },
+    });
 
     if (isMiniAppEntry && isFinalQuestion) {
       clearAutoAdvanceTimer();

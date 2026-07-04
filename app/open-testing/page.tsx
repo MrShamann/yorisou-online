@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import OpenTestingNotice from "../components/OpenTestingNotice";
-import { MvpActionLink, MvpCard, MvpSection } from "../components/MvpSurface";
+import { MvpCard, MvpSection } from "../components/MvpSurface";
+import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 
 export const metadata: Metadata = {
   title: "公開テスト | Yorisou",
@@ -38,6 +38,7 @@ const TESTING_NOTES = [
 export default function OpenTestingPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_42%,_#F3FAF6_100%)] text-[#2F2A28]">
+      <OpenTestingPageTracker eventName="open_testing_viewed" route="/open-testing" source="open_testing_page" entrySource="open-testing" />
       <section className="border-b border-[rgba(23,59,53,0.08)] bg-[radial-gradient(circle_at_14%_0%,_rgba(217,130,86,0.11),_transparent_30%),radial-gradient(circle_at_88%_7%,_rgba(223,238,235,0.75),_transparent_34%),linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_60%,_#F3FAF6_100%)]">
         <div className="container py-8 md:py-12">
           <div className="mx-auto max-w-[44rem] space-y-4">
@@ -54,19 +55,24 @@ export default function OpenTestingPage() {
               120問のチェックから、結果、詳しいレポート、保存、感想送信まで、現在のYorisouで試せる流れをまとめています。
             </p>
             <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-              <MvpActionLink
+              <OpenTestingTrackingLink
                 href="/check-in?source=open-testing&entry_source=open-testing"
-                label="公開テストを始める"
-                tone="primary"
-                className="rounded-full"
-              />
-              <MvpActionLink
+                tracking={{ eventName: "open_testing_start_clicked", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
+              >
+                公開テストを始める
+              </OpenTestingTrackingLink>
+              <OpenTestingTrackingLink
                 href="/line/mini-app"
-                label="LINEから始める"
-                tone="secondary"
-                className="rounded-full"
-              />
+                tracking={{ eventName: "line_entry_opened", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white/85 px-5 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
+              >
+                LINEから始める
+              </OpenTestingTrackingLink>
             </div>
+            <p className="text-[12px] leading-6 text-[#6F625C]">
+              LINEから始めると、結果の見返しや関連するお知らせをLINEで受け取れる状態が有効になることがあります。不要な場合はいつでも停止できます。
+            </p>
           </div>
         </div>
       </section>
@@ -122,15 +128,27 @@ export default function OpenTestingPage() {
           <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)]">
             <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">関連ページ</p>
             <div className="flex flex-col gap-2.5">
-              <Link href="/contact?topic=open-testing" className="text-[14px] font-semibold text-[#315F50] hover:underline">
+              <OpenTestingTrackingLink
+                href="/contact?topic=open-testing"
+                tracking={{ eventName: "contact_feedback_submitted", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
+                className="text-[14px] font-semibold text-[#315F50] hover:underline"
+              >
                 公開テストの感想・不具合報告を送る
-              </Link>
-              <Link href="/result?resultId=EM-AK&overlayId=balancing&confidence=low" className="text-[14px] font-semibold text-[#315F50] hover:underline">
+              </OpenTestingTrackingLink>
+              <OpenTestingTrackingLink
+                href="/result?resultId=EM-AK&overlayId=balancing&confidence=low"
+                tracking={{ eventName: "result_viewed", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing", resultId: "EM-AK", overlayId: "balancing", confidence: "low" }}
+                className="text-[14px] font-semibold text-[#315F50] hover:underline"
+              >
                 結果ページの見本を見る
-              </Link>
-              <Link href="/reports/self-understanding/EM-AK" className="text-[14px] font-semibold text-[#315F50] hover:underline">
+              </OpenTestingTrackingLink>
+              <OpenTestingTrackingLink
+                href="/reports/self-understanding/EM-AK"
+                tracking={{ reportEvent: { eventType: "full_viewed", reportType: "self-understanding-v0.2.1", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing", resultId: "EM-AK" } }}
+                className="text-[14px] font-semibold text-[#315F50] hover:underline"
+              >
                 詳しいレポートの見本を見る
-              </Link>
+              </OpenTestingTrackingLink>
             </div>
           </MvpCard>
         </div>

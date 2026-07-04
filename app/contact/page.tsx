@@ -72,6 +72,7 @@ export default async function ContactPage({
                   locale="ja"
                   initialInquiryType={initialContext.inquiryType}
                   initialMessage={initialContext.message}
+                  trackingTopic={topicValue || "contact"}
                 />
               </div>
             </div>
