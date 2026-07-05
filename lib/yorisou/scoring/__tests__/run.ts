@@ -1,6 +1,7 @@
 import { runPublicAssignmentValidationTest } from "@/lib/yorisou/public-result/__tests__/assignment.test";
 import { runSelfUnderstandingReportLibraryValidationTest } from "@/lib/yorisou/reports/__tests__/library.test";
 import { runRelationshipIntelligenceEventSemanticsValidationTest } from "@/lib/server/relationship-intelligence/__tests__/event-semantics.test";
+import { runCompanionSeedValidationTest } from "@/lib/server/relationship-intelligence/__tests__/companion-seed.test";
 import { runRelationshipIntelligenceOperationsControlRoomValidationTest } from "@/lib/server/relationship-intelligence/__tests__/operations-control-room.test";
 import { runRecommendationOrchestratorValidationTest } from "@/lib/server/relationship-intelligence/__tests__/recommendation-orchestrator.test";
 import { runAggregationValidationTest } from "./aggregation.test";
@@ -17,6 +18,7 @@ async function main() {
   const checkinRuntime = runCheckInRuntimeValidationTest();
   const publicAssignment = runPublicAssignmentValidationTest();
   const reportLibrary = runSelfUnderstandingReportLibraryValidationTest();
+  const companionSeed = runCompanionSeedValidationTest();
   const relationshipIntelligenceEventSemantics = await runRelationshipIntelligenceEventSemanticsValidationTest();
   const relationshipIntelligenceOperationsControlRoom = await runRelationshipIntelligenceOperationsControlRoomValidationTest();
   const recommendationOrchestrator = await runRecommendationOrchestratorValidationTest();
@@ -30,6 +32,7 @@ async function main() {
     checkinRuntime,
     publicAssignment,
     reportLibrary,
+    companionSeed,
     relationshipIntelligenceEventSemantics,
     relationshipIntelligenceOperationsControlRoom,
     recommendationOrchestrator,

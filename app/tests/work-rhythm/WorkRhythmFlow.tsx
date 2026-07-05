@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 
+import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { WORK_RHYTHM_QUESTIONS, getWorkRhythmResult } from "@/app/data/yorisouQuestionSets";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
@@ -99,6 +100,14 @@ export default function WorkRhythmFlow() {
                 </div>
               ))}
             </div>
+
+            <YorisouCompanionCard
+              testId="work-rhythm"
+              source="work_rhythm_flow"
+              resultId={result.id}
+              pagePath="/tests/work-rhythm"
+              mode="immediate_result"
+            />
 
             <YorisouRecommendationSlot
               testId="work-rhythm"

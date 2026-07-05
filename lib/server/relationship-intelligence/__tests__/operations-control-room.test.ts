@@ -367,9 +367,147 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       },
       createdAt: "2026-05-05T00:05:00.000Z",
     });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_companion_view_review", {
+      id: "signal_companion_view_review",
+      anonymousSessionId: "asess_companion_view",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "companion_card",
+      signalType: "companion_card_viewed",
+      testId: "work-rhythm",
+      resultId: "steady-planner",
+      interestId: null,
+      actionId: null,
+      actionRole: null,
+      recommendationMode: "immediate_result",
+      companionArchetypeId: "sleepy-penguin",
+      companionOptionId: null,
+      companionIntentType: null,
+      note: null,
+      pagePath: "/tests/work-rhythm",
+      metadataJson: {
+        confidence: "emerging",
+        isFallback: false,
+      },
+      createdAt: "2026-05-05T00:06:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_companion_cta_review", {
+      id: "signal_companion_cta_review",
+      anonymousSessionId: "asess_companion_cta",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "companion_card",
+      signalType: "companion_cta_clicked",
+      testId: "work-rhythm",
+      resultId: "steady-planner",
+      interestId: null,
+      actionId: "report-preview-sample",
+      actionRole: "primary",
+      recommendationMode: "immediate_result",
+      companionArchetypeId: "sleepy-penguin",
+      companionOptionId: null,
+      companionIntentType: null,
+      note: null,
+      pagePath: "/tests/work-rhythm",
+      metadataJson: {
+        confidence: "emerging",
+        isFallback: false,
+      },
+      createdAt: "2026-05-05T00:07:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_companion_line_return_review", {
+      id: "signal_companion_line_return_review",
+      anonymousSessionId: "asess_companion_line",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "companion_card",
+      signalType: "companion_line_return_clicked",
+      testId: "work-rhythm",
+      resultId: "steady-planner",
+      interestId: null,
+      actionId: "line-save-entry",
+      actionRole: "secondary",
+      recommendationMode: "immediate_result",
+      companionArchetypeId: "sleepy-penguin",
+      companionOptionId: null,
+      companionIntentType: null,
+      note: null,
+      pagePath: "/tests/work-rhythm",
+      metadataJson: {
+        confidence: "emerging",
+        isFallback: false,
+      },
+      createdAt: "2026-05-05T00:08:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_companion_return_review", {
+      id: "signal_companion_return_review",
+      anonymousSessionId: "asess_companion_return",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "line_mini_app",
+      signalType: "companion_return_block_viewed",
+      testId: "current-state",
+      resultId: null,
+      interestId: null,
+      actionId: null,
+      actionRole: null,
+      recommendationMode: "return_session",
+      companionArchetypeId: "rain-bird",
+      companionOptionId: null,
+      companionIntentType: null,
+      note: null,
+      pagePath: "/line/mini-app",
+      metadataJson: {
+        confidence: "low",
+        isFallback: true,
+      },
+      createdAt: "2026-05-05T00:09:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_companion_question_review", {
+      id: "signal_companion_question_review",
+      anonymousSessionId: "asess_companion_question",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "line_mini_app",
+      signalType: "companion_question_answered",
+      testId: "current-state",
+      resultId: null,
+      interestId: null,
+      actionId: null,
+      actionRole: null,
+      recommendationMode: "return_session",
+      companionArchetypeId: "rain-bird",
+      companionOptionId: "sort_lightly",
+      companionIntentType: null,
+      note: null,
+      pagePath: "/line/mini-app",
+      metadataJson: {},
+      createdAt: "2026-05-05T00:10:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_companion_subscription_review", {
+      id: "signal_companion_subscription_review",
+      anonymousSessionId: "asess_companion_subscription",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "line_mini_app",
+      signalType: "companion_subscription_interest_clicked",
+      testId: "current-state",
+      resultId: null,
+      interestId: null,
+      actionId: null,
+      actionRole: null,
+      recommendationMode: "return_session",
+      companionArchetypeId: "rain-bird",
+      companionOptionId: null,
+      companionIntentType: "weekly_reflection_interest",
+      note: null,
+      pagePath: "/line/mini-app",
+      metadataJson: {},
+      createdAt: "2026-05-05T00:11:00.000Z",
+    });
 
     const recommendationDashboard = await service.getOpenTestingDashboardSnapshot();
-    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 9);
+    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 15);
     assert.equal(recommendationDashboard.recommendationSignals.byType.report_interest_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.design_interest_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.test_completed, 1);
@@ -378,9 +516,15 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
     assert.equal(recommendationDashboard.recommendationSignals.byType.return_surface_viewed, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.return_recommendation_shown, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.return_recommendation_clicked, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.companion_card_viewed, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.companion_cta_clicked, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.companion_line_return_clicked, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.companion_return_block_viewed, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.companion_question_answered, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.companion_subscription_interest_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.interestCounts.report, 1);
     assert.equal(recommendationDashboard.recommendationSignals.interestCounts.design, 1);
-    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 10);
+    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 16);
     assert.equal(recommendationDashboard.dataQuality.excludedTestRecommendationSignals, 1);
     assert.equal(recommendationDashboard.recommendationOrchestrator.packagesShown, 1);
     assert.equal(recommendationDashboard.recommendationOrchestrator.actionClicks, 1);
@@ -393,7 +537,22 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
     assert.equal(recommendationDashboard.returnLoop.noMemoryFallbackShown, 1);
     assert.equal(recommendationDashboard.returnLoop.shownByAction["open-testing-guide"], 1);
     assert.equal(recommendationDashboard.returnLoop.clickedByAction["test-work-rhythm"], 1);
-    assert.equal(recommendationDashboard.founderSignalIntelligence.totals.totalSignals, 3);
+    assert.equal(recommendationDashboard.companion.cardViews, 1);
+    assert.equal(recommendationDashboard.companion.ctaClicks, 1);
+    assert.equal(recommendationDashboard.companion.lineReturnClicks, 1);
+    assert.equal(recommendationDashboard.companion.returnBlockViews, 1);
+    assert.equal(recommendationDashboard.companion.questionAnswers, 1);
+    assert.equal(recommendationDashboard.companion.subscriptionInterestClicks, 1);
+    assert.equal(recommendationDashboard.companion.subscriptionNotNowClicks, 0);
+    assert.equal(recommendationDashboard.companion.fallbackCompanionCount, 1);
+    assert.equal(recommendationDashboard.companion.lowConfidenceCompanionCount, 1);
+    assert.equal(recommendationDashboard.companion.archetypeDistribution["sleepy-penguin"], 1);
+    assert.equal(recommendationDashboard.companion.archetypeDistribution["rain-bird"], 1);
+    const sleepyPenguinCompanion = recommendationDashboard.companion.clickThroughByArchetype.find(
+      (entry) => entry.archetypeId === "sleepy-penguin",
+    );
+    assert.equal(sleepyPenguinCompanion?.ctr, 200);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.totals.totalSignals, 9);
     assert.equal(recommendationDashboard.founderSignalIntelligence.totals.excludedSignals, 1);
     assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byProductLayer.report, 1);
     assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byProductLayer.design, 1);
@@ -425,7 +584,7 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       ),
       true,
     );
-    assert.equal(recommendationDashboard.founderSignalIntelligence.staleAreas.some((entry) => entry.testId === "current-state"), true);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.staleAreas.some((entry) => entry.testId === "current-state"), false);
 
     return {
       tempDir,

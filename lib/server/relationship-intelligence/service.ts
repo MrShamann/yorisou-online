@@ -379,6 +379,9 @@ export async function recordRecommendationSignal(input: RecommendationSignalInpu
     actionId: input.actionId || null,
     actionRole: input.actionRole || null,
     recommendationMode: input.recommendationMode || null,
+    companionArchetypeId: input.companionArchetypeId || null,
+    companionOptionId: input.companionOptionId || null,
+    companionIntentType: input.companionIntentType || null,
     note: input.note || null,
     pagePath: input.pagePath || null,
     metadataJson: sanitizeMetadata(input.metadata),
@@ -1145,6 +1148,55 @@ export async function getOpenTestingDashboardSnapshot() {
       ).length,
     },
   };
+  const companionSignals = realRecommendationSignals.filter((entry) => entry.signalType.startsWith("companion_"));
+  const companionViewSignals = companionSignals.filter(
+    (entry) =>
+      entry.signalType === "companion_card_viewed" || entry.signalType === "companion_return_block_viewed",
+  );
+  const companionShownByArchetype = countBy(
+    companionViewSignals.map((entry) => entry.companionArchetypeId || "unknown"),
+  );
+  const companionCtaByArchetype = countBy(
+    companionSignals
+      .filter((entry) => entry.signalType === "companion_cta_clicked")
+      .map((entry) => entry.companionArchetypeId || "unknown"),
+  );
+  const companionLineReturnByArchetype = countBy(
+    companionSignals
+      .filter((entry) => entry.signalType === "companion_line_return_clicked")
+      .map((entry) => entry.companionArchetypeId || "unknown"),
+  );
+  const companionArchetypePerformance = Object.entries(companionShownByArchetype)
+    .map(([archetypeId, views]) => {
+      const ctaClicks = companionCtaByArchetype[archetypeId] || 0;
+      const lineReturnClicks = companionLineReturnByArchetype[archetypeId] || 0;
+      return {
+        archetypeId,
+        views,
+        ctaClicks,
+        lineReturnClicks,
+        ctr: views > 0 ? Number((((ctaClicks + lineReturnClicks) / views) * 100).toFixed(1)) : 0,
+      };
+    })
+    .sort((a, b) => b.views - a.views);
+  const companion = {
+    cardViews: companionSignals.filter((entry) => entry.signalType === "companion_card_viewed").length,
+    ctaClicks: companionSignals.filter((entry) => entry.signalType === "companion_cta_clicked").length,
+    lineReturnClicks: companionSignals.filter((entry) => entry.signalType === "companion_line_return_clicked").length,
+    returnBlockViews: companionSignals.filter((entry) => entry.signalType === "companion_return_block_viewed").length,
+    questionAnswers: companionSignals.filter((entry) => entry.signalType === "companion_question_answered").length,
+    optionClicks: companionSignals.filter((entry) => entry.signalType === "companion_option_clicked").length,
+    subscriptionInterestClicks: companionSignals.filter(
+      (entry) => entry.signalType === "companion_subscription_interest_clicked",
+    ).length,
+    subscriptionNotNowClicks: companionSignals.filter(
+      (entry) => entry.signalType === "companion_subscription_not_now_clicked",
+    ).length,
+    archetypeDistribution: companionShownByArchetype,
+    clickThroughByArchetype: companionArchetypePerformance,
+    fallbackCompanionCount: companionViewSignals.filter((entry) => entry.metadataJson.isFallback === true).length,
+    lowConfidenceCompanionCount: companionViewSignals.filter((entry) => entry.metadataJson.confidence === "low").length,
+  };
   const founderSignalIntelligence = buildRecommendationSignalIntelligence(recommendationSignals);
   const relationshipDetails = latestRelationshipStatuses.slice(0, 25).map((relationship) => {
     const userFunnel = realFunnelEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
@@ -1207,6 +1259,7 @@ export async function getOpenTestingDashboardSnapshot() {
     recommendationSignals: recommendationSignalsView,
     recommendationOrchestrator,
     returnLoop,
+    companion,
     founderSignalIntelligence,
     resultDistribution,
     resultIntelligence: {

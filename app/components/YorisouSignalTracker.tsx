@@ -12,6 +12,11 @@ import type {
   RecommendationSignalType,
   YorisouTestId,
 } from "@/app/data/yorisouRecommendationSignals";
+import type {
+  CompanionArchetypeId,
+  CompanionIntentType,
+  CompanionOptionId,
+} from "@/app/data/yorisouCompanionArchetypes";
 
 export type RecommendationSignalPayload = {
   source: RecommendationSignalSource;
@@ -22,6 +27,9 @@ export type RecommendationSignalPayload = {
   actionId?: RecommendationActionId | null;
   actionRole?: RecommendationActionRole | null;
   recommendationMode?: RecommendationMode | null;
+  companionArchetypeId?: CompanionArchetypeId | null;
+  companionOptionId?: CompanionOptionId | null;
+  companionIntentType?: CompanionIntentType | null;
   note?: string | null;
   pagePath?: string | null;
   metadata?: Record<string, string | number | boolean | null>;

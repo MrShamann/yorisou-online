@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 
 import { OPEN_TESTING_SESSION_COOKIE, recordRecommendationSignal } from "@/lib/server/relationship-intelligence/service";
 import {
+  isCompanionArchetypeId,
+  isCompanionIntentType,
+  isCompanionOptionId,
   isRecommendationActionId,
   isRecommendationActionRole,
   isRecommendationInterestId,
@@ -63,6 +66,9 @@ export async function POST(request: Request) {
     const actionId = asString(body.actionId);
     const actionRole = asString(body.actionRole);
     const recommendationMode = asString(body.recommendationMode);
+    const companionArchetypeId = asString(body.companionArchetypeId);
+    const companionOptionId = asString(body.companionOptionId);
+    const companionIntentType = asString(body.companionIntentType);
 
     if (!source) {
       return NextResponse.json({ ok: false, error: "missing_signal_source" }, { status: 400 });
@@ -91,6 +97,19 @@ export async function POST(request: Request) {
     if (recommendationMode && !isRecommendationMode(recommendationMode)) {
       return NextResponse.json({ ok: false, error: "invalid_recommendation_mode" }, { status: 400 });
     }
+    const isCompanionSignal = signalType.startsWith("companion_");
+    if (isCompanionSignal && source !== "companion_card" && source !== "line_mini_app") {
+      return NextResponse.json({ ok: false, error: "invalid_signal_source" }, { status: 400 });
+    }
+    if (companionArchetypeId && !isCompanionArchetypeId(companionArchetypeId)) {
+      return NextResponse.json({ ok: false, error: "invalid_companion_archetype_id" }, { status: 400 });
+    }
+    if (companionOptionId && !isCompanionOptionId(companionOptionId)) {
+      return NextResponse.json({ ok: false, error: "invalid_companion_option_id" }, { status: 400 });
+    }
+    if (companionIntentType && !isCompanionIntentType(companionIntentType)) {
+      return NextResponse.json({ ok: false, error: "invalid_companion_intent_type" }, { status: 400 });
+    }
     if (
       (
         signalType === "recommendation_package_shown" ||
@@ -101,6 +120,21 @@ export async function POST(request: Request) {
       (!actionId || !actionRole || !recommendationMode)
     ) {
       return NextResponse.json({ ok: false, error: "missing_recommendation_tracking_fields" }, { status: 400 });
+    }
+    if (isCompanionSignal && !companionArchetypeId) {
+      return NextResponse.json({ ok: false, error: "invalid_companion_archetype_id" }, { status: 400 });
+    }
+    if (
+      (signalType === "companion_question_answered" || signalType === "companion_option_clicked") &&
+      !companionOptionId
+    ) {
+      return NextResponse.json({ ok: false, error: "missing_companion_fields" }, { status: 400 });
+    }
+    if (
+      (signalType === "companion_subscription_interest_clicked" || signalType === "companion_subscription_not_now_clicked") &&
+      !companionIntentType
+    ) {
+      return NextResponse.json({ ok: false, error: "missing_companion_fields" }, { status: 400 });
     }
 
     const sanitizedNote = sanitizeNote(body.note);
@@ -123,6 +157,10 @@ export async function POST(request: Request) {
       actionId: validatedActionId,
       actionRole: validatedActionRole,
       recommendationMode: validatedRecommendationMode,
+      companionArchetypeId: companionArchetypeId && isCompanionArchetypeId(companionArchetypeId) ? companionArchetypeId : null,
+      companionOptionId: companionOptionId && isCompanionOptionId(companionOptionId) ? companionOptionId : null,
+      companionIntentType:
+        companionIntentType && isCompanionIntentType(companionIntentType) ? companionIntentType : null,
       note: sanitizedNote.note,
       pagePath: asString(body.pagePath),
       metadata: asMetadata(body.metadata),

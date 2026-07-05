@@ -9,6 +9,7 @@ import {
   type AnswerMap,
   type LDResult,
 } from "./data";
+import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
@@ -366,6 +367,14 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
           <ResultConversionCommunity
             moduleId="love-distance"
             reportTeaser={archetype.reportTeaser}
+          />
+
+          <YorisouCompanionCard
+            testId="love-distance"
+            source="love_distance_flow"
+            resultId={archetype.id}
+            pagePath="/tests/love-distance"
+            mode="immediate_result"
           />
 
           <YorisouRecommendationSlot
