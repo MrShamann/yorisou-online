@@ -11,6 +11,10 @@ import { isMarkedTestMetadata } from "@/lib/server/relationship-intelligence/mar
 import type { RecommendationSignalRecord, RecommendationSignalTestId } from "@/lib/server/relationship-intelligence/types";
 
 const NOTE_EXCERPT_LIMIT = 120;
+const FOUNDER_INTELLIGENCE_EXCLUDED_SIGNAL_TYPES = new Set([
+  "recommendation_package_shown",
+  "recommendation_action_clicked",
+]);
 
 function countBy(values: string[]) {
   const counts = new Map<string, number>();
@@ -134,7 +138,11 @@ function buildStaleAreas(realSignals: RecommendationSignalRecord[]) {
 }
 
 export function buildRecommendationSignalIntelligence(signals: RecommendationSignalRecord[]) {
-  const realSignals = signals.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
+  const realSignals = signals.filter(
+    (entry) =>
+      !isMarkedTestMetadata(entry.metadataJson) &&
+      !FOUNDER_INTELLIGENCE_EXCLUDED_SIGNAL_TYPES.has(entry.signalType),
+  );
   const excludedSignals = signals.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
   const recentRealSignals = sortByNewest(realSignals);
   const classifiedSignals = recentRealSignals

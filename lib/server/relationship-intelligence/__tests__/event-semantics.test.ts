@@ -127,6 +127,42 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(invalidSignalInterest.status, 400);
   assert.equal((await readJsonBody(invalidSignalInterest)).error, "invalid_interest_id");
 
+  const invalidSignalActionId = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "work_rhythm_flow",
+        signalType: "recommendation_action_clicked",
+        testId: "work-rhythm",
+        actionId: "totally_fake_action",
+        actionRole: "primary",
+        recommendationMode: "immediate_result",
+        pagePath: "/tests/work-rhythm",
+      }),
+    }),
+  );
+  assert.equal(invalidSignalActionId.status, 400);
+  assert.equal((await readJsonBody(invalidSignalActionId)).error, "invalid_action_id");
+
+  const invalidSignalMode = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "work_rhythm_flow",
+        signalType: "recommendation_action_clicked",
+        testId: "work-rhythm",
+        actionId: "report-preview-sample",
+        actionRole: "primary",
+        recommendationMode: "totally_fake_mode",
+        pagePath: "/tests/work-rhythm",
+      }),
+    }),
+  );
+  assert.equal(invalidSignalMode.status, 400);
+  assert.equal((await readJsonBody(invalidSignalMode)).error, "invalid_recommendation_mode");
+
   const invalidSignalNoteType = await postRecommendationSignal(
     new Request("http://localhost/api/open-testing/signals", {
       method: "POST",
@@ -258,6 +294,24 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   );
   assert.equal(validSignalWithBlankNote.status, 200);
 
+  const validRecommendationShown = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "work_rhythm_flow",
+        signalType: "recommendation_package_shown",
+        testId: "work-rhythm",
+        resultId: "steady-planner",
+        actionId: "report-preview-sample",
+        actionRole: "primary",
+        recommendationMode: "immediate_result",
+        pagePath: "/tests/work-rhythm",
+      }),
+    }),
+  );
+  assert.equal(validRecommendationShown.status, 200);
+
   const recommendationSignalsBeforeOversized = await listRelationshipRecords<RecommendationSignalRecord>(
     "recommendation-signals",
   );
@@ -295,13 +349,15 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(afterValidDashboard.funnelSummary.open_testing_viewed, 1);
   assert.equal(afterValidDashboard.funnelSummary.report_intent_clicked, 1);
   assert.equal(afterValidDashboard.reportInterest.intent_clicked, 1);
-  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 5);
+  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 6);
   assert.equal(afterValidDashboard.recommendationSignals.byType.select_interest_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_started, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_completed, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.report_interest_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.related_test_clicked, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.recommendation_package_shown, 1);
   assert.equal(afterValidDashboard.recommendationSignals.interestCounts.select, 1);
+  assert.equal(afterValidDashboard.recommendationOrchestrator.packagesShown, 1);
 
   const openTestingPageSource = fs.readFileSync(path.join(process.cwd(), "app/open-testing/page.tsx"), "utf8");
   const resultPageSource = fs.readFileSync(path.join(process.cwd(), "app/result/page.tsx"), "utf8");
@@ -331,6 +387,8 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   );
   assert.equal(signalRouteSource.includes("invalid_signal_type"), true);
   assert.equal(signalRouteSource.includes("invalid_interest_id"), true);
+  assert.equal(signalRouteSource.includes("invalid_action_id"), true);
+  assert.equal(signalRouteSource.includes("invalid_recommendation_mode"), true);
   assert.equal(signalRouteSource.includes("invalid_note"), true);
 
   return {

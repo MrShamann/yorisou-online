@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 
-import RecommendationActionCards from "../_components/RecommendationActionCards";
+import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { LOCAL_LIFE_QUESTIONS, getLocalLifeAcknowledgement } from "@/app/data/yorisouQuestionSets";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
@@ -83,12 +83,13 @@ export default function LocalLifeFlow() {
               ))}
             </div>
 
-            <RecommendationActionCards
+            <YorisouRecommendationSlot
               testId="local-life"
               source="local_life_flow"
-              actionIds={result.nextActionIds}
               resultId={result.id}
               pagePath="/tests/local-life"
+              mode="local_life_inquiry"
+              title="今の関心から試しやすい入口"
             />
 
             <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-5 py-4">

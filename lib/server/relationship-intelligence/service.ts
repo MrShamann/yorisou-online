@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "crypto";
 
+import { getRecommendationActionDefinition } from "@/app/data/yorisouRecommendationActions";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { getLineMessagingConfigStatus } from "@/lib/server/yorisouLine";
@@ -375,6 +376,9 @@ export async function recordRecommendationSignal(input: RecommendationSignalInpu
     testId: input.testId || null,
     resultId: input.resultId || null,
     interestId: input.interestId || null,
+    actionId: input.actionId || null,
+    actionRole: input.actionRole || null,
+    recommendationMode: input.recommendationMode || null,
     note: input.note || null,
     pagePath: input.pagePath || null,
     metadataJson: sanitizeMetadata(input.metadata),
@@ -382,6 +386,13 @@ export async function recordRecommendationSignal(input: RecommendationSignalInpu
   };
   await putRelationshipRecord("recommendation-signals", record.id, record);
   return { record, session };
+}
+
+export async function listRecommendationSignalsForAnonymousSession(anonymousSessionId: string) {
+  const records = await listRelationshipRecords<RecommendationSignalRecord>("recommendation-signals");
+  return records
+    .filter((entry) => entry.anonymousSessionId === anonymousSessionId)
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
 export async function storeFeedbackSubmission(input: {
@@ -983,6 +994,80 @@ export async function getOpenTestingDashboardSnapshot() {
       lineSave: recommendationSignalSummary.line_save_interest_clicked || 0,
     },
   };
+  const recommendationPackageShownSignals = realRecommendationSignals.filter(
+    (entry) => entry.signalType === "recommendation_package_shown" && entry.actionId,
+  );
+  const recommendationActionClickSignals = realRecommendationSignals.filter(
+    (entry) => entry.signalType === "recommendation_action_clicked" && entry.actionId,
+  );
+  const shownByAction = countBy(recommendationPackageShownSignals.map((entry) => entry.actionId || "unknown"));
+  const clickedByAction = countBy(recommendationActionClickSignals.map((entry) => entry.actionId || "unknown"));
+  const shownByLayer = countBy(
+    recommendationPackageShownSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).productLayer : "unknown",
+    ),
+  );
+  const clickedByLayer = countBy(
+    recommendationActionClickSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).productLayer : "unknown",
+    ),
+  );
+  const shownByActionType = countBy(
+    recommendationPackageShownSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).actionType : "unknown",
+    ),
+  );
+  const clickedByActionType = countBy(
+    recommendationActionClickSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).actionType : "unknown",
+    ),
+  );
+  const actionPerformance = Object.entries(shownByAction)
+    .map(([actionId, shown]) => {
+      const definition = getRecommendationActionDefinition(actionId as Parameters<typeof getRecommendationActionDefinition>[0]);
+      const clicks = clickedByAction[actionId] || 0;
+      return {
+        actionId,
+        title: definition.title,
+        productLayer: definition.productLayer,
+        actionType: definition.actionType,
+        shown,
+        clicks,
+        ctr: shown > 0 ? Number(((clicks / shown) * 100).toFixed(1)) : 0,
+      };
+    })
+    .sort((a, b) => b.shown - a.shown);
+  const recommendationOrchestrator = {
+    packagesShown: recommendationPackageShownSignals.filter((entry) => entry.actionRole === "primary").length,
+    actionClicks: recommendationActionClickSignals.length,
+    shownByAction,
+    clickedByAction,
+    shownByLayer,
+    clickedByLayer,
+    shownByActionType,
+    clickedByActionType,
+    topActions: actionPerformance.slice(0, 6),
+    lowPerformingActions: actionPerformance.filter((entry) => entry.shown >= 2 && entry.ctr < 25).slice(0, 6),
+    repeatedInterestLayers: Object.entries(clickedByLayer)
+      .filter(([, count]) => count >= 2)
+      .map(([layer, count]) => ({ layer, count })),
+    suppressedRiskyActionCounts: countBy(
+      recommendationPackageShownSignals
+        .filter((entry) => entry.actionRole === "suppressed" && entry.actionId)
+        .map((entry) => getRecommendationActionDefinition(entry.actionId!).riskBoundary),
+    ),
+    localLifeSafetyCounts: {
+      shown: recommendationPackageShownSignals.filter(
+        (entry) => entry.actionId && getRecommendationActionDefinition(entry.actionId).productLayer === "local_life" && entry.actionRole !== "suppressed",
+      ).length,
+      suppressed: recommendationPackageShownSignals.filter(
+        (entry) => entry.actionId && getRecommendationActionDefinition(entry.actionId).productLayer === "local_life" && entry.actionRole === "suppressed",
+      ).length,
+      clicked: recommendationActionClickSignals.filter(
+        (entry) => entry.actionId && getRecommendationActionDefinition(entry.actionId).productLayer === "local_life",
+      ).length,
+    },
+  };
   const founderSignalIntelligence = buildRecommendationSignalIntelligence(recommendationSignals);
   const relationshipDetails = latestRelationshipStatuses.slice(0, 25).map((relationship) => {
     const userFunnel = realFunnelEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
@@ -1043,6 +1128,7 @@ export async function getOpenTestingDashboardSnapshot() {
     funnelSummary,
     funnelTable,
     recommendationSignals: recommendationSignalsView,
+    recommendationOrchestrator,
     founderSignalIntelligence,
     resultDistribution,
     resultIntelligence: {

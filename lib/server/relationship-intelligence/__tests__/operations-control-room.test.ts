@@ -191,6 +191,9 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       testId: "work-rhythm",
       resultId: null,
       interestId: "report-preview",
+      actionId: null,
+      actionRole: null,
+      recommendationMode: null,
       note: null,
       pagePath: "/tests",
       metadataJson: {},
@@ -206,6 +209,9 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       testId: "local-life",
       resultId: null,
       interestId: "design-interest",
+      actionId: null,
+      actionRole: null,
+      recommendationMode: null,
       note: null,
       pagePath: "/tests",
       metadataJson: {
@@ -223,6 +229,9 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       testId: "work-rhythm",
       resultId: "steady-planner",
       interestId: "design-interest",
+      actionId: null,
+      actionRole: null,
+      recommendationMode: null,
       note: "  仕事の流れを整える道具や見せ方の案があると助かる。社内にも共有しやすいとよい。  ",
       pagePath: "/report-preview",
       metadataJson: {},
@@ -238,21 +247,85 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       testId: "local-life",
       resultId: "支え合いアイデアへの関心",
       interestId: null,
+      actionId: null,
+      actionRole: null,
+      recommendationMode: null,
       note: ` ${"暮らしの支え合いの案を知りたい。".repeat(12)} `,
       pagePath: "/tests/local-life",
       metadataJson: {},
       createdAt: "2026-05-04T00:00:00.000Z",
     });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_package_primary_review", {
+      id: "signal_package_primary_review",
+      anonymousSessionId: "asess_pkg_primary",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "work_rhythm_flow",
+      signalType: "recommendation_package_shown",
+      testId: "work-rhythm",
+      resultId: "steady-planner",
+      interestId: null,
+      actionId: "report-preview-sample",
+      actionRole: "primary",
+      recommendationMode: "immediate_result",
+      note: null,
+      pagePath: "/tests/work-rhythm",
+      metadataJson: {},
+      createdAt: "2026-05-05T00:00:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_package_secondary_review", {
+      id: "signal_package_secondary_review",
+      anonymousSessionId: "asess_pkg_secondary",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "work_rhythm_flow",
+      signalType: "recommendation_package_shown",
+      testId: "work-rhythm",
+      resultId: "steady-planner",
+      interestId: null,
+      actionId: "design-interest-entry",
+      actionRole: "suppressed",
+      recommendationMode: "immediate_result",
+      note: null,
+      pagePath: "/tests/work-rhythm",
+      metadataJson: {},
+      createdAt: "2026-05-05T00:01:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_package_click_review", {
+      id: "signal_package_click_review",
+      anonymousSessionId: "asess_pkg_click",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "work_rhythm_flow",
+      signalType: "recommendation_action_clicked",
+      testId: "work-rhythm",
+      resultId: "steady-planner",
+      interestId: null,
+      actionId: "report-preview-sample",
+      actionRole: "primary",
+      recommendationMode: "immediate_result",
+      note: null,
+      pagePath: "/tests/work-rhythm",
+      metadataJson: {},
+      createdAt: "2026-05-05T00:02:00.000Z",
+    });
 
     const recommendationDashboard = await service.getOpenTestingDashboardSnapshot();
-    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 3);
+    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 6);
     assert.equal(recommendationDashboard.recommendationSignals.byType.report_interest_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.design_interest_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.test_completed, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.recommendation_package_shown, 2);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.recommendation_action_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.interestCounts.report, 1);
     assert.equal(recommendationDashboard.recommendationSignals.interestCounts.design, 1);
-    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 4);
+    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 7);
     assert.equal(recommendationDashboard.dataQuality.excludedTestRecommendationSignals, 1);
+    assert.equal(recommendationDashboard.recommendationOrchestrator.packagesShown, 1);
+    assert.equal(recommendationDashboard.recommendationOrchestrator.actionClicks, 1);
+    assert.equal(recommendationDashboard.recommendationOrchestrator.shownByAction["report-preview-sample"], 1);
+    assert.equal(recommendationDashboard.recommendationOrchestrator.clickedByAction["report-preview-sample"], 1);
+    assert.equal(recommendationDashboard.recommendationOrchestrator.suppressedRiskyActionCounts.product_claim_boundary, 1);
     assert.equal(recommendationDashboard.founderSignalIntelligence.totals.totalSignals, 3);
     assert.equal(recommendationDashboard.founderSignalIntelligence.totals.excludedSignals, 1);
     assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byProductLayer.report, 1);

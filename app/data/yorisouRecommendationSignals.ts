@@ -11,6 +11,8 @@ export type YorisouTestId = (typeof YORISOU_TEST_IDS)[number];
 export const RECOMMENDATION_SIGNAL_TYPES = [
   "test_started",
   "test_completed",
+  "recommendation_package_shown",
+  "recommendation_action_clicked",
   "recommendation_interest_clicked",
   "report_interest_clicked",
   "select_interest_clicked",
@@ -48,6 +50,40 @@ export const RECOMMENDATION_INTEREST_IDS = [
 ] as const;
 
 export type RecommendationInterestId = (typeof RECOMMENDATION_INTEREST_IDS)[number];
+
+export const RECOMMENDATION_ACTION_IDS = [
+  "report-preview-sample",
+  "line-save-entry",
+  "select-hint",
+  "design-interest-entry",
+  "community-interest-entry",
+  "local-life-signal-entry",
+  "test-love-distance",
+  "test-work-rhythm",
+  "test-name-impression",
+  "test-local-life",
+  "open-testing-guide",
+] as const;
+
+export type RecommendationActionId = (typeof RECOMMENDATION_ACTION_IDS)[number];
+
+export const RECOMMENDATION_ACTION_ROLES = [
+  "primary",
+  "secondary",
+  "suppressed",
+] as const;
+
+export type RecommendationActionRole = (typeof RECOMMENDATION_ACTION_ROLES)[number];
+
+export const RECOMMENDATION_MODES = [
+  "immediate_result",
+  "return_session",
+  "line_save",
+  "local_life_inquiry",
+  "select_design_interest",
+] as const;
+
+export type RecommendationMode = (typeof RECOMMENDATION_MODES)[number];
 
 export type RecommendationNextAction = {
   id: RecommendationInterestId;

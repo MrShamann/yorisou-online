@@ -5,18 +5,24 @@ import type { ComponentProps } from "react";
 import Link from "next/link";
 
 import type {
+  RecommendationActionId,
+  RecommendationActionRole,
   RecommendationInterestId,
+  RecommendationMode,
   RecommendationSignalSource,
   RecommendationSignalType,
   YorisouTestId,
 } from "@/app/data/yorisouRecommendationSignals";
 
-type RecommendationSignalPayload = {
+export type RecommendationSignalPayload = {
   source: RecommendationSignalSource;
   signalType: RecommendationSignalType;
   testId?: YorisouTestId;
   resultId?: string | null;
   interestId?: RecommendationInterestId;
+  actionId?: RecommendationActionId | null;
+  actionRole?: RecommendationActionRole | null;
+  recommendationMode?: RecommendationMode | null;
   note?: string | null;
   pagePath?: string | null;
   metadata?: Record<string, string | number | boolean | null>;
@@ -34,6 +40,12 @@ export async function trackRecommendationSignal(payload: RecommendationSignalPay
     });
   } catch {
     // Signal capture must never block the public flow.
+  }
+}
+
+export async function trackRecommendationSignals(payloads: RecommendationSignalPayload[]) {
+  for (const payload of payloads) {
+    await trackRecommendationSignal(payload);
   }
 }
 
