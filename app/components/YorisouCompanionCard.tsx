@@ -35,6 +35,11 @@ const PROBE_VALUE_LABELS = [
   "深いレポートとのつながり",
 ] as const;
 
+const PURPOSE_PILLS = {
+  result: ["今の結果の続き", "3問だけで軽く確認", "自由入力なし"],
+  return: ["前回の続き", "返りやすい入口", "自由入力なし"],
+} as const;
+
 function buildCompanionPayload(
   signalType: RecommendationSignalPayload["signalType"],
   seed: CompanionSeed,
@@ -162,6 +167,12 @@ export default function YorisouCompanionCard({
     variant === "return"
       ? "前回のチェックや最近の入口から、今日戻りやすい場所をひとつ表示します。"
       : "今のチェック結果や最近の選び方から生まれた、小さな目印です。";
+  const eyebrow = variant === "return" ? "前回の続き" : "よりそうの小さな相棒";
+  const title = variant === "return" ? "今日の返り道を、軽くひとつ。" : "今の結果のそばに置く、小さな相棒。";
+  const guideLine =
+    variant === "return"
+      ? "迷ったら、まずここからひとつ押して次へ進めます。"
+      : "深読みの前に、近い場面だけを軽く見直したいときに使えます。";
 
   const selectedOption = seed.boundedOptions.find((entry) => entry.id === selectedOptionId) || null;
   const selectedSubscriptionChoice =
@@ -171,15 +182,25 @@ export default function YorisouCompanionCard({
   const visibleSeed = fallbackSeed || seed;
 
   return (
-    <section className="space-y-4 rounded-[1.25rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 shadow-[0_16px_34px_rgba(23,59,53,0.07)]">
-      <div className="space-y-2">
+    <section className="space-y-4 rounded-[1.3rem] border border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_18px_38px_rgba(23,59,53,0.07)]">
+      <div className="space-y-3">
         <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">
-          {variant === "return" ? "前回の続き" : "よりそうの小さな相棒"}
+          {eyebrow}
         </p>
-        <h2 className="display-serif text-[1.45rem] leading-[1.28] text-[#2F2A28] md:text-[1.8rem]">
-          よりそうの小さな相棒
+        <h2 className="display-serif text-[1.4rem] leading-[1.3] text-[#2F2A28] md:text-[1.72rem]">
+          {title}
         </h2>
         <p className="text-[13px] leading-7 text-[#6F625C]">{subtitle}</p>
+        <div className="flex flex-wrap gap-2">
+          {PURPOSE_PILLS[variant].map((pill) => (
+            <span
+              key={pill}
+              className="rounded-full border border-[rgba(23,59,53,0.08)] bg-[#F7FBF8] px-3 py-1 text-[11px] font-semibold leading-5 text-[#49615B]"
+            >
+              {pill}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] p-4">
@@ -198,6 +219,11 @@ export default function YorisouCompanionCard({
             少し前の動きも含めた目印なので、今日は軽く見直す入口として使ってください。
           </p>
         ) : null}
+      </div>
+
+      <div className="rounded-[1.05rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(255,253,249,0.74)] px-4 py-3">
+        <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">この相棒でできること</p>
+        <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{guideLine}</p>
       </div>
 
       <div className="grid gap-2.5 sm:grid-cols-2">
@@ -224,7 +250,7 @@ export default function YorisouCompanionCard({
               }),
             );
           }}
-          className="flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
+          className="flex min-h-[50px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 text-center text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
         >
           {visibleSeed.recommendedCta.label}
         </Link>
@@ -245,7 +271,7 @@ export default function YorisouCompanionCard({
                 }),
               );
             }}
-            className="flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-4 text-[14px] font-semibold text-[#173B35] transition hover:-translate-y-0.5"
+            className="flex min-h-[50px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-4 text-center text-[14px] font-semibold text-[#173B35] transition hover:-translate-y-0.5"
           >
             {visibleSeed.lineReturnCta.label}
           </Link>
@@ -339,12 +365,15 @@ export default function YorisouCompanionCard({
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap gap-2 text-[11px] leading-5 text-[#7A7068]">
-            {PROBE_VALUE_LABELS.map((label) => (
-              <span key={label} className="rounded-full border border-[rgba(23,59,53,0.08)] bg-white px-2.5 py-1">
-                {label}
-              </span>
-            ))}
+          <div className="space-y-2">
+            <p className="text-[11px] font-semibold tracking-[0.08em] text-[#7A7068]">想定しているもの</p>
+            <div className="flex flex-wrap gap-2 text-[11px] leading-5 text-[#7A7068]">
+              {PROBE_VALUE_LABELS.map((label) => (
+                <span key={label} className="rounded-full border border-[rgba(23,59,53,0.08)] bg-white px-2.5 py-1">
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
           {selectedSubscriptionChoice ? (
             <p className="text-[12px] leading-6 text-[#6F625C]">
@@ -356,7 +385,10 @@ export default function YorisouCompanionCard({
         </div>
       ) : null}
 
-      <p className="text-[12px] leading-6 text-[#7A7068]">{visibleSeed.riskBoundaryNote}</p>
+      <div className="rounded-[1rem] border border-[rgba(23,59,53,0.06)] bg-[#FCFAF6] px-4 py-3">
+        <p className="text-[11px] font-semibold tracking-[0.08em] text-[#7A7068]">境界の考え方</p>
+        <p className="mt-1 text-[12px] leading-6 text-[#7A7068]">{visibleSeed.riskBoundaryNote}</p>
+      </div>
     </section>
   );
 }

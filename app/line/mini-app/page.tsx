@@ -121,7 +121,13 @@ export default async function MiniAppEntryPage({
           </p>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5 space-y-2">
+          <div>
+            <p className="text-[11px] font-semibold tracking-[0.12em] text-[#4D7A69]">今日の返り道</p>
+            <p className="mt-1 text-[12px] leading-6 text-[#7A7068]">
+              まずは相棒で今の続き方をひとつ見て、その下で次の入口を選べます。
+            </p>
+          </div>
           <YorisouCompanionCard
             testId="current-state"
             source="line_mini_app"
@@ -168,17 +174,13 @@ export default async function MiniAppEntryPage({
             >
               公開テスト案内
             </Link>
-            <Link
-              href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
-              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
-            >
-              レポート見本
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] font-semibold text-[#315F50]">
+            <Link href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low" className="hover:underline">
+              レポートの見本を見る
             </Link>
-            <Link
-              href="/tests/local-life"
-              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
-            >
-              暮らしの関心
+            <Link href="/tests/local-life" className="hover:underline">
+              暮らしの入口を見る
             </Link>
           </div>
           <p className="mt-1 text-[11px] leading-5 text-[#7A7068]">
