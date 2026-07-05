@@ -8,6 +8,41 @@ export type FeedbackEmailDeliveryStatus = "not_requested" | "pending" | "sent" |
 export type RelationshipStatusValue = "active" | "paused" | "stopped" | "blocked";
 export type MessageLogStatus = "queued" | "sent" | "failed" | "skipped";
 export type ReportEventType = "preview_viewed" | "intent_clicked" | "full_viewed" | "downloaded";
+export type RecommendationSignalType =
+  | "test_started"
+  | "test_completed"
+  | "recommendation_interest_clicked"
+  | "report_interest_clicked"
+  | "select_interest_clicked"
+  | "design_interest_clicked"
+  | "community_interest_clicked"
+  | "local_life_interest_clicked"
+  | "line_save_interest_clicked"
+  | "related_test_clicked";
+export type RecommendationSignalSource =
+  | "tests_page"
+  | "open_testing_page"
+  | "love_distance_flow"
+  | "work_rhythm_flow"
+  | "name_impression_flow"
+  | "local_life_flow"
+  | "result_page"
+  | "report_preview_page"
+  | "full_report_page";
+export type RecommendationInterestId =
+  | "report-preview"
+  | "line-save"
+  | "related-test"
+  | "select-info"
+  | "design-interest"
+  | "community-interest"
+  | "local-life-interest";
+export type RecommendationSignalTestId =
+  | "current-state"
+  | "love-distance"
+  | "work-rhythm"
+  | "name-impression"
+  | "local-life";
 export type RelationshipActivationSource =
   | "line_mini_app_entry"
   | "line_login_callback"
@@ -39,6 +74,49 @@ export const REPORT_EVENT_TYPES = [
   "full_viewed",
   "downloaded",
 ] as const satisfies readonly ReportEventType[];
+
+export const RECOMMENDATION_SIGNAL_TYPES = [
+  "test_started",
+  "test_completed",
+  "recommendation_interest_clicked",
+  "report_interest_clicked",
+  "select_interest_clicked",
+  "design_interest_clicked",
+  "community_interest_clicked",
+  "local_life_interest_clicked",
+  "line_save_interest_clicked",
+  "related_test_clicked",
+] as const satisfies readonly RecommendationSignalType[];
+
+export const RECOMMENDATION_SIGNAL_SOURCES = [
+  "tests_page",
+  "open_testing_page",
+  "love_distance_flow",
+  "work_rhythm_flow",
+  "name_impression_flow",
+  "local_life_flow",
+  "result_page",
+  "report_preview_page",
+  "full_report_page",
+] as const satisfies readonly RecommendationSignalSource[];
+
+export const RECOMMENDATION_INTEREST_IDS = [
+  "report-preview",
+  "line-save",
+  "related-test",
+  "select-info",
+  "design-interest",
+  "community-interest",
+  "local-life-interest",
+] as const satisfies readonly RecommendationInterestId[];
+
+export const RECOMMENDATION_SIGNAL_TEST_IDS = [
+  "current-state",
+  "love-distance",
+  "work-rhythm",
+  "name-impression",
+  "local-life",
+] as const satisfies readonly RecommendationSignalTestId[];
 
 export const RELATIONSHIP_ACTIVATION_SOURCES = [
   "line_mini_app_entry",
@@ -81,6 +159,10 @@ export const FEEDBACK_EMAIL_DELIVERY_STATUSES = [
 ] as const satisfies readonly FeedbackEmailDeliveryStatus[];
 
 const reportEventTypeSet = new Set<string>(REPORT_EVENT_TYPES);
+const recommendationSignalTypeSet = new Set<string>(RECOMMENDATION_SIGNAL_TYPES);
+const recommendationSignalSourceSet = new Set<string>(RECOMMENDATION_SIGNAL_SOURCES);
+const recommendationInterestIdSet = new Set<string>(RECOMMENDATION_INTEREST_IDS);
+const recommendationSignalTestIdSet = new Set<string>(RECOMMENDATION_SIGNAL_TEST_IDS);
 const relationshipActivationSourceSet = new Set<string>(RELATIONSHIP_ACTIVATION_SOURCES);
 const openTestingEventNameSet = new Set<string>(OPEN_TESTING_EVENT_NAMES);
 const feedbackSubmissionStatusSet = new Set<string>(FEEDBACK_SUBMISSION_STATUSES);
@@ -88,6 +170,22 @@ const feedbackEmailDeliveryStatusSet = new Set<string>(FEEDBACK_EMAIL_DELIVERY_S
 
 export function isReportEventType(value: unknown): value is ReportEventType {
   return typeof value === "string" && reportEventTypeSet.has(value);
+}
+
+export function isRecommendationSignalType(value: unknown): value is RecommendationSignalType {
+  return typeof value === "string" && recommendationSignalTypeSet.has(value);
+}
+
+export function isRecommendationSignalSource(value: unknown): value is RecommendationSignalSource {
+  return typeof value === "string" && recommendationSignalSourceSet.has(value);
+}
+
+export function isRecommendationInterestId(value: unknown): value is RecommendationInterestId {
+  return typeof value === "string" && recommendationInterestIdSet.has(value);
+}
+
+export function isRecommendationSignalTestId(value: unknown): value is RecommendationSignalTestId {
+  return typeof value === "string" && recommendationSignalTestIdSet.has(value);
 }
 
 export function isRelationshipActivationSource(value: unknown): value is RelationshipActivationSource {
@@ -228,6 +326,22 @@ export type RelationshipStatusRecord = {
   stopReason: string | null;
 };
 
+export type RecommendationSignalRecord = {
+  id: string;
+  anonymousSessionId: string;
+  userProfileId: string | null;
+  authIdentityId: string | null;
+  source: RecommendationSignalSource;
+  signalType: RecommendationSignalType;
+  testId: RecommendationSignalTestId | null;
+  resultId: string | null;
+  interestId: RecommendationInterestId | null;
+  note: string | null;
+  pagePath: string | null;
+  metadataJson: Record<string, string | number | boolean | null>;
+  createdAt: string;
+};
+
 export type FollowUpRuleId =
   | "result_saved_confirmation"
   | "report_preview_prompt"
@@ -266,6 +380,7 @@ export type RelationshipCollection =
   | "diagnosis-results"
   | "funnel-events"
   | "report-events"
+  | "recommendation-signals"
   | "feedback-submissions"
   | "relationship-statuses"
   | "message-logs";
@@ -284,4 +399,18 @@ export type OpenTestingEventInput = {
   reportType?: string | null;
   metadata?: Record<string, string | number | boolean | null>;
   testVersion?: string | null;
+};
+
+export type RecommendationSignalInput = {
+  source: RecommendationSignalSource;
+  signalType: RecommendationSignalType;
+  anonymousSessionId?: string | null;
+  userProfileId?: string | null;
+  authIdentityId?: string | null;
+  testId?: RecommendationSignalTestId | null;
+  resultId?: string | null;
+  interestId?: RecommendationInterestId | null;
+  note?: string | null;
+  pagePath?: string | null;
+  metadata?: Record<string, string | number | boolean | null>;
 };
