@@ -261,6 +261,42 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(invalidCompanionIntent.status, 400);
   assert.equal((await readJsonBody(invalidCompanionIntent)).error, "invalid_companion_intent_type");
 
+  const invalidCompanionNotNowMissingArchetype = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "companion_subscription_not_now_clicked",
+        testId: "current-state",
+        companionIntentType: "free_only_for_now",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(invalidCompanionNotNowMissingArchetype.status, 400);
+  assert.equal(
+    (await readJsonBody(invalidCompanionNotNowMissingArchetype)).error,
+    "invalid_companion_archetype_id",
+  );
+
+  const invalidCompanionNotNowArchetype = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "companion_subscription_not_now_clicked",
+        testId: "current-state",
+        companionArchetypeId: "totally_fake_companion",
+        companionIntentType: "free_only_for_now",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(invalidCompanionNotNowArchetype.status, 400);
+  assert.equal((await readJsonBody(invalidCompanionNotNowArchetype)).error, "invalid_companion_archetype_id");
+
   const afterInvalidDashboard = await service.getOpenTestingDashboardSnapshot();
   assert.deepEqual(afterInvalidDashboard.funnelSummary, {});
   assert.equal(afterInvalidDashboard.reportInterest.intent_clicked, undefined);
@@ -528,6 +564,23 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   );
   assert.equal(validCompanionSubscriptionInterest.status, 200);
 
+  const validCompanionSubscriptionNotNow = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "companion_subscription_not_now_clicked",
+        testId: "current-state",
+        companionArchetypeId: "rain-bird",
+        companionIntentType: "free_only_for_now",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(validCompanionSubscriptionNotNow.status, 200);
+
   const recommendationSignalsBeforeOversized = await listRelationshipRecords<RecommendationSignalRecord>(
     "recommendation-signals",
   );
@@ -570,12 +623,20 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
     signalsByType.get("companion_subscription_interest_clicked")?.companionIntentType,
     "weekly_reflection_interest",
   );
+  assert.equal(
+    signalsByType.get("companion_subscription_not_now_clicked")?.companionArchetypeId,
+    "rain-bird",
+  );
+  assert.equal(
+    signalsByType.get("companion_subscription_not_now_clicked")?.companionIntentType,
+    "free_only_for_now",
+  );
 
   const afterValidDashboard = await service.getOpenTestingDashboardSnapshot();
   assert.equal(afterValidDashboard.funnelSummary.open_testing_viewed, 1);
   assert.equal(afterValidDashboard.funnelSummary.report_intent_clicked, 1);
   assert.equal(afterValidDashboard.reportInterest.intent_clicked, 1);
-  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 14);
+  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 15);
   assert.equal(afterValidDashboard.recommendationSignals.byType.select_interest_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_started, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_completed, 1);
@@ -590,6 +651,7 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(afterValidDashboard.recommendationSignals.byType.companion_question_answered, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.companion_option_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.companion_subscription_interest_clicked, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.companion_subscription_not_now_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.interestCounts.select, 1);
   assert.equal(afterValidDashboard.recommendationOrchestrator.packagesShown, 1);
   assert.equal(afterValidDashboard.returnLoop.surfaceViews, 1);
@@ -600,6 +662,7 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(afterValidDashboard.companion.questionAnswers, 1);
   assert.equal(afterValidDashboard.companion.optionClicks, 1);
   assert.equal(afterValidDashboard.companion.subscriptionInterestClicks, 1);
+  assert.equal(afterValidDashboard.companion.subscriptionNotNowClicks, 1);
   assert.equal(afterValidDashboard.companion.archetypeDistribution["sleepy-penguin"], 1);
   assert.equal(afterValidDashboard.companion.archetypeDistribution["rain-bird"], 1);
 

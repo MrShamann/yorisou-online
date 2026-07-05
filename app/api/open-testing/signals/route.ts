@@ -121,12 +121,8 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json({ ok: false, error: "missing_recommendation_tracking_fields" }, { status: 400 });
     }
-    if (
-      isCompanionSignal &&
-      !companionArchetypeId &&
-      signalType !== "companion_subscription_not_now_clicked"
-    ) {
-      return NextResponse.json({ ok: false, error: "missing_companion_fields" }, { status: 400 });
+    if (isCompanionSignal && !companionArchetypeId) {
+      return NextResponse.json({ ok: false, error: "invalid_companion_archetype_id" }, { status: 400 });
     }
     if (
       (signalType === "companion_question_answered" || signalType === "companion_option_clicked") &&
