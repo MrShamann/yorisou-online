@@ -1068,6 +1068,83 @@ export async function getOpenTestingDashboardSnapshot() {
       ).length,
     },
   };
+  const returnSurfaceSignals = realRecommendationSignals.filter((entry) => entry.signalType === "return_surface_viewed");
+  const returnRecommendationShownSignals = realRecommendationSignals.filter(
+    (entry) => entry.signalType === "return_recommendation_shown" && entry.actionId,
+  );
+  const returnRecommendationClickSignals = realRecommendationSignals.filter(
+    (entry) => entry.signalType === "return_recommendation_clicked" && entry.actionId,
+  );
+  const returnShownByAction = countBy(returnRecommendationShownSignals.map((entry) => entry.actionId || "unknown"));
+  const returnClickedByAction = countBy(returnRecommendationClickSignals.map((entry) => entry.actionId || "unknown"));
+  const returnShownByLayer = countBy(
+    returnRecommendationShownSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).productLayer : "unknown",
+    ),
+  );
+  const returnClickedByLayer = countBy(
+    returnRecommendationClickSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).productLayer : "unknown",
+    ),
+  );
+  const returnShownByActionType = countBy(
+    returnRecommendationShownSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).actionType : "unknown",
+    ),
+  );
+  const returnClickedByActionType = countBy(
+    returnRecommendationClickSignals.map((entry) =>
+      entry.actionId ? getRecommendationActionDefinition(entry.actionId).actionType : "unknown",
+    ),
+  );
+  const returnActionPerformance = Object.entries(returnShownByAction)
+    .map(([actionId, shown]) => {
+      const definition = getRecommendationActionDefinition(actionId as Parameters<typeof getRecommendationActionDefinition>[0]);
+      const clicks = returnClickedByAction[actionId] || 0;
+      return {
+        actionId,
+        title: definition.title,
+        productLayer: definition.productLayer,
+        actionType: definition.actionType,
+        shown,
+        clicks,
+        ctr: shown > 0 ? Number(((clicks / shown) * 100).toFixed(1)) : 0,
+      };
+    })
+    .sort((a, b) => b.shown - a.shown);
+  const returnLoop = {
+    surfaceViews: returnSurfaceSignals.length,
+    packagesShown: returnRecommendationShownSignals.filter((entry) => entry.actionRole === "primary").length,
+    actionClicks: returnRecommendationClickSignals.length,
+    shownByAction: returnShownByAction,
+    clickedByAction: returnClickedByAction,
+    shownByLayer: returnShownByLayer,
+    clickedByLayer: returnClickedByLayer,
+    shownByActionType: returnShownByActionType,
+    clickedByActionType: returnClickedByActionType,
+    topActions: returnActionPerformance.slice(0, 6),
+    lowPerformingActions: returnActionPerformance.filter((entry) => entry.shown >= 2 && entry.ctr < 25).slice(0, 6),
+    repeatedInterestLayers: Object.entries(returnClickedByLayer)
+      .filter(([, count]) => count >= 2)
+      .map(([layer, count]) => ({ layer, count })),
+    noMemoryFallbackShown: returnRecommendationShownSignals.filter(
+      (entry) => entry.metadataJson.memoryState === "no_memory" && entry.actionRole === "primary",
+    ).length,
+    staleMemoryShown: returnRecommendationShownSignals.filter(
+      (entry) => entry.metadataJson.memoryState !== "no_memory" && entry.metadataJson.staleSignals === true && entry.actionRole === "primary",
+    ).length,
+    localLifeSafetyCounts: {
+      shown: returnRecommendationShownSignals.filter(
+        (entry) => entry.actionId && getRecommendationActionDefinition(entry.actionId).productLayer === "local_life" && entry.actionRole !== "suppressed",
+      ).length,
+      suppressed: returnRecommendationShownSignals.filter(
+        (entry) => entry.actionId && getRecommendationActionDefinition(entry.actionId).productLayer === "local_life" && entry.actionRole === "suppressed",
+      ).length,
+      clicked: returnRecommendationClickSignals.filter(
+        (entry) => entry.actionId && getRecommendationActionDefinition(entry.actionId).productLayer === "local_life",
+      ).length,
+    },
+  };
   const founderSignalIntelligence = buildRecommendationSignalIntelligence(recommendationSignals);
   const relationshipDetails = latestRelationshipStatuses.slice(0, 25).map((relationship) => {
     const userFunnel = realFunnelEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
@@ -1129,6 +1206,7 @@ export async function getOpenTestingDashboardSnapshot() {
     funnelTable,
     recommendationSignals: recommendationSignalsView,
     recommendationOrchestrator,
+    returnLoop,
     founderSignalIntelligence,
     resultDistribution,
     resultIntelligence: {

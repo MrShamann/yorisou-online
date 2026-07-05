@@ -14,6 +14,9 @@ const NOTE_EXCERPT_LIMIT = 120;
 const FOUNDER_INTELLIGENCE_EXCLUDED_SIGNAL_TYPES = new Set([
   "recommendation_package_shown",
   "recommendation_action_clicked",
+  "return_surface_viewed",
+  "return_recommendation_shown",
+  "return_recommendation_clicked",
 ]);
 
 function countBy(values: string[]) {

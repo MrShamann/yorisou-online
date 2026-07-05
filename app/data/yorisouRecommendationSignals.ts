@@ -13,6 +13,9 @@ export const RECOMMENDATION_SIGNAL_TYPES = [
   "test_completed",
   "recommendation_package_shown",
   "recommendation_action_clicked",
+  "return_surface_viewed",
+  "return_recommendation_shown",
+  "return_recommendation_clicked",
   "recommendation_interest_clicked",
   "report_interest_clicked",
   "select_interest_clicked",
@@ -28,6 +31,7 @@ export type RecommendationSignalType = (typeof RECOMMENDATION_SIGNAL_TYPES)[numb
 export const RECOMMENDATION_SIGNAL_SOURCES = [
   "tests_page",
   "open_testing_page",
+  "line_mini_app",
   "love_distance_flow",
   "work_rhythm_flow",
   "name_impression_flow",

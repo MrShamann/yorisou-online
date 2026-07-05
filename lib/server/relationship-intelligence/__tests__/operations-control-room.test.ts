@@ -309,23 +309,90 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       metadataJson: {},
       createdAt: "2026-05-05T00:02:00.000Z",
     });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_return_surface_review", {
+      id: "signal_return_surface_review",
+      anonymousSessionId: "asess_return_surface",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "line_mini_app",
+      signalType: "return_surface_viewed",
+      testId: "current-state",
+      resultId: null,
+      interestId: null,
+      actionId: null,
+      actionRole: null,
+      recommendationMode: "return_session",
+      note: null,
+      pagePath: "/line/mini-app",
+      metadataJson: {},
+      createdAt: "2026-05-05T00:03:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_return_shown_review", {
+      id: "signal_return_shown_review",
+      anonymousSessionId: "asess_return_shown",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "line_mini_app",
+      signalType: "return_recommendation_shown",
+      testId: "current-state",
+      resultId: null,
+      interestId: null,
+      actionId: "open-testing-guide",
+      actionRole: "primary",
+      recommendationMode: "return_session",
+      note: null,
+      pagePath: "/line/mini-app",
+      metadataJson: {
+        memoryState: "no_memory",
+      },
+      createdAt: "2026-05-05T00:04:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_return_click_review", {
+      id: "signal_return_click_review",
+      anonymousSessionId: "asess_return_click",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "line_mini_app",
+      signalType: "return_recommendation_clicked",
+      testId: "current-state",
+      resultId: null,
+      interestId: null,
+      actionId: "test-work-rhythm",
+      actionRole: "secondary",
+      recommendationMode: "return_session",
+      note: null,
+      pagePath: "/line/mini-app",
+      metadataJson: {
+        memoryState: "light",
+      },
+      createdAt: "2026-05-05T00:05:00.000Z",
+    });
 
     const recommendationDashboard = await service.getOpenTestingDashboardSnapshot();
-    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 6);
+    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 9);
     assert.equal(recommendationDashboard.recommendationSignals.byType.report_interest_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.design_interest_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.test_completed, 1);
     assert.equal(recommendationDashboard.recommendationSignals.byType.recommendation_package_shown, 2);
     assert.equal(recommendationDashboard.recommendationSignals.byType.recommendation_action_clicked, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.return_surface_viewed, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.return_recommendation_shown, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.return_recommendation_clicked, 1);
     assert.equal(recommendationDashboard.recommendationSignals.interestCounts.report, 1);
     assert.equal(recommendationDashboard.recommendationSignals.interestCounts.design, 1);
-    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 7);
+    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 10);
     assert.equal(recommendationDashboard.dataQuality.excludedTestRecommendationSignals, 1);
     assert.equal(recommendationDashboard.recommendationOrchestrator.packagesShown, 1);
     assert.equal(recommendationDashboard.recommendationOrchestrator.actionClicks, 1);
     assert.equal(recommendationDashboard.recommendationOrchestrator.shownByAction["report-preview-sample"], 1);
     assert.equal(recommendationDashboard.recommendationOrchestrator.clickedByAction["report-preview-sample"], 1);
     assert.equal(recommendationDashboard.recommendationOrchestrator.suppressedRiskyActionCounts.product_claim_boundary, 1);
+    assert.equal(recommendationDashboard.returnLoop.surfaceViews, 1);
+    assert.equal(recommendationDashboard.returnLoop.packagesShown, 1);
+    assert.equal(recommendationDashboard.returnLoop.actionClicks, 1);
+    assert.equal(recommendationDashboard.returnLoop.noMemoryFallbackShown, 1);
+    assert.equal(recommendationDashboard.returnLoop.shownByAction["open-testing-guide"], 1);
+    assert.equal(recommendationDashboard.returnLoop.clickedByAction["test-work-rhythm"], 1);
     assert.equal(recommendationDashboard.founderSignalIntelligence.totals.totalSignals, 3);
     assert.equal(recommendationDashboard.founderSignalIntelligence.totals.excludedSignals, 1);
     assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byProductLayer.report, 1);

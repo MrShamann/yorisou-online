@@ -8,11 +8,15 @@ export type FeedbackEmailDeliveryStatus = "not_requested" | "pending" | "sent" |
 export type RelationshipStatusValue = "active" | "paused" | "stopped" | "blocked";
 export type MessageLogStatus = "queued" | "sent" | "failed" | "skipped";
 export type ReportEventType = "preview_viewed" | "intent_clicked" | "full_viewed" | "downloaded";
+export type RecommendationConfidence = "low" | "emerging" | "strong";
 export type RecommendationSignalType =
   | "test_started"
   | "test_completed"
   | "recommendation_package_shown"
   | "recommendation_action_clicked"
+  | "return_surface_viewed"
+  | "return_recommendation_shown"
+  | "return_recommendation_clicked"
   | "recommendation_interest_clicked"
   | "report_interest_clicked"
   | "select_interest_clicked"
@@ -24,6 +28,7 @@ export type RecommendationSignalType =
 export type RecommendationSignalSource =
   | "tests_page"
   | "open_testing_page"
+  | "line_mini_app"
   | "love_distance_flow"
   | "work_rhythm_flow"
   | "name_impression_flow"
@@ -101,6 +106,9 @@ export const RECOMMENDATION_SIGNAL_TYPES = [
   "test_completed",
   "recommendation_package_shown",
   "recommendation_action_clicked",
+  "return_surface_viewed",
+  "return_recommendation_shown",
+  "return_recommendation_clicked",
   "recommendation_interest_clicked",
   "report_interest_clicked",
   "select_interest_clicked",
@@ -114,6 +122,7 @@ export const RECOMMENDATION_SIGNAL_TYPES = [
 export const RECOMMENDATION_SIGNAL_SOURCES = [
   "tests_page",
   "open_testing_page",
+  "line_mini_app",
   "love_distance_flow",
   "work_rhythm_flow",
   "name_impression_flow",
