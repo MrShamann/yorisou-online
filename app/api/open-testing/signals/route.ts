@@ -92,7 +92,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "invalid_recommendation_mode" }, { status: 400 });
     }
     if (
-      (signalType === "recommendation_package_shown" || signalType === "recommendation_action_clicked") &&
+      (
+        signalType === "recommendation_package_shown" ||
+        signalType === "recommendation_action_clicked" ||
+        signalType === "return_recommendation_shown" ||
+        signalType === "return_recommendation_clicked"
+      ) &&
       (!actionId || !actionRole || !recommendationMode)
     ) {
       return NextResponse.json({ ok: false, error: "missing_recommendation_tracking_fields" }, { status: 400 });

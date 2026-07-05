@@ -163,6 +163,22 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(invalidSignalMode.status, 400);
   assert.equal((await readJsonBody(invalidSignalMode)).error, "invalid_recommendation_mode");
 
+  const invalidReturnSignal = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "return_recommendation_clicked",
+        testId: "current-state",
+        actionRole: "primary",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(invalidReturnSignal.status, 400);
+
   const invalidSignalNoteType = await postRecommendationSignal(
     new Request("http://localhost/api/open-testing/signals", {
       method: "POST",
@@ -312,6 +328,55 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   );
   assert.equal(validRecommendationShown.status, 200);
 
+  const validReturnSurface = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "return_surface_viewed",
+        testId: "current-state",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(validReturnSurface.status, 200);
+
+  const validReturnShown = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "return_recommendation_shown",
+        testId: "current-state",
+        actionId: "report-preview-sample",
+        actionRole: "primary",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(validReturnShown.status, 200);
+
+  const validReturnClicked = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "return_recommendation_clicked",
+        testId: "current-state",
+        actionId: "report-preview-sample",
+        actionRole: "primary",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(validReturnClicked.status, 200);
+
   const recommendationSignalsBeforeOversized = await listRelationshipRecords<RecommendationSignalRecord>(
     "recommendation-signals",
   );
@@ -349,15 +414,21 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(afterValidDashboard.funnelSummary.open_testing_viewed, 1);
   assert.equal(afterValidDashboard.funnelSummary.report_intent_clicked, 1);
   assert.equal(afterValidDashboard.reportInterest.intent_clicked, 1);
-  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 6);
+  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 9);
   assert.equal(afterValidDashboard.recommendationSignals.byType.select_interest_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_started, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_completed, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.report_interest_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.related_test_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.recommendation_package_shown, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.return_surface_viewed, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.return_recommendation_shown, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.return_recommendation_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.interestCounts.select, 1);
   assert.equal(afterValidDashboard.recommendationOrchestrator.packagesShown, 1);
+  assert.equal(afterValidDashboard.returnLoop.surfaceViews, 1);
+  assert.equal(afterValidDashboard.returnLoop.packagesShown, 1);
+  assert.equal(afterValidDashboard.returnLoop.actionClicks, 1);
 
   const openTestingPageSource = fs.readFileSync(path.join(process.cwd(), "app/open-testing/page.tsx"), "utf8");
   const resultPageSource = fs.readFileSync(path.join(process.cwd(), "app/result/page.tsx"), "utf8");
@@ -366,6 +437,7 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
     path.join(process.cwd(), "app/reports/self-understanding/[publicCode]/page.tsx"),
     "utf8",
   );
+  const lineMiniAppSource = fs.readFileSync(path.join(process.cwd(), "app/line/mini-app/page.tsx"), "utf8");
   const lineAuthStartSource = fs.readFileSync(path.join(process.cwd(), "app/api/line/auth/start/route.ts"), "utf8");
   const contactRouteSource = fs.readFileSync(path.join(process.cwd(), "app/api/contact/route.ts"), "utf8");
   const signalRouteSource = fs.readFileSync(path.join(process.cwd(), "app/api/open-testing/signals/route.ts"), "utf8");
@@ -380,6 +452,7 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(reportPreviewSource.includes('eventName: "result_viewed"'), false);
   assert.equal(reportPreviewSource.includes('eventType: "intent_clicked"'), true);
   assert.equal(fullReportPageSource.includes('eventType="full_viewed"'), true);
+  assert.equal(lineMiniAppSource.includes('signalType: "return_surface_viewed"'), true);
   assert.equal(lineAuthStartSource.includes('eventName: "line_save_clicked"'), false);
   assert.equal(
     contactRouteSource.indexOf("await storeFeedbackSubmission") < contactRouteSource.indexOf("if (!resendResponse.ok)"),

@@ -2,9 +2,11 @@ import { randomBytes } from "crypto";
 
 import { getRecommendationActionDefinition, type RecommendationActionType } from "@/app/data/yorisouRecommendationActions";
 import type { RecommendationProductLayer, RecommendationRiskBoundary } from "@/app/data/yorisouRecommendationGraph";
+import { buildRecommendationMemoryBase, type RecommendationMemorySummary } from "@/lib/server/relationship-intelligence/recommendation-memory";
 import type {
   RecommendationActionId,
   RecommendationActionRole,
+  RecommendationConfidence,
   RecommendationInterestId,
   RecommendationMode,
   RecommendationSignalRecord,
@@ -14,8 +16,6 @@ import type {
 } from "@/lib/server/relationship-intelligence/types";
 
 const MAX_SECONDARY_ACTIONS = 3;
-
-export type RecommendationConfidence = "low" | "emerging" | "strong";
 
 export type RecommendationPackageAction = {
   actionId: RecommendationActionId;
@@ -146,11 +146,17 @@ function buildSessionProfile(signals: RecommendationSignalRecord[], currentTestI
       completedTests.add(signal.testId);
     }
 
-    if (signal.signalType === "recommendation_package_shown" && signal.actionId) {
+    if (
+      (signal.signalType === "recommendation_package_shown" || signal.signalType === "return_recommendation_shown") &&
+      signal.actionId
+    ) {
       incrementCount(shownActionCounts, signal.actionId);
     }
 
-    if (signal.signalType === "recommendation_action_clicked" && signal.actionId) {
+    if (
+      (signal.signalType === "recommendation_action_clicked" || signal.signalType === "return_recommendation_clicked") &&
+      signal.actionId
+    ) {
       incrementCount(clickedActionCounts, signal.actionId);
       const action = getRecommendationActionDefinition(signal.actionId);
       incrementCount(layerInterestCounts, action.productLayer);
@@ -199,6 +205,11 @@ function getTestDefaultRiskBoundary(testId: RecommendationSignalTestId): Recomme
 }
 
 function getBaseCandidates(input: RecommendationOrchestratorInput): RecommendationActionId[] {
+  const memory = buildRecommendationMemoryBase(input.recentSignals || []);
+  if (input.mode === "return_session") {
+    return getReturnSessionCandidates(input, memory);
+  }
+
   switch (input.testId) {
     case "work-rhythm":
       if (input.resultId === "social-drive") {
@@ -237,7 +248,83 @@ function getBaseCandidates(input: RecommendationOrchestratorInput): Recommendati
   }
 }
 
-function explainPackage(input: RecommendationOrchestratorInput, confidence: RecommendationConfidence, riskBoundary: RecommendationRiskBoundary) {
+function uniqueActions(actions: RecommendationActionId[]) {
+  return [...new Set(actions)];
+}
+
+function getReturnSessionCandidates(input: RecommendationOrchestratorInput, memory: RecommendationMemorySummary): RecommendationActionId[] {
+  const baseFallback: RecommendationActionId[] =
+    input.source === "line_mini_app"
+      ? ["open-testing-guide", "test-work-rhythm", "report-preview-sample", "test-name-impression"]
+      : ["open-testing-guide", "test-work-rhythm", "report-preview-sample", "line-save-entry"];
+
+  if (memory.memoryState === "no_memory") {
+    return baseFallback;
+  }
+
+  const dominantTestId = memory.dominantTestId || memory.recentTests[0] || input.testId;
+  let candidates: RecommendationActionId[];
+
+  switch (dominantTestId) {
+    case "work-rhythm":
+      candidates = ["test-work-rhythm", "report-preview-sample", "test-name-impression", "line-save-entry"];
+      break;
+    case "name-impression":
+      candidates = ["test-name-impression", "report-preview-sample", "test-love-distance", "line-save-entry"];
+      break;
+    case "love-distance":
+      candidates = ["test-love-distance", "report-preview-sample", "test-name-impression", "line-save-entry"];
+      break;
+    case "local-life":
+      candidates = ["local-life-signal-entry", "community-interest-entry", "open-testing-guide", "design-interest-entry"];
+      break;
+    default:
+      candidates = baseFallback;
+      break;
+  }
+
+  if (memory.repeatedReportInterest) {
+    candidates = ["report-preview-sample", ...candidates];
+  }
+  if (memory.repeatedSelectInterest && dominantTestId !== "local-life") {
+    candidates = ["select-hint", ...candidates];
+  }
+  if (memory.repeatedDesignInterest && dominantTestId !== "local-life") {
+    candidates = [...candidates, "design-interest-entry"];
+  }
+  if (memory.repeatedCommunityInterest && dominantTestId !== "local-life") {
+    candidates = ["community-interest-entry", ...candidates];
+  }
+  if (memory.repeatedLocalLifeInterest && dominantTestId !== "local-life") {
+    candidates = ["local-life-signal-entry", "community-interest-entry", ...candidates];
+  }
+  if (memory.staleSignals) {
+    candidates = ["open-testing-guide", ...candidates];
+  }
+  if (input.source === "line_mini_app" || memory.lineSaveUsed) {
+    candidates = candidates.filter((actionId) => actionId !== "line-save-entry");
+  }
+
+  return uniqueActions(candidates);
+}
+
+function explainPackage(
+  input: RecommendationOrchestratorInput,
+  confidence: RecommendationConfidence,
+  riskBoundary: RecommendationRiskBoundary,
+  memory: RecommendationMemorySummary,
+) {
+  if (input.mode === "return_session" && memory.memoryState === "no_memory") {
+    return "まだ記録が少ないため、まずは気になる入口から始めてください。診断一覧や公開テスト案内、レポート見本から無理なく選べます。";
+  }
+
+  if (input.mode === "return_session" && input.source === "line_mini_app") {
+    if (memory.dominantTestId === "local-life" || memory.repeatedLocalLifeInterest) {
+      return "最近の関心をもとに、暮らしの声を安全に続けやすい入口を優先しています。サービス提供の約束ではなく、続きを整理するための導線です。";
+    }
+    return "最近の診断や関心をもとに、前回の続きとして試しやすい入口を出しています。医療・心理診断ではなく、今の状態を見つめるための小さな手がかりです。";
+  }
+
   if (input.testId === "local-life") {
     return confidence === "low"
       ? "今の結果から見ると、まずは生活の声を安全に整理できる入口を優先しています。サービス提供の約束ではなく、関心や困りごとを送る入口だけを出しています。"
@@ -293,6 +380,10 @@ function shouldSuppress(action: RecommendationPackageAction, input: Recommendati
     return "needs_more_signal_before_product_suggestion";
   }
 
+  if (input.mode === "return_session" && profile.completedTests.has("local-life") && action.productLayer === "design") {
+    return "needs_more_signal_before_product_suggestion";
+  }
+
   if (profile.confidence === "low" && (action.productLayer === "select" || action.productLayer === "design")) {
     return "needs_more_signal_before_product_suggestion";
   }
@@ -303,6 +394,10 @@ function shouldSuppress(action: RecommendationPackageAction, input: Recommendati
 
   if (action.actionId === "line-save-entry" && profile.hasLineSaveIntent) {
     return "line_save_already_used";
+  }
+
+  if (input.mode === "return_session" && input.source === "line_mini_app" && action.actionId === "line-save-entry") {
+    return "already_on_line_return_surface";
   }
 
   if (action.actionId === "report-preview-sample" && profile.hasReportInterest && input.mode === "return_session") {
@@ -321,6 +416,7 @@ function rankScore(action: RecommendationPackageAction, input: RecommendationOrc
   if (action.productLayer === "select" || action.productLayer === "design") score += profile.confidence === "strong" ? 5 : 1;
   if (action.actionType === "start_related_test") score += profile.confidence === "low" ? 5 : 2;
   if (input.testId === "local-life" && action.actionId === "local-life-signal-entry") score += 8;
+  if (input.mode === "return_session" && profile.completedTests.has("local-life") && action.actionId === "local-life-signal-entry") score += 8;
   if (input.testId === "name-impression" && action.actionId === "test-work-rhythm" && input.resultId === "straight") score += 4;
   if (input.testId === "work-rhythm" && action.actionId === "community-interest-entry" && input.resultId === "social-drive") score += 4;
   if (input.testId === "work-rhythm" && action.actionId === "design-interest-entry" && input.resultId === "steady-planner") score += 3;
@@ -332,6 +428,7 @@ function rankScore(action: RecommendationPackageAction, input: RecommendationOrc
 
 export function buildAutonomousRecommendationPackage(input: RecommendationOrchestratorInput): RecommendationPackage {
   const profile = buildSessionProfile(input.recentSignals || [], input.testId);
+  const memory = buildRecommendationMemoryBase(input.recentSignals || []);
   const candidateIds = getBaseCandidates(input);
   const candidateActions = candidateIds.map((actionId) => actionToPublicShape(actionId, input));
   const suppressedActions: RecommendationSuppressedAction[] = [];
@@ -359,7 +456,7 @@ export function buildAutonomousRecommendationPackage(input: RecommendationOrches
   const recommendationMode = determineMode(primaryAction, input.mode);
   const packageId = createPackageId();
   const generatedAt = nowIso();
-  const explanation = explainPackage(input, profile.confidence, riskBoundary);
+  const explanation = explainPackage(input, profile.confidence, riskBoundary, memory);
 
   return {
     packageId,

@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { trackRecommendationSignals, type RecommendationSignalPayload } from "@/app/components/YorisouSignalTracker";
 import type { RecommendationMode, RecommendationSignalSource, YorisouTestId } from "@/app/data/yorisouRecommendationSignals";
+import type { RecommendationMemorySummary } from "@/lib/server/relationship-intelligence/recommendation-memory";
 import type { RecommendationPackage } from "@/lib/server/relationship-intelligence/recommendation-orchestrator";
 
 type Props = {
@@ -16,14 +17,43 @@ type Props = {
   title?: string;
 };
 
+type RecommendationApiResponse = {
+  ok?: boolean;
+  package?: RecommendationPackage;
+  memory?: RecommendationMemorySummary;
+};
+
+const TEST_LABELS: Record<YorisouTestId, string> = {
+  "current-state": "入口一覧",
+  "love-distance": "恋愛の距離感",
+  "work-rhythm": "仕事のリズム",
+  "name-impression": "名前の印象",
+  "local-life": "暮らしの困りごと",
+};
+
+const INTEREST_LABELS: Record<string, string> = {
+  "report-preview": "レポート",
+  "line-save": "LINE保存",
+  "related-test": "関連テスト",
+  "select-info": "Select",
+  "design-interest": "Design",
+  "community-interest": "Community",
+  "local-life-interest": "Local Life",
+};
+
 function buildShownPayload(
   recommendationPackage: RecommendationPackage,
   action: RecommendationPackage["primaryAction"],
   actionRole: "primary" | "secondary" | "suppressed",
+  memory: RecommendationMemorySummary | null,
 ): RecommendationSignalPayload {
+  const signalType =
+    recommendationPackage.recommendationMode === "return_session"
+      ? "return_recommendation_shown"
+      : "recommendation_package_shown";
   return {
     source: recommendationPackage.source,
-    signalType: "recommendation_package_shown",
+    signalType,
     testId: recommendationPackage.testId,
     resultId: recommendationPackage.resultId,
     actionId: action.actionId,
@@ -35,6 +65,9 @@ function buildShownPayload(
       actionType: action.actionType,
       confidence: recommendationPackage.confidence,
       packageId: recommendationPackage.packageId,
+      memoryState: memory?.memoryState || null,
+      recentSignalCount: memory?.recentSignalCount || 0,
+      staleSignals: memory?.staleSignals || false,
     },
   };
 }
@@ -43,11 +76,16 @@ function buildClickPayload(
   recommendationPackage: RecommendationPackage,
   action: RecommendationPackage["primaryAction"],
   actionRole: "primary" | "secondary",
+  memory: RecommendationMemorySummary | null,
 ): RecommendationSignalPayload[] {
+  const signalType =
+    recommendationPackage.recommendationMode === "return_session"
+      ? "return_recommendation_clicked"
+      : "recommendation_action_clicked";
   const payloads: RecommendationSignalPayload[] = [
     {
       source: recommendationPackage.source,
-      signalType: "recommendation_action_clicked",
+      signalType,
       testId: recommendationPackage.testId,
       resultId: recommendationPackage.resultId,
       actionId: action.actionId,
@@ -59,6 +97,9 @@ function buildClickPayload(
         actionType: action.actionType,
         confidence: recommendationPackage.confidence,
         packageId: recommendationPackage.packageId,
+        memoryState: memory?.memoryState || null,
+        recentSignalCount: memory?.recentSignalCount || 0,
+        staleSignals: memory?.staleSignals || false,
       },
     },
   ];
@@ -94,6 +135,28 @@ function buildSafetyNote(recommendationPackage: RecommendationPackage) {
   return null;
 }
 
+function buildMemorySummary(memory: RecommendationMemorySummary | null) {
+  if (!memory) {
+    return null;
+  }
+
+  if (memory.memoryState === "no_memory") {
+    return {
+      title: "まだ記録が少ない状態です。",
+      detail: "まずは気になる入口から始めてください。",
+    };
+  }
+
+  const recentTests = memory.recentTests.map((testId) => TEST_LABELS[testId]).filter(Boolean).slice(0, 2).join(" / ");
+  const recentInterests = memory.recentInterests.map((interestId) => INTEREST_LABELS[interestId] || interestId).slice(0, 2).join(" / ");
+  const detailParts = [recentTests ? `最近の入口: ${recentTests}` : null, recentInterests ? `関心: ${recentInterests}` : null].filter(Boolean);
+
+  return {
+    title: "前回の続きに近い入口です。",
+    detail: detailParts.join(" ・ ") || "最近の動きから続けやすい入口を選んでいます。",
+  };
+}
+
 export default function YorisouRecommendationSlot({
   testId,
   source,
@@ -103,6 +166,8 @@ export default function YorisouRecommendationSlot({
   title = "次に試せること",
 }: Props) {
   const [recommendationPackage, setRecommendationPackage] = useState<RecommendationPackage | null>(null);
+  const [memorySummary, setMemorySummary] = useState<RecommendationMemorySummary | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const trackedPackageRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -110,6 +175,7 @@ export default function YorisouRecommendationSlot({
 
     async function loadRecommendationPackage() {
       try {
+        setLoadFailed(false);
         const response = await fetch("/api/open-testing/recommendations", {
           method: "POST",
           headers: {
@@ -123,15 +189,21 @@ export default function YorisouRecommendationSlot({
             mode,
           }),
         });
-        const payload = (await response.json().catch(() => null)) as
-          | { ok?: boolean; package?: RecommendationPackage }
-          | null;
+        const payload = (await response.json().catch(() => null)) as RecommendationApiResponse | null;
 
         if (!cancelled && response.ok && payload?.ok && payload.package) {
           setRecommendationPackage(payload.package);
+          setMemorySummary(payload.memory || null);
+          return;
+        }
+
+        if (!cancelled) {
+          setLoadFailed(true);
         }
       } catch {
-        // Recommendation fetch must never block the public flow.
+        if (!cancelled) {
+          setLoadFailed(true);
+        }
       }
     }
 
@@ -153,24 +225,52 @@ export default function YorisouRecommendationSlot({
     trackedPackageRef.current = recommendationPackage.packageId;
 
     const payloads: RecommendationSignalPayload[] = [
-      buildShownPayload(recommendationPackage, recommendationPackage.primaryAction, "primary"),
-      ...recommendationPackage.secondaryActions.map((action) => buildShownPayload(recommendationPackage, action, "secondary")),
-      ...recommendationPackage.suppressedActions.map((action) => buildShownPayload(recommendationPackage, action, "suppressed")),
+      buildShownPayload(recommendationPackage, recommendationPackage.primaryAction, "primary", memorySummary),
+      ...recommendationPackage.secondaryActions.map((action) =>
+        buildShownPayload(recommendationPackage, action, "secondary", memorySummary),
+      ),
+      ...recommendationPackage.suppressedActions.map((action) =>
+        buildShownPayload(recommendationPackage, action, "suppressed", memorySummary),
+      ),
     ];
 
     void trackRecommendationSignals(payloads);
-  }, [recommendationPackage]);
+  }, [memorySummary, recommendationPackage]);
+
+  if (!recommendationPackage && loadFailed) {
+    return (
+      <section className="space-y-3 rounded-[1.2rem] border border-[rgba(23,59,53,0.1)] bg-white/88 p-5 shadow-[0_14px_30px_rgba(23,59,53,0.06)]">
+        <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">{title}</p>
+        <p className="text-[14px] leading-7 text-[#5F5750]">
+          次に試せる入口を読み込めませんでした。診断一覧から選べます。
+        </p>
+        <Link
+          href="/tests"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F6FBF8] px-4 text-[13px] font-semibold text-[#173B35]"
+        >
+          診断一覧を見る
+        </Link>
+      </section>
+    );
+  }
 
   if (!recommendationPackage) {
     return null;
   }
 
   const safetyNote = buildSafetyNote(recommendationPackage);
+  const memory = buildMemorySummary(memorySummary);
 
   return (
     <section className="space-y-3 rounded-[1.2rem] border border-[rgba(23,59,53,0.1)] bg-white/88 p-5 shadow-[0_14px_30px_rgba(23,59,53,0.06)]">
       <div className="space-y-2">
         <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">{title}</p>
+        {memory ? (
+          <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-3">
+            <p className="text-[13px] font-semibold leading-6 text-[#173B35]">{memory.title}</p>
+            <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">{memory.detail}</p>
+          </div>
+        ) : null}
         <p className="text-[14px] leading-7 text-[#5F5750]">{recommendationPackage.explanation}</p>
       </div>
 
@@ -178,7 +278,7 @@ export default function YorisouRecommendationSlot({
         href={recommendationPackage.primaryAction.href}
         onClick={() => {
           void trackRecommendationSignals(
-            buildClickPayload(recommendationPackage, recommendationPackage.primaryAction, "primary"),
+            buildClickPayload(recommendationPackage, recommendationPackage.primaryAction, "primary", memorySummary),
           );
         }}
         className="block rounded-[1.1rem] border border-[#173B35] bg-[#173B35] px-4 py-4 text-white transition hover:-translate-y-0.5"
@@ -195,7 +295,7 @@ export default function YorisouRecommendationSlot({
               key={action.actionId}
               href={action.href}
               onClick={() => {
-                void trackRecommendationSignals(buildClickPayload(recommendationPackage, action, "secondary"));
+                void trackRecommendationSignals(buildClickPayload(recommendationPackage, action, "secondary", memorySummary));
               }}
               className="rounded-[1rem] border border-[rgba(23,59,53,0.1)] bg-[#F6FBF8] px-4 py-4 transition hover:-translate-y-0.5"
             >

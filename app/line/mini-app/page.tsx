@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
+import { RecommendationSignalMountTracker } from "@/app/components/YorisouSignalTracker";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "@/app/components/OpenTestingTracker";
 
@@ -44,6 +46,15 @@ export default async function MiniAppEntryPage({
       style={{ paddingBottom: "max(40px, env(safe-area-inset-bottom, 0px))" }}
     >
       <OpenTestingPageTracker eventName="line_entry_opened" route="/line/mini-app" source="line_mini_app" entrySource="line-mini-app" />
+      <RecommendationSignalMountTracker
+        signal={{
+          source: "line_mini_app",
+          signalType: "return_surface_viewed",
+          testId: "current-state",
+          recommendationMode: "return_session",
+          pagePath: "/line/mini-app",
+        }}
+      />
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -71,11 +82,10 @@ export default async function MiniAppEntryPage({
         {/* Launcher headline */}
         <div className="mt-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A9088]">
-            今の状態に近い入口を選ぶ
+            前回の続きから、少しだけ。
           </p>
         </div>
 
-        {/* Primary entry — quick_check */}
         <div
           className="mt-4 rounded-[1.4rem] p-5"
           style={{
@@ -97,22 +107,34 @@ export default async function MiniAppEntryPage({
             className="display-serif mt-3 leading-[1.22] text-[#22201D]"
             style={{ fontSize: "1.55rem" }}
           >
-            まずは120問から、<br />
-            今の動き方を見ていく。
+            最近の診断や関心をもとに、<br />
+            次に試しやすい入口を出します。
           </h1>
 
           <p className="mt-2 text-[13px] leading-[1.85] text-[#6F6760]">
-            今の感覚に近いものをひとつずつ選ぶだけ。答えると、今のあなたに近い無料の結果が届きます。
+            最近の診断や関心をもとに、次に試しやすい入口を表示します。医療・心理診断ではなく、今の状態を見つめるための小さな手がかりです。
           </p>
 
           <p className="mt-2 text-[11px] tracking-[0.06em] text-[#9A9088]">
-            120問 · 無料 · ログインなし
+            LINE / Web 継続用 · ログインなし
           </p>
+        </div>
 
+        <div className="mt-5">
+          <YorisouRecommendationSlot
+            testId="current-state"
+            source="line_mini_app"
+            pagePath="/line/mini-app"
+            mode="return_session"
+            title="前回の続き"
+          />
+        </div>
+
+        <div className="mt-5 grid gap-2.5">
           <OpenTestingTrackingLink
             href={startHref}
             tracking={{ eventName: "open_testing_start_clicked", route: "/line/mini-app", source: "line_mini_app", entrySource: "line-mini-app" }}
-            className="mt-4 flex min-h-[52px] w-full items-center justify-center rounded-full text-[15px] transition active:scale-[0.975]"
+            className="flex min-h-[52px] w-full items-center justify-center rounded-full text-[15px] transition active:scale-[0.975]"
             style={{
               background: "#173B35",
               color: "#fff",
@@ -120,14 +142,36 @@ export default async function MiniAppEntryPage({
               boxShadow: "0 12px 26px rgba(23,59,53,0.26)",
             }}
           >
-            はじめる
+            120問から始める
           </OpenTestingTrackingLink>
-
-          <p className="mt-2.5 text-center text-[10px] text-[#9A9088]">
-            診断ではありません
-          </p>
-          <p className="mt-2 text-[11px] leading-5 text-[#7A7068]">
-            LINEから結果を受け取ると、結果の確認や関連するお知らせをLINEで受け取れる状態が有効になることがあります。不要な場合は停止できます。
+          <div className="grid grid-cols-2 gap-2.5">
+            <Link
+              href="/tests"
+              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
+            >
+              テスト一覧
+            </Link>
+            <Link
+              href="/open-testing"
+              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
+            >
+              公開テスト案内
+            </Link>
+            <Link
+              href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
+              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
+            >
+              レポート見本
+            </Link>
+            <Link
+              href="/tests/local-life"
+              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
+            >
+              暮らしの関心
+            </Link>
+          </div>
+          <p className="mt-1 text-[11px] leading-5 text-[#7A7068]">
+            まだ記録が少ない場合は、公開テスト案内や診断一覧から続けやすい入口を案内します。不要なお知らせはいつでも止められます。
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { buildRecommendationMemoryBase } from "@/lib/server/relationship-intelligence/recommendation-memory";
 import { buildAutonomousRecommendationPackage } from "@/lib/server/relationship-intelligence/recommendation-orchestrator";
 import { ensureOpenTestingAnonymousSession, listRecommendationSignalsForAnonymousSession, OPEN_TESTING_SESSION_COOKIE } from "@/lib/server/relationship-intelligence/service";
 import { isRecommendationMode, isRecommendationSignalSource, isRecommendationSignalTestId, type RecommendationSignalSource } from "@/lib/server/relationship-intelligence/types";
@@ -38,23 +39,24 @@ function defaultSourceForTest(testId: string): RecommendationSignalSource {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
-    const testId = asString(body.testId);
     const mode = asString(body.mode);
+    const rawTestId = asString(body.testId);
     const source = asString(body.source);
     const resultId = asString(body.resultId);
     const pagePath = asString(body.pagePath, MAX_PATH_LENGTH);
 
-    if (!testId) {
-      return NextResponse.json({ ok: false, error: "missing_test_id" }, { status: 400 });
-    }
-    if (!isRecommendationSignalTestId(testId)) {
-      return NextResponse.json({ ok: false, error: "invalid_test_id" }, { status: 400 });
-    }
     if (!mode) {
       return NextResponse.json({ ok: false, error: "missing_recommendation_mode" }, { status: 400 });
     }
     if (!isRecommendationMode(mode)) {
       return NextResponse.json({ ok: false, error: "invalid_recommendation_mode" }, { status: 400 });
+    }
+    const testId = rawTestId || (mode === "return_session" ? "current-state" : null);
+    if (!testId) {
+      return NextResponse.json({ ok: false, error: "missing_test_id" }, { status: 400 });
+    }
+    if (!isRecommendationSignalTestId(testId)) {
+      return NextResponse.json({ ok: false, error: "invalid_test_id" }, { status: 400 });
     }
     if (source && !isRecommendationSignalSource(source)) {
       return NextResponse.json({ ok: false, error: "invalid_signal_source" }, { status: 400 });
@@ -75,10 +77,20 @@ export async function POST(request: Request) {
       mode,
       recentSignals,
     });
+    const recommendationMemory = {
+      ...buildRecommendationMemoryBase(recentSignals, session.record.anonymousSessionId),
+      returnRecommendedMode: recommendationPackage.recommendationMode,
+      nextBestReturnAction: recommendationPackage.primaryAction.actionId,
+      secondaryReturnActions: recommendationPackage.secondaryActions.map((action) => action.actionId),
+      riskBoundary: recommendationPackage.riskBoundary,
+      confidence: recommendationPackage.confidence,
+      generatedAt: recommendationPackage.generatedAt,
+    };
 
     const response = NextResponse.json({
       ok: true,
       package: recommendationPackage,
+      memory: recommendationMemory,
     });
     response.cookies.set(OPEN_TESTING_SESSION_COOKIE, session.record.anonymousSessionId, {
       httpOnly: true,

@@ -1,7 +1,6 @@
 "use client";
 
-import type { MouseEvent } from "react";
-import type { ComponentProps } from "react";
+import { useEffect, useRef, type MouseEvent, type ComponentProps } from "react";
 import Link from "next/link";
 
 import type {
@@ -47,6 +46,21 @@ export async function trackRecommendationSignals(payloads: RecommendationSignalP
   for (const payload of payloads) {
     await trackRecommendationSignal(payload);
   }
+}
+
+export function RecommendationSignalMountTracker({ signal }: { signal: RecommendationSignalPayload }) {
+  const trackedRef = useRef(false);
+
+  useEffect(() => {
+    if (trackedRef.current) {
+      return;
+    }
+
+    trackedRef.current = true;
+    void trackRecommendationSignal(signal);
+  }, [signal]);
+
+  return null;
 }
 
 type RecommendationSignalLinkProps = ComponentProps<typeof Link> & {
