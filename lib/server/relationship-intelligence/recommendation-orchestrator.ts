@@ -146,11 +146,17 @@ function buildSessionProfile(signals: RecommendationSignalRecord[], currentTestI
       completedTests.add(signal.testId);
     }
 
-    if (signal.signalType === "recommendation_package_shown" && signal.actionId) {
+    if (
+      (signal.signalType === "recommendation_package_shown" || signal.signalType === "return_recommendation_shown") &&
+      signal.actionId
+    ) {
       incrementCount(shownActionCounts, signal.actionId);
     }
 
-    if (signal.signalType === "recommendation_action_clicked" && signal.actionId) {
+    if (
+      (signal.signalType === "recommendation_action_clicked" || signal.signalType === "return_recommendation_clicked") &&
+      signal.actionId
+    ) {
       incrementCount(clickedActionCounts, signal.actionId);
       const action = getRecommendationActionDefinition(signal.actionId);
       incrementCount(layerInterestCounts, action.productLayer);

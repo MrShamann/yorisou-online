@@ -119,6 +119,31 @@ export async function runRecommendationOrchestratorValidationTest() {
   assert.equal(["report-preview-sample", "test-work-rhythm", "open-testing-guide"].includes(noMemoryReturnPackage.primaryAction.actionId), true);
   assert.equal(noMemoryReturnPackage.secondaryActions.length <= 3, true);
 
+  const returnClickSuppressionPackage = buildAutonomousRecommendationPackage({
+    testId: "current-state",
+    source: "line_mini_app",
+    pagePath: "/line/mini-app",
+    mode: "return_session",
+    recentSignals: [
+      buildSignal({
+        source: "line_mini_app",
+        signalType: "return_recommendation_clicked",
+        testId: "current-state",
+        actionId: "report-preview-sample",
+        actionRole: "primary",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+    ],
+  });
+  assert.notEqual(returnClickSuppressionPackage.primaryAction.actionId, "report-preview-sample");
+  assert.equal(
+    returnClickSuppressionPackage.suppressedActions.some(
+      (entry) => entry.actionId === "report-preview-sample" && entry.reason === "already_clicked_recently",
+    ),
+    true,
+  );
+
   const workRhythmReturnSignals = [
     buildSignal({
       signalType: "test_completed",
@@ -186,6 +211,55 @@ export async function runRecommendationOrchestratorValidationTest() {
   assert.equal(returnMemory.anonymousSessionId, "asess_return");
   assert.equal(returnMemory.recentTests.includes("work-rhythm"), true);
   assert.equal("note" in (returnMemory as unknown as Record<string, unknown>), false);
+
+  const protectedDominantMemory = buildRecommendationMemoryBase(
+    [
+      buildSignal({
+        signalType: "test_completed",
+        testId: "work-rhythm",
+        pagePath: "/tests/work-rhythm",
+      }),
+      buildSignal({
+        source: "line_mini_app",
+        signalType: "return_recommendation_clicked",
+        testId: "current-state",
+        actionId: "report-preview-sample",
+        actionRole: "primary",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+        createdAt: "2026-07-05T00:00:02.000Z",
+      }),
+    ],
+    "asess_return",
+  );
+  assert.equal(protectedDominantMemory.dominantTestId, "work-rhythm");
+  assert.equal(protectedDominantMemory.recentTests[0], "work-rhythm");
+
+  const telemetryOnlyMemory = buildRecommendationMemoryBase(
+    [
+      buildSignal({
+        source: "line_mini_app",
+        signalType: "return_surface_viewed",
+        testId: "current-state",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+      buildSignal({
+        source: "line_mini_app",
+        signalType: "return_recommendation_clicked",
+        testId: "current-state",
+        actionId: "report-preview-sample",
+        actionRole: "primary",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+        createdAt: "2026-07-05T00:00:01.000Z",
+      }),
+    ],
+    "asess_return",
+  );
+  assert.equal(telemetryOnlyMemory.memoryState, "no_memory");
+  assert.equal(telemetryOnlyMemory.dominantTestId, null);
+  assert.deepEqual(telemetryOnlyMemory.recentTests, []);
 
   const validRecommendationResponse = await postRecommendationPackage(
     new Request("http://localhost/api/open-testing/recommendations", {

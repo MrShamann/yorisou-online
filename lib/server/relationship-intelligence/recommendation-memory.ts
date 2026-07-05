@@ -91,6 +91,14 @@ function deriveMemoryState(signalCount: number, clickedActions: number, recentTe
   return "light";
 }
 
+function isReturnTelemetrySignal(signal: RecommendationSignalRecord) {
+  return (
+    signal.signalType === "return_surface_viewed" ||
+    signal.signalType === "return_recommendation_shown" ||
+    signal.signalType === "return_recommendation_clicked"
+  );
+}
+
 export function buildRecommendationMemoryBase(
   signals: RecommendationSignalRecord[],
   anonymousSessionId?: string | null,
@@ -100,6 +108,7 @@ export function buildRecommendationMemoryBase(
     .slice(0, 40);
   const layerCounts = new Map<RecommendationProductLayer, number>();
   const testCounts = new Map<RecommendationSignalTestId, number>();
+  const contextualSignals = recentSignals.filter((signal) => !isReturnTelemetrySignal(signal));
 
   for (const signal of recentSignals) {
     if (signal.actionId && (signal.signalType === "recommendation_action_clicked" || signal.signalType === "return_recommendation_clicked")) {
@@ -110,13 +119,13 @@ export function buildRecommendationMemoryBase(
       incrementCount(layerCounts, toInterestLayer(signal.interestId));
     }
 
-    if (signal.testId) {
+    if (signal.testId && !isReturnTelemetrySignal(signal)) {
       incrementCount(testCounts, signal.testId);
     }
   }
 
   const recentTests = uniqueOrdered(
-    recentSignals
+    contextualSignals
       .map((signal) => signal.testId)
       .filter((value): value is RecommendationSignalTestId => Boolean(value)),
   ).slice(0, 4);
@@ -161,6 +170,18 @@ export function buildRecommendationMemoryBase(
   const repeatedDesignInterest = (layerCounts.get("design") || 0) >= 2;
   const repeatedCommunityInterest = (layerCounts.get("community") || 0) >= 2;
   const repeatedLocalLifeInterest = (layerCounts.get("local_life") || 0) >= 2;
+  const contextualSignalCount = contextualSignals.length;
+  const contextualClickedActions = uniqueOrdered(
+    contextualSignals
+      .filter((signal) => signal.actionId && signal.signalType === "recommendation_action_clicked")
+      .map((signal) => signal.actionId as RecommendationActionId),
+  ).length;
+  const memoryState =
+    contextualSignalCount === 0 ? "no_memory" : deriveMemoryState(contextualSignalCount, contextualClickedActions, recentTests.length);
+  const confidence =
+    contextualSignalCount === 0
+      ? "low"
+      : deriveConfidence(contextualSignalCount, repeatedInterestLayers.length, contextualClickedActions, recentTests.length);
 
   return {
     anonymousSessionId: anonymousSessionId || recentSignals[0]?.anonymousSessionId || null,
@@ -174,11 +195,11 @@ export function buildRecommendationMemoryBase(
     nextBestReturnAction: null,
     secondaryReturnActions: [],
     riskBoundary: "normal",
-    confidence: deriveConfidence(recentSignals.length, repeatedInterestLayers.length, clickedActions.length, recentTests.length),
+    confidence,
     staleSignals,
     generatedAt: nowIso(),
     dominantTestId,
-    memoryState: deriveMemoryState(recentSignals.length, clickedActions.length, recentTests.length),
+    memoryState,
     recentSignalCount: recentSignals.length,
     lineSaveUsed:
       recentSignals.some((signal) => signal.signalType === "line_save_interest_clicked") ||
