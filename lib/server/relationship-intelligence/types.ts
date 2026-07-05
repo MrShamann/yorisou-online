@@ -11,6 +11,8 @@ export type ReportEventType = "preview_viewed" | "intent_clicked" | "full_viewed
 export type RecommendationSignalType =
   | "test_started"
   | "test_completed"
+  | "recommendation_package_shown"
+  | "recommendation_action_clicked"
   | "recommendation_interest_clicked"
   | "report_interest_clicked"
   | "select_interest_clicked"
@@ -37,12 +39,31 @@ export type RecommendationInterestId =
   | "design-interest"
   | "community-interest"
   | "local-life-interest";
+export type RecommendationActionId =
+  | "report-preview-sample"
+  | "line-save-entry"
+  | "select-hint"
+  | "design-interest-entry"
+  | "community-interest-entry"
+  | "local-life-signal-entry"
+  | "test-love-distance"
+  | "test-work-rhythm"
+  | "test-name-impression"
+  | "test-local-life"
+  | "open-testing-guide";
+export type RecommendationActionRole = "primary" | "secondary" | "suppressed";
 export type RecommendationSignalTestId =
   | "current-state"
   | "love-distance"
   | "work-rhythm"
   | "name-impression"
   | "local-life";
+export type RecommendationMode =
+  | "immediate_result"
+  | "return_session"
+  | "line_save"
+  | "local_life_inquiry"
+  | "select_design_interest";
 export type RelationshipActivationSource =
   | "line_mini_app_entry"
   | "line_login_callback"
@@ -78,6 +99,8 @@ export const REPORT_EVENT_TYPES = [
 export const RECOMMENDATION_SIGNAL_TYPES = [
   "test_started",
   "test_completed",
+  "recommendation_package_shown",
+  "recommendation_action_clicked",
   "recommendation_interest_clicked",
   "report_interest_clicked",
   "select_interest_clicked",
@@ -110,6 +133,26 @@ export const RECOMMENDATION_INTEREST_IDS = [
   "local-life-interest",
 ] as const satisfies readonly RecommendationInterestId[];
 
+export const RECOMMENDATION_ACTION_IDS = [
+  "report-preview-sample",
+  "line-save-entry",
+  "select-hint",
+  "design-interest-entry",
+  "community-interest-entry",
+  "local-life-signal-entry",
+  "test-love-distance",
+  "test-work-rhythm",
+  "test-name-impression",
+  "test-local-life",
+  "open-testing-guide",
+] as const satisfies readonly RecommendationActionId[];
+
+export const RECOMMENDATION_ACTION_ROLES = [
+  "primary",
+  "secondary",
+  "suppressed",
+] as const satisfies readonly RecommendationActionRole[];
+
 export const RECOMMENDATION_SIGNAL_TEST_IDS = [
   "current-state",
   "love-distance",
@@ -117,6 +160,14 @@ export const RECOMMENDATION_SIGNAL_TEST_IDS = [
   "name-impression",
   "local-life",
 ] as const satisfies readonly RecommendationSignalTestId[];
+
+export const RECOMMENDATION_MODES = [
+  "immediate_result",
+  "return_session",
+  "line_save",
+  "local_life_inquiry",
+  "select_design_interest",
+] as const satisfies readonly RecommendationMode[];
 
 export const RELATIONSHIP_ACTIVATION_SOURCES = [
   "line_mini_app_entry",
@@ -162,7 +213,10 @@ const reportEventTypeSet = new Set<string>(REPORT_EVENT_TYPES);
 const recommendationSignalTypeSet = new Set<string>(RECOMMENDATION_SIGNAL_TYPES);
 const recommendationSignalSourceSet = new Set<string>(RECOMMENDATION_SIGNAL_SOURCES);
 const recommendationInterestIdSet = new Set<string>(RECOMMENDATION_INTEREST_IDS);
+const recommendationActionIdSet = new Set<string>(RECOMMENDATION_ACTION_IDS);
+const recommendationActionRoleSet = new Set<string>(RECOMMENDATION_ACTION_ROLES);
 const recommendationSignalTestIdSet = new Set<string>(RECOMMENDATION_SIGNAL_TEST_IDS);
+const recommendationModeSet = new Set<string>(RECOMMENDATION_MODES);
 const relationshipActivationSourceSet = new Set<string>(RELATIONSHIP_ACTIVATION_SOURCES);
 const openTestingEventNameSet = new Set<string>(OPEN_TESTING_EVENT_NAMES);
 const feedbackSubmissionStatusSet = new Set<string>(FEEDBACK_SUBMISSION_STATUSES);
@@ -184,8 +238,20 @@ export function isRecommendationInterestId(value: unknown): value is Recommendat
   return typeof value === "string" && recommendationInterestIdSet.has(value);
 }
 
+export function isRecommendationActionId(value: unknown): value is RecommendationActionId {
+  return typeof value === "string" && recommendationActionIdSet.has(value);
+}
+
+export function isRecommendationActionRole(value: unknown): value is RecommendationActionRole {
+  return typeof value === "string" && recommendationActionRoleSet.has(value);
+}
+
 export function isRecommendationSignalTestId(value: unknown): value is RecommendationSignalTestId {
   return typeof value === "string" && recommendationSignalTestIdSet.has(value);
+}
+
+export function isRecommendationMode(value: unknown): value is RecommendationMode {
+  return typeof value === "string" && recommendationModeSet.has(value);
 }
 
 export function isRelationshipActivationSource(value: unknown): value is RelationshipActivationSource {
@@ -336,6 +402,9 @@ export type RecommendationSignalRecord = {
   testId: RecommendationSignalTestId | null;
   resultId: string | null;
   interestId: RecommendationInterestId | null;
+  actionId: RecommendationActionId | null;
+  actionRole: RecommendationActionRole | null;
+  recommendationMode: RecommendationMode | null;
   note: string | null;
   pagePath: string | null;
   metadataJson: Record<string, string | number | boolean | null>;
@@ -410,6 +479,9 @@ export type RecommendationSignalInput = {
   testId?: RecommendationSignalTestId | null;
   resultId?: string | null;
   interestId?: RecommendationInterestId | null;
+  actionId?: RecommendationActionId | null;
+  actionRole?: RecommendationActionRole | null;
+  recommendationMode?: RecommendationMode | null;
   note?: string | null;
   pagePath?: string | null;
   metadata?: Record<string, string | number | boolean | null>;

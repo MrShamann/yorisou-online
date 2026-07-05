@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 
-import RecommendationActionCards from "../_components/RecommendationActionCards";
+import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { NAME_IMPRESSION_QUESTIONS, getNameImpressionResult } from "@/app/data/yorisouQuestionSets";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
@@ -86,12 +86,13 @@ export default function NameImpressionFlow() {
               ))}
             </div>
 
-            <RecommendationActionCards
+            <YorisouRecommendationSlot
               testId="name-impression"
               source="name_impression_flow"
-              actionIds={result.nextActionIds}
               resultId={result.id}
               pagePath="/tests/name-impression"
+              mode="immediate_result"
+              title="この入口の次に試しやすいもの"
             />
 
             <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-5 py-4">

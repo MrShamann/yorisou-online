@@ -2,6 +2,7 @@ import { runPublicAssignmentValidationTest } from "@/lib/yorisou/public-result/_
 import { runSelfUnderstandingReportLibraryValidationTest } from "@/lib/yorisou/reports/__tests__/library.test";
 import { runRelationshipIntelligenceEventSemanticsValidationTest } from "@/lib/server/relationship-intelligence/__tests__/event-semantics.test";
 import { runRelationshipIntelligenceOperationsControlRoomValidationTest } from "@/lib/server/relationship-intelligence/__tests__/operations-control-room.test";
+import { runRecommendationOrchestratorValidationTest } from "@/lib/server/relationship-intelligence/__tests__/recommendation-orchestrator.test";
 import { runAggregationValidationTest } from "./aggregation.test";
 import { runCheckInRuntimeValidationTest } from "./checkin-runtime.test";
 import { runFoundationValidationTest } from "./foundation.test";
@@ -18,6 +19,7 @@ async function main() {
   const reportLibrary = runSelfUnderstandingReportLibraryValidationTest();
   const relationshipIntelligenceEventSemantics = await runRelationshipIntelligenceEventSemanticsValidationTest();
   const relationshipIntelligenceOperationsControlRoom = await runRelationshipIntelligenceOperationsControlRoomValidationTest();
+  const recommendationOrchestrator = await runRecommendationOrchestratorValidationTest();
 
   const summary = {
     status: "ok",
@@ -30,6 +32,7 @@ async function main() {
     reportLibrary,
     relationshipIntelligenceEventSemantics,
     relationshipIntelligenceOperationsControlRoom,
+    recommendationOrchestrator,
   };
 
   console.log(JSON.stringify(summary, null, 2));

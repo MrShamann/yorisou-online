@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 
-import RecommendationActionCards from "../_components/RecommendationActionCards";
+import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { WORK_RHYTHM_QUESTIONS, getWorkRhythmResult } from "@/app/data/yorisouQuestionSets";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
@@ -100,12 +100,13 @@ export default function WorkRhythmFlow() {
               ))}
             </div>
 
-            <RecommendationActionCards
+            <YorisouRecommendationSlot
               testId="work-rhythm"
               source="work_rhythm_flow"
-              actionIds={result.nextActionIds}
               resultId={result.id}
               pagePath="/tests/work-rhythm"
+              mode="immediate_result"
+              title="この入口の次に試しやすいもの"
             />
 
             <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-5 py-4">

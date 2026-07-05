@@ -9,8 +9,8 @@ import {
   type AnswerMap,
   type LDResult,
 } from "./data";
+import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
-import RecommendationActionCards from "../_components/RecommendationActionCards";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
 type Phase = "intro" | "quiz" | "result";
@@ -368,12 +368,13 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
             reportTeaser={archetype.reportTeaser}
           />
 
-          <RecommendationActionCards
+          <YorisouRecommendationSlot
             testId="love-distance"
             source="love_distance_flow"
-            actionIds={["report-preview", "line-save", "community-interest", "related-test"]}
             resultId={archetype.id}
             pagePath="/tests/love-distance"
+            mode="immediate_result"
+            title="もう少し整理したいときは"
           />
 
           {/* Safety note */}

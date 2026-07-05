@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 
 import { OPEN_TESTING_SESSION_COOKIE, recordRecommendationSignal } from "@/lib/server/relationship-intelligence/service";
 import {
+  isRecommendationActionId,
+  isRecommendationActionRole,
   isRecommendationInterestId,
+  isRecommendationMode,
   isRecommendationSignalSource,
   isRecommendationSignalTestId,
   isRecommendationSignalType,
@@ -57,6 +60,9 @@ export async function POST(request: Request) {
     const signalType = asString(body.signalType);
     const testId = asString(body.testId);
     const interestId = asString(body.interestId);
+    const actionId = asString(body.actionId);
+    const actionRole = asString(body.actionRole);
+    const recommendationMode = asString(body.recommendationMode);
 
     if (!source) {
       return NextResponse.json({ ok: false, error: "missing_signal_source" }, { status: 400 });
@@ -76,6 +82,21 @@ export async function POST(request: Request) {
     if (interestId && !isRecommendationInterestId(interestId)) {
       return NextResponse.json({ ok: false, error: "invalid_interest_id" }, { status: 400 });
     }
+    if (actionId && !isRecommendationActionId(actionId)) {
+      return NextResponse.json({ ok: false, error: "invalid_action_id" }, { status: 400 });
+    }
+    if (actionRole && !isRecommendationActionRole(actionRole)) {
+      return NextResponse.json({ ok: false, error: "invalid_action_role" }, { status: 400 });
+    }
+    if (recommendationMode && !isRecommendationMode(recommendationMode)) {
+      return NextResponse.json({ ok: false, error: "invalid_recommendation_mode" }, { status: 400 });
+    }
+    if (
+      (signalType === "recommendation_package_shown" || signalType === "recommendation_action_clicked") &&
+      (!actionId || !actionRole || !recommendationMode)
+    ) {
+      return NextResponse.json({ ok: false, error: "missing_recommendation_tracking_fields" }, { status: 400 });
+    }
 
     const sanitizedNote = sanitizeNote(body.note);
     if (!sanitizedNote.ok) {
@@ -84,6 +105,9 @@ export async function POST(request: Request) {
 
     const validatedTestId = testId && isRecommendationSignalTestId(testId) ? testId : null;
     const validatedInterestId = interestId && isRecommendationInterestId(interestId) ? interestId : null;
+    const validatedActionId = actionId && isRecommendationActionId(actionId) ? actionId : null;
+    const validatedActionRole = actionRole && isRecommendationActionRole(actionRole) ? actionRole : null;
+    const validatedRecommendationMode = recommendationMode && isRecommendationMode(recommendationMode) ? recommendationMode : null;
 
     const result = await recordRecommendationSignal({
       source,
@@ -91,6 +115,9 @@ export async function POST(request: Request) {
       testId: validatedTestId,
       resultId: asString(body.resultId),
       interestId: validatedInterestId,
+      actionId: validatedActionId,
+      actionRole: validatedActionRole,
+      recommendationMode: validatedRecommendationMode,
       note: sanitizedNote.note,
       pagePath: asString(body.pagePath),
       metadata: asMetadata(body.metadata),
