@@ -185,6 +185,7 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
+        id="yorisou-select"
         eyebrow="Yorisou Select"
         title="今の状態に合いそうな選択肢を、少しずつ。"
         lead="診断結果やフィードバックをもとに、今の状態に合いそうな読みもの、道具、サービス、商品を少しずつ提案していきます。"
@@ -210,6 +211,7 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
+        id="yorisou-design"
         eyebrow="Yorisou Design"
         title="あると助かるものを、声から育てる。"
         lead="診断やフィードバックから見えてきた「あると助かるもの」を、アイデア、試用、共創、商品化へと少しずつ育てていきます。"
@@ -229,6 +231,7 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
+        id="yorisou-community"
         eyebrow="小さく参加できる、よりそいの場"
         title="参加は任意で、声は次の改善につながる。"
         lead="気になるテーマには、フィードバック、試用、生活の観察、アイデアづくりとして参加できます。参加は任意です。あなたの声は、よりよい診断、レポート、おすすめ、サービスや商品アイデアにつながります。"
@@ -248,6 +251,7 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
+        id="yorisou-local-life"
         eyebrow="暮らしの困りごとも、少しずつ見える形に。"
         title="言葉にしにくい生活の困りごとも、関心の入口から。"
         lead="買い物、移動、家族のサポート、地域のつながり。日々の中で言葉にしにくい困りごとも、Yorisouでは関心や相談の入口として受け止め、必要な情報や選択肢を探すきっかけにしていきます。"

@@ -14,6 +14,8 @@ import type {
   FunnelEvent,
   MessageLog,
   OpenTestingEventInput,
+  RecommendationSignalInput,
+  RecommendationSignalRecord,
   RelationshipActivationSource,
   RelationshipAuthIdentity,
   RelationshipStatusRecord,
@@ -363,6 +365,31 @@ export async function recordReportEvent(input: {
     metadata: sanitizeMetadata(input.metadata),
   });
 
+  return { record, session };
+}
+
+export async function recordRecommendationSignal(input: RecommendationSignalInput) {
+  const session = await ensureOpenTestingAnonymousSession({
+    source: input.source,
+    route: input.pagePath,
+    preferredSessionId: input.anonymousSessionId,
+  });
+  const record: RecommendationSignalRecord = {
+    id: createId("signal"),
+    anonymousSessionId: session.record.anonymousSessionId,
+    userProfileId: input.userProfileId ?? session.record.userProfileId,
+    authIdentityId: input.authIdentityId ?? session.record.authIdentityId,
+    source: input.source,
+    signalType: input.signalType,
+    testId: input.testId || null,
+    resultId: input.resultId || null,
+    interestId: input.interestId || null,
+    note: input.note || null,
+    pagePath: input.pagePath || null,
+    metadataJson: sanitizeMetadata(input.metadata),
+    createdAt: nowIso(),
+  };
+  await putRelationshipRecord("recommendation-signals", record.id, record);
   return { record, session };
 }
 
@@ -840,9 +867,10 @@ function countBy(values: string[]): Record<string, number> {
 }
 
 export async function getOpenTestingDashboardSnapshot() {
-  const [funnelEvents, reportEvents, feedback, relationshipStatuses, messageLogs] = await Promise.all([
+  const [funnelEvents, reportEvents, recommendationSignals, feedback, relationshipStatuses, messageLogs] = await Promise.all([
     listRelationshipRecords<FunnelEvent>("funnel-events"),
     listRelationshipRecords<ReportEvent>("report-events"),
+    listRelationshipRecords<RecommendationSignalRecord>("recommendation-signals"),
     listRelationshipRecords<FeedbackSubmission>("feedback-submissions"),
     listRelationshipRecords<RelationshipStatusRecord>("relationship-statuses"),
     listRelationshipRecords<MessageLog>("message-logs"),
@@ -851,13 +879,17 @@ export async function getOpenTestingDashboardSnapshot() {
   const lineConfig = getLineMessagingConfigStatus();
   const realFunnelEvents = funnelEvents.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
   const realReportEvents = reportEvents.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
+  const realRecommendationSignals = recommendationSignals.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
   const realFeedback = feedback.filter((entry) => !isMarkedTestMetadata(entry.metadataJson));
   const testFunnelEvents = funnelEvents.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
   const testReportEvents = reportEvents.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
+  const testRecommendationSignals = recommendationSignals.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
   const testFeedback = feedback.filter((entry) => isMarkedTestMetadata(entry.metadataJson));
   const funnelSummary = countBy(realFunnelEvents.map((entry) => entry.eventName));
   const reportInterestSummary = countBy(realReportEvents.map((entry) => entry.eventType));
+  const recommendationSignalSummary = countBy(realRecommendationSignals.map((entry) => entry.signalType));
   const messageSummary = countBy(messageLogs.map((entry) => entry.status));
+  const topTestEntrySummary = countBy(realRecommendationSignals.map((entry) => entry.testId || "unknown"));
   const resultComboCounts = countBy(
     realFunnelEvents
       .filter((entry) => entry.resultId || entry.overlayId || entry.confidence)
@@ -865,6 +897,7 @@ export async function getOpenTestingDashboardSnapshot() {
   );
   const latestFunnelEvents = sortByNewest(realFunnelEvents);
   const latestReportEvents = sortByNewest(realReportEvents);
+  const latestRecommendationSignals = sortByNewest(realRecommendationSignals);
   const latestFeedback = sortByNewest(feedback);
   const latestMessageLogs = sortByNewest(messageLogs);
   const latestRelationshipStatuses = [...relationshipStatuses].sort(
@@ -887,6 +920,7 @@ export async function getOpenTestingDashboardSnapshot() {
     reportPreviewViews: reportInterestSummary.preview_viewed || 0,
     fullReportViews: reportInterestSummary.full_viewed || 0,
     feedbackCount: realFeedback.length,
+    recommendationSignals: realRecommendationSignals.length,
     activeLineRelationships: relationshipStatuses.filter((entry) => entry.channel === "line" && entry.status === "active").length,
     queuedFollowUps: messageSummary.queued || 0,
     skippedFollowUps: messageSummary.skipped || 0,
@@ -941,6 +975,23 @@ export async function getOpenTestingDashboardSnapshot() {
           : null,
     },
   });
+  const recommendationSignalsView = {
+    totalSignals: realRecommendationSignals.length,
+    byType: recommendationSignalSummary,
+    topTestEntries: Object.entries(topTestEntrySummary)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([testId, count]) => ({ testId, count })),
+    recent: latestRecommendationSignals.slice(0, 20),
+    interestCounts: {
+      report: recommendationSignalSummary.report_interest_clicked || 0,
+      select: recommendationSignalSummary.select_interest_clicked || 0,
+      design: recommendationSignalSummary.design_interest_clicked || 0,
+      community: recommendationSignalSummary.community_interest_clicked || 0,
+      localLife: recommendationSignalSummary.local_life_interest_clicked || 0,
+      lineSave: recommendationSignalSummary.line_save_interest_clicked || 0,
+    },
+  };
   const relationshipDetails = latestRelationshipStatuses.slice(0, 25).map((relationship) => {
     const userFunnel = realFunnelEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
     const userReports = realReportEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
@@ -982,6 +1033,8 @@ export async function getOpenTestingDashboardSnapshot() {
       excludedTestFunnelEvents: testFunnelEvents.length,
       totalReportEvents: reportEvents.length,
       excludedTestReportEvents: testReportEvents.length,
+      totalRecommendationSignals: recommendationSignals.length,
+      excludedTestRecommendationSignals: testRecommendationSignals.length,
       totalFeedbackSubmissions: feedback.length,
       excludedTestFeedbackSubmissions: testFeedback.length,
       invalidRejectedCountAvailable: false,
@@ -997,6 +1050,7 @@ export async function getOpenTestingDashboardSnapshot() {
     executive,
     funnelSummary,
     funnelTable,
+    recommendationSignals: recommendationSignalsView,
     resultDistribution,
     resultIntelligence: {
       resultId: resultDistribution.resultId,
@@ -1039,6 +1093,7 @@ export async function getOpenTestingDashboardSnapshot() {
     recentActivity: {
       funnel: latestFunnelEvents.slice(0, 20),
       report: latestReportEvents.slice(0, 20),
+      recommendationSignals: latestRecommendationSignals.slice(0, 20),
       feedback: latestFeedback.slice(0, 10),
       relationships: latestRelationshipStatuses.slice(0, 10),
       messages: latestMessageLogs.slice(0, 10),

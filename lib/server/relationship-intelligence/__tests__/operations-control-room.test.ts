@@ -4,7 +4,12 @@ import os from "node:os";
 import path from "node:path";
 
 import { listRelationshipRecords, putRelationshipRecord } from "@/lib/server/relationship-intelligence/store";
-import type { FeedbackSubmission, MessageLog, RelationshipStatusRecord } from "@/lib/server/relationship-intelligence/types";
+import type {
+  FeedbackSubmission,
+  MessageLog,
+  RecommendationSignalRecord,
+  RelationshipStatusRecord,
+} from "@/lib/server/relationship-intelligence/types";
 
 async function readJsonBody(response: Response) {
   return (await response.json()) as Record<string, unknown>;
@@ -174,9 +179,50 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
     assert.equal(dashboardSnapshot.feedbackInbox.some((entry) => entry.isTest), true);
     assert.equal(dashboardSnapshot.feedbackRecent.length, 0);
 
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_real_review", {
+      id: "signal_real_review",
+      anonymousSessionId: "asess_signal_real",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "tests_page",
+      signalType: "report_interest_clicked",
+      testId: "work-rhythm",
+      resultId: null,
+      interestId: "report-preview",
+      note: null,
+      pagePath: "/tests",
+      metadataJson: {},
+      createdAt: "2026-05-01T00:00:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_test_review", {
+      id: "signal_test_review",
+      anonymousSessionId: "asess_signal_test",
+      userProfileId: null,
+      authIdentityId: null,
+      source: "tests_page",
+      signalType: "design_interest_clicked",
+      testId: "local-life",
+      resultId: null,
+      interestId: "design-interest",
+      note: null,
+      pagePath: "/tests",
+      metadataJson: {
+        __review_test: true,
+      },
+      createdAt: "2026-05-02T00:00:00.000Z",
+    });
+
+    const recommendationDashboard = await service.getOpenTestingDashboardSnapshot();
+    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.report_interest_clicked, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.interestCounts.report, 1);
+    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 2);
+    assert.equal(recommendationDashboard.dataQuality.excludedTestRecommendationSignals, 1);
+
     return {
       tempDir,
       excludedTestFeedback: dashboardSnapshot.dataQuality.excludedTestFeedbackSubmissions,
+      excludedTestRecommendationSignals: recommendationDashboard.dataQuality.excludedTestRecommendationSignals,
       followUpProviderMode: followUpSnapshot.providerMode,
       queuedOrSkippedLogs: messageLogs.length,
     };

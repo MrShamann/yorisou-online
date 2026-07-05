@@ -11,6 +11,7 @@ type MvpActionLinkProps = {
 };
 
 type MvpSectionProps = {
+  id?: string;
   eyebrow?: string;
   title: ReactNode;
   lead?: ReactNode;
@@ -87,9 +88,9 @@ export function MvpActionLink({ href, label, tone = "primary", className = "" }:
   );
 }
 
-export function MvpSection({ eyebrow, title, lead, actions, children, className = "" }: MvpSectionProps) {
+export function MvpSection({ id, eyebrow, title, lead, actions, children, className = "" }: MvpSectionProps) {
   return (
-    <section className={`section ${className}`}>
+    <section id={id} className={`section ${className}`}>
       <div className="container">
         <div className="grid gap-5">
           <div className="max-w-[48rem]">

@@ -10,6 +10,8 @@ import {
   type LDResult,
 } from "./data";
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
+import RecommendationActionCards from "../_components/RecommendationActionCards";
+import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
@@ -50,6 +52,13 @@ export default function LoveDistanceFlow() {
     const r = computeLDResult(finalAnswers);
     setResult(r);
     setPhase("result");
+    void trackRecommendationSignal({
+      source: "love_distance_flow",
+      signalType: "test_completed",
+      testId: "love-distance",
+      resultId: r.archetypeId,
+      pagePath: "/tests/love-distance",
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -71,6 +80,12 @@ export default function LoveDistanceFlow() {
     setAnswers({});
     setCurrentIndex(0);
     setPhase("quiz");
+    void trackRecommendationSignal({
+      source: "love_distance_flow",
+      signalType: "test_started",
+      testId: "love-distance",
+      pagePath: "/tests/love-distance",
+    });
   }
 
   function selectOption(optId: string) {
@@ -351,6 +366,14 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
           <ResultConversionCommunity
             moduleId="love-distance"
             reportTeaser={archetype.reportTeaser}
+          />
+
+          <RecommendationActionCards
+            testId="love-distance"
+            source="love_distance_flow"
+            actionIds={["report-preview", "line-save", "community-interest", "related-test"]}
+            resultId={archetype.id}
+            pagePath="/tests/love-distance"
           />
 
           {/* Safety note */}
