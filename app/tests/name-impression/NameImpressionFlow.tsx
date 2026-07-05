@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 
+import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { NAME_IMPRESSION_QUESTIONS, getNameImpressionResult } from "@/app/data/yorisouQuestionSets";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
@@ -85,6 +86,14 @@ export default function NameImpressionFlow() {
                 </div>
               ))}
             </div>
+
+            <YorisouCompanionCard
+              testId="name-impression"
+              source="name_impression_flow"
+              resultId={result.id}
+              pagePath="/tests/name-impression"
+              mode="immediate_result"
+            />
 
             <YorisouRecommendationSlot
               testId="name-impression"

@@ -195,6 +195,72 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(invalidSignalNoteType.status, 400);
   assert.equal((await readJsonBody(invalidSignalNoteType)).error, "invalid_note");
 
+  const invalidCompanionSignalSource = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "tests_page",
+        signalType: "companion_card_viewed",
+        testId: "work-rhythm",
+        companionArchetypeId: "sleepy-penguin",
+        pagePath: "/tests",
+      }),
+    }),
+  );
+  assert.equal(invalidCompanionSignalSource.status, 400);
+  assert.equal((await readJsonBody(invalidCompanionSignalSource)).error, "invalid_signal_source");
+
+  const invalidCompanionArchetype = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "companion_card",
+        signalType: "companion_card_viewed",
+        testId: "work-rhythm",
+        companionArchetypeId: "totally_fake_companion",
+        pagePath: "/tests/work-rhythm",
+      }),
+    }),
+  );
+  assert.equal(invalidCompanionArchetype.status, 400);
+  assert.equal((await readJsonBody(invalidCompanionArchetype)).error, "invalid_companion_archetype_id");
+
+  const invalidCompanionOption = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "companion_card",
+        signalType: "companion_question_answered",
+        testId: "work-rhythm",
+        companionArchetypeId: "sleepy-penguin",
+        companionOptionId: "totally_fake_option",
+        pagePath: "/tests/work-rhythm",
+      }),
+    }),
+  );
+  assert.equal(invalidCompanionOption.status, 400);
+  assert.equal((await readJsonBody(invalidCompanionOption)).error, "invalid_companion_option_id");
+
+  const invalidCompanionIntent = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "companion_subscription_interest_clicked",
+        testId: "current-state",
+        companionArchetypeId: "rain-bird",
+        companionIntentType: "totally_fake_intent",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(invalidCompanionIntent.status, 400);
+  assert.equal((await readJsonBody(invalidCompanionIntent)).error, "invalid_companion_intent_type");
+
   const afterInvalidDashboard = await service.getOpenTestingDashboardSnapshot();
   assert.deepEqual(afterInvalidDashboard.funnelSummary, {});
   assert.equal(afterInvalidDashboard.reportInterest.intent_clicked, undefined);
@@ -377,6 +443,91 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   );
   assert.equal(validReturnClicked.status, 200);
 
+  const validCompanionCardViewed = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "companion_card",
+        signalType: "companion_card_viewed",
+        testId: "work-rhythm",
+        resultId: "steady-planner",
+        companionArchetypeId: "sleepy-penguin",
+        pagePath: "/tests/work-rhythm",
+      }),
+    }),
+  );
+  assert.equal(validCompanionCardViewed.status, 200);
+
+  const validCompanionReturnBlock = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "companion_return_block_viewed",
+        testId: "current-state",
+        companionArchetypeId: "rain-bird",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+        note: "少し戻り先を見たいです",
+      }),
+    }),
+  );
+  assert.equal(validCompanionReturnBlock.status, 200);
+
+  const validCompanionQuestionAnswered = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "companion_card",
+        signalType: "companion_question_answered",
+        testId: "name-impression",
+        companionArchetypeId: "thread-cat",
+        companionOptionId: "sort_lightly",
+        pagePath: "/tests/name-impression",
+        note: "  いったん軽くほどきたい  ",
+      }),
+    }),
+  );
+  assert.equal(validCompanionQuestionAnswered.status, 200);
+
+  const validCompanionOptionClicked = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "companion_option_clicked",
+        testId: "current-state",
+        companionArchetypeId: "rain-bird",
+        companionOptionId: "look_only_today",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+        note: "   ",
+      }),
+    }),
+  );
+  assert.equal(validCompanionOptionClicked.status, 200);
+
+  const validCompanionSubscriptionInterest = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "line_mini_app",
+        signalType: "companion_subscription_interest_clicked",
+        testId: "current-state",
+        companionArchetypeId: "rain-bird",
+        companionIntentType: "weekly_reflection_interest",
+        recommendationMode: "return_session",
+        pagePath: "/line/mini-app",
+      }),
+    }),
+  );
+  assert.equal(validCompanionSubscriptionInterest.status, 200);
+
   const recommendationSignalsBeforeOversized = await listRelationshipRecords<RecommendationSignalRecord>(
     "recommendation-signals",
   );
@@ -409,12 +560,22 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(signalsByType.get("test_completed")?.note, "朝に集中しやすいです");
   assert.equal(signalsByType.get("report_interest_clicked")?.note, "夜は考えすぎやすい");
   assert.equal(signalsByType.get("related_test_clicked")?.note ?? null, null);
+  assert.equal(signalsByType.get("companion_card_viewed")?.companionArchetypeId, "sleepy-penguin");
+  assert.equal(signalsByType.get("companion_card_viewed")?.note ?? null, null);
+  assert.equal(signalsByType.get("companion_return_block_viewed")?.note, "少し戻り先を見たいです");
+  assert.equal(signalsByType.get("companion_question_answered")?.companionOptionId, "sort_lightly");
+  assert.equal(signalsByType.get("companion_question_answered")?.note, "いったん軽くほどきたい");
+  assert.equal(signalsByType.get("companion_option_clicked")?.note ?? null, null);
+  assert.equal(
+    signalsByType.get("companion_subscription_interest_clicked")?.companionIntentType,
+    "weekly_reflection_interest",
+  );
 
   const afterValidDashboard = await service.getOpenTestingDashboardSnapshot();
   assert.equal(afterValidDashboard.funnelSummary.open_testing_viewed, 1);
   assert.equal(afterValidDashboard.funnelSummary.report_intent_clicked, 1);
   assert.equal(afterValidDashboard.reportInterest.intent_clicked, 1);
-  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 9);
+  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 14);
   assert.equal(afterValidDashboard.recommendationSignals.byType.select_interest_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_started, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.test_completed, 1);
@@ -424,11 +585,23 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(afterValidDashboard.recommendationSignals.byType.return_surface_viewed, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.return_recommendation_shown, 1);
   assert.equal(afterValidDashboard.recommendationSignals.byType.return_recommendation_clicked, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.companion_card_viewed, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.companion_return_block_viewed, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.companion_question_answered, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.companion_option_clicked, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.companion_subscription_interest_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.interestCounts.select, 1);
   assert.equal(afterValidDashboard.recommendationOrchestrator.packagesShown, 1);
   assert.equal(afterValidDashboard.returnLoop.surfaceViews, 1);
   assert.equal(afterValidDashboard.returnLoop.packagesShown, 1);
   assert.equal(afterValidDashboard.returnLoop.actionClicks, 1);
+  assert.equal(afterValidDashboard.companion.cardViews, 1);
+  assert.equal(afterValidDashboard.companion.returnBlockViews, 1);
+  assert.equal(afterValidDashboard.companion.questionAnswers, 1);
+  assert.equal(afterValidDashboard.companion.optionClicks, 1);
+  assert.equal(afterValidDashboard.companion.subscriptionInterestClicks, 1);
+  assert.equal(afterValidDashboard.companion.archetypeDistribution["sleepy-penguin"], 1);
+  assert.equal(afterValidDashboard.companion.archetypeDistribution["rain-bird"], 1);
 
   const openTestingPageSource = fs.readFileSync(path.join(process.cwd(), "app/open-testing/page.tsx"), "utf8");
   const resultPageSource = fs.readFileSync(path.join(process.cwd(), "app/result/page.tsx"), "utf8");
@@ -463,6 +636,9 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(signalRouteSource.includes("invalid_action_id"), true);
   assert.equal(signalRouteSource.includes("invalid_recommendation_mode"), true);
   assert.equal(signalRouteSource.includes("invalid_note"), true);
+  assert.equal(signalRouteSource.includes("invalid_companion_archetype_id"), true);
+  assert.equal(signalRouteSource.includes("invalid_companion_option_id"), true);
+  assert.equal(signalRouteSource.includes("invalid_companion_intent_type"), true);
 
   return {
     tempDir,

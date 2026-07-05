@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { RecommendationSignalMountTracker } from "@/app/components/YorisouSignalTracker";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
@@ -118,6 +119,16 @@ export default async function MiniAppEntryPage({
           <p className="mt-2 text-[11px] tracking-[0.06em] text-[#9A9088]">
             LINE / Web 継続用 · ログインなし
           </p>
+        </div>
+
+        <div className="mt-5">
+          <YorisouCompanionCard
+            testId="current-state"
+            source="line_mini_app"
+            pagePath="/line/mini-app"
+            mode="return_session"
+            variant="return"
+          />
         </div>
 
         <div className="mt-5">

@@ -1,3 +1,9 @@
+import {
+  COMPANION_ARCHETYPE_IDS,
+  COMPANION_INTENT_TYPES,
+  COMPANION_OPTION_IDS,
+} from "@/app/data/yorisouCompanionArchetypes";
+
 export type RelationshipChannel = "line" | "web";
 export type RelationshipUserStatus = "anonymous" | "relationship_active" | "inactive" | "blocked";
 export type RelationshipIdentityProvider = "line" | "web";
@@ -17,6 +23,14 @@ export type RecommendationSignalType =
   | "return_surface_viewed"
   | "return_recommendation_shown"
   | "return_recommendation_clicked"
+  | "companion_card_viewed"
+  | "companion_cta_clicked"
+  | "companion_line_return_clicked"
+  | "companion_return_block_viewed"
+  | "companion_question_answered"
+  | "companion_option_clicked"
+  | "companion_subscription_interest_clicked"
+  | "companion_subscription_not_now_clicked"
   | "recommendation_interest_clicked"
   | "report_interest_clicked"
   | "select_interest_clicked"
@@ -28,6 +42,7 @@ export type RecommendationSignalType =
 export type RecommendationSignalSource =
   | "tests_page"
   | "open_testing_page"
+  | "companion_card"
   | "line_mini_app"
   | "love_distance_flow"
   | "work_rhythm_flow"
@@ -69,6 +84,9 @@ export type RecommendationMode =
   | "line_save"
   | "local_life_inquiry"
   | "select_design_interest";
+export type CompanionArchetypeId = (typeof COMPANION_ARCHETYPE_IDS)[number];
+export type CompanionOptionId = (typeof COMPANION_OPTION_IDS)[number];
+export type CompanionIntentType = (typeof COMPANION_INTENT_TYPES)[number];
 export type RelationshipActivationSource =
   | "line_mini_app_entry"
   | "line_login_callback"
@@ -109,6 +127,14 @@ export const RECOMMENDATION_SIGNAL_TYPES = [
   "return_surface_viewed",
   "return_recommendation_shown",
   "return_recommendation_clicked",
+  "companion_card_viewed",
+  "companion_cta_clicked",
+  "companion_line_return_clicked",
+  "companion_return_block_viewed",
+  "companion_question_answered",
+  "companion_option_clicked",
+  "companion_subscription_interest_clicked",
+  "companion_subscription_not_now_clicked",
   "recommendation_interest_clicked",
   "report_interest_clicked",
   "select_interest_clicked",
@@ -122,6 +148,7 @@ export const RECOMMENDATION_SIGNAL_TYPES = [
 export const RECOMMENDATION_SIGNAL_SOURCES = [
   "tests_page",
   "open_testing_page",
+  "companion_card",
   "line_mini_app",
   "love_distance_flow",
   "work_rhythm_flow",
@@ -178,6 +205,10 @@ export const RECOMMENDATION_MODES = [
   "select_design_interest",
 ] as const satisfies readonly RecommendationMode[];
 
+export const COMPANION_ARCHETYPE_ID_VALUES = COMPANION_ARCHETYPE_IDS;
+export const COMPANION_OPTION_ID_VALUES = COMPANION_OPTION_IDS;
+export const COMPANION_INTENT_TYPE_VALUES = COMPANION_INTENT_TYPES;
+
 export const RELATIONSHIP_ACTIVATION_SOURCES = [
   "line_mini_app_entry",
   "line_login_callback",
@@ -226,6 +257,9 @@ const recommendationActionIdSet = new Set<string>(RECOMMENDATION_ACTION_IDS);
 const recommendationActionRoleSet = new Set<string>(RECOMMENDATION_ACTION_ROLES);
 const recommendationSignalTestIdSet = new Set<string>(RECOMMENDATION_SIGNAL_TEST_IDS);
 const recommendationModeSet = new Set<string>(RECOMMENDATION_MODES);
+const companionArchetypeIdSet = new Set<string>(COMPANION_ARCHETYPE_ID_VALUES);
+const companionOptionIdSet = new Set<string>(COMPANION_OPTION_ID_VALUES);
+const companionIntentTypeSet = new Set<string>(COMPANION_INTENT_TYPE_VALUES);
 const relationshipActivationSourceSet = new Set<string>(RELATIONSHIP_ACTIVATION_SOURCES);
 const openTestingEventNameSet = new Set<string>(OPEN_TESTING_EVENT_NAMES);
 const feedbackSubmissionStatusSet = new Set<string>(FEEDBACK_SUBMISSION_STATUSES);
@@ -265,6 +299,18 @@ export function isRecommendationMode(value: unknown): value is RecommendationMod
 
 export function isRelationshipActivationSource(value: unknown): value is RelationshipActivationSource {
   return typeof value === "string" && relationshipActivationSourceSet.has(value);
+}
+
+export function isCompanionArchetypeId(value: unknown): value is CompanionArchetypeId {
+  return typeof value === "string" && companionArchetypeIdSet.has(value);
+}
+
+export function isCompanionOptionId(value: unknown): value is CompanionOptionId {
+  return typeof value === "string" && companionOptionIdSet.has(value);
+}
+
+export function isCompanionIntentType(value: unknown): value is CompanionIntentType {
+  return typeof value === "string" && companionIntentTypeSet.has(value);
 }
 
 export function isOpenTestingEventName(value: unknown): value is OpenTestingEventName {
@@ -414,6 +460,9 @@ export type RecommendationSignalRecord = {
   actionId: RecommendationActionId | null;
   actionRole: RecommendationActionRole | null;
   recommendationMode: RecommendationMode | null;
+  companionArchetypeId?: CompanionArchetypeId | null;
+  companionOptionId?: CompanionOptionId | null;
+  companionIntentType?: CompanionIntentType | null;
   note: string | null;
   pagePath: string | null;
   metadataJson: Record<string, string | number | boolean | null>;
@@ -491,6 +540,9 @@ export type RecommendationSignalInput = {
   actionId?: RecommendationActionId | null;
   actionRole?: RecommendationActionRole | null;
   recommendationMode?: RecommendationMode | null;
+  companionArchetypeId?: CompanionArchetypeId | null;
+  companionOptionId?: CompanionOptionId | null;
+  companionIntentType?: CompanionIntentType | null;
   note?: string | null;
   pagePath?: string | null;
   metadata?: Record<string, string | number | boolean | null>;
