@@ -12,6 +12,28 @@ function asString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function sanitizeNote(value: unknown) {
+  if (value === undefined || value === null) {
+    return { ok: true as const, note: null };
+  }
+
+  if (typeof value !== "string") {
+    return { ok: false as const };
+  }
+
+  const note = value.trim();
+
+  if (!note) {
+    return { ok: true as const, note: null };
+  }
+
+  if (note.length > 500) {
+    return { ok: false as const };
+  }
+
+  return { ok: true as const, note };
+}
+
 function asMetadata(value: unknown) {
   if (!value || typeof value !== "object") {
     return undefined;
@@ -55,6 +77,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "invalid_interest_id" }, { status: 400 });
     }
 
+    const sanitizedNote = sanitizeNote(body.note);
+    if (!sanitizedNote.ok) {
+      return NextResponse.json({ ok: false, error: "invalid_note" }, { status: 400 });
+    }
+
     const validatedTestId = testId && isRecommendationSignalTestId(testId) ? testId : null;
     const validatedInterestId = interestId && isRecommendationInterestId(interestId) ? interestId : null;
 
@@ -64,7 +91,7 @@ export async function POST(request: Request) {
       testId: validatedTestId,
       resultId: asString(body.resultId),
       interestId: validatedInterestId,
-      note: asString(body.note),
+      note: sanitizedNote.note,
       pagePath: asString(body.pagePath),
       metadata: asMetadata(body.metadata),
     });

@@ -3,6 +3,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { listRelationshipRecords } from "@/lib/server/relationship-intelligence/store";
+import type { RecommendationSignalRecord } from "@/lib/server/relationship-intelligence/types";
+
 async function readJsonBody(response: Response) {
   return (await response.json()) as Record<string, unknown>;
 }
@@ -124,6 +127,22 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   assert.equal(invalidSignalInterest.status, 400);
   assert.equal((await readJsonBody(invalidSignalInterest)).error, "invalid_interest_id");
 
+  const invalidSignalNoteType = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "tests_page",
+        signalType: "recommendation_interest_clicked",
+        testId: "work-rhythm",
+        pagePath: "/tests",
+        note: { unexpected: true },
+      }),
+    }),
+  );
+  assert.equal(invalidSignalNoteType.status, 400);
+  assert.equal((await readJsonBody(invalidSignalNoteType)).error, "invalid_note");
+
   const afterInvalidDashboard = await service.getOpenTestingDashboardSnapshot();
   assert.deepEqual(afterInvalidDashboard.funnelSummary, {});
   assert.equal(afterInvalidDashboard.reportInterest.intent_clicked, undefined);
@@ -180,12 +199,108 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   );
   assert.equal(validSignal.status, 200);
 
+  const validSignalWithoutNote = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "tests_page",
+        signalType: "test_started",
+        testId: "work-rhythm",
+        pagePath: "/tests/work-rhythm",
+      }),
+    }),
+  );
+  assert.equal(validSignalWithoutNote.status, 200);
+
+  const validSignalWithShortNote = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "work_rhythm_flow",
+        signalType: "test_completed",
+        testId: "work-rhythm",
+        pagePath: "/tests/work-rhythm",
+        note: "朝に集中しやすいです",
+      }),
+    }),
+  );
+  assert.equal(validSignalWithShortNote.status, 200);
+
+  const validSignalWithPaddedNote = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "work_rhythm_flow",
+        signalType: "report_interest_clicked",
+        testId: "work-rhythm",
+        pagePath: "/tests/work-rhythm",
+        note: "  夜は考えすぎやすい  ",
+      }),
+    }),
+  );
+  assert.equal(validSignalWithPaddedNote.status, 200);
+
+  const validSignalWithBlankNote = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "work_rhythm_flow",
+        signalType: "related_test_clicked",
+        testId: "work-rhythm",
+        pagePath: "/tests/work-rhythm",
+        note: "   ",
+      }),
+    }),
+  );
+  assert.equal(validSignalWithBlankNote.status, 200);
+
+  const recommendationSignalsBeforeOversized = await listRelationshipRecords<RecommendationSignalRecord>(
+    "recommendation-signals",
+  );
+
+  const invalidSignalOversizedNote = await postRecommendationSignal(
+    new Request("http://localhost/api/open-testing/signals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "work_rhythm_flow",
+        signalType: "line_save_interest_clicked",
+        testId: "work-rhythm",
+        pagePath: "/tests/work-rhythm",
+        note: "x".repeat(501),
+      }),
+    }),
+  );
+  assert.equal(invalidSignalOversizedNote.status, 400);
+  assert.equal((await readJsonBody(invalidSignalOversizedNote)).error, "invalid_note");
+
+  const recommendationSignalsAfterOversized = await listRelationshipRecords<RecommendationSignalRecord>(
+    "recommendation-signals",
+  );
+  assert.equal(recommendationSignalsAfterOversized.length, recommendationSignalsBeforeOversized.length);
+
+  const signalsByType = new Map(
+    recommendationSignalsAfterOversized.map((record) => [record.signalType, record] as const),
+  );
+  assert.equal(signalsByType.get("test_started")?.note ?? null, null);
+  assert.equal(signalsByType.get("test_completed")?.note, "朝に集中しやすいです");
+  assert.equal(signalsByType.get("report_interest_clicked")?.note, "夜は考えすぎやすい");
+  assert.equal(signalsByType.get("related_test_clicked")?.note ?? null, null);
+
   const afterValidDashboard = await service.getOpenTestingDashboardSnapshot();
   assert.equal(afterValidDashboard.funnelSummary.open_testing_viewed, 1);
   assert.equal(afterValidDashboard.funnelSummary.report_intent_clicked, 1);
   assert.equal(afterValidDashboard.reportInterest.intent_clicked, 1);
-  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.totalSignals, 5);
   assert.equal(afterValidDashboard.recommendationSignals.byType.select_interest_clicked, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.test_started, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.test_completed, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.report_interest_clicked, 1);
+  assert.equal(afterValidDashboard.recommendationSignals.byType.related_test_clicked, 1);
   assert.equal(afterValidDashboard.recommendationSignals.interestCounts.select, 1);
 
   const openTestingPageSource = fs.readFileSync(path.join(process.cwd(), "app/open-testing/page.tsx"), "utf8");
@@ -216,6 +331,7 @@ export async function runRelationshipIntelligenceEventSemanticsValidationTest() 
   );
   assert.equal(signalRouteSource.includes("invalid_signal_type"), true);
   assert.equal(signalRouteSource.includes("invalid_interest_id"), true);
+  assert.equal(signalRouteSource.includes("invalid_note"), true);
 
   return {
     tempDir,
