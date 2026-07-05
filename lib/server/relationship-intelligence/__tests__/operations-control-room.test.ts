@@ -178,6 +178,8 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
     assert.equal(dashboardSnapshot.dataQuality.defaultMode, "exclude_marked_tests");
     assert.equal(dashboardSnapshot.feedbackInbox.some((entry) => entry.isTest), true);
     assert.equal(dashboardSnapshot.feedbackRecent.length, 0);
+    assert.equal(dashboardSnapshot.founderSignalIntelligence.totals.totalSignals, 0);
+    assert.equal(dashboardSnapshot.founderSignalIntelligence.founderReviewCandidates.length, 0);
 
     await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_real_review", {
       id: "signal_real_review",
@@ -211,13 +213,79 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       },
       createdAt: "2026-05-02T00:00:00.000Z",
     });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_design_review", {
+      id: "signal_design_review",
+      anonymousSessionId: "asess_signal_design",
+      userProfileId: "user_active",
+      authIdentityId: null,
+      source: "report_preview_page",
+      signalType: "design_interest_clicked",
+      testId: "work-rhythm",
+      resultId: "steady-planner",
+      interestId: "design-interest",
+      note: "  仕事の流れを整える道具や見せ方の案があると助かる。社内にも共有しやすいとよい。  ",
+      pagePath: "/report-preview",
+      metadataJson: {},
+      createdAt: "2026-05-03T00:00:00.000Z",
+    });
+    await putRelationshipRecord<RecommendationSignalRecord>("recommendation-signals", "signal_local_life_review", {
+      id: "signal_local_life_review",
+      anonymousSessionId: "asess_signal_local_life",
+      userProfileId: "user_local_life",
+      authIdentityId: null,
+      source: "local_life_flow",
+      signalType: "test_completed",
+      testId: "local-life",
+      resultId: "支え合いアイデアへの関心",
+      interestId: null,
+      note: ` ${"暮らしの支え合いの案を知りたい。".repeat(12)} `,
+      pagePath: "/tests/local-life",
+      metadataJson: {},
+      createdAt: "2026-05-04T00:00:00.000Z",
+    });
 
     const recommendationDashboard = await service.getOpenTestingDashboardSnapshot();
-    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.totalSignals, 3);
     assert.equal(recommendationDashboard.recommendationSignals.byType.report_interest_clicked, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.design_interest_clicked, 1);
+    assert.equal(recommendationDashboard.recommendationSignals.byType.test_completed, 1);
     assert.equal(recommendationDashboard.recommendationSignals.interestCounts.report, 1);
-    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 2);
+    assert.equal(recommendationDashboard.recommendationSignals.interestCounts.design, 1);
+    assert.equal(recommendationDashboard.dataQuality.totalRecommendationSignals, 4);
     assert.equal(recommendationDashboard.dataQuality.excludedTestRecommendationSignals, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.totals.totalSignals, 3);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.totals.excludedSignals, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byProductLayer.report, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byProductLayer.design, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byProductLayer.public_value, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byOpportunityCategory.deepen_report, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byOpportunityCategory.validate_design_candidate, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.counts.byOpportunityCategory.public_value_memo_candidate, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.topTestEntries[0]?.testId, "work-rhythm");
+    assert.equal(recommendationDashboard.founderSignalIntelligence.localLifeCandidates.length, 0);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.publicValueCandidates.length, 1);
+    assert.equal(recommendationDashboard.founderSignalIntelligence.riskWarnings.length >= 2, true);
+    const designCandidate = recommendationDashboard.founderSignalIntelligence.founderReviewCandidates.find(
+      (entry) => entry.productLayer === "design",
+    );
+    assert.equal(designCandidate?.riskBoundary, "product_claim_boundary");
+    assert.equal(designCandidate?.reviewStatus, "founder_review_candidate");
+    assert.equal(designCandidate?.noteExcerpts[0], "仕事の流れを整える道具や見せ方の案があると助かる。社内にも共有しやすいとよい。");
+    const publicValueCandidate = recommendationDashboard.founderSignalIntelligence.founderReviewCandidates.find(
+      (entry) => entry.productLayer === "public_value",
+    );
+    assert.equal(publicValueCandidate?.riskBoundary, "care_welfare_mobility_boundary");
+    assert.equal(publicValueCandidate?.reviewStatus, "founder_review_candidate");
+    assert.equal(publicValueCandidate?.title.includes("支え合いアイデアへの関心"), true);
+    assert.equal((publicValueCandidate?.noteExcerpts[0]?.length || 0) <= 120, true);
+    assert.equal(publicValueCandidate?.noteExcerpts[0]?.includes("…"), true);
+    assert.equal(
+      recommendationDashboard.founderSignalIntelligence.recentMeaningfulSignals.every(
+        (entry) => !entry.noteExcerpt || entry.noteExcerpt.length <= 120,
+      ),
+      true,
+    );
+    assert.equal(recommendationDashboard.founderSignalIntelligence.staleAreas.some((entry) => entry.testId === "current-state"), true);
 
     return {
       tempDir,

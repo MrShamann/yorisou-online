@@ -4,6 +4,8 @@ import { createHash, randomBytes } from "crypto";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { getLineMessagingConfigStatus } from "@/lib/server/yorisouLine";
+import { isMarkedTestMetadata, TEST_MARKER_KEYS } from "@/lib/server/relationship-intelligence/markers";
+import { buildRecommendationSignalIntelligence } from "@/lib/server/relationship-intelligence/signal-intelligence";
 import { getRelationshipRecord, getRelationshipStoreStatus, listRelationshipRecords, putRelationshipRecord } from "@/lib/server/relationship-intelligence/store";
 import type {
   AnonymousSessionRecord,
@@ -61,17 +63,6 @@ function sanitizeMetadata(value: Record<string, unknown> | undefined) {
   }
 
   return normalized;
-}
-
-const TEST_MARKER_KEYS = [
-  "__review_test",
-  "__post_merge_review_test",
-  "__local_smoke_test",
-  "__pr68_review_test",
-] as const;
-
-function isMarkedTestMetadata(metadata: Record<string, string | number | boolean | null> | undefined) {
-  return TEST_MARKER_KEYS.some((key) => Boolean(metadata?.[key]));
 }
 
 function sortByNewest<T extends { createdAt: string }>(records: T[]) {
@@ -992,6 +983,7 @@ export async function getOpenTestingDashboardSnapshot() {
       lineSave: recommendationSignalSummary.line_save_interest_clicked || 0,
     },
   };
+  const founderSignalIntelligence = buildRecommendationSignalIntelligence(recommendationSignals);
   const relationshipDetails = latestRelationshipStatuses.slice(0, 25).map((relationship) => {
     const userFunnel = realFunnelEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
     const userReports = realReportEvents.filter((entry) => entry.userProfileId === relationship.userProfileId);
@@ -1051,6 +1043,7 @@ export async function getOpenTestingDashboardSnapshot() {
     funnelSummary,
     funnelTable,
     recommendationSignals: recommendationSignalsView,
+    founderSignalIntelligence,
     resultDistribution,
     resultIntelligence: {
       resultId: resultDistribution.resultId,
