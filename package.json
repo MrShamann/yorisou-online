@@ -15,6 +15,7 @@
     "yorisou:assets:check": "node scripts/yorisou/validate-persona-assets.mjs",
     "check:yorisou": "bash scripts/yorisou-check.sh",
     "check:env": "node scripts/yorisou-env-check.mjs",
+    "smoke:companion": "node scripts/yorisou/companion-smoke.mjs",
     "test:smoke": "playwright test",
     "test:smoke:headed": "playwright test --headed",
     "smoke:openclaw": "node scripts/openclaw-webhook-smoke.mjs",
