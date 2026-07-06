@@ -115,7 +115,7 @@ export default async function SelfUnderstandingReportPage({
     }));
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#FFF9F2_0%,#fffdf8_42%,#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="frontstage-page">
       <OpenTestingReportTracker
         eventType="full_viewed"
         reportType="self-understanding-v0.2.1"
@@ -135,7 +135,7 @@ export default async function SelfUnderstandingReportPage({
             <MvpPill>公開テスト中</MvpPill>
           </div>
 
-          <MvpCard className="space-y-4 rounded-[1.35rem] border-[rgba(23,59,53,0.1)] bg-white/95 p-4 shadow-[0_16px_34px_rgba(23,59,53,0.08)] md:p-6">
+          <MvpCard className="space-y-4 border-[rgba(23,59,53,0.1)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(23,59,53,0.08)] md:p-6">
             <div className="space-y-3 rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-[linear-gradient(135deg,#F4FAF7_0%,#fff_100%)] px-4 py-4">
               <p className="service-kicker">{report.metadata.currentStateNote ?? "120Qから見た、今の動き方"}</p>
               <h1 className="display-serif text-[2rem] leading-[1.08] text-[#2F2A28] md:text-[2.4rem]">
@@ -151,7 +151,7 @@ export default async function SelfUnderstandingReportPage({
               <MvpActionLink href={downloadHref} label="レポートを保存" tone="primary" className="rounded-full" />
             </div>
 
-            <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(248,250,246,0.82)] px-4 py-3">
+            <div className="surface-panel-soft">
               <p className="text-[12px] leading-6 text-[#6F625C]">
                 現在は公開テスト中のため、プレビュー・本編・拡張を続けて読めます。内部メモや運用用の注記は含めていません。
               </p>
@@ -167,8 +167,8 @@ export default async function SelfUnderstandingReportPage({
           />
 
           {sectionEntries.map((section) => (
-            <MvpCard key={section.key} className="space-y-4 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)] md:p-6">
-              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">{section.label}</p>
+            <MvpCard key={section.key} className="space-y-4 bg-white/94 md:p-6">
+              <p className="surface-meta">{section.label}</p>
               <div className="space-y-3">
                 <ReactMarkdown components={markdownComponents}>{section.markdown}</ReactMarkdown>
               </div>

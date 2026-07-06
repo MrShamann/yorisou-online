@@ -7,32 +7,31 @@ import { useMemo, useState } from "react";
 
 const primaryNavJa = [
   { href: "/check-in", label: "クイックチェック" },
-  { href: "/tests", label: "テスト一覧" },
+  { href: "/tests", label: "入口を選ぶ" },
+  { href: "/open-testing", label: "公開テスト" },
 ];
 
 const primaryNavEn = [
   { href: "/en/check-in", label: "Quick Check" },
   { href: "/tests", label: "Tests" },
+  { href: "/open-testing", label: "Open Testing" },
 ];
 
 const secondaryNavJa = [
   { href: "/about", label: "Yorisouとは" },
   { href: "/contact", label: "お問い合わせ" },
-  { href: "/legal", label: "利用規約" },
-  { href: "/privacy", label: "プライバシーポリシー" },
 ];
 
 const secondaryNavEn = [
-  { href: "/en/about", label: "About Yorisou" },
+  { href: "/en/about", label: "About" },
   { href: "/en/contact", label: "Contact" },
-  { href: "/en/legal", label: "Terms" },
 ];
 
 function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/reservation-mobility-support", "/about", "/services", "/tests", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(base)) return base;
+    if (["/", "/about", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -41,13 +40,13 @@ function toJapanesePath(pathname: string): string {
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
-  if (["/reservation-mobility-support", "/about", "/services", "/tests", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
+  if (["/about", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
   return "/en";
 }
 
 export default function SiteHeader() {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname() || "/";
+  const [open, setOpen] = useState(false);
   const isEn = pathname === "/en" || pathname.startsWith("/en/");
   const homeHref = isEn ? "/en" : "/";
   const currentPath = isEn ? toJapanesePath(pathname) : pathname;
@@ -57,7 +56,7 @@ export default function SiteHeader() {
   const languageHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
 
   function localizedHref(path: string) {
-    return isEn ? toEnglishPath(path) : path;
+    return isEn && !path.startsWith("/en") ? toEnglishPath(path) : path;
   }
 
   function isActive(path: string) {
@@ -66,237 +65,129 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[rgba(216,207,195,0.56)] bg-[rgba(252,250,245,0.92)] backdrop-blur-xl">
-      <div className="container py-4">
-        <div className="flex items-center justify-between gap-5">
-          <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline md:gap-4">
-            <div className="flex items-center justify-center">
-              <Image
-                src="/images/brand/tsuru-logo.png"
-                alt="YORISOU"
-                width={132}
-                height={132}
-                priority
-                className="h-auto w-[108px] object-contain drop-shadow-[0_7px_14px_rgba(63,45,39,0.08)] md:w-[138px]"
-              />
-            </div>
+    <header className="sticky top-0 z-40 border-b border-[rgba(23,59,53,0.08)] bg-[rgba(255,253,248,0.9)] backdrop-blur-xl">
+      <div className="container">
+        <div className="flex items-center justify-between gap-4 py-4">
+          <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline">
+            <Image
+              src="/images/brand/tsuru-logo.png"
+              alt="YORISOU"
+              width={132}
+              height={132}
+              priority
+              className="h-auto w-[98px] object-contain md:w-[114px]"
+            />
             <div className="min-w-0">
-              <div className="display-serif text-[1.78rem] font-semibold tracking-[0.09em] text-[var(--text)] md:text-[2.12rem]">YORISOU</div>
-              <div className="mt-0.5 hidden text-[0.82rem] leading-7 text-[var(--muted)] md:block">
-                {isEn ? "Understand your current state and find useful next steps." : "いまの自分を理解し、次の一歩を見つける。"}
+              <div className="display-serif text-[1.32rem] font-semibold tracking-[0.08em] text-[var(--text)] md:text-[1.54rem]">
+                YORISOU
+              </div>
+              <div className="mt-0.5 hidden text-[12px] leading-5 text-[var(--muted)] md:block">
+                {isEn ? "A quiet way to reflect on your current state." : "今の自分を静かに見つめ直すための入口。"}
               </div>
             </div>
           </Link>
 
           <button
+            type="button"
             onClick={() => setOpen((value) => !value)}
             aria-label={isEn ? "Menu" : "メニュー"}
-            className="mobile-toggle hidden items-center justify-center rounded-full border border-[rgba(217,204,184,0.6)] bg-white/84 text-[var(--text)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(23,59,53,0.1)] bg-white/90 text-[var(--text)] md:hidden"
           >
-            <span className="menu-icon" aria-hidden="true">
-              <span />
-              <span />
-              <span />
+            <span className="flex flex-col gap-[3px]" aria-hidden="true">
+              <span className="h-[1.5px] w-[16px] rounded-full bg-current" />
+              <span className="h-[1.5px] w-[16px] rounded-full bg-current" />
+              <span className="h-[1.5px] w-[16px] rounded-full bg-current" />
             </span>
           </button>
 
-          <div className={`site-nav ${open ? "open" : ""}`}>
-            <nav className="primary-nav">
+          <div className="hidden items-center gap-8 md:flex">
+            <nav className="flex items-center gap-6">
               {primaryNav.map((item) => {
                 const href = localizedHref(item.href);
-                const active = isActive(item.href);
-
                 return (
-                  <Link key={href} href={href} className={`nav-link ${active ? "active" : ""}`} onClick={() => setOpen(false)}>
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`text-[13px] font-semibold no-underline transition ${
+                      isActive(item.href) ? "text-[#173B35]" : "text-[var(--text)] hover:text-[#173B35]"
+                    }`}
+                  >
                     {item.label}
                   </Link>
                 );
               })}
+            </nav>
 
-              <div className="secondary-nav-wrap">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 border-l border-[rgba(23,59,53,0.1)] pl-4">
                 {secondaryNav.map((item) => (
                   <Link
                     key={item.href}
                     href={localizedHref(item.href)}
-                    className={`nav-link secondary-nav-link ${isActive(item.href) ? "active" : ""}`}
-                    onClick={() => setOpen(false)}
+                    className="text-[12px] text-[var(--muted)] no-underline transition hover:text-[#173B35]"
                   >
                     {item.label}
                   </Link>
                 ))}
               </div>
-            </nav>
 
-            <div className="header-actions">
-              <Link href={languageHref} className="locale-switch" onClick={() => setOpen(false)}>
-                <span className="locale-current">{isEn ? "EN" : "JP"}</span>
-                <span className="locale-target">{isEn ? "日本語" : "EN"}</span>
+              <Link
+                href={languageHref}
+                className="inline-flex min-h-[40px] items-center rounded-full border border-[rgba(23,59,53,0.1)] bg-white/92 px-4 text-[12px] font-semibold text-[#315F50] no-underline"
+              >
+                {isEn ? "日本語" : "EN"}
               </Link>
             </div>
           </div>
         </div>
-      </div>
 
-      <style jsx>{`
-        .site-nav {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .primary-nav {
-          display: flex;
-          align-items: center;
-          gap: 1px;
-          padding: 4px 6px;
-          border-radius: 20px;
-          background: rgba(252, 250, 245, 0.74);
-          border: 1px solid rgba(201, 211, 195, 0.54);
-          box-shadow: 0 8px 14px rgba(47, 35, 33, 0.028);
-        }
-        .nav-link,
-        .more-button {
-          border: none;
-          background: transparent;
-          text-decoration: none;
-          color: var(--text);
-          padding: 10px 12px;
-          border-radius: 14px;
-          font-size: 12px;
-          white-space: nowrap;
-          cursor: pointer;
-        }
-        .nav-link:hover,
-        .nav-link.active {
-          background: rgba(225, 232, 219, 0.82);
-          color: var(--accent-sage-text);
-        }
-        .menu-icon {
-          display: inline-flex;
-          flex-direction: column;
-          gap: 3px;
-          justify-content: center;
-          align-items: center;
-          width: 18px;
-          height: 18px;
-        }
-        .menu-icon span {
-          display: block;
-          width: 14px;
-          height: 1.5px;
-          border-radius: 999px;
-          background: currentColor;
-        }
-        .secondary-nav-wrap {
-          display: none;
-        }
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .login-link {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 40px;
-          padding: 0 14px;
-          border-radius: 15px;
-          border: 1px solid rgba(201, 211, 195, 0.56);
-          background: rgba(252, 250, 245, 0.88);
-          box-shadow: 0 6px 14px rgba(59, 47, 47, 0.028);
-          color: var(--text);
-          font-size: 12px;
-          text-decoration: none;
-        }
-        .login-link:hover,
-        .login-link.active {
-          background: rgba(225, 232, 219, 0.8);
-        }
-        .locale-switch {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          border: 1px solid rgba(201, 211, 195, 0.58);
-          border-radius: 16px;
-          padding: 9px 11px;
-          text-decoration: none;
-          background: rgba(252, 250, 245, 0.92);
-          box-shadow: 0 8px 16px rgba(59, 47, 47, 0.03);
-          color: var(--text);
-        }
-        .locale-current {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 34px;
-          height: 28px;
-          border-radius: 12px;
-          background: rgba(225, 232, 219, 0.86);
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-        }
-        .locale-target {
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          padding-right: 4px;
-        }
-        @media (max-width: 1024px) {
-          .mobile-toggle {
-            display: inline-flex !important;
-            width: 40px;
-            height: 40px;
-          }
-          .site-nav {
-            position: absolute;
-            right: 4vw;
-            top: 96px;
-            width: min(360px, 92vw);
-            display: none;
-            flex-direction: column;
-            align-items: stretch;
-            padding: 16px;
-            border-radius: 24px;
-            background: rgba(252, 250, 245, 0.98);
-            border: 1px solid rgba(201, 211, 195, 0.75);
-            box-shadow: 0 20px 40px rgba(47, 35, 33, 0.12);
-          }
-          .site-nav.open {
-            display: flex;
-          }
-          .primary-nav {
-            flex-direction: column;
-            align-items: stretch;
-            border-radius: 18px;
-            padding: 8px;
-            box-shadow: none;
-          }
-          .nav-link {
-            border-radius: 12px;
-            padding: 14px 16px;
-            font-size: 13px;
-          }
-          .secondary-nav-wrap {
-            display: contents;
-          }
-          .secondary-nav-link {
-            opacity: 0.72;
-          }
-          .header-actions {
-            justify-content: stretch;
-            flex-direction: column;
-            gap: 8px;
-          }
-          .login-link {
-            width: 100%;
-          }
-          .locale-switch {
-            width: 100%;
-            justify-content: center;
-          }
-        }
-      `}</style>
+        {open ? (
+          <div className="md:hidden">
+            <div className="surface-panel mb-4 space-y-4 !rounded-[22px] !p-4">
+              <div className="grid gap-2">
+                {primaryNav.map((item) => {
+                  const href = localizedHref(item.href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setOpen(false)}
+                      className={`rounded-[16px] px-4 py-3 text-[14px] font-semibold no-underline ${
+                        isActive(item.href)
+                          ? "bg-[#F3FAF6] text-[#173B35]"
+                          : "bg-white text-[var(--text)]"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="surface-list text-[13px]">
+                {secondaryNav.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={localizedHref(item.href)}
+                    onClick={() => setOpen(false)}
+                    className="text-[var(--muted)] no-underline"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              <Link
+                href={languageHref}
+                onClick={() => setOpen(false)}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.1)] bg-white px-4 text-[13px] font-semibold text-[#315F50] no-underline"
+              >
+                {isEn ? "日本語" : "EN"}
+              </Link>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </header>
   );
 }

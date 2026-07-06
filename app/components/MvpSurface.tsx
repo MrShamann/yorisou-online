@@ -54,17 +54,13 @@ const DEFAULT_RECOGNITION_OPTIONS: MvpRecognitionScaleOption[] = [
 
 export function MvpCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div
-      className={`rounded-[1.45rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.86)] p-4 shadow-[0_12px_28px_rgba(47,35,33,0.05)] sm:p-5 ${className}`}
-    >
-      {children}
-    </div>
+    <div className={`surface-panel ${className}`}>{children}</div>
   );
 }
 
 export function MvpPill({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex rounded-full border border-[rgba(201,211,195,0.78)] bg-white/84 px-3 py-1.5 text-[11px] leading-5 tracking-[0.14em] text-[var(--accent-sage-text)]">
+    <span className="inline-flex rounded-full border border-[rgba(201,211,195,0.78)] bg-white/84 px-3 py-1.5 text-[11px] leading-5 text-[var(--accent-sage-text)]">
       {children}
     </span>
   );
@@ -92,11 +88,11 @@ export function MvpSection({ id, eyebrow, title, lead, actions, children, classN
   return (
     <section id={id} className={`section ${className}`}>
       <div className="container">
-        <div className="grid gap-5">
-          <div className="max-w-[48rem]">
+        <div className="grid gap-6">
+          <div className="max-w-[48rem] space-y-3">
             {eyebrow ? <p className="service-kicker">{eyebrow}</p> : null}
-            <h2 className="display-serif mt-3 max-w-[16em] text-[1.7rem] leading-[1.62] md:text-[2.02rem]">{title}</h2>
-            {lead ? <p className="mt-3 max-w-[42rem] text-[15px] leading-8 text-[var(--muted)]">{lead}</p> : null}
+            <h2 className="section-title max-w-[14em]">{title}</h2>
+            {lead ? <p className="page-copy">{lead}</p> : null}
           </div>
           {actions ? <div className="flex flex-wrap gap-2.5">{actions}</div> : null}
           {children}
@@ -115,8 +111,8 @@ export function MvpRecognitionScale({
 }: MvpRecognitionScaleProps) {
   return (
     <MvpCard className={`space-y-4 ${className}`}>
-      <div className="service-kicker">{title}</div>
-      <p className="text-[14px] leading-7 text-[var(--muted)]">{note}</p>
+      <div className="surface-meta">{title}</div>
+      <p className="page-copy">{note}</p>
       <div className="grid gap-2 sm:grid-cols-3">
         {options.map((option, index) => {
           const id = `${name}-${option.value}`;
@@ -153,8 +149,8 @@ export function MvpFeedbackSignal({
   // TODO: wire feedback_submit analytics once the MVP event layer is approved.
   return (
     <MvpCard className={`space-y-4 ${className}`}>
-      <div className="service-kicker">{title}</div>
-      <p className="text-[15px] leading-8 text-[var(--muted)]">{note}</p>
+      <div className="surface-meta">{title}</div>
+      <p className="page-copy">{note}</p>
       <div className="flex flex-col gap-3 sm:flex-row">
         <MvpActionLink href={primaryHref} label={primaryLabel} />
         <MvpActionLink href={secondaryHref} label={secondaryLabel} tone="secondary" />

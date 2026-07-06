@@ -16,19 +16,19 @@ export default function SiteFooter() {
   const testsHref = "/tests";
 
   return (
-    <footer className="mt-[64px] border-t border-[var(--line)] bg-[rgba(252,250,245,0.92)]">
+    <footer className="mt-[72px] border-t border-[var(--line)] bg-[rgba(255,253,248,0.94)]">
       <div className="container py-12">
-        <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-start">
-          <div className="flex gap-5">
+        <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-start">
+          <div className="flex gap-4">
             <div className="flex items-start justify-center pt-1">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={70} height={70} className="h-auto w-[70px] object-contain" />
+              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={70} height={70} className="h-auto w-[64px] object-contain" />
             </div>
             <div className="max-w-xl">
-              <div className="display-serif text-[1.6rem] font-semibold tracking-[0.08em]">YORISOU</div>
-              <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+              <div className="display-serif text-[1.45rem] font-semibold tracking-[0.08em]">YORISOU</div>
+              <p className="mt-3 max-w-[28rem] text-sm leading-7 text-[var(--muted)]">
                 {isEn
-                  ? "Understand your current state and find useful next steps."
-                  : "いまの自分を理解し、次の一歩を見つける。"}
+                  ? "A quiet way to reflect on your current state and return when you need the next step."
+                  : "今の自分を静かに見つめ直し、必要なときに次の一歩へ戻れるようにするための入口です。"}
               </p>
             </div>
           </div>
@@ -39,7 +39,7 @@ export default function SiteFooter() {
               <div className="mt-4 grid gap-3 text-sm text-[var(--muted)]">
                 <Link href={aboutHref}>{isEn ? "About Yorisou" : "Yorisouとは"}</Link>
                 <Link href={checkInHref}>{isEn ? "Quick Check" : "クイックチェック"}</Link>
-                <Link href={testsHref}>{isEn ? "Tests" : "テスト一覧"}</Link>
+                <Link href={testsHref}>{isEn ? "Choose a Test" : "入口を選ぶ"}</Link>
               </div>
             </div>
             <div>

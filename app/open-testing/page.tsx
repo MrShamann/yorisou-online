@@ -38,42 +38,46 @@ const TESTING_NOTES = [
 
 export default function OpenTestingPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_42%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="frontstage-page">
       <OpenTestingPageTracker eventName="open_testing_viewed" route="/open-testing" source="open_testing_page" entrySource="open-testing" />
-      <section className="border-b border-[rgba(23,59,53,0.08)] bg-[radial-gradient(circle_at_14%_0%,_rgba(217,130,86,0.11),_transparent_30%),radial-gradient(circle_at_88%_7%,_rgba(223,238,235,0.75),_transparent_34%),linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_60%,_#F3FAF6_100%)]">
-        <div className="container py-8 md:py-12">
-          <div className="mx-auto max-w-[44rem] space-y-4">
+      <section className="frontstage-hero">
+        <div className="container">
+          <div className="frontstage-hero-inner">
+            <div className="frontstage-hero-copy">
             <p className="service-kicker">公開テストのご案内</p>
-            <div className="inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/84 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">
+            <div className="mt-3 inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/84 px-3 py-1 text-[11px] font-semibold text-[#49615B]">
               公開テスト中
             </div>
-            <h1 className="display-serif text-[2rem] leading-[1.16] text-[#2F2A28] md:text-[3rem]">
+            <h1 className="display-serif frontstage-hero-title mt-4 max-w-[12em]">
               はじめての方が、
               <br className="hidden sm:block" />
               結果まで迷わず進めるための入口です。
             </h1>
-            <p className="max-w-[38rem] text-[15px] leading-8 text-[#5F5750]">
+            <p className="frontstage-hero-lead max-w-[38rem]">
               120問のチェックから、結果、詳しいレポート、保存、感想送信まで、現在のYorisouで試せる流れをまとめています。
             </p>
-            <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+            <div className="frontstage-hero-actions">
               <OpenTestingTrackingLink
                 href="/check-in?source=open-testing&entry_source=open-testing"
                 tracking={{ eventName: "open_testing_start_clicked", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
-                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
+                className="btn btn-primary"
               >
                 公開テストを始める
               </OpenTestingTrackingLink>
               <OpenTestingTrackingLink
                 href="/line/mini-app"
                 tracking={{ eventName: "line_entry_opened", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
-                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white/85 px-5 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
+                className="btn btn-secondary"
               >
                 LINEから始める
               </OpenTestingTrackingLink>
             </div>
-            <p className="text-[12px] leading-6 text-[#6F625C]">
+            </div>
+            <div className="frontstage-note">
+            <p>
               LINEから始めると、結果の見返しや関連するお知らせをLINEで受け取れる状態が有効になることがあります。不要な場合はいつでも停止できます。
             </p>
+            </div>
           </div>
         </div>
       </section>
@@ -98,10 +102,7 @@ export default function OpenTestingPage() {
       >
         <div className="grid gap-3 md:grid-cols-2">
           {OPEN_TESTING_STEPS.map((step, index) => (
-            <MvpCard
-              key={step.title}
-              className="space-y-2 rounded-[1.15rem] border-[rgba(23,59,53,0.1)] bg-white/94 p-4 shadow-[0_12px_26px_rgba(23,59,53,0.06)]"
-            >
+            <MvpCard key={step.title} className="space-y-2 bg-white/94">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F3FAF6] text-[13px] font-semibold text-[#49615B]">
                 {index + 1}
               </div>
@@ -119,16 +120,16 @@ export default function OpenTestingPage() {
         className="!py-8 md:!pb-14"
       >
         <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-          <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)]">
+          <MvpCard className="surface-list bg-white/94">
             {TESTING_NOTES.map((note) => (
               <p key={note} className="text-[14px] leading-7 text-[#5F5750]">
                 {note}
               </p>
             ))}
           </MvpCard>
-          <MvpCard className="space-y-3 rounded-[1.25rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_12px_24px_rgba(23,59,53,0.06)]">
-            <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">関連ページ</p>
-            <div className="flex flex-col gap-2.5">
+          <MvpCard className="space-y-3 bg-white/94">
+            <p className="surface-meta">関連ページ</p>
+            <div className="surface-link-row flex-col !gap-2.5">
               <Link href="/contact?topic=open-testing" className="text-[14px] font-semibold text-[#315F50] hover:underline">
                 公開テストの感想・不具合報告を送る
               </Link>

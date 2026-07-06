@@ -11,20 +11,22 @@ export const metadata: Metadata = {
 
 export default function TestsPage() {
   return (
-    <main className="min-h-screen bg-[#FBFAF6] text-[#2F2A28]">
-      <section className="border-b border-[rgba(23,59,53,0.1)]">
-        <div className="container py-10 md:py-16">
-          <div className="mx-auto max-w-[46rem]">
+    <main className="frontstage-page">
+      <section className="frontstage-hero">
+        <div className="container">
+          <div className="frontstage-hero-inner">
+            <div className="frontstage-hero-copy">
             <p className="service-kicker">Yorisou 診断入口</p>
-            <h1 className="display-serif mt-4 text-[2rem] leading-[1.18] text-[#2F2A28] md:text-[2.95rem]">
+            <h1 className="display-serif frontstage-hero-title max-w-[11em] mt-3">
               いまの自分に近い入口を選ぶ
             </h1>
-            <p className="mt-4 max-w-[38rem] text-[15px] leading-8 text-[#6F625C]">
+            <p className="frontstage-hero-lead max-w-[38rem]">
               Yorisouは、今の状態を見つめる入口をいくつか用意しています。恋愛や仕事のリズム、名前の印象、暮らしの困りごとまで、近いテーマから静かに選べます。
             </p>
-            <p className="mt-3 max-w-[38rem] text-[12px] leading-6 text-[#8A7764]">
-              公開中の入口はそのまま始められます。ライトチェックや関心の入口も、今の段階で無理なく試せる形で公開しています。
-            </p>
+            </div>
+            <div className="frontstage-note">
+              <p>公開中の入口はそのまま始められます。ライトチェックや関心の入口も、今の段階で無理なく試せる形で公開しています。</p>
+            </div>
           </div>
         </div>
       </section>
@@ -35,7 +37,7 @@ export default function TestsPage() {
             {YORISOU_TEST_ENTRIES.map((test) => (
               <div
                 key={test.id}
-                className={`rounded-[1.4rem] border p-5 shadow-[0_18px_38px_rgba(23,59,53,0.07)] md:p-6 ${
+                className={`surface-panel ${
                   test.availableNow
                     ? "border-[rgba(23,59,53,0.16)] bg-white/96"
                     : "border-[rgba(23,59,53,0.1)] bg-white/88"
@@ -62,12 +64,12 @@ export default function TestsPage() {
                   {test.title}
                 </h2>
                 <p className="mt-2 text-[14px] leading-7 text-[#5F5750]">{test.hook}</p>
-                <div className="mt-4 rounded-[1.05rem] border border-[rgba(23,59,53,0.08)] bg-[#F8F7F4] px-4 py-3">
-                  <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">この入口で受け取れるもの</p>
+                <div className="surface-panel-soft mt-4">
+                  <p className="surface-meta">この入口で受け取れるもの</p>
                   <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{test.outcome}</p>
                 </div>
-                <div className="mt-3 rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-4 py-3">
-                  <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">今の公開状態</p>
+                <div className="surface-panel-soft mt-3 !bg-white/74">
+                  <p className="surface-meta">今の公開状態</p>
                   <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{test.nextLayer}</p>
                 </div>
                 <div className="mt-4">
@@ -97,7 +99,7 @@ export default function TestsPage() {
 
       <section className="container pb-12 md:pb-16">
         <div className="mx-auto max-w-[52rem]">
-          <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.08)] bg-white/75 px-5 py-5">
+          <div className="surface-panel bg-white/78">
             <p className="service-kicker">入口の先でつながるもの</p>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">

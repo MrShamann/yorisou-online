@@ -56,7 +56,7 @@ export default async function ResultPage({
     : "いま色テストの結果";
 
   return (
-    <main className="min-h-screen bg-[#FBFAF6] text-[#2F2A28]">
+    <main className="frontstage-page-soft">
       <OpenTestingPageTracker
         eventName="result_viewed"
         route="/result"
@@ -74,7 +74,7 @@ export default async function ResultPage({
               <MvpPill>{compatibility.currentStateNote}</MvpPill>
             </div>
 
-            <MvpCard className="space-y-5 rounded-[1.35rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
+            <MvpCard className="space-y-5 border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
               <div
                 className="space-y-3 rounded-[1.18rem] px-4 py-4 sm:px-5 sm:py-5"
                 style={{
@@ -141,13 +141,13 @@ export default async function ResultPage({
                 ))}
               </div>
 
-              <div className="space-y-3 rounded-[1.08rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(248,250,246,0.82)] p-4">
-                <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">次の一歩</p>
+              <div className="surface-panel-soft space-y-3">
+                <p className="surface-meta">次の一歩</p>
                 <p className="text-[14px] leading-7 text-[#6F625C]">{compatibility.gentleNextStep}</p>
               </div>
 
-              <div className="space-y-3 rounded-[1.08rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(255,253,249,0.74)] p-4">
-                <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">このあと読めるもの</p>
+              <div className="surface-panel-soft space-y-3 !bg-[rgba(255,253,249,0.74)]">
+                <p className="surface-meta">このあと読めるもの</p>
                 <p className="text-[13px] leading-6 text-[#7A7068]">
                   まずは詳しいレポートを開き、必要なら今日のヒントをあとから見返せます。
                 </p>
@@ -181,8 +181,8 @@ export default async function ResultPage({
                 </div>
               </div>
 
-              <div className="space-y-3 rounded-[1.08rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(255,255,255,0.78)] p-4">
-                <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">シェア</p>
+              <div className="surface-panel-soft space-y-3 !bg-[rgba(255,255,255,0.78)]">
+                <p className="surface-meta">シェア</p>
                 <p className="text-[13px] leading-6 text-[#7A7068]">
                   今の印象を短い言葉のまま残したいときだけ、ここからシェアできます。
                 </p>

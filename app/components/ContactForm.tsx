@@ -148,8 +148,8 @@ export default function ContactForm({
   return (
     <div style={{ maxWidth: 860 }}>
       <form onSubmit={handleSubmit}>
-        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
-          <label>
+        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+          <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
             {t.name}
             <input
               value={form.name}
@@ -158,7 +158,7 @@ export default function ContactForm({
               style={inputStyle}
             />
           </label>
-          <label>
+          <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
             {t.orgType}
             <select
               value={form.organizationType}
@@ -174,7 +174,7 @@ export default function ContactForm({
               ))}
             </select>
           </label>
-          <label>
+          <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
             {t.email}
             <input
               type="email"
@@ -184,7 +184,7 @@ export default function ContactForm({
               style={inputStyle}
             />
           </label>
-          <label>
+          <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
             {t.inquiryType}
             <select
               value={form.inquiryType}
@@ -202,7 +202,7 @@ export default function ContactForm({
           </label>
         </div>
 
-        <label style={{ display: "block", marginTop: 14 }}>
+        <label className="mt-4 grid gap-2 text-[13px] font-medium text-[var(--text)]" style={{ display: "grid" }}>
           {t.message}
           <textarea
             value={form.message}
@@ -213,19 +213,19 @@ export default function ContactForm({
           />
         </label>
 
-        <button type="submit" className="btn btn-primary" style={{ marginTop: 14, opacity: isSubmitting ? 0.8 : 1 }} disabled={isSubmitting}>
+        <button type="submit" className="btn btn-primary" style={{ marginTop: 16, opacity: isSubmitting ? 0.8 : 1 }} disabled={isSubmitting}>
           {isSubmitting ? t.sending : t.submit}
         </button>
       </form>
 
       {error && (
-        <p style={{ marginTop: 12, color: "#9a1c1c", fontWeight: 700 }}>
+        <p style={{ marginTop: 12, color: "#9a1c1c", fontWeight: 700, lineHeight: 1.7 }}>
           {error}
         </p>
       )}
 
       {submitted && (
-        <p style={{ marginTop: 12, color: "#0f4c81", fontWeight: 700 }}>
+        <p style={{ marginTop: 12, color: "#315f50", fontWeight: 700, lineHeight: 1.7 }}>
           {successMessage}
         </p>
       )}
@@ -236,10 +236,11 @@ export default function ContactForm({
 const inputStyle: CSSProperties = {
   width: "100%",
   border: "1px solid var(--line-soft)",
-  borderRadius: 14,
-  marginTop: 6,
-  padding: "12px 14px",
+  borderRadius: 18,
+  padding: "14px 16px",
   fontSize: 14,
   fontFamily: "inherit",
-  background: "rgba(255,253,249,0.92)",
+  lineHeight: 1.7,
+  background: "rgba(255,253,249,0.96)",
+  color: "var(--text)",
 };

@@ -61,7 +61,7 @@ export default function LocalLifeFlow() {
     const result = resultBundle.result;
 
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+      <main className="frontstage-page">
         <div className="container py-10 md:py-14">
           <div className="mx-auto max-w-[42rem] space-y-6">
             <div className="space-y-2">
@@ -72,13 +72,13 @@ export default function LocalLifeFlow() {
               <p className="text-[15px] leading-8 text-[#5F5750]">{result.summary}</p>
             </div>
 
-            <div className="rounded-[1.4rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-6 shadow-[0_18px_40px_rgba(23,59,53,0.08)]">
+            <div className="surface-panel bg-white/94">
               <p className="text-[15px] leading-8 text-[#5F5750]">{result.detail}</p>
             </div>
 
             <div className="space-y-2.5">
               {result.bullets.map((bullet) => (
-                <div key={bullet} className="rounded-[1rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-4 py-3.5">
+                <div key={bullet} className="surface-panel-soft">
                   <p className="text-[14px] leading-7 text-[#2F2A28]">{bullet}</p>
                 </div>
               ))}
@@ -101,7 +101,7 @@ export default function LocalLifeFlow() {
               title="今の関心から試しやすい入口"
             />
 
-            <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-5 py-4">
+            <div className="surface-panel-soft !bg-white/70">
               <p className="text-[12px] leading-7 text-[#7A7068]">
                 ここは、暮らしの困りごとを直接引き受けるサービスではありません。生活の声や関心を、次の取り組みや案内の材料として整理する入口です。
               </p>
@@ -126,7 +126,7 @@ export default function LocalLifeFlow() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="frontstage-page">
       <div className="container py-10 md:py-14">
         <div className="mx-auto max-w-[42rem]">
           {phase === "intro" ? (
@@ -141,13 +141,13 @@ export default function LocalLifeFlow() {
                   暮らし方、回復の仕方、身近なつながり、次に見たいテーマ。今の関心に近いものを選ぶと、次の入口を静かに整理できます。
                 </p>
               </div>
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-5 shadow-[0_16px_36px_rgba(23,59,53,0.07)] space-y-3">
-                <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">この入口で確認すること</p>
-                <ul className="space-y-2 text-[13px] leading-7 text-[#5F5750]">
-                  <li>・今の関心テーマがどれに近いか</li>
-                  <li>・情報がほしいのか、声を送りたいのか</li>
-                  <li>・Community / Design につながる余地があるか</li>
-                </ul>
+              <div className="surface-panel space-y-3 bg-white/92">
+                <p className="surface-meta">この入口で確認すること</p>
+                <div className="surface-list">
+                  <p className="text-[13px] leading-7 text-[#5F5750]">今の関心テーマがどれに近いか</p>
+                  <p className="text-[13px] leading-7 text-[#5F5750]">情報がほしいのか、声を送りたいのか</p>
+                  <p className="text-[13px] leading-7 text-[#5F5750]">Community / Design につながる余地があるか</p>
+                </div>
               </div>
               <button
                 type="button"
@@ -159,13 +159,13 @@ export default function LocalLifeFlow() {
             </div>
           ) : question ? (
             <div className="space-y-4">
-              <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-3.5 shadow-[0_14px_30px_rgba(23,59,53,0.07)]">
+              <div className="surface-panel-soft">
                 <div className="text-[11px] font-semibold tracking-[0.13em] text-[#6F625C]">{question.section}</div>
                 <div className="mt-0.5 text-[14px] font-bold text-[#2F2A28]">
                   Q{currentIndex + 1} / {LOCAL_LIFE_QUESTIONS.length}
                 </div>
               </div>
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/95 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
+              <div className="surface-panel space-y-4 bg-white/96 md:p-6">
                 <p className="service-kicker">近いものをひとつ選んでください</p>
                 <h2 className="display-serif text-[1.48rem] leading-[1.32] text-[#2F2A28] md:text-[2.1rem]">{question.prompt}</h2>
                 <div className="grid gap-2.5">

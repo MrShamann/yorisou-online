@@ -182,9 +182,9 @@ export default function YorisouCompanionCard({
   const visibleSeed = fallbackSeed || seed;
 
   return (
-    <section className="space-y-4 rounded-[1.3rem] border border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_18px_38px_rgba(23,59,53,0.07)]">
+    <section className="surface-panel space-y-4 bg-white/94">
       <div className="space-y-3">
-        <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">
+        <p className="surface-meta">
           {eyebrow}
         </p>
         <h2 className="display-serif text-[1.4rem] leading-[1.3] text-[#2F2A28] md:text-[1.72rem]">
@@ -193,10 +193,7 @@ export default function YorisouCompanionCard({
         <p className="text-[13px] leading-7 text-[#6F625C]">{subtitle}</p>
         <div className="flex flex-wrap gap-2">
           {PURPOSE_PILLS[variant].map((pill) => (
-            <span
-              key={pill}
-              className="rounded-full border border-[rgba(23,59,53,0.08)] bg-[#F7FBF8] px-3 py-1 text-[11px] font-semibold leading-5 text-[#49615B]"
-            >
+            <span key={pill} className="rounded-full border border-[rgba(23,59,53,0.08)] bg-[#F7FBF8] px-3 py-1 text-[11px] font-semibold leading-5 text-[#49615B]">
               {pill}
             </span>
           ))}
@@ -221,8 +218,8 @@ export default function YorisouCompanionCard({
         ) : null}
       </div>
 
-      <div className="rounded-[1.05rem] border border-[rgba(23,59,53,0.08)] bg-[rgba(255,253,249,0.74)] px-4 py-3">
-        <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">この相棒でできること</p>
+      <div className="surface-panel-soft !bg-[rgba(255,253,249,0.74)]">
+        <p className="surface-meta">この相棒でできること</p>
         <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{guideLine}</p>
       </div>
 
@@ -279,7 +276,7 @@ export default function YorisouCompanionCard({
       </div>
 
       {visibleSeed.boundedQuestion ? (
-        <div className="space-y-3 rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-[#FCFAF6] p-4">
+        <div className="surface-panel-soft space-y-3 !bg-[#FCFAF6]">
           <p className="text-[13px] font-semibold leading-6 text-[#2F2A28]">{visibleSeed.boundedQuestion}</p>
           <div className="grid gap-2">
             {visibleSeed.boundedOptions.map((option) => (
