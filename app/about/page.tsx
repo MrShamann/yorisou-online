@@ -24,8 +24,8 @@ export default function AboutPage() {
         subtitle="Yorisouは、いまの気分・考え方・行動のリズムをふり返り、公開しても安心な結果と、自分だけで読めるヒントを分けて届けるサービスです。"
         primaryHref="/check-in"
         primaryLabel="24問チェックをはじめる"
-        secondaryHref="/insights"
-        secondaryLabel="結果の見方を知る"
+        secondaryHref="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
+        secondaryLabel="レポートの見本を見る"
       />
 
       <section className="section section-wash">

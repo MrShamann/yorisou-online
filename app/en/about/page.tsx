@@ -24,8 +24,8 @@ export default function AboutPageEn() {
         subtitle="It is a reflection product that turns a short check-in into a public-safe result, private hints, and carefully bounded recommendation paths."
         primaryHref="/en/check-in"
         primaryLabel="Start the check-in"
-        secondaryHref="/en/insights"
-        secondaryLabel="Read insights"
+        secondaryHref="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
+        secondaryLabel="See a report preview"
       />
 
       <section className="section section-wash">
@@ -110,8 +110,8 @@ export default function AboutPageEn() {
                   <Link href="/en/check-in" className="btn btn-primary">
                     Start the check-in
                   </Link>
-                  <Link href="/en/insights" className="soft-link">
-                    Go to insights
+                  <Link href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low" className="soft-link">
+                    See a report preview
                   </Link>
                 </div>
               </div>
