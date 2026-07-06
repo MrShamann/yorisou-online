@@ -79,7 +79,7 @@ export default async function ReportPreviewPage({
     : null;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_90%_0%,_rgba(221,236,242,0.6),_transparent_32%),linear-gradient(180deg,#FFF7F1_0%,#fffdf9_44%,#F4FAF7_100%)] text-[#2F2A28]">
+    <main className="frontstage-page-soft">
       <DteEventTracker
         event="report_preview_viewed"
         surface="report_preview"
@@ -114,7 +114,7 @@ export default async function ReportPreviewPage({
 
             <div className="space-y-3">
               <p className="service-kicker">{compatibility.brandedTestName}</p>
-              <h1 className="display-serif text-[2rem] leading-[1.18] text-[#2F2A28] md:text-[2.8rem]">
+              <h1 className="display-serif text-[2rem] leading-[1.12] text-[#2F2A28] md:text-[2.8rem]">
                 見えてきたのは、
                 <br className="hidden sm:block" />
                 <span className="text-[#173B35]">今の動き方の輪郭です。</span>
@@ -147,8 +147,8 @@ export default async function ReportPreviewPage({
         <div className="mx-auto max-w-[44rem] space-y-10">
           <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">いま受け取れるもの</p>
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_14px_28px_rgba(23,59,53,0.06)] md:p-6">
+              <p className="surface-meta">いま受け取れるもの</p>
+              <div className="surface-panel bg-white/94 md:p-6">
                 {reportPreview ? (
                   <div className="space-y-3">
                     {reportPreview.paragraphs.map((paragraph) => (
@@ -171,8 +171,8 @@ export default async function ReportPreviewPage({
             </div>
 
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">この先で見ていくこと</p>
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/92 p-5 shadow-[0_14px_28px_rgba(23,59,53,0.06)] md:p-6">
+              <p className="surface-meta">この先で見ていくこと</p>
+              <div className="surface-panel bg-white/94 md:p-6">
                 <ul className="space-y-2.5">
                   {teaserBullets.map((item) => (
                     <li key={item} className="flex items-start gap-2.5 text-[14px] leading-7 text-[#2F2A28]">
@@ -186,8 +186,8 @@ export default async function ReportPreviewPage({
           </div>
 
           {fullReportHref ? (
-            <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.05)] md:p-6">
-              <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">オープンテスト中の全文</p>
+            <div className="surface-panel bg-white/94 md:p-6">
+              <p className="surface-meta">オープンテスト中の全文</p>
               <p className="mt-3 text-[14px] leading-7 text-[#6F625C]">
                 現在はオープンテスト中のため、公開プレビューの先にある本編と拡張も読めます。内部メモは含みません。
               </p>
@@ -221,8 +221,8 @@ export default async function ReportPreviewPage({
           ) : null}
 
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">読み方のトーン</p>
-            <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 shadow-[0_12px_28px_rgba(23,59,53,0.05)] md:p-6">
+            <p className="surface-meta">読み方のトーン</p>
+            <div className="surface-panel bg-white/92 md:p-6">
               <p className="text-[15px] leading-8 text-[#2F2A28]">
                 ここでお届けするのは、今の自分を決めつけるための答えではなく、少し見返しやすくするための読み方です。
               </p>
@@ -245,7 +245,7 @@ export default async function ReportPreviewPage({
             }}
           />
 
-          <div className="rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">
+          <div className="surface-panel-soft !bg-white/60">
             <p className="text-[11px] leading-7 text-[#8A8078]">
               このページでは、詳しい本文そのものではなく、公開プレビューと次のヒントだけを先に整えています。
             </p>

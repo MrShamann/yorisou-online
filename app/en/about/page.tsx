@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function AboutPageEn() {
   return (
-    <main className="bg-[#F5F1E8] text-[#3B2F2F]">
+    <main className="frontstage-page">
       <Hero
         eyebrow="About Yorisou"
         title={
@@ -47,7 +47,7 @@ export default function AboutPageEn() {
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.02fr_0.98fr]">
             <MotionReveal delay={40}>
-              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+              <div className="motion-card shell-card px-6 py-6">
                 <div className="service-kicker">Why it exists</div>
                 <h2 className="section-title" style={{ marginTop: 12 }}>
                   Not to define you. To make reflection easier.
@@ -80,7 +80,7 @@ export default function AboutPageEn() {
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
             <MotionReveal delay={40}>
-              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+              <div className="motion-card shell-card px-6 py-6">
                 <div className="service-kicker">After the check-in</div>
                 <h2 className="section-title" style={{ marginTop: 12 }}>
                   Public result, private depth
@@ -95,7 +95,7 @@ export default function AboutPageEn() {
             </MotionReveal>
 
             <MotionReveal delay={130} distance={18}>
-              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+              <div className="motion-card shell-card px-6 py-6">
                 <div className="service-kicker">Clear boundaries matter</div>
                 <p className="page-copy" style={{ marginTop: 12 }}>
                   Yorisou is not a medical or psychological diagnosis, therapy, fortune-telling, professional advice, a chatbot replacement for human care, or a public service provider.

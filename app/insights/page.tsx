@@ -40,13 +40,13 @@ const VOICES = [
 
 export default function InsightsPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#FFF9F2_0%,#fffdf8_42%,#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="frontstage-page">
 
       {/* ── Header ── */}
       <section className="border-b border-[rgba(23,59,53,0.08)]">
         <div className="container py-10 md:py-14">
           <MotionReveal className="max-w-[44rem] space-y-3" delay={20}>
-            <p className="text-[11px] font-semibold tracking-[0.15em] text-[#49615B]">Yorisou Notes</p>
+            <p className="surface-meta">Yorisou Notes</p>
             <h1 className="display-serif text-[2rem] leading-[1.2] text-[#2F2A28] md:text-[2.8rem]">
               今の気持ちや人との距離感を、<br className="hidden sm:block" />
               少し静かに読み直す。
@@ -64,8 +64,8 @@ export default function InsightsPage() {
           {/* ── 1. 今月の小さな問い ── */}
           <MotionReveal delay={30}>
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">今月の小さな問い</p>
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 px-6 py-5">
+              <p className="surface-meta">今月の小さな問い</p>
+              <div className="surface-panel bg-white/92">
                 <p className="text-[16px] font-semibold leading-7 text-[#2F2A28]">
                   最近、人との距離で少し疲れた場面はありましたか。
                 </p>
@@ -79,7 +79,7 @@ export default function InsightsPage() {
           {/* ── 2. テーマから読む ── */}
           <MotionReveal delay={50}>
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">テーマから読む</p>
+              <p className="surface-meta">テーマから読む</p>
               <p className="text-[13px] leading-6 text-[#7A7068]">
                 気になるテーマをひとつ選ぶだけで大丈夫です。
               </p>
@@ -102,8 +102,8 @@ export default function InsightsPage() {
           {/* ── 3. 同じような人の声 ── */}
           <MotionReveal delay={70}>
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">同じような人の声</p>
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/80 p-5 space-y-3">
+              <p className="surface-meta">同じような人の声</p>
+              <div className="surface-panel bg-white/84 space-y-3">
                 {VOICES.map((voice, i) => (
                   <div
                     key={i}
@@ -122,7 +122,7 @@ export default function InsightsPage() {
           {/* ── 4. 深く読むレポート ── */}
           <MotionReveal delay={90}>
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">深く読むレポート</p>
+              <p className="surface-meta">深く読むレポート</p>
               <Link
                 href="/reports/relationship-fatigue"
                 className="group flex flex-col gap-2 rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/90 p-5 transition hover:-translate-y-0.5 hover:border-[rgba(23,59,53,0.18)] hover:bg-white"
@@ -145,8 +145,8 @@ export default function InsightsPage() {
 
           {/* ── 5. LINE CTA ── */}
           <MotionReveal delay={110}>
-            <section className="rounded-[1.35rem] border border-[rgba(23,59,53,0.1)] bg-white/80 px-5 py-5 space-y-3">
-              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">LINEであとから見返す</p>
+            <section className="surface-panel bg-white/84 space-y-3">
+              <p className="surface-meta">LINEであとから見返す</p>
               <p className="text-[13px] leading-6 text-[#5F5750]">
                 今日の気持ちを、あとからLINEで静かに見返す。急いで結論を出さなくていい。
               </p>
@@ -164,7 +164,7 @@ export default function InsightsPage() {
 
           {/* ── Safety note ── */}
           <MotionReveal delay={120}>
-            <div className="rounded-[1.1rem] border border-[rgba(23,59,53,0.07)] bg-white/60 px-5 py-3.5">
+            <div className="surface-panel-soft !bg-white/60">
               <p className="text-[11px] leading-6 text-[#9A918B]">
                 Yorisou Notesは、医療・心理診断、治療、カウンセリング、専門的な対人関係の助言ではありません。今の気持ちを、少し静かに整理するための読みものです。
               </p>

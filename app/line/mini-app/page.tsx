@@ -82,7 +82,7 @@ export default async function MiniAppEntryPage({
 
         {/* Launcher headline */}
         <div className="mt-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9A9088]">
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-[#9A9088]">
             前回の続きから、少しだけ。
           </p>
         </div>
@@ -96,10 +96,7 @@ export default async function MiniAppEntryPage({
         >
           <div className="flex items-center gap-2">
             <span className="signal-orb" aria-hidden="true" />
-            <span
-              className="text-[10px] font-semibold uppercase tracking-[0.16em]"
-              style={{ color: "#4D7A69" }}
-            >
+            <span className="text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#4D7A69" }}>
               おすすめ
             </span>
           </div>
@@ -116,7 +113,7 @@ export default async function MiniAppEntryPage({
             最近の診断や関心をもとに、次に試しやすい入口を表示します。医療・心理診断ではなく、今の状態を見つめるための小さな手がかりです。
           </p>
 
-          <p className="mt-2 text-[11px] tracking-[0.06em] text-[#9A9088]">
+          <p className="mt-2 text-[11px] text-[#9A9088]">
             LINE / Web 継続用 · ログインなし
           </p>
         </div>
@@ -175,7 +172,7 @@ export default async function MiniAppEntryPage({
               公開テスト案内
             </Link>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] font-semibold text-[#315F50]">
+          <div className="surface-link-row text-[13px] font-semibold text-[#315F50]">
             <Link href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low" className="hover:underline">
               レポートの見本を見る
             </Link>
@@ -218,10 +215,7 @@ export default async function MiniAppEntryPage({
 
         {/* Coming soon section */}
         <div className="mt-10 border-t pt-6" style={{ borderColor: "rgba(23,59,53,0.07)" }}>
-          <p
-            className="mb-3 text-[10px] font-semibold uppercase tracking-[0.16em]"
-            style={{ color: "#9A9088" }}
-          >
+          <p className="mb-3 text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#9A9088" }}>
             これから増えるチェック
           </p>
           <div className="space-y-1.5">

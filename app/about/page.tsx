@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="bg-[var(--bg)] text-[var(--text)]">
+    <main className="frontstage-page">
       <Hero
         eyebrow="Yorisouについて"
         title={
@@ -47,7 +47,7 @@ export default function AboutPage() {
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.02fr_0.98fr]">
             <MotionReveal delay={40}>
-              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+              <div className="motion-card shell-card px-6 py-6">
                 <div className="service-kicker">なぜ存在するか</div>
                 <h2 className="section-title" style={{ marginTop: 12 }}>
                   答えを決めつけるためではなく、考えやすくするために
@@ -83,7 +83,7 @@ export default function AboutPage() {
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
             <MotionReveal delay={40}>
-              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+              <div className="motion-card shell-card px-6 py-6">
                 <div className="service-kicker">チェックのあとに届くもの</div>
                 <p className="page-copy" style={{ marginTop: 12 }}>
                   チェック後には、まず公開しても安心な結果が表示されます。タイプ名、短い認識の言葉、いくつかの安全な傾向を確認できます。
@@ -98,7 +98,7 @@ export default function AboutPage() {
             </MotionReveal>
 
             <MotionReveal delay={130} distance={18}>
-              <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+              <div className="motion-card shell-card px-6 py-6">
                 <div className="service-kicker">Yorisouがしないこと</div>
                 <p className="page-copy" style={{ marginTop: 12 }}>
                   Yorisouは、医療・心理・法律・金融・進路などの専門判断を提供するサービスではありません。
@@ -118,7 +118,7 @@ export default function AboutPage() {
       <section className="section section-wash" style={{ paddingTop: 0 }}>
         <div className="container">
           <MotionReveal delay={40}>
-            <div className="motion-card rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+              <div className="motion-card shell-card px-6 py-6">
               <div className="service-kicker">公開されるものと、自分だけのものを分けます</div>
               <p className="page-copy" style={{ marginTop: 12 }}>
                 Yorisouでは、公開してもよい結果と、自分だけで読む深いヒントを分けて扱います。

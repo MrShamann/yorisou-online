@@ -45,11 +45,11 @@ export default async function ContactPage({
         eyebrow="お問い合わせ"
         title={
           <>
-            <span className="block md:whitespace-nowrap">お問い合わせも、</span>
-            <span className="block md:whitespace-nowrap">やさしく話せる入口でありたいと考えています。</span>
+            <span className="block md:whitespace-nowrap">気になったことを、</span>
+            <span className="block md:whitespace-nowrap">落ち着いて送れる入口にしています。</span>
           </>
         }
-        subtitle="ご相談内容がまだまとまっていなくても大丈夫です。ご本人、ご家族、地域の関係者、それぞれの立場に合わせて、落ち着いてお話をうかがいます。"
+        subtitle="ご相談内容がまだまとまっていなくても大丈夫です。公開テストの感想、不具合、使い方への質問まで、必要なことから順番にお送りいただけます。"
         primaryHref="/check-in"
         primaryLabel="クイックチェックを始める"
         secondaryHref="/tests"
@@ -59,7 +59,7 @@ export default async function ContactPage({
       <section className="section">
         <div className="container">
           <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="rounded-[1.7rem] border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.82)] px-6 py-6">
+            <div className="shell-card px-6 py-6">
               <div className="service-kicker">お問い合わせフォーム</div>
               <h2 className="section-title" style={{ marginTop: 12 }}>
                 チェック結果の使い方からYorisouについての質問まで、このままお送りいただけます。

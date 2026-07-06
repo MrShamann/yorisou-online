@@ -36,14 +36,14 @@ const THEMES = [
 
 export default function InsightsPageEn() {
   return (
-    <main className="min-h-screen bg-[#F5F1E8] text-[#3B2F2F]">
+    <main className="frontstage-page">
 
       {/* Header */}
       <section className="border-b border-[#D6C3A3]/35">
         <div className="mx-auto max-w-3xl px-6 py-14 md:px-10 md:py-18">
           <div className="space-y-4">
-            <div className="text-xs tracking-[0.18em] text-[#8A7764]">Yorisou Notes</div>
-            <h1 className="text-3xl font-light leading-tight md:text-5xl">
+            <div className="text-xs text-[#8A7764]">Yorisou Notes</div>
+            <h1 className="display-serif text-3xl leading-tight md:text-5xl">
               A quiet space to read about<br className="hidden md:block" />
               <span className="text-[#6B5A4A]"> your current state.</span>
             </h1>
@@ -71,14 +71,14 @@ export default function InsightsPageEn() {
       {/* Editorial themes */}
       <section className="border-b border-[#D6C3A3]/30 bg-[#FCFAF6]">
         <div className="mx-auto max-w-5xl px-6 py-10 md:px-10">
-          <div className="mb-6 text-xs tracking-[0.18em] text-[#8A7764]">Themes</div>
+          <div className="mb-6 text-xs text-[#8A7764]">Themes</div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {THEMES.map((theme) => (
               <div
                 key={theme.label}
                 className="rounded-[1.5rem] border border-[#D6C3A3]/35 bg-white/80 p-5 shadow-sm"
               >
-                <div className="text-sm tracking-[0.14em] text-[#8A7764]">{theme.label}</div>
+                <div className="text-sm text-[#8A7764]">{theme.label}</div>
                 <p className="mt-3 text-sm leading-7 text-[#5A4B3E]">{theme.text}</p>
               </div>
             ))}
@@ -89,7 +89,7 @@ export default function InsightsPageEn() {
       {/* Report link */}
       <section className="mx-auto max-w-3xl px-6 py-12 md:px-10">
         <div className="space-y-4">
-          <div className="text-xs tracking-[0.18em] text-[#8A7764]">Report preview</div>
+          <div className="text-xs text-[#8A7764]">Report preview</div>
           <Link
             href="/reports/relationship-fatigue"
             className="group flex flex-col gap-2 rounded-[1.5rem] border border-[#D6C3A3]/40 bg-white/80 p-6 shadow-sm transition hover:shadow-md"

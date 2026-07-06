@@ -22,31 +22,32 @@ export default function Hero({
   secondaryLabel,
 }: HeroProps) {
   return (
-    <section className="section-wash border-b border-[var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.97),_rgba(247,244,238,0.99)_60%)]">
-      <div className="container py-11 md:py-13">
-        <MotionReveal className="max-w-[48rem]" delay={40} distance={24}>
-          <div className="service-kicker">{eyebrow}</div>
-          <h1 className="display-serif mt-4 max-w-[15.4em] text-[1.62rem] leading-[1.68] text-[var(--text)] md:text-[2.04rem]">
-            {title}
-          </h1>
-          <p className="mt-4 max-w-[40rem] text-sm leading-8 text-[var(--muted)] md:text-[0.97rem]">
-            {subtitle}
-          </p>
-        </MotionReveal>
-        {(primaryHref || secondaryHref) && (
-          <MotionReveal className="mt-6 flex flex-wrap gap-3" delay={140} distance={18}>
-            {primaryHref && primaryLabel && (
-              <Link href={primaryHref} className="btn btn-primary">
-                {primaryLabel}
-              </Link>
-            )}
-            {secondaryHref && secondaryLabel && (
-              <Link href={secondaryHref} className="btn btn-secondary">
-                {secondaryLabel}
-              </Link>
+    <section className="frontstage-hero">
+      <div className="container">
+        <div className="frontstage-hero-inner md:grid-cols-[minmax(0,1fr)_18rem]">
+          <MotionReveal className="frontstage-hero-copy" delay={40} distance={24}>
+            <div className="service-kicker">{eyebrow}</div>
+            <h1 className="display-serif frontstage-hero-title mt-3 max-w-[11.5em]">{title}</h1>
+            <p className="frontstage-hero-lead">{subtitle}</p>
+            {(primaryHref || secondaryHref) && (
+              <div className="frontstage-hero-actions">
+                {primaryHref && primaryLabel && (
+                  <Link href={primaryHref} className="btn btn-primary">
+                    {primaryLabel}
+                  </Link>
+                )}
+                {secondaryHref && secondaryLabel && (
+                  <Link href={secondaryHref} className="btn btn-secondary">
+                    {secondaryLabel}
+                  </Link>
+                )}
+              </div>
             )}
           </MotionReveal>
-        )}
+          <MotionReveal className="frontstage-note self-end" delay={140} distance={18}>
+            <p>診断や評価を断定するためではなく、今の状態を見つめやすくするための入口として整えています。</p>
+          </MotionReveal>
+        </div>
       </div>
     </section>
   );
