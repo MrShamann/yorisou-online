@@ -245,12 +245,12 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
       source: "local_life_flow",
       signalType: "test_completed",
       testId: "local-life",
-      resultId: "支え合いアイデアへの関心",
+      resultId: "続き方のヒントへの関心",
       interestId: null,
       actionId: null,
       actionRole: null,
       recommendationMode: null,
-      note: ` ${"暮らしの支え合いの案を知りたい。".repeat(12)} `,
+      note: ` ${"あとで戻りやすい続き方のヒントを知りたい。".repeat(12)} `,
       pagePath: "/tests/local-life",
       metadataJson: {},
       createdAt: "2026-05-04T00:00:00.000Z",
@@ -575,7 +575,7 @@ export async function runRelationshipIntelligenceOperationsControlRoomValidation
     );
     assert.equal(publicValueCandidate?.riskBoundary, "care_welfare_mobility_boundary");
     assert.equal(publicValueCandidate?.reviewStatus, "founder_review_candidate");
-    assert.equal(publicValueCandidate?.title.includes("支え合いアイデアへの関心"), true);
+    assert.equal(publicValueCandidate?.title.includes("続き方のヒントへの関心"), true);
     assert.equal((publicValueCandidate?.noteExcerpts[0]?.length || 0) <= 120, true);
     assert.equal(publicValueCandidate?.noteExcerpts[0]?.includes("…"), true);
     assert.equal(

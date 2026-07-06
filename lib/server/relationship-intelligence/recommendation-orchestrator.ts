@@ -239,7 +239,7 @@ function getBaseCandidates(input: RecommendationOrchestratorInput): Recommendati
       }
       return ["report-preview-sample", "test-name-impression", "line-save-entry", "test-work-rhythm"];
     case "local-life":
-      if (input.resultId === "支え合いアイデアへの関心") {
+      if (input.resultId === "続き方のヒントへの関心") {
         return ["local-life-signal-entry", "community-interest-entry", "design-interest-entry", "open-testing-guide"];
       }
       return ["local-life-signal-entry", "community-interest-entry", "open-testing-guide", "design-interest-entry"];
