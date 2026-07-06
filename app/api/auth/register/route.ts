@@ -60,7 +60,7 @@ async function parsePayload(request: Request): Promise<{ payload: RegisterPayloa
       email: String(formData.get("email") || ""),
       password: String(formData.get("password") || ""),
       city: String(formData.get("city") || ""),
-      role: (formData.get("role") as RegisterPayload["role"]) || "family",
+      role: (formData.get("role") as RegisterPayload["role"]) || "self",
       next: String(formData.get("next") || ""),
       returnTo: String(formData.get("returnTo") || ""),
     },
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       email: payload.email.trim(),
       password: payload.password,
       city: payload.city.trim(),
-      role: payload.role || "family",
+      role: payload.role || "self",
     });
 
     if (!result.ok) {

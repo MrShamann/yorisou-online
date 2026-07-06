@@ -21,11 +21,11 @@ export default function AboutPageEn() {
             <span className="block md:whitespace-nowrap">before choosing their next step.</span>
           </>
         }
-        subtitle="It is a LINE/Web-first reflection product that turns a short check-in into a public-safe result, private hints, and carefully bounded recommendation paths."
+        subtitle="It is a reflection product that turns a short check-in into a public-safe result, private hints, and carefully bounded recommendation paths."
         primaryHref="/en/check-in"
         primaryLabel="Start the check-in"
-        secondaryHref="/en/insights"
-        secondaryLabel="Read insights"
+        secondaryHref="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
+        secondaryLabel="See a report preview"
       />
 
       <section className="section section-wash">
@@ -101,7 +101,7 @@ export default function AboutPageEn() {
                   Yorisou is not a medical or psychological diagnosis, therapy, fortune-telling, professional advice, a chatbot replacement for human care, or a public service provider.
                 </p>
                 <p className="page-copy" style={{ marginTop: 8 }}>
-                  It does not provide mobility reservations, elderly-care services, care-facility coordination, vehicle products, or pilot programs.
+                  It does not provide direct professional care, government support operations, marketplace checkout, or real-world service dispatch.
                 </p>
                 <p className="page-copy" style={{ marginTop: 8 }}>
                   When a situation requires professional support, Yorisou should not be treated as a substitute.
@@ -110,8 +110,8 @@ export default function AboutPageEn() {
                   <Link href="/en/check-in" className="btn btn-primary">
                     Start the check-in
                   </Link>
-                  <Link href="/en/insights" className="soft-link">
-                    Go to insights
+                  <Link href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low" className="soft-link">
+                    See a report preview
                   </Link>
                 </div>
               </div>
