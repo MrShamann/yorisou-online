@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import SupportWorkspace from "@/app/components/SupportWorkspace";
 
 export const metadata: Metadata = {
-  title: "Talk with Hinata | Yorisou",
-  description: "Reflect on your current state, daily rhythm, and Yorisou check results with Hinata. This is a self-reflection support space, not medical, psychological, legal, or professional advice.",
+  title: "Yorisou Support | Yorisou",
+  description:
+    "This page helps you confirm login status and access permissions. Founder dashboard access requires an admin-authorized email account.",
 };
 
 export default async function SupportPageEn({
