@@ -27,7 +27,6 @@ export default function AccountEntryForm({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [city, setCity] = useState("");
-  const [role, setRole] = useState<"self" | "family" | "facility">("family");
   const [error, setError] = useState(initialError || "");
   const [notice, setNotice] = useState(initialNotice || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,40 +81,54 @@ export default function AccountEntryForm({
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <section className="border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-6 py-16 md:px-10 md:py-24">
         <div className="mx-auto max-w-5xl">
-          <div className="grid gap-8 lg:grid-cols-[0.78fr_1.08fr] lg:items-start">
+          <div className="grid gap-8 lg:grid-cols-[0.82fr_1.06fr] lg:items-start">
             <div className="px-1 py-2 md:pr-6">
-              <div className="service-kicker">{locale === "ja" ? "Yorisouのつづき" : "Continue with Yorisou"}</div>
-              <h1 className="display-serif mt-4 max-w-[13.5em] text-[1.7rem] leading-[1.66] md:text-[2.08rem]">
+              <div className="service-kicker">{locale === "ja" ? "アカウント" : "Account"}</div>
+              <h1 className="display-serif mt-4 max-w-[13.5em] text-[1.7rem] leading-[1.5] md:text-[2.08rem]">
                 {mode === "login"
                   ? locale === "ja"
                     ? (
                       <>
-                        <span className="block md:whitespace-nowrap">チェックの記録を、</span>
-                        <span className="block md:whitespace-nowrap">あとから見返せます。</span>
+                        <span className="block md:whitespace-nowrap">Yorisou アカウントに</span>
+                        <span className="block md:whitespace-nowrap">ログインします。</span>
                       </>
                     )
-                    : "Log in to review your support"
+                    : "Log in to your Yorisou account."
                   : locale === "ja"
                     ? (
                       <>
-                        <span className="block md:whitespace-nowrap">あとから続けやすい</span>
-                        <span className="block md:whitespace-nowrap">受け取り方を整えます。</span>
+                        <span className="block md:whitespace-nowrap">Yorisou アカウントを</span>
+                        <span className="block md:whitespace-nowrap">作成します。</span>
                       </>
                     )
-                    : "Save your check-in records to review later."}
+                    : "Create your Yorisou account."}
               </h1>
               <p className="mt-5 max-w-xl text-sm leading-8 text-[var(--muted)] md:text-base">
                 {mode === "login"
                   ? locale === "ja"
-                    ? "チェックの記録やご案内を、あとから見返したいときに使えます。"
-                    : "Log in to review your check-in records and follow-up notes."
+                    ? "保存したチェック結果や相棒との続き方を見返したいときに使えます。"
+                    : "Log in to revisit saved check results and companion continuity."
                   : locale === "ja"
-                    ? "登録しておくと、チェックの記録やご案内を、ひとつの場所でやさしく続けやすくなります。"
-                    : "Create one account to keep your check-in records and follow-up notes together."}
+                    ? "チェック結果や相棒との続き方を保存できます。"
+                    : "Save your check results and companion continuity in one place."}
               </p>
               <div className="panel-sage mt-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
-                <div>{locale === "ja" ? "ご本人でも、ご家族でも、無理のない形で続けられます。" : "This entry works for older adults and family members."}</div>
-                <div className="mt-2">{locale === "ja" ? "LINEでもメールでも、あとから静かに選べます。" : "You can choose LINE or email later, whichever feels easier."}</div>
+                <div>{locale === "ja" ? "公開テストの続きや、相棒との返り道を落ち着いて残したい方のためのアカウントです。" : "This account keeps your open-testing progress and companion continuity available when you come back."}</div>
+                <div className="mt-2">{locale === "ja" ? "メールで登録しておくと、結果や次の入口をあとから見返せます。" : "Email registration makes it easier to revisit your saved results and next-step paths later."}</div>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-3 text-sm">
+                <Link href="/open-testing" className="soft-link">
+                  {locale === "ja" ? "公開テストに戻る" : "Back to open testing"}
+                </Link>
+                {mode === "register" ? (
+                  <Link href={loginHref} className="soft-link">
+                    {locale === "ja" ? "すでにアカウントがある方はログイン" : "Already have an account? Log in"}
+                  </Link>
+                ) : (
+                  <Link href={registerHref} className="soft-link">
+                    {locale === "ja" ? "アカウントを作成する" : "Create an account"}
+                  </Link>
+                )}
               </div>
               {initialAccount && (
                 <div className="panel-sage mt-6 rounded-[2rem] px-6 py-6 text-sm leading-7">
@@ -141,42 +154,21 @@ export default function AccountEntryForm({
                 </Link>
               </div>
 
-              {!initialAccount && (
-                <div id="line-entry" className="panel-sage mb-5 rounded-[1.4rem] px-5 py-5 text-sm leading-7">
-                  <div className="service-kicker text-[#64705f]">{locale === "ja" ? "あとから受け取りたい方へ" : "Continue with LINE"}</div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--accent-sage-text)]">
-                    {locale === "ja"
-                      ? "チェックの続きやご案内を、必要なときだけLINEで受け取りたい方に向いています。"
-                      : "A calm and simple way for older adults and families to begin."}
-                  </p>
-                  <div className="mt-4">
-                    <Link href={lineLoginHref} className="inline-flex w-full items-center justify-center rounded-[1.25rem] border border-[color:var(--line-sage)] bg-[rgba(255,253,249,0.88)] px-6 py-4 text-center text-sm font-semibold text-[var(--accent-sage-text)] transition hover:translate-y-[-1px] hover:bg-white hover:opacity-95">
-                      <LineBrandIcon className="h-5 w-5" />
-                      {locale === "ja" ? "LINEでつながる" : "Continue with LINE"}
-                    </Link>
-                  </div>
-                  <p className="mt-3 text-xs leading-6 text-[#64705f]">
-                    {locale === "ja"
-                      ? "まずはチェックを始めて、あとからLINEで落ち着いて続けたい方にも使えます。"
-                      : "A calm and simple way for older adults and families to begin."}
-                  </p>
-                </div>
-              )}
-
               <form className="grid gap-5" action={endpoint} method="post" onSubmit={handleSubmit}>
                 <input type="hidden" name="next" value={supportHref} />
                 <input type="hidden" name="returnTo" value={mode === "login" ? loginHref : registerHref} />
+                {mode === "register" && <input type="hidden" name="role" value="self" />}
                 {!initialAccount && (
                   <div className="rounded-[1.3rem] bg-[rgba(255,253,249,0.78)] px-5 py-4 text-sm leading-7 text-[var(--muted)]">
-                    <div className="font-medium text-[var(--text)]">{locale === "ja" ? "メールやパスワードで続ける" : "Continue with email instead"}</div>
+                    <div className="font-medium text-[var(--text)]">{locale === "ja" ? "メールアドレスで続ける" : "Continue with email"}</div>
                     <p className="mt-2">
                       {mode === "login"
                         ? locale === "ja"
-                          ? "メールアドレスとパスワードで、チェックの記録を見返したい方はこちらをお使いください。"
-                          : "Use this if you want to sign in with your email address and password."
+                          ? "メールアドレスとパスワードで、保存した結果や続き方を見返せます。"
+                          : "Use your email address and password to revisit saved results and continuity."
                         : locale === "ja"
-                          ? "LINEを使わずに始めたい場合も、こちらから落ち着いて登録できます。"
-                          : "Use this to create an account with email if you do not want to start with LINE."}
+                          ? "メールアドレスで登録して、結果や相棒の続き方を保存できます。"
+                          : "Create an account with email to save results and companion continuity."}
                     </p>
                   </div>
                 )}
@@ -253,7 +245,7 @@ export default function AccountEntryForm({
 
                 {mode === "register" && (
                   <>
-                    <Field label={locale === "ja" ? "お住まいの地域" : "City / area"}>
+                    <Field label={locale === "ja" ? "地域" : "City / area"}>
                       <input
                         name="city"
                         value={city}
@@ -263,21 +255,6 @@ export default function AccountEntryForm({
                         }}
                         className={inputClassName}
                       />
-                    </Field>
-                    <Field label={locale === "ja" ? "立場" : "Role"}>
-                      <select
-                        name="role"
-                        value={role}
-                        onChange={(event) => {
-                          clearError();
-                          setRole(event.target.value as "self" | "family" | "facility");
-                        }}
-                        className={inputClassName}
-                      >
-                        <option value="self">{locale === "ja" ? "ご本人" : "Self"}</option>
-                        <option value="family">{locale === "ja" ? "ご家族" : "Family"}</option>
-                        <option value="facility">{locale === "ja" ? "施設・事業者" : "Facility / operator"}</option>
-                      </select>
                     </Field>
                   </>
                 )}
@@ -300,13 +277,29 @@ export default function AccountEntryForm({
                       : "Submitting..."
                     : mode === "login"
                     ? locale === "ja"
-                      ? "ログインして続きを見る"
-                      : "Log in to support"
+                      ? "ログインする"
+                      : "Log in"
                     : locale === "ja"
-                      ? "登録して続ける"
-                      : "Create account and continue"}
+                      ? "登録する"
+                      : "Create account"}
                 </button>
 
+                {!initialAccount && (
+                  <div className="rounded-[1.2rem] border border-[color:var(--line-soft)] bg-[rgba(243,250,246,0.55)] px-5 py-4 text-sm leading-7 text-[var(--muted)]">
+                    <div className="font-medium text-[var(--text)]">{locale === "ja" ? "LINEで続ける場合" : "If you prefer LINE"}</div>
+                    <p className="mt-2">
+                      {locale === "ja"
+                        ? "メール登録の代わりに、LINE連携で続きを開くこともできます。現在のYorisouでは補助的な継続手段です。"
+                        : "You can also continue through LINE connection. In the current Yorisou flow, it is an optional continuity path."}
+                    </p>
+                    <div className="mt-3">
+                      <Link href={lineLoginHref} className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-sage-text)] hover:underline">
+                        <LineBrandIcon className="h-5 w-5" />
+                        {locale === "ja" ? "LINEで続ける" : "Continue with LINE"}
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </form>
             </div>
           </div>

@@ -138,7 +138,7 @@ export default function LocalLifeFlow() {
                   <span className="text-[#173B35]">関心の入口として整理する。</span>
                 </h1>
                 <p className="text-[15px] leading-8 text-[#5F5750]">
-                  移動、買い物や通院、家族を支える負担、地域のつながり。今の関心に近いものを選ぶと、次の入口を静かに整理できます。
+                  暮らし方、回復の仕方、身近なつながり、次に見たいテーマ。今の関心に近いものを選ぶと、次の入口を静かに整理できます。
                 </p>
               </div>
               <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-5 shadow-[0_16px_36px_rgba(23,59,53,0.07)] space-y-3">

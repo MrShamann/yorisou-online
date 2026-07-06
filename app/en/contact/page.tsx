@@ -19,7 +19,7 @@ const inquiryCards = [
 const trustPoints = [
   "We aim to be easy to talk to, even for a first conversation.",
   "Our approach stays grounded in local community life and practical use.",
-  "We value clear, respectful communication for older adults and family members.",
+  "We value clear, respectful communication across different roles and contexts.",
 ];
 
 export default function ContactPageEn() {
@@ -47,7 +47,7 @@ export default function ContactPageEn() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#5A4B3E] md:text-lg">
-              Yorisou aims to be approachable for individuals, families, and local partners alike.
+              Yorisou aims to be approachable for individuals, teams, and local partners alike.
               From introductory experience requests to community discussions, we value a calm and thoughtful conversation.
             </p>
           </div>
