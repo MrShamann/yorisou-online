@@ -4,7 +4,7 @@ import ContactForm from "../../components/ContactForm";
 const inquiryCards = [
   {
     title: "Check Experience",
-    text: "Questions about the quick check, your results, or how to use Hinata — we're happy to hear from you.",
+    text: "Questions about the quick check, your results, or how to use Yorisou are always welcome.",
   },
   {
     title: "About Yorisou",
@@ -92,7 +92,7 @@ export default function ContactPageEn() {
             <div className="text-sm tracking-[0.18em] text-[#8A7764]">How We Can Help</div>
             <h2 className="mt-3 text-3xl font-light leading-tight">Ways to contact Yorisou</h2>
             <p className="mt-4 text-sm leading-7 text-[#5A4B3E] md:text-base">
-              Whether it's about the check experience, Hinata, or Yorisou in general — we're here.
+              Whether it is about the check experience or Yorisou in general, we are here.
             </p>
           </div>
 
