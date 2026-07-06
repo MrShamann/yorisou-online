@@ -96,10 +96,10 @@ export default async function InsightDetailPageEn({
         <section className="mt-8 rounded-[1.75rem] border border-[#D6C3A3]/35 bg-white/80 p-6 shadow-sm">
           <div className="text-sm tracking-[0.18em] text-[#8A7764]">What This Means</div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <AudienceCard title="For Seniors" text={insight.whatThisMeans.seniors} />
-            <AudienceCard title="For Families" text={insight.whatThisMeans.families} />
-            <AudienceCard title="For Local Communities" text={insight.whatThisMeans.localCommunities} />
-            <AudienceCard title="For Operators / Pilot Partners" text={insight.whatThisMeans.operators} />
+            <AudienceCard title="For quick self-checks" text={insight.whatThisMeans.seniors} />
+            <AudienceCard title="For returning to your result" text={insight.whatThisMeans.families} />
+            <AudienceCard title="For open testing" text={insight.whatThisMeans.localCommunities} />
+            <AudienceCard title="For recommendation memory" text={insight.whatThisMeans.operators} />
           </div>
         </section>
 
