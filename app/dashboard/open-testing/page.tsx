@@ -7,7 +7,7 @@ import { evaluateOpenTestingFollowUps, getOpenTestingDashboardSnapshot } from "@
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Open Testing Dashboard | Yorisou",
+  title: "管理ダッシュボード | Yorisou",
   robots: {
     index: false,
     follow: false,

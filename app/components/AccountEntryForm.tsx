@@ -45,6 +45,8 @@ export default function AccountEntryForm({
       ? `/api/line/auth/start?locale=ja&intent=${mode}`
       : `/api/line/auth/start?locale=en&intent=${mode}`;
   const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+  const isAdminIntent = nextPath === "/dashboard/open-testing";
+  const isAdminLogin = isAdminIntent && mode === "login";
   const passwordChecks = PASSWORD_RULES.map((rule) => ({
     ...rule,
     ok: rule.test(password),
@@ -85,12 +87,18 @@ export default function AccountEntryForm({
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <section className="border-b border-[color:var(--line)] bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.96),_rgba(250,245,238,0.99)_62%)] px-6 py-16 md:px-10 md:py-24">
-        <div className="mx-auto max-w-5xl">
-          <div className="grid gap-8 lg:grid-cols-[0.82fr_1.06fr] lg:items-start">
-            <div className="px-1 py-2 md:pr-6">
-              <div className="service-kicker">{locale === "ja" ? "アカウント" : "Account"}</div>
+        <div className={`mx-auto ${isAdminLogin ? "max-w-3xl" : "max-w-5xl"}`}>
+          <div className={`grid gap-8 ${isAdminLogin ? "lg:grid-cols-1" : "lg:grid-cols-[0.82fr_1.06fr] lg:items-start"}`}>
+            <div className={`px-1 py-2 ${isAdminLogin ? "max-w-2xl" : "md:pr-6"}`}>
+              <div className="service-kicker">
+                {isAdminLogin ? (locale === "ja" ? "管理者用" : "Administrator") : locale === "ja" ? "アカウント" : "Account"}
+              </div>
               <h1 className="display-serif mt-4 max-w-[13.5em] text-[1.7rem] leading-[1.5] md:text-[2.08rem]">
-                {mode === "login"
+                {isAdminLogin
+                  ? locale === "ja"
+                    ? "管理者ログイン"
+                    : "Administrator login"
+                  : mode === "login"
                   ? locale === "ja"
                     ? (
                       <>
@@ -109,7 +117,11 @@ export default function AccountEntryForm({
                     : "Create your Yorisou account."}
               </h1>
               <p className="mt-5 max-w-xl text-sm leading-8 text-[var(--muted)] md:text-base">
-                {mode === "login"
+                {isAdminLogin
+                  ? locale === "ja"
+                    ? "Yorisou の管理画面へ入ります。必要な操作だけに絞った管理者ログインです。"
+                    : "Use email and password to enter the Yorisou founder dashboard."
+                  : mode === "login"
                   ? locale === "ja"
                     ? "保存したチェック結果や相棒との続き方を見返したいときに使えます。"
                     : "Log in to revisit saved check results and companion continuity."
@@ -117,24 +129,34 @@ export default function AccountEntryForm({
                     ? "チェック結果や相棒との続き方を保存できます。"
                     : "Save your check results and companion continuity in one place."}
               </p>
-              <div className="panel-sage mt-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
-                <div>{locale === "ja" ? "公開テストの続きや、相棒との返り道を落ち着いて残したい方のためのアカウントです。" : "This account keeps your open-testing progress and companion continuity available when you come back."}</div>
-                <div className="mt-2">{locale === "ja" ? "メールで登録しておくと、結果や次の入口をあとから見返せます。" : "Email registration makes it easier to revisit your saved results and next-step paths later."}</div>
-              </div>
-              <div className="mt-5 flex flex-wrap gap-3 text-sm">
-                <Link href="/open-testing" className="soft-link">
-                  {locale === "ja" ? "公開テストに戻る" : "Back to open testing"}
-                </Link>
-                {mode === "register" ? (
-                  <Link href={loginHref} className="soft-link">
-                    {locale === "ja" ? "すでにアカウントがある方はログイン" : "Already have an account? Log in"}
-                  </Link>
-                ) : (
-                  <Link href={registerHref} className="soft-link">
-                    {locale === "ja" ? "アカウントを作成する" : "Create an account"}
-                  </Link>
-                )}
-              </div>
+              {!isAdminLogin ? (
+                <>
+                  <div className="panel-sage mt-6 rounded-[1.5rem] px-5 py-5 text-sm leading-7">
+                    <div>{locale === "ja" ? "公開テストの続きや、相棒との返り道を落ち着いて残したい方のためのアカウントです。" : "This account keeps your open-testing progress and companion continuity available when you come back."}</div>
+                    <div className="mt-2">{locale === "ja" ? "メールで登録しておくと、結果や次の入口をあとから見返せます。" : "Email registration makes it easier to revisit your saved results and next-step paths later."}</div>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-3 text-sm">
+                    <Link href="/open-testing" className="soft-link">
+                      {locale === "ja" ? "公開テストに戻る" : "Back to open testing"}
+                    </Link>
+                    {mode === "register" ? (
+                      <Link href={loginHref} className="soft-link">
+                        {locale === "ja" ? "すでにアカウントがある方はログイン" : "Already have an account? Log in"}
+                      </Link>
+                    ) : (
+                      <Link href={registerHref} className="soft-link">
+                        {locale === "ja" ? "アカウントを作成する" : "Create an account"}
+                      </Link>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-6 rounded-[1.35rem] border border-[color:var(--line-soft)] bg-[rgba(255,253,249,0.82)] px-5 py-4 text-sm leading-7 text-[var(--muted)]">
+                  {locale === "ja"
+                    ? "公開テスト用の一般アカウント案内や LINE 継続導線はここでは表示していません。"
+                    : "Public onboarding and LINE continuity are intentionally hidden in administrator mode."}
+                </div>
+              )}
               {initialAccount && (
                 <div className="panel-sage mt-6 rounded-[2rem] px-6 py-6 text-sm leading-7">
                   {locale === "ja"
@@ -149,21 +171,27 @@ export default function AccountEntryForm({
               )}
             </div>
 
-            <div className="shell-card p-6 md:p-8">
-              <div className="mb-5 inline-flex gap-2 rounded-full border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.88)] p-1.5">
-                <Link href={loginHref} className={`rounded-full px-5 py-3 text-sm ${mode === "login" ? "bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,35,33,0.14)]" : "text-[var(--muted)]"}`}>
-                  {locale === "ja" ? "ログイン" : "Login"}
-                </Link>
-                <Link href={registerHref} className={`rounded-full px-5 py-3 text-sm ${mode === "register" ? "bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,35,33,0.14)]" : "text-[var(--muted)]"}`}>
-                  {locale === "ja" ? "新規登録" : "Register"}
-                </Link>
-              </div>
+            <div className={`shell-card p-6 md:p-8 ${isAdminLogin ? "max-w-2xl" : ""}`}>
+              {isAdminLogin ? (
+                <div className="mb-5 inline-flex rounded-full border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.92)] px-4 py-2 text-sm font-semibold text-[var(--text)]">
+                  {locale === "ja" ? "管理画面へログイン" : "Administrator access"}
+                </div>
+              ) : (
+                <div className="mb-5 inline-flex gap-2 rounded-full border border-[color:var(--line-soft)] bg-[rgba(252,250,245,0.88)] p-1.5">
+                  <Link href={loginHref} className={`rounded-full px-5 py-3 text-sm ${mode === "login" ? "bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,35,33,0.14)]" : "text-[var(--muted)]"}`}>
+                    {locale === "ja" ? "ログイン" : "Login"}
+                  </Link>
+                  <Link href={registerHref} className={`rounded-full px-5 py-3 text-sm ${mode === "register" ? "bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,35,33,0.14)]" : "text-[var(--muted)]"}`}>
+                    {locale === "ja" ? "新規登録" : "Register"}
+                  </Link>
+                </div>
+              )}
 
               <form className="grid gap-5" action={endpoint} method="post" onSubmit={handleSubmit}>
                 <input type="hidden" name="next" value={nextPath} />
                 <input type="hidden" name="returnTo" value={mode === "login" ? loginBaseHref : registerBaseHref} />
                 {mode === "register" && <input type="hidden" name="role" value="self" />}
-                {!initialAccount && (
+                {!initialAccount && !isAdminLogin && (
                   <div className="rounded-[1.3rem] bg-[rgba(255,253,249,0.78)] px-5 py-4 text-sm leading-7 text-[var(--muted)]">
                     <div className="font-medium text-[var(--text)]">{locale === "ja" ? "メールアドレスで続ける" : "Continue with email"}</div>
                     <p className="mt-2">
@@ -282,14 +310,16 @@ export default function AccountEntryForm({
                       : "Submitting..."
                     : mode === "login"
                     ? locale === "ja"
-                      ? "ログインする"
+                      ? isAdminLogin
+                        ? "管理画面へログイン"
+                        : "ログインする"
                       : "Log in"
                     : locale === "ja"
                       ? "登録する"
                       : "Create account"}
                 </button>
 
-                {!initialAccount && (
+                {!initialAccount && !isAdminLogin && (
                   <div className="rounded-[1.2rem] border border-[color:var(--line-soft)] bg-[rgba(243,250,246,0.55)] px-5 py-4 text-sm leading-7 text-[var(--muted)]">
                     <div className="font-medium text-[var(--text)]">{locale === "ja" ? "LINEで続ける場合" : "If you prefer LINE"}</div>
                     <p className="mt-2">
@@ -305,6 +335,13 @@ export default function AccountEntryForm({
                     </div>
                   </div>
                 )}
+                {isAdminLogin ? (
+                  <p className="text-xs leading-6 text-[var(--muted)]">
+                    {locale === "ja"
+                      ? "管理者登録はここでは行いません。アクセス権のあるメールアドレスでログインしてください。"
+                      : "Administrator registration is not self-service on this screen."}
+                  </p>
+                ) : null}
               </form>
             </div>
           </div>
