@@ -20,11 +20,11 @@ export const PLATFORM_PILLARS = [
     body: "反応や声を残し、軽く参加しながら次の改善につなげられます。",
   },
   {
-    title: "Yorisou Design",
+    title: "よりそうデザイン",
     body: "小さなアイデアや試作品の関心を育てる、コンセプト領域です。",
   },
   {
-    title: "マーケット",
+    title: "マッチング",
     body: "将来のおすすめやマッチングの可能性を、まだ販売前の段階で整理します。",
   },
   {
@@ -76,8 +76,8 @@ export const HOME_PRODUCT_LOOP = [
     body: "反応や声を残し、次の改善につなげます。",
   },
   {
-    title: "Design / マーケット",
-    body: "将来の試作品やマッチングの可能性を育てます。",
+    title: "よりそうデザイン / マッチング",
+    body: "将来の試作品や、人と選択肢をつなぐ可能性を育てます。",
   },
   {
     title: "LINEで戻る",
@@ -136,17 +136,17 @@ export const HOME_PLATFORM_BRANCHES = [
     status: "参加は任意",
   },
   {
-    title: "Yorisou Design",
+    title: "よりそうデザイン",
     body: "まだ販売ではなく、アイデアや試作品の可能性を育てる場所です。",
     href: "/#yorisou-design",
-    label: "Designを見る",
+    label: "よりそうデザインを見る",
     status: "コンセプト検証",
   },
   {
-    title: "マーケット",
+    title: "マッチング",
     body: "将来のおすすめやマッチングの可能性を、準備中の領域として整理します。",
     href: "/#yorisou-market",
-    label: "マーケットを見る",
+    label: "マッチングを見る",
     status: "準備中",
   },
 ] as const;

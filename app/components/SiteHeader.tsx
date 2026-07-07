@@ -11,8 +11,8 @@ const primaryNavJa = [
   { href: "/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low", label: "レポート" },
   { href: "/recommendations?resultId=EM-AK&overlayId=balancing&confidence=low", label: "おすすめ" },
   { href: "/#yorisou-community", label: "コミュニティ" },
-  { href: "/#yorisou-design", label: "Yorisou Design" },
-  { href: "/#yorisou-market", label: "マーケット" },
+  { href: "/#yorisou-design", label: "よりそうデザイン" },
+  { href: "/#yorisou-market", label: "マッチング" },
 ];
 
 const primaryNavEn = [

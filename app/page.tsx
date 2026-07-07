@@ -21,7 +21,7 @@ import {
 export const metadata: Metadata = {
   title: "Yorisou | 今の状態を理解し、次の選択肢につなげる",
   description:
-    "Yorisouは、今の状態を理解し、チェック、結果、レポート、おすすめ、コミュニティ、Yorisou Design、マーケット、LINE継続へつなげる日本語ファーストのプラットフォームです。",
+    "Yorisouは、今の状態を理解し、チェック、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチング、LINE継続へつなげる日本語ファーストのプラットフォームです。",
 };
 
 export default function HomePage() {
@@ -42,7 +42,7 @@ export default function HomePage() {
                 レポート、おすすめへつなぐ場所です。
               </h1>
               <p className="frontstage-hero-lead max-w-[37rem]">
-                チェック、結果、レポート、おすすめ、コミュニティ、Yorisou Design、マーケット、LINE継続までを、ひとつの流れで見通せるように整えています。
+                チェック、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチング、LINE継続までを、ひとつの流れで見通せるように整えています。
               </p>
               <div className="frontstage-hero-actions">
                 <Link href="/open-testing" className="btn btn-primary">
@@ -54,13 +54,13 @@ export default function HomePage() {
               </div>
               <div className="surface-link-row mt-4 text-[13px] font-semibold text-[#315F50]">
                 <Link href="/#yorisou-design" className="hover:underline">
-                  Yorisou Designを見る
+                  よりそうデザインを見る
                 </Link>
                 <Link href="/#yorisou-community" className="hover:underline">
                   コミュニティを見る
                 </Link>
                 <Link href="/#yorisou-market" className="hover:underline">
-                  マーケットを見る
+                  マッチングを見る
                 </Link>
               </div>
               <div className="frontstage-capability-grid mt-5">
@@ -77,7 +77,7 @@ export default function HomePage() {
               <div>
                 <p className="surface-meta">プラットフォームの見取り図</p>
                 <p className="mt-2 text-[13px] leading-7 text-[#6F625C]">
-                  まずはチェックから始め、結果、レポート、おすすめ、コミュニティ、Design、マーケットへと静かにつながります。
+                  まずはチェックから始め、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチングへと静かにつながります。
                 </p>
               </div>
               <div className="frontstage-mini-stack">
@@ -119,7 +119,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-[52rem]">
           <OpenTestingNotice
             title="いま使える核"
-            body="いまは、チェック、結果、詳しいレポート、LINE保存、感想送信、おすすめの入口までを実際に試せます。コミュニティ、Yorisou Design、マーケットはコンセプトや関心の段階として育てています。"
+            body="いまは、チェック、結果、詳しいレポート、LINE保存、感想送信、おすすめの入口までを実際に試せます。コミュニティ、よりそうデザイン、マッチングはコンセプトや関心の段階として育てています。"
             primaryHref="/contact?topic=open-testing"
             primaryLabel="感想や不具合を送る"
             secondaryHref="/open-testing"
@@ -241,7 +241,7 @@ export default function HomePage() {
 
       <MvpSection
         id="yorisou-recommendations"
-        title="おすすめ・リソースは、次の選択肢の層です。"
+        title="おすすめは、次の選択肢の層です。"
         lead="診断結果やフィードバックをもとに、今の状態に合いそうな読みもの、道具、サービス、商品候補を少しずつ提案していきます。"
         className="!py-6 md:!py-7"
       >
@@ -296,7 +296,7 @@ export default function HomePage() {
 
       <MvpSection
         id="yorisou-market"
-        title="マーケットは、将来の選択肢やマッチングを育てる層です。"
+        title="マッチングは、将来の選択肢やつながりを育てる層です。"
         lead="まだ販売や注文の場所ではなく、どんな提案やつながりが役に立ちそうかを、関心ベースで整理していく準備中の領域です。"
         className="!py-6 md:!py-7"
       >

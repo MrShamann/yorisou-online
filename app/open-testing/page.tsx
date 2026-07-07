@@ -110,11 +110,11 @@ export default function OpenTestingPage() {
         <div className="surface-panel-soft mt-3">
           <p className="surface-meta">この流れのあと</p>
           <p className="mt-2 text-[13px] leading-7 text-[#6F625C]">
-            公開テストは、結果を読むだけで終わりません。あとで見返す、詳しいレポートへ進む、おすすめや別の入口を見る、コミュニティやDesign/マーケットの関心へつなぐ、といった次の行動にもつながります。
+            公開テストは、結果を読むだけで終わりません。あとで見返す、詳しいレポートへ進む、おすすめや別の入口を見る、コミュニティやよりそうデザイン、マッチングの関心へつなぐ、といった次の行動にもつながります。
           </p>
         </div>
         <div className="grid gap-3 md:grid-cols-4">
-          {["レポート", "おすすめ", "コミュニティ", "Yorisou Design / マーケット"].map((item) => (
+          {["レポート", "おすすめ", "コミュニティ", "よりそうデザイン / マッチング"].map((item) => (
             <div
               key={item}
               className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/80 px-4 py-4 text-[13px] font-semibold text-[#173B35]"

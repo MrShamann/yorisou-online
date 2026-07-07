@@ -23,7 +23,7 @@ export default function TestsPage() {
                 どの入口から始めるか。
               </h1>
               <p className="frontstage-hero-lead max-w-[39rem]">
-                Yorisouは、今の状態に近い入口から始めて、結果、レポート、おすすめ、コミュニティ、Yorisou Design、マーケットの次の層へつなげる流れを整えています。
+                Yorisouは、今の状態に近い入口から始めて、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチングの次の層へつなげる流れを整えています。
               </p>
               <div className="frontstage-hero-actions">
                 <RecommendationSignalLink
@@ -85,7 +85,7 @@ export default function TestsPage() {
                 "レポートへ進む",
                 "おすすめを見る",
                 "コミュニティに反応を残す",
-                "Design / マーケットの関心を見る",
+                "よりそうデザイン / マッチングの関心を見る",
               ].map((item) => (
                 <div
                   key={item}
@@ -185,7 +185,7 @@ export default function TestsPage() {
               <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
                 <p className="text-[14px] font-semibold text-[#173B35]">次の提案</p>
                 <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  レポート、おすすめ、コミュニティ、Yorisou Design、マーケットの入口へ、テーマごとに無理なくつながります。
+                  レポート、おすすめ、コミュニティ、よりそうデザイン、マッチングの入口へ、テーマごとに無理なくつながります。
                 </p>
               </div>
             </div>
