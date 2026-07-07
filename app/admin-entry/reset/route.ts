@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { ACCOUNT_COOKIE, clearViewerSession, SESSION_COOKIE } from "@/lib/server/yorisouAuth";
+import { normalizeSafeInternalPath } from "@/lib/server/foundation/safeRedirect";
 import { LINE_AUTH_COOKIE } from "@/lib/server/yorisouLine";
 
 function clearCookie(response: NextResponse, name: string) {
@@ -18,7 +19,9 @@ export async function POST(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const locale = searchParams.get("locale");
-  const loginHref = locale === "en" ? "/en/login" : "/login";
+  const safeNext = normalizeSafeInternalPath(searchParams.get("next"), "/dashboard/open-testing");
+  const loginBase = locale === "en" ? "/en/login" : "/login";
+  const loginHref = `${loginBase}?next=${encodeURIComponent(safeNext)}`;
   const response = NextResponse.redirect(new URL(loginHref, request.url), { status: 303 });
 
   clearCookie(response, SESSION_COOKIE);

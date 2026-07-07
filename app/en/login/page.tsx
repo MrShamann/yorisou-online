@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import AccountEntryForm from "@/app/components/AccountEntryForm";
+import { normalizeSafeInternalPath } from "@/lib/server/foundation/safeRedirect";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 
 export const metadata: Metadata = {
@@ -54,13 +55,16 @@ function getNoticeMessage(code: string | undefined) {
 export default async function LoginPageEn({
   searchParams,
 }: {
-  searchParams?: Promise<{ error?: string; notice?: string; line_error?: string; line_status?: string }>;
+  searchParams?: Promise<{ error?: string; notice?: string; line_error?: string; line_status?: string; next?: string }>;
 }) {
   const viewer = await getViewerContext();
-  if (viewer.session && viewer.account) {
-    redirect("/en/support");
-  }
   const params = (await searchParams) || {};
+  const nextPath = normalizeSafeInternalPath(params.next, "/en/support");
+
+  if (viewer.session && viewer.account) {
+    redirect(nextPath);
+  }
+
   return (
     <AccountEntryForm
       mode="login"
@@ -68,6 +72,7 @@ export default async function LoginPageEn({
       initialAccount={viewer.session ? viewer.account : null}
       initialError={getErrorMessage(params.line_error || params.error)}
       initialNotice={getNoticeMessage(params.notice || (params.line_status === "connected" ? "line_connected" : undefined))}
+      nextPath={nextPath}
     />
   );
 }

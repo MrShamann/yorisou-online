@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { buildSafeInternalHref } from "@/lib/server/foundation/safeRedirect";
+
 export const metadata: Metadata = {
   title: "Founder Access Entry | Yorisou",
   description: "Founder dashboard に入る前に、現在のログイン状態をリセットしてメールログインへ進むための入口です。",
 };
 
 export default function AdminEntryPage() {
+  const dashboardPath = "/dashboard/open-testing";
+  const loginHref = buildSafeInternalHref("/login", dashboardPath);
+  const registerHref = buildSafeInternalHref("/register", dashboardPath);
+  const resetAction = `/admin-entry/reset?next=${encodeURIComponent(dashboardPath)}`;
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8f5ef_0%,#efe8db_100%)] text-[var(--text)]">
       <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-4 py-6 md:px-6 md:py-8">
@@ -21,20 +28,20 @@ export default function AdminEntryPage() {
             現在の Yorisou セッションをリセットしてから、メールログインへ進むための入口です。
           </p>
 
-          <form action="/admin-entry/reset" method="post" className="mt-7">
+          <form action={resetAction} method="post" className="mt-7">
             <button type="submit" className="btn btn-primary">
               現在のログイン状態をリセットして、ログインへ進む
             </button>
           </form>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/login" className="btn btn-secondary">
+            <Link href={loginHref} className="btn btn-secondary">
               ログインする
             </Link>
-            <Link href="/register" className="btn btn-secondary">
+            <Link href={registerHref} className="btn btn-secondary">
               アカウントを作成する
             </Link>
-            <Link href="/dashboard/open-testing" className="btn btn-secondary">
+            <Link href={dashboardPath} className="btn btn-secondary">
               Founder dashboard を開く
             </Link>
             <Link href="/support" className="btn btn-secondary">

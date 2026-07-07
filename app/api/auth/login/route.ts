@@ -13,6 +13,7 @@ import {
   withSessionPrincipalLandingShadow,
 } from "@/lib/server/yorisouAuth";
 import { inferLocaleFromPaths } from "@/app/api/auth/redirectLocale";
+import { normalizeSafeInternalPath } from "@/lib/server/foundation/safeRedirect";
 
 type LoginPayload = {
   email?: string;
@@ -20,13 +21,6 @@ type LoginPayload = {
   next?: string;
   returnTo?: string;
 };
-
-function safeRedirectPath(value: string | undefined, fallback: string) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return fallback;
-  }
-  return value;
-}
 
 function buildRedirectUrl(request: Request, path: string) {
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -70,8 +64,8 @@ export async function POST(request: Request) {
     const locale = inferLocaleFromPaths(payload.returnTo, payload.next);
     const defaultSuccessPath = locale === "en" ? "/en/support" : "/support";
     const defaultReturnPath = locale === "en" ? "/en/login" : "/login";
-    const successPath = safeRedirectPath(payload.next, defaultSuccessPath);
-    returnPath = safeRedirectPath(payload.returnTo, defaultReturnPath);
+    const successPath = normalizeSafeInternalPath(payload.next, defaultSuccessPath);
+    returnPath = normalizeSafeInternalPath(payload.returnTo, defaultReturnPath);
 
     if (!payload.email?.trim() || !payload.password) {
       if (isDocumentRequest) {
