@@ -1,5 +1,6 @@
 import OpenTestingControlRoom from "./OpenTestingControlRoom";
 
+import { getReleaseMarker } from "@/lib/releaseMarker";
 import { requireAdminViewer } from "@/lib/server/foundation/access";
 import { evaluateOpenTestingFollowUps, getOpenTestingDashboardSnapshot } from "@/lib/server/relationship-intelligence/service";
 
@@ -19,19 +20,12 @@ export default async function OpenTestingDashboardPage() {
     getOpenTestingDashboardSnapshot(),
     evaluateOpenTestingFollowUps(),
   ]);
+  const releaseMarker = getReleaseMarker();
 
   return (
-    <main className="min-h-screen bg-[#F5F1E8] px-6 py-10 text-[#3B2F2F]">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <header className="space-y-3">
-          <p className="text-sm font-semibold tracking-[0.14em] text-[#6E5D4D]">INTERNAL DASHBOARD</p>
-          <h1 className="text-3xl font-light">Open Testing Operations Control Room</h1>
-          <p className="max-w-3xl text-sm text-[#6E5D4D]">
-            Founder-only view for real-user open-testing funnel health, durable feedback review, relationship inspection, and safe queue-first follow-up operations.
-          </p>
-        </header>
-
-        <OpenTestingControlRoom dashboard={dashboard} followUps={followUps} />
+    <main className="min-h-[100dvh] bg-[#F6F3EC] px-4 py-6 text-[#2F2926] md:px-6 md:py-8">
+      <div className="mx-auto max-w-7xl">
+        <OpenTestingControlRoom dashboard={dashboard} followUps={followUps} releaseMarker={releaseMarker} />
       </div>
     </main>
   );

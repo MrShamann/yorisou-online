@@ -15,12 +15,14 @@ export default function AccountEntryForm({
   initialAccount,
   initialError,
   initialNotice,
+  nextPath,
 }: {
   mode: Mode;
   locale: "ja" | "en";
   initialAccount: AccountRecord | null;
   initialError?: string | null;
   initialNotice?: string | null;
+  nextPath: string;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,8 +34,11 @@ export default function AccountEntryForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const supportHref = locale === "ja" ? "/support" : "/en/support";
-  const loginHref = locale === "ja" ? "/login" : "/en/login";
-  const registerHref = locale === "ja" ? "/register" : "/en/register";
+  const loginBaseHref = locale === "ja" ? "/login" : "/en/login";
+  const registerBaseHref = locale === "ja" ? "/register" : "/en/register";
+  const nextParam = `next=${encodeURIComponent(nextPath)}`;
+  const loginHref = `${loginBaseHref}?${nextParam}`;
+  const registerHref = `${registerBaseHref}?${nextParam}`;
   const forgotPasswordHref = locale === "ja" ? "/forgot-password" : "/en/forgot-password";
   const lineLoginHref =
     locale === "ja"
@@ -155,8 +160,8 @@ export default function AccountEntryForm({
               </div>
 
               <form className="grid gap-5" action={endpoint} method="post" onSubmit={handleSubmit}>
-                <input type="hidden" name="next" value={supportHref} />
-                <input type="hidden" name="returnTo" value={mode === "login" ? loginHref : registerHref} />
+                <input type="hidden" name="next" value={nextPath} />
+                <input type="hidden" name="returnTo" value={mode === "login" ? loginBaseHref : registerBaseHref} />
                 {mode === "register" && <input type="hidden" name="role" value="self" />}
                 {!initialAccount && (
                   <div className="rounded-[1.3rem] bg-[rgba(255,253,249,0.78)] px-5 py-4 text-sm leading-7 text-[var(--muted)]">
