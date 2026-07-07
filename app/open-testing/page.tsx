@@ -44,39 +44,35 @@ export default function OpenTestingPage() {
         <div className="container">
           <div className="frontstage-hero-inner">
             <div className="frontstage-hero-copy">
-            <p className="service-kicker">公開テストのご案内</p>
-            <div className="mt-3 inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/84 px-3 py-1 text-[11px] font-semibold text-[#49615B]">
-              公開テスト中
-            </div>
-            <h1 className="display-serif frontstage-hero-title mt-4 max-w-[12em]">
-              はじめての方が、
-              <br className="hidden sm:block" />
-              結果まで迷わず進めるための入口です。
-            </h1>
-            <p className="frontstage-hero-lead max-w-[38rem]">
-              120問のチェックから、結果、詳しいレポート、保存、感想送信まで、現在のYorisouで試せる流れをまとめています。
-            </p>
-            <div className="frontstage-hero-actions">
-              <OpenTestingTrackingLink
-                href="/check-in?source=open-testing&entry_source=open-testing"
-                tracking={{ eventName: "open_testing_start_clicked", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
-                className="btn btn-primary"
-              >
-                公開テストを始める
-              </OpenTestingTrackingLink>
-              <OpenTestingTrackingLink
-                href="/line/mini-app"
-                tracking={{ eventName: "line_entry_opened", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
-                className="btn btn-secondary"
-              >
-                LINEから始める
-              </OpenTestingTrackingLink>
-            </div>
+              <p className="service-kicker">公開テストのご案内</p>
+              <div className="mt-3 inline-flex rounded-full border border-[rgba(23,59,53,0.12)] bg-white/84 px-3 py-1 text-[11px] font-semibold text-[#49615B]">
+                公開テスト中
+              </div>
+              <h1 className="display-serif frontstage-hero-title mt-4 max-w-[12em]">
+                いまの状態を見て、
+                <br className="hidden sm:block" />
+                次の入口まで試せる流れです。
+              </h1>
+              <p className="frontstage-hero-lead max-w-[38rem]">
+                120問のチェックから、結果、詳しいレポート、保存、感想送信まで、現在のYorisouで使える流れをまとめています。迷ったら、まずここから始めれば大丈夫です。
+              </p>
+              <div className="frontstage-hero-actions">
+                <OpenTestingTrackingLink
+                  href="/check-in?source=open-testing&entry_source=open-testing"
+                  tracking={{ eventName: "open_testing_start_clicked", route: "/open-testing", source: "open_testing_page", entrySource: "open-testing" }}
+                  className="btn btn-primary"
+                >
+                  公開テストを始める
+                </OpenTestingTrackingLink>
+                <Link href="/tests" className="btn btn-secondary">
+                  別の入口を選ぶ
+                </Link>
+              </div>
             </div>
             <div className="frontstage-note">
-            <p>
-              LINEから始めると、結果の見返しや関連するお知らせをLINEで受け取れる状態が有効になることがあります。不要な場合はいつでも停止できます。
-            </p>
+              <p>
+                結果をあとで見返したい場合は、途中でLINE導線も選べます。これは医療や心理診断ではなく、今の状態を見直し、次の入口を見つけやすくするための公開テストです。
+              </p>
             </div>
           </div>
         </div>
@@ -97,7 +93,7 @@ export default function OpenTestingPage() {
       <MvpSection
         eyebrow="このページでわかること"
         title="公開テストで進められる流れ。"
-        lead="最初の利用者がどこまで進めるのかを、先に短くまとめています。"
+        lead="最初に何をして、そのあと何が見えてくるのかを、先に短くまとめています。"
         className="!py-8 md:!py-10"
       >
         <div className="grid gap-3 md:grid-cols-2">
@@ -111,12 +107,18 @@ export default function OpenTestingPage() {
             </MvpCard>
           ))}
         </div>
+        <div className="surface-panel-soft mt-3">
+          <p className="surface-meta">この流れのあと</p>
+          <p className="mt-2 text-[13px] leading-7 text-[#6F625C]">
+            公開テストは、結果を読むだけで終わりません。あとで見返す、詳しいレポートへ進む、別の入口やおすすめを選ぶ、といった次の行動にもつながります。
+          </p>
+        </div>
       </MvpSection>
 
       <MvpSection
         eyebrow="公開テストの前提"
         title="先に知っておいてほしいこと。"
-        lead="実際に試す前に、公開テストとしての位置づけと感想の送り先を明確にしています。"
+        lead="実際に試す前に、公開テストとしての位置づけと、どこへつながるかを明確にしています。"
         className="!py-8 md:!pb-14"
       >
         <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
@@ -132,6 +134,9 @@ export default function OpenTestingPage() {
             <div className="surface-link-row flex-col !gap-2.5">
               <Link href="/contact?topic=open-testing" className="text-[14px] font-semibold text-[#315F50] hover:underline">
                 公開テストの感想・不具合報告を送る
+              </Link>
+              <Link href="/tests" className="text-[14px] font-semibold text-[#315F50] hover:underline">
+                ほかの入口を見る
               </Link>
               <Link
                 href="/result?resultId=EM-AK&overlayId=balancing&confidence=low"
