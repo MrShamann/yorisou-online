@@ -249,9 +249,9 @@ export default function HomePage() {
 
       <MvpSection
         id="yorisou-local-life"
-        eyebrow="暮らしの困りごとも、少しずつ見える形に。"
-        title="言葉にしにくい生活の困りごとも、関心の入口から。"
-        lead="買い物、移動、家族のサポート、地域のつながり。日々の中で言葉にしにくい困りごとも、Yorisouでは関心や相談の入口として受け止め、必要な情報や選択肢を探すきっかけにしていきます。"
+        eyebrow="暮らしの小さな揺れも、入口から。"
+        title="言葉にしにくい揺れを、次の一歩のヒントに。"
+        lead="生活リズム、気持ちの戻り方、人との距離、小さな行動。まだ大きな悩みになる前の揺れも、Yorisouでは今の関心を整理する入口として受け止めます。"
         className="!py-7 md:!pb-14"
       >
         <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
@@ -270,13 +270,13 @@ export default function HomePage() {
           </MvpCard>
           <MvpCard className="space-y-3 bg-white/94">
             <p className="text-[14px] leading-7 text-[#5F5750]">
-              いまは、暮らしの困りごとを直接提供するサービスではなく、関心や相談の入口として受け止めています。地域の生活シグナルや、生活の声を次の取り組みにつなげる材料として整理していく段階です。
+              いまは、暮らしを直接引き受けるサービスではなく、今の関心や戻り方を整理する入口として扱っています。受け取った声は、次の案内や小さな改善につなげる材料として慎重に見ています。
             </p>
             <Link
               href="/contact?topic=open-testing"
               className="btn btn-secondary"
             >
-              関心や相談を送る
+              感想や関心を送る
             </Link>
           </MvpCard>
         </div>

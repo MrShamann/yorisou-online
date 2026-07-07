@@ -312,11 +312,11 @@ export function getNameImpressionResult(answerMap: Record<string, string>) {
 }
 
 export const LOCAL_LIFE_THEMES = [
-  "移動の困りごと",
-  "日々の買い物・通院",
-  "家族サポートの負担",
-  "地域とのつながり",
-  "支え合いアイデアへの関心",
+  "生活リズムの立て直し",
+  "気持ちの戻し方",
+  "人との距離の整え方",
+  "小さく動ける次の一歩",
+  "続き方のヒントへの関心",
 ] as const;
 
 export type LocalLifeTheme = (typeof LOCAL_LIFE_THEMES)[number];
@@ -325,13 +325,13 @@ export const LOCAL_LIFE_QUESTIONS: readonly LightweightQuestion[] = [
   {
     id: "LL_Q1",
     section: "今の関心を見る",
-    prompt: "今、いちばん近い困りごとはどれですか？",
+    prompt: "今、いちばん近い関心はどれですか？",
     options: [
-      { id: "a", label: "移動しづらさ", tags: ["mobility"] },
-      { id: "b", label: "買い物や通院の動きにくさ", tags: ["shopping-medical"] },
-      { id: "c", label: "家族を支える負担", tags: ["family-support"] },
-      { id: "d", label: "地域とのつながりの薄さ", tags: ["community-link"] },
-      { id: "e", label: "支え合いの新しい案に関心がある", tags: ["mutual-support"] },
+      { id: "a", label: "生活リズムを立て直したい", tags: ["rhythm-reset"] },
+      { id: "b", label: "気持ちの戻し方を知りたい", tags: ["emotional-recovery"] },
+      { id: "c", label: "人との距離を整えたい", tags: ["distance-balance"] },
+      { id: "d", label: "小さく動ける次の一歩がほしい", tags: ["small-step"] },
+      { id: "e", label: "あとで戻りやすい続き方に関心がある", tags: ["continuation-clue"] },
     ],
   },
   {
@@ -371,11 +371,11 @@ export const LOCAL_LIFE_QUESTIONS: readonly LightweightQuestion[] = [
 
 export function getLocalLifeAcknowledgement(answerMap: Record<string, string>) {
   const themeMap: Record<string, LocalLifeTheme> = {
-    mobility: "移動の困りごと",
-    "shopping-medical": "日々の買い物・通院",
-    "family-support": "家族サポートの負担",
-    "community-link": "地域とのつながり",
-    "mutual-support": "支え合いアイデアへの関心",
+    "rhythm-reset": "生活リズムの立て直し",
+    "emotional-recovery": "気持ちの戻し方",
+    "distance-balance": "人との距離の整え方",
+    "small-step": "小さく動ける次の一歩",
+    "continuation-clue": "続き方のヒントへの関心",
   };
   const question1 = LOCAL_LIFE_QUESTIONS[0];
   const selectedThemeOption = question1.options.find((entry) => entry.id === answerMap[question1.id]);
@@ -410,11 +410,11 @@ export function getLocalLifeAcknowledgement(answerMap: Record<string, string>) {
     result: {
       id: primaryTheme,
       title: primaryTheme,
-      summary: "今の関心テーマを受け止めるための確認結果です。",
+      summary: "今の暮らし方や戻り方に近い入口を整理した確認結果です。",
       detail: `${primaryTheme}に近い関心が見えています。${supportCopy[strongest]}`,
       bullets: [
-        "これはサービス提供の約束ではありません",
-        "生活の声や関心を次の取り組みにつなげる入口です",
+        "これは専門的な支援やサービス提供の約束ではありません",
+        "今の関心を次の案内や改善につなげる入口です",
         "必要ならCommunityやDesignの関心導線にもつなげられます",
       ],
       recommendationTags: [primaryTheme, strongest, "local-life-signal"],
@@ -430,5 +430,5 @@ export const TEST_THEME_BY_ID: Record<YorisouTestId, string> = {
   "love-distance": "恋愛の距離感",
   "work-rhythm": "仕事のリズム",
   "name-impression": "名前の印象",
-  "local-life": "暮らしの困りごと",
+  "local-life": "暮らしの関心",
 };

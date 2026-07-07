@@ -72,7 +72,7 @@ export async function runRecommendationOrchestratorValidationTest() {
 
   const localLifePackage = buildAutonomousRecommendationPackage({
     testId: "local-life",
-    resultId: "移動の困りごと",
+    resultId: "生活リズムの立て直し",
     source: "local_life_flow",
     pagePath: "/tests/local-life",
     mode: "local_life_inquiry",
@@ -188,7 +188,7 @@ export async function runRecommendationOrchestratorValidationTest() {
         source: "local_life_flow",
         signalType: "test_completed",
         testId: "local-life",
-        resultId: "移動の困りごと",
+        resultId: "生活リズムの立て直し",
         pagePath: "/tests/local-life",
       }),
       buildSignal({

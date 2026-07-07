@@ -104,11 +104,11 @@ export const COMMUNITY_CARDS = [
 ] as const;
 
 export const LOCAL_LIFE_THEMES = [
-  "移動しづらさ",
-  "買い物や通院の困りごと",
-  "家族を支える人の負担",
-  "地域のつながり",
-  "若い世代と高齢者の支え合いアイデア",
+  "生活リズムの立て直し",
+  "気持ちの戻し方",
+  "人との距離の整え方",
+  "小さく動ける次の一歩",
+  "続き方のヒントへの関心",
 ] as const;
 
 export const DIAGNOSTIC_ENTRY_CARDS = [

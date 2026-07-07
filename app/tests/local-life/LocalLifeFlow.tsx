@@ -65,7 +65,7 @@ export default function LocalLifeFlow() {
         <div className="container py-10 md:py-14">
           <div className="mx-auto max-w-[42rem] space-y-6">
             <div className="space-y-2">
-              <p className="service-kicker">暮らしの困りごとチェック</p>
+              <p className="service-kicker">暮らしの関心チェック</p>
               <h1 className="display-serif text-[1.9rem] leading-[1.24] text-[#2F2A28] md:text-[2.5rem]">
                 今の関心: 「{result.title}」
               </h1>
@@ -103,7 +103,7 @@ export default function LocalLifeFlow() {
 
             <div className="surface-panel-soft !bg-white/70">
               <p className="text-[12px] leading-7 text-[#7A7068]">
-                ここは、暮らしの困りごとを直接引き受けるサービスではありません。生活の声や関心を、次の取り組みや案内の材料として整理する入口です。
+                ここは、暮らしを直接引き受けるサービスではありません。今の関心や戻り方を、次の案内や改善の材料として整理する入口です。
               </p>
             </div>
 
@@ -132,13 +132,13 @@ export default function LocalLifeFlow() {
           {phase === "intro" ? (
             <div className="space-y-6">
               <div className="space-y-3">
-                <p className="service-kicker">暮らしの困りごとチェック</p>
+                <p className="service-kicker">暮らしの関心チェック</p>
                 <h1 className="display-serif text-[2rem] leading-[1.22] text-[#2F2A28] md:text-[2.6rem]">
-                  言葉にしにくい困りごとを、<br />
-                  <span className="text-[#173B35]">関心の入口として整理する。</span>
+                  言葉にしにくい揺れを、<br />
+                  <span className="text-[#173B35]">今の関心として整理する。</span>
                 </h1>
                 <p className="text-[15px] leading-8 text-[#5F5750]">
-                  暮らし方、回復の仕方、身近なつながり、次に見たいテーマ。今の関心に近いものを選ぶと、次の入口を静かに整理できます。
+                  生活リズム、気持ちの戻り方、人との距離、小さな行動。今の関心に近いものを選ぶと、次の入口を静かに整理できます。
                 </p>
               </div>
               <div className="surface-panel space-y-3 bg-white/92">

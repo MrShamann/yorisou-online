@@ -99,7 +99,7 @@ export const YORISOU_RECOMMENDATION_ACTIONS: Record<RecommendationActionId, Reco
   "local-life-signal-entry": {
     id: "local-life-signal-entry",
     title: "暮らしの声を送る",
-    description: "生活の困りごとや関心を短く整理して送る入口です。",
+    description: "今の関心や戻り方を短く整理して送る入口です。",
     actionType: "send_local_life_signal",
     productLayer: "local_life",
     riskBoundary: "care_welfare_mobility_boundary",
@@ -145,8 +145,8 @@ export const YORISOU_RECOMMENDATION_ACTIONS: Record<RecommendationActionId, Reco
   },
   "test-local-life": {
     id: "test-local-life",
-    title: "暮らしの困りごとを整理する",
-    description: "生活の声や地域の困りごとを整理する入口です。",
+    title: "暮らしの関心を整理する",
+    description: "生活リズムや人との距離、小さな次の一歩を整理する入口です。",
     actionType: "start_related_test",
     productLayer: "local_life",
     riskBoundary: "care_welfare_mobility_boundary",
