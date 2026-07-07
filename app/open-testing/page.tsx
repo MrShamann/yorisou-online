@@ -54,7 +54,7 @@ export default function OpenTestingPage() {
                 次の入口まで試せる流れです。
               </h1>
               <p className="frontstage-hero-lead max-w-[38rem]">
-                120問のチェックから、結果、詳しいレポート、保存、感想送信まで、現在のYorisouで使える流れをまとめています。迷ったら、まずここから始めれば大丈夫です。
+                120問のチェックから、結果、詳しいレポート、保存、感想送信、おすすめの入口まで、現在のYorisouで使える流れをまとめています。迷ったら、まずここから始めれば大丈夫です。
               </p>
               <div className="frontstage-hero-actions">
                 <OpenTestingTrackingLink
@@ -71,7 +71,7 @@ export default function OpenTestingPage() {
             </div>
             <div className="frontstage-note">
               <p>
-                結果をあとで見返したい場合は、途中でLINE導線も選べます。これは医療や心理診断ではなく、今の状態を見直し、次の入口を見つけやすくするための公開テストです。
+                結果をあとで見返したい場合は、途中でLINE導線も選べます。これは医療や心理診断ではなく、今の状態を見直し、レポートやおすすめ、次の入口につなげるための公開テストです。
               </p>
             </div>
           </div>
@@ -110,8 +110,18 @@ export default function OpenTestingPage() {
         <div className="surface-panel-soft mt-3">
           <p className="surface-meta">この流れのあと</p>
           <p className="mt-2 text-[13px] leading-7 text-[#6F625C]">
-            公開テストは、結果を読むだけで終わりません。あとで見返す、詳しいレポートへ進む、別の入口やおすすめを選ぶ、といった次の行動にもつながります。
+            公開テストは、結果を読むだけで終わりません。あとで見返す、詳しいレポートへ進む、おすすめや別の入口を見る、コミュニティやDesign/マーケットの関心へつなぐ、といった次の行動にもつながります。
           </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-4">
+          {["レポート", "おすすめ", "コミュニティ", "Yorisou Design / マーケット"].map((item) => (
+            <div
+              key={item}
+              className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/80 px-4 py-4 text-[13px] font-semibold text-[#173B35]"
+            >
+              {item}
+            </div>
+          ))}
         </div>
       </MvpSection>
 

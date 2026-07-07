@@ -23,7 +23,7 @@ export default function TestsPage() {
                 どの入口から始めるか。
               </h1>
               <p className="frontstage-hero-lead max-w-[39rem]">
-                Yorisouは、今の状態に近い入口から始めて、結果、レポート、LINEでの見返し、次の入口やおすすめへつなげる流れを整えています。
+                Yorisouは、今の状態に近い入口から始めて、結果、レポート、おすすめ、コミュニティ、Yorisou Design、マーケットの次の層へつなげる流れを整えています。
               </p>
               <div className="frontstage-hero-actions">
                 <RecommendationSignalLink
@@ -74,6 +74,26 @@ export default function TestsPage() {
                   LINEやレポートの導線があるので、その場で決めきらなくても後から続けられます。
                 </p>
               </div>
+            </div>
+          </div>
+
+          <div className="surface-panel bg-white/76">
+            <p className="surface-meta">このページの先にある層</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-5">
+              {[
+                "結果を見る",
+                "レポートへ進む",
+                "おすすめを見る",
+                "コミュニティに反応を残す",
+                "Design / マーケットの関心を見る",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/84 px-4 py-3 text-[12px] leading-6 text-[#5F5750]"
+                >
+                  {item}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -165,7 +185,7 @@ export default function TestsPage() {
               <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
                 <p className="text-[14px] font-semibold text-[#173B35]">次の提案</p>
                 <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  Yorisou Select、Design、Community、Local Lifeの入口へ、テーマごとに無理なくつながります。
+                  レポート、おすすめ、コミュニティ、Yorisou Design、マーケットの入口へ、テーマごとに無理なくつながります。
                 </p>
               </div>
             </div>

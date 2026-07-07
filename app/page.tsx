@@ -9,17 +9,19 @@ import {
   DESIGN_CARDS,
   DESIGN_FUTURE_NOTE,
   HOME_ENTRY_GUIDE,
+  HOME_PLATFORM_BRANCHES,
   HOME_PRODUCT_LOOP,
   LOCAL_LIFE_THEMES,
+  MARKETPLACE_CARDS,
   PLATFORM_ENTRY_LINKS,
   PLATFORM_PILLARS,
   SELECT_CARDS,
 } from "./data/platformNarrative";
 
 export const metadata: Metadata = {
-  title: "Yorisou | 今の状態を知って、次の入口を見つける",
+  title: "Yorisou | 今の状態を理解し、次の選択肢につなげる",
   description:
-    "Yorisouは、今の状態を軽く見つめ、近い入口を選び、結果、LINEでの見返し、レポート、次のおすすめへつなげる日本語ファーストのサービスです。",
+    "Yorisouは、今の状態を理解し、チェック、結果、レポート、おすすめ、コミュニティ、Yorisou Design、マーケット、LINE継続へつなげる日本語ファーストのプラットフォームです。",
 };
 
 export default function HomePage() {
@@ -29,23 +31,36 @@ export default function HomePage() {
         <div className="container">
           <div className="frontstage-hero-inner md:grid-cols-[minmax(0,1fr)_20rem]">
             <MotionReveal className="frontstage-hero-copy" delay={20} distance={18}>
-              <p className="service-kicker">今の状態を知って、次の入口へ。</p>
-              <h1 className="display-serif frontstage-hero-title max-w-[9.5em]">
+              <p className="service-kicker">今の状態を理解し、次の選択肢へ。</p>
+              <h1 className="display-serif frontstage-hero-title max-w-[10.5em]">
                 Yorisouは、
                 <br className="hidden md:block" />
-                今の自分を見つめて
+                今の状態を理解し、
                 <br className="hidden md:block" />
-                次を選びやすくする入口です。
+                次に合う入口や
+                <br className="hidden md:block" />
+                レポート、おすすめへつなぐ場所です。
               </h1>
-              <p className="frontstage-hero-lead max-w-[34rem]">
-                短いチェックから、結果、LINEでの見返し、レポート、次に合いそうな入口までを、ひとつの流れで受け取れるように整えています。
+              <p className="frontstage-hero-lead max-w-[37rem]">
+                チェック、結果、レポート、おすすめ、コミュニティ、Yorisou Design、マーケット、LINE継続までを、ひとつの流れで見通せるように整えています。
               </p>
               <div className="frontstage-hero-actions">
                 <Link href="/open-testing" className="btn btn-primary">
-                  今の自分をチェックする
+                  はじめる
                 </Link>
                 <Link href="/tests" className="btn btn-secondary">
-                  入口を選ぶ
+                  チェックを選ぶ
+                </Link>
+              </div>
+              <div className="surface-link-row mt-4 text-[13px] font-semibold text-[#315F50]">
+                <Link href="/#yorisou-design" className="hover:underline">
+                  Yorisou Designを見る
+                </Link>
+                <Link href="/#yorisou-community" className="hover:underline">
+                  コミュニティを見る
+                </Link>
+                <Link href="/#yorisou-market" className="hover:underline">
+                  マーケットを見る
                 </Link>
               </div>
               <div className="frontstage-capability-grid mt-5">
@@ -60,23 +75,23 @@ export default function HomePage() {
 
             <MotionReveal className="surface-panel-soft self-end space-y-4" delay={110} distance={16}>
               <div>
-                <p className="surface-meta">はじめての流れ</p>
+                <p className="surface-meta">プラットフォームの見取り図</p>
                 <p className="mt-2 text-[13px] leading-7 text-[#6F625C]">
-                  まずは今に近い入口を選び、結果を読み、必要ならLINEやレポートから後で戻れます。
+                  まずはチェックから始め、結果、レポート、おすすめ、コミュニティ、Design、マーケットへと静かにつながります。
                 </p>
               </div>
               <div className="frontstage-mini-stack">
                 <div>
                   <p className="frontstage-mini-title">最初にすること</p>
-                  <p className="frontstage-mini-body">公開テストからまとめて進めるか、入口一覧から近いテーマを選びます。</p>
+                  <p className="frontstage-mini-body">公開テストから始めるか、チェック一覧から近い入口を選びます。</p>
                 </div>
                 <div>
                   <p className="frontstage-mini-title">このあと</p>
-                  <p className="frontstage-mini-body">結果、レポート、LINE保存、次の入口やおすすめへ静かにつながります。</p>
+                  <p className="frontstage-mini-body">結果を読み、レポートやおすすめへ進み、必要なら声や関心を残せます。</p>
                 </div>
                 <div>
-                  <p className="frontstage-mini-title">境界</p>
-                  <p className="frontstage-mini-body">医療や心理診断ではなく、今の状態を見つめるための小さな手がかりです。</p>
+                  <p className="frontstage-mini-title">領域</p>
+                  <p className="frontstage-mini-body">LINEは戻り道のひとつであり、Yorisou.online自体が全体の入口と見取り図です。</p>
                 </div>
               </div>
             </MotionReveal>
@@ -84,8 +99,8 @@ export default function HomePage() {
 
           <MotionReveal className="frontstage-loop-panel mt-4" delay={150} distance={16}>
             <div className="frontstage-loop-head">
-              <p className="surface-meta">チェックのあと、どうつながるか</p>
-              <p className="frontstage-loop-copy">診断で終わらず、あとで戻れて、次の入口まで見つけやすい流れにしています。</p>
+              <p className="surface-meta">プラットフォームの流れ</p>
+              <p className="frontstage-loop-copy">チェックだけで終わらず、結果、レポート、おすすめ、参加、将来の選択肢、LINE継続まで見渡せるようにしています。</p>
             </div>
             <div className="frontstage-loop-grid">
               {HOME_PRODUCT_LOOP.map((step, index) => (
@@ -103,8 +118,8 @@ export default function HomePage() {
       <section className="container py-6 md:py-8">
         <div className="mx-auto max-w-[52rem]">
           <OpenTestingNotice
-            title="いま試せる流れ"
-            body="いまは、入口選びから120問の公開テスト、結果、詳しいレポート、LINE保存、感想送信まで一通り確認できます。受け取った声をもとに、次の入口やおすすめの出し方を少しずつ育てています。"
+            title="いま使える核"
+            body="いまは、チェック、結果、詳しいレポート、LINE保存、感想送信、おすすめの入口までを実際に試せます。コミュニティ、Yorisou Design、マーケットはコンセプトや関心の段階として育てています。"
             primaryHref="/contact?topic=open-testing"
             primaryLabel="感想や不具合を送る"
             secondaryHref="/open-testing"
@@ -114,17 +129,20 @@ export default function HomePage() {
       </section>
 
       <MvpSection
-        title="今日は、どこから始めるか。"
-        lead="はじめての人にも、今すぐ試したい人にも、あとで戻りたい人にも、始め方を先に見えるようにしています。"
+        title="この場で見える、Yorisouの入口。"
+        lead="Yorisou.onlineは、ひとつの診断ページではなく、今の状態理解から次の選択肢までを並べて見渡せるプラットフォームの入口です。"
         className="!py-7 md:!py-8"
       >
         <div className="grid gap-3 md:grid-cols-3">
-          {HOME_ENTRY_GUIDE.map((entry) => (
+          {HOME_PLATFORM_BRANCHES.map((entry) => (
             <Link
               key={entry.title}
               href={entry.href}
               className="surface-panel group space-y-3 no-underline transition hover:-translate-y-0.5"
             >
+              <span className="inline-flex rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold text-[#49615B]">
+                {entry.status}
+              </span>
               <p className="text-[15px] font-semibold leading-7 text-[#173B35]">{entry.title}</p>
               <p className="text-[13px] leading-7 text-[#6F625C]">{entry.body}</p>
               <span className="inline-flex min-h-[40px] items-center rounded-full border border-[rgba(23,59,53,0.1)] bg-[#F8F7F4] px-4 text-[12px] font-semibold text-[#315F50]">
@@ -136,12 +154,12 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
-        title="今つながっている入口。"
-        lead="公開テスト、入口一覧、LINE継続は別々のページですが、同じ流れの中で役割を分けています。"
+        title="最初の入口をどう選ぶか。"
+        lead="まず始める、近いテーマから選ぶ、次のおすすめを見る。初めての人にも選びやすい3つの始め方を先に並べています。"
         className="!py-6 md:!py-7"
       >
         <div className="grid gap-3 md:grid-cols-3">
-          {PLATFORM_ENTRY_LINKS.map((entry) => (
+          {[...HOME_ENTRY_GUIDE, ...PLATFORM_ENTRY_LINKS].slice(0, 6).map((entry) => (
             <Link
               key={entry.title}
               href={entry.href}
@@ -158,8 +176,8 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
-        title="あとで見返せる、次にもつながる。"
-        lead="診断結果をLINEに保存すると、あとから見返せます。必要に応じて、振り返りのきっかけや次に試せる入口、あなたに合いそうな情報が届くことがあります。通知はいつでも止められるようにします。"
+        title="LINEは、戻り道として使える。"
+        lead="Yorisouの中心はサイト全体ですが、結果を保存し、あとで見返し、必要なときだけ続きを受け取る戻り道としてLINEも使えます。"
         className="!py-6 md:!py-7"
       >
         <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
@@ -175,7 +193,7 @@ export default function HomePage() {
           <div className="surface-panel-soft space-y-3">
             <p className="surface-meta">LINEから始める</p>
             <p className="text-[13px] leading-7 text-[#6F625C]">
-              LINEは、診断の代わりではなく、結果や振り返りを無理なく続けるための軽い入口です。
+              LINEは、診断の代わりではなく、結果や振り返りを無理なく続けるための戻り道です。
             </p>
             <Link href="/line/mini-app" className="btn btn-secondary inline-flex">
               LINEでYorisouを開く
@@ -185,6 +203,7 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
+        id="yorisou-report"
         title="レポートは、Yorisouの一層です。"
         lead="無料結果だけでは見えにくい傾向や、関係・仕事・選び方のリズムを、もう少し具体的に整理します。レポートは、あなたの状態を決めつけるものではなく、次の選択肢を考えるための読みものです。"
         className="!py-6 md:!py-8"
@@ -221,10 +240,9 @@ export default function HomePage() {
       </MvpSection>
 
       <MvpSection
-        id="yorisou-select"
-        eyebrow="Yorisou Select"
-        title="今の状態に合いそうな選択肢を、少しずつ。"
-        lead="診断結果やフィードバックをもとに、今の状態に合いそうな読みもの、道具、サービス、商品を少しずつ提案していきます。"
+        id="yorisou-recommendations"
+        title="おすすめ・リソースは、次の選択肢の層です。"
+        lead="診断結果やフィードバックをもとに、今の状態に合いそうな読みもの、道具、サービス、商品候補を少しずつ提案していきます。"
         className="!py-6 md:!py-7"
       >
         <div className="grid gap-3 md:grid-cols-4">
@@ -245,7 +263,6 @@ export default function HomePage() {
 
       <MvpSection
         id="yorisou-design"
-        eyebrow="Yorisou Design"
         title="あると助かるものを、声から育てる。"
         lead="診断やフィードバックから見えてきた「あると助かるもの」を、アイデア、試用、共創、商品化へと少しずつ育てていきます。"
         className="!py-6 md:!py-7"
@@ -263,7 +280,6 @@ export default function HomePage() {
 
       <MvpSection
         id="yorisou-community"
-        eyebrow="Yorisou Community"
         title="参加は任意で、声は次の改善につながる。"
         lead="気になるテーマには、フィードバック、試用、生活の観察、アイデアづくりとして参加できます。参加は任意です。あなたの声は、よりよい診断、レポート、おすすめ、サービスや商品アイデアにつながります。"
         className="!py-6 md:!py-7"
@@ -276,6 +292,25 @@ export default function HomePage() {
             </MvpCard>
           ))}
         </div>
+      </MvpSection>
+
+      <MvpSection
+        id="yorisou-market"
+        title="マーケットは、将来の選択肢やマッチングを育てる層です。"
+        lead="まだ販売や注文の場所ではなく、どんな提案やつながりが役に立ちそうかを、関心ベースで整理していく準備中の領域です。"
+        className="!py-6 md:!py-7"
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          {MARKETPLACE_CARDS.map((item) => (
+            <MvpCard key={item.title} className="space-y-3 bg-white/94">
+              <p className="text-[14px] font-semibold leading-6 text-[#173B35]">{item.title}</p>
+              <p className="text-[13px] leading-7 text-[#6F625C]">{item.body}</p>
+            </MvpCard>
+          ))}
+        </div>
+        <p className="text-[12px] leading-6 text-[#8A7E78]">
+          ここではまだ、購入、決済、在庫、配送、申込みは行いません。将来のおすすめやマッチングの可能性を整理する段階です。
+        </p>
       </MvpSection>
 
       <MvpSection
