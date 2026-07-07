@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import AccountEntryForm from "@/app/components/AccountEntryForm";
-import { normalizeSafeInternalPath } from "@/lib/server/foundation/safeRedirect";
+import { buildSafeInternalHref, normalizeSafeInternalPath } from "@/lib/server/foundation/safeRedirect";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 
 export const metadata: Metadata = {
@@ -58,6 +58,10 @@ export default async function RegisterPage({
   const viewer = await getViewerContext();
   const params = (await searchParams) || {};
   const nextPath = normalizeSafeInternalPath(params.next, "/support");
+
+  if (nextPath === "/dashboard/open-testing") {
+    redirect(buildSafeInternalHref("/login", nextPath));
+  }
 
   if (viewer.session && viewer.account) {
     redirect(nextPath);
