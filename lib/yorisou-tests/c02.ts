@@ -1,0 +1,63 @@
+import { c02ImaNoWatashiCheckV10 } from "./generated/C02_ima_no_watashi_check_v1_0";
+import type { RuleBasedRuntime, TestCatalogEntry } from "./types";
+
+export const c02CatalogEntry: TestCatalogEntry = {
+  slug: "c02",
+  testId: "C02",
+  title: "今のわたしチェック",
+  description: "今の内側の温度や、人との距離、次の一歩の出し方をやさしく整理する入口です。",
+  estimatedTime: "約7〜10分",
+  category: "自分の状態",
+  boundaryNote: "医療・心理診断ではありません。今の状態を整理するための参考です。",
+  ctaLabel: "チェックを始める",
+  route: "/tests/c02",
+  status: "available",
+};
+
+export const c02Runtime: RuleBasedRuntime = {
+  slug: "c02",
+  testId: "C02",
+  title: "今のわたしチェック",
+  introTitle: "今の温度や距離感を、\n静かに見つめ直す。",
+  introDescription:
+    "今の自分に近い答えを選ぶと、整えたいこと、小さく動けること、次に見たい入口がやわらかく見えてきます。",
+  estimatedTime: c02CatalogEntry.estimatedTime,
+  questionCount: c02ImaNoWatashiCheckV10.metadata.question_count,
+  questions: c02ImaNoWatashiCheckV10.questions,
+  sections: c02ImaNoWatashiCheckV10.sections,
+  resultTypes: c02ImaNoWatashiCheckV10.result_types,
+  resultRules: c02ImaNoWatashiCheckV10.result_assignment_rules,
+  dimensionLabels: {
+    inner_temperature: "自分の内側の温度",
+    emotional_clarity: "気持ちの輪郭",
+    emotional_sensitivity: "刺激への敏感さ",
+    emotional_stability: "落ち着きやすさ",
+    recovery_need: "回復の必要度",
+    reflection_need: "内側を見たい気持ち",
+    action_energy: "小さく動く力",
+    change_readiness: "変化を受け取る準備",
+    next_step_readiness: "次の一歩の準備",
+    decision_style: "決め方のペース",
+    reassurance_need: "安心したい気持ち",
+    connection_need: "つながりたい気持ち",
+    autonomy_need: "一人になれる余白",
+    boundary_need: "距離を測り直す必要",
+    relationship_focus: "人との距離への意識",
+    work_focus: "仕事や役割への意識",
+    recommendation_intent: "次の入口への関心",
+    light_support_need: "軽い支えのほしさ",
+    rhythm_reset_need: "ペースを整えたい気持ち",
+    pace_sensitivity: "今のペースへの敏感さ",
+    oracle_return_intent: "軽いヒントで戻りたい気持ち",
+    core_depth_intent: "深く知りたい気持ち",
+    core_need_signal: "深い整理への入口",
+  },
+  boundaryNote: c02ImaNoWatashiCheckV10.consent_copy.boundary_jp,
+  paidPreviewCopy: c02ImaNoWatashiCheckV10.paid_teaser_config.promise_jp,
+  shareLabel: c02ImaNoWatashiCheckV10.free_result_config.share_cta_jp,
+  relatedRoutes: [
+    { href: "/open-testing", label: "120問の入口を見る" },
+    { href: "/tests/f01", label: "働き方の入口を見る" },
+    { href: "/tests/s01", label: "今日のおみくじを見る" },
+  ],
+};
