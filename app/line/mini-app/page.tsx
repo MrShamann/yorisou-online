@@ -163,7 +163,7 @@ export default async function MiniAppEntryPage({
               href="/tests"
               className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
             >
-              テスト一覧
+              入口を選ぶ
             </Link>
             <Link
               href="/open-testing"

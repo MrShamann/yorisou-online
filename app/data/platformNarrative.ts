@@ -1,55 +1,160 @@
 export const PLATFORM_PILLARS = [
   {
-    title: "診断で、いまの状態を知る",
-    body: "恋愛、仕事、人との距離感、名前の印象。今の自分に近い入口から、状態やリズムを見える形にします。",
+    title: "チェック",
+    body: "今の状態に近い入口から、まず現在地をつかみます。",
   },
   {
-    title: "LINEで、ゆるく続くよりそい",
-    body: "結果をLINEに保存すると、あとから見返せます。必要に応じて、振り返りのきっかけや次の入口、あなたに合いそうな情報が届くことがあります。",
+    title: "結果",
+    body: "短い結果を受け取り、今の見え方を落ち着いて読みます。",
   },
   {
-    title: "レポートで、もう少し深く読む",
-    body: "無料結果だけでは見えにくい傾向や、関係・仕事・選び方のリズムを、レポートでもう少し具体的に整理できます。",
+    title: "レポート",
+    body: "もう少し深く読みたいときは、レポートへ進めます。",
   },
   {
-    title: "Yorisou Select",
-    body: "本、コンテンツ、道具、サービス、商品まで。今の状態に合いそうな選択肢を少しずつ提案していきます。",
+    title: "おすすめ",
+    body: "次に見たい読みものや選択肢、おすすめの入口につながります。",
   },
   {
-    title: "Yorisou Design",
-    body: "声や行動から見えてきた困りごとや欲しいものをもとに、新しい道具や体験の案を育てます。はじめは関心確認や小さな試用から進めます。",
+    title: "コミュニティ",
+    body: "反応や声を残し、軽く参加しながら次の改善につなげられます。",
   },
   {
-    title: "Community / Co-creation",
-    body: "気になるテーマには、フィードバックや試用、生活の観察、アイデアづくりとして参加できます。参加は任意です。",
+    title: "よりそうデザイン",
+    body: "小さなアイデアや試作品の関心を育てる、コンセプト領域です。",
+  },
+  {
+    title: "マッチング",
+    body: "将来のおすすめやマッチングの可能性を、まだ販売前の段階で整理します。",
+  },
+  {
+    title: "LINEで続ける",
+    body: "保存、再開、受け取りのための戻り道としてLINEを使えます。",
   },
 ] as const;
 
 export const PLATFORM_ENTRY_LINKS = [
   {
-    title: "今の自分を診断する",
-    body: "今の状態タイプ、短い解説、LINE保存、レポートの見本、おすすめの入口まで、今使える流れをまとめて試せます。",
+    title: "はじめる",
+    body: "初めての人が、チェックから結果、レポート、保存までひと通り試す入口です。",
     href: "/open-testing",
-    label: "公開中の入口へ",
+    label: "公開テストから始める",
   },
   {
-    title: "入口を選ぶ",
-    body: "恋愛、人との距離感、仕事や生活のリズムなど、今の自分に近いテーマから静かに選べます。",
+    title: "チェックを選ぶ",
+    body: "恋愛、仕事、暮らし、名前の印象など、近いテーマから入口を選べます。",
     href: "/tests",
-    label: "診断テーマを見る",
+    label: "入口を見比べる",
   },
   {
-    title: "LINEから続ける",
-    body: "結果の見返しや次のヒントを、必要なときだけ受け取れるLINE入口です。",
-    href: "/line/mini-app",
-    label: "LINEを開く",
+    title: "おすすめを見る",
+    body: "結果のあとで、次に見たいヒントや選択肢を静かに整理する領域です。",
+    href: "/recommendations?resultId=EM-AK&overlayId=balancing&confidence=low",
+    label: "おすすめの入口を見る",
+  },
+] as const;
+
+export const HOME_PRODUCT_LOOP = [
+  {
+    title: "チェック",
+    body: "今の状態に近い入口から始めます。",
+  },
+  {
+    title: "結果を読む",
+    body: "今の見え方を短く受け取ります。",
+  },
+  {
+    title: "レポート",
+    body: "深く知りたいときは、レポートへ進みます。",
+  },
+  {
+    title: "おすすめ",
+    body: "次に見たいヒントや選択肢を受け取ります。",
+  },
+  {
+    title: "コミュニティ",
+    body: "反応や声を残し、次の改善につなげます。",
+  },
+  {
+    title: "よりそうデザイン / マッチング",
+    body: "将来の試作品や、人と選択肢をつなぐ可能性を育てます。",
+  },
+  {
+    title: "LINEで戻る",
+    body: "保存・再開・受け取りの導線として使えます。",
+  },
+] as const;
+
+export const HOME_ENTRY_GUIDE = [
+  {
+    title: "まず今の状態を知りたい",
+    body: "公開テストから、結果とレポートまでひと通り進めたい人向けです。",
+    href: "/open-testing",
+    label: "はじめる",
+  },
+  {
+    title: "自分に近いテーマから選びたい",
+    body: "恋愛、人との距離感、仕事や生活リズム、暮らしの関心から近い入口を選べます。",
+    href: "/tests",
+    label: "チェックを選ぶ",
+  },
+  {
+    title: "次のヒントやおすすめも見たい",
+    body: "結果のあとで、次の入口、おすすめ、反応の残し方まで見たい人向けです。",
+    href: "/recommendations?resultId=EM-AK&overlayId=balancing&confidence=low",
+    label: "おすすめを見る",
+  },
+] as const;
+
+export const HOME_PLATFORM_BRANCHES = [
+  {
+    title: "チェック",
+    body: "今の状態に近い入口から始める領域です。",
+    href: "/tests",
+    label: "チェックを見る",
+    status: "いま使える",
+  },
+  {
+    title: "レポート",
+    body: "結果をもう少し深く読み、次を整理する読みものです。",
+    href: "/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low",
+    label: "レポートを見る",
+    status: "いま使える",
+  },
+  {
+    title: "おすすめ",
+    body: "次に見たいヒントや選択肢、おすすめの入口をまとめます。",
+    href: "/recommendations?resultId=EM-AK&overlayId=balancing&confidence=low",
+    label: "おすすめを見る",
+    status: "いま使える",
+  },
+  {
+    title: "コミュニティ",
+    body: "反応、感想、生活の声を残し、軽く参加できる領域です。",
+    href: "/#yorisou-community",
+    label: "コミュニティを見る",
+    status: "参加は任意",
+  },
+  {
+    title: "よりそうデザイン",
+    body: "まだ販売ではなく、アイデアや試作品の可能性を育てる場所です。",
+    href: "/#yorisou-design",
+    label: "よりそうデザインを見る",
+    status: "コンセプト検証",
+  },
+  {
+    title: "マッチング",
+    body: "将来のおすすめやマッチングの可能性を、準備中の領域として整理します。",
+    href: "/#yorisou-market",
+    label: "マッチングを見る",
+    status: "準備中",
   },
 ] as const;
 
 export const SELECT_CARDS = [
   {
     title: "読みもの",
-    body: "今の状態をもう少し整理するためのコンテンツ。",
+    body: "今の状態をもう少し整理するためのコンテンツや見本。",
     status: "提案候補",
   },
   {
@@ -84,14 +189,17 @@ export const DESIGN_CARDS = [
   },
 ] as const;
 
+export const DESIGN_FUTURE_NOTE =
+  "こどもの絵や家族の小さな表現を、将来の試作品や記念品のアイデアとして育てることも検討しています。まだ販売ではなく、関心や可能性を見ていく段階です。";
+
 export const COMMUNITY_CARDS = [
   {
     title: "フィードバック",
     body: "気づいたことや違和感を、次の改善につなげる入口です。",
   },
   {
-    title: "試用",
-    body: "小さく試して、使い心地を確かめる参加の形です。",
+    title: "反応",
+    body: "結果やおすすめに対するひとことの反応を、軽く残せます。",
   },
   {
     title: "生活の観察",
@@ -109,6 +217,21 @@ export const LOCAL_LIFE_THEMES = [
   "人との距離の整え方",
   "小さく動ける次の一歩",
   "続き方のヒントへの関心",
+] as const;
+
+export const MARKETPLACE_CARDS = [
+  {
+    title: "おすすめ候補をためる",
+    body: "今の状態や関心に合いそうな選択肢を、まだ販売前の候補として整理します。",
+  },
+  {
+    title: "将来のマッチングを見る",
+    body: "必要な人と選択肢がどうつながるかを、準備中の領域として育てます。",
+  },
+  {
+    title: "関心の強さを確かめる",
+    body: "ほしいもの、試したいこと、合いそうな提案の反応を静かに集めます。",
+  },
 ] as const;
 
 export const DIAGNOSTIC_ENTRY_CARDS = [

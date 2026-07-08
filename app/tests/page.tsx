@@ -33,6 +33,50 @@ export default function TestsPage() {
 
       <section className="container py-8 md:py-10">
         <div className="mx-auto max-w-[52rem]">
+          <div className="surface-panel bg-white/80">
+            <p className="surface-meta">入口の選び方</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">まず全体を知りたい</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  公開テストから始めると、結果、レポート、LINE保存まで今の流れを一通り試せます。
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">近いテーマがある</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  恋愛、仕事、名前、暮らしなど、今ひっかかるテーマから小さく選べます。
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">あとで戻りたい</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  LINEやレポートの導線があるので、その場で決めきらなくても後から続けられます。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="surface-panel bg-white/76">
+            <p className="surface-meta">このページの先にある層</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-5">
+              {[
+                "結果を見る",
+                "レポートへ進む",
+                "おすすめを見る",
+                "コミュニティに反応を残す",
+                "よりそうデザイン / マッチングの関心を見る",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/84 px-4 py-3 text-[12px] leading-6 text-[#5F5750]"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="grid gap-4">
             {PHASE1_TEST_CATALOG.map((test) => (
               <div

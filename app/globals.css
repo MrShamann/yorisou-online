@@ -390,6 +390,116 @@ main {
   letter-spacing: 0.08em;
 }
 
+.frontstage-capability-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.frontstage-capability-card {
+  border: 1px solid rgba(23, 59, 53, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  padding: 14px 15px;
+}
+
+.frontstage-capability-title {
+  margin: 0;
+  color: #173b35;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.frontstage-capability-body {
+  margin: 6px 0 0;
+  color: #6f625c;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.frontstage-mini-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.frontstage-mini-title {
+  margin: 0;
+  color: #173b35;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.frontstage-mini-body {
+  margin: 4px 0 0;
+  color: #6f625c;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.frontstage-loop-panel {
+  border: 1px solid rgba(23, 59, 53, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 248, 0.88) 0%, rgba(244, 250, 247, 0.84) 100%);
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: 0 14px 30px rgba(47, 35, 33, 0.04);
+}
+
+.frontstage-loop-head {
+  display: grid;
+  gap: 8px;
+}
+
+.frontstage-loop-copy {
+  margin: 0;
+  color: #6f625c;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.frontstage-loop-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.frontstage-loop-item {
+  border: 1px solid rgba(23, 59, 53, 0.07);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  padding: 14px 14px 13px;
+}
+
+.frontstage-loop-step {
+  display: inline-flex;
+  min-width: 28px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #173b35;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.frontstage-loop-title {
+  margin: 10px 0 0;
+  color: #173b35;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.frontstage-loop-body {
+  margin: 5px 0 0;
+  color: #6f625c;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
 @media (max-width: 768px) {
   .section {
     padding: 46px 0;
@@ -416,6 +526,10 @@ main {
   .surface-panel-soft,
   .shell-card {
     border-radius: 22px;
+  }
+
+  .frontstage-capability-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -601,6 +715,10 @@ main {
   .journey-grid {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     align-items: start;
+  }
+
+  .frontstage-loop-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
