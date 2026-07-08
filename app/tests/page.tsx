@@ -4,9 +4,9 @@ import { RecommendationSignalLink } from "../components/YorisouSignalTracker";
 import { YORISOU_TEST_ENTRIES } from "../data/yorisouTests";
 
 export const metadata: Metadata = {
-  title: "テスト一覧 | Yorisou",
+  title: "入口を選ぶ | Yorisou",
   description:
-    "Yorisouの診断入口を一覧で見られるページです。今の状態、恋愛や仕事のリズム、名前の印象、暮らしの困りごとまで、いまの自分に近い入口から選べます。",
+    "Yorisouの入口を、今の状態や関心に合わせて選べるページです。結果、レポート、LINEでの見返し、次のおすすめへつながる始め方を案内します。",
 };
 
 export default function TestsPage() {
@@ -16,16 +16,36 @@ export default function TestsPage() {
         <div className="container">
           <div className="frontstage-hero-inner">
             <div className="frontstage-hero-copy">
-            <p className="service-kicker">Yorisou 診断入口</p>
-            <h1 className="display-serif frontstage-hero-title max-w-[11em] mt-3">
-              いまの自分に近い入口を選ぶ
-            </h1>
-            <p className="frontstage-hero-lead max-w-[38rem]">
-              Yorisouは、今の状態を見つめる入口をいくつか用意しています。恋愛や仕事のリズム、名前の印象、暮らしの困りごとまで、近いテーマから静かに選べます。
-            </p>
+              <p className="service-kicker">入口を選ぶ</p>
+              <h1 className="display-serif frontstage-hero-title max-w-[11em] mt-3">
+                今日は、
+                <br className="hidden sm:block" />
+                どの入口から始めるか。
+              </h1>
+              <p className="frontstage-hero-lead max-w-[39rem]">
+                Yorisouは、今の状態に近い入口から始めて、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチングの次の層へつなげる流れを整えています。
+              </p>
+              <div className="frontstage-hero-actions">
+                <RecommendationSignalLink
+                  href="/open-testing"
+                  signal={{ source: "tests_page", signalType: "related_test_clicked", testId: "current-state", pagePath: "/tests" }}
+                  className="btn btn-primary"
+                >
+                  まず今の自分をチェックする
+                </RecommendationSignalLink>
+                <RecommendationSignalLink
+                  href="/line/mini-app"
+                  signal={{ source: "tests_page", signalType: "line_save_interest_clicked", pagePath: "/tests", interestId: "line-save" }}
+                  className="btn btn-secondary"
+                >
+                  LINEから始める
+                </RecommendationSignalLink>
+              </div>
             </div>
             <div className="frontstage-note">
-              <p>公開中の入口はそのまま始められます。ライトチェックや関心の入口も、今の段階で無理なく試せる形で公開しています。</p>
+              <p>
+                入口ごとに向いている場面が違います。迷ったら公開テストから始め、近いテーマがあるときはその入口を選ぶだけで大丈夫です。
+              </p>
             </div>
           </div>
         </div>
@@ -33,6 +53,50 @@ export default function TestsPage() {
 
       <section className="container py-8 md:py-10">
         <div className="mx-auto max-w-[52rem]">
+          <div className="surface-panel bg-white/80">
+            <p className="surface-meta">入口の選び方</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">まず全体を知りたい</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  公開テストから始めると、結果、レポート、LINE保存まで今の流れを一通り試せます。
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">近いテーマがある</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  恋愛、仕事、名前、暮らしなど、今ひっかかるテーマから小さく選べます。
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
+                <p className="text-[14px] font-semibold text-[#173B35]">あとで戻りたい</p>
+                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
+                  LINEやレポートの導線があるので、その場で決めきらなくても後から続けられます。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="surface-panel bg-white/76">
+            <p className="surface-meta">このページの先にある層</p>
+            <div className="mt-3 grid gap-3 md:grid-cols-5">
+              {[
+                "結果を見る",
+                "レポートへ進む",
+                "おすすめを見る",
+                "コミュニティに反応を残す",
+                "よりそうデザイン / マッチングの関心を見る",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/84 px-4 py-3 text-[12px] leading-6 text-[#5F5750]"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="grid gap-4">
             {YORISOU_TEST_ENTRIES.map((test) => (
               <div
@@ -65,11 +129,15 @@ export default function TestsPage() {
                 </h2>
                 <p className="mt-2 text-[14px] leading-7 text-[#5F5750]">{test.hook}</p>
                 <div className="surface-panel-soft mt-4">
+                  <p className="surface-meta">こんなときに選ぶ</p>
+                  <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{test.whenToChoose}</p>
+                </div>
+                <div className="surface-panel-soft mt-3">
                   <p className="surface-meta">この入口で受け取れるもの</p>
                   <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{test.outcome}</p>
                 </div>
                 <div className="surface-panel-soft mt-3 !bg-white/74">
-                  <p className="surface-meta">今の公開状態</p>
+                  <p className="surface-meta">このあとにつながること</p>
                   <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{test.nextLayer}</p>
                 </div>
                 <div className="mt-4">
@@ -117,7 +185,7 @@ export default function TestsPage() {
               <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
                 <p className="text-[14px] font-semibold text-[#173B35]">次の提案</p>
                 <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  Yorisou Select、Design、Community、Local Lifeの入口へ、テーマごとに無理なくつながります。
+                  レポート、おすすめ、コミュニティ、よりそうデザイン、マッチングの入口へ、テーマごとに無理なくつながります。
                 </p>
               </div>
             </div>

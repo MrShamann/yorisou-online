@@ -10,6 +10,7 @@ export type YorisouTestEntry = {
   mode: YorisouEntryMode;
   route: string;
   estimatedTime: string;
+  whenToChoose: string;
   hook: string;
   outcome: string;
   nextLayer: string;
@@ -28,6 +29,7 @@ export const YORISOU_TEST_ENTRIES: readonly YorisouTestEntry[] = [
     mode: "live-diagnostic",
     route: "/open-testing",
     estimatedTime: "約3分",
+    whenToChoose: "まず今の状態をまとめて知りたいとき。",
     hook: "今の気分や人との向き合い方から、あなたの現在地を見つけます。",
     outcome: "今の状態タイプ、短い解説、LINE保存、レポートの見本、おすすめの入口",
     nextLayer: "結果ページから、レポート・LINE保存・別の入口へ続けられます。",
@@ -44,6 +46,7 @@ export const YORISOU_TEST_ENTRIES: readonly YorisouTestEntry[] = [
     mode: "live-diagnostic",
     route: "/tests/love-distance",
     estimatedTime: "約3〜5分",
+    whenToChoose: "恋愛や親密さで、近づき方と自分のペースを見直したいとき。",
     hook: "近づきたい気持ちと、自分のペース。その間にある、あなたらしい距離感を見つけます。",
     outcome: "距離感タイプ、関係のリズム、レポート案内、次に整えたいこと",
     nextLayer: "答えを急がず、レポートや別の診断につなげられます。",
@@ -60,6 +63,7 @@ export const YORISOU_TEST_ENTRIES: readonly YorisouTestEntry[] = [
     mode: "light-check",
     route: "/tests/work-rhythm",
     estimatedTime: "約2〜3分",
+    whenToChoose: "仕事の進め方や疲れやすいペースを軽く整理したいとき。",
     hook: "集中しやすい環境、疲れやすい関わり方、動き出しやすいペースを軽く整理します。",
     outcome: "仕事リズムタイプ、向きやすい環境、Select/Designにつながるヒント",
     nextLayer: "結果から、道具・読みもの・つくりたい案への関心を送れます。",
@@ -76,6 +80,7 @@ export const YORISOU_TEST_ENTRIES: readonly YorisouTestEntry[] = [
     mode: "symbolic-check",
     route: "/tests/name-impression",
     estimatedTime: "約2〜3分",
+    whenToChoose: "自分らしさの見え方や、言葉にする印象を軽く見直したいとき。",
     hook: "名前から受ける印象をきっかけに、自分らしさの見え方を軽く振り返ります。",
     outcome: "印象の方向、自己紹介のヒント、関連する診断の入口",
     nextLayer: "自分らしさの見え方から、別の入口やレポートの見本につなげられます。",
@@ -92,6 +97,7 @@ export const YORISOU_TEST_ENTRIES: readonly YorisouTestEntry[] = [
     mode: "interest-check",
     route: "/tests/local-life",
     estimatedTime: "約2分",
+    whenToChoose: "生活リズムや小さな次の一歩を、今の関心として整理したいとき。",
     hook: "生活リズム、気持ちの戻り方、人との距離感、小さな次の一歩を、今の関心として軽く整理します。",
     outcome: "今の関心テーマ、受け取りたい案内、次に見たい入口",
     nextLayer: "サービス提供の約束ではなく、今の関心を次の案内や改善につなげる入口です。",

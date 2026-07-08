@@ -6,20 +6,26 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 const primaryNavJa = [
-  { href: "/check-in", label: "クイックチェック" },
-  { href: "/tests", label: "入口を選ぶ" },
-  { href: "/open-testing", label: "公開テスト" },
+  { href: "/open-testing", label: "はじめる" },
+  { href: "/tests", label: "チェック" },
+  { href: "/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low", label: "レポート" },
+  { href: "/recommendations?resultId=EM-AK&overlayId=balancing&confidence=low", label: "おすすめ" },
+  { href: "/#yorisou-community", label: "コミュニティ" },
+  { href: "/#yorisou-design", label: "よりそうデザイン" },
+  { href: "/#yorisou-market", label: "マッチング" },
 ];
 
 const primaryNavEn = [
-  { href: "/en/check-in", label: "Quick Check" },
-  { href: "/tests", label: "Tests" },
+  { href: "/en/check-in", label: "Start" },
+  { href: "/tests", label: "Checks" },
   { href: "/open-testing", label: "Open Testing" },
+  { href: "/recommendations?resultId=EM-AK&overlayId=balancing&confidence=low", label: "Recommendations" },
 ];
 
 const secondaryNavJa = [
   { href: "/about", label: "Yorisouとは" },
-  { href: "/contact", label: "お問い合わせ" },
+  { href: "/line/mini-app", label: "LINEで続ける" },
+  { href: "/contact?topic=open-testing", label: "お問い合わせ" },
 ];
 
 const secondaryNavEn = [
@@ -37,11 +43,21 @@ function toJapanesePath(pathname: string): string {
   return pathname;
 }
 
+function splitDecoratedPath(path: string) {
+  const hashIndex = path.indexOf("#");
+  const queryIndex = path.indexOf("?");
+  const cutIndex =
+    hashIndex === -1 ? queryIndex : queryIndex === -1 ? hashIndex : Math.min(hashIndex, queryIndex);
+
+  if (cutIndex === -1) return { base: path, suffix: "" };
+  return { base: path.slice(0, cutIndex), suffix: path.slice(cutIndex) };
+}
+
 function toEnglishPath(pathname: string): string {
   if (pathname === "/") return "/en";
   if (pathname.startsWith("/en")) return pathname;
   if (["/about", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(pathname)) return `/en${pathname}`;
-  return "/en";
+  return pathname;
 }
 
 export default function SiteHeader() {
@@ -56,11 +72,15 @@ export default function SiteHeader() {
   const languageHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
 
   function localizedHref(path: string) {
-    return isEn && !path.startsWith("/en") ? toEnglishPath(path) : path;
+    if (!isEn || path.startsWith("/en")) return path;
+    const { base, suffix } = splitDecoratedPath(path);
+    return `${toEnglishPath(base)}${suffix}`;
   }
 
   function isActive(path: string) {
-    const normalizedHref = path.replace(/\/$/, "") || "/";
+    if (path.includes("#")) return false;
+    const { base } = splitDecoratedPath(path);
+    const normalizedHref = base.replace(/\/$/, "") || "/";
     return normalizedCurrent === normalizedHref || normalizedCurrent.startsWith(`${normalizedHref}/`);
   }
 
@@ -81,8 +101,8 @@ export default function SiteHeader() {
               <div className="display-serif text-[1.32rem] font-semibold tracking-[0.08em] text-[var(--text)] md:text-[1.54rem]">
                 YORISOU
               </div>
-              <div className="mt-0.5 hidden text-[12px] leading-5 text-[var(--muted)] md:block">
-                {isEn ? "A quiet way to reflect on your current state." : "今の自分を静かに見つめ直すための入口。"}
+              <div className="mt-0.5 hidden text-[12px] leading-5 text-[var(--muted)] xl:block">
+                {isEn ? "Understand your current state and find a fitting next step." : "今の状態を理解し、次の選択肢につなげるプラットフォーム。"}
               </div>
             </div>
           </Link>
@@ -100,15 +120,15 @@ export default function SiteHeader() {
             </span>
           </button>
 
-          <div className="hidden items-center gap-8 md:flex">
-            <nav className="flex items-center gap-6">
+          <div className="hidden min-w-0 items-center gap-5 md:flex">
+            <nav className="flex min-w-0 items-center gap-4">
               {primaryNav.map((item) => {
                 const href = localizedHref(item.href);
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`text-[13px] font-semibold no-underline transition ${
+                    className={`whitespace-nowrap text-[12px] font-semibold no-underline transition ${
                       isActive(item.href) ? "text-[#173B35]" : "text-[var(--text)] hover:text-[#173B35]"
                     }`}
                   >
@@ -124,7 +144,7 @@ export default function SiteHeader() {
                   <Link
                     key={item.href}
                     href={localizedHref(item.href)}
-                    className="text-[12px] text-[var(--muted)] no-underline transition hover:text-[#173B35]"
+                    className="whitespace-nowrap text-[12px] text-[var(--muted)] no-underline transition hover:text-[#173B35]"
                   >
                     {item.label}
                   </Link>
