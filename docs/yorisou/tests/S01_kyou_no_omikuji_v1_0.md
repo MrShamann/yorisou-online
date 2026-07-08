@@ -1,0 +1,2122 @@
+---
+file_id: S01_kyou_no_omikuji_v1_0
+test_id: S01
+test_name_jp: 今日のおみくじ
+test_name_cn: 今日一签
+layer: Yorisou Oracle / Asobi
+version: v1.0
+status: draft_test_spec
+codex_ready: false
+founder_review_needed: true
+trust_risk_review_needed: true
+created_for: Yorisou Test Product System
+---
+
+# S01_kyou_no_omikuji_v1_0.md
+
+## File Status
+
+output_type: md_review_asset
+asset_type: symbolic_reflective_daily_return_test
+test_id: S01
+version: v1.0
+codex_ready: false
+founder_review_needed: true
+trust_risk_review_needed: true
+implementation_status: not_implemented
+publication_status: not_published
+
+## 1. Test Product Summary
+
+test_id: S01
+test_name_jp: 今日のおみくじ
+test_name_cn: 今日一签
+layer: Yorisou Oracle / Asobi
+category: symbolic / reflective entertainment
+primary_role: daily return entry
+secondary_role: lightweight recommendation signal and share trigger
+format: one draw action with optional light input
+expected_completion_time: 10-30 seconds
+result_count: 48
+commercial_role: free daily result, LINE save/reminder opt-in, route to C02/R01/F01/main 120-question test
+not_a_role: fortune prediction, destiny reading, religious ritual, psychological diagnosis, work/love/money forecast
+
+S01 is a light daily return experience for Yorisou. It gives the user a small reflective cue for today, not a prediction about the future. The result should feel playful, gentle, and repeatable. It may guide the user toward C02, R01, F01, or the 120-question main test when the user's selected mood or result signal suggests a useful next step.
+
+## 2. Landing Page Copy
+
+### Japanese
+
+title: 今日のおみくじ
+subtitle: 今日の自分に、ひとことだけ寄り添う小さなサイン。
+description: これは未来を当てるものではありません。今の気分を少し整えるための、Yorisouのあそび型リフレクションです。
+primary_cta: 今日の一枚を引く
+secondary_cta: 今のわたしチェックへ
+microcopy: 結果は保存・シェアできます。個人を決めつける内容は出しません。
+
+### Chinese
+
+title: 今日一签
+subtitle: 给今天的自己，一句轻轻靠近的小提示。
+description: 这不是未来预测，也不是命运判断。它是 Yorisou 的轻量每日回访入口，用来帮助用户温和地整理今天的状态。
+primary_cta: 抽取今日一签
+secondary_cta: 去做「现在的我」检查
+microcopy: 结果可以保存和分享，但不会输出决定性判断或私人深层分析。
+
+## 3. Consent / Privacy / Boundary Notes
+
+- S01 does not require login, birthday, real name, address, workplace, relationship partner name, medical data, or financial data.
+- Optional inputs must stay light: today mood, area of attention, or desired tone.
+- The result is reflective entertainment only.
+- S01 must not claim to predict the future.
+- S01 must not claim spiritual, religious, scientific, clinical, or diagnostic authority.
+- S01 must not replace shrine omikuji, religious practice, counseling, medical care, financial advice, or legal advice.
+- Public share cards must contain only public-safe result copy.
+- Private routing signals may be used only for recommendation logic after consent and must not be exposed on share cards.
+- LINE save/reminder opt-in must be explicit and optional.
+
+Japanese boundary copy:
+「このおみくじは、未来を予言するものではありません。今日の気分を少し見つめるための、あそびとしての小さなリフレクションです。」
+
+Chinese boundary copy:
+「本签文不是未来预测或命运判断，只是帮助你轻轻观察今天状态的娱乐型反思提示。」
+
+## 4. Action / Input Format
+
+### Core Action
+
+- User taps one primary action: 「今日の一枚を引く」
+- The result is assigned from the result pool using daily randomization rules.
+- The user may save, share, or continue to another test.
+
+### Optional Light Inputs
+
+Optional input count: 0-3
+
+Input 1:
+- id: today_mood
+- label_jp: 今日の気分
+- type: single_select
+- options:
+  - すっきり
+  - ふつう
+  - 迷いぎみ
+  - つかれぎみ
+  - ちょっと楽しみ
+
+Input 2:
+- id: attention_area
+- label_jp: 今日、少し気になること
+- type: single_select
+- options:
+  - 自分のこと
+  - 人との距離
+  - 恋愛
+  - 仕事・学び
+  - 休み方
+  - まだわからない
+
+Input 3:
+- id: tone_preference
+- label_jp: ほしい言葉の温度
+- type: single_select
+- options:
+  - やさしく
+  - すっきり
+  - そっと背中を押す
+  - 余白をくれる
+
+### Input Boundary
+
+Inputs must not ask for sensitive personal facts. Inputs are used only to softly weight result assignment and recommendation routing.
+
+## 5. Result Pool Structure
+
+fortune_level_set:
+- 大吉
+- 中吉
+- 小吉
+- 吉
+- 末吉
+- 余白
+- 整え
+
+Each result entry contains:
+- result_id
+- fortune_level_jp
+- fortune_level_cn
+- title_jp
+- title_cn
+- main_message_jp
+- main_message_cn
+- today_hint_jp
+- avoid_jp
+- lucky_action_jp
+- lucky_color_jp
+- core_bridge_jp
+- recommendation_trigger
+- share_card_line_jp
+- risk_boundary
+
+## 6. Omikuji Result Entries
+
+### S01_R001
+result_id: S01_R001
+fortune_level_jp: 大吉
+fortune_level_cn: 大吉
+title_jp: 風が通る日
+title_cn: 风开始流动的一天
+main_message_jp: 今日は、考えを少し外に出すと流れが軽くなりそうです。完璧な言葉でなくても、短く伝えるだけで十分です。
+main_message_cn: 今天适合把想法稍微说出口。即使不是完美表达，只要短短传达，也会让状态变轻。
+today_hint_jp: ひとつだけ、今考えていることを誰かに共有してみる。
+avoid_jp: 全部を一人で整理してから動こうとすること。
+lucky_action_jp: 3行メモを書く
+lucky_color_jp: みずいろ
+core_bridge_jp: 今の状態をもう少し見たいときは、C02 今のわたしチェックへ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「風が通る日」。短く伝えるだけで、少し軽くなるかも。
+risk_boundary: reflective entertainment only; no future prediction; no interpersonal outcome guarantee
+
+### S01_R002
+result_id: S01_R002
+fortune_level_jp: 中吉
+fortune_level_cn: 中吉
+title_jp: 小さく整う日
+title_cn: 小小整理的一天
+main_message_jp: 大きく変えなくても、机の上や予定の順番を少し整えるだけで、気持ちの入口が見えやすくなります。
+main_message_cn: 不需要大幅改变，只要稍微整理桌面或安排顺序，就可能更容易看见今天的入口。
+today_hint_jp: いちばん目に入る場所をひとつ片づける。
+avoid_jp: 気合いだけで全部を進めようとすること。
+lucky_action_jp: 予定をひとつ並べ替える
+lucky_color_jp: 白
+core_bridge_jp: 疲れやすさが気になるなら、C02で今の状態を確認。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「小さく整う日」。ひとつ整えるだけで十分。
+risk_boundary: reflective entertainment only; no productivity or health guarantee
+
+### S01_R003
+result_id: S01_R003
+fortune_level_jp: 小吉
+fortune_level_cn: 小吉
+title_jp: 余白を守る日
+title_cn: 保护余白的一天
+main_message_jp: 今日の鍵は、空いている時間をすぐ埋めないこと。余白は怠けではなく、自分の声が戻る場所です。
+main_message_cn: 今天的关键是不要急着把空白时间填满。余白不是懒散，而是让自己的声音回来。
+today_hint_jp: 予定と予定の間に10分の空白を残す。
+avoid_jp: 空いた時間を反射的に埋めること。
+lucky_action_jp: 通知を少し切る
+lucky_color_jp: 生成り
+core_bridge_jp: 休み方の傾向を見たいときは、120問テストへ。
+recommendation_trigger: MAIN_120
+share_card_line_jp: 今日は「余白を守る日」。空白にも意味がある。
+risk_boundary: reflective entertainment only; no mental health advice
+
+### S01_R004
+result_id: S01_R004
+fortune_level_jp: 吉
+fortune_level_cn: 吉
+title_jp: 近すぎないやさしさ
+title_cn: 不过近的温柔
+main_message_jp: 誰かを大切にしたい日ほど、距離の取り方も大切になります。すぐ答えを出さず、相手と自分の余地を残してみてください。
+main_message_cn: 越是想珍惜某个人的时候，距离感也越重要。今天可以先不急着给答案，给彼此留一点空间。
+today_hint_jp: 返事を急がず、一呼吸おいてから送る。
+avoid_jp: 相手の気持ちを決めつけること。
+lucky_action_jp: 短い確認の言葉を使う
+lucky_color_jp: 淡いピンク
+core_bridge_jp: 恋愛や相性の距離感を見たいなら、R01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「近すぎないやさしさ」。余地を残すのも思いやり。
+risk_boundary: reflective entertainment only; no relationship prediction
+
+### S01_R005
+result_id: S01_R005
+fortune_level_jp: 末吉
+fortune_level_cn: 末吉
+title_jp: ゆっくり芽が出る日
+title_cn: 慢慢发芽的一天
+main_message_jp: すぐ結果が見えなくても、今日の小さな一歩はあとで効いてきます。急がず、でも止めずにいきましょう。
+main_message_cn: 即使今天看不到结果，小小一步也可能在之后起作用。不急，但也不用完全停下。
+today_hint_jp: 5分だけ手をつける。
+avoid_jp: できなかった部分だけを数えること。
+lucky_action_jp: タイマーを5分にする
+lucky_color_jp: 若草色
+core_bridge_jp: 働き方の進め方が気になるなら、F01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「ゆっくり芽が出る日」。小さく始めればいい。
+risk_boundary: reflective entertainment only; no career outcome guarantee
+
+### S01_R006
+result_id: S01_R006
+fortune_level_jp: 余白
+fortune_level_cn: 余白
+title_jp: 答えを急がない日
+title_cn: 不急着回答的一天
+main_message_jp: 今日は、はっきり決めるよりも、まだ決めない自分を許すほうが合うかもしれません。保留もひとつの選び方です。
+main_message_cn: 今天也许不适合马上决定。允许自己暂时保留，也是一种选择方式。
+today_hint_jp: 決めたいことを「今日決める」と「後で見る」に分ける。
+avoid_jp: 不安だからといって即決すること。
+lucky_action_jp: 保留メモを作る
+lucky_color_jp: うす灰
+core_bridge_jp: 今の迷いの形を見たいなら、C02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「答えを急がない日」。保留にも意味がある。
+risk_boundary: reflective entertainment only; no decision advice for high-stakes matters
+
+### S01_R007
+result_id: S01_R007
+fortune_level_jp: 整え
+fortune_level_cn: 调整
+title_jp: 呼吸を戻す日
+title_cn: 把呼吸找回来的一天
+main_message_jp: 今日は、前に進むより先に呼吸を戻すことが助けになります。落ち着いてから見る景色は、少し違って見えます。
+main_message_cn: 今天比起向前推进，先把呼吸找回来会更有帮助。平静后再看，景色会稍微不同。
+today_hint_jp: 深呼吸を3回してから次の作業に入る。
+avoid_jp: 乱れたまま重要な返事をすること。
+lucky_action_jp: 温かい飲み物を飲む
+lucky_color_jp: ほうじ茶色
+core_bridge_jp: 状態の波を見たいときは、C02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「呼吸を戻す日」。整えてからで大丈夫。
+risk_boundary: reflective entertainment only; no medical or therapeutic claim
+
+### S01_R008
+result_id: S01_R008
+fortune_level_jp: 大吉
+fortune_level_cn: 大吉
+title_jp: 好きが目印になる日
+title_cn: 喜欢会成为路标的一天
+main_message_jp: 今日は、効率よりも「少し好き」を手がかりにすると進みやすい日。心が少し向く方向を見逃さないで。
+main_message_cn: 今天比起效率，更适合把“一点点喜欢”当作线索。不要忽略心里稍微偏向的方向。
+today_hint_jp: 今日やることに、好きな要素をひとつ足す。
+avoid_jp: 正しさだけで選び続けること。
+lucky_action_jp: 好きな音を流す
+lucky_color_jp: レモン色
+core_bridge_jp: 自分に合う働き方の入口としてF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「好きが目印になる日」。少し好き、を拾ってみる。
+risk_boundary: reflective entertainment only; no career or life direction guarantee
+
+### S01_R009
+result_id: S01_R009
+fortune_level_jp: 中吉
+fortune_level_cn: 中吉
+title_jp: ほどよい境界の日
+title_cn: 刚刚好的边界日
+main_message_jp: やさしくすることと、何でも受け止めることは同じではありません。今日は小さな境界線を置いても大丈夫です。
+main_message_cn: 温柔和全部承接并不是一回事。今天可以给自己放一条小小边界线。
+today_hint_jp: ひとつだけ「今日はここまで」を決める。
+avoid_jp: 断れないまま引き受けること。
+lucky_action_jp: 返事の前に予定を見る
+lucky_color_jp: 藍色
+core_bridge_jp: 人との距離感を見たいなら、R01またはC02へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「ほどよい境界の日」。やさしさに余白を。
+risk_boundary: reflective entertainment only; no interpersonal judgment
+
+### S01_R010
+result_id: S01_R010
+fortune_level_jp: 小吉
+fortune_level_cn: 小吉
+title_jp: 眠っていた予定の日
+title_cn: 沉睡计划醒来的一天
+main_message_jp: 前に置いたままの予定やメモが、今日ふと役に立つかもしれません。新しく増やすより、戻って見る日です。
+main_message_cn: 之前放下的计划或笔记，今天可能忽然派上用场。比起新增，更适合回头看看。
+today_hint_jp: 古いメモをひとつだけ開く。
+avoid_jp: 新しいことを増やしすぎること。
+lucky_action_jp: 未完了リストを眺める
+lucky_color_jp: くすみ緑
+core_bridge_jp: 仕事や学びの進め方はF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「眠っていた予定の日」。前のメモが味方になるかも。
+risk_boundary: reflective entertainment only; no productivity promise
+
+### S01_R011
+result_id: S01_R011
+fortune_level_jp: 吉
+fortune_level_cn: 吉
+title_jp: 受け取る練習の日
+title_cn: 练习接收的一天
+main_message_jp: 頑張るだけでなく、差し出されたものを受け取ることも今日のテーマです。遠慮しすぎなくて大丈夫。
+main_message_cn: 今天的主题不只是努力，也包括接收别人递来的东西。不必过度客气。
+today_hint_jp: ありがとうを短く素直に言う。
+avoid_jp: すぐ「大丈夫です」と返してしまうこと。
+lucky_action_jp: 小さなお礼を伝える
+lucky_color_jp: さくら色
+core_bridge_jp: 自分の受け取り方を見たいならC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「受け取る練習の日」。遠慮を少しゆるめて。
+risk_boundary: reflective entertainment only; no social outcome guarantee
+
+### S01_R012
+result_id: S01_R012
+fortune_level_jp: 末吉
+fortune_level_cn: 末吉
+title_jp: 低速で進む日
+title_cn: 低速前进的一天
+main_message_jp: 今日は速さよりも、止まらずに続けることが合いそうです。歩幅を小さくすれば、進んでいる感覚が戻ります。
+main_message_cn: 今天比起速度，更适合不停下地继续。把步幅变小，就更容易感到自己在前进。
+today_hint_jp: ひとつの作業を小さく分ける。
+avoid_jp: いきなり大きな完成を目指すこと。
+lucky_action_jp: 最初の一手だけ決める
+lucky_color_jp: ベージュ
+core_bridge_jp: 自分に合う作業リズムはF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「低速で進む日」。小さい歩幅でいい。
+risk_boundary: reflective entertainment only; no work result guarantee
+
+### S01_R013
+result_id: S01_R013
+fortune_level_jp: 余白
+fortune_level_cn: 余白
+title_jp: 静かな本音の日
+title_cn: 安静本音的一天
+main_message_jp: にぎやかな言葉の下に、小さな本音が隠れていそうです。今日は誰かに見せる前に、自分だけで眺めてみてください。
+main_message_cn: 热闹的话语下面，可能藏着小小的本音。今天可以先只给自己看一看。
+today_hint_jp: 人に送らないメモを書く。
+avoid_jp: すぐ公開できる形にしようとすること。
+lucky_action_jp: 下書きに残す
+lucky_color_jp: すみれ色
+core_bridge_jp: 今の自分の層を見たいときは120問テストへ。
+recommendation_trigger: MAIN_120
+share_card_line_jp: 今日は「静かな本音の日」。見せないメモも大事。
+risk_boundary: reflective entertainment only; no deep psychological claim
+
+### S01_R014
+result_id: S01_R014
+fortune_level_jp: 整え
+fortune_level_cn: 调整
+title_jp: 音量を下げる日
+title_cn: 把音量调低的一天
+main_message_jp: 外から入る情報が多いと、自分の感覚が見えにくくなります。今日は少しだけ音量を下げると整いやすいです。
+main_message_cn: 外部信息太多时，会不容易看清自己的感觉。今天可以稍微把音量调低。
+today_hint_jp: ひとつの通知をオフにする。
+avoid_jp: 目に入った情報を全部追うこと。
+lucky_action_jp: 画面を閉じる時間を作る
+lucky_color_jp: 霧の白
+core_bridge_jp: 疲れや情報量の状態確認はC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「音量を下げる日」。静けさを少し足して。
+risk_boundary: reflective entertainment only; no digital wellbeing claim
+
+### S01_R015
+result_id: S01_R015
+fortune_level_jp: 大吉
+fortune_level_cn: 大吉
+title_jp: ひと声が開く日
+title_cn: 一句话打开的一天
+main_message_jp: 今日の流れは、短いひと声から開きやすそうです。完璧な誘い方でなくても、軽く声をかけるだけで十分です。
+main_message_cn: 今天的流动可能从一句短短的话开始。邀请不用完美，轻轻开口就足够。
+today_hint_jp: 気になる人に短い一言を送る。
+avoid_jp: 長く考えすぎて何も送れないこと。
+lucky_action_jp: ひとこと連絡する
+lucky_color_jp: コーラル
+core_bridge_jp: 関係の距離感を見たいならR01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「ひと声が開く日」。短い言葉で十分。
+risk_boundary: reflective entertainment only; no love or response prediction
+
+### S01_R016
+result_id: S01_R016
+fortune_level_jp: 中吉
+fortune_level_cn: 中吉
+title_jp: 手ざわりを信じる日
+title_cn: 相信手感的一天
+main_message_jp: 理屈で説明しきれなくても、「これは少し合う」という感覚があります。今日はその手ざわりを軽く信じてみてください。
+main_message_cn: 有些“好像适合我”的感觉，不一定能马上解释。今天可以轻轻相信这种手感。
+today_hint_jp: 触って心地よいものを近くに置く。
+avoid_jp: すべてを理由で固めようとすること。
+lucky_action_jp: 好きな道具を使う
+lucky_color_jp: 木の色
+core_bridge_jp: 合う働き方や環境の傾向はF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「手ざわりを信じる日」。合う感覚を拾って。
+risk_boundary: reflective entertainment only; no suitability diagnosis
+
+### S01_R017
+result_id: S01_R017
+fortune_level_jp: 小吉
+fortune_level_cn: 小吉
+title_jp: 早めに閉じる日
+title_cn: 早点收尾的一天
+main_message_jp: 今日の良さは、長く粘ることより、早めに閉じる判断にありそうです。終わらせることで明日の余力が残ります。
+main_message_cn: 今天的好处可能不在坚持更久，而在早点收尾。结束本身会给明天留下余力。
+today_hint_jp: 終わりの時間を先に決める。
+avoid_jp: もう少しだけを何度も続けること。
+lucky_action_jp: 片づけのアラームを置く
+lucky_color_jp: 薄紫
+core_bridge_jp: 休み方と続け方の確認はC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「早めに閉じる日」。終わりを作るのも前進。
+risk_boundary: reflective entertainment only; no health or performance claim
+
+### S01_R018
+result_id: S01_R018
+fortune_level_jp: 吉
+fortune_level_cn: 吉
+title_jp: まっすぐ聞く日
+title_cn: 直接询问的一天
+main_message_jp: 想像で補いすぎるより、今日は小さく聞いてみるほうがよさそうです。確認は責めることではありません。
+main_message_cn: 与其过度想象，不如今天小小确认一下。确认并不等于责备。
+today_hint_jp: 「今どう思ってる？」をやわらかく聞く。
+avoid_jp: 聞かずに相手の答えを決めること。
+lucky_action_jp: 質問を短くする
+lucky_color_jp: 空色
+core_bridge_jp: 恋愛・相性の受け取り方はR01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「まっすぐ聞く日」。確認はやさしくできる。
+risk_boundary: reflective entertainment only; no relationship advice guarantee
+
+### S01_R019
+result_id: S01_R019
+fortune_level_jp: 末吉
+fortune_level_cn: 末吉
+title_jp: ほぐしてから進む日
+title_cn: 放松后再前进的一天
+main_message_jp: 体や気分が固いまま進めると、いつもより重く感じるかもしれません。先に少しほぐす時間を入れてみてください。
+main_message_cn: 如果身体或心情紧绷地前进，可能会比平时更重。今天先放松一点再开始。
+today_hint_jp: 肩や手をゆっくり伸ばす。
+avoid_jp: 固まったまま勢いで進めること。
+lucky_action_jp: 立って水を飲む
+lucky_color_jp: ミント
+core_bridge_jp: 今の負荷感を見たいならC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「ほぐしてから進む日」。先にゆるめて。
+risk_boundary: reflective entertainment only; no medical advice
+
+### S01_R020
+result_id: S01_R020
+fortune_level_jp: 余白
+fortune_level_cn: 余白
+title_jp: 名前をつけない日
+title_cn: 不急着命名的一天
+main_message_jp: まだ言葉にならない気持ちに、無理に名前をつけなくても大丈夫です。ぼんやりしたまま持っていてもいい日です。
+main_message_cn: 还没有变成语言的感受，不必勉强命名。今天可以允许它保持模糊。
+today_hint_jp: 気持ちを色や天気でメモする。
+avoid_jp: すぐ正解の言葉を探すこと。
+lucky_action_jp: 色で記録する
+lucky_color_jp: くもり白
+core_bridge_jp: 自分の状態をもう少し見たいなら120問テストへ。
+recommendation_trigger: MAIN_120
+share_card_line_jp: 今日は「名前をつけない日」。ぼんやりのままでいい。
+risk_boundary: reflective entertainment only; no psychological diagnosis
+
+### S01_R021
+result_id: S01_R021
+fortune_level_jp: 大吉
+fortune_level_cn: 大吉
+title_jp: 軽い始まりの日
+title_cn: 轻轻开始的一天
+main_message_jp: 今日は、ちゃんと始めるより軽く触れるほうが向いています。入口を小さくすれば、気持ちがあとからついてきます。
+main_message_cn: 今天比起正式开始，更适合轻轻碰一下。入口越小，心情越容易跟上。
+today_hint_jp: 最初の30秒だけやってみる。
+avoid_jp: 始める前に全部の準備をそろえること。
+lucky_action_jp: ファイルを開くだけ
+lucky_color_jp: クリーム
+core_bridge_jp: 作業の始め方はF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「軽い始まりの日」。30秒だけでいい。
+risk_boundary: reflective entertainment only; no productivity guarantee
+
+### S01_R022
+result_id: S01_R022
+fortune_level_jp: 中吉
+fortune_level_cn: 中吉
+title_jp: ほどける会話の日
+title_cn: 对话松开的日子
+main_message_jp: 今日は、結論を急がない会話が合いそうです。話しながらほどけることもあります。
+main_message_cn: 今天适合不急着下结论的对话。有些东西会在说着说着的时候松开。
+today_hint_jp: 結論より先に、感じたことを一言置く。
+avoid_jp: すぐ白黒をつけること。
+lucky_action_jp: 相づちをゆっくり返す
+lucky_color_jp: ラベンダー
+core_bridge_jp: 人との距離や会話の傾向はR01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「ほどける会話の日」。急がない言葉を。
+risk_boundary: reflective entertainment only; no interpersonal outcome prediction
+
+### S01_R023
+result_id: S01_R023
+fortune_level_jp: 小吉
+fortune_level_cn: 小吉
+title_jp: 一段低く見る日
+title_cn: 降低一层来看的一天
+main_message_jp: 今日の課題は、思っているより少し小さく分けられそうです。大きな山に見えるものを、一段だけ低くしてみてください。
+main_message_cn: 今天的课题也许可以比想象中拆得更小。把看似很高的山，先降低一层。
+today_hint_jp: やることを「今できる一手」に直す。
+avoid_jp: 大きなまま抱え続けること。
+lucky_action_jp: タスク名を短くする
+lucky_color_jp: 石のグレー
+core_bridge_jp: 今の負荷と行動の関係はC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「一段低く見る日」。小さくすれば見える。
+risk_boundary: reflective entertainment only; no stress management claim
+
+### S01_R024
+result_id: S01_R024
+fortune_level_jp: 吉
+fortune_level_cn: 吉
+title_jp: 待つ力の日
+title_cn: 等待力的一天
+main_message_jp: 今日は、追いかけるより待つことが合う場面がありそうです。待つことは止まることではなく、余地を残すことです。
+main_message_cn: 今天可能有些时候，等待比追赶更适合。等待不是停止，而是留下余地。
+today_hint_jp: 返事を一度寝かせてから送る。
+avoid_jp: 不安で何度も確認すること。
+lucky_action_jp: 下書きを保存する
+lucky_color_jp: 月白
+core_bridge_jp: 恋愛や相性の反応パターンはR01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「待つ力の日」。余地を残すのも選択。
+risk_boundary: reflective entertainment only; no love or message outcome prediction
+
+### S01_R025
+result_id: S01_R025
+fortune_level_jp: 末吉
+fortune_level_cn: 末吉
+title_jp: 足元を見る日
+title_cn: 看脚下的一天
+main_message_jp: 先のことを考えすぎると、今日できることがぼやけます。足元にあるひとつを見れば十分です。
+main_message_cn: 想太远时，今天能做的事会变模糊。看见脚下的一件事就足够了。
+today_hint_jp: 今日中に終わる小さな用事をひとつ選ぶ。
+avoid_jp: 未来の不安だけで予定を決めること。
+lucky_action_jp: 靴をそろえる
+lucky_color_jp: 土色
+core_bridge_jp: 現在地の確認はC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「足元を見る日」。今日のひとつでいい。
+risk_boundary: reflective entertainment only; no future or financial prediction
+
+### S01_R026
+result_id: S01_R026
+fortune_level_jp: 余白
+fortune_level_cn: 余白
+title_jp: 予定を減らす日
+title_cn: 减少安排的一天
+main_message_jp: 今日は、足すより引くほうが整いやすい日。予定や情報をひとつ減らすだけで、呼吸がしやすくなります。
+main_message_cn: 今天比起增加，更适合减少。少一个安排或信息源，就可能更容易呼吸。
+today_hint_jp: やらないことをひとつ決める。
+avoid_jp: 空白を不安で埋めること。
+lucky_action_jp: ToDoをひとつ消す
+lucky_color_jp: 透明
+core_bridge_jp: 休み方や余白の傾向は120問テストへ。
+recommendation_trigger: MAIN_120
+share_card_line_jp: 今日は「予定を減らす日」。引くことで整う。
+risk_boundary: reflective entertainment only; no health or scheduling advice
+
+### S01_R027
+result_id: S01_R027
+fortune_level_jp: 整え
+fortune_level_cn: 调整
+title_jp: 水を通す日
+title_cn: 让水流过的一天
+main_message_jp: 気分が少し滞っているときは、流れを作る小さな動きが助けになります。水を飲む、歩く、窓を開ける。それだけで十分です。
+main_message_cn: 当心情有点停滞时，一个制造流动的小动作会有帮助。喝水、走动、开窗，就足够。
+today_hint_jp: 水を飲んで、窓を少し開ける。
+avoid_jp: 同じ姿勢で考え込み続けること。
+lucky_action_jp: 近くを少し歩く
+lucky_color_jp: アクア
+core_bridge_jp: 気分の現在地はC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「水を通す日」。小さな流れを作って。
+risk_boundary: reflective entertainment only; no medical or mental health instruction
+
+### S01_R028
+result_id: S01_R028
+fortune_level_jp: 大吉
+fortune_level_cn: 大吉
+title_jp: きっかけを拾う日
+title_cn: 捡起契机的一天
+main_message_jp: 今日は、偶然見かけた言葉や人の一言が、小さなきっかけになりそうです。無理に意味づけず、軽く拾ってみてください。
+main_message_cn: 今天偶然看到的话或听到的一句，可能成为小契机。不必过度解释，轻轻捡起来就好。
+today_hint_jp: 気になった言葉をひとつ保存する。
+avoid_jp: すぐ大きな意味に変えること。
+lucky_action_jp: スクリーンショットを一枚残す
+lucky_color_jp: 金色
+core_bridge_jp: 気になるテーマが出たらC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「きっかけを拾う日」。気になった言葉をひとつ。
+risk_boundary: reflective entertainment only; no fate or sign certainty
+
+### S01_R029
+result_id: S01_R029
+fortune_level_jp: 中吉
+fortune_level_cn: 中吉
+title_jp: 似合う速度の日
+title_cn: 适合自己速度的一天
+main_message_jp: 人の速さに合わせすぎると、自分のリズムが見えにくくなります。今日は似合う速度を探してみてください。
+main_message_cn: 太配合别人的速度时，会不容易看见自己的节奏。今天可以找找适合自己的速度。
+today_hint_jp: いつもより少しだけゆっくり始める。
+avoid_jp: 周りのペースだけで焦ること。
+lucky_action_jp: 作業前に時間幅を見る
+lucky_color_jp: 青磁
+core_bridge_jp: 働き方のリズム確認はF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「似合う速度の日」。自分の速さを見つけて。
+risk_boundary: reflective entertainment only; no work suitability diagnosis
+
+### S01_R030
+result_id: S01_R030
+fortune_level_jp: 小吉
+fortune_level_cn: 小吉
+title_jp: 聞き役を休む日
+title_cn: 让倾听者休息的一天
+main_message_jp: いつも聞き役になりやすい人ほど、今日は自分の話を少し置いてもよさそうです。聞くことを休んでも、やさしさは消えません。
+main_message_cn: 平时容易成为倾听者的人，今天也可以稍微说说自己。暂停倾听，并不代表温柔消失。
+today_hint_jp: 自分の近況を一文だけ話す。
+avoid_jp: ずっと相手の話だけを受け止めること。
+lucky_action_jp: 「私は」を一回使う
+lucky_color_jp: 桃色
+core_bridge_jp: 関係の偏りを見たいならR01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「聞き役を休む日」。自分の声も置いていい。
+risk_boundary: reflective entertainment only; no relationship diagnosis
+
+### S01_R031
+result_id: S01_R031
+fortune_level_jp: 吉
+fortune_level_cn: 吉
+title_jp: 途中を見せる日
+title_cn: 展示过程的一天
+main_message_jp: 完成形だけを見せなくても大丈夫。今日は途中を少し共有することで、気持ちも作業も軽くなるかもしれません。
+main_message_cn: 不必只展示完成品。今天稍微分享过程，心情和任务都可能变轻。
+today_hint_jp: 途中の状態を信頼できる人に見せる。
+avoid_jp: 完成まで誰にも見せないこと。
+lucky_action_jp: 下書きを共有する
+lucky_color_jp: オリーブ
+core_bridge_jp: 作業や表現の出し方はF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「途中を見せる日」。完成前にも価値がある。
+risk_boundary: reflective entertainment only; no evaluation or career promise
+
+### S01_R032
+result_id: S01_R032
+fortune_level_jp: 末吉
+fortune_level_cn: 末吉
+title_jp: ひとつ戻る日
+title_cn: 回到前一步的一天
+main_message_jp: 進みにくいときは、前に戻ることが遠回りとは限りません。今日はひとつ手前を見直すと、詰まりがほどけやすそうです。
+main_message_cn: 前进困难时，回到前一步不一定是绕路。今天看一眼前一步，可能更容易松开卡点。
+today_hint_jp: 詰まった場所の一歩前を確認する。
+avoid_jp: 詰まった場所だけを押し続けること。
+lucky_action_jp: 最初のメモを読む
+lucky_color_jp: 砂色
+core_bridge_jp: 今の詰まり方を見るならC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「ひとつ戻る日」。戻ることで見えるものがある。
+risk_boundary: reflective entertainment only; no problem-solving guarantee
+
+### S01_R033
+result_id: S01_R033
+fortune_level_jp: 余白
+fortune_level_cn: 余白
+title_jp: 言葉を寝かせる日
+title_cn: 把语言放一放的一天
+main_message_jp: 今日は、すぐ投稿したり送ったりするより、言葉を少し寝かせるほうが合いそうです。時間を置くと、やわらかくなります。
+main_message_cn: 今天比起马上发布或发送，更适合把话放一放。隔一点时间，语言会变柔和。
+today_hint_jp: 送る前に一度読み返す。
+avoid_jp: 気持ちが高いまま公開すること。
+lucky_action_jp: 下書き保存を使う
+lucky_color_jp: 夜明け色
+core_bridge_jp: 感情と言葉の距離はC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「言葉を寝かせる日」。少し置くとやわらぐ。
+risk_boundary: reflective entertainment only; no communication outcome guarantee
+
+### S01_R034
+result_id: S01_R034
+fortune_level_jp: 整え
+fortune_level_cn: 调整
+title_jp: まわり道を許す日
+title_cn: 允许绕路的一天
+main_message_jp: 最短で行けない日にも、別の見え方があります。今日は少し遠回りしても、自分を責めなくて大丈夫です。
+main_message_cn: 不能走最短路线的日子，也会有另一种看见。今天就算有点绕，也不必责备自己。
+today_hint_jp: 遅れた理由より、次の一歩を見る。
+avoid_jp: 遠回りを失敗と決めること。
+lucky_action_jp: 道順を変える
+lucky_color_jp: 深緑
+core_bridge_jp: 進み方の癖を見たいならF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「まわり道を許す日」。遠回りにも景色がある。
+risk_boundary: reflective entertainment only; no success or failure judgment
+
+### S01_R035
+result_id: S01_R035
+fortune_level_jp: 大吉
+fortune_level_cn: 大吉
+title_jp: うれしい偶然の日
+title_cn: 小小偶然带来开心的一天
+main_message_jp: 今日は、予定外の小さなうれしさを見つけやすい日。大きな出来事でなくても、気づいたらちゃんと受け取ってください。
+main_message_cn: 今天适合发现计划外的小小开心。即使不是大事，只要注意到了，就好好接收。
+today_hint_jp: うれしかったことを一つだけ残す。
+avoid_jp: 小さすぎるからと流すこと。
+lucky_action_jp: ひとこと日記を書く
+lucky_color_jp: ひまわり色
+core_bridge_jp: 日々の変化を残すならLINE保存へ。
+recommendation_trigger: LINE_SAVE
+share_card_line_jp: 今日は「うれしい偶然の日」。小さなよろこびを拾って。
+risk_boundary: reflective entertainment only; no promise that good events will happen
+
+### S01_R036
+result_id: S01_R036
+fortune_level_jp: 中吉
+fortune_level_cn: 中吉
+title_jp: 目線を変える日
+title_cn: 换个视角的一天
+main_message_jp: いつもの場所から見えないものが、少し角度を変えると見えるかもしれません。今日は見方を一つだけ変えてみてください。
+main_message_cn: 从平常的位置看不到的东西，稍微换个角度可能会出现。今天可以只改变一个看法。
+today_hint_jp: 反対側から一度見てみる。
+avoid_jp: 最初の見方だけで決めること。
+lucky_action_jp: 席を変える
+lucky_color_jp: 夕空色
+core_bridge_jp: 見方の癖を知りたいなら120問テストへ。
+recommendation_trigger: MAIN_120
+share_card_line_jp: 今日は「目線を変える日」。角度を少し変えて。
+risk_boundary: reflective entertainment only; no insight guarantee
+
+### S01_R037
+result_id: S01_R037
+fortune_level_jp: 小吉
+fortune_level_cn: 小吉
+title_jp: やさしい制限の日
+title_cn: 温柔限制的一天
+main_message_jp: 制限は冷たいものではなく、自分を守る形にもなります。今日は時間や量をやさしく区切ってみてください。
+main_message_cn: 限制不一定冰冷，也可以是保护自己的形状。今天可以温柔地给时间或数量设个边界。
+today_hint_jp: 使う時間を先に決める。
+avoid_jp: 区切りなしで続けること。
+lucky_action_jp: 15分だけ区切る
+lucky_color_jp: 薄茶
+core_bridge_jp: 続け方と休み方はF01またはC02へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「やさしい制限の日」。区切りは味方になる。
+risk_boundary: reflective entertainment only; no behavioral advice guarantee
+
+### S01_R038
+result_id: S01_R038
+fortune_level_jp: 吉
+fortune_level_cn: 吉
+title_jp: 近況を結ぶ日
+title_cn: 连接近况的一天
+main_message_jp: 久しぶりの人や少し離れた人に、近況を短く結び直すのに向いています。重くしなくて大丈夫です。
+main_message_cn: 今天适合和久未联系或稍微远离的人，轻轻重新连接近况。不必弄得很重。
+today_hint_jp: 「最近こんな感じ」と一言だけ送る。
+avoid_jp: 完璧な再開の言葉を探すこと。
+lucky_action_jp: 写真を一枚送る
+lucky_color_jp: 若桃色
+core_bridge_jp: 距離感や相性の見方はR01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「近況を結ぶ日」。軽い一言でつながる。
+risk_boundary: reflective entertainment only; no relationship restoration claim
+
+### S01_R039
+result_id: S01_R039
+fortune_level_jp: 末吉
+fortune_level_cn: 末吉
+title_jp: ゆるい集中の日
+title_cn: 松弛专注的一天
+main_message_jp: 強く集中しようとするより、環境を少し整えて自然に入るほうが合いそうです。集中は力みだけで作らなくて大丈夫。
+main_message_cn: 今天与其强迫自己集中，不如稍微整理环境，让自己自然进入。专注不一定要靠用力。
+today_hint_jp: 目の前から不要なものを一つ外す。
+avoid_jp: 気合いで集中を作ろうとすること。
+lucky_action_jp: 机に一つだけ置く
+lucky_color_jp: 青緑
+core_bridge_jp: 作業環境との相性はF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「ゆるい集中の日」。力まず入ってみる。
+risk_boundary: reflective entertainment only; no attention or performance claim
+
+### S01_R040
+result_id: S01_R040
+fortune_level_jp: 余白
+fortune_level_cn: 余白
+title_jp: 何もしない数分の日
+title_cn: 什么都不做几分钟的一天
+main_message_jp: 今日は、何かを足すより何もしない数分が効きそうです。空いた数分を、ただ空いたままにしてみてください。
+main_message_cn: 今天比起再增加什么，什么都不做的几分钟可能更有用。让空出来的时间就这样空着。
+today_hint_jp: 3分だけ何もせず座る。
+avoid_jp: 休み時間まで成果に変えようとすること。
+lucky_action_jp: 画面を伏せる
+lucky_color_jp: 雪色
+core_bridge_jp: 休息の必要感を見るならC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「何もしない数分の日」。空白をそのままに。
+risk_boundary: reflective entertainment only; no therapeutic claim
+
+### S01_R041
+result_id: S01_R041
+fortune_level_jp: 整え
+fortune_level_cn: 调整
+title_jp: 朝を短く整える日
+title_cn: 简短整理早晨的一天
+main_message_jp: 朝や始まりの時間を少し整えると、今日全体の入口がやさしくなります。長いルーティンでなくて大丈夫です。
+main_message_cn: 稍微整理早晨或开始的时间，会让今天的入口更柔和。不需要很长的仪式。
+today_hint_jp: 最初に飲むものを決める。
+avoid_jp: 朝から情報を浴びすぎること。
+lucky_action_jp: カーテンを開ける
+lucky_color_jp: 朝日色
+core_bridge_jp: 日々の戻り先としてLINE保存へ。
+recommendation_trigger: LINE_SAVE
+share_card_line_jp: 今日は「朝を短く整える日」。始まりをやさしく。
+risk_boundary: reflective entertainment only; no lifestyle outcome claim
+
+### S01_R042
+result_id: S01_R042
+fortune_level_jp: 大吉
+fortune_level_cn: 大吉
+title_jp: ありがとうが返る日
+title_cn: 感谢回流的一天
+main_message_jp: 今日の「ありがとう」は、自分にも相手にも少しあたたかく返ってきそうです。大げさでなく、短く伝えてみてください。
+main_message_cn: 今天的一句谢谢，可能会给自己和对方都带来一点温度。不需要夸张，短短表达就好。
+today_hint_jp: 助かったことを一つ伝える。
+avoid_jp: 伝えなくてもわかるはずと思うこと。
+lucky_action_jp: ありがとうを一文送る
+lucky_color_jp: はちみつ色
+core_bridge_jp: 人との温度感を見たいならR01へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「ありがとうが返る日」。短い感謝を置いて。
+risk_boundary: reflective entertainment only; no response guarantee
+
+### S01_R043
+result_id: S01_R043
+fortune_level_jp: 中吉
+fortune_level_cn: 中吉
+title_jp: 自分の席に戻る日
+title_cn: 回到自己座位的一天
+main_message_jp: 周りの期待や空気を読みすぎたら、自分の席に戻る時間を作ってください。今日は自分の感じ方を一度中心に置く日です。
+main_message_cn: 如果太在意周围期待或气氛，今天给自己一点回到自己座位的时间。把自己的感受放回中心一次。
+today_hint_jp: 「私はどうしたい？」を一度だけ書く。
+avoid_jp: 周りの正解だけで決めること。
+lucky_action_jp: 一人の時間を10分取る
+lucky_color_jp: ネイビー
+core_bridge_jp: 自分の現在地はC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「自分の席に戻る日」。感じ方を中心に戻して。
+risk_boundary: reflective entertainment only; no identity diagnosis
+
+### S01_R044
+result_id: S01_R044
+fortune_level_jp: 小吉
+fortune_level_cn: 小吉
+title_jp: 少し頼る日
+title_cn: 稍微依靠的一天
+main_message_jp: ひとりで抱えることが強さになる日もあれば、少し頼ることが流れを作る日もあります。今日は小さく頼ってみてください。
+main_message_cn: 有时独自承担是力量，有时稍微依靠也会创造流动。今天可以小小地依靠一下。
+today_hint_jp: ひとつだけ相談する。
+avoid_jp: 頼る前から迷惑と決めること。
+lucky_action_jp: 手伝ってほしい点を一つ言う
+lucky_color_jp: うす緑
+core_bridge_jp: 頼り方や距離感はR01またはC02へ。
+recommendation_trigger: R01
+share_card_line_jp: 今日は「少し頼る日」。小さく頼ってもいい。
+risk_boundary: reflective entertainment only; no social or relationship guarantee
+
+### S01_R045
+result_id: S01_R045
+fortune_level_jp: 吉
+fortune_level_cn: 吉
+title_jp: 形から入る日
+title_cn: 从形式进入的一天
+main_message_jp: 気持ちがまだ追いつかないときは、形から入るのもひとつです。道具、場所、姿勢を少し変えるだけで入口ができます。
+main_message_cn: 心情还没跟上时，从形式进入也是一种方法。工具、地点、姿势稍微改变，就能出现入口。
+today_hint_jp: 作業する場所を少し変える。
+avoid_jp: 気分が整うまで待ち続けること。
+lucky_action_jp: ペンやノートを選ぶ
+lucky_color_jp: 黒
+core_bridge_jp: 合う環境や働き方はF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「形から入る日」。入口は作ってもいい。
+risk_boundary: reflective entertainment only; no productivity or suitability guarantee
+
+### S01_R046
+result_id: S01_R046
+fortune_level_jp: 末吉
+fortune_level_cn: 末吉
+title_jp: 比べる手を休める日
+title_cn: 让比较的手休息的一天
+main_message_jp: 今日の自分を、誰かの速度や成果と並べなくても大丈夫です。比べる手を少し休ませると、今の位置が見えます。
+main_message_cn: 今天的自己不必和别人的速度或成果摆在一起。让比较的手休息一下，会更看得见当前位置。
+today_hint_jp: SNSを見る前に自分の予定を見る。
+avoid_jp: 人の進捗を見て自分を急かすこと。
+lucky_action_jp: 自分の一歩を記録する
+lucky_color_jp: 銀色
+core_bridge_jp: 現在地をやさしく確認するならC02へ。
+recommendation_trigger: C02
+share_card_line_jp: 今日は「比べる手を休める日」。自分の位置に戻って。
+risk_boundary: reflective entertainment only; no mental health claim
+
+### S01_R047
+result_id: S01_R047
+fortune_level_jp: 余白
+fortune_level_cn: 余白
+title_jp: 未完成を置く日
+title_cn: 放下未完成的一天
+main_message_jp: 未完成のまま置いておくことが、次の入口になる日です。今日の終わりに、途中の自分を責めなくて大丈夫です。
+main_message_cn: 今天，允许未完成地放在那里，反而会成为下一次入口。一天结束时，不必责备途中状态的自己。
+today_hint_jp: 途中の場所がわかるメモを残す。
+avoid_jp: 未完成を失敗として扱うこと。
+lucky_action_jp: 続きの一行を書く
+lucky_color_jp: 羊毛色
+core_bridge_jp: 続け方のパターンはF01へ。
+recommendation_trigger: F01
+share_card_line_jp: 今日は「未完成を置く日」。途中にも続きがある。
+risk_boundary: reflective entertainment only; no achievement outcome claim
+
+### S01_R048
+result_id: S01_R048
+fortune_level_jp: 整え
+fortune_level_cn: 调整
+title_jp: 今日をしまう日
+title_cn: 把今天收起来的一天
+main_message_jp: 今日の終わりに、よかったことと重かったことをひとつずつしまってください。全部を解決しなくても、区切るだけで十分です。
+main_message_cn: 在今天结束时，把一件好的事和一件重的事分别收起来。不必全部解决，只要做个区分就足够。
+today_hint_jp: よかったことを一つ、重かったことを一つ書く。
+avoid_jp: 眠る前に全部を反省し続けること。
+lucky_action_jp: 今日の一行を保存する
+lucky_color_jp: 夕暮れ色
+core_bridge_jp: 明日も戻るならLINEリマインダー保存へ。
+recommendation_trigger: LINE_SAVE
+share_card_line_jp: 今日は「今日をしまう日」。一行だけ残して眠ろう。
+risk_boundary: reflective entertainment only; no sleep or health claim
+
+## 7. Randomization / Assignment Logic
+
+assignment_method: daily_seeded_random_with_light_weighting
+
+Base logic:
+- If no optional input is provided, assign one result from the full result pool using daily seed randomization.
+- Daily seed may use date + anonymous session token + non-identifying local value.
+- Do not require birthdate, name, location, or personal identity data.
+- Result assignment must feel playful and not deterministic.
+
+Light weighting:
+- today_mood = つかれぎみ may slightly favor 整え / 余白 entries.
+- today_mood = 迷いぎみ may slightly favor 余白 / 小吉 entries.
+- today_mood = ちょっと楽しみ may slightly favor 大吉 / 中吉 entries.
+- attention_area = 恋愛 may slightly favor entries with recommendation_trigger R01.
+- attention_area = 仕事・学び may slightly favor entries with recommendation_trigger F01.
+- attention_area = 自分のこと or 休み方 may slightly favor C02 or MAIN_120.
+- tone_preference affects copy emphasis only; it must not create predictive claims.
+
+Repeat rules:
+- Do not show the same result_id to the same anonymous saved user on consecutive days when local history is available.
+- Avoid showing the same result_id more than twice in 7 days when local history is available.
+- If no history is available, normal daily randomization is acceptable.
+- A user may redraw only if the UI labels the second draw as あそびの引き直し and does not imply the first result was wrong.
+- If redraw is allowed, limit to one redraw per day.
+- Saved result should preserve original result_id and timestamp.
+
+Safety rules:
+- No result may be labeled as a warning, fate, bad luck, punishment, curse, or certain event.
+- Do not use 「凶」 as a result level in v1.0.
+- Fortune levels are mood labels, not predictions.
+
+## 8. Free Result Structure
+
+Free result screen must include:
+- Public-safe marker: 「これは未来予測ではなく、今日のリフレクションです」
+- Fortune level
+- Result title
+- Main message
+- Today hint
+- Avoid note
+- Lucky action
+- Lucky color
+- Save to LINE CTA
+- Share card CTA
+- Recommended next action CTA
+
+CTA hierarchy:
+1. LINEで今日の一枚を保存する
+2. 今のわたしチェックへ
+3. シェアカードを作る
+4. もう少し深く見る
+
+Public/private boundary:
+- The free result may be shared.
+- Optional input choices must not appear on share card unless explicitly public-safe and user-approved.
+- Recommendation routing should not expose private inference.
+
+## 9. Paid / Deep Report Boundary
+
+S01 should not create a paid deep report in v1.0.
+
+Allowed:
+- soft route to C02, R01, F01, or 120-question main test
+- optional LINE reminder opt-in
+- free saved daily archive
+- future paid report preview only after the user enters a deeper test flow
+
+Forbidden:
+- paid omikuji result
+- fear-based upsell
+- "bad luck removal" offer
+- prediction report
+- love/work/money forecast
+- religious or shrine replacement framing
+- hidden affiliate recommendation
+
+Boundary copy:
+「今日のおみくじ自体には有料の深掘りはありません。もっと自分の状態を見たい場合は、Yorisouのチェックに進めます。」
+
+## 10. Share Card Logic
+
+Share card must be public-safe.
+
+Share card includes:
+- test_name_jp: 今日のおみくじ
+- fortune_level_jp
+- title_jp
+- share_card_line_jp
+- lucky_color_jp
+- boundary microcopy: 未来予測ではなく、今日のリフレクション
+- Yorisou mark/name
+- optional date
+
+Share card must not include:
+- optional input choices
+- private state interpretation
+- recommendation trigger
+- paid report teaser
+- relationship vulnerability
+- work anxiety
+- mental health wording
+- diagnostic or predictive copy
+
+Example share line:
+「今日は『風が通る日』。短く伝えるだけで、少し軽くなるかも。」
+
+## 11. Recommendation Mapping
+
+recommendation_target_rules:
+- C02 今のわたしチェック:
+  - when result focuses on current state, fatigue, hesitation, information overload, emotional naming, or self-position
+- R01 恋愛相性:
+  - when result focuses on distance, communication, reply timing, gratitude, asking, boundaries, or relying
+- F01 向いている働き方診断:
+  - when result focuses on work rhythm, task start, pace, environment, completion, focus, or unfinished work
+- MAIN_120:
+  - when result focuses on deeper self-patterns, life-state layers, rest style, or broader self-understanding
+- LINE_SAVE:
+  - when result focuses on daily return, archive, reminder, or repeated reflection
+
+Demand signal:
+- Save click indicates daily return interest.
+- Share click indicates public-safe resonance.
+- CTA click to C02/R01/F01/MAIN_120 indicates topic interest.
+- Redraw indicates playful engagement, not dissatisfaction.
+- No signal should be treated as validated demand alone.
+
+## 12. LINE / Web Return Path
+
+LINE save path:
+- User taps: LINEで今日の一枚を保存する
+- Show consent: 「LINEに今日の結果を保存し、明日のリマインドを受け取れます」
+- Opt-in must be optional.
+- User can continue without LINE save.
+
+Web return path:
+- User can copy/share URL or save result locally.
+- Saved daily archive may show date, result title, fortune level, lucky color, and CTA.
+- Archive must not imply long-term diagnosis or fate tracking.
+
+Reminder copy:
+「今日の一枚を見にきますか？未来予測ではなく、今の自分に戻る小さな時間です。」
+
+## 13. UX Implementation Notes
+
+Mobile-first screen order:
+1. Header: 今日のおみくじ
+2. Boundary microcopy
+3. Optional light input chips
+4. Primary draw button
+5. Result card
+6. Save/share row
+7. Recommended next test CTA
+8. Boundary and privacy note
+
+Component notes:
+- Use a single central draw action.
+- Keep result card short enough for mobile first screen.
+- Avoid heavy mystical visuals.
+- Visual tone may reference paper, soft color, folded card, or daily note.
+- Do not use frightening red warning styles.
+- Do not make low fortune levels visually punitive.
+- Use "余白" and "整え" as gentle non-hierarchical states.
+- Redraw should be visually secondary.
+- Result should be readable without scrolling too much.
+- Share card should be clean and public-safe at thumbnail scale.
+
+Japanese readability:
+- Short sentences.
+- Avoid heavy kanji clusters.
+- Avoid deterministic words such as 必ず, 絶対, 運命, 予言, 的中.
+- Prefer やさしく, 少し, 今日は, かもしれません, してみてください.
+- Do not overuse vague placeholder lines.
+
+## 14. Trust-Risk Review
+
+Risk category: symbolic / reflective entertainment with low-to-medium trust sensitivity.
+
+Key risks:
+- fortune-telling certainty
+- religious replacement implication
+- anxiety from bad luck wording
+- relationship/work/money prediction
+- fake authority or fake accuracy
+- hidden commercial routing
+- public/private leakage on share cards
+
+Mitigations:
+- Use reflective entertainment boundary throughout.
+- Do not use 「凶」 in v1.0.
+- Do not claim shrine, religious, spiritual, scientific, or diagnostic authority.
+- Keep all result messages gentle and actionable.
+- Make LINE reminder opt-in explicit.
+- Make recommendation routing transparent and non-commercial in v1.0.
+- Keep share card public-safe.
+- Do not create paid omikuji result.
+
+Review needed before implementation:
+- Founder review for tone and brand fit.
+- Trust-risk review for oracle/asobi boundary.
+- Japanese copy review for non-deterministic wording.
+- UX review for mobile readability and share-card safety.
+
+## 15. Complete TypeScript-Friendly Data Spec
+
+```ts
+export const s01KyouNoOmikujiV10 = {
+  test_id: "S01",
+  test_name_jp: "今日のおみくじ",
+  test_name_cn: "今日一签",
+  layer: "Yorisou Oracle / Asobi",
+  version: "v1.0",
+  codex_ready: false,
+  founder_review_needed: true,
+  trust_risk_review_needed: true,
+  format: {
+    type: "daily_symbolic_reflective_draw",
+    action_count: 1,
+    optional_input_count: {
+      min: 0,
+      max: 3
+    },
+    expected_completion_time_seconds: [10, 30],
+    boundary: "reflective_entertainment_only"
+  },
+  boundary_notes: {
+    jp: "このおみくじは、未来を予言するものではありません。今日の気分を少し見つめるための、あそびとしての小さなリフレクションです。",
+    cn: "本签文不是未来预测或命运判断，只是帮助你轻轻观察今天状态的娱乐型反思提示。",
+    forbidden_claims: [
+      "future_prediction",
+      "destiny_certainty",
+      "psychological_diagnosis",
+      "religious_replacement",
+      "love_work_money_forecast",
+      "fear_based_bad_luck"
+    ]
+  },
+  optional_inputs: [
+    {
+      id: "today_mood",
+      label_jp: "今日の気分",
+      type: "single_select",
+      options: ["すっきり", "ふつう", "迷いぎみ", "つかれぎみ", "ちょっと楽しみ"],
+      sensitivity_level: "low",
+      use: "soft_weighting_only"
+    },
+    {
+      id: "attention_area",
+      label_jp: "今日、少し気になること",
+      type: "single_select",
+      options: ["自分のこと", "人との距離", "恋愛", "仕事・学び", "休み方", "まだわからない"],
+      sensitivity_level: "low",
+      use: "soft_recommendation_weighting_only"
+    },
+    {
+      id: "tone_preference",
+      label_jp: "ほしい言葉の温度",
+      type: "single_select",
+      options: ["やさしく", "すっきり", "そっと背中を押す", "余白をくれる"],
+      sensitivity_level: "low",
+      use: "copy_tone_only"
+    }
+  ],
+  assignment_logic: {
+    method: "daily_seeded_random_with_light_weighting",
+    daily_seed_inputs_allowed: ["date", "anonymous_session_token", "non_identifying_local_value"],
+    prohibited_seed_inputs: ["real_name", "birthdate", "address", "workplace", "partner_name", "medical_data", "financial_data"],
+    repeat_rules: {
+      avoid_same_result_consecutive_days: true,
+      avoid_more_than_twice_in_7_days_when_history_available: true,
+      redraw_limit_per_day: 1,
+      redraw_label_jp: "あそびの引き直し"
+    },
+    fortune_levels: ["大吉", "中吉", "小吉", "吉", "末吉", "余白", "整え"],
+    forbidden_level: "凶"
+  },
+  recommendation_targets: {
+    C02: "今のわたしチェック",
+    R01: "恋愛相性",
+    F01: "向いている働き方診断",
+    MAIN_120: "120問主テスト",
+    LINE_SAVE: "LINE保存・リマインダー"
+  },
+  result_pool: [
+    {
+      result_id: "S01_R001",
+      fortune_level_jp: "大吉",
+      fortune_level_cn: "大吉",
+      title_jp: "風が通る日",
+      title_cn: "风开始流动的一天",
+      main_message_jp: "今日は、考えを少し外に出すと流れが軽くなりそうです。完璧な言葉でなくても、短く伝えるだけで十分です。",
+      main_message_cn: "今天适合把想法稍微说出口。即使不是完美表达，只要短短传达，也会让状态变轻。",
+      today_hint_jp: "ひとつだけ、今考えていることを誰かに共有してみる。",
+      avoid_jp: "全部を一人で整理してから動こうとすること。",
+      lucky_action_jp: "3行メモを書く",
+      lucky_color_jp: "みずいろ",
+      core_bridge_jp: "今の状態をもう少し見たいときは、C02 今のわたしチェックへ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「風が通る日」。短く伝えるだけで、少し軽くなるかも。",
+      risk_boundary: "reflective entertainment only; no future prediction; no interpersonal outcome guarantee"
+    },
+    {
+      result_id: "S01_R002",
+      fortune_level_jp: "中吉",
+      fortune_level_cn: "中吉",
+      title_jp: "小さく整う日",
+      title_cn: "小小整理的一天",
+      main_message_jp: "大きく変えなくても、机の上や予定の順番を少し整えるだけで、気持ちの入口が見えやすくなります。",
+      main_message_cn: "不需要大幅改变，只要稍微整理桌面或安排顺序，就可能更容易看见今天的入口。",
+      today_hint_jp: "いちばん目に入る場所をひとつ片づける。",
+      avoid_jp: "気合いだけで全部を進めようとすること。",
+      lucky_action_jp: "予定をひとつ並べ替える",
+      lucky_color_jp: "白",
+      core_bridge_jp: "疲れやすさが気になるなら、C02で今の状態を確認。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「小さく整う日」。ひとつ整えるだけで十分。",
+      risk_boundary: "reflective entertainment only; no productivity or health guarantee"
+    },
+    {
+      result_id: "S01_R003",
+      fortune_level_jp: "小吉",
+      fortune_level_cn: "小吉",
+      title_jp: "余白を守る日",
+      title_cn: "保护余白的一天",
+      main_message_jp: "今日の鍵は、空いている時間をすぐ埋めないこと。余白は怠けではなく、自分の声が戻る場所です。",
+      main_message_cn: "今天的关键是不要急着把空白时间填满。余白不是懒散，而是让自己的声音回来。",
+      today_hint_jp: "予定と予定の間に10分の空白を残す。",
+      avoid_jp: "空いた時間を反射的に埋めること。",
+      lucky_action_jp: "通知を少し切る",
+      lucky_color_jp: "生成り",
+      core_bridge_jp: "休み方の傾向を見たいときは、120問テストへ。",
+      recommendation_trigger: "MAIN_120",
+      share_card_line_jp: "今日は「余白を守る日」。空白にも意味がある。",
+      risk_boundary: "reflective entertainment only; no mental health advice"
+    },
+    {
+      result_id: "S01_R004",
+      fortune_level_jp: "吉",
+      fortune_level_cn: "吉",
+      title_jp: "近すぎないやさしさ",
+      title_cn: "不过近的温柔",
+      main_message_jp: "誰かを大切にしたい日ほど、距離の取り方も大切になります。すぐ答えを出さず、相手と自分の余地を残してみてください。",
+      main_message_cn: "越是想珍惜某个人的时候，距离感也越重要。今天可以先不急着给答案，给彼此留一点空间。",
+      today_hint_jp: "返事を急がず、一呼吸おいてから送る。",
+      avoid_jp: "相手の気持ちを決めつけること。",
+      lucky_action_jp: "短い確認の言葉を使う",
+      lucky_color_jp: "淡いピンク",
+      core_bridge_jp: "恋愛や相性の距離感を見たいなら、R01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「近すぎないやさしさ」。余地を残すのも思いやり。",
+      risk_boundary: "reflective entertainment only; no relationship prediction"
+    },
+    {
+      result_id: "S01_R005",
+      fortune_level_jp: "末吉",
+      fortune_level_cn: "末吉",
+      title_jp: "ゆっくり芽が出る日",
+      title_cn: "慢慢发芽的一天",
+      main_message_jp: "すぐ結果が見えなくても、今日の小さな一歩はあとで効いてきます。急がず、でも止めずにいきましょう。",
+      main_message_cn: "即使今天看不到结果，小小一步也可能在之后起作用。不急，但也不用完全停下。",
+      today_hint_jp: "5分だけ手をつける。",
+      avoid_jp: "できなかった部分だけを数えること。",
+      lucky_action_jp: "タイマーを5分にする",
+      lucky_color_jp: "若草色",
+      core_bridge_jp: "働き方の進め方が気になるなら、F01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「ゆっくり芽が出る日」。小さく始めればいい。",
+      risk_boundary: "reflective entertainment only; no career outcome guarantee"
+    },
+    {
+      result_id: "S01_R006",
+      fortune_level_jp: "余白",
+      fortune_level_cn: "余白",
+      title_jp: "答えを急がない日",
+      title_cn: "不急着回答的一天",
+      main_message_jp: "今日は、はっきり決めるよりも、まだ決めない自分を許すほうが合うかもしれません。保留もひとつの選び方です。",
+      main_message_cn: "今天也许不适合马上决定。允许自己暂时保留，也是一种选择方式。",
+      today_hint_jp: "決めたいことを「今日決める」と「後で見る」に分ける。",
+      avoid_jp: "不安だからといって即決すること。",
+      lucky_action_jp: "保留メモを作る",
+      lucky_color_jp: "うす灰",
+      core_bridge_jp: "今の迷いの形を見たいなら、C02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「答えを急がない日」。保留にも意味がある。",
+      risk_boundary: "reflective entertainment only; no decision advice for high-stakes matters"
+    },
+    {
+      result_id: "S01_R007",
+      fortune_level_jp: "整え",
+      fortune_level_cn: "调整",
+      title_jp: "呼吸を戻す日",
+      title_cn: "把呼吸找回来的一天",
+      main_message_jp: "今日は、前に進むより先に呼吸を戻すことが助けになります。落ち着いてから見る景色は、少し違って見えます。",
+      main_message_cn: "今天比起向前推进，先把呼吸找回来会更有帮助。平静后再看，景色会稍微不同。",
+      today_hint_jp: "深呼吸を3回してから次の作業に入る。",
+      avoid_jp: "乱れたまま重要な返事をすること。",
+      lucky_action_jp: "温かい飲み物を飲む",
+      lucky_color_jp: "ほうじ茶色",
+      core_bridge_jp: "状態の波を見たいときは、C02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「呼吸を戻す日」。整えてからで大丈夫。",
+      risk_boundary: "reflective entertainment only; no medical or therapeutic claim"
+    },
+    {
+      result_id: "S01_R008",
+      fortune_level_jp: "大吉",
+      fortune_level_cn: "大吉",
+      title_jp: "好きが目印になる日",
+      title_cn: "喜欢会成为路标的一天",
+      main_message_jp: "今日は、効率よりも「少し好き」を手がかりにすると進みやすい日。心が少し向く方向を見逃さないで。",
+      main_message_cn: "今天比起效率，更适合把“一点点喜欢”当作线索。不要忽略心里稍微偏向的方向。",
+      today_hint_jp: "今日やることに、好きな要素をひとつ足す。",
+      avoid_jp: "正しさだけで選び続けること。",
+      lucky_action_jp: "好きな音を流す",
+      lucky_color_jp: "レモン色",
+      core_bridge_jp: "自分に合う働き方の入口としてF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「好きが目印になる日」。少し好き、を拾ってみる。",
+      risk_boundary: "reflective entertainment only; no career or life direction guarantee"
+    },
+    {
+      result_id: "S01_R009",
+      fortune_level_jp: "中吉",
+      fortune_level_cn: "中吉",
+      title_jp: "ほどよい境界の日",
+      title_cn: "刚刚好的边界日",
+      main_message_jp: "やさしくすることと、何でも受け止めることは同じではありません。今日は小さな境界線を置いても大丈夫です。",
+      main_message_cn: "温柔和全部承接并不是一回事。今天可以给自己放一条小小边界线。",
+      today_hint_jp: "ひとつだけ「今日はここまで」を決める。",
+      avoid_jp: "断れないまま引き受けること。",
+      lucky_action_jp: "返事の前に予定を見る",
+      lucky_color_jp: "藍色",
+      core_bridge_jp: "人との距離感を見たいなら、R01またはC02へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「ほどよい境界の日」。やさしさに余白を。",
+      risk_boundary: "reflective entertainment only; no interpersonal judgment"
+    },
+    {
+      result_id: "S01_R010",
+      fortune_level_jp: "小吉",
+      fortune_level_cn: "小吉",
+      title_jp: "眠っていた予定の日",
+      title_cn: "沉睡计划醒来的一天",
+      main_message_jp: "前に置いたままの予定やメモが、今日ふと役に立つかもしれません。新しく増やすより、戻って見る日です。",
+      main_message_cn: "之前放下的计划或笔记，今天可能忽然派上用场。比起新增，更适合回头看看。",
+      today_hint_jp: "古いメモをひとつだけ開く。",
+      avoid_jp: "新しいことを増やしすぎること。",
+      lucky_action_jp: "未完了リストを眺める",
+      lucky_color_jp: "くすみ緑",
+      core_bridge_jp: "仕事や学びの進め方はF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「眠っていた予定の日」。前のメモが味方になるかも。",
+      risk_boundary: "reflective entertainment only; no productivity promise"
+    },
+    {
+      result_id: "S01_R011",
+      fortune_level_jp: "吉",
+      fortune_level_cn: "吉",
+      title_jp: "受け取る練習の日",
+      title_cn: "练习接收的一天",
+      main_message_jp: "頑張るだけでなく、差し出されたものを受け取ることも今日のテーマです。遠慮しすぎなくて大丈夫。",
+      main_message_cn: "今天的主题不只是努力，也包括接收别人递来的东西。不必过度客气。",
+      today_hint_jp: "ありがとうを短く素直に言う。",
+      avoid_jp: "すぐ「大丈夫です」と返してしまうこと。",
+      lucky_action_jp: "小さなお礼を伝える",
+      lucky_color_jp: "さくら色",
+      core_bridge_jp: "自分の受け取り方を見たいならC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「受け取る練習の日」。遠慮を少しゆるめて。",
+      risk_boundary: "reflective entertainment only; no social outcome guarantee"
+    },
+    {
+      result_id: "S01_R012",
+      fortune_level_jp: "末吉",
+      fortune_level_cn: "末吉",
+      title_jp: "低速で進む日",
+      title_cn: "低速前进的一天",
+      main_message_jp: "今日は速さよりも、止まらずに続けることが合いそうです。歩幅を小さくすれば、進んでいる感覚が戻ります。",
+      main_message_cn: "今天比起速度，更适合不停下地继续。把步幅变小，就更容易感到自己在前进。",
+      today_hint_jp: "ひとつの作業を小さく分ける。",
+      avoid_jp: "いきなり大きな完成を目指すこと。",
+      lucky_action_jp: "最初の一手だけ決める",
+      lucky_color_jp: "ベージュ",
+      core_bridge_jp: "自分に合う作業リズムはF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「低速で進む日」。小さい歩幅でいい。",
+      risk_boundary: "reflective entertainment only; no work result guarantee"
+    },
+    {
+      result_id: "S01_R013",
+      fortune_level_jp: "余白",
+      fortune_level_cn: "余白",
+      title_jp: "静かな本音の日",
+      title_cn: "安静本音的一天",
+      main_message_jp: "にぎやかな言葉の下に、小さな本音が隠れていそうです。今日は誰かに見せる前に、自分だけで眺めてみてください。",
+      main_message_cn: "热闹的话语下面，可能藏着小小的本音。今天可以先只给自己看一看。",
+      today_hint_jp: "人に送らないメモを書く。",
+      avoid_jp: "すぐ公開できる形にしようとすること。",
+      lucky_action_jp: "下書きに残す",
+      lucky_color_jp: "すみれ色",
+      core_bridge_jp: "今の自分の層を見たいときは120問テストへ。",
+      recommendation_trigger: "MAIN_120",
+      share_card_line_jp: "今日は「静かな本音の日」。見せないメモも大事。",
+      risk_boundary: "reflective entertainment only; no deep psychological claim"
+    },
+    {
+      result_id: "S01_R014",
+      fortune_level_jp: "整え",
+      fortune_level_cn: "调整",
+      title_jp: "音量を下げる日",
+      title_cn: "把音量调低的一天",
+      main_message_jp: "外から入る情報が多いと、自分の感覚が見えにくくなります。今日は少しだけ音量を下げると整いやすいです。",
+      main_message_cn: "外部信息太多时，会不容易看清自己的感觉。今天可以稍微把音量调低。",
+      today_hint_jp: "ひとつの通知をオフにする。",
+      avoid_jp: "目に入った情報を全部追うこと。",
+      lucky_action_jp: "画面を閉じる時間を作る",
+      lucky_color_jp: "霧の白",
+      core_bridge_jp: "疲れや情報量の状態確認はC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「音量を下げる日」。静けさを少し足して。",
+      risk_boundary: "reflective entertainment only; no digital wellbeing claim"
+    },
+    {
+      result_id: "S01_R015",
+      fortune_level_jp: "大吉",
+      fortune_level_cn: "大吉",
+      title_jp: "ひと声が開く日",
+      title_cn: "一句话打开的一天",
+      main_message_jp: "今日の流れは、短いひと声から開きやすそうです。完璧な誘い方でなくても、軽く声をかけるだけで十分です。",
+      main_message_cn: "今天的流动可能从一句短短的话开始。邀请不用完美，轻轻开口就足够。",
+      today_hint_jp: "気になる人に短い一言を送る。",
+      avoid_jp: "長く考えすぎて何も送れないこと。",
+      lucky_action_jp: "ひとこと連絡する",
+      lucky_color_jp: "コーラル",
+      core_bridge_jp: "関係の距離感を見たいならR01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「ひと声が開く日」。短い言葉で十分。",
+      risk_boundary: "reflective entertainment only; no love or response prediction"
+    },
+    {
+      result_id: "S01_R016",
+      fortune_level_jp: "中吉",
+      fortune_level_cn: "中吉",
+      title_jp: "手ざわりを信じる日",
+      title_cn: "相信手感的一天",
+      main_message_jp: "理屈で説明しきれなくても、「これは少し合う」という感覚があります。今日はその手ざわりを軽く信じてみてください。",
+      main_message_cn: "有些“好像适合我”的感觉，不一定能马上解释。今天可以轻轻相信这种手感。",
+      today_hint_jp: "触って心地よいものを近くに置く。",
+      avoid_jp: "すべてを理由で固めようとすること。",
+      lucky_action_jp: "好きな道具を使う",
+      lucky_color_jp: "木の色",
+      core_bridge_jp: "合う働き方や環境の傾向はF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「手ざわりを信じる日」。合う感覚を拾って。",
+      risk_boundary: "reflective entertainment only; no suitability diagnosis"
+    },
+    {
+      result_id: "S01_R017",
+      fortune_level_jp: "小吉",
+      fortune_level_cn: "小吉",
+      title_jp: "早めに閉じる日",
+      title_cn: "早点收尾的一天",
+      main_message_jp: "今日の良さは、長く粘ることより、早めに閉じる判断にありそうです。終わらせることで明日の余力が残ります。",
+      main_message_cn: "今天的好处可能不在坚持更久，而在早点收尾。结束本身会给明天留下余力。",
+      today_hint_jp: "終わりの時間を先に決める。",
+      avoid_jp: "もう少しだけを何度も続けること。",
+      lucky_action_jp: "片づけのアラームを置く",
+      lucky_color_jp: "薄紫",
+      core_bridge_jp: "休み方と続け方の確認はC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「早めに閉じる日」。終わりを作るのも前進。",
+      risk_boundary: "reflective entertainment only; no health or performance claim"
+    },
+    {
+      result_id: "S01_R018",
+      fortune_level_jp: "吉",
+      fortune_level_cn: "吉",
+      title_jp: "まっすぐ聞く日",
+      title_cn: "直接询问的一天",
+      main_message_jp: "想像で補いすぎるより、今日は小さく聞いてみるほうがよさそうです。確認は責めることではありません。",
+      main_message_cn: "与其过度想象，不如今天小小确认一下。确认并不等于责备。",
+      today_hint_jp: "「今どう思ってる？」をやわらかく聞く。",
+      avoid_jp: "聞かずに相手の答えを決めること。",
+      lucky_action_jp: "質問を短くする",
+      lucky_color_jp: "空色",
+      core_bridge_jp: "恋愛・相性の受け取り方はR01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「まっすぐ聞く日」。確認はやさしくできる。",
+      risk_boundary: "reflective entertainment only; no relationship advice guarantee"
+    },
+    {
+      result_id: "S01_R019",
+      fortune_level_jp: "末吉",
+      fortune_level_cn: "末吉",
+      title_jp: "ほぐしてから進む日",
+      title_cn: "放松后再前进的一天",
+      main_message_jp: "体や気分が固いまま進めると、いつもより重く感じるかもしれません。先に少しほぐす時間を入れてみてください。",
+      main_message_cn: "如果身体或心情紧绷地前进，可能会比平时更重。今天先放松一点再开始。",
+      today_hint_jp: "肩や手をゆっくり伸ばす。",
+      avoid_jp: "固まったまま勢いで進めること。",
+      lucky_action_jp: "立って水を飲む",
+      lucky_color_jp: "ミント",
+      core_bridge_jp: "今の負荷感を見たいならC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「ほぐしてから進む日」。先にゆるめて。",
+      risk_boundary: "reflective entertainment only; no medical advice"
+    },
+    {
+      result_id: "S01_R020",
+      fortune_level_jp: "余白",
+      fortune_level_cn: "余白",
+      title_jp: "名前をつけない日",
+      title_cn: "不急着命名的一天",
+      main_message_jp: "まだ言葉にならない気持ちに、無理に名前をつけなくても大丈夫です。ぼんやりしたまま持っていてもいい日です。",
+      main_message_cn: "还没有变成语言的感受，不必勉强命名。今天可以允许它保持模糊。",
+      today_hint_jp: "気持ちを色や天気でメモする。",
+      avoid_jp: "すぐ正解の言葉を探すこと。",
+      lucky_action_jp: "色で記録する",
+      lucky_color_jp: "くもり白",
+      core_bridge_jp: "自分の状態をもう少し見たいなら120問テストへ。",
+      recommendation_trigger: "MAIN_120",
+      share_card_line_jp: "今日は「名前をつけない日」。ぼんやりのままでいい。",
+      risk_boundary: "reflective entertainment only; no psychological diagnosis"
+    },
+    {
+      result_id: "S01_R021",
+      fortune_level_jp: "大吉",
+      fortune_level_cn: "大吉",
+      title_jp: "軽い始まりの日",
+      title_cn: "轻轻开始的一天",
+      main_message_jp: "今日は、ちゃんと始めるより軽く触れるほうが向いています。入口を小さくすれば、気持ちがあとからついてきます。",
+      main_message_cn: "今天比起正式开始，更适合轻轻碰一下。入口越小，心情越容易跟上。",
+      today_hint_jp: "最初の30秒だけやってみる。",
+      avoid_jp: "始める前に全部の準備をそろえること。",
+      lucky_action_jp: "ファイルを開くだけ",
+      lucky_color_jp: "クリーム",
+      core_bridge_jp: "作業の始め方はF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「軽い始まりの日」。30秒だけでいい。",
+      risk_boundary: "reflective entertainment only; no productivity guarantee"
+    },
+    {
+      result_id: "S01_R022",
+      fortune_level_jp: "中吉",
+      fortune_level_cn: "中吉",
+      title_jp: "ほどける会話の日",
+      title_cn: "对话松开的一天",
+      main_message_jp: "今日は、結論を急がない会話が合いそうです。話しながらほどけることもあります。",
+      main_message_cn: "今天适合不急着下结论的对话。有些东西会在说着说着的时候松开。",
+      today_hint_jp: "結論より先に、感じたことを一言置く。",
+      avoid_jp: "すぐ白黒をつけること。",
+      lucky_action_jp: "相づちをゆっくり返す",
+      lucky_color_jp: "ラベンダー",
+      core_bridge_jp: "人との距離や会話の傾向はR01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「ほどける会話の日」。急がない言葉を。",
+      risk_boundary: "reflective entertainment only; no interpersonal outcome prediction"
+    },
+    {
+      result_id: "S01_R023",
+      fortune_level_jp: "小吉",
+      fortune_level_cn: "小吉",
+      title_jp: "一段低く見る日",
+      title_cn: "降低一层来看的一天",
+      main_message_jp: "今日の課題は、思っているより少し小さく分けられそうです。大きな山に見えるものを、一段だけ低くしてみてください。",
+      main_message_cn: "今天的课题也许可以比想象中拆得更小。把看似很高的山，先降低一层。",
+      today_hint_jp: "やることを「今できる一手」に直す。",
+      avoid_jp: "大きなまま抱え続けること。",
+      lucky_action_jp: "タスク名を短くする",
+      lucky_color_jp: "石のグレー",
+      core_bridge_jp: "今の負荷と行動の関係はC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「一段低く見る日」。小さくすれば見える。",
+      risk_boundary: "reflective entertainment only; no stress management claim"
+    },
+    {
+      result_id: "S01_R024",
+      fortune_level_jp: "吉",
+      fortune_level_cn: "吉",
+      title_jp: "待つ力の日",
+      title_cn: "等待力的一天",
+      main_message_jp: "今日は、追いかけるより待つことが合う場面がありそうです。待つことは止まることではなく、余地を残すことです。",
+      main_message_cn: "今天可能有些时候，等待比追赶更适合。等待不是停止，而是留下余地。",
+      today_hint_jp: "返事を一度寝かせてから送る。",
+      avoid_jp: "不安で何度も確認すること。",
+      lucky_action_jp: "下書きを保存する",
+      lucky_color_jp: "月白",
+      core_bridge_jp: "恋愛や相性の反応パターンはR01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「待つ力の日」。余地を残すのも選択。",
+      risk_boundary: "reflective entertainment only; no love or message outcome prediction"
+    },
+    {
+      result_id: "S01_R025",
+      fortune_level_jp: "末吉",
+      fortune_level_cn: "末吉",
+      title_jp: "足元を見る日",
+      title_cn: "看脚下的一天",
+      main_message_jp: "先のことを考えすぎると、今日できることがぼやけます。足元にあるひとつを見れば十分です。",
+      main_message_cn: "想太远时，今天能做的事会变模糊。看见脚下的一件事就足够了。",
+      today_hint_jp: "今日中に終わる小さな用事をひとつ選ぶ。",
+      avoid_jp: "未来の不安だけで予定を決めること。",
+      lucky_action_jp: "靴をそろえる",
+      lucky_color_jp: "土色",
+      core_bridge_jp: "現在地の確認はC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「足元を見る日」。今日のひとつでいい。",
+      risk_boundary: "reflective entertainment only; no future or financial prediction"
+    },
+    {
+      result_id: "S01_R026",
+      fortune_level_jp: "余白",
+      fortune_level_cn: "余白",
+      title_jp: "予定を減らす日",
+      title_cn: "减少安排的一天",
+      main_message_jp: "今日は、足すより引くほうが整いやすい日。予定や情報をひとつ減らすだけで、呼吸がしやすくなります。",
+      main_message_cn: "今天比起增加，更适合减少。少一个安排或信息源，就可能更容易呼吸。",
+      today_hint_jp: "やらないことをひとつ決める。",
+      avoid_jp: "空白を不安で埋めること。",
+      lucky_action_jp: "ToDoをひとつ消す",
+      lucky_color_jp: "透明",
+      core_bridge_jp: "休み方や余白の傾向は120問テストへ。",
+      recommendation_trigger: "MAIN_120",
+      share_card_line_jp: "今日は「予定を減らす日」。引くことで整う。",
+      risk_boundary: "reflective entertainment only; no health or scheduling advice"
+    },
+    {
+      result_id: "S01_R027",
+      fortune_level_jp: "整え",
+      fortune_level_cn: "调整",
+      title_jp: "水を通す日",
+      title_cn: "让水流过的一天",
+      main_message_jp: "気分が少し滞っているときは、流れを作る小さな動きが助けになります。水を飲む、歩く、窓を開ける。それだけで十分です。",
+      main_message_cn: "当心情有点停滞时，一个制造流动的小动作会有帮助。喝水、走动、开窗，就足够。",
+      today_hint_jp: "水を飲んで、窓を少し開ける。",
+      avoid_jp: "同じ姿勢で考え込み続けること。",
+      lucky_action_jp: "近くを少し歩く",
+      lucky_color_jp: "アクア",
+      core_bridge_jp: "気分の現在地はC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「水を通す日」。小さな流れを作って。",
+      risk_boundary: "reflective entertainment only; no medical or mental health instruction"
+    },
+    {
+      result_id: "S01_R028",
+      fortune_level_jp: "大吉",
+      fortune_level_cn: "大吉",
+      title_jp: "きっかけを拾う日",
+      title_cn: "捡起契机的一天",
+      main_message_jp: "今日は、偶然見かけた言葉や人の一言が、小さなきっかけになりそうです。無理に意味づけず、軽く拾ってみてください。",
+      main_message_cn: "今天偶然看到的话或听到的一句，可能成为小契机。不必过度解释，轻轻捡起来就好。",
+      today_hint_jp: "気になった言葉をひとつ保存する。",
+      avoid_jp: "すぐ大きな意味に変えること。",
+      lucky_action_jp: "スクリーンショットを一枚残す",
+      lucky_color_jp: "金色",
+      core_bridge_jp: "気になるテーマが出たらC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「きっかけを拾う日」。気になった言葉をひとつ。",
+      risk_boundary: "reflective entertainment only; no fate or sign certainty"
+    },
+    {
+      result_id: "S01_R029",
+      fortune_level_jp: "中吉",
+      fortune_level_cn: "中吉",
+      title_jp: "似合う速度の日",
+      title_cn: "适合自己速度的一天",
+      main_message_jp: "人の速さに合わせすぎると、自分のリズムが見えにくくなります。今日は似合う速度を探してみてください。",
+      main_message_cn: "太配合别人的速度时，会不容易看见自己的节奏。今天可以找找适合自己的速度。",
+      today_hint_jp: "いつもより少しだけゆっくり始める。",
+      avoid_jp: "周りのペースだけで焦ること。",
+      lucky_action_jp: "作業前に時間幅を見る",
+      lucky_color_jp: "青磁",
+      core_bridge_jp: "働き方のリズム確認はF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「似合う速度の日」。自分の速さを見つけて。",
+      risk_boundary: "reflective entertainment only; no work suitability diagnosis"
+    },
+    {
+      result_id: "S01_R030",
+      fortune_level_jp: "小吉",
+      fortune_level_cn: "小吉",
+      title_jp: "聞き役を休む日",
+      title_cn: "让倾听者休息的一天",
+      main_message_jp: "いつも聞き役になりやすい人ほど、今日は自分の話を少し置いてもよさそうです。聞くことを休んでも、やさしさは消えません。",
+      main_message_cn: "平时容易成为倾听者的人，今天也可以稍微说说自己。暂停倾听，并不代表温柔消失。",
+      today_hint_jp: "自分の近況を一文だけ話す。",
+      avoid_jp: "ずっと相手の話だけを受け止めること。",
+      lucky_action_jp: "「私は」を一回使う",
+      lucky_color_jp: "桃色",
+      core_bridge_jp: "関係の偏りを見たいならR01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「聞き役を休む日」。自分の声も置いていい。",
+      risk_boundary: "reflective entertainment only; no relationship diagnosis"
+    },
+    {
+      result_id: "S01_R031",
+      fortune_level_jp: "吉",
+      fortune_level_cn: "吉",
+      title_jp: "途中を見せる日",
+      title_cn: "展示过程的一天",
+      main_message_jp: "完成形だけを見せなくても大丈夫。今日は途中を少し共有することで、気持ちも作業も軽くなるかもしれません。",
+      main_message_cn: "不必只展示完成品。今天稍微分享过程，心情和任务都可能变轻。",
+      today_hint_jp: "途中の状態を信頼できる人に見せる。",
+      avoid_jp: "完成まで誰にも見せないこと。",
+      lucky_action_jp: "下書きを共有する",
+      lucky_color_jp: "オリーブ",
+      core_bridge_jp: "作業や表現の出し方はF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「途中を見せる日」。完成前にも価値がある。",
+      risk_boundary: "reflective entertainment only; no evaluation or career promise"
+    },
+    {
+      result_id: "S01_R032",
+      fortune_level_jp: "末吉",
+      fortune_level_cn: "末吉",
+      title_jp: "ひとつ戻る日",
+      title_cn: "回到前一步的一天",
+      main_message_jp: "進みにくいときは、前に戻ることが遠回りとは限りません。今日はひとつ手前を見直すと、詰まりがほどけやすそうです。",
+      main_message_cn: "前进困难时，回到前一步不一定是绕路。今天看一眼前一步，可能更容易松开卡点。",
+      today_hint_jp: "詰まった場所の一歩前を確認する。",
+      avoid_jp: "詰まった場所だけを押し続けること。",
+      lucky_action_jp: "最初のメモを読む",
+      lucky_color_jp: "砂色",
+      core_bridge_jp: "今の詰まり方を見るならC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「ひとつ戻る日」。戻ることで見えるものがある。",
+      risk_boundary: "reflective entertainment only; no problem-solving guarantee"
+    },
+    {
+      result_id: "S01_R033",
+      fortune_level_jp: "余白",
+      fortune_level_cn: "余白",
+      title_jp: "言葉を寝かせる日",
+      title_cn: "把语言放一放的一天",
+      main_message_jp: "今日は、すぐ投稿したり送ったりするより、言葉を少し寝かせるほうが合いそうです。時間を置くと、やわらかくなります。",
+      main_message_cn: "今天比起马上发布或发送，更适合把话放一放。隔一点时间，语言会变柔和。",
+      today_hint_jp: "送る前に一度読み返す。",
+      avoid_jp: "気持ちが高いまま公開すること。",
+      lucky_action_jp: "下書き保存を使う",
+      lucky_color_jp: "夜明け色",
+      core_bridge_jp: "感情と言葉の距離はC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「言葉を寝かせる日」。少し置くとやわらぐ。",
+      risk_boundary: "reflective entertainment only; no communication outcome guarantee"
+    },
+    {
+      result_id: "S01_R034",
+      fortune_level_jp: "整え",
+      fortune_level_cn: "调整",
+      title_jp: "まわり道を許す日",
+      title_cn: "允许绕路的一天",
+      main_message_jp: "最短で行けない日にも、別の見え方があります。今日は少し遠回りしても、自分を責めなくて大丈夫です。",
+      main_message_cn: "不能走最短路线的日子，也会有另一种看见。今天就算有点绕，也不必责备自己。",
+      today_hint_jp: "遅れた理由より、次の一歩を見る。",
+      avoid_jp: "遠回りを失敗と決めること。",
+      lucky_action_jp: "道順を変える",
+      lucky_color_jp: "深緑",
+      core_bridge_jp: "進み方の癖を見たいならF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「まわり道を許す日」。遠回りにも景色がある。",
+      risk_boundary: "reflective entertainment only; no success or failure judgment"
+    },
+    {
+      result_id: "S01_R035",
+      fortune_level_jp: "大吉",
+      fortune_level_cn: "大吉",
+      title_jp: "うれしい偶然の日",
+      title_cn: "小小偶然带来开心的一天",
+      main_message_jp: "今日は、予定外の小さなうれしさを見つけやすい日。大きな出来事でなくても、気づいたらちゃんと受け取ってください。",
+      main_message_cn: "今天适合发现计划外的小小开心。即使不是大事，只要注意到了，就好好接收。",
+      today_hint_jp: "うれしかったことを一つだけ残す。",
+      avoid_jp: "小さすぎるからと流すこと。",
+      lucky_action_jp: "ひとこと日記を書く",
+      lucky_color_jp: "ひまわり色",
+      core_bridge_jp: "日々の変化を残すならLINE保存へ。",
+      recommendation_trigger: "LINE_SAVE",
+      share_card_line_jp: "今日は「うれしい偶然の日」。小さなよろこびを拾って。",
+      risk_boundary: "reflective entertainment only; no promise that good events will happen"
+    },
+    {
+      result_id: "S01_R036",
+      fortune_level_jp: "中吉",
+      fortune_level_cn: "中吉",
+      title_jp: "目線を変える日",
+      title_cn: "换个视角的一天",
+      main_message_jp: "いつもの場所から見えないものが、少し角度を変えると見えるかもしれません。今日は見方を一つだけ変えてみてください。",
+      main_message_cn: "从平常的位置看不到的东西，稍微换个角度可能会出现。今天可以只改变一个看法。",
+      today_hint_jp: "反対側から一度見てみる。",
+      avoid_jp: "最初の見方だけで決めること。",
+      lucky_action_jp: "席を変える",
+      lucky_color_jp: "夕空色",
+      core_bridge_jp: "見方の癖を知りたいなら120問テストへ。",
+      recommendation_trigger: "MAIN_120",
+      share_card_line_jp: "今日は「目線を変える日」。角度を少し変えて。",
+      risk_boundary: "reflective entertainment only; no insight guarantee"
+    },
+    {
+      result_id: "S01_R037",
+      fortune_level_jp: "小吉",
+      fortune_level_cn: "小吉",
+      title_jp: "やさしい制限の日",
+      title_cn: "温柔限制的一天",
+      main_message_jp: "制限は冷たいものではなく、自分を守る形にもなります。今日は時間や量をやさしく区切ってみてください。",
+      main_message_cn: "限制不一定冰冷，也可以是保护自己的形状。今天可以温柔地给时间或数量设个边界。",
+      today_hint_jp: "使う時間を先に決める。",
+      avoid_jp: "区切りなしで続けること。",
+      lucky_action_jp: "15分だけ区切る",
+      lucky_color_jp: "薄茶",
+      core_bridge_jp: "続け方と休み方はF01またはC02へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「やさしい制限の日」。区切りは味方になる。",
+      risk_boundary: "reflective entertainment only; no behavioral advice guarantee"
+    },
+    {
+      result_id: "S01_R038",
+      fortune_level_jp: "吉",
+      fortune_level_cn: "吉",
+      title_jp: "近況を結ぶ日",
+      title_cn: "连接近况的一天",
+      main_message_jp: "久しぶりの人や少し離れた人に、近況を短く結び直すのに向いています。重くしなくて大丈夫です。",
+      main_message_cn: "今天适合和久未联系或稍微远离的人，轻轻重新连接近况。不必弄得很重。",
+      today_hint_jp: "「最近こんな感じ」と一言だけ送る。",
+      avoid_jp: "完璧な再開の言葉を探すこと。",
+      lucky_action_jp: "写真を一枚送る",
+      lucky_color_jp: "若桃色",
+      core_bridge_jp: "距離感や相性の見方はR01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「近況を結ぶ日」。軽い一言でつながる。",
+      risk_boundary: "reflective entertainment only; no relationship restoration claim"
+    },
+    {
+      result_id: "S01_R039",
+      fortune_level_jp: "末吉",
+      fortune_level_cn: "末吉",
+      title_jp: "ゆるい集中の日",
+      title_cn: "松弛专注的一天",
+      main_message_jp: "強く集中しようとするより、環境を少し整えて自然に入るほうが合いそうです。集中は力みだけで作らなくて大丈夫。",
+      main_message_cn: "今天与其强迫自己集中，不如稍微整理环境，让自己自然进入。专注不一定要靠用力。",
+      today_hint_jp: "目の前から不要なものを一つ外す。",
+      avoid_jp: "気合いで集中を作ろうとすること。",
+      lucky_action_jp: "机に一つだけ置く",
+      lucky_color_jp: "青緑",
+      core_bridge_jp: "作業環境との相性はF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「ゆるい集中の日」。力まず入ってみる。",
+      risk_boundary: "reflective entertainment only; no attention or performance claim"
+    },
+    {
+      result_id: "S01_R040",
+      fortune_level_jp: "余白",
+      fortune_level_cn: "余白",
+      title_jp: "何もしない数分の日",
+      title_cn: "什么都不做几分钟的一天",
+      main_message_jp: "今日は、何かを足すより何もしない数分が効きそうです。空いた数分を、ただ空いたままにしてみてください。",
+      main_message_cn: "今天比起再增加什么，什么都不做的几分钟可能更有用。让空出来的时间就这样空着。",
+      today_hint_jp: "3分だけ何もせず座る。",
+      avoid_jp: "休み時間まで成果に変えようとすること。",
+      lucky_action_jp: "画面を伏せる",
+      lucky_color_jp: "雪色",
+      core_bridge_jp: "休息の必要感を見るならC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「何もしない数分の日」。空白をそのままに。",
+      risk_boundary: "reflective entertainment only; no therapeutic claim"
+    },
+    {
+      result_id: "S01_R041",
+      fortune_level_jp: "整え",
+      fortune_level_cn: "调整",
+      title_jp: "朝を短く整える日",
+      title_cn: "简短整理早晨的一天",
+      main_message_jp: "朝や始まりの時間を少し整えると、今日全体の入口がやさしくなります。長いルーティンでなくて大丈夫です。",
+      main_message_cn: "稍微整理早晨或开始的时间，会让今天的入口更柔和。不需要很长的仪式。",
+      today_hint_jp: "最初に飲むものを決める。",
+      avoid_jp: "朝から情報を浴びすぎること。",
+      lucky_action_jp: "カーテンを開ける",
+      lucky_color_jp: "朝日色",
+      core_bridge_jp: "日々の戻り先としてLINE保存へ。",
+      recommendation_trigger: "LINE_SAVE",
+      share_card_line_jp: "今日は「朝を短く整える日」。始まりをやさしく。",
+      risk_boundary: "reflective entertainment only; no lifestyle outcome claim"
+    },
+    {
+      result_id: "S01_R042",
+      fortune_level_jp: "大吉",
+      fortune_level_cn: "大吉",
+      title_jp: "ありがとうが返る日",
+      title_cn: "感谢回流的一天",
+      main_message_jp: "今日の「ありがとう」は、自分にも相手にも少しあたたかく返ってきそうです。大げさでなく、短く伝えてみてください。",
+      main_message_cn: "今天的一句谢谢，可能会给自己和对方都带来一点温度。不需要夸张，短短表达就好。",
+      today_hint_jp: "助かったことを一つ伝える。",
+      avoid_jp: "伝えなくてもわかるはずと思うこと。",
+      lucky_action_jp: "ありがとうを一文送る",
+      lucky_color_jp: "はちみつ色",
+      core_bridge_jp: "人との温度感を見たいならR01へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「ありがとうが返る日」。短い感謝を置いて。",
+      risk_boundary: "reflective entertainment only; no response guarantee"
+    },
+    {
+      result_id: "S01_R043",
+      fortune_level_jp: "中吉",
+      fortune_level_cn: "中吉",
+      title_jp: "自分の席に戻る日",
+      title_cn: "回到自己座位的一天",
+      main_message_jp: "周りの期待や空気を読みすぎたら、自分の席に戻る時間を作ってください。今日は自分の感じ方を一度中心に置く日です。",
+      main_message_cn: "如果太在意周围期待或气氛，今天给自己一点回到自己座位的时间。把自己的感受放回中心一次。",
+      today_hint_jp: "「私はどうしたい？」を一度だけ書く。",
+      avoid_jp: "周りの正解だけで決めること。",
+      lucky_action_jp: "一人の時間を10分取る",
+      lucky_color_jp: "ネイビー",
+      core_bridge_jp: "自分の現在地はC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「自分の席に戻る日」。感じ方を中心に戻して。",
+      risk_boundary: "reflective entertainment only; no identity diagnosis"
+    },
+    {
+      result_id: "S01_R044",
+      fortune_level_jp: "小吉",
+      fortune_level_cn: "小吉",
+      title_jp: "少し頼る日",
+      title_cn: "稍微依靠的一天",
+      main_message_jp: "ひとりで抱えることが強さになる日もあれば、少し頼ることが流れを作る日もあります。今日は小さく頼ってみてください。",
+      main_message_cn: "有时独自承担是力量，有时稍微依靠也会创造流动。今天可以小小地依靠一下。",
+      today_hint_jp: "ひとつだけ相談する。",
+      avoid_jp: "頼る前から迷惑と決めること。",
+      lucky_action_jp: "手伝ってほしい点を一つ言う",
+      lucky_color_jp: "うす緑",
+      core_bridge_jp: "頼り方や距離感はR01またはC02へ。",
+      recommendation_trigger: "R01",
+      share_card_line_jp: "今日は「少し頼る日」。小さく頼ってもいい。",
+      risk_boundary: "reflective entertainment only; no social or relationship guarantee"
+    },
+    {
+      result_id: "S01_R045",
+      fortune_level_jp: "吉",
+      fortune_level_cn: "吉",
+      title_jp: "形から入る日",
+      title_cn: "从形式进入的一天",
+      main_message_jp: "気持ちがまだ追いつかないときは、形から入るのもひとつです。道具、場所、姿勢を少し変えるだけで入口ができます。",
+      main_message_cn: "心情还没跟上时，从形式进入也是一种方法。工具、地点、姿势稍微改变，就能出现入口。",
+      today_hint_jp: "作業する場所を少し変える。",
+      avoid_jp: "気分が整うまで待ち続けること。",
+      lucky_action_jp: "ペンやノートを選ぶ",
+      lucky_color_jp: "黒",
+      core_bridge_jp: "合う環境や働き方はF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「形から入る日」。入口は作ってもいい。",
+      risk_boundary: "reflective entertainment only; no productivity or suitability guarantee"
+    },
+    {
+      result_id: "S01_R046",
+      fortune_level_jp: "末吉",
+      fortune_level_cn: "末吉",
+      title_jp: "比べる手を休める日",
+      title_cn: "让比较的手休息的一天",
+      main_message_jp: "今日の自分を、誰かの速度や成果と並べなくても大丈夫です。比べる手を少し休ませると、今の位置が見えます。",
+      main_message_cn: "今天的自己不必和别人的速度或成果摆在一起。让比较的手休息一下，会更看得见当前位置。",
+      today_hint_jp: "SNSを見る前に自分の予定を見る。",
+      avoid_jp: "人の進捗を見て自分を急かすこと。",
+      lucky_action_jp: "自分の一歩を記録する",
+      lucky_color_jp: "銀色",
+      core_bridge_jp: "現在地をやさしく確認するならC02へ。",
+      recommendation_trigger: "C02",
+      share_card_line_jp: "今日は「比べる手を休める日」。自分の位置に戻って。",
+      risk_boundary: "reflective entertainment only; no mental health claim"
+    },
+    {
+      result_id: "S01_R047",
+      fortune_level_jp: "余白",
+      fortune_level_cn: "余白",
+      title_jp: "未完成を置く日",
+      title_cn: "放下未完成的一天",
+      main_message_jp: "未完成のまま置いておくことが、次の入口になる日です。今日の終わりに、途中の自分を責めなくて大丈夫です。",
+      main_message_cn: "今天，允许未完成地放在那里，反而会成为下一次入口。一天结束时，不必责备途中状态的自己。",
+      today_hint_jp: "途中の場所がわかるメモを残す。",
+      avoid_jp: "未完成を失敗として扱うこと。",
+      lucky_action_jp: "続きの一行を書く",
+      lucky_color_jp: "羊毛色",
+      core_bridge_jp: "続け方のパターンはF01へ。",
+      recommendation_trigger: "F01",
+      share_card_line_jp: "今日は「未完成を置く日」。途中にも続きがある。",
+      risk_boundary: "reflective entertainment only; no achievement outcome claim"
+    },
+    {
+      result_id: "S01_R048",
+      fortune_level_jp: "整え",
+      fortune_level_cn: "调整",
+      title_jp: "今日をしまう日",
+      title_cn: "把今天收起来的一天",
+      main_message_jp: "今日の終わりに、よかったことと重かったことをひとつずつしまってください。全部を解決しなくても、区切るだけで十分です。",
+      main_message_cn: "在今天结束时，把一件好的事和一件重的事分别收起来。不必全部解决，只要做个区分就足够。",
+      today_hint_jp: "よかったことを一つ、重かったことを一つ書く。",
+      avoid_jp: "眠る前に全部を反省し続けること。",
+      lucky_action_jp: "今日の一行を保存する",
+      lucky_color_jp: "夕暮れ色",
+      core_bridge_jp: "明日も戻るならLINEリマインダー保存へ。",
+      recommendation_trigger: "LINE_SAVE",
+      share_card_line_jp: "今日は「今日をしまう日」。一行だけ残して眠ろう。",
+      risk_boundary: "reflective entertainment only; no sleep or health claim"
+    }
+  ],
+  free_result_structure: {
+    required_blocks: [
+      "public_safe_marker",
+      "fortune_level",
+      "result_title",
+      "main_message",
+      "today_hint",
+      "avoid_note",
+      "lucky_action",
+      "lucky_color",
+      "save_to_line_cta",
+      "share_card_cta",
+      "recommended_next_test_cta"
+    ],
+    primary_cta_jp: "LINEで今日の一枚を保存する",
+    secondary_cta_jp: "今のわたしチェックへ",
+    share_cta_jp: "シェアカードを作る"
+  },
+  share_card_logic: {
+    public_safe: true,
+    include_fields: ["test_name_jp", "fortune_level_jp", "title_jp", "share_card_line_jp", "lucky_color_jp", "date_optional"],
+    exclude_fields: ["optional_inputs", "private_state_interpretation", "recommendation_trigger", "paid_report_teaser", "relationship_vulnerability", "work_anxiety"],
+    boundary_microcopy_jp: "未来予測ではなく、今日のリフレクション"
+  },
+  paid_deep_report_boundary: {
+    paid_report_enabled: false,
+    allowed_next_steps: ["C02", "R01", "F01", "MAIN_120", "LINE_SAVE"],
+    forbidden: ["paid_omikuji", "fear_based_upsell", "bad_luck_removal", "prediction_report", "love_work_money_forecast", "religious_replacement"]
+  }
+} as const;
+````
+
+## 16. Final Status
+
+output_status: md_review_file_created
+file_name: S01_kyou_no_omikuji_v1_0.md
+founder_review_needed: yes
+trust_risk_review_needed: yes
+codex_needed: no
+codex_ready: false
+next_recommended_action: founder_and_trust_risk_review_before_next_test_md
+

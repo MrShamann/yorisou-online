@@ -1,0 +1,1821 @@
+---
+
+test_id: R04
+test_name_jp: 名前相性チェック
+test_name_cn: 姓名相性检测
+layer: Yorisou Relationship / Oracle
+version: v1.0
+codex_ready: false
+founder_review_needed: true
+trust_risk_review_needed: true
+------------------------------
+
+# R04_namae_aisho_check_v1_0.md
+
+## File Status
+
+output_type: md_review_asset
+asset_type: symbolic_reflective_relationship_entry_test
+test_id: R04
+version: v1.0
+codex_ready: false
+founder_review_needed: true
+trust_risk_review_needed: true
+implementation_status: not_implemented
+publication_status: not_published
+
+## 1. Test Product Summary
+
+test_id: R04
+test_name_jp: 名前相性チェック
+test_name_cn: 姓名相性检测
+layer: Yorisou Relationship / Oracle
+category: relationship / symbolic reflective entertainment
+primary_role: light sharing entry for relationship interest
+secondary_role: route to R01, C02, and S01
+format: two-name input with optional light questions
+expected_completion_time: 30-90 seconds
+result_count: 32
+commercial_role: free public-safe result, share card, relationship interest signal, R01 long-test routing
+not_a_role: name divination, destiny judgment, relationship conclusion, marriage forecast, breakup forecast, psychological diagnosis, religious/spiritual reading
+
+R04 is a light, shareable Yorisou entry experience. It uses two names or nicknames as a playful starting point for reflective compatibility copy. It must not claim that names determine compatibility. It must not use name numerology, astrology, divination, religion, or psychology as authority. Deeper relationship understanding must be routed to R01.
+
+## 2. Landing Page Copy
+
+### Japanese
+
+title: 名前相性チェック
+subtitle: ふたりの名前をきっかけに、距離感をそっと見てみる。
+description: これは姓名判断や運命予測ではありません。名前を入口にした、あそび型の相性リフレクションです。
+primary_cta: 名前で相性を見てみる
+secondary_cta: ふたり恋愛相性診断へ
+microcopy: 結果は軽いリフレクションです。恋愛や関係の結論を決めるものではありません。
+
+### Chinese
+
+title: 姓名相性检测
+subtitle: 用两个名字作为入口，轻轻看看两个人的距离感。
+description: 这不是姓名命理、命运判断或恋爱结论。它是以名字为契机的娱乐型相性反思。
+primary_cta: 用名字看看相性
+secondary_cta: 去做双人恋爱相性诊断
+microcopy: 结果仅用于轻量反思，不判断两个人是否适合恋爱或未来会怎样。
+
+## 3. Consent / Privacy / Boundary Notes
+
+* R04 accepts names or nicknames only.
+* Users should be encouraged to use nicknames instead of legal names.
+* Input names must not be treated as identity verification.
+* R04 does not require birthday, address, workplace, contact info, gender, relationship history, medical data, or financial data.
+* R04 must not claim to calculate compatibility from names.
+* R04 must not claim name numerology, 姓名判断, 数理, astrology, divination, religion, psychology, or scientific authority.
+* R04 must not state that two people are destined, suitable, unsuitable, likely to marry, likely to break up, likely to reconcile, or likely to date.
+* R04 must remain symbolic / reflective entertainment.
+* Share cards must be public-safe and must not expose private relationship worry.
+* Deeper relationship analysis must route to R01.
+
+Japanese boundary copy:
+「このチェックは、姓名判断や運命予測ではありません。名前をきっかけにした、あそび型の相性リフレクションです。」
+
+Chinese boundary copy:
+「本检测不是姓名命理、命运预测或心理诊断，只是以名字为入口的娱乐型关系反思。」
+
+## 4. Input Format
+
+### Required Inputs
+
+Input 1:
+
+* id: your_name_or_nickname
+* label_jp: あなたの名前・ニックネーム
+* type: text
+* max_length: 20
+* required: true
+* guidance_jp: 本名ではなく、ニックネームでも大丈夫です。
+
+Input 2:
+
+* id: partner_name_or_nickname
+* label_jp: 相手の名前・ニックネーム
+* type: text
+* max_length: 20
+* required: true
+* guidance_jp: 相手の本名でなく、呼び名でも大丈夫です。
+
+### Optional Inputs
+
+Input 3:
+
+* id: relation_context
+* label_jp: ふたりの関係
+* type: single_select
+* required: false
+* options:
+
+  * 恋愛
+  * 気になる人
+  * 友だち
+  * 仕事・チーム
+  * まだわからない
+
+Input 4:
+
+* id: tone_preference
+* label_jp: ほしい言葉の雰囲気
+* type: single_select
+* required: false
+* options:
+
+  * やさしく
+  * ちょっと楽しく
+  * すっきり
+  * 背中を押す
+
+### Input Boundary
+
+* Names may be normalized only for display and seeded randomization.
+* Names must not be interpreted as destiny, personality, relationship quality, or objective compatibility.
+* Input should be stored only if the user explicitly saves the result.
+
+## 5. Optional Light Question Set
+
+question_count: 6
+question_type: optional_light_single_select
+use: soft weighting only, never relationship judgment
+
+### R04_Q01
+
+id: R04_Q01
+prompt_jp: ふたりでいるとき、どんな空気になりやすいですか？
+prompt_cn: 两个人在一起时，比较容易形成怎样的氛围？
+options:
+
+* key: calm
+  label_jp: 落ち着く
+  label_cn: 安稳
+  score_tags: ["calm", "steady"]
+* key: playful
+  label_jp: 楽しくなる
+  label_cn: 轻松有趣
+  score_tags: ["playful", "spark"]
+* key: careful
+  label_jp: 少し気をつかう
+  label_cn: 有点在意
+  score_tags: ["careful", "distance"]
+* key: unknown
+  label_jp: まだわからない
+  label_cn: 还不确定
+  score_tags: ["unknown", "open"]
+
+### R04_Q02
+
+id: R04_Q02
+prompt_jp: 相手に近づくとき、あなたはどちらに近いですか？
+prompt_cn: 想靠近对方时，你更接近哪一种？
+options:
+
+* key: slow
+  label_jp: ゆっくり近づきたい
+  label_cn: 想慢慢靠近
+  score_tags: ["slow", "safe"]
+* key: direct
+  label_jp: 素直に伝えたい
+  label_cn: 想直接表达
+  score_tags: ["direct", "spark"]
+* key: observe
+  label_jp: まず様子を見たい
+  label_cn: 想先观察
+  score_tags: ["observe", "careful"]
+* key: mixed
+  label_jp: 日によって変わる
+  label_cn: 看当天状态
+  score_tags: ["mixed", "fluid"]
+
+### R04_Q03
+
+id: R04_Q03
+prompt_jp: ふたりの会話で大事にしたいことは？
+prompt_cn: 两个人对话时，你更想重视什么？
+options:
+
+* key: ease
+  label_jp: 気楽さ
+  label_cn: 轻松
+  score_tags: ["ease", "playful"]
+* key: honesty
+  label_jp: 正直さ
+  label_cn: 真实
+  score_tags: ["honesty", "direct"]
+* key: kindness
+  label_jp: やさしさ
+  label_cn: 温柔
+  score_tags: ["kindness", "calm"]
+* key: timing
+  label_jp: タイミング
+  label_cn: 时机
+  score_tags: ["timing", "distance"]
+
+### R04_Q04
+
+id: R04_Q04
+prompt_jp: 今いちばん知りたいのは？
+prompt_cn: 你现在最想知道的是？
+options:
+
+* key: mood
+  label_jp: 今の距離感
+  label_cn: 现在的距离感
+  score_tags: ["distance", "C02"]
+* key: future_talk
+  label_jp: 次に話すきっかけ
+  label_cn: 下一次开口的契机
+  score_tags: ["talk", "R01"]
+* key: self_state
+  label_jp: 自分の気持ち
+  label_cn: 自己的心情
+  score_tags: ["self", "C02"]
+* key: light_fun
+  label_jp: 軽く楽しみたい
+  label_cn: 只是轻松玩一下
+  score_tags: ["asobi", "S01"]
+
+### R04_Q05
+
+id: R04_Q05
+prompt_jp: ふたりのテンポは？
+prompt_cn: 两个人的节奏更像？
+options:
+
+* key: similar
+  label_jp: 近い気がする
+  label_cn: 好像比较接近
+  score_tags: ["sync", "steady"]
+* key: different
+  label_jp: 違うけど気になる
+  label_cn: 不同但在意
+  score_tags: ["contrast", "curious"]
+* key: changing
+  label_jp: 変わってきている
+  label_cn: 正在变化
+  score_tags: ["change", "open"]
+* key: unknown
+  label_jp: まだ見えていない
+  label_cn: 还看不清
+  score_tags: ["unknown", "observe"]
+
+### R04_Q06
+
+id: R04_Q06
+prompt_jp: 結果のあと、進みたい先は？
+prompt_cn: 看完结果后，你更想去哪里？
+options:
+
+* key: r01
+  label_jp: ふたりの相性を深く見る
+  label_cn: 深入看两个人的相性
+  score_tags: ["R01"]
+* key: c02
+  label_jp: まず自分の状態を見る
+  label_cn: 先看看自己的状态
+  score_tags: ["C02"]
+* key: s01
+  label_jp: 今日の軽いヒントを見る
+  label_cn: 看看今天的小提示
+  score_tags: ["S01"]
+* key: share
+  label_jp: 結果をシェアしたい
+  label_cn: 想分享结果
+  score_tags: ["share"]
+
+## 6. Result Pool Structure
+
+Each result entry contains:
+
+* result_id
+* title_jp
+* title_cn
+* compatibility_label_jp
+* compatibility_label_cn
+* main_message_jp
+* main_message_cn
+* pair_strength_jp
+* possible_gap_jp
+* one_question_to_talk_jp
+* r01_bridge_jp
+* c02_bridge_jp
+* share_card_line_jp
+* risk_boundary
+
+compatibility_label_set:
+
+* ふわっと近づく相性
+* ゆっくり育つ相性
+* 会話でほどける相性
+* 違いが光る相性
+* 安心をつくる相性
+* きっかけ待ちの相性
+* 余白が大事な相性
+* 遊び心が合う相性
+
+## 7. Result Entries
+
+### R04_R001
+
+result_id: R04_R001
+title_jp: 風通しのいいふたり
+title_cn: 通风感很好的两个人
+compatibility_label_jp: ふわっと近づく相性
+compatibility_label_cn: 轻轻靠近型相性
+main_message_jp: ふたりの名前から受け取る印象は、重く決めるよりも軽く言葉を交わすことで近づきやすい組み合わせです。
+main_message_cn: 从两个名字作为入口的印象来看，这是一种比起沉重判断，更适合轻轻交换语言的组合。
+pair_strength_jp: 短い会話や小さな共有が、距離をやわらかくします。
+possible_gap_jp: 深い話を急ぐと、少し身構えやすいかもしれません。
+one_question_to_talk_jp: 最近、少しうれしかったことある？
+r01_bridge_jp: ふたりの会話や距離感を深く見たいなら、R01 ふたり恋愛相性診断へ。
+c02_bridge_jp: まず自分の今の気持ちを確認したいなら、C02 今のわたしチェックへ。
+share_card_line_jp: ふたりは「風通しのいいふたり」。軽い言葉から近づけるかも。
+risk_boundary: reflective entertainment only; names do not determine compatibility or relationship outcome
+
+### R04_R002
+
+result_id: R04_R002
+title_jp: じんわり温まるふたり
+title_cn: 慢慢变暖的两个人
+compatibility_label_jp: ゆっくり育つ相性
+compatibility_label_cn: 慢慢培养型相性
+main_message_jp: ふたりは、急な盛り上がりよりも、少しずつ安心を積むほうが似合いそうです。
+main_message_cn: 两个人比起突然升温，更适合一点点积累安心感。
+pair_strength_jp: 続くやりとりの中で、信頼の温度が出やすいです。
+possible_gap_jp: 反応がゆっくりだと、不安に見えやすいかもしれません。
+one_question_to_talk_jp: 連絡のペース、どれくらいが楽？
+r01_bridge_jp: ふたりのペース差を見たいなら、R01へ。
+c02_bridge_jp: 待つ時間の不安が気になるなら、C02へ。
+share_card_line_jp: ふたりは「じんわり温まるふたり」。急がず育つ距離感。
+risk_boundary: reflective entertainment only; no promise of relationship growth
+
+### R04_R003
+
+result_id: R04_R003
+title_jp: 会話でほどけるふたり
+title_cn: 通过对话松开的两个人
+compatibility_label_jp: 会話でほどける相性
+compatibility_label_cn: 对话松开型相性
+main_message_jp: ふたりは、考え込むより話してみることで空気が見えやすくなる組み合わせです。
+main_message_cn: 两个人比起各自想太多，更适合通过说出来看清氛围。
+pair_strength_jp: 確認の言葉が、誤解を小さくします。
+possible_gap_jp: 聞かずに想像すると、距離が広がりやすいかもしれません。
+one_question_to_talk_jp: これ、どう受け取った？
+r01_bridge_jp: 会話の相性を深く知るなら、R01へ。
+c02_bridge_jp: 自分の受け取り方を見たいなら、C02へ。
+share_card_line_jp: ふたりは「会話でほどけるふたり」。聞くことで近づく相性。
+risk_boundary: reflective entertainment only; no communication outcome guarantee
+
+### R04_R004
+
+result_id: R04_R004
+title_jp: 違いが小さく光るふたり
+title_cn: 差异微微发光的两个人
+compatibility_label_jp: 違いが光る相性
+compatibility_label_cn: 差异发光型相性
+main_message_jp: ふたりは、同じところより違うところに気づいたとき、関係の面白さが出やすいかもしれません。
+main_message_cn: 两个人的趣味可能不在完全相同，而在注意到差异时慢慢出现。
+pair_strength_jp: 違いを否定せず眺める力があります。
+possible_gap_jp: 同じ反応を期待すると、少しすれ違いやすいです。
+one_question_to_talk_jp: そこ、私は違って見えるかも。聞いてもいい？
+r01_bridge_jp: 違いの扱い方を見たいなら、R01へ。
+c02_bridge_jp: 違いに揺れる自分を見たいなら、C02へ。
+share_card_line_jp: ふたりは「違いが小さく光るふたり」。同じじゃなくても面白い。
+risk_boundary: reflective entertainment only; no suitability or unsuitability judgment
+
+### R04_R005
+
+result_id: R04_R005
+title_jp: 安心を置けるふたり
+title_cn: 可以放下安心感的两个人
+compatibility_label_jp: 安心をつくる相性
+compatibility_label_cn: 制造安心型相性
+main_message_jp: ふたりは、派手な刺激よりも、落ち着いていられる空気に良さが出やすい組み合わせです。
+main_message_cn: 两个人比起强烈刺激，更容易在安稳的空气里显出好处。
+pair_strength_jp: 無理に盛り上げなくても、そばにある安心が残ります。
+possible_gap_jp: 刺激が少ないと、物足りなさと誤解することがあります。
+one_question_to_talk_jp: 一緒にいて楽な瞬間ってどんなとき？
+r01_bridge_jp: 安心感と恋愛感の違いを見たいなら、R01へ。
+c02_bridge_jp: 自分が何に安心するか見たいなら、C02へ。
+share_card_line_jp: ふたりは「安心を置けるふたり」。静かな良さがある相性。
+risk_boundary: reflective entertainment only; no claim that relationship is safe or ideal
+
+### R04_R006
+
+result_id: R04_R006
+title_jp: きっかけ待ちのふたり
+title_cn: 等待契机的两个人
+compatibility_label_jp: きっかけ待ちの相性
+compatibility_label_cn: 契机等待型相性
+main_message_jp: ふたりは、何かひとつきっかけがあると会話が動きやすい組み合わせです。
+main_message_cn: 两个人可能需要一个小契机，交流才更容易动起来。
+pair_strength_jp: 話題が見つかると、距離が軽くなります。
+possible_gap_jp: 何もないまま待つと、相手任せになりやすいです。
+one_question_to_talk_jp: 今度、これ一緒に見てみない？
+r01_bridge_jp: きっかけの作り方を深く見たいなら、R01へ。
+c02_bridge_jp: 声をかける前の迷いを見るなら、C02へ。
+share_card_line_jp: ふたりは「きっかけ待ちのふたり」。小さな話題が橋になる。
+risk_boundary: reflective entertainment only; no prediction of contact or response
+
+### R04_R007
+
+result_id: R04_R007
+title_jp: 余白で近づくふたり
+title_cn: 通过余白靠近的两个人
+compatibility_label_jp: 余白が大事な相性
+compatibility_label_cn: 余白重要型相性
+main_message_jp: ふたりは、詰めすぎない距離の中で自然さが出やすい組み合わせです。
+main_message_cn: 两个人在不过度推进的距离里，更容易显出自然感。
+pair_strength_jp: 返事や沈黙に余地を残せると、関係がやわらぎます。
+possible_gap_jp: 距離を急に縮めると、少し窮屈に感じるかもしれません。
+one_question_to_talk_jp: 連絡しない時間も、どれくらいあると楽？
+r01_bridge_jp: ふたりの距離感を深く見るなら、R01へ。
+c02_bridge_jp: 近づきたい気持ちと不安を見るなら、C02へ。
+share_card_line_jp: ふたりは「余白で近づくふたり」。急がない距離感が合図。
+risk_boundary: reflective entertainment only; no relationship timing advice
+
+### R04_R008
+
+result_id: R04_R008
+title_jp: 遊び心が合うふたり
+title_cn: 玩心相合的两个人
+compatibility_label_jp: 遊び心が合う相性
+compatibility_label_cn: 玩心相合型相性
+main_message_jp: ふたりは、まじめな確認よりも、軽い冗談や小さな遊びから空気がほぐれやすい組み合わせです。
+main_message_cn: 两个人比起严肃确认，更容易通过轻松玩笑或小玩法让气氛松开。
+pair_strength_jp: 笑える余地が、距離を近づけます。
+possible_gap_jp: 大事な話まで軽くしすぎると、伝わりにくいことがあります。
+one_question_to_talk_jp: 最近ちょっと笑ったこと、何？
+r01_bridge_jp: 楽しさと本音のバランスを見るなら、R01へ。
+c02_bridge_jp: 自分の伝え方の癖を見たいなら、C02へ。
+share_card_line_jp: ふたりは「遊び心が合うふたり」。笑える余白が橋になる。
+risk_boundary: reflective entertainment only; no claim of romantic fit
+
+### R04_R009
+
+result_id: R04_R009
+title_jp: そっと並ぶふたり
+title_cn: 轻轻并肩的两个人
+compatibility_label_jp: 安心をつくる相性
+compatibility_label_cn: 制造安心型相性
+main_message_jp: ふたりは、前に出すぎず、隣にいるような距離で心地よさが出やすい印象です。
+main_message_cn: 两个人在不过度前进、像并肩一样的距离里，可能更容易感到舒服。
+pair_strength_jp: 同じ空間にいるだけで落ち着く場面があります。
+possible_gap_jp: 言葉が少ないと、気持ちが見えにくくなるかもしれません。
+one_question_to_talk_jp: 一緒にいるとき、何をしている時間が楽？
+r01_bridge_jp: 静かな相性を深く見るなら、R01へ。
+c02_bridge_jp: 自分の安心ポイントを見るなら、C02へ。
+share_card_line_jp: ふたりは「そっと並ぶふたり」。静かな距離に良さがある。
+risk_boundary: reflective entertainment only; no emotional safety guarantee
+
+### R04_R010
+
+result_id: R04_R010
+title_jp: 小さな合図が届くふたり
+title_cn: 小信号能传到的两个人
+compatibility_label_jp: 会話でほどける相性
+compatibility_label_cn: 对话松开型相性
+main_message_jp: ふたりは、大きな説明よりも、小さな合図や短い言葉が伝わりやすい組み合わせです。
+main_message_cn: 两个人可能比起长篇说明，更容易通过小信号或短句传达。
+pair_strength_jp: 短い確認が、安心の入口になります。
+possible_gap_jp: 言わなくても伝わるはずと思うと、ずれが出ることがあります。
+one_question_to_talk_jp: 今の一言、どう聞こえた？
+r01_bridge_jp: 伝わり方の相性を見たいなら、R01へ。
+c02_bridge_jp: 自分の伝え方を見たいなら、C02へ。
+share_card_line_jp: ふたりは「小さな合図が届くふたり」。短い言葉が鍵。
+risk_boundary: reflective entertainment only; no guarantee of mutual understanding
+
+### R04_R011
+
+result_id: R04_R011
+title_jp: ゆっくりほどけるふたり
+title_cn: 慢慢松开的两个人
+compatibility_label_jp: ゆっくり育つ相性
+compatibility_label_cn: 慢慢培养型相性
+main_message_jp: ふたりは、最初から全部を見せるより、少しずつほどける中で良さが見えやすい組み合わせです。
+main_message_cn: 两个人比起一开始就全部打开，更适合在一点点松开的过程中看见好处。
+pair_strength_jp: 時間をかけるほど、話しやすさが出やすいです。
+possible_gap_jp: 早く答えを出そうとすると、自然さが減るかもしれません。
+one_question_to_talk_jp: 急がず話すなら、何から話したい？
+r01_bridge_jp: 育つ相性を深く見たいなら、R01へ。
+c02_bridge_jp: 焦りや期待を見たいなら、C02へ。
+share_card_line_jp: ふたりは「ゆっくりほどけるふたり」。時間が味方になる相性。
+risk_boundary: reflective entertainment only; no promise that relationship will deepen
+
+### R04_R012
+
+result_id: R04_R012
+title_jp: 明るい入口のふたり
+title_cn: 入口明亮的两个人
+compatibility_label_jp: 遊び心が合う相性
+compatibility_label_cn: 玩心相合型相性
+main_message_jp: ふたりは、最初の一言が重くならないほど入りやすい印象です。
+main_message_cn: 两个人的入口越不沉重，越容易进入交流。
+pair_strength_jp: 軽い誘いや小さな共有が似合います。
+possible_gap_jp: まじめな確認を避けすぎると、本音が残るかもしれません。
+one_question_to_talk_jp: 軽く行くなら、何なら一緒にできそう？
+r01_bridge_jp: 楽しさと本音の深さを見るなら、R01へ。
+c02_bridge_jp: 自分が何を望んでいるか見るなら、C02へ。
+share_card_line_jp: ふたりは「明るい入口のふたり」。軽い一言から始まる。
+risk_boundary: reflective entertainment only; no prediction of dating or closeness
+
+### R04_R013
+
+result_id: R04_R013
+title_jp: 静かな確認が合うふたり
+title_cn: 适合安静确认的两个人
+compatibility_label_jp: 余白が大事な相性
+compatibility_label_cn: 余白重要型相性
+main_message_jp: ふたりは、強く踏み込むよりも、静かに確認することで安心しやすい組み合わせです。
+main_message_cn: 两个人比起强势靠近，更适合通过安静确认获得安心。
+pair_strength_jp: やわらかい質問が、距離を守りながら近づけます。
+possible_gap_jp: 遠慮しすぎると、本当の気持ちが見えにくくなります。
+one_question_to_talk_jp: 今、話しても大丈夫？
+r01_bridge_jp: 確認と距離の相性はR01へ。
+c02_bridge_jp: 遠慮の理由を見たいなら、C02へ。
+share_card_line_jp: ふたりは「静かな確認が合うふたり」。やわらかく聞ける相性。
+risk_boundary: reflective entertainment only; no consent or safety assessment
+
+### R04_R014
+
+result_id: R04_R014
+title_jp: 違うリズムで響くふたり
+title_cn: 不同节奏也能回响的两个人
+compatibility_label_jp: 違いが光る相性
+compatibility_label_cn: 差异发光型相性
+main_message_jp: ふたりは、テンポが違うからこそ、相手の見方に気づける場面がありそうです。
+main_message_cn: 两个人也许正因为节奏不同，才更容易注意到对方的看法。
+pair_strength_jp: 自分にない視点を受け取れるところがあります。
+possible_gap_jp: 返事や反応の速度を同じにしようとすると疲れやすいです。
+one_question_to_talk_jp: 返事のペース、どんな感じが楽？
+r01_bridge_jp: テンポ差の扱い方はR01へ。
+c02_bridge_jp: 待つときの自分の状態はC02へ。
+share_card_line_jp: ふたりは「違うリズムで響くふたり」。違いもヒントになる。
+risk_boundary: reflective entertainment only; no compatibility calculation from names
+
+### R04_R015
+
+result_id: R04_R015
+title_jp: ひとことで動くふたり
+title_cn: 一句话就会动起来的两个人
+compatibility_label_jp: きっかけ待ちの相性
+compatibility_label_cn: 契机等待型相性
+main_message_jp: ふたりは、長い説明よりも、短いひとことが流れを作りやすい印象です。
+main_message_cn: 两个人比起长篇说明，更可能由短短一句话带动气氛。
+pair_strength_jp: 最初の一言が、次の会話を呼びやすいです。
+possible_gap_jp: 言う前に考えすぎると、入口を逃しやすいです。
+one_question_to_talk_jp: 今日、少し話せる？
+r01_bridge_jp: 声のかけ方や反応を深く見たいなら、R01へ。
+c02_bridge_jp: 声をかける不安はC02へ。
+share_card_line_jp: ふたりは「ひとことで動くふたり」。短い言葉がきっかけに。
+risk_boundary: reflective entertainment only; no response prediction
+
+### R04_R016
+
+result_id: R04_R016
+title_jp: 似ていないから見えるふたり
+title_cn: 因为不同而看见的两个人
+compatibility_label_jp: 違いが光る相性
+compatibility_label_cn: 差异发光型相性
+main_message_jp: ふたりは、似ているかどうかよりも、違いをどう眺めるかで空気が変わりやすい組み合わせです。
+main_message_cn: 两个人的重点不在是否相似，而在如何看待差异。
+pair_strength_jp: 違いを会話にできると、関係が広がります。
+possible_gap_jp: 違いを勝ち負けにすると、緊張しやすくなります。
+one_question_to_talk_jp: そこ、私はこう見えるけど、あなたは？
+r01_bridge_jp: 違いを関係に活かすヒントはR01へ。
+c02_bridge_jp: 違いに反応する自分を見たいなら、C02へ。
+share_card_line_jp: ふたりは「似ていないから見えるふたり」。違いが会話になる。
+risk_boundary: reflective entertainment only; no judgment that difference is good or bad
+
+### R04_R017
+
+result_id: R04_R017
+title_jp: 近づき方を選べるふたり
+title_cn: 可以选择靠近方式的两个人
+compatibility_label_jp: ふわっと近づく相性
+compatibility_label_cn: 轻轻靠近型相性
+main_message_jp: ふたりは、近づく速度をひとつに決めなくてもよい組み合わせです。日によって、軽くても深くても大丈夫。
+main_message_cn: 两个人不必把靠近的速度固定成一种。不同日子可以轻一点，也可以深一点。
+pair_strength_jp: 距離の調整に柔らかさがあります。
+possible_gap_jp: 相手の速度を読みすぎると、自分の気持ちが後ろに下がります。
+one_question_to_talk_jp: 今日の距離感、どれくらいが楽？
+r01_bridge_jp: 距離調整の相性はR01へ。
+c02_bridge_jp: 自分の近づき方を見たいなら、C02へ。
+share_card_line_jp: ふたりは「近づき方を選べるふたり」。距離は調整できる。
+risk_boundary: reflective entertainment only; no relationship advice for serious conflicts
+
+### R04_R018
+
+result_id: R04_R018
+title_jp: 言葉より空気が先に届くふたり
+title_cn: 氛围先于语言到达的两个人
+compatibility_label_jp: 安心をつくる相性
+compatibility_label_cn: 制造安心型相性
+main_message_jp: ふたりは、言葉にする前の空気を感じ取りやすい印象です。
+main_message_cn: 两个人可能比较容易先感受到语言之前的氛围。
+pair_strength_jp: 静かな変化に気づけるところがあります。
+possible_gap_jp: 空気を読みすぎると、確認が足りなくなるかもしれません。
+one_question_to_talk_jp: 今の空気、私だけそう感じてる？
+r01_bridge_jp: 空気感と確認のバランスはR01へ。
+c02_bridge_jp: 読みすぎて疲れるときはC02へ。
+share_card_line_jp: ふたりは「言葉より空気が先に届くふたり」。感じる力がある相性。
+risk_boundary: reflective entertainment only; no mind-reading or psychological claim
+
+### R04_R019
+
+result_id: R04_R019
+title_jp: 笑いで橋をかけるふたり
+title_cn: 用笑声架桥的两个人
+compatibility_label_jp: 遊び心が合う相性
+compatibility_label_cn: 玩心相合型相性
+main_message_jp: ふたりは、少し笑える余地があると話しやすくなる組み合わせです。
+main_message_cn: 两个人在有一点笑意的余地时，更容易说话。
+pair_strength_jp: 気まずさを軽くする力があります。
+possible_gap_jp: 大事な話を冗談だけで流すと、残るものがあります。
+one_question_to_talk_jp: まじめに言うと、ほんとはどう思った？
+r01_bridge_jp: 笑いと本音のバランスはR01へ。
+c02_bridge_jp: 本音を出す前の自分はC02へ。
+share_card_line_jp: ふたりは「笑いで橋をかけるふたり」。軽さが入口になる。
+risk_boundary: reflective entertainment only; no romantic conclusion
+
+### R04_R020
+
+result_id: R04_R020
+title_jp: ゆるく続くふたり
+title_cn: 轻松延续的两个人
+compatibility_label_jp: ゆっくり育つ相性
+compatibility_label_cn: 慢慢培养型相性
+main_message_jp: ふたりは、一度で決めるより、ゆるく続く中で見えてくるものが多そうです。
+main_message_cn: 两个人比起一次性判断，更可能在轻松延续中慢慢看见更多。
+pair_strength_jp: 続けるほど、無理のない距離が見えます。
+possible_gap_jp: はっきりした答えを急ぐと、自然さが消えやすいです。
+one_question_to_talk_jp: また話すなら、どんな話がいい？
+r01_bridge_jp: 続く関係の流れを見るなら、R01へ。
+c02_bridge_jp: 答えを急ぐ気持ちはC02へ。
+share_card_line_jp: ふたりは「ゆるく続くふたり」。続く中で見えてくる。
+risk_boundary: reflective entertainment only; no prediction that contact will continue
+
+### R04_R021
+
+result_id: R04_R021
+title_jp: 透明な距離のふたり
+title_cn: 透明距离的两个人
+compatibility_label_jp: 余白が大事な相性
+compatibility_label_cn: 余白重要型相性
+main_message_jp: ふたりは、何も起きていない時間にも意味を置ける組み合わせです。
+main_message_cn: 两个人也许可以在“什么都没发生”的时间里保留意义。
+pair_strength_jp: 沈黙や間を、すぐ不安に変えない余地があります。
+possible_gap_jp: 何も言わない時間が長いと、誤解も生まれやすいです。
+one_question_to_talk_jp: 連絡が空くとき、どう受け取る？
+r01_bridge_jp: 沈黙や間の相性はR01へ。
+c02_bridge_jp: 不安になりやすい自分を見るなら、C02へ。
+share_card_line_jp: ふたりは「透明な距離のふたり」。間にも余白がある。
+risk_boundary: reflective entertainment only; no advice on relationship silence
+
+### R04_R022
+
+result_id: R04_R022
+title_jp: 小さな約束が似合うふたり
+title_cn: 适合小约定的两个人
+compatibility_label_jp: きっかけ待ちの相性
+compatibility_label_cn: 契机等待型相性
+main_message_jp: ふたりは、大きな約束よりも、小さく次を決めるほうが動きやすい印象です。
+main_message_cn: 两个人比起大约定，更适合小小决定下一步。
+pair_strength_jp: 次の一歩が見えると安心しやすいです。
+possible_gap_jp: 曖昧なまま期待だけ増えると、少し疲れやすいです。
+one_question_to_talk_jp: 次、軽く何をしてみる？
+r01_bridge_jp: 次の一歩の相性を見るなら、R01へ。
+c02_bridge_jp: 期待の大きさを見たいなら、C02へ。
+share_card_line_jp: ふたりは「小さな約束が似合うふたり」。次の一歩を軽く。
+risk_boundary: reflective entertainment only; no promise or commitment forecast
+
+### R04_R023
+
+result_id: R04_R023
+title_jp: まっすぐ聞けるふたり
+title_cn: 能直接询问的两个人
+compatibility_label_jp: 会話でほどける相性
+compatibility_label_cn: 对话松开型相性
+main_message_jp: ふたりは、遠回りに探るよりも、やわらかく聞くことで見えるものがありそうです。
+main_message_cn: 两个人比起绕远试探，可能更适合温柔地直接询问。
+pair_strength_jp: 質問が関係を責めずに進める力になります。
+possible_gap_jp: 聞き方が強くなると、相手が身構えることがあります。
+one_question_to_talk_jp: これ、聞いても大丈夫？
+r01_bridge_jp: 質問と受け取り方の相性はR01へ。
+c02_bridge_jp: 聞く前の緊張はC02へ。
+share_card_line_jp: ふたりは「まっすぐ聞けるふたり」。やわらかい質問が鍵。
+risk_boundary: reflective entertainment only; no communication success guarantee
+
+### R04_R024
+
+result_id: R04_R024
+title_jp: 温度差をならせるふたり
+title_cn: 能调和温差的两个人
+compatibility_label_jp: 違いが光る相性
+compatibility_label_cn: 差异发光型相性
+main_message_jp: ふたりは、気持ちの温度が違う日でも、調整しながら話せる余地があります。
+main_message_cn: 两个人即使情绪温度不同，也可能有一边调整一边说话的余地。
+pair_strength_jp: 同じ温度でなくても並べるところがあります。
+possible_gap_jp: 相手にも同じ熱量を求めると、苦しくなりやすいです。
+one_question_to_talk_jp: 今の温度感、どれくらい？
+r01_bridge_jp: 温度差の扱い方はR01へ。
+c02_bridge_jp: 自分の熱量を見たいなら、C02へ。
+share_card_line_jp: ふたりは「温度差をならせるふたり」。同じ熱量じゃなくてもいい。
+risk_boundary: reflective entertainment only; no claim of emotional compatibility
+
+### R04_R025
+
+result_id: R04_R025
+title_jp: やさしい入口のふたり
+title_cn: 温柔入口的两个人
+compatibility_label_jp: ふわっと近づく相性
+compatibility_label_cn: 轻轻靠近型相性
+main_message_jp: ふたりは、強く踏み込むより、やさしい入口を作ることで近づきやすい印象です。
+main_message_cn: 两个人比起强势靠近，更适合创造一个温柔入口。
+pair_strength_jp: 無理のない誘い方が似合います。
+possible_gap_jp: 遠慮しすぎると、入口が見えなくなることがあります。
+one_question_to_talk_jp: 気が向いたら、少し話さない？
+r01_bridge_jp: 近づき方を深く見たいなら、R01へ。
+c02_bridge_jp: 遠慮しがちな自分を見るなら、C02へ。
+share_card_line_jp: ふたりは「やさしい入口のふたり」。無理なく近づく相性。
+risk_boundary: reflective entertainment only; no prediction of closeness
+
+### R04_R026
+
+result_id: R04_R026
+title_jp: 受け取り上手になれるふたり
+title_cn: 能练习接收的两个人
+compatibility_label_jp: 安心をつくる相性
+compatibility_label_cn: 制造安心型相性
+main_message_jp: ふたりは、言葉や行動をどう受け取るかで空気が変わりやすい組み合わせです。
+main_message_cn: 两个人的氛围可能会随着“如何接收对方的话和行动”而变化。
+pair_strength_jp: 受け取り方を確認できると安心が増えます。
+possible_gap_jp: 先に悪く受け取ると、距離が固まりやすいです。
+one_question_to_talk_jp: 今の、どういう意味で言ってくれた？
+r01_bridge_jp: 受け取り方の相性はR01へ。
+c02_bridge_jp: 自分の受け取り癖はC02へ。
+share_card_line_jp: ふたりは「受け取り上手になれるふたり」。確認が安心になる。
+risk_boundary: reflective entertainment only; no psychological assessment
+
+### R04_R027
+
+result_id: R04_R027
+title_jp: 日常に混ざるふたり
+title_cn: 融入日常的两个人
+compatibility_label_jp: ゆっくり育つ相性
+compatibility_label_cn: 慢慢培养型相性
+main_message_jp: ふたりは、特別な場面よりも、日常の小さなやりとりで見えてくるものがありそうです。
+main_message_cn: 两个人也许比起特别场景，更容易在日常的小互动里看见东西。
+pair_strength_jp: 何気ない連絡や共有が関係の温度を作ります。
+possible_gap_jp: 特別さだけを求めると、日常の良さを見落とすかもしれません。
+one_question_to_talk_jp: 何気ない日なら、何を共有したい？
+r01_bridge_jp: 日常の相性を深く見るなら、R01へ。
+c02_bridge_jp: 自分が欲しい温度を見たいなら、C02へ。
+share_card_line_jp: ふたりは「日常に混ざるふたり」。小さなやりとりが残る。
+risk_boundary: reflective entertainment only; no relationship stability claim
+
+### R04_R028
+
+result_id: R04_R028
+title_jp: 反応を待てるふたり
+title_cn: 能等待反应的两个人
+compatibility_label_jp: 余白が大事な相性
+compatibility_label_cn: 余白重要型相性
+main_message_jp: ふたりは、すぐ答えを出さない時間に余白を置けると、やわらかく進みやすい印象です。
+main_message_cn: 两个人如果能给“不立刻回答”的时间留出余白，会更容易柔和地前进。
+pair_strength_jp: 待つことを不安だけにしない力があります。
+possible_gap_jp: 反応の遅さを気持ちの薄さと決めると、苦しくなりやすいです。
+one_question_to_talk_jp: 返事に時間がいるとき、どう言うと楽？
+r01_bridge_jp: 待つことと距離感はR01へ。
+c02_bridge_jp: 待つ時間の自分はC02へ。
+share_card_line_jp: ふたりは「反応を待てるふたり」。待つ余白も関係の一部。
+risk_boundary: reflective entertainment only; no interpretation of response speed as love or dislike
+
+### R04_R029
+
+result_id: R04_R029
+title_jp: ふたりの間に窓がある
+title_cn: 两个人之间有一扇窗
+compatibility_label_jp: 会話でほどける相性
+compatibility_label_cn: 对话松开型相性
+main_message_jp: ふたりは、閉じた部屋よりも、窓を開けるような会話で空気が通りやすい組み合わせです。
+main_message_cn: 两个人比起封闭房间，更适合像开窗一样的对话，让空气流动。
+pair_strength_jp: 話題を変える力と、空気を入れ替える力があります。
+possible_gap_jp: 同じ話題に留まりすぎると、重く感じるかもしれません。
+one_question_to_talk_jp: ちょっと話題を変えてもいい？
+r01_bridge_jp: 会話の流れを深く見るなら、R01へ。
+c02_bridge_jp: 会話で疲れやすいなら、C02へ。
+share_card_line_jp: ふたりは「間に窓があるふたり」。会話で風が通る。
+risk_boundary: reflective entertainment only; no objective relationship reading
+
+### R04_R030
+
+result_id: R04_R030
+title_jp: 軽い約束から始まるふたり
+title_cn: 从轻约定开始的两个人
+compatibility_label_jp: きっかけ待ちの相性
+compatibility_label_cn: 契机等待型相性
+main_message_jp: ふたりは、重い確認よりも、軽い約束から次の空気が見えやすい印象です。
+main_message_cn: 两个人比起沉重确认，更容易从轻轻的约定里看见下一步氛围。
+pair_strength_jp: 次に会う・話すきっかけを作りやすいです。
+possible_gap_jp: 期待を大きく乗せすぎると、軽さがなくなることがあります。
+one_question_to_talk_jp: 軽く決めるなら、次は何にする？
+r01_bridge_jp: 次の一歩の温度感はR01へ。
+c02_bridge_jp: 期待が大きくなる自分はC02へ。
+share_card_line_jp: ふたりは「軽い約束から始まるふたり」。小さな次が橋になる。
+risk_boundary: reflective entertainment only; no promise of meeting, dating, or progress
+
+### R04_R031
+
+result_id: R04_R031
+title_jp: やわらかく照らし合うふたり
+title_cn: 柔和照亮彼此的两个人
+compatibility_label_jp: ふわっと近づく相性
+compatibility_label_cn: 轻轻靠近型相性
+main_message_jp: ふたりは、相手を強く変えようとするより、少し照らし合うような距離が似合いそうです。
+main_message_cn: 两个人比起强行改变对方，更适合像柔和照亮彼此一样的距离。
+pair_strength_jp: 相手の良さを小さく見つける力があります。
+possible_gap_jp: 理想を押しつけると、自然な良さが見えにくくなります。
+one_question_to_talk_jp: 最近、相手のいいなと思ったところは？
+r01_bridge_jp: ふたりの良さの見つけ方はR01へ。
+c02_bridge_jp: 自分の期待を見たいなら、C02へ。
+share_card_line_jp: ふたりは「やわらかく照らし合うふたり」。小さな良さに気づける相性。
+risk_boundary: reflective entertainment only; no claim of mutual love or future
+
+### R04_R032
+
+result_id: R04_R032
+title_jp: 今日の相性メモ
+title_cn: 今天的相性便签
+compatibility_label_jp: 遊び心が合う相性
+compatibility_label_cn: 玩心相合型相性
+main_message_jp: ふたりの名前をきっかけに見るなら、今日は深く決めるより、軽い相性メモとして受け取るのがよさそうです。
+main_message_cn: 如果以两个名字为入口，今天比起做深层判断，更适合把它当作轻轻的相性便签来接收。
+pair_strength_jp: 軽く楽しむことで、次の会話の入口ができます。
+possible_gap_jp: この結果だけで関係を判断すると、見落とすものがあります。
+one_question_to_talk_jp: これ、遊びとして見たらどう思う？
+r01_bridge_jp: 本当に深く見たい場合は、R01 ふたり恋愛相性診断へ。
+c02_bridge_jp: 結果を見て自分の気持ちが動いたら、C02へ。
+share_card_line_jp: ふたりは「今日の相性メモ」。軽く楽しむ入口として。
+risk_boundary: reflective entertainment only; this result is not a relationship conclusion
+
+## 8. Assignment Logic
+
+assignment_method: name_seeded_symbolic_random_with_optional_soft_weighting
+
+Base logic:
+
+* Use two input names or nicknames only as a playful randomization seed.
+* Names must not be interpreted as destiny, personality, or actual compatibility.
+* If optional questions are skipped, assign one result from the full result pool through symbolic seeded randomization.
+* If optional questions are answered, lightly weight the result pool by tone, relation_context, and question score_tags.
+* Do not output calculation details that imply姓名判断, 数理, 命理, 占星, or psychological authority.
+
+Soft weighting:
+
+* relation_context = 恋愛 or 気になる人 may slightly favor R01_bridge-forward results.
+* relation_context = 友だち may favor playful, calm, or conversation-based results.
+* relation_context = 仕事・チーム may avoid romantic wording and favor communication / difference / pace copy.
+* tone_preference = やさしく may favor 安心 / 余白 labels.
+* tone_preference = ちょっと楽しく may favor 遊び心 / きっかけ labels.
+* tone_preference = すっきり may favor 会話 / 違い labels.
+* tone_preference = 背中を押す may favor ふわっと近づく / きっかけ labels.
+
+Repeat rules:
+
+* Same pair input may receive the same result within the same day.
+* If history exists, avoid showing the same result for the same pair more than twice in 7 days.
+* Allow one redraw labeled 「あそびの引き直し」.
+* Redraw must not imply the first result was wrong.
+* Saved result should preserve result_id, input display names, relation_context, and timestamp only with explicit user consent.
+
+Safety rules:
+
+* Do not classify pairs as good/bad, suitable/unsuitable, destined/not destined.
+* Do not show scores, percentages, rankings, marriage probability, breakup probability, or reconciliation probability.
+* Do not call any result a diagnosis, judgment, or truth.
+
+## 9. Free Result Structure
+
+Free result screen must include:
+
+* Public-safe marker: 「名前をきっかけにした、あそび型の相性リフレクションです」
+* Display names or nicknames
+* Result title
+* Compatibility label
+* Main message
+* Pair strength
+* Possible gap
+* One question to talk
+* R01 bridge CTA
+* C02 bridge CTA
+* Share card CTA
+* Optional S01 return CTA
+
+CTA hierarchy:
+
+1. R01でふたりの相性を深く見る
+2. C02で今の自分の気持ちを見る
+3. シェアカードを作る
+4. 今日のおみくじを見る
+
+Public/private boundary:
+
+* Free result can be public-safe if names are nicknames or user-approved.
+* Share card should allow hiding names.
+* Optional question answers must not appear on share cards.
+* Recommendation trigger must not be shown as private inference.
+
+## 10. Paid / Deep Report Boundary
+
+R04 should not produce a paid deep report in v1.0.
+
+Allowed:
+
+* free light result
+* share card
+* route to R01 for deeper two-person compatibility
+* route to C02 for self-state check
+* route to S01 for daily playful return
+
+Forbidden:
+
+* paid name compatibility report
+* name numerology report
+* destiny/marriage/breakup/reconciliation forecast
+* emotional pressure upsell
+* hidden affiliate route
+* relationship judgment based on names
+
+Boundary copy:
+「名前相性チェック自体には、有料の深掘りや関係判断はありません。ふたりの距離感をもっと丁寧に見たい場合は、R01に進めます。」
+
+## 11. Share Card Logic
+
+Share card must be public-safe and optional.
+
+Share card includes:
+
+* test_name_jp: 名前相性チェック
+* optional display names or hidden-name format
+* result title
+* compatibility label
+* share_card_line_jp
+* boundary microcopy: 名前をきっかけにした、あそび型リフレクション
+* Yorisou mark/name
+
+Share card name display modes:
+
+* show_both_names: 「A × B」
+* hide_partner_name: 「わたし × あの人」
+* hide_both_names: 「ふたり」
+
+Share card must not include:
+
+* optional question answers
+* private worry
+* relationship status inference
+* R01/C02 routing trigger
+* paid report teaser
+* probability, score, ranking, destiny, marriage, breakup, reconciliation, or suitability language
+
+Example share line:
+「ふたりは『風通しのいいふたり』。軽い言葉から近づけるかも。」
+
+## 12. Recommendation Mapping
+
+recommendation_target_rules:
+
+* R01 ふたり恋愛相性診断:
+
+  * primary route for users who want deeper relationship compatibility
+  * use when result focuses on distance, conversation, pace, warmth, difference, or next step
+* C02 今のわたしチェック:
+
+  * use when result triggers self-reflection, waiting anxiety, expectation, uncertainty, hesitation, or emotional response
+* S01 今日のおみくじ:
+
+  * use when user wants playful daily return or does not want deeper relationship exploration
+* LINE/Web save:
+
+  * use for saved share card, reminder, and return path only with consent
+
+Demand signal:
+
+* Starting R04 indicates relationship curiosity signal.
+* Completing optional relation_context indicates relationship category signal.
+* Clicking R01 indicates deeper relationship interest.
+* Clicking C02 indicates self-state reflection need.
+* Sharing indicates public-safe resonance.
+* Redraw indicates play engagement, not invalid result.
+* No R04 signal alone should be treated as validated relationship demand.
+
+## 13. LINE / Web Return Path
+
+LINE save path:
+
+* User taps: LINEで結果を保存する
+* Show consent: 「この結果をLINEに保存できます。名前はニックネーム表示のまま保存できます。」
+* Opt-in must be optional.
+* User can continue without LINE save.
+
+Web return path:
+
+* User can copy/share URL or save result locally.
+* Saved archive may show date, display name mode, result title, compatibility label, and next CTA.
+* Archive must not imply long-term relationship tracking, fate tracking, or compatibility history.
+
+S01 return copy:
+「今日は軽く楽しむだけにするなら、今日のおみくじへ。」
+
+R01 route copy:
+「ふたりの距離感をもう少し丁寧に見たい場合は、R01へ。」
+
+C02 route copy:
+「結果を見て自分の気持ちが動いたら、C02で今の状態を見てみましょう。」
+
+## 14. UX Implementation Notes
+
+Mobile-first screen order:
+
+1. Header: 名前相性チェック
+2. Boundary microcopy
+3. Name/nickname input fields
+4. Optional relation_context and tone_preference chips
+5. Optional light questions
+6. Primary CTA
+7. Result card
+8. R01/C02/S01 CTA row
+9. Share/save row
+10. Privacy and boundary note
+
+Component notes:
+
+* Encourage nickname input.
+* Keep input fields friendly and low-pressure.
+* Do not decorate with occult, astrology, shrine, spell, fate, or numerology visuals.
+* Do not show score meters, percentages, rankings, or red/blue compatibility judgments.
+* Result card should feel like a light note, not a verdict.
+* R01 bridge should be primary when the user wants depth.
+* C02 should be presented as self-check, not relationship repair.
+* S01 should be presented as playful return.
+* Share card should support hiding names.
+
+Japanese readability:
+
+* Use gentle relationship language.
+* Avoid 必ず, 絶対, 運命, 宿命, 的中, 結ばれる, 相性最悪, 脈あり確定, 脈なし確定.
+* Prefer かもしれません, 印象です, きっかけ, 距離感, 見てみる, あそび型.
+* Avoid strong advice for serious relationship issues.
+
+## 15. Trust-Risk Review
+
+Risk category: symbolic relationship entertainment with medium trust sensitivity.
+
+Key risks:
+
+* users may treat name input as fortune-telling or destiny judgment
+* relationship anxiety could be amplified by compatibility labels
+* public share cards could expose private names or relationship interest
+* copy could imply psychological, spiritual, or name numerology authority
+* R04 could accidentally replace R01 as relationship judgment product
+* commercial routing could feel manipulative if R01 is framed as necessary
+
+Mitigations:
+
+* State clearly that R04 is not姓名判断, destiny, numerology, astrology, divination, religion, psychology, or diagnosis.
+* Encourage nicknames and hidden-name share mode.
+* Keep all labels gentle and non-hierarchical.
+* Avoid scores, percentages, good/bad compatibility, romantic probability, marriage, breakup, reconciliation, and suitability claims.
+* Route depth to R01 without pressure.
+* Route self-state to C02 when emotional response is stronger than relationship curiosity.
+* Keep share card public-safe.
+* Keep paid/deep report disabled in R04 v1.0.
+
+Review needed before implementation:
+
+* Founder review for tone, product fit, and Japanese naming.
+* Trust-risk review for relationship sensitivity and public/private boundary.
+* UI/UX review for mobile input, hidden-name share, and CTA hierarchy.
+* Copy review for non-deterministic Japanese language.
+
+## 16. Complete TypeScript-Friendly Data Spec
+
+```ts
+export const r04NamaeAishoCheckV10 = {
+  test_id: "R04",
+  test_name_jp: "名前相性チェック",
+  test_name_cn: "姓名相性检测",
+  layer: "Yorisou Relationship / Oracle",
+  version: "v1.0",
+  codex_ready: false,
+  founder_review_needed: true,
+  trust_risk_review_needed: true,
+  format: {
+    type: "symbolic_reflective_name_pair_input",
+    required_inputs: ["your_name_or_nickname", "partner_name_or_nickname"],
+    optional_inputs: ["relation_context", "tone_preference"],
+    optional_question_count: 6,
+    expected_completion_time_seconds: [30, 90],
+    boundary: "reflective_entertainment_only"
+  },
+  boundary_notes: {
+    jp: "このチェックは、姓名判断や運命予測ではありません。名前をきっかけにした、あそび型の相性リフレクションです。",
+    cn: "本检测不是姓名命理、命运预测或心理诊断，只是以名字为入口的娱乐型关系反思。",
+    forbidden_claims: [
+      "name_determines_compatibility",
+      "destiny_certainty",
+      "romantic_suitability_judgment",
+      "dating_prediction",
+      "marriage_probability",
+      "breakup_probability",
+      "reconciliation_probability",
+      "name_numerology_authority",
+      "astrology_authority",
+      "religious_authority",
+      "psychological_diagnosis"
+    ]
+  },
+  inputs: [
+    {
+      id: "your_name_or_nickname",
+      label_jp: "あなたの名前・ニックネーム",
+      type: "text",
+      max_length: 20,
+      required: true,
+      guidance_jp: "本名ではなく、ニックネームでも大丈夫です。",
+      sensitivity_level: "low_to_medium",
+      use: "display_and_symbolic_seed_only"
+    },
+    {
+      id: "partner_name_or_nickname",
+      label_jp: "相手の名前・ニックネーム",
+      type: "text",
+      max_length: 20,
+      required: true,
+      guidance_jp: "相手の本名でなく、呼び名でも大丈夫です。",
+      sensitivity_level: "low_to_medium",
+      use: "display_and_symbolic_seed_only"
+    },
+    {
+      id: "relation_context",
+      label_jp: "ふたりの関係",
+      type: "single_select",
+      required: false,
+      options: ["恋愛", "気になる人", "友だち", "仕事・チーム", "まだわからない"],
+      sensitivity_level: "medium",
+      use: "soft_weighting_and_copy_context_only"
+    },
+    {
+      id: "tone_preference",
+      label_jp: "ほしい言葉の雰囲気",
+      type: "single_select",
+      required: false,
+      options: ["やさしく", "ちょっと楽しく", "すっきり", "背中を押す"],
+      sensitivity_level: "low",
+      use: "copy_tone_only"
+    }
+  ],
+  optional_questions: [
+    {
+      id: "R04_Q01",
+      prompt_jp: "ふたりでいるとき、どんな空気になりやすいですか？",
+      prompt_cn: "两个人在一起时，比较容易形成怎样的氛围？",
+      options: [
+        { key: "calm", label_jp: "落ち着く", label_cn: "安稳", score_tags: ["calm", "steady"] },
+        { key: "playful", label_jp: "楽しくなる", label_cn: "轻松有趣", score_tags: ["playful", "spark"] },
+        { key: "careful", label_jp: "少し気をつかう", label_cn: "有点在意", score_tags: ["careful", "distance"] },
+        { key: "unknown", label_jp: "まだわからない", label_cn: "还不确定", score_tags: ["unknown", "open"] }
+      ]
+    },
+    {
+      id: "R04_Q02",
+      prompt_jp: "相手に近づくとき、あなたはどちらに近いですか？",
+      prompt_cn: "想靠近对方时，你更接近哪一种？",
+      options: [
+        { key: "slow", label_jp: "ゆっくり近づきたい", label_cn: "想慢慢靠近", score_tags: ["slow", "safe"] },
+        { key: "direct", label_jp: "素直に伝えたい", label_cn: "想直接表达", score_tags: ["direct", "spark"] },
+        { key: "observe", label_jp: "まず様子を見たい", label_cn: "想先观察", score_tags: ["observe", "careful"] },
+        { key: "mixed", label_jp: "日によって変わる", label_cn: "看当天状态", score_tags: ["mixed", "fluid"] }
+      ]
+    },
+    {
+      id: "R04_Q03",
+      prompt_jp: "ふたりの会話で大事にしたいことは？",
+      prompt_cn: "两个人对话时，你更想重视什么？",
+      options: [
+        { key: "ease", label_jp: "気楽さ", label_cn: "轻松", score_tags: ["ease", "playful"] },
+        { key: "honesty", label_jp: "正直さ", label_cn: "真实", score_tags: ["honesty", "direct"] },
+        { key: "kindness", label_jp: "やさしさ", label_cn: "温柔", score_tags: ["kindness", "calm"] },
+        { key: "timing", label_jp: "タイミング", label_cn: "时机", score_tags: ["timing", "distance"] }
+      ]
+    },
+    {
+      id: "R04_Q04",
+      prompt_jp: "今いちばん知りたいのは？",
+      prompt_cn: "你现在最想知道的是？",
+      options: [
+        { key: "mood", label_jp: "今の距離感", label_cn: "现在的距离感", score_tags: ["distance", "C02"] },
+        { key: "future_talk", label_jp: "次に話すきっかけ", label_cn: "下一次开口的契机", score_tags: ["talk", "R01"] },
+        { key: "self_state", label_jp: "自分の気持ち", label_cn: "自己的心情", score_tags: ["self", "C02"] },
+        { key: "light_fun", label_jp: "軽く楽しみたい", label_cn: "只是轻松玩一下", score_tags: ["asobi", "S01"] }
+      ]
+    },
+    {
+      id: "R04_Q05",
+      prompt_jp: "ふたりのテンポは？",
+      prompt_cn: "两个人的节奏更像？",
+      options: [
+        { key: "similar", label_jp: "近い気がする", label_cn: "好像比较接近", score_tags: ["sync", "steady"] },
+        { key: "different", label_jp: "違うけど気になる", label_cn: "不同但在意", score_tags: ["contrast", "curious"] },
+        { key: "changing", label_jp: "変わってきている", label_cn: "正在变化", score_tags: ["change", "open"] },
+        { key: "unknown", label_jp: "まだ見えていない", label_cn: "还看不清", score_tags: ["unknown", "observe"] }
+      ]
+    },
+    {
+      id: "R04_Q06",
+      prompt_jp: "結果のあと、進みたい先は？",
+      prompt_cn: "看完结果后，你更想去哪里？",
+      options: [
+        { key: "r01", label_jp: "ふたりの相性を深く見る", label_cn: "深入看两个人的相性", score_tags: ["R01"] },
+        { key: "c02", label_jp: "まず自分の状態を見る", label_cn: "先看看自己的状态", score_tags: ["C02"] },
+        { key: "s01", label_jp: "今日の軽いヒントを見る", label_cn: "看看今天的小提示", score_tags: ["S01"] },
+        { key: "share", label_jp: "結果をシェアしたい", label_cn: "想分享结果", score_tags: ["share"] }
+      ]
+    }
+  ],
+  assignment_logic: {
+    method: "name_seeded_symbolic_random_with_optional_soft_weighting",
+    name_use_boundary: "names_are_seed_only_not_interpretation_basis",
+    prohibited_outputs: ["scores", "percentages", "rankings", "marriage_probability", "breakup_probability", "reconciliation_probability", "destiny_label"],
+    redraw_limit_per_day: 1,
+    redraw_label_jp: "あそびの引き直し"
+  },
+  recommendation_targets: {
+    R01: "ふたり恋愛相性診断",
+    C02: "今のわたしチェック",
+    S01: "今日のおみくじ",
+    LINE_SAVE: "LINE保存"
+  },
+  result_pool: [
+    {
+      result_id: "R04_R001",
+      title_jp: "風通しのいいふたり",
+      title_cn: "通风感很好的两个人",
+      compatibility_label_jp: "ふわっと近づく相性",
+      compatibility_label_cn: "轻轻靠近型相性",
+      main_message_jp: "ふたりの名前から受け取る印象は、重く決めるよりも軽く言葉を交わすことで近づきやすい組み合わせです。",
+      main_message_cn: "从两个名字作为入口的印象来看，这是一种比起沉重判断，更适合轻轻交换语言的组合。",
+      pair_strength_jp: "短い会話や小さな共有が、距離をやわらかくします。",
+      possible_gap_jp: "深い話を急ぐと、少し身構えやすいかもしれません。",
+      one_question_to_talk_jp: "最近、少しうれしかったことある？",
+      r01_bridge_jp: "ふたりの会話や距離感を深く見たいなら、R01 ふたり恋愛相性診断へ。",
+      c02_bridge_jp: "まず自分の今の気持ちを確認したいなら、C02 今のわたしチェックへ。",
+      share_card_line_jp: "ふたりは「風通しのいいふたり」。軽い言葉から近づけるかも。",
+      risk_boundary: "reflective entertainment only; names do not determine compatibility or relationship outcome"
+    },
+    {
+      result_id: "R04_R002",
+      title_jp: "じんわり温まるふたり",
+      title_cn: "慢慢变暖的两个人",
+      compatibility_label_jp: "ゆっくり育つ相性",
+      compatibility_label_cn: "慢慢培养型相性",
+      main_message_jp: "ふたりは、急な盛り上がりよりも、少しずつ安心を積むほうが似合いそうです。",
+      main_message_cn: "两个人比起突然升温，更适合一点点积累安心感。",
+      pair_strength_jp: "続くやりとりの中で、信頼の温度が出やすいです。",
+      possible_gap_jp: "反応がゆっくりだと、不安に見えやすいかもしれません。",
+      one_question_to_talk_jp: "連絡のペース、どれくらいが楽？",
+      r01_bridge_jp: "ふたりのペース差を見たいなら、R01へ。",
+      c02_bridge_jp: "待つ時間の不安が気になるなら、C02へ。",
+      share_card_line_jp: "ふたりは「じんわり温まるふたり」。急がず育つ距離感。",
+      risk_boundary: "reflective entertainment only; no promise of relationship growth"
+    },
+    {
+      result_id: "R04_R003",
+      title_jp: "会話でほどけるふたり",
+      title_cn: "通过对话松开的两个人",
+      compatibility_label_jp: "会話でほどける相性",
+      compatibility_label_cn: "对话松开型相性",
+      main_message_jp: "ふたりは、考え込むより話してみることで空気が見えやすくなる組み合わせです。",
+      main_message_cn: "两个人比起各自想太多，更适合通过说出来看清氛围。",
+      pair_strength_jp: "確認の言葉が、誤解を小さくします。",
+      possible_gap_jp: "聞かずに想像すると、距離が広がりやすいかもしれません。",
+      one_question_to_talk_jp: "これ、どう受け取った？",
+      r01_bridge_jp: "会話の相性を深く知るなら、R01へ。",
+      c02_bridge_jp: "自分の受け取り方を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「会話でほどけるふたり」。聞くことで近づく相性。",
+      risk_boundary: "reflective entertainment only; no communication outcome guarantee"
+    },
+    {
+      result_id: "R04_R004",
+      title_jp: "違いが小さく光るふたり",
+      title_cn: "差异微微发光的两个人",
+      compatibility_label_jp: "違いが光る相性",
+      compatibility_label_cn: "差异发光型相性",
+      main_message_jp: "ふたりは、同じところより違うところに気づいたとき、関係の面白さが出やすいかもしれません。",
+      main_message_cn: "两个人的趣味可能不在完全相同，而在注意到差异时慢慢出现。",
+      pair_strength_jp: "違いを否定せず眺める力があります。",
+      possible_gap_jp: "同じ反応を期待すると、少しすれ違いやすいです。",
+      one_question_to_talk_jp: "そこ、私は違って見えるかも。聞いてもいい？",
+      r01_bridge_jp: "違いの扱い方を見たいなら、R01へ。",
+      c02_bridge_jp: "違いに揺れる自分を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「違いが小さく光るふたり」。同じじゃなくても面白い。",
+      risk_boundary: "reflective entertainment only; no suitability or unsuitability judgment"
+    },
+    {
+      result_id: "R04_R005",
+      title_jp: "安心を置けるふたり",
+      title_cn: "可以放下安心感的两个人",
+      compatibility_label_jp: "安心をつくる相性",
+      compatibility_label_cn: "制造安心型相性",
+      main_message_jp: "ふたりは、派手な刺激よりも、落ち着いていられる空気に良さが出やすい組み合わせです。",
+      main_message_cn: "两个人比起强烈刺激，更容易在安稳的空气里显出好处。",
+      pair_strength_jp: "無理に盛り上げなくても、そばにある安心が残ります。",
+      possible_gap_jp: "刺激が少ないと、物足りなさと誤解することがあります。",
+      one_question_to_talk_jp: "一緒にいて楽な瞬間ってどんなとき？",
+      r01_bridge_jp: "安心感と恋愛感の違いを見たいなら、R01へ。",
+      c02_bridge_jp: "自分が何に安心するか見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「安心を置けるふたり」。静かな良さがある相性。",
+      risk_boundary: "reflective entertainment only; no claim that relationship is safe or ideal"
+    },
+    {
+      result_id: "R04_R006",
+      title_jp: "きっかけ待ちのふたり",
+      title_cn: "等待契机的两个人",
+      compatibility_label_jp: "きっかけ待ちの相性",
+      compatibility_label_cn: "契机等待型相性",
+      main_message_jp: "ふたりは、何かひとつきっかけがあると会話が動きやすい組み合わせです。",
+      main_message_cn: "两个人可能需要一个小契机，交流才更容易动起来。",
+      pair_strength_jp: "話題が見つかると、距離が軽くなります。",
+      possible_gap_jp: "何もないまま待つと、相手任せになりやすいです。",
+      one_question_to_talk_jp: "今度、これ一緒に見てみない？",
+      r01_bridge_jp: "きっかけの作り方を深く見たいなら、R01へ。",
+      c02_bridge_jp: "声をかける前の迷いを見るなら、C02へ。",
+      share_card_line_jp: "ふたりは「きっかけ待ちのふたり」。小さな話題が橋になる。",
+      risk_boundary: "reflective entertainment only; no prediction of contact or response"
+    },
+    {
+      result_id: "R04_R007",
+      title_jp: "余白で近づくふたり",
+      title_cn: "通过余白靠近的两个人",
+      compatibility_label_jp: "余白が大事な相性",
+      compatibility_label_cn: "余白重要型相性",
+      main_message_jp: "ふたりは、詰めすぎない距離の中で自然さが出やすい組み合わせです。",
+      main_message_cn: "两个人在不过度推进的距离里，更容易显出自然感。",
+      pair_strength_jp: "返事や沈黙に余地を残せると、関係がやわらぎます。",
+      possible_gap_jp: "距離を急に縮めると、少し窮屈に感じるかもしれません。",
+      one_question_to_talk_jp: "連絡しない時間も、どれくらいあると楽？",
+      r01_bridge_jp: "ふたりの距離感を深く見るなら、R01へ。",
+      c02_bridge_jp: "近づきたい気持ちと不安を見るなら、C02へ。",
+      share_card_line_jp: "ふたりは「余白で近づくふたり」。急がない距離感が合図。",
+      risk_boundary: "reflective entertainment only; no relationship timing advice"
+    },
+    {
+      result_id: "R04_R008",
+      title_jp: "遊び心が合うふたり",
+      title_cn: "玩心相合的两个人",
+      compatibility_label_jp: "遊び心が合う相性",
+      compatibility_label_cn: "玩心相合型相性",
+      main_message_jp: "ふたりは、まじめな確認よりも、軽い冗談や小さな遊びから空気がほぐれやすい組み合わせです。",
+      main_message_cn: "两个人比起严肃确认，更容易通过轻松玩笑或小玩法让气氛松开。",
+      pair_strength_jp: "笑える余地が、距離を近づけます。",
+      possible_gap_jp: "大事な話まで軽くしすぎると、伝わりにくいことがあります。",
+      one_question_to_talk_jp: "最近ちょっと笑ったこと、何？",
+      r01_bridge_jp: "楽しさと本音のバランスを見るなら、R01へ。",
+      c02_bridge_jp: "自分の伝え方の癖を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「遊び心が合うふたり」。笑える余白が橋になる。",
+      risk_boundary: "reflective entertainment only; no claim of romantic fit"
+    },
+    {
+      result_id: "R04_R009",
+      title_jp: "そっと並ぶふたり",
+      title_cn: "轻轻并肩的两个人",
+      compatibility_label_jp: "安心をつくる相性",
+      compatibility_label_cn: "制造安心型相性",
+      main_message_jp: "ふたりは、前に出すぎず、隣にいるような距離で心地よさが出やすい印象です。",
+      main_message_cn: "两个人在不过度前进、像并肩一样的距离里，可能更容易感到舒服。",
+      pair_strength_jp: "同じ空間にいるだけで落ち着く場面があります。",
+      possible_gap_jp: "言葉が少ないと、気持ちが見えにくくなるかもしれません。",
+      one_question_to_talk_jp: "一緒にいるとき、何をしている時間が楽？",
+      r01_bridge_jp: "静かな相性を深く見るなら、R01へ。",
+      c02_bridge_jp: "自分の安心ポイントを見るなら、C02へ。",
+      share_card_line_jp: "ふたりは「そっと並ぶふたり」。静かな距離に良さがある。",
+      risk_boundary: "reflective entertainment only; no emotional safety guarantee"
+    },
+    {
+      result_id: "R04_R010",
+      title_jp: "小さな合図が届くふたり",
+      title_cn: "小信号能传到的两个人",
+      compatibility_label_jp: "会話でほどける相性",
+      compatibility_label_cn: "对话松开型相性",
+      main_message_jp: "ふたりは、大きな説明よりも、小さな合図や短い言葉が伝わりやすい組み合わせです。",
+      main_message_cn: "两个人可能比起长篇说明，更容易通过小信号或短句传达。",
+      pair_strength_jp: "短い確認が、安心の入口になります。",
+      possible_gap_jp: "言わなくても伝わるはずと思うと、ずれが出ることがあります。",
+      one_question_to_talk_jp: "今の一言、どう聞こえた？",
+      r01_bridge_jp: "伝わり方の相性を見たいなら、R01へ。",
+      c02_bridge_jp: "自分の伝え方を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「小さな合図が届くふたり」。短い言葉が鍵。",
+      risk_boundary: "reflective entertainment only; no guarantee of mutual understanding"
+    },
+    {
+      result_id: "R04_R011",
+      title_jp: "ゆっくりほどけるふたり",
+      title_cn: "慢慢松开的两个人",
+      compatibility_label_jp: "ゆっくり育つ相性",
+      compatibility_label_cn: "慢慢培养型相性",
+      main_message_jp: "ふたりは、最初から全部を見せるより、少しずつほどける中で良さが見えやすい組み合わせです。",
+      main_message_cn: "两个人比起一开始就全部打开，更适合在一点点松开的过程中看见好处。",
+      pair_strength_jp: "時間をかけるほど、話しやすさが出やすいです。",
+      possible_gap_jp: "早く答えを出そうとすると、自然さが減るかもしれません。",
+      one_question_to_talk_jp: "急がず話すなら、何から話したい？",
+      r01_bridge_jp: "育つ相性を深く見たいなら、R01へ。",
+      c02_bridge_jp: "焦りや期待を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「ゆっくりほどけるふたり」。時間が味方になる相性。",
+      risk_boundary: "reflective entertainment only; no promise that relationship will deepen"
+    },
+    {
+      result_id: "R04_R012",
+      title_jp: "明るい入口のふたり",
+      title_cn: "入口明亮的两个人",
+      compatibility_label_jp: "遊び心が合う相性",
+      compatibility_label_cn: "玩心相合型相性",
+      main_message_jp: "ふたりは、最初の一言が重くならないほど入りやすい印象です。",
+      main_message_cn: "两个人的入口越不沉重，越容易进入交流。",
+      pair_strength_jp: "軽い誘いや小さな共有が似合います。",
+      possible_gap_jp: "まじめな確認を避けすぎると、本音が残るかもしれません。",
+      one_question_to_talk_jp: "軽く行くなら、何なら一緒にできそう？",
+      r01_bridge_jp: "楽しさと本音の深さを見るなら、R01へ。",
+      c02_bridge_jp: "自分が何を望んでいるか見るなら、C02へ。",
+      share_card_line_jp: "ふたりは「明るい入口のふたり」。軽い一言から始まる。",
+      risk_boundary: "reflective entertainment only; no prediction of dating or closeness"
+    },
+    {
+      result_id: "R04_R013",
+      title_jp: "静かな確認が合うふたり",
+      title_cn: "适合安静确认的两个人",
+      compatibility_label_jp: "余白が大事な相性",
+      compatibility_label_cn: "余白重要型相性",
+      main_message_jp: "ふたりは、強く踏み込むよりも、静かに確認することで安心しやすい組み合わせです。",
+      main_message_cn: "两个人比起强势靠近，更适合通过安静确认获得安心。",
+      pair_strength_jp: "やわらかい質問が、距離を守りながら近づけます。",
+      possible_gap_jp: "遠慮しすぎると、本当の気持ちが見えにくくなります。",
+      one_question_to_talk_jp: "今、話しても大丈夫？",
+      r01_bridge_jp: "確認と距離の相性はR01へ。",
+      c02_bridge_jp: "遠慮の理由を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「静かな確認が合うふたり」。やわらかく聞ける相性。",
+      risk_boundary: "reflective entertainment only; no consent or safety assessment"
+    },
+    {
+      result_id: "R04_R014",
+      title_jp: "違うリズムで響くふたり",
+      title_cn: "不同节奏也能回响的两个人",
+      compatibility_label_jp: "違いが光る相性",
+      compatibility_label_cn: "差异发光型相性",
+      main_message_jp: "ふたりは、テンポが違うからこそ、相手の見方に気づける場面がありそうです。",
+      main_message_cn: "两个人也许正因为节奏不同，才更容易注意到对方的看法。",
+      pair_strength_jp: "自分にない視点を受け取れるところがあります。",
+      possible_gap_jp: "返事や反応の速度を同じにしようとすると疲れやすいです。",
+      one_question_to_talk_jp: "返事のペース、どんな感じが楽？",
+      r01_bridge_jp: "テンポ差の扱い方はR01へ。",
+      c02_bridge_jp: "待つときの自分の状態はC02へ。",
+      share_card_line_jp: "ふたりは「違うリズムで響くふたり」。違いもヒントになる。",
+      risk_boundary: "reflective entertainment only; no compatibility calculation from names"
+    },
+    {
+      result_id: "R04_R015",
+      title_jp: "ひとことで動くふたり",
+      title_cn: "一句话就会动起来的两个人",
+      compatibility_label_jp: "きっかけ待ちの相性",
+      compatibility_label_cn: "契机等待型相性",
+      main_message_jp: "ふたりは、長い説明よりも、短いひとことが流れを作りやすい印象です。",
+      main_message_cn: "两个人比起长篇说明，更可能由短短一句话带动气氛。",
+      pair_strength_jp: "最初の一言が、次の会話を呼びやすいです。",
+      possible_gap_jp: "言う前に考えすぎると、入口を逃しやすいです。",
+      one_question_to_talk_jp: "今日、少し話せる？",
+      r01_bridge_jp: "声のかけ方や反応を深く見たいなら、R01へ。",
+      c02_bridge_jp: "声をかける不安はC02へ。",
+      share_card_line_jp: "ふたりは「ひとことで動くふたり」。短い言葉がきっかけに。",
+      risk_boundary: "reflective entertainment only; no response prediction"
+    },
+    {
+      result_id: "R04_R016",
+      title_jp: "似ていないから見えるふたり",
+      title_cn: "因为不同而看见的两个人",
+      compatibility_label_jp: "違いが光る相性",
+      compatibility_label_cn: "差异发光型相性",
+      main_message_jp: "ふたりは、似ているかどうかよりも、違いをどう眺めるかで空気が変わりやすい組み合わせです。",
+      main_message_cn: "两个人的重点不在是否相似，而在如何看待差异。",
+      pair_strength_jp: "違いを会話にできると、関係が広がります。",
+      possible_gap_jp: "違いを勝ち負けにすると、緊張しやすくなります。",
+      one_question_to_talk_jp: "そこ、私はこう見えるけど、あなたは？",
+      r01_bridge_jp: "違いを関係に活かすヒントはR01へ。",
+      c02_bridge_jp: "違いに反応する自分を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「似ていないから見えるふたり」。違いが会話になる。",
+      risk_boundary: "reflective entertainment only; no judgment that difference is good or bad"
+    },
+    {
+      result_id: "R04_R017",
+      title_jp: "近づき方を選べるふたり",
+      title_cn: "可以选择靠近方式的两个人",
+      compatibility_label_jp: "ふわっと近づく相性",
+      compatibility_label_cn: "轻轻靠近型相性",
+      main_message_jp: "ふたりは、近づく速度をひとつに決めなくてもよい組み合わせです。日によって、軽くても深くても大丈夫。",
+      main_message_cn: "两个人不必把靠近的速度固定成一种。不同日子可以轻一点，也可以深一点。",
+      pair_strength_jp: "距離の調整に柔らかさがあります。",
+      possible_gap_jp: "相手の速度を読みすぎると、自分の気持ちが後ろに下がります。",
+      one_question_to_talk_jp: "今日の距離感、どれくらいが楽？",
+      r01_bridge_jp: "距離調整の相性はR01へ。",
+      c02_bridge_jp: "自分の近づき方を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「近づき方を選べるふたり」。距離は調整できる。",
+      risk_boundary: "reflective entertainment only; no relationship advice for serious conflicts"
+    },
+    {
+      result_id: "R04_R018",
+      title_jp: "言葉より空気が先に届くふたり",
+      title_cn: "氛围先于语言到达的两个人",
+      compatibility_label_jp: "安心をつくる相性",
+      compatibility_label_cn: "制造安心型相性",
+      main_message_jp: "ふたりは、言葉にする前の空気を感じ取りやすい印象です。",
+      main_message_cn: "两个人可能比较容易先感受到语言之前的氛围。",
+      pair_strength_jp: "静かな変化に気づけるところがあります。",
+      possible_gap_jp: "空気を読みすぎると、確認が足りなくなるかもしれません。",
+      one_question_to_talk_jp: "今の空気、私だけそう感じてる？",
+      r01_bridge_jp: "空気感と確認のバランスはR01へ。",
+      c02_bridge_jp: "読みすぎて疲れるときはC02へ。",
+      share_card_line_jp: "ふたりは「言葉より空気が先に届くふたり」。感じる力がある相性。",
+      risk_boundary: "reflective entertainment only; no mind-reading or psychological claim"
+    },
+    {
+      result_id: "R04_R019",
+      title_jp: "笑いで橋をかけるふたり",
+      title_cn: "用笑声架桥的两个人",
+      compatibility_label_jp: "遊び心が合う相性",
+      compatibility_label_cn: "玩心相合型相性",
+      main_message_jp: "ふたりは、少し笑える余地があると話しやすくなる組み合わせです。",
+      main_message_cn: "两个人在有一点笑意的余地时，更容易说话。",
+      pair_strength_jp: "気まずさを軽くする力があります。",
+      possible_gap_jp: "大事な話を冗談だけで流すと、残るものがあります。",
+      one_question_to_talk_jp: "まじめに言うと、ほんとはどう思った？",
+      r01_bridge_jp: "笑いと本音のバランスはR01へ。",
+      c02_bridge_jp: "本音を出す前の自分はC02へ。",
+      share_card_line_jp: "ふたりは「笑いで橋をかけるふたり」。軽さが入口になる。",
+      risk_boundary: "reflective entertainment only; no romantic conclusion"
+    },
+    {
+      result_id: "R04_R020",
+      title_jp: "ゆるく続くふたり",
+      title_cn: "轻松延续的两个人",
+      compatibility_label_jp: "ゆっくり育つ相性",
+      compatibility_label_cn: "慢慢培养型相性",
+      main_message_jp: "ふたりは、一度で決めるより、ゆるく続く中で見えてくるものが多そうです。",
+      main_message_cn: "两个人比起一次性判断，更可能在轻松延续中慢慢看见更多。",
+      pair_strength_jp: "続けるほど、無理のない距離が見えます。",
+      possible_gap_jp: "はっきりした答えを急ぐと、自然さが消えやすいです。",
+      one_question_to_talk_jp: "また話すなら、どんな話がいい？",
+      r01_bridge_jp: "続く関係の流れを見るなら、R01へ。",
+      c02_bridge_jp: "答えを急ぐ気持ちはC02へ。",
+      share_card_line_jp: "ふたりは「ゆるく続くふたり」。続く中で見えてくる。",
+      risk_boundary: "reflective entertainment only; no prediction that contact will continue"
+    },
+    {
+      result_id: "R04_R021",
+      title_jp: "透明な距離のふたり",
+      title_cn: "透明距离的两个人",
+      compatibility_label_jp: "余白が大事な相性",
+      compatibility_label_cn: "余白重要型相性",
+      main_message_jp: "ふたりは、何も起きていない時間にも意味を置ける組み合わせです。",
+      main_message_cn: "两个人也许可以在“什么都没发生”的时间里保留意义。",
+      pair_strength_jp: "沈黙や間を、すぐ不安に変えない余地があります。",
+      possible_gap_jp: "何も言わない時間が長いと、誤解も生まれやすいです。",
+      one_question_to_talk_jp: "連絡が空くとき、どう受け取る？",
+      r01_bridge_jp: "沈黙や間の相性はR01へ。",
+      c02_bridge_jp: "不安になりやすい自分を見るなら、C02へ。",
+      share_card_line_jp: "ふたりは「透明な距離のふたり」。間にも余白がある。",
+      risk_boundary: "reflective entertainment only; no advice on relationship silence"
+    },
+    {
+      result_id: "R04_R022",
+      title_jp: "小さな約束が似合うふたり",
+      title_cn: "适合小约定的两个人",
+      compatibility_label_jp: "きっかけ待ちの相性",
+      compatibility_label_cn: "契机等待型相性",
+      main_message_jp: "ふたりは、大きな約束よりも、小さく次を決めるほうが動きやすい印象です。",
+      main_message_cn: "两个人比起大约定，更适合小小决定下一步。",
+      pair_strength_jp: "次の一歩が見えると安心しやすいです。",
+      possible_gap_jp: "曖昧なまま期待だけ増えると、少し疲れやすいです。",
+      one_question_to_talk_jp: "次、軽く何をしてみる？",
+      r01_bridge_jp: "次の一歩の相性を見るなら、R01へ。",
+      c02_bridge_jp: "期待の大きさを見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「小さな約束が似合うふたり」。次の一歩を軽く。",
+      risk_boundary: "reflective entertainment only; no promise or commitment forecast"
+    },
+    {
+      result_id: "R04_R023",
+      title_jp: "まっすぐ聞けるふたり",
+      title_cn: "能直接询问的两个人",
+      compatibility_label_jp: "会話でほどける相性",
+      compatibility_label_cn: "对话松开型相性",
+      main_message_jp: "ふたりは、遠回りに探るよりも、やわらかく聞くことで見えるものがありそうです。",
+      main_message_cn: "两个人比起绕远试探，可能更适合温柔地直接询问。",
+      pair_strength_jp: "質問が関係を責めずに進める力になります。",
+      possible_gap_jp: "聞き方が強くなると、相手が身構えることがあります。",
+      one_question_to_talk_jp: "これ、聞いても大丈夫？",
+      r01_bridge_jp: "質問と受け取り方の相性はR01へ。",
+      c02_bridge_jp: "聞く前の緊張はC02へ。",
+      share_card_line_jp: "ふたりは「まっすぐ聞けるふたり」。やわらかい質問が鍵。",
+      risk_boundary: "reflective entertainment only; no communication success guarantee"
+    },
+    {
+      result_id: "R04_R024",
+      title_jp: "温度差をならせるふたり",
+      title_cn: "能调和温差的两个人",
+      compatibility_label_jp: "違いが光る相性",
+      compatibility_label_cn: "差异发光型相性",
+      main_message_jp: "ふたりは、気持ちの温度が違う日でも、調整しながら話せる余地があります。",
+      main_message_cn: "两个人即使情绪温度不同，也可能有一边调整一边说话的余地。",
+      pair_strength_jp: "同じ温度でなくても並べるところがあります。",
+      possible_gap_jp: "相手にも同じ熱量を求めると、苦しくなりやすいです。",
+      one_question_to_talk_jp: "今の温度感、どれくらい？",
+      r01_bridge_jp: "温度差の扱い方はR01へ。",
+      c02_bridge_jp: "自分の熱量を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「温度差をならせるふたり」。同じ熱量じゃなくてもいい。",
+      risk_boundary: "reflective entertainment only; no claim of emotional compatibility"
+    },
+    {
+      result_id: "R04_R025",
+      title_jp: "やさしい入口のふたり",
+      title_cn: "温柔入口的两个人",
+      compatibility_label_jp: "ふわっと近づく相性",
+      compatibility_label_cn: "轻轻靠近型相性",
+      main_message_jp: "ふたりは、強く踏み込むより、やさしい入口を作ることで近づきやすい印象です。",
+      main_message_cn: "两个人比起强势靠近，更适合创造一个温柔入口。",
+      pair_strength_jp: "無理のない誘い方が似合います。",
+      possible_gap_jp: "遠慮しすぎると、入口が見えなくなることがあります。",
+      one_question_to_talk_jp: "気が向いたら、少し話さない？",
+      r01_bridge_jp: "近づき方を深く見たいなら、R01へ。",
+      c02_bridge_jp: "遠慮しがちな自分を見るなら、C02へ。",
+      share_card_line_jp: "ふたりは「やさしい入口のふたり」。無理なく近づく相性。",
+      risk_boundary: "reflective entertainment only; no prediction of closeness"
+    },
+    {
+      result_id: "R04_R026",
+      title_jp: "受け取り上手になれるふたり",
+      title_cn: "能练习接收的两个人",
+      compatibility_label_jp: "安心をつくる相性",
+      compatibility_label_cn: "制造安心型相性",
+      main_message_jp: "ふたりは、言葉や行動をどう受け取るかで空気が変わりやすい組み合わせです。",
+      main_message_cn: "两个人的氛围可能会随着“如何接收对方的话和行动”而变化。",
+      pair_strength_jp: "受け取り方を確認できると安心が増えます。",
+      possible_gap_jp: "先に悪く受け取ると、距離が固まりやすいです。",
+      one_question_to_talk_jp: "今の、どういう意味で言ってくれた？",
+      r01_bridge_jp: "受け取り方の相性はR01へ。",
+      c02_bridge_jp: "自分の受け取り癖はC02へ。",
+      share_card_line_jp: "ふたりは「受け取り上手になれるふたり」。確認が安心になる。",
+      risk_boundary: "reflective entertainment only; no psychological assessment"
+    },
+    {
+      result_id: "R04_R027",
+      title_jp: "日常に混ざるふたり",
+      title_cn: "融入日常的两个人",
+      compatibility_label_jp: "ゆっくり育つ相性",
+      compatibility_label_cn: "慢慢培养型相性",
+      main_message_jp: "ふたりは、特別な場面よりも、日常の小さなやりとりで見えてくるものがありそうです。",
+      main_message_cn: "两个人也许比起特别场景，更容易在日常的小互动里看见东西。",
+      pair_strength_jp: "何気ない連絡や共有が関係の温度を作ります。",
+      possible_gap_jp: "特別さだけを求めると、日常の良さを見落とすかもしれません。",
+      one_question_to_talk_jp: "何気ない日なら、何を共有したい？",
+      r01_bridge_jp: "日常の相性を深く見るなら、R01へ。",
+      c02_bridge_jp: "自分が欲しい温度を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「日常に混ざるふたり」。小さなやりとりが残る。",
+      risk_boundary: "reflective entertainment only; no relationship stability claim"
+    },
+    {
+      result_id: "R04_R028",
+      title_jp: "反応を待てるふたり",
+      title_cn: "能等待反应的两个人",
+      compatibility_label_jp: "余白が大事な相性",
+      compatibility_label_cn: "余白重要型相性",
+      main_message_jp: "ふたりは、すぐ答えを出さない時間に余白を置けると、やわらかく進みやすい印象です。",
+      main_message_cn: "两个人如果能给“不立刻回答”的时间留出余白，会更容易柔和地前进。",
+      pair_strength_jp: "待つことを不安だけにしない力があります。",
+      possible_gap_jp: "反応の遅さを気持ちの薄さと決めると、苦しくなりやすいです。",
+      one_question_to_talk_jp: "返事に時間がいるとき、どう言うと楽？",
+      r01_bridge_jp: "待つことと距離感はR01へ。",
+      c02_bridge_jp: "待つ時間の自分はC02へ。",
+      share_card_line_jp: "ふたりは「反応を待てるふたり」。待つ余白も関係の一部。",
+      risk_boundary: "reflective entertainment only; no interpretation of response speed as love or dislike"
+    },
+    {
+      result_id: "R04_R029",
+      title_jp: "ふたりの間に窓がある",
+      title_cn: "两个人之间有一扇窗",
+      compatibility_label_jp: "会話でほどける相性",
+      compatibility_label_cn: "对话松开型相性",
+      main_message_jp: "ふたりは、閉じた部屋よりも、窓を開けるような会話で空気が通りやすい組み合わせです。",
+      main_message_cn: "两个人比起封闭房间，更适合像开窗一样的对话，让空气流动。",
+      pair_strength_jp: "話題を変える力と、空気を入れ替える力があります。",
+      possible_gap_jp: "同じ話題に留まりすぎると、重く感じるかもしれません。",
+      one_question_to_talk_jp: "ちょっと話題を変えてもいい？",
+      r01_bridge_jp: "会話の流れを深く見るなら、R01へ。",
+      c02_bridge_jp: "会話で疲れやすいなら、C02へ。",
+      share_card_line_jp: "ふたりは「間に窓があるふたり」。会話で風が通る。",
+      risk_boundary: "reflective entertainment only; no objective relationship reading"
+    },
+    {
+      result_id: "R04_R030",
+      title_jp: "軽い約束から始まるふたり",
+      title_cn: "从轻约定开始的两个人",
+      compatibility_label_jp: "きっかけ待ちの相性",
+      compatibility_label_cn: "契机等待型相性",
+      main_message_jp: "ふたりは、重い確認よりも、軽い約束から次の空気が見えやすい印象です。",
+      main_message_cn: "两个人比起沉重确认，更容易从轻轻的约定里看见下一步氛围。",
+      pair_strength_jp: "次に会う・話すきっかけを作りやすいです。",
+      possible_gap_jp: "期待を大きく乗せすぎると、軽さがなくなることがあります。",
+      one_question_to_talk_jp: "軽く決めるなら、次は何にする？",
+      r01_bridge_jp: "次の一歩の温度感はR01へ。",
+      c02_bridge_jp: "期待が大きくなる自分はC02へ。",
+      share_card_line_jp: "ふたりは「軽い約束から始まるふたり」。小さな次が橋になる。",
+      risk_boundary: "reflective entertainment only; no promise of meeting, dating, or progress"
+    },
+    {
+      result_id: "R04_R031",
+      title_jp: "やわらかく照らし合うふたり",
+      title_cn: "柔和照亮彼此的两个人",
+      compatibility_label_jp: "ふわっと近づく相性",
+      compatibility_label_cn: "轻轻靠近型相性",
+      main_message_jp: "ふたりは、相手を強く変えようとするより、少し照らし合うような距離が似合いそうです。",
+      main_message_cn: "两个人比起强行改变对方，更适合像柔和照亮彼此一样的距离。",
+      pair_strength_jp: "相手の良さを小さく見つける力があります。",
+      possible_gap_jp: "理想を押しつけると、自然な良さが見えにくくなります。",
+      one_question_to_talk_jp: "最近、相手のいいなと思ったところは？",
+      r01_bridge_jp: "ふたりの良さの見つけ方はR01へ。",
+      c02_bridge_jp: "自分の期待を見たいなら、C02へ。",
+      share_card_line_jp: "ふたりは「やわらかく照らし合うふたり」。小さな良さに気づける相性。",
+      risk_boundary: "reflective entertainment only; no claim of mutual love or future"
+    },
+    {
+      result_id: "R04_R032",
+      title_jp: "今日の相性メモ",
+      title_cn: "今天的相性便签",
+      compatibility_label_jp: "遊び心が合う相性",
+      compatibility_label_cn: "玩心相合型相性",
+      main_message_jp: "ふたりの名前をきっかけに見るなら、今日は深く決めるより、軽い相性メモとして受け取るのがよさそうです。",
+      main_message_cn: "如果以两个名字为入口，今天比起做深层判断，更适合把它当作轻轻的相性便签来接收。",
+      pair_strength_jp: "軽く楽しむことで、次の会話の入口ができます。",
+      possible_gap_jp: "この結果だけで関係を判断すると、見落とすものがあります。",
+      one_question_to_talk_jp: "これ、遊びとして見たらどう思う？",
+      r01_bridge_jp: "本当に深く見たい場合は、R01 ふたり恋愛相性診断へ。",
+      c02_bridge_jp: "結果を見て自分の気持ちが動いたら、C02へ。",
+      share_card_line_jp: "ふたりは「今日の相性メモ」。軽く楽しむ入口として。",
+      risk_boundary: "reflective entertainment only; this result is not a relationship conclusion"
+    }
+  ],
+  free_result_structure: {
+    required_blocks: [
+      "public_safe_marker",
+      "display_names_or_nicknames",
+      "result_title",
+      "compatibility_label",
+      "main_message",
+      "pair_strength",
+      "possible_gap",
+      "one_question_to_talk",
+      "r01_bridge_cta",
+      "c02_bridge_cta",
+      "share_card_cta",
+      "s01_return_cta"
+    ],
+    primary_cta_jp: "R01でふたりの相性を深く見る",
+    secondary_cta_jp: "C02で今の自分の気持ちを見る",
+    share_cta_jp: "シェアカードを作る",
+    return_cta_jp: "今日のおみくじを見る"
+  },
+  share_card_logic: {
+    public_safe: true,
+    name_display_modes: ["show_both_names", "hide_partner_name", "hide_both_names"],
+    include_fields: ["test_name_jp", "display_name_mode", "title_jp", "compatibility_label_jp", "share_card_line_jp"],
+    exclude_fields: ["optional_question_answers", "private_worry", "relationship_status_inference", "recommendation_trigger", "paid_report_teaser", "probability", "score", "ranking"],
+    boundary_microcopy_jp: "名前をきっかけにした、あそび型リフレクション"
+  },
+  paid_deep_report_boundary: {
+    paid_report_enabled: false,
+    allowed_next_steps: ["R01", "C02", "S01", "LINE_SAVE"],
+    forbidden: ["paid_name_compatibility_report", "name_numerology_report", "destiny_forecast", "marriage_forecast", "breakup_forecast", "reconciliation_forecast", "fear_based_upsell"]
+  }
+} as const;
+```
+
+## 17. Final Status
+
+output_status: md_review_file_created
+file_name: R04_namae_aisho_check_v1_0.md
+founder_review_needed: yes
+trust_risk_review_needed: yes
+codex_needed: no
+codex_ready: false
+next_recommended_action: founder_and_trust_risk_review_before_next_test_md

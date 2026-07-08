@@ -1,0 +1,61 @@
+import { f01MuiteiruHatarakikataShindanV10 } from "./generated/F01_muiteiru_hatarakikata_shindan_v1_0";
+import type { RuleBasedRuntime, TestCatalogEntry } from "./types";
+
+export const f01CatalogEntry: TestCatalogEntry = {
+  slug: "f01",
+  testId: "F01",
+  title: "向いている働き方診断",
+  description: "力を出しやすい進め方、集中の仕方、安心して働ける条件を見つめる入口です。",
+  estimatedTime: "約12〜18分",
+  category: "働き方",
+  boundaryNote: "転職・退職・職業選択を決めるものではありません。",
+  ctaLabel: "診断を始める",
+  route: "/tests/f01",
+  status: "available",
+};
+
+export const f01Runtime: RuleBasedRuntime = {
+  slug: "f01",
+  testId: "F01",
+  title: "向いている働き方診断",
+  introTitle: "進みやすい働き方を、\n今のリズムから見る。",
+  introDescription:
+    "エネルギーの出どころ、集中の仕方、人との働き方、戻り方を順番に見ることで、無理なく力を出しやすい条件を整理します。",
+  estimatedTime: f01CatalogEntry.estimatedTime,
+  questionCount: f01MuiteiruHatarakikataShindanV10.metadata.question_count,
+  questions: f01MuiteiruHatarakikataShindanV10.questions,
+  sections: f01MuiteiruHatarakikataShindanV10.sections,
+  resultTypes: f01MuiteiruHatarakikataShindanV10.result_types,
+  resultRules: f01MuiteiruHatarakikataShindanV10.result_assignment_rules,
+  dimensionLabels: {
+    energy_source: "力が湧きやすい源",
+    focus_style: "深く集中する条件",
+    pace_stability: "一定のペースで進む力",
+    collaboration_style: "人と動くときのしっくり感",
+    feedback_need: "反応や手応えの必要度",
+    autonomy_need: "自分で工夫できる余白",
+    structure_need: "見通しや役割の明確さ",
+    stress_response: "負荷がかかったときの反応",
+    recovery_style: "戻り方の相性",
+    growth_motivation: "挑戦したい気持ち",
+    environment_sensitivity: "環境の影響の受けやすさ",
+    execution_style: "ひとつずつ進める力",
+    purpose_drive: "意味が見えると動ける力",
+    contribution_drive: "役に立ちたい気持ち",
+    stability_need: "安心できる土台の必要度",
+    switching_tolerance: "変化や切り替えへの強さ",
+    action_start: "動き始め方の癖",
+    ideation_style: "発想が広がる条件",
+    pressure_activation: "負荷で火がつく傾向",
+    reassurance_need: "安心を確認したい気持ち",
+    repair_style: "整え直し方の癖",
+  },
+  boundaryNote: f01MuiteiruHatarakikataShindanV10.consent_copy.boundary_jp,
+  paidPreviewCopy: f01MuiteiruHatarakikataShindanV10.paid_teaser_config.promise_jp,
+  shareLabel: f01MuiteiruHatarakikataShindanV10.free_result_config.share_cta_jp,
+  relatedRoutes: [
+    { href: "/tests/f02", label: "職場環境の入口を見る" },
+    { href: "/tests/c02", label: "今の状態を見る" },
+    { href: "/open-testing", label: "120問の入口を見る" },
+  ],
+};
