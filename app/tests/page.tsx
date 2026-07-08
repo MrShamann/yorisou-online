@@ -4,9 +4,9 @@ import Link from "next/link";
 import { PHASE1_TEST_CATALOG } from "@/lib/yorisou-tests/catalog";
 
 export const metadata: Metadata = {
-  title: "テスト一覧 | Yorisou",
+  title: "入口を選ぶ | Yorisou",
   description:
-    "Yorisouの公開テスト入口を一覧で見られるページです。今の状態、働き方、職場環境、名前の印象、今日のヒントまで、近いテーマから選べます。",
+    "Yorisouの公開テスト入口を、今の状態や関心に合わせて選べるページです。結果、レポート、LINE保存につながる入口を一覧できます。",
 };
 
 export default function TestsPage() {
