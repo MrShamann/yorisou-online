@@ -12,7 +12,13 @@ import {
   resolveRuleBasedResult,
   buildNamePairOffset,
 } from "@/lib/yorisou-tests/scoring";
-import type { NamePairRuntime, OmikujiRuntime, RuleBasedRuntime } from "@/lib/yorisou-tests/types";
+import { resolveR01Result } from "@/lib/yorisou-tests/r01";
+import type {
+  NamePairRuntime,
+  OmikujiRuntime,
+  RelationshipPairRuntime,
+  RuleBasedRuntime,
+} from "@/lib/yorisou-tests/types";
 
 type Phase = "intro" | "questions" | "result";
 
@@ -230,6 +236,299 @@ function Pill({ children }: { children: React.ReactNode }) {
     <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.14)] bg-white/80 px-3 py-1.5 text-[12px] font-semibold text-[#5F5750]">
       {children}
     </span>
+  );
+}
+
+export function RelationshipPairFlow({ runtime }: { runtime: RelationshipPairRuntime }) {
+  const [phase, setPhase] = useState<"intro" | "A" | "swap" | "B" | "result">("intro");
+  const [index, setIndex] = useState(0);
+  const [answersA, setAnswersA] = useState<Record<string, string>>({});
+  const [answersB, setAnswersB] = useState<Record<string, string>>({});
+
+  const questionsA = useMemo(
+    () => runtime.questions.filter((question) => question.person === "A"),
+    [runtime.questions],
+  );
+  const questionsB = useMemo(
+    () => runtime.questions.filter((question) => question.person === "B"),
+    [runtime.questions],
+  );
+
+  const participant =
+    phase === "B" ? runtime.participants.find((entry) => entry.id === "B") : runtime.participants.find((entry) => entry.id === "A");
+  const currentQuestions = phase === "B" ? questionsB : questionsA;
+  const question = phase === "A" || phase === "B" ? currentQuestions[index] : null;
+  const result = useMemo(
+    () => (phase === "result" ? resolveR01Result(answersA, answersB) : null),
+    [answersA, answersB, phase],
+  );
+
+  function start() {
+    setAnswersA({});
+    setAnswersB({});
+    setIndex(0);
+    setPhase("A");
+  }
+
+  function select(optionLabel: string) {
+    if (!question) return;
+    const updater = phase === "B" ? setAnswersB : setAnswersA;
+    updater((current) => ({ ...current, [question.id]: optionLabel }));
+
+    if (index === currentQuestions.length - 1) {
+      setIndex(0);
+      setPhase(phase === "A" ? "swap" : "result");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    setIndex((current) => current + 1);
+  }
+
+  function goBack() {
+    if (phase === "A") {
+      if (index === 0) {
+        setPhase("intro");
+        return;
+      }
+      setIndex((current) => current - 1);
+      return;
+    }
+
+    if (phase === "B") {
+      if (index === 0) {
+        setPhase("swap");
+        return;
+      }
+      setIndex((current) => current - 1);
+    }
+  }
+
+  if (phase === "result" && result) {
+    return (
+      <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_48%,_#F3FAF6_100%)] text-[#2F2A28]">
+        <div className="container py-10 md:py-14">
+          <div className="mx-auto max-w-[44rem] space-y-6">
+            <div className="flex flex-wrap gap-2">
+              <Pill>ふたりの結果</Pill>
+              <Pill>
+                {result.confidence === "high"
+                  ? "温度差は小さめ"
+                  : result.confidence === "medium"
+                    ? "差も含めて見える"
+                    : "違いを言葉にすると活きる"}
+              </Pill>
+            </div>
+
+            <div className="space-y-2">
+              <p className="service-kicker">{runtime.title}</p>
+              <h1 className="display-serif text-[1.92rem] leading-[1.24] md:text-[2.55rem]">{result.title}</h1>
+              <p className="text-[15px] leading-8 text-[#5F5750]">{result.summary}</p>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-6 shadow-[0_18px_40px_rgba(23,59,53,0.08)]">
+              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">見えた相性の軸</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {result.alignedLabels.map((label) => (
+                  <span
+                    key={label}
+                    className="inline-flex rounded-full border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-3 py-1.5 text-[12px] font-semibold text-[#315F50]"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4 grid gap-3">
+                {result.bullets.map((bullet) => (
+                  <div key={bullet} className="rounded-[1rem] border border-[rgba(23,59,53,0.1)] bg-[#F7FBF8] px-4 py-3.5">
+                    <p className="text-[14px] leading-7 text-[#2F2A28]">{bullet}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {result.gapSummary ? (
+              <div className="rounded-[1.2rem] border border-[rgba(138,119,100,0.14)] bg-[#FFFDF8] px-5 py-4">
+                <p className="text-[13px] font-semibold text-[#6B5E55]">差が出やすいところ</p>
+                <p className="mt-1 text-[13px] leading-7 text-[#6B5E55]">{result.gapSummary}</p>
+              </div>
+            ) : null}
+
+            <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-5 py-4">
+              <p className="text-[12px] font-semibold tracking-[0.1em] text-[#49615B]">{runtime.reportTeaserLabel}</p>
+              <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">{result.reportTeaser}</p>
+            </div>
+
+            <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-5 py-4">
+              <p className="text-[12px] leading-7 text-[#7A7068]">{runtime.boundaryNote}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={start}
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
+              >
+                もう一度ふたりで試す
+              </button>
+              <Link
+                href="/tests"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-[14px] font-semibold text-[#315F50]"
+              >
+                入口一覧に戻る
+              </Link>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {runtime.relatedRoutes.map((route) => (
+                <Link
+                  key={route.href}
+                  href={route.href}
+                  className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/88 px-4 py-3 text-[13px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
+                >
+                  {route.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_48%,_#F3FAF6_100%)] text-[#2F2A28]">
+      <div className="container py-10 md:py-14">
+        <div className="mx-auto max-w-[44rem]">
+          {phase === "intro" ? (
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-2">
+                <Pill>{runtime.questionCountPerPerson}問 × 2人</Pill>
+                <Pill>{runtime.estimatedTime}</Pill>
+                <Pill>公開結果のみ</Pill>
+              </div>
+              <div className="space-y-3">
+                <p className="service-kicker">{runtime.title}</p>
+                <h1 className="display-serif whitespace-pre-line text-[2rem] leading-[1.22] md:text-[2.7rem]">
+                  {runtime.introTitle}
+                </h1>
+                <p className="text-[15px] leading-8 text-[#5F5750]">{runtime.introDescription}</p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {runtime.participants.map((entry) => (
+                  <div key={entry.id} className="rounded-[1.1rem] border border-[rgba(23,59,53,0.1)] bg-white/88 px-5 py-4">
+                    <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">{entry.label_jp}</p>
+                    <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">{entry.intro_jp}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.1)] bg-white/88 p-5">
+                <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">境界メモ</p>
+                <p className="mt-2 text-[13px] leading-7 text-[#5F5750]">{runtime.boundaryNote}</p>
+              </div>
+              <button
+                type="button"
+                onClick={start}
+                className="inline-flex min-h-[56px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-6 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 sm:w-auto"
+              >
+                ふたりでチェックする
+              </button>
+            </div>
+          ) : phase === "swap" ? (
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <p className="service-kicker">ひとり目の回答が終わりました</p>
+                <h2 className="display-serif text-[1.9rem] leading-[1.26] md:text-[2.45rem]">
+                  次は、ふたり目の 30 問です。
+                </h2>
+                <p className="text-[15px] leading-8 text-[#5F5750]">
+                  ここまでの回答を表示したり比較したりはしません。端末をそのまま渡して、もうひとりにも近い感覚を選んでもらってください。
+                </p>
+              </div>
+              <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.1)] bg-white/90 px-5 py-4">
+                <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">安心メモ</p>
+                <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
+                  結果ではふたり全体の傾向だけを返し、片方の答えだけを責める材料として見せることはありません。
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIndex(0);
+                    setPhase("B");
+                  }}
+                  className="inline-flex min-h-[56px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-6 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5"
+                >
+                  ふたり目を始める
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIndex(questionsA.length - 1);
+                    setPhase("A");
+                  }}
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-[14px] font-semibold text-[#315F50]"
+                >
+                  ひとり目に戻る
+                </button>
+              </div>
+            </div>
+          ) : question && participant ? (
+            <div className="space-y-4">
+              <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-3.5 shadow-[0_14px_30px_rgba(23,59,53,0.07)]">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-semibold tracking-[0.13em] text-[#6F625C]">{participant.label_jp}</div>
+                    <div className="mt-0.5 text-[14px] font-bold text-[#2F2A28]">
+                      Q{index + 1} / {runtime.questionCountPerPerson}
+                    </div>
+                  </div>
+                  <div className="rounded-full bg-[#EAF7F1] px-3 py-1 text-[12px] font-semibold text-[#315F50]">
+                    全体 {phase === "A" ? index + 1 : runtime.questionCountPerPerson + index + 1} / {runtime.questionCountTotal}
+                  </div>
+                </div>
+                <div className="mt-3 h-2 rounded-full bg-[rgba(23,59,53,0.08)]">
+                  <div
+                    className="h-2 rounded-full bg-[#173B35]"
+                    style={{
+                      width: `${(((phase === "A" ? 0 : runtime.questionCountPerPerson) + index + 1) / runtime.questionCountTotal) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/95 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
+                <p className="service-kicker">{participant.intro_jp}</p>
+                <h2 className="display-serif text-[1.48rem] leading-[1.32] md:text-[2.08rem]">{question.prompt}</h2>
+                <div className="grid gap-2.5">
+                  {question.options.map((option) => (
+                    <button
+                      key={`${question.id}:${option.label}`}
+                      type="button"
+                      onClick={() => select(option.label)}
+                      className="rounded-[1rem] border border-[rgba(111,98,92,0.13)] bg-white/90 px-4 py-3.5 text-left transition hover:-translate-y-0.5 hover:bg-white"
+                    >
+                      <span className="text-[15px] font-semibold leading-7 text-[#2F2A28]">{option.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={goBack}
+                  className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-[13px] font-semibold text-[#315F50]"
+                >
+                  戻る
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </main>
   );
 }
 

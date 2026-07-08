@@ -160,3 +160,69 @@ export type NamePairRuntime = {
   }>;
   relatedRoutes: readonly SymbolicRoute[];
 };
+
+export type RelationshipParticipant = {
+  id: "A" | "B";
+  label_jp: string;
+  intro_jp: string;
+};
+
+export type RelationshipQuestionOption = {
+  label: string;
+  text: string;
+  score: Record<string, number>;
+};
+
+export type RelationshipQuestion = {
+  id: string;
+  person: "A" | "B";
+  prompt: string;
+  options: readonly RelationshipQuestionOption[];
+  sensitivity: string;
+};
+
+export type RelationshipResultType = {
+  id: string;
+  name: string;
+  summary: string;
+  dims: readonly string[];
+  bullets: readonly string[];
+  private: string;
+  report: string;
+};
+
+export type RelationshipPairRuntime = {
+  slug: string;
+  testId: string;
+  title: string;
+  introTitle: string;
+  introDescription: string;
+  estimatedTime: string;
+  questionCountTotal: number;
+  questionCountPerPerson: number;
+  participants: readonly RelationshipParticipant[];
+  dimensions: ReadonlyArray<{
+    id: string;
+    label: string;
+    description: string;
+  }>;
+  questions: readonly RelationshipQuestion[];
+  resultTypes: readonly RelationshipResultType[];
+  tieBreakOrder: readonly string[];
+  fallbackResultId: string;
+  boundaryNote: string;
+  reportTeaserLabel: string;
+  relatedRoutes: readonly SymbolicRoute[];
+};
+
+export type RelationshipPairResolvedResult = {
+  resultId: string;
+  title: string;
+  summary: string;
+  bullets: readonly string[];
+  reportTeaser: string;
+  confidence: "low" | "medium" | "high";
+  alignedLabels: readonly string[];
+  gapLabel: string | null;
+  gapSummary: string | null;
+};
