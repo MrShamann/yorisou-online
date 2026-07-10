@@ -23,3 +23,5 @@ Do not apply the migration in this phase. After founder approval, apply it only 
 ## Local validation
 
 Run `npm run test:agent-runtime`, `npm run test:agent-runtime:db`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`. The database command refuses absent, non-localhost, Supabase, or non-test database URLs. GitHub Actions supplies an ephemeral PostgreSQL 16 service with workflow-local credentials; it applies the migration only there. Local database RPC execution remains unavailable in the Codex sandbox. This is validation infrastructure, not production runtime architecture; the migration and final deployment-role grant remain unapplied/deferred.
+
+The database harness executes core schema, promotion, ready-only claim, ownership, stale recovery, illegal-transition, PUBLIC-permission, idempotency, payload-limit, and two-client concurrent-claim checks. The concurrency check launches two independent `psql` sessions against two ready rows and requires distinct claimed IDs. It uses only the disposable CI database.

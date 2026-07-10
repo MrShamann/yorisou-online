@@ -23,3 +23,10 @@ select assert_true(not has_function_privilege('public','public.promote_yorisou_a
 select assert_true((select count(*) from pg_policies where schemaname='public' and tablename like 'agent_runtime_%')=0,'no user policies');
 drop function assert_true(boolean,text);
 SQL
+# Two independent psql clients race to claim two explicit ready tasks. Each call is a separate DB session.
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id,status) values ('concurrency','{}','internal','concurrent-a','c','ready'),('concurrency','{}','internal','concurrent-b','c','ready');"
+psql "$DATABASE_URL" -Atqc "select id from claim_yorisou_agent_runtime_tasks('concurrent-worker-a',60,1);" > /tmp/agent-runtime-claim-a & a=$!
+psql "$DATABASE_URL" -Atqc "select id from claim_yorisou_agent_runtime_tasks('concurrent-worker-b',60,1);" > /tmp/agent-runtime-claim-b & b=$!
+wait "$a"; wait "$b"
+test "$(cat /tmp/agent-runtime-claim-a)" != "$(cat /tmp/agent-runtime-claim-b)"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "do \$\$ begin insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id) values('x','{}','internal','queued-due','duplicate'); raise exception 'idempotency missing'; exception when unique_violation then null; end \$\$; do \$\$ begin insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id) values('x',jsonb_build_object('x',repeat('x',65537)),'internal','oversize','c'); raise exception 'payload limit missing'; exception when check_violation then null; end \$\$;"
