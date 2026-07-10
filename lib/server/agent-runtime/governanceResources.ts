@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import checksums from "./governance-checksums.json";
 
 export const YORISOU_PROJECT_ID = "yorisou" as const;
 const ROOT = path.resolve(process.cwd(), "resources/governance/current");
@@ -43,14 +44,17 @@ async function manifestFiles() {
 export async function validateGovernanceResources(): Promise<GovernanceResource[]> {
   const realRoot = await fs.realpath(ROOT).catch(() => fail("root_missing"));
   const listed = await manifestFiles();
-  const actual = (await fs.readdir(realRoot, { withFileTypes: true })).filter((entry) => entry.isFile()).map((entry) => entry.name).sort();
+  const entries = await fs.readdir(realRoot, { withFileTypes: true });
+  const actual = entries.map((entry) => entry.name).sort();
   if (listed.length !== EXPECTED_FILES || actual.length !== EXPECTED_FILES || actual.join("\n") !== listed.join("\n")) fail("allowlist_mismatch");
+  if (Object.keys(checksums.files).sort().join("\n") !== listed.join("\n")) fail("checksum_manifest_parity");
   const resources = await Promise.all(listed.map(async (filename) => {
     if (filename.startsWith(".") || filename.includes("..") || path.basename(filename) !== filename) fail(`unsafe_filename:${filename}`);
     const candidate = path.join(realRoot, filename); const stat = await fs.lstat(candidate);
     if (!stat.isFile() || stat.isSymbolicLink()) fail(`unsafe_file:${filename}`);
     const resolved = await fs.realpath(candidate); if (!resolved.startsWith(`${realRoot}${path.sep}`)) fail(`path_escape:${filename}`);
     const content = await fs.readFile(resolved, "utf8");
+    if (checksums.files[filename as keyof typeof checksums.files] !== hash(content)) fail(`checksum_mismatch:${filename}`);
     const metadata = filename === README ? { version: "v0.3.1", documentType: "Governance Pack" } : parseHeader(content, filename);
     if (/\b(Draft|Rev|Superseded|Intermediate)\b/i.test(filename) || /\*\*Status:\*\*\s*(Draft|Rev|Superseded|Intermediate)/i.test(content)) fail(`inactive_resource:${filename}`);
     return { filename, ...metadata, status: "Approved" as const, sha256: hash(content), resourceClass: filename === README ? "manifest" as const : "governance" as const, project_id: YORISOU_PROJECT_ID, loaded_at: new Date().toISOString(), sourcePath: `resources/governance/current/${filename}`, parseStatus: "valid" as const, domain: domainOf(filename), authorityPriority: priorityOf(filename), content };
