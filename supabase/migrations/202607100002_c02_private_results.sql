@@ -24,8 +24,16 @@ alter table public.yorisou_test_results enable row level security;
 -- All access is mediated by a server-only service-role repository, which checks
 -- the encrypted YORISOU session owner before each read or write.
 revoke all on table public.yorisou_test_results from public;
-revoke all on table public.yorisou_test_results from anon;
-revoke all on table public.yorisou_test_results from authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    revoke all on table public.yorisou_test_results from anon;
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    revoke all on table public.yorisou_test_results from authenticated;
+  end if;
+end;
+$$;
 
 create or replace function public.set_yorisou_test_result_updated_at()
 returns trigger
@@ -40,8 +48,16 @@ end;
 $$;
 
 revoke all on function public.set_yorisou_test_result_updated_at() from public;
-revoke all on function public.set_yorisou_test_result_updated_at() from anon;
-revoke all on function public.set_yorisou_test_result_updated_at() from authenticated;
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    revoke all on function public.set_yorisou_test_result_updated_at() from anon;
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    revoke all on function public.set_yorisou_test_result_updated_at() from authenticated;
+  end if;
+end;
+$$;
 
 create trigger yorisou_test_results_updated_at
 before update on public.yorisou_test_results
