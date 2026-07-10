@@ -30,6 +30,7 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run test:agent-runtime
+      - run: npm run test:c02
       - run: npm run test:agent-runtime:db
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/yorisou_agent_runtime_test
@@ -62,6 +63,12 @@ jobs:
 
       - name: TypeScript check
         run: npx tsc --noEmit
+
+      - name: C02 definition and scoring checks
+        run: npm run test:c02
+
+      - name: Secret-pattern check
+        run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"
 
       - name: Env check (informational)
         run: npm run check:env
