@@ -1,5 +1,10 @@
 import { c02ImaNoWatashiCheckV10 } from "./generated/C02_ima_no_watashi_check_v1_0";
-import type { RuleBasedRuntime, TestCatalogEntry } from "./types";
+import { getOptionId, resolveRuleBasedResult } from "./scoring";
+import type { RuleBasedResolvedResult, RuleBasedRuntime, TestCatalogEntry } from "./types";
+
+export const C02_TEST_ID = "C02" as const;
+export const C02_TEST_VERSION = "v1.0" as const;
+export const C02_SCORING_VERSION = "c02-rule-based-v1" as const;
 
 export const c02CatalogEntry: TestCatalogEntry = {
   slug: "c02",
@@ -61,3 +66,46 @@ export const c02Runtime: RuleBasedRuntime = {
     { href: "/tests/s01", label: "今日のおみくじを見る" },
   ],
 };
+
+export type C02AnswerMap = Record<string, string>;
+
+export type C02ValidationResult =
+  | { ok: true; answers: C02AnswerMap }
+  | { ok: false; code: "invalid_answers" | "incomplete_answers"; message: string };
+
+/**
+ * Validates the inherited C02 source contract before deterministic scoring or
+ * persistence. Raw answers are deliberately kept out of public result data.
+ */
+export function validateC02Answers(input: unknown): C02ValidationResult {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return { ok: false, code: "invalid_answers", message: "回答形式を確認できませんでした。" };
+  }
+
+  const answers = input as Record<string, unknown>;
+  const expectedIds = new Set(c02Runtime.questions.map((question) => question.id));
+  if (Object.keys(answers).length !== expectedIds.size) {
+    return { ok: false, code: "incomplete_answers", message: "すべての質問への回答が必要です。" };
+  }
+
+  const normalized: C02AnswerMap = {};
+  for (const question of c02Runtime.questions) {
+    const answer = answers[question.id];
+    if (typeof answer !== "string" || !question.options.some((option) => getOptionId(option) === answer)) {
+      return { ok: false, code: "invalid_answers", message: "回答内容を確認できませんでした。" };
+    }
+    normalized[question.id] = answer;
+  }
+
+  for (const answerId of Object.keys(answers)) {
+    if (!expectedIds.has(answerId)) {
+      return { ok: false, code: "invalid_answers", message: "回答内容を確認できませんでした。" };
+    }
+  }
+
+  return { ok: true, answers: normalized };
+}
+
+export function resolveValidatedC02Result(answers: C02AnswerMap): RuleBasedResolvedResult {
+  return resolveRuleBasedResult(c02Runtime, answers);
+}

@@ -75,7 +75,7 @@ const BRANCH_DEFINITIONS: BranchDefinition[] = [
     monetization_truth: "result / deep report / recurring content",
     branch_data_scope: ["completion", "result_identity", "funnel", "recurring_follow_up"],
     compliance_profile: "mobile-first, result-first, branch-contained",
-    allowed_entry_routes: ["/", "/line/mini-app", "/line/next", "/line/open", "/check-in", "/result"],
+    allowed_entry_routes: ["/", "/line/mini-app", "/line/next", "/line/open", "/check-in", "/result", "/tests", "/saved"],
     forbidden_redirect_targets: ["/support", "/en/support", "/ai-advisor", "/en/ai-advisor"],
     visibility_policy: "public",
     cross_branch_access_policy: "explicit_bridge",

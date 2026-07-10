@@ -13,6 +13,7 @@ import {
   buildNamePairOffset,
 } from "@/lib/yorisou-tests/scoring";
 import { resolveR01Result } from "@/lib/yorisou-tests/r01";
+import { C02PrivateSave } from "../c02/C02PrivateSave";
 import type {
   NamePairRuntime,
   OmikujiRuntime,
@@ -99,6 +100,8 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
             <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 px-5 py-4">
               <p className="text-[12px] leading-7 text-[#7A7068]">{runtime.boundaryNote}</p>
             </div>
+
+            {runtime.testId === "C02" ? <C02PrivateSave answers={answers} /> : null}
 
             <div className="rounded-[1.2rem] border border-[rgba(105,151,130,0.16)] bg-[#F7FBF8] px-5 py-4">
               <p className="text-[12px] font-semibold tracking-[0.1em] text-[#49615B]">シェア用の一行</p>
