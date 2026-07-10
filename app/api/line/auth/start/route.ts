@@ -39,9 +39,9 @@ export async function GET(request: Request) {
   const loginHref = locale === "en" ? "/en/login#line-entry" : "/login#line-entry";
   const registerHref = locale === "en" ? "/en/register#line-entry" : "/register#line-entry";
   const returnTo = safeRedirectPath(url.searchParams.get("returnTo"), supportHref);
-  const c02Return = returnTo === "/tests/c02" || returnTo.startsWith("/tests/c02?") || returnTo.startsWith("/saved/c02/");
-  const successRedirect = c02Return || intent === "support" ? returnTo : supportHref;
-  const failureRedirect = c02Return ? returnTo : intent === "register" ? registerHref : intent === "support" ? supportHref : loginHref;
+  const testReturn = /^\/tests\/(c02|f01|f02)(?:\/return)?(?:\?.*)?$/.test(returnTo) || returnTo.startsWith("/saved/tests/") || returnTo.startsWith("/saved/c02/");
+  const successRedirect = testReturn || intent === "support" ? returnTo : supportHref;
+  const failureRedirect = testReturn ? returnTo : intent === "register" ? registerHref : intent === "support" ? supportHref : loginHref;
 
   const viewer = await getViewerContext();
   const session = viewer.session || (await ensureViewerSession());
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
     successRedirect,
     failureRedirect,
     locale,
-    branchId: c02Return ? "yorisou_dte" : null,
+    branchId: testReturn ? "yorisou_dte" : null,
   });
   const existingEntries = decodeLineAuthCookieEntries(request.headers.get("cookie")?.match(/(?:^|; )yorisou_line_auth=([^;]+)/)?.[1]);
   const nextEntries = upsertLineAuthCookieEntry(existingEntries, payload);

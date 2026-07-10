@@ -6,14 +6,14 @@ import { useState } from "react";
 import type { C02AnswerMap } from "@/lib/yorisou-tests/c02";
 import { storePendingC02Save } from "./pendingSave";
 
-export function C02PrivateSave({ answers }: { answers: C02AnswerMap }) {
+export function PrivateTestSave({ testSlug, answers }: { testSlug: "c02" | "f01" | "f02"; answers: C02AnswerMap }) {
   const [state, setState] = useState<"idle" | "saving" | "saved" | "login" | "error">("idle");
   const [savedId, setSavedId] = useState<string | null>(null);
 
   async function save() {
     setState("saving");
     try {
-      const response = await fetch("/api/tests/c02/results", {
+      const response = await fetch(`/api/tests/${testSlug}/results`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers }),
@@ -32,7 +32,7 @@ export function C02PrivateSave({ answers }: { answers: C02AnswerMap }) {
     }
   }
 
-  const returnTo = "/tests/c02/return";
+  const returnTo = `/tests/${testSlug}/return`;
   const loginHref = `/login?next=${encodeURIComponent(returnTo)}`;
   const lineHref = `/api/line/auth/start?locale=ja&intent=login&returnTo=${encodeURIComponent(returnTo)}`;
 
@@ -43,7 +43,7 @@ export function C02PrivateSave({ answers }: { answers: C02AnswerMap }) {
         回答は公開されません。ログイン後、Yorisouアカウントに紐づけて結果を見返せます。
       </p>
       {state === "saved" && savedId ? (
-        <Link href={`/saved/c02/${savedId}`} className="btn mt-4 inline-flex min-h-[46px] items-center justify-center rounded-full px-5 text-sm">
+        <Link href={`/saved/tests/${savedId}`} className="btn mt-4 inline-flex min-h-[46px] items-center justify-center rounded-full px-5 text-sm">
           保存した結果を見る
         </Link>
       ) : state === "login" ? (
