@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import SavedResultView from "./SavedResultView";
+import SavedTestList from "./SavedTestList";
 
 export const metadata: Metadata = {
   title: "保存した結果 | Yorisou",
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function SavedPage() {
-  return <SavedResultView />;
+  return <><SavedResultView /><SavedTestList /></>;
 }
