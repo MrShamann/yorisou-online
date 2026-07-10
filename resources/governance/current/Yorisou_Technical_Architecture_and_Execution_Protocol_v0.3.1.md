@@ -1,9 +1,10 @@
-# Yorisou Technical Architecture and Execution Protocol v0.3
+# Yorisou Technical Architecture and Execution Protocol v0.3.1.1
 
 **Status:** Approved  
 **Owner:** Edward  
 **Approver:** Edward  
-**Approved Date:** 2026-07-10  
+**Approved Date:** 2026-07-10
+**Amendment Consolidated:** Multi-Channel and App Distribution Amendment v0.1  
 **Supersedes:** Yorisou Technical Architecture and Execution Protocol v0.2
 
 ---
@@ -670,3 +671,31 @@ Initial activation target:
 11. Governance Auditor.
 
 Other capabilities remain Planned or Dormant until trigger conditions and value are demonstrated.
+
+## 28. Multi-Channel Client and App Distribution Architecture
+
+Canonical client surfaces are:
+
+- responsive Web;
+- LINE/LIFF or LINE Mini App where appropriate;
+- planned iOS App Store application;
+- planned Android Google Play application.
+
+Email remains an identity, authentication, account-recovery, and service-communication channel.
+
+All clients must consume one governed backend and stable, versioned API contracts. Core domain logic, authorization, visibility enforcement, consent, moderation, payment truth, state history, memory, and recommendation provenance must not exist only in a client.
+
+Before mobile implementation, Codex must audit the current repository and compare at least:
+
+- React Native/Expo;
+- Capacitor over the existing Web stack;
+- PWA as an interim bridge;
+- shared TypeScript domain/API packages;
+- separate native implementation only where justified.
+
+The selection report must compare reuse, maintainability, accessibility, offline needs, push notifications, deep links, store review, testing, security, release operations, and one-person-company workload.
+
+Future mobile release readiness must cover Apple and Google developer accounts, signing, store metadata, privacy manifests/disclosures, account deletion, age rating, content moderation declarations, universal/app links, push consent, crash monitoring, backend compatibility, staged rollout, rollback, and payment-policy review.
+
+No mobile client project may be created merely by governance installation. A separate approved implementation task is required.
+

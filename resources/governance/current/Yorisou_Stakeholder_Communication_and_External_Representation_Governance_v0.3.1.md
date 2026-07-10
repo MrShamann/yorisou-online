@@ -1,13 +1,13 @@
-# Yorisou Stakeholder Communication and External Representation Governance v0.3
+# Yorisou Stakeholder Communication and External Representation Governance v0.3.1
 
 **Status:** Approved  
 **Owner:** Edward  
 **Approver:** Edward  
-**Version:** v0.3
+**Version:** v0.3.1
 **Current Market:** Japan  
 **Current Brand and Domain:** YORISOU / yorisou.online  
-**Current Channels:** Japanese Web, LINE, email registration and account recovery  
-**Governing Documents:** Project Constitution v0.3 and the six core v0.3 governance documents
+**Current Channels:** Japanese responsive Web, LINE/LIFF, planned iOS and Android apps, and email identity/account recovery
+**Governing Documents:** Project Constitution v0.3.1 and the six core v0.3 governance documents
 
 ---
 
@@ -50,3 +50,12 @@ Use explicit status labels: Current, Prototype, Planned, Deferred, or Researchin
 ## 6. Incident Communication
 
 Material privacy, security, moderation, payment, or service incidents must be documented, escalated to the founder, and communicated consistently with legal and user-protection obligations.
+
+## 7. Channel and App Availability Claims
+
+Approved current description:
+
+> YORISOU is a Japanese-language AI-native platform being developed for the Japan market, with a responsive Web product and LINE-oriented entry and return paths, and planned iOS and Android applications.
+
+Until store acceptance is complete, external communication must use terms such as `planned`, `in development`, or `future app`. It must not display App Store or Google Play availability badges, download claims, review scores, or launch dates without evidence and approval.
+

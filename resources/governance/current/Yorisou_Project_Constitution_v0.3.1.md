@@ -1,12 +1,13 @@
-# Yorisou Project Constitution v0.3
+# Yorisou Project Constitution v0.3.1
 
 **Status:** Approved  
 **Owner:** Edward  
 **Approver:** Edward  
-**Approved Date:** 2026-07-10  
+**Approved Date:** 2026-07-10
+**Amendment Consolidated:** Multi-Channel and App Distribution Amendment v0.1  
 **Review Cycle:** As needed during v0.x phase  
 **Supersedes:** Yorisou Project Constitution v0.2  
-**Related Documents:** Strategic Doctrine v0.3, Business Model and Platform Architecture Doctrine v0.3, Product Doctrine and UX Boundary v0.3, Data Privacy Consent and Social Visibility Governance v0.3, Technical Architecture and Execution Protocol v0.3
+**Related Documents:** Strategic Doctrine v0.3.1, Business Model and Platform Architecture Doctrine v0.3.1, Product Doctrine and UX Boundary v0.3.1, Data Privacy Consent and Social Visibility Governance v0.3.1, Technical Architecture and Execution Protocol v0.3.1.1
 
 ---
 
@@ -16,11 +17,11 @@ This Constitution is the highest internal governance document for Yorisou.
 
 It defines Yorisou's strategic identity, platform model, product boundaries, data and visibility principles, AI authority limits, commercial boundaries, execution authority, and founder decision rights.
 
-Yorisou v0.3 upgrades the project from a life-state understanding and recommendation platform into a Japan-market, Japanese-language, state-based, low-pressure social discovery and recommendation platform.
+Yorisou v0.3.1 consolidates and extends the project from a life-state understanding and recommendation platform into a Japan-market, Japanese-language, state-based, low-pressure social discovery and recommendation platform.
 
 This is an evolution, not a restart from zero.
 
-Existing valid assets from v0.2 and earlier remain usable where they do not conflict with v0.3.
+Existing valid assets from v0.2 and earlier remain usable where they do not conflict with v0.3.1.
 
 If another Yorisou document conflicts with this Constitution, this Constitution prevails.
 
@@ -42,9 +43,9 @@ Yorisou helps people:
 7. try, save, reflect, and return,
 8. improve future recommendations through feedback and behavior.
 
-Yorisou v0.3 is a Japan-market product. Its current user experience, content, operations, moderation, identity, and compliance design are Japanese-language and Web/LINE-first.
+Yorisou v0.3.1 is a Japan-market product. Its governed channel architecture combines current responsive Web and LINE-oriented flows with planned iOS and Android applications.
 
-Email registration and account recovery are supported alongside LINE identity. Future expansion outside Japan is not part of the current approved scope and must be separately proposed and approved.
+Email registration and account recovery are supported alongside linkable LINE, Apple, and Google authentication identities where implemented and approved. Future expansion outside Japan is not part of the current approved scope and must be separately proposed and approved.
 
 ---
 
@@ -549,3 +550,22 @@ YORISOU shall operate an independent project-scoped Agent system.
 YORISOU and Mirai Move must remain isolated in memory, task queues, artifacts, logs, budgets, credentials, prompts, namespaces, and governance context.
 
 Every YORISOU Agent must have a versioned contract defining purpose, triggers, inputs, outputs, tools, providers, data classes, permissions, automatic actions, review requirements, forbidden actions, cost limits, retry rules, metrics, and stop conditions.
+
+## 24. Multi-Channel and App Distribution Constitution
+
+YORISOU is one governed platform delivered through multiple channel surfaces. It must not be designed as a LINE-only product or as four disconnected products.
+
+Approved channel architecture:
+
+- responsive Japanese Web at `yorisou.online`;
+- LINE, LIFF, or a LINE Mini App where useful for entry, linking, reminders, and return;
+- a downloadable iOS application distributed through Apple App Store;
+- a downloadable Android application distributed through Google Play;
+- email for identity, authentication, account recovery, and service communication.
+
+The iOS and Android applications are approved target channels but remain **Planned** until they are implemented, reviewed, submitted, and accepted by the relevant store. YORISOU must not state that either application is available before that point.
+
+All channel surfaces must use one governed core platform, including one UserProfile model, linkable AuthIdentity records, consent and privacy controls, Life-State Graph, Experience Graph, Recommendation Graph, Personal Memory model, companion services, moderation, analytics, and backend/API contracts.
+
+LINE, Apple, Google, and email identities are authentication identities, not the user profile itself. Identity linking requires user control, verification, consent, auditability, and protection against silent merges.
+

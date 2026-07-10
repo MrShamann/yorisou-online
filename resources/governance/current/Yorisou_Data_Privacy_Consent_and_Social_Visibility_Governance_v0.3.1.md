@@ -1,9 +1,10 @@
-# Yorisou Data Privacy, Consent and Social Visibility Governance v0.3
+# Yorisou Data Privacy, Consent and Social Visibility Governance v0.3.1
 
 **Status:** Approved  
 **Owner:** Edward  
 **Approver:** Edward  
-**Approved Date:** 2026-07-10  
+**Approved Date:** 2026-07-10
+**Amendment Consolidated:** Multi-Channel and App Distribution Amendment v0.1  
 **Supersedes:** Yorisou Data Privacy and Consent Governance v0.2
 
 ---
@@ -397,7 +398,7 @@ Public-safe results and shared experience must never automatically include:
 
 Yorisou v0.3 operates for the Japan market through Yorisou合同会社 and the yorisou.online product surface.
 
-The user-facing service is Japanese-language and Web/LINE-first.
+The user-facing service is Japanese-language and governed for responsive Web, LINE-oriented flows, and planned iOS and Android applications.
 
 ### 11.2 Current Identity Channels
 
@@ -540,3 +541,16 @@ A family member cannot create an unrestricted simulation solely by claiming a re
 ## 19. Cross-Agent Data Isolation
 
 Akari, Hinata, and YORISOU specialist Agents may access only the minimum data allowed by their contracts. YORISOU data, memories, prompts, and artifacts must not enter Mirai Move or Shigeru contexts. Provider calls must follow data-classification and minimization rules through Hermes.
+
+## 20. Mobile Application and Cross-Channel Data Governance
+
+The same privacy, visibility, consent, deletion, export, moderation, and identity rules apply across Web, LINE, iOS, and Android.
+
+Mobile-specific data may include device tokens, app version, operating-system version, crash diagnostics, notification consent, deep-link attribution, and store purchase references. Such data must be minimized, purpose-limited, access-controlled, and assigned retention rules.
+
+Push notification tokens must not be treated as permanent identity. Notification permission, topic selection, frequency, and quiet periods must be user controlled.
+
+Apple, Google, LINE, and email login records must remain separate AuthIdentity records linked to one UserProfile only after verification and consent. Silent identity merging is prohibited.
+
+App Store and Google Play privacy disclosures must accurately reflect actual collection, tracking, sharing, account deletion, AI processing, and third-party SDK behavior.
+

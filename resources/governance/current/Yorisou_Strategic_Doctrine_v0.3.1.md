@@ -1,9 +1,10 @@
-# Yorisou Strategic Doctrine v0.3
+# Yorisou Strategic Doctrine v0.3.1
 
 **Status:** Approved  
 **Owner:** Edward  
 **Approver:** Edward  
-**Approved Date:** 2026-07-10  
+**Approved Date:** 2026-07-10
+**Amendment Consolidated:** Multi-Channel and App Distribution Amendment v0.1  
 **Supersedes:** Yorisou Strategic Doctrine v0.2
 
 ---
@@ -419,3 +420,19 @@ Community formation should be dynamic and state-relevant rather than follower-ba
 YORISOU may use aggregated, anonymized, and evidence-labeled signals to identify unmet product and service needs. Agents may produce product concepts, design candidates, price hypotheses, landing-page drafts, waitlists, and pre-sale validation plans.
 
 No Agent may independently collect money, contract suppliers, make binding claims, or launch a commercial product without founder authorization and the required operational controls.
+
+## 22. Multi-Channel Strategy
+
+The approved target distribution model is Web + LINE + iOS + Android, supported by email identity and recovery.
+
+Web remains the universal product surface. LINE remains a major Japan-market acquisition, identity-linking, reminder, and return channel. iOS and Android are planned downloadable product surfaces. None of these channels may become the sole holder of core product logic, user identity, memory, or state history.
+
+The strategic sequence is:
+
+1. preserve and strengthen the responsive Web core;
+2. maintain LINE as a high-value channel adapter;
+3. audit the repository for a shared-code mobile path;
+4. select a mobile architecture only after evidence-based review;
+5. prepare App Store and Google Play compliance, privacy, age-rating, moderation, deep-link, notification, and payment boundaries;
+6. release native-store applications only after functional and governance gates pass.
+

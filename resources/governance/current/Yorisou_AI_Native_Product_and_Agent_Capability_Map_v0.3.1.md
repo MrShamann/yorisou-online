@@ -1,8 +1,8 @@
-# Yorisou AI-Native Product and Agent Capability Map v0.3
+# Yorisou AI-Native Product and Agent Capability Map v0.3.1
 
 **Status:** Approved  
 **Owner / Approver:** Edward  
-**Version:** v0.3
+**Version:** v0.3.1
 **Market:** Japan  
 **Brand / Domain:** YORISOU / yorisou.online
 
@@ -126,3 +126,17 @@ A capability may move from Planned to Active only when it has:
 - cost and stop limits;
 - rollback or pause mechanism;
 - necessary user controls and disclosure.
+
+## 6. Channel Capability Layer
+
+The governed channel layer includes:
+
+- responsive Web;
+- LINE/LIFF entry, linking, reminder, and return flows;
+- planned iOS App Store client;
+- planned Android Google Play client;
+- email identity, recovery, and service communication;
+- shared deep-link, notification-policy, account-linking, and client-version compatibility services.
+
+Channel availability is separate from capability definition. iOS and Android remain Planned until implementation and store approval are complete.
+

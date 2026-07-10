@@ -1,9 +1,10 @@
-# Yorisou Product Doctrine and UX Boundary v0.3
+# Yorisou Product Doctrine and UX Boundary v0.3.1
 
 **Status:** Approved  
 **Owner:** Edward  
 **Approver:** Edward  
-**Approved Date:** 2026-07-10  
+**Approved Date:** 2026-07-10
+**Amendment Consolidated:** Multi-Channel and App Distribution Amendment v0.1  
 **Supersedes:** Yorisou Product Doctrine and UX Boundary v0.2
 
 ---
@@ -478,3 +479,23 @@ Community surfaces should prioritize state topics, structured experience, useful
 ## 22. Digital Legacy UX Boundary
 
 Any future Legacy experience must display persistent, understandable disclosure that the output is AI-generated from authorized material and is not the deceased person. It must provide direct access to source memories, pause, report, administrator contact, and deletion controls.
+
+## 23. Web, LINE, iOS, and Android UX Boundary
+
+YORISOU must provide coherent continuity across responsive Web, LINE/LIFF, iOS, and Android.
+
+Users should be able to begin on one channel and continue on another after verified account linking. Channel changes must not create disconnected state, memory, reports, purchases, or recommendation histories.
+
+Mobile applications must preserve:
+
+- Japanese-native interaction;
+- private-by-default behavior;
+- visible AI and commercial disclosures;
+- account deletion and data-control access;
+- notification consent and quiet periods;
+- deep links and safe return paths;
+- graceful handling of older app versions;
+- app-store-compliant moderation and reporting access.
+
+The product must not use push notifications, badges, or app-only features to create dependency, artificial urgency, or punishment for absence.
+

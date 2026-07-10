@@ -1,9 +1,10 @@
-# Yorisou Business Model and Platform Architecture Doctrine v0.3
+# Yorisou Business Model and Platform Architecture Doctrine v0.3.1
 
 **Status:** Approved  
 **Owner:** Edward  
 **Approver:** Edward  
-**Approved Date:** 2026-07-10  
+**Approved Date:** 2026-07-10
+**Amendment Consolidated:** Multi-Channel and App Distribution Amendment v0.1  
 **Supersedes:** Yorisou Business Model and Platform Architecture Doctrine v0.2
 
 ---
@@ -18,7 +19,7 @@ It defines user entry, state understanding, private state, structured experience
 
 ## 2. Business Model Summary
 
-Yorisou is a Japan-market, Japanese-language, state-based low-pressure social discovery and recommendation platform operated through Web and LINE-oriented interfaces.
+Yorisou is a Japan-market, Japanese-language, state-based low-pressure social discovery and recommendation platform operated through one shared core with responsive Web and LINE-oriented interfaces and planned iOS and Android applications.
 
 It creates value through:
 
@@ -535,3 +536,20 @@ AI-native revenue and validation paths may include:
 - future Digital Legacy storage and access services.
 
 Digital Legacy must not be commercialized before dedicated consent, identity, beneficiary, activation, deletion, and grief-safe governance are operational.
+
+## 24. Unified Multi-Channel Product Architecture
+
+YORISOU must operate as one core platform with channel adapters for Web, LINE/LIFF, iOS, and Android. Email remains an identity, recovery, and service-communication channel.
+
+The shared core includes:
+
+- UserProfile and linkable AuthIdentity;
+- consent, privacy, and visibility;
+- Life-State, Experience, Recommendation, Personal Memory, and Trust graphs;
+- reports, companion services, moderation, analytics, and demand intelligence;
+- stable backend APIs and versioned client contracts.
+
+Channel-specific presentation may differ, but facts, user rights, visibility, purchase status, memory, moderation state, and recommendation provenance must remain consistent.
+
+The mobile delivery approach must be selected after repository audit. React Native/Expo, Capacitor, a PWA bridge, shared TypeScript domain code, or another approach may be evaluated. No framework is approved merely by this doctrine.
+

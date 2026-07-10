@@ -6,8 +6,8 @@
 **Version:** v0.3
 **Current Market:** Japan  
 **Current Brand and Domain:** YORISOU / yorisou.online  
-**Current Channels:** Japanese Web, LINE, email registration and account recovery  
-**Governing Documents:** Project Constitution v0.3 and the six core v0.3 governance documents
+**Current Channels:** Japanese responsive Web, LINE/LIFF, planned iOS and Android apps, and email identity/account recovery
+**Governing Documents:** Project Constitution v0.3.1 and the six core v0.3 governance documents
 
 ---
 
