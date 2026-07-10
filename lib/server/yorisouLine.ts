@@ -6,7 +6,7 @@ import type { AccountRecord, SessionRecord } from "@/lib/server/yorisouData";
 export const LINE_AUTH_COOKIE = "yorisou_line_auth";
 const MAX_PENDING_LINE_AUTH_STATES = 6;
 
-type LineAuthCookiePayload = {
+export type LineAuthCookiePayload = {
   accountId: string | null;
   sessionId: string | null;
   branchId: BranchId;
