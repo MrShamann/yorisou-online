@@ -22,4 +22,4 @@ Do not apply the migration in this phase. After founder approval, apply it only 
 
 ## Local validation
 
-Run `npm run test:agent-runtime`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`. Local database RPC execution requires an approved local Supabase/Postgres environment; it was not applied to production and must not be represented as executed when unavailable. No test performs a provider call or external action.
+Run `npm run test:agent-runtime`, `npm run test:agent-runtime:db`, `npx tsc --noEmit`, `npm run lint`, and `npm run build`. The database command refuses absent, non-localhost, Supabase, or non-test database URLs. GitHub Actions supplies an ephemeral PostgreSQL 16 service with workflow-local credentials; it applies the migration only there. Local database RPC execution remains unavailable in the Codex sandbox. This is validation infrastructure, not production runtime architecture; the migration and final deployment-role grant remain unapplied/deferred.

@@ -12,6 +12,7 @@
     "review:needs": "node --import tsx scripts/review-needs.ts",
     "validate:foundation": "tsx scripts/validate-foundation-repositories.ts",
     "test:agent-runtime": "node --conditions=react-server --import tsx lib/server/agent-runtime/__tests__/phase1.test.ts",
+    "test:agent-runtime:db": "bash tests/agent-runtime/postgres-integration.sh",
     "yorisou:assets:check": "node scripts/yorisou/validate-persona-assets.mjs",
     "check:yorisou": "bash scripts/yorisou-check.sh",
     "check:env": "node scripts/yorisou-env-check.mjs",
