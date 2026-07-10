@@ -25,6 +25,34 @@ drop function assert_true(boolean,text);
 SQL
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
 create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
+-- Recovery contract: claimed -> ready, running -> retry_wait; terminal/non-expired work stays untouched.
+insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id,status,claimed_by,claimed_at,lease_expires_at,attempt_count) values
+('lease','{}','internal','lease-claimed-live','c','claimed','live',now(),now()+interval '1 hour',2),
+('lease','{}','internal','lease-running-live','c','running','live',now(),now()+interval '1 hour',2),
+('lease','{}','internal','lease-claimed-stale','c','claimed','stale',now()-interval '2 hours',now()-interval '1 hour',2),
+('lease','{}','internal','lease-running-stale','c','running','stale',now()-interval '2 hours',now()-interval '1 hour',2),
+('lease','{}','internal','lease-completed','c','completed',null,null,null,2),
+('lease','{}','internal','lease-failed','c','failed',null,null,null,2),
+('lease','{}','internal','lease-cancelled','c','cancelled',null,null,null,2),
+('lease','{}','internal','lease-paused','c','paused',null,null,null,2),
+('lease','{}','internal','lease-dead','c','dead_letter',null,null,null,2);
+select assert_true(recover_stale_yorisou_agent_runtime_tasks()=2,'only stale leases recovered');
+select assert_true((select status='ready' and claimed_by is null and claimed_at is null and lease_expires_at is null and attempt_count=2 from agent_runtime_tasks where idempotency_key='lease-claimed-stale'),'claimed stale reset');
+select assert_true((select status='retry_wait' and claimed_by is null and claimed_at is null and lease_expires_at is null and attempt_count=2 from agent_runtime_tasks where idempotency_key='lease-running-stale'),'running stale retry');
+select assert_true((select count(*)=0 from agent_runtime_tasks where idempotency_key in ('lease-claimed-live','lease-running-live') and status not in ('claimed','running')),'live leases preserved');
+select assert_true((select count(*)=0 from agent_runtime_tasks where idempotency_key in ('lease-completed','lease-failed','lease-cancelled','lease-paused','lease-dead') and status not in ('completed','failed','cancelled','paused','dead_letter')),'terminal/non-running preserved');
+insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id) values('refs','{}','internal','reference-task','corr-reference');
+insert into agent_runtime_review_items(task_id,project_id,required_approver,reason) select id,'yorisou','edward','review' from agent_runtime_tasks where idempotency_key='reference-task';
+select assert_true((select correlation_id='corr-reference' and project_id='yorisou' from agent_runtime_tasks where idempotency_key='reference-task'),'task identity preserved');
+do $$ begin insert into agent_runtime_review_items(task_id,project_id,required_approver,reason) select id,'yorisou','other','bad' from agent_runtime_tasks where idempotency_key='reference-task'; raise exception 'approver accepted'; exception when check_violation then null; end $$;
+do $$ begin insert into agent_runtime_review_items(task_id,project_id,required_approver,reason) select id,'yorisou','edward','duplicate' from agent_runtime_tasks where idempotency_key='reference-task'; raise exception 'duplicate accepted'; exception when unique_violation then null; end $$;
+do $$ begin insert into agent_runtime_task_attempts(task_id,project_id,attempt_number,previous_status,next_status,actor,reason,correlation_id) values(gen_random_uuid(),'yorisou',1,'queued','ready','x','x','x'); raise exception 'attempt FK accepted'; exception when foreign_key_violation then null; end $$;
+do $$ begin insert into agent_runtime_pause_records(task_id,project_id,actor,reason) values(gen_random_uuid(),'yorisou','x','x'); raise exception 'pause FK accepted'; exception when foreign_key_violation then null; end $$;
+select assert_true((select count(*)=3 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('promote_yorisou_agent_runtime_tasks','recover_stale_yorisou_agent_runtime_tasks','claim_yorisou_agent_runtime_tasks') and p.proconfig @> array['search_path=public']),'fixed function search_path');
+drop function assert_true(boolean,text);
+SQL
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
 -- Timing: future work is not promoted; due scheduled/retry work is promoted in deterministic priority/id order.
 insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id,status,available_at,scheduled_at,priority) values
 ('timing','{}','internal','scheduled-due','c','scheduled',now()-interval '1 minute',now()-interval '1 minute',2),
