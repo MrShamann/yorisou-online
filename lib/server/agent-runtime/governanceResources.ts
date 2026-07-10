@@ -33,28 +33,29 @@ function parseHeader(content: string, filename: string) {
   return { version, documentType: title.replace(/^Yorisou\s+/i, "") };
 }
 
-async function manifestFiles() {
-  const source = await fs.readFile(path.join(ROOT, README), "utf8");
+async function manifestFiles(root = ROOT) {
+  const source = await fs.readFile(path.join(root, README), "utf8");
   if (!/^\*\*Status:\*\*\s*Approved\s*$/m.test(source)) fail("manifest_not_approved");
   const entries = [...source.matchAll(/^- `([^`]+\.md)`\s*$/gm)].map((match) => match[1]);
   if (entries.length !== 27 || new Set(entries).size !== entries.length) fail("manifest_entries");
   return [README, ...entries].sort();
 }
 
-export async function validateGovernanceResources(): Promise<GovernanceResource[]> {
-  const realRoot = await fs.realpath(ROOT).catch(() => fail("root_missing"));
-  const listed = await manifestFiles();
+async function validate(root: string, checksumFiles: Record<string, string>): Promise<GovernanceResource[]> {
+  const realRoot = await fs.realpath(root).catch(() => fail("root_missing"));
+  const listed = await manifestFiles(root);
   const entries = await fs.readdir(realRoot, { withFileTypes: true });
   const actual = entries.map((entry) => entry.name).sort();
   if (listed.length !== EXPECTED_FILES || actual.length !== EXPECTED_FILES || actual.join("\n") !== listed.join("\n")) fail("allowlist_mismatch");
-  if (Object.keys(checksums.files).sort().join("\n") !== listed.join("\n")) fail("checksum_manifest_parity");
+  if (Object.keys(checksumFiles).sort().join("\n") !== listed.join("\n")) fail("checksum_manifest_parity");
   const resources = await Promise.all(listed.map(async (filename) => {
     if (filename.startsWith(".") || filename.includes("..") || path.basename(filename) !== filename) fail(`unsafe_filename:${filename}`);
     const candidate = path.join(realRoot, filename); const stat = await fs.lstat(candidate);
     if (!stat.isFile() || stat.isSymbolicLink()) fail(`unsafe_file:${filename}`);
     const resolved = await fs.realpath(candidate); if (!resolved.startsWith(`${realRoot}${path.sep}`)) fail(`path_escape:${filename}`);
     const content = await fs.readFile(resolved, "utf8");
-    if (checksums.files[filename as keyof typeof checksums.files] !== hash(content)) fail(`checksum_mismatch:${filename}`);
+    if (!/^[a-f0-9]{64}$/.test(checksumFiles[filename] || "")) fail(`checksum_manifest_invalid:${filename}`);
+    if (checksumFiles[filename] !== hash(content)) fail(`checksum_mismatch:${filename}`);
     const metadata = filename === README ? { version: "v0.3.1", documentType: "Governance Pack" } : parseHeader(content, filename);
     if (/\b(Draft|Rev|Superseded|Intermediate)\b/i.test(filename) || /\*\*Status:\*\*\s*(Draft|Rev|Superseded|Intermediate)/i.test(content)) fail(`inactive_resource:${filename}`);
     return { filename, ...metadata, status: "Approved" as const, sha256: hash(content), resourceClass: filename === README ? "manifest" as const : "governance" as const, project_id: YORISOU_PROJECT_ID, loaded_at: new Date().toISOString(), sourcePath: `resources/governance/current/${filename}`, parseStatus: "valid" as const, domain: domainOf(filename), authorityPriority: priorityOf(filename), content };
@@ -68,6 +69,9 @@ export async function validateGovernanceResources(): Promise<GovernanceResource[
   if (!/Current Surfaces:\*\* Responsive Web and LINE\/LIFF/i.test(readme) || !/iOS and Android.*Planned/i.test(constitution) || !/Shigeru.*must not be used by YORISOU/i.test(constitution) || !/Implementation Status:\*\* Not active/i.test(legacy)) fail("required_governance_assertion");
   return resources.sort((a, b) => b.authorityPriority - a.authorityPriority || a.filename.localeCompare(b.filename));
 }
+export async function validateGovernanceResources(): Promise<GovernanceResource[]> { return validate(ROOT, checksums.files); }
+/** Test-only: not used by product code or exposed through a route. */
+export const __testValidateGovernanceResources = (root: string, checksumFiles: Record<string, string>) => validate(root, checksumFiles);
 
 export async function lookupGovernanceResources(query: GovernanceLookup) {
   const resources = await validateGovernanceResources();
