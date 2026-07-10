@@ -1,0 +1,7 @@
+import "server-only";
+import type { LineAuthCookiePayload } from "@/lib/server/yorisouLine";
+
+function config() { const url = process.env.SUPABASE_URL?.trim(); const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(); if (!url || !key) throw new Error("line_state_store_not_configured"); return { url: url.replace(/\/$/, ""), key }; }
+async function request(path: string, init: RequestInit) { const { url, key } = config(); const response = await fetch(`${url}/rest/v1/${path}`, { ...init, headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(init.headers || {}) }, cache: "no-store" }); if (!response.ok) throw new Error(`line_state_store_failed:${response.status}`); return response; }
+export async function persistLineOAuthState(payload: LineAuthCookiePayload) { await request("yorisou_line_oauth_states", { method: "POST", body: JSON.stringify({ state: payload.state, payload, expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString() }) }); }
+export async function consumeLineOAuthState(state: string) { const response = await request(`yorisou_line_oauth_states?state=eq.${encodeURIComponent(state)}&consumed_at=is.null&expires_at=gt.${encodeURIComponent(new Date().toISOString())}`, { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify({ consumed_at: new Date().toISOString() }) }); const record = ((await response.json()) as { payload?: LineAuthCookiePayload }[])[0]; return record?.payload || null; }

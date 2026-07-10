@@ -20,6 +20,7 @@ import {
   inferLineLocaleFromState,
   verifyLineIdToken,
 } from "@/lib/server/yorisouLine";
+import { consumeLineOAuthState } from "@/lib/server/lineOAuthStateStore";
 
 function buildReturnUrl(request: Request, path: string) {
   const forwardedHost = request.headers.get("x-forwarded-host");
@@ -79,7 +80,8 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   const state = url.searchParams.get("state");
   const lineCookieEntries = decodeLineAuthCookieEntries(cookieStore.get(LINE_AUTH_COOKIE)?.value);
-  const lineCookie = state ? lineCookieEntries.find((entry) => entry.state === state) || null : null;
+  const cookieState = state ? lineCookieEntries.find((entry) => entry.state === state) || null : null;
+  const lineCookie = state ? await consumeLineOAuthState(state) : null;
 
   if (!lineCookie) {
     const locale = inferLineLocaleFromState(url.searchParams.get("state")) === "en" ? "en" : "ja";
@@ -92,6 +94,9 @@ export async function GET(request: Request) {
   const successPath = lineCookie.successRedirect || `${lineCookie.returnTo.split("#")[0]}#line-connect`;
   const failurePath = lineCookie.failureRedirect || `${lineCookie.returnTo.split("#")[0]}#line-connect`;
   const remainingEntries = lineCookieEntries.filter((entry) => entry.state !== lineCookie.state);
+  if (cookieState && cookieState.nonce !== lineCookie.nonce) {
+    return failResponse(request, withStatus(failurePath, { line_error: "invalid_state" }), remainingEntries);
+  }
   const bindAuthorization = lineCookie.accountId
     ? resolveLineCallbackBindAuthorization(viewer, lineCookie.accountId)
     : null;

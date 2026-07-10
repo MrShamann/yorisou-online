@@ -10,6 +10,7 @@ import {
   isLineLoginConfigured,
   upsertLineAuthCookieEntry,
 } from "@/lib/server/yorisouLine";
+import { persistLineOAuthState } from "@/lib/server/lineOAuthStateStore";
 
 function safeRedirectPath(value: string | null, fallback: string) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -66,6 +67,7 @@ export async function GET(request: Request) {
   });
   const existingEntries = decodeLineAuthCookieEntries(request.headers.get("cookie")?.match(/(?:^|; )yorisou_line_auth=([^;]+)/)?.[1]);
   const nextEntries = upsertLineAuthCookieEntry(existingEntries, payload);
+  await persistLineOAuthState(payload);
 
   const response = NextResponse.redirect(buildLineAuthorizeUrl(payload), { status: 303 });
   setViewerSessionCookie(response, { ...session, userId: viewer.account?.id || null });
