@@ -34,7 +34,10 @@ function parseHeader(content: string, filename: string) {
 }
 
 async function manifestFiles(root = ROOT) {
-  const source = await fs.readFile(path.join(root, README), "utf8");
+  const readmePath = path.join(root, README);
+  const readmeStat = await fs.lstat(readmePath).catch(() => fail("manifest_missing"));
+  if (!readmeStat.isFile() || readmeStat.isSymbolicLink()) fail("unsafe_file:README.md");
+  const source = await fs.readFile(readmePath, "utf8");
   if (!/^\*\*Status:\*\*\s*Approved\s*$/m.test(source)) fail("manifest_not_approved");
   const entries = [...source.matchAll(/^- `([^`]+\.md)`\s*$/gm)].map((match) => match[1]);
   if (entries.length !== 27 || new Set(entries).size !== entries.length) fail("manifest_entries");
