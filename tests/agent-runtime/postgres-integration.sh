@@ -86,3 +86,19 @@ psql "$DATABASE_URL" -Atqc "select id from claim_yorisou_agent_runtime_tasks('co
 wait "$a"; wait "$b"
 test "$(cat /tmp/agent-runtime-claim-a)" != "$(cat /tmp/agent-runtime-claim-b)"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "do \$\$ begin insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id) values('x','{}','internal','queued-due','duplicate'); raise exception 'idempotency missing'; exception when unique_violation then null; end \$\$; do \$\$ begin insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id) values('x',jsonb_build_object('x',repeat('x',65537)),'internal','oversize','c'); raise exception 'payload limit missing'; exception when check_violation then null; end \$\$;"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
+insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id,status,claimed_by,claimed_at,lease_expires_at,attempt_count,maximum_attempts) values
+('exhaust','{}','internal','exhausted-claimed','corr-exhaust','claimed','worker',now()-interval '2 hours',now()-interval '1 hour',3,3),
+('exhaust','{}','internal','exhausted-running','corr-exhaust','running','worker',now()-interval '2 hours',now()-interval '1 hour',4,3);
+select assert_true(recover_stale_yorisou_agent_runtime_tasks()=2,'exhausted tasks recovered');
+select assert_true((select count(*)=2 from agent_runtime_tasks where idempotency_key like 'exhausted-%' and status='failed' and claimed_by is null and claimed_at is null and lease_expires_at is null and error_class='attempts_exhausted'),'exhaustion failed and fields cleared');
+select assert_true((select count(*)=0 from agent_runtime_tasks where idempotency_key like 'exhausted-%' and status in ('ready','retry_wait','claimed','running')),'exhaustion never requeues');
+update agent_runtime_tasks set status='dead_letter' where idempotency_key='exhausted-claimed';
+select assert_true((select status='dead_letter' from agent_runtime_tasks where idempotency_key='exhausted-claimed'),'failed dead letter legal');
+do $$ begin create role anon; exception when duplicate_object then null; end $$; do $$ begin create role authenticated; exception when duplicate_object then null; end $$;
+select assert_true(not has_function_privilege('anon','public.claim_yorisou_agent_runtime_tasks(text,integer,integer)','execute'),'anon claim denied');
+select assert_true(not has_function_privilege('anon','public.promote_yorisou_agent_runtime_tasks(integer)','execute'),'anon promote denied');
+select assert_true(not has_function_privilege('authenticated','public.recover_stale_yorisou_agent_runtime_tasks()','execute'),'authenticated recover denied');
+drop function assert_true(boolean,text);
+SQL
