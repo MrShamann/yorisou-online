@@ -48,7 +48,7 @@ select assert_true((select status='cancelled' from agent_runtime_tasks where ide
 do $$ begin update agent_runtime_tasks set status='completed' where idempotency_key='scheduled-due'; raise exception 'ready complete accepted'; exception when others then if position('illegal transition' in sqlerrm)=0 then raise; end if; end $$;
 do $$ begin insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id,maximum_attempts) values('x','{}','internal','attempt-low','c',0); raise exception 'attempt low accepted'; exception when check_violation then null; end $$;
 do $$ begin insert into agent_runtime_tasks(workflow_type,input_payload,data_classification,idempotency_key,correlation_id,timeout_seconds) values('x','{}','internal','timeout-high','c',3601); raise exception 'timeout high accepted'; exception when check_violation then null; end $$;
-do $$ begin insert into agent_runtime_artifacts(task_id,project_id,storage_uri,sha256,data_classification) values(gen_random_uuid(),'yorisou','x','bad','internal'); raise exception 'artifact sha accepted'; exception when check_violation then null; exception when foreign_key_violation then null; end $$;
+do $$ begin insert into agent_runtime_artifacts(task_id,project_id,storage_uri,sha256,data_classification) values(gen_random_uuid(),'yorisou','x','bad','internal'); raise exception 'artifact sha accepted'; exception when check_violation or foreign_key_violation then null; end $$;
 drop function assert_true(boolean,text);
 SQL
 # Two independent psql clients race to claim two explicit ready tasks. Each call is a separate DB session.
