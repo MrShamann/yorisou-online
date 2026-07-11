@@ -10,7 +10,9 @@ Deterministic test output remains authoritative. The provider receives only test
 
 `test_result_reflection` (`hinata.private_reflection.v1`) is user-triggered only. The same input hash is idempotent per owner/result/workflow version. The web worker uses the existing leased task queue; no schedule, polling loop, outbound LINE message, or cross-project dependency is enabled.
 
-Akari owns task/risk/cost routing. Hinata owns bounded reflection continuity. The only active provider order is Mistral, then OpenRouter when individually enabled. Both are server-only, time-bounded, JSON-schema validated, and cost-capped. A disabled provider is not called.
+Akari owns task/risk/cost routing. Hinata owns bounded reflection continuity. A YORISOU-only resolver may select an explicitly configured shared-credential alias (`gemini_shared`, then explicit project fallback aliases) without importing Mirai Move or OpenClaw code, routing, context, tasks, or logs. The resolver is server-only, time-bounded, JSON-schema validated, and cost-capped. Each resulting task and run remains hard-namespaced with `project_id = yorisou`; provider credentials are the only permitted shared infrastructure.
+
+`YORISOU_PRIVATE_AI_PROVIDER_PRIMARY` and `YORISOU_PRIVATE_AI_PROVIDER_FALLBACKS` are deployment-local routing controls. They are unset by default, so the legacy Mistral/OpenRouter path remains available only when its existing controls are enabled. The approved initial shared route is `gemini_shared`, with `groq_shared` and `openrouter_shared` as explicit, YORISOU-local fallbacks. Shared credentials do not share request payloads, responses, retry state, budgets, ledgers, or rate-limit counters.
 
 ## Controls and operational safety
 
