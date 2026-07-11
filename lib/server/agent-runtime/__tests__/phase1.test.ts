@@ -9,14 +9,15 @@ import { assertRuntimeTaskInput, assertTransition } from "../taskQueue";
 
 export async function runAgentRuntimePhase1Tests() {
   const resources = await validateGovernanceResources();
-  assert.equal(resources.length, 28);
+  assert.equal(resources.length, 31);
   assert.ok(resources.some((resource) => resource.filename === "Yorisou_Project_Constitution_v0.3.1.md"));
+  assert.ok(resources.some((resource) => resource.filename === "Yorisou_Current_Implementation_Baseline_v0.3.3.md"));
   assert.ok(resources.some((resource) => resource.filename === "Yorisou_Technical_Architecture_and_Execution_Protocol_v0.3.1.md"));
   assert.ok((await lookupGovernanceResources({ filename: "Yorisou_Agent_Skill_OpenClaw_and_Hermes_Governance_v0.3.md" })).length === 1);
   const source = path.join(process.cwd(), "resources/governance/current"); let negative = 0;
   const digest = (value: string) => createHash("sha256").update(value).digest("hex");
   async function fixture(mutate: (root: string, manifest: Record<string, string>) => Promise<void>, expected: RegExp) { const root = await mkdtemp(path.join(tmpdir(), "yorisou-governance-")); try { await cp(source, root, { recursive: true }); const manifest = { ...checksums.files }; await mutate(root, manifest); await assert.rejects(() => __testValidateGovernanceResources(root, manifest), expected); negative++; } finally { await rm(root, { recursive: true, force: true }); } }
-  const good = await mkdtemp(path.join(tmpdir(), "yorisou-governance-")); try { await cp(source, good, { recursive: true }); assert.equal((await __testValidateGovernanceResources(good, checksums.files)).length, 28); } finally { await rm(good, { recursive: true, force: true }); }
+  const good = await mkdtemp(path.join(tmpdir(), "yorisou-governance-")); try { await cp(source, good, { recursive: true }); assert.equal((await __testValidateGovernanceResources(good, checksums.files)).length, 31); } finally { await rm(good, { recursive: true, force: true }); }
   await fixture(async (r) => writeFile(path.join(r, "README.md"), `${await readFile(path.join(r, "README.md"), "utf8")}tamper`), /checksum_mismatch/);
   await fixture(async (r) => writeFile(path.join(r, "Yorisou_Project_Constitution_v0.3.1.md"), "tamper"), /checksum_mismatch/);
   await fixture(async (_r,m) => { delete m["README.md"]; }, /checksum_manifest_parity/);

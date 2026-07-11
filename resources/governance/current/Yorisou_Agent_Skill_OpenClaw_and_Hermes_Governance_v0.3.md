@@ -103,3 +103,26 @@ All active workflows must support:
 - error classification;
 - user-impact traceability where applicable;
 - pause and rollback.
+
+---
+
+## v0.3.3 Evidence Amendment (2026-07-11)
+
+**Amendment approval:** Edward, Phase 2B-1 governance authorization, 2026-07-11.
+
+This document remains Approved. The implementation-of-record statements below take precedence over any conflicting runtime-implementation wording in this document. Role definitions, boundaries, isolation rules, data rules, and approval rules remain in force.
+
+- YORISOU Agent Runtime (Supabase/PostgreSQL durable task queue, task attempts, runs, artifacts, review records, leases, bounded retry, failed/dead-letter behavior, pause and kill-switch controls, `project_id = yorisou` isolation): CURRENT_REQUIRED. Implemented in `yorisou-online` (`supabase/migrations/202607100001_agent_runtime_phase1.sql`, `lib/server/agent-runtime/`).
+- YORISOU Provider Harness (`lib/server/privateAiProviderResolver.ts`; `gemini_shared` primary route; `groq_shared`, `mistral_shared`, `openrouter_shared`, `nvidia_nim_shared` fallback routes; provider/model/cost/latency metadata): CURRENT_REQUIRED.
+- Vercel Web runtime: CURRENT_REQUIRED.
+- Supabase/PostgreSQL (`yorisou-production`): CURRENT_REQUIRED.
+- AWS S3 shared/artifact storage: CURRENT_REQUIRED.
+- OpenClaw task runtime for YORISOU task execution: SUPERSEDED_BY_YORISOU_RUNTIME. OpenClaw as a platform is not declared obsolete by this amendment.
+- OpenClaw Voice bridge: CURRENT_OPTIONAL / HEALTH_UNVERIFIED. This amendment neither activates, retires, nor migrates it.
+- OpenClaw knowledge sidecar configuration: LEGACY_CONFIG / ZERO_CODE_REFERENCE.
+- OpenClaw local repository working copy: MIXED_ASSET_REQUIRES_SPLIT.
+- Hermes separate runtime: UNCONFIRMED / NOT_REQUIRED. The Hermes harness role is fulfilled by the YORISOU Provider Harness. No statement is made that a separate Hermes runtime exists.
+- AWS Amplify: HISTORICAL_EVIDENCE.
+- Shared provider credentials: SHARED_CREDENTIAL_ONLY. Account-level sharing is approved; runtime context, task queues, memory, artifacts, logs, and cost ledgers remain project-isolated.
+
+Authoritative evidence detail: `Yorisou_Current_Implementation_Baseline_v0.3.3.md`. Decision record: `Yorisou_Founder_Decision_Record_v0.3.3.md`. Migration mechanics: `Yorisou_Governance_Migration_Note_v0.3.3.md`.
