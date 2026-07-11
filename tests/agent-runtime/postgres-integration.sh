@@ -3,10 +3,13 @@ set -euo pipefail
 if [[ -z "${DATABASE_URL:-}" ]]; then echo "DATABASE_URL is required" >&2; exit 1; fi
 if [[ "$DATABASE_URL" == *"supabase.co"* || "$DATABASE_URL" != *"@localhost:"* || "$DATABASE_URL" != *"yorisou_agent_runtime_test"* ]]; then echo "Refusing non-ephemeral database target" >&2; exit 1; fi
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c 'create extension if not exists pgcrypto;'
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "do \$\$ begin create role service_role; exception when duplicate_object then null; end \$\$; do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$; do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607100001_agent_runtime_phase1.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607100002_c02_private_results.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607100003_shared_test_engine.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607100004_line_oauth_state_replay_protection.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110001_private_ai_state_and_harness.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110002_experience_cards.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
 create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
 select assert_true((select count(*)=5 from pg_tables where schemaname='public' and tablename like 'agent_runtime_%'),'five runtime tables');
@@ -110,5 +113,34 @@ do $$ begin create role anon; exception when duplicate_object then null; end $$;
 select assert_true(not has_function_privilege('anon','public.claim_yorisou_agent_runtime_tasks(text,integer,integer)','execute'),'anon claim denied');
 select assert_true(not has_function_privilege('anon','public.promote_yorisou_agent_runtime_tasks(integer)','execute'),'anon promote denied');
 select assert_true(not has_function_privilege('authenticated','public.recover_stale_yorisou_agent_runtime_tasks()','execute'),'authenticated recover denied');
+drop function assert_true(boolean,text);
+SQL
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
+select assert_true((select count(*)=10 from pg_tables where schemaname='public' and tablename like 'yorisou_experience_%'),'ten experience tables');
+select assert_true((select bool_and(c.relrowsecurity) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relname like 'yorisou_experience_%'),'experience RLS enabled');
+select assert_true((select count(*)=0 from pg_policies where schemaname='public' and tablename like 'yorisou_experience_%'),'experience tables have no user policies');
+select assert_true(not has_table_privilege('public','public.yorisou_experience_cards','select'),'PUBLIC experience read denied');
+select assert_true(not has_table_privilege('anon','public.yorisou_experience_cards','select'),'anon experience read denied');
+select assert_true(not has_table_privilege('authenticated','public.yorisou_experience_cards','select'),'authenticated experience read denied');
+select assert_true((select p.proconfig @> array['search_path=public'] from pg_proc p where p.proname='record_yorisou_experience_interaction'),'interaction fixed search_path');
+select assert_true((select count(*)=3 from pg_proc where proname in ('record_yorisou_experience_interaction','enforce_yorisou_experience_card_rate','enforce_yorisou_experience_report_rate') and proconfig @> array['search_path=public']),'experience functions fixed search_path');
+select assert_true(not has_function_privilege('public','public.record_yorisou_experience_interaction(uuid,text,text,text)','execute'),'PUBLIC interaction RPC denied');
+select assert_true(not has_function_privilege('anon','public.record_yorisou_experience_interaction(uuid,text,text,text)','execute'),'anon interaction RPC denied');
+insert into yorisou_experience_cards(owner_account_id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit,visibility,searchable,audience_rule,moderation_status,consented_at,preview_confirmed_at,published_at) values('owner-a','state','situation','action','outcome','limits','fit','not fit','ANONYMOUS_SHARED',true,'anonymous_shared','published',now(),now(),now());
+select assert_true((select project_id='yorisou' and visibility_version=1 from yorisou_experience_cards where owner_account_id='owner-a'),'project and visibility identity preserved');
+do $$ begin insert into yorisou_experience_cards(owner_account_id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit,visibility,searchable,audience_rule,moderation_status) values('owner-b','s','s','a','o','l','f','n','PUBLIC_SAFE',true,'anonymous_shared','published'); raise exception 'deferred public visibility activated'; exception when check_violation then null; end $$;
+select record_yorisou_experience_interaction((select id from yorisou_experience_cards where owner_account_id='owner-a'),'viewer-a','save','idempotency-0000000001');
+select record_yorisou_experience_interaction((select id from yorisou_experience_cards where owner_account_id='owner-a'),'viewer-a','save','idempotency-0000000001');
+select assert_true((select count(*)=1 from yorisou_experience_interactions where actor_account_id='viewer-a'),'interaction idempotency');
+update yorisou_experience_cards set withdrawn_at=now(),searchable=false where owner_account_id='owner-a';
+select assert_true((select withdrawn_at is not null and not searchable from yorisou_experience_cards where owner_account_id='owner-a'),'withdrawal removes discovery');
+update yorisou_experience_cards set deleted_at=now() where owner_account_id='owner-a';
+select assert_true((select deleted_at is not null from yorisou_experience_cards where owner_account_id='owner-a'),'soft deletion retained for audit');
+insert into yorisou_experience_cards(owner_account_id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit) select 'rate-owner','s','s','a','o','l','f','n' from generate_series(1,10);
+do $$ begin insert into yorisou_experience_cards(owner_account_id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit) values('rate-owner','s','s','a','o','l','f','n'); raise exception 'card rate limit missing'; exception when others then if position('experience card rate limited' in sqlerrm)=0 then raise; end if; end $$;
+insert into yorisou_experience_cards(owner_account_id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit,visibility,searchable,audience_rule,moderation_status,consented_at,preview_confirmed_at,published_at) select 'report-target-'||g,'s','s','a','o','l','f','n','ANONYMOUS_SHARED',true,'anonymous_shared','published',now(),now(),now() from generate_series(1,21) g;
+insert into yorisou_experience_reports(experience_id,reporter_account_id,reason) select id,'rate-reporter','other' from yorisou_experience_cards where owner_account_id like 'report-target-%' order by owner_account_id limit 20;
+do $$ begin insert into yorisou_experience_reports(experience_id,reporter_account_id,reason) select id,'rate-reporter','other' from yorisou_experience_cards where owner_account_id='report-target-21'; raise exception 'report rate limit missing'; exception when others then if position('experience report rate limited' in sqlerrm)=0 then raise; end if; end $$;
 drop function assert_true(boolean,text);
 SQL
