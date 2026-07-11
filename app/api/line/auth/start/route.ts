@@ -56,7 +56,7 @@ export async function GET(request: Request) {
   }
 
   const payload = createLineAuthCookiePayload({
-    account: viewer.account,
+    account: viewer.account || viewer.legacyAccount,
     session,
     intent,
     returnTo,
