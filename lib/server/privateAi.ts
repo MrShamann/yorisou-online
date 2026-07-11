@@ -55,6 +55,9 @@ async function callProvider(prompt: string, enabled: { mistral_enabled: boolean;
 
 async function controls() { return ((await (await request("yorisou_ai_runtime_controls?select=global_enabled,reflection_enabled,mistral_enabled,openrouter_enabled,daily_budget_cents,reflection_budget_cents&singleton=eq.true")).json()) as Array<{ global_enabled: boolean; reflection_enabled: boolean; mistral_enabled: boolean; openrouter_enabled: boolean; daily_budget_cents: number; reflection_budget_cents: number }>)[0]; }
 async function patch(path: string, body: unknown) { await request(path, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body) }); }
+async function taskForIdempotencyKey(key: string) {
+  return ((await (await request(`agent_runtime_tasks?select=id,status&idempotency_key=eq.${encodeURIComponent(key)}&limit=1`)).json()) as Array<{ id: string; status: string }>)[0];
+}
 
 export async function listPrivateState(owner: string, resultId?: string): Promise<PrivateState> {
   const resultFilter = resultId ? `&saved_result_id=eq.${encodeURIComponent(resultId)}` : "";
@@ -74,7 +77,20 @@ export async function generateReflection(owner: string, resultId: string) {
   const inputHash = hash(minimizedResult(saved));
   const existing = (await (await request(`yorisou_ai_runs?select=id,status&owner_account_id=eq.${encodeURIComponent(owner)}&saved_result_id=eq.${resultId}&workflow_type=eq.${WORKFLOW}&workflow_version=eq.${WORKFLOW_VERSION}&input_hash=eq.${inputHash}&limit=1`)).json()) as Array<{ id: string; status: string }>;
   if (existing[0]?.status === "completed") return { state: await listPrivateState(owner, resultId), deduplicated: true };
-  const task = ((await (await request("agent_runtime_tasks", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ project_id: PROJECT_ID, agent_id: "akari", workflow_type: WORKFLOW, skill_id: "hinata.private_reflection.v1", priority: 100, input_payload: { saved_result_id: resultId, input_hash: inputHash, prompt_version: PROMPT_VERSION }, data_classification: "sensitive", approval_required: false, available_at: new Date().toISOString(), maximum_attempts: 2, timeout_seconds: 30, retry_policy: { max_retries: 1, fallback_max: 1 }, idempotency_key: `reflection:${owner}:${resultId}:${inputHash}`, cost_budget_cents: control.reflection_budget_cents, correlation_id: randomUUID() }) })).json()) as Array<{ id: string }>)[0];
+  const baseIdempotencyKey = `reflection:${owner}:${resultId}:${inputHash}`;
+  const baseTask = await taskForIdempotencyKey(baseIdempotencyKey);
+  let idempotencyKey = baseIdempotencyKey;
+  if (baseTask) {
+    if (["ready", "claimed", "running", "completed"].includes(baseTask.status)) return { state: await listPrivateState(owner, resultId), deduplicated: true };
+    if (baseTask.status !== "failed") throw new Error("generation_retry_exhausted");
+    idempotencyKey = `${baseIdempotencyKey}:retry-1`;
+    const retryTask = await taskForIdempotencyKey(idempotencyKey);
+    if (retryTask) {
+      if (["ready", "claimed", "running", "completed"].includes(retryTask.status)) return { state: await listPrivateState(owner, resultId), deduplicated: true };
+      throw new Error("generation_retry_exhausted");
+    }
+  }
+  const task = ((await (await request("agent_runtime_tasks", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ project_id: PROJECT_ID, agent_id: "akari", workflow_type: WORKFLOW, skill_id: "hinata.private_reflection.v1", priority: 100, input_payload: { saved_result_id: resultId, input_hash: inputHash, prompt_version: PROMPT_VERSION }, data_classification: "sensitive", approval_required: false, available_at: new Date().toISOString(), maximum_attempts: 2, timeout_seconds: 30, retry_policy: { max_retries: 1, fallback_max: 1 }, idempotency_key: idempotencyKey, cost_budget_cents: control.reflection_budget_cents, correlation_id: randomUUID() }) })).json()) as Array<{ id: string }>)[0];
   if (!task) throw new Error("task_create_failed");
   const workerId = "yorisou-web-worker";
   await patch(`agent_runtime_tasks?id=eq.${task.id}`, { status: "ready" });
