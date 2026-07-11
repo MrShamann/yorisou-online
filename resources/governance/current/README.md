@@ -1,7 +1,7 @@
-# YORISOU Governance Pack v0.3.1 — Approved
+# YORISOU Governance Pack v0.3.3 — Approved
 
 **Status:** Approved  
-**Approved Date:** 2026-07-10  
+**Approved Date:** 2026-07-11  
 **Owner / Approver:** Edward  
 **Current Market:** Japan  
 **Current Product Language:** Japanese  
@@ -12,7 +12,7 @@
 
 ## Authority
 
-This directory is the single current source of truth for YORISOU governance. It consolidates the approved Multi-Channel and App Distribution Amendment v0.1.
+This directory is the single current source of truth for YORISOU governance. It consolidates the approved Multi-Channel and App Distribution Amendment v0.1 and the v0.3.3 Evidence Amendment (2026-07-11). Implementation-of-record statuses are defined in `Yorisou_Current_Implementation_Baseline_v0.3.3.md` and take precedence over conflicting runtime-implementation wording in older documents.
 
 YORISOU is one governed core platform delivered through Web, LINE, planned iOS, and planned Android channel adapters. iOS and Android must not be described as available until implementation and store approval are complete.
 
@@ -20,8 +20,10 @@ YORISOU is one governed core platform delivered through Web, LINE, planned iOS, 
 
 - Akari: YORISOU Platform Orchestrator.
 - Hinata: User Intelligence and Companion Orchestrator.
-- OpenClaw: Agent runtime and scheduled execution layer.
-- Hermes: Provider/tool harness, routing, validation, retry, fallback, cost and artifact layer.
+- YORISOU Agent Runtime: durable task execution layer, implemented in `yorisou-online` (CURRENT_REQUIRED).
+- YORISOU Provider Harness: provider routing, validation, retry, fallback, cost and artifact layer, implemented in `yorisou-online` (CURRENT_REQUIRED).
+- OpenClaw: role retained; task runtime for YORISOU is SUPERSEDED_BY_YORISOU_RUNTIME; Voice bridge CURRENT_OPTIONAL / HEALTH_UNVERIFIED.
+- Hermes: harness role fulfilled by the YORISOU Provider Harness; separate runtime UNCONFIRMED / NOT_REQUIRED.
 - Codex: sole formal production-code execution Agent for YORISOU.
 - Shigeru: exclusive to Mirai Move and prohibited from YORISOU orchestration.
 
@@ -42,10 +44,13 @@ Only files in this `current` directory may be used as active governance. Superse
 - `Yorisou_Community_Local_and_Real_World_Connection_Policy_v0.1.md`
 - `Yorisou_Concept_Product_and_Pre_Commerce_Policy_v0.3.md`
 - `Yorisou_Content_Result_Copy_and_Methodology_Standard_v0.3.md`
+- `Yorisou_Current_Implementation_Baseline_v0.3.3.md`
 - `Yorisou_Data_Privacy_Consent_and_Social_Visibility_Governance_v0.3.1.md`
 - `Yorisou_Demand_Intelligence_and_External_Report_Policy_v0.3.md`
 - `Yorisou_Digital_Legacy_and_Synthetic_Identity_Governance_v0.1.md`
 - `Yorisou_Digital_Report_Product_Doctrine_v0.3.md`
+- `Yorisou_Founder_Decision_Record_v0.3.3.md`
+- `Yorisou_Governance_Migration_Note_v0.3.3.md`
 - `Yorisou_Hinata_User_Intelligence_and_Companion_Role_Specification_v0.2.md`
 - `Yorisou_Nightly_Autonomous_Workflow_SOP_v0.2.md`
 - `Yorisou_Participation_and_Reward_Policy_v0.3.md`

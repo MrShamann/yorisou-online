@@ -8,7 +8,7 @@ import checksums from "./governance-checksums.json";
 export const YORISOU_PROJECT_ID = "yorisou" as const;
 const ROOT = path.resolve(process.cwd(), "resources/governance/current");
 const README = "README.md";
-const EXPECTED_FILES = 28;
+const EXPECTED_FILES = 31;
 
 export type GovernanceResource = {
   filename: string; version: string; status: "Approved"; sha256: string;
@@ -40,7 +40,7 @@ async function manifestFiles(root = ROOT) {
   const source = await fs.readFile(readmePath, "utf8");
   if (!/^\*\*Status:\*\*\s*Approved\s*$/m.test(source)) fail("manifest_not_approved");
   const entries = [...source.matchAll(/^- `([^`]+\.md)`\s*$/gm)].map((match) => match[1]);
-  if (entries.length !== 27 || new Set(entries).size !== entries.length) fail("manifest_entries");
+  if (entries.length !== 30 || new Set(entries).size !== entries.length) fail("manifest_entries");
   return [README, ...entries].sort();
 }
 
@@ -59,12 +59,12 @@ async function validate(root: string, checksumFiles: Record<string, string>): Pr
     const content = await fs.readFile(resolved, "utf8");
     if (!/^[a-f0-9]{64}$/.test(checksumFiles[filename] || "")) fail(`checksum_manifest_invalid:${filename}`);
     if (checksumFiles[filename] !== hash(content)) fail(`checksum_mismatch:${filename}`);
-    const metadata = filename === README ? { version: "v0.3.1", documentType: "Governance Pack" } : parseHeader(content, filename);
+    const metadata = filename === README ? { version: "v0.3.3", documentType: "Governance Pack" } : parseHeader(content, filename);
     if (/\b(Draft|Rev|Superseded|Intermediate)\b/i.test(filename) || /\*\*Status:\*\*\s*(Draft|Rev|Superseded|Intermediate)/i.test(content)) fail(`inactive_resource:${filename}`);
     return { filename, ...metadata, status: "Approved" as const, sha256: hash(content), resourceClass: filename === README ? "manifest" as const : "governance" as const, project_id: YORISOU_PROJECT_ID, loaded_at: new Date().toISOString(), sourcePath: `resources/governance/current/${filename}`, parseStatus: "valid" as const, domain: domainOf(filename), authorityPriority: priorityOf(filename), content };
   }));
   const names = resources.map((resource) => resource.filename);
-  for (const required of ["Yorisou_Project_Constitution_v0.3.1.md", "Yorisou_Technical_Architecture_and_Execution_Protocol_v0.3.1.md", "Yorisou_Agent_Skill_OpenClaw_and_Hermes_Governance_v0.3.md"]) if (!names.includes(required)) fail(`required_missing:${required}`);
+  for (const required of ["Yorisou_Project_Constitution_v0.3.1.md", "Yorisou_Technical_Architecture_and_Execution_Protocol_v0.3.1.md", "Yorisou_Agent_Skill_OpenClaw_and_Hermes_Governance_v0.3.md", "Yorisou_Current_Implementation_Baseline_v0.3.3.md"]) if (!names.includes(required)) fail(`required_missing:${required}`);
   const byName = new Map(resources.map((resource) => [resource.filename, resource.content]));
   const readme = byName.get(README) || "";
   const constitution = byName.get("Yorisou_Project_Constitution_v0.3.1.md") || "";
