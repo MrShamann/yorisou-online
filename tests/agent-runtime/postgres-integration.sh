@@ -10,6 +10,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607100003_s
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607100004_line_oauth_state_replay_protection.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110001_private_ai_state_and_harness.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110002_experience_cards.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110003_recommendation_graph.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
 create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
 select assert_true((select count(*)=5 from pg_tables where schemaname='public' and tablename like 'agent_runtime_%'),'five runtime tables');
@@ -34,6 +35,16 @@ update agent_runtime_tasks set lease_expires_at=now()-interval '1 second' where 
 do $$ begin update agent_runtime_tasks set status='completed' where idempotency_key='queued-due'; raise exception 'illegal transition accepted'; exception when others then if position('illegal transition' in sqlerrm)=0 then raise; end if; end $$;
 select assert_true(not has_function_privilege('public','public.promote_yorisou_agent_runtime_tasks(integer)','execute'),'public promotion denied');
 select assert_true((select count(*) from pg_policies where schemaname='public' and tablename like 'agent_runtime_%')=0,'no user policies');
+drop function assert_true(boolean,text);
+SQL
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
+select assert_true((select count(*)=8 from pg_tables where schemaname='public' and tablename like 'yorisou_recommendation_%' or tablename in ('yorisou_resources','yorisou_resource_sources')),'recommendation tables');
+select assert_true((select bool_and(c.relrowsecurity) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and (c.relname like 'yorisou_recommendation_%' or c.relname in ('yorisou_resources','yorisou_resource_sources'))),'recommendation RLS enabled');
+select assert_true(not has_table_privilege('anon','public.yorisou_recommendation_sets','select'),'anon graph denied');
+select assert_true(not has_function_privilege('public','public.record_yorisou_recommendation_action(uuid,text,text,text,text)','execute'),'PUBLIC graph RPC denied');
+select assert_true((select p.proconfig @> array['search_path=public'] from pg_proc p where p.proname='record_yorisou_recommendation_action'),'graph fixed search path');
+select assert_true((select count(*)>=2 from yorisou_resources where lifecycle_status='active'),'bounded resources seeded');
 drop function assert_true(boolean,text);
 SQL
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'

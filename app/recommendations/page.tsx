@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import RecommendationSignalForm from "./RecommendationSignalForm";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "次にほしいヒント | Yorisou",
@@ -97,6 +98,12 @@ export default async function RecommendationsPage({
             </MvpCard>
 
             <div className="grid gap-3">
+              <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
+                <div className="service-kicker">状態から選ぶ</div>
+                <h2 className="display-serif text-[1.36rem] leading-[1.38]">有限のおすすめを見る</h2>
+                <p className="text-[14px] leading-7 text-[var(--text)]">保存、試す、振り返りまでを自分のペースで記録できます。</p>
+                <Link href="/recommendations/graph" className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] px-5 py-3 text-sm font-semibold text-[#315F50]">おすすめを開く</Link>
+              </MvpCard>
               <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
                 <div className="service-kicker">今の傾向を保存する</div>
                 <h2 className="display-serif text-[1.36rem] leading-[1.38]">あとで同じ流れに戻る</h2>
