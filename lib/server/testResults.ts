@@ -1,5 +1,5 @@
 import "server-only";
-import type { TestAnswerMap, ProductionTestDefinition } from "@/lib/yorisou-tests/engine";
+import type { TestAnswerMap } from "@/lib/yorisou-tests/engine";
 import type { RuleBasedResolvedResult } from "@/lib/yorisou-tests/types";
 
 const TABLE = "yorisou_test_results";
@@ -8,7 +8,7 @@ export type SavedTestResult = { id: string; owner_account_id: string; test_id: s
 function config() { const url = process.env.SUPABASE_URL?.trim(); const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(); if (!url || !key) throw new Error("test_persistence_not_configured"); return { url: url.replace(/\/$/, ""), key }; }
 async function request(path: string, init: RequestInit) { const { url, key } = config(); const response = await fetch(`${url}/rest/v1/${path}`, { ...init, headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...(init.headers || {}) }, cache: "no-store" }); if (!response.ok) throw new Error(`test_persistence_failed:${response.status}`); return response; }
 
-export async function createSavedTestResult(input: { ownerAccountId: string; definition: ProductionTestDefinition; answers: TestAnswerMap; result: RuleBasedResolvedResult }) {
+export async function createSavedTestResult(input: { ownerAccountId: string; definition: { testId: string; version: string; scoringVersion: string }; answers: TestAnswerMap; result: RuleBasedResolvedResult }) {
   const response = await request(TABLE, { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ owner_account_id: input.ownerAccountId, test_id: input.definition.testId, test_version: input.definition.version, scoring_version: input.definition.scoringVersion, result_id: input.result.resultId, result_title: input.result.title, public_summary: input.result.summary, score_summary: { score: input.result.score, topDimensions: input.result.topDimensions }, answers: input.answers }) });
   const record = ((await response.json()) as SavedTestResult[])[0]; if (!record) throw new Error("test_persistence_empty_response"); return record;
 }

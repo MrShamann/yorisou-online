@@ -17,6 +17,7 @@
     "test:recommendation-graph": "node --conditions=react-server --import tsx lib/server/__tests__/recommendationGraph.test.ts",
     "test:agent-runtime:db": "bash tests/agent-runtime/postgres-integration.sh",
     "test:c02": "node --import tsx lib/yorisou-tests/__tests__/c02.test.ts",
+    "test:relationship-fatigue": "node --import tsx lib/yorisou-tests/__tests__/relationshipFatigue.test.ts",
     "yorisou:assets:check": "node scripts/yorisou/validate-persona-assets.mjs",
     "check:yorisou": "bash scripts/yorisou-check.sh",
     "check:env": "node scripts/yorisou-env-check.mjs",
