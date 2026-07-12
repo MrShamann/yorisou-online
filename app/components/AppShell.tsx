@@ -20,7 +20,7 @@ const SHELL_SUPPRESSED_EXACT = new Set([
   "/result",
 ]);
 
-const SHELL_SUPPRESSED_PREFIXES = ["/line", "/reports/self-understanding"];
+const SHELL_SUPPRESSED_PREFIXES = ["/line", "/reports/self-understanding", "/prototype"];
 
 function isSuppressedRoute(pathname: string | null): boolean {
   if (!pathname) return false;
