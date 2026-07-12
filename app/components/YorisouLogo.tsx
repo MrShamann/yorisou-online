@@ -9,10 +9,10 @@ const SYMBOL_COLORS: Record<YorisouLogoVariant, { mark: string; text: string }> 
 };
 
 /**
- * YORISOU brand symbol: an abstract Y whose two arms curve inward like an
- * embrace, with a continuous orbit and a small returning dot — the user
- * coming back to their own state over time. Single geometry for every
- * surface (web, favicon, LINE); only color variants may differ.
+ * YORISOU brand symbol — Founder-reference geometry: a heart drawn as two
+ * flowing strokes whose tails merge into a Y stem, wrapped by one thin orbit
+ * with a small returning dot. One geometry everywhere (header, footer,
+ * favicon, deep AI cards, LINE); only the color variant may change.
  */
 export function YorisouSymbol({
   variant = "primary",
@@ -37,25 +37,34 @@ export function YorisouSymbol({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* orbit */}
+      {/* orbit — thin ellipse sweeping through the heart, with a returning dot */}
       <ellipse
         cx="24"
-        cy="26"
-        rx="19"
-        ry="7.5"
-        transform="rotate(-18 24 26)"
+        cy="25"
+        rx="20"
+        ry="8.5"
+        transform="rotate(-22 24 25)"
         stroke={mark}
-        strokeWidth="2"
-        opacity="0.42"
+        strokeWidth="1.7"
+        opacity="0.45"
         className={breathing ? "yorisou-orbit-breathe" : undefined}
       />
-      {/* returning dot on the orbit */}
-      <circle cx="42.1" cy="20.1" r="2.4" fill={mark} className={breathing ? "yorisou-orbit-dot" : undefined} />
-      {/* Y arms curving inward (embrace) */}
-      <path d="M11 8.5 C11 20 16.5 24.5 24 27" stroke={mark} strokeWidth="4.2" strokeLinecap="round" />
-      <path d="M37 8.5 C37 20 31.5 24.5 24 27" stroke={mark} strokeWidth="4.2" strokeLinecap="round" />
-      {/* stem */}
-      <path d="M24 27 L24 41" stroke={mark} strokeWidth="4.2" strokeLinecap="round" />
+      <circle cx="42.6" cy="17.4" r="2.5" fill={mark} className={breathing ? "yorisou-orbit-dot" : undefined} />
+      {/* heart: two flowing lobes whose tails merge toward one point */}
+      <path
+        d="M23.6 17.5 C21.5 11.5 15.5 9.5 12 12.6 C8.6 15.6 9.3 21.3 13.4 25.6 C16.4 28.7 20.4 31.6 23.6 33.4"
+        stroke={mark}
+        strokeWidth="3.9"
+        strokeLinecap="round"
+      />
+      <path
+        d="M23.6 17.5 C25.7 11.5 31.7 9.5 35.2 12.6 C38.6 15.6 37.9 21.3 33.8 25.6 C30.8 28.7 26.8 31.6 23.6 33.4"
+        stroke={mark}
+        strokeWidth="3.9"
+        strokeLinecap="round"
+      />
+      {/* Y tail continuing from the heart point */}
+      <path d="M23.6 33.4 L23.6 41.5" stroke={mark} strokeWidth="3.9" strokeLinecap="round" />
     </svg>
   );
 }

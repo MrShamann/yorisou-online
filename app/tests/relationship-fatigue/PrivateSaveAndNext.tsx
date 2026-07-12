@@ -156,8 +156,8 @@ export function RelationshipFatiguePrivateSave({
 
   return (
     <div className="space-y-5">
-      {/* ── Section 3: Private Save ── */}
-      <section className="rounded-[var(--yorisou-radius-card)] border border-[var(--yorisou-color-neutral-100)] bg-[var(--yorisou-color-surface-card)] px-5 py-5 shadow-[var(--yorisou-shadow-card)]">
+      {/* ── Section 4: Private Save (value conversion point) ── */}
+      <section id="rf-save" className="rounded-[var(--yorisou-radius-card)] border border-[var(--yorisou-color-neutral-100)] bg-[var(--yorisou-color-surface-card)] px-5 py-5 shadow-[var(--yorisou-shadow-card)]">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-primary-50)] px-2.5 py-1 text-[11px] font-bold text-[var(--yorisou-color-primary-700)]">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -185,10 +185,12 @@ export function RelationshipFatiguePrivateSave({
             >
               保存した結果を見る
             </Link>
-            <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--yorisou-color-accent-600)]">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 12.5 10 17.5 19 7" />
-              </svg>
+            <span className="yorisou-success-pop inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--yorisou-color-accent-600)]">
+              <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[var(--yorisou-color-accent-100)]">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12.5 10 17.5 19 7" />
+                </svg>
+              </span>
               非公開で保存しました
             </span>
           </div>
@@ -260,13 +262,24 @@ export function RelationshipFatiguePrivateSave({
           ) : recState === "loaded" && topItem ? (
             <div className="mt-3 space-y-3">
               <div className="rounded-[var(--yorisou-radius-button)] border border-[var(--yorisou-color-neutral-100)] bg-white px-4 py-4">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="inline-flex rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-primary-100)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--yorisou-color-primary-700)]">
-                    {topItem.object_type === "experience_card" ? "ユーザー体験" : topItem.yorisou_resources?.resource_type || "選択肢"}
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[var(--yorisou-color-primary-100)] text-[var(--yorisou-color-primary-600)]" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      {topItem.object_type === "experience_card" ? (
+                        <><circle cx="12" cy="8.5" r="3.2" /><path d="M6 19c1-2.8 3.3-4.2 6-4.2s5 1.4 6 4.2" /></>
+                      ) : (
+                        <path d="M12 4.5 13.8 9.7 19 11.5 13.8 13.3 12 18.5 10.2 13.3 5 11.5 10.2 9.7 12 4.5Z" />
+                      )}
+                    </svg>
                   </span>
-                  <span className="inline-flex rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-neutral-100)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--yorisou-color-neutral-500)]">
-                    {commercialLabel(topItem)}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-primary-100)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--yorisou-color-primary-700)]">
+                      {topItem.object_type === "experience_card" ? "ユーザー体験" : topItem.yorisou_resources?.resource_type || "選択肢"}
+                    </span>
+                    <span className="inline-flex rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-neutral-100)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--yorisou-color-neutral-500)]">
+                      {commercialLabel(topItem)}
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-2 text-[15px] font-bold leading-7 text-[var(--yorisou-color-neutral-800)]">
                   {topItem.yorisou_resources?.title || topItem.yorisou_experience_cards?.state_context || "小さな選択肢"}
