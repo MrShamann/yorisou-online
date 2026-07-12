@@ -11,6 +11,17 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607100004_l
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110001_private_ai_state_and_harness.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110002_experience_cards.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607110003_recommendation_graph.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607120001_relationship_fatigue_results.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
+-- Relationship-fatigue rows must be persistable (PR #104 production save defect).
+insert into yorisou_test_results(owner_account_id,test_id,test_version,scoring_version,result_id,result_title,public_summary,score_summary,answers) values('rf-check-owner','RELATIONSHIP-FATIGUE','v0.1','relationship_fatigue_mvp_v0_1','RF_REPLY_LOAD','t','s','{}','{}');
+select assert_true((select count(*)=1 from yorisou_test_results where owner_account_id='rf-check-owner' and test_id='RELATIONSHIP-FATIGUE'),'relationship-fatigue result accepted');
+insert into yorisou_test_results(owner_account_id,test_id,test_version,scoring_version,result_id,result_title,public_summary,score_summary,answers) values('c02-check-owner','C02','v1.0','c02-rule-based-v1','R1','t','s','{}','{}');
+select assert_true((select count(*)=1 from yorisou_test_results where owner_account_id='c02-check-owner'),'existing engine rows still accepted');
+do $$ begin insert into yorisou_test_results(owner_account_id,test_id,test_version,scoring_version,result_id,result_title,public_summary,score_summary,answers) values('bad-check-owner','UNKNOWN-TEST','v1.0','c02-rule-based-v1','R1','t','s','{}','{}'); raise exception 'unknown test id accepted'; exception when check_violation then null; end $$;
+drop function assert_true(boolean,text);
+SQL
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
 create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
 select assert_true((select count(*)=5 from pg_tables where schemaname='public' and tablename like 'agent_runtime_%'),'five runtime tables');

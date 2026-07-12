@@ -13,6 +13,7 @@ import {
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
 import { RelationshipFatiguePrivateSave } from "./PrivateSaveAndNext";
 import { trackOpenTestingEvent } from "@/app/components/OpenTestingTracker";
+import { YorisouSymbol } from "@/app/components/YorisouLogo";
 
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
@@ -127,7 +128,7 @@ export default function RelationshipFatigueFlow() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="min-h-screen bg-[var(--yorisou-color-surface-bg)] text-[var(--yorisou-color-neutral-800)]">
       <div className="container py-10 md:py-14">
         <div className="mx-auto max-w-[42rem]">
 
@@ -149,7 +150,7 @@ export default function RelationshipFatigueFlow() {
                 <p className="service-kicker">人間関係の疲れチェック</p>
                 <h1 className="display-serif text-[2rem] leading-[1.22] text-[#2F2A28] md:text-[2.6rem]">
                   会う・返す・合わせる。<br />
-                  <span className="text-[#173B35]">今の負担を、少し整理する。</span>
+                  <span className="text-[var(--yorisou-color-primary-600)]">今の負担を、少し整理する。</span>
                 </h1>
                 <p className="text-[15px] leading-8 text-[#5F5750]">
                   今の感覚に近いものを、ひとつずつ選ぶだけです。答え終えると、今のあなたに近いチェック結果が表示されます。
@@ -165,7 +166,7 @@ export default function RelationshipFatigueFlow() {
                       key={item}
                       className="flex items-center gap-2 rounded-[0.9rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-3.5 py-2.5"
                     >
-                      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#173B35] text-[10px] text-white">✓</span>
+                      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--yorisou-color-primary-500)] text-[10px] text-white">✓</span>
                       <span className="text-[13px] font-semibold leading-6 text-[#315F50]">{item}</span>
                     </div>
                   ))}
@@ -179,7 +180,7 @@ export default function RelationshipFatigueFlow() {
                 <button
                   type="button"
                   onClick={begin}
-                  className="inline-flex min-h-[56px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-6 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] sm:w-auto"
+                  className="inline-flex min-h-[56px] w-full items-center justify-center rounded-full border border-[var(--yorisou-color-primary-500)] bg-[var(--yorisou-color-primary-500)] px-6 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[var(--yorisou-color-primary-600)] sm:w-auto"
                 >
                   チェックを始める
                 </button>
@@ -210,13 +211,13 @@ export default function RelationshipFatigueFlow() {
                       Q{currentIndex + 1} / {total}
                     </div>
                   </div>
-                  <div className="rounded-full bg-[#EAF7F1] px-3 py-1 text-[12px] font-semibold text-[#315F50]">
+                  <div className="rounded-full bg-[var(--yorisou-color-primary-50)] px-3 py-1 text-[12px] font-semibold text-[var(--yorisou-color-primary-700)]">
                     {answeredCount} / {total} 回答済み
                   </div>
                 </div>
                 <div className="mt-3 h-2 rounded-full bg-[rgba(23,59,53,0.1)]">
                   <div
-                    className="h-full rounded-full bg-[#173B35] transition-all"
+                    className="h-full rounded-full bg-[var(--yorisou-color-primary-500)] transition-all"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -241,7 +242,7 @@ export default function RelationshipFatigueFlow() {
                         onClick={() => selectOption(opt.id)}
                         className={`rounded-[1rem] border px-4 py-3.5 text-left transition ${
                           selected
-                            ? "border-[#173B35] bg-[#F3FAF6] shadow-[0_10px_22px_rgba(23,59,53,0.11)]"
+                            ? "border-[var(--yorisou-color-primary-500)] bg-[var(--yorisou-color-primary-50)] shadow-[var(--yorisou-shadow-card)]"
                             : "border-[rgba(111,98,92,0.13)] bg-white/90 hover:-translate-y-0.5 hover:bg-white"
                         }`}
                       >
@@ -252,7 +253,7 @@ export default function RelationshipFatigueFlow() {
                           <span
                             className={`mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] ${
                               selected
-                                ? "border-[#173B35] bg-[#173B35] text-white"
+                                ? "border-[var(--yorisou-color-primary-500)] bg-[var(--yorisou-color-primary-500)] text-white"
                                 : "border-[rgba(201,211,195,0.8)] bg-white"
                             }`}
                           >
@@ -271,7 +272,7 @@ export default function RelationshipFatigueFlow() {
                   <button
                     type="button"
                     onClick={goBack}
-                    className="inline-flex min-h-[50px] w-[34%] items-center justify-center rounded-full border border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] px-4 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5 sm:w-auto"
+                    className="inline-flex min-h-[50px] w-[34%] items-center justify-center rounded-full border border-[var(--yorisou-color-neutral-200)] bg-[var(--yorisou-color-primary-50)] px-4 text-[14px] font-semibold text-[var(--yorisou-color-primary-700)] transition hover:-translate-y-0.5 sm:w-auto"
                   >
                     戻る
                   </button>
@@ -279,7 +280,7 @@ export default function RelationshipFatigueFlow() {
                     type="button"
                     onClick={goNext}
                     disabled={!currentAnswer}
-                    className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full bg-[#173B35] px-4 text-[16px] font-bold text-white shadow-[0_16px_32px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] disabled:cursor-not-allowed disabled:bg-[rgba(111,98,92,0.26)] disabled:shadow-none"
+                    className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full bg-[var(--yorisou-color-primary-500)] px-4 text-[16px] font-bold text-white shadow-[var(--yorisou-shadow-raised)] transition hover:-translate-y-0.5 hover:bg-[var(--yorisou-color-primary-600)] disabled:cursor-not-allowed disabled:bg-[rgba(111,98,92,0.26)] disabled:shadow-none"
                   >
                     {currentIndex === total - 1 ? "チェック結果へ" : "すぐ次へ"}
                   </button>
@@ -298,32 +299,45 @@ function ResultView({ result, answers, onRetake }: { result: RFResult; answers: 
   const { archetype } = result;
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
-      <div className="container py-10 md:py-14">
-        <div className="mx-auto max-w-[42rem] space-y-6">
+    <main className="min-h-screen bg-[var(--yorisou-color-surface-bg)] text-[var(--yorisou-color-neutral-800)]">
+      <div className="container py-8 md:py-14">
+        <div className="mx-auto max-w-[42rem] space-y-5">
 
-          {/* Result header */}
-          <div className="space-y-2">
-            <p className="service-kicker">チェック結果 · 人間関係の疲れ</p>
-            <h1 className="display-serif text-[1.9rem] leading-[1.24] text-[#2F2A28] md:text-[2.5rem]">
-              今の整理:&nbsp;「{archetype.name}」
+          {/* ── Section 1: Result Hero ── */}
+          <div className="yorisou-reveal space-y-3 rounded-[var(--yorisou-radius-hero)] border border-[var(--yorisou-color-neutral-100)] bg-[var(--yorisou-color-surface-card)] p-6 shadow-[var(--yorisou-shadow-card)] md:p-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-primary-100)] px-3 py-1 text-[11px] font-bold text-[var(--yorisou-color-primary-700)]">
+                チェック結果
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-neutral-100)] px-3 py-1 text-[11px] font-semibold text-[var(--yorisou-color-neutral-500)]">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <rect x="5" y="10" width="14" height="10" rx="2.5" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+                この画面はあなたにだけ表示されています
+              </span>
+            </div>
+            <h1 className="text-[1.62rem] font-bold leading-[1.3] text-[var(--yorisou-color-neutral-800)] md:text-[2.1rem]">
+              {archetype.name}
             </h1>
+            <p className="text-[15px] leading-8 text-[var(--yorisou-color-neutral-500)]">{archetype.body}</p>
+            <p className="text-[12.5px] leading-6 text-[var(--yorisou-color-neutral-500)] opacity-90">
+              これは今の状態を小さく整理した結果で、あなたという人を決めつけるものではありません。日や状況によって変わります。
+            </p>
           </div>
 
-          {/* Main result card */}
-          <div className="rounded-[1.45rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-6 shadow-[0_18px_40px_rgba(23,59,53,0.08)] space-y-4">
-            <p className="text-[16px] leading-8 text-[#2F2A28]">
-              今のあなたは、<strong>{archetype.fatigueScene}</strong>に負担が出やすい状態かもしれません。
-              これは人間関係の結論ではなく、今の疲れ方を小さく整理するための結果です。
-            </p>
-            <p className="text-[15px] leading-8 text-[#5F5750]">
-              {archetype.body}
-            </p>
+          {/* Deep insight card */}
+          <div className="yorisou-reveal-late rounded-[var(--yorisou-radius-card)] bg-[var(--yorisou-color-deep-900)] p-5 text-white md:p-6">
+            <div className="flex items-center gap-2">
+              <YorisouSymbol variant="white" size={20} breathing />
+              <span className="text-[11px] font-bold tracking-[0.1em] text-white/70">見つかったこと</span>
+            </div>
+            <p className="mt-3 text-[14px] leading-8 text-white/92">{archetype.insight}</p>
           </div>
 
           {/* Three insights */}
           <div className="space-y-2.5">
-            <p className="text-[13px] font-semibold tracking-[0.1em] text-[#49615B]">今の整理 — 3つのポイント</p>
+            <p className="text-[12px] font-bold tracking-[0.08em] text-[var(--yorisou-color-neutral-500)]">今の整理 — 3つのポイント</p>
             {[
               { label: "疲れが出やすい場面", value: archetype.fatigueScene },
               { label: "守りたい距離", value: archetype.boundaryHint },
@@ -331,37 +345,39 @@ function ResultView({ result, answers, onRetake }: { result: RFResult; answers: 
             ].map(({ label, value }) => (
               <div
                 key={label}
-                className="rounded-[1.1rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-4 py-3.5"
+                className="rounded-[var(--yorisou-radius-button)] border border-[var(--yorisou-color-neutral-100)] bg-[var(--yorisou-color-surface-raised)] px-4 py-3.5"
               >
-                <p className="text-[11px] font-semibold tracking-[0.1em] text-[#49615B]">{label}</p>
-                <p className="mt-1 text-[14px] leading-7 text-[#2F2A28]">{value}</p>
+                <p className="text-[11px] font-bold tracking-[0.08em] text-[var(--yorisou-color-primary-600)]">{label}</p>
+                <p className="mt-1 text-[14px] leading-7 text-[var(--yorisou-color-neutral-800)]">{value}</p>
               </div>
             ))}
           </div>
 
-          {/* Next action */}
-          <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.14)] bg-[#173B35] px-5 py-4 text-white">
-            <p className="text-[12px] font-semibold tracking-[0.1em] opacity-70">今日の小さな一歩</p>
-            <p className="mt-1.5 text-[15px] font-semibold leading-7">{archetype.nextStep}</p>
+          {/* ── Section 2: 今日の小さな一歩 ── */}
+          <div className="rounded-[var(--yorisou-radius-card)] bg-[var(--yorisou-color-deep-800)] px-5 py-5 text-white">
+            <p className="text-[11px] font-bold tracking-[0.1em] text-white/60">今日の小さな一歩</p>
+            <p className="mt-2 text-[15.5px] font-bold leading-8">{archetype.nextStep}</p>
+            <p className="mt-2 text-[12.5px] leading-6 text-white/70">
+              短い時間でできることからで大丈夫です。今日はここまでにしても構いません。
+            </p>
           </div>
 
-          {/* General next action line from spec */}
-          <p className="text-[14px] leading-7 text-[#5F5750]">
+          <p className="text-[13.5px] leading-7 text-[var(--yorisou-color-neutral-500)]">
             返信・予定・SNS・ひとり時間のうち、今日いちばん軽くできそうなものを一つ選んでみましょう。
           </p>
 
-          {/* Phase 3B: private save + one governed recommendation + return loop */}
+          {/* ── Sections 3–5: private save + one governed recommendation + return path ── */}
           <RelationshipFatiguePrivateSave answers={answers} archetypeId={result.archetypeId} />
 
-          {/* Phase 2U: community + report + LINE + next checks */}
+          {/* Phase 2U: community + report + next checks */}
           <ResultConversionCommunity
             moduleId="relationship-fatigue"
             reportTeaser={archetype.reportTeaser}
           />
 
           {/* Safety note */}
-          <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">
-            <p className="text-[12px] leading-7 text-[#7A7068]">
+          <div className="rounded-[var(--yorisou-radius-card)] border border-[var(--yorisou-color-neutral-100)] bg-white/70 px-5 py-4">
+            <p className="text-[12px] leading-7 text-[var(--yorisou-color-neutral-500)]">
               この結果は医療・心理診断ではありません。人間関係の結論や相手への判断を決めるものでもありません。
               つらさが強い、長く続く、生活に影響している場合は、結果だけで抱え込まず、信頼できる人や確認済みの相談先につながることも選択肢です。
             </p>
@@ -371,11 +387,11 @@ function ResultView({ result, answers, onRetake }: { result: RFResult; answers: 
           <div className="space-y-3 pt-2">
             <Link
               href="/check-in"
-              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-6 text-[15px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6] sm:w-auto"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-[var(--yorisou-radius-pill)] border border-[var(--yorisou-color-neutral-200)] bg-white px-6 text-[15px] font-semibold text-[var(--yorisou-color-primary-700)] transition hover:bg-[var(--yorisou-color-primary-50)] sm:w-auto"
             >
               「今の自分」チェックも見る
             </Link>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-[#49615B]">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-[var(--yorisou-color-neutral-500)]">
               <button
                 type="button"
                 onClick={onRetake}
