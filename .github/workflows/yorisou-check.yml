@@ -31,6 +31,7 @@ jobs:
       - run: npm ci
       - run: npm run test:agent-runtime
       - run: npm run test:c02
+      - run: npm run test:relationship-fatigue
       - run: npm run test:experience-cards
       - run: npm run test:agent-runtime:db
         env:
@@ -67,6 +68,9 @@ jobs:
 
       - name: C02 definition and scoring checks
         run: npm run test:c02
+
+      - name: Relationship-fatigue return-loop checks
+        run: npm run test:relationship-fatigue
 
       - name: Experience Card contracts
         run: npm run test:experience-cards

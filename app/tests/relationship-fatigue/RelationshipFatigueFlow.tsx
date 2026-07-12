@@ -4,12 +4,15 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 
 import {
+  MODULE_VERSION,
   RF_QUESTIONS,
   computeRFResult,
   type AnswerMap,
   type RFResult,
 } from "./data";
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
+import { RelationshipFatiguePrivateSave } from "./PrivateSaveAndNext";
+import { trackOpenTestingEvent } from "@/app/components/OpenTestingTracker";
 
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
@@ -50,6 +53,20 @@ export default function RelationshipFatigueFlow() {
     const r = computeRFResult(finalAnswers);
     setResult(r);
     setPhase("result");
+    void trackOpenTestingEvent({
+      eventName: "test_completed",
+      route: "/tests/relationship-fatigue",
+      source: "relationship-fatigue",
+      resultId: r.archetypeId,
+      testVersion: MODULE_VERSION,
+    });
+    void trackOpenTestingEvent({
+      eventName: "result_viewed",
+      route: "/tests/relationship-fatigue",
+      source: "relationship-fatigue",
+      resultId: r.archetypeId,
+      testVersion: MODULE_VERSION,
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -71,6 +88,12 @@ export default function RelationshipFatigueFlow() {
     setAnswers({});
     setCurrentIndex(0);
     setPhase("quiz");
+    void trackOpenTestingEvent({
+      eventName: "test_started",
+      route: "/tests/relationship-fatigue",
+      source: "relationship-fatigue",
+      testVersion: MODULE_VERSION,
+    });
   }
 
   function selectOption(optId: string) {
@@ -100,7 +123,7 @@ export default function RelationshipFatigueFlow() {
   }
 
   if (phase === "result" && result) {
-    return <ResultView result={result} onRetake={begin} />;
+    return <ResultView result={result} answers={answers} onRetake={begin} />;
   }
 
   return (
@@ -148,7 +171,7 @@ export default function RelationshipFatigueFlow() {
                   ))}
                 </div>
                 <p className="text-[12px] leading-6 text-[#7A7068]">
-                  ログインなし。回答は送信されません。医療・専門的判断ではありません。
+                  ログインなしで最後まで進めます。回答が送信されるのは、結果を保存すると選んだときだけです。医療・専門的判断ではありません。
                 </p>
               </div>
 
@@ -271,7 +294,7 @@ export default function RelationshipFatigueFlow() {
   );
 }
 
-function ResultView({ result, onRetake }: { result: RFResult; onRetake: () => void }) {
+function ResultView({ result, answers, onRetake }: { result: RFResult; answers: AnswerMap; onRetake: () => void }) {
   const { archetype } = result;
 
   return (
@@ -326,6 +349,9 @@ function ResultView({ result, onRetake }: { result: RFResult; onRetake: () => vo
           <p className="text-[14px] leading-7 text-[#5F5750]">
             返信・予定・SNS・ひとり時間のうち、今日いちばん軽くできそうなものを一つ選んでみましょう。
           </p>
+
+          {/* Phase 3B: private save + one governed recommendation + return loop */}
+          <RelationshipFatiguePrivateSave answers={answers} archetypeId={result.archetypeId} />
 
           {/* Phase 2U: community + report + LINE + next checks */}
           <ResultConversionCommunity
