@@ -6,6 +6,8 @@ import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../c
 import ResultShareActions from "../components/ResultShareActions";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
+import RevealExperience from "./reveal/RevealExperience";
+import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -75,6 +77,12 @@ export default async function ResultPage({
             </div>
 
             <MvpCard className="space-y-5 border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
+              <p className="sr-only">
+                結果のまとめ: {compatibility.assignment ? `あなたのいま色は「${compatibility.assignment.nickname}」(${publicTypeLabel})。` : compatibility.displayLine}
+                {highlightSummary} この結果は診断ではなく、いまの傾向のやわらかい整理です。以下の内容はアニメーションなしでもすべて読めます。
+              </p>
+              <RevealExperience stages={[
+              <div key="hero" className="grid gap-5">
               <div
                 className="space-y-3 rounded-[1.18rem] px-4 py-4 sm:px-5 sm:py-5"
                 style={{
@@ -124,29 +132,24 @@ export default async function ResultPage({
                   {compatibility.assignment ? compatibility.assignment.secondaryBadge : compatibility.placeholderText}
                 </p>
               </div>
+              </div>,
 
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                {compatibility.highlights.map((item) => (
-                  <div
-                    key={`${item.label}:${item.text}`}
-                    className="rounded-[1rem] px-4 py-3"
-                    style={{
-                      background: "rgba(255,255,255,0.78)",
-                      border: "1px solid rgba(23,59,53,0.08)",
-                    }}
-                  >
-                    <p className="text-[12px] font-semibold text-[#49615B]">{item.label}</p>
-                    <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{item.text}</p>
-                  </div>
-                ))}
-              </div>
+              <EvidencePanel key="evidence" highlights={compatibility.highlights} />,
 
-              <div className="surface-panel-soft space-y-3">
-                <p className="surface-meta">次の一歩</p>
+              <ConstellationPanel
+                key="constellation"
+                centerLabel={compatibility.assignment ? compatibility.assignment.nickname : "いまのあなた"}
+                highlights={compatibility.highlights}
+              />,
+
+              <LimitsPanel key="limits" band={confidenceBand} />,
+
+              <GentleActions key="actions">
+              <div className="space-y-3">
                 <p className="text-[14px] leading-7 text-[#6F625C]">{compatibility.gentleNextStep}</p>
               </div>
 
-              <div className="surface-panel-soft space-y-3 !bg-[rgba(255,253,249,0.74)]">
+              <div className="space-y-3 rounded-[1.08rem] !bg-[rgba(255,253,249,0.74)] px-1 py-1">
                 <p className="surface-meta">このあと読めるもの</p>
                 <p className="text-[13px] leading-6 text-[#7A7068]">
                   まずは詳しいレポートを開き、必要なら今日のヒントをあとから見返せます。
@@ -180,7 +183,10 @@ export default async function ResultPage({
                   />
                 </div>
               </div>
+              </GentleActions>,
 
+              <div key="privacy-share" className="grid gap-4">
+              <PrivacyPanel />
               <div className="surface-panel-soft space-y-3 !bg-[rgba(255,255,255,0.78)]">
                 <p className="surface-meta">シェア</p>
                 <p className="text-[13px] leading-6 text-[#7A7068]">
@@ -204,6 +210,8 @@ export default async function ResultPage({
                 secondaryHref={fullReportHref ?? recommendationHref}
                 secondaryLabel={fullReportHref ? "詳しいレポートへ進む" : "今のヒントを見る"}
               />
+              </div>,
+              ]} />
             </MvpCard>
           </div>
         </div>
