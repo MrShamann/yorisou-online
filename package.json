@@ -29,9 +29,9 @@
     "verify:automation": "npm run check:env && npm run smoke:openclaw && npm run smoke:hermes"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1014.0",
+    "@aws-sdk/client-s3": "^3.1086.0",
     "gray-matter": "^4.0.3",
-    "next": "16.1.6",
+    "next": "16.2.10",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
@@ -44,7 +44,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "5.9.3"
