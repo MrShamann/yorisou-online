@@ -1,0 +1,23 @@
+# PROJECT_MANIFEST.yaml — machine-readable project identity
+# Schema: AI-Workspace/agent-os/schemas/PROJECT_MANIFEST_SCHEMA.md
+# Registry (authoritative on conflict): AI-Workspace/agent-os/registries/PROJECT_REGISTRY.yaml
+# Rules: null where not applicable — never guess; never include secrets.
+
+schema_version: 1
+project_id: yorisou-online
+display_name: "YORISOU / yorisou-online"
+canonical_repository_path: /Users/yangjin/Projects/yorisou-online
+repository_name: yorisou-online
+workspace_symlink: AI-Workspace/projects/yorisou-online
+vault_path: vaults/projects/yorisou-online
+github_owner: MrShamann
+github_repository: yorisou-online
+remote_required: true
+primary_tool: CLAUDE_CODE
+fallback_tools: [CODEX]
+lifecycle_state: PAUSED
+sensitivity_class: internal
+deployment_targets: []
+created_at: "2026-07-12"
+last_migrated_at: "2026-07-14"
+governance_version: 2
