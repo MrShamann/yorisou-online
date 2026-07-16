@@ -75,6 +75,9 @@ jobs:
       - name: Experience Card contracts
         run: npm run test:experience-cards
 
+      - name: Result-reveal contracts (incl. YRR-1 aria-hidden/inert gate)
+        run: npm run test:result-reveal
+
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"
 
