@@ -81,6 +81,9 @@ jobs:
       - name: Imairo snapshot contracts (RTR-1 private save)
         run: npm run test:imairo-snapshot
 
+      - name: Candidate intake contracts (CIF-1 foundation)
+        run: npm run test:candidate-intake
+
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"
 

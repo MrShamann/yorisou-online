@@ -64,6 +64,7 @@ export default async function AdminHomePage() {
             <Link href="/admin/timeline" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">Timeline</Link>
             <Link href="/admin/dte-launch-dashboard" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">DTE Launch</Link>
             <Link href="/admin/audit" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">Audit</Link>
+            <Link href="/admin/candidates" className="rounded-full border border-[#D6C3A3]/50 px-5 py-2 text-sm text-[#5A4B3E]">Candidates</Link>
           </div>
         </header>
 
