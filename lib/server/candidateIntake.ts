@@ -50,40 +50,15 @@ async function request(path: string, init: RequestInit) {
   return response;
 }
 
-async function insertOne<T>(table: string, body: Record<string, unknown>): Promise<T> {
-  const response = await request(table, { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(body) });
-  const record = ((await response.json()) as T[])[0];
+// CIF-1A: creation goes through security-definer RPCs that insert the object
+// AND its `created` audit event in ONE transaction. Direct table INSERT is
+// revoked from the application role, so there is no non-atomic creation path
+// and no separate event-emission call.
+async function callRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const response = await request(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
+  const record = (await response.json()) as T;
   if (!record) throw new Error("candidate_intake_empty_response");
   return record;
-}
-
-async function emitEvent(input: {
-  submissionId?: string | null;
-  organizationId?: string | null;
-  offeringId?: string | null;
-  eventType: string;
-  actor: string;
-  actorType: CandidateActorType;
-  reason?: string | null;
-  previousState?: string | null;
-  newState?: string | null;
-  metadata?: Record<string, unknown> | null;
-}) {
-  await request(EVENT, {
-    method: "POST",
-    body: JSON.stringify({
-      submission_id: input.submissionId ?? null,
-      organization_id: input.organizationId ?? null,
-      offering_id: input.offeringId ?? null,
-      event_type: input.eventType,
-      actor: input.actor,
-      actor_type: input.actorType,
-      reason: input.reason ?? null,
-      previous_state: input.previousState ?? null,
-      new_state: input.newState ?? null,
-      metadata: input.metadata ?? null,
-    }),
-  });
 }
 
 // ── Organizations ──────────────────────────────────────────────────────────
@@ -99,20 +74,18 @@ export async function createCandidateOrganization(input: {
   actor: string;
   actorType?: CandidateActorType;
 }): Promise<CandidateOrganization> {
-  const record = await insertOne<CandidateOrganization>(ORG, {
-    source_type: input.sourceType,
-    display_name: input.displayName,
-    external_domain: input.externalDomain ?? null,
-    external_ref: input.externalRef ?? null,
-    commercial_relationship: input.commercialRelationship ?? "unknown_review",
-    related_project_ref: input.relatedProjectRef ?? null,
-    conflict_of_interest_disclosure: input.conflictOfInterestDisclosure ?? null,
-    notes: input.notes ?? null,
-    created_by: input.actor,
-    created_by_type: input.actorType ?? "admin",
+  return callRpc<CandidateOrganization>("create_yorisou_candidate_organization", {
+    p_source_type: input.sourceType,
+    p_display_name: input.displayName,
+    p_external_domain: input.externalDomain ?? null,
+    p_external_ref: input.externalRef ?? null,
+    p_commercial_relationship: input.commercialRelationship ?? "unknown_review",
+    p_related_project_ref: input.relatedProjectRef ?? null,
+    p_conflict_of_interest_disclosure: input.conflictOfInterestDisclosure ?? null,
+    p_notes: input.notes ?? null,
+    p_actor: input.actor,
+    p_actor_type: input.actorType ?? "admin",
   });
-  await emitEvent({ organizationId: record.id, eventType: "created", actor: input.actor, actorType: input.actorType ?? "admin", newState: "active" });
-  return record;
 }
 
 export async function listCandidateOrganizations(): Promise<CandidateOrganization[]> {
@@ -145,20 +118,18 @@ export async function createCandidateOffering(input: {
   actor: string;
   actorType?: CandidateActorType;
 }): Promise<CandidateOffering> {
-  const record = await insertOne<CandidateOffering>(OFFERING, {
-    organization_id: input.organizationId,
-    offering_type: input.offeringType,
-    title: input.title,
-    summary: input.summary ?? null,
-    external_url: input.externalUrl ?? null,
-    external_ref: input.externalRef ?? null,
-    version_label: input.versionLabel ?? null,
-    supersedes_offering_id: input.supersedesOfferingId ?? null,
-    created_by: input.actor,
-    created_by_type: input.actorType ?? "admin",
+  return callRpc<CandidateOffering>("create_yorisou_candidate_offering", {
+    p_organization_id: input.organizationId,
+    p_offering_type: input.offeringType,
+    p_title: input.title,
+    p_summary: input.summary ?? null,
+    p_external_url: input.externalUrl ?? null,
+    p_external_ref: input.externalRef ?? null,
+    p_version_label: input.versionLabel ?? null,
+    p_supersedes_offering_id: input.supersedesOfferingId ?? null,
+    p_actor: input.actor,
+    p_actor_type: input.actorType ?? "admin",
   });
-  await emitEvent({ organizationId: input.organizationId, offeringId: record.id, eventType: "created", actor: input.actor, actorType: input.actorType ?? "admin", newState: "active" });
-  return record;
 }
 
 export async function listCandidateOfferings(organizationId: string): Promise<CandidateOffering[]> {
@@ -190,27 +161,25 @@ export async function createCandidateSubmission(input: {
   if (input.contactInfo && input.consentStatus !== "recorded") {
     throw new Error("candidate_contact_requires_recorded_consent");
   }
-  const record = await insertOne<CandidateSubmission>(SUBMISSION, {
-    organization_id: input.organizationId,
-    offering_id: input.offeringId ?? null,
-    submission_channel: input.submissionChannel,
-    submitter_type: input.submitterType,
-    submitter_ref: input.submitterRef ?? null,
-    provenance: input.provenance,
-    commercial_relationship: input.commercialRelationship ?? "unknown_review",
-    related_project_disclosure: input.relatedProjectDisclosure ?? null,
-    conflict_of_interest_disclosure: input.conflictOfInterestDisclosure ?? null,
-    consent_status: input.consentStatus ?? "not_required",
-    consent_reference: input.consentReference ?? null,
-    contact_info: input.contactInfo ?? null,
-    retention_category: input.retentionCategory ?? "standard",
-    retention_deadline: input.retentionDeadline ?? null,
-    external_ref: input.externalRef ?? null,
-    created_by: input.actor,
-    created_by_type: input.actorType ?? "admin",
+  return callRpc<CandidateSubmission>("create_yorisou_candidate_submission", {
+    p_organization_id: input.organizationId,
+    p_offering_id: input.offeringId ?? null,
+    p_submission_channel: input.submissionChannel,
+    p_submitter_type: input.submitterType,
+    p_submitter_ref: input.submitterRef ?? null,
+    p_provenance: input.provenance,
+    p_commercial_relationship: input.commercialRelationship ?? "unknown_review",
+    p_related_project_disclosure: input.relatedProjectDisclosure ?? null,
+    p_conflict_of_interest_disclosure: input.conflictOfInterestDisclosure ?? null,
+    p_consent_status: input.consentStatus ?? "not_required",
+    p_consent_reference: input.consentReference ?? null,
+    p_contact_info: input.contactInfo ?? null,
+    p_retention_category: input.retentionCategory ?? "standard",
+    p_retention_deadline: input.retentionDeadline ?? null,
+    p_external_ref: input.externalRef ?? null,
+    p_actor: input.actor,
+    p_actor_type: input.actorType ?? "admin",
   });
-  await emitEvent({ submissionId: record.id, organizationId: input.organizationId, offeringId: input.offeringId ?? null, eventType: "created", actor: input.actor, actorType: input.actorType ?? "admin", newState: "draft" });
-  return record;
 }
 
 export async function listCandidateSubmissions(filter?: { status?: CandidateSubmissionStatus; organizationId?: string }): Promise<CandidateSubmission[]> {

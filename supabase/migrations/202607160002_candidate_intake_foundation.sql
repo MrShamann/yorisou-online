@@ -15,7 +15,13 @@
 -- No existing YORISOU table is altered or dropped.
 --
 -- Rollback (non-destructive): drop in dependency order —
+--   drop function if exists public.create_yorisou_candidate_submission(uuid,uuid,text,text,text,text,text,text,text,text,text,text,text,timestamptz,text,text,text);
+--   drop function if exists public.create_yorisou_candidate_offering(uuid,text,text,text,text,text,text,uuid,text,text);
+--   drop function if exists public.create_yorisou_candidate_organization(text,text,text,text,text,text,text,text,text,text);
 --   drop function if exists public.transition_yorisou_candidate_submission(uuid,text,text,text,text);
+--   drop trigger if exists yorisou_candidate_events_no_update_delete on public.yorisou_candidate_events;
+--   drop trigger if exists yorisou_candidate_events_no_truncate on public.yorisou_candidate_events;
+--   drop function if exists public.yorisou_candidate_events_block_mutation();
 --   drop table if exists public.yorisou_candidate_events;
 --   drop table if exists public.yorisou_candidate_submissions;
 --   drop table if exists public.yorisou_candidate_offerings;
@@ -297,3 +303,171 @@ begin
     execute 'grant execute on function public.transition_yorisou_candidate_submission(uuid, text, text, text, text) to service_role';
   end if;
 end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 7. CIF-1A: atomic creation. A governed object and its `created` audit event
+-- are inserted in ONE transaction (the function body). If the event insert
+-- fails, the object insert is rolled back — an object can never exist without
+-- its creation event. These security-definer RPCs are the ONLY creation path
+-- (direct INSERT is revoked from service_role in section 9), so there is no
+-- retained path where the object commits while the event fails separately.
+-- ─────────────────────────────────────────────────────────────────────────
+create or replace function public.create_yorisou_candidate_organization(
+  p_source_type text,
+  p_display_name text,
+  p_external_domain text,
+  p_external_ref text,
+  p_commercial_relationship text,
+  p_related_project_ref text,
+  p_conflict_of_interest_disclosure text,
+  p_notes text,
+  p_actor text,
+  p_actor_type text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_row public.yorisou_candidate_organizations;
+begin
+  insert into public.yorisou_candidate_organizations (
+    source_type, display_name, external_domain, external_ref,
+    commercial_relationship, related_project_ref, conflict_of_interest_disclosure,
+    notes, created_by, created_by_type
+  ) values (
+    p_source_type, p_display_name, p_external_domain, p_external_ref,
+    coalesce(p_commercial_relationship, 'unknown_review'), p_related_project_ref,
+    p_conflict_of_interest_disclosure, p_notes, p_actor, coalesce(p_actor_type, 'admin')
+  ) returning * into v_row;
+
+  insert into public.yorisou_candidate_events (project_id, organization_id, event_type, actor, actor_type, new_state)
+    values ('yorisou', v_row.id, 'created', p_actor, coalesce(p_actor_type, 'admin'), 'active');
+
+  return to_jsonb(v_row);
+end $$;
+
+create or replace function public.create_yorisou_candidate_offering(
+  p_organization_id uuid,
+  p_offering_type text,
+  p_title text,
+  p_summary text,
+  p_external_url text,
+  p_external_ref text,
+  p_version_label text,
+  p_supersedes_offering_id uuid,
+  p_actor text,
+  p_actor_type text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_row public.yorisou_candidate_offerings;
+begin
+  insert into public.yorisou_candidate_offerings (
+    organization_id, offering_type, title, summary, external_url, external_ref,
+    version_label, supersedes_offering_id, created_by, created_by_type
+  ) values (
+    p_organization_id, p_offering_type, p_title, p_summary, p_external_url, p_external_ref,
+    p_version_label, p_supersedes_offering_id, p_actor, coalesce(p_actor_type, 'admin')
+  ) returning * into v_row;
+
+  insert into public.yorisou_candidate_events (project_id, organization_id, offering_id, event_type, actor, actor_type, new_state)
+    values ('yorisou', v_row.organization_id, v_row.id, 'created', p_actor, coalesce(p_actor_type, 'admin'), 'active');
+
+  return to_jsonb(v_row);
+end $$;
+
+create or replace function public.create_yorisou_candidate_submission(
+  p_organization_id uuid,
+  p_offering_id uuid,
+  p_submission_channel text,
+  p_submitter_type text,
+  p_submitter_ref text,
+  p_provenance text,
+  p_commercial_relationship text,
+  p_related_project_disclosure text,
+  p_conflict_of_interest_disclosure text,
+  p_consent_status text,
+  p_consent_reference text,
+  p_contact_info text,
+  p_retention_category text,
+  p_retention_deadline timestamptz,
+  p_external_ref text,
+  p_actor text,
+  p_actor_type text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare v_row public.yorisou_candidate_submissions;
+begin
+  insert into public.yorisou_candidate_submissions (
+    organization_id, offering_id, submission_channel, submitter_type, submitter_ref,
+    provenance, commercial_relationship, related_project_disclosure,
+    conflict_of_interest_disclosure, consent_status, consent_reference, contact_info,
+    retention_category, retention_deadline, external_ref, created_by, created_by_type
+  ) values (
+    p_organization_id, p_offering_id, p_submission_channel, p_submitter_type, p_submitter_ref,
+    p_provenance, coalesce(p_commercial_relationship, 'unknown_review'), p_related_project_disclosure,
+    p_conflict_of_interest_disclosure, coalesce(p_consent_status, 'not_required'), p_consent_reference,
+    p_contact_info, coalesce(p_retention_category, 'standard'), p_retention_deadline, p_external_ref,
+    p_actor, coalesce(p_actor_type, 'admin')
+  ) returning * into v_row;
+
+  insert into public.yorisou_candidate_events (project_id, submission_id, organization_id, offering_id, event_type, actor, actor_type, new_state)
+    values ('yorisou', v_row.id, v_row.organization_id, v_row.offering_id, 'created', p_actor, coalesce(p_actor_type, 'admin'), 'draft');
+
+  return to_jsonb(v_row);
+end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 8. CIF-1A: audit events are append-only. UPDATE/DELETE/TRUNCATE are blocked
+-- for everyone (including the table owner and any definer path) by triggers.
+-- INSERT remains allowed (used only by the security-definer functions above
+-- and the transition function). A future retention/legal-erasure mechanism, if
+-- ever needed, is deliberately left to a separately authorized package.
+-- ─────────────────────────────────────────────────────────────────────────
+create or replace function public.yorisou_candidate_events_block_mutation()
+returns trigger language plpgsql as $$
+begin
+  raise exception 'cif1_candidate_events_are_append_only';
+end $$;
+
+drop trigger if exists yorisou_candidate_events_no_update_delete on public.yorisou_candidate_events;
+create trigger yorisou_candidate_events_no_update_delete
+  before update or delete on public.yorisou_candidate_events
+  for each row execute function public.yorisou_candidate_events_block_mutation();
+
+drop trigger if exists yorisou_candidate_events_no_truncate on public.yorisou_candidate_events;
+create trigger yorisou_candidate_events_no_truncate
+  before truncate on public.yorisou_candidate_events
+  for each statement execute function public.yorisou_candidate_events_block_mutation();
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 9. CIF-1A: explicit service-role application permission model.
+-- Direct REST path is READ-ONLY on all candidate tables; object creation is
+-- only via the atomic RPCs (section 7); audit events are insert-only via the
+-- governed functions and immutable (section 8). This removes the non-atomic
+-- direct-INSERT path and denies UPDATE/DELETE/TRUNCATE on the audit log.
+-- ─────────────────────────────────────────────────────────────────────────
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    -- Objects: read-only for the direct path; creation only through atomic RPCs.
+    execute 'revoke insert, update, delete, truncate on public.yorisou_candidate_organizations, public.yorisou_candidate_offerings, public.yorisou_candidate_submissions from service_role';
+    execute 'grant select on public.yorisou_candidate_organizations, public.yorisou_candidate_offerings, public.yorisou_candidate_submissions to service_role';
+    -- Audit events: read-only for the direct path; append-only via functions.
+    execute 'revoke insert, update, delete, truncate on public.yorisou_candidate_events from service_role';
+    execute 'grant select on public.yorisou_candidate_events to service_role';
+    -- Governed creation RPCs are executable by the application role.
+    execute 'grant execute on function public.create_yorisou_candidate_organization(text,text,text,text,text,text,text,text,text,text) to service_role';
+    execute 'grant execute on function public.create_yorisou_candidate_offering(uuid,text,text,text,text,text,text,uuid,text,text) to service_role';
+    execute 'grant execute on function public.create_yorisou_candidate_submission(uuid,uuid,text,text,text,text,text,text,text,text,text,text,text,timestamptz,text,text,text) to service_role';
+  end if;
+end $$;
+
+revoke all on function public.create_yorisou_candidate_organization(text,text,text,text,text,text,text,text,text,text) from public;
+revoke all on function public.create_yorisou_candidate_offering(uuid,text,text,text,text,text,text,uuid,text,text) from public;
+revoke all on function public.create_yorisou_candidate_submission(uuid,uuid,text,text,text,text,text,text,text,text,text,text,text,timestamptz,text,text,text) from public;

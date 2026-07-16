@@ -86,8 +86,11 @@ assert.ok(migration.includes("yorisou_candidate_submissions_contact_consent_chk"
 assert.ok(migration.includes("security definer"), "controlled transition is security-definer");
 assert.ok(migration.includes("grant execute on function") && migration.includes("to service_role"), "transition fn granted to service_role only");
 
-// 7. Additive + non-destructive migration; documented rollback.
-assert.ok(!/\b(drop table|delete from|truncate)\b/i.test(migration.split("\n").filter((l) => !l.trimStart().startsWith("--")).join("\n")), "no destructive ops in executable SQL");
+// 7. Additive + non-destructive migration; documented rollback. (Executable
+//    SQL only — comments stripped. `truncate`/`delete` as trigger events and in
+//    REVOKE statements are protective, not destructive, and are excluded.)
+const executableSql = migration.split("\n").filter((l) => !l.trimStart().startsWith("--")).join("\n");
+assert.ok(!/(drop table|delete from|truncate\s+(table\s+)?public\.)/i.test(executableSql), "no destructive statements in executable SQL");
 assert.ok(migration.includes("Rollback (non-destructive)"), "rollback documented");
 
 // 8. Protected-boundary isolation: CIF-1 code does not import or touch
@@ -113,4 +116,39 @@ for (const f of ["app/api/admin/candidates/route.ts", "app/api/admin/candidates/
 }
 assert.ok(read("app/admin/candidates/page.tsx").includes("requireAdminViewer"), "admin page is server-gated");
 
-console.log("Candidate-intake (CIF-1) contract checks passed: 8 groups");
+// 9. CIF-1A: atomic creation (object + created event in one txn) + audit
+//    immutability + service-role deny model.
+for (const fn of [
+  "create_yorisou_candidate_organization",
+  "create_yorisou_candidate_offering",
+  "create_yorisou_candidate_submission",
+]) {
+  assert.ok(migration.includes(`create or replace function public.${fn}`), `atomic RPC ${fn} present`);
+}
+// each create RPC inserts BOTH the object and a 'created' event in its body
+const orgFnBody = migration.slice(migration.indexOf("create or replace function public.create_yorisou_candidate_organization"), migration.indexOf("create or replace function public.create_yorisou_candidate_offering"));
+assert.ok(/insert into public\.yorisou_candidate_organizations/.test(orgFnBody) && /insert into public\.yorisou_candidate_events[\s\S]*'created'/.test(orgFnBody), "org RPC inserts object + created event atomically");
+const subFnBody = migration.slice(migration.indexOf("create or replace function public.create_yorisou_candidate_submission"), migration.indexOf("-- 8."));
+assert.ok(/insert into public\.yorisou_candidate_submissions/.test(subFnBody) && /insert into public\.yorisou_candidate_events[\s\S]*'created'/.test(subFnBody), "submission RPC inserts object + created event atomically");
+// immutability triggers + block function
+assert.ok(migration.includes("yorisou_candidate_events_block_mutation") && migration.includes("cif1_candidate_events_are_append_only"), "audit block function present");
+assert.ok(migration.includes("before update or delete on public.yorisou_candidate_events"), "no-update/delete trigger present");
+assert.ok(migration.includes("before truncate on public.yorisou_candidate_events"), "no-truncate trigger present");
+// service-role deny model on events (insert/update/delete/truncate revoked; select granted)
+assert.ok(/revoke insert, update, delete, truncate on public\.yorisou_candidate_events from service_role/.test(migration), "service_role event mutation revoked");
+assert.ok(/grant select on public\.yorisou_candidate_events to service_role/.test(migration), "service_role event select granted");
+assert.ok(/revoke insert, update, delete, truncate on public\.yorisou_candidate_organizations[\s\S]*from service_role/.test(migration), "service_role object insert/update/delete revoked (creation only via RPC)");
+for (const fn of ["create_yorisou_candidate_organization", "create_yorisou_candidate_offering", "create_yorisou_candidate_submission"]) {
+  assert.ok(new RegExp(`grant execute on function public\\.${fn}`).test(migration), `${fn} execute granted to service_role`);
+}
+// store: creation goes through the atomic RPCs; no separate/non-atomic event call
+const store = read("lib/server/candidateIntake.ts");
+assert.ok(!/emitEvent|insertOne|return=representation/.test(store), "store has no separate/non-atomic creation-event path (emitEvent/insertOne removed)");
+assert.ok(store.includes("callRpc"), "store uses the callRpc helper for creation");
+for (const fn of ["create_yorisou_candidate_organization", "create_yorisou_candidate_offering", "create_yorisou_candidate_submission"]) {
+  assert.ok(store.includes(`"${fn}"`), `store calls atomic RPC ${fn}`);
+}
+// the store performs no direct object/event table POST for creation (reads are GET; creation is rpc/)
+assert.ok(!/method:\s*"POST"[\s\S]{0,120}?`\$\{(ORG|OFFERING|SUBMISSION|EVENT)\}/.test(store), "store performs no direct object/event table POST for creation");
+
+console.log("Candidate-intake (CIF-1 + CIF-1A) contract checks passed: 9 groups");
