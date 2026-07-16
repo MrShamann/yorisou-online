@@ -28,7 +28,8 @@
     "smoke:hermes": "node scripts/hermes-webhook-smoke.mjs",
     "verify:automation": "npm run check:env && npm run smoke:openclaw && npm run smoke:hermes",
     "test:result-reveal": "node --import tsx lib/yorisou-tests/__tests__/resultReveal.test.ts",
-    "test:imairo-snapshot": "node --import tsx lib/yorisou-tests/__tests__/imairoSnapshot.test.ts"
+    "test:imairo-snapshot": "node --import tsx lib/yorisou-tests/__tests__/imairoSnapshot.test.ts",
+    "test:candidate-intake": "node --import tsx lib/yorisou-tests/__tests__/candidateIntake.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
