@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   const loginHref = locale === "en" ? "/en/login#line-entry" : "/login#line-entry";
   const registerHref = locale === "en" ? "/en/register#line-entry" : "/register#line-entry";
   const returnTo = safeRedirectPath(url.searchParams.get("returnTo"), supportHref);
-  const testReturn = /^\/tests\/(c02|f01|f02|relationship-fatigue)(?:\/return)?(?:\?.*)?$/.test(returnTo) || returnTo.startsWith("/saved/tests/") || returnTo.startsWith("/saved/c02/");
+  const testReturn = /^\/tests\/(c02|f01|f02|relationship-fatigue)(?:\/return)?(?:\?.*)?$/.test(returnTo) || /^\/result\/return(?:\?.*)?$/.test(returnTo) || returnTo.startsWith("/saved/tests/") || returnTo.startsWith("/saved/c02/");
   const successRedirect = testReturn || intent === "support" ? returnTo : supportHref;
   const failureRedirect = testReturn ? returnTo : intent === "register" ? registerHref : intent === "support" ? supportHref : loginHref;
 
