@@ -8,6 +8,7 @@ import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/O
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import RevealExperience from "./reveal/RevealExperience";
 import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
+import PrivateResultSave from "./PrivateResultSave";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -213,6 +214,17 @@ export default async function ResultPage({
               </div>,
               ]} />
             </MvpCard>
+
+            {compatibility.assignment ? (
+              <PrivateResultSave
+                context={{
+                  resultId: compatibility.assignment.publicCode,
+                  overlayId,
+                  confidence: confidenceBand,
+                  payloadKey,
+                }}
+              />
+            ) : null}
           </div>
         </div>
       </section>
