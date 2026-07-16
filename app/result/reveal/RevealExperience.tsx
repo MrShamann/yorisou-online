@@ -61,6 +61,9 @@ export default function RevealExperience({ stages }: { stages: ReactNode[] }) {
               transition={{ duration: 0.45, ease: "easeOut" }}
               style={visible ? undefined : { pointerEvents: "none" }}
               aria-hidden={visible ? undefined : true}
+              // inert keeps links/buttons in unrevealed stages out of tab
+              // order while they are aria-hidden (axe: aria-hidden-focus)
+              inert={visible ? undefined : true}
             >
               {stage}
             </motion.div>

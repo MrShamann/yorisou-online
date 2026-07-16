@@ -51,4 +51,10 @@ const pkg = JSON.parse(read("package.json"));
 assert.equal(pkg.dependencies.motion, "12.42.2", "motion pinned exact");
 assert.ok(!pkg.dependencies.three && !pkg.dependencies["@react-three/fiber"], "no 3D deps added");
 
-console.log("Result-reveal contract checks passed: 6 groups");
+// 7. YRR-1: unrevealed stages must be inert whenever they are aria-hidden,
+// so no focusable element ever sits inside an aria-hidden subtree during
+// the reveal window (axe rule: aria-hidden-focus).
+assert.ok(reveal.includes("aria-hidden={visible ? undefined : true}"), "stage aria-hidden gate present");
+assert.ok(reveal.includes("inert={visible ? undefined : true}"), "stage inert gate must mirror aria-hidden (YRR-1)");
+
+console.log("Result-reveal contract checks passed: 7 groups");
