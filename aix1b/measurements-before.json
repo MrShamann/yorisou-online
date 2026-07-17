@@ -1,0 +1,748 @@
+[
+  {
+    "route": "/",
+    "name": "home-whisper-row",
+    "text": "受け取れるもの:",
+    "color": "rgb(141, 147, 140)",
+    "fontSize": "11px",
+    "fontWeight": "600",
+    "effectiveBg": "rgb(248, 244, 236)",
+    "bgChain": [
+      "span:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "section:rgba(0, 0, 0, 0)",
+      "main:rgba(0, 0, 0, 0)"
+    ],
+    "ratio": 2.86
+  },
+  {
+    "route": "/",
+    "name": "home-boundary-line",
+    "text": "診断や占いではありません · 120問 · 無料 · ログインなし",
+    "color": "rgb(138, 128, 120)",
+    "fontSize": "12px",
+    "fontWeight": "400",
+    "effectiveBg": "rgb(248, 244, 236)",
+    "bgChain": [
+      "p:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "section:rgba(0, 0, 0, 0)",
+      "main:rgba(0, 0, 0, 0)",
+      "body:rgb(248, 244, 236)"
+    ],
+    "ratio": 3.52
+  },
+  {
+    "route": "/",
+    "name": "home-layer-stage-label",
+    "text": "準備中 · 関心の段階",
+    "color": "rgb(138, 128, 120)",
+    "fontSize": "11px",
+    "fontWeight": "600",
+    "effectiveBg": "rgb(248, 244, 236)",
+    "bgChain": [
+      "p:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "section:rgba(0, 0, 0, 0)",
+      "main:rgba(0, 0, 0, 0)"
+    ],
+    "ratio": 3.52
+  },
+  {
+    "route": "/",
+    "name": "home-layer-note",
+    "text": "言葉にしにくい揺れも、大きな悩みになる前の関心も、Yorisouでは今を整理する",
+    "color": "rgb(138, 126, 120)",
+    "fontSize": "12px",
+    "fontWeight": "400",
+    "effectiveBg": "rgb(248, 244, 236)",
+    "bgChain": [
+      "p:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "section:rgba(0, 0, 0, 0)",
+      "main:rgba(0, 0, 0, 0)",
+      "body:rgb(248, 244, 236)"
+    ],
+    "ratio": 3.59
+  },
+  {
+    "route": "/",
+    "name": "axe-color-contrast",
+    "violations": 0,
+    "incomplete": [
+      {
+        "target": [
+          ".py-10 > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "h1"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".frontstage-hero-lead"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".btn-secondary.btn[href$=\"tests\"]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".leading-6.mt-4.text-\\[\\#8A8078\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-whisper:nth-child(1)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-whisper:nth-child(2)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-whisper:nth-child(3)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-whisper:nth-child(4)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > div:nth-child(1) > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > div:nth-child(1) > h2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > div:nth-child(1) > .aix-band-lead"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(1) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > .aix-flow > .aix-flow-step:nth-child(1) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(2) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > .aix-flow > .aix-flow-step:nth-child(2) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(3) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > .aix-flow > .aix-flow-step:nth-child(3) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(4) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > .aix-flow > .aix-flow-step:nth-child(4) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(5) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(5) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(6) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(6) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".surface-meta"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".page-copy"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".border-\\[rgba\\(201\\,211\\,195\\,0\\.72\\)\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-report > .container > .max-w-\\[44rem\\] > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-report > .container > .max-w-\\[44rem\\] > h2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-report > .container > .max-w-\\[44rem\\] > .aix-band-lead"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".underline-offset-4.hover\\:underline.text-\\[14px\\]:nth-child(1)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".underline-offset-4.hover\\:underline.text-\\[14px\\]:nth-child(2)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".underline-offset-4.hover\\:underline[href=\"/contact?topic=open-testing\"]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[1fr_1fr\\] > div:nth-child(1) > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[1fr_1fr\\] > div:nth-child(1) > h2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[1fr_1fr\\] > div:nth-child(1) > .aix-band-lead"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".btn-secondary.btn[href$=\"mini-app\"]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(1) > .\\!text-\\[14px\\].aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(2) > .\\!text-\\[14px\\].aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(3) > .\\!text-\\[14px\\].aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(4) > .\\!text-\\[14px\\].aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-community > .container > .max-w-\\[44rem\\]:nth-child(1) > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-community > .container > .max-w-\\[44rem\\]:nth-child(1) > h2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-community > .container > .max-w-\\[44rem\\]:nth-child(1) > .aix-band-lead"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".py-5.md\\:border-t-2.border-t:nth-child(1) > .text-\\[15px\\].font-bold.text-\\[\\#173B35\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".py-5.md\\:border-t-2.border-t:nth-child(1) > .text-\\[13px\\].text-\\[\\#6F625C\\].mt-2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".py-5.md\\:border-t-2.border-t:nth-child(1) > .text-\\[11px\\].text-\\[\\#8A8078\\].tracking-\\[0\\.08em\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-design > .text-\\[15px\\].font-bold.text-\\[\\#173B35\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-design > .text-\\[13px\\].text-\\[\\#6F625C\\].mt-2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-design > .text-\\[11px\\].text-\\[\\#8A8078\\].tracking-\\[0\\.08em\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-market > .text-\\[15px\\].font-bold.text-\\[\\#173B35\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-market > .text-\\[13px\\].text-\\[\\#6F625C\\].mt-2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "#yorisou-market > .text-\\[11px\\].text-\\[\\#8A8078\\].tracking-\\[0\\.08em\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".text-\\[\\#8A7E78\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".ml-2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      }
+    ]
+  },
+  {
+    "route": "/open-testing",
+    "name": "open-testing-hero-note",
+    "text": "結果をあとで見返したい場合は、途中でLINE導線も選べます。これは医療や心理診断",
+    "color": "rgb(138, 128, 120)",
+    "fontSize": "12px",
+    "fontWeight": "400",
+    "effectiveBg": "rgb(248, 244, 236)",
+    "bgChain": [
+      "p:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "section:rgba(0, 0, 0, 0)",
+      "main:rgba(0, 0, 0, 0)",
+      "body:rgb(248, 244, 236)"
+    ],
+    "ratio": 3.52
+  },
+  {
+    "route": "/open-testing",
+    "name": "axe-color-contrast",
+    "violations": 0,
+    "incomplete": [
+      {
+        "target": [
+          ".max-w-\\[42rem\\] > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "h1"
+        ],
+        "msg": "Element's background color could not be determined because it partially overlaps other ele"
+      },
+      {
+        "target": [
+          ".max-w-\\[42rem\\] > .aix-band-lead"
+        ],
+        "msg": "Element's background color could not be determined because it partially overlaps other ele"
+      },
+      {
+        "target": [
+          ".btn-secondary"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".max-w-\\[38rem\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > div:nth-child(1) > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > div:nth-child(1) > h2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[0\\.9fr_1\\.1fr\\] > div:nth-child(1) > .aix-band-lead"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(1) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(1) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(2) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(2) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(3) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(3) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(4) > .aix-flow-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-flow-step:nth-child(4) > .aix-flow-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[1fr_1fr\\] > div:nth-child(1) > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".md\\:grid-cols-\\[1fr_1fr\\] > div:nth-child(1) > h2"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".border-l-2.border-\\[rgba\\(105\\,151\\,130\\,0\\.4\\)\\].text-\\[\\#5F5750\\]:nth-child(1)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".border-l-2.border-\\[rgba\\(105\\,151\\,130\\,0\\.4\\)\\].text-\\[\\#5F5750\\]:nth-child(2)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".border-l-2.border-\\[rgba\\(105\\,151\\,130\\,0\\.4\\)\\].text-\\[\\#5F5750\\]:nth-child(3)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "div:nth-child(2) > .aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".hover\\:underline.text-\\[\\#315F50\\][href=\"/contact?topic=open-testing\"]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".hover\\:underline.text-\\[\\#315F50\\][href$=\"tests\"]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".hover\\:underline.text-\\[\\#315F50\\].text-\\[14px\\]:nth-child(3)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".hover\\:underline.text-\\[\\#315F50\\].text-\\[14px\\]:nth-child(4)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".surface-meta"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".page-copy"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".border-\\[rgba\\(201\\,211\\,195\\,0\\.72\\)\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      }
+    ]
+  },
+  {
+    "route": "/tests",
+    "name": "intent-item-meta",
+    "text": "今の自分の状態を、見てみたい",
+    "color": "rgb(34, 32, 29)",
+    "fontSize": "17px",
+    "fontWeight": "700",
+    "effectiveBg": "rgb(248, 244, 236)",
+    "bgChain": [
+      "p:rgba(0, 0, 0, 0)",
+      "summary:rgba(0, 0, 0, 0)",
+      "details:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)",
+      "div:rgba(0, 0, 0, 0)"
+    ],
+    "ratio": 14.81
+  },
+  {
+    "route": "/tests",
+    "name": "axe-color-contrast",
+    "violations": 0,
+    "incomplete": [
+      {
+        "target": [
+          ".aix-kicker"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "h1"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".aix-band-lead"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(1) > summary > .aix-intent-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(1) > summary > .aix-intent-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(1) > summary > .aix-intent-meta > span"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(2) > summary > .aix-intent-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(2) > summary > .aix-intent-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(2) > summary > .aix-intent-meta > span"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(3) > summary > .aix-intent-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(3) > summary > .aix-intent-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(3) > summary > .aix-intent-meta > span"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(4) > summary > .aix-intent-title"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(4) > summary > .aix-intent-body"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          "details:nth-child(4) > summary > .aix-intent-meta > span"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".text-\\[\\#8A7764\\]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".flex-wrap > .hover\\:underline.text-\\[\\#315F50\\][href$=\"open-testing\"]:nth-child(1)"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".hover\\:underline.text-\\[\\#315F50\\][href$=\"mini-app\"]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      },
+      {
+        "target": [
+          ".flex-wrap > .hover\\:underline.text-\\[\\#315F50\\][href=\"/contact?topic=open-testing\"]"
+        ],
+        "msg": "Element's background color could not be determined due to a background gradient"
+      }
+    ]
+  }
+]
