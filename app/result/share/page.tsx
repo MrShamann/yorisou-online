@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { MvpActionLink, MvpCard, MvpPill } from "../../components/MvpSurface";
+import { MvpActionLink, MvpPill } from "../../components/MvpSurface";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../../check-in/resultCompatibility";
+import { StateSignatureStatic } from "../../components/state-field/StateSignature";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -66,6 +67,24 @@ export default async function ResultSharePage({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+            {/* AIX-1 — static State Signature (public-safe, deterministic) */}
+            <div
+              aria-hidden="true"
+              style={{
+                width: "min(46vw, 200px)",
+                aspectRatio: "1",
+                borderRadius: "50%",
+                overflow: "hidden",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.14)",
+              }}
+            >
+              <StateSignatureStatic
+                context={{ resultId, overlayId, confidenceBand }}
+                className="h-full w-full"
+                onDark
+              />
+            </div>
             <h1
               className="display-serif"
               style={{
@@ -141,8 +160,33 @@ export default async function ResultSharePage({
             </div>
           </div>
 
-          <MvpCard className="w-full space-y-6 border-white/10 bg-[linear-gradient(180deg,rgba(10,16,15,0.98)_0%,rgba(23,34,30,0.98)_56%,rgba(242,246,239,0.99)_100%)] px-5 py-6 text-white shadow-[0_24px_52px_rgba(10,16,14,0.18)] sm:px-7 sm:py-7">
+          {/* AIX-1: solid deep-forest card (the previous surface-panel class
+              overrode the dark gradient, leaving white text on ivory —
+              pre-existing contrast defect fixed here). */}
+          <div
+            className="w-full space-y-6 rounded-[24px] border border-white/10 px-5 py-6 text-white shadow-[0_24px_52px_rgba(10,16,14,0.18)] sm:px-7 sm:py-7"
+            style={{ background: "linear-gradient(180deg, #0E1413 0%, #16221E 62%, #1D2B26 100%)" }}
+          >
             <div className="space-y-3 text-center">
+              {/* AIX-1 — static State Signature (public-safe, deterministic) */}
+              <div
+                aria-hidden="true"
+                className="mx-auto"
+                style={{
+                  width: "min(40vw, 170px)",
+                  aspectRatio: "1",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                }}
+              >
+                <StateSignatureStatic
+                  context={{ resultId, overlayId, confidenceBand }}
+                  className="h-full w-full"
+                  onDark
+                />
+              </div>
               <p
                 className="service-kicker"
                 style={{ color: "rgba(255,255,255,0.58)" }}
@@ -190,7 +234,7 @@ export default async function ResultSharePage({
                 ))}
               </div>
             </div>
-          </MvpCard>
+          </div>
 
           <div className="space-y-2 text-center">
             <p className="text-[12px] leading-6 text-[rgba(255,255,255,0.64)]">

@@ -9,6 +9,7 @@ import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import RevealExperience from "./reveal/RevealExperience";
 import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
 import PrivateResultSave from "./PrivateResultSave";
+import StateSignature from "../components/state-field/StateSignature";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -91,6 +92,16 @@ export default async function ResultPage({
                   border: "1px solid rgba(23,59,53,0.1)",
                 }}
               >
+                {/* AIX-1 — State Signature: deterministic visual identity of
+                    this public result (public-safe IDs only). */}
+                <div className="mx-auto w-[46%] max-w-[220px] sm:float-right sm:ml-4 sm:w-[36%]">
+                  <div className="aix-signature-frame">
+                    <StateSignature
+                      context={{ resultId, overlayId, confidenceBand }}
+                      className="!absolute !inset-0"
+                    />
+                  </div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {compatibility.heroChips.map((bullet) => (
                     <span

@@ -121,8 +121,12 @@ export default function SiteHeader() {
           </button>
 
           <div className="hidden min-w-0 items-center gap-5 md:flex">
+            {/* AIX-1 — restrained desktop nav: the four journey destinations.
+                The concept-layer anchors (community/design/matching) stay in
+                the home narrative and the mobile menu, so the header never
+                collides or exposes a catalog. */}
             <nav className="flex min-w-0 items-center gap-4">
-              {primaryNav.map((item) => {
+              {primaryNav.slice(0, 4).map((item) => {
                 const href = localizedHref(item.href);
                 return (
                   <Link

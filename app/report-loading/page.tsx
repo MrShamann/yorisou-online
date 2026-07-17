@@ -7,6 +7,8 @@ import { buildPublicResultHref } from "../check-in/resultCompatibility";
 import { PUBLIC_RESULT_LOADING_LINE } from "../check-in/resultCompatibility";
 import { MvpCard, MvpPill } from "../components/MvpSurface";
 import { currentStateCheckV1 } from "../check-in/currentStateCheckV1";
+import StateFieldCanvasLazy from "../components/state-field/StateFieldCanvasLazy";
+import { signatureParams } from "../components/state-field/seed";
 
 const LOADING_STEPS = [
   "今の状態を整理中",
@@ -61,9 +63,22 @@ export default function ReportLoadingPage() {
     };
   }, [resultHref, router]);
 
+  // AIX-1 — the visitor's State Signature coalesces while the result is
+  // prepared (deterministic from public-safe IDs; decorative only — the
+  // steps, progress, and fallback link below carry the actual state).
+  const fieldParams = useMemo(
+    () => signatureParams({ resultId, overlayId, confidenceBand: confidence }, 48),
+    [confidence, overlayId, resultId],
+  );
+  const fieldFormation = 0.25 + ((activeStep + 1) / LOADING_STEPS.length) * 0.75;
+
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.99),_rgba(247,244,238,0.98)_42%,_rgba(240,244,236,0.98)_100%)] text-[var(--text)]">
-      <section className="container flex min-h-screen items-center py-8 md:py-12">
+    <main className="relative min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.99),_rgba(247,244,238,0.98)_42%,_rgba(240,244,236,0.98)_100%)] text-[var(--text)]">
+      <div className="state-field-scene !fixed" aria-hidden="true">
+        <StateFieldCanvasLazy params={fieldParams} formation={fieldFormation} className="state-field-layer" />
+        <div className="state-field-veil" />
+      </div>
+      <section className="container relative z-[1] flex min-h-screen items-center py-8 md:py-12">
         <div className="mx-auto w-full max-w-[34rem] space-y-5">
           <div className="flex flex-wrap gap-2">
             <MvpPill>結果の準備中</MvpPill>

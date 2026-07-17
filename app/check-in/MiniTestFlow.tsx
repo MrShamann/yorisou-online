@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { MvpActionLink, MvpCard } from "../components/MvpSurface";
+import { MvpActionLink } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { trackOpenTestingEvent } from "../components/OpenTestingTracker";
+import StateFieldCanvasLazy from "../components/state-field/StateFieldCanvasLazy";
+import { intentionParams } from "../components/state-field/seed";
 import { buildAbsolutePublicResultUrl, buildPublicResultHref } from "./resultCompatibility";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import {
@@ -254,8 +256,19 @@ export default function MiniTestFlow() {
     setCurrentIndex((value) => value + 1);
   }
 
+  // AIX-1 — the field quietly forms as the visitor answers (state formation).
+  // Purely presentational: derived from progress only, never required to
+  // answer, and absent under reduced motion (static ivory stays).
+  const fieldParams = useMemo(() => intentionParams("current-state", 36), []);
+  const fieldFormation =
+    phase === "intro" ? 0.3 : 0.3 + (Math.min(currentIndex + 1, totalQuestions) / totalQuestions) * 0.7;
+
   return (
-    <main className="min-h-screen bg-[#FBFAF6] text-[#22201D]">
+    <main className="relative min-h-screen bg-[#FBFAF6] text-[#22201D]">
+      <div className="state-field-scene !fixed" aria-hidden="true">
+        <StateFieldCanvasLazy params={fieldParams} formation={fieldFormation} className="state-field-layer" />
+        <div className="state-field-veil" />
+      </div>
       {/* Minimal top bar — orientation anchor in shell-suppressed context */}
       <div className="sticky top-0 z-30 border-b border-[rgba(23,59,53,0.06)] bg-[rgba(251,250,246,0.96)] backdrop-blur-sm">
         <div className="container flex items-center justify-between py-3">
@@ -269,7 +282,7 @@ export default function MiniTestFlow() {
           )}
         </div>
       </div>
-      <section className="border-b border-[rgba(23,59,53,0.1)]">
+      <section className="relative z-[1] border-b border-[rgba(23,59,53,0.1)]">
         <div className="container py-5 md:py-8">
           <div className="mx-auto max-w-[40rem]">
             {phase === "intro" ? (
@@ -299,15 +312,15 @@ export default function MiniTestFlow() {
                   </p>
                 </div>
 
-                <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.08)] bg-white/92 p-4 shadow-[0_12px_26px_rgba(23,59,53,0.06)]">
+                <div className="space-y-2.5 border-l border-[rgba(105,151,130,0.4)] pl-4">
                   <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">このあと受け取れるもの</p>
-                  <div className="grid gap-2 text-[13px] leading-6 text-[#6F6760] sm:grid-cols-2">
-                    <p>・24の結果から今の動き方を表示します。</p>
-                    <p>・公開テスト中の詳しいレポートまで続けて読めます。</p>
-                    <p>・レポートはこの端末に保存できます。</p>
-                    <p>・感想や不具合はあとで送れます。</p>
+                  <div className="grid gap-1.5 text-[13px] leading-6 text-[#6F6760]">
+                    <p>24の結果から今の動き方を表示します。</p>
+                    <p>公開テスト中の詳しいレポートまで続けて読めます。</p>
+                    <p>レポートはこの端末に保存できます。</p>
+                    <p>感想や不具合はあとで送れます。</p>
                   </div>
-                </MvpCard>
+                </div>
 
                 {/* Transition cue — lightweight signal strip */}
                 <div
@@ -350,7 +363,7 @@ export default function MiniTestFlow() {
                   ) : null}
                 </div>
 
-                <MvpCard className="space-y-4 rounded-[1.3rem] border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_22px_44px_rgba(23,59,53,0.09)] md:p-6">
+                <div key={currentQuestion.id} className="aix-question-enter aix-quiz-surface space-y-4 p-4 md:p-6">
                   <div className="space-y-3">
                     <p className="service-kicker" style={{ color: "#4D7A69" }}>今の感覚に近いものをひとつ選んでください</p>
                     <h2 className="display-serif text-[1.52rem] leading-[1.32] text-[#22201D] md:text-[2.4rem]">
@@ -391,7 +404,7 @@ export default function MiniTestFlow() {
                       );
                     })}
                   </div>
-                </MvpCard>
+                </div>
 
                 <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.07)] bg-[rgba(251,250,246,0.97)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
                   {navigationFallbackHref ? (

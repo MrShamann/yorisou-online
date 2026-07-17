@@ -7,6 +7,7 @@ import { OpenTestingReportTracker, OpenTestingTrackingLink } from "../components
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import ReportIntentAction from "./ReportIntentAction";
 import { buildSelfUnderstandingPreviewByCode, buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
+import { StateSignatureStatic } from "../components/state-field/StateSignature";
 
 export const metadata: Metadata = {
   title: "詳細レポート | Yorisou",
@@ -113,6 +114,14 @@ export default async function ReportPreviewPage({
             </div>
 
             <div className="space-y-3">
+              {/* AIX-1 — continuity: the same State Signature carries from the
+                  result into the deeper reading (public-safe IDs only). */}
+              <div className="aix-signature-frame float-right ml-4 w-[26%] max-w-[130px]" aria-hidden="true">
+                <StateSignatureStatic
+                  context={{ resultId, overlayId, confidenceBand }}
+                  className="absolute inset-0 h-full w-full"
+                />
+              </div>
               <p className="service-kicker">{compatibility.brandedTestName}</p>
               <h1 className="display-serif text-[2rem] leading-[1.12] text-[#2F2A28] md:text-[2.8rem]">
                 見えてきたのは、
@@ -222,7 +231,7 @@ export default async function ReportPreviewPage({
 
           <div className="space-y-3">
             <p className="surface-meta">読み方のトーン</p>
-            <div className="surface-panel bg-white/92 md:p-6">
+            <div className="border-l-2 border-[rgba(105,151,130,0.4)] pl-5">
               <p className="text-[15px] leading-8 text-[#2F2A28]">
                 ここでお届けするのは、今の自分を決めつけるための答えではなく、少し見返しやすくするための読み方です。
               </p>

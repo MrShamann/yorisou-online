@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PHASE1_TEST_CATALOG } from "@/lib/yorisou-tests/catalog";
+import IntentionChooser, { type IntentionGroup } from "./IntentionChooser";
 
 export const metadata: Metadata = {
   title: "入口を選ぶ | Yorisou",
@@ -9,164 +10,127 @@ export const metadata: Metadata = {
     "Yorisouの公開テスト入口を、今の状態や関心に合わせて選べるページです。結果、レポート、LINE保存につながる入口を一覧できます。",
 };
 
+// AIX-1 — entry selection as an intention choice, not a catalog of cards.
+// Test availability comes from the existing PHASE1 catalog (unchanged).
+
+function catalogItem(testId: string) {
+  const test = PHASE1_TEST_CATALOG.find((entry) => entry.testId === testId);
+  if (!test || test.status !== "available") return null;
+  return {
+    key: test.testId,
+    title: test.title,
+    description: test.description,
+    meta: `${test.category} · ${test.estimatedTime}`,
+    href: test.route,
+    ctaLabel: test.ctaLabel,
+    boundaryNote: test.boundaryNote,
+  };
+}
+
 export default function TestsPage() {
+  const groups: IntentionGroup[] = [
+    {
+      intention: "current-state",
+      title: "今の自分の状態を、見てみたい",
+      body: "気持ちや動き方が定まらないとき。まず今の見え方をやわらかく整理します。",
+      items: [
+        {
+          key: "imairo",
+          title: "いま色テスト by よりそう",
+          description: "今の動き方を、24の色と名前で見てみるテスト。120問をもとにしています。",
+          meta: "今の状態 · 120問 · 無料 · ログインなし",
+          href: "/check-in",
+          ctaLabel: "いま色テストをはじめる",
+          boundaryNote: "結果は固定タイプではなく、今の動き方です。医療・心理的な判定ではありません。",
+        },
+        ...[catalogItem("C02")].filter((item): item is NonNullable<typeof item> => item !== null),
+      ],
+    },
+    {
+      intention: "work-life-rhythm",
+      title: "仕事や生活のリズムを、整えたい",
+      body: "働き方や職場環境が今の自分に合っているか、少し立ち止まって見たいとき。",
+      items: [catalogItem("F01"), catalogItem("F02")].filter(
+        (item): item is NonNullable<typeof item> => item !== null,
+      ),
+    },
+    {
+      intention: "continue-previous",
+      title: "前回の結果から、続けたい",
+      body: "保存した結果を見返したり、状態が変わったと感じたらもう一度試せます。",
+      items: [
+        {
+          key: "saved",
+          title: "保存した結果を見返す",
+          description: "この端末やアカウントに保存した結果・レポートを、自分のペースで見直せます。",
+          meta: "継続 · 保存済みの結果",
+          href: "/saved",
+          ctaLabel: "保存した結果を開く",
+        },
+        {
+          key: "retake",
+          title: "もう一度いま色テストをする",
+          description: "結果は今の見え方です。変わったと感じたら、また試せます。",
+          meta: "今の状態 · 120問",
+          href: "/check-in",
+          ctaLabel: "もう一度はじめる",
+        },
+      ],
+    },
+    {
+      intention: "discover-next",
+      title: "次の一歩やヒントを、探したい",
+      body: "結果の先にある詳しいレポートや、今の状態に合いそうなヒントを見てみたいとき。",
+      items: [
+        {
+          key: "report-sample",
+          title: "レポートの見本を見る",
+          description: "無料結果の先にある、少し深い読みものの見本です。公開テスト中のため全文まで確認できます。",
+          meta: "レポート · 見本",
+          href: "/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low",
+          ctaLabel: "見本を開く",
+        },
+        {
+          key: "hints",
+          title: "今のヒントを見る",
+          description: "今の状態に合いそうな読みものや小さな次の一歩の入口です。購入や申込みはありません。",
+          meta: "おすすめ · 入口",
+          href: "/recommendations?resultId=EM-AK&overlayId=balancing&confidence=low",
+          ctaLabel: "ヒントを見る",
+        },
+      ],
+      pendingNote: "関係の距離や暮らしのテーマの入口は、これから少しずつ増やしていきます。",
+    },
+  ];
+
   return (
     <main className="frontstage-page">
-      <section className="frontstage-hero">
+      <section className="aix-scene border-b border-[rgba(23,59,53,0.07)]">
         <div className="container">
-          <div className="frontstage-hero-inner">
-            <div className="frontstage-hero-copy">
-              <p className="service-kicker">Yorisou 公開テスト</p>
-              <h1 className="display-serif frontstage-hero-title mt-3 max-w-[11em]">
-                どの入口から始めるか、静かに選べる一覧
-              </h1>
-              <p className="frontstage-hero-lead max-w-[38rem]">
-                Yorisouの第一段階の公開テストをまとめています。今の状態、働き方、職場環境、名前の印象、今日の軽いヒントまで、近いテーマから無理なく試せます。
-              </p>
-            </div>
-            <div className="frontstage-note">
-              <p>公開中の入口はそのまま始められます。どの入口も確認用の公開版として扱っており、医療・診断・運命判断ではなく、今の状態や関心を見直すためのリフレクションとして使えます。</p>
-            </div>
+          <div className="max-w-[42rem] py-10 md:py-14">
+            <p className="aix-kicker">入口をえらぶ</p>
+            <h1 className="display-serif mt-3 text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.8rem]">
+              いま、どんな気持ちに近いですか。
+            </h1>
+            <p className="aix-band-lead">
+              テストの一覧からではなく、今の気持ちから入口を選べます。どの入口も、医療・診断・運命判断ではなく、今の状態や関心を見直すためのリフレクションです。
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="container py-8 md:py-10">
-        <div className="mx-auto max-w-[52rem]">
-          <div className="surface-panel bg-white/80">
-            <p className="surface-meta">入口の選び方</p>
-            <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
-                <p className="text-[14px] font-semibold text-[#173B35]">まず全体を知りたい</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  公開テストから始めると、結果、レポート、LINE保存まで今の流れを一通り試せます。
-                </p>
-              </div>
-              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
-                <p className="text-[14px] font-semibold text-[#173B35]">近いテーマがある</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  恋愛、仕事、名前、暮らしなど、今ひっかかるテーマから小さく選べます。
-                </p>
-              </div>
-              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-4">
-                <p className="text-[14px] font-semibold text-[#173B35]">あとで戻りたい</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  LINEやレポートの導線があるので、その場で決めきらなくても後から続けられます。
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="surface-panel bg-white/76">
-            <p className="surface-meta">このページの先にある層</p>
-            <div className="mt-3 grid gap-3 md:grid-cols-5">
-              {[
-                "結果を見る",
-                "レポートへ進む",
-                "おすすめを見る",
-                "コミュニティに反応を残す",
-                "よりそうデザイン / マッチングの関心を見る",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/84 px-4 py-3 text-[12px] leading-6 text-[#5F5750]"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {PHASE1_TEST_CATALOG.map((test) => (
-              <div
-                key={test.testId}
-                className={`surface-panel ${
-                  test.status === "available"
-                    ? "border-[rgba(23,59,53,0.16)] bg-white/96"
-                    : "border-[rgba(23,59,53,0.1)] bg-white/88"
-                }`}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#F4FAF7] px-3 py-1 text-[11px] font-semibold text-[#315F50]">
-                    {test.category}
-                  </span>
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${
-                      test.status === "available"
-                        ? "bg-[#173B35] text-white"
-                        : "border border-[rgba(23,59,53,0.08)] bg-[rgba(23,59,53,0.04)] text-[#7A7068]"
-                    }`}
-                  >
-                    {test.status === "available" ? "公開中" : "準備中"}
-                  </span>
-                  <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.08)] bg-white px-3 py-1 text-[11px] font-semibold text-[#8A7764]">
-                    {test.estimatedTime}
-                  </span>
-                </div>
-                <h2 className="display-serif mt-4 text-[1.35rem] leading-[1.38] text-[#2F2A28] md:text-[1.62rem]">
-                  {test.title}
-                </h2>
-                <p className="mt-2 text-[14px] leading-7 text-[#5F5750]">{test.description}</p>
-                <div className="surface-panel-soft mt-4">
-                  <p className="surface-meta">境界メモ</p>
-                  <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{test.boundaryNote}</p>
-                </div>
-                <div className="mt-4">
-                  <Link
-                    href={test.route}
-                    className={`inline-flex min-h-[50px] items-center justify-center rounded-full px-6 py-3 text-[15px] font-semibold transition hover:-translate-y-0.5 ${
-                      test.status === "available"
-                        ? "border border-[#173B35] bg-[#173B35] text-white shadow-[0_14px_28px_rgba(23,59,53,0.22)] hover:bg-[#0F2F2B]"
-                        : "border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] text-[#315F50] hover:bg-[#ddf0e8]"
-                    }`}
-                  >
-                    {test.status === "available" ? test.ctaLabel : "準備中の内容を見る"}
-                  </Link>
-                </div>
-                {test.blockedReason ? (
-                  <p className="mt-3 text-[12px] leading-6 text-[#8A7764]">この入口は元データ確認後に公開します。</p>
-                ) : null}
-              </div>
-            ))}
-          </div>
+      <section className="container py-6 md:py-10">
+        <div className="mx-auto max-w-[46rem]">
+          <IntentionChooser groups={groups} />
         </div>
       </section>
 
-      <section className="container pb-12 md:pb-16">
-        <div className="mx-auto max-w-[52rem]">
-          <div className="surface-panel bg-white/78">
-            <p className="service-kicker">入口の先で見えるもの</p>
-            <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
-                <p className="text-[14px] font-semibold text-[#173B35]">無料の結果</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  タイプ名、傾向、気をつけたい点、次に見たい入口までを、公開できる範囲で受け取れます。
-                </p>
-              </div>
-              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
-                <p className="text-[14px] font-semibold text-[#173B35]">関連する入口</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  今の状態、働き方、職場環境、名前、今日のヒントを行き来しながら、近いテーマを続けて試せます。
-                </p>
-              </div>
-              <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-4">
-                <p className="text-[14px] font-semibold text-[#173B35]">境界の明示</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">
-                  どの入口も、医療・診断・運命判断・退職助言ではなく、今を整理するためのリフレクションとして扱います。
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="container pb-8">
-        <div className="mx-auto max-w-[52rem]">
+      <div className="container pb-10">
+        <div className="mx-auto max-w-[46rem]">
           <p className="text-[12px] leading-7 text-[#8A7764]">
             いずれも医療・心理診断ではありません。占いの断定、恋愛や仕事の結論、退職や収入の助言ではなく、今の状態や関心を見直すための入口です。
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
             <Link href="/open-testing" className="text-[13px] font-semibold text-[#315F50] hover:underline">
               公開中の入口を見る
             </Link>

@@ -722,6 +722,252 @@ main {
   }
 }
 
+/* ============================================================
+   AIX-1 — Quiet Computational Nature (静かな知性)
+   State Field scene layers + spatial section system.
+   ============================================================ */
+
+:root {
+  --field-glow-a: rgba(105, 151, 130, 0.35);
+  --field-glow-b: rgba(225, 184, 130, 0.28);
+  --whisper: #8d938c;
+}
+
+/* Layered field host: static SVG below, canvas above, same box → no CLS. */
+.state-field-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.state-field-scene--interactive {
+  pointer-events: auto;
+}
+
+.state-field-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.state-field-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(251, 250, 246, 0.55) 0%, rgba(251, 250, 246, 0.12) 55%, transparent 78%);
+}
+
+/* Spatial narrative sections (home) */
+.aix-scene {
+  position: relative;
+  isolation: isolate;
+}
+
+.aix-scene > .container {
+  position: relative;
+  z-index: 1;
+}
+
+.aix-hero {
+  min-height: min(88svh, 780px);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(23, 59, 53, 0.07);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(225, 184, 130, 0.1), transparent 30%),
+    linear-gradient(180deg, #fffaf3 0%, #fbfaf6 55%, #f4faf7 100%);
+}
+
+.aix-kicker {
+  color: #4d7a69;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.aix-whisper {
+  color: var(--whisper);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.aix-flow {
+  display: grid;
+  gap: 0;
+  border-left: 1px solid rgba(105, 151, 130, 0.28);
+}
+
+.aix-flow-step {
+  position: relative;
+  padding: 14px 0 14px 22px;
+}
+
+.aix-flow-step::before {
+  content: "";
+  position: absolute;
+  left: -4.5px;
+  top: 22px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #173b35;
+  box-shadow: 0 0 0 4px rgba(105, 151, 130, 0.16);
+}
+
+.aix-flow-title {
+  margin: 0;
+  color: #173b35;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.aix-flow-body {
+  margin: 3px 0 0;
+  color: #6f625c;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* Intention chooser (entry selection) */
+.aix-intent {
+  display: block;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  border: none;
+  border-bottom: 1px solid rgba(23, 59, 53, 0.1);
+  background: transparent;
+  padding: 20px 8px;
+  transition: background 0.3s ease, padding-left 0.3s ease;
+}
+
+.aix-intent:hover,
+.aix-intent:focus-visible {
+  background: rgba(244, 250, 247, 0.7);
+  padding-left: 16px;
+}
+
+.aix-intent:focus-visible {
+  outline: 2px solid rgba(85, 98, 82, 0.42);
+  outline-offset: -2px;
+}
+
+.aix-intent-title {
+  margin: 0;
+  color: #22201d;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.aix-intent-body {
+  margin: 4px 0 0;
+  color: #6f625c;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.aix-intent-meta {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: #4d7a69;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Section rhythm without card walls */
+.aix-band {
+  padding: 64px 0;
+}
+
+.aix-band + .aix-band {
+  border-top: 1px solid rgba(23, 59, 53, 0.06);
+}
+
+.aix-band-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #22201d;
+  max-width: 16em;
+}
+
+.aix-band-lead {
+  margin: 14px 0 0;
+  max-width: 40rem;
+  color: #6f625c;
+  font-size: 14.5px;
+  line-height: 2;
+}
+
+.aix-signature-frame {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 253, 248, 0.9) 0%, rgba(244, 250, 247, 0.65) 60%, rgba(215, 226, 211, 0.4) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(105, 151, 130, 0.18),
+    0 24px 60px rgba(23, 59, 53, 0.1);
+}
+
+@media (max-width: 768px) {
+  .aix-band {
+    padding: 44px 0;
+  }
+
+  .aix-hero {
+    min-height: min(86svh, 660px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aix-intent {
+    transition: none;
+  }
+}
+
+/* Test flow (AIX-1): one coherent space; question entrance is CSS-only and
+   fully optional — content is present and readable without it. */
+.aix-question-enter {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aix-question-enter {
+    animation: aixQuestionEnter 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+}
+
+@keyframes aixQuestionEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aix-quiz-surface {
+  position: relative;
+  border-radius: 1.3rem;
+  background: rgba(255, 253, 249, 0.82);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 1px 0 rgba(23, 59, 53, 0.05);
+}
+
 .signal-orb {
   display: inline-block;
   width: 7px;
