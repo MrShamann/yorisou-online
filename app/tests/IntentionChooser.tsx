@@ -70,9 +70,9 @@ export default function IntentionChooser({ groups }: { groups: IntentionGroup[] 
                 <div key={item.key} className="border-l-2 border-[rgba(105,151,130,0.4)] py-3 pl-4">
                   <p className="text-[15px] font-bold leading-7 text-[#173B35]">{item.title}</p>
                   <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">{item.description}</p>
-                  <p className="mt-1 text-[11px] font-semibold tracking-[0.06em] text-[#8A8078]">{item.meta}</p>
+                  <p className="mt-1 text-[11px] font-semibold tracking-[0.06em] text-[#756B63]">{item.meta}</p>
                   {item.boundaryNote ? (
-                    <p className="mt-1.5 text-[12px] leading-6 text-[#8A7E78]">{item.boundaryNote}</p>
+                    <p className="mt-1.5 text-[12px] leading-6 text-[#756B63]">{item.boundaryNote}</p>
                   ) : null}
                   <Link
                     href={item.href}

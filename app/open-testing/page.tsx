@@ -77,7 +77,7 @@ export default function OpenTestingPage() {
                 別の入口を選ぶ
               </Link>
             </div>
-            <p className="mt-4 max-w-[38rem] text-[12px] leading-7 text-[#8A8078]">
+            <p className="mt-4 max-w-[38rem] text-[12px] leading-7 text-[#756B63]">
               結果をあとで見返したい場合は、途中でLINE導線も選べます。これは医療や心理診断ではなく、今の状態を見直し、レポートやおすすめ、次の入口につなげるための公開テストです。
             </p>
           </div>

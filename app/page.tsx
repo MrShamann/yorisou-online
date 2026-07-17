@@ -70,7 +70,7 @@ export default function HomePage() {
                 入口をえらぶ
               </Link>
             </div>
-            <p className="mt-4 text-[12px] leading-6 text-[#8A8078]">
+            <p className="mt-4 text-[12px] leading-6 text-[#756B63]">
               診断や占いではありません · 120問 · 無料 · ログインなし
             </p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
@@ -199,11 +199,11 @@ export default function HomePage() {
               >
                 <p className="text-[15px] font-bold leading-7 text-[#173B35]">{layer.title}</p>
                 <p className="mt-2 text-[13px] leading-7 text-[#6F625C]">{layer.body}</p>
-                <p className="mt-2 text-[11px] font-semibold tracking-[0.08em] text-[#8A8078]">準備中 · 関心の段階</p>
+                <p className="mt-2 text-[11px] font-semibold tracking-[0.08em] text-[#756B63]">準備中 · 関心の段階</p>
               </div>
             ))}
           </div>
-          <p className="mt-6 max-w-[44rem] text-[12px] leading-6 text-[#8A7E78]">
+          <p className="mt-6 max-w-[44rem] text-[12px] leading-6 text-[#756B63]">
             言葉にしにくい揺れも、大きな悩みになる前の関心も、Yorisouでは今を整理する入口として受け止めます。
             <Link href="/contact?topic=open-testing" className="ml-2 font-semibold text-[#315F50] hover:underline">
               感想や関心を送る →

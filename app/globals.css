@@ -730,7 +730,7 @@ main {
 :root {
   --field-glow-a: rgba(105, 151, 130, 0.35);
   --field-glow-b: rgba(225, 184, 130, 0.28);
-  --whisper: #8d938c;
+  --whisper: #667066;
 }
 
 /* Layered field host: static SVG below, canvas above, same box → no CLS.
