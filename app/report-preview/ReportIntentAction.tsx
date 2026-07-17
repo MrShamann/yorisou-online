@@ -62,8 +62,8 @@ export default function ReportIntentAction({
   };
 
   return (
-    <div className="rounded-[1.35rem] border border-[var(--hair)] bg-[rgba(20,38,30,0.5)]5 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
-      <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">あとで詳しく読みたいとき</p>
+    <div className="rounded-[1.35rem] border border-[var(--hair)] bg-[rgba(20,38,30,0.5)] p-5 shadow-[0_20px_42px_rgba(4,20,14,0.35)] space-y-4 md:p-6">
+      <p className="text-[11px] font-semibold tracking-[0.13em] text-[#8aa298]">あとで詳しく読みたいとき</p>
 
       <button
         type="button"
@@ -108,7 +108,7 @@ export default function ReportIntentAction({
         ) : null}
         <Link
           href={backHref}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[var(--hair)] bg-[rgba(20,38,30,0.5)]80 px-5 text-[13px] font-medium text-[#aec3b7] transition hover:bg-[rgba(20,38,30,0.5)]"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[var(--hair)] bg-[rgba(20,38,30,0.35)] px-5 text-[13px] font-medium text-[#aec3b7] transition hover:bg-[rgba(20,38,30,0.6)]"
           onClick={() => {
             void trackDteEvent({
               event: "not_now_clicked",
