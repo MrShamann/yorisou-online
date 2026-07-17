@@ -8,6 +8,13 @@
 // - device pixel ratio capped at 2; ~30fps on coarse-pointer devices;
 // - node budget reduced on mobile and low-power devices;
 // - pointer adds a gentle local attraction (delight only, never required).
+//   The scene host is pointer-events: none so UI above stays fully clickable;
+//   pointer position is therefore read from a window-level listener and
+//   normalized to the canvas bounds. Fine-pointer devices only — touch
+//   devices never pay for it. While attraction is live the canvas exposes
+//   data-pointer="active" (observable in tests). When the canvas activates,
+//   the parent scene gets data-canvas-active so the static SVG layer fades
+//   out (no duplicate visual density).
 
 import { useEffect, useRef, useState } from "react";
 
@@ -93,6 +100,15 @@ export default function StateField({ params, formation = 1, className }: Props) 
       currentFormation += (formationTarget.current - currentFormation) * 0.04;
       pointer.strength *= 0.96;
 
+      const pointerLive = pointer.strength > 0.05 && pointer.x >= 0;
+      if (pointerLive !== (canvas.dataset.pointer === "active")) {
+        if (pointerLive) {
+          canvas.dataset.pointer = "active";
+        } else {
+          delete canvas.dataset.pointer;
+        }
+      }
+
       const points = fieldPointsAt(nodes, params.seed, t, currentFormation);
 
       // gentle pointer attraction
@@ -154,27 +170,42 @@ export default function StateField({ params, formation = 1, className }: Props) 
       setRunning(!document.hidden && inView);
     });
 
+    // Window-level pointer tracking: the scene host is pointer-events: none
+    // (links, buttons, scrolling and text selection above it are untouched),
+    // so movement is observed globally and mapped into canvas space. Only
+    // positions inside (or just beside) the canvas box feed the attraction.
     const onPointer = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
-      pointer.x = (event.clientX - rect.left) / Math.max(1, rect.width);
-      pointer.y = (event.clientY - rect.top) / Math.max(1, rect.height);
+      if (rect.width < 1 || rect.height < 1) return;
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+      if (x < -0.05 || x > 1.05 || y < -0.05 || y > 1.05) return;
+      pointer.x = x;
+      pointer.y = y;
       pointer.strength = 1;
     };
+    const finePointer = !mobile;
 
     resize();
     window.addEventListener("resize", resize);
     document.addEventListener("visibilitychange", onVisibility);
-    canvas.addEventListener("pointermove", onPointer, { passive: true });
+    if (finePointer) {
+      window.addEventListener("pointermove", onPointer, { passive: true });
+    }
     observer.observe(canvas);
     setRunning(true);
     setActive(true);
+    canvas.parentElement?.setAttribute("data-canvas-active", "true");
 
     return () => {
       setRunning(false);
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", onVisibility);
-      canvas.removeEventListener("pointermove", onPointer);
+      if (finePointer) {
+        window.removeEventListener("pointermove", onPointer);
+      }
       observer.disconnect();
+      canvas.parentElement?.removeAttribute("data-canvas-active");
     };
     // params identity is stable per surface; formation flows through a ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps

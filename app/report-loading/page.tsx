@@ -8,6 +8,7 @@ import { PUBLIC_RESULT_LOADING_LINE } from "../check-in/resultCompatibility";
 import { MvpCard, MvpPill } from "../components/MvpSurface";
 import { currentStateCheckV1 } from "../check-in/currentStateCheckV1";
 import StateFieldCanvasLazy from "../components/state-field/StateFieldCanvasLazy";
+import StateFieldStatic from "../components/state-field/StateFieldStatic";
 import { signatureParams } from "../components/state-field/seed";
 
 const LOADING_STEPS = [
@@ -75,6 +76,10 @@ export default function ReportLoadingPage() {
   return (
     <main className="relative min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.99),_rgba(247,244,238,0.98)_42%,_rgba(240,244,236,0.98)_100%)] text-[var(--text)]">
       <div className="state-field-scene !fixed" aria-hidden="true">
+        {/* AIX-1A: static frame first (SSR/no-JS/reduced-motion/canvas-
+            unavailable); fades out via data-canvas-active once the canvas
+            takes over, so density never doubles. */}
+        <StateFieldStatic params={fieldParams} formation={0.6} className="state-field-layer" />
         <StateFieldCanvasLazy params={fieldParams} formation={fieldFormation} className="state-field-layer" />
         <div className="state-field-veil" />
       </div>

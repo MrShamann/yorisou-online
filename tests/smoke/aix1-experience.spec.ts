@@ -108,6 +108,87 @@ test.describe("AIX-1 entry + test flow behavior preservation", () => {
   });
 });
 
+test.describe("AIX-1A preview-integrity hardening", () => {
+  test("pointer movement drives real field interaction without blocking UI", async ({ page, browserName }) => {
+    test.skip(browserName !== "chromium", "pointer semantics verified on chromium");
+    const isTouch = await page.evaluate(() => window.matchMedia("(pointer: coarse)").matches);
+    test.skip(isTouch, "fine-pointer behavior only; touch devices are excluded by design");
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1200);
+    const canvas = page.locator(".state-field-scene canvas").first();
+    await expect(canvas).toHaveCount(1);
+    // move the pointer across the hero field
+    await page.mouse.move(300, 300);
+    await page.mouse.move(420, 360, { steps: 4 });
+    await expect(canvas).toHaveAttribute("data-pointer", "active", { timeout: 2000 });
+    // attraction decays back to idle when the pointer stops
+    await page.waitForTimeout(2500);
+    const idle = await canvas.getAttribute("data-pointer");
+    expect(idle).toBeNull();
+    // and the primary CTA above the field remains fully clickable
+    await page.getByRole("link", { name: "いま色テストをはじめる" }).click();
+    await expect(page).toHaveURL(/\/check-in/);
+  });
+
+  test("no duplicate density: static SVG fades out once the canvas is active", async ({ page }) => {
+    await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1400);
+    const state = await page.evaluate(() => {
+      const scene = document.querySelector(".state-field-scene");
+      const svg = scene?.querySelector("svg.state-field-layer");
+      return {
+        canvasActive: scene?.getAttribute("data-canvas-active") ?? null,
+        svgOpacity: svg ? getComputedStyle(svg).opacity : null,
+      };
+    });
+    expect(state.canvasActive).toBe("true");
+    expect(Number(state.svgOpacity)).toBeLessThanOrEqual(0.05);
+  });
+
+  test("check-in and report-loading keep a static field with JS disabled", async ({ browser }) => {
+    const ctx = await browser.newContext({ javaScriptEnabled: false });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/check-in`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("button", { name: "いま色テストをはじめる" })).toBeVisible();
+    expect(await page.locator(".state-field-scene svg circle").count()).toBeGreaterThan(5);
+    await page.goto(`${BASE}/report-loading?resultId=MS-KI`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("link", { name: "結果ページを開く" })).toBeVisible();
+    expect(await page.locator(".state-field-scene svg circle").count()).toBeGreaterThan(5);
+    await ctx.close();
+  });
+
+  test("check-in keeps the static field under reduced motion (canvas never activates)", async ({ browser }) => {
+    const ctx = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/check-in`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1000);
+    const state = await page.evaluate(() => ({
+      svgCircles: document.querySelectorAll(".state-field-scene svg circle").length,
+      canvasActive: document.querySelector(".state-field-scene")?.getAttribute("data-canvas-active") ?? null,
+      svgOpacity: (() => {
+        const svg = document.querySelector(".state-field-scene svg");
+        return svg ? getComputedStyle(svg).opacity : null;
+      })(),
+    }));
+    expect(state.svgCircles).toBeGreaterThan(5);
+    expect(state.canvasActive).toBeNull();
+    expect(Number(state.svgOpacity)).toBeGreaterThan(0.9);
+    await ctx.close();
+  });
+
+  test("marketing surfaces do not self-describe as 診断 (disclaimers excepted)", async ({ page }) => {
+    for (const route of ["/", "/tests", "/open-testing"]) {
+      await page.goto(`${BASE}${route}`, { waitUntil: "domcontentloaded" });
+      const text = await page.evaluate(() => document.body.innerText);
+      // every remaining 診断 must sit inside a negative boundary phrase
+      const occurrences = text.split("診断").length - 1;
+      const disclaimers =
+        (text.match(/診断[^。]{0,8}(?:ではありません|ではなく)|・診断・/g) ?? []).length;
+      expect(occurrences, `${route}: 診断 outside disclaimers`).toBe(disclaimers);
+    }
+  });
+});
+
 test.describe("AIX-1 engineering controls", () => {
   test("State Field pauses when the page is hidden", async ({ page }) => {
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" });

@@ -7,6 +7,7 @@ import { MvpActionLink } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { trackOpenTestingEvent } from "../components/OpenTestingTracker";
 import StateFieldCanvasLazy from "../components/state-field/StateFieldCanvasLazy";
+import StateFieldStatic from "../components/state-field/StateFieldStatic";
 import { intentionParams } from "../components/state-field/seed";
 import { buildAbsolutePublicResultUrl, buildPublicResultHref } from "./resultCompatibility";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
@@ -266,6 +267,10 @@ export default function MiniTestFlow() {
   return (
     <main className="relative min-h-screen bg-[#FBFAF6] text-[#22201D]">
       <div className="state-field-scene !fixed" aria-hidden="true">
+        {/* AIX-1A: static frame first (SSR/no-JS/reduced-motion/canvas-
+            unavailable); fades out via data-canvas-active once the canvas
+            takes over, so density never doubles. */}
+        <StateFieldStatic params={fieldParams} formation={0.3} className="state-field-layer" />
         <StateFieldCanvasLazy params={fieldParams} formation={fieldFormation} className="state-field-layer" />
         <div className="state-field-veil" />
       </div>

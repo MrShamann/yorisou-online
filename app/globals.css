@@ -733,16 +733,14 @@ main {
   --whisper: #8d938c;
 }
 
-/* Layered field host: static SVG below, canvas above, same box → no CLS. */
+/* Layered field host: static SVG below, canvas above, same box → no CLS.
+   Pointer input for the field is observed at window level (StateField.tsx),
+   so the scene never intercepts clicks, scrolling, or text selection. */
 .state-field-scene {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-}
-
-.state-field-scene--interactive {
-  pointer-events: auto;
 }
 
 .state-field-layer {
@@ -751,6 +749,24 @@ main {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* When the animated canvas takes over (data-canvas-active set by
+   StateField.tsx), fade the static SVG frame out so the field never renders
+   at double density. Reduced-motion / no-JS / canvas-unavailable never set
+   the attribute, so the static frame remains. */
+.state-field-scene > svg.state-field-layer {
+  transition: opacity 900ms ease;
+}
+
+.state-field-scene[data-canvas-active="true"] > svg.state-field-layer {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state-field-scene > svg.state-field-layer {
+    transition: none;
+  }
 }
 
 .state-field-veil {
