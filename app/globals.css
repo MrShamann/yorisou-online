@@ -1021,3 +1021,326 @@ main {
     opacity: 0.55;
   }
 }
+
+/* ============================================================================
+   AIX-2 — Living Intelligence (生きた知性)
+   Dark, dimensional, warm. Scoped under .aix2 so out-of-scope light pages are
+   untouched. One theme, one accent (jade), one radius scale, zero em-dashes.
+   ============================================================================ */
+
+.aix2 {
+  --ink: #0a1310;            /* warm near-black green canvas */
+  --ink-2: #0e1a15;         /* elevated surface */
+  --ink-3: #14261e;         /* card surface */
+  --hair: rgba(126, 224, 182, 0.13);
+  --hair-2: rgba(126, 224, 182, 0.22);
+  --tx: #eef4ef;            /* primary text (very high contrast) */
+  --tx-mut: #aec3b7;        /* muted text (verified >= 4.5:1 in battery) */
+  --tx-faint: #8aa298;      /* faint: large/decorative only */
+  --jade: #2fc596;          /* interactive fill */
+  --jade-bright: #5ce6b4;   /* jade text/links on dark */
+  --jade-ink: #04140e;      /* text on jade fill */
+  --amber: #ecb765;
+  --coral: #f2896c;
+  --r: 18px;                /* single radius scale */
+  --r-sm: 12px;
+  --r-pill: 999px;
+
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  color: var(--tx);
+  background:
+    radial-gradient(140% 90% at 15% -10%, rgba(47, 197, 150, 0.14), transparent 55%),
+    radial-gradient(120% 80% at 92% 0%, rgba(236, 183, 101, 0.09), transparent 50%),
+    linear-gradient(180deg, #0b1712 0%, #0a1310 46%, #07100c 100%),
+    var(--ink);
+  color-scheme: dark;
+}
+
+/* ---- depth-field scene layers (shared) ---- */
+.depth-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.depth-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.depth-scene > svg.depth-layer { transition: opacity 1200ms ease; }
+.depth-scene[data-canvas-active="true"] > svg.depth-layer { opacity: 0; }
+.depth-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 50% 44%, rgba(8, 16, 12, 0.62) 0%, rgba(8, 16, 12, 0.2) 46%, transparent 74%),
+    linear-gradient(180deg, transparent 40%, rgba(8, 16, 12, 0.72) 100%);
+}
+
+/* ---- typography ---- */
+.aix2-eyebrow {
+  color: var(--jade-bright);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.aix2-display {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  color: var(--tx);
+  text-wrap: balance;
+}
+.aix2-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+.aix2-lead {
+  color: var(--tx-mut);
+  font-size: 16px;
+  line-height: 1.85;
+  max-width: 40rem;
+}
+.aix2-mut { color: var(--tx-mut); }
+.aix2-faint { color: var(--tx-faint); }
+
+/* ---- surfaces ---- */
+.aix2-panel {
+  border: 1px solid var(--hair);
+  background: linear-gradient(180deg, rgba(20, 38, 30, 0.72) 0%, rgba(14, 26, 21, 0.72) 100%);
+  border-radius: var(--r);
+  backdrop-filter: blur(8px);
+}
+.aix2-glass {
+  border: 1px solid var(--hair-2);
+  background: rgba(14, 26, 21, 0.55);
+  border-radius: var(--r);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(126, 224, 182, 0.1), 0 24px 60px rgba(4, 12, 8, 0.5);
+}
+.aix2-hair-top { border-top: 1px solid var(--hair); }
+
+/* ---- buttons (one radius: pill; contrast verified) ---- */
+.aix2-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 26px;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+  will-change: transform;
+}
+.aix2-btn-primary {
+  background: linear-gradient(180deg, #43d6a4 0%, var(--jade) 100%);
+  color: var(--jade-ink);
+  box-shadow: 0 10px 30px rgba(47, 197, 150, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.aix2-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(47, 197, 150, 0.36); }
+.aix2-btn-primary:active { transform: translateY(0) scale(0.985); }
+.aix2-btn-ghost {
+  background: rgba(126, 224, 182, 0.06);
+  color: var(--tx);
+  border-color: var(--hair-2);
+}
+.aix2-btn-ghost:hover { transform: translateY(-2px); background: rgba(126, 224, 182, 0.11); }
+.aix2-btn:focus-visible { outline: 2px solid var(--jade-bright); outline-offset: 3px; }
+
+.aix2-link {
+  color: var(--jade-bright);
+  font-weight: 600;
+  text-decoration: none;
+}
+.aix2-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* ---- section rhythm ---- */
+.aix2-band { position: relative; padding: 88px 0; }
+.aix2-band--tight { padding: 56px 0; }
+.aix2-band + .aix2-band { border-top: 1px solid var(--hair); }
+.aix2-band-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.16;
+  font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+  color: var(--tx);
+  max-width: 15em;
+}
+
+/* ---- hero ---- */
+.aix2-hero {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+/* text-side scrim: darkens the left/lower area so hero copy stays high
+   contrast over the brightest part of the depth field */
+.aix2-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7, 14, 11, 0.9) 0%, rgba(7, 14, 11, 0.66) 34%, rgba(7, 14, 11, 0.12) 62%, transparent 80%),
+    linear-gradient(180deg, rgba(7, 14, 11, 0.4) 0%, transparent 30%, rgba(7, 14, 11, 0.55) 100%);
+}
+.aix2-hero-title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+  font-size: clamp(2.7rem, 6.6vw, 4.9rem);
+  color: var(--tx);
+  text-shadow: 0 2px 30px rgba(4, 10, 7, 0.5);
+}
+.aix2-hero-title .em {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-style: normal;
+  color: var(--jade-bright);
+  letter-spacing: -0.02em;
+}
+
+/* ---- product journey (spatial diagram, not a paragraph) ---- */
+.aix2-journey {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.aix2-journey-node {
+  position: relative;
+  border: 1px solid var(--hair);
+  background: linear-gradient(180deg, rgba(20, 38, 30, 0.6), rgba(12, 22, 18, 0.6));
+  border-radius: var(--r);
+  padding: 16px 14px 18px;
+  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.aix2-journey-node:hover {
+  transform: translateY(-4px);
+  border-color: var(--hair-2);
+  box-shadow: 0 18px 44px rgba(4, 12, 8, 0.5);
+}
+.aix2-journey-node[data-accent="jade"] { box-shadow: inset 0 0 0 1px rgba(47, 197, 150, 0.28); }
+.aix2-journey-step {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--jade-bright);
+}
+.aix2-journey-title { font-size: 15px; font-weight: 700; color: var(--tx); line-height: 1.5; }
+.aix2-journey-body { margin-top: 5px; font-size: 12.5px; line-height: 1.7; color: var(--tx-mut); }
+
+@media (max-width: 900px) {
+  .aix2-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .aix2-journey { grid-template-columns: minmax(0, 1fr); }
+  .aix2-band { padding: 60px 0; }
+}
+
+/* ---- signature frame (result) ---- */
+.aix2-sig-frame {
+  position: relative;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: radial-gradient(circle at 50% 42%, rgba(20, 38, 30, 0.9), rgba(8, 16, 12, 0.96));
+  box-shadow: inset 0 0 0 1px var(--hair-2), 0 30px 70px rgba(4, 12, 8, 0.55);
+}
+
+/* ---- intention chooser (entry) ---- */
+.aix2-intent {
+  display: block;
+  width: 100%;
+  text-align: left;
+  text-decoration: none;
+  border: none;
+  border-bottom: 1px solid var(--hair);
+  background: transparent;
+  padding: 22px 10px;
+  transition: background 0.3s ease, padding-left 0.3s ease;
+  color: var(--tx);
+  cursor: pointer;
+}
+.aix2-intent:hover, .aix2-intent:focus-visible {
+  background: rgba(126, 224, 182, 0.05);
+  padding-left: 18px;
+}
+.aix2-intent:focus-visible { outline: 2px solid var(--jade-bright); outline-offset: -2px; }
+.aix2-intent-title { font-size: 18px; font-weight: 700; color: var(--tx); line-height: 1.5; }
+.aix2-intent-body { margin-top: 5px; font-size: 13.5px; line-height: 1.75; color: var(--tx-mut); }
+.aix2-intent-cue { margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--jade-bright); }
+
+/* ---- quiz surface (test flow) ---- */
+.aix2-quiz {
+  position: relative;
+  border-radius: var(--r);
+  border: 1px solid var(--hair);
+  background: rgba(12, 22, 18, 0.66);
+  backdrop-filter: blur(10px);
+}
+.aix2-answer {
+  width: 100%;
+  text-align: left;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--hair);
+  background: rgba(20, 38, 30, 0.5);
+  color: var(--tx);
+  padding: 15px 16px;
+  transition: transform 0.16s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.aix2-answer:hover { transform: translateY(-1px); border-color: var(--hair-2); background: rgba(24, 44, 35, 0.66); }
+.aix2-answer[data-selected="true"] {
+  border-color: var(--jade);
+  background: rgba(47, 197, 150, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(47, 197, 150, 0.4);
+}
+.aix2-answer:focus-visible { outline: 2px solid var(--jade-bright); outline-offset: 2px; }
+
+/* ---- progress ---- */
+.aix2-progress-track { height: 3px; border-radius: 999px; background: rgba(126, 224, 182, 0.12); overflow: hidden; }
+.aix2-progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--jade), var(--jade-bright)); transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* ---- header/footer dark tone (shared shell on aix2 routes) ---- */
+.aix2-shell-header {
+  background: linear-gradient(180deg, rgba(8, 16, 12, 0.86) 0%, rgba(8, 16, 12, 0.5) 100%);
+  border-bottom: 1px solid var(--hair);
+  backdrop-filter: blur(14px);
+}
+
+/* ---- motion: entrance (gated) ---- */
+.aix2-rise { opacity: 0; transform: translateY(18px); }
+@media (prefers-reduced-motion: no-preference) {
+  .aix2-in .aix2-rise {
+    animation: aix2Rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: var(--d, 0ms);
+  }
+}
+@keyframes aix2Rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aix2-rise { opacity: 1; transform: none; }
+  .depth-scene > svg.depth-layer { transition: none; }
+  .aix2-btn, .aix2-journey-node, .aix2-intent, .aix2-answer { transition: none; }
+}

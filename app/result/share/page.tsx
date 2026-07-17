@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { MvpActionLink, MvpPill } from "../../components/MvpSurface";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../../check-in/resultCompatibility";
-import { StateSignatureStatic } from "../../components/state-field/StateSignature";
+import { DepthSignatureStatic } from "../../components/depth-field/DepthSignature";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -79,10 +78,10 @@ export default async function ResultSharePage({
                 border: "1px solid rgba(255,255,255,0.14)",
               }}
             >
-              <StateSignatureStatic
+              <DepthSignatureStatic
                 context={{ resultId, overlayId, confidenceBand }}
                 className="h-full w-full"
-                onDark
+
               />
             </div>
             <h1
@@ -150,13 +149,13 @@ export default async function ResultSharePage({
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,20,19,0.98)_0%,_rgba(28,40,36,0.96)_26%,_rgba(243,246,239,1)_100%)] px-4 py-6 sm:py-8">
+    <main className="aix2 min-h-screen px-4 py-6 sm:py-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[42rem] items-center">
         <div className="w-full space-y-4">
           <div className="flex justify-center">
             <div className="flex flex-wrap justify-center gap-2">
-              <MvpPill>{compatibility.brandedTestName}</MvpPill>
-              <MvpPill>シェア用</MvpPill>
+              <span className="rounded-full border border-[var(--hair-2)] bg-[rgba(126,224,182,0.07)] px-3 py-1.5 text-[11px] text-[color:var(--jade-bright)]">{compatibility.brandedTestName}</span>
+              <span className="rounded-full border border-[var(--hair-2)] bg-[rgba(126,224,182,0.07)] px-3 py-1.5 text-[11px] aix2-mut">シェア用</span>
             </div>
           </div>
 
@@ -181,10 +180,10 @@ export default async function ResultSharePage({
                   border: "1px solid rgba(255,255,255,0.14)",
                 }}
               >
-                <StateSignatureStatic
+                <DepthSignatureStatic
                   context={{ resultId, overlayId, confidenceBand }}
                   className="h-full w-full"
-                  onDark
+
                 />
               </div>
               <p
@@ -240,19 +239,13 @@ export default async function ResultSharePage({
             <p className="text-[12px] leading-6 text-[rgba(255,255,255,0.64)]">
               そのまま保存したり、スクリーンショットしてシェアしやすい形にしています。
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <MvpActionLink
-                href={`${resultHref}${resultHref.includes("?") ? "&" : "?"}story=1`}
-                label="ストーリーズ用に開く"
-                tone="primary"
-                className="rounded-full"
-              />
-              <MvpActionLink
-                href={resultHref}
-                label="結果ページに戻る"
-                tone="ghost"
-                className="rounded-full !text-white"
-              />
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Link href={`${resultHref}${resultHref.includes("?") ? "&" : "?"}story=1`} className="aix2-btn aix2-btn-primary">
+                ストーリーズ用に開く
+              </Link>
+              <Link href={resultHref} className="aix2-btn aix2-btn-ghost">
+                結果ページに戻る
+              </Link>
             </div>
           </div>
         </div>

@@ -5,6 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { BrandLockup } from "./brand/BrandMark";
+
+// AIX-2 routes render the shared shell in the dark "Living Intelligence" tone.
+const AIX2_DARK_ROUTES = new Set(["/", "/tests", "/open-testing"]);
+
 const primaryNavJa = [
   { href: "/open-testing", label: "はじめる" },
   { href: "/tests", label: "チェック" },
@@ -70,6 +75,7 @@ export default function SiteHeader() {
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
   const languageHref = isEn ? toJapanesePath(pathname) : toEnglishPath(pathname);
+  const dark = AIX2_DARK_ROUTES.has(normalizedCurrent);
 
   function localizedHref(path: string) {
     if (!isEn || path.startsWith("/en")) return path;
@@ -85,33 +91,47 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[rgba(23,59,53,0.08)] bg-[rgba(255,253,248,0.9)] backdrop-blur-xl">
+    <header
+      className={`sticky top-0 z-40 backdrop-blur-xl ${
+        dark
+          ? "aix2-shell-header text-[#eef4ef]"
+          : "border-b border-[rgba(23,59,53,0.08)] bg-[rgba(255,253,248,0.9)]"
+      }`}
+    >
       <div className="container">
         <div className="flex items-center justify-between gap-4 py-4">
-          <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline">
-            <Image
-              src="/images/brand/tsuru-logo.png"
-              alt="YORISOU"
-              width={132}
-              height={132}
-              priority
-              className="h-auto w-[98px] object-contain md:w-[114px]"
-            />
-            <div className="min-w-0">
-              <div className="display-serif text-[1.32rem] font-semibold tracking-[0.08em] text-[var(--text)] md:text-[1.54rem]">
-                YORISOU
-              </div>
-              <div className="mt-0.5 hidden text-[12px] leading-5 text-[var(--muted)] xl:block">
-                {isEn ? "Understand your current state and find a fitting next step." : "今の状態を理解し、次の選択肢につなげるプラットフォーム。"}
-              </div>
-            </div>
+          <Link href={homeHref} className="flex min-w-0 items-center gap-3 no-underline" aria-label="YORISOU">
+            {dark ? (
+              <BrandLockup markSize={30} tone="dark" />
+            ) : (
+              <>
+                <Image
+                  src="/images/brand/tsuru-logo.png"
+                  alt="YORISOU"
+                  width={132}
+                  height={132}
+                  priority
+                  className="h-auto w-[98px] object-contain md:w-[114px]"
+                />
+                <div className="min-w-0">
+                  <div className="display-serif text-[1.32rem] font-semibold tracking-[0.08em] text-[var(--text)] md:text-[1.54rem]">
+                    YORISOU
+                  </div>
+                  <div className="mt-0.5 hidden text-[12px] leading-5 text-[var(--muted)] xl:block">
+                    {isEn ? "Understand your current state and find a fitting next step." : "今の状態を理解し、次の選択肢につなげるプラットフォーム。"}
+                  </div>
+                </div>
+              </>
+            )}
           </Link>
 
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
             aria-label={isEn ? "Menu" : "メニュー"}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(23,59,53,0.1)] bg-white/90 text-[var(--text)] md:hidden"
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-full border md:hidden ${
+              dark ? "border-[rgba(126,224,182,0.22)] bg-[rgba(126,224,182,0.08)] text-[#eef4ef]" : "border-[rgba(23,59,53,0.1)] bg-white/90 text-[var(--text)]"
+            }`}
           >
             <span className="flex flex-col gap-[3px]" aria-hidden="true">
               <span className="h-[1.5px] w-[16px] rounded-full bg-current" />
@@ -128,12 +148,19 @@ export default function SiteHeader() {
             <nav className="flex min-w-0 items-center gap-4">
               {primaryNav.slice(0, 4).map((item) => {
                 const href = localizedHref(item.href);
+                const active = isActive(item.href);
                 return (
                   <Link
                     key={href}
                     href={href}
                     className={`whitespace-nowrap text-[12px] font-semibold no-underline transition ${
-                      isActive(item.href) ? "text-[#173B35]" : "text-[var(--text)] hover:text-[#173B35]"
+                      dark
+                        ? active
+                          ? "text-[#5ce6b4]"
+                          : "text-[#c8d8ce] hover:text-[#5ce6b4]"
+                        : active
+                          ? "text-[#173B35]"
+                          : "text-[var(--text)] hover:text-[#173B35]"
                     }`}
                   >
                     {item.label}
@@ -143,12 +170,14 @@ export default function SiteHeader() {
             </nav>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 border-l border-[rgba(23,59,53,0.1)] pl-4">
+              <div className={`flex items-center gap-3 border-l pl-4 ${dark ? "border-[rgba(126,224,182,0.2)]" : "border-[rgba(23,59,53,0.1)]"}`}>
                 {secondaryNav.map((item) => (
                   <Link
                     key={item.href}
                     href={localizedHref(item.href)}
-                    className="whitespace-nowrap text-[12px] text-[var(--muted)] no-underline transition hover:text-[#173B35]"
+                    className={`whitespace-nowrap text-[12px] no-underline transition ${
+                      dark ? "text-[#9db3a8] hover:text-[#5ce6b4]" : "text-[var(--muted)] hover:text-[#173B35]"
+                    }`}
                   >
                     {item.label}
                   </Link>
@@ -157,7 +186,11 @@ export default function SiteHeader() {
 
               <Link
                 href={languageHref}
-                className="inline-flex min-h-[40px] items-center rounded-full border border-[rgba(23,59,53,0.1)] bg-white/92 px-4 text-[12px] font-semibold text-[#315F50] no-underline"
+                className={`inline-flex min-h-[40px] items-center rounded-full border px-4 text-[12px] font-semibold no-underline ${
+                  dark
+                    ? "border-[rgba(126,224,182,0.25)] bg-[rgba(126,224,182,0.08)] text-[#5ce6b4]"
+                    : "border-[rgba(23,59,53,0.1)] bg-white/92 text-[#315F50]"
+                }`}
               >
                 {isEn ? "日本語" : "EN"}
               </Link>
@@ -167,19 +200,30 @@ export default function SiteHeader() {
 
         {open ? (
           <div className="md:hidden">
-            <div className="surface-panel mb-4 space-y-4 !rounded-[22px] !p-4">
+            <div
+              className={`mb-4 space-y-4 rounded-[22px] p-4 ${
+                dark
+                  ? "border border-[rgba(126,224,182,0.18)] bg-[rgba(10,19,16,0.96)]"
+                  : "surface-panel"
+              }`}
+            >
               <div className="grid gap-2">
                 {primaryNav.map((item) => {
                   const href = localizedHref(item.href);
+                  const active = isActive(item.href);
                   return (
                     <Link
                       key={href}
                       href={href}
                       onClick={() => setOpen(false)}
                       className={`rounded-[16px] px-4 py-3 text-[14px] font-semibold no-underline ${
-                        isActive(item.href)
-                          ? "bg-[#F3FAF6] text-[#173B35]"
-                          : "bg-white text-[var(--text)]"
+                        dark
+                          ? active
+                            ? "bg-[rgba(47,197,150,0.14)] text-[#5ce6b4]"
+                            : "bg-[rgba(126,224,182,0.05)] text-[#eef4ef]"
+                          : active
+                            ? "bg-[#F3FAF6] text-[#173B35]"
+                            : "bg-white text-[var(--text)]"
                       }`}
                     >
                       {item.label}
@@ -188,13 +232,13 @@ export default function SiteHeader() {
                 })}
               </div>
 
-              <div className="surface-list text-[13px]">
+              <div className={dark ? "grid gap-3 border-t border-[rgba(126,224,182,0.14)] pt-4 text-[13px]" : "surface-list text-[13px]"}>
                 {secondaryNav.map((item) => (
                   <Link
                     key={item.href}
                     href={localizedHref(item.href)}
                     onClick={() => setOpen(false)}
-                    className="text-[var(--muted)] no-underline"
+                    className={`no-underline ${dark ? "text-[#9db3a8]" : "text-[var(--muted)]"}`}
                   >
                     {item.label}
                   </Link>
@@ -204,7 +248,9 @@ export default function SiteHeader() {
               <Link
                 href={languageHref}
                 onClick={() => setOpen(false)}
-                className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.1)] bg-white px-4 text-[13px] font-semibold text-[#315F50] no-underline"
+                className={`inline-flex min-h-[44px] items-center justify-center rounded-full border px-4 text-[13px] font-semibold no-underline ${
+                  dark ? "border-[rgba(126,224,182,0.25)] bg-[rgba(126,224,182,0.08)] text-[#5ce6b4]" : "border-[rgba(23,59,53,0.1)] bg-white text-[#315F50]"
+                }`}
               >
                 {isEn ? "日本語" : "EN"}
               </Link>

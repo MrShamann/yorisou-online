@@ -62,28 +62,28 @@ export default function ReportIntentAction({
   };
 
   return (
-    <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/95 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
+    <div className="rounded-[1.35rem] border border-[var(--hair)] bg-[rgba(20,38,30,0.5)]5 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
       <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">あとで詳しく読みたいとき</p>
 
       <button
         type="button"
         onClick={handleExpressIntent}
         data-report-intent="express-interest"
-        className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 py-3 text-[15px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
+        className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full aix2-btn aix2-btn-primary !min-h-[48px] !text-[14px]"
       >
         {hasIntent ? "あとで読みたいメモを残しました" : "あとで詳しく読む"}
       </button>
 
       {hasIntent ? (
-        <div className="rounded-[1rem] border border-[rgba(105,151,130,0.24)] bg-[#F4FAF7] px-4 py-3">
-          <p className="text-[14px] font-semibold leading-7 text-[#315F50]">あとで見返したい気持ちを残しました</p>
-          <p className="mt-0.5 text-[12px] leading-6 text-[#315F50]">
+        <div className="rounded-[1rem] border border-[var(--hair-2)] bg-[rgba(47,197,150,0.08)] px-4 py-3">
+          <p className="text-[14px] font-semibold leading-7 text-[#5ce6b4]">あとで見返したい気持ちを残しました</p>
+          <p className="mt-0.5 text-[12px] leading-6 text-[#5ce6b4]">
             記録はこの端末のブラウザ内だけに残ります。軽いメモとして使えます。
           </p>
         </div>
       ) : (
-        <div className="rounded-[0.95rem] border border-[rgba(23,59,53,0.08)] bg-[#F4FAF7] px-4 py-3">
-          <p className="text-[12px] leading-6 text-[#6F625C]">
+        <div className="rounded-[0.95rem] border border-[var(--hair)] bg-[rgba(47,197,150,0.08)] px-4 py-3">
+          <p className="text-[12px] leading-6 text-[#aec3b7]">
             この場で詳しい本文は開きません。あとで見返したい気持ちだけを、この端末に静かに残します。
           </p>
         </div>
@@ -93,7 +93,7 @@ export default function ReportIntentAction({
         {secondaryHref && secondaryLabel ? (
           <Link
             href={secondaryHref}
-            className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(105,151,130,0.34)] bg-[#EAF7F1] px-5 text-[13px] font-semibold text-[#315F50] transition hover:-translate-y-0.5 hover:bg-[#ddf0e8]"
+            className="aix2-btn aix2-btn-ghost !min-h-[44px] !px-5 !text-[13px]"
             onClick={() => {
               void trackDteEvent({
                 event: "report_preview_secondary_opened",
@@ -108,7 +108,7 @@ export default function ReportIntentAction({
         ) : null}
         <Link
           href={backHref}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.12)] bg-white/80 px-5 text-[13px] font-medium text-[#6F625C] transition hover:bg-white"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[var(--hair)] bg-[rgba(20,38,30,0.5)]80 px-5 text-[13px] font-medium text-[#aec3b7] transition hover:bg-[rgba(20,38,30,0.5)]"
           onClick={() => {
             void trackDteEvent({
               event: "not_now_clicked",

@@ -1,19 +1,16 @@
 "use client";
 
-// AIX-1 — intention-oriented entry selection. The visitor chooses a current
-// intention (not a catalog card); the State Field quietly re-forms around the
-// choice and the matching entries are disclosed. Test eligibility and routes
-// come from the existing PHASE1 catalog and are NOT modified here.
-//
-// Progressive enhancement: native <details name="intent"> gives a keyboard-
-// accessible exclusive accordion that works with JavaScript disabled; the
-// field reaction is the only JS-dependent layer.
+// AIX-2 — intention-oriented entry selection on the dark depth system. The
+// visitor chooses a current intention (not a catalog card); the depth field
+// re-forms around the choice and the matching entries disclose. Test
+// eligibility and routes come from the existing PHASE1 catalog and are NOT
+// modified here. Native <details> keeps it keyboard- and no-JS-accessible.
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
-import StateFieldCanvasLazy from "../components/state-field/StateFieldCanvasLazy";
-import { intentionParams, type EntryIntention } from "../components/state-field/seed";
+import DepthFieldLazy from "../components/depth-field/DepthFieldLazy";
+import { intentionDepthParams, intentionPalette, type EntryIntention } from "../components/depth-field/seed";
 
 export type EntryItem = {
   key: string;
@@ -30,19 +27,19 @@ export type IntentionGroup = {
   title: string;
   body: string;
   items: EntryItem[];
-  /** honest note when a lane is still growing */
   pendingNote?: string;
 };
 
 export default function IntentionChooser({ groups }: { groups: IntentionGroup[] }) {
   const [selected, setSelected] = useState<EntryIntention | null>(null);
-  const fieldParams = useMemo(() => intentionParams(selected, 64), [selected]);
+  const params = useMemo(() => intentionDepthParams(selected, 160), [selected]);
+  const palette = intentionPalette();
 
   return (
     <div className="relative">
-      <div className="state-field-scene" aria-hidden="true">
-        <StateFieldCanvasLazy params={fieldParams} formation={selected ? 1 : 0.7} className="state-field-layer" />
-        <div className="state-field-veil" />
+      <div className="depth-scene" aria-hidden="true">
+        <DepthFieldLazy params={params} palette={palette} formation={selected ? 1 : 0.72} className="depth-layer" />
+        <div className="depth-veil" />
       </div>
 
       <div className="relative z-[1]">
@@ -51,43 +48,33 @@ export default function IntentionChooser({ groups }: { groups: IntentionGroup[] 
             key={group.intention}
             name="yorisou-intent"
             onToggle={(event) => {
-              if ((event.target as HTMLDetailsElement).open) {
-                setSelected(group.intention);
-              } else if (selected === group.intention) {
-                setSelected(null);
-              }
+              if ((event.target as HTMLDetailsElement).open) setSelected(group.intention);
+              else if (selected === group.intention) setSelected(null);
             }}
           >
-            <summary className="aix-intent cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-              <p className="aix-intent-title">{group.title}</p>
-              <p className="aix-intent-body">{group.body}</p>
-              <span className="aix-intent-meta">
-                <span>この気持ちから入る →</span>
-              </span>
+            <summary className="aix2-intent cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <p className="aix2-intent-title">{group.title}</p>
+              <p className="aix2-intent-body">{group.body}</p>
+              <span className="aix2-intent-cue">この気持ちから入る →</span>
             </summary>
-            <div className="border-b border-[rgba(23,59,53,0.1)] bg-[rgba(255,253,248,0.66)] px-2 py-4 sm:px-4">
+            <div className="border-b border-[var(--hair)] bg-[rgba(10,19,16,0.55)] px-2 py-4 sm:px-4">
               {group.items.map((item) => (
-                <div key={item.key} className="border-l-2 border-[rgba(105,151,130,0.4)] py-3 pl-4">
-                  <p className="text-[15px] font-bold leading-7 text-[#173B35]">{item.title}</p>
-                  <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">{item.description}</p>
-                  <p className="mt-1 text-[11px] font-semibold tracking-[0.06em] text-[#756B63]">{item.meta}</p>
+                <div key={item.key} className="border-l-2 border-[var(--hair-2)] py-3 pl-4">
+                  <p className="text-[15px] font-bold leading-7 text-[color:var(--tx)]">{item.title}</p>
+                  <p className="mt-1 text-[13px] leading-7 aix2-mut">{item.description}</p>
+                  <p className="mt-1 text-[11px] font-semibold tracking-[0.06em] aix2-faint">{item.meta}</p>
                   {item.boundaryNote ? (
-                    <p className="mt-1.5 text-[12px] leading-6 text-[#756B63]">{item.boundaryNote}</p>
+                    <p className="mt-1.5 text-[12px] leading-6 aix2-faint">{item.boundaryNote}</p>
                   ) : null}
-                  <Link
-                    href={item.href}
-                    className="mt-3 inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
-                  >
+                  <Link href={item.href} className="aix2-btn aix2-btn-primary mt-3 !min-h-[46px] !text-[14px]">
                     {item.ctaLabel}
                   </Link>
                 </div>
               ))}
               {group.pendingNote ? (
-                <p className="border-l-2 border-[rgba(23,59,53,0.14)] py-3 pl-4 text-[13px] leading-7 text-[#7A7068]">
+                <p className="border-l-2 border-[var(--hair)] py-3 pl-4 text-[13px] leading-7 aix2-mut">
                   {group.pendingNote}{" "}
-                  <Link href="/contact?topic=open-testing" className="font-semibold text-[#315F50] hover:underline">
-                    関心を送る →
-                  </Link>
+                  <Link href="/contact?topic=open-testing" className="aix2-link">関心を送る →</Link>
                 </p>
               ) : null}
             </div>

@@ -104,42 +104,36 @@ export default function TestsPage() {
   ];
 
   return (
-    <main className="frontstage-page">
-      <section className="aix-scene border-b border-[rgba(23,59,53,0.07)]">
+    <main className="aix2">
+      <section className="border-b border-[var(--hair)]">
         <div className="container">
-          <div className="max-w-[42rem] py-10 md:py-14">
-            <p className="aix-kicker">入口をえらぶ</p>
-            <h1 className="display-serif mt-3 text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.8rem]">
-              いま、どんな気持ちに近いですか。
+          <div className="max-w-[44rem] py-14 md:py-20">
+            <p className="aix2-eyebrow">入口をえらぶ</p>
+            <h1 className="aix2-serif mt-4 text-[2.3rem] font-semibold leading-[1.18] text-[color:var(--tx)] md:text-[3.1rem]">
+              いま、どんな気持ちに近い？
             </h1>
-            <p className="aix-band-lead">
+            <p className="aix2-lead mt-5">
               テストの一覧からではなく、今の気持ちから入口を選べます。どの入口も、医療・診断・運命判断ではなく、今の状態や関心を見直すためのリフレクションです。
             </p>
           </div>
         </div>
       </section>
 
-      <section className="container py-6 md:py-10">
+      <section className="container py-8 md:py-12">
         <div className="mx-auto max-w-[46rem]">
           <IntentionChooser groups={groups} />
         </div>
       </section>
 
-      <div className="container pb-10">
+      <div className="container pb-14">
         <div className="mx-auto max-w-[46rem]">
-          <p className="text-[12px] leading-7 text-[#8A7764]">
+          <p className="text-[12px] leading-7 aix2-faint">
             いずれも医療・心理診断ではありません。占いの断定、恋愛や仕事の結論、退職や収入の助言ではなく、今の状態や関心を見直すための入口です。
           </p>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-            <Link href="/open-testing" className="text-[13px] font-semibold text-[#315F50] hover:underline">
-              公開中の入口を見る
-            </Link>
-            <Link href="/line/mini-app" className="text-[13px] font-semibold text-[#315F50] hover:underline">
-              LINE入口を見る
-            </Link>
-            <Link href="/contact?topic=open-testing" className="text-[13px] font-semibold text-[#315F50] hover:underline">
-              先行テーマへの関心を送る
-            </Link>
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+            <Link href="/open-testing" className="aix2-link text-[13px]">公開中の入口を見る →</Link>
+            <Link href="/line/mini-app" className="aix2-link text-[13px]">LINE入口を見る →</Link>
+            <Link href="/contact?topic=open-testing" className="aix2-link text-[13px]">先行テーマへの関心を送る →</Link>
           </div>
         </div>
       </div>

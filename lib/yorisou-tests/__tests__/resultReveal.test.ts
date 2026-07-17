@@ -49,7 +49,11 @@ for (const f of ["app/result/reveal/RevealExperience.tsx", "app/result/reveal/Re
 // 6. Question bank / algorithm untouched: compatibility file only imported, never modified semantics here
 const pkg = JSON.parse(read("package.json"));
 assert.equal(pkg.dependencies.motion, "12.42.2", "motion pinned exact");
-assert.ok(!pkg.dependencies.three && !pkg.dependencies["@react-three/fiber"], "no 3D deps added");
+// AIX-2: Three.js is founder-authorized for the depth scenes and is pinned;
+// R3F/drei are NOT used. The /result reveal path itself uses the SERVER-
+// rendered static Depth Signature (no client WebGL in the reveal).
+assert.ok(pkg.dependencies.three && !pkg.dependencies["@react-three/fiber"] && !pkg.dependencies["@react-three/drei"], "three pinned; no R3F/drei");
+assert.ok(page.includes("DepthSignatureStatic") && !page.includes("import DepthSignature "), "result reveal uses the server-rendered static signature (no client WebGL in the reveal)");
 
 // 7. YRR-1: unrevealed stages must be inert whenever they are aria-hidden,
 // so no focusable element ever sits inside an aria-hidden subtree during
