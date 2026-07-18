@@ -206,7 +206,7 @@ main {
 }
 
 .service-kicker {
-  color: var(--muted);
+  color: var(--yr-kicker);
   font-size: 12px;
   letter-spacing: 0.08em;
 }
@@ -336,16 +336,16 @@ main {
 }
 
 .surface-panel {
-  border: 1px solid rgba(217, 208, 195, 0.6);
-  background: rgba(255, 253, 248, 0.92);
+  border: 1px solid var(--yr-hair);
+  background: var(--yr-panel);
   border-radius: 24px;
   padding: 20px;
-  box-shadow: 0 14px 30px rgba(47, 35, 33, 0.045);
+  box-shadow: 0 14px 30px rgba(9, 11, 10, 0.08);
 }
 
 .surface-panel-soft {
-  border: 1px solid rgba(23, 59, 53, 0.08);
-  background: rgba(248, 250, 246, 0.84);
+  border: 1px solid var(--yr-hair);
+  background: var(--yr-panel-soft);
   border-radius: 22px;
   padding: 18px;
 }
@@ -358,12 +358,12 @@ main {
 .surface-list {
   display: grid;
   gap: 0;
-  border-top: 1px solid rgba(217, 208, 195, 0.72);
+  border-top: 1px solid var(--yr-hair);
 }
 
 .surface-list > * {
   padding: 16px 0;
-  border-bottom: 1px solid rgba(217, 208, 195, 0.72);
+  border-bottom: 1px solid var(--yr-hair);
 }
 
 .surface-link-row {
@@ -373,7 +373,7 @@ main {
 }
 
 .surface-link-row a {
-  color: #315f50;
+  color: var(--yr-accent-text);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -384,7 +384,7 @@ main {
 }
 
 .surface-meta {
-  color: #49615b;
+  color: var(--yr-kicker);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -1313,6 +1313,91 @@ main {
   .aix2-band { padding: 60px 0; }
 }
 
+/* ---- AIX-4 hero system map: the six domains as a connected field in the
+   first-page composition (Founder Finding C). A flowing connected rail, not a
+   grid of generic cards. ---- */
+.yr-systemmap {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  padding: 22px 4px 6px;
+}
+.yr-systemmap::before {
+  content: "";
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--hair-2) 8%, rgba(95, 230, 180, 0.4) 50%, var(--hair-2) 92%, transparent);
+}
+.yr-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  text-decoration: none;
+  padding-top: 6px;
+}
+.yr-node-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid var(--hair-2);
+  background: #0c0e0d;
+  box-shadow: 0 0 0 5px rgba(12, 14, 13, 0.9);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.yr-node[data-live="true"] .yr-node-dot {
+  border-color: var(--jade-bright);
+  background: radial-gradient(circle, var(--jade-bright) 0%, var(--jade) 70%);
+  box-shadow: 0 0 0 5px rgba(12, 14, 13, 0.9), 0 0 18px rgba(92, 230, 180, 0.5);
+}
+.yr-node:hover .yr-node-dot { transform: scale(1.18); }
+.yr-node-title { font-size: 13px; font-weight: 700; color: var(--tx); line-height: 1.3; }
+.yr-node-role { font-size: 11px; color: var(--tx-mut); line-height: 1.4; }
+.yr-node-live { font-size: 10px; letter-spacing: 0.1em; color: var(--jade-bright); }
+.yr-node-soon { font-size: 10px; letter-spacing: 0.1em; color: var(--tx-faint); }
+@media (max-width: 760px) {
+  .yr-systemmap { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; }
+  .yr-systemmap::before { display: none; }
+  .yr-node { align-items: flex-start; text-align: left; }
+}
+
+/* concrete example journey rail */
+.yr-example {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.yr-example-step {
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  background: rgba(228, 240, 233, 0.03);
+  padding: 18px 16px;
+}
+.yr-example-step .n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid var(--hair-jade);
+  color: var(--jade-bright);
+  font-size: 12px;
+  font-weight: 700;
+}
+@media (max-width: 820px) {
+  .yr-example { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 460px) {
+  .yr-example { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* ---- signature frame (result) ---- */
 .aix2-sig-frame {
   position: relative;
@@ -1412,6 +1497,123 @@ main {
 .aix3-shell-editorial {
   background: rgba(255, 253, 248, 0.9);
   border-bottom: 1px solid rgba(23, 59, 53, 0.09);
+}
+
+/* ============================================================================
+   AIX-4 — semantic experience tokens (one system, intentional modes).
+   Shared product components (companion card, recommendation slot, conversion
+   community, private-save, metadata pills, continuation cards) consume ONLY
+   these tokens, so one code path renders correctly in every mode. The mode
+   wrapper sets the tokens: light is the default (editorial / LINE); .yr-focus
+   overrides to the dark Product-Focus surface. Behaviour/data/tracking/privacy
+   in those components is unchanged — only presentation moves to tokens.
+   ============================================================================ */
+:root,
+.yr-editorial,
+.yr-line {
+  --yr-surface: #fbfaf6;
+  --yr-surface-2: #f4faf7;
+  --yr-panel: rgba(255, 255, 255, 0.92);
+  --yr-panel-2: #f3faf6;
+  --yr-panel-soft: rgba(255, 255, 255, 0.7);
+  --yr-text: #2f2a28;
+  --yr-text-mut: #5f5750;
+  --yr-text-faint: #7a7068;
+  --yr-kicker: #49615b;
+  --yr-hair: rgba(23, 59, 53, 0.1);
+  --yr-hair-2: rgba(23, 59, 53, 0.16);
+  --yr-accent: #173b35;
+  --yr-accent-text: #315f50;
+  --yr-accent-ink: #ffffff;
+  --yr-accent-soft: #eaf7f1;
+  --amber: #a9732a;
+  --coral: #b8503b;
+}
+.yr-focus,
+.aix2 {
+  --yr-surface: #0c0e0d;
+  --yr-surface-2: #0f1411;
+  --yr-panel: rgba(22, 28, 25, 0.62);
+  --yr-panel-2: rgba(228, 240, 233, 0.05);
+  --yr-panel-soft: rgba(228, 240, 233, 0.03);
+  --yr-text: #eef4ef;
+  --yr-text-mut: #adc0b6;
+  --yr-text-faint: #8ba095;
+  --yr-kicker: #5ce6b4;
+  --yr-hair: rgba(228, 240, 233, 0.09);
+  --yr-hair-2: rgba(228, 240, 233, 0.17);
+  --yr-accent: #2fc596;
+  --yr-accent-text: #5ce6b4;
+  --yr-accent-ink: #04140e;
+  --yr-accent-soft: rgba(47, 197, 150, 0.12);
+  --amber: #ecb765;
+  --coral: #f2896c;
+}
+
+/* Product-Focus shell: a calm dark ground (no WebGL) for test detail / question
+   flow / focused actions. Unmistakably the same product as the immersive
+   catalogue, quieter for concentration. Replaces the AIX-3D light Understand
+   surface (Founder Finding A). */
+.yr-focus {
+  position: relative;
+  min-height: 100dvh;
+  color: var(--yr-text);
+  background:
+    radial-gradient(120% 60% at 18% -8%, rgba(47, 197, 150, 0.1), transparent 52%),
+    radial-gradient(110% 50% at 92% -4%, rgba(236, 183, 101, 0.05), transparent 44%),
+    linear-gradient(180deg, #0e1512 0%, #0c0e0d 42%, #090b0a 100%);
+  color-scheme: dark;
+}
+
+/* Shared token-driven primitives used across modes. */
+.yr-panel {
+  border: 1px solid var(--yr-hair);
+  background: var(--yr-panel);
+  border-radius: 18px;
+}
+.yr-panel-2 {
+  border: 1px solid var(--yr-hair);
+  background: var(--yr-panel-2);
+  border-radius: 14px;
+}
+.yr-kicker {
+  color: var(--yr-kicker);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.yr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  min-height: 48px;
+  padding: 0 20px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.24s ease, background 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+}
+.yr-btn-primary {
+  background: var(--yr-accent);
+  color: var(--yr-accent-ink);
+  border: 1px solid var(--yr-accent);
+}
+.yr-btn-primary:hover {
+  transform: translateY(-2px);
+}
+.yr-btn-ghost {
+  background: transparent;
+  color: var(--yr-accent-text);
+  border: 1px solid var(--yr-hair-2);
+}
+.yr-btn-ghost:hover {
+  transform: translateY(-2px);
+  background: var(--yr-accent-soft);
+}
+.yr-btn:focus-visible {
+  outline: 2px solid var(--yr-accent-text);
+  outline-offset: 3px;
 }
 
 /* ---- editorial page surface (trust / info / legal, §14) ---- */

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
-import ResultShareActions from "../components/ResultShareActions";
+import ShareResultActions from "../components/share/ShareResultActions";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import RevealExperience from "./reveal/RevealExperience";
@@ -165,21 +165,18 @@ export default async function ResultPage({ searchParams }: { searchParams?: Sear
 
               <div key="privacy-share" className="grid gap-4">
               <PrivacyPanel />
-              <div className="aix2-panel space-y-3 p-5">
-                <p className="aix2-eyebrow">シェア</p>
-                <p className="text-[13px] leading-6 aix2-mut">
-                  今の印象を短い言葉のまま残したいときだけ、ここからシェアできます。
-                </p>
-                <ResultShareActions
-                  shareUrl={resultShareHref}
-                  shareTitle={compatibility.brandedTestName}
-                  shareText={`${compatibility.shareLine}\n${compatibility.currentStateNote}`}
-                  shareCardUrl={resultShareHref}
-                  personaId={resultId ?? "imairo-placeholder"}
-                  shareSurface="result-page"
-                  showCopyLink={false}
-                />
-              </div>
+              <ShareResultActions
+                input={{
+                  testLabel: compatibility.brandedTestName,
+                  title: compatibility.assignment ? compatibility.assignment.nickname : compatibility.displayLine,
+                  line: compatibility.shareLine,
+                  traits: compatibility.heroChips,
+                  seed: resultId ?? compatibility.assignment?.publicCode ?? "imairo",
+                  url: resultShareHref,
+                  theme: "immersive",
+                }}
+                trackingTestId="imairo"
+              />
 
               <div className="aix2-panel p-5">
                 <p className="aix2-eyebrow">公開テストについて</p>

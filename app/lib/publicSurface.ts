@@ -145,15 +145,16 @@ export function usesBrandedShell(pathname: string | null | undefined): boolean {
   return f === "immersive" || f === "understand" || f === "editorial";
 }
 
-// Header/footer visual tone. Only immersive uses the dark tone; understand,
-// editorial and legacy use the light tone.
+// Header/footer visual tone. AIX-4 — immersive AND understand (the dark
+// Product-Focus test flows) use the dark tone so the shared header/footer match
+// the flow body; editorial and legacy use the light tone.
 export function shellTone(pathname: string | null | undefined): "dark" | "light" {
-  return surfaceFamily(pathname) === "immersive" ? "dark" : "light";
+  const f = surfaceFamily(pathname);
+  return f === "immersive" || f === "understand" ? "dark" : "light";
 }
 
-// Whether the shared header/footer should render in the dark tone. Only the
-// immersive product surfaces are dark; everything else (understand, editorial,
-// legacy) is light.
+// Whether the shared header/footer should render in the dark tone. Immersive +
+// understand (Product-Focus) are dark; editorial and legacy are light.
 export function isDarkSurface(pathname: string | null | undefined): boolean {
   return shellTone(pathname) === "dark";
 }

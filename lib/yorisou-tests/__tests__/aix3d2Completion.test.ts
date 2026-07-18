@@ -38,7 +38,8 @@ assert.ok(surface.includes("UNDERSTAND_PREFIXES") && surface.includes('"understa
 for (const r of RETAINED) {
   assert.equal(surfaceFamily(`/tests/${r}`), "understand", `/tests/${r} resolves to understand`);
   assert.equal(isUnderstand(`/tests/${r}`), true, `/tests/${r} isUnderstand`);
-  assert.equal(isDarkSurface(`/tests/${r}`), false, `/tests/${r} is light (branded-light Understand)`);
+  // AIX-4 — Understand is now the dark Product-Focus surface (unified with the product).
+  assert.equal(isDarkSurface(`/tests/${r}`), true, `/tests/${r} is dark (Product-Focus)`);
   assert.notEqual(surfaceFamily(`/tests/${r}`), "legacy", `no launch /tests route is legacy`);
 }
 // The catalogue itself stays immersive (the dark entry).
@@ -51,7 +52,8 @@ for (const r of ["/tests/c02/return", "/tests/relationship-fatigue/return"]) {
 // ── Shared Understand grammar + no stale test-only identity ─────────────────
 assert.ok(has("app/tests/_components/UnderstandShell.tsx"), "shared UnderstandShell exists");
 const understandShell = read("app/tests/_components/UnderstandShell.tsx");
-assert.ok(understandShell.includes("#FBFAF6"), "UnderstandShell uses the shared light ground");
+// AIX-4 — UnderstandShell is the dark Product-Focus surface (.yr-focus tokens).
+assert.ok(understandShell.includes("yr-focus"), "UnderstandShell uses the dark Product-Focus surface");
 // Every retained flow uses the shared ground and drops the legacy frontstage / warm-cream gradient.
 const FLOW_FILES = [
   "app/tests/_components/SpecAssessmentFlow.tsx",
@@ -63,7 +65,8 @@ const FLOW_FILES = [
 ];
 for (const f of FLOW_FILES) {
   const src = read(f);
-  assert.ok(src.includes("#FBFAF6") || src.includes("UnderstandShell"), `${f}: shared Understand ground`);
+  // AIX-4 — dark Product-Focus ground (.yr-focus) or the shared UnderstandShell.
+  assert.ok(src.includes("yr-focus") || src.includes("UnderstandShell"), `${f}: shared Product-Focus ground`);
   assert.ok(!src.includes("frontstage-page"), `${f}: no legacy frontstage-page shell`);
   assert.ok(!/linear-gradient\(180deg,_#FFF9F2/.test(src), `${f}: no stale warm-cream test palette`);
   assert.ok(!src.includes("tsuru-logo"), `${f}: no crane`);

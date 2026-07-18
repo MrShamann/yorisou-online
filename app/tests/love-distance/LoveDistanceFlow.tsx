@@ -12,6 +12,7 @@ import {
 import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
+import ShareResultActions from "@/app/components/share/ShareResultActions";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
 type Phase = "intro" | "quiz" | "result";
@@ -120,7 +121,7 @@ export default function LoveDistanceFlow() {
   }
 
   return (
-    <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
+    <main className="yr-focus">
       <div className="container py-10 md:py-14">
         <div className="mx-auto max-w-[42rem]">
 
@@ -131,7 +132,7 @@ export default function LoveDistanceFlow() {
                 {INTRO_PILLS.map((p) => (
                   <span
                     key={p}
-                    className="inline-flex rounded-full border border-[rgba(23,59,53,0.14)] bg-white/80 px-3 py-1.5 text-[12px] font-semibold text-[#5F5750]"
+                    className="inline-flex rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel)] px-3 py-1.5 text-[12px] font-semibold text-[color:var(--yr-text-mut)]"
                   >
                     {p}
                   </span>
@@ -140,30 +141,30 @@ export default function LoveDistanceFlow() {
 
               <div className="space-y-3">
                 <p className="service-kicker">恋愛距離感チェック</p>
-                <h1 className="display-serif text-[2rem] leading-[1.22] text-[#2F2A28] md:text-[2.6rem]">
+                <h1 className="display-serif text-[2rem] leading-[1.22] text-[color:var(--yr-text)] md:text-[2.6rem]">
                   近づきたい、待っている、<br />
-                  <span className="text-[#173B35]">今の距離感を、少し整理する。</span>
+                  <span className="text-[color:var(--yr-accent-text)]">今の距離感を、少し整理する。</span>
                 </h1>
-                <p className="text-[15px] leading-8 text-[#5F5750]">
+                <p className="text-[15px] leading-8 text-[color:var(--yr-text-mut)]">
                   今の感覚に近いものを、ひとつずつ選ぶだけです。答え終えると、今のあなたに近いチェック結果が表示されます。
                 </p>
               </div>
 
               {/* 終わると見えること */}
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-5 shadow-[0_16px_36px_rgba(23,59,53,0.07)] space-y-3">
-                <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">終わると見えること</p>
+              <div className="rounded-[1.35rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-5 shadow-[0_16px_36px_rgba(23,59,53,0.07)] space-y-3">
+                <p className="text-[11px] font-semibold tracking-[0.12em] text-[color:var(--yr-kicker)]">終わると見えること</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {WHAT_YOU_GET.map((item) => (
                     <div
                       key={item}
-                      className="flex items-center gap-2 rounded-[0.9rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-3.5 py-2.5"
+                      className="flex items-center gap-2 rounded-[0.9rem] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-3.5 py-2.5"
                     >
-                      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#173B35] text-[10px] text-white">✓</span>
-                      <span className="text-[13px] font-semibold leading-6 text-[#315F50]">{item}</span>
+                      <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[var(--yr-accent)] text-[10px] text-[color:var(--yr-accent-ink)]">✓</span>
+                      <span className="text-[13px] font-semibold leading-6 text-[color:var(--yr-accent-text)]">{item}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-[12px] leading-6 text-[#7A7068]">
+                <p className="text-[12px] leading-6 text-[color:var(--yr-text-faint)]">
                   ログインなし。回答は送信されません。相手の気持ちや関係の結論を判断するものではありません。
                 </p>
               </div>
@@ -172,17 +173,17 @@ export default function LoveDistanceFlow() {
                 <button
                   type="button"
                   onClick={begin}
-                  className="inline-flex min-h-[56px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-6 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] sm:w-auto"
+                  className="inline-flex min-h-[56px] w-full items-center justify-center rounded-full border border-[var(--yr-accent)] bg-[var(--yr-accent)] px-6 text-[16px] font-bold text-[color:var(--yr-accent-ink)] shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] sm:w-auto"
                 >
                   チェックを始める
                 </button>
-                <p className="text-[12px] leading-7 text-[#7A7068]">
+                <p className="text-[12px] leading-7 text-[color:var(--yr-text-faint)]">
                   連絡する・告白する・別れる・復縁するなどの判断を決めるものではありません。
                 </p>
               </div>
 
               <div className="pt-2">
-                <Link href="/" className="text-[13px] text-[#49615B] underline-offset-2 hover:underline">
+                <Link href="/" className="text-[13px] text-[color:var(--yr-kicker)] underline-offset-2 hover:underline">
                   ← トップに戻る
                 </Link>
               </div>
@@ -193,33 +194,33 @@ export default function LoveDistanceFlow() {
           {phase === "quiz" && currentQ && (
             <div className="space-y-4">
               {/* Progress header */}
-              <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-3.5 shadow-[0_14px_30px_rgba(23,59,53,0.07)]">
+              <div className="rounded-[1.2rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-3.5 shadow-[0_14px_30px_rgba(23,59,53,0.07)]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-[11px] font-semibold tracking-[0.13em] text-[#6F625C]">
+                    <div className="text-[11px] font-semibold tracking-[0.13em] text-[color:var(--yr-text-faint)]">
                       {currentQ.section}
                     </div>
-                    <div className="mt-0.5 text-[14px] font-bold text-[#2F2A28]">
+                    <div className="mt-0.5 text-[14px] font-bold text-[color:var(--yr-text)]">
                       Q{currentIndex + 1} / {total}
                     </div>
                   </div>
-                  <div className="rounded-full bg-[#EAF7F1] px-3 py-1 text-[12px] font-semibold text-[#315F50]">
+                  <div className="rounded-full bg-[var(--yr-panel-2)] px-3 py-1 text-[12px] font-semibold text-[color:var(--yr-accent-text)]">
                     {answeredCount} / {total} 回答済み
                   </div>
                 </div>
                 <div className="mt-3 h-2 rounded-full bg-[rgba(23,59,53,0.1)]">
                   <div
-                    className="h-full rounded-full bg-[#173B35] transition-all"
+                    className="h-full rounded-full bg-[var(--yr-accent)] transition-all"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
               </div>
 
               {/* Question card */}
-              <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/95 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
+              <div className="rounded-[1.35rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
                 <div className="space-y-2">
                   <p className="service-kicker">今の感覚に近いものをひとつ選んでください</p>
-                  <h2 className="display-serif text-[1.48rem] leading-[1.32] text-[#2F2A28] md:text-[2.1rem]">
+                  <h2 className="display-serif text-[1.48rem] leading-[1.32] text-[color:var(--yr-text)] md:text-[2.1rem]">
                     {currentQ.prompt}
                   </h2>
                 </div>
@@ -234,19 +235,19 @@ export default function LoveDistanceFlow() {
                         onClick={() => selectOption(opt.id)}
                         className={`rounded-[1rem] border px-4 py-3.5 text-left transition ${
                           selected
-                            ? "border-[#173B35] bg-[#F3FAF6] shadow-[0_10px_22px_rgba(23,59,53,0.11)]"
-                            : "border-[rgba(111,98,92,0.13)] bg-white/90 hover:-translate-y-0.5 hover:bg-white"
+                            ? "border-[var(--yr-accent)] bg-[var(--yr-panel-2)] shadow-[0_10px_22px_rgba(23,59,53,0.11)]"
+                            : "border-[var(--yr-hair)] bg-[var(--yr-panel)] hover:-translate-y-0.5 hover:bg-[var(--yr-panel)]"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-4">
-                          <span className="text-[15px] font-semibold leading-7 text-[#2F2A28]">
+                          <span className="text-[15px] font-semibold leading-7 text-[color:var(--yr-text)]">
                             {opt.label}
                           </span>
                           <span
                             className={`mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] ${
                               selected
-                                ? "border-[#173B35] bg-[#173B35] text-white"
-                                : "border-[rgba(201,211,195,0.8)] bg-white"
+                                ? "border-[var(--yr-accent)] bg-[var(--yr-accent)] text-[color:var(--yr-accent-ink)]"
+                                : "border-[var(--yr-hair)] bg-[var(--yr-panel)]"
                             }`}
                           >
                             {selected ? "✓" : ""}
@@ -259,12 +260,12 @@ export default function LoveDistanceFlow() {
               </div>
 
               {/* Nav */}
-              <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.09)] bg-[rgba(251,250,246,0.96)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-0">
+              <div className="sticky bottom-0 z-20 -mx-4 border-t border-[var(--yr-hair)] bg-[rgba(251,250,246,0.96)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-0">
                 <div className="flex gap-2.5">
                   <button
                     type="button"
                     onClick={goBack}
-                    className="inline-flex min-h-[50px] w-[34%] items-center justify-center rounded-full border border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] px-4 text-[14px] font-semibold text-[#315F50] transition hover:-translate-y-0.5 sm:w-auto"
+                    className="inline-flex min-h-[50px] w-[34%] items-center justify-center rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel-2)] px-4 text-[14px] font-semibold text-[color:var(--yr-accent-text)] transition hover:-translate-y-0.5 sm:w-auto"
                   >
                     戻る
                   </button>
@@ -272,7 +273,7 @@ export default function LoveDistanceFlow() {
                     type="button"
                     onClick={goNext}
                     disabled={!currentAnswer}
-                    className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full bg-[#173B35] px-4 text-[16px] font-bold text-white shadow-[0_16px_32px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] disabled:cursor-not-allowed disabled:bg-[rgba(111,98,92,0.26)] disabled:shadow-none"
+                    className="inline-flex min-h-[50px] flex-1 items-center justify-center rounded-full bg-[var(--yr-accent)] px-4 text-[16px] font-bold text-[color:var(--yr-accent-ink)] shadow-[0_16px_32px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] disabled:cursor-not-allowed disabled:bg-[rgba(111,98,92,0.26)] disabled:shadow-none"
                   >
                     {currentIndex === total - 1 ? "チェック結果へ" : "すぐ次へ"}
                   </button>
@@ -291,32 +292,32 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
   const { archetype, repeatedCheckCount, unsafePressureCount } = result;
 
   return (
-    <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
+    <main className="yr-focus">
       <div className="container py-10 md:py-14">
         <div className="mx-auto max-w-[42rem] space-y-6">
 
           {/* Result header */}
           <div className="space-y-2">
             <p className="service-kicker">チェック結果 · 恋愛距離感</p>
-            <h1 className="display-serif text-[1.9rem] leading-[1.24] text-[#2F2A28] md:text-[2.5rem]">
+            <h1 className="display-serif text-[1.9rem] leading-[1.24] text-[color:var(--yr-text)] md:text-[2.5rem]">
               今の整理:&nbsp;「{archetype.name}」
             </h1>
           </div>
 
           {/* Main result card */}
-          <div className="rounded-[1.45rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-6 shadow-[0_18px_40px_rgba(23,59,53,0.08)] space-y-4">
-            <p className="text-[16px] leading-8 text-[#2F2A28]">
+          <div className="rounded-[1.45rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-6 shadow-[0_18px_40px_rgba(23,59,53,0.08)] space-y-4">
+            <p className="text-[16px] leading-8 text-[color:var(--yr-text)]">
               今のあなたは、<strong>{archetype.title}</strong>かもしれません。
               これは相手の気持ちや関係の結論を示すものではなく、今の自分の距離感を整理するための結果です。
             </p>
-            <p className="text-[15px] leading-8 text-[#5F5750]">
+            <p className="text-[15px] leading-8 text-[color:var(--yr-text-mut)]">
               {archetype.body}
             </p>
           </div>
 
           {/* Three insights */}
           <div className="space-y-2.5">
-            <p className="text-[13px] font-semibold tracking-[0.1em] text-[#49615B]">今の整理 — 3つのポイント</p>
+            <p className="text-[13px] font-semibold tracking-[0.1em] text-[color:var(--yr-kicker)]">今の整理 — 3つのポイント</p>
             {[
               { label: "今の距離感", value: archetype.distanceHint },
               { label: "待ち方の負担", value: archetype.waitingHint },
@@ -324,30 +325,30 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
             ].map(({ label, value }) => (
               <div
                 key={label}
-                className="rounded-[1.1rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-4 py-3.5"
+                className="rounded-[1.1rem] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-4 py-3.5"
               >
-                <p className="text-[11px] font-semibold tracking-[0.1em] text-[#49615B]">{label}</p>
-                <p className="mt-1 text-[14px] leading-7 text-[#2F2A28]">{value}</p>
+                <p className="text-[11px] font-semibold tracking-[0.1em] text-[color:var(--yr-kicker)]">{label}</p>
+                <p className="mt-1 text-[14px] leading-7 text-[color:var(--yr-text)]">{value}</p>
               </div>
             ))}
           </div>
 
           {/* Next action */}
-          <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.14)] bg-[#173B35] px-5 py-4 text-white">
+          <div className="rounded-[1.25rem] border border-[var(--yr-hair-2)] bg-[var(--yr-accent)] px-5 py-4 text-[color:var(--yr-accent-ink)]">
             <p className="text-[12px] font-semibold tracking-[0.1em] opacity-70">今日の小さな一歩</p>
             <p className="mt-1.5 text-[15px] font-semibold leading-7">{archetype.nextStep}</p>
           </div>
 
           {/* General next action line */}
-          <p className="text-[14px] leading-7 text-[#5F5750]">
+          <p className="text-[14px] leading-7 text-[color:var(--yr-text-mut)]">
             今日は、関係の答えを出さずに「今の自分は何を整えたいか」を一つだけ選んでみましょう。
           </p>
 
           {/* Repeated-check warning */}
           {repeatedCheckCount >= 2 && (
-            <div className="rounded-[1.15rem] border border-[rgba(180,120,60,0.18)] bg-[#FFF7EC]/80 px-5 py-4">
-              <p className="text-[13px] font-semibold text-[#7A4E20]">チェックを繰り返したいと感じているかたへ</p>
-              <p className="mt-1.5 text-[13px] leading-7 text-[#6B4E3F]">
+            <div className="rounded-[1.15rem] border border-[rgba(236,183,101,0.32)] bg-[rgba(236,183,101,0.08)] px-5 py-4">
+              <p className="text-[13px] font-semibold text-[color:var(--amber)]">チェックを繰り返したいと感じているかたへ</p>
+              <p className="mt-1.5 text-[13px] leading-7 text-[color:var(--yr-text-mut)]">
                 同じテーマを何度も確認したくなるときは、チェックを続けるほど不安が強くなることがあります。今日は結果を増やすより、少し時間を置いて自分の安心を優先してみてください。
               </p>
             </div>
@@ -355,9 +356,9 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
 
           {/* Unsafe-pressure warning */}
           {unsafePressureCount >= 1 && (
-            <div className="rounded-[1.15rem] border border-[rgba(180,60,60,0.15)] bg-[#FFF5F5]/80 px-5 py-4">
-              <p className="text-[13px] font-semibold text-[#7A2020]">行動を急ぎたい気持ちが強いかたへ</p>
-              <p className="mt-1.5 text-[13px] leading-7 text-[#6B3030]">
+            <div className="rounded-[1.15rem] border border-[rgba(242,137,108,0.32)] bg-[rgba(242,137,108,0.08)] px-5 py-4">
+              <p className="text-[13px] font-semibold text-[color:var(--coral)]">行動を急ぎたい気持ちが強いかたへ</p>
+              <p className="mt-1.5 text-[13px] leading-7 text-[color:var(--yr-text-mut)]">
                 相手に何度も確認したい、急がせたい気持ちが強いときは、いったん行動を止めることが大切です。このチェックは、相手を動かすためではなく、自分を落ち着かせるためのものです。
               </p>
             </div>
@@ -367,6 +368,18 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
           <ResultConversionCommunity
             moduleId="love-distance"
             reportTeaser={archetype.reportTeaser}
+          />
+
+          <ShareResultActions
+            input={{
+              testLabel: "恋愛距離感チェック",
+              title: archetype.name,
+              line: archetype.body,
+              traits: ["今の距離感", "待ち方の負担", "伝える前に整えたいこと"],
+              seed: archetype.id,
+              url: "/tests/love-distance",
+            }}
+            trackingTestId="love-distance"
           />
 
           <YorisouCompanionCard
@@ -387,8 +400,8 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
           />
 
           {/* Safety note */}
-          <div className="rounded-[1.25rem] border border-[rgba(23,59,53,0.08)] bg-white/60 px-5 py-4">
-            <p className="text-[12px] leading-7 text-[#7A7068]">
+          <div className="rounded-[1.25rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] px-5 py-4">
+            <p className="text-[12px] leading-7 text-[color:var(--yr-text-faint)]">
               この結果は、相手の本心や関係の結論を判断するものではありません。連絡する、告白する、別れる、復縁する、結婚するなどの判断は、この結果だけで決めないでください。
               つらさが強い場合は、信頼できる人や確認済みの相談先につながることも選択肢です。
             </p>
@@ -398,11 +411,11 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
           <div className="space-y-3 pt-2">
             <Link
               href="/tests/relationship-fatigue"
-              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-[rgba(23,59,53,0.22)] bg-white px-6 text-[15px] font-semibold text-[#173B35] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6] sm:w-auto"
+              className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel)] px-6 text-[15px] font-semibold text-[color:var(--yr-accent-text)] transition hover:-translate-y-0.5 hover:bg-[var(--yr-panel-2)] sm:w-auto"
             >
               「人間関係の疲れ」チェックも見る
             </Link>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-[#49615B]">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-[color:var(--yr-kicker)]">
               <button
                 type="button"
                 onClick={onRetake}

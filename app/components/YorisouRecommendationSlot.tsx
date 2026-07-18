@@ -239,14 +239,14 @@ export default function YorisouRecommendationSlot({
 
   if (!recommendationPackage && loadFailed) {
     return (
-      <section className="space-y-3 rounded-[1.2rem] border border-[rgba(23,59,53,0.1)] bg-white/88 p-5 shadow-[0_14px_30px_rgba(23,59,53,0.06)]">
-        <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">{title}</p>
-        <p className="text-[14px] leading-7 text-[#5F5750]">
+      <section className="space-y-3 rounded-[1.2rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-5 shadow-[0_14px_30px_rgba(23,59,53,0.06)]">
+        <p className="text-[11px] font-semibold tracking-[0.12em] text-[color:var(--yr-kicker)]">{title}</p>
+        <p className="text-[14px] leading-7 text-[color:var(--yr-text-mut)]">
           次に試せる入口を読み込めませんでした。診断一覧から選べます。
         </p>
         <Link
           href="/tests"
-          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-[#F6FBF8] px-4 text-[13px] font-semibold text-[#173B35]"
+          className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel-2)] px-4 text-[13px] font-semibold text-[color:var(--yr-accent-text)]"
         >
           診断一覧を見る
         </Link>
@@ -262,16 +262,16 @@ export default function YorisouRecommendationSlot({
   const memory = buildMemorySummary(memorySummary);
 
   return (
-    <section className="space-y-3 rounded-[1.2rem] border border-[rgba(23,59,53,0.1)] bg-white/88 p-5 shadow-[0_14px_30px_rgba(23,59,53,0.06)]">
+    <section className="space-y-3 rounded-[1.2rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-5 shadow-[0_14px_30px_rgba(23,59,53,0.06)]">
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold tracking-[0.12em] text-[#49615B]">{title}</p>
+        <p className="text-[11px] font-semibold tracking-[0.12em] text-[color:var(--yr-kicker)]">{title}</p>
         {memory ? (
-          <div className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] px-4 py-3">
-            <p className="text-[13px] font-semibold leading-6 text-[#173B35]">{memory.title}</p>
-            <p className="mt-1 text-[12px] leading-6 text-[#6F625C]">{memory.detail}</p>
+          <div className="rounded-[1rem] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-4 py-3">
+            <p className="text-[13px] font-semibold leading-6 text-[color:var(--yr-accent-text)]">{memory.title}</p>
+            <p className="mt-1 text-[12px] leading-6 text-[color:var(--yr-text-faint)]">{memory.detail}</p>
           </div>
         ) : null}
-        <p className="text-[14px] leading-7 text-[#5F5750]">{recommendationPackage.explanation}</p>
+        <p className="text-[14px] leading-7 text-[color:var(--yr-text-mut)]">{recommendationPackage.explanation}</p>
       </div>
 
       <Link
@@ -281,11 +281,11 @@ export default function YorisouRecommendationSlot({
             buildClickPayload(recommendationPackage, recommendationPackage.primaryAction, "primary", memorySummary),
           );
         }}
-        className="block rounded-[1.1rem] border border-[#173B35] bg-[#173B35] px-4 py-4 text-white transition hover:-translate-y-0.5"
+        className="block rounded-[1.1rem] border border-[var(--yr-accent)] bg-[var(--yr-accent)] px-4 py-4 text-[color:var(--yr-accent-ink)] transition hover:-translate-y-0.5"
       >
-        <span className="block text-[12px] font-semibold tracking-[0.08em] text-white/72">いちばん試しやすい入口</span>
+        <span className="block text-[12px] font-semibold tracking-[0.08em] text-[color:var(--yr-accent-ink)]/72">いちばん試しやすい入口</span>
         <span className="mt-1 block text-[15px] font-semibold leading-6">{recommendationPackage.primaryAction.title}</span>
-        <span className="mt-1 block text-[13px] leading-6 text-white/82">{recommendationPackage.primaryAction.description}</span>
+        <span className="mt-1 block text-[13px] leading-6 text-[color:var(--yr-accent-ink)]/82">{recommendationPackage.primaryAction.description}</span>
       </Link>
 
       {recommendationPackage.secondaryActions.length > 0 ? (
@@ -297,17 +297,17 @@ export default function YorisouRecommendationSlot({
               onClick={() => {
                 void trackRecommendationSignals(buildClickPayload(recommendationPackage, action, "secondary", memorySummary));
               }}
-              className="rounded-[1rem] border border-[rgba(23,59,53,0.1)] bg-[#F6FBF8] px-4 py-4 transition hover:-translate-y-0.5"
+              className="rounded-[1rem] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-4 py-4 transition hover:-translate-y-0.5"
             >
-              <span className="block text-[14px] font-semibold leading-6 text-[#173B35]">{action.title}</span>
-              <span className="mt-1 block text-[12px] leading-6 text-[#6F625C]">{action.description}</span>
+              <span className="block text-[14px] font-semibold leading-6 text-[color:var(--yr-accent-text)]">{action.title}</span>
+              <span className="mt-1 block text-[12px] leading-6 text-[color:var(--yr-text-faint)]">{action.description}</span>
             </Link>
           ))}
         </div>
       ) : null}
 
       {safetyNote ? (
-        <p className="text-[12px] leading-6 text-[#7A7068]">{safetyNote}</p>
+        <p className="text-[12px] leading-6 text-[color:var(--yr-text-faint)]">{safetyNote}</p>
       ) : null}
     </section>
   );

@@ -1,22 +1,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-// AIX-3D-2 — shared Understand-domain grammar for the retained per-test flows
-// under /tests/*. One calm branded-LIGHT surface, framed by the shared
-// SiteHeader/SiteFooter (BrandLockup, product nav). Light by design: these flows
-// embed the shared, hardcoded-light recommendation/conversion components
-// (YorisouCompanionCard / RecommendationSlot / ResultConversionCommunity) that
-// also render on the light LINE mini-app, so the whole test-flow surface reads
-// as one coherent light product grammar — not a disconnected catalogue of
-// quizzes, and not a stale test-only palette. Flow logic/scoring lives in the
+// AIX-4 — the retained per-test flows now render in the dark Product-Focus mode
+// (`.yr-focus`), unmistakably the same product as the immersive catalogue, quieter
+// for concentration. All surfaces are token-driven (var(--yr-*)) so the shared
+// recommendation/conversion components embedded in results render dark here and
+// light on the LINE mini-app from one code path. Flow logic/scoring lives in the
 // flow components and is never touched here.
 
 export function UnderstandShell({ children }: { children: ReactNode }) {
   return (
-    <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
-      <div className="container py-9 md:py-14">
-        <div className="mx-auto max-w-[44rem]">{children}</div>
-      </div>
+    <main className="yr-focus">
+      <section className="relative z-[1]">
+        <div className="container py-8 md:py-12">
+          <div className="mx-auto max-w-[44rem]">{children}</div>
+        </div>
+      </section>
     </main>
   );
 }
@@ -27,7 +26,7 @@ export function UnderstandPills({ items }: { items: ReadonlyArray<ReactNode> }) 
       {items.map((item, i) => (
         <span
           key={i}
-          className="inline-flex rounded-full border border-[rgba(23,59,53,0.14)] bg-white/80 px-3 py-1.5 text-[12px] font-semibold text-[#5F5750]"
+          className="inline-flex rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel-2)] px-3 py-1.5 text-[12px] font-semibold text-[color:var(--yr-text-mut)]"
         >
           {item}
         </span>
@@ -37,13 +36,13 @@ export function UnderstandPills({ items }: { items: ReadonlyArray<ReactNode> }) 
 }
 
 export function UnderstandKicker({ children }: { children: ReactNode }) {
-  return <p className="text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">{children}</p>;
+  return <p className="yr-kicker">{children}</p>;
 }
 
 export function UnderstandTitle({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <h1
-      className={`display-serif whitespace-pre-line text-[2rem] leading-[1.22] text-[#2F2A28] md:text-[2.6rem] ${className ?? ""}`}
+      className={`aix2-serif whitespace-pre-line text-[2rem] font-semibold leading-[1.22] text-[color:var(--yr-text)] md:text-[2.7rem] ${className ?? ""}`}
     >
       {children}
     </h1>
@@ -51,7 +50,7 @@ export function UnderstandTitle({ children, className }: { children: ReactNode; 
 }
 
 export function UnderstandLead({ children }: { children: ReactNode }) {
-  return <p className="text-[15px] leading-8 text-[#5F5750]">{children}</p>;
+  return <p className="text-[15px] leading-8 text-[color:var(--yr-text-mut)]">{children}</p>;
 }
 
 // Question progress header: section/kicker + Q index + progress bar.
@@ -67,19 +66,21 @@ export function UnderstandProgress({
   aside?: ReactNode;
 }) {
   return (
-    <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.11)] bg-white/90 p-3.5 shadow-[0_14px_30px_rgba(23,59,53,0.07)]">
+    <div className="yr-panel p-3.5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-[11px] font-semibold tracking-[0.13em] text-[#6F625C]">{kicker}</div>
-          <div className="mt-0.5 text-[14px] font-bold text-[#2F2A28]">{indexLabel}</div>
+          <div className="text-[11px] font-semibold tracking-[0.13em] text-[color:var(--yr-text-faint)]">{kicker}</div>
+          <div className="mt-0.5 text-[14px] font-bold text-[color:var(--yr-text)]">{indexLabel}</div>
         </div>
         {aside ? (
-          <div className="rounded-full bg-[#EAF7F1] px-3 py-1 text-[12px] font-semibold text-[#315F50]">{aside}</div>
+          <div className="rounded-full bg-[var(--yr-accent-soft)] px-3 py-1 text-[12px] font-semibold text-[color:var(--yr-accent-text)]">
+            {aside}
+          </div>
         ) : null}
       </div>
-      <div className="mt-3 h-2 rounded-full bg-[rgba(23,59,53,0.1)]">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--yr-panel-2)]">
         <div
-          className="h-full rounded-full bg-[#173B35] transition-[width] duration-500"
+          className="h-full rounded-full bg-[var(--yr-accent)] transition-[width] duration-500"
           style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
         />
       </div>
@@ -87,7 +88,7 @@ export function UnderstandProgress({
   );
 }
 
-// A labelled light info panel (traits, friction, teasers, boundary notes).
+// A labelled token-driven info panel (traits, friction, teasers, boundary notes).
 export function UnderstandNote({
   label,
   children,
@@ -99,16 +100,14 @@ export function UnderstandNote({
 }) {
   const base =
     tone === "accent"
-      ? "rounded-[1.2rem] border border-[rgba(138,119,100,0.16)] bg-[#FFFDF8]"
+      ? "rounded-[18px] border border-[var(--yr-hair-2)] bg-[var(--yr-accent-soft)]"
       : tone === "quiet"
-        ? "rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70"
-        : "rounded-[1.25rem] border border-[rgba(23,59,53,0.1)] bg-white/90";
-  const labelColor = tone === "accent" ? "text-[#6B5E55]" : "text-[#49615B]";
-  const bodyColor = tone === "accent" ? "text-[#6B5E55]" : "text-[#5F5750]";
+        ? "rounded-[18px] border border-[var(--yr-hair)] bg-[var(--yr-panel-soft)]"
+        : "rounded-[18px] border border-[var(--yr-hair)] bg-[var(--yr-panel)]";
   return (
     <div className={`${base} px-5 py-4`}>
-      {label ? <p className={`text-[12px] font-semibold tracking-[0.1em] ${labelColor}`}>{label}</p> : null}
-      <div className={`${label ? "mt-1 " : ""}text-[13px] leading-7 ${bodyColor}`}>{children}</div>
+      {label ? <p className="text-[12px] font-semibold tracking-[0.1em] text-[color:var(--yr-accent-text)]">{label}</p> : null}
+      <div className={`${label ? "mt-1 " : ""}text-[13px] leading-7 text-[color:var(--yr-text-mut)]`}>{children}</div>
     </div>
   );
 }
@@ -123,10 +122,7 @@ export function UnderstandRelated({
 }) {
   return (
     <div className="space-y-3">
-      <Link
-        href="/tests"
-        className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-[13px] font-semibold text-[#315F50] transition hover:-translate-y-0.5 hover:bg-[#F3FAF6]"
-      >
+      <Link href="/tests" className="yr-btn yr-btn-ghost !min-h-[46px] !text-[13px]">
         {backLabel}
       </Link>
       {routes.length > 0 ? (
@@ -135,7 +131,7 @@ export function UnderstandRelated({
             <Link
               key={route.href}
               href={route.href}
-              className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-white/88 px-4 py-3 text-[13px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
+              className="rounded-[14px] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-4 py-3 text-[13px] font-semibold text-[color:var(--yr-accent-text)] transition hover:-translate-y-0.5 hover:border-[var(--yr-hair-2)]"
             >
               {route.label}
             </Link>

@@ -43,12 +43,12 @@ test.describe("AIX-2 progressive enhancement", () => {
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    // AIX-3 — platform positioning: the check is an entry, not the product.
-    await expect(page.locator("h1")).toContainText("終わらない");
+    // AIX-4 — product-first positioning: leads with the platform, the check is one first step.
+    await expect(page.locator("h1")).toContainText("次の選択");
     await expect(page.getByRole("link", { name: "いまの状態をみる" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "プロダクトを見る" })).toBeVisible();
-    // positioning: the check is the entry
-    await expect(page.getByText("チェックは、その入口")).toBeVisible();
+    await expect(page.getByRole("link", { name: "プラットフォームを見る" })).toBeVisible();
+    // the six-domain system map is part of the first-page composition
+    await expect(page.getByLabel("YORISOUの6つの領域")).toBeVisible();
     // static depth field is server-rendered SVG (no JS / no WebGL)
     expect(await page.locator(".depth-scene svg circle").count()).toBeGreaterThan(20);
     await ctx.close();

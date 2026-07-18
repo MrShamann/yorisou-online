@@ -33,10 +33,14 @@ for (const label of ["理解する", "見つける", "深める", "つながる"
 // EN language promise is not shown on the JA experience (gated to isEn only).
 assert.ok(header.includes("isEn ?") && header.includes('日本語'), "EN switch gated to EN pages");
 
-// 19.3 — positioning contract: the homepage says the check is an entry and the
-// product continues into the service domains.
+// 19.3 — positioning contract: the homepage leads with the platform and frames
+// the check as one entry/first step (AIX-4 product-first hero).
 const home = read("app/page.tsx");
-assert.ok(home.includes("テストで") && home.includes("入口"), "home: check is an entry, not the product");
+assert.ok(home.includes("プラットフォーム"), "home: leads with the platform");
+assert.ok(
+  home.includes("領域のひとつ") || home.includes("はじめの一歩") || home.includes("入口"),
+  "home: the check is one entry / first step, not the product",
+);
 for (const id of ["understand", "keep", "discover", "deepen", "connect", "improve"]) {
   assert.ok(home.includes(`id: "${id}"`), `home service-system map has domain: ${id}`);
 }

@@ -10,6 +10,7 @@ import {
   resolveRuleBasedResult,
 } from "@/lib/yorisou-tests/scoring";
 import { PrivateTestSave } from "../c02/C02PrivateSave";
+import ShareResultActions from "@/app/components/share/ShareResultActions";
 import type { RuleBasedRuntime } from "@/lib/yorisou-tests/types";
 import {
   UnderstandShell,
@@ -77,18 +78,18 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
         <div className="space-y-6">
           <div className="space-y-2">
             <UnderstandKicker>{runtime.title}</UnderstandKicker>
-            <h1 className="display-serif text-[1.92rem] leading-[1.24] text-[#2F2A28] md:text-[2.55rem]">
+            <h1 className="display-serif text-[1.92rem] leading-[1.24] text-[color:var(--yr-text)] md:text-[2.55rem]">
               {result.title}
             </h1>
             <UnderstandLead>{result.summary}</UnderstandLead>
           </div>
 
-          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-6 shadow-[0_18px_40px_rgba(23,59,53,0.08)]">
-            <p className="text-[12px] font-semibold tracking-[0.12em] text-[#49615B]">見えた傾向</p>
+          <div className="rounded-[1.35rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-6 shadow-[0_18px_40px_rgba(23,59,53,0.08)]">
+            <p className="text-[12px] font-semibold tracking-[0.12em] text-[color:var(--yr-kicker)]">見えた傾向</p>
             <div className="mt-3 space-y-2.5">
               {trendLines.map((line) => (
-                <div key={line} className="rounded-[1rem] border border-[rgba(23,59,53,0.1)] bg-[#F3FAF6] px-4 py-3.5">
-                  <p className="text-[14px] leading-7 text-[#2F2A28]">{line}</p>
+                <div key={line} className="rounded-[1rem] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-4 py-3.5">
+                  <p className="text-[14px] leading-7 text-[color:var(--yr-text)]">{line}</p>
                 </div>
               ))}
             </div>
@@ -103,25 +104,30 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
           ) : null}
 
           <UnderstandNote tone="quiet">
-            <span className="text-[#7A7068]">{runtime.boundaryNote}</span>
+            <span className="text-[color:var(--yr-text-faint)]">{runtime.boundaryNote}</span>
           </UnderstandNote>
 
           {runtime.testId === "C02" || runtime.testId === "F01" || runtime.testId === "F02" ? (
             <PrivateTestSave testSlug={runtime.slug as "c02" | "f01" | "f02"} answers={answers} />
           ) : null}
 
-          <UnderstandNote label="シェア用の一行">
-            <span className="text-[#2F2A28]">
-              {runtime.shareLabel ? `${runtime.shareLabel}: ` : ""}
-              {result.summary}
-            </span>
-          </UnderstandNote>
+          <ShareResultActions
+            input={{
+              testLabel: runtime.title,
+              title: result.title,
+              line: result.summary,
+              traits: trendLines,
+              seed: `${runtime.testId}:${result.title}`,
+              url: `/tests/${runtime.slug}`,
+            }}
+            trackingTestId={runtime.slug}
+          />
 
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={start}
-              className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[var(--yr-accent)] bg-[var(--yr-accent)] px-5 text-[14px] font-semibold text-[color:var(--yr-accent-ink)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
             >
               もう一度試す
             </button>
@@ -147,7 +153,7 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
           <button
             type="button"
             onClick={start}
-            className="inline-flex min-h-[56px] w-full items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-6 text-[16px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] sm:w-auto"
+            className="inline-flex min-h-[56px] w-full items-center justify-center rounded-full border border-[var(--yr-accent)] bg-[var(--yr-accent)] px-6 text-[16px] font-bold text-[color:var(--yr-accent-ink)] shadow-[0_18px_34px_rgba(23,59,53,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] sm:w-auto"
           >
             チェックを始める
           </button>
@@ -161,9 +167,9 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
             aside="ひとつずつ進む"
           />
 
-          <div className="rounded-[1.35rem] border border-[rgba(23,59,53,0.11)] bg-white/95 p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
-            <p className="text-[11px] font-semibold tracking-[0.14em] text-[#49615B]">今の感覚に近いものをひとつ選んでください</p>
-            <h2 className="display-serif text-[1.48rem] leading-[1.32] text-[#2F2A28] md:text-[2.08rem]">
+          <div className="rounded-[1.35rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] p-5 shadow-[0_20px_42px_rgba(23,59,53,0.09)] space-y-4 md:p-6">
+            <p className="text-[11px] font-semibold tracking-[0.14em] text-[color:var(--yr-kicker)]">今の感覚に近いものをひとつ選んでください</p>
+            <h2 className="display-serif text-[1.48rem] leading-[1.32] text-[color:var(--yr-text)] md:text-[2.08rem]">
               {question.prompt_jp}
             </h2>
             <div className="grid gap-2.5">
@@ -172,9 +178,9 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
                   key={getOptionId(option)}
                   type="button"
                   onClick={() => select(getOptionId(option))}
-                  className="rounded-[1rem] border border-[rgba(111,98,92,0.13)] bg-white/90 px-4 py-3.5 text-left transition hover:-translate-y-0.5 hover:bg-white"
+                  className="rounded-[1rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] px-4 py-3.5 text-left transition hover:-translate-y-0.5 hover:bg-[var(--yr-panel)]"
                 >
-                  <span className="text-[15px] font-semibold leading-7 text-[#2F2A28]">{getOptionLabel(option)}</span>
+                  <span className="text-[15px] font-semibold leading-7 text-[color:var(--yr-text)]">{getOptionLabel(option)}</span>
                 </button>
               ))}
             </div>
@@ -184,7 +190,7 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
             <button
               type="button"
               onClick={goBack}
-              className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-[13px] font-semibold text-[#315F50] transition hover:-translate-y-0.5"
+              className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel)] px-5 text-[13px] font-semibold text-[color:var(--yr-accent-text)] transition hover:-translate-y-0.5"
             >
               戻る
             </button>

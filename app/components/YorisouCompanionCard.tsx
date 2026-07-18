@@ -182,45 +182,45 @@ export default function YorisouCompanionCard({
   const visibleSeed = fallbackSeed || seed;
 
   return (
-    <section className="surface-panel space-y-4 bg-white/94">
+    <section className="surface-panel space-y-4 bg-[var(--yr-panel)]">
       <div className="space-y-3">
         <p className="surface-meta">
           {eyebrow}
         </p>
-        <h2 className="display-serif text-[1.4rem] leading-[1.3] text-[#2F2A28] md:text-[1.72rem]">
+        <h2 className="display-serif text-[1.4rem] leading-[1.3] text-[color:var(--yr-text)] md:text-[1.72rem]">
           {title}
         </h2>
-        <p className="text-[13px] leading-7 text-[#6F625C]">{subtitle}</p>
+        <p className="text-[13px] leading-7 text-[color:var(--yr-text-faint)]">{subtitle}</p>
         <div className="flex flex-wrap gap-2">
           {PURPOSE_PILLS[variant].map((pill) => (
-            <span key={pill} className="rounded-full border border-[rgba(23,59,53,0.08)] bg-[#F7FBF8] px-3 py-1 text-[11px] font-semibold leading-5 text-[#49615B]">
+            <span key={pill} className="rounded-full border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-3 py-1 text-[11px] font-semibold leading-5 text-[color:var(--yr-kicker)]">
               {pill}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-[#F6FBF8] p-4">
+      <div className="rounded-[1.2rem] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] p-4">
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-[1.5rem] shadow-[0_10px_20px_rgba(23,59,53,0.08)]">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--yr-panel)] text-[1.5rem] shadow-[0_10px_20px_rgba(23,59,53,0.08)]">
             {visibleSeed.motifEmoji}
           </span>
           <div>
-            <p className="text-[15px] font-semibold leading-6 text-[#173B35]">{visibleSeed.displayNameJa}</p>
-            <p className="text-[12px] leading-6 text-[#6F625C]">{visibleSeed.shortMessageJa}</p>
+            <p className="text-[15px] font-semibold leading-6 text-[color:var(--yr-accent-text)]">{visibleSeed.displayNameJa}</p>
+            <p className="text-[12px] leading-6 text-[color:var(--yr-text-faint)]">{visibleSeed.shortMessageJa}</p>
           </div>
         </div>
-        <p className="mt-3 text-[13px] leading-7 text-[#5F5750]">{visibleSeed.stateSummaryJa}</p>
+        <p className="mt-3 text-[13px] leading-7 text-[color:var(--yr-text-mut)]">{visibleSeed.stateSummaryJa}</p>
         {recommendationMemory?.staleSignals && recommendationMemory.memoryState !== "no_memory" ? (
-          <p className="mt-2 text-[12px] leading-6 text-[#7A7068]">
+          <p className="mt-2 text-[12px] leading-6 text-[color:var(--yr-text-faint)]">
             少し前の動きも含めた目印なので、今日は軽く見直す入口として使ってください。
           </p>
         ) : null}
       </div>
 
-      <div className="surface-panel-soft !bg-[rgba(255,253,249,0.74)]">
+      <div className="surface-panel-soft !bg-[var(--yr-accent-soft)]">
         <p className="surface-meta">この相棒でできること</p>
-        <p className="mt-1 text-[13px] leading-6 text-[#6F625C]">{guideLine}</p>
+        <p className="mt-1 text-[13px] leading-6 text-[color:var(--yr-text-mut)]">{guideLine}</p>
       </div>
 
       <div className="grid gap-2.5 sm:grid-cols-2">
@@ -247,7 +247,7 @@ export default function YorisouCompanionCard({
               }),
             );
           }}
-          className="flex min-h-[50px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 text-center text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
+          className="flex min-h-[50px] items-center justify-center rounded-full border border-[var(--yr-accent)] bg-[var(--yr-accent)] px-4 text-center text-[14px] font-semibold text-[color:var(--yr-accent-ink)] transition hover:-translate-y-0.5"
         >
           {visibleSeed.recommendedCta.label}
         </Link>
@@ -268,7 +268,7 @@ export default function YorisouCompanionCard({
                 }),
               );
             }}
-            className="flex min-h-[50px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-4 text-center text-[14px] font-semibold text-[#173B35] transition hover:-translate-y-0.5"
+            className="flex min-h-[50px] items-center justify-center rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel)] px-4 text-center text-[14px] font-semibold text-[color:var(--yr-accent-text)] transition hover:-translate-y-0.5"
           >
             {visibleSeed.lineReturnCta.label}
           </Link>
@@ -276,8 +276,8 @@ export default function YorisouCompanionCard({
       </div>
 
       {visibleSeed.boundedQuestion ? (
-        <div className="surface-panel-soft space-y-3 !bg-[#FCFAF6]">
-          <p className="text-[13px] font-semibold leading-6 text-[#2F2A28]">{visibleSeed.boundedQuestion}</p>
+        <div className="surface-panel-soft space-y-3 !bg-[var(--yr-panel-2)]">
+          <p className="text-[13px] font-semibold leading-6 text-[color:var(--yr-text)]">{visibleSeed.boundedQuestion}</p>
           <div className="grid gap-2">
             {visibleSeed.boundedOptions.map((option) => (
               <button
@@ -312,23 +312,23 @@ export default function YorisouCompanionCard({
                 }}
                 className={`rounded-[0.95rem] border px-3.5 py-3 text-left text-[13px] font-semibold transition ${
                   selectedOptionId === option.id
-                    ? "border-[#173B35] bg-[#F3FAF6] text-[#173B35]"
-                    : "border-[rgba(23,59,53,0.08)] bg-white text-[#315F50] hover:-translate-y-0.5"
+                    ? "border-[var(--yr-accent)] bg-[var(--yr-panel-2)] text-[color:var(--yr-accent-text)]"
+                    : "border-[var(--yr-hair)] bg-[var(--yr-panel)] text-[color:var(--yr-accent-text)] hover:-translate-y-0.5"
                 }`}
               >
                 {option.label}
               </button>
             ))}
           </div>
-          {selectedOption ? <p className="text-[12px] leading-6 text-[#6F625C]">{selectedOption.reply}</p> : null}
+          {selectedOption ? <p className="text-[12px] leading-6 text-[color:var(--yr-text-faint)]">{selectedOption.reply}</p> : null}
         </div>
       ) : null}
 
       {variant === "return" && visibleSeed.subscriptionProbe?.show ? (
-        <div className="space-y-3 rounded-[1.1rem] border border-[rgba(23,59,53,0.08)] bg-[#FFF9F2] p-4">
+        <div className="space-y-3 rounded-[1.1rem] border border-[var(--yr-hair)] bg-[var(--yr-accent-soft)] p-4">
           <div className="space-y-1.5">
-            <p className="text-[13px] font-semibold leading-6 text-[#2F2A28]">{visibleSeed.subscriptionProbe.question}</p>
-            <p className="text-[12px] leading-6 text-[#6F625C]">
+            <p className="text-[13px] font-semibold leading-6 text-[color:var(--yr-text)]">{visibleSeed.subscriptionProbe.question}</p>
+            <p className="text-[12px] leading-6 text-[color:var(--yr-text-faint)]">
               これは支払いではなく、今後の関心を確かめるための小さな確認です。
             </p>
           </div>
@@ -354,8 +354,8 @@ export default function YorisouCompanionCard({
                 }}
                 className={`rounded-[0.95rem] border px-3.5 py-3 text-left text-[13px] font-semibold transition ${
                   selectedSubscription === choice.id
-                    ? "border-[#173B35] bg-[#F3FAF6] text-[#173B35]"
-                    : "border-[rgba(23,59,53,0.08)] bg-white text-[#315F50] hover:-translate-y-0.5"
+                    ? "border-[var(--yr-accent)] bg-[var(--yr-panel-2)] text-[color:var(--yr-accent-text)]"
+                    : "border-[var(--yr-hair)] bg-[var(--yr-panel)] text-[color:var(--yr-accent-text)] hover:-translate-y-0.5"
                 }`}
               >
                 {choice.label}
@@ -363,17 +363,17 @@ export default function YorisouCompanionCard({
             ))}
           </div>
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold tracking-[0.08em] text-[#7A7068]">想定しているもの</p>
-            <div className="flex flex-wrap gap-2 text-[11px] leading-5 text-[#7A7068]">
+            <p className="text-[11px] font-semibold tracking-[0.08em] text-[color:var(--yr-text-faint)]">想定しているもの</p>
+            <div className="flex flex-wrap gap-2 text-[11px] leading-5 text-[color:var(--yr-text-faint)]">
               {PROBE_VALUE_LABELS.map((label) => (
-                <span key={label} className="rounded-full border border-[rgba(23,59,53,0.08)] bg-white px-2.5 py-1">
+                <span key={label} className="rounded-full border border-[var(--yr-hair)] bg-[var(--yr-panel)] px-2.5 py-1">
                   {label}
                 </span>
               ))}
             </div>
           </div>
           {selectedSubscriptionChoice ? (
-            <p className="text-[12px] leading-6 text-[#6F625C]">
+            <p className="text-[12px] leading-6 text-[color:var(--yr-text-faint)]">
               {selectedSubscriptionChoice.id === "free_only_for_now"
                 ? "今は無料の入口を優先する、という受け止め方で記録します。"
                 : "今後の相棒まわりの検討材料として、関心だけを記録します。"}
@@ -382,9 +382,9 @@ export default function YorisouCompanionCard({
         </div>
       ) : null}
 
-      <div className="rounded-[1rem] border border-[rgba(23,59,53,0.06)] bg-[#FCFAF6] px-4 py-3">
-        <p className="text-[11px] font-semibold tracking-[0.08em] text-[#7A7068]">境界の考え方</p>
-        <p className="mt-1 text-[12px] leading-6 text-[#7A7068]">{visibleSeed.riskBoundaryNote}</p>
+      <div className="rounded-[1rem] border border-[var(--yr-hair)] bg-[var(--yr-panel-2)] px-4 py-3">
+        <p className="text-[11px] font-semibold tracking-[0.08em] text-[color:var(--yr-text-faint)]">境界の考え方</p>
+        <p className="mt-1 text-[12px] leading-6 text-[color:var(--yr-text-faint)]">{visibleSeed.riskBoundaryNote}</p>
       </div>
     </section>
   );
