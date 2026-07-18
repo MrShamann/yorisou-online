@@ -83,6 +83,6 @@ const header = read("app/components/SiteHeader.tsx");
 for (const href of ["/en/about", "/en/partners", "/en/contact", "/en/privacy", "/en/legal"]) {
   assert.ok(header.includes(`href: "${href}"`), `header EN nav includes ${href}`);
 }
-assert.ok(header.includes("isImmersive(pathname)"), "header tone resolves from the actual path (fixes EN dark/light mismatch)");
+assert.ok(header.includes("isDarkSurface(pathname)"), "header tone resolves from the actual path (fixes EN dark/light mismatch; AIX-3D-2 dark understand)");
 
 console.log("AIX-3D-1 completion contract checks passed");
