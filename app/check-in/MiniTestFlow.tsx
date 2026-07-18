@@ -320,7 +320,7 @@ export default function MiniTestFlow() {
 
                 <div className="aix2-panel px-4 py-3">
                   <p className="text-[12px] leading-6 aix2-mut">
-                    今の動き方を、24の色と名前で見ていきます。現在は最初の公開テスト中です。わかりにくかった点や不具合は、
+                    現在は最初の公開テスト中です。わかりにくかった点や不具合は、
                     <Link href="/contact?topic=open-testing" className="aix2-link">あとで感想として送れます</Link>。
                   </p>
                 </div>
@@ -380,7 +380,7 @@ export default function MiniTestFlow() {
                   </div>
                 </div>
 
-                <div className="sticky bottom-0 z-20 -mx-4 border-t border-[var(--hair)] bg-[rgba(8,16,12,0.94)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
+                <div className="sticky bottom-0 z-20 -mx-4 border-t border-[var(--hair)] bg-[rgba(9,11,10,0.94)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))" }}>
                   {navigationFallbackHref ? (
                     <div className="mb-3 aix2-panel px-4 py-3">
                       <p className="text-[13px] leading-6 aix2-mut">

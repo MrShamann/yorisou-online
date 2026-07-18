@@ -16,18 +16,18 @@ export const metadata: Metadata = {
 // hero flowing into a glanceable product journey and honest growing layers.
 
 const JOURNEY: ReadonlyArray<{ step: string; title: string; body: string; accent?: boolean }> = [
-  { step: "01", title: "はじめる", body: "ログインなしで、今の動き方をみる120問チェックへ。", accent: true },
-  { step: "02", title: "チェック", body: "一問ずつ、静かに。答えるほど状態が形になっていきます。" },
-  { step: "03", title: "結果", body: "固定タイプではなく、いまの動き方を24の色と名前で受け取る。" },
-  { step: "04", title: "保存・戻る", body: "この端末やLINEに残して、あとから自分のペースで見返せます。" },
-  { step: "05", title: "レポート", body: "無料結果の先の、少し深い読みもの。次の選択肢を考える材料に。" },
-  { step: "06", title: "次の層", body: "おすすめ、コミュニティ、よりそうデザイン、マッチングへ静かに。" },
+  { step: "01", title: "はじめる", body: "ログインなしで120問へ。", accent: true },
+  { step: "02", title: "チェック", body: "一問ずつ、静かに答える。" },
+  { step: "03", title: "結果", body: "いまの動き方を、24の色で。" },
+  { step: "04", title: "保存・戻る", body: "端末やLINEに残して見返す。" },
+  { step: "05", title: "レポート", body: "結果の先の、深い読みもの。" },
+  { step: "06", title: "次の層", body: "おすすめや、この先の領域へ。" },
 ];
 
 const LAYERS = [
-  { title: "コミュニティ", body: "気になるテーマに、フィードバックや試用として任意で参加できます。声は、よりよいチェックやレポートにつながります。" },
-  { title: "よりそうデザイン", body: "チェックの結果から見えてきた「あると助かるもの」を、アイデア、試用、共創へと少しずつ育てていきます。" },
-  { title: "マッチング", body: "まだ販売や注文の場所ではなく、どんな提案やつながりが役に立ちそうかを、関心ベースで整理していく準備中の領域です。" },
+  { title: "コミュニティ", body: "気になるテーマに、任意で参加。声は次の改善につながります。" },
+  { title: "よりそうデザイン", body: "「あると助かるもの」を、アイデアから試用へ少しずつ。" },
+  { title: "マッチング", body: "販売の場ではなく、役立つつながりを関心ベースで整理する準備中の領域。" },
 ] as const;
 
 export default function HomePage() {
@@ -72,17 +72,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== Scene 2: the journey, shown as a spatial diagram ===== */}
+      {/* ===== Scene 2: the journey, shown as a connected flow ===== */}
       <AixIn as="section" className="aix2-band">
         <div className="container">
-          <div className="max-w-[42rem]">
-            <p className="aix2-eyebrow aix2-rise">ひとつのテストで終わらない</p>
-            <h2 className="aix2-band-title mt-3 aix2-rise" style={{ ["--d" as string]: "90ms" }}>
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+            <h2 className="aix2-band-title aix2-rise">
               状態は変わる。だから、続く。
             </h2>
-            <p className="aix2-lead mt-4 aix2-rise" style={{ ["--d" as string]: "170ms" }}>
-              はじめる、チェック、結果、保存と戻り道、レポート、そして次の層。全体をひとつの流れとして見通せます。
-            </p>
+            <p className="aix2-eyebrow aix2-rise" style={{ ["--d" as string]: "90ms" }}>はじめる → 次の層</p>
           </div>
           <div className="aix2-journey mt-10">
             {JOURNEY.map((n, i) => (
@@ -103,14 +100,19 @@ export default function HomePage() {
         </div>
       </AixIn>
 
-      {/* ===== Scene 3: current open-testing truth ===== */}
-      <section className="aix2-band aix2-band--tight">
+      {/* ===== Scene 3: what works now (elevated "present" zone) ===== */}
+      <section className="aix2-band aix2-band--tight aix2-band--tint">
         <div className="container">
           <div className="mx-auto max-w-[52rem]">
-            <div className="aix2-panel p-6 sm:p-8">
-              <p className="aix2-eyebrow">いま使える核</p>
-              <p className="mt-3 aix2-mut text-[14.5px] leading-8">
-                いまは、チェック、結果、詳しいレポート、LINE保存、感想送信、おすすめの入口までを実際に試せます。コミュニティ、よりそうデザイン、マッチングはコンセプトや関心の段階として育てています。
+            <div className="aix2-panel aix2-panel--now p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="aix2-eyebrow">いま動いている</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--hair-jade)] px-2.5 py-1 text-[11px] font-semibold text-[var(--jade-bright)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--jade)]" />公開テスト中
+                </span>
+              </div>
+              <p className="mt-3 text-[16px] font-semibold leading-8 text-[color:var(--tx)]">
+                チェック・結果・レポート・LINE保存・おすすめまで、実際に試せます。
               </p>
               <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
                 <Link href="/open-testing" className="aix2-link">公開中の入口を見る →</Link>
@@ -131,7 +133,7 @@ export default function HomePage() {
                 無料結果の先に、深い読みもの。
               </h2>
               <p className="aix2-lead mt-4 aix2-rise" style={{ ["--d" as string]: "170ms" }}>
-                関係の距離、仕事や生活で整えやすいペースを、無料結果より少し具体的に整理します。決めつけではなく、次の選択肢を考えるための読みものです。
+                関係の距離や整えやすいペースを、無料結果より少し具体的に。決めつけではなく、次の一歩のための読みものです。
               </p>
               <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 aix2-rise" style={{ ["--d" as string]: "250ms" }}>
                 <Link href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low" className="aix2-link">レポートの見本 →</Link>
@@ -148,8 +150,8 @@ export default function HomePage() {
         </div>
       </AixIn>
 
-      {/* ===== Scene 5: LINE return path ===== */}
-      <AixIn as="section" className="aix2-band">
+      {/* ===== Scene 5: LINE return path (elevated "present" zone) ===== */}
+      <AixIn as="section" className="aix2-band aix2-band--tint">
         <div className="container" id="yorisou-line">
           <div className="grid gap-8 md:grid-cols-[1fr_1fr] md:items-start">
             <div>
@@ -158,7 +160,7 @@ export default function HomePage() {
                 LINEは、戻り道として使える。
               </h2>
               <p className="aix2-lead mt-4 aix2-rise" style={{ ["--d" as string]: "170ms" }}>
-                チェックの代わりではなく、結果や振り返りを無理なく続けるための戻り道です。結果を保存し、必要なときだけ次の入口を受け取り、不要なときは通知を止められます。
+                チェックの代わりではなく、振り返りを続けるための戻り道。保存し、必要なときだけ次の入口を受け取り、不要なら通知を止められます。
               </p>
               <div className="mt-6 aix2-rise" style={{ ["--d" as string]: "250ms" }}>
                 <Link href="/line/mini-app" className="aix2-btn aix2-btn-ghost">LINEでYorisouを開く</Link>
@@ -177,16 +179,16 @@ export default function HomePage() {
         </div>
       </AixIn>
 
-      {/* ===== Scene 6: growing layers (honest stages) ===== */}
-      <AixIn as="section" className="aix2-band">
+      {/* ===== Scene 6: growing layers (deliberately quiet, subordinate) ===== */}
+      <AixIn as="section" className="aix2-band aix2-band--quiet">
         <div className="container" id="yorisou-community">
           <div className="max-w-[42rem]">
-            <p className="aix2-eyebrow aix2-rise">育てている層</p>
+            <p className="aix2-eyebrow aix2-rise">この先に育てている層</p>
             <h2 className="aix2-band-title mt-3 aix2-rise" style={{ ["--d" as string]: "90ms" }}>
-              この先に、少しずつ育てている領域。
+              まだ準備中の領域。
             </h2>
             <p className="aix2-lead mt-4 aix2-rise" style={{ ["--d" as string]: "170ms" }}>
-              どれもまだコンセプトや関心の段階です。購入、決済、在庫、配送、申込みは行いません。参加は任意で、声は次の改善につながります。
+              どれもコンセプトや関心の段階です。購入・決済・配送・申込みは行いません。参加は任意です。
             </p>
           </div>
           <div className="mt-9 grid gap-0 md:grid-cols-3 md:gap-10">
@@ -204,7 +206,7 @@ export default function HomePage() {
             ))}
           </div>
           <p className="mt-8 max-w-[44rem] text-[13px] leading-7 aix2-faint">
-            言葉にしにくい揺れも、大きな悩みになる前の関心も、Yorisouでは今を整理する入口として受け止めます。
+            言葉にしにくい揺れも、悩みになる前の関心も、いまを整理する入口として。
             <Link href="/contact?topic=open-testing" className="ml-2 aix2-link">感想や関心を送る →</Link>
           </p>
         </div>

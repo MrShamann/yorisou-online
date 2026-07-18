@@ -28,11 +28,11 @@ export default function SiteFooter() {
     <footer
       className={
         dark
-          ? "mt-[72px] border-t border-[rgba(126,224,182,0.14)] bg-[#08110c] text-[#eef4ef]"
+          ? "border-t border-[rgba(228,240,233,0.12)] bg-[#0a0d0b] text-[#eef4ef]"
           : "mt-[72px] border-t border-[var(--line)] bg-[rgba(255,253,248,0.94)]"
       }
     >
-      <div className="container py-12">
+      <div className={`container pb-12 ${dark ? "pt-16" : "py-12"}`}>
         <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-start">
           <div className="max-w-xl">
             {dark ? (
@@ -69,7 +69,7 @@ export default function SiteFooter() {
             </div>
           </div>
         </div>
-        <div className={`mt-10 border-t pt-5 text-xs ${dark ? "border-[rgba(126,224,182,0.12)] text-[#8aa298]" : "border-[var(--line-soft)] text-[var(--muted)]"}`}>
+        <div className={`mt-10 border-t pt-5 text-xs ${dark ? "border-[rgba(228,240,233,0.10)] text-[#8ba095]" : "border-[var(--line-soft)] text-[var(--muted)]"}`}>
           © {new Date().getFullYear()} YORISOU. All rights reserved.
         </div>
       </div>

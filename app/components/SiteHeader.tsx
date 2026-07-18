@@ -203,7 +203,7 @@ export default function SiteHeader() {
             <div
               className={`mb-4 space-y-4 rounded-[22px] p-4 ${
                 dark
-                  ? "border border-[rgba(126,224,182,0.18)] bg-[rgba(10,19,16,0.96)]"
+                  ? "border border-[rgba(228,240,233,0.14)] bg-[rgba(11,13,12,0.97)]"
                   : "surface-panel"
               }`}
             >

@@ -105,7 +105,7 @@ export default function ReportLoadingPage() {
                   <div
                     key={step}
                     className={`flex items-center gap-3 rounded-[12px] border px-4 py-3 transition ${
-                      isActive ? "border-[var(--hair-2)] bg-[rgba(47,197,150,0.1)]" : "border-[var(--hair)] bg-[rgba(20,38,30,0.4)]"
+                      isActive ? "border-[var(--hair-2)] bg-[rgba(47,197,150,0.1)]" : "border-[var(--hair)] bg-[rgba(26,32,29,0.4)]"
                     }`}
                   >
                     <span
@@ -132,7 +132,7 @@ export default function ReportLoadingPage() {
               <p className="text-[12px] leading-6 aix2-mut">まもなく結果が表示されます。</p>
             </div>
 
-            <div className="rounded-[12px] border border-[var(--hair)] bg-[rgba(20,38,30,0.4)] px-4 py-3">
+            <div className="rounded-[12px] border border-[var(--hair)] bg-[rgba(26,32,29,0.4)] px-4 py-3">
               <p className="text-[13px] leading-6 aix2-mut">
                 結果の表示に少し時間がかかっています。進まない場合は、下のボタンから結果を開いてください。
               </p>

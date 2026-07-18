@@ -134,7 +134,7 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
   return (
     <div className="space-y-5" data-testid="imairo-private-save">
       {/* Private save */}
-      <section className="rounded-[1.25rem] border border-[rgba(126,224,182,0.14)] bg-[rgba(20,38,30,0.6)] px-5 py-5">
+      <section className="rounded-[1.25rem] border border-[rgba(126,224,182,0.14)] bg-[rgba(26,32,29,0.6)] px-5 py-5">
         <p className="text-[13px] font-semibold text-[#5ce6b4]">この結果を非公開で残す</p>
         <p className="mt-1 text-[13px] leading-7 text-[#aec3b7]">
           保存した結果はあなたにだけ表示されます。あとから見返して、変化をゆっくり確かめられます。
@@ -149,7 +149,7 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
             </Link>
             <Link
               href="/private-state"
-              className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(20,38,30,0.5)] px-5 text-[14px] font-semibold text-[#5ce6b4]"
+              className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(26,32,29,0.5)] px-5 text-[14px] font-semibold text-[#5ce6b4]"
             >
               わたしの今を開く
             </Link>
@@ -168,7 +168,7 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
               </Link>
               <Link
                 href={lineHref}
-                className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(20,38,30,0.5)] px-5 text-[14px] font-semibold text-[#5ce6b4]"
+                className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(26,32,29,0.5)] px-5 text-[14px] font-semibold text-[#5ce6b4]"
               >
                 LINEでログイン
               </Link>
@@ -199,7 +199,7 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
             <p className="mt-2 text-[13px] leading-7 text-[#aec3b7]">候補を整理しています。</p>
           ) : recState === "loaded" && topItem ? (
             <div className="mt-3 space-y-3">
-              <div className="rounded-[1rem] border border-[rgba(126,224,182,0.14)] bg-[rgba(20,38,30,0.55)] px-4 py-4">
+              <div className="rounded-[1rem] border border-[rgba(126,224,182,0.14)] bg-[rgba(26,32,29,0.55)] px-4 py-4">
                 <p className="text-[11px] font-semibold tracking-[0.1em] text-[#5ce6b4]">
                   {topItem.object_type === "experience_card"
                     ? "匿名で共有された体験"
@@ -227,7 +227,7 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
                       key={action}
                       type="button"
                       onClick={() => sendFeedback(topItem.id, action)}
-                      className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(20,38,30,0.5)] px-4 text-[13px] font-semibold text-[#5ce6b4] transition hover:-translate-y-0.5"
+                      className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(26,32,29,0.5)] px-4 text-[13px] font-semibold text-[#5ce6b4] transition hover:-translate-y-0.5"
                     >
                       {label}
                     </button>
@@ -252,14 +252,14 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
                 <button
                   type="button"
                   onClick={() => planReturn(recommendation.set.id)}
-                  className="inline-flex min-h-[42px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(20,38,30,0.5)] px-4 text-[13px] font-semibold text-[#5ce6b4]"
+                  className="inline-flex min-h-[42px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(26,32,29,0.5)] px-4 text-[13px] font-semibold text-[#5ce6b4]"
                 >
                   1週間後の変化を記録する
                 </button>
               ) : null}
               <Link
                 href="/recommendations/graph"
-                className="inline-flex min-h-[42px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(20,38,30,0.5)] px-4 text-[13px] font-semibold text-[#5ce6b4]"
+                className="inline-flex min-h-[42px] items-center justify-center rounded-full border border-[rgba(126,224,182,0.2)] bg-[rgba(26,32,29,0.5)] px-4 text-[13px] font-semibold text-[#5ce6b4]"
               >
                 保存した提案を確認する
               </Link>

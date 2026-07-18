@@ -74,7 +74,7 @@ export default async function ResultPage({ searchParams }: { searchParams?: Sear
               </p>
               <RevealExperience stages={[
               <div key="hero" className="grid gap-5">
-              <div className="relative overflow-hidden rounded-[16px] border border-[var(--hair)] bg-[rgba(20,38,30,0.5)] px-4 py-5 sm:px-5">
+              <div className="relative overflow-hidden rounded-[16px] border border-[var(--hair)] bg-[rgba(26,32,29,0.5)] px-4 py-5 sm:px-5">
                 {/* AIX-2 — Depth Signature: deterministic volumetric identity of
                     this public result (public-safe IDs only). */}
                 <div className="mx-auto mb-2 w-[52%] max-w-[240px] sm:float-right sm:mb-0 sm:ml-4 sm:w-[38%]">
@@ -105,7 +105,7 @@ export default async function ResultPage({ searchParams }: { searchParams?: Sear
                 <p className="mt-2 text-[14px] leading-7 aix2-mut">{compatibility.recognitionLine}</p>
               </div>
 
-              <div className="rounded-[14px] border border-[var(--hair)] bg-[rgba(20,38,30,0.4)] px-4 py-4">
+              <div className="rounded-[14px] border border-[var(--hair)] bg-[rgba(26,32,29,0.4)] px-4 py-4">
                 <div className="aix2-eyebrow">今の見え方</div>
                 <p className="mt-2 text-[14px] leading-7 aix2-mut">{compatibility.recognitionLine}</p>
                 <p className="mt-2 text-[14px] leading-7 aix2-mut">{highlightSummary}</p>
@@ -130,7 +130,7 @@ export default async function ResultPage({ searchParams }: { searchParams?: Sear
                 <p className="text-[14px] leading-7 aix2-mut">{compatibility.gentleNextStep}</p>
               </div>
 
-              <div className="space-y-3 rounded-[14px] border border-[var(--hair)] bg-[rgba(20,38,30,0.4)] px-4 py-4">
+              <div className="space-y-3 rounded-[14px] border border-[var(--hair)] bg-[rgba(26,32,29,0.4)] px-4 py-4">
                 <p className="aix2-eyebrow">このあと読めるもの</p>
                 <p className="text-[13px] leading-6 aix2-mut">
                   まずは詳しいレポートを開き、必要なら今日のヒントをあとから見返せます。

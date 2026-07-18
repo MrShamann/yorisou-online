@@ -49,7 +49,7 @@ export default function OpenTestingPage() {
               いまの状態を見て、次の入口まで。
             </h1>
             <p className="aix2-lead mt-5">
-              120問のチェックから、結果、詳しいレポート、保存、感想送信、おすすめの入口まで、現在のYorisouで使える流れをまとめています。迷ったら、まずここから始めれば大丈夫です。
+              チェックから結果、レポート、保存、おすすめまで、いま使える流れをまとめました。迷ったら、まずここから。
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <OpenTestingTrackingLink
@@ -62,7 +62,7 @@ export default function OpenTestingPage() {
               <Link href="/tests" className="aix2-btn aix2-btn-ghost">別の入口を選ぶ</Link>
             </div>
             <p className="mt-4 max-w-[38rem] text-[12.5px] leading-7 aix2-faint">
-              結果をあとで見返したい場合は、途中でLINE導線も選べます。これは医療や心理診断ではなく、今の状態を見直し、レポートやおすすめ、次の入口につなげるための公開テストです。
+              途中でLINE導線も選べます。医療や心理診断ではなく、今の状態を見直すための公開テストです。
             </p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function OpenTestingPage() {
               <p className="aix2-eyebrow">このページでわかること</p>
               <h2 className="aix2-band-title mt-3">公開テストで進められる流れ。</h2>
               <p className="aix2-lead mt-4">
-                最初に何をして、そのあと何が見えてくるのかを、先に短くまとめています。公開テストは、結果を読むだけで終わりません。あとで見返す、詳しいレポートへ進む、おすすめや別の入口を見る、コミュニティやよりそうデザイン、マッチングの関心へつなぐ、といった次の行動にもつながります。
+                最初に何をして、次に何が見えるか。結果を読むだけで終わらず、保存やレポート、次の入口へ続きます。
               </p>
             </div>
             <div className="grid gap-0">

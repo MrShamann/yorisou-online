@@ -15,7 +15,7 @@ export function SourceChip({ type }: { type: SourceType }): ReactElement {
   return (
     <span
       className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10.5px] font-semibold"
-      style={{ borderColor: `${tone}44`, color: tone, background: "rgba(14,26,21,0.7)" }}
+      style={{ borderColor: `${tone}44`, color: tone, background: "rgba(18,22,20,0.7)" }}
     >
       <span aria-hidden style={{ width: 5, height: 5, borderRadius: 99, background: tone }} />
       {SOURCE_LABEL[type]}
@@ -35,7 +35,7 @@ export function EvidencePanel({ highlights }: { highlights: { label: string; tex
       </p>
       <ul className="m-0 grid list-none gap-2 p-0">
         {highlights.map((h) => (
-          <li key={`${h.label}:${h.text}`} className="rounded-[12px] border border-[var(--hair)] bg-[rgba(20,38,30,0.45)] px-4 py-3">
+          <li key={`${h.label}:${h.text}`} className="rounded-[12px] border border-[var(--hair)] bg-[rgba(26,32,29,0.45)] px-4 py-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[12px] font-semibold text-[color:var(--jade-bright)]">{h.label}</p>
               <SourceChip type="RULE_BASED_INTERPRETATION" />

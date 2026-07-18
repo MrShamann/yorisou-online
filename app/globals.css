@@ -1029,16 +1029,21 @@ main {
    ============================================================================ */
 
 .aix2 {
-  --ink: #0a1310;            /* warm near-black green canvas */
-  --ink-2: #0e1a15;         /* elevated surface */
-  --ink-3: #14261e;         /* card surface */
-  --hair: rgba(126, 224, 182, 0.13);
-  --hair-2: rgba(126, 224, 182, 0.22);
+  /* AIX-2A: neutral warm-charcoal base — green pulled out of the canvas and
+     kept as a jade ACCENT only. Alternating --ink-alt band gives tonal
+     separation between zones. */
+  --ink: #0c0e0d;           /* neutral warm near-black canvas */
+  --ink-2: #121613;         /* elevated surface (neutral) */
+  --ink-3: #1a1f1c;         /* card surface (neutral charcoal) */
+  --ink-alt: #0f1411;       /* alternating band ground: faint forest wash */
+  --hair: rgba(228, 240, 233, 0.09);   /* de-greened neutral hairline */
+  --hair-2: rgba(228, 240, 233, 0.17); /* stronger neutral hairline */
+  --hair-jade: rgba(95, 230, 180, 0.30); /* reserved jade accent hairline */
   --tx: #eef4ef;            /* primary text (very high contrast) */
-  --tx-mut: #aec3b7;        /* muted text (verified >= 4.5:1 in battery) */
-  --tx-faint: #8aa298;      /* faint: large/decorative only */
-  --jade: #2fc596;          /* interactive fill */
-  --jade-bright: #5ce6b4;   /* jade text/links on dark */
+  --tx-mut: #adc0b6;        /* muted text (verified >= 4.5:1 in battery) */
+  --tx-faint: #8ba095;      /* faint: large/decorative only */
+  --jade: #2fc596;          /* interactive fill (accent) */
+  --jade-bright: #5ce6b4;   /* jade text/links on dark (accent) */
   --jade-ink: #04140e;      /* text on jade fill */
   --amber: #ecb765;
   --coral: #f2896c;
@@ -1050,10 +1055,11 @@ main {
   isolation: isolate;
   min-height: 100dvh;
   color: var(--tx);
+  /* luminous at the top (hero), neutral charcoal below */
   background:
-    radial-gradient(140% 90% at 15% -10%, rgba(47, 197, 150, 0.14), transparent 55%),
-    radial-gradient(120% 80% at 92% 0%, rgba(236, 183, 101, 0.09), transparent 50%),
-    linear-gradient(180deg, #0b1712 0%, #0a1310 46%, #07100c 100%),
+    radial-gradient(120% 68% at 16% -8%, rgba(47, 197, 150, 0.11), transparent 52%),
+    radial-gradient(110% 58% at 92% -4%, rgba(236, 183, 101, 0.06), transparent 46%),
+    linear-gradient(180deg, #0e1512 0%, #0c0e0d 38%, #090b0a 100%),
     var(--ink);
   color-scheme: dark;
 }
@@ -1078,8 +1084,8 @@ main {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(120% 80% at 50% 44%, rgba(8, 16, 12, 0.62) 0%, rgba(8, 16, 12, 0.2) 46%, transparent 74%),
-    linear-gradient(180deg, transparent 40%, rgba(8, 16, 12, 0.72) 100%);
+    radial-gradient(120% 80% at 50% 44%, rgba(7, 9, 8, 0.6) 0%, rgba(7, 9, 8, 0.18) 46%, transparent 74%),
+    linear-gradient(180deg, transparent 40%, rgba(7, 9, 8, 0.72) 100%);
 }
 
 /* ---- typography ---- */
@@ -1115,16 +1121,21 @@ main {
 /* ---- surfaces ---- */
 .aix2-panel {
   border: 1px solid var(--hair);
-  background: linear-gradient(180deg, rgba(20, 38, 30, 0.72) 0%, rgba(14, 26, 21, 0.72) 100%);
+  background: linear-gradient(180deg, rgba(28, 34, 31, 0.66) 0%, rgba(18, 22, 20, 0.66) 100%);
   border-radius: var(--r);
   backdrop-filter: blur(8px);
 }
+/* accent panel: the "now / present" surface carries a jade edge */
+.aix2-panel--now {
+  border-color: var(--hair-jade);
+  box-shadow: inset 0 0 0 1px rgba(47, 197, 150, 0.14), 0 20px 50px rgba(4, 12, 8, 0.4);
+}
 .aix2-glass {
   border: 1px solid var(--hair-2);
-  background: rgba(14, 26, 21, 0.55);
+  background: rgba(20, 24, 22, 0.55);
   border-radius: var(--r);
-  backdrop-filter: blur(14px) saturate(140%);
-  box-shadow: inset 0 1px 0 rgba(126, 224, 182, 0.1), 0 24px 60px rgba(4, 12, 8, 0.5);
+  backdrop-filter: blur(14px) saturate(130%);
+  box-shadow: inset 0 1px 0 rgba(228, 240, 233, 0.08), 0 24px 60px rgba(4, 8, 6, 0.5);
 }
 .aix2-hair-top { border-top: 1px solid var(--hair); }
 
@@ -1152,11 +1163,11 @@ main {
 .aix2-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(47, 197, 150, 0.36); }
 .aix2-btn-primary:active { transform: translateY(0) scale(0.985); }
 .aix2-btn-ghost {
-  background: rgba(126, 224, 182, 0.06);
+  background: rgba(228, 240, 233, 0.05);
   color: var(--tx);
   border-color: var(--hair-2);
 }
-.aix2-btn-ghost:hover { transform: translateY(-2px); background: rgba(126, 224, 182, 0.11); }
+.aix2-btn-ghost:hover { transform: translateY(-2px); background: rgba(228, 240, 233, 0.09); border-color: var(--hair-jade); }
 .aix2-btn:focus-visible { outline: 2px solid var(--jade-bright); outline-offset: 3px; }
 
 .aix2-link {
@@ -1166,10 +1177,22 @@ main {
 }
 .aix2-link:hover { text-decoration: underline; text-underline-offset: 4px; }
 
-/* ---- section rhythm ---- */
-.aix2-band { position: relative; padding: 88px 0; }
-.aix2-band--tight { padding: 56px 0; }
-.aix2-band + .aix2-band { border-top: 1px solid var(--hair); }
+/* ---- section rhythm + tonal separation ---- */
+.aix2-band { position: relative; padding: 92px 0; }
+.aix2-band--tight { padding: 60px 0; }
+/* base->base adjacency keeps a quiet hairline */
+.aix2-band + .aix2-band:not(.aix2-band--tint) { border-top: 1px solid var(--hair); }
+/* but a base band right after a tint band already has the tint's bottom edge */
+.aix2-band--tint + .aix2-band:not(.aix2-band--tint) { border-top: none; }
+/* elevated, forest-washed zone: separates "present" sections from the base
+   charcoal so the page reads as distinct zones, not one flat wall */
+.aix2-band--tint {
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(30, 46, 38, 0.42), transparent 66%),
+    var(--ink-alt);
+  border-top: 1px solid var(--hair-2);
+  border-bottom: 1px solid var(--hair-2);
+}
 .aix2-band-title {
   font-family: var(--font-sans);
   font-weight: 700;
@@ -1179,6 +1202,9 @@ main {
   color: var(--tx);
   max-width: 15em;
 }
+/* quiet tier for future/optional zones — visibly subordinate to "now" */
+.aix2-band--quiet .aix2-band-title { font-size: clamp(1.35rem, 2.4vw, 1.9rem); color: var(--tx-mut); }
+.aix2-band--quiet .aix2-eyebrow { color: var(--tx-faint); }
 
 /* ---- hero ---- */
 .aix2-hero {
@@ -1197,8 +1223,8 @@ main {
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(7, 14, 11, 0.9) 0%, rgba(7, 14, 11, 0.66) 34%, rgba(7, 14, 11, 0.12) 62%, transparent 80%),
-    linear-gradient(180deg, rgba(7, 14, 11, 0.4) 0%, transparent 30%, rgba(7, 14, 11, 0.55) 100%);
+    linear-gradient(90deg, rgba(6, 8, 7, 0.9) 0%, rgba(6, 8, 7, 0.66) 34%, rgba(6, 8, 7, 0.12) 62%, transparent 80%),
+    linear-gradient(180deg, rgba(6, 8, 7, 0.4) 0%, transparent 30%, rgba(6, 8, 7, 0.55) 100%);
 }
 .aix2-hero-title {
   font-family: var(--font-sans);
@@ -1217,19 +1243,32 @@ main {
   letter-spacing: -0.02em;
 }
 
-/* ---- product journey (spatial diagram, not a paragraph) ---- */
+/* ---- product journey: one connected flow, not six look-alike cards ---- */
 .aix2-journey {
+  position: relative;
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
+/* connective spine: threads the numbered steps into a single left-to-right flow */
+.aix2-journey::before {
+  content: "";
+  position: absolute;
+  top: 40px;
+  left: 6%;
+  right: 6%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--hair-2) 10%, var(--hair-2) 90%, transparent);
+  z-index: 0;
+}
 .aix2-journey-node {
   position: relative;
+  z-index: 1;
   border: 1px solid var(--hair);
-  background: linear-gradient(180deg, rgba(20, 38, 30, 0.6), rgba(12, 22, 18, 0.6));
+  background: linear-gradient(180deg, rgba(24, 30, 27, 0.62), rgba(15, 19, 17, 0.62));
   border-radius: var(--r);
   padding: 16px 14px 18px;
-  min-height: 128px;
+  min-height: 130px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1238,20 +1277,36 @@ main {
 .aix2-journey-node:hover {
   transform: translateY(-4px);
   border-color: var(--hair-2);
-  box-shadow: 0 18px 44px rgba(4, 12, 8, 0.5);
+  box-shadow: 0 18px 44px rgba(4, 8, 6, 0.5);
 }
-.aix2-journey-node[data-accent="jade"] { box-shadow: inset 0 0 0 1px rgba(47, 197, 150, 0.28); }
+.aix2-journey-node[data-accent="jade"] {
+  border-color: var(--hair-jade);
+  box-shadow: inset 0 0 0 1px rgba(47, 197, 150, 0.24);
+}
 .aix2-journey-step {
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--hair-2);
+  background: var(--ink);
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.02em;
   color: var(--jade-bright);
+}
+.aix2-journey-node[data-accent="jade"] .aix2-journey-step {
+  border-color: var(--hair-jade);
+  background: rgba(47, 197, 150, 0.14);
 }
 .aix2-journey-title { font-size: 15px; font-weight: 700; color: var(--tx); line-height: 1.5; }
 .aix2-journey-body { margin-top: 5px; font-size: 12.5px; line-height: 1.7; color: var(--tx-mut); }
 
 @media (max-width: 900px) {
   .aix2-journey { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aix2-journey::before { display: none; }
 }
 @media (max-width: 480px) {
   .aix2-journey { grid-template-columns: minmax(0, 1fr); }
@@ -1264,8 +1319,8 @@ main {
   border-radius: var(--r-pill);
   overflow: hidden;
   aspect-ratio: 1;
-  background: radial-gradient(circle at 50% 42%, rgba(20, 38, 30, 0.9), rgba(8, 16, 12, 0.96));
-  box-shadow: inset 0 0 0 1px var(--hair-2), 0 30px 70px rgba(4, 12, 8, 0.55);
+  background: radial-gradient(circle at 50% 42%, rgba(26, 34, 30, 0.9), rgba(9, 11, 10, 0.96));
+  box-shadow: inset 0 0 0 1px var(--hair-2), 0 30px 70px rgba(4, 8, 6, 0.55);
 }
 
 /* ---- intention chooser (entry) ---- */
@@ -1296,7 +1351,7 @@ main {
   position: relative;
   border-radius: var(--r);
   border: 1px solid var(--hair);
-  background: rgba(12, 22, 18, 0.66);
+  background: rgba(16, 20, 18, 0.66);
   backdrop-filter: blur(10px);
 }
 .aix2-answer {
@@ -1304,12 +1359,12 @@ main {
   text-align: left;
   border-radius: var(--r-sm);
   border: 1px solid var(--hair);
-  background: rgba(20, 38, 30, 0.5);
+  background: rgba(26, 32, 29, 0.5);
   color: var(--tx);
   padding: 15px 16px;
   transition: transform 0.16s ease, border-color 0.2s ease, background 0.2s ease;
 }
-.aix2-answer:hover { transform: translateY(-1px); border-color: var(--hair-2); background: rgba(24, 44, 35, 0.66); }
+.aix2-answer:hover { transform: translateY(-1px); border-color: var(--hair-2); background: rgba(32, 38, 35, 0.66); }
 .aix2-answer[data-selected="true"] {
   border-color: var(--jade);
   background: rgba(47, 197, 150, 0.12);
@@ -1323,7 +1378,7 @@ main {
 
 /* ---- header/footer dark tone (shared shell on aix2 routes) ---- */
 .aix2-shell-header {
-  background: linear-gradient(180deg, rgba(8, 16, 12, 0.86) 0%, rgba(8, 16, 12, 0.5) 100%);
+  background: linear-gradient(180deg, rgba(9, 11, 10, 0.86) 0%, rgba(9, 11, 10, 0.5) 100%);
   border-bottom: 1px solid var(--hair);
   backdrop-filter: blur(14px);
 }
