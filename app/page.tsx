@@ -98,7 +98,7 @@ export default function HomePage() {
               必要なときに届ける。固定タイプではなく、これからを一緒に選ぶ伴走です。
             </p>
             <div className="mt-9 flex flex-wrap gap-3 aix2-rise" style={{ ["--d" as string]: "340ms" }}>
-              <Link href="/check-in" className="aix2-btn aix2-btn-primary">
+              <Link href="/start" className="aix2-btn aix2-btn-primary">
                 今の自分から始める
               </Link>
               <Link href="/#system" className="aix2-btn aix2-btn-ghost">

@@ -42,7 +42,13 @@ const IMMERSIVE_EXACT = new Set<string>([
   "/co-design",
   "/saved",
   "/private-state",
+  // SR-1 — stranger-ready service spine (dark product surfaces).
+  "/start",
+  "/my-yorisou",
 ]);
+
+// SR-1 — anonymous guided-experience runtime renders as a dark product surface.
+const IMMERSIVE_PREFIXES = ["/experiences/guided"];
 
 // Keep & Return continuity routes (private state space, saved, LINE return).
 const CONTINUITY_EXACT = new Set<string>(["/saved", "/private-state"]);
@@ -111,7 +117,7 @@ export function surfaceFamily(pathname: string | null | undefined): SurfaceFamil
   const p = normalizePath(pathname);
   // focus takes priority (self-understanding reports + line are reading/flow surfaces)
   if (FOCUS_EXACT.has(p) || startsWithAny(p, FOCUS_PREFIXES)) return "focus";
-  if (IMMERSIVE_EXACT.has(p)) return "immersive";
+  if (IMMERSIVE_EXACT.has(p) || startsWithAny(p, IMMERSIVE_PREFIXES)) return "immersive";
   // Children of /tests (the per-test flows) are the dark Understand surface;
   // the exact "/tests" catalogue is caught by IMMERSIVE_EXACT above.
   if (startsWithAny(p, UNDERSTAND_PREFIXES)) return "understand";

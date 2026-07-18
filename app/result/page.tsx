@@ -9,6 +9,8 @@ import RevealExperience from "./reveal/RevealExperience";
 import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
 import PrivateResultSave from "./PrivateResultSave";
 import { DepthSignatureStatic } from "../components/depth-field/DepthSignature";
+import SupportPlanView from "../components/sr1/SupportPlanView";
+import { buildSupportPlan } from "@/lib/sr1/supportPlan";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -40,6 +42,7 @@ export default async function ResultPage({ searchParams }: { searchParams?: Sear
   const payloadKey = readParam(params, "payloadKey");
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
+  const resultHref = buildPublicResultHref("/result", routeContext);
   const resultShareHref = buildPublicResultHref("/result/share", routeContext);
   const recommendationHref = buildPublicResultHref("/recommendations", routeContext);
   const fullReportHref = compatibility.assignment
@@ -193,14 +196,53 @@ export default async function ResultPage({ searchParams }: { searchParams?: Sear
             </div>
 
             {compatibility.assignment ? (
-              <PrivateResultSave
-                context={{
-                  resultId: compatibility.assignment.publicCode,
-                  overlayId,
-                  confidence: confidenceBand,
-                  payloadKey,
-                }}
-              />
+              <>
+                {/* SR-1 — the result becomes a continuing service: a public-safe,
+                    deterministic support plan (what we understood → what may help
+                    now/next, with reasons) + an anonymous device-local save. */}
+                <SupportPlanView
+                  className="mt-2"
+                  plan={buildSupportPlan({
+                    family: "imairo",
+                    resultLabel: compatibility.assignment.nickname,
+                    traits: compatibility.heroChips,
+                    confidence: confidenceBand,
+                    reportHref: fullReportHref,
+                    resultPath: resultHref,
+                  })}
+                  save={{
+                    resultType: "imairo",
+                    resultLabel: compatibility.assignment.nickname,
+                    context: "public-result",
+                    recognitionLine: compatibility.recognitionLine,
+                    traitChips: [
+                      compatibility.heroChips[0] ?? compatibility.assignment.clanJapanese,
+                      compatibility.heroChips[1] ?? compatibility.assignment.secondaryBadge,
+                      compatibility.heroChips[2] ?? "120問ベース",
+                    ],
+                    resultPath: resultHref,
+                    continuePath: "/result/continue",
+                    baseResultId: compatibility.assignment.publicCode,
+                    overlayId: overlayId ?? undefined,
+                    confidenceBand,
+                    payloadKey: payloadKey ?? undefined,
+                  }}
+                  journeyResult={{
+                    family: "imairo",
+                    resultId: compatibility.assignment.publicCode,
+                    label: compatibility.assignment.nickname,
+                    resultPath: resultHref,
+                  }}
+                />
+                <PrivateResultSave
+                  context={{
+                    resultId: compatibility.assignment.publicCode,
+                    overlayId,
+                    confidence: confidenceBand,
+                    payloadKey,
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </div>

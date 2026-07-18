@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import RecommendationSignalForm from "./RecommendationSignalForm";
+import { ServiceRecoveryBlock } from "../components/sr1/ServiceStates";
 
 export const metadata: Metadata = {
   title: "見つける | YORISOU 今の状態に合うもの",
@@ -67,7 +68,9 @@ export default async function RecommendationsPage({
                 <span className="mt-1 block text-[color:var(--jade-bright)]">合うものを、見つける。</span>
               </h1>
               <p className="aix2-lead mt-4">
-                {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
+                {compatibility.assignment
+                  ? compatibility.globalNote
+                  : "はじめての方は、まず今の状態を少し見てから合うものを探すと、届くものがあなたに近づきます。ここにあるのは、理由つきの小さな次の一歩です。"}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {traitChips.map((chip) => (
@@ -92,6 +95,24 @@ export default async function RecommendationsPage({
         </div>
       </section>
 
+      {/* SR-1 — first-visit recovery: a stranger arriving via nav (no result yet)
+          gets a real, working next step instead of a "preparing result" implication. */}
+      {!compatibility.assignment ? (
+        <section className="aix2-band !pt-0">
+          <div className="container">
+            <ServiceRecoveryBlock
+              eyebrow="はじめての方へ"
+              title="まず、今の自分から。"
+              body="おすすめは、今の状態がわかるほどあなたに近づきます。まだチェックをしていなければ、ここから始められます。無料・ログインなしで、この端末だけで進みます。"
+              actions={[
+                { href: "/start", label: "今の自分から始める", primary: true },
+                { href: "/experiences/guided/grounding-reflection", label: "2分の振り返りから" },
+              ]}
+            />
+          </div>
+        </section>
+      ) : null}
+
       {/* ===== Discover actions ===== */}
       <section className="aix2-band !pt-0">
         <div className="container">
@@ -99,8 +120,17 @@ export default async function RecommendationsPage({
             <div className="aix2-panel p-6">
               <p className="aix2-eyebrow">状態から選ぶ</p>
               <h2 className="mt-2 text-[1.3rem] font-bold text-[color:var(--tx)]">有限のおすすめを見る</h2>
-              <p className="mt-2 text-[14px] leading-7 aix2-mut">保存、試す、振り返りまでを自分のペースで記録できます。</p>
-              <Link href="/recommendations/graph" className="aix2-btn aix2-btn-primary mt-4 !min-h-[46px] !text-[14px]">おすすめを開く</Link>
+              <p className="mt-2 text-[14px] leading-7 aix2-mut">
+                {compatibility.assignment
+                  ? "保存、試す、振り返りまでを自分のペースで記録できます。詳しい候補づくりにはログインが必要です。"
+                  : "詳しい候補づくりにはログインが必要です。まずは今の自分から始めるのがおすすめです。"}
+              </p>
+              <Link
+                href={compatibility.assignment ? "/recommendations/graph" : "/start"}
+                className="aix2-btn aix2-btn-primary mt-4 !min-h-[46px] !text-[14px]"
+              >
+                {compatibility.assignment ? "おすすめを開く" : "今の自分から始める"}
+              </Link>
             </div>
             <div className="aix2-panel p-6">
               <p className="aix2-eyebrow">今の傾向を保存する</p>

@@ -72,7 +72,7 @@ export default function SiteHeader() {
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
   const dark = isDarkSurface(pathname);
   // Primary CTA — the same across the product.
-  const ctaHref = isEn ? "/en/check-in" : "/check-in";
+  const ctaHref = isEn ? "/en/check-in" : "/start";
   const ctaLabel = isEn ? "Start where you are" : "今の自分から始める";
 
   function isActive(path: string) {

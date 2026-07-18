@@ -2,8 +2,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { ServiceRecoveryBlock } from "../components/sr1/ServiceStates";
+
 // AIX-3C — わたしの今 (private reflection space, Keep domain). Fetch logic
 // preserved; reframed dark. Private-by-default; AI reflection is not diagnosis.
+// SR-1 — a logged-out visitor (401) now gets an honest "sign in to open" recovery
+// block instead of a misleading transient-error dead-end.
 type State = {
   reflections: Array<{ id: string; saved_result_id: string; content: { headline: string; current_state_summary: string } }>;
   memories: Array<{ id: string; content: string }>;
@@ -13,11 +17,16 @@ type State = {
 
 export default function PrivateStateHome() {
   const [state, setState] = useState<State | null>(null);
-  const [error, setError] = useState(false);
+  const [status, setStatus] = useState<"loading" | "ready" | "auth" | "error">("loading");
   useEffect(() => {
     fetch("/api/private-state")
-      .then(async (r) => { if (!r.ok) throw new Error(); setState((await r.json() as { state: State }).state); })
-      .catch(() => setError(true));
+      .then(async (r) => {
+        if (r.status === 401) { setStatus("auth"); return; }
+        if (!r.ok) { setStatus("error"); return; }
+        setState((await r.json() as { state: State }).state);
+        setStatus("ready");
+      })
+      .catch(() => setStatus("error"));
   }, []);
 
   return (
@@ -34,10 +43,26 @@ export default function PrivateStateHome() {
               <Link href="/experiences" className="aix2-btn aix2-btn-ghost !min-h-[46px] !text-[14px]">体験カードを作る</Link>
             </div>
 
-            {error ? (
+            {status === "auth" ? (
+              <div className="mt-7">
+                <ServiceRecoveryBlock
+                  eyebrow="ログインすると開けます"
+                  title="「わたしの今」は、あなただけの場所です。"
+                  body="ログインすると、保存した結果・メモ・振り返りをこの場所に集められます。まだ結果がなくても、今の自分から始められます。この端末だけで進める入口もあります。"
+                  actions={[
+                    { href: "/login", label: "ログイン", primary: true },
+                    { href: "/register", label: "アカウントを作る" },
+                    { href: "/start", label: "まず今の自分から始める" },
+                  ]}
+                />
+                <p className="mt-3 text-[12px] aix2-faint">LINE連携でも続けられます。連携は任意です。</p>
+              </div>
+            ) : status === "error" ? (
               <p className="aix2-panel mt-7 p-5 text-[14px] aix2-mut">今は読み込めませんでした。時間をおいて、もう一度お試しください。</p>
-            ) : !state ? (
+            ) : status === "loading" ? (
               <p className="aix2-panel mt-7 p-5 text-[14px] aix2-mut">読み込んでいます。</p>
+            ) : !state ? (
+              <p className="aix2-panel mt-7 p-5 text-[14px] aix2-mut">今は読み込めませんでした。時間をおいて、もう一度お試しください。</p>
             ) : (
               <div className="mt-7 grid gap-5">
                 <div className="aix2-panel p-5">
