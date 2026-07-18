@@ -1,0 +1,23 @@
+{
+  "total": 94,
+  "families": {
+    "immersive": 11,
+    "editorial": 27,
+    "redirect": 32,
+    "focus": 11,
+    "retired": 2,
+    "line-context": 1,
+    "understand": 10
+  },
+  "dispositions": {
+    "canonical": 47,
+    "redirect": 32,
+    "canonical-flow": 1,
+    "retired": 2,
+    "canonical-flow-utility": 3,
+    "canonical-catalogue": 1,
+    "canonical-test-flow": 8
+  },
+  "craneHits": 0,
+  "axeHits": 0
+}
