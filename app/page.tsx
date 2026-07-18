@@ -7,13 +7,13 @@ import { intentionDepthParams, intentionPalette } from "./components/depth-field
 import AixIn from "./components/aix2/AixIn";
 
 export const metadata: Metadata = {
-  title: "YORISOU｜今の状態から、次の選択まで。状態理解プラットフォーム",
+  title: "YORISOU｜今のあなたを知り、これからを一緒に選ぶ。AI-native伴走プラットフォーム",
   description:
-    "YORISOUは、今の状態を理解し、残し、見つけ、深め、つながり、育てるまでを一つにつなぐAI-nativeプラットフォームです。最初のチェックは無料・ログインなしで、その先の記録・発見・レポート・体験へ続きます。",
+    "YORISOUは、あなたの状態・変化・好みを理解し、必要な情報・体験・サービス・つながりを、必要なときに届けるAI-native伴走プラットフォームです。チェックは、あなたを理解するための最初の入口のひとつ。無料・ログインなしで始められます。",
   openGraph: {
-    title: "YORISOU｜今の状態から、次の選択まで。",
+    title: "YORISOU｜今のあなたを知り、これからを一緒に選ぶ。",
     description:
-      "理解する・残す・見つける・深める・つながる・育てる。今の状態から次の選択までを一つにつなぐプラットフォーム。",
+      "あなたの状態・変化・好みを理解し、合う情報・体験・サービス・つながりを、必要なときに届ける伴走プラットフォーム。チェックはその最初の入口のひとつです。",
     url: "https://yorisou.online",
     siteName: "YORISOU",
     locale: "ja_JP",
@@ -21,9 +21,11 @@ export const metadata: Metadata = {
   },
 };
 
-// AIX-4 — product-first homepage (Founder Finding C). Leads with the whole
-// platform, not the check. The check is one recommended, free, no-login first
-// step; the six-domain system map is part of the first-page composition.
+// AIX-5 — value-proposition reset (Founder rejected AIX-4 for a strategic gap).
+// The homepage leads with one product truth: YORISOU understands the person in
+// order to provide continuing, personalized support beyond the check. The loop
+// (understand → remember → recommend → try → reflect → adapt → return) is the
+// product; the check is one entry, shown after the proposition.
 
 type Status = "current" | "testing" | "prototype" | "planned";
 const STATUS_LABEL: Record<Status, string> = {
@@ -85,26 +87,26 @@ export default function HomePage() {
         <div className="container relative z-[1]">
           <div className="aix2-in max-w-[56rem] pt-20 pb-8 md:pt-24">
             <p className="aix2-eyebrow aix2-rise" style={{ ["--d" as string]: "40ms" }}>
-              YORISOU · 状態から人生へつなぐプラットフォーム
+              YORISOU · AI-native 伴走プラットフォーム
             </p>
             <h1 className="aix2-hero-title mt-5 aix2-rise" style={{ ["--d" as string]: "120ms" }}>
-              今の状態から、<span className="em">次の選択</span>まで。
+              今のあなたを知り、<span className="em">これからを一緒に選ぶ</span>。
             </h1>
             <p className="aix2-lead mt-6 aix2-rise" style={{ ["--d" as string]: "240ms" }}>
-              理解する。残す。見つける。深める。つながる。育てる。
+              あなたの状態・変化・好みを理解し、合う情報・体験・サービス・つながりを、
               <br className="hidden sm:block" />
-              YORISOUは、その流れを一つにつなぐプラットフォームです。
+              必要なときに届ける。固定タイプではなく、これからを一緒に選ぶ伴走です。
             </p>
             <div className="mt-9 flex flex-wrap gap-3 aix2-rise" style={{ ["--d" as string]: "340ms" }}>
               <Link href="/check-in" className="aix2-btn aix2-btn-primary">
-                いまの状態をみる
+                今の自分から始める
               </Link>
               <Link href="/#system" className="aix2-btn aix2-btn-ghost">
-                プラットフォームを見る
+                YORISOUでできることを見る
               </Link>
             </div>
             <p className="mt-4 text-[12.5px] aix2-mut aix2-rise" style={{ ["--d" as string]: "440ms" }}>
-              はじめの一歩は、今の状態をみるチェック。無料・ログインなし。
+              チェックは、あなたを理解するための最初の入口のひとつ。無料・ログインなしで始められます。
             </p>
           </div>
 
@@ -126,17 +128,68 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ===== Understanding → support model: the personalization mechanism ===== */}
+      <AixIn as="section" id="how" className="aix2-band aix2-band--tight">
+        <div className="container">
+          <p className="aix2-eyebrow aix2-rise">仕組み</p>
+          <h2 className="aix2-band-title mt-3 aix2-rise" style={{ ["--d" as string]: "90ms" }}>
+            理解するから、合うものが届く。
+          </h2>
+          <p className="mt-4 max-w-[44rem] text-[14px] leading-8 aix2-mut aix2-rise" style={{ ["--d" as string]: "150ms" }}>
+            テスト結果で終わりではありません。あなたが選んで教えてくれたことから今の状態を理解し、必要なときに合うものを届け、反応から少しずつ学び直します。
+          </p>
+          <div className="yr-flow mt-8 aix2-rise" style={{ ["--d" as string]: "200ms" }}>
+            <div className="yr-flow-col">
+              <p className="yr-flow-label">入力（あなたが選ぶ）</p>
+              <p className="yr-flow-title">教えてくれたこと</p>
+              <p className="yr-flow-item">チェック・選択</p>
+              <p className="yr-flow-item">保存した関心・感想</p>
+              <p className="yr-flow-item">今の状態の変化</p>
+            </div>
+            <div className="yr-flow-arrow" aria-hidden="true">→</div>
+            <div className="yr-flow-col" data-accent="jade">
+              <p className="yr-flow-label">理解</p>
+              <p className="yr-flow-title">今のあなたを読む</p>
+              <p className="yr-flow-item">状態・ペース・文脈</p>
+              <p className="yr-flow-item">固定タイプにはしない</p>
+              <p className="yr-flow-item">残す・戻るはあなたの操作で</p>
+            </div>
+            <div className="yr-flow-arrow" aria-hidden="true">→</div>
+            <div className="yr-flow-col">
+              <p className="yr-flow-label">支援（必要なときに）</p>
+              <p className="yr-flow-title">合うものを届ける</p>
+              <p className="yr-flow-item">情報・レポート・行動</p>
+              <p className="yr-flow-item">体験・場所・公的な資源</p>
+              <p className="yr-flow-item">サービス・次の一歩</p>
+            </div>
+          </div>
+          <div className="yr-flow-loop mt-6 aix2-rise" style={{ ["--d" as string]: "260ms" }}>
+            <span className="text-[11px] font-semibold tracking-[0.12em] text-[color:var(--jade-bright)]">学びのループ</span>
+            {["役立った", "試した", "保存", "見返す", "自分に合わない"].map((n, i) => (
+              <span key={n} className="contents">
+                <span className="node">{n}</span>
+                {i < 4 ? <span className="sep">·</span> : null}
+              </span>
+            ))}
+            <span className="text-[12px] aix2-faint">→ 次のおすすめが、少しずつ合っていく。</span>
+          </div>
+        </div>
+      </AixIn>
+
       {/* ===== Service-system detail: the six user domains ===== */}
       <AixIn as="section" id="system" className="aix2-band aix2-band--tint">
         <div className="container">
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
             <div className="max-w-[42rem]">
-              <p className="aix2-eyebrow aix2-rise">ひとつのプラットフォーム</p>
+              <p className="aix2-eyebrow aix2-rise">ひとつの伴走システム</p>
               <h2 className="aix2-band-title mt-3 aix2-rise" style={{ ["--d" as string]: "90ms" }}>
-                チェックは、6つの領域のひとつ。
+                6つの領域は、あなたを理解して<br className="hidden sm:block" />つながる、ひとつの流れ。
               </h2>
+              <p className="mt-3 max-w-[40rem] text-[13.5px] leading-7 aix2-mut aix2-rise" style={{ ["--d" as string]: "120ms" }}>
+                別々の機能ではありません。理解をもとに、残し、合うものを見つけ、深め、試し、その反応が次を良くしていきます。
+              </p>
             </div>
-            <p className="aix2-eyebrow aix2-rise" style={{ ["--d" as string]: "120ms" }}>理解 → 育てる</p>
+            <p className="aix2-eyebrow aix2-rise" style={{ ["--d" as string]: "150ms" }}>理解 → 育てる</p>
           </div>
           <div className="aix3-domains mt-10">
             {DOMAINS.map((d, i) => (
@@ -214,7 +267,7 @@ export default function HomePage() {
                 状態を見て、残し、合うものを見つけ、深め、必要なときだけ戻る。決めつけず、あなたのペースで。
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <Link href="/check-in" className="aix2-btn aix2-btn-primary !min-h-[46px] !text-[14px]">いまの状態をみる</Link>
+                <Link href="/check-in" className="aix2-btn aix2-btn-primary !min-h-[46px] !text-[14px]">今の自分から始める</Link>
                 <Link href="/tests" className="aix2-link self-center">入口をえらぶ →</Link>
               </div>
             </div>
@@ -250,7 +303,7 @@ export default function HomePage() {
             ))}
           </div>
           <div className="mt-8 flex flex-wrap gap-3 aix2-rise" style={{ ["--d" as string]: "220ms" }}>
-            <Link href="/check-in" className="aix2-btn aix2-btn-primary">いまの状態をみる</Link>
+            <Link href="/check-in" className="aix2-btn aix2-btn-primary">今の自分から始める</Link>
             <Link href="/contact?topic=open-testing" className="aix2-btn aix2-btn-ghost">感想や関心を送る</Link>
           </div>
         </div>

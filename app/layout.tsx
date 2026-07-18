@@ -7,9 +7,9 @@ import { getReleaseMarker } from "@/lib/releaseMarker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
-  title: "Yorisou | 今の自分を知る24問チェック",
+  title: "YORISOU｜今のあなたを知り、これからを一緒に選ぶ AI-native伴走プラットフォーム",
   description:
-    "Yorisouは、今の気持ちや生活リズムを24問でふり返り、自分の状態と次の一歩を見つけるためのLINE/Web-firstセルフリフレクションサービスです。診断や占いではありません。",
+    "YORISOUは、あなたの状態・変化・好みを理解し、必要な情報・体験・サービス・つながりを、必要なときに届けるAI-native伴走プラットフォームです。チェックは、あなたを理解するための最初の入口のひとつ。診断や占いではありません。",
 };
 
 export default async function RootLayout({

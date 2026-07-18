@@ -88,8 +88,24 @@ function Card({ model, format }: { model: ShareCardModel; format: ShareCardForma
 
       {/* Result identity */}
       <div style={{ display: "flex", flexDirection: "column", gap: isStory ? 34 : 22, maxWidth: width - pad * 2 }}>
-        <div style={{ display: "flex", fontSize: labelSize, letterSpacing: "0.14em", color: "#8fd8bd" }}>
-          {model.testLabel}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              borderRadius: 999,
+              border: "1px solid rgba(140,216,189,0.34)",
+              background: "rgba(47,197,150,0.10)",
+              padding: `${isOg ? 6 : 8}px ${isOg ? 14 : 18}px`,
+              fontSize: labelSize * 0.82,
+              color: "#8fd8bd",
+              letterSpacing: "0.1em",
+            }}
+          >
+            {model.locale === "en" ? "current state" : "今の状態"}
+          </div>
+          <div style={{ display: "flex", fontSize: labelSize, letterSpacing: "0.14em", color: "#8fd8bd" }}>
+            {model.testLabel}
+          </div>
         </div>
         <div style={{ display: "flex", fontSize: titleSize, lineHeight: 1.08, fontWeight: 700, color: "#f4f9f5" }}>
           {model.title}
@@ -127,7 +143,7 @@ function Card({ model, format }: { model: ShareCardModel; format: ShareCardForma
           yorisou.online
         </div>
         <div style={{ display: "flex", fontSize: isOg ? 20 : 26, color: "#6f8a7d" }}>
-          {model.locale === "en" ? "state-to-life platform" : "今の状態から、次の選択まで。"}
+          {model.locale === "en" ? "understands you, chooses what's next with you" : "今のあなたを知り、これからを一緒に選ぶ。"}
         </div>
       </div>
     </div>

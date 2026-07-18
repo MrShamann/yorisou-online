@@ -48,6 +48,19 @@ const MAX_LABEL = 32;
 // Anything that looks like private/leak-prone content is refused outright.
 const FORBIDDEN = /(payloadKey|service_role|answers?=|"answers"|confidence[_-]?band|accountId|userId|sessionId|@)/i;
 
+// AIX-5 — production-placeholder prohibition (§19). Development/placeholder
+// tokens must never reach a user-facing or evidence card; they resolve to the
+// polished generic YORISOU card instead of showing "test" / "demo" / codes.
+const PLACEHOLDER = /^(test|demo|placeholder|sample|example|todo|tbd|xxx|dummy|undefined|null|n\/?a|result|title|share)$/i;
+const GENERIC_TITLE = "今のあなたから、次の一歩へ。";
+const GENERIC_LINE = "今のあなたを知り、これからを一緒に選ぶ。";
+const GENERIC_LABEL = "YORISOU";
+
+function isPlaceholder(value: string): boolean {
+  if (!value) return true;
+  return PLACEHOLDER.test(value.trim());
+}
+
 function clean(value: string | undefined | null, max: number): string {
   if (!value) return "";
   const oneLine = String(value).replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim();
@@ -76,13 +89,20 @@ function safeUrl(url: string | undefined): string {
 }
 
 export function resolveShareCard(input: ShareCardInput): ShareCardModel {
-  const title = clean(input.title, MAX_TITLE) || "YORISOU";
-  const testLabel = clean(input.testLabel, MAX_LABEL) || "YORISOU";
-  const line = clean(input.line, MAX_LINE) || "今の状態から、次の選択まで。";
-  const traits = (input.traits ?? [])
-    .map((t) => clean(t, MAX_TRAIT))
-    .filter(Boolean)
-    .slice(0, 3);
+  const rawTitle = clean(input.title, MAX_TITLE);
+  const rawLabel = clean(input.testLabel, MAX_LABEL);
+  // If the result identity is a placeholder / incomplete, fall back to the
+  // polished generic YORISOU card rather than leaking a dev token (§19).
+  const placeholder = isPlaceholder(rawTitle);
+  const title = placeholder ? GENERIC_TITLE : rawTitle;
+  const testLabel = placeholder || isPlaceholder(rawLabel) ? GENERIC_LABEL : rawLabel;
+  const line = placeholder ? GENERIC_LINE : clean(input.line, MAX_LINE) || GENERIC_LINE;
+  const traits = placeholder
+    ? []
+    : (input.traits ?? [])
+        .map((t) => clean(t, MAX_TRAIT))
+        .filter((t) => t && !isPlaceholder(t))
+        .slice(0, 3);
   const seed = clean(input.seed || `${testLabel}:${title}`, 64) || title;
   const locale: ShareLocale = input.locale === "en" ? "en" : "ja";
   const theme: ShareTheme = input.theme === "immersive" ? "immersive" : "focus";

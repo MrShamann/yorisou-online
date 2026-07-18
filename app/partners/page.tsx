@@ -59,7 +59,7 @@ export default function PartnersPage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3 aix2-rise" style={{ ["--d" as string]: "320ms" }}>
               <Link href="/contact?topic=partners" className="aix2-btn aix2-btn-primary">関心を伝える</Link>
-              <Link href="/#system" className="aix2-btn aix2-btn-ghost">プロダクト全体を見る</Link>
+              <Link href="/#system" className="aix2-btn aix2-btn-ghost">YORISOUでできることを見る</Link>
             </div>
           </div>
         </div>

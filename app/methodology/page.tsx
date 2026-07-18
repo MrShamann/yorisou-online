@@ -27,8 +27,8 @@ export default function MethodologyPage() {
       eyebrow="考え方 · Methodology"
       title="今の状態を、固定せずに受け取る方法。"
       lead="YORISOU は、診断でも占いでもありません。チェックでは、今の暮らしのリズムや距離感、決め方、戻り方を見て、公開結果と自分だけの記録を分けて扱います。"
-      primary={{ href: "/check-in", label: "いまの状態をみる" }}
-      secondary={{ href: "/#system", label: "プロダクト全体を見る" }}
+      primary={{ href: "/check-in", label: "今の自分から始める" }}
+      secondary={{ href: "/#system", label: "YORISOUでできることを見る" }}
     >
       <EditorialSection title="大切にしていること">
         <div className="mt-2 grid gap-4 md:grid-cols-2">

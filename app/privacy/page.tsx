@@ -24,7 +24,7 @@ export default function PrivacyPage() {
       eyebrow="プライバシー"
       title="はじめやすく、境界はわかりやすく。"
       lead="YORISOU では、最初のチェックを軽く始められることと、公開してよい結果と自分だけのものの境界がわかることを大切にしています。"
-      primary={{ href: "/check-in", label: "いまの状態をみる" }}
+      primary={{ href: "/check-in", label: "今の自分から始める" }}
       secondary={{ href: "/contact?topic=privacy", label: "プライバシーの問い合わせ" }}
     >
       {POINTS.map((p) => (

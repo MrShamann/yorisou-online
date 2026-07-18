@@ -1367,6 +1367,65 @@ main {
   .yr-node { align-items: flex-start; text-align: left; }
 }
 
+/* ---- AIX-5 understanding → support model: the personalization mechanism as a
+   connected field (inputs → understanding → support) with a learning-loop arc,
+   not a row of generic cards (Founder value-proposition reset). ---- */
+.yr-flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: stretch;
+  gap: 0;
+}
+.yr-flow-col {
+  border: 1px solid var(--hair);
+  border-radius: 18px;
+  background: rgba(228, 240, 233, 0.03);
+  padding: 20px 18px;
+}
+.yr-flow-col[data-accent="jade"] {
+  border-color: var(--hair-jade);
+  background: rgba(47, 197, 150, 0.06);
+}
+.yr-flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  color: var(--jade-bright);
+  font-size: 20px;
+}
+.yr-flow-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--jade-bright);
+}
+.yr-flow-title { margin-top: 6px; font-size: 15px; font-weight: 700; color: var(--tx); line-height: 1.4; }
+.yr-flow-item { margin-top: 8px; font-size: 12.5px; line-height: 1.7; color: var(--tx-mut); }
+.yr-flow-loop {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--tx-mut);
+}
+.yr-flow-loop .node {
+  display: inline-flex;
+  border: 1px solid var(--hair-2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  color: var(--tx);
+  font-weight: 600;
+}
+.yr-flow-loop .sep { color: var(--jade-bright); }
+@media (max-width: 900px) {
+  .yr-flow { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .yr-flow-arrow { width: auto; height: 28px; transform: rotate(90deg); }
+}
+
 /* concrete example journey rail */
 .yr-example {
   display: grid;

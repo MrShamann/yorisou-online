@@ -43,10 +43,11 @@ test.describe("AIX-2 progressive enhancement", () => {
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    // AIX-4 — product-first positioning: leads with the platform, the check is one first step.
-    await expect(page.locator("h1")).toContainText("次の選択");
-    await expect(page.getByRole("link", { name: "いまの状態をみる" }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: "プラットフォームを見る" })).toBeVisible();
+    // AIX-5 — value-proposition reset: the platform promise leads (understand → choose
+    // together), the check is one first entry, not the hero.
+    await expect(page.locator("h1")).toContainText("一緒に選ぶ");
+    await expect(page.getByRole("link", { name: "今の自分から始める" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "YORISOUでできることを見る" })).toBeVisible();
     // the six-domain system map is part of the first-page composition
     await expect(page.getByLabel("YORISOUの6つの領域")).toBeVisible();
     // static depth field is server-rendered SVG (no JS / no WebGL)
@@ -76,7 +77,7 @@ test.describe("AIX-2 progressive enhancement", () => {
     }));
     expect(state.canvasActive).toBeNull();
     expect(state.svgCircles).toBeGreaterThan(20);
-    await expect(page.getByRole("link", { name: "いまの状態をみる" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "今の自分から始める" }).first()).toBeVisible();
     await ctx.close();
   });
 });

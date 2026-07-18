@@ -73,7 +73,7 @@ export default function SiteHeader() {
   const dark = isDarkSurface(pathname);
   // Primary CTA — the same across the product.
   const ctaHref = isEn ? "/en/check-in" : "/check-in";
-  const ctaLabel = isEn ? "See your state" : "いまの状態をみる";
+  const ctaLabel = isEn ? "Start where you are" : "今の自分から始める";
 
   function isActive(path: string) {
     if (path.includes("#")) return false;

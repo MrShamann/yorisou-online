@@ -87,7 +87,7 @@ for (const f of SHARE_SURFACES) {
 // ── Product-first homepage ──────────────────────────────────────────────────
 const home = read("app/page.tsx");
 assert.ok(home.includes("プラットフォーム"), "homepage leads with the platform");
-assert.ok(home.includes("次の選択"), "platform-level headline");
+assert.ok(home.includes("一緒に選ぶ"), "platform-level headline (AIX-5 value-proposition reset)");
 assert.ok(home.includes("yr-systemmap"), "six-domain system map is in the composition");
 assert.ok(!/120問[^。]{0,4}<\/h1>/.test(home), "no 120問 at hero-headline level");
 for (const id of ["understand", "keep", "discover", "deepen", "connect", "improve"]) {

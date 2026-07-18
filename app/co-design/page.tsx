@@ -39,7 +39,7 @@ export default function CoDesignPage() {
         title={<>これからを、<span className="em">一緒に育てる</span>。</>}
         lead="感想や共創で、これからの体験・資料・プロダクトを少しずつ良くしていく領域です。参加は任意で、あなたが許可した範囲だけを使います。"
         primary={{ href: "/contact?topic=co-design", label: "フィードバックを送る" }}
-        secondary={{ href: "/#system", label: "プロダクト全体を見る" }}
+        secondary={{ href: "/#system", label: "YORISOUでできることを見る" }}
         seed="continue-previous"
       />
 

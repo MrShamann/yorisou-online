@@ -27,7 +27,7 @@ export default function ReportsLandingPage() {
         title={<>結果の先の、<span className="em">深い読みもの</span>。</>}
         lead="無料結果より少し具体的に、今の動き方を読むための読みものです。公開プレビューと、自分だけで読む本文を分けて扱います。医学的な診断ではありません。"
         primary={{ href: "/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low", label: "レポートの見本を見る" }}
-        secondary={{ href: "/check-in", label: "いまの状態をみる" }}
+        secondary={{ href: "/check-in", label: "今の自分から始める" }}
         seed="discover-next"
       />
 
