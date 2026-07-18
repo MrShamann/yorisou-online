@@ -2,33 +2,39 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import ContactForm from "../components/ContactForm";
-import Hero from "../components/Hero";
-
-const inquiryNotes = [
-  "ご相談内容がまだ曖昧でも、気になることからお話しいただけます。",
-  "Yorisouのチェック体験や使い方についても、こちらからお気軽にどうぞ。",
-  "内容に応じて順次ご案内します。返信まで少しお時間をいただく場合があります。",
-];
+import { EditorialShell, EditorialSection } from "../components/aix3/EditorialShell";
 
 export const metadata: Metadata = {
-  title: "お問い合わせ | Yorisou",
-  description: "Yorisouのチェック体験、サポート機能、デジタルレポート、推薦・マッチング支援に関するお問い合わせを受け付けています。",
+  title: "お問い合わせ | YORISOU",
+  description: "YORISOUのチェック体験、保存・アカウント、LINE、おすすめのフィードバック、共創参加、パートナー、プライバシーに関するお問い合わせを受け付けています。",
 };
 
-function getInitialContactContext(topic: string | null) {
-  if (topic === "open-testing") {
-    return {
-      inquiryType: "公開テストの感想・不具合報告",
-      message:
-        "公開テストの感想や不具合報告を送ります。\n\n・どのページで気づいたか\n・よかった点 / わかりにくかった点\n・不具合があれば再現手順\n\n",
-    };
-  }
+// AIX-3D-1 — contact on the shared editorial system with topic separation.
+// ContactForm + topic context preserved.
 
-  return {
-    inquiryType: undefined,
-    message: undefined,
+function getInitialContactContext(topic: string | null) {
+  const map: Record<string, { inquiryType: string; message: string }> = {
+    "open-testing": {
+      inquiryType: "公開テストの感想・不具合報告",
+      message: "公開テストの感想や不具合報告を送ります。\n\n・どのページで気づいたか\n・よかった点 / わかりにくかった点\n・不具合があれば再現手順\n\n",
+    },
+    "saved": { inquiryType: "保存・アカウントについて", message: "保存した結果やアカウントについての相談です。\n\n" },
+    "line": { inquiryType: "LINEについて", message: "LINEでの継続や連携についての相談です。\n\n" },
+    "co-design": { inquiryType: "共創・フィードバック", message: "共創やアイデア、フィードバックを送ります。\n\n" },
+    "partners": { inquiryType: "パートナーについて", message: "パートナー（提供者・作り手）としての関心を伝えます。\n\n・提供したい資料/プロダクトの概要\n・想定する対象や状態\n\n" },
+    "privacy": { inquiryType: "プライバシー・データについて", message: "プライバシーやデータの取り扱い、削除についての相談です。\n\n" },
   };
+  return topic && map[topic] ? map[topic] : { inquiryType: undefined, message: undefined };
 }
+
+const TOPICS: ReadonlyArray<[string, string]> = [
+  ["open-testing", "感想・不具合"],
+  ["saved", "保存・アカウント"],
+  ["line", "LINE"],
+  ["co-design", "共創・フィードバック"],
+  ["partners", "パートナー"],
+  ["privacy", "プライバシー・データ"],
+];
 
 export default async function ContactPage({
   searchParams,
@@ -40,67 +46,36 @@ export default async function ContactPage({
   const initialContext = getInitialContactContext(topicValue);
 
   return (
-    <main className="bg-[var(--bg)] text-[var(--text)]">
-      <Hero
-        eyebrow="お問い合わせ"
-        title={
-          <>
-            <span className="block md:whitespace-nowrap">気になったことを、</span>
-            <span className="block md:whitespace-nowrap">落ち着いて送れる入口にしています。</span>
-          </>
-        }
-        subtitle="ご相談内容がまだまとまっていなくても大丈夫です。公開テストの感想、不具合、使い方への質問まで、必要なことから順番にお送りいただけます。"
-        primaryHref="/check-in"
-        primaryLabel="クイックチェックを始める"
-        secondaryHref="/tests"
-        secondaryLabel="テスト一覧を見る"
-      />
-
-      <section className="section">
-        <div className="container">
-          <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="shell-card px-6 py-6">
-              <div className="service-kicker">お問い合わせフォーム</div>
-              <h2 className="section-title" style={{ marginTop: 12 }}>
-                チェック結果の使い方からYorisouについての質問まで、このままお送りいただけます。
-              </h2>
-              <p className="page-copy" style={{ marginTop: 12 }}>
-                内容に応じて順次ご連絡します。公開テストの感想、わかりにくかった点、不具合報告もこのままお送りください。
-              </p>
-              <div style={{ marginTop: 20 }}>
-                <ContactForm
-                  locale="ja"
-                  initialInquiryType={initialContext.inquiryType}
-                  initialMessage={initialContext.message}
-                  trackingTopic={topicValue || "contact"}
-                />
-              </div>
-            </div>
-
-            <div className="panel-sage rounded-[1.7rem] px-6 py-6">
-              <div className="service-kicker text-[var(--accent-sage-text)]">はじめての方へ</div>
-              <h2 className="section-title" style={{ marginTop: 12 }}>
-                急がずに、必要なことから話せれば大丈夫です。
-              </h2>
-              <div className="mt-5 grid gap-3">
-                {inquiryNotes.map((item) => (
-                  <div key={item} className="rounded-[1.2rem] bg-[rgba(252,250,245,0.82)] px-5 py-4 text-sm leading-8 text-[var(--accent-sage-text)]">
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 rounded-[1.2rem] bg-[rgba(252,250,245,0.82)] px-5 py-4 text-sm leading-8 text-[var(--accent-sage-text)]">
-                公開テスト中の感想や不具合報告は、組織ではなく個人ユーザーとしてそのまま送っていただけます。
-              </div>
-              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                <Link href="/check-in" className="soft-link">
-                  クイックチェックを始める
-                </Link>
-              </div>
-            </div>
-          </div>
+    <EditorialShell
+      eyebrow="お問い合わせ"
+      title="気になったことを、落ち着いて送れる入口。"
+      lead="ご相談内容がまだまとまっていなくても大丈夫です。感想・不具合、保存やアカウント、LINE、おすすめの反応、共創、パートナー、プライバシーまで、必要なことから順番にお送りいただけます。"
+    >
+      <EditorialSection title="話したいことを選ぶ（任意）">
+        <div className="flex flex-wrap gap-2">
+          {TOPICS.map(([t, label]) => (
+            <Link
+              key={t}
+              href={`/contact?topic=${t}`}
+              className={`inline-flex rounded-full border px-3.5 py-1.5 text-[13px] no-underline transition ${topicValue === t ? "border-[#315f50] bg-[#eaf7f1] text-[#173b35]" : "border-[rgba(23,59,53,0.14)] text-[#5f5750] hover:border-[#315f50]"}`}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
-      </section>
-    </main>
+        <p className="mt-3 text-[13px]">返信までお時間をいただく場合があります。返信時間の保証はしていません。急ぎで専門的な支援が必要なときは、適切な専門家や公的窓口にご相談ください。</p>
+      </EditorialSection>
+
+      <EditorialSection title="お問い合わせフォーム">
+        <div className="aix3-ed-card">
+          <ContactForm
+            locale="ja"
+            initialInquiryType={initialContext.inquiryType}
+            initialMessage={initialContext.message}
+            trackingTopic={topicValue || "contact"}
+          />
+        </div>
+      </EditorialSection>
+    </EditorialShell>
   );
 }

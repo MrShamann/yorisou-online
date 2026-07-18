@@ -13,7 +13,7 @@ export default function SiteFooter() {
   const dark = isImmersive(pathname);
 
   const legalHref = isEn ? "/en/legal" : "/legal";
-  const privacyHref = "/privacy";
+  const privacyHref = isEn ? "/en/privacy" : "/privacy";
   const contactHref = isEn ? "/en/contact" : "/contact";
   const aboutHref = isEn ? "/en/about" : "/about";
   const testsHref = "/tests";
@@ -57,7 +57,7 @@ export default function SiteFooter() {
               <div className={`mt-4 grid gap-3 text-sm ${muted}`}>
                 <Link href={contactHref}>{isEn ? "Contact" : "お問い合わせ"}</Link>
                 <Link href={legalHref}>{isEn ? "Terms" : "利用規約"}</Link>
-                {isEn ? null : <Link href={privacyHref}>プライバシーポリシー</Link>}
+                <Link href={privacyHref}>{isEn ? "Privacy" : "プライバシーポリシー"}</Link>
               </div>
             </div>
           </div>

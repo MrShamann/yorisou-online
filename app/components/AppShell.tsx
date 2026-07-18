@@ -10,9 +10,11 @@ type Props = {
   children: ReactNode;
 };
 
+// AIX-3D-1 (Part B) — /support + /en/support moved off the suppressed list so
+// they render inside the shared branded editorial shell (SiteHeader/SiteFooter,
+// BrandLockup, language toggle), consistent with the other trust routes. Their
+// access-helper logic is preserved inside the editorial surface.
 const SHELL_SUPPRESSED_EXACT = new Set([
-  "/support",
-  "/en/support",
   "/check-in",
   "/report-loading",
   "/report-preview",

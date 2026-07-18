@@ -49,6 +49,14 @@ const EDITORIAL_EXACT = new Set<string>([
   "/support",
 ]);
 
+// AIX-3D-1 (Part D) — English Option B informational routes that must resolve to
+// the editorial (light) surface *before* the /en prefix is stripped. Without
+// this, normalizePath("/en") -> "/" and normalizePath("/en/partners") ->
+// "/partners" would inherit the immersive (dark) family and mismatch the light
+// English pages. The remaining /en info routes (/en/about, /en/contact,
+// /en/privacy, /en/legal, /en/support) already map to editorial after stripping.
+const EN_EDITORIAL_EXACT = new Set<string>(["/en", "/en/partners"]);
+
 // Flow routes where the shared header/footer is suppressed (the page owns its
 // full-bleed surface). Kept in sync with AppShell suppression.
 const FOCUS_EXACT = new Set<string>([
@@ -75,6 +83,9 @@ const startsWithAny = (p: string, prefixes: string[]) =>
   prefixes.some((pre) => p === pre || p.startsWith(`${pre}/`));
 
 export function surfaceFamily(pathname: string | null | undefined): SurfaceFamily {
+  // English informational routes are resolved before the /en prefix is stripped.
+  const raw = (pathname || "/").replace(/\/+$/, "") || "/";
+  if (EN_EDITORIAL_EXACT.has(raw)) return "editorial";
   const p = normalizePath(pathname);
   // focus takes priority (self-understanding reports + line are reading/flow surfaces)
   if (FOCUS_EXACT.has(p) || startsWithAny(p, FOCUS_PREFIXES)) return "focus";

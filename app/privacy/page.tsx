@@ -1,79 +1,46 @@
 import type { Metadata } from "next";
 
-import { MvpActionLink, MvpCard, MvpSection } from "../components/MvpSurface";
+import { EditorialShell, EditorialSection } from "../components/aix3/EditorialShell";
 
 export const metadata: Metadata = {
-  title: "プライバシー | Yorisou",
+  title: "プライバシー | YORISOU",
   description:
-    "ログインなしで始められる Yorisou の使い方と、公開結果・保存・診断ではないことを短く伝えるページです。",
+    "ログインなしで始められる YORISOU の使い方と、公開結果・保存・診断ではないことを短く伝えるページです。保存はこの端末内の簡易保存で、いつでも削除できます。",
 };
 
-const privacyPoints = [
-  {
-    title: "最初はログインなしで始められます",
-    body: "最初のチェックインは、ログインなしで始められます。",
-  },
-  {
-    title: "この端末内に簡易保存できます",
-    body: "保存はブラウザ内だけの簡易保存です。アカウント保存やLINE連携は、実装されている場合だけ明示します。",
-  },
-  {
-    title: "最初のチェックインでは個人情報を求めません",
-    body: "名前、住所、家族介護の詳細など、個人を特定する情報は最初のチェックインでは求めません。",
-  },
-  {
-    title: "公開結果と自分だけのヒントは分けます",
-    body: "公開しやすい結果と、自分だけのヒントは分けて扱います。診断や医療・心理評価ではありません。",
-  },
+// AIX-3D-1 — privacy on the shared editorial system. Legal/substantive meaning
+// preserved; presentation reskinned; storage boundaries stated accurately.
+
+const POINTS: ReadonlyArray<{ title: string; body: string }> = [
+  { title: "最初はログインなしで始められます", body: "最初のチェックは、ログインなしで始められます。" },
+  { title: "保存は、この端末のブラウザ内だけ", body: "簡易保存はこの端末（デバイス）のブラウザ内だけに残ります。別の端末には引き継がれません。アカウント保存やLINE連携は、実装されている場合だけ明示します。いつでも削除・クリアできます。" },
+  { title: "最初のチェックでは個人情報を求めません", body: "名前、住所、家族介護の詳細など、個人を特定する情報は最初のチェックでは求めません。" },
+  { title: "公開結果と、自分だけのものを分けます", body: "公開しても安心な結果と、自分だけで読む深いヒントやレポート本文は、いつも分けて扱います。診断や医療・心理評価ではありません。" },
 ];
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(247,244,238,0.98)_35%,_rgba(240,244,236,0.98)_100%)] text-[var(--text)]">
-      <section className="border-b border-[color:var(--line-soft)]">
-        <div className="container py-12 md:py-16">
-          <div className="max-w-[44rem] space-y-4">
-            <p className="service-kicker">プライバシー</p>
-            <h1 className="display-serif max-w-[12em] text-[2.28rem] leading-[1.22] md:text-[3rem]">
-              はじめやすく、
-              <span className="block text-[var(--accent-sage-text)]">境界はわかりやすく。</span>
-            </h1>
-            <p className="max-w-[38rem] text-[15px] leading-8 text-[var(--muted)]">
-              Yorisou では、最初のチェックインを軽く始められることと、最初の結果と自分だけのヒントの境界がわかることを大切にしています。
-            </p>
-          </div>
-        </div>
-      </section>
+    <EditorialShell
+      eyebrow="プライバシー"
+      title="はじめやすく、境界はわかりやすく。"
+      lead="YORISOU では、最初のチェックを軽く始められることと、公開してよい結果と自分だけのものの境界がわかることを大切にしています。"
+      primary={{ href: "/check-in", label: "いまの状態をみる" }}
+      secondary={{ href: "/contact?topic=privacy", label: "プライバシーの問い合わせ" }}
+    >
+      {POINTS.map((p) => (
+        <EditorialSection key={p.title} title={p.title}>
+          <p>{p.body}</p>
+        </EditorialSection>
+      ))}
 
-      <MvpSection eyebrow="最初に伝えたいこと" title="使い方と境界を、短くお伝えします。">
-        <div className="grid gap-4 md:grid-cols-2">
-          {privacyPoints.map((point) => (
-            <MvpCard key={point.title}>
-              <div className="service-kicker">{point.title}</div>
-              <p className="mt-3 text-[15px] leading-8">{point.body}</p>
-            </MvpCard>
-          ))}
-        </div>
-      </MvpSection>
+      <EditorialSection title="おすすめ・フィードバックの signal">
+        <p>おすすめや「役立った / 今は合わない」などの反応は、次のマッチングを少しずつ良くするために使います。個人を特定しない形で扱い、表示順を売ることはしません。参加は任意で、公開への強制はありません。</p>
+      </EditorialSection>
 
-      <MvpSection
-        eyebrow="安心して使うために"
-        title="最初は、軽く試せる範囲だけを整えています。"
-        lead="保存はこの端末内だけの簡易保存です。診断や医療・心理評価ではない形で、今の状態を受け取れます。"
-        actions={
-          <>
-            <MvpActionLink href="/check-in" label="チェックインをはじめる" />
-            <MvpActionLink href="/" label="ホームへ戻る" tone="secondary" />
-          </>
-        }
-      >
-        <MvpCard>
-          <div className="service-kicker">補足</div>
-          <p className="mt-3 text-[15px] leading-8">
-            最初に見る結果には自分だけのヒントを含めません。最初のチェックインでは個人を特定する情報は求めず、この端末内の簡易保存だけを使います。
-          </p>
-        </MvpCard>
-      </MvpSection>
-    </main>
+      <EditorialSection title="削除・クリア / LINE の境界">
+        <p>この端末の簡易保存は、保存ページからいつでも削除できます。LINEは継続の入口のひとつであり、YORISOUの全体ではありません。プロトタイプの参加は任意で、内容は明示された範囲だけを使います。</p>
+        <p>詳しい取り扱いや削除のご相談は、<a href="/contact?topic=privacy">お問い合わせ</a>からご連絡ください。</p>
+      </EditorialSection>
+    </EditorialShell>
   );
 }

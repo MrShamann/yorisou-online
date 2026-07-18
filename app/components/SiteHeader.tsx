@@ -18,12 +18,13 @@ const primaryNavJa = [
   { href: "/partners", label: "パートナー" },
 ];
 
+// AIX-3D-1 (Part D) — English Option B nav points at the supported English
+// informational routes (not a parallel English product). The live product is
+// reached via the CTA, which continues into the Japanese flow.
 const primaryNavEn = [
-  { href: "/tests", label: "Understand" },
-  { href: "/recommendations", label: "Discover" },
-  { href: "/reports", label: "Deepen" },
-  { href: "/experiences", label: "Connect" },
+  { href: "/en/about", label: "About" },
   { href: "/en/partners", label: "Partners" },
+  { href: "/en/contact", label: "Contact" },
 ];
 
 const secondaryNavJa = [
@@ -33,15 +34,15 @@ const secondaryNavJa = [
 ];
 
 const secondaryNavEn = [
-  { href: "/en/about", label: "About" },
-  { href: "/en/contact", label: "Contact" },
+  { href: "/en/privacy", label: "Privacy" },
+  { href: "/en/legal", label: "Legal" },
 ];
 
 function toJapanesePath(pathname: string): string {
   if (pathname === "/en") return "/";
   if (pathname.startsWith("/en/")) {
     const base = pathname.replace("/en", "");
-    if (["/", "/about", "/contact", "/legal", "/support", "/products", "/login", "/register"].includes(base)) return base;
+    if (["/", "/about", "/contact", "/legal", "/support", "/products", "/login", "/register", "/partners", "/privacy"].includes(base)) return base;
     return "/";
   }
   return pathname;
@@ -62,13 +63,14 @@ export default function SiteHeader() {
   const [open, setOpen] = useState(false);
   const isEn = pathname === "/en" || pathname.startsWith("/en/");
   const homeHref = isEn ? "/en" : "/";
-  const currentPath = isEn ? toJapanesePath(pathname) : pathname;
-  const normalizedCurrent = useMemo(() => normalizePath(currentPath), [currentPath]);
+  // AIX-3D-1 (Part D) — active state + tone are resolved from the *actual* path.
+  // normalizePath strips the /en prefix, so English info routes highlight against
+  // their own hrefs and resolve to the correct (editorial/light) surface, instead
+  // of inheriting the Japanese home's immersive/dark tone.
+  const normalizedCurrent = useMemo(() => normalizePath(pathname), [pathname]);
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
-  // AIX-3 — dark immersive tone is resolved from the centralized surface config,
-  // not an ad-hoc route set, so the whole public site themes consistently.
-  const dark = isImmersive(currentPath);
+  const dark = isImmersive(pathname);
   // Primary CTA — the same across the product.
   const ctaHref = isEn ? "/en/check-in" : "/check-in";
   const ctaLabel = isEn ? "See your state" : "いまの状態をみる";
@@ -76,7 +78,7 @@ export default function SiteHeader() {
   function isActive(path: string) {
     if (path.includes("#")) return false;
     const { base } = splitDecoratedPath(path);
-    const normalizedHref = base.replace(/\/$/, "") || "/";
+    const normalizedHref = normalizePath(base);
     return normalizedCurrent === normalizedHref || normalizedCurrent.startsWith(`${normalizedHref}/`);
   }
 
