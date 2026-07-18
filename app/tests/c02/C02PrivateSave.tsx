@@ -36,6 +36,7 @@ export function PrivateTestSave({ testSlug, answers }: { testSlug: "c02" | "f01"
   const loginHref = `/login?next=${encodeURIComponent(returnTo)}`;
   const lineHref = `/api/line/auth/start?locale=ja&intent=login&returnTo=${encodeURIComponent(returnTo)}`;
 
+  // AIX-3D-2 — calm branded-light Understand grammar; save/login/error logic preserved verbatim.
   return (
     <section className="rounded-[1.2rem] border border-[rgba(23,59,53,0.12)] bg-white/90 px-5 py-5">
       <p className="text-[13px] font-semibold text-[#315F50]">結果を非公開で残す</p>

@@ -78,7 +78,7 @@ export default function WorkRhythmFlow() {
     const result = resultBundle.result;
 
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+      <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
         <div className="container py-10 md:py-14">
           <div className="mx-auto max-w-[42rem] space-y-6">
             <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function WorkRhythmFlow() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
       <div className="container py-10 md:py-14">
         <div className="mx-auto max-w-[42rem]">
           {phase === "intro" ? (

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { BrandLockup } from "./brand/BrandMark";
-import { isImmersive } from "../lib/publicSurface";
+import { isDarkSurface } from "../lib/publicSurface";
 
 export default function SiteFooter() {
   const pathname = usePathname() || "/";
   const isEn = pathname === "/en" || pathname.startsWith("/en/");
-  // AIX-3 — dark immersive tone resolved from the centralized surface config.
-  const dark = isImmersive(pathname);
+  // AIX-3 — dark tone resolved from the centralized surface config (immersive +
+  // AIX-3D-2 understand product surfaces).
+  const dark = isDarkSurface(pathname);
 
   const legalHref = isEn ? "/en/legal" : "/legal";
   const privacyHref = isEn ? "/en/privacy" : "/privacy";

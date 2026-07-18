@@ -1,13 +1,8 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { OmikujiFlow } from "../_components/SpecAssessmentFlow";
-import { s01Runtime } from "@/lib/yorisou-tests/s01";
-
-export const metadata: Metadata = {
-  title: "今日のおみくじ | Yorisou",
-  description: "今日の気分に合わせて軽いヒントをひとつ受け取る公開おみくじです。",
-};
-
+// AIX-3D-2 — /tests/s01 consolidated. The "今日のおみくじ" (omikuji / daily fortune)
+// draw is fortune-telling, which the platform explicitly is not. Not in the
+// canonical catalogue. Redirect to the Understand entry; engine preserved in lib/.
 export default function S01Page() {
-  return <OmikujiFlow runtime={s01Runtime} />;
+  redirect("/tests");
 }

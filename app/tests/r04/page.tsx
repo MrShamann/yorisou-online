@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { NamePairFlow } from "../_components/SpecAssessmentFlow";
-import { r04Runtime } from "@/lib/yorisou-tests/r04";
-
-export const metadata: Metadata = {
-  title: "名前相性チェック | Yorisou",
-  description: "ふたりの呼び名をきっかけに距離感のヒントを軽く受け取る公開チェックです。",
-};
-
+// AIX-3D-2 — /tests/r04 consolidated. The name-compatibility ("名前相性") flow
+// draws a seeded result from two names — a divination mechanic outside the
+// platform's non-divination positioning, and not in the canonical catalogue.
+// Redirect to the Understand entry; the engine is preserved in lib/.
 export default function R04Page() {
-  return <NamePairFlow runtime={r04Runtime} />;
+  redirect("/tests");
 }

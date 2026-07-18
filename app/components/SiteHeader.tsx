@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { BrandLockup } from "./brand/BrandMark";
-import { isImmersive, normalizePath } from "../lib/publicSurface";
+import { isDarkSurface, normalizePath } from "../lib/publicSurface";
 
 // AIX-3 — navigation around the complete product system (six user domains +
 // partner), not a list of internal features. The test lives inside 理解する.
@@ -70,7 +70,7 @@ export default function SiteHeader() {
   const normalizedCurrent = useMemo(() => normalizePath(pathname), [pathname]);
   const primaryNav = isEn ? primaryNavEn : primaryNavJa;
   const secondaryNav = isEn ? secondaryNavEn : secondaryNavJa;
-  const dark = isImmersive(pathname);
+  const dark = isDarkSurface(pathname);
   // Primary CTA — the same across the product.
   const ctaHref = isEn ? "/en/check-in" : "/check-in";
   const ctaLabel = isEn ? "See your state" : "いまの状態をみる";

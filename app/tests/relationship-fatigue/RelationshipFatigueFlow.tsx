@@ -127,7 +127,7 @@ export default function RelationshipFatigueFlow() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
       <div className="container py-10 md:py-14">
         <div className="mx-auto max-w-[42rem]">
 
@@ -266,7 +266,7 @@ export default function RelationshipFatigueFlow() {
               </div>
 
               {/* Nav */}
-              <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.09)] bg-[rgba(255,249,242,0.96)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-0">
+              <div className="sticky bottom-0 z-20 -mx-4 border-t border-[rgba(23,59,53,0.09)] bg-[rgba(251,250,246,0.96)] px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-0">
                 <div className="flex gap-2.5">
                   <button
                     type="button"
@@ -298,7 +298,7 @@ function ResultView({ result, answers, onRetake }: { result: RFResult; answers: 
   const { archetype } = result;
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
       <div className="container py-10 md:py-14">
         <div className="mx-auto max-w-[42rem] space-y-6">
 

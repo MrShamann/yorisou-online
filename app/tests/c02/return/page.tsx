@@ -19,5 +19,5 @@ export default function C02SaveReturnPage() {
       })
       .catch(() => setState("error"));
   }, []);
-  return <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]"><div className="container py-12"><div className="mx-auto max-w-lg rounded-[1.25rem] bg-white p-6">{savedId ? <><p>結果を非公開で保存しました。</p><Link href={`/saved/c02/${savedId}`} className="btn mt-5 inline-flex rounded-full px-5 py-3">保存した結果を開く</Link></> : state === "saving" ? <p>結果を非公開で保存しています。</p> : <><p>{state === "missing" ? "保存する結果が見つかりませんでした。" : "結果を保存できませんでした。"}</p><Link href="/tests/c02" className="btn mt-5 inline-flex rounded-full px-5 py-3">C02に戻る</Link></>}</div></div></main>;
+  return <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]"><div className="container py-12"><div className="mx-auto max-w-lg rounded-[1.25rem] bg-white p-6">{savedId ? <><p>結果を非公開で保存しました。</p><Link href={`/saved/c02/${savedId}`} className="btn mt-5 inline-flex rounded-full px-5 py-3">保存した結果を開く</Link></> : state === "saving" ? <p>結果を非公開で保存しています。</p> : <><p>{state === "missing" ? "保存する結果が見つかりませんでした。" : "結果を保存できませんでした。"}</p><Link href="/tests/c02" className="btn mt-5 inline-flex rounded-full px-5 py-3">C02に戻る</Link></>}</div></div></main>;
 }

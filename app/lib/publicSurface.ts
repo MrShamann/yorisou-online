@@ -6,13 +6,27 @@
 // public site can be completed and themed maintainably.
 //
 //   immersive : dark "Living Intelligence" shell (hero + WebGL depth)
+//   understand: calm branded-light product surface for the retained per-test
+//               flows under /tests/* (AIX-3D-2). Light (not dark) by design: the
+//               flows embed the shared, hardcoded-light recommendation/conversion
+//               components (YorisouCompanionCard / RecommendationSlot /
+//               ResultConversionCommunity) that also render on the light LINE
+//               mini-app, so the whole test-flow surface is one coherent light
+//               grammar. The catalogue /tests stays immersive (the dark entry).
 //   editorial : calm branded-light surface for info / trust / legal pages
 //               (still uses the nestle BrandLockup, product type + nav)
 //   focus     : shell-suppressed flow surfaces (check-in / result / report / line)
 //   legacy    : not yet migrated to AIX-3 (old light/card shell) — tracked so
 //               the completion contracts and header can treat them honestly.
 
-export type SurfaceFamily = "immersive" | "continuity" | "report" | "editorial" | "focus" | "legacy";
+export type SurfaceFamily =
+  | "immersive"
+  | "understand"
+  | "continuity"
+  | "report"
+  | "editorial"
+  | "focus"
+  | "legacy";
 
 // Exact routes that render the immersive dark shell.
 const IMMERSIVE_EXACT = new Set<string>([
@@ -72,6 +86,14 @@ const FOCUS_EXACT = new Set<string>([
 ]);
 const FOCUS_PREFIXES = ["/line", "/reports/self-understanding"];
 
+// AIX-3D-2 — retained per-test detail/flow routes under /tests/* render on the
+// calm branded-light Understand surface (shared UnderstandShell grammar). The
+// catalogue "/tests" itself stays immersive; only its children are "understand".
+// Checked as a prefix so every retained /tests/<slug> flow themes consistently
+// with the shared light recommendation/conversion components it embeds — an
+// approved family, not the legacy shell.
+const UNDERSTAND_PREFIXES = ["/tests"];
+
 export function normalizePath(pathname: string | null | undefined): string {
   if (!pathname) return "/";
   // strip the /en locale prefix for family resolution (EN parity is a separate concern)
@@ -90,6 +112,9 @@ export function surfaceFamily(pathname: string | null | undefined): SurfaceFamil
   // focus takes priority (self-understanding reports + line are reading/flow surfaces)
   if (FOCUS_EXACT.has(p) || startsWithAny(p, FOCUS_PREFIXES)) return "focus";
   if (IMMERSIVE_EXACT.has(p)) return "immersive";
+  // Children of /tests (the per-test flows) are the dark Understand surface;
+  // the exact "/tests" catalogue is caught by IMMERSIVE_EXACT above.
+  if (startsWithAny(p, UNDERSTAND_PREFIXES)) return "understand";
   if (CONTINUITY_EXACT.has(p) || startsWithAny(p, CONTINUITY_PREFIXES)) return "continuity";
   if (REPORT_EXACT.has(p) || startsWithAny(p, REPORT_PREFIXES)) return "report";
   if (EDITORIAL_EXACT.has(p)) return "editorial";
@@ -107,16 +132,28 @@ export function isEditorial(pathname: string | null | undefined): boolean {
   return surfaceFamily(pathname) === "editorial";
 }
 
-// The shared shell renders in the AIX-3 branded tone (dark on immersive, calm
-// on editorial) for both immersive and editorial families; it is suppressed on
-// focus routes and kept legacy on not-yet-migrated routes.
-export function usesBrandedShell(pathname: string | null | undefined): boolean {
-  const f = surfaceFamily(pathname);
-  return f === "immersive" || f === "editorial";
+// AIX-3D-2 — the retained per-test flows are a calm branded-light surface.
+export function isUnderstand(pathname: string | null | undefined): boolean {
+  return surfaceFamily(pathname) === "understand";
 }
 
-// Header/footer visual tone. Editorial + legacy use the light tone; immersive
-// uses the dark tone.
+// The shared shell renders in the AIX-3 branded tone (dark on immersive, calm
+// light on understand + editorial); it is suppressed on focus routes and kept
+// legacy on not-yet-migrated routes.
+export function usesBrandedShell(pathname: string | null | undefined): boolean {
+  const f = surfaceFamily(pathname);
+  return f === "immersive" || f === "understand" || f === "editorial";
+}
+
+// Header/footer visual tone. Only immersive uses the dark tone; understand,
+// editorial and legacy use the light tone.
 export function shellTone(pathname: string | null | undefined): "dark" | "light" {
   return surfaceFamily(pathname) === "immersive" ? "dark" : "light";
+}
+
+// Whether the shared header/footer should render in the dark tone. Only the
+// immersive product surfaces are dark; everything else (understand, editorial,
+// legacy) is light.
+export function isDarkSurface(pathname: string | null | undefined): boolean {
+  return shellTone(pathname) === "dark";
 }
