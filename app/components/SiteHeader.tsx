@@ -12,17 +12,17 @@ import { isImmersive, normalizePath } from "../lib/publicSurface";
 const primaryNavJa = [
   { href: "/tests", label: "理解する" },
   { href: "/recommendations", label: "見つける" },
-  { href: "/#deepen", label: "深める" },
-  { href: "/#connect", label: "つながる" },
-  { href: "/#improve", label: "育てる" },
+  { href: "/reports", label: "深める" },
+  { href: "/experiences", label: "つながる" },
+  { href: "/co-design", label: "育てる" },
   { href: "/partners", label: "パートナー" },
 ];
 
 const primaryNavEn = [
   { href: "/tests", label: "Understand" },
   { href: "/recommendations", label: "Discover" },
-  { href: "/#deepen", label: "Deepen" },
-  { href: "/#connect", label: "Connect" },
+  { href: "/reports", label: "Deepen" },
+  { href: "/experiences", label: "Connect" },
   { href: "/en/partners", label: "Partners" },
 ];
 

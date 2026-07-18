@@ -22,6 +22,12 @@ const IMMERSIVE_EXACT = new Set<string>([
   "/recommendations",
   "/recommendations/graph",
   "/partners",
+  // AIX-3C — core product domains rendered as immersive dark surfaces.
+  "/reports",
+  "/experiences",
+  "/co-design",
+  "/saved",
+  "/private-state",
 ]);
 
 // Keep & Return continuity routes (private state space, saved, LINE return).

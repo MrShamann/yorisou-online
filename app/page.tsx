@@ -33,11 +33,11 @@ const DOMAINS: ReadonlyArray<{
   cueLabel: string;
 }> = [
   { id: "understand", index: "01", title: "理解する", body: "チェックを入口に、今の状態を見る。固定タイプではなく、いまの動き方を。", status: "current", cueHref: "/tests", cueLabel: "理解の入口へ" },
-  { id: "keep", index: "02", title: "残す・戻る", body: "結果や気づきを、この端末やLINEに残す。状態が変わったら、また戻れる。", status: "current", cueHref: "/check-in", cueLabel: "チェックから始める" },
+  { id: "keep", index: "02", title: "残す・戻る", body: "結果や気づきを、この端末やLINEに残す。状態が変わったら、また戻れる。", status: "current", cueHref: "/saved", cueLabel: "残したものを見る" },
   { id: "discover", index: "03", title: "見つける", body: "今の状態に合う一歩・体験・読みもの・道具・場所を、理由つきで。", status: "current", cueHref: "/recommendations", cueLabel: "見つけにいく" },
-  { id: "deepen", index: "04", title: "深める", body: "無料結果の先の、少し深い読みもの。決めつけず、次の一歩の材料に。", status: "current", cueHref: "/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low", cueLabel: "レポートの見本を見る" },
-  { id: "connect", index: "05", title: "つながる", body: "体験を試す、役立ったを残す。低圧力のつながりや地域の発見は、プロトタイプ段階。", status: "prototype", cueHref: "/contact?topic=open-testing", cueLabel: "体験の感想を送る" },
-  { id: "improve", index: "06", title: "育てる", body: "感想や共創で、これからの体験・資料・プロダクトを一緒に良くしていく。", status: "prototype", cueHref: "/contact?topic=open-testing", cueLabel: "フィードバックを送る" },
+  { id: "deepen", index: "04", title: "深める", body: "無料結果の先の、少し深い読みもの。決めつけず、次の一歩の材料に。", status: "current", cueHref: "/reports", cueLabel: "レポートを見る" },
+  { id: "connect", index: "05", title: "つながる", body: "体験を試す、役立ったを残す。低圧力のつながりや地域の発見。", status: "prototype", cueHref: "/experiences", cueLabel: "体験の場を見る" },
+  { id: "improve", index: "06", title: "育てる", body: "感想や共創で、これからの体験・資料・プロダクトを一緒に良くしていく。", status: "prototype", cueHref: "/co-design", cueLabel: "育てる場を見る" },
 ];
 
 const LOOP = ["理解", "残す", "見つける", "深める", "体験", "戻る", "改善"] as const;
