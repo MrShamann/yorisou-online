@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-
-import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
-import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
-import RecommendationSignalForm from "./RecommendationSignalForm";
 import Link from "next/link";
 
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import RecommendationSignalForm from "./RecommendationSignalForm";
+
 export const metadata: Metadata = {
-  title: "次にほしいヒント | Yorisou",
+  title: "見つける | YORISOU 今の状態に合うもの",
   description:
-    "いま色テスト by よりそう の公開結果のあとで、次の入口だけを静かに選べるページです。",
+    "今の状態に合う一歩・体験・レポート・読みもの・道具・場所・サービスを、理由つきで。命令ではなく、合わないときは選べます。表示順は買えません。",
 };
+
+// AIX-3 — "見つける (Discover What Fits)" domain. Result compatibility, the
+// signal form and all links are preserved; only the surface is reframed into
+// the dark product system. No ranking logic changes here.
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -33,6 +36,8 @@ function getOverlaySuggestion(overlayId: string) {
   }
 }
 
+const KINDS = ["小さな一歩", "体験", "レポート", "読みもの", "道具", "場所", "公共の情報", "サービス", "条件を満たしたプロダクト"];
+
 export default async function RecommendationsPage({
   searchParams,
 }: {
@@ -43,128 +48,94 @@ export default async function RecommendationsPage({
   const overlayId = readParam(params, "overlayId");
   const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
   const payloadKey = readParam(params, "payloadKey");
-  const routeContext = {
-    resultId,
-    overlayId,
-    confidenceBand,
-    payloadKey,
-  } as const;
+  const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
   const savedHref = buildPublicResultHref("/saved", routeContext);
   const confidenceLabel = confidenceBand === "medium" ? "公開結果を確認中" : "公開結果を表示中";
-  const genericTraitChips = compatibility.assignment
-    ? compatibility.heroChips
-    : ["120問ベース", "今の動き方", "準備中"];
+  const traitChips = compatibility.assignment ? compatibility.heroChips : ["120問ベース", "今の動き方", "今の見え方"];
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_88%_0%,_rgba(221,236,242,0.72),_transparent_34%),linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_44%,_#F4FAF7_100%)] text-[#2F2A28]">
-      <section className="border-b border-[rgba(23,59,53,0.1)]">
-        <div className="container grid gap-5 py-5 md:py-10 lg:grid-cols-[0.96fr_1.04fr] lg:items-start lg:gap-8">
-          <div className="max-w-[40rem] space-y-4">
-            <div className="flex flex-wrap gap-1.5">
-              <MvpPill>次のヒント</MvpPill>
-              <MvpPill>120問互換表示</MvpPill>
-            </div>
-            <div className="space-y-3">
-              <p className="service-kicker">{compatibility.brandedTestName}</p>
-              <h1 className="display-serif max-w-[11em] text-[2rem] leading-[1.13] text-[#2F2A28] md:text-[2.72rem]">
+    <main className="aix2">
+      {/* ===== Hero ===== */}
+      <section className="aix2-band aix2-band--tight">
+        <div className="container">
+          <div className="grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-start">
+            <div className="max-w-[40rem]">
+              <p className="aix2-eyebrow">見つける · Discover</p>
+              <h1 className="aix2-band-title mt-3">
                 {compatibility.displayLine}
-                <span className="block text-[#173B35]">次の入口を選ぶ。</span>
+                <span className="mt-1 block text-[color:var(--jade-bright)]">合うものを、見つける。</span>
               </h1>
-              <p className="max-w-[34rem] text-[15px] font-medium leading-7 text-[#6F625C]">
+              <p className="aix2-lead mt-4">
                 {compatibility.assignment ? compatibility.globalNote : compatibility.placeholderText}
               </p>
-            </div>
-            <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(23,59,53,0.1)] bg-white/92 shadow-[0_16px_34px_rgba(23,59,53,0.07)]">
-              <div className="flex flex-wrap gap-1.5">
-                <MvpPill>{compatibility.assignment ? compatibility.assignment.publicCode : "今の見え方"}</MvpPill>
-                <MvpPill>{confidenceLabel}</MvpPill>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {traitChips.map((chip) => (
+                  <span key={chip} className="aix3-chip">{chip}</span>
+                ))}
+                <span className="aix3-chip">{confidenceLabel}</span>
               </div>
-              <p className="text-[13px] leading-7 text-[#4A3E39]">
-                {compatibility.assignment
-                  ? compatibility.currentStateNote
-                  : "今の見方を整えながら、結果の入口だけを先に保っています。"}
+            </div>
+
+            <div className="aix2-panel aix2-panel--now p-6">
+              <p className="aix2-eyebrow">おすすめに含まれるもの</p>
+              <p className="mt-3 text-[13.5px] leading-7 aix2-mut">
+                今の状態に合いそうな候補を、種類を問わず、理由つきで。命令ではなく、合わないときは選べます。表示順は買えません。
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {genericTraitChips.map((chip) => (
-                  <span
-                    key={chip}
-                    className="rounded-full border border-[rgba(105,151,130,0.2)] bg-[#F4FAF7] px-3 py-1.5 text-[12px] font-semibold text-[#315F50]"
-                  >
-                    {chip}
-                  </span>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {KINDS.map((k) => (
+                  <span key={k} className="aix3-tag" aria-hidden="true">{k}</span>
                 ))}
               </div>
-            </MvpCard>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="grid gap-3">
-              <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
-                <div className="service-kicker">状態から選ぶ</div>
-                <h2 className="display-serif text-[1.36rem] leading-[1.38]">有限のおすすめを見る</h2>
-                <p className="text-[14px] leading-7 text-[var(--text)]">保存、試す、振り返りまでを自分のペースで記録できます。</p>
-                <Link href="/recommendations/graph" className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] px-5 py-3 text-sm font-semibold text-[#315F50]">おすすめを開く</Link>
-              </MvpCard>
-              <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
-                <div className="service-kicker">今の傾向を保存する</div>
-                <h2 className="display-serif text-[1.36rem] leading-[1.38]">あとで同じ流れに戻る</h2>
-                <p className="text-[14px] leading-7 text-[var(--text)]">
-                  保存済みページでは、この端末に残した結果からもう一度見返せます。
-                </p>
-                <MvpActionLink
-                  href={savedHref}
-                  label="保存済みを見る"
-                  tone="secondary"
-                  className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
-                />
-              </MvpCard>
-
-              <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
-                <div className="service-kicker">もう一度チェックする</div>
-                <h2 className="display-serif text-[1.36rem] leading-[1.38]">別の日の傾向と見比べる</h2>
-                <p className="text-[14px] leading-7 text-[var(--text)]">
-                  日を変えて見ると、今の傾向が少し読みやすくなることがあります。
-                </p>
-                <MvpActionLink
-                  href="/check-in"
-                  label="120問をもう一度見る"
-                  tone="secondary"
-                  className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"
-                />
-              </MvpCard>
-
-              <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
-                <div className="service-kicker">小さな次の一歩</div>
-                <h2 className="display-serif text-[1.36rem] leading-[1.38]">承認前でもできること</h2>
-                <p className="text-[14px] leading-7 text-[var(--text)]">{getOverlaySuggestion(overlayId ?? "balancing")}</p>
-              </MvpCard>
+      {/* ===== Discover actions ===== */}
+      <section className="aix2-band !pt-0">
+        <div className="container">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="aix2-panel p-6">
+              <p className="aix2-eyebrow">状態から選ぶ</p>
+              <h2 className="mt-2 text-[1.3rem] font-bold text-[color:var(--tx)]">有限のおすすめを見る</h2>
+              <p className="mt-2 text-[14px] leading-7 aix2-mut">保存、試す、振り返りまでを自分のペースで記録できます。</p>
+              <Link href="/recommendations/graph" className="aix2-btn aix2-btn-primary mt-4 !min-h-[46px] !text-[14px]">おすすめを開く</Link>
+            </div>
+            <div className="aix2-panel p-6">
+              <p className="aix2-eyebrow">今の傾向を保存する</p>
+              <h2 className="mt-2 text-[1.3rem] font-bold text-[color:var(--tx)]">あとで同じ流れに戻る</h2>
+              <p className="mt-2 text-[14px] leading-7 aix2-mut">保存済みページでは、この端末に残した結果からもう一度見返せます。</p>
+              <Link href={savedHref} className="aix2-btn aix2-btn-ghost mt-4 !min-h-[46px] !text-[14px]">保存済みを見る</Link>
+            </div>
+            <div className="aix2-panel p-6">
+              <p className="aix2-eyebrow">もう一度チェックする</p>
+              <h2 className="mt-2 text-[1.3rem] font-bold text-[color:var(--tx)]">別の日の傾向と見比べる</h2>
+              <p className="mt-2 text-[14px] leading-7 aix2-mut">日を変えて見ると、今の傾向が少し読みやすくなることがあります。</p>
+              <Link href="/check-in" className="aix2-btn aix2-btn-ghost mt-4 !min-h-[46px] !text-[14px]">120問をもう一度見る</Link>
+            </div>
+            <div className="aix2-panel p-6">
+              <p className="aix2-eyebrow">小さな次の一歩</p>
+              <h2 className="mt-2 text-[1.3rem] font-bold text-[color:var(--tx)]">今できること</h2>
+              <p className="mt-2 text-[14px] leading-7 aix2-mut">{getOverlaySuggestion(overlayId ?? "balancing")}</p>
             </div>
           </div>
 
-          <RecommendationSignalForm
-            resultContext={{
-              ...(resultId ? { resultId } : {}),
-              ...(overlayId ? { overlayId } : {}),
-              confidenceBand,
-              ...(payloadKey ? { payloadKey } : {}),
-            }}
-            options={[
-              {
-                value: "self-understanding-reading",
-                label: "あとで詳しく読む",
-                hint: "落ち着いたときに見返したい",
-              },
-              {
-                value: "rest-and-recovery",
-                label: "小さな次の一歩",
-                hint: "今できることだけ軽く試したい",
-              },
-              {
-                value: "none-right-now",
-                label: "もう一度チェックする",
-                hint: "今日は比較を先にしたいとき",
-              },
-            ]}
-          />
+          <div className="mt-6">
+            <RecommendationSignalForm
+              resultContext={{
+                ...(resultId ? { resultId } : {}),
+                ...(overlayId ? { overlayId } : {}),
+                confidenceBand,
+                ...(payloadKey ? { payloadKey } : {}),
+              }}
+              options={[
+                { value: "self-understanding-reading", label: "あとで詳しく読む", hint: "落ち着いたときに見返したい" },
+                { value: "rest-and-recovery", label: "小さな次の一歩", hint: "今できることだけ軽く試したい" },
+                { value: "none-right-now", label: "もう一度チェックする", hint: "今日は比較を先にしたいとき" },
+              ]}
+            />
+          </div>
         </div>
       </section>
     </main>

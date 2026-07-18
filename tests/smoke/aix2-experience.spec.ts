@@ -43,11 +43,12 @@ test.describe("AIX-2 progressive enhancement", () => {
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    await expect(page.locator("h1")).toContainText("今を");
-    await expect(page.getByRole("link", { name: "いま色テストをはじめる" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "入口をえらぶ" })).toBeVisible();
-    // non-diagnosis clarity present (embedded in the hero lead)
-    await expect(page.getByText("固定タイプの診断ではなく")).toBeVisible();
+    // AIX-3 — platform positioning: the check is an entry, not the product.
+    await expect(page.locator("h1")).toContainText("終わらない");
+    await expect(page.getByRole("link", { name: "いまの状態をみる" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "プロダクトを見る" })).toBeVisible();
+    // positioning: the check is the entry
+    await expect(page.getByText("チェックは、その入口")).toBeVisible();
     // static depth field is server-rendered SVG (no JS / no WebGL)
     expect(await page.locator(".depth-scene svg circle").count()).toBeGreaterThan(20);
     await ctx.close();
@@ -75,7 +76,7 @@ test.describe("AIX-2 progressive enhancement", () => {
     }));
     expect(state.canvasActive).toBeNull();
     expect(state.svgCircles).toBeGreaterThan(20);
-    await expect(page.getByRole("link", { name: "いま色テストをはじめる" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "いまの状態をみる" }).first()).toBeVisible();
     await ctx.close();
   });
 });
@@ -133,7 +134,7 @@ test.describe("AIX-2 dark contrast (axe-independent, WCAG AA)", () => {
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
     for (const [name, sel] of [
       ["lead", ".aix2-lead"],
-      ["journey body", ".aix2-journey-body"],
+      ["domain body", ".aix3-domain-body"],
       ["muted", ".aix2-mut"],
     ] as const) {
       const m = await contrast(page, sel);

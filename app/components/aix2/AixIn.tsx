@@ -11,10 +11,12 @@ export default function AixIn({
   children,
   className = "",
   as: Tag = "div",
+  id,
 }: {
   children: ReactNode;
   className?: string;
   as?: "div" | "section" | "header";
+  id?: string;
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const [inView, setInView] = useState(false);
@@ -37,7 +39,7 @@ export default function AixIn({
 
   const Comp = Tag as "div";
   return (
-    <Comp ref={ref as never} className={`${inView ? "aix2-in" : ""} ${className}`}>
+    <Comp ref={ref as never} id={id} className={`${inView ? "aix2-in" : ""} ${className}`}>
       {children}
     </Comp>
   );
