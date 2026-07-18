@@ -32,7 +32,8 @@
     "test:candidate-intake": "node --import tsx lib/yorisou-tests/__tests__/candidateIntake.test.ts",
     "test:state-field": "node --import tsx lib/yorisou-tests/__tests__/stateField.test.ts",
     "test:depth-field": "node --import tsx lib/yorisou-tests/__tests__/depthField.test.ts",
-    "test:aix3": "node --import tsx lib/yorisou-tests/__tests__/aix3Completion.test.ts"
+    "test:aix3": "node --import tsx lib/yorisou-tests/__tests__/aix3Completion.test.ts",
+    "test:aix3b": "node --import tsx lib/yorisou-tests/__tests__/aix3bCompletion.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",

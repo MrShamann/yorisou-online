@@ -12,7 +12,7 @@
 //   legacy    : not yet migrated to AIX-3 (old light/card shell) — tracked so
 //               the completion contracts and header can treat them honestly.
 
-export type SurfaceFamily = "immersive" | "editorial" | "focus" | "legacy";
+export type SurfaceFamily = "immersive" | "continuity" | "report" | "editorial" | "focus" | "legacy";
 
 // Exact routes that render the immersive dark shell.
 const IMMERSIVE_EXACT = new Set<string>([
@@ -23,6 +23,14 @@ const IMMERSIVE_EXACT = new Set<string>([
   "/recommendations/graph",
   "/partners",
 ]);
+
+// Keep & Return continuity routes (private state space, saved, LINE return).
+const CONTINUITY_EXACT = new Set<string>(["/saved", "/private-state"]);
+const CONTINUITY_PREFIXES = ["/saved"];
+
+// Deepen / report routes (report overview + reading surfaces).
+const REPORT_EXACT = new Set<string>(["/reports"]);
+const REPORT_PREFIXES = ["/reports"];
 
 // Exact routes that use the calm branded editorial surface.
 const EDITORIAL_EXACT = new Set<string>([
@@ -57,14 +65,22 @@ export function normalizePath(pathname: string | null | undefined): string {
   return p.replace(/\/+$/, "") || "/";
 }
 
+const startsWithAny = (p: string, prefixes: string[]) =>
+  prefixes.some((pre) => p === pre || p.startsWith(`${pre}/`));
+
 export function surfaceFamily(pathname: string | null | undefined): SurfaceFamily {
   const p = normalizePath(pathname);
+  // focus takes priority (self-understanding reports + line are reading/flow surfaces)
+  if (FOCUS_EXACT.has(p) || startsWithAny(p, FOCUS_PREFIXES)) return "focus";
   if (IMMERSIVE_EXACT.has(p)) return "immersive";
+  if (CONTINUITY_EXACT.has(p) || startsWithAny(p, CONTINUITY_PREFIXES)) return "continuity";
+  if (REPORT_EXACT.has(p) || startsWithAny(p, REPORT_PREFIXES)) return "report";
   if (EDITORIAL_EXACT.has(p)) return "editorial";
-  if (FOCUS_EXACT.has(p)) return "focus";
-  if (FOCUS_PREFIXES.some((pre) => p === pre || p.startsWith(`${pre}/`))) return "focus";
   return "legacy";
 }
+
+// Disposition for the AIX-3B route manifest / completion contracts.
+export type RouteDisposition = "canonical" | "child" | "redirect" | "internal" | "retire";
 
 export function isImmersive(pathname: string | null | undefined): boolean {
   return surfaceFamily(pathname) === "immersive";
