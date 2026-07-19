@@ -205,7 +205,12 @@ event type is a contract gap, not a silent no-op.
 - [ ] Exercising confirm/correct/reject/hide appends the mapped WS-F event; the
       log remains append-only (no in-place mutation).
 - [ ] Consent-preview surfaces for rights-blocked/architecture methods are
-      unreachable unless the matching dev flag is on and `NODE_ENV !== "production"`.
+      unreachable unless the matching dev flag is on and the deployment context is
+      non-production. Per R1 §10 the deny signal is `VERCEL_ENV === "production"`
+      (`isTrueProduction()` / `deploymentContext()`), **not** `NODE_ENV` — a Vercel
+      Preview runs a production-mode build but is not true production. Sensitive
+      surfaces are additionally gated by `cpv1PreviewAccess` (server-side auth +
+      Founder/Admin + route authorization).
 - [ ] Contract suite `lib/yorisou-tests/__tests__/cpv1Completion.test.ts` covers the
       above and passes locally.
 
@@ -227,13 +232,17 @@ event type is a contract gap, not a silent no-op.
 
 ## 7. Open blockers
 
-- **B-E1 (contract gap):** `history.ts` lacks explicit `HistoryEventType`s for
-  `forget`, `delete`, `export`, and `revoke_downstream`. Add append-only audit
-  events (or a governance-event sub-log) so every right leaves a truthful trace.
-  Until resolved these operations run but their audit type is undefined.
-- **B-E2 (deletion semantics):** `delete`/`forget` need a defined tombstone +
-  cascade contract across WS-D results, WS-F objectRefs, WS-G Companion memory, and
-  WS-I recommendation state — specified, then RLS-enforced in local Supabase.
+- **B-E1 (contract gap) — RESOLVED in R1 §8.** `history.ts` now defines explicit
+  event types `user_forgot`, `user_deleted`, `user_exported`, `downstream_revoked`
+  plus the five permission-change events, appended via `recordDataRightsEvent(...)`
+  and enforced by the DB check constraint `yorisou_cpv1_hist_event_type_r1`. Every
+  right now leaves a truthful append-only trace. See WS-F §8.
+- **B-E2 (deletion semantics) — audit form RESOLVED in R1 §8; cascade still open.**
+  The tombstone contract is defined and tested (`makeTombstone` /
+  `tombstoneCarriesNoPersonalContent`, `user_deleted` with a content-free
+  `safeDetail`). The cross-surface cascade (WS-D results, WS-F objectRefs, WS-G
+  Companion memory, WS-I recommendation state) remains a wiring item to be
+  RLS-enforced in local Supabase before any persistence is activated.
 - **B-E3 (`RIGHTS_BLOCKED` upstream):** sensitive families are rights-gated at
   WS-B; WS-E consent for them cannot be exercised on a public route until a Founder
   clears rights AND activates. WS-E stays contract-only for those methods.
@@ -242,3 +251,28 @@ event type is a contract gap, not a silent no-op.
   sensitive birth-place capture stays behind dev flags only.
 - **B-E5 (persistence surface):** `account_saved` retention implies a saved-data
   store — Preview/local only, never pointed at production.
+
+---
+
+## 8. CPV1-R1 §9 corrections (independent permissions, not ordered levels)
+
+The R1 pass rebuilt consent in `lib/cpv1/consent.ts` (migration `202607190003`) so
+permissions are **independent booleans**, never an ordered privacy ladder where a
+higher level implies the lower ones:
+
+- **Independent purposes.** `MethodConsent.purposes` is a
+  `Record<DownstreamPurpose, boolean>` over `report | companion | recommendation |
+  community | public | archive | legacy`, all **false by default**. Granting one
+  never implies another (`grantPurpose` / `revokePurpose` toggle exactly one).
+- **Separate visibility axis.** `visibility` (`private | shared | public_safe`) is
+  orthogonal to purpose grants — a `public_safe` visibility does not by itself grant
+  any downstream use, and no purpose grant raises visibility.
+- **Compound guards in `consentAllows(c, purpose)`.** community/public additionally
+  require `visibility === "public_safe"`; community additionally requires
+  `saveAcknowledged`; legacy additionally requires at least one `legacyRecipients`
+  entry. `canShareToCommunity(c) === consentAllows(c, "community")`.
+- **Restrictive defaults.** `defaultConsent()` yields `session_only` retention for
+  sensitive input, `private` visibility, and no purposes — the safe floor.
+
+Covered by `lib/yorisou-tests/__tests__/cpv1Completion.test.ts` (§9). WS-E remains
+`CONTRACT_CPV1`; no sensitive method is activated on a public route by this program.

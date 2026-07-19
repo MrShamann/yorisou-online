@@ -181,8 +181,10 @@ the read-model for "show what changed, when, which method + version, and whether
    `result_created` event with `supersedesVersion = fromVersion` and the prior result reconstructible.
 3. **Change view is honest.** `buildChangeView` reports every `result_created` / `user_corrected` /
    `user_rejected` with `at`, `methodId`, `methodVersion`, `what`, and correct `userConfirmed`.
-4. **Confirmation matching is correct.** `userConfirmed` is true iff a `user_confirmed` event exists for
-   the same `objectRef ?? methodId`.
+4. **Confirmation matching is correct (R1-corrected).** `userConfirmed` is true iff a `user_confirmed`
+   event exists for the **exact** `objectRef` (result/observation id). There is **no `methodId` fallback**:
+   an empty/absent `objectRef` confirms nothing, so confirming one result never marks a *different* result
+   of the same method as confirmed. See `confirmationKey(e)` in `history.ts` (§8).
 5. **No sensitive leakage.** No raw answers / birth data appear in any `HistoryEvent`; only `objectRef`
    and non-sensitive `safeDetail`.
 6. **No universal score.** No surface derived from history emits a single collapsed score or fixed label.
@@ -202,15 +204,49 @@ the read-model for "show what changed, when, which method + version, and whether
   design-only; it stays behind `cpv1_*_preview` dev flags until designed, built, and privacy-reviewed.
 - **`PERSIST` (Preview-gated).** Durable append-only + insert-only RLS storage exists only against local
   Supabase / Preview; production persistence is out of scope for this program (§5).
-- **`ERASURE-SEMANTICS` (`CONTRACT_CPV1`).** The exact reconciliation of user `forget`/`delete` with the
-  append-only invariant (tombstone vs. hard erase, and its audit form) needs a dedicated data-rights
-  decision before any persistence is activated.
+- **`ERASURE-SEMANTICS` — RESOLVED in R1 §8 (`CONTRACT_CPV1`).** Deletion is reconciled with the
+  append-only invariant via a **tombstone**: `makeTombstone(...)` appends a `user_deleted` event carrying
+  a fixed non-personal `safeDetail` ("personal content deleted at user request") and **no** personal
+  content — `tombstoneCarriesNoPersonalContent(e)` enforces this. The prior content row is what is erased;
+  the audit trail keeps a content-free record that erasure happened. Cross-surface cascade (WS-D/G/I)
+  remains a wiring item, but the audit form is now defined and tested.
 - **`WS-D/E COUPLING`.** Precise event emission from understanding (WS-D) and consent (WS-E) state
   transitions is contract-level; end-to-end wiring is tracked in those workstreams.
 - **`RIGHTS_BLOCKED` methods.** History for external / rights-blocked methods cannot appear on any public
   route until rights clearance + original content + Founder activation (Program Architecture §2).
 - **`LEGAL_BLOCKED` legacy.** History feeding a public Digital Legacy / Life Archive is blocked pending
   legal/jurisdiction review (WS-K); no such activation occurs in this program.
+
+---
+
+## 8. CPV1-R1 §8 corrections (runtime truth)
+
+The R1 hardening pass corrected this workstream's identity, confirmation, and
+data-rights model in `lib/cpv1/history.ts` (migration `202607190003`):
+
+- **Exact-object identity.** `HistoryEvent` carries `objectKind` (`result` |
+  `observation` | `action` | `permission` | `recipient`) and `objectRef` is the
+  **exact** object id. `recordResultChange({resultId, fromVersion, toVersion,
+  userConfirmed, …})` targets that exact `resultId` and sets
+  `priorVersionConfirmed` from the caller's `userConfirmed` — a confirmation of
+  version N is never silently transferred to version N+1.
+- **Confirmation keys on `objectRef` only.** `confirmationKey(e)` returns the
+  object ref alone; a null/empty ref confirms nothing. The former
+  `objectRef ?? methodId` fallback is removed (it would have marked every result
+  of a method confirmed once any one was).
+- **Data-rights events are first-class.** Added event types `user_forgot`,
+  `user_deleted`, `user_exported`, `downstream_revoked`, and the five
+  permission-change events (`method_consent_changed`,
+  `companion/recommendation/community_permission_changed`,
+  `archive_permission_changed`, `legacy_designation_changed`). `recordDataRightsEvent(...)`
+  appends them; the DB check constraint `yorisou_cpv1_hist_event_type_r1` enforces
+  the full set. This resolves blocker **B-E1** carried in WS-E §7.
+- **Deletion tombstone.** See the R1-resolved `ERASURE-SEMANTICS` blocker above:
+  `makeTombstone` / `tombstoneCarriesNoPersonalContent` give append-only-safe
+  erasure with a content-free audit record.
+
+All of the above are covered by `lib/yorisou-tests/__tests__/cpv1Completion.test.ts`
+(§8 section) and remain `CONTRACT_CPV1` — no public timeline is claimed live.
 
 ---
 

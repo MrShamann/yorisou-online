@@ -197,3 +197,33 @@ Synthetic fixtures may appear only in tests and are never presented as real user
 - Open design item: the `themeKeyOf` projection must be authored so theme keys are safe derived
   summaries only — a review checkpoint is required to guarantee no raw answer text or sensitive
   input leaks through the key.
+
+---
+
+## 8. CPV1-R1 §7/§9 corrections (genuine synthesis + independent downstream)
+
+R1 rebuilt the understanding contract in `lib/cpv1/understanding.ts` (migration
+`202607190003`) that this workstream renders from:
+
+- **Relation-based contradiction (§7).** `synthesizeThemes(...)` groups
+  `Observation`s by `themeKey` and reads each observation's `relation`
+  (`supports | opposes | unrelated | uncertain`, with an optional
+  `correctedRelation` the user can set — `effectiveRelation(o)` resolves it). A
+  theme is reported **`contradictory` only when ≥1 observation supports AND ≥1
+  opposes** the same theme — never merely because two different methods produced
+  entries. `recurring` needs ≥2 supports; a purely `uncertain` set stays
+  `uncertain`; `unrelated`/deleted/rejected are excluded. `SynthesisTheme` exposes
+  `supportingMethodIds` + `opposingMethodIds`, and output is deterministically
+  sorted (contradictory first). `NO_UNIVERSAL_SCORE` still holds — no overall
+  score/rank is derived.
+- **Independent downstream gating (§9).** `canUseDownstream(o, use)` is an
+  **independent** check, not an ordered privacy ladder:
+  `!deleted && !rejected && permittedDownstream.includes(use)` and, for
+  `community`/`public`, additionally `visibility === "public_safe"`. Acceptance
+  criteria #3 (delete/reject removes an observation from all reports and share
+  cards) and #5 (share card only from `public_safe` observations) are enforced by
+  this single predicate — there is no separate inclusion list.
+
+Covered by `lib/yorisou-tests/__tests__/cpv1Completion.test.ts` (§7). These
+surfaces remain behind `cpv1_understanding_model_ui`; APP-2 nine-family private
+reports are unchanged.
