@@ -1,0 +1,18 @@
+CPV1-R1 §5 + §6 EVIDENCE (2026-07-19)
+
+§5 RUNTIME-TRUTH AUDIT — public-active methods proven against real routes/flows on production main:
+  PROVEN (9): imairo-120q(/check-in MiniTestFlow), c02(/tests/c02 RuleBasedTestFlow), relationship-fatigue-24q,
+              f01, f02, love-distance, work-rhythm, local-life, name-impression — all real non-redirect routes + flows on main @ 70da80a.
+  DOWNGRADED: yorisou-values (claimed public_active; NO route/flow/result — nothing outside registry references it) → unbuilt.
+              reflection-cadence + motivation: in_progress → not_started (no route).
+  Corrected count: 9 public-active (was 10). Redirect-only r01/r04/s01 correctly unregistered.
+  Doc: docs/cpv1/92_CPV1_METHOD_RUNTIME_RECONCILIATION.md. Enforced by cpv1 test §5 (route+flow proofs).
+  No protected questions/scoring/taxonomy/result-IDs/report-mappings changed.
+
+§6 ALWAYS-PASS TEST REMOVAL — scanned PR #114 diff + inherited suites for || true / unconditional pass /
+  file-existence-only / comment-assertions / cannot-fail. Only real violation: the A5 LINE assertion (`... || true`).
+  Replaced with a REAL assertion exercising runtime behavior (lineRecoveryMessage per outcome code +
+  evaluateLineCallback on a malformed envelope ⇒ not "ok") + the external-handshake framing. 0 || true assertions remain.
+
+Verification: cpv1 36/36; full battery aix4/aix5/sr1/sr2/app1/app2/cpv1 PASS; tsc 0; eslint 0; gitleaks clean.
+NOTE: Founder instruction truncated again mid-§6; §7–§16 awaited.
