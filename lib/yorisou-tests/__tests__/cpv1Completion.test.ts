@@ -27,11 +27,28 @@ import {
 import {
   canUseDownstream,
   synthesizeThemes,
+  effectiveRelation,
   NO_UNIVERSAL_SCORE,
   type Observation,
+  type ThemeRelation,
 } from "@/lib/cpv1/understanding";
-import { defaultConsent, canPersist, canShareToCommunity } from "@/lib/cpv1/consent";
-import { appendEvent, recordResultChange, buildChangeView, type HistoryEvent } from "@/lib/cpv1/history";
+import {
+  defaultConsent,
+  canPersist,
+  canShareToCommunity,
+  consentAllows,
+  grantPurpose,
+  revokePurpose,
+} from "@/lib/cpv1/consent";
+import {
+  appendEvent,
+  recordResultChange,
+  recordDataRightsEvent,
+  makeTombstone,
+  tombstoneCarriesNoPersonalContent,
+  buildChangeView,
+  type HistoryEvent,
+} from "@/lib/cpv1/history";
 import { COMPLETION_COPY } from "@/app/result/reveal/revealContent";
 import { PRODUCT_CARDS } from "@/app/data/productCards";
 import { lineRecoveryMessage, evaluateLineCallback } from "@/lib/app2/lineCallbackContract";
@@ -230,65 +247,162 @@ check("resolution report enumerates each specific unresolved reason", () => {
   assert.ok(rep.unresolved.some((u) => u.includes("trademark")), "trademark reason listed");
 });
 
-console.log("CPV1 — source-separated understanding (WS-D)");
+console.log("CPV1 — source-separated understanding (WS-D) + §7 relations + §9 permissions");
 check("no universal score constant is set", () => assert.equal(NO_UNIVERSAL_SCORE, true));
 const baseObs = (over: Partial<Observation>): Observation => ({
-  id: "o", sourceClass: "yorisou_original_result", methodId: "imairo-120q", methodVersion: "v0.1",
-  createdAt: "2026-07-19T00:00:00Z", rawInputRef: null, derived: "theme-a", evidenceClass: "method_derived",
-  confirmation: "unreviewed", userCorrection: null, privacy: "account_private", freshnessAt: "2026-07-19T00:00:00Z",
-  permittedDownstream: [], deleted: false, ...over,
+  id: "o", sourceClass: "yorisou_original_result", methodId: "imairo-120q", methodVersion: "v0.1", resultId: "r-o",
+  createdAt: "2026-07-19T00:00:00Z", rawInputRef: null, derived: "theme-a", themeKey: "theme-a", relation: "supports",
+  correctedRelation: null, evidenceClass: "method_derived", confirmation: "unreviewed", userCorrection: null,
+  visibility: "private", permittedDownstream: [], freshnessAt: "2026-07-19T00:00:00Z", deleted: false, ...over,
 });
-check("rejected/deleted observations are never used downstream", () => {
-  assert.equal(canUseDownstream(baseObs({ confirmation: "rejected", permittedDownstream: ["report"], privacy: "account_private" }), "report"), false);
-  assert.equal(canUseDownstream(baseObs({ deleted: true, permittedDownstream: ["report"], privacy: "account_private" }), "report"), false);
+// §9 — independent permissions (never ordered / inferred).
+check("§9 rejected/deleted observations are never used downstream", () => {
+  assert.equal(canUseDownstream(baseObs({ confirmation: "rejected", permittedDownstream: ["report"] }), "report"), false);
+  assert.equal(canUseDownstream(baseObs({ deleted: true, permittedDownstream: ["report"] }), "report"), false);
 });
-check("community use requires public_safe + permission", () => {
-  assert.equal(canUseDownstream(baseObs({ privacy: "account_private", permittedDownstream: ["community"] }), "community"), false);
-  assert.equal(canUseDownstream(baseObs({ privacy: "public_safe", permittedDownstream: ["community"] }), "community"), true);
+check("§9 recommendation grant does NOT grant companion (and vice-versa); report grants neither", () => {
+  const rec = baseObs({ permittedDownstream: ["recommendation"] });
+  assert.equal(canUseDownstream(rec, "recommendation"), true);
+  assert.equal(canUseDownstream(rec, "companion"), false, "recommendation ⇏ companion");
+  const comp = baseObs({ permittedDownstream: ["companion"] });
+  assert.equal(canUseDownstream(comp, "recommendation"), false, "companion ⇏ recommendation");
+  const rep = baseObs({ permittedDownstream: ["report"] });
+  assert.equal(canUseDownstream(rep, "companion"), false, "report ⇏ companion");
+  assert.equal(canUseDownstream(rep, "recommendation"), false, "report ⇏ recommendation");
 });
-check("companion use requires companion permission scope", () => {
-  assert.equal(canUseDownstream(baseObs({ privacy: "account_private", permittedDownstream: ["companion"] }), "companion"), false);
-  assert.equal(canUseDownstream(baseObs({ privacy: "companion_permitted", permittedDownstream: ["companion"] }), "companion"), true);
+check("§9 community/public require public_safe visibility + explicit grant; archive ⇏ legacy", () => {
+  assert.equal(canUseDownstream(baseObs({ visibility: "private", permittedDownstream: ["community"] }), "community"), false);
+  assert.equal(canUseDownstream(baseObs({ visibility: "public_safe", permittedDownstream: ["community"] }), "community"), true);
+  assert.equal(canUseDownstream(baseObs({ visibility: "public_safe", permittedDownstream: ["community"] }), "public"), false, "community ⇏ public");
+  assert.equal(canUseDownstream(baseObs({ permittedDownstream: ["archive"] }), "legacy"), false, "archive ⇏ legacy");
 });
-check("synthesis reports agreement, not an average; multi-method ⇒ recurring", () => {
-  const obs: Observation[] = [
-    baseObs({ id: "1", methodId: "imairo-120q", derived: "resilience" }),
-    baseObs({ id: "2", methodId: "work-rhythm", derived: "resilience" }),
-    baseObs({ id: "3", methodId: "love-distance", derived: "distance" }),
-    baseObs({ id: "4", methodId: "imairo-120q", derived: "rejected-theme", confirmation: "rejected" }),
-  ];
-  const themes = synthesizeThemes(obs, (o) => o.derived);
-  const resilience = themes.find((t) => t.theme === "resilience")!;
-  assert.equal(resilience.agreement, "recurring");
-  assert.equal(resilience.supportingMethodIds.length, 2);
-  assert.ok(!themes.some((t) => t.theme === "rejected-theme"), "rejected excluded");
-  // deterministic: most-supported first
-  assert.equal(themes[0].theme, "resilience");
+check("§9 default permissions are restrictive; changing one leaves others unchanged", () => {
+  const none = baseObs({});
+  for (const p of ["report", "companion", "recommendation", "community", "public", "archive", "legacy"] as const) {
+    assert.equal(canUseDownstream(none, p), false, `default denies ${p}`);
+  }
+  const granted = baseObs({ permittedDownstream: ["recommendation", "report"] });
+  assert.equal(canUseDownstream(granted, "recommendation"), true);
+  assert.equal(canUseDownstream(granted, "companion"), false, "granting recommendation+report did not grant companion");
+});
+// §7 — genuine relation-based contradiction detection.
+const rel = (over: Partial<Observation> & { relation: ThemeRelation; themeKey: string }): Observation => baseObs(over);
+check("§7 two methods on the same theme do NOT auto-conflict; multiple supports ⇒ recurring", () => {
+  const themes = synthesizeThemes([
+    rel({ id: "1", methodId: "imairo-120q", themeKey: "resilience", relation: "supports" }),
+    rel({ id: "2", methodId: "work-rhythm", themeKey: "resilience", relation: "supports" }),
+  ]);
+  const t = themes.find((x) => x.theme === "resilience")!;
+  assert.equal(t.agreement, "recurring", "same-theme different-methods is not contradiction");
+  assert.equal(t.supportingMethodIds.length, 2);
+});
+check("§7 an explicit support/opposition pair ⇒ contradictory", () => {
+  const themes = synthesizeThemes([
+    rel({ id: "1", methodId: "imairo-120q", themeKey: "outgoing", relation: "supports" }),
+    rel({ id: "2", methodId: "c02-current-state", themeKey: "outgoing", relation: "opposes" }),
+  ]);
+  assert.equal(themes.find((x) => x.theme === "outgoing")!.agreement, "contradictory");
+});
+check("§7 unrelated not mixed; uncertain ≠ contradiction; rejected/deleted excluded", () => {
+  const themes = synthesizeThemes([
+    rel({ id: "1", themeKey: "focus", relation: "unrelated" }), // excluded from grouping
+    rel({ id: "2", themeKey: "calm", relation: "uncertain" }),
+    rel({ id: "3", themeKey: "calm", relation: "uncertain" }),
+    rel({ id: "4", themeKey: "drive", relation: "opposes", confirmation: "rejected" }), // excluded
+    rel({ id: "5", themeKey: "drive", relation: "supports", deleted: true }), // excluded
+  ]);
+  assert.ok(!themes.some((t) => t.theme === "focus"), "unrelated not surfaced as a theme");
+  const calm = themes.find((t) => t.theme === "calm")!;
+  assert.equal(calm.agreement, "uncertain", "uncertain is not contradiction");
+  assert.ok(!themes.some((t) => t.theme === "drive"), "rejected+deleted excluded");
+});
+check("§7 user correction changes the effective relation (support→oppose ⇒ contradictory)", () => {
+  const a = rel({ id: "1", methodId: "m1", themeKey: "steady", relation: "supports" });
+  const b = rel({ id: "2", methodId: "m2", themeKey: "steady", relation: "supports", correctedRelation: "opposes" });
+  assert.equal(effectiveRelation(b), "opposes", "corrected relation wins");
+  assert.equal(synthesizeThemes([a, b]).find((t) => t.theme === "steady")!.agreement, "contradictory");
+});
+check("§7 deterministic + no universal score", () => {
+  const obs = [rel({ id: "1", methodId: "m1", themeKey: "z", relation: "supports" }), rel({ id: "2", methodId: "m2", themeKey: "a", relation: "supports" }), rel({ id: "3", methodId: "m3", themeKey: "a", relation: "supports" })];
+  const one = JSON.stringify(synthesizeThemes(obs));
+  const two = JSON.stringify(synthesizeThemes(obs));
+  assert.equal(one, two, "deterministic");
+  assert.ok(!/score|overall|average/i.test(one), "no universal score in output");
 });
 
-console.log("CPV1 — consent (WS-E)");
-check("sensitive (birth-data) methods default to session-only, no persist w/o save", () => {
+console.log("CPV1 — consent (WS-E) + §9 independent permissions");
+check("sensitive (birth-data) methods default to session-only + private + no purposes", () => {
   const c = defaultConsent("bazi-four-pillars", "chinese_traditional");
   assert.equal(c.retention, "session_only");
+  assert.equal(c.visibility, "private");
   assert.equal(canPersist(c), false);
   assert.equal(canShareToCommunity(c), false);
+  for (const p of ["report", "companion", "recommendation", "community", "public", "archive", "legacy"] as const) {
+    assert.equal(consentAllows(c, p), false, `default denies ${p}`);
+  }
 });
-check("community share requires explicit enable + save", () => {
-  const c = defaultConsent("imairo-120q", "yorisou_original_assessment");
-  assert.equal(canShareToCommunity(c), false);
-  assert.equal(canShareToCommunity({ ...c, communityUse: true, saveAcknowledged: true }), true);
+check("§9 consent purposes are independent; community needs public_safe + save; legacy needs recipient", () => {
+  let c = defaultConsent("imairo-120q", "yorisou_original_assessment");
+  c = grantPurpose(c, "recommendation");
+  assert.equal(consentAllows(c, "recommendation"), true);
+  assert.equal(consentAllows(c, "companion"), false, "recommendation grant did not grant companion");
+  c = grantPurpose(c, "community");
+  assert.equal(consentAllows(c, "community"), false, "community needs public_safe + save");
+  c = { ...c, visibility: "public_safe", saveAcknowledged: true };
+  assert.equal(consentAllows(c, "community"), true);
+  // legacy requires an explicit recipient (recipient-specific)
+  c = grantPurpose(c, "legacy");
+  assert.equal(consentAllows(c, "legacy"), false, "legacy needs a recipient");
+  assert.equal(consentAllows({ ...c, legacyRecipients: ["recipient-1"] }, "legacy"), true);
+});
+check("§9 revoking one purpose leaves the others unchanged (applies on next read)", () => {
+  let c = grantPurpose(grantPurpose(defaultConsent("m", "yorisou_state"), "recommendation"), "report");
+  c = revokePurpose(c, "recommendation");
+  assert.equal(consentAllows(c, "recommendation"), false, "revoked");
+  assert.equal(consentAllows(c, "report"), true, "report untouched by the revocation");
 });
 
-console.log("CPV1 — history (WS-F)");
-check("history is append-only; result change preserves prior version", () => {
+console.log("CPV1 — history (WS-F) + §8 identity + data-rights + deletion");
+check("history is append-only; result change preserves prior version + uses userConfirmed", () => {
   let h: HistoryEvent[] = [];
-  h = appendEvent(h, { id: "1", type: "method_completed", methodId: "imairo-120q", methodVersion: "v0.1", objectRef: "r1", at: "2026-07-19T00:00:00Z", safeDetail: null, supersedesVersion: null });
-  const change = recordResultChange({ id: "2", methodId: "imairo-120q", fromVersion: "v0.1", toVersion: "v0.2", userConfirmed: false, at: "2026-07-19T01:00:00Z" });
+  h = appendEvent(h, { id: "1", type: "method_completed", methodId: "imairo-120q", methodVersion: "v0.1", objectKind: "result", objectRef: "r1", at: "2026-07-19T00:00:00Z", safeDetail: null, supersedesVersion: null, priorVersionConfirmed: false });
+  const change = recordResultChange({ id: "2", methodId: "imairo-120q", resultId: "r1", fromVersion: "v0.1", toVersion: "v0.2", userConfirmed: true, at: "2026-07-19T01:00:00Z" });
   h = appendEvent(h, change);
   assert.equal(h.length, 2, "appended, not overwritten");
   assert.equal(change.supersedesVersion, "v0.1", "prior version preserved");
+  assert.equal(change.priorVersionConfirmed, true, "userConfirmed is USED, not ignored");
+  assert.ok(/v0.1 → v0.2/.test(buildChangeView(h)[0].what), "change surfaced");
+});
+check("§8 confirmation targets the EXACT object — not other results/versions of the same method", () => {
+  const h: HistoryEvent[] = [
+    { id: "e1", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t1", safeDetail: "A", supersedesVersion: null, priorVersionConfirmed: false },
+    { id: "e2", type: "result_created", methodId: "m1", methodVersion: "v2", objectKind: "result", objectRef: "resultB", at: "t2", safeDetail: "B", supersedesVersion: null, priorVersionConfirmed: false },
+    { id: "e3", type: "user_confirmed", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t3", safeDetail: null, supersedesVersion: null, priorVersionConfirmed: false },
+  ];
   const view = buildChangeView(h);
-  assert.ok(view.some((v) => /v0.1 → v0.2/.test(v.what)), "change surfaced");
+  assert.equal(view.find((v) => v.objectRef === "resultA")!.userConfirmed, true, "A confirmed");
+  assert.equal(view.find((v) => v.objectRef === "resultB")!.userConfirmed, false, "B NOT confirmed by A's confirmation");
+});
+check("§8 confirmation cannot be inferred from a null/empty object ref", () => {
+  const h: HistoryEvent[] = [
+    { id: "e1", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t1", safeDetail: "A", supersedesVersion: null, priorVersionConfirmed: false },
+    { id: "e2", type: "user_confirmed", methodId: "m1", methodVersion: "v1", objectKind: null, objectRef: null, at: "t2", safeDetail: null, supersedesVersion: null, priorVersionConfirmed: false },
+  ];
+  assert.equal(buildChangeView(h).find((v) => v.objectRef === "resultA")!.userConfirmed, false, "null-ref confirmation confirms nothing");
+});
+check("§8 data-rights events exist for every audited right", () => {
+  const types = ["user_forgot", "user_exported", "downstream_revoked", "method_consent_changed", "companion_permission_changed", "recommendation_permission_changed", "community_permission_changed", "archive_permission_changed", "legacy_designation_changed"] as const;
+  for (const t of types) {
+    const e = recordDataRightsEvent({ id: "x", type: t, objectKind: "permission", objectRef: "obj-1", at: "t" });
+    assert.equal(e.type, t);
+    assert.equal(e.objectRef, "obj-1", "targets an exact object");
+  }
+});
+check("§8 deletion tombstone carries NO personal content", () => {
+  const tomb = makeTombstone({ id: "d1", objectKind: "observation", objectRef: "obs-1", at: "t" });
+  assert.equal(tomb.type, "user_deleted");
+  assert.ok(tombstoneCarriesNoPersonalContent(tomb), "no personal content in tombstone");
+  assert.ok(!/answer|birth|name:|私の/.test(String(tomb.safeDetail)), "safeDetail is a fixed non-personal marker");
 });
 
 console.log("CPV1 — WS-A P0 corrections");
