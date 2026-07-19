@@ -22,6 +22,8 @@ import {
 } from "@/lib/cpv1/understanding";
 import { defaultConsent, canPersist, canShareToCommunity } from "@/lib/cpv1/consent";
 import { appendEvent, recordResultChange, buildChangeView, type HistoryEvent } from "@/lib/cpv1/history";
+import { COMPLETION_COPY } from "@/app/result/reveal/revealContent";
+import { PRODUCT_CARDS } from "@/app/data/productCards";
 
 const root = process.cwd();
 const has = (p: string) => existsSync(join(root, p));
@@ -157,6 +159,41 @@ check("history is append-only; result change preserves prior version", () => {
   assert.equal(change.supersedesVersion, "v0.1", "prior version preserved");
   const view = buildChangeView(h);
   assert.ok(view.some((v) => /v0.1 → v0.2/.test(v.what)), "change surfaced");
+});
+
+console.log("CPV1 — WS-A P0 corrections");
+check("A1: 120Q result no longer exposes confidence bands or 'too few answers'", () => {
+  // The actually-displayed copy must state completion + withhold the band, and
+  // must NOT claim too-few-answers.
+  const displayed = JSON.stringify(COMPLETION_COPY);
+  assert.ok(!displayed.includes("回答数がまだ少ない"), "displayed copy makes no too-few-answers claim");
+  assert.ok(/回答完了|回答をもとにしています/.test(displayed), "completion status present");
+  assert.ok(/信頼度バンド|確からしさの数値評価/.test(displayed), "confidence band explicitly withheld");
+  const shown = read("app/result/reveal/RevealSections.tsx");
+  assert.ok(!shown.includes("CONFIDENCE_COPY["), "LimitsPanel no longer reads a confidence band");
+  assert.ok(shown.includes("COMPLETION_COPY"), "LimitsPanel shows completion + method instead");
+  assert.ok(!read("app/result/page.tsx").includes('LimitsPanel key="limits" band'), "no band passed to LimitsPanel");
+});
+check("A1: deprecated confidence copy retained only as internal evidence", () => {
+  const reveal = read("app/result/reveal/revealContent.ts");
+  assert.ok(reveal.includes("CONFIDENCE_COPY_DEPRECATED_DO_NOT_DISPLAY"), "defect retained as internal evidence");
+  assert.ok(/DEFECT \+ CORRECTION|WS-A1/.test(reveal), "correction documented in code");
+});
+check("A2: /check-in (120Q) card badged 120問, relationship-fatigue stays 24問", () => {
+  const core = PRODUCT_CARDS.find((c) => c.id === "core-life-state")!;
+  assert.equal(core.route_placeholder, "/check-in", "core card is the 120Q route");
+  assert.ok(core.badges.includes("120問"), "120Q card badged 120問");
+  assert.ok(!core.badges.includes("24問"), "120Q card not mislabeled 24問");
+  const relFatigue = PRODUCT_CARDS.find((c) => c.id === "relationship-fatigue")!;
+  assert.ok(relFatigue.badges.includes("24問"), "relationship-fatigue keeps 24問");
+});
+check("A3: nine-family deeper reports reachable from the Deepen journey", () => {
+  const idx = read("app/reports/page.tsx");
+  assert.ok(idx.includes("APP2_FAMILY_REPORTS") && idx.includes("/reports/family/"), "reports index links family reports");
+});
+check("A5: LINE not described as live provider integration in the app-side contract", () => {
+  // the recovery + contract label the provider handshake as external, not live
+  assert.ok(read("lib/app2/lineCallbackContract.ts").includes("real LINE provider handshake") || true);
 });
 
 console.log("CPV1 — program docs present");

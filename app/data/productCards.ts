@@ -24,7 +24,9 @@ export const PRODUCT_CARDS: readonly ProductCard[] = [
     category: "core_life_state",
     title_ja: "今の自分",
     subtitle_ja: "気分、リズム、人との距離、回復のしかたを広くふり返ります。",
-    badges: ["Primary", "24問", "無料結果"],
+    // CPV1 WS-A2: /check-in is the 120-question route; the prior "24問" badge
+    // mislabeled it (the 24問 method is the separate relationship-fatigue check).
+    badges: ["Primary", "120問", "無料結果"],
     status: "primary",
     primary_cta: "今の自分を見る",
     route_placeholder: "/check-in",
