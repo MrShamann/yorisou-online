@@ -25,6 +25,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the branch-diff secret scan can resolve origin/main..HEAD
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -46,11 +48,20 @@ jobs:
       - name: Secret-pattern hard gate
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"
 
-      - name: gitleaks (report-only — pre-existing localStorage/save-state false positives)
+      - name: Install gitleaks
         run: |
           curl -sSL -o /tmp/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
-          /tmp/gitleaks detect --no-banner --redact --exit-code 0 || true
+
+      - name: 11A.8 Changed-content secret scan (HARD gate — origin/main..HEAD)
+        # New content on this branch must introduce NO secrets, even though full
+        # history retains pre-existing localStorage/save-state false positives.
+        run: |
+          git fetch --no-tags origin main
+          /tmp/gitleaks detect --no-banner --redact --exit-code 1 --log-opts="origin/main..HEAD"
+
+      - name: gitleaks full history (report-only — pre-existing localStorage/save-state false positives)
+        run: /tmp/gitleaks detect --no-banner --redact --exit-code 0 || true
         continue-on-error: true
 
       - name: CPV1 foundation contract (rights gate + §3–§10)
