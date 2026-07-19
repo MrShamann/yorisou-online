@@ -1,0 +1,25 @@
+{
+  "name": "YORISOU",
+  "short_name": "よりそう",
+  "description": "今のあなたを知り、これからを一緒に選ぶ。AI-native 伴走プラットフォーム。",
+  "lang": "ja",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#0c0e0d",
+  "background_color": "#0c0e0d",
+  "categories": ["lifestyle", "health", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "今の自分から始める", "short_name": "始める", "url": "/start?source=pwa", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "マイよりそう", "short_name": "マイよりそう", "url": "/my-yorisou?source=pwa", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
