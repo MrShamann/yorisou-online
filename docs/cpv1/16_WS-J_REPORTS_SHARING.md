@@ -25,7 +25,7 @@ Four report types + one share artifact:
    (`app/data/app2/familyReports.ts`, rendered by `app/reports/family/[family]`). Per-method, calm
    Japanese, device-local by default, non-diagnostic.
 2. **Cross-method synthesis report** — source-labelled themes across methods, built only from
-   `synthesizeThemes` in `lib/cpv1/understanding.ts`. Surfaces recurring / mixed / contradictory /
+   `synthesizeThemes` in `lib/cpv1/understanding.ts`. Surfaces cross_method_recurring (≥2 distinct methods) / within_method_recurring / mixed / contradictory /
    temporary patterns. **No averaged number. No overall verdict.**
 3. **Change-over-time report** — version-preserving longitudinal view from `lib/cpv1/history.ts`
    (`buildChangeView`). Shows what changed, when, by which method version, and whether the user
@@ -57,14 +57,15 @@ renders a bare sentence; it renders a labelled observation carrying `sourceClass
 `SourceClass` and `isAiSynthesis(o)` must gate its rendering as "YORISOUのまとめ（推測）", never as a
 method result or verified fact.
 
-**Report inclusion is `canUseDownstream(o, "report")` — nothing else decides it.** Per the real
-`PRIVACY_ALLOWS.report` set, an observation is report-eligible only when it is not `deleted`, not
-`rejected`, and its `privacy` is `account_private` or broader. Deletion and rejection therefore
+**Report inclusion is `canUseDownstream(o, "report")` — nothing else decides it.** Per CPV1-R1 §9
+the check is INDEPENDENT (no ordered privacy ladder): an observation is report-eligible only when it
+is not `deleted`, not `rejected`, and `permittedDownstream` explicitly includes `report` (community/
+public additionally require `visibility === "public_safe"`). Deletion and rejection therefore
 propagate into every report for free — there is no second inclusion path to keep in sync.
 
 **Cross-method synthesis is `synthesizeThemes(observations, themeKeyOf)` — verbatim.** The function
 is pure and deterministic, groups non-deleted/non-rejected observations by theme key, and reports
-`agreement: "recurring" | "mixed" | "contradictory" | "temporary"` with `supportingMethodIds`. WS-J
+`agreement: "cross_method_recurring" | "within_method_recurring" | "mixed" | "contradictory" | "temporary" | "uncertain"` with `supportingMethodIds` (11A.6: cross-method requires ≥2 distinct method ids). WS-J
 supplies only the `themeKeyOf` projection (a safe derived-theme key, never raw answer text). The
 constant `NO_UNIVERSAL_SCORE = true` is the invariant this workstream must never violate: no code
 path may collapse `SynthesisTheme[]` into a single number, rank, or percentage.
@@ -121,8 +122,7 @@ auto-become, and no code path may convert them into:
 **Public-safe sharing may include ONLY:** activated method **name** + user-approved **theme** +
 non-sensitive **summary** + Companion **expression** + a low-risk **prompt**. Nothing else.
 
-**Method name in a share card requires an activated method.** A method that is `rights_blocked` /
-`contract_only` (`lib/cpv1/methods.ts` `MethodActivationState`) is off all public routes, so its name
+**Method name in a share card requires an activated method.** A method that is not publicly activatable (`methodPublicallyActivatable` === false; activation state `gated`) is off all public routes, so its name
 cannot appear in any shared artifact. `rightsClears` (`lib/cpv1/rights.ts`) is the upstream gate;
 WS-J trusts it and does not re-derive rights.
 
@@ -177,7 +177,7 @@ Synthetic fixtures may appear only in tests and are never presented as real user
 6. No private report auto-converts to a public card, community identity, profile label, supplier
    data, or social proof — asserted by a test that no report→public transition exists without an
    explicit per-item approval.
-7. A `rights_blocked` / `contract_only` method's name cannot appear in any share card.
+7. A not-publicly-activatable (`gated`) method's name cannot appear in any share card.
 8. New CPV1 report/share surfaces render only behind `cpv1_understanding_model_ui`; off in
    production; APP-2 nine-family private reports remain unchanged and passing.
 
@@ -185,7 +185,7 @@ Synthetic fixtures may appear only in tests and are never presented as real user
 
 ## 7. Open blockers
 
-- `RIGHTS_BLOCKED` (upstream, WS-B/C): external-method report bodies (Zi Wei Dou Shu, Ba Zi, I Ching,
+- Multi-dimension unbuilt (upstream, WS-B/C — implementation/content/privacy/tests/rights all unmet, not merely rights): external-method report bodies (Zi Wei Dou Shu, Ba Zi, I Ching,
   astrology, Tarot, Big Five, MBTI, …) cannot carry original/licensed interpretation content in this
   program, so their method reports stay off public routes. Their *governed presence* (registry name +
   rights record) may be referenced but not rendered as content.

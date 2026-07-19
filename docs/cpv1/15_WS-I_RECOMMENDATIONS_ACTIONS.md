@@ -109,7 +109,7 @@ use. This is enforced by real contracts, not by convention:
 - `MethodConsent.recommendationUse === true` (opt-in) — `lib/cpv1/consent.ts`. Default is
   `false`; sensitive/birth-data families default to `session_only` with no downstream use.
 - `MethodRegistryEntry.recommendationPermission` — `lib/cpv1/methods.ts` (default
-  `opt_in`). A method whose adapter is `rights_blocked`/`contract_only` yields **no**
+  `opt_in`). A method that is not publicly activatable (`gated`) yields **no**
   recommendation content (there is no `compute`; `blockedAdapter` withholds it).
 
 ### 5.3 Candidate sources (all real routes)
@@ -125,7 +125,7 @@ use. This is enforced by real contracts, not by convention:
 ## 6. Symbolic / cultural method influence boundary
 
 Symbolic and cultural methods (WS-C `chinese_traditional`, `western_symbolic`; e.g. I
-Ching, Tarot, astrology, Zi Wei Dou Shu) are, in this program, `RIGHTS_BLOCKED` and
+Ching, Tarot, astrology, Zi Wei Dou Shu) are, in this program, unbuilt and not publicly activatable (`gated` — implementation/content/privacy/tests/rights all unmet) and
 produce no computed content. **Even once rights-cleared**, their influence on WS-I is
 permanently narrowed by contract:
 
@@ -203,7 +203,7 @@ touches those domains — the candidate is dropped, not down-ranked.
 
 ## 10. Open blockers
 
-- **Symbolic/cultural provenance is upstream-blocked** (`RIGHTS_BLOCKED`, WS-C). WS-I's
+- **Symbolic/cultural methods are upstream-unbuilt** (`gated` across multiple dimensions, WS-C). WS-I's
   symbolic-influence path is specified but inert until methods clear rights + privacy +
   Founder activation. Do not surface it publicly before then.
 - **Commercial layer is placeholder** — `commercialStatus` / `priceRange` / partner

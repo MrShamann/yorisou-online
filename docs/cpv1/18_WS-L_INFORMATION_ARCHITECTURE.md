@@ -38,7 +38,7 @@ sections whose routes already exist on the APP-2 baseline.
 | IA layer | Maturity | Backed by |
 |---|---|---|
 | Sitemap + navigation contract (§4) | `ARCHITECTURE_CPV1` | this doc |
-| Home first-screen explainer (§5) | `IMPLEMENTED_CPV1` (copy/layout), extends `/` `LIVE_APP2` | `app/page.tsx` (home) |
+| Home first-screen explainer (§5) | `CONTRACT_CPV1` / partial — a home first screen ships (`LIVE_APP2`, `app/page.tsx`); no dedicated CPV1 explainer UI is separately wired | `app/page.tsx` (home) |
 | Understand Me / Methods & Reflection | `LIVE_APP2` | `app/tests`, `app/tests/[testId]`, `app/result`, `app/progress` |
 | My YORISOU | `LIVE_APP2` | `app/my-yorisou` |
 | Recommendations & Actions | `LIVE_APP2` route + `CONTRACT_CPV1` envelope (WS-I) | `app/recommendations`, `app/saved`, `app/support` |
@@ -200,6 +200,6 @@ WS-L stores no user data of its own; it references the governed models:
 - **Recommendations & Reports sections depend on downstream CONTRACT_CPV1 work** (WS-I/J):
   the routes are live (`LIVE_APP2`) but the full CPV1 provenance/synthesis envelopes are
   contract-level, so those sections are truthful today only within APP-2 scope.
-- **Rights-blocked methods** (WS-C `RIGHTS_BLOCKED`) remain excluded from the browsable
+- **Not-publicly-activatable methods** (WS-C `gated`, multi-dimension) remain excluded from the browsable
   method surface until rights + privacy review + Founder activation; the IA must not add
   them to public nav before then.

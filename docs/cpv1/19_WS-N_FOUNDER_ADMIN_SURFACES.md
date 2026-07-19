@@ -25,7 +25,7 @@ Twelve aggregate panels, each tagged with its own maturity and sourced from a re
 | # | Panel | Maturity | Source of truth (real) |
 |---|-------|----------|------------------------|
 | 1 | Method readiness | `CONTRACT_CPV1` | `methodActivationState` over `CPV1_METHOD_UNIVERSE` (`lib/cpv1/methods.ts`) |
-| 2 | Rights status | `RIGHTS_BLOCKED` | `rightsClears` / `RightsRecord` (`lib/cpv1/rights.ts`) |
+| 2 | Rights status | rights `review_required` (one of several unmet dimensions for external methods) | `rightsClears` / `RightsRecord` (`lib/cpv1/rights.ts`) |
 | 3 | Method activation gates | `FOUNDER_GATED` | `methodPublicallyActivatable`; `founderActivated` + `activationGate` |
 | 4 | Completion / abandonment | `CONTRACT_CPV1` | `HistoryEventType` (`method_completed`), `yorisou_migration_funnel` (`LIVE_APP2`) |
 | 5 | Correction / rejection patterns | `CONTRACT_CPV1` | `HistoryEvent` (`user_corrected`, `user_rejected`); `ConfirmationState` |
@@ -74,7 +74,9 @@ Real sources it aggregates over (no invented data):
 
 - **Method readiness / rights / gates** — derived purely from `lib/cpv1/methods.ts`:
   `publicMethods()`, `rightsBlockedMethods()`, `devVisibleMethods()`, and `methodActivationState(m)`
-  bucketing into `public_active | implemented_private | rights_blocked | contract_only | retired`. Rights
+  bucketing into exactly `public_active | implemented_private | gated | retired` (there is NO
+  `rights_blocked` or `contract_only` activation state — `gated` covers every not-publicly-activatable
+  method, whose specific unmet dimensions come from `methodMaturity(m)`). Rights
   cells come from `rightsClears(m.rights)` and `RightsRecord` fields (`copyrightStatus`, `activationGate`).
   These are configuration facts about the catalog, not user data.
 - **Completion / abandonment / correction / rejection / recommendation / report** — counts over
@@ -147,7 +149,7 @@ individually-logged, denied-by-default capability — not part of this contract.
 1. Every panel returns an `AdminAggregatePanel`; no route returns a user-identifiable row. A test asserts
    the response shape contains only aggregate cells and provenance `sourceRefs`.
 2. Method panels (1–3) are computed **only** from `CPV1_METHOD_UNIVERSE` via `methodActivationState`,
-   `rightsClears`, `methodPublicallyActivatable`; a rights-blocked or contract-only method never shows as
+   `rightsClears`, `methodPublicallyActivatable`; a method that is not publicly activatable (any of its seven maturity dimensions unmet; activation state `gated`) never shows as
    `public_active`.
 3. Cells below `k` are suppressed and reflected in `suppressedCells`; a test with a low-count fixture
    confirms suppression.
@@ -166,7 +168,7 @@ individually-logged, denied-by-default capability — not part of this contract.
 
 ## 7. Open blockers
 
-- **`RIGHTS_BLOCKED`** — Panel 2/3 numbers are meaningful only once real rights records are reviewed;
+- **Multi-dimension-blocked methods** — Panel 2/3 numbers are meaningful only once real rights records are reviewed (and the other unmet dimensions built);
   until a human reviewer + evidence + open `activationGate` exist, methods correctly read as blocked.
 - **`LEGAL_BLOCKED`** — Panel 11 (Digital Legacy config) cannot move past status display; public legacy
   activation requires legal clearance not in scope for Preview.

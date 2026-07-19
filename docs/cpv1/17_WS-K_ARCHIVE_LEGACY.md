@@ -122,7 +122,7 @@ A distinct, **more-restricted** architecture than the WS-G Living Companion (its
 - **No universal score / no persona.** The archive presents a plurality of source-labelled views over a life; it never collapses to one label, rank, or fixed identity. No 31 Personas, no Persona rooms, no fixed taxonomy.
 - **One-directional privacy boundary.** Archive/Legacy materials are on the WS-J share denylist: they can **never** be serialized into a public-safe share card or any public surface.
 - **Preview / local only.** No production deploy, migration, secrets, or real payment. New WS-K surfaces render only behind `cpv1_archive_legacy_preview` (`flags.ts`), off by default, LOCAL/Preview only.
-- **Rights gate still applies.** Any archived method result references a registered `MethodRegistryEntry`; `rights_blocked` / `contract_only` methods (`MethodActivationState`) carry no public route into or out of the archive.
+- **Rights gate still applies.** Any archived method result references a registered `MethodRegistryEntry`; methods that are not publicly activatable (`gated`) carry no public route into or out of the archive.
 
 ---
 
@@ -160,7 +160,7 @@ A distinct, **more-restricted** architecture than the WS-G Living Companion (its
 - **`FOUNDER_GATED` — public Life Archive UI (K1).** Any public archive surface requires an explicit Founder activation after design, build, and privacy review; until then it stays behind `cpv1_archive_legacy_preview`.
 - **`PERSIST` (Preview-gated).** Durable, RLS-protected, deletion-aware archive storage exists only against local Supabase / Preview; production persistence is out of scope (Program Architecture §5).
 - **`ERASURE-SEMANTICS` coupling (WS-F).** Reconciling owner `forget`/`delete` with the append-only audit log (tombstone vs. hard erase) inherits the WS-F data-rights decision and must be settled before any persistence is activated.
-- **`RIGHTS_BLOCKED` methods.** Archived references to external / rights-blocked methods carry no public route into or out of the archive until rights clearance + original content + Founder activation.
+- **Not-publicly-activatable (`gated`) methods.** Archived references to external unbuilt methods carry no public route into or out of the archive until they are built (implementation + original content + privacy + tests) AND rights-cleared AND Founder-activated.
 
 ---
 

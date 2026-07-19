@@ -76,7 +76,7 @@ SENSITIVE_METHOD_FAMILIES = { "chinese_traditional", "western_symbolic" }
 families and `"device_local"` otherwise. All downstream-use flags start `false`
 and `rawLocationMinimized` starts `true` for every method regardless of family.
 
-> Note: most method families in the sensitive set are **`RIGHTS_BLOCKED`** at the
+> Note: most method families in the sensitive set are **not publicly activatable (`gated`, multi-dimension — implementation/content/privacy/tests/rights all unmet)** at the
 > method layer (see `lib/cpv1/rights.ts`, WS-B) and therefore never reach a public
 > route in CPV1. WS-E's sensitive-input handling is nonetheless authored and
 > contract-tested now so that consent is correct *before* any such method could be
@@ -129,9 +129,13 @@ Exercising a right must append an immutable event to the WS-F log
 
 `forget`, `delete`, `export`, and `revoke_downstream` are **operations on stored
 data** (erasure / portability / downstream revocation) rather than result-state
-transitions. Their exact append-only event vocabulary is not yet in
-`history.ts` — see Open Blockers §7. Until then they are performed but their audit
-event type is a contract gap, not a silent no-op.
+transitions. Per CPV1-R1 §8 their append-only event vocabulary now EXISTS in
+`history.ts` (`user_forgot`, `user_deleted`, `user_exported`, `downstream_revoked`,
+plus permission-change events) via `recordDataRightsEvent` / `makeTombstone`; the DB
+enforces them (migration `202607190003`), and 11A.2 additionally guarantees these
+audit events carry an enumerated reason code and NO personal free text (migration
+`202607190004`). What remains is the cross-surface *cascade* wiring (Open Blockers §7),
+not the audit vocabulary.
 
 ---
 
@@ -243,7 +247,7 @@ event type is a contract gap, not a silent no-op.
   `safeDetail`). The cross-surface cascade (WS-D results, WS-F objectRefs, WS-G
   Companion memory, WS-I recommendation state) remains a wiring item to be
   RLS-enforced in local Supabase before any persistence is activated.
-- **B-E3 (`RIGHTS_BLOCKED` upstream):** sensitive families are rights-gated at
+- **B-E3 (multi-dimension unbuilt upstream):** sensitive families are unbuilt + gated at
   WS-B; WS-E consent for them cannot be exercised on a public route until a Founder
   clears rights AND activates. WS-E stays contract-only for those methods.
 - **B-E4 (location derivation):** the tz/coord-rounding utility that guarantees raw

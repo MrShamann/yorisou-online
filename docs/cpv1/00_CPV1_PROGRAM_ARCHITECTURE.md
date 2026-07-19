@@ -43,13 +43,16 @@ artwork is **rights-gated**. Per the authorization:
 **Consequence for this build:** the external method universe (Zi Wei Dou Shu, Ba
 Zi, Cheng Gu, I Ching, Five Elements, Chinese Zodiac, astrology, Tarot, numerology,
 Big Five, MBTI, …) cannot be truthfully rights-cleared or original-content-authored
-inside this program. Those modules are delivered as **governed registry entries +
-rights records (`RIGHTS_REVIEW_REQUIRED`) + private-flagged adapter stubs** — real
-governance, NO fabricated calculation logic or interpretation content, NO public
-route. This is the correct behaviour under §25 ("record the exact blocker; keep it
-off public routes; continue all other workstreams; do not substitute fabricated
-content"), and it is why the honest program outcome is
-`CPV1_PARTIALLY_READY_WITH_EXPLICIT_RIGHTS_BLOCKERS`.
+inside this program. Those modules are delivered as **governed registry entries with
+every maturity dimension recorded unmet separately** — implementation `not_started`,
+content `not_authored`, privacy `not_reviewed`, tests `not_run`, rights
+`review_required`, Founder gate closed, public route unavailable — real governance, NO
+fabricated calculation logic or interpretation content, NO public route. Rights is only
+ONE of the unmet dimensions; the external universe is unbuilt, not merely rights-blocked.
+This is the correct behaviour under §25 ("record the exact blocker; keep it off public
+routes; continue all other workstreams; do not substitute fabricated content"), and it is
+why the honest program outcome is
+`CPV1_PARTIAL_9_METHODS_ACTIVE_EXTERNAL_UNBUILT_MULTI_DIMENSION_BLOCKED`.
 
 ## 3. Maturity taxonomy (used in the capability matrix)
 
@@ -61,7 +64,7 @@ Every capability is tagged with exactly one maturity level so nothing is over-cl
 | `IMPLEMENTED_CPV1` | New in CPV1: real code, wired, contract-tested, local-verified. |
 | `CONTRACT_CPV1` | Real typed contract + model + tests, not yet a full public surface. |
 | `ARCHITECTURE_CPV1` | Governed design spec only (as the authorization requires for it). |
-| `RIGHTS_BLOCKED` | Registered + gated; blocked on rights clearance / original content. |
+| `gated` (multi-dimension) | Registered but NOT publicly activatable: the actual `methodActivationState` value when ANY of the seven maturity dimensions is unmet (implementation/content/privacy/tests/rights/Founder/public-route). For external methods, ALL are unmet — not just rights. There is no single `rights_blocked` activation state. |
 | `LEGAL_BLOCKED` | Blocked on legal/jurisdiction review (e.g. real Legacy activation). |
 | `FOUNDER_GATED` | Built but requires an explicit Founder activation to go public. |
 
@@ -74,8 +77,8 @@ or "coming soon" surface.
 |---|---|---|
 | A | P0 current-product corrections (120/120 completion, badges, report nav, responsive, LINE truthfulness) | `IMPLEMENTED_CPV1` |
 | B | Method Registry + Method/Content Rights Registry + activation gate | `IMPLEMENTED_CPV1` |
-| C | Method-adapter contract + method universe registration | original `IMPLEMENTED_CPV1`; external `RIGHTS_BLOCKED` |
-| D | Source-separated understanding model (no universal score) | `IMPLEMENTED_CPV1` / `CONTRACT_CPV1` |
+| C | Method-adapter contract + method universe registration | originals: **9 public-active** + 3 unbuilt (`gated`, implementation `not_started`); external: **15 `gated`** — implementation `not_started` · content `not_authored` · privacy `not_reviewed` · tests `not_run` · rights `review_required` (multi-dimension, not merely rights) |
+| D | Source-separated understanding model (no universal score) | `CONTRACT_CPV1` (backend types + tests; no wired UI) |
 | E | Method-level consent + sensitive inputs | `CONTRACT_CPV1` |
 | F | Longitudinal history events | `CONTRACT_CPV1` |
 | G | Living Companion (Quiet Guide / AI Friend / AI Pet) | `ARCHITECTURE_CPV1` |

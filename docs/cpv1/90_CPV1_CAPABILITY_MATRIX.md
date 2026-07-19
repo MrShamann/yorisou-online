@@ -33,11 +33,12 @@ Founder activation.
 | B1 | Method Registry (full field set) | `IMPLEMENTED_CPV1` | `lib/cpv1/methods.ts`, cpv1 tests |
 | B2 | Method/Content Rights Registry (governed routes) | `IMPLEMENTED_CPV1` | `lib/cpv1/rights.ts`, cpv1 tests |
 | B3 | Public activation gate (logic+rights+privacy+tests+Founder) | `IMPLEMENTED_CPV1` | `methodPublicallyActivatable`, cpv1 tests |
-| C (originals) | YORISOU-original assessments wired + public-active | `LIVE_APP2` + `IMPLEMENTED_CPV1` | registry `public_active`; shipped surfaces |
-| C (external) | Zi Wei Dou Shu, Ba Zi, Cheng Gu, I Ching, Five Elements, Chinese Zodiac, name-hanzi, astrology, Tarot, numerology, dream, symbolic-cards, image-color, Big Five, MBTI | `RIGHTS_BLOCKED` | registry entries + `rightsReviewRequired`; off public routes; cpv1 tests |
-| D | Source-separated understanding model (no universal score; AI-synthesis distinct) | `IMPLEMENTED_CPV1` / `CONTRACT_CPV1` | `lib/cpv1/understanding.ts` + local schema (6/6 PASS) |
-| E | Method-level consent + sensitive inputs | `CONTRACT_CPV1` | `lib/cpv1/consent.ts` + local `yorisou_cpv1_method_consent` + spec 11 |
-| F | Longitudinal history (append-only, version-preserving) | `CONTRACT_CPV1` | `lib/cpv1/history.ts` + local `yorisou_cpv1_history_events` (append-only PASS) + spec 12 |
+| C (originals: 9 public-active) | imairo-120q, c02-current-state, relationship-fatigue-24q, f01-work-fit, f02-workplace-fit, love-distance, work-rhythm, local-life, name-impression — each a REAL non-redirect route + flow | `LIVE_APP2` + `IMPLEMENTED_CPV1` | `publicMethods()`===9; runtime reconciliation `92_*` |
+| C (originals: 3 UNBUILT) | yorisou-values (downgraded), reflection-cadence, yorisou-motivation — no route, no flow | `gated` (implementation `not_started`) | registry overrides; cpv1 test §5 |
+| C (external: 15, each MULTI-dimension blocked) | Zi Wei Dou Shu, Ba Zi, Cheng Gu, I Ching, Five Elements, Chinese Zodiac, name-hanzi, astrology, Tarot, numerology, dream, symbolic-cards, image-color, Big Five, MBTI | `gated` — implementation `not_started` · content `not_authored` · privacy `not_reviewed` · tests `not_run` · rights `review_required` · Founder gate closed (NOT merely rights-blocked) | registry entries + `methodMaturity`; off public routes; cpv1 §4 tests |
+| D | Source-separated understanding model (no universal score; AI-synthesis distinct) | `CONTRACT_CPV1` (backend types + tests; no wired UI) | `lib/cpv1/understanding.ts` + local schema (§12 verified) |
+| E | Method-level consent + sensitive inputs | `CONTRACT_CPV1` (no wired UI) | `lib/cpv1/consent.ts` + local `yorisou_cpv1_method_consent` + spec 11 |
+| F | Longitudinal history (append-only, version-preserving) | `CONTRACT_CPV1` (no wired UI) | `lib/cpv1/history.ts` + local `yorisou_cpv1_history_events` (append-only verified, §12) + spec 12 |
 | G | Living Companion (Quiet Guide / AI Friend / AI Pet) | `ARCHITECTURE_CPV1` | spec 13 |
 | H | Community surfaces | `ARCHITECTURE_CPV1` | spec 14 |
 | I | Recommendations & actions (finite, explainable, provenance) | `CONTRACT_CPV1` (extends APP-2/SR-1) | spec 15 + APP-2 recommendation graph |
@@ -55,16 +56,18 @@ Founder activation.
 | new CPV1 branch | `feat/cpv1-integrated-platform` — this program's stacked work (draft PR #114) |
 | local-only | local Supabase (Colima) verification of D/E/F schema |
 | Preview-only | Vercel PR preview of the CPV1 branch (ephemeral) |
-| rights-blocked | the external method universe — off public routes, no fabricated content |
+| multi-dimension-blocked | the external method universe — off public routes; unbuilt across implementation + content + privacy + tests + rights + Founder activation (not just rights) |
 | legal-blocked | real post-death Legacy activation, source-grounded Memory Q&A production use |
 | Founder-approval-blocked | public activation of any method + Companion/Community/Archive public surfaces |
 
-## Why the honest program status is `CPV1_PARTIALLY_READY_WITH_EXPLICIT_RIGHTS_BLOCKERS`
+## Why the honest program status is `CPV1_PARTIAL_9_METHODS_ACTIVE_EXTERNAL_UNBUILT_MULTI_DIMENSION_BLOCKED`
 
-The platform foundation (P0 corrections, method + rights registries, activation gate,
-source-separated understanding, consent, history) is real, tested, and local-verified.
-The continuity layers (Companion, Community, Archive/Legacy) are governed architecture,
-and the external method universe is rights-blocked by design. No external method can be
-truthfully rights-cleared or original-content-authored inside this program, so it cannot
-reach `INTEGRATED_PREVIEW_READY` — the rights + legal + Founder-activation gates are the
-remaining, correctly-recorded blockers.
+Runtime truth: **9 methods are public-active** (real routes + flows); **18 are `gated`** — 3
+YORISOU-originals are **unbuilt** (implementation `not_started`) and 15 external methods are unbuilt
+across **multiple independent dimensions** (implementation, original content, privacy review, tests,
+rights clearance, Founder activation). The platform foundation (P0 corrections, registries,
+activation gate) plus the understanding/consent/history layers are **backend typed contracts +
+local-schema tests only** (`CONTRACT_CPV1`) — no wired user-facing CPV1 UI. The continuity layers
+(Companion, Community, Archive/Legacy) are governed **architecture-only**; Legacy is additionally
+legal-blocked. Describing every unfinished external method as "only a rights blocker" is inaccurate:
+the blockers are per-dimension, so the program cannot reach `INTEGRATED_PREVIEW_READY`.
