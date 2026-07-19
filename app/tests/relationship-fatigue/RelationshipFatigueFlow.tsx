@@ -14,6 +14,7 @@ import ResultConversionCommunity from "../../components/ResultConversionCommunit
 import { RelationshipFatiguePrivateSave } from "./PrivateSaveAndNext";
 import { trackOpenTestingEvent } from "@/app/components/OpenTestingTracker";
 import ShareResultActions from "@/app/components/share/ShareResultActions";
+import ResultSupportPlan from "@/app/components/sr2/ResultSupportPlan";
 
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
@@ -358,6 +359,15 @@ function ResultView({ result, answers, onRetake }: { result: RFResult; answers: 
           <ResultConversionCommunity
             moduleId="relationship-fatigue"
             reportTeaser={archetype.reportTeaser}
+          />
+
+          {/* SR-2: deterministic support plan + anonymous device-local save */}
+          <ResultSupportPlan
+            family="relationship-fatigue"
+            resultLabel={archetype.name}
+            traits={["疲れが出やすい場面", "守りたい距離", "戻りやすい形"]}
+            resultPath="/tests/relationship-fatigue"
+            recognitionLine={archetype.body}
           />
 
           {/* AIX-4: public-safe result share */}

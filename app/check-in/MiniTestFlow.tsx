@@ -20,6 +20,14 @@ import {
   type CurrentStateQuestion,
   type CurrentStateAnswerMap,
 } from "./currentStateCheckV1";
+import {
+  answeredCount,
+  clearCheckProgress,
+  readCheckProgress,
+  relativeUpdatedLabel,
+  writeCheckProgress,
+  type CheckProgress,
+} from "@/lib/sr2/checkProgress";
 
 type Phase = "intro" | "quiz";
 const AUTO_ADVANCE_DELAY_MS = 320;
@@ -46,8 +54,24 @@ export default function MiniTestFlow() {
   const autoAdvanceTimerRef = useRef<number | null>(null);
   const navigationFallbackTimerRef = useRef<number | null>(null);
   const resultNavigationStartedRef = useRef(false);
+  // SR-2 — device-local 120Q progress resume. Raw answers persist only in the
+  // separately-versioned checkProgress record (never the guest journey / URL /
+  // analytics / share). A stale question-bank signature or corrupt data auto-
+  // discards (see readCheckProgress).
+  const [resumeCandidate, setResumeCandidate] = useState<CheckProgress | null>(null);
+  const [resumeUpdatedLabel, setResumeUpdatedLabel] = useState("");
 
   const totalQuestions = currentStateQuestions.length;
+  const bankSignature = `120q:v1:${totalQuestions}`;
+
+  function persistProgress(nextIndex: number, nextAnswers: CurrentStateAnswerMap) {
+    if (Object.keys(nextAnswers).length === 0) return;
+    writeCheckProgress({
+      bankSignature,
+      currentIndex: nextIndex,
+      answers: nextAnswers as Record<string, string>,
+    });
+  }
   const currentQuestion = currentStateQuestions[currentIndex];
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] ?? "" : "";
   const stepLabel = `${Math.min(currentIndex + 1, totalQuestions)} / ${totalQuestions}`;
@@ -82,6 +106,35 @@ export default function MiniTestFlow() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    // Read any saved in-progress 120Q once after mount (kept out of first paint
+    // so there is no hydration mismatch); offer to resume from the intro.
+    const saved = readCheckProgress(bankSignature);
+    if (saved && Object.keys(saved.answers).length > 0) {
+      /* eslint-disable react-hooks/set-state-in-effect -- intentional: read the
+         device-local progress ONCE after mount so the resume prompt is absent
+         from the SSR/first-paint HTML (no hydration mismatch), then surface it. */
+      setResumeCandidate(saved);
+      setResumeUpdatedLabel(relativeUpdatedLabel(saved.updatedAt, Date.now()));
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [bankSignature]);
+
+  function resumeFromCandidate() {
+    if (!resumeCandidate) return;
+    resultNavigationStartedRef.current = false;
+    setAnswers(resumeCandidate.answers as CurrentStateAnswerMap);
+    setCurrentIndex(Math.max(0, Math.min(resumeCandidate.currentIndex, totalQuestions - 1)));
+    setResumeCandidate(null);
+    setPhase("quiz");
+  }
+
+  function discardAndRestart() {
+    clearCheckProgress();
+    setResumeCandidate(null);
+    begin();
+  }
 
   function clearAutoAdvanceTimer() {
     if (autoAdvanceTimerRef.current) {
@@ -128,6 +181,9 @@ export default function MiniTestFlow() {
     resultNavigationStartedRef.current = true;
     const target = preparedTarget ?? buildPreparedResultTarget(nextAnswers);
     saveCurrentStateResult(target.payload);
+    // SR-2 — completed: the in-progress record is no longer needed (never submit
+    // incomplete as complete; never leave a stale resume after a real result).
+    clearCheckProgress();
     void trackOpenTestingEvent({
       eventName: "test_completed",
       route: "/check-in",
@@ -190,6 +246,8 @@ export default function MiniTestFlow() {
     clearNavigationFallbackTimer();
     resultNavigationStartedRef.current = false;
     setNavigationFallbackHref(null);
+    clearCheckProgress();
+    setResumeCandidate(null);
     setPhase("quiz");
     setCurrentIndex(0);
     setAnswers({});
@@ -213,6 +271,8 @@ export default function MiniTestFlow() {
     };
 
     setAnswers(nextAnswers);
+    // SR-2 — persist progress after each answer (device-local, versioned record).
+    persistProgress(Math.min(currentIndex + 1, totalQuestions - 1), nextAnswers);
     void trackOpenTestingEvent({
       eventName: "question_answered",
       route: "/check-in",
@@ -240,7 +300,9 @@ export default function MiniTestFlow() {
       return;
     }
 
-    setCurrentIndex((value) => value - 1);
+    const prev = currentIndex - 1;
+    setCurrentIndex(prev);
+    persistProgress(prev, answers);
   }
 
   function goNext() {
@@ -254,7 +316,9 @@ export default function MiniTestFlow() {
     }
 
     clearAutoAdvanceTimer();
-    setCurrentIndex((value) => value + 1);
+    const next = currentIndex + 1;
+    setCurrentIndex(next);
+    persistProgress(next, answers);
   }
 
   // AIX-2 — the depth field quietly forms as the visitor answers (state
@@ -299,9 +363,36 @@ export default function MiniTestFlow() {
                   </p>
                 </div>
 
+                {resumeCandidate ? (
+                  <div className="aix2-panel p-4 sm:p-5" data-sr2-resume="true">
+                    <p className="aix2-eyebrow">前回の続き</p>
+                    <p className="mt-2 text-[14px] leading-7 aix2-mut">
+                      前回の回答がこの端末に残っています（{answeredCount(resumeCandidate)} / {totalQuestions}問
+                      {resumeUpdatedLabel ? ` · ${resumeUpdatedLabel}` : ""}
+                      ）。続きから、または最初からやり直せます。
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2.5">
+                      <button
+                        type="button"
+                        onClick={resumeFromCandidate}
+                        className="aix2-btn aix2-btn-primary !min-h-[46px] !text-[14px]"
+                      >
+                        続きから
+                      </button>
+                      <button
+                        type="button"
+                        onClick={discardAndRestart}
+                        className="aix2-btn aix2-btn-ghost !min-h-[46px] !text-[14px]"
+                      >
+                        最初から
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
                 <div>
                   <button type="button" onClick={begin} className="aix2-btn aix2-btn-primary w-full">
-                    いま色テストをはじめる
+                    {resumeCandidate ? "最初から始める" : "いま色テストをはじめる"}
                   </button>
                   <p className="mt-2.5 text-[11px] leading-6 aix2-faint">
                     診断ではありません · <Link href="/privacy" className="aix2-link">プライバシー</Link>

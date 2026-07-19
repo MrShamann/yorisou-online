@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 
 import ShareResultActions from "@/app/components/share/ShareResultActions";
+import ResultSupportPlan from "@/app/components/sr2/ResultSupportPlan";
 import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { NAME_IMPRESSION_QUESTIONS, getNameImpressionResult } from "@/app/data/yorisouQuestionSets";
@@ -87,6 +88,15 @@ export default function NameImpressionFlow() {
                 </div>
               ))}
             </div>
+
+            {/* SR-2: deterministic support plan + anonymous device-local save */}
+            <ResultSupportPlan
+              family="name-impression"
+              resultLabel={result.title}
+              traits={result.bullets.slice(0, 3)}
+              resultPath="/tests/name-impression"
+              recognitionLine={result.summary}
+            />
 
             <ShareResultActions
               input={{

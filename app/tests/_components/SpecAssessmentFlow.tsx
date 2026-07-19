@@ -11,6 +11,8 @@ import {
 } from "@/lib/yorisou-tests/scoring";
 import { PrivateTestSave } from "../c02/C02PrivateSave";
 import ShareResultActions from "@/app/components/share/ShareResultActions";
+import ResultSupportPlan from "@/app/components/sr2/ResultSupportPlan";
+import type { SupportPlanFamily } from "@/lib/sr1/supportPlan";
 import type { RuleBasedRuntime } from "@/lib/yorisou-tests/types";
 import {
   UnderstandShell,
@@ -106,6 +108,18 @@ export function RuleBasedTestFlow({ runtime }: { runtime: RuleBasedRuntime }) {
           <UnderstandNote tone="quiet">
             <span className="text-[color:var(--yr-text-faint)]">{runtime.boundaryNote}</span>
           </UnderstandNote>
+
+          {/* SR-2 — the shared result→service surface: deterministic support plan +
+              anonymous device-local save (parity with imairo /result) + feedback.
+              Anonymous save no longer requires login; PrivateTestSave remains the
+              optional cross-device account upgrade. */}
+          <ResultSupportPlan
+            family={runtime.testId.toLowerCase() as SupportPlanFamily}
+            resultLabel={result.title}
+            traits={trendLines}
+            resultPath={`/tests/${runtime.slug}`}
+            recognitionLine={result.summary}
+          />
 
           {runtime.testId === "C02" || runtime.testId === "F01" || runtime.testId === "F02" ? (
             <PrivateTestSave testSlug={runtime.slug as "c02" | "f01" | "f02"} answers={answers} />

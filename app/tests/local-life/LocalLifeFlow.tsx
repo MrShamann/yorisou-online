@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 
 import ShareResultActions from "@/app/components/share/ShareResultActions";
+import ResultSupportPlan from "@/app/components/sr2/ResultSupportPlan";
 import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { LOCAL_LIFE_QUESTIONS, getLocalLifeAcknowledgement } from "@/app/data/yorisouQuestionSets";
@@ -107,6 +108,15 @@ export default function LocalLifeFlow() {
                 ここは、暮らしを直接引き受けるサービスではありません。今の関心や戻り方を、次の案内や改善の材料として整理する入口です。
               </p>
             </div>
+
+            {/* SR-2: deterministic support plan + anonymous device-local save */}
+            <ResultSupportPlan
+              family="local-life"
+              resultLabel={result.title}
+              traits={result.bullets.slice(0, 3)}
+              resultPath="/tests/local-life"
+              recognitionLine={result.summary}
+            />
 
             <ShareResultActions
               input={{

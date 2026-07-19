@@ -6,6 +6,7 @@ import Link from "next/link";
 import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import ShareResultActions from "@/app/components/share/ShareResultActions";
+import ResultSupportPlan from "@/app/components/sr2/ResultSupportPlan";
 import { WORK_RHYTHM_QUESTIONS, getWorkRhythmResult } from "@/app/data/yorisouQuestionSets";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
@@ -124,6 +125,15 @@ export default function WorkRhythmFlow() {
                 この結果は、能力や適職を決めるものではありません。今の仕事リズムと、無理なく動きやすい形を見直すための入口です。
               </p>
             </div>
+
+            {/* SR-2: deterministic support plan + anonymous device-local save */}
+            <ResultSupportPlan
+              family="work-rhythm"
+              resultLabel={result.title}
+              traits={result.bullets.slice(0, 3)}
+              resultPath="/tests/work-rhythm"
+              recognitionLine={result.summary}
+            />
 
             <ShareResultActions
               input={{

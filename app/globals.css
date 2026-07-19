@@ -1609,6 +1609,32 @@ main {
   --coral: #f2896c;
 }
 
+/* SR-2 — token bridge. The SR-1 SupportPlanView / recovery components (rendered on
+   the focused-flow result surfaces via ResultSupportPlan) use the aix2 accent /
+   text / hairline token NAMES, which are otherwise only declared on .aix2. Expose
+   them on the dark .yr-focus focused surface too, with identical dark values, so
+   the shared result→service surface themes identically across /result (.aix2) and
+   /tests/* (.yr-focus). Tokens only — no layout/background (those stay on .aix2 /
+   .yr-focus's own blocks). */
+.yr-focus {
+  --ink: #0c0e0d;
+  --ink-2: #121613;
+  --ink-3: #1a1f1c;
+  --ink-alt: #0f1411;
+  --hair: rgba(228, 240, 233, 0.09);
+  --hair-2: rgba(228, 240, 233, 0.17);
+  --hair-jade: rgba(95, 230, 180, 0.30);
+  --tx: #eef4ef;
+  --tx-mut: #adc0b6;
+  --tx-faint: #8ba095;
+  --jade: #2fc596;
+  --jade-bright: #5ce6b4;
+  --jade-ink: #04140e;
+  --r: 18px;
+  --r-sm: 12px;
+  --r-pill: 999px;
+}
+
 /* Product-Focus shell: a calm dark ground (no WebGL) for test detail / question
    flow / focused actions. Unmistakably the same product as the immersive
    catalogue, quieter for concentration. Replaces the AIX-3D light Understand

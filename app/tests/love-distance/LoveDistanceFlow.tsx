@@ -13,6 +13,7 @@ import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
 import ShareResultActions from "@/app/components/share/ShareResultActions";
+import ResultSupportPlan from "@/app/components/sr2/ResultSupportPlan";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
 
 type Phase = "intro" | "quiz" | "result";
@@ -368,6 +369,15 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
           <ResultConversionCommunity
             moduleId="love-distance"
             reportTeaser={archetype.reportTeaser}
+          />
+
+          {/* SR-2: deterministic support plan + anonymous device-local save */}
+          <ResultSupportPlan
+            family="love-distance"
+            resultLabel={archetype.name}
+            traits={["今の距離感", "待ち方の負担", "伝える前に整えたいこと"]}
+            resultPath="/tests/love-distance"
+            recognitionLine={archetype.body}
           />
 
           <ShareResultActions
