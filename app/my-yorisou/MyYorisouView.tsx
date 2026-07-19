@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 import Link from "next/link";
 
-import { getServiceItem, SR1_SERVICE_CATALOGUE, type ServiceItem } from "@/app/data/sr1/serviceCatalogue";
+import { getServiceItem, type ServiceItem } from "@/app/data/sr1/serviceCatalogue";
 import {
   clearSavedResultRecord,
   readSavedResultRecord,
@@ -13,13 +13,16 @@ import {
 } from "@/app/result/saveState";
 import {
   clearGuestJourney,
+  hideItem,
   PERSISTENCE_SCOPE_LABEL,
+  resetAdaptationSignals,
   toggleSavedItem,
   type GuestJourneyState,
 } from "@/lib/sr1/guestJourney";
 import { useGuestJourney } from "@/lib/sr1/useGuestJourney";
 import { routeService, SERVICE_NEEDS } from "@/lib/sr1/serviceRouter";
 import { buildSupportPlan, type SupportPlanFamily } from "@/lib/sr1/supportPlan";
+import { topAdaptedItems, type AdaptedItem } from "@/lib/app2/adaptation";
 
 // --- device-local helpers (public-safe, no PII, no raw answers) ---------------
 
@@ -56,31 +59,6 @@ const PACE_LABEL: Record<NonNullable<GuestJourneyState["pace"]>, string> = {
   quick: "軽やかなペースで",
   deep: "じっくりのペースで",
 };
-
-const CONTINUE_TYPE_ORDER: ServiceItem["type"][] = ["small_action", "report", "guided_experience", "return_action"];
-
-// Up to 4 distinct catalogue items, preferring one of each key type, excluding
-// anything the visitor has hidden.
-function pickContinueItems(hiddenIds: string[]): ServiceItem[] {
-  const available = SR1_SERVICE_CATALOGUE.filter((item) => !hiddenIds.includes(item.id));
-  const picked: ServiceItem[] = [];
-  const used = new Set<string>();
-  for (const type of CONTINUE_TYPE_ORDER) {
-    const match = available.find((item) => item.type === type && !used.has(item.id));
-    if (match) {
-      picked.push(match);
-      used.add(match.id);
-    }
-  }
-  for (const item of available) {
-    if (picked.length >= 4) break;
-    if (!used.has(item.id)) {
-      picked.push(item);
-      used.add(item.id);
-    }
-  }
-  return picked.slice(0, 4);
-}
 
 // A single, normalized "next step" shape shared by the two truthful sources.
 type NextStep = { title: string; why: string; estimatedTime: string; href: string; prototype: boolean };
@@ -149,8 +127,28 @@ export default function MyYorisouView() {
     };
   }
 
-  // Section 4 — continue browsing.
-  const continueItems = pickContinueItems(journey.hiddenItemIds);
+  // Section 4 — continue browsing, now personally adapted (APP-2 WS-B). The
+  // ordering is a pure, deterministic function of this device's own journey
+  // signals; every card states WHY it is here and can be hidden or reset.
+  const adapted = topAdaptedItems(
+    {
+      need: journey.need,
+      latestResultFamily: journey.lastResult?.family,
+      savedItemIds: journey.savedItemIds,
+      triedItemIds: journey.triedItemIds,
+      hiddenItemIds: journey.hiddenItemIds,
+      feedback: journey.feedback,
+      pace: journey.pace,
+      returning: journey.returning || Boolean(journey.lastResult),
+    },
+    4,
+  );
+  const adaptationActive =
+    Boolean(journey.need || journey.lastResult) ||
+    journey.savedItemIds.length > 0 ||
+    journey.triedItemIds.length > 0 ||
+    journey.hiddenItemIds.length > 0 ||
+    journey.feedback.length > 0;
 
   // Section 5 — saved / tried resume list.
   const savedTriedIds = Array.from(new Set([...journey.savedItemIds, ...journey.triedItemIds]));
@@ -296,26 +294,48 @@ export default function MyYorisouView() {
             </section>
           ) : null}
 
-          {/* Section 4 — 続けて見る */}
-          {continueItems.length ? (
+          {/* Section 4 — 続けて見る（あなたに合わせて並べています / WS-B） */}
+          {adapted.length ? (
             <section className="mt-9" aria-labelledby="my-continue">
-              <p id="my-continue" className="aix2-eyebrow">
-                続けて見る
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p id="my-continue" className="aix2-eyebrow">
+                  続けて見る
+                </p>
+                {adaptationActive ? (
+                  <button
+                    type="button"
+                    onClick={() => resetAdaptationSignals()}
+                    className="rounded-full border border-[var(--hair-2)] px-3 py-1.5 text-[11.5px] aix2-mut transition-colors hover:border-[var(--hair-jade)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--jade-bright)]"
+                  >
+                    並び順をリセット
+                  </button>
+                ) : null}
+              </div>
+              <p className="mt-2 text-[12.5px] leading-7 aix2-faint">
+                {adaptationActive
+                  ? "この端末に残った、あなた自身の記録だけをもとに並べています。各項目に理由を表示しています。"
+                  : "まずは基本の順に表示しています。使うほど、あなたに合わせて並び替わります。"}
               </p>
               <div className="mt-3 grid gap-4 md:grid-cols-2">
-                {continueItems.map((item) => {
+                {adapted.map(({ item, state, primaryReason, reasons }: AdaptedItem) => {
                   const saved = journey.savedItemIds.includes(item.id);
                   return (
                     <div key={item.id} className="aix2-panel p-6 space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-[15.5px] font-bold text-[color:var(--tx)]">{item.title}</p>
+                        {state === "done" ? <span className={chipClass}>試した</span> : null}
                         {item.availability === "prototype" ? <span className={chipClass}>プロトタイプ</span> : null}
                       </div>
+                      {/* Explainability: why this card is placed here (WS-B §6.1). */}
+                      <p className="text-[12px] leading-6 text-[color:var(--jade-bright)]">
+                        なぜ表示: {primaryReason}
+                        {reasons.length > 1 ? `（ほか${reasons.length - 1}件）` : ""}
+                      </p>
                       <p className="text-[13px] leading-7 aix2-mut">{item.whyMayFit}</p>
                       <p className="text-[12px] leading-6 aix2-faint">目安: {item.estimatedTime}</p>
-                      <div className="flex items-center gap-4 pt-1">
+                      <div className="flex flex-wrap items-center gap-4 pt-1">
                         <Link href={item.href} className="aix2-link">
-                          見てみる →
+                          {state === "done" ? "もう一度見る →" : "見てみる →"}
                         </Link>
                         <button
                           type="button"
@@ -325,10 +345,35 @@ export default function MyYorisouView() {
                         >
                           {saved ? "保存済み" : "保存"}
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => hideItem(item.id)}
+                          className="text-[12px] aix2-faint underline underline-offset-4 rounded-sm transition-colors hover:text-[color:var(--tx)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--jade-bright)]"
+                        >
+                          今は非表示
+                        </button>
                       </div>
                     </div>
                   );
                 })}
+              </div>
+            </section>
+          ) : adaptationActive ? (
+            <section className="mt-9" aria-labelledby="my-continue">
+              <p id="my-continue" className="aix2-eyebrow">
+                続けて見る
+              </p>
+              <div className="aix2-panel mt-3 p-6 space-y-3">
+                <p className="text-[14px] leading-8 aix2-mut">
+                  今は表示できる候補がありません。非表示や「今は違う」で絞り込みすぎたときは、並び順をリセットできます。
+                </p>
+                <button
+                  type="button"
+                  onClick={() => resetAdaptationSignals()}
+                  className="aix2-link text-left"
+                >
+                  並び順をリセットする →
+                </button>
               </div>
             </section>
           ) : null}

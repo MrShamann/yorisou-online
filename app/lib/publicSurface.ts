@@ -48,7 +48,7 @@ const IMMERSIVE_EXACT = new Set<string>([
 ]);
 
 // SR-1 — anonymous guided-experience runtime renders as a dark product surface.
-const IMMERSIVE_PREFIXES = ["/experiences/guided"];
+const IMMERSIVE_PREFIXES = ["/experiences/guided", "/reports/family"];
 
 // Keep & Return continuity routes (private state space, saved, LINE return).
 const CONTINUITY_EXACT = new Set<string>(["/saved", "/private-state"]);

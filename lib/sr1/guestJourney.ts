@@ -259,6 +259,15 @@ export function setReturnPath(path: string) {
   updateGuestJourney({ lastReturnPath: path });
 }
 
+// APP-2 WS-B — reset only the signals that reprioritize/suppress the adaptive
+// list (coarse feedback, hidden items, tried markers). Keeps the visitor's
+// explicit keepers: their need, pace, last result, and saved items. This makes
+// the adaptation fully reversible without discarding what they chose to save.
+export function resetAdaptationSignals() {
+  const current = readGuestJourney();
+  persist({ ...current, feedback: [], hiddenItemIds: [], triedItemIds: [] });
+}
+
 export function clearGuestJourney() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(SR1_GUEST_JOURNEY_KEY);
