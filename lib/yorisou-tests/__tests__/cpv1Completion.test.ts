@@ -52,6 +52,7 @@ import {
 import { COMPLETION_COPY } from "@/app/result/reveal/revealContent";
 import { PRODUCT_CARDS } from "@/app/data/productCards";
 import { lineRecoveryMessage, evaluateLineCallback } from "@/lib/app2/lineCallbackContract";
+import { deploymentContext, cpv1PreviewAccess } from "@/lib/cpv1/deploymentContext";
 
 const root = process.cwd();
 const has = (p: string) => existsSync(join(root, p));
@@ -456,6 +457,55 @@ check("A5: LINE surfaces never claim a live/completed provider connection (runti
     }).outcome,
     "ok",
   );
+});
+
+console.log("CPV1-R1 §10 — trusted deployment context + server-side preview access");
+check("§10 deployment context is derived from trusted server env (Preview ≠ production)", () => {
+  assert.equal(deploymentContext({ VERCEL_ENV: "production" }), "production");
+  assert.equal(deploymentContext({ VERCEL_ENV: "preview", NODE_ENV: "production" }), "vercel_preview");
+  assert.equal(deploymentContext({ NODE_ENV: "test" }), "test");
+  // A local `next start` is production-MODE but NOT true production.
+  assert.equal(deploymentContext({ NODE_ENV: "production" }), "local");
+  assert.equal(deploymentContext({}), "local");
+});
+const localFlagOn = { NODE_ENV: "development", YORISOU_CPV1_DEV_FLAGS: "cpv1_method_universe_preview" };
+const localFlagOff = { NODE_ENV: "development" };
+const previewFlagOn = { VERCEL_ENV: "preview", NODE_ENV: "production", YORISOU_CPV1_DEV_FLAGS: "x" };
+const previewFlagOff = { VERCEL_ENV: "preview", NODE_ENV: "production" };
+const prodFlagOn = { VERCEL_ENV: "production", NODE_ENV: "production", YORISOU_CPV1_DEV_FLAGS: "x" };
+const prodFlagOff = { VERCEL_ENV: "production", NODE_ENV: "production" };
+const access = (env: Record<string, string | undefined>, authenticated: boolean, isFounderAdmin: boolean, routeAuthorized = true) =>
+  cpv1PreviewAccess({ authenticated, isFounderAdmin, routeAuthorized, env });
+check("§10 12-case preview-access matrix", () => {
+  // 1 local flag absent → denied
+  assert.equal(access(localFlagOff, true, true).allowed, false);
+  // 2 local flag present, unauthorized identity → denied
+  assert.equal(access(localFlagOn, true, false).allowed, false);
+  // 3 local flag present, authorized dev identity → allowed
+  assert.equal(access(localFlagOn, true, true).allowed, true);
+  // 4 preview flag absent → denied
+  assert.equal(access(previewFlagOff, true, true).allowed, false);
+  // 5 preview unauthenticated → denied
+  assert.equal(access(previewFlagOn, false, false).allowed, false);
+  // 6 preview ordinary authenticated user → denied
+  assert.equal(access(previewFlagOn, true, false).allowed, false);
+  // 7 preview Founder/Admin → allowed
+  assert.equal(access(previewFlagOn, true, true).allowed, true);
+  // 8 production flag absent → denied
+  assert.equal(access(prodFlagOff, true, true).reason, "denied_production");
+  // 9 production flag present → STILL denied
+  assert.equal(access(prodFlagOn, true, true).reason, "denied_production");
+  // 10 forged client environment (server env is production) → denied regardless
+  assert.equal(access(prodFlagOn, true, true).allowed, false);
+  // 11 direct URL access without navigation (no route authorization) → denied
+  assert.equal(access(previewFlagOn, true, true, false).reason, "denied_route_unauthorized");
+  // 12 client-side hiding bypass attempt → server-side gate still denies (not admin)
+  assert.equal(access(previewFlagOn, true, false).allowed, false);
+});
+check("§10 no Founder/Admin identifiers embedded in the decision module", () => {
+  const src = read("lib/cpv1/deploymentContext.ts");
+  // The decision takes isFounderAdmin as a param; it must not hard-code admin emails/ids.
+  assert.ok(!/@[a-z0-9.]+\.(com|jp|test)|admin_email|founderId/i.test(src), "no hard-coded admin identifiers");
 });
 
 console.log("CPV1 — program docs present");
