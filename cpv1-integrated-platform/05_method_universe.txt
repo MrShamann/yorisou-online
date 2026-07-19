@@ -1,0 +1,8 @@
+CPV1 METHOD UNIVERSE by activation state (27 methods):
+  public_active (10): imairo-120q, c02-current-state, relationship-fatigue-24q, f01-work-fit, f02-workplace-fit, love-distance, work-rhythm, local-life, name-impression, yorisou-values
+  contract_only (2): reflection-cadence, yorisou-motivation
+  rights_blocked (15): ziwei-dou-shu, bazi-four-pillars, cheng-gu, i-ching, five-elements, chinese-zodiac, name-hanzi-reflection, astrology-natal, tarot, numerology, dream-reflection, yorisou-symbolic-cards, image-color-reflection, big-five-ipip, mbti-import-handoff
+
+PUBLIC methods (gate passes) — external/traditional MUST be absent:
+  public: imairo-120q, c02-current-state, relationship-fatigue-24q, f01-work-fit, f02-workplace-fit, love-distance, work-rhythm, local-life, name-impression, yorisou-values
+  rights_blocked (off public routes): ziwei-dou-shu, bazi-four-pillars, cheng-gu, i-ching, five-elements, chinese-zodiac, name-hanzi-reflection, astrology-natal, tarot, numerology, dream-reflection, yorisou-symbolic-cards, image-color-reflection, big-five-ipip, mbti-import-handoff

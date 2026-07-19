@@ -1,0 +1,12 @@
+CPV1 — PREFLIGHT + PRODUCTION BOUNDARY (captured 2026-07-19)
+Preflight: AUTHORIZED_BOUNDED_IMPLEMENTATION
+feature HEAD 8483333 (= expected); production main @ 70da80a09491b375c0e066be60bfe6411dc7cabc = origin/main
+prod unchanged: YES@70da80a
+PR #113 (APP-2 baseline): OPEN (unchanged)
+PR #114 (CPV1 draft): 
+CPV1 commits:
+4c2bf72 docs(cpv1): WS-E..N continuity architecture specs + capability matrix
+0356ec2 feat(cpv1): local Supabase schema for understanding/history/consent (WS-D/E/F) — reversible, RLS, append-only
+a00296b fix(cpv1): WS-A P0 corrections — 120/120 completion presentation, badge, report nav (presentation-only)
+2b70d14 feat(cpv1): platform foundation — method + rights registries, adapter contract, source-separated understanding, consent, history (WS-B/C/D/E/F)
+b8fe11e docs(cpv1): program architecture + rights-gate doctrine (stacked on APP-2)

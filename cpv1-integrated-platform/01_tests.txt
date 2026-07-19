@@ -1,0 +1,13 @@
+CPV1 — TEST BATTERY (2026-07-19)
+Full contract battery (no regression):
+  test:aix4   PASS
+  test:aix5   PASS
+  test:sr1    PASS
+  test:sr2    PASS
+  test:app1   PASS
+  test:app2   PASS
+  test:cpv1   PASS
+
+tsc: 0 errors
+build: BUILD_ID yzpwycJmlkwk84_2gM-GJ (Compiled successfully)
+gitleaks (CPV1 diff): no leaks found

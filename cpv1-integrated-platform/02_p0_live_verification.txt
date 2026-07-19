@@ -1,0 +1,8 @@
+CPV1 — WS-A P0 LIVE VERIFICATION (against running local app 127.0.0.1:3210)
+A1 completion '回答をもとにしています（完了）': 1 (expect >=1)
+A1 defect '回答数がまだ少ないため' (too-few-answers): 0 (expect 0)
+A1 confidence band 'ひかえめ': 0 (expect 0)
+A1 method version 'いま色 公開割り当て v0.1': 1 (expect >=1)
+A2 core-life-state (/check-in 120Q route) badged 120問 not 24問; relationship-fatigue keeps 24問 (verified by test:cpv1 A2 assertion PASS)
+A3 /reports links family reports: 1 (expect >=1)
+A4 responsive: desktop full-width hero + mobile 375px single-column (screenshots captured)

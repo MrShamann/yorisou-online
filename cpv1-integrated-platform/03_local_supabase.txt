@@ -1,0 +1,8 @@
+CPV1 — LOCAL SUPABASE VERIFICATION (WS-D/E/F; local Colima; NOT production)
+NOTICE:  PASS: cpv1 schema present
+NOTICE:  PASS: history UPDATE blocked (append_only: UPDATE on yorisou_cpv1_history_events is not permitted)
+NOTICE:  PASS: history DELETE blocked (append_only: DELETE on yorisou_cpv1_history_events is not permitted)
+NOTICE:  PASS: anon denied on cpv1 tables
+NOTICE:  PASS: cpv1 user isolation (own=1 other=0)
+NOTICE:  PASS: no universal-score column
+reversible: rollback drop + re-apply both exit 0

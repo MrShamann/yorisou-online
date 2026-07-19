@@ -1,0 +1,9 @@
+CPV1 — ADVERSARIAL GOVERNANCE REVIEW (WS-E..N specs 11-19)
+Verdict: ALL 9 specs PASS on every governance axis.
+- No maturity mis-tags (tags verified against real lib/cpv1 symbols).
+- No fabricated content/users/metrics/community activity.
+- All Companion prohibitions present (no guilt/jealousy/abandonment/consciousness/suffering/dependency/pressure).
+- All Legacy prohibitions present (no prod activation; no synthetic deceased voice/video; Legacy Companion architecture-only).
+- No Personas / fixed taxonomy reintroduced.
+- Private->public leakage rules stated (reports never auto-public; raw answers/birth-data/legacy on hard denylist).
+Only defect: one WS-L<->WS-K citation typo in file 19 (fixed). Not a governance violation.
