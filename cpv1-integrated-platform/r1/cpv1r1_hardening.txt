@@ -1,0 +1,29 @@
+CPV1-R1 — TRUTH/CONTRACT HARDENING EVIDENCE (2026-07-19)
+Scope executed: §1 preflight+lock · §3 route-specific rights gate · §4 separate maturity dimensions.
+NOTE: Founder instruction truncated mid-§4; §5+ awaited before final status.
+
+§3 route-specific rights gate (lib/cpv1/rights.ts):
+  - ROUTE_RULES per route; rightsResolutionReport() enumerates each unresolved reason.
+  - No pending applicable field may clear; missing licence/attribution/ephemeris/artwork/reviewer/evidence/date/gate all block.
+§4 seven separate maturity dimensions (lib/cpv1/methods.ts methodMaturity()):
+  implementation · rights · content · privacy · tests · founderActivation · publicRoute — never collapsed.
+[eval]:2
+import { CPV1_METHOD_UNIVERSE, methodMaturity, methodPrimaryBlocker } from "@/lib/cpv1/methods";
+         ^^^^^^^^^^^^^^^^^^^^
+SyntaxError: The requested module '@/lib/cpv1/methods' does not provide an export named 'CPV1_METHOD_UNIVERSE'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:226:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:335:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:282:26)
+    at async ModuleLoader.executeModuleJob (node:internal/modules/esm/loader:278:20)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.22.3
+
+Tests: cpv1 33/33 (incl §3 8 route-gate checks + §4 dimension checks); full battery aix4/aix5/sr1/sr2/app1/app2/cpv1 PASS; tsc 0; eslint 0; gitleaks clean.
+Per-method maturity (external methods show SEPARATE unmet dimensions):
+  tarot: impl=not_started rights=review_required content=not_authored privacy=not_reviewed tests=not_run gate=closed public=unavailable primaryBlocker=implementation
+  astrology-natal: impl=not_started rights=review_required content=not_authored privacy=not_reviewed tests=not_run gate=closed public=unavailable primaryBlocker=implementation
+  bazi-four-pillars: impl=not_started rights=review_required content=not_authored privacy=not_reviewed tests=not_run gate=closed public=unavailable primaryBlocker=implementation
+  big-five-ipip: impl=not_started rights=review_required content=not_authored privacy=not_reviewed tests=not_run gate=closed public=unavailable primaryBlocker=implementation
+  mbti-import-handoff: impl=not_started rights=review_required content=not_authored privacy=not_reviewed tests=not_run gate=closed public=unavailable primaryBlocker=implementation
+  imairo-120q (original): impl=complete rights=cleared content=authored public=available
