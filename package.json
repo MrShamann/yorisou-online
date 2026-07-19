@@ -42,7 +42,8 @@
     "test:sr1": "node --import tsx lib/yorisou-tests/__tests__/sr1Completion.test.ts",
     "test:sr2": "node --import tsx lib/yorisou-tests/__tests__/sr2Completion.test.ts",
     "test:app1": "node --import tsx lib/yorisou-tests/__tests__/app1Completion.test.ts",
-    "test:app2": "node --import tsx lib/yorisou-tests/__tests__/app2Completion.test.ts"
+    "test:app2": "node --import tsx lib/yorisou-tests/__tests__/app2Completion.test.ts",
+    "test:cpv1": "node --import tsx lib/yorisou-tests/__tests__/cpv1Completion.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
