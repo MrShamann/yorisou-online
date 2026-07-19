@@ -8,12 +8,22 @@ import {
   CPV1_METHOD_UNIVERSE,
   getMethod,
   methodActivationState,
+  methodMaturity,
+  methodPrimaryBlocker,
   methodPublicallyActivatable,
   publicMethods,
   rightsBlockedMethods,
   blockedAdapter,
 } from "@/lib/cpv1/methods";
-import { rightsClears, rightsReviewRequired, yorisouOriginal } from "@/lib/cpv1/rights";
+import {
+  rightsClears,
+  rightsResolutionReport,
+  rightsReviewRequired,
+  yorisouOriginal,
+  ROUTE_RULES,
+  type RightsRecord,
+  type RightsRoute,
+} from "@/lib/cpv1/rights";
 import {
   canUseDownstream,
   synthesizeThemes,
@@ -60,26 +70,42 @@ check("shipped originals are public-active", () => {
     assert.equal(methodActivationState(m!), "public_active", `${id} public_active`);
   }
 });
-check("EVERY external/traditional method is rights_blocked + dev-flagged + no compute", () => {
+check("§4 EVERY external method exposes SEPARATE unmet dimensions (never collapsed)", () => {
   const external = CPV1_METHOD_UNIVERSE.filter((m) => m.family === "chinese_traditional" || m.family === "western_symbolic");
   assert.ok(external.length >= 10, "many external methods registered");
   for (const m of external) {
-    assert.equal(methodActivationState(m), "rights_blocked", `${m.methodId} rights_blocked`);
+    const mt = methodMaturity(m);
+    // Each blocking dimension is recorded on its own — implementation, rights,
+    // content, privacy, tests are ALL independently unmet (not one rights_blocked).
+    assert.equal(mt.implementation, "not_started", `${m.methodId} implementation not_started`);
+    assert.equal(mt.rights, "review_required", `${m.methodId} rights review_required`);
+    assert.equal(mt.content, "not_authored", `${m.methodId} content not_authored`);
+    assert.equal(mt.privacy, "not_reviewed", `${m.methodId} privacy not_reviewed`);
+    assert.equal(mt.tests, "not_run", `${m.methodId} tests not_run`);
+    assert.equal(mt.founderActivation, "closed", `${m.methodId} founder gate closed`);
+    assert.equal(mt.publicRoute, "unavailable", `${m.methodId} public route unavailable`);
     assert.equal(m.devFlagged, true, `${m.methodId} dev-flagged`);
-    assert.equal(m.logicComplete, false, `${m.methodId} not implemented`);
-    assert.equal(m.founderActivated, false, `${m.methodId} not activated`);
     assert.equal(methodPublicallyActivatable(m), false, `${m.methodId} not publicly activatable`);
-    assert.equal(rightsClears(m.rights), false, `${m.methodId} rights blocked`);
+    assert.equal(methodActivationState(m), "gated", `${m.methodId} gated (not collapsed to rights_blocked)`);
   }
+});
+check("§4 primary blocker is honest (implementation before rights, etc.)", () => {
+  // With implementation not_started, the primary blocker is implementation — NOT
+  // rights collapsed over everything.
+  assert.equal(methodPrimaryBlocker(getMethod("tarot")!), "implementation");
+  // A method that is implemented + content-authored but rights-pending blocks on rights.
+  const hypo = { ...getMethod("tarot")!, implementation: "complete" as const, content: "authored" as const, privacy: "reviewed" as const, tests: "passing" as const };
+  assert.equal(methodPrimaryBlocker(hypo), "rights");
 });
 check("MBTI is import/handoff only (never embedded)", () => {
   const m = getMethod("mbti-import-handoff")!;
   assert.ok(/import|handoff|licen/i.test(m.model), "import/handoff model");
   assert.equal(methodPublicallyActivatable(m), false);
 });
-check("Big Five requires source validation (blocked)", () => {
+check("Big Five requires source validation (rights review_required)", () => {
   const m = getMethod("big-five-ipip")!;
-  assert.equal(methodActivationState(m), "rights_blocked");
+  assert.equal(methodMaturity(m).rights, "review_required");
+  assert.equal(methodPublicallyActivatable(m), false);
 });
 check("publicMethods excludes all rights-blocked methods", () => {
   const pub = new Set(publicMethods().map((m) => m.methodId));
@@ -98,6 +124,68 @@ check("no fabricated calc/interpretation content in external registry entries", 
   const src = read("lib/cpv1/methods.ts");
   // external entries describe the model as gated/unimplemented, not real content
   assert.ok(/rights-gated|not implemented|pending-rights|unimplemented/i.test(src));
+});
+
+console.log("CPV1-R1 §3 — route-specific rights gate");
+function fullyResolved(route: RightsRoute): RightsRecord {
+  return {
+    methodId: "t", rightsRoute: route, source: "test provenance",
+    copyrightStatus: "clear", trademarkStatus: "clear", softwareLicense: "MIT",
+    commercialUsePermission: "clear", translationRights: "clear", modificationRights: "clear",
+    attribution: "attribution present", dataOrEphemerisSource: "licensed ephemeris", artworkRights: "clear",
+    reviewer: "reviewer", evidence: "evidence ref", reviewDate: "2026-07-19", activationGate: "open",
+    requiresEphemeris: false, requiresArtwork: false,
+  };
+}
+const CLEARABLE: RightsRoute[] = [
+  "YORISOU_ORIGINAL", "VERIFIED_PUBLIC_DOMAIN_REIMPLEMENTATION", "OPEN_LICENSE_COMMERCIAL_USE",
+  "FORMALLY_LICENSED_INTEGRATION", "OFFICIAL_EXTERNAL_HANDOFF", "USER_RESULT_IMPORT",
+];
+check("each clearable route clears only when fully resolved", () => {
+  for (const r of CLEARABLE) {
+    assert.ok(ROUTE_RULES[r].clearable, `${r} clearable`);
+    assert.ok(rightsClears(fullyResolved(r)), `${r} clears when fully resolved`);
+  }
+});
+check("RIGHTS_REVIEW_REQUIRED never clears even with all fields resolved", () => {
+  assert.equal(ROUTE_RULES.RIGHTS_REVIEW_REQUIRED.clearable, false);
+  assert.equal(rightsClears(fullyResolved("RIGHTS_REVIEW_REQUIRED")), false);
+});
+check("ANY pending applicable status field blocks clearance (every route)", () => {
+  for (const r of CLEARABLE) {
+    for (const f of ["copyrightStatus", "trademarkStatus", "commercialUsePermission", "translationRights", "modificationRights", "artworkRights"] as const) {
+      const rec: RightsRecord = { ...fullyResolved(r), [f]: "pending" };
+      assert.equal(rightsClears(rec), false, `${r} blocked by pending ${f}`);
+    }
+  }
+});
+check("missing reviewer / evidence / date / closed gate each block", () => {
+  const b = fullyResolved("YORISOU_ORIGINAL");
+  assert.equal(rightsClears({ ...b, reviewer: null }), false, "reviewer");
+  assert.equal(rightsClears({ ...b, evidence: null }), false, "evidence");
+  assert.equal(rightsClears({ ...b, reviewDate: null }), false, "reviewDate");
+  assert.equal(rightsClears({ ...b, activationGate: "closed" }), false, "gate");
+});
+check("OPEN_LICENSE requires resolved licence + attribution", () => {
+  const b = fullyResolved("OPEN_LICENSE_COMMERCIAL_USE");
+  assert.equal(rightsClears({ ...b, softwareLicense: "review_required" }), false, "licence terms required");
+  assert.equal(rightsClears({ ...b, attribution: null }), false, "attribution required");
+});
+check("FORMALLY_LICENSED requires resolved licence", () => {
+  assert.equal(rightsClears({ ...fullyResolved("FORMALLY_LICENSED_INTEGRATION"), softwareLicense: "review_required" }), false);
+});
+check("astrology ephemeris + Tarot artwork applicability enforced", () => {
+  const eph: RightsRecord = { ...fullyResolved("VERIFIED_PUBLIC_DOMAIN_REIMPLEMENTATION"), requiresEphemeris: true, dataOrEphemerisSource: null };
+  assert.equal(rightsClears(eph), false, "missing proven ephemeris blocks");
+  const art: RightsRecord = { ...fullyResolved("FORMALLY_LICENSED_INTEGRATION"), requiresArtwork: true, artworkRights: "pending" };
+  assert.equal(rightsClears(art), false, "pending artwork blocks");
+});
+check("resolution report enumerates each specific unresolved reason", () => {
+  const rec: RightsRecord = { ...fullyResolved("OPEN_LICENSE_COMMERCIAL_USE"), attribution: null, trademarkStatus: "pending" };
+  const rep = rightsResolutionReport(rec);
+  assert.equal(rep.cleared, false);
+  assert.ok(rep.unresolved.some((u) => u.includes("attribution")), "attribution reason listed");
+  assert.ok(rep.unresolved.some((u) => u.includes("trademark")), "trademark reason listed");
 });
 
 console.log("CPV1 — source-separated understanding (WS-D)");

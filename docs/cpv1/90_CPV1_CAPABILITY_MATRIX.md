@@ -1,5 +1,16 @@
 # CPV1 — Capability Matrix (honest maturity ledger)
 
+> **CPV1-R1 hardening (2026-07-19):** the rights gate is now **route-specific**
+> (`lib/cpv1/rights.ts` `ROUTE_RULES` + `rightsResolutionReport`) — no pending
+> applicable field can clear, per route. Method maturity is now **seven separate
+> dimensions** (`methodMaturity()`: implementation · rights · content · privacy ·
+> tests · founderActivation · publicRoute), never collapsed into one
+> `rights_blocked`. Each external method records each unmet dimension on its own
+> (implementation `not_started`, rights `review_required`, content `not_authored`,
+> privacy `not_reviewed`, tests `not_run`, founder gate `closed`). See
+> `cpv1Completion.test.ts` §3/§4 (33 checks).
+
+
 Every capability tagged with exactly one maturity level. Nothing rights-blocked or
 architecture-only is presented as a public, functional, or "coming soon" surface.
 

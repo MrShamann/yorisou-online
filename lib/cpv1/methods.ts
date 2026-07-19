@@ -9,7 +9,7 @@
 // calculation logic or interpretation content).
 
 import { isDevFlagOn } from "./flags";
-import { type RightsRecord, rightsClears, rightsReviewRequired, yorisouOriginal } from "./rights";
+import { type RightsRecord, rightsClears, rightsResolutionReport, rightsReviewRequired, yorisouOriginal } from "./rights";
 
 export type MethodFamily =
   | "yorisou_state" // current-state / reflection originals
@@ -30,11 +30,32 @@ export type InputKind = "answers" | "text" | "birth_date" | "birth_time" | "birt
 
 export type ContinuityPermission = "allowed" | "opt_in" | "prohibited_by_default";
 
+// CPV1-R1 §4 — SEVEN SEPARATE maturity dimensions. Blockers are never collapsed
+// into a single "rights_blocked". Each method exposes each dimension truthfully.
+export type ImplementationStatus = "not_started" | "in_progress" | "complete";
+export type MethodRightsStatus = "review_required" | "cleared" | "blocked";
+export type ContentStatus = "not_authored" | "draft" | "authored" | "licensed";
+export type PrivacyStatus = "not_reviewed" | "reviewed";
+export type TestStatus = "not_run" | "passing";
+export type FounderActivationStatus = "closed" | "open";
+export type PublicRouteStatus = "unavailable" | "available";
+
+export type MethodMaturity = {
+  implementation: ImplementationStatus;
+  rights: MethodRightsStatus;
+  content: ContentStatus;
+  privacy: PrivacyStatus;
+  tests: TestStatus;
+  founderActivation: FounderActivationStatus;
+  publicRoute: PublicRouteStatus;
+};
+
+// A coarse summary label (NOT a replacement for the seven dimensions — read
+// methodMaturity() for the real per-dimension truth). Never collapses blockers.
 export type MethodActivationState =
-  | "public_active" // logic complete + rights clear + Founder-activated
-  | "implemented_private" // logic complete, not yet publicly activated
-  | "rights_blocked" // registered; blocked on rights clearance / original content
-  | "contract_only" // adapter contract defined; module not implemented
+  | "public_active" // every dimension passes; on a public route
+  | "implemented_private" // implemented + rights cleared, not yet Founder-activated
+  | "gated" // one or more dimensions unmet (see methodMaturity for which)
   | "retired";
 
 export type MethodRegistryEntry = {
@@ -61,11 +82,12 @@ export type MethodRegistryEntry = {
   publicSafeSharingRule: string;
   exportRule: string;
   deletionRule: string;
-  logicComplete: boolean; // is the method's own logic actually implemented?
-  privacyReviewed: boolean;
-  testsPass: boolean;
-  founderActivated: boolean;
-  rights: RightsRecord;
+  // CPV1-R1 §4 — separate maturity dimensions (raw truth; never collapsed).
+  implementation: ImplementationStatus; // is the method's own logic actually built?
+  content: ContentStatus; // is the interpretation/result content authored/licensed?
+  privacy: PrivacyStatus;
+  tests: TestStatus;
+  rights: RightsRecord; // rights status derives from the route-specific gate
   devFlagged: boolean; // true ⇒ visible only in dev preview, never public
 };
 
@@ -96,25 +118,69 @@ export function blockedAdapter(methodId: string, reason: string): MethodAdapter 
   };
 }
 
-// The public activation gate (§8.3). PUBLIC only when ALL hold.
-export function methodPublicallyActivatable(m: MethodRegistryEntry): boolean {
-  return (
-    m.logicComplete &&
-    rightsClears(m.rights) &&
-    m.privacyReviewed &&
-    m.testsPass &&
-    m.founderActivated &&
-    !m.devFlagged
-  );
+// Derive the rights DIMENSION from the route-specific gate (cleared / blocked /
+// review_required) — kept separate from implementation, content, privacy, tests.
+function deriveRightsStatus(r: RightsRecord): MethodRightsStatus {
+  if (rightsClears(r)) return "cleared";
+  if (r.rightsRoute === "RIGHTS_REVIEW_REQUIRED") return "review_required";
+  const report = rightsResolutionReport(r);
+  return report.unresolved.some((u) => u.includes(":blocked")) ? "blocked" : "review_required";
 }
 
-// The effective activation state a surface should trust.
+// CPV1-R1 §4 — the seven separate maturity dimensions. `founderActivation` is the
+// single source of truth (the rights activation gate). `publicRoute` is available
+// ONLY when every dimension passes AND the method is not dev-flagged.
+export function methodMaturity(m: MethodRegistryEntry): MethodMaturity {
+  const rights = deriveRightsStatus(m.rights);
+  const founderActivation: FounderActivationStatus = m.rights.activationGate;
+  const publicRoute: PublicRouteStatus =
+    m.implementation === "complete" &&
+    rights === "cleared" &&
+    (m.content === "authored" || m.content === "licensed") &&
+    m.privacy === "reviewed" &&
+    m.tests === "passing" &&
+    founderActivation === "open" &&
+    !m.devFlagged
+      ? "available"
+      : "unavailable";
+  return {
+    implementation: m.implementation,
+    rights,
+    content: m.content,
+    privacy: m.privacy,
+    tests: m.tests,
+    founderActivation,
+    publicRoute,
+  };
+}
+
+// The public activation gate (§8.3): PUBLIC only when every dimension passes.
+export function methodPublicallyActivatable(m: MethodRegistryEntry): boolean {
+  return methodMaturity(m).publicRoute === "available";
+}
+
+// The FIRST unmet dimension (honest primary blocker) — never a single collapsed
+// "rights_blocked". Returns null when the method is publicly activatable.
+export function methodPrimaryBlocker(m: MethodRegistryEntry): keyof MethodMaturity | "dev_flagged" | null {
+  const mt = methodMaturity(m);
+  if (mt.publicRoute === "available") return null;
+  if (mt.implementation !== "complete") return "implementation";
+  if (mt.rights !== "cleared") return "rights";
+  if (mt.content !== "authored" && mt.content !== "licensed") return "content";
+  if (mt.privacy !== "reviewed") return "privacy";
+  if (mt.tests !== "passing") return "tests";
+  if (mt.founderActivation !== "open") return "founderActivation";
+  if (m.devFlagged) return "dev_flagged";
+  return null;
+}
+
+// A coarse summary label. The real truth is methodMaturity(); this never collapses
+// distinct blockers into one.
 export function methodActivationState(m: MethodRegistryEntry): MethodActivationState {
-  if (m.rights.rightsRoute === "RIGHTS_REVIEW_REQUIRED" || !rightsClears(m.rights)) {
-    return m.logicComplete ? "rights_blocked" : m.model ? "rights_blocked" : "contract_only";
-  }
-  if (!m.logicComplete) return "contract_only";
-  return methodPublicallyActivatable(m) ? "public_active" : "implemented_private";
+  const mt = methodMaturity(m);
+  if (mt.publicRoute === "available") return "public_active";
+  if (mt.implementation === "complete" && mt.rights === "cleared") return "implemented_private";
+  return "gated";
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -138,10 +204,10 @@ function originalActive(
     schoolVariant: null,
     optionalInputs: [],
     ...common,
-    logicComplete: true,
-    privacyReviewed: true,
-    testsPass: true,
-    founderActivated: true,
+    implementation: "complete",
+    content: "authored",
+    privacy: "reviewed",
+    tests: "passing",
     rights: yorisouOriginal(e.methodId, { activated: true }),
     devFlagged: false,
     ...e,
@@ -152,7 +218,11 @@ function originalActive(
 // implementation (no fabricated content). `model` describes the intended model
 // only; compute is withheld.
 function externalRightsBlocked(
-  e: Pick<MethodRegistryEntry, "methodId" | "nameJa" | "nameZh" | "nameEn" | "family" | "tradition" | "schoolVariant" | "role" | "requiredInputs" | "sensitiveInputs" | "model" | "interpretationLimits"> & { rightsSource: string },
+  e: Pick<MethodRegistryEntry, "methodId" | "nameJa" | "nameZh" | "nameEn" | "family" | "tradition" | "schoolVariant" | "role" | "requiredInputs" | "sensitiveInputs" | "model" | "interpretationLimits"> & {
+    rightsSource: string;
+    requiresEphemeris?: boolean; // astrology natal chart etc.
+    requiresArtwork?: boolean; // Tarot / symbolic cards etc.
+  },
 ): MethodRegistryEntry {
   return {
     optionalInputs: [],
@@ -162,11 +232,15 @@ function externalRightsBlocked(
     refreshModel: "pending",
     ...common,
     communityPermission: "prohibited_by_default",
-    logicComplete: false,
-    privacyReviewed: false,
-    testsPass: false,
-    founderActivated: false,
-    rights: rightsReviewRequired(e.methodId, e.rightsSource),
+    // CPV1-R1 §4 — every blocking dimension recorded separately, not collapsed.
+    implementation: "not_started",
+    content: "not_authored",
+    privacy: "not_reviewed",
+    tests: "not_run",
+    rights: rightsReviewRequired(e.methodId, e.rightsSource, {
+      requiresEphemeris: e.requiresEphemeris,
+      requiresArtwork: e.requiresArtwork,
+    }),
     devFlagged: true,
     ...e,
   } as MethodRegistryEntry;
@@ -328,10 +402,9 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
       interpretationLimits: "自己記述の記録。判定や評価ではない。",
       refreshModel: "recurring by cadence",
     }),
-    logicComplete: false,
-    testsPass: false,
-    founderActivated: false,
-    // Real original method, but surface integration is CPV1 contract-level.
+    implementation: "in_progress",
+    tests: "not_run",
+    // Real original method, but CPV1 surface integration is contract-level (not yet public).
   },
 
   // Chinese cultural & traditional — RIGHTS_BLOCKED (no fabricated content) -----
@@ -456,6 +529,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     model: "natal chart requires a LICENSED ephemeris + original interpretation; not implemented",
     interpretationLimits: "象徴的参照。医療・法律・金融・雇用・関係の権威にしない。",
     rightsSource: "ephemeris data licence + original interpretation content required",
+    requiresEphemeris: true,
   }),
   externalRightsBlocked({
     methodId: "tarot",
@@ -471,6 +545,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     model: "card draw → reflection; ARTWORK + interpretation must be ORIGINAL YORISOU or licensed (do NOT copy a modern deck)",
     interpretationLimits: "内省の入口。決定の権威にしない。",
     rightsSource: "artwork rights + interpretation; original YORISOU deck or verified commercial licence required",
+    requiresArtwork: true,
   }),
   externalRightsBlocked({
     methodId: "numerology",
@@ -516,6 +591,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     model: "original YORISOU card set — logic can be original but ORIGINAL ARTWORK must be authored/verified before public",
     interpretationLimits: "内省の入口。決定の権威にしない。",
     rightsSource: "must be original YORISOU artwork + copy; blocked until authored (no copied deck)",
+    requiresArtwork: true,
   }),
   externalRightsBlocked({
     methodId: "image-color-reflection",
@@ -595,9 +671,8 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
       interpretationLimits: "動機の傾向。判定ではない。",
       refreshModel: "retake anytime",
     }),
-    logicComplete: false,
-    testsPass: false,
-    founderActivated: false, // original but CPV1 contract-level (not yet a public surface)
+    implementation: "in_progress",
+    tests: "not_run", // original but CPV1 surface integration is contract-level (not yet public)
   },
 ] as const;
 
@@ -613,7 +688,7 @@ export function publicMethods(): MethodRegistryEntry[] {
 
 // Rights-blocked methods (never public; visible in dev preview only).
 export function rightsBlockedMethods(): MethodRegistryEntry[] {
-  return CPV1_METHOD_UNIVERSE.filter((m) => methodActivationState(m) === "rights_blocked");
+  return CPV1_METHOD_UNIVERSE.filter((m) => methodMaturity(m).rights !== "cleared");
 }
 
 // Dev-preview visibility (never in production).
