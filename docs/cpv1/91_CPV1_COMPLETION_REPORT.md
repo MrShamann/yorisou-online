@@ -17,11 +17,14 @@
 5. **Product architecture** — one integrated loop (multi-method → private continuity →
    Companion → community → recommendation → feedback → longitudinal → Archive/Legacy),
    source-separated, user-controlled; rights gate + maturity taxonomy load-bearing.
-6. **Method-by-method status** — 27 methods registered: **10 public_active** (YORISOU
-   originals), **2 contract_only** (reflection-cadence, motivation), **15 rights_blocked**
-   (Zi Wei Dou Shu, Ba Zi, Cheng Gu, I Ching, Five Elements, Chinese Zodiac, name-hanzi,
-   astrology, Tarot, numerology, dream, symbolic-cards, image-color, Big Five, MBTI).
-   `publicMethods()` excludes all 15 rights-blocked — none reachable on a public route.
+6. **Method-by-method status** (corrected by CPV1-R1 §5 runtime audit) — 27 methods
+   registered: **9 public_active** (YORISOU originals, each with a real route on
+   production `main` — see `92_CPV1_METHOD_RUNTIME_RECONCILIATION.md`), **3 unbuilt/
+   contract_only** (yorisou-values [downgraded from a wrongly-claimed public_active],
+   reflection-cadence, motivation), **15 rights_blocked** (Zi Wei Dou Shu, Ba Zi, Cheng
+   Gu, I Ching, Five Elements, Chinese Zodiac, name-hanzi, astrology, Tarot, numerology,
+   dream, symbolic-cards, image-color, Big Five, MBTI). `publicMethods()` excludes all
+   15 rights-blocked + the 3 unbuilt — none reachable on a public route.
 7. **Rights registry** — governed routes incl. `RIGHTS_REVIEW_REQUIRED`; `rightsClears()`
    gate; every external method non-clearing until a human rights review opens the gate.
 8. **P0 defect status** — A1 120/120 completion presented complete, "too few answers"

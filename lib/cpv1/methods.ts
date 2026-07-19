@@ -402,7 +402,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
       interpretationLimits: "自己記述の記録。判定や評価ではない。",
       refreshModel: "recurring by cadence",
     }),
-    implementation: "in_progress",
+    implementation: "not_started",
     tests: "not_run",
     // Real original method, but CPV1 surface integration is contract-level (not yet public).
   },
@@ -640,21 +640,32 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "外部結果の取り込み。YORISOUの判定ではない。",
     rightsSource: "trademarked; import/handoff/licence only",
   }),
-  originalActive({
-    methodId: "yorisou-values",
-    nameJa: "価値観リフレクション",
-    nameEn: "Values reflection",
-    family: "psychology_preference",
-    role: "preference_reflection",
-    requiredInputs: ["answers"],
-    sensitiveInputs: ["answers"],
-    model: "YORISOU-original values reflection",
-    methodVersion: "values-v0.1",
-    resultSchema: "values-result",
-    reportSchema: "family-report:values",
-    interpretationLimits: "今大事にしていることの整理。判定ではない。",
-    refreshModel: "retake anytime",
-  }),
+  {
+    ...originalActive({
+      methodId: "yorisou-values",
+      nameJa: "価値観リフレクション",
+      nameEn: "Values reflection",
+      family: "psychology_preference",
+      role: "preference_reflection",
+      requiredInputs: ["answers"],
+      sensitiveInputs: ["answers"],
+      model: "YORISOU-original values reflection",
+      methodVersion: "values-v0.1",
+      resultSchema: "values-result",
+      reportSchema: "family-report:values",
+      interpretationLimits: "今大事にしていることの整理。判定ではない。",
+      refreshModel: "retake anytime",
+    }),
+    // CPV1-R1 §5 runtime reconciliation: DOWNGRADED. This YORISOU-original concept
+    // is REGISTERED but NOT BUILT — no route, no flow, no result implementation
+    // (nothing outside the registry references it). It was wrongly classified
+    // public_active on a registry declaration alone. Corrected to unbuilt.
+    implementation: "not_started",
+    content: "not_authored",
+    tests: "not_run",
+    rights: yorisouOriginal("yorisou-values", { activated: false }),
+    devFlagged: true,
+  },
   {
     ...originalActive({
       methodId: "yorisou-motivation",
@@ -671,7 +682,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
       interpretationLimits: "動機の傾向。判定ではない。",
       refreshModel: "retake anytime",
     }),
-    implementation: "in_progress",
+    implementation: "not_started",
     tests: "not_run", // original but CPV1 surface integration is contract-level (not yet public)
   },
 ] as const;

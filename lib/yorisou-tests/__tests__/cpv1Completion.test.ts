@@ -34,6 +34,7 @@ import { defaultConsent, canPersist, canShareToCommunity } from "@/lib/cpv1/cons
 import { appendEvent, recordResultChange, buildChangeView, type HistoryEvent } from "@/lib/cpv1/history";
 import { COMPLETION_COPY } from "@/app/result/reveal/revealContent";
 import { PRODUCT_CARDS } from "@/app/data/productCards";
+import { lineRecoveryMessage, evaluateLineCallback } from "@/lib/app2/lineCallbackContract";
 
 const root = process.cwd();
 const has = (p: string) => existsSync(join(root, p));
@@ -124,6 +125,47 @@ check("no fabricated calc/interpretation content in external registry entries", 
   const src = read("lib/cpv1/methods.ts");
   // external entries describe the model as gated/unimplemented, not real content
   assert.ok(/rights-gated|not implemented|pending-rights|unimplemented/i.test(src));
+});
+
+console.log("CPV1-R1 §5 — runtime-truth reconciliation");
+// The 9 PROVEN public methods each mount a REAL flow at a real (non-redirect)
+// route — not a registry declaration alone. yorisou-values is DOWNGRADED.
+const PROVEN_PUBLIC: Array<[string, string]> = [
+  ["imairo-120q", "app/check-in/page.tsx"],
+  ["c02-current-state", "app/tests/c02/page.tsx"],
+  ["relationship-fatigue-24q", "app/tests/relationship-fatigue/page.tsx"],
+  ["f01-work-fit", "app/tests/f01/page.tsx"],
+  ["f02-workplace-fit", "app/tests/f02/page.tsx"],
+  ["love-distance", "app/tests/love-distance/page.tsx"],
+  ["work-rhythm", "app/tests/work-rhythm/page.tsx"],
+  ["local-life", "app/tests/local-life/page.tsx"],
+  ["name-impression", "app/tests/name-impression/page.tsx"],
+];
+check("§5 exactly 9 public-active methods, each with a real route + flow (not a declaration)", () => {
+  const pub = publicMethods().map((m) => m.methodId);
+  assert.equal(pub.length, 9, "exactly 9 public-active (corrected from an over-claimed 10)");
+  for (const [id, route] of PROVEN_PUBLIC) {
+    assert.ok(pub.includes(id), `${id} is public-active`);
+    assert.ok(has(route), `${id} route ${route} exists`);
+    const src = read(route);
+    assert.ok(!/redirect\(/.test(src), `${id} route is not a redirect`);
+    assert.ok(/Flow/.test(src), `${id} route mounts a real flow component`);
+  }
+});
+check("§5 yorisou-values downgraded — registered but NOT built; never public", () => {
+  const m = getMethod("yorisou-values")!;
+  const mt = methodMaturity(m);
+  assert.equal(mt.implementation, "not_started", "not built");
+  assert.equal(mt.content, "not_authored", "content not authored");
+  assert.equal(mt.publicRoute, "unavailable", "not public");
+  assert.equal(methodPublicallyActivatable(m), false);
+  assert.ok(!has("app/tests/values/page.tsx"), "no values route exists in the app");
+});
+check("§5 redirect-only inherited routes are not registered as active methods", () => {
+  for (const r of ["r01", "r04", "s01"]) {
+    assert.ok(/redirect\(/.test(read(`app/tests/${r}/page.tsx`)), `${r} is redirect-only`);
+    assert.equal(getMethod(r), undefined, `${r} is not a registered method`);
+  }
 });
 
 console.log("CPV1-R1 §3 — route-specific rights gate");
@@ -279,9 +321,27 @@ check("A3: nine-family deeper reports reachable from the Deepen journey", () => 
   const idx = read("app/reports/page.tsx");
   assert.ok(idx.includes("APP2_FAMILY_REPORTS") && idx.includes("/reports/family/"), "reports index links family reports");
 });
-check("A5: LINE not described as live provider integration in the app-side contract", () => {
-  // the recovery + contract label the provider handshake as external, not live
-  assert.ok(read("lib/app2/lineCallbackContract.ts").includes("real LINE provider handshake") || true);
+check("A5: LINE surfaces never claim a live/completed provider connection (runtime + framing)", () => {
+  // CPV1-R1 §6 — replaced an always-pass (`|| true`) assertion. This exercises
+  // RUNTIME behavior (recovery-message output per outcome code) AND the framing.
+  for (const code of ["cancelled", "invalid_signature", "expired", "replay", "missing_consent", "malformed"]) {
+    const msg = lineRecoveryMessage(code);
+    assert.ok(msg.length > 0, `recovery message exists for ${code}`);
+    assert.ok(!/連携済み|接続済み|接続しました|連携が完了しました/.test(msg), `${code} message makes no false connection claim`);
+  }
+  // The app-side contract documents that the real provider handshake stays external.
+  assert.ok(/stays external/.test(read("lib/app2/lineCallbackContract.ts")), "handshake documented as external, not live");
+  // A malformed callback is handled application-side (no live provider call) and never "ok".
+  assert.notEqual(
+    evaluateLineCallback({
+      secret: "s",
+      envelope: { state: "", nonce: "", code: "", intent: "login", returnTo: "/", issuedAt: 0, consent: false, idempotencyKey: "" },
+      signature: "x",
+      expectation: { state: "s", nonce: "n", ttlMs: 1000 },
+      context: { now: 0, consumedStates: [], consumedIdempotencyKeys: [] },
+    }).outcome,
+    "ok",
+  );
 });
 
 console.log("CPV1 — program docs present");
