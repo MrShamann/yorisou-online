@@ -1,0 +1,4 @@
+APP-2 Playwright smoke (captured 2026-07-19, prod build @ next start:3100)
+app2.spec.ts:      26 passed (reports x9x2 + unknown-404 + reprioritization + hidden + recovery)
+app2-axe.spec.ts:   3 passed (wcag2a+aa, 0 violations: /reports/family/imairo, /reports/family/relationship-fatigue, /line/recovery)
+app1-pwa.spec.ts:  12 passed (APP-1 installable-PWA regression — no regression)

@@ -1,0 +1,6 @@
+APP-2 dev-only local infrastructure (Homebrew; §3 authorization; NOT production):
+colima 0.10.3
+docker 29.6.2
+docker-compose 5.3.1
+lima 2.1.4
+supabase CLI: 2.106.0

@@ -1,0 +1,39 @@
+APP-2 — LOCAL SUPABASE VERIFICATION (captured 2026-07-19, local dev via Colima; NOT production)
+Stack: Colima 0.10.3 · Docker 29.6.2 · Supabase CLI 2.106.0 · db 127.0.0.1:54322
+Migration: supabase/migrations/202607190001_app2_full_service_backend.sql (fresh apply + deterministic seed)
+===============================================================================
+
+### RLS enabled on the 8 APP-2 tables
+           tablename            | rowsecurity 
+--------------------------------+-------------
+ yorisou_adaptation_state       | t
+ yorisou_admin_access_logs      | t
+ yorisou_guest_migration_events | t
+ yorisou_guest_migration_jobs   | t
+ yorisou_review_queue_events    | t
+ yorisou_review_queue_items     | t
+ yorisou_service_feedback       | t
+ yorisou_service_incidents      | t
+(8 rows)
+
+
+### Verification suite
+NOTICE:  PASS: app2 schema present
+NOTICE:  PASS: idempotent create (same id, single created event)
+NOTICE:  PASS: transition audit trail (3 events)
+NOTICE:  PASS: illegal transition rejected (illegal_transition:pending->succeeded)
+NOTICE:  PASS: audit UPDATE blocked (append_only: UPDATE on yorisou_guest_migration_events is not permitted)
+NOTICE:  PASS: audit DELETE blocked (append_only: DELETE on yorisou_guest_migration_events is not permitted)
+NOTICE:  PASS: denied admin access is logged (1 denied rows)
+NOTICE:  PASS: anon denied on app2 tables
+NOTICE:  PASS: user isolation (own=1 other=0)
+NOTICE:  PASS: authenticated denied on admin tables
+NOTICE:  PASS: review lifecycle audit (4 events)
+NOTICE:  PASS: readiness overview readable (open_review_items=0)
+
+### REST/RPC E2E via running PostgREST (the exact path lib/server/app2ServiceBackend.ts uses)
+PASS: REST idempotent create (same id)
+PASS: REST guarded transition -> succeeded
+PASS: anon HTTP 401 on admin_access_logs (denied)
+PASS: anon grant-denied (42501) on migration jobs
+readiness funnel via REST: [{"total_jobs":7,"succeeded":3,"failed":0,"cancelled":0,"compensated":0,"in_progress":4,"total_retries":0}]

@@ -1,0 +1,38 @@
+  ✓ all 9 families present
+  ✓ each report has complete, non-placeholder content
+  ✓ no fabricated science / statistics + explicit not-a-diagnosis boundary
+  ✓ family report route + view exist and are theme-registered
+  ✓ B1 deterministic: same input ⇒ identical ordering
+  ✓ B2 result-family relevance rises to the top
+  ✓ B3 stated-need relevance is applied + explained
+  ✓ B4 hidden items are NEVER shown
+  ✓ B5 rejected (not_now) items are NEVER repeated
+  ✓ B6 tried items are recognized as done and de-prioritized
+  ✓ B7 saved items carry the saved reason + state
+  ✓ B8 every surfaced item has a reason + primaryReason
+  ✓ B9 found-useful boosts + explains
+  ✓ B10 pace 'quick' prefers a short item with pace_fit reason
+  ✓ B-reset: clearing signals restores a hidden item (reversible)
+  ✓ B-top: topAdaptedItems caps the list
+  ✓ C1 valid signed callback ⇒ ok + keep_guest continuity
+  ✓ C2 tampered signature ⇒ invalid_signature
+  ✓ C3 tampered field breaks the signature
+  ✓ C4 state mismatch ⇒ state_mismatch
+  ✓ C5 nonce mismatch ⇒ nonce_mismatch
+  ✓ C6 expired ⇒ expired
+  ✓ C7 replayed state ⇒ replay
+  ✓ C8 duplicate idempotency key ⇒ duplicate (idempotent, no attack)
+  ✓ C9 provider cancel ⇒ cancelled (retryable)
+  ✓ C10 attach-to-account without consent ⇒ missing_consent
+  ✓ C11 attach-to-account with consent ⇒ ok + attach_to_account
+  ✓ C12 conflicting existing account ⇒ identity_conflict (no silent merge)
+  ✓ C13 unsafe returnTo is never an open redirect
+  ✓ C14 audit event carries no raw code/nonce (privacy)
+  ✓ C15 malformed envelope ⇒ malformed + safe return
+  ✓ recovery UI surface exists
+  ✓ migration exists, additive, reversible (rollback block)
+  ✓ append-only guard on the three audit/log tables
+  ✓ anon revoked + admin tables have no authenticated grant
+  ✓ server store, dashboard, queues, migration endpoint, access-logging present
+  ✓ local verification + seed + cleanup docs present
+APP-2 completion contract: 37 checks passed.
