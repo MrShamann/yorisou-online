@@ -43,10 +43,15 @@ import {
 import {
   appendEvent,
   recordResultChange,
+  recordConfirmation,
   recordDataRightsEvent,
   makeTombstone,
   tombstoneCarriesNoPersonalContent,
+  dataRightsEventCarriesNoFreeText,
+  stableIdentity,
   buildChangeView,
+  DATA_RIGHTS_MESSAGES,
+  ALLOWED_DATA_RIGHTS_DETAILS,
   type HistoryEvent,
 } from "@/lib/cpv1/history";
 import { COMPLETION_COPY } from "@/app/result/reveal/revealContent";
@@ -288,14 +293,30 @@ check("§9 default permissions are restrictive; changing one leaves others uncha
 });
 // §7 — genuine relation-based contradiction detection.
 const rel = (over: Partial<Observation> & { relation: ThemeRelation; themeKey: string }): Observation => baseObs(over);
-check("§7 two methods on the same theme do NOT auto-conflict; multiple supports ⇒ recurring", () => {
+check("§7/11A.6 two DISTINCT methods on a theme ⇒ cross_method_recurring (not contradiction)", () => {
   const themes = synthesizeThemes([
     rel({ id: "1", methodId: "imairo-120q", themeKey: "resilience", relation: "supports" }),
     rel({ id: "2", methodId: "work-rhythm", themeKey: "resilience", relation: "supports" }),
   ]);
   const t = themes.find((x) => x.theme === "resilience")!;
-  assert.equal(t.agreement, "recurring", "same-theme different-methods is not contradiction");
+  assert.equal(t.agreement, "cross_method_recurring", "≥2 distinct methods is cross-method recurrence");
   assert.equal(t.supportingMethodIds.length, 2);
+});
+check("11A.6 repeated support from ONE method ⇒ within_method_recurring (never cross-method)", () => {
+  // Two supporting observations, same method id — longitudinal, not cross-method.
+  const sameMethod = synthesizeThemes([
+    rel({ id: "1", methodId: "imairo-120q", themeKey: "steadiness", relation: "supports" }),
+    rel({ id: "2", methodId: "imairo-120q", themeKey: "steadiness", relation: "supports" }),
+  ]).find((t) => t.theme === "steadiness")!;
+  assert.equal(sameMethod.agreement, "within_method_recurring", "same-method repetition is within-method");
+  assert.equal(sameMethod.supportingMethodIds.length, 1, "one distinct method");
+  // Method-less user restatements are also within-method (no cross-method breadth).
+  const userRestated = synthesizeThemes([
+    rel({ id: "3", methodId: null, themeKey: "worry", relation: "supports" }),
+    rel({ id: "4", methodId: null, themeKey: "worry", relation: "supports" }),
+  ]).find((t) => t.theme === "worry")!;
+  assert.equal(userRestated.agreement, "within_method_recurring", "method-less repetition is not cross-method");
+  assert.equal(userRestated.supportingMethodIds.length, 0);
 });
 check("§7 an explicit support/opposition pair ⇒ contradictory", () => {
   const themes = synthesizeThemes([
@@ -364,9 +385,14 @@ check("§9 revoking one purpose leaves the others unchanged (applies on next rea
 });
 
 console.log("CPV1 — history (WS-F) + §8 identity + data-rights + deletion");
+// A fully-typed base event (all fields incl. R1 11A.1/11A.2 reasonCode).
+const ev = (over: Partial<HistoryEvent> & { id: string; type: HistoryEvent["type"] }): HistoryEvent => ({
+  methodId: null, methodVersion: null, objectKind: null, objectRef: null, at: "t",
+  safeDetail: null, reasonCode: null, supersedesVersion: null, priorVersionConfirmed: false, ...over,
+});
 check("history is append-only; result change preserves prior version + uses userConfirmed", () => {
   let h: HistoryEvent[] = [];
-  h = appendEvent(h, { id: "1", type: "method_completed", methodId: "imairo-120q", methodVersion: "v0.1", objectKind: "result", objectRef: "r1", at: "2026-07-19T00:00:00Z", safeDetail: null, supersedesVersion: null, priorVersionConfirmed: false });
+  h = appendEvent(h, ev({ id: "1", type: "method_completed", methodId: "imairo-120q", methodVersion: "v0.1", objectKind: "result", objectRef: "r1", at: "2026-07-19T00:00:00Z" }));
   const change = recordResultChange({ id: "2", methodId: "imairo-120q", resultId: "r1", fromVersion: "v0.1", toVersion: "v0.2", userConfirmed: true, at: "2026-07-19T01:00:00Z" });
   h = appendEvent(h, change);
   assert.equal(h.length, 2, "appended, not overwritten");
@@ -376,9 +402,9 @@ check("history is append-only; result change preserves prior version + uses user
 });
 check("§8 confirmation targets the EXACT object — not other results/versions of the same method", () => {
   const h: HistoryEvent[] = [
-    { id: "e1", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t1", safeDetail: "A", supersedesVersion: null, priorVersionConfirmed: false },
-    { id: "e2", type: "result_created", methodId: "m1", methodVersion: "v2", objectKind: "result", objectRef: "resultB", at: "t2", safeDetail: "B", supersedesVersion: null, priorVersionConfirmed: false },
-    { id: "e3", type: "user_confirmed", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t3", safeDetail: null, supersedesVersion: null, priorVersionConfirmed: false },
+    ev({ id: "e1", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t1", safeDetail: "A" }),
+    ev({ id: "e2", type: "result_created", methodId: "m1", methodVersion: "v2", objectKind: "result", objectRef: "resultB", at: "t2", safeDetail: "B" }),
+    recordConfirmation({ id: "e3", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t3" }),
   ];
   const view = buildChangeView(h);
   assert.equal(view.find((v) => v.objectRef === "resultA")!.userConfirmed, true, "A confirmed");
@@ -386,24 +412,88 @@ check("§8 confirmation targets the EXACT object — not other results/versions 
 });
 check("§8 confirmation cannot be inferred from a null/empty object ref", () => {
   const h: HistoryEvent[] = [
-    { id: "e1", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t1", safeDetail: "A", supersedesVersion: null, priorVersionConfirmed: false },
-    { id: "e2", type: "user_confirmed", methodId: "m1", methodVersion: "v1", objectKind: null, objectRef: null, at: "t2", safeDetail: null, supersedesVersion: null, priorVersionConfirmed: false },
+    ev({ id: "e1", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "resultA", at: "t1", safeDetail: "A" }),
+    ev({ id: "e2", type: "user_confirmed", methodId: "m1", methodVersion: "v1", objectKind: null, objectRef: null, at: "t2" }),
   ];
   assert.equal(buildChangeView(h).find((v) => v.objectRef === "resultA")!.userConfirmed, false, "null-ref confirmation confirms nothing");
 });
-check("§8 data-rights events exist for every audited right", () => {
+
+// ── 11A.1 — enforced COMPOSITE identity (kind + ref + methodId + methodVersion) ──
+check("11A.1 same result id + DIFFERENT method version do NOT share confirmation", () => {
+  const h: HistoryEvent[] = [
+    ev({ id: "a", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "R", at: "t1", safeDetail: "v1" }),
+    ev({ id: "b", type: "result_created", methodId: "m1", methodVersion: "v2", objectKind: "result", objectRef: "R", at: "t2", safeDetail: "v2" }),
+    recordConfirmation({ id: "c", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "R", at: "t3" }),
+  ];
+  const v = buildChangeView(h);
+  assert.equal(v.find((x) => x.methodVersion === "v1")!.userConfirmed, true, "v1 confirmed");
+  assert.equal(v.find((x) => x.methodVersion === "v2")!.userConfirmed, false, "v2 NOT confirmed by v1's confirmation");
+});
+check("11A.1 same object id under DIFFERENT methods do NOT share confirmation", () => {
+  assert.notEqual(
+    stableIdentity({ objectKind: "result", methodId: "m1", methodVersion: "v1", objectRef: "R" }),
+    stableIdentity({ objectKind: "result", methodId: "m2", methodVersion: "v1", objectRef: "R" }),
+    "different method ids yield different identity",
+  );
+});
+check("11A.1 observation vs result with the SAME textual id do NOT share confirmation", () => {
+  assert.notEqual(
+    stableIdentity({ objectKind: "result", methodId: "m1", methodVersion: "v1", objectRef: "X" }),
+    stableIdentity({ objectKind: "observation", methodId: "m1", methodVersion: "v1", objectRef: "X" }),
+    "different kinds yield different identity",
+  );
+});
+check("11A.1 null method/version fail SAFE where identity requires them (no confirmation)", () => {
+  // A result/observation with a null method or version cannot form an identity.
+  assert.equal(stableIdentity({ objectKind: "result", methodId: null, methodVersion: "v1", objectRef: "R" }), null);
+  assert.equal(stableIdentity({ objectKind: "result", methodId: "m1", methodVersion: null, objectRef: "R" }), null);
+  assert.equal(stableIdentity({ objectKind: null, methodId: "m1", methodVersion: "v1", objectRef: "R" }), null);
+  assert.equal(stableIdentity({ objectKind: "result", methodId: "m1", methodVersion: "v1", objectRef: "" }), null);
+  // A confirmation event lacking full identity confirms nothing.
+  const h: HistoryEvent[] = [
+    ev({ id: "a", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "R", at: "t1", safeDetail: "x" }),
+    ev({ id: "b", type: "user_confirmed", methodId: null, methodVersion: null, objectKind: "result", objectRef: "R", at: "t2" }),
+  ];
+  assert.equal(buildChangeView(h)[0].userConfirmed, false, "identity-incomplete confirmation confirms nothing");
+});
+check("11A.1 previous versions remain SEPARATELY visible", () => {
+  const h: HistoryEvent[] = [
+    ev({ id: "a", type: "result_created", methodId: "m1", methodVersion: "v1", objectKind: "result", objectRef: "R", at: "t1", safeDetail: "v1" }),
+    recordResultChange({ id: "b", methodId: "m1", resultId: "R", fromVersion: "v1", toVersion: "v2", userConfirmed: false, at: "t2" }),
+  ];
+  const versions = buildChangeView(h).map((x) => x.methodVersion).sort();
+  assert.deepEqual(versions, ["v1", "v2"], "both prior and new version visible");
+});
+
+// ── 11A.2 — data-rights audit rejects personal free text ──────────────────────
+check("11A.2 data-rights events exist for every audited right + carry a reason code (no free text)", () => {
   const types = ["user_forgot", "user_exported", "downstream_revoked", "method_consent_changed", "companion_permission_changed", "recommendation_permission_changed", "community_permission_changed", "archive_permission_changed", "legacy_designation_changed"] as const;
   for (const t of types) {
-    const e = recordDataRightsEvent({ id: "x", type: t, objectKind: "permission", objectRef: "obj-1", at: "t" });
+    const e = recordDataRightsEvent({ id: "x", type: t, objectKind: "permission", objectRef: "obj-1", at: "t", reason: "user_requested" });
     assert.equal(e.type, t);
     assert.equal(e.objectRef, "obj-1", "targets an exact object");
+    assert.equal(e.reasonCode, "user_requested", "carries an enumerated reason code");
+    assert.equal(e.safeDetail, DATA_RIGHTS_MESSAGES.user_requested, "detail is the internally-generated fixed message");
+    assert.ok(dataRightsEventCarriesNoFreeText(e), "no free text possible");
   }
+});
+check("11A.2 the API has NO caller free-text path; detail is always a fixed enumerated message", () => {
+  // Every reason maps to a fixed non-personal message and passes the no-free-text guard.
+  for (const reason of ["user_requested", "consent_withdrawn", "retention_expired", "policy_enforced", "export_fulfilled", "downstream_revoked"] as const) {
+    const e = recordDataRightsEvent({ id: "y", type: "downstream_revoked", objectKind: "observation", objectRef: "o1", at: "t", reason });
+    assert.equal(e.safeDetail, DATA_RIGHTS_MESSAGES[reason]);
+    assert.ok(ALLOWED_DATA_RIGHTS_DETAILS.includes(String(e.safeDetail)), "detail is in the fixed allowed set");
+  }
+  // A hand-forged data-rights event carrying personal free text is REJECTED by the guard.
+  const forged: HistoryEvent = ev({ id: "f", type: "user_forgot", objectKind: "observation", objectRef: "o1", safeDetail: "私の生年月日は…", reasonCode: null });
+  assert.equal(dataRightsEventCarriesNoFreeText(forged), false, "personal free text / missing reason code is rejected");
 });
 check("§8 deletion tombstone carries NO personal content", () => {
   const tomb = makeTombstone({ id: "d1", objectKind: "observation", objectRef: "obs-1", at: "t" });
   assert.equal(tomb.type, "user_deleted");
   assert.ok(tombstoneCarriesNoPersonalContent(tomb), "no personal content in tombstone");
   assert.ok(!/answer|birth|name:|私の/.test(String(tomb.safeDetail)), "safeDetail is a fixed non-personal marker");
+  assert.ok(dataRightsEventCarriesNoFreeText(tomb), "tombstone passes the no-free-text guard");
 });
 
 console.log("CPV1 — WS-A P0 corrections");
@@ -459,48 +549,68 @@ check("A5: LINE surfaces never claim a live/completed provider connection (runti
   );
 });
 
-console.log("CPV1-R1 §10 — trusted deployment context + server-side preview access");
-check("§10 deployment context is derived from trusted server env (Preview ≠ production)", () => {
+console.log("CPV1-R1 §10 + 11A.3/11A.4 — fail-closed deployment context + exact-flag preview access");
+check("§10/11A.3 deployment context is trusted + FAILS CLOSED to unknown", () => {
   assert.equal(deploymentContext({ VERCEL_ENV: "production" }), "production");
   assert.equal(deploymentContext({ VERCEL_ENV: "preview", NODE_ENV: "production" }), "vercel_preview");
   assert.equal(deploymentContext({ NODE_ENV: "test" }), "test");
-  // A local `next start` is production-MODE but NOT true production.
-  assert.equal(deploymentContext({ NODE_ENV: "production" }), "local");
-  assert.equal(deploymentContext({}), "local");
+  // Trusted local markers only.
+  assert.equal(deploymentContext({ NODE_ENV: "development" }), "local");
+  assert.equal(deploymentContext({ VERCEL_ENV: "development" }), "local");
+  assert.equal(deploymentContext({ YORISOU_LOCAL_DEV: "1" }), "local");
+  // 11A.3 — bare `next start` (NODE_ENV=production, no marker), empty, and unknown
+  // hosted envs are UNKNOWN (fail closed) — NOT local.
+  assert.equal(deploymentContext({ NODE_ENV: "production" }), "unknown");
+  assert.equal(deploymentContext({}), "unknown");
+  assert.equal(deploymentContext({ SOME_OTHER_HOST: "1" }), "unknown");
 });
-const localFlagOn = { NODE_ENV: "development", YORISOU_CPV1_DEV_FLAGS: "cpv1_method_universe_preview" };
+const REQ = "cpv1_method_universe_preview" as const; // the flag the representative surface requires
+const localFlagOn = { NODE_ENV: "development", YORISOU_CPV1_DEV_FLAGS: REQ };
 const localFlagOff = { NODE_ENV: "development" };
-const previewFlagOn = { VERCEL_ENV: "preview", NODE_ENV: "production", YORISOU_CPV1_DEV_FLAGS: "x" };
+const localWrongFlag = { NODE_ENV: "development", YORISOU_CPV1_DEV_FLAGS: "cpv1_companion_preview" }; // a DIFFERENT cpv1 flag
+const localBogusFlag = { NODE_ENV: "development", YORISOU_CPV1_DEV_FLAGS: "false" }; // 11A.4 non-flag value
+const previewFlagOn = { VERCEL_ENV: "preview", NODE_ENV: "production", YORISOU_CPV1_DEV_FLAGS: REQ };
 const previewFlagOff = { VERCEL_ENV: "preview", NODE_ENV: "production" };
-const prodFlagOn = { VERCEL_ENV: "production", NODE_ENV: "production", YORISOU_CPV1_DEV_FLAGS: "x" };
+const prodFlagOn = { VERCEL_ENV: "production", NODE_ENV: "production", YORISOU_CPV1_DEV_FLAGS: REQ };
 const prodFlagOff = { VERCEL_ENV: "production", NODE_ENV: "production" };
+const unknownFlagOn = { NODE_ENV: "production", YORISOU_CPV1_DEV_FLAGS: REQ }; // no trusted marker → unknown
 const access = (env: Record<string, string | undefined>, authenticated: boolean, isFounderAdmin: boolean, routeAuthorized = true) =>
-  cpv1PreviewAccess({ authenticated, isFounderAdmin, routeAuthorized, env });
-check("§10 12-case preview-access matrix", () => {
-  // 1 local flag absent → denied
+  cpv1PreviewAccess({ authenticated, isFounderAdmin, routeAuthorized, requiredFlag: REQ, env });
+check("§10 + 11A.3/11A.4 preview-access matrix (unknown fail-closed + exact flag)", () => {
+  // local flag absent → denied
   assert.equal(access(localFlagOff, true, true).allowed, false);
-  // 2 local flag present, unauthorized identity → denied
+  // local flag present, unauthorized identity → denied
   assert.equal(access(localFlagOn, true, false).allowed, false);
-  // 3 local flag present, authorized dev identity → allowed
+  // local flag present, authorized dev identity → allowed
   assert.equal(access(localFlagOn, true, true).allowed, true);
-  // 4 preview flag absent → denied
+  // 11A.4 — a DIFFERENT cpv1 flag does NOT authorize the required surface
+  assert.equal(access(localWrongFlag, true, true).reason, "denied_flag_off");
+  // 11A.4 — a non-flag value ("false") does NOT authorize
+  assert.equal(access(localBogusFlag, true, true).reason, "denied_flag_off");
+  // preview flag absent → denied
   assert.equal(access(previewFlagOff, true, true).allowed, false);
-  // 5 preview unauthenticated → denied
+  // preview unauthenticated → denied
   assert.equal(access(previewFlagOn, false, false).allowed, false);
-  // 6 preview ordinary authenticated user → denied
+  // preview ordinary authenticated user → denied
   assert.equal(access(previewFlagOn, true, false).allowed, false);
-  // 7 preview Founder/Admin → allowed
+  // preview Founder/Admin with the EXACT flag → allowed
   assert.equal(access(previewFlagOn, true, true).allowed, true);
-  // 8 production flag absent → denied
+  // production flag absent → denied_production
   assert.equal(access(prodFlagOff, true, true).reason, "denied_production");
-  // 9 production flag present → STILL denied
+  // production flag present → STILL denied_production
   assert.equal(access(prodFlagOn, true, true).reason, "denied_production");
-  // 10 forged client environment (server env is production) → denied regardless
-  assert.equal(access(prodFlagOn, true, true).allowed, false);
-  // 11 direct URL access without navigation (no route authorization) → denied
+  // 11A.3 — unknown context (no trusted marker) → denied_unknown_context, even with flag+auth+admin
+  assert.equal(access(unknownFlagOn, true, true).reason, "denied_unknown_context");
+  assert.equal(access(unknownFlagOn, true, true).allowed, false);
+  // direct URL access without route authorization → denied
   assert.equal(access(previewFlagOn, true, true, false).reason, "denied_route_unauthorized");
-  // 12 client-side hiding bypass attempt → server-side gate still denies (not admin)
-  assert.equal(access(previewFlagOn, true, false).allowed, false);
+});
+check("11A.4 flags.ts and deploymentContext.ts share ONE flag interpretation", () => {
+  // flags.ts must delegate — it must not re-implement its own env parsing.
+  const flagsSrc = read("lib/cpv1/flags.ts");
+  assert.ok(/from "\.\/deploymentContext"/.test(flagsSrc), "flags.ts imports the single source");
+  assert.ok(!/process\.env\.YORISOU_CPV1_DEV_FLAGS/.test(flagsSrc), "flags.ts does not read the flag env directly");
+  assert.ok(!/\.split\(/.test(flagsSrc), "flags.ts does not parse the flag env itself");
 });
 check("§10 no Founder/Admin identifiers embedded in the decision module", () => {
   const src = read("lib/cpv1/deploymentContext.ts");

@@ -88,7 +88,18 @@ export function effectiveRelation(o: Observation): ThemeRelation {
   return o.correctedRelation ?? o.relation;
 }
 
-export type ThemeAgreement = "recurring" | "mixed" | "contradictory" | "temporary" | "uncertain";
+// R1 11A.6 — recurrence is split by SOURCE breadth:
+//   cross_method_recurring  = supported by ≥2 DISTINCT method ids (true cross-method)
+//   within_method_recurring = ≥2 supporting observations but from <2 distinct methods
+//                             (longitudinal / repeated within one method / user restatements)
+// The two are never conflated: repeated support from one method is NOT cross-method.
+export type ThemeAgreement =
+  | "cross_method_recurring"
+  | "within_method_recurring"
+  | "mixed"
+  | "contradictory"
+  | "temporary"
+  | "uncertain";
 
 export type SynthesisTheme = {
   theme: string;
@@ -130,8 +141,13 @@ export function synthesizeThemes(
     let agreement: ThemeAgreement;
     if (supporting.length > 0 && opposing.length > 0) {
       agreement = "contradictory"; // §7 test 3 — explicit support/oppose pair
+    } else if (supMethods.length >= 2) {
+      // 11A.6 — TRUE cross-method recurrence needs ≥2 DISTINCT method ids.
+      agreement = "cross_method_recurring";
     } else if (supporting.length >= 2) {
-      agreement = "recurring"; // §7 test 2 — multiple supporting relations
+      // 11A.6 — repeated support from a single method (or method-less user
+      // restatements) is longitudinal/within-method recurrence, NOT cross-method.
+      agreement = "within_method_recurring";
     } else if (uncertain.length > 0 && supporting.length === 0 && opposing.length === 0) {
       agreement = "uncertain"; // §7 test 5 — uncertain is never contradiction
     } else if (obs.length >= 2) {
@@ -140,22 +156,29 @@ export function synthesizeThemes(
       agreement = "temporary";
     }
 
+    const note =
+      agreement === "contradictory"
+        ? "複数の見方が食い違っています。どちらかに決めるのではなく、両方の見え方として扱います。"
+        : agreement === "cross_method_recurring"
+          ? "複数の異なる方法から共通して見えている傾向です。ひとつの答えに決めるものではありません。"
+          : agreement === "within_method_recurring"
+            ? "同じ方法の中で繰り返し見えている傾向です（複数の方法の一致ではありません）。"
+            : "見えている傾向のひとつです。ひとつの答えに決めるものではありません。";
+
     out.push({
       theme,
       supportingMethodIds: supMethods,
       opposingMethodIds: oppMethods,
       agreement,
       userConfirmed: obs.some((o) => o.confirmation === "confirmed"),
-      note:
-        agreement === "contradictory"
-          ? "複数の見方が食い違っています。どちらかに決めるのではなく、両方の見え方として扱います。"
-          : "複数の見方から見えている傾向です。ひとつの答えに決めるものではありません。",
+      note,
     });
   }
   // Deterministic order: contradictory first (most notable), then most-supported,
   // then theme name.
   out.sort((a, b) => {
-    const rank = (t: ThemeAgreement) => (t === "contradictory" ? 0 : t === "recurring" ? 1 : 2);
+    const rank = (t: ThemeAgreement) =>
+      t === "contradictory" ? 0 : t === "cross_method_recurring" ? 1 : t === "within_method_recurring" ? 2 : 3;
     if (rank(a.agreement) !== rank(b.agreement)) return rank(a.agreement) - rank(b.agreement);
     if (b.supportingMethodIds.length !== a.supportingMethodIds.length) return b.supportingMethodIds.length - a.supportingMethodIds.length;
     return a.theme.localeCompare(b.theme);

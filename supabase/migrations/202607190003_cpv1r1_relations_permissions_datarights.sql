@@ -3,7 +3,12 @@
 --   event types + deletion tombstone; §9 independent consent purposes + visibility.
 -- LOCAL Supabase verification only — never production. Depends on 202607190002.
 --
--- Rollback (non-destructive):
+-- ROLLBACK CLASSIFICATION: LOCAL_DISPOSABLE_SCHEMA_ROLLBACK (NOT non-destructive).
+--   Dropping these columns/constraints DESTROYS the data stored in them. It is safe
+--   ONLY in an isolated disposable local/test database, and is NOT approved for any
+--   persistent environment. No production migration is authorized; a persistent
+--   environment would require a separately approved, data-preserving forward
+--   correction. Rollback (disposable local DB only):
 --   alter table public.yorisou_cpv1_observations
 --     drop column if exists visibility, drop column if exists theme_key,
 --     drop column if exists relation, drop column if exists corrected_relation,

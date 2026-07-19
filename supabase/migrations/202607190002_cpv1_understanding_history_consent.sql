@@ -6,7 +6,12 @@
 -- never production. Depends on public.yorisou_current_account_id() from
 -- migration 202607190001 (APP-2).
 --
--- Rollback (non-destructive):
+-- ROLLBACK CLASSIFICATION: LOCAL_DISPOSABLE_SCHEMA_ROLLBACK (NOT non-destructive).
+--   Dropping these tables DESTROYS all rows they hold. Safe ONLY in an isolated
+--   disposable local/test database; NOT approved for any persistent environment; no
+--   production migration authorized. A persistent environment would require a
+--   separately approved, data-preserving forward correction. Rollback (disposable
+--   local DB only):
 --   drop trigger if exists yorisou_cpv1_history_no_mutate on public.yorisou_cpv1_history_events;
 --   drop table if exists public.yorisou_cpv1_history_events;
 --   drop table if exists public.yorisou_cpv1_method_consent;
