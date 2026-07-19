@@ -6,6 +6,12 @@ import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlo
 import { RecommendationSignalMountTracker } from "@/app/components/YorisouSignalTracker";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "@/app/components/OpenTestingTracker";
+import { BrandLockup } from "@/app/components/brand/BrandMark";
+
+// AIX-3D-1 (Part A) — the LINE MINI App entry is framed as a continuity channel,
+// not the whole product: shared BrandLockup (nestle mark, no crane), links back
+// into 残す・戻る (saved / reports), truthful login-free persistence, and the
+// LINE-context light visual mode kept by design (§5). No new LINE integration.
 
 export const metadata: Metadata = {
   title: "Yorisou | チェックを始める",
@@ -25,12 +31,6 @@ const currentTests = [
     title: "恋愛や親密さの距離感を整理する",
     href: "/tests/love-distance",
   },
-] as const;
-
-const comingSoonTests = [
-  "仕事・リズム",
-  "生活・回復",
-  "月次チェック",
 ] as const;
 
 export default async function MiniAppEntryPage({
@@ -67,22 +67,20 @@ export default async function MiniAppEntryPage({
       />
 
       <div className="relative mx-auto max-w-md px-5 pt-7">
-        {/* Header */}
+        {/* Header — shared brand lockup (nestle mark), LINE continuity badge */}
         <div className="flex items-center justify-between">
-          <span className="display-serif text-[1.22rem] font-semibold tracking-[0.09em] text-[#22201D]">
-            YORISOU
-          </span>
+          <BrandLockup markSize={26} tone="light" accent="#37A98A" />
           <span
             className="rounded-full px-3 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-[#4D7A69]"
             style={{ border: "1px solid rgba(23,59,53,0.14)", background: "rgba(23,59,53,0.05)" }}
           >
-            LINE
+            LINEで続ける
           </span>
         </div>
 
         {/* Launcher headline */}
         <div className="mt-8">
-          <p className="text-[11px] font-semibold tracking-[0.08em] text-[#9A9088]">
+          <p className="text-[11px] font-semibold tracking-[0.08em] text-[#6F6760]">
             前回の続きから、少しだけ。
           </p>
         </div>
@@ -105,15 +103,15 @@ export default async function MiniAppEntryPage({
             className="display-serif mt-3 leading-[1.22] text-[#22201D]"
             style={{ fontSize: "1.55rem" }}
           >
-            最近の診断や関心をもとに、<br />
+            最近のチェックや関心をもとに、<br />
             次に試しやすい入口を出します。
           </h1>
 
           <p className="mt-2 text-[13px] leading-[1.85] text-[#6F6760]">
-            最近の診断や関心をもとに、次に試しやすい入口を表示します。医療・心理診断ではなく、今の状態を見つめるための小さな手がかりです。
+            最近のチェックや関心をもとに、次に試しやすい入口を表示します。医療・心理的な判定ではなく、今の状態を見つめるための小さな手がかりです。
           </p>
 
-          <p className="mt-2 text-[11px] text-[#9A9088]">
+          <p className="mt-2 text-[11px] text-[#6F6760]">
             LINE / Web 継続用 · ログインなし
           </p>
         </div>
@@ -181,7 +179,7 @@ export default async function MiniAppEntryPage({
             </Link>
           </div>
           <p className="mt-1 text-[11px] leading-5 text-[#7A7068]">
-            まだ記録が少ない場合は、公開テスト案内や診断一覧から続けやすい入口を案内します。不要なお知らせはいつでも止められます。
+            まだ記録が少ない場合は、公開テスト案内やチェック一覧から続けやすい入口を案内します。不要なお知らせはいつでも止められます。
           </p>
         </div>
 
@@ -200,7 +198,7 @@ export default async function MiniAppEntryPage({
               <div>
                 <p
                   className="text-[10px] font-semibold uppercase tracking-[0.13em]"
-                  style={{ color: "#9A9088" }}
+                  style={{ color: "#6F6760" }}
                 >
                   {test.kicker}
                 </p>
@@ -213,28 +211,47 @@ export default async function MiniAppEntryPage({
           ))}
         </div>
 
-        {/* Coming soon section */}
+        {/* Continuity — back into 残す・戻る (saved / reports). LINE is one
+            channel of a larger product, not the whole of it. */}
         <div className="mt-10 border-t pt-6" style={{ borderColor: "rgba(23,59,53,0.07)" }}>
-          <p className="mb-3 text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#9A9088" }}>
-            これから増えるチェック
+          <p className="mb-3 text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#6F6760" }}>
+            保存した続きに戻る
           </p>
-          <div className="space-y-1.5">
-            {comingSoonTests.map((label) => (
-              <div
-                key={label}
-                className="flex items-center justify-between rounded-[0.9rem] px-4 py-3"
-                style={{ background: "rgba(23,59,53,0.03)", border: "1px solid rgba(23,59,53,0.06)" }}
-              >
-                <span className="text-[13px] text-[#B0A89E]">{label}</span>
-                <span
-                  className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "rgba(23,59,53,0.06)", color: "#9A9088" }}
-                >
-                  準備中
-                </span>
+          <div className="space-y-2">
+            <Link
+              href="/saved"
+              className="flex items-center justify-between gap-3 rounded-[1.1rem] px-4 py-3.5 transition active:scale-[0.99]"
+              style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(23,59,53,0.09)" }}
+            >
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em]" style={{ color: "#6F6760" }}>
+                  残す
+                </p>
+                <p className="mt-0.5 text-[13px] font-semibold leading-[1.5] text-[#22201D]">
+                  この端末に保存した結果に戻る
+                </p>
               </div>
-            ))}
+              <span className="shrink-0 text-[18px] leading-none text-[#B0A89E]">›</span>
+            </Link>
+            <Link
+              href="/reports"
+              className="flex items-center justify-between gap-3 rounded-[1.1rem] px-4 py-3.5 transition active:scale-[0.99]"
+              style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(23,59,53,0.09)" }}
+            >
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em]" style={{ color: "#6F6760" }}>
+                  深める
+                </p>
+                <p className="mt-0.5 text-[13px] font-semibold leading-[1.5] text-[#22201D]">
+                  レポートで、もう少し深く読む
+                </p>
+              </div>
+              <span className="shrink-0 text-[18px] leading-none text-[#B0A89E]">›</span>
+            </Link>
           </div>
+          <p className="mt-3 text-[11px] leading-6 text-[#6F6760]">
+            仕事・生活・月次などのテーマも、順次ふやしていきます。保存や通知は、確認と同意のあとで使えます。
+          </p>
         </div>
       </div>
     </main>

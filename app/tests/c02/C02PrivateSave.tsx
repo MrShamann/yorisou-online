@@ -36,10 +36,11 @@ export function PrivateTestSave({ testSlug, answers }: { testSlug: "c02" | "f01"
   const loginHref = `/login?next=${encodeURIComponent(returnTo)}`;
   const lineHref = `/api/line/auth/start?locale=ja&intent=login&returnTo=${encodeURIComponent(returnTo)}`;
 
+  // AIX-3D-2 — calm branded-light Understand grammar; save/login/error logic preserved verbatim.
   return (
-    <section className="rounded-[1.2rem] border border-[rgba(23,59,53,0.12)] bg-white/90 px-5 py-5">
-      <p className="text-[13px] font-semibold text-[#315F50]">結果を非公開で残す</p>
-      <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
+    <section className="rounded-[1.2rem] border border-[var(--yr-hair)] bg-[var(--yr-panel)] px-5 py-5">
+      <p className="text-[13px] font-semibold text-[color:var(--yr-accent-text)]">結果を非公開で残す</p>
+      <p className="mt-1 text-[13px] leading-7 text-[color:var(--yr-text-mut)]">
         回答は公開されません。ログイン後、Yorisouアカウントに紐づけて結果を見返せます。
       </p>
       {state === "saved" && savedId ? (
@@ -49,7 +50,7 @@ export function PrivateTestSave({ testSlug, answers }: { testSlug: "c02" | "f01"
       ) : state === "login" ? (
         <div className="mt-4 flex flex-wrap gap-3">
           <Link href={loginHref} className="btn inline-flex min-h-[46px] items-center justify-center rounded-full px-5 text-sm">ログインして保存する</Link>
-          <Link href={lineHref} className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-sm font-semibold text-[#315F50]">LINEでログイン</Link>
+          <Link href={lineHref} className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[var(--yr-hair-2)] bg-[var(--yr-panel)] px-5 text-sm font-semibold text-[color:var(--yr-accent-text)]">LINEでログイン</Link>
         </div>
       ) : (
         <button type="button" onClick={save} disabled={state === "saving"} className="btn mt-4 inline-flex min-h-[46px] items-center justify-center rounded-full px-5 text-sm disabled:opacity-60">

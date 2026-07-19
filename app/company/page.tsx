@@ -1,64 +1,41 @@
 import type { Metadata } from "next";
 
+import { EditorialShell, EditorialSection } from "../components/aix3/EditorialShell";
+
 export const metadata: Metadata = {
-  title: "会社情報 | Yorisou",
-  description: "Yorisou合同会社は、LINE/Web-firstのセルフリフレクション体験、ライフステート理解、デジタルレポート、推薦・マッチング支援の開発と運営を行います。",
+  title: "会社情報 | YORISOU",
+  description: "YORISOUを開発・運営する会社の概要です。セルフリフレクション体験、状態理解、デジタルレポート、推薦・マッチング支援の企画・開発・運営を行います。",
 };
 
+// AIX-3D-1 — company (legal disclosure) on the shared editorial system. Company
+// facts preserved; distinct legal purpose (not a duplicate of /about).
+
+const ROWS: ReadonlyArray<[string, string]> = [
+  ["会社名", "寄り添う（Yorisou）"],
+  ["所在地", "福岡県福岡市"],
+  ["設立", "2026年"],
+  ["代表取締役", "Jin Yang（ジン ヤン）"],
+  ["事業内容", "セルフリフレクションサービス、状態理解、デジタルレポート、推薦・マッチング支援の企画・開発・運営"],
+];
+
 export default function CompanyPage() {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "#f6f3ec",
-          color: "#2c2c2c",
-          fontFamily:
-            'Hiragino Kaku Gothic ProN, Yu Gothic, system-ui, -apple-system',
-          padding: "80px 40px",
-        }}
-      >
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h1 style={{ fontSize: 36, marginBottom: 40 }}>
-            会社概要
-          </h1>
-  
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <tbody>
-              <tr>
-                <td style={tdLeft}>会社名</td>
-                <td style={tdRight}>寄り添う（Yorisou）</td>
-              </tr>
-              <tr>
-                <td style={tdLeft}>所在地</td>
-                <td style={tdRight}>福岡県福岡市</td>
-              </tr>
-              <tr>
-                <td style={tdLeft}>設立</td>
-                <td style={tdRight}>2026年</td>
-              </tr>
-              <tr>
-                <td style={tdLeft}>代表取締役</td>
-                <td style={tdRight}>Jin Yang（ジン ヤン）</td>
-              </tr>
-              <tr>
-                <td style={tdLeft}>事業内容</td>
-                <td style={tdRight}>
-                  セルフリフレクションサービス、ライフステート理解、デジタルレポート、推薦・マッチング支援の企画・開発・運営
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </main>
-    );
-  }
-  
-  const tdLeft: React.CSSProperties = {
-    padding: "14px 0",
-    width: "180px",
-    fontWeight: 600,
-  };
-  
-  const tdRight: React.CSSProperties = {
-    padding: "14px 0",
-  };
+  return (
+    <EditorialShell
+      eyebrow="会社情報"
+      title="会社概要"
+      lead="YORISOU を開発・運営する会社の概要です。"
+      secondary={{ href: "/about", label: "Yorisouとは" }}
+    >
+      <EditorialSection>
+        <dl className="grid gap-0">
+          {ROWS.map(([k, v]) => (
+            <div key={k} className="grid grid-cols-[7rem_1fr] gap-4 border-b border-[rgba(23,59,53,0.08)] py-4 last:border-b-0 sm:grid-cols-[10rem_1fr]">
+              <dt className="text-[14px] font-semibold text-[#2f2a28]">{k}</dt>
+              <dd className="text-[14px] leading-8 text-[#5f5750]">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </EditorialSection>
+    </EditorialShell>
+  );
+}

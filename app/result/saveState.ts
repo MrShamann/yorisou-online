@@ -78,6 +78,17 @@ export function saveResultRecord(record: SavedResultRecord) {
   window.dispatchEvent(new Event(YORISOU_SAVED_RESULT_EVENT));
 }
 
+// AIX-3C — user-controlled device-local clear (Keep domain remove control).
+// Additive; does not change the save flow (RTR-1 preserved).
+export function clearSavedResultRecord() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(YORISOU_SAVED_RESULT_KEY);
+  syncSavedResultSnapshot(null);
+  window.dispatchEvent(new Event(YORISOU_SAVED_RESULT_EVENT));
+}
+
 export function readSavedResultRecord(): SavedResultRecord | null {
   if (typeof window === "undefined") {
     return cachedSavedResultParsed;

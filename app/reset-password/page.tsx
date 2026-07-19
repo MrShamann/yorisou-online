@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 
 import PasswordResetForm from "@/app/components/PasswordResetForm";
+import { EditorialShell } from "@/app/components/aix3/EditorialShell";
 import { validatePasswordResetToken } from "@/lib/server/yorisouData";
 
 export const metadata: Metadata = {
-  title: "Yorisou | 新しいパスワード",
-  description: "Yorisouアカウントの新しいパスワードを設定します。",
+  title: "新しいパスワード | YORISOU",
+  description: "YORISOUアカウントの新しいパスワードを設定します。",
 };
+
+// AIX-3D-1 — reset-password wrapped in the shared editorial surface; token
+// validation + PasswordResetForm behavior preserved.
 
 function getErrorMessage(code: string | undefined) {
   switch (code) {
@@ -32,11 +36,19 @@ export default async function ResetPasswordPage({
   const derivedError = params.error || (token && "reason" in validation ? validation.reason : undefined);
 
   return (
-    <PasswordResetForm
-      locale="ja"
-      token={token}
-      tokenValid={Boolean(token && validation.ok)}
-      initialError={getErrorMessage(derivedError)}
-    />
+    <EditorialShell
+      eyebrow="アカウント"
+      title="新しいパスワードを設定"
+      lead="安全のため、パスワードは12文字以上で、大文字・小文字・数字・記号をそれぞれ1文字以上含めてください。"
+    >
+      <div className="aix3-ed-card">
+        <PasswordResetForm
+          locale="ja"
+          token={token}
+          tokenValid={Boolean(token && validation.ok)}
+          initialError={getErrorMessage(derivedError)}
+        />
+      </div>
+    </EditorialShell>
   );
 }

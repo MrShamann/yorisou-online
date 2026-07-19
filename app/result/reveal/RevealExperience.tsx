@@ -44,7 +44,7 @@ export default function RevealExperience({ stages }: { stages: ReactNode[] }) {
           <button
             type="button"
             onClick={() => setSkipped(true)}
-            className="min-h-[44px] rounded-full border border-[rgba(23,59,53,0.2)] bg-white/80 px-4 text-[12.5px] font-semibold text-[#49615B]"
+            className="aix2-btn aix2-btn-ghost !min-h-[44px] !px-4 !text-[12.5px]"
           >
             すべて表示
           </button>

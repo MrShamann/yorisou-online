@@ -29,7 +29,20 @@
     "verify:automation": "npm run check:env && npm run smoke:openclaw && npm run smoke:hermes",
     "test:result-reveal": "node --import tsx lib/yorisou-tests/__tests__/resultReveal.test.ts",
     "test:imairo-snapshot": "node --import tsx lib/yorisou-tests/__tests__/imairoSnapshot.test.ts",
-    "test:candidate-intake": "node --import tsx lib/yorisou-tests/__tests__/candidateIntake.test.ts"
+    "test:candidate-intake": "node --import tsx lib/yorisou-tests/__tests__/candidateIntake.test.ts",
+    "test:state-field": "node --import tsx lib/yorisou-tests/__tests__/stateField.test.ts",
+    "test:depth-field": "node --import tsx lib/yorisou-tests/__tests__/depthField.test.ts",
+    "test:aix3": "node --import tsx lib/yorisou-tests/__tests__/aix3Completion.test.ts",
+    "test:aix3b": "node --import tsx lib/yorisou-tests/__tests__/aix3bCompletion.test.ts",
+    "test:aix3c": "node --import tsx lib/yorisou-tests/__tests__/aix3cCompletion.test.ts",
+    "test:aix3d": "node --import tsx lib/yorisou-tests/__tests__/aix3dCompletion.test.ts",
+    "test:aix3d2": "node --import tsx lib/yorisou-tests/__tests__/aix3d2Completion.test.ts",
+    "test:aix4": "node --import tsx lib/yorisou-tests/__tests__/aix4Completion.test.ts",
+    "test:aix5": "node --import tsx lib/yorisou-tests/__tests__/aix5Completion.test.ts",
+    "test:sr1": "node --import tsx lib/yorisou-tests/__tests__/sr1Completion.test.ts",
+    "test:sr2": "node --import tsx lib/yorisou-tests/__tests__/sr2Completion.test.ts",
+    "test:app1": "node --import tsx lib/yorisou-tests/__tests__/app1Completion.test.ts",
+    "test:app2": "node --import tsx lib/yorisou-tests/__tests__/app2Completion.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
@@ -39,7 +52,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",
@@ -47,6 +61,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.185.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",

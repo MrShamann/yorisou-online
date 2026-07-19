@@ -29,7 +29,7 @@ export default function RelationshipFatigueSaveReturnPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="min-h-[calc(100dvh-3.5rem)] bg-[#FBFAF6] text-[#2F2A28]">
       <div className="container py-12">
         <div className="mx-auto max-w-lg rounded-[1.25rem] border border-[rgba(23,59,53,0.11)] bg-white/95 p-6">
           {savedId ? (

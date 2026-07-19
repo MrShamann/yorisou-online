@@ -79,30 +79,27 @@ export default function ReportSamplePage() {
             ))}
           </div>
 
-          {/* Locked content indicator */}
+          {/* Full report — free during open testing (SR-1: no fabricated lock) */}
           <div className="rounded-[1.2rem] border border-[rgba(23,59,53,0.08)] bg-white/70 p-5 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[18px] opacity-40">🔒</span>
-              <p className="text-[13px] font-semibold text-[#8A9E98]">残り12章</p>
-            </div>
-            <p className="text-[12px] leading-6 text-[#A09890]">
-              感情の負荷分析・人間関係のレンズ・7日間の行動計画・30日間の方向性ほか — 詳細レポートで読めます。
+            <p className="text-[13px] font-semibold text-[#315F50]">続きも、いま無料で読めます</p>
+            <p className="text-[12px] leading-6 text-[#6F625C]">
+              自己理解レポートは、公開テスト中は導入・本編・発展まで無料で読めます。チェックを終えると、あなたの結果に合ったレポートが開けます。支払いはありません。
             </p>
           </div>
 
           {/* CTAs */}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
-              href="/report-preview"
+              href="/reports"
               className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-6 text-[14px] font-bold text-white shadow-[0_14px_28px_rgba(23,59,53,0.2)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B]"
             >
-              詳細レポートに興味を保存する
+              自己理解レポートを見る
             </Link>
             <Link
-              href="/check-in"
+              href="/start"
               className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.16)] bg-white/80 px-6 text-[14px] font-medium text-[#315F50] transition hover:bg-white"
             >
-              チェックを始める
+              今の自分から始める
             </Link>
           </div>
 

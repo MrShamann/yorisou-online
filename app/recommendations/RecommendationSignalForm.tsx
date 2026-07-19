@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 
-import { MvpCard } from "../components/MvpSurface";
 import {
   readRecommendationSignal,
   saveRecommendationSignal,
@@ -94,9 +93,9 @@ export default function RecommendationSignalForm({
   };
 
   return (
-    <MvpCard className="space-y-3.5 rounded-[1.15rem] border-[rgba(23,59,53,0.1)] bg-white/92 p-4 shadow-[0_16px_34px_rgba(23,59,53,0.07)] md:p-5">
-      <div className="service-kicker">この方向を記録する</div>
-      <p className="text-[13px] leading-7 text-[#4A3E39]">
+    <div className="aix2-glass space-y-3.5 p-4 md:p-5">
+      <div className="aix2-eyebrow">この方向を記録する</div>
+      <p className="text-[13px] leading-7 aix2-mut">
         どちらを先に見たいかを、この端末に静かに残せます。たくさん選ぶ場所ではありません。
       </p>
       <div className="grid gap-1.5 lg:grid-cols-2">
@@ -107,11 +106,8 @@ export default function RecommendationSignalForm({
             <label
               key={option.value}
               htmlFor={id}
-              className={`flex cursor-pointer flex-col gap-0.5 rounded-[0.95rem] border px-3.5 py-2.5 transition hover:-translate-y-0.5 hover:bg-white/96 ${
-                selectedSignal === option.value
-                  ? "border-[#173B35] bg-[#F4FAF7]"
-                  : "border-[rgba(105,151,130,0.18)] bg-[#F4FAF7]"
-              }`}
+              className="aix2-answer flex cursor-pointer flex-col gap-0.5 !py-2.5"
+              data-selected={selectedSignal === option.value ? "true" : undefined}
             >
               <input
                 id={id}
@@ -122,8 +118,8 @@ export default function RecommendationSignalForm({
                 onChange={() => setSelectedSignal(option.value)}
                 className="sr-only"
               />
-              <span className="text-[13px] font-semibold leading-5 text-[var(--text)]">{option.label}</span>
-              <span className="text-[11px] leading-5 text-[var(--muted)]">{option.hint}</span>
+              <span className="text-[13px] font-semibold leading-5 text-[color:var(--tx)]">{option.label}</span>
+              <span className="text-[11px] leading-5 aix2-mut">{option.hint}</span>
             </label>
           );
         })}
@@ -134,20 +130,20 @@ export default function RecommendationSignalForm({
           onClick={handleSubmit}
           data-recommendation-signal="submit"
           disabled={!resolvedSelectedSignal}
-          className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-4 py-3 text-[15px] font-bold text-white shadow-[0_18px_34px_rgba(23,59,53,0.2)] transition hover:-translate-y-0.5 hover:bg-[#0F2F2B] hover:opacity-95 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-[rgba(111,98,92,0.28)] disabled:text-white disabled:shadow-none"
+          className="aix2-btn aix2-btn-primary !min-h-[50px] !text-[15px] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {storedSignal && storedSignal.selectedSignal === resolvedSelectedSignal && selectedOption
             ? "記録しました"
             : "選んだ方向を記録する"}
         </button>
       </div>
-      <div className="rounded-[0.95rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-2.5">
-        <p className="text-[12px] leading-6 text-[var(--muted)]">
+      <div className="rounded-[0.95rem] border border-[var(--hair)] bg-[rgba(16,20,18,0.6)] px-4 py-2.5">
+        <p className="text-[12px] leading-6 aix2-faint">
           {storedSignal && storedSignal.selectedSignal === resolvedSelectedSignal && selectedOption
             ? "この端末内の簡易記録です。"
             : "あとで見返すための簡易記録です。"}
         </p>
       </div>
-    </MvpCard>
+    </div>
   );
 }

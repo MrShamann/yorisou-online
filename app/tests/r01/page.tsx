@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { RelationshipPairFlow } from "../_components/SpecAssessmentFlow";
-import { r01Runtime } from "@/lib/yorisou-tests/r01";
-
-export const metadata: Metadata = {
-  title: "ふたり恋愛相性診断 | Yorisou",
-  description: "ふたりの連絡の温度、距離感、話し合い方をやさしく見直す公開チェックです。",
-};
-
+// AIX-3D-2 — /tests/r01 consolidated. The couple-compatibility ("相性診断") flow
+// was not part of the canonical Understand catalogue and its compatibility
+// framing sits outside the platform's non-divination positioning. Redirect to
+// the canonical Understand entry; the underlying engine is preserved in lib/.
 export default function R01Page() {
-  return <RelationshipPairFlow runtime={r01Runtime} />;
+  redirect("/tests");
 }

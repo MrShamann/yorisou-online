@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
-import OpenTestingNotice from "../components/OpenTestingNotice";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
-import ResultShareActions from "../components/ResultShareActions";
+import ShareResultActions from "../components/share/ShareResultActions";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import RevealExperience from "./reveal/RevealExperience";
 import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
 import PrivateResultSave from "./PrivateResultSave";
+import { DepthSignatureStatic } from "../components/depth-field/DepthSignature";
+import SupportPlanView from "../components/sr1/SupportPlanView";
+import { buildSupportPlan } from "@/lib/sr1/supportPlan";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -28,19 +30,11 @@ function buildHighlightSummary(highlights: { text: string }[]) {
   if (highlights.length === 0) {
     return "今の動き方を、公開できる範囲でやわらかく整えています。";
   }
-
-  const summary = highlights
-    .map((item) => item.text.replace(/。$/u, ""))
-    .join("、");
-
+  const summary = highlights.map((item) => item.text.replace(/。$/u, "")).join("、");
   return `${summary}傾向があります。`;
 }
 
-export default async function ResultPage({
-  searchParams,
-}: {
-  searchParams?: SearchParams;
-}) {
+export default async function ResultPage({ searchParams }: { searchParams?: SearchParams }) {
   const params = (await searchParams) || {};
   const resultId = readParam(params, "resultId");
   const overlayId = readParam(params, "overlayId");
@@ -48,18 +42,17 @@ export default async function ResultPage({
   const payloadKey = readParam(params, "payloadKey");
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
+  const resultHref = buildPublicResultHref("/result", routeContext);
   const resultShareHref = buildPublicResultHref("/result/share", routeContext);
   const recommendationHref = buildPublicResultHref("/recommendations", routeContext);
   const fullReportHref = compatibility.assignment
     ? buildSelfUnderstandingReportHref(compatibility.assignment.publicCode)
     : null;
   const highlightSummary = buildHighlightSummary(compatibility.highlights);
-  const publicTypeLabel = compatibility.assignment
-    ? `${compatibility.assignment.clanJapanese}のタイプ`
-    : "いま色テストの結果";
+  const publicTypeLabel = compatibility.assignment ? `${compatibility.assignment.clanJapanese}のタイプ` : "いま色テストの結果";
 
   return (
-    <main className="frontstage-page-soft">
+    <main className="aix2">
       <OpenTestingPageTracker
         eventName="result_viewed"
         route="/result"
@@ -69,67 +62,57 @@ export default async function ResultPage({
         overlayId={overlayId}
         confidence={confidenceBand}
       />
-      <section className="border-b border-[rgba(23,59,53,0.1)]">
-        <div className="container py-6 md:py-12">
+      <section className="border-b border-[var(--hair)]">
+        <div className="container py-8 md:py-14">
           <div className="mx-auto grid max-w-[42rem] gap-4">
             <div className="flex flex-wrap gap-1.5">
-              <MvpPill>{compatibility.brandedTestName}</MvpPill>
-              <MvpPill>{compatibility.currentStateNote}</MvpPill>
+              <span className="rounded-full border border-[var(--hair-2)] bg-[rgba(126,224,182,0.07)] px-3 py-1.5 text-[11px] leading-5 text-[color:var(--jade-bright)]">{compatibility.brandedTestName}</span>
+              <span className="rounded-full border border-[var(--hair-2)] bg-[rgba(126,224,182,0.07)] px-3 py-1.5 text-[11px] leading-5 aix2-mut">{compatibility.currentStateNote}</span>
             </div>
 
-            <MvpCard className="space-y-5 border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
+            <div className="aix2-glass space-y-5 p-4 sm:p-7">
               <p className="sr-only">
                 結果のまとめ: {compatibility.assignment ? `あなたのいま色は「${compatibility.assignment.nickname}」(${publicTypeLabel})。` : compatibility.displayLine}
                 {highlightSummary} この結果は診断ではなく、いまの傾向のやわらかい整理です。以下の内容はアニメーションなしでもすべて読めます。
               </p>
               <RevealExperience stages={[
               <div key="hero" className="grid gap-5">
-              <div
-                className="space-y-3 rounded-[1.18rem] px-4 py-4 sm:px-5 sm:py-5"
-                style={{
-                  background: "linear-gradient(135deg, #F4FAF7 0%, #fff 100%)",
-                  border: "1px solid rgba(23,59,53,0.1)",
-                }}
-              >
+              <div className="relative overflow-hidden rounded-[16px] border border-[var(--hair)] bg-[rgba(26,32,29,0.5)] px-4 py-5 sm:px-5">
+                {/* AIX-2 — Depth Signature: deterministic volumetric identity of
+                    this public result (public-safe IDs only). */}
+                <div className="mx-auto mb-2 w-[52%] max-w-[240px] sm:float-right sm:mb-0 sm:ml-4 sm:w-[38%]">
+                  <div className="aix2-sig-frame">
+                    <DepthSignatureStatic context={{ resultId, overlayId, confidenceBand }} className="absolute inset-0 h-full w-full" />
+                  </div>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {compatibility.heroChips.map((bullet) => (
-                    <span
-                      key={bullet}
-                      className="rounded-full border border-[rgba(105,151,130,0.16)] bg-white/72 px-3 py-1 text-[11px] font-semibold leading-5 text-[#315F50]"
-                    >
+                    <span key={bullet} className="rounded-full border border-[var(--hair-2)] bg-[rgba(126,224,182,0.06)] px-3 py-1 text-[11px] font-semibold leading-5 text-[color:var(--jade-bright)]">
                       {bullet}
                     </span>
                   ))}
                 </div>
                 {compatibility.assignment ? (
                   <>
-                    <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">あなたのいま色は、</p>
-                    <h1 className="display-serif text-[2.3rem] leading-[1.02] text-[#2F2A28] md:text-[3rem]">
+                    <p className="mt-3 text-[12px] font-semibold tracking-[0.08em] aix2-mut">あなたのいま色は、</p>
+                    <h1 className="aix2-serif text-[2.4rem] font-semibold leading-[1.04] text-[color:var(--tx)] md:text-[3.1rem]">
                       {compatibility.assignment.nickname}。
                     </h1>
-                    <p className="text-[14px] font-semibold leading-6 text-[#4D7A69]">{publicTypeLabel}</p>
+                    <p className="text-[14px] font-semibold leading-6 text-[color:var(--jade-bright)]">{publicTypeLabel}</p>
                   </>
                 ) : (
-                  <h1 className="display-serif text-[2.12rem] leading-[1.06] text-[#2F2A28] md:text-[3rem]">
+                  <h1 className="aix2-serif mt-3 text-[2.15rem] font-semibold leading-[1.08] text-[color:var(--tx)] md:text-[3rem]">
                     {compatibility.displayLine}
                   </h1>
                 )}
-                <p className="text-[14px] leading-7 text-[#6F625C]">
-                  {compatibility.recognitionLine}
-                </p>
+                <p className="mt-2 text-[14px] leading-7 aix2-mut">{compatibility.recognitionLine}</p>
               </div>
 
-              <div
-                className="rounded-[1.08rem] px-4 py-4"
-                style={{
-                  background: "#F4FAF7",
-                  border: "1px solid rgba(23,59,53,0.1)",
-                }}
-              >
-                <div className="service-kicker">今の見え方</div>
-                <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{compatibility.recognitionLine}</p>
-                <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{highlightSummary}</p>
-                <p className="mt-2 text-[12px] font-semibold leading-6 text-[#4D7A69]">
+              <div className="rounded-[14px] border border-[var(--hair)] bg-[rgba(26,32,29,0.4)] px-4 py-4">
+                <div className="aix2-eyebrow">今の見え方</div>
+                <p className="mt-2 text-[14px] leading-7 aix2-mut">{compatibility.recognitionLine}</p>
+                <p className="mt-2 text-[14px] leading-7 aix2-mut">{highlightSummary}</p>
+                <p className="mt-2 text-[12px] font-semibold leading-6 text-[color:var(--jade-bright)]">
                   {compatibility.assignment ? compatibility.assignment.secondaryBadge : compatibility.placeholderText}
                 </p>
               </div>
@@ -147,12 +130,12 @@ export default async function ResultPage({
 
               <GentleActions key="actions">
               <div className="space-y-3">
-                <p className="text-[14px] leading-7 text-[#6F625C]">{compatibility.gentleNextStep}</p>
+                <p className="text-[14px] leading-7 aix2-mut">{compatibility.gentleNextStep}</p>
               </div>
 
-              <div className="space-y-3 rounded-[1.08rem] !bg-[rgba(255,253,249,0.74)] px-1 py-1">
-                <p className="surface-meta">このあと読めるもの</p>
-                <p className="text-[13px] leading-6 text-[#7A7068]">
+              <div className="space-y-3 rounded-[14px] border border-[var(--hair)] bg-[rgba(26,32,29,0.4)] px-4 py-4">
+                <p className="aix2-eyebrow">このあと読めるもの</p>
+                <p className="text-[13px] leading-6 aix2-mut">
                   まずは詳しいレポートを開き、必要なら今日のヒントをあとから見返せます。
                 </p>
                 <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
@@ -171,59 +154,95 @@ export default async function ResultPage({
                           confidence: confidenceBand,
                         },
                       }}
-                      className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
+                      className="aix2-btn aix2-btn-primary !min-h-[48px] !text-[14px]"
                     >
                       今の詳しいレポートを読む
                     </OpenTestingTrackingLink>
                   ) : null}
-                  <MvpActionLink
-                    href={recommendationHref}
-                    label="今のヒントを見る"
-                    tone="secondary"
-                    className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none"
-                  />
+                  <Link href={recommendationHref} className="aix2-btn aix2-btn-ghost !min-h-[48px] !text-[14px]">
+                    今のヒントを見る
+                  </Link>
                 </div>
               </div>
               </GentleActions>,
 
               <div key="privacy-share" className="grid gap-4">
               <PrivacyPanel />
-              <div className="surface-panel-soft space-y-3 !bg-[rgba(255,255,255,0.78)]">
-                <p className="surface-meta">シェア</p>
-                <p className="text-[13px] leading-6 text-[#7A7068]">
-                  今の印象を短い言葉のまま残したいときだけ、ここからシェアできます。
-                </p>
-                <ResultShareActions
-                  shareUrl={resultShareHref}
-                  shareTitle={compatibility.brandedTestName}
-                  shareText={`${compatibility.shareLine}\n${compatibility.currentStateNote}`}
-                  shareCardUrl={resultShareHref}
-                  personaId={resultId ?? "imairo-placeholder"}
-                  shareSurface="result-page"
-                  showCopyLink={false}
-                />
-              </div>
-
-              <OpenTestingNotice
-                body="現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。"
-                primaryHref="/contact?topic=open-testing"
-                primaryLabel="感想や不具合を送る"
-                secondaryHref={fullReportHref ?? recommendationHref}
-                secondaryLabel={fullReportHref ? "詳しいレポートへ進む" : "今のヒントを見る"}
+              <ShareResultActions
+                input={{
+                  testLabel: compatibility.brandedTestName,
+                  title: compatibility.assignment ? compatibility.assignment.nickname : compatibility.displayLine,
+                  line: compatibility.shareLine,
+                  traits: compatibility.heroChips,
+                  seed: resultId ?? compatibility.assignment?.publicCode ?? "imairo",
+                  url: resultShareHref,
+                  theme: "immersive",
+                }}
+                trackingTestId="imairo"
               />
+
+              <div className="aix2-panel p-5">
+                <p className="aix2-eyebrow">公開テストについて</p>
+                <p className="mt-2 text-[13px] leading-7 aix2-mut">
+                  現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。
+                </p>
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+                  <Link href="/contact?topic=open-testing" className="aix2-link">感想や不具合を送る →</Link>
+                  <Link href={fullReportHref ?? recommendationHref} className="aix2-link">{fullReportHref ? "詳しいレポートへ進む →" : "今のヒントを見る →"}</Link>
+                </div>
+              </div>
               </div>,
               ]} />
-            </MvpCard>
+            </div>
 
             {compatibility.assignment ? (
-              <PrivateResultSave
-                context={{
-                  resultId: compatibility.assignment.publicCode,
-                  overlayId,
-                  confidence: confidenceBand,
-                  payloadKey,
-                }}
-              />
+              <>
+                {/* SR-1 — the result becomes a continuing service: a public-safe,
+                    deterministic support plan (what we understood → what may help
+                    now/next, with reasons) + an anonymous device-local save. */}
+                <SupportPlanView
+                  className="mt-2"
+                  plan={buildSupportPlan({
+                    family: "imairo",
+                    resultLabel: compatibility.assignment.nickname,
+                    traits: compatibility.heroChips,
+                    confidence: confidenceBand,
+                    reportHref: fullReportHref,
+                    resultPath: resultHref,
+                  })}
+                  save={{
+                    resultType: "imairo",
+                    resultLabel: compatibility.assignment.nickname,
+                    context: "public-result",
+                    recognitionLine: compatibility.recognitionLine,
+                    traitChips: [
+                      compatibility.heroChips[0] ?? compatibility.assignment.clanJapanese,
+                      compatibility.heroChips[1] ?? compatibility.assignment.secondaryBadge,
+                      compatibility.heroChips[2] ?? "120問ベース",
+                    ],
+                    resultPath: resultHref,
+                    continuePath: "/result/continue",
+                    baseResultId: compatibility.assignment.publicCode,
+                    overlayId: overlayId ?? undefined,
+                    confidenceBand,
+                    payloadKey: payloadKey ?? undefined,
+                  }}
+                  journeyResult={{
+                    family: "imairo",
+                    resultId: compatibility.assignment.publicCode,
+                    label: compatibility.assignment.nickname,
+                    resultPath: resultHref,
+                  }}
+                />
+                <PrivateResultSave
+                  context={{
+                    resultId: compatibility.assignment.publicCode,
+                    overlayId,
+                    confidence: confidenceBand,
+                    payloadKey,
+                  }}
+                />
+              </>
             ) : null}
           </div>
         </div>
