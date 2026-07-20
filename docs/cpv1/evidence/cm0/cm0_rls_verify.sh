@@ -5,9 +5,16 @@
 # Creates a throwaway DB, applies 200001..200004, runs the checks, tears down + reapplies,
 # and drops the DB (no synthetic rows survive; dev DB untouched).
 set -uo pipefail
-C=supabase_db_yorisou-online
+# Repository-portable (MR0 §4): derive the repo root from THIS script's own location,
+# so the script runs from any working directory and on any clone — no hardcoded
+# user-specific filesystem path. The Supabase Postgres container is configurable via
+# SUPABASE_DB_CONTAINER. Disposable-only: this script NEVER connects to a hosted
+# database — it creates a throwaway LOCAL database and drops it at the end.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
+C="${SUPABASE_DB_CONTAINER:-supabase_db_yorisou-online}"
 DB=cpv1cm0_verify
-MIG=/Users/yangjin/Projects/yorisou-online/supabase/migrations
+MIG="$ROOT/supabase/migrations"
 pass=0; fail=0
 ok(){ echo "  PASS  $1"; pass=$((pass+1)); }
 no(){ echo "  FAIL  $1"; fail=$((fail+1)); }

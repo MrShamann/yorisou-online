@@ -3,6 +3,11 @@
 All run on `feat/cpv1-clean-main-foundation` (from clean `main` @ `70da80a0`). The CPV1 foundation builds
 and tests independently of PR #113 / PR #114.
 
+> These results were verified at the **code/schema verification checkpoint** `f99a22c` (CM0.1) and
+> re-confirmed under the MR0 evidence finalization. The exact current PR HEAD and its final CI runs are
+> recorded in the PR #115 body and final PR comment — not embedded here, since each evidence revision
+> creates a later commit.
+
 | Check | Result |
 |---|---|
 | `tsc --noEmit` (whole clean-main project + CPV1 lib) | 0 errors |

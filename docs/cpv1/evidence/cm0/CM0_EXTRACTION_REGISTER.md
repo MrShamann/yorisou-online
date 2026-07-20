@@ -51,3 +51,15 @@ branch-specific evidence was carried over as current clean-main truth.
 | `lib/cpv1/__tests__/cpv1Contract.test.ts` | +2 parity checks (DB set === TS set; fields+constraints present) — 62 checks |
 | `scripts/validate-cpv1-migrations.mjs` | hard-gate: obsolete `rights_blocked`/`contract_only` in executable SQL fails (negative-control verified) |
 | `docs/cpv1/evidence/cm0/cm0_rls_verify.sh` | +20 registry schema-contract checks — 45/45 |
+
+## MR0 corrections (evidence finalization + merge-readiness — same branch, no new PR)
+
+Evidence/tooling normalization only — **no** change to CPV1 contracts, schema semantics, activation
+model, RLS model or application code.
+
+| Object | Change |
+|---|---|
+| `cm0_rls_verify.sh` | Repository-portable: removed the hardcoded `/Users/...` migrations path; derive repo root from the script's own location via `git rev-parse --show-toplevel`; container configurable via `SUPABASE_DB_CONTAINER`. Disposable-only behavior preserved; re-run reproduced **45/45** |
+| `cm0_rls_verify.out` | Regenerated as the pure portable re-run output (no absolute path) |
+| `CM0_FINAL_REPORT.md`, `CM0_CI.md` | Evidence-head-model correction: `f99a22c` is the **code/schema verification checkpoint**, not the "final branch HEAD"; the exact final PR HEAD + final CI runs live in the PR body/comment/handoff (no self-referential loop) |
+| `CM0_CONTRACT_VERIFICATION.md`, `CM0_MIGRATION_RLS.md` | Same checkpoint framing; recorded script portability + re-verification |

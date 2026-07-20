@@ -10,6 +10,14 @@ The CM0 CPV1 schema depends ONLY on CPV1-owned helpers defined by
 `yorisou_cpv1_block_mutation()` + pgcrypto). **No APP-2 dependency** — the disposable DB had NO
 `yorisou_current_account_id` / `yorisou_app2_block_mutation`, and the migrations still applied (check 2).
 
+## Repository-portable verification (MR0 §4)
+`cm0_rls_verify.sh` carries **no hardcoded user-specific filesystem path**: it derives the repository root
+from its own location (`git -C "$SCRIPT_DIR" rev-parse --show-toplevel`) and reads the Supabase container
+from `SUPABASE_DB_CONTAINER` (default `supabase_db_yorisou-online`). It runs from any working directory on
+any clone. It remains **disposable-only** — it creates a throwaway local database and drops it, and never
+connects to a hosted database. Re-run under MR0 from a non-repo working directory (with the container var
+set) reproduced the **exact 45/45** result; the tracked `cm0_rls_verify.out` is the pure re-run output.
+
 ## Rollback classification
 `LOCAL_DISPOSABLE_SCHEMA_ROLLBACK` — dropping the CPV1 tables/columns/functions destroys their data; safe
 only in an isolated disposable local/test DB; **NOT a production rollback**; no production migration

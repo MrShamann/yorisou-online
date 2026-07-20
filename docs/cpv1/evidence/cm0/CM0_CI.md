@@ -9,10 +9,12 @@ draft PR to `main`.
 - **Report-only:** full-history gitleaks (pre-existing `main` localStorage/save-state false positives).
 - **No axe** — CM0 changes no user-facing route markup.
 
-**Recorded run tied to the final HEAD:** see the final report / PR comment (URL + conclusion + head SHA),
-GitHub-verified via `gh run view`.
+**Exact final PR HEAD + its final CI runs:** recorded in the PR #115 body, the final PR comment, and the
+governance handoff (URL + conclusion + head SHA), GitHub-verified via `gh run view`. This file records the
+CI at the **code/schema verification checkpoint** (`f99a22c`); the final-HEAD run IDs are not embedded here,
+because updating this file necessarily creates a later commit (a self-referential evidence loop).
 
-## Recorded runs (final HEAD `f99a22c`, GitHub-verified)
+## CI at the code/schema verification checkpoint (`f99a22c`, GitHub-verified)
 
 | Run | Workflow | Event | Head SHA | Conclusion |
 |---|---|---|---|---|
@@ -23,5 +25,6 @@ GitHub-verified via `gh run view`.
 - URL: https://github.com/MrShamann/yorisou-online/actions/runs/29714805258
 - The clean-main branch additionally passes `main`'s own full CI ("Yorisou Check"), confirming no
   regression to production `main`.
-- (Prior CM0 final HEAD `aec9d93` runs were CPV1-CM0 CI `29714007641` + Yorisou Check `29714007605`;
-  CM0.1 supersedes them with the `f99a22c` runs above.)
+- (Prior CM0 checkpoint `aec9d93` runs were CPV1-CM0 CI `29714007641` + Yorisou Check `29714007605`;
+  CM0.1 supersedes them with the `f99a22c` runs above. The MR0 evidence-finalization commit runs on a
+  later HEAD; those exact run IDs are recorded in the PR #115 body + final comment, not here.)

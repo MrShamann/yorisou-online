@@ -6,7 +6,15 @@ PR #114 stacked branches.
 
 ## Repository state
 - **Starting `main` HEAD:** `70da80a09491b375c0e066be60bfe6411dc7cabc` (clean).
-- **Final branch HEAD:** `f99a22c` (CM0.1). Draft PR #115 changed-file count: **23**.
+- **Code/schema verification checkpoint:** `f99a22c` (CM0.1) — the commit at which the CPV1
+  contract, schema, tests and disposable-DB verification were run. This is **not** claimed as the
+  branch's "final HEAD": every evidence-document revision necessarily produces a later commit, so
+  this file does not embed its own final SHA (that would be self-referential). The **exact current
+  PR HEAD and its final CI runs are recorded in the PR #115 body, the final PR comment, and the
+  governance handoff** after push.
+- Draft PR #115 changed-file count at the code/schema checkpoint: **23** (the MR0 evidence
+  finalization edits existing tracked evidence/tooling files only — it adds no new files, so the
+  inventory is unchanged; the exact post-commit diff is recorded in the PR).
 - **Branch:** `feat/cpv1-clean-main-foundation` (from clean `main`; NOT from PR #113/#114).
 - **Draft PR:** **#115** → base `main`, OPEN, **draft**, unmerged.
 - Working tree clean (the two untracked audit/export files were never staged; Supabase CLI `.branches`/
@@ -49,13 +57,18 @@ activation; no inferred production deployment; enum-without-evidence not accepte
 multi-dimension gated; no external calculation/interpretation content. The 9 product routes are NOT
 converted into CPV1 public activation.
 
-## CI run tied to final HEAD (`f99a22c`)
+## CI at the code/schema verification checkpoint (`f99a22c`)
 `CPV1-CM0 CI` SUCCESS — PR-check `pull_request` run
 [29714805258](https://github.com/MrShamann/yorisou-online/actions/runs/29714805258) + `push` run
 [29714803873](https://github.com/MrShamann/yorisou-online/actions/runs/29714803873). The main-targeting
 "Yorisou Check" full suite also passed (run 29714805285) — no regression to `main`. All run→sha bindings
-GitHub-verified. (Prior CM0 final-HEAD `aec9d93` runs were `29714007641` / Yorisou Check `29714007605`,
+GitHub-verified. (Prior CM0 checkpoint `aec9d93` runs were `29714007641` / Yorisou Check `29714007605`,
 now superseded.)
+
+The **exact final PR HEAD and its final CI run IDs** — the new commit produced by this MR0 evidence
+finalization — are recorded only in the PR #115 body, the final PR comment, and the governance handoff,
+**not embedded in this file**, to avoid a self-referential evidence loop (updating this file to name its
+own commit would move the very HEAD it claims).
 
 ## Invariants
 - **Production `main` UNCHANGED** at `70da80a0`.
