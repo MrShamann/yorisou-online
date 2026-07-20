@@ -36,7 +36,7 @@ Hand-maintained duplicate lists (`yorisouTests.ts`-style) are retired at impleme
 | 5 | **Founder-activated** | CPV1 `public_active`: all 10 dimensions incl. deployment evidence ref + founder decision ref | **0 methods today** |
 | 6 | **Launch Core member** | Product-planning group in the frozen universe | 10 methods (incl. 3 unbuilt) |
 | 7 | **Appears in navigation** | Linked from `/tests`, home, or LINE surfaces | subsets per catalog — currently inconsistent |
-| 8 | **May contribute to private understanding** | evidence_class permits CPV1 observations | never `traditional_symbolic*`; per-purpose consent required |
+| 8 | **May contribute to private understanding** | method_evidence_class permits understanding contribution (two-class symbolic boundary) | `traditional_symbolic` → symbolic-reflection layer only; `traditional_symbolic_entertainment` fully excluded; per-purpose consent required |
 
 A method can be publicly reachable (2) without being Founder-activated (5) — that is today's actual production state for all 12 flows, and it is the central distinction the old catalogs blur. Conversely a Launch Core member (6) can be entirely unbuilt (daily-check-in). Navigation (7) is a channel decision, not an activation. Understanding contribution (8) is a consent + evidence-class decision, orthogonal to all of the above.
 

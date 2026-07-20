@@ -15,7 +15,9 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
 
 `use_frequency`: once_deep / retake_casual / repeat_weekly / daily / situational.
 `privacy_class`: `P1_answers_only` · `P2_name_input` · `P3_two_person` · `P4_birth_data` · `P5_free_text` (higher = more sensitive handling; two-person requires both-party consent design; birth data requires explicit retention policy).
-`evidence_class`: `yorisou_original_reflection` (first-party non-clinical reflection) · `psychology_preference_nonclinical` · `public_domain_psychometric_review` · `traditional_symbolic` · `traditional_symbolic_entertainment` (S01 fixed classification, MTF-1 §3.4).
+`method_evidence_class` (MTF-1.1 canonical name; TypeScript `methodEvidenceClass`): the METHOD-LEVEL classification — `yorisou_original_reflection` (first-party non-clinical reflection) · `psychology_preference_nonclinical` · `public_domain_psychometric_review` · `traditional_symbolic` · `traditional_symbolic_entertainment` (S01 fixed classification, MTF-1 §3.4). **This is a different axis from CPV1's observation-level `EvidenceClass`** (`user_declared | method_derived | behavioral | inferred | imported`, `lib/cpv1/understanding.ts:36`). Mapping rule: a method-level class NEVER replaces the observation-level evidence class; every generated observation carries BOTH its method provenance (methodId + methodVersion + methodEvidenceClass) AND the appropriate CPV1 observation `EvidenceClass`; the two axes must never be collapsed.
+`cross_method_role = symbolic_reflection_layer_only`: the MTF-1.1 contribution boundary for `traditional_symbolic` methods — they may contribute ONLY to a source-separated private symbolic/cultural reflection layer (observation source class `symbolic_reflection` or `chinese_cultural_interpretation`), never to psychology evidence, never averaged with YORISOU original assessments, always consent-gated and user-confirmable. `none_entertainment_only` (S01) is stricter: fully excluded from the Understanding Graph, evidence, dimensions, compatibility, synthesis, recommendations, and Companion memory. The two classes are NOT equivalent.
+`benchmark_status` (MTF-1.1): `verified_actual_count` for shipped methods (counts are repository-verified) · `benchmark_pending` for unbuilt methods — item counts, formats, and result-set sizes are decided ONLY at the Forge "Benchmark and format decision" stage; any count-like wording on a `benchmark_pending` method is a non-binding hypothesis.
 `activation_state` uses the canonical CPV1 5-state vocabulary (`lib/cpv1/methods.ts` `METHOD_ACTIVATION_STATES`); `planned_unbuilt` is a documentation-level pre-state meaning "not yet in the runtime registry"; it maps to CPV1 `gated` on registration.
 `implementation_truth` cites the MTF-0 audit (2026-07-20) — never optimistic labels.
 
@@ -32,7 +34,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: five_point_scale_fixed_bank
   result_type: archetype_24_of_6_clans
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: anchor_baseline_retakeable
@@ -40,7 +42,8 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: primary_driver
   mobile_role: deep_session_20min_resume_required
   activation_state: implemented_route_verified
-  implementation_truth: production_active_route (/check-in→/result); 120Q/8dim/24sub/24результ — 24 results live; confidence band placeholder-low with false copy (T5); formula FORMULA_DRAFT_REQUIRES_EDWARD_APPROVAL; server snapshot save exists
+  benchmark_status: verified_actual_count
+  implementation_truth: production_active_route (/check-in→/result); 120Q/8dim/24sub/24 results — 24 results live; confidence band placeholder-low with false copy (T5); formula FORMULA_DRAFT_REQUIRES_EDWARD_APPROVAL; server snapshot save exists
   required_completion_work: T4 badge correction; T5 confidence-copy correction (separately gated, §3.5); wire dormant contract suite (T10); mid-test resume port (SR-2, branch-only today)
   activation_prerequisites: founder decision on T5 wording; no new content needed
 - method_id: c02-current-state
@@ -52,7 +55,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: single_choice_weighted_36q
   result_type: archetype_8
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: frequent_snapshot
@@ -60,6 +63,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: entry_router
   mobile_role: five_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/c02); 36Q/8 results; server save + LINE return; dim drift T6; stale bank metadata T7
   required_completion_work: reconcile dimension drift (T6); family deep-report content (none on main); fix dangling relatedRoutes (T8)
   activation_prerequisites: dimension reconciliation record
@@ -72,7 +76,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: scenario_choice_24q
   result_type: archetype_7_plus_state_tags
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: repeat_relationship_check
@@ -80,6 +84,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: relationship_service_router
   mobile_role: five_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/relationship-fatigue); 24Q/6dim/7 archetypes + 7 state tags; server save + LINE return; CI-tested
   required_completion_work: family deep-report content
   activation_prerequisites: none beyond report content
@@ -92,7 +97,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: scenario_choice_18q
   result_type: archetype_7
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: repeat_relationship_check
@@ -100,6 +105,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: relationship_service_router
   mobile_role: five_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/love-distance); 18Q/6dim/7 archetypes + 2 safety counters; CLIENT-ONLY (no server save, no scoring test)
   required_completion_work: server-save parity; scoring unit test; family deep-report content
   activation_prerequisites: persistence parity
@@ -112,7 +118,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: single_choice_6q_micro
   result_type: archetype_4
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: repeat_work_check
@@ -120,6 +126,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: work_service_router
   mobile_role: one_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/work-rhythm); 6Q/4 results; UNVERSIONED scoring; client-only
   required_completion_work: scoring version; server save; family deep-report content
   activation_prerequisites: versioning + persistence
@@ -132,7 +139,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: name_plus_answers
   format_category: single_choice_5q_plus_name
   result_type: archetype_4
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P2_name_input
   longitudinal_role: none
@@ -140,6 +147,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: casual_entry_router
   mobile_role: one_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/name-impression); 5Q+name/4 results; explicit non-姓名判断 disclaimer in copy; unversioned; client-only
   required_completion_work: scoring version; server save decision (name retention policy); family deep-report content
   activation_prerequisites: name-retention policy record
@@ -152,7 +160,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: mood_energy_note
   format_category: repeated_check_1to3_inputs
   result_type: state_log_no_archetype
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P5_free_text
   longitudinal_role: primary_longitudinal_spine
@@ -160,6 +168,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: cadence_based_nudge
   mobile_role: thirty_second_completion_primary_mobile_surface
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: ABSENT — no daily check exists anywhere (MTF-0 B.5); registry carries only the umbrella reflection-cadence contract entry (not_started)
   required_completion_work: full product build — inputs, cadence model, history view, change-over-time report, gentle non-streak design
   activation_prerequisites: engine cadence+history capability; content package; founder review
@@ -171,8 +180,8 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   use_frequency: situational
   input_type: two_person_answers
   format_category: two_person_paired_questions
-  result_type: pair_archetype_set
-  evidence_class: yorisou_original_reflection
+  result_type: pair_result_set_benchmark_pending
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P3_two_person
   longitudinal_role: repeatable_relationship_milestone
@@ -180,6 +189,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: relationship_service_router
   mobile_role: shared_or_async_two_person_flow
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: R01 successor (MTF-1 §3.2 FIXED). R01 stays untouched on Production in MTF-1. Successor may reuse ONLY first-party structural patterns (two-person flow, pair-dimension comparison, distance/gap interpretation, pair-result rendering); all questions/dimensions/results/copy newly created
   required_completion_work: originality + two-person privacy review; full content package; pair-consent design
   activation_prerequisites: originality review; two-person consent model; founder review
@@ -191,8 +201,8 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   use_frequency: retake_casual
   input_type: answers
   format_category: single_choice_with_tradeoff
-  result_type: archetype_6to8
-  evidence_class: psychology_preference_nonclinical
+  result_type: archetype_set_benchmark_pending
+  method_evidence_class: psychology_preference_nonclinical
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P1_answers_only
   longitudinal_role: yearly_or_lifestage_retake
@@ -200,8 +210,9 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: values_based_router
   mobile_role: ten_minute_completion
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only (downgraded R1 §5 — declared but unbuilt; no questions, no route)
-  required_completion_work: full content package (dimensions, ~24Q, options, scoring, archetypes, copy, report)
+  required_completion_work: full content package (dimensions, items, options, scoring, result set, copy, report — item count and result-set size are benchmark_pending, decided at the Forge Benchmark stage)
   activation_prerequisites: content package; founder review (Launch Core preference method — MTF-1 §3.6 FIXED)
 - method_id: image-color-reflection
   name_ja: イメージ・色のふり返り
@@ -212,7 +223,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: image_color_selection
   format_category: image_color_choice
   result_type: reflective_record_plus_light_reading
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P1_answers_only
   longitudinal_role: mood_texture_over_time
@@ -220,6 +231,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: gentle_entry_router
   mobile_role: visual_first_mobile_native_interaction
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only (rights-gated on image assets); no flow, no assets. Founder placed in Launch Core (§4.1 FIXED); custom deck artwork is NOT a V1 blocker (§3.7) — original color fields/abstract original imagery suffice for V1; no third-party image may be copied
   required_completion_work: original visual asset set (colors/abstract images); selection model; reflective copy; engine image-choice format
   activation_prerequisites: original assets authored + rights verified; engine format support; founder review
@@ -232,7 +244,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: single_choice_weighted_60q
   result_type: archetype_8
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: lifestage_retake
@@ -240,6 +252,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: work_service_router
   mobile_role: fifteen_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/f01); 60Q/8 results; shared pending-save key defect (T9); 2 dead-weight dims
   required_completion_work: fix T9; prune dead dims record; family report content
   activation_prerequisites: none blocking
@@ -252,7 +265,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: single_choice_weighted_60q
   result_type: archetype_8
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: job_change_retake
@@ -260,6 +273,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: work_service_router
   mobile_role: fifteen_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/f02); 60Q/8 results; synthesized assignment (no fallback tier — structural asymmetry vs C02/F01)
   required_completion_work: document/decide fallback asymmetry; family report content
   activation_prerequisites: none blocking
@@ -272,7 +286,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: single_choice_4q_micro
   result_type: theme_acknowledgement_5
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: none
@@ -280,6 +294,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: local_service_router
   mobile_role: one_minute_completion
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/local-life); 4Q/5 themes (acknowledgement-style, not a result taxonomy); client-only; unversioned
   required_completion_work: keep as micro-reflection; versioning
   activation_prerequisites: none blocking
@@ -291,8 +306,8 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   use_frequency: retake_casual
   input_type: answers
   format_category: single_choice_with_tradeoff
-  result_type: archetype_6to8
-  evidence_class: psychology_preference_nonclinical
+  result_type: archetype_set_benchmark_pending
+  method_evidence_class: psychology_preference_nonclinical
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P1_answers_only
   longitudinal_role: lifestage_retake
@@ -300,6 +315,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: motivation_based_router
   mobile_role: ten_minute_completion
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only (not_started); no questions, no route (MTF-1 §3.6 FIXED — Supporting)
   required_completion_work: full content package
   activation_prerequisites: content package; founder review
@@ -311,8 +327,8 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   use_frequency: retake_casual
   input_type: answers
   format_category: scenario_choice
-  result_type: archetype_small_set
-  evidence_class: yorisou_original_reflection
+  result_type: archetype_set_benchmark_pending
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P1_answers_only
   longitudinal_role: repeat_relationship_check
@@ -320,6 +336,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: relationship_service_router
   mobile_role: five_minute_completion
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: ABSENT (MTF-0 B.5 — never existed); new original build
   required_completion_work: full content package
   activation_prerequisites: content package; founder review
@@ -331,8 +348,8 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   use_frequency: retake_casual
   input_type: answers
   format_category: scenario_choice
-  result_type: archetype_small_set
-  evidence_class: yorisou_original_reflection
+  result_type: archetype_set_benchmark_pending
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P1_answers_only
   longitudinal_role: repeat_recovery_check
@@ -340,6 +357,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: rest_service_router
   mobile_role: five_minute_completion
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: ABSENT (MTF-0 B.5); new original build; must stay non-clinical (no sleep/health diagnosis)
   required_completion_work: full content package; trust-risk review (health-adjacent tone)
   activation_prerequisites: content package; trust-risk review; founder review
@@ -352,7 +370,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: two_names_plus_answers
   format_category: name_pair_plus_optional_questions
   result_type: impression_reading_original_pool
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P3_two_person
   longitudinal_role: none
@@ -360,6 +378,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: casual_entry_router
   mobile_role: two_minute_completion
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: R04 successor (MTF-1 §3.3 FIXED): name-impression + interaction-reflection product; NOT 姓名判断 / fate / compatibility certainty / marriage prediction / scientific evidence. R04 stays untouched on Production in MTF-1
   required_completion_work: original content pool; second-person name consent handling; boundary copy
   activation_prerequisites: originality review; consent handling for the second name; founder review
@@ -372,7 +391,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: optional_mood_inputs
   format_category: deterministic_seeded_draw
   result_type: omikuji_48_pool
-  evidence_class: traditional_symbolic_entertainment
+  method_evidence_class: traditional_symbolic_entertainment
   rights_route: YORISOU_ORIGINAL_EXISTING
   privacy_class: P1_answers_only
   longitudinal_role: daily_ritual_entry_only
@@ -380,6 +399,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: none_entertainment_only
   mobile_role: ten_second_interaction
   activation_state: implemented_route_verified
+  benchmark_status: verified_actual_count
   implementation_truth: production_active (/tests/s01); 48 original verses / 7 levels; seeded deterministic; MTF-1 §3.4 FIXED — traditional_symbolic_entertainment; MUST NOT update psychology evidence, personality dimensions, relationship compatibility, universal scores, or clinical/professional recommendations; Launch Supporting, never Core
   required_completion_work: classification metadata only (no route change in MTF-1)
   activation_prerequisites: registry entry carrying the entertainment classification
@@ -392,7 +412,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: card_selection
   format_category: card_choice
   result_type: card_meaning_reflection
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P1_answers_only
   longitudinal_role: reflection_ritual
@@ -400,6 +420,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: gentle_entry_router
   mobile_role: visual_first_interaction
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; ORIGINAL YORISOU artwork + meanings required (no copied deck — §3.7); custom deck art NOT a V1 blocker
   required_completion_work: original deck (art + meanings); engine card-choice format
   activation_prerequisites: original artwork authored; founder review
@@ -412,7 +433,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: answers
   format_category: five_point_scale_item_pool
   result_type: five_factor_profile_multi_result
-  evidence_class: public_domain_psychometric_review
+  method_evidence_class: public_domain_psychometric_review
   rights_route: PUBLIC_DOMAIN_REIMPLEMENTATION_REVIEW
   privacy_class: P1_answers_only
   longitudinal_role: yearly_retake
@@ -420,9 +441,10 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: preference_router
   mobile_role: fifteen_minute_completion
   activation_state: planned_unbuilt
-  implementation_truth: registry entry only; IPIP claimed public-domain — source/jurisdiction/translation/commercial-use verification REQUIRED; JA item translation must be original; multi-result profile is an engine gap
-  required_completion_work: IPIP source validation; original JA translation; multi-result engine support
-  activation_prerequisites: rights review complete; engine multi-result; founder review
+  benchmark_status: benchmark_pending
+  implementation_truth: registry entry only; IPIP claimed public-domain — source/jurisdiction/translation/commercial-use verification REQUIRED; JA item translation must be original; DimensionProfileResult rendering is an engine gap
+  required_completion_work: IPIP source validation; original JA translation; DimensionProfileResult engine support
+  activation_prerequisites: rights review complete; DimensionProfileResult support; founder review
 - method_id: dream-reflection
   name_ja: 夢のふり返り
   family: western_symbolic
@@ -432,7 +454,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: free_text
   format_category: free_text_guided_prompts
   result_type: reflective_record
-  evidence_class: yorisou_original_reflection
+  method_evidence_class: yorisou_original_reflection
   rights_route: YORISOU_ORIGINAL_REBUILD_CANDIDATE
   privacy_class: P5_free_text
   longitudinal_role: dream_journal_over_time
@@ -440,6 +462,7 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   recommendation_role: none
   mobile_role: journaling_interaction
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; original reflective prompts required (no third-party dream dictionary); queue placement = prompt-originality review pending
   required_completion_work: original prompt set; free-text privacy handling
   activation_prerequisites: originality review of prompts; free-text privacy review; founder review
@@ -452,14 +475,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: birth_date_and_name
   format_category: deterministic_calculator
   result_type: symbolic_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: PUBLIC_DOMAIN_REIMPLEMENTATION_REVIEW
   privacy_class: P4_birth_data
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: instant_calculation
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; reduction rules simple/PD-claimed (system Pythagorean vs Chaldean must be explicit); ALL interpretation text must be original
   required_completion_work: system selection; original interpretation corpus; birth-data retention policy
   activation_prerequisites: rights review; retention policy; founder review
@@ -472,14 +496,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: selection
   format_category: deterministic_seeded_draw
   result_type: hexagram_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: PUBLIC_DOMAIN_REIMPLEMENTATION_REVIEW
   privacy_class: P1_answers_only
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: instant_draw
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; classical text may be PD but modern translations are NOT; edition/translation route unresolved
   required_completion_work: edition selection; original or verified-PD JA rendering; commentary authorship
   activation_prerequisites: rights review; founder review
@@ -492,14 +517,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: birth_date
   format_category: deterministic_calculator
   result_type: symbolic_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: PUBLIC_DOMAIN_REIMPLEMENTATION_REVIEW
   privacy_class: P4_birth_data
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: instant_calculation
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; sign mapping trivial (calendar provenance required); ALL interpretation text must be original
   required_completion_work: original interpretation text; calendar provenance; retention policy
   activation_prerequisites: rights review; founder review
@@ -512,14 +538,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: name
   format_category: deterministic_calculator_plus_reflection
   result_type: symbolic_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: TRADITIONAL_SOURCE_AND_SCHOOL_REVIEW
   privacy_class: P2_name_input
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: instant_interaction
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; stroke/meaning model must be explicit; do NOT copy 姓名判断 tables; distinct from the shipped name-impression AND from name-pair-impression
   required_completion_work: school/model decision; original meaning corpus
   activation_prerequisites: source+school review; founder review
@@ -532,14 +559,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: birth_date_time_location
   format_category: deterministic_calculator_ephemeris
   result_type: chart_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: LICENSED_INTEGRATION_REQUIRED
   privacy_class: P4_birth_data
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: deep_visual_surface
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; requires LICENSED ephemeris data + original interpretation; house system + zodiac must be explicit
   required_completion_work: ephemeris licence; original interpretation corpus; birth-data retention policy
   activation_prerequisites: licence resolution; retention policy; founder review
@@ -552,14 +580,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: birth_date_time
   format_category: deterministic_calculator_chart
   result_type: chart_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: TRADITIONAL_SOURCE_AND_SCHOOL_REVIEW
   privacy_class: P4_birth_data
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: deep_visual_surface
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; school/variant + calculation rules + commentary ownership all unresolved; NOT an App V1 blocker
   required_completion_work: full traditional-source review chain
   activation_prerequisites: source+school review; founder review
@@ -572,14 +601,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: birth_date_time
   format_category: deterministic_calculator_chart
   result_type: chart_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: TRADITIONAL_SOURCE_AND_SCHOOL_REVIEW
   privacy_class: P4_birth_data
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: deep_visual_surface
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; calendar/timezone provenance + school + interpretation corpus unresolved
   required_completion_work: full traditional-source review chain
   activation_prerequisites: source+school review; founder review
@@ -592,14 +622,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: birth_date_time
   format_category: deterministic_table_lookup
   result_type: verse_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: TRADITIONAL_SOURCE_AND_SCHOOL_REVIEW
   privacy_class: P4_birth_data
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: instant_lookup
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; table variant + verse text ownership unresolved
   required_completion_work: table-variant decision; verse authorship
   activation_prerequisites: source review; founder review
@@ -612,14 +643,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: birth_date
   format_category: deterministic_calculator
   result_type: balance_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: TRADITIONAL_SOURCE_AND_SCHOOL_REVIEW
   privacy_class: P4_birth_data
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: instant_calculation
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; mapping model + interpretation corpus unresolved
   required_completion_work: mapping-model decision; original corpus
   activation_prerequisites: source review; founder review
@@ -632,14 +664,15 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
   input_type: card_selection
   format_category: card_choice
   result_type: card_reading
-  evidence_class: traditional_symbolic
+  method_evidence_class: traditional_symbolic
   rights_route: LICENSED_INTEGRATION_REQUIRED
   privacy_class: P1_answers_only
   longitudinal_role: none
-  cross_method_role: none_symbolic_only
+  cross_method_role: symbolic_reflection_layer_only
   recommendation_role: none
   mobile_role: visual_first_interaction
   activation_state: planned_unbuilt
+  benchmark_status: benchmark_pending
   implementation_truth: registry entry only; deck artwork + spread + interpretation all unresolved; a fully-original YORISOU deck would re-route this to REBUILD (recorded as a potential future founder decision, not made here); no modern deck may be copied
   required_completion_work: deck decision (licence vs original); interpretation authorship
   activation_prerequisites: deck/licence resolution; founder review
@@ -664,6 +697,8 @@ YORISOU is a **multi-method human-understanding platform** (MTF-1 §3.1). The 12
 ## Non-negotiable universe rules
 
 1. No universal cross-method score exists or may be introduced.
-2. `traditional_symbolic` / `traditional_symbolic_entertainment` output never updates psychology evidence, personality dimensions, relationship compatibility, universal scores, or clinical/professional recommendations.
+2. **Two-class symbolic boundary (MTF-1.1):**
+   - `traditional_symbolic` methods may contribute ONLY to a **source-separated private symbolic/cultural reflection layer** (observation source class `symbolic_reflection` or `chinese_cultural_interpretation`). They are never represented as psychology, scientific, or clinical evidence; never used in a universal score; never silently averaged with YORISOU original assessments; user confirmation/correction/rejection is mandatory; purpose-level consent is required before report, recommendation, Companion, or other downstream use; public copy states the symbolic/cultural boundary; no high-stakes decision authority; no fate, certainty, health, financial, legal, marriage, or career prediction.
+   - `traditional_symbolic_entertainment` (incl. `s01-omikuji`) is **fully excluded** from the Understanding Graph, psychological evidence, personality dimensions, compatibility conclusions, cross-method synthesis, recommendations, and Companion memory. It may support entertainment, sharing, and return behavior only. Entertainment and symbolic-reflection are NEVER treated as equivalent classes.
 3. Every method keeps its own result identity; cross-method use happens only through the source-separated CPV1 understanding model (user-confirmable observations), never by merging taxonomies.
 4. Activation of ANY method (including Launch Core) follows the CPV1 evidence-gated model on `main` — 10-dimension `public_active` gate with deployment evidence + Founder decision refs. Launch-group membership is a product-planning fact, NOT an activation.

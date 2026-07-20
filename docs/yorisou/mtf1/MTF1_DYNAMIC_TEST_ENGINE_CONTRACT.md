@@ -18,16 +18,45 @@
 type MethodActivationState = // = lib/cpv1 METHOD_ACTIVATION_STATES
   | "public_active" | "implemented_route_verified" | "implemented_private" | "gated" | "retired";
 
+/**
+ * STRICT method-family union (MTF-1.1 Correction E). Arbitrary family strings are
+ * PROHIBITED — the DB registry column being free text does not remove the need for
+ * TypeScript governance. The first five values exist in current CPV1
+ * (lib/cpv1/methods.ts:16-21). `relationship_compatibility` and
+ * `japanese_cultural_symbolic` are FROZEN MTF-1 additions: registering a method with
+ * either value requires a later ADDITIVE CPV1 extension package; the MTF-1/1.1
+ * packages do not modify CPV1.
+ */
+type EngineMethodFamily =
+  | "yorisou_state"
+  | "yorisou_original_assessment"
+  | "chinese_traditional"
+  | "western_symbolic"
+  | "psychology_preference"
+  | "relationship_compatibility"      // MTF-1 addition — CPV1 extension gated
+  | "japanese_cultural_symbolic";     // MTF-1 addition — CPV1 extension gated
+
+/**
+ * METHOD-LEVEL classification (MTF-1.1 Correction A). This is a DIFFERENT AXIS from
+ * CPV1's observation-level `EvidenceClass` (lib/cpv1/understanding.ts:36 —
+ * user_declared | method_derived | behavioral | inferred | imported), which remains
+ * untouched and canonical for observations. Mapping rule: a method-level class never
+ * replaces the observation-level evidence class; every generated observation carries
+ * BOTH its method provenance (methodId + methodVersion + methodEvidenceClass) AND the
+ * appropriate CPV1 observation EvidenceClass. The two axes must never be collapsed.
+ */
+type MethodEvidenceClass =
+  | "yorisou_original_reflection"
+  | "psychology_preference_nonclinical"
+  | "public_domain_psychometric_review"
+  | "traditional_symbolic"               // symbolic-reflection layer ONLY (see §7 two-class boundary)
+  | "traditional_symbolic_entertainment"; // S01 class: fully understanding-isolated
+
 interface EngineMethodIdentity {
   methodId: string;                    // canonical, e.g. "relationship-pair-check"
   methodVersion: string;               // e.g. "pair-check-v1.0"
-  family: string;                      // universe family (source-separated)
-  evidenceClass:
-    | "yorisou_original_reflection"
-    | "psychology_preference_nonclinical"
-    | "public_domain_psychometric_review"
-    | "traditional_symbolic"
-    | "traditional_symbolic_entertainment"; // S01 class: NEVER feeds evidence
+  family: EngineMethodFamily;          // STRICT union — no arbitrary strings
+  methodEvidenceClass: MethodEvidenceClass;
   rightsStatus: string;                // from the CPV1 rights model (cleared/review_required/…)
   contentStatus: "authored" | "in_review" | "not_authored";
   privacyClass: "P1_answers_only" | "P2_name_input" | "P3_two_person" | "P4_birth_data" | "P5_free_text";
@@ -83,7 +112,10 @@ interface EngineScoringMeta {
   scoringVersion: string;
   bankContentHash: string;
   reproducible: true;                  // structurally required — no nondeterminism outside declared seeds
-  multiResult: boolean;                // e.g. Big-Five profile: several simultaneous facet results
+  // MTF-1.1 Correction C: the former `multiResult: boolean` flag was REMOVED as
+  // insufficient — multi-dimensional output is a real structure, `DimensionProfileResult`
+  // (see §4), not a boolean on a single-archetype shape.
+  resultKind: "archetype" | "state_record" | "dimension_profile" | "symbolic_reflection" | "imported_external";
   confidencePolicy:
     | { kind: "none_stated" }          // DEFAULT. Honest absence: "このバージョンは統計的に検証された確信度スコアを提供しません"
     | { kind: "validated"; validationRef: string }; // ONLY with a real, Founder-approved validation reference
@@ -93,30 +125,95 @@ interface EngineScoringMeta {
 
 Confidence rule (binding, per Founder decision D-3.5): the engine never fabricates certainty. Until a validation exists, every method uses `none_stated`; UI copy states the honest absence and NEVER attributes low confidence to false causes (the 120Q "insufficient answers" copy is the canonical violation, gated for correction as G-1).
 
-## 4. Result object
+## 4. Result object — polymorphic tagged union (MTF-1.1 Correction C)
+
+A single mandatory-archetype shape cannot represent the frozen universe (daily state logs, dimension profiles, symbolic readings, imports). `EngineResult` is therefore a **tagged union**; every variant extends one shared base.
 
 ```ts
-interface EngineResult {
-  resultId: string;                    // method-SPECIFIC id (e.g. "RF_BOUNDARY_RESET") — no global namespace
+/** Shared base — EVERY variant carries all of this. */
+interface EngineResultBase {
+  resultId: string;                    // method-SPECIFIC id — no global namespace
+  resultKind: "archetype" | "state_record" | "dimension_profile" | "symbolic_reflection" | "imported_external";
   methodId: string;
   methodVersion: string;
+  bankVersion: string;                 // + content hash via provenance
   scoringVersion: string;
   computedAt: string;                  // ISO
-  primary: { archetypeId: string; nameJa: string };
-  secondarySignals: Array<{ id: string; nameJa: string; strength: "faint" | "present" | "strong" }>; // words, not numbers
-  reasons: Array<{ itemRefs: string[]; explanationJa: string }>;   // explainability: WHY this result
+  reasons: Array<{ itemRefs: string[]; explanationJa: string }> | null; // explainability where applicable
   limits: string;                      // mandatory interpretation-limit line (「診断ではありません」…)
   publicCopy: { recognitionJa: string; shareLineJa: string };      // screenshot-safe layer ONLY
-  privateCopy: { highlightsJa: string[]; gentleNextStepJa: string }; // never in URLs/share cards
-  reportEligibility: { deepReport: boolean; reportSchemaId: string | null };
-  recommendationTags: string[];        // routing suggestions, never verdicts; empty for *_entertainment
+  privateCopy: { highlightsJa: string[]; gentleNextStepJa: string } | null; // never in URLs/share cards
+  recommendationTags: string[];        // suggestions, never verdicts; ALWAYS empty for *_entertainment
   retestGuidance: { cadence: string; noteJa: string };             // no "you got worse" framing
   confirmation: {                      // CPV1 understanding integration (source-separated)
     status: "unreviewed" | "confirmed" | "corrected" | "rejected";
     correctedNoteRef: string | null;   // structured ref — no personal free text in audit events (CPV1 rule)
   };
+  reproducibility: { deterministic: true; seed: string | null };
+  provenance: { methodEvidenceClass: MethodEvidenceClass; bankContentHash: string; sourceRegister: string };
 }
+
+/** 120Q, C02, F01/F02, RF, LD, work-rhythm, name-impression — archetype methods. */
+interface ArchetypeResult extends EngineResultBase {
+  resultKind: "archetype";
+  primary: { archetypeId: string; nameJa: string };
+  secondarySignals: Array<{ id: string; nameJa: string; strength: "faint" | "present" | "strong" }>; // optional, words not numbers
+  modifiers: Array<{ id: string; nameJa: string }>;                // optional (RF state tags, LD safety counters)
+  reportEligibility: { deepReport: boolean; reportSchemaId: string | null };
+}
+
+/** daily-check-in and longitudinal entries — NO archetype required, no forced personality interpretation. */
+interface StateRecordResult extends EngineResultBase {
+  resultKind: "state_record";
+  stateValues: Record<string, string>; // structured state (mood/energy/…): words, not scores
+  privateReflection: string | null;    // optional P5 free text, private-only
+  cadence: "daily" | "weekly" | "monthly" | "seasonal" | "annual";
+  comparisonEligibility: { changeOverTime: true; crossMethod: false }; // method-local timeline only
+  acknowledgementJa: string;           // gentle acknowledgement copy, NOT an interpretation
+}
+
+/** Big-Five (post rights review) and future multi-dimension methods — no forced single primary type. */
+interface DimensionProfileResult extends EngineResultBase {
+  resultKind: "dimension_profile";
+  dimensions: Array<{
+    dimensionId: string;
+    nameJa: string;
+    band: string;                      // qualitative band by default…
+    validatedValue: { value: number; validationRef: string } | null; // …numeric ONLY with a real validation ref
+  }>;
+  profileLimitsJa: string;             // profile-level limits in addition to base limits
+  comparison: "method_local_only";     // NEVER compared/merged across methods
+}
+
+/** Rights-cleared traditional/symbolic methods — symbolic reflection, NOT entertainment output. */
+interface SymbolicReflectionResult extends EngineResultBase {
+  resultKind: "symbolic_reflection";
+  entries: Array<{ symbolId: string; nameJa: string; readingJa: string }>;
+  source: { text: string; school: string; sourceVersion: string }; // explicit school/edition provenance
+  symbolicBoundaryJa: string;          // mandatory public boundary statement (象徴的参照…)
+  scientificWeighting: null;           // structurally none — never weighted as evidence
+  understandingContribution: "symbolic_reflection_layer_only";     // distinguishes this from entertainment output
+}
+
+/** MBTI et al. — official handoff / user import ONLY. */
+interface ImportedExternalResult extends EngineResultBase {
+  resultKind: "imported_external";
+  provider: string;
+  importMode: "user_declared" | "official_handoff";
+  providerResultLabel: string;         // the ORIGINAL provider label, unmodified
+  yorisouRescoring: null;              // structurally none — YORISOU never re-scores an external result
+  frameworkOwnership: "external";      // no claim of ownership over the external framework
+}
+
+type EngineResult =
+  | ArchetypeResult
+  | StateRecordResult
+  | DimensionProfileResult
+  | SymbolicReflectionResult
+  | ImportedExternalResult;
 ```
+
+Universe mapping (binding): `daily-check-in` → `StateRecordResult` (no archetype); `image-color-reflection` → `StateRecordResult` or `SymbolicReflectionResult` (reflective record — no mandatory archetype); `big-five-ipip` → `DimensionProfileResult`; rights-cleared `traditional_symbolic` methods → `SymbolicReflectionResult`; `mbti-import-handoff` → `ImportedExternalResult`; `s01-omikuji` → `ArchetypeResult`-shaped entertainment output with empty `recommendationTags` and NO understanding contribution (its `methodEvidenceClass` structurally isolates it).
 
 ## 5. Persistence & continuity
 
@@ -182,7 +279,10 @@ interface EngineMobileContract {
 - No self-activation: `activationState` transitions happen only through the CPV1 evidence-gated model (deployment evidence + Founder decision refs).
 - No silent re-scoring of historical results on version changes.
 - No fabricated confidence, validation, accuracy, or user-count claims.
-- No evidence contribution from `traditional_symbolic*` methods — their results are reflections/entertainment, structurally excluded from the understanding evidence classes.
+- **Two-class symbolic contribution boundary (MTF-1.1 Correction B — replaces the former blanket exclusion):**
+  - `traditional_symbolic` methods MAY contribute — but ONLY to a **source-separated private symbolic/cultural reflection layer**: observation source class restricted to `symbolic_reflection` or `chinese_cultural_interpretation`; never represented as psychology, scientific, or clinical evidence; never used in a universal score; never silently averaged with YORISOU original assessments; user confirmation/correction/rejection mandatory; purpose-level consent required before report, recommendation, Companion, or other downstream use; public copy states the symbolic/cultural boundary; no high-stakes decision authority; no fate, certainty, health, financial, legal, marriage, or career prediction.
+  - `traditional_symbolic_entertainment` (incl. `s01-omikuji`) remains **fully excluded** from the Understanding Graph, psychological evidence, personality dimensions, compatibility conclusions, cross-method synthesis, recommendations, and Companion memory — entertainment, sharing, and return behavior only.
+  - The two classes are structurally distinct (`SymbolicReflectionResult.understandingContribution` vs entertainment output) and are never treated as equivalent.
 - No channel-specific forks of banks, scoring, or result assembly.
 
 ## 8. Open engine-contract items (for the implementation package)
@@ -190,4 +290,4 @@ interface EngineMobileContract {
 1. Concrete wire format for `EngineItem` plans (JSON schema) + bank build tooling (the 120Q generator being founder-held (T20) argues for an in-repo bank compiler this time).
 2. `calculator_input` calculator registry (numerology/zodiac later — deterministic, versioned, PD-verified rules only).
 3. Two-person session pairing transport (same-device pass-and-play vs async link) — privacy review first (relationship-pair-check content package).
-4. Multi-result rendering pattern (needed before big-five-ipip exits the rights queue).
+4. `DimensionProfileResult` rendering pattern (needed before big-five-ipip exits the rights queue).

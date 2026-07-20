@@ -2,7 +2,7 @@
 
 **Binding standard.** Every new YORISOU method — and every `YORISOU_ORIGINAL_REBUILD_CANDIDATE` — MUST pass through the **Test Pattern Forge** workflow below before implementation. No step may be skipped; each step produces a recorded artifact in the method's spec folder. Founder review gates activation at the end — content production alone never activates anything (CPV1 evidence-gated model).
 
-## The Test Pattern Forge — 19 mandatory steps
+## The Test Pattern Forge — 20 mandatory steps
 
 | # | Step | Required artifact |
 |---|---|---|
@@ -10,21 +10,24 @@
 | 2 | **Source classification** — where the concept space comes from (first-party / abstract pattern / public domain / traditional system / licensed) | source statement with provenance |
 | 3 | **Rights classification** — exactly one primary route from the eight in `MTF1_METHOD_SOURCE_RIGHTS_MATRIX.md` | rights row + unresolved fields |
 | 4 | **Abstract-pattern extraction ONLY** — what may be reused is the abstract shape (e.g. "two-person gap comparison", "5-point self-report", "periodic check-in"); NEVER concrete items, labels, keys, or copy | pattern note naming exactly what is reused and why it is unprotectable |
-| 5 | **Original Japanese product naming** — a new JA-first name; no borrowed or "sound-alike" naming of existing products | name + naming rationale |
-| 6 | **Original dimensions** — dimension set authored for the Japanese need; not a re-labelled copy of any existing instrument's factors | dimension sheet (id, JA name, definition, behavioral anchors) |
-| 7 | **Original question structure** — section plan, item counts, ordering logic, completion-time budget | structure sheet |
-| 8 | **Original answer options** — option scales/choices written fresh; trade-off options must trade REAL things | option style guide + examples |
-| 9 | **Original scoring** — scoring logic designed from the dimension sheet (weights, rules, tie-breaks, fallback); versioned from day one | scoring spec (versioned) |
-| 10 | **Original result archetypes** — result set (count, ids, JA names) authored fresh; names must not collide with any existing YORISOU taxonomy (see naming-collision register T1/T2) | archetype sheet |
-| 11 | **Original free-result copy** — recognition line, highlights, gentle next step, share line — per archetype, current-state framed | free-copy sheet |
-| 12 | **Original deep-report structure** — section skeleton + editorial intent per section; private-by-default | report skeleton |
-| 13 | **Recommendation tags** — which service families each result may route to; tags are suggestions, never verdicts | tag map |
-| 14 | **Japanese cultural adaptation** — pass the full `MTF1_JAPAN_LOCALIZATION_STANDARD.md` checklist | localization checklist result |
-| 15 | **Public/private copy separation** — explicit split: screenshot-safe public copy vs private-only copy; nothing sensitive in URLs or share cards | copy-boundary sheet |
-| 16 | **Repeat-test design** — retest cadence, what changes between takes, how history is presented without "you got worse" framing | cadence spec |
-| 17 | **Trust-risk review** — clinical-adjacency, vulnerable-moment reading paths, safety copy, boundary statements (「〜ではありません」lines) | trust-risk record |
-| 18 | **Implementation contract** — mapping to the Dynamic Test Engine contract (`MTF1_DYNAMIC_TEST_ENGINE_CONTRACT.md`): formats, scoring class, result object, persistence needs | engine-contract mapping |
-| 19 | **Founder review before activation** — the CPV1 gate: founder decision ref + deployment evidence required for `public_active`; content completion NEVER auto-activates | founder decision record |
+| 5 | **Benchmark and format decision** (MTF-1.1 — MANDATORY before any question count, item structure, or completion time is frozen) — compare at minimum: **24-item multi-choice · 48-item A/B · 60-item A/B · 72-item A/B · 84-item A/B**; evaluate target user intent, mobile completion burden, abandonment risk, retest frequency, free-result credibility, deep-report information requirement, scoring stability, accessibility, content-production cost, sensitivity/fatigue, and whether a quick, main, or deep assessment is appropriate. **Do NOT preselect 24 questions or 6–8 archetypes merely because existing tests use that shape.** Until this step is recorded, every count in any planning document is `benchmark_pending` / a non-binding hypothesis. | recorded benchmark decision with rationale (format, item count, expected completion time, assessment tier) |
+| 6 | **Original Japanese product naming** — a new JA-first name; no borrowed or "sound-alike" naming of existing products | name + naming rationale |
+| 7 | **Original dimensions** — dimension set authored for the Japanese need; not a re-labelled copy of any existing instrument's factors | dimension sheet (id, JA name, definition, behavioral anchors) |
+| 8 | **Original question structure** — section plan, ordering logic, completion-time budget, all consistent with the step-5 benchmark decision (item count comes FROM step 5, never assumed) | structure sheet |
+| 9 | **Original answer options** — option scales/choices written fresh; trade-off options must trade REAL things | option style guide + examples |
+| 10 | **Original scoring** — scoring logic designed from the dimension sheet (weights, rules, tie-breaks, fallback); versioned from day one | scoring spec (versioned) |
+| 11 | **Original result archetypes** — result set (count from the step-5 benchmark, ids, JA names) authored fresh; names must not collide with any existing YORISOU taxonomy (see naming-collision register T1/T2) | archetype sheet |
+| 12 | **Original free-result copy** — recognition line, highlights, gentle next step, share line — per archetype, current-state framed | free-copy sheet |
+| 13 | **Original deep-report structure** — section skeleton + editorial intent per section; private-by-default | report skeleton |
+| 14 | **Recommendation tags** — which service families each result may route to; tags are suggestions, never verdicts | tag map |
+| 15 | **Japanese cultural adaptation** — pass the full `MTF1_JAPAN_LOCALIZATION_STANDARD.md` checklist | localization checklist result |
+| 16 | **Public/private copy separation** — explicit split: screenshot-safe public copy vs private-only copy; nothing sensitive in URLs or share cards | copy-boundary sheet |
+| 17 | **Repeat-test design** — retest cadence, what changes between takes, how history is presented without "you got worse" framing | cadence spec |
+| 18 | **Trust-risk review** — clinical-adjacency, vulnerable-moment reading paths, safety copy, boundary statements (「〜ではありません」lines) | trust-risk record |
+| 19 | **Implementation contract** — mapping to the Dynamic Test Engine contract (`MTF1_DYNAMIC_TEST_ENGINE_CONTRACT.md`): formats, scoring class, result variant (polymorphic `EngineResult`), persistence needs | engine-contract mapping |
+| 20 | **Founder review before activation** — the CPV1 gate: founder decision ref + deployment evidence required for `public_active`; content completion NEVER auto-activates | founder decision record |
+
+Existing completed methods retain their verified actual counts (120/36/60/60/24/18/6/5/4 and the R01/R04/S01 pools) — the benchmark stage governs NEW and REBUILD methods, not retroactive changes to shipped banks.
 
 ## Absolute prohibitions
 
