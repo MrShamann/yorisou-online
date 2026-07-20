@@ -210,10 +210,10 @@ export function buildSupportPlan(input: SupportPlanInput): SupportPlan {
     if (save) next.push(toPlanItem(save, save.whyMayFit));
   }
 
+  // CPV1 WS-A1: confidence bands are not exposed until a validated model is
+  // approved, so this note is band-independent (no "はっきり/ゆるやか" implication).
   const confidenceNote =
-    input.confidence === "medium"
-      ? "今の傾向は、ある程度はっきり出ています。それでも、時期や状況で変わります。"
-      : "今の傾向は、ゆるやかに見えています。日によって変わることもあります。";
+    "今の傾向をやわらかく整理したものです。時期や状況によって変わることがあります。";
 
   return {
     family: input.family,

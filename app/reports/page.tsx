@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { DomainHero, DomainSection } from "../components/aix3/DomainShell";
+import { APP2_FAMILY_REPORTS } from "../data/app2/familyReports";
 
 export const metadata: Metadata = {
   title: "深める | YORISOU レポート",
@@ -65,6 +66,28 @@ export default function ReportsLandingPage() {
               <Link href="/contact?topic=open-testing" className="aix2-link">読みたいテーマを送る →</Link>
             </div>
           </div>
+        </div>
+      </DomainSection>
+
+      {/* CPV1 WS-A3 — make the implemented nine-family deeper reports reachable
+          through the governed Deepen journey (public-safe; no PII). */}
+      <DomainSection eyebrow="テーマ別に深める" title="今の気になるテーマから読む。" tight>
+        <p className="mb-4 max-w-[42rem] text-[13.5px] leading-7 aix2-mut">
+          チェックのテーマごとに、今の傾向をやわらかく読み直す読みものです。ログインなしで読め、この端末に保存できます。医学的・心理的な診断ではありません。
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {APP2_FAMILY_REPORTS.map((r) => (
+            <Link
+              key={r.family}
+              href={`/reports/family/${r.family}`}
+              className="aix2-panel p-5 transition-colors hover:border-[var(--hair-jade)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--jade-bright)]"
+            >
+              <p className="text-[11px] leading-5 text-[color:var(--jade-bright)]">{r.testLabel}</p>
+              <p className="mt-1 text-[15px] font-bold leading-6 text-[color:var(--tx)]">{r.title}</p>
+              <p className="mt-2 text-[12.5px] leading-6 aix2-mut line-clamp-2">{r.whatWeUnderstand}</p>
+              <span className="mt-3 inline-block text-[12px] text-[color:var(--jade-bright)]">読む →</span>
+            </Link>
+          ))}
         </div>
       </DomainSection>
 
