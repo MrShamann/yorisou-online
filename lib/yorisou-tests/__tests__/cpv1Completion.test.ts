@@ -15,6 +15,7 @@ import {
   productionRouteVerifiedMethods,
   rightsBlockedMethods,
   blockedAdapter,
+  type MethodRegistryEntry,
 } from "@/lib/cpv1/methods";
 import {
   rightsClears,
@@ -106,6 +107,58 @@ check("R1.1 §4 NOTHING is public_active without an evidenced Founder activation
   assert.equal(publicMethods().length, 0, "no method has an evidenced CPV1 Founder public-activation");
   assert.equal(productionRouteVerifiedMethods().length, 9, "exactly 9 production-route-verified methods");
 });
+
+// ── R1.1A §7 — negative contract tests for the deployment + activation model ──
+// Base = a route-verified original (impl complete, rights cleared, content authored,
+// privacy reviewed, tests passing, route on production main; deployment + Founder both
+// unverified with NO refs). We mutate ONE axis at a time.
+const rvBase = getMethod("imairo-120q")!;
+const withM = (over: Partial<MethodRegistryEntry>): MethodRegistryEntry => ({ ...rvBase, ...over });
+const DEPLOY_REF = "deploy://prod/run-abc123";
+const FOUNDER_REF = "founder://decision-2026-07-20";
+check("R1.1A §7.1 route present + Founder open + deployment UNVERIFIED ⇒ NOT public", () => {
+  const mt = methodMaturity(withM({ founderActivation: "open", founderDecisionRef: FOUNDER_REF, deploymentStatus: "unverified", deploymentEvidenceRef: null }));
+  assert.equal(mt.publicRoute, "unavailable");
+  assert.notEqual(methodActivationState(withM({ founderActivation: "open", founderDecisionRef: FOUNDER_REF })), "public_active");
+});
+check("R1.1A §7.2 deployment VERIFIED + Founder unverified ⇒ NOT public", () => {
+  const mt = methodMaturity(withM({ deploymentStatus: "production_verified", deploymentEvidenceRef: DEPLOY_REF, founderActivation: "unverified", founderDecisionRef: null }));
+  assert.equal(mt.deployment, "production_verified", "deployment trusted (ref present)");
+  assert.equal(mt.publicRoute, "unavailable", "still not public without Founder activation");
+});
+check("R1.1A §7.3 deployment VERIFIED + Founder CLOSED ⇒ NOT public", () => {
+  assert.equal(methodMaturity(withM({ deploymentStatus: "production_verified", deploymentEvidenceRef: DEPLOY_REF, founderActivation: "closed" })).publicRoute, "unavailable");
+});
+check("R1.1A §7.4 route present + rights blocked ⇒ NOT route-verified", () => {
+  const blockedRights = getMethod("tarot")!.rights; // review_required
+  assert.notEqual(methodActivationState(withM({ rights: blockedRights })), "implemented_route_verified");
+});
+check("R1.1A §7.5 route present + content incomplete ⇒ NOT route-verified", () => {
+  assert.notEqual(methodActivationState(withM({ content: "not_authored" })), "implemented_route_verified");
+});
+check("R1.1A §7.6 route present + privacy not reviewed ⇒ NOT route-verified", () => {
+  assert.notEqual(methodActivationState(withM({ privacy: "not_reviewed" })), "implemented_route_verified");
+  // route absent also fails route-verified
+  assert.notEqual(methodActivationState(withM({ routeEvidence: "none" })), "implemented_route_verified");
+  // tests not passing also fails route-verified
+  assert.notEqual(methodActivationState(withM({ tests: "not_run" })), "implemented_route_verified");
+});
+check("R1.1A §7.7 ALL dimensions + production deployment + Founder open (with refs) ⇒ public_active", () => {
+  const full = withM({ deploymentStatus: "production_verified", deploymentEvidenceRef: DEPLOY_REF, founderActivation: "open", founderDecisionRef: FOUNDER_REF });
+  assert.equal(methodMaturity(full).publicRoute, "available");
+  assert.equal(methodActivationState(full), "public_active");
+});
+check("R1.1A §7.8 NO constructor infers Founder activation or deployment evidence; enum-without-ref not trusted", () => {
+  for (const m of CPV1_METHOD_UNIVERSE) {
+    assert.equal(m.deploymentStatus, "unverified", `${m.methodId} deployment not asserted by any constructor`);
+    assert.equal(m.deploymentEvidenceRef, null, `${m.methodId} no deployment evidence ref from a constructor`);
+    assert.equal(m.founderDecisionRef, null, `${m.methodId} no Founder decision ref from a constructor`);
+    assert.notEqual(m.founderActivation, "open", `${m.methodId} Founder activation not asserted 'open' by any constructor`);
+  }
+  // An enum value WITHOUT its evidence ref is downgraded (not trusted as verified).
+  assert.equal(methodMaturity(withM({ founderActivation: "open", founderDecisionRef: null })).founderActivation, "unverified", "open without ref ⇒ unverified");
+  assert.equal(methodMaturity(withM({ deploymentStatus: "production_verified", deploymentEvidenceRef: null })).deployment, "unverified", "verified without ref ⇒ unverified");
+});
 check("§4 EVERY external method exposes SEPARATE unmet dimensions (never collapsed)", () => {
   const external = CPV1_METHOD_UNIVERSE.filter((m) => m.family === "chinese_traditional" || m.family === "western_symbolic");
   assert.ok(external.length >= 10, "many external methods registered");
@@ -120,6 +173,7 @@ check("§4 EVERY external method exposes SEPARATE unmet dimensions (never collap
     assert.equal(mt.tests, "not_run", `${m.methodId} tests not_run`);
     assert.equal(mt.founderActivation, "closed", `${m.methodId} founder gate closed`);
     assert.equal(mt.route, "none", `${m.methodId} no route (§4 route dimension)`);
+    assert.equal(mt.deployment, "unverified", `${m.methodId} deployment unverified (R1.1A §2)`);
     assert.equal(mt.publicRoute, "unavailable", `${m.methodId} public route unavailable`);
     assert.equal(m.devFlagged, true, `${m.methodId} dev-flagged`);
     assert.equal(methodPublicallyActivatable(m), false, `${m.methodId} not publicly activatable`);
@@ -164,9 +218,10 @@ check("no fabricated calc/interpretation content in external registry entries", 
 });
 
 console.log("CPV1-R1 §5 — runtime-truth reconciliation");
-// The 9 PROVEN public methods each mount a REAL flow at a real (non-redirect)
-// route — not a registry declaration alone. yorisou-values is DOWNGRADED.
-const PROVEN_PUBLIC: Array<[string, string]> = [
+// The 9 ROUTE_VERIFIED methods each mount a REAL flow at a real (non-redirect) route
+// present on production main — NOT publicly activated, NOT deployment-verified here.
+// yorisou-values is DOWNGRADED.
+const ROUTE_VERIFIED_METHODS: Array<[string, string]> = [
   ["imairo-120q", "app/check-in/page.tsx"],
   ["c02-current-state", "app/tests/c02/page.tsx"],
   ["relationship-fatigue-24q", "app/tests/relationship-fatigue/page.tsx"],
@@ -180,7 +235,7 @@ const PROVEN_PUBLIC: Array<[string, string]> = [
 check("§5/R1.1 §4 exactly 9 production-route-verified methods, each with a real route + flow (not public_active)", () => {
   const rv = productionRouteVerifiedMethods().map((m) => m.methodId);
   assert.equal(rv.length, 9, "exactly 9 production-route-verified (corrected from an over-claimed 10, and from a mis-stated 'public_active')");
-  for (const [id, route] of PROVEN_PUBLIC) {
+  for (const [id, route] of ROUTE_VERIFIED_METHODS) {
     assert.ok(rv.includes(id), `${id} is production-route-verified`);
     assert.ok(has(route), `${id} route ${route} exists`);
     const src = read(route);

@@ -4,7 +4,7 @@
 > (`lib/cpv1/rights.ts` `ROUTE_RULES` + `rightsResolutionReport`) — no pending
 > applicable field can clear, per route. Method maturity is now **seven separate
 > dimensions** (`methodMaturity()`: implementation · rights · content · privacy ·
-> tests · founderActivation · publicRoute), never collapsed into one
+> tests · route · deployment · founderActivation · publicRoute — R1.1A adds an independent deployment-evidence dimension), never collapsed into one
 > `rights_blocked`. Each external method records each unmet dimension on its own
 > (implementation `not_started`, rights `review_required`, content `not_authored`,
 > privacy `not_reviewed`, tests `not_run`, founder gate `closed`). See
@@ -17,7 +17,7 @@ architecture-only is presented as a public, functional, or "coming soon" surface
 Legend: `LIVE_APP2` shipped on the APP-2 baseline (preserved) · `IMPLEMENTED_CPV1`
 new real code, wired + tested + local-verified · `CONTRACT_CPV1` real typed
 contract + model + tests (not a full public surface) · `ARCHITECTURE_CPV1`
-governed design spec only · `RIGHTS_BLOCKED` registered + gated on rights ·
+governed design spec only · `MULTI_DIMENSION_GATED` registered but unbuilt across implementation + content + privacy + tests + rights (not merely rights) ·
 `LEGAL_BLOCKED` gated on legal/jurisdiction · `FOUNDER_GATED` needs explicit
 Founder activation.
 

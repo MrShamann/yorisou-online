@@ -18,13 +18,38 @@ R1.1 separates these into explicit, independent contract fields
 | Implementation | `implementation` | not_started / in_progress / complete |
 | Route existence + environment | `route` (`routeEvidence`) | none / preview_only / production_main_present |
 | Rights clearance | `rights` | review_required / cleared / blocked |
-| Founder public-activation | `founderActivation` | **unverified** / closed / open |
+| Founder public-activation | `founderActivation` (+ `founderDecisionRef`) | **unverified** / closed / open |
 | Public availability (DERIVED) | `publicRoute` | available only if ALL of the above + content + privacy + tests + not-dev-flagged |
 
 `methodActivationState` now returns `public_active` **only** when public availability is derived true —
 which requires an **explicit evidenced Founder activation** (`open`) **and** a production-main route.
 No method currently carries an evidenced Founder activation, so **`publicMethods()` returns 0**. The 9
 route-verified methods return **`implemented_route_verified`** (`productionRouteVerifiedMethods()`).
+
+## R1.1A §2 — deployment evidence is now an INDEPENDENT contract dimension
+
+R1.1A adds a first-class deployment-evidence field and evidence references, and tightens the gate so
+route-exists / deployed / Founder-approved are never conflated:
+
+| Concept | Field | Values / rule |
+|---|---|---|
+| Deployment evidence | `deployment` (`deploymentStatus` + `deploymentEvidenceRef`) | `unverified` / `preview_verified` / `production_verified` — a `*_verified` value is trusted **only** when `deploymentEvidenceRef` is present; NEVER inferred from route/branch/main/build/Preview/Founder-decision |
+| Founder decision ref | `founderDecisionRef` | `founderActivation: "open"` is trusted **only** when this ref is present |
+
+**`public_active` now requires ALL 10 conditions** (`methodMaturity.publicRoute === "available"`):
+implementation complete · rights cleared · content authored/licensed · privacy reviewed · tests passing ·
+route `production_main_present` · **deployment `production_verified`** · **Founder `open`** · non-dev-flagged ·
+**the required evidence refs present** (enforced by the evidence-gating: an enum value without its ref
+downgrades to `unverified`).
+
+**`implemented_route_verified` requires** implementation + rights cleared + content + privacy + tests +
+route on production main — and does **NOT** require deployment or Founder activation (and is never returned
+merely because implementation, tests and a route exist — see the R1.1A §7 negative tests).
+
+For all 9 methods, `deploymentStatus` is **`unverified`** with **no** `deploymentEvidenceRef`, and
+`founderActivation` is **`unverified`** with **no** `founderDecisionRef` — so they remain
+`implemented_route_verified` and `publicMethods()` stays **0**. A live-site observation is never converted
+into a CPV1 Founder activation or a deployment-evidence record.
 
 ## Truth table — the 9 formerly-`public_active` methods vs the 8 conditions
 

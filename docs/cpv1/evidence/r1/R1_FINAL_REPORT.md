@@ -17,7 +17,7 @@ draft PR #114). Local/Preview only; production untouched.
   originals + 15 external, each `route: none`, `implementation not_started`).
 - **Rights-gate result** — route-specific `ROUTE_RULES` + `rightsResolutionReport`; no pending
   applicable field clears; per-route pass/fail fixtures pass (§3).
-- **Maturity-model result** — seven independent dimensions; `methodActivationState` ∈
+- **Maturity-model result (R1.1A)** — nine independent dimensions incl. an independent deployment-evidence field (implementation · rights · content · privacy · tests · route · deployment · founderActivation · publicRoute); `methodActivationState` ∈
   `public_active | implemented_route_verified | implemented_private | gated | retired` — no collapsed `rights_blocked`; route/deployment/Founder-activation kept separate (R1.1 §4).
 - **Invalid-test remediation** — the always-pass LINE `|| true` was replaced by a real runtime
   assertion (§6); contract suite is now **58 real checks** (R1.1 added the §4 route/Founder-activation separation tests).

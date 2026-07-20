@@ -4,9 +4,11 @@
 // identity, inputs (incl. sensitive), model, schemas, limits, continuity
 // permissions, sharing/export/deletion rules, and activation state. The public
 // activation gate combines: method logic complete AND rights clear AND privacy
-// reviewed AND tests pass AND Founder activation. External/traditional methods
-// are registered but RIGHTS_BLOCKED (kept off public routes; no fabricated
-// calculation logic or interpretation content).
+// reviewed AND tests pass AND deployment verified AND Founder activation.
+// External/traditional methods are registered but MULTI-DIMENSION-GATED — unbuilt
+// across implementation, content, privacy, tests AND rights (kept off public routes;
+// no fabricated calculation logic or interpretation content). They are NOT merely
+// "rights-blocked".
 
 import { isDevFlagOn } from "./flags";
 import { type RightsRecord, rightsClears, rightsResolutionReport, rightsReviewRequired, yorisouOriginal } from "./rights";
@@ -46,6 +48,12 @@ export type FounderActivationStatus = "unverified" | "closed" | "open";
 // means the route file is present on production `main` (git-verified) — this is NOT a
 // claim that a live server is serving it, nor that CPV1 has Founder-activated it.
 export type RouteStatus = "none" | "preview_only" | "production_main_present";
+// CPV1-R1.1A §2 — an INDEPENDENT deployment-evidence dimension. Deployment is NEVER
+// inferred from a route file existing, a branch name, a route on `main`, a local
+// build, a Preview deployment, or a Founder-activation decision. `production_verified`
+// (and `preview_verified`) require a separately RECORDED evidence reference; an enum
+// value without a reference is NOT trusted as verified (see methodMaturity).
+export type DeploymentStatus = "unverified" | "preview_verified" | "production_verified";
 export type PublicRouteStatus = "unavailable" | "available";
 
 export type MethodMaturity = {
@@ -55,7 +63,8 @@ export type MethodMaturity = {
   privacy: PrivacyStatus; // privacy review recorded?
   tests: TestStatus; // tests passing?
   route: RouteStatus; // route existence + environment where evidenced (§4)
-  founderActivation: FounderActivationStatus; // explicit Founder public-activation (§4)
+  deployment: DeploymentStatus; // §2 — EVIDENCE-GATED deployment status (ref required to be verified)
+  founderActivation: FounderActivationStatus; // §4 — EVIDENCE-GATED Founder public-activation (ref required for `open`)
   publicRoute: PublicRouteStatus; // DERIVED public availability — true only if ALL above hold
 };
 
@@ -64,8 +73,8 @@ export type MethodMaturity = {
 // never equates "route exists on main" with "deployed to production" with "Founder
 // public-activation".
 export type MethodActivationState =
-  | "public_active" // ALL evidenced incl. production deployment + explicit Founder activation
-  | "implemented_route_verified" // implemented + tests pass + route present on production main, but NO evidenced Founder public-activation (§4)
+  | "public_active" // ALL 10 evidenced incl. deployment production_verified + explicit Founder activation (+ refs)
+  | "implemented_route_verified" // impl + rights cleared + content + privacy + tests + route on production main; NO deployment/Founder-activation required (§4)
   | "implemented_private" // implemented + rights cleared, no production route
   | "gated" // one or more dimensions unmet (see methodMaturity for which)
   | "retired";
@@ -104,6 +113,13 @@ export type MethodRegistryEntry = {
   // explicit fields (never inferred from a constructor).
   routeEvidence: RouteStatus; // where the method's route is evidenced to exist
   founderActivation: FounderActivationStatus; // explicit Founder public-activation decision
+  // CPV1-R1.1A §2 — independent deployment evidence. `deploymentStatus` is only trusted
+  // as verified when the matching evidence ref is present; `founderActivation: "open"` is
+  // only trusted when `founderDecisionRef` is present. Enum values without refs are NOT
+  // treated as verified (enforced in methodMaturity).
+  deploymentStatus: DeploymentStatus; // independent deployment-evidence status
+  deploymentEvidenceRef: string | null; // required for a *_verified deployment to be trusted
+  founderDecisionRef: string | null; // required for founderActivation "open" to be trusted
   devFlagged: boolean; // true ⇒ visible only in dev preview, never public
 };
 
@@ -143,25 +159,48 @@ function deriveRightsStatus(r: RightsRecord): MethodRightsStatus {
   return report.unresolved.some((u) => u.includes(":blocked")) ? "blocked" : "review_required";
 }
 
-// CPV1-R1 §4 / R1.1 §4 — the separate maturity dimensions. `founderActivation` is an
-// EXPLICIT registry field (never derived from the rights gate or a constructor).
-// `route` is the evidenced route/environment. `publicRoute` (public AVAILABILITY) is
-// available ONLY when every internal dimension passes AND an explicit Founder
-// public-activation is recorded (`open`) AND the route is present on production main
-// AND the method is not dev-flagged. Route-exists / deployed / Founder-approved are
-// never equated.
-export function methodMaturity(m: MethodRegistryEntry): MethodMaturity {
-  const rights = deriveRightsStatus(m.rights);
-  const founderActivation: FounderActivationStatus = m.founderActivation;
-  const route: RouteStatus = m.routeEvidence;
-  const publicRoute: PublicRouteStatus =
+const hasRef = (r: string | null): boolean => typeof r === "string" && r.trim().length > 0;
+
+// Content is publishable when authored or licensed.
+const contentReady = (c: ContentStatus): boolean => c === "authored" || c === "licensed";
+
+// CPV1-R1.1A §4 — the ROUTE-VERIFIED dimensions: implementation + rights + content +
+// privacy + tests + route-on-production-main. This set does NOT include deployment or
+// Founder activation. Every one is required; a route alone is never enough.
+function isRouteVerified(m: MethodRegistryEntry, rights: MethodRightsStatus, route: RouteStatus): boolean {
+  return (
     m.implementation === "complete" &&
     rights === "cleared" &&
-    (m.content === "authored" || m.content === "licensed") &&
+    contentReady(m.content) &&
     m.privacy === "reviewed" &&
     m.tests === "passing" &&
+    route === "production_main_present"
+  );
+}
+
+// CPV1-R1 §4 / R1.1 §4 / R1.1A §2 — the separate maturity dimensions.
+//   - `founderActivation` is EXPLICIT and EVIDENCE-GATED: a raw `"open"` is trusted
+//     only when `founderDecisionRef` is present; otherwise it downgrades to `unverified`.
+//   - `deployment` is an INDEPENDENT dimension and EVIDENCE-GATED: a raw
+//     `production_verified`/`preview_verified` is trusted only when
+//     `deploymentEvidenceRef` is present; otherwise it downgrades to `unverified`.
+//   - Deployment is NEVER inferred from route/branch/main/build/preview/Founder-decision.
+// `publicRoute` (public AVAILABILITY, §3) is available ONLY when ALL 10 hold: the six
+// route-verified dimensions + deployment `production_verified` + Founder `open` +
+// non-dev-flagged + the required evidence references (implied by the evidence-gating).
+export function methodMaturity(m: MethodRegistryEntry): MethodMaturity {
+  const rights = deriveRightsStatus(m.rights);
+  const route: RouteStatus = m.routeEvidence;
+  // Evidence-gated Founder activation: `open` requires a recorded decision ref.
+  const founderActivation: FounderActivationStatus =
+    m.founderActivation === "open" ? (hasRef(m.founderDecisionRef) ? "open" : "unverified") : m.founderActivation;
+  // Evidence-gated deployment: a *_verified status requires a recorded evidence ref.
+  const deployment: DeploymentStatus =
+    m.deploymentStatus === "unverified" ? "unverified" : hasRef(m.deploymentEvidenceRef) ? m.deploymentStatus : "unverified";
+  const publicRoute: PublicRouteStatus =
+    isRouteVerified(m, rights, route) &&
+    deployment === "production_verified" &&
     founderActivation === "open" &&
-    route === "production_main_present" &&
     !m.devFlagged
       ? "available"
       : "unavailable";
@@ -172,6 +211,7 @@ export function methodMaturity(m: MethodRegistryEntry): MethodMaturity {
     privacy: m.privacy,
     tests: m.tests,
     route,
+    deployment,
     founderActivation,
     publicRoute,
   };
@@ -193,6 +233,7 @@ export function methodPrimaryBlocker(m: MethodRegistryEntry): keyof MethodMaturi
   if (mt.privacy !== "reviewed") return "privacy";
   if (mt.tests !== "passing") return "tests";
   if (mt.route !== "production_main_present") return "route";
+  if (mt.deployment !== "production_verified") return "deployment";
   if (mt.founderActivation !== "open") return "founderActivation";
   if (m.devFlagged) return "dev_flagged";
   return null;
@@ -204,11 +245,12 @@ export function methodPrimaryBlocker(m: MethodRegistryEntry): keyof MethodMaturi
 export function methodActivationState(m: MethodRegistryEntry): MethodActivationState {
   const mt = methodMaturity(m);
   if (mt.publicRoute === "available") return "public_active";
-  // Implemented + tested + route present on production main, but WITHOUT an evidenced
-  // Founder public-activation ⇒ route-verified, NOT publicly activated (§4).
-  if (mt.implementation === "complete" && mt.tests === "passing" && mt.route === "production_main_present") {
-    return "implemented_route_verified";
-  }
+  // R1.1A §4 — implemented_route_verified requires the FULL route-verified dimension set
+  // (implementation + rights cleared + content authored/licensed + privacy reviewed +
+  // tests passing + route on production main). It does NOT require production deployment
+  // or Founder public-activation, and is NEVER returned merely because implementation,
+  // tests and a route exist.
+  if (isRouteVerified(m, mt.rights, mt.route)) return "implemented_route_verified";
   if (mt.implementation === "complete" && mt.rights === "cleared") return "implemented_private";
   return "gated";
 }
@@ -245,15 +287,20 @@ function originalRouteVerified(
     rights: yorisouOriginal(e.methodId, { activated: true }), // rights cleared (self-owned)
     routeEvidence: "production_main_present", // route file present on production main (git-verified)
     founderActivation: "unverified", // §4 — NOT inferred; no evidenced Founder public-activation
+    // R1.1A §2 — deployment + Founder-decision evidence are UNVERIFIED and have NO refs.
+    // No constructor may assert production deployment or a Founder decision.
+    deploymentStatus: "unverified",
+    deploymentEvidenceRef: null,
+    founderDecisionRef: null,
     devFlagged: false,
     ...e,
   } as MethodRegistryEntry;
 }
 
-// An external/traditional method: registered, rights-blocked, dev-flagged, NO
-// implementation (no fabricated content). `model` describes the intended model
-// only; compute is withheld.
-function externalRightsBlocked(
+// A MULTI-DIMENSION-GATED external/traditional method: registered but unbuilt across
+// implementation, content, privacy, tests AND rights — NOT merely rights-blocked. No
+// fabricated content; `model` describes the intended model only; compute is withheld.
+function externalGatedMethod(
   e: Pick<MethodRegistryEntry, "methodId" | "nameJa" | "nameZh" | "nameEn" | "family" | "tradition" | "schoolVariant" | "role" | "requiredInputs" | "sensitiveInputs" | "model" | "interpretationLimits"> & {
     rightsSource: string;
     requiresEphemeris?: boolean; // astrology natal chart etc.
@@ -277,8 +324,11 @@ function externalRightsBlocked(
       requiresEphemeris: e.requiresEphemeris,
       requiresArtwork: e.requiresArtwork,
     }),
-    routeEvidence: "none", // §4 — no route exists for an unbuilt external method
-    founderActivation: "closed", // §4 — explicitly not Founder-activated
+    routeEvidence: "none", // no route exists for an unbuilt external method
+    founderActivation: "closed", // explicitly not Founder-activated
+    deploymentStatus: "unverified", // R1.1A §2 — no deployment evidence
+    deploymentEvidenceRef: null,
+    founderDecisionRef: null,
     devFlagged: true,
     ...e,
   } as MethodRegistryEntry;
@@ -447,7 +497,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
   },
 
   // Chinese cultural & traditional — RIGHTS_BLOCKED (no fabricated content) -----
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "ziwei-dou-shu",
     nameJa: "紫微斗数",
     nameZh: "紫微斗數",
@@ -462,7 +512,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "象徴的参照。運命・断定・診断・重大判断の根拠にしない。",
     rightsSource: "traditional system; needs verified public-domain reimplementation or licensed integration",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "bazi-four-pillars",
     nameJa: "八字・四柱推命",
     nameZh: "八字/四柱",
@@ -477,7 +527,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "象徴的参照。運命・断定の根拠にしない。",
     rightsSource: "traditional system + calendar conversion + interpretation corpus; rights review required",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "cheng-gu",
     nameJa: "称骨",
     nameZh: "稱骨",
@@ -492,7 +542,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "象徴的参照のみ。",
     rightsSource: "traditional weighting tables + verse text; rights review required",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "i-ching",
     nameJa: "易経",
     nameZh: "易經",
@@ -507,7 +557,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "内省の入口。決定の権威にしない。",
     rightsSource: "text + translation rights; classical text may be PD but modern translations are not",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "five-elements",
     nameJa: "五行",
     nameZh: "五行",
@@ -522,7 +572,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "象徴的参照のみ。",
     rightsSource: "mapping + interpretation corpus; rights review required",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "chinese-zodiac",
     nameJa: "生肖（十二支）",
     nameZh: "生肖",
@@ -537,7 +587,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "象徴的参照のみ。",
     rightsSource: "sign mapping is simple but interpretation text must be original/licensed",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "name-hanzi-reflection",
     nameJa: "姓名・漢字リフレクション",
     nameZh: "姓名/漢字",
@@ -554,7 +604,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
   }),
 
   // Western & global symbolic — RIGHTS_BLOCKED --------------------------------
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "astrology-natal",
     nameJa: "占星術・出生図",
     nameZh: null,
@@ -570,7 +620,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     rightsSource: "ephemeris data licence + original interpretation content required",
     requiresEphemeris: true,
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "tarot",
     nameJa: "タロット",
     nameZh: null,
@@ -586,7 +636,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     rightsSource: "artwork rights + interpretation; original YORISOU deck or verified commercial licence required",
     requiresArtwork: true,
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "numerology",
     nameJa: "数秘術",
     nameZh: null,
@@ -601,7 +651,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "象徴的参照のみ。",
     rightsSource: "interpretation text must be original/licensed",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "dream-reflection",
     nameJa: "夢のふり返り",
     nameZh: null,
@@ -616,7 +666,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "解釈は内省の補助。診断ではない。",
     rightsSource: "original reflective prompts required (no third-party dream dictionary)",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "yorisou-symbolic-cards",
     nameJa: "YORISOUシンボルカード",
     nameZh: null,
@@ -632,7 +682,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     rightsSource: "must be original YORISOU artwork + copy; blocked until authored (no copied deck)",
     requiresArtwork: true,
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "image-color-reflection",
     nameJa: "イメージ・色のふり返り",
     nameZh: null,
@@ -649,7 +699,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
   }),
 
   // Psychology & preference -----------------------------------------------------
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "big-five-ipip",
     nameJa: "ビッグファイブ（IPIP準拠）",
     nameZh: null,
@@ -664,7 +714,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "傾向の内省。臨床診断ではない。",
     rightsSource: "IPIP source validation required before use (§9 C4)",
   }),
-  externalRightsBlocked({
+  externalGatedMethod({
     methodId: "mbti-import-handoff",
     nameJa: "MBTI（結果インポート／公式連携）",
     nameZh: null,
@@ -705,6 +755,9 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     rights: yorisouOriginal("yorisou-values", { activated: false }),
     routeEvidence: "none", // §4 — unbuilt: no route exists on production main
     founderActivation: "unverified",
+    deploymentStatus: "unverified", // R1.1A §2 — no deployment evidence
+    deploymentEvidenceRef: null,
+    founderDecisionRef: null,
     devFlagged: true,
   },
   {

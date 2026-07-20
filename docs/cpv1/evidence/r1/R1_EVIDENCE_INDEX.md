@@ -22,10 +22,13 @@ work is local/Preview only; production is untouched.
 
 - **Rights-route matrix + per-route fixtures** — `lib/cpv1/rights.ts` (`ROUTE_RULES`,
   `rightsResolutionReport`); contract tests `cpv1Completion.test.ts` §3 (per-route pass/fail).
-- **Seven maturity dimensions** — `methodMaturity()` (implementation · rights · content · privacy ·
-  tests · route · founderActivation · publicRoute); `methodActivationState` ∈ `public_active |
-  implemented_route_verified | implemented_private | gated | retired` (no collapsed `rights_blocked`;
-  route/deployment/Founder-activation are separate — R1.1 §4). Tests §4.
+- **Maturity dimensions (R1.1A)** — `methodMaturity()` (implementation · rights · content · privacy ·
+  tests · route · **deployment** · founderActivation · publicRoute); `methodActivationState` ∈ `public_active |
+  implemented_route_verified | implemented_private | gated | retired`. Route existence, **deployment
+  evidence** (`deploymentStatus`+`deploymentEvidenceRef`), and Founder public-activation
+  (`founderActivation`+`founderDecisionRef`) are SEPARATE, evidence-gated fields — none inferred from a
+  constructor; an enum without its ref is not trusted. `public_active` requires ALL 10 conditions.
+  Tests §4 + R1.1A §7 (8 negative tests). See `METHOD_STATE_TRUTH_TABLE_R1.1.md`.
 - **Corrected count (R1.1 §4)** — **0 `public_active`** (no evidenced Founder activation; `publicMethods()`===0); **9 `implemented_route_verified`** (`productionRouteVerifiedMethods()`===9); 18 gated. See METHOD_STATE_TRUTH_TABLE_R1.1.
   See [`RUNTIME_TRUTH_R1.md`](./RUNTIME_TRUTH_R1.md) and `92_CPV1_METHOD_RUNTIME_RECONCILIATION.md`.
 

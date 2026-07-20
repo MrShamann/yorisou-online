@@ -64,7 +64,7 @@ Every capability is tagged with exactly one maturity level so nothing is over-cl
 | `IMPLEMENTED_CPV1` | New in CPV1: real code, wired, contract-tested, local-verified. |
 | `CONTRACT_CPV1` | Real typed contract + model + tests, not yet a full public surface. |
 | `ARCHITECTURE_CPV1` | Governed design spec only (as the authorization requires for it). |
-| `gated` (multi-dimension) | Registered but NOT publicly activatable: the actual `methodActivationState` value when ANY of the seven maturity dimensions is unmet (implementation/content/privacy/tests/rights/Founder/public-route). For external methods, ALL are unmet — not just rights. There is no single `rights_blocked` activation state. |
+| `gated` (multi-dimension) | Registered but NOT publicly activatable: the actual `methodActivationState` value when ANY maturity dimension is unmet (implementation/content/privacy/tests/rights/route/deployment/Founder/public-availability — R1.1A adds independent deployment evidence). For external methods, ALL are unmet — not just rights. There is no single `rights_blocked` activation state. |
 | `LEGAL_BLOCKED` | Blocked on legal/jurisdiction review (e.g. real Legacy activation). |
 | `FOUNDER_GATED` | Built but requires an explicit Founder activation to go public. |
 
