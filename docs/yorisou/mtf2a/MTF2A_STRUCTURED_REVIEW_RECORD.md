@@ -114,3 +114,17 @@ All 48 items assessed side-blind for kinder/healthier/more-responsible/more-gene
 ## Post-MTF-2A.2 classification
 
 Content completeness COMPLETE · Scoring integrity CORRECTED + genuinely fixture-verified (canonical scorer; transformed-bank invariance; constructed ties; asserted gaps) · Version coherence FROZEN (first-canonical-candidate set) · Originality UNCHANGED (`YORISOU_ORIGINAL_AUTHORED_PENDING_FOUNDER_REVIEW`) · Japanese quality PASS (final share-copy pass) · Trust risk PASS (non-directive acks; anti-screening shipped) · Founder-review readiness READY (step 20 withheld per decision 3.4 pending this review).
+
+---
+
+# MTF-2A.2-M1 — Canonical Mirror Synchronization (documentation-canonicity correction only)
+
+## Defect present at `426e52b`
+
+| # | Defect |
+|---|---|
+| C-25 | **Markdown mirrors retained stale version, Mixed, hash and scoring descriptions at 426e52b** — the package index claimed "Canonical spec (v1.1)" / ack v1.1 and a completed 20-step Forge; the daily product spec cited `daily-ack-v1.1` and pre-field-valid longitudinal examples; the values benchmark kept the "priorities in motion" Mixed rationale; the originality register described a "head-to-head tie-break" scoring model; the values product spec said the bank hash would be "pinned at implementation"; the trust-risk current outcome still read as two unresolved escalations; the copy-system privacy quote omitted the canonical consent clause |
+
+## Correction applied
+
+Documentation-canonicity synchronization ONLY: the canonical JSONs, both content hashes, all questions, options, dimensions, scoring rules, fixture expectations, result IDs/names/copy, and recommendation evidence rules are **byte-unchanged from `426e52b`**. C-1..C-24 are NOT reopened. The validator now enforces mirror/canon semantic synchronization: negative stale-claim checks scoped to current-truth documents/sections (stale versions, completed-Forge claim, "priorities in motion", head-to-head Mixed claims, hash-pinned-later claim, E-1-unresolved outcome, stale hashes) plus positive final-state checks (v1.2.0 package specs, ack v1.2, scoring v1.0, both final hashes, Steps 1–19 complete / Step 20 pending, Mixed close-score-only meaning, E-1 resolved for V1 / E-2 legal follow-up). Historical defect tables (this file) remain and are distinguished from current-truth sections by document scoping.

@@ -43,3 +43,12 @@ Rejected/rewritten categories: 翻訳調 (translated-sounding) · generic AI pro
 | A1-7 | private layers | recovery-route claim (TSUNAGARI), unmeasured guilt (YAKUWARI), needs-claim (JIKKAN) | rewritten traceable-to-answers |
 
 **Outcome: PASS after A1-1..A1-7.** Canonical JSONs reflect the corrected state.
+
+## MTF-2A.2 final editorial note (third pass — current canonical state)
+
+- **Final Q04/Q25 wording** (blinded attractiveness audit over all 48 items: 46 keep / 2 rewrites): Q04 「新しい場に入って、最初にしたいのは」 A「様子をつかんで、足場を固めること」(anshin) / B「できる役割を、引き受けてみること」(yakuwari); Q25 「催しや集まりに関わるなら」 A「運営や手伝いの側で、動きたい」(yakuwari) / B「参加する側で、見通しよく楽しみたい」(anshin). Both sides read as ordinary, equally approved preferences.
+- **Final acknowledgement set is `daily-ack-v1.2`**: ACK_RAIN and ACK_LOWBATT rewritten observational (advice and sufficiency-evaluation removed); 13/13 observational, non-predictive, non-directive, non-clinical.
+- **Final share-copy pass**: 8 behavior-recognizable, individually constructed share lines (no name+suffix templates).
+- **Private result copy is answer-traceable**: `privateRenderingContract` + `resultReasons` govern every private section (evidence rules, min support, soften/omit); Mixed declines to infer beyond close scores.
+
+Earlier wordings recorded in E-1..E-8 and A1-1..A1-7 are **historical**; the canonical JSONs at this HEAD carry only the final state above — no intermediate wording is current.

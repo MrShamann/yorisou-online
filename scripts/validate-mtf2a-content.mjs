@@ -464,6 +464,87 @@ if (!values.usageBoundaryJa?.includes("採用") || !values.interpretationLimitsJ
 else ok("A2-scr: anti-screening usage boundary present");
 if (daily.identity.activationState !== "gated" || values.identity.activationState !== "gated") fail("A2-gate: gating changed"); else ok("A2-gate: both methods remain gated");
 
+// ── M1: CANONICAL MIRROR SEMANTIC SYNCHRONIZATION (MTF-2A.2-M1) ──────────────
+// Negative checks are SCOPED to current-truth documents/sections so that the
+// structured review record's historical defect tables (which quote obsolete
+// phrases by design) are distinguishable from active claims.
+const M1 = {
+  idx: read("MTF2A_PACKAGE_INDEX.md"),
+  dspec: read("MTF2A_DAILY_CHECK_IN_PRODUCT_SPEC.md"),
+  dcopy: read("MTF2A_DAILY_CHECK_IN_COPY_SYSTEM.md"),
+  vbench: read("MTF2A_VALUES_BENCHMARK.md"),
+  vspec: read("MTF2A_VALUES_PRODUCT_SPEC.md"),
+  reg: read("MTF2A_SOURCE_AND_ORIGINALITY_REGISTER.md"),
+  ed: read("MTF2A_JAPANESE_EDITORIAL_REVIEW.md"),
+  tr: read("MTF2A_TRUST_RISK_REVIEW.md"),
+  rr: read("MTF2A_STRUCTURED_REVIEW_RECORD.md"),
+  vbank: read("MTF2A_VALUES_QUESTION_BANK.md"),
+  vcopy: read("MTF2A_VALUES_RESULT_COPY.md"),
+};
+// M1-1 package index: no stale v1.1 spec/ack claims
+if (/Canonical spec \(v1\.1\)/.test(M1.idx) || /ack rules v1\.1/.test(M1.idx) || /daily-ack-v1\.1\b/.test(M1.idx)) fail("M1-1: package index still claims v1.1 spec/ack");
+else ok("M1-1: package index carries no stale v1.1 spec/ack claim");
+// M1-2 package index: no completed-20-step claim; Step-20-pending truth present
+if (/completed the full \*\*20-step/.test(M1.idx) || !M1.idx.includes("Forge steps 1–19") || !M1.idx.includes("Step 20 (Founder acceptance) is PENDING")) fail("M1-2: Forge step-20 truth wrong in package index");
+else ok("M1-2: package index states Steps 1–19 complete / Step 20 (Founder acceptance) PENDING");
+// M1-3 daily product spec: ack version is v1.2, no v1.1 reference
+if (/daily-ack-v1\.1\b/.test(M1.dspec) || !M1.dspec.includes("daily-ack-v1.2")) fail("M1-3: daily product spec ack version stale");
+else ok("M1-3: daily product spec cites daily-ack-v1.2 only");
+// M1-4 benchmark: Mixed = close scores only; no motion/transition rationale
+if (/priorities in motion/.test(M1.vbench) || /入れ替わっている途中/.test(M1.vbench)) fail("M1-4: benchmark retains priorities-in-motion Mixed rationale");
+else if (!M1.vbench.includes("Mixed is a valid scored outcome, not an incomplete state") || !M1.vbench.includes("does not by itself prove transition, conflict or indecision")) fail("M1-4: benchmark missing close-score-only Mixed meaning");
+else ok("M1-4: benchmark Mixed rationale = close scores only, valid scored outcome, no transition claim");
+// M1-5 originality register: final scoring model description (no head-to-head tie-break claim)
+if (/with head-to-head tie-break/.test(M1.reg)) fail("M1-5: register still describes a head-to-head tie-break");
+else if (!M1.reg.includes("pair-independent Mixed threshold") || !M1.reg.includes("no head-to-head condition determines Mixed") || !M1.reg.includes("48/48 coverage") || !M1.reg.includes("declaration-order tie-break")) fail("M1-5: register missing final scoring-model description");
+else ok("M1-5: register describes pairwise win rate + 48/48 + pair-independent Mixed + declaration-order secondary tie-break");
+// M1-6 values product spec: hash already pinned (not deferred to implementation)
+if (/pinned at implementation/.test(M1.vspec)) fail("M1-6: values spec still defers hash pinning to implementation");
+else if (!M1.vspec.includes("already computed and pinned") || !M1.vspec.includes(values.definition.contentHash.value)) fail("M1-6: values spec missing pinned-hash truth");
+else ok("M1-6: values spec states the bank hash is already computed/pinned; implementation must verify it");
+// M1-7 trust-risk: current state = E-1 resolved for V1, E-2 sole legal follow-up
+if (!M1.tr.includes("E-1 — RESOLVED for V1") || !M1.tr.includes("E-2 — OPEN as a future ToU/legal implementation item") || !M1.tr.includes("one unresolved legal follow-up")) fail("M1-7: trust-risk current escalation state missing/wrong");
+else if (/## Outcome\n/.test(M1.tr)) fail("M1-7: unqualified historical Outcome heading still reads as current");
+else ok("M1-7: trust-risk current state = E-1 resolved for V1; E-2 the single legal follow-up; historical outcome marked");
+// M1-8 no stale hash anywhere: every 64-hex string in any MD equals a canonical hash
+{
+  const allMd = Object.values(M1).join("\n");
+  const hex = [...new Set(allMd.match(/\b[0-9a-f]{64}\b/g) ?? [])];
+  const staleHex = hex.filter((h) => h !== values.definition.contentHash.value && h !== daily.definition.contentHash.value);
+  if (staleHex.length) fail(`M1-8: stale hash(es) present — ${staleHex.map((h) => h.slice(0, 12)).join(", ")}`);
+  else ok("M1-8: every full hash in the MD set equals a canonical hash (no stale hashes)");
+}
+// M1-9 no stale scoring version anywhere (docs + JSONs)
+if (/values-scoring-v1\.1/.test(Object.values(M1).join("\n")) || /values-scoring-v1\.1/.test(allText)) fail("M1-9: values-scoring-v1.1 reference survives");
+else ok("M1-9: no values-scoring-v1.1 reference anywhere");
+// M1-10 package index version matrix matches canonical JSONs
+{
+  const wantIdx = ["mtf2a-daily-check-in-v1.2.0", "mtf2a-yorisou-values-v1.2.0", "daily-state-schema-v1.1", "daily-ack-v1.2", "daily-longitudinal-v1", "values-bank-v1.0", "values-scoring-v1.0", "values-result-v1.0", "values-report-outline-v1.0"];
+  const missing = wantIdx.filter((v) => !M1.idx.includes(v));
+  const notCanon = ["mtf2a-daily-check-in-v1.2.0", "mtf2a-yorisou-values-v1.2.0"].filter((v) => !allText.includes(v));
+  if (missing.length || notCanon.length) fail(`M1-10: version matrix mismatch — idx missing: ${missing.join(",") || "none"}; not in JSON: ${notCanon.join(",") || "none"}`);
+  else ok("M1-10: package-index version matrix complete and consistent with the canonical JSONs (both spec versions v1.2.0)");
+}
+// M1-11 package index pins both canonical hashes
+if (!M1.idx.includes(values.definition.contentHash.value) || !M1.idx.includes(daily.definition.contentHash.value)) fail("M1-11: package index missing a canonical hash");
+else ok("M1-11: package index pins both final canonical hashes");
+// M1-12 daily product spec + copy system: field-valid longitudinal truth, no stale all-days example
+if (/今月いちばん多かった/.test(M1.dspec) || !M1.dspec.includes("field-valid") || !M1.dspec.includes("記録した日の中では")) fail("M1-12: daily longitudinal field-valid truth missing/stale in product spec");
+else ok("M1-12: daily product spec states field-valid denominators; unrecorded days neutral; 記録した日の中では wording");
+// M1-13 copy system privacy quote equals canonical privacyJa (incl. consent clause; no absolute claim)
+{
+  const priv = JSON.stringify(daily).match(/"privacyJa":"([^"]+)"/)?.[1] ?? "";
+  if (!priv || !M1.dcopy.includes(priv)) fail("M1-13: copy-system privacy quote does not match canonical privacyJa");
+  else if (/だれにも見えません/.test(M1.dcopy)) fail("M1-13: absolute invisibility claim present");
+  else ok("M1-13: copy-system privacy summary equals canonical privacyJa (consent clause included, no absolute claim)");
+}
+// M1-14 editorial review carries the final MTF-2A.2 note (current-state wording)
+if (!M1.ed.includes("MTF-2A.2 final editorial note") || !M1.ed.includes("daily-ack-v1.2") || !M1.ed.includes("privateRenderingContract")) fail("M1-14: final editorial note missing");
+else ok("M1-14: editorial review records the final Q04/Q25, ack v1.2, share-pass and answer-traceable state");
+// M1-15 review record: C-25 present; step-20 pending in completion matrix
+if (!M1.rr.includes("C-25") || !M1.rr.includes("Step 20 (Founder review): PENDING") || !M1.rr.includes("byte-unchanged from `426e52b`")) fail("M1-15: C-25 / step-20 truth missing in review record");
+else ok("M1-15: review record carries C-25 mirror-staleness defect + documentation-only correction + step-20 PENDING");
+
 // ── EXTERNAL REPOSITORY GATES (executed for real; counted separately) ────────
 try {
   execSync("node scripts/validate-mtf1-docs.mjs", { stdio: "pipe" });

@@ -33,7 +33,7 @@ Construct rationale (per §6.3 the suggested list was not adopted mechanically):
 - Missing inputs: rendered 未記入; acknowledgement cascade skips null fields; no imputation.
 - Cadence: `daily`, **streak-free** — gaps carry no penalty and no guilt copy (「あいだが空いても、なにも失われません。」).
 
-## 4. Acknowledgement model (`daily-ack-v1.1`)
+## 4. Acknowledgement model (`daily-ack-v1.2`)
 
 A **finite set of 13 authored acknowledgements** selected by a deterministic priority cascade (first match wins): first-entry → rain → wind → low battery → swirl → need-keyed (6) → sunny → neutral. Canonical rules + full copy in the JSON.
 
@@ -50,11 +50,13 @@ A **finite set of 13 authored acknowledgements** selected by a deterministic pri
 
 ## 6. Timeline semantics (the deep output)
 
-There is deliberately **no conventional deep report**. The longitudinal experience IS the deep output:
+There is deliberately **no conventional deep report**. The longitudinal experience IS the deep output.
 
-- **7-day view** 「この7日の空模様」 — five mini-rows (one per field), icons/words only.
-- **30-day view** 「この30日の空模様」 — weather strip + need-frequency words (e.g. 「今月いちばん多かった『ほしいもの』：やすみ」). Words, never counts presented as scores.
-- **Recent-pattern summary** — authored sentence patterns over the last 7 days (e.g. 雨が続いた週, 充電少なめの週), selected deterministically, phrased as observations, never as deterioration claims.
+**Field-valid denominator rule (MTF-2A.2, canonical):** every summary uses **only field-valid recorded entries** — days with no entry and entries where the specific field was unanswered are excluded from that rule's denominator. Summary copy carries the 「記録した日の中では…」 meaning; unrecorded days remain neutral and are never described as known states. Per-rule minimum observation counts are canonical in the JSON.
+
+- **7-day view** 「この7日の空模様」 — five mini-rows (one per field), icons/words only; unanswered cells render neutral.
+- **30-day view** 「この30日の空模様」 — weather strip (only answered weather is drawn) + need-frequency words computed over kyou_hoshii-answered days only (e.g. 「記録した日の中でいちばん多かった『ほしいもの』は『やすみ』でした」). Words, never counts presented as scores.
+- **Recent-pattern summary** — authored sentence patterns over field-valid recorded days (e.g. 「記録した日の中では、あめの日が多めでした」「記録した日の中では、充電少なめの日が目立ちました」), selected deterministically with per-rule minimum observations, phrased as observations, never as deterioration claims.
 - **Recurring context (opt-in)** — the user may confirm a recurring pattern into their private understanding (CPV1 confirmation flow).
 - **Gentle reflection prompts** — 3 authored prompts shown at most weekly.
 

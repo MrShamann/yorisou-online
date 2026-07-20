@@ -23,7 +23,7 @@ Evaluation axes (§7.2): mobile burden (8 min holds attention one commute), comp
 | 14 (7 × 2 flavors) | rejected — duplicates copy without adding recognition value |
 | **7 dimension-led + 1 mixed, secondary as a live signal** | **SELECTED** |
 
-**Count derivation (explicitly not a default):** the result count follows the **7-dimension construct** — result identity = the currently-leading priority; texture comes from `secondarySignals` (native to `ArchetypeResult`), not from result multiplication; the mixed result exists because a deep tie is itself the finding (priorities in motion), not a failure state. Total **8 result records**.
+**Count derivation (explicitly not a default):** the result count follows the **7-dimension construct** — result identity = the currently-leading priority; texture comes from `secondarySignals` (native to `ArchetypeResult`), not from result multiplication. The mixed result exists because the normalized top dimensions are close and the method does not have sufficient basis to force one clear primary — **Mixed is a valid scored outcome, not an incomplete state, and does not by itself prove transition, conflict or indecision.** Total **8 result records**.
 
 **Retest interpretation:** 結果が変わるのは自然なこと。前回との違いは「変化した点」としてことばで示し、優劣・悪化では示さない。
 

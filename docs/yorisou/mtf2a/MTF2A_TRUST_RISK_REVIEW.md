@@ -36,14 +36,14 @@
 | Compatibility certainty | PASS — no compatibility output exists; cross-method numeric comparison structurally prohibited |
 | Permanent identity labeling | PASS — 「〜たい時期」 naming + current-state recognition lines + retest framing (変化は自然) |
 
-## Escalation register (separate, not implemented here)
+## Escalation register (historical — step-18 state, SUPERSEDED by the current state below)
 
-- **E-1** — sustained-low-state gentle-resources policy (daily-check-in): Founder decision; crisis-adjacent design requires its own reviewed package.
-- **E-2** — anti-screening terms-of-use clause (values): Founder/legal follow-up.
+- **E-1** — sustained-low-state gentle-resources policy (daily-check-in): Founder decision; crisis-adjacent design requires its own reviewed package. *(SUPERSEDED: resolved for V1 by Founder decision 3.2 — see current state.)*
+- **E-2** — anti-screening terms-of-use clause (values): Founder/legal follow-up. *(Still open as a legal implementation item — see current state.)*
 
-## Outcome
+## Outcome (historical — step-18 pass, before MTF-2A.1 Founder decisions)
 
-**PASS with two recorded escalations (E-1, E-2)** — both are future policy decisions, not defects in the authored content.
+**PASS with two recorded escalations (E-1, E-2)** — recorded at step 18 as future policy decisions, not defects in the authored content. *(This count is historical; see the current escalation state below.)*
 
 ## MTF-2A.1 additions
 
@@ -51,3 +51,11 @@
 - **Anti-screening boundary (3.3) shipped** in `yorisou-values.v1.json` (`usageBoundaryJa`) + product spec §9 + interpretation limits; ToU implementation requirement registered (FD-3 remains a legal follow-up).
 - **Acknowledgement risk pass:** 13/13 reviewed — future predictions, outcome guarantees, it-will-work claims, mobility assumptions and unrequested advice removed (keep 4 / polish 2 / rewrite 7; per-ack decisions in the JSON).
 - **Privacy language:** absolute claims removed; accurate boundary copy shipped (daily privacyJa/shareBoundaryJa + privacy.processingNote).
+
+## Current escalation state (MTF-2A.2 — canonical)
+
+- **E-1 — RESOLVED for V1** by the frozen no-automatic-crisis-classification / no-automatic-resource-trigger policy (Founder decision 3.2, carried in the canonical `prohibitions`). Historical E-1 entries above are superseded.
+- **E-2 — OPEN as a future ToU/legal implementation item (FD-3)**: the anti-screening boundary already SHIPS in canonical copy (`usageBoundaryJa` + interpretation limits); the Terms-of-Use clause is required at implementation.
+- **Net current state:** this package carries **one unresolved legal follow-up (E-2/FD-3)** — not two unresolved product-policy decisions.
+
+**Current outcome: PASS** — acks non-directive (v1.2), anti-screening shipped, V1 low-state policy in force.
