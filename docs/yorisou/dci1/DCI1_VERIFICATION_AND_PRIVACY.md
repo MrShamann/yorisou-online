@@ -33,7 +33,7 @@ Longitudinal: 10 deterministic test groups — rain / low-battery / swirl / repe
 
 ## 5. Privacy & consent review (§17/§18)
 
-- Persisted records private by default; owner-scoped service-role repository; anonymous users cannot read or mutate anything (401 before store access; RLS denies direct access).
+- Persisted records private by default; server repository owner-scoped in every query; anonymous users cannot read or mutate anything (401 before store access; RLS enabled with direct user access denied — deny-all direct access + RPC-only mutation, not user-JWT owner RLS).
 - No state field or memo in share cards or URLs (no share surface exists for this method; smoke asserts URL cleanliness); no state/memo in client or server logs (error paths log bounded error CODES only — reviewed line-by-line); no analytics emission at all in DCI-1 (event contract deferred); memo never used in hints (hints read `kyou_hoshii` only); no AI/LLM call anywhere in the slice; NO cross-method understanding update (nothing writes to CPV1 observations/understanding); no supplier/external access; no moderator surface.
 - Purpose separation: (1) private save = the explicit save action; (2) cross-method understanding = **disabled in DCI-1** (not implemented); (3) recommendation hints = separate user-initiated reveal (「…ヒントを見る（任意）」) shown only AFTER a successful private save — never automatic, never bundled into the save consent. Hint output carries fitReason + source option + private-only boundary; unanswered need → explicit `no_recommendation`; no commercial content.
 - Anonymous continuation: device-local sessionStorage only, 10-minute TTL, taken exactly once; anonymous state is never silently merged into an account — the user explicitly signs in and the resumed entry is shown for review before any save.
@@ -58,3 +58,29 @@ Longitudinal: 10 deterministic test groups — rain / low-battery / swirl / repe
 
 - **FD-DCI-1**: accept/reject this implementation candidate (Founder Review of PR #118) — acceptance would authorize flipping registry `implementation` to `complete` and scheduling the merge package.
 - **FD-DCI-2**: whether/when to authorize an isolated-Preview acceptance run (requires setting `dci_daily_check_in_preview` + a Preview backend — both outside this package's authority).
+
+
+---
+
+# DCI-1.1 — Verification Addendum
+
+## Corrected results (final DCI-1.1 state)
+
+| Check | Result |
+|---|---|
+| DCI contract suite (`npm run test:daily-check-in`) | **41 checks passed** (adds the server-authoritative time contract: server identity, resumed windows, midnight crossing, timezone-change no-re-bucket, correction window) |
+| Disposable-DB harness (`npm run test:daily-check-in:db`) | **ALL CHECKS PASSED** — DCI-1.1 additions: every direct write (INSERT/UPDATE/DELETE/TRUNCATE × 3 tables) FAILS under `SET ROLE service_role` while the RPCs succeed; initial `produced_at` never overwritten; version rows carry their own server timestamps; past-local-date correction rejected in-database; governed erasure sweeps (record row gone, zero version rows, memo string absent database-wide, content-free tombstone with 12-month retention); **two concurrent corrections serialize to exactly v3 with three distinct version rows**; rollback executed (incl. dropping `yorisou_dci_block_mutation`) |
+| Full-stack authenticated acceptance (`bash tests/daily-check-in/fullstack-local.sh`) | **5/5 PASSED** — see the architecture doc's DCI-1.1 section for the exact coverage |
+| API negatives | malformed JSON → 400; >16KB body → 413; client `producedAt`/`entryLocalDate` → 422 `time_identity_is_server_authoritative`; expired/future resumed time → 422 bounded codes; duplicate day → 409; correction after local midnight → 409 `correction_window_closed`; internal Postgres text never exposed (allowlisted `RPC_ERROR_MAP` only) |
+| DCI-focused remote CI | `.github/workflows/dci-1-ci.yml` — generator drift, contract suite, MTF validators (both modes), migration guard, DB harness (CI service Postgres), tsc, focused eslint, secret scan, build, focused browser tests, authenticated full-stack harness (CI PostgREST + real app) |
+
+## Deletion retention rule (canonical)
+
+Tombstone purpose: bounded deletion audit + duplicate/idempotency handling. Retention class: metadata-only (record id, owner ref, method id via record linkage, last version count, deletion instant, reason code). Expiry: `retention_expires_at` = deletion + 12 months; purge path: the account-level data-rights flow (`yorisou_account_deletion_requests`); access boundary: service-role SELECT only, never served to any user surface. No documented legal basis exists for indefinite retention, so none is claimed.
+
+## Status of DCI-1's unresolved items
+
+1. Authenticated browser round-trip vs a live local backend — **CLOSED (DCI-C6)** by the full-stack harness (local + CI).
+2. Event emission — still deferred by design (contract recorded); unchanged.
+3. Rate limiting — still a platform-level follow-up (no repository-wide limiter pattern exists); unchanged.
+4. JS-failure degradation — unchanged (consistent with every existing test flow).

@@ -43,18 +43,18 @@ PR #113/#114 were consulted as REFERENCE ONLY; nothing was cherry-picked (no bra
 
 `yorisou_test_results` REJECTED for daily state: its CHECK-constrained `test_id`, one-active-row idempotency and result-shaped columns would force fake answers/result fields, destructive updates, no entry-local-date identity and no version history. Dedicated additive migration `supabase/migrations/202607200005_dci1_daily_state_records.sql`:
 
-- `yorisou_daily_state_records` — current visible entry; partial unique `(owner_account_id, entry_local_date) where deleted_at is null`; identity = `produced_at` (UTC) + `entry_local_date` + IANA `timezone` (+ optional `utc_offset_minutes`); memo ≤140; method CHECK `daily-check-in`.
-- `yorisou_daily_state_record_versions` — append-only content history (block-mutation triggers via clean-main `yorisou_cpv1_block_mutation()`); `reason_code in ('initial','user_correction')`.
+- `yorisou_daily_state_records` — current visible entry; unique `(owner_account_id, entry_local_date)`; identity = INITIAL `produced_at` (UTC, never overwritten by corrections) + `entry_local_date` + IANA `timezone` (+ optional `utc_offset_minutes`); memo ≤140; method CHECK `daily-check-in`. (DCI-1.1: the erased-row deletion model replaced the DCI-1 `deleted_at` soft-hide columns.)
+- `yorisou_daily_state_record_versions` — append-only content history while the record exists (DCI-1.1: `yorisou_dci_block_mutation()` guard — UPDATE/TRUNCATE never; DELETE only under the governed-erase flag inside the deletion RPC); `reason_code in ('initial','user_correction')`.
 - `yorisou_daily_state_history_events` — append-only audit/tombstone events; **structurally carries NO state and NO memo columns**.
-- Atomic RPCs (SECURITY DEFINER, service-role execute only, fixed `search_path=public`): `yorisou_daily_record_create` / `_correct` / `_delete` — record + version + event mutate together or not at all.
-- RLS: enabled on all three; ALL direct grants revoked from public/anon/authenticated (product-family posture — app auth is cookie-based, no user JWT reaches PostgREST; owner scoping enforced in the server-only repository + API layer).
+- Atomic RPCs (SECURITY DEFINER, service-role execute only, fixed `search_path=public`): `yorisou_daily_record_create` / `_correct` / `_delete` — record + version + event mutate together or not at all; the definer-owner performs the internal writes (DCI-1.1: application code holding the service-role key CANNOT write any table directly).
+- Access (DCI-1.1 corrected terminology): **RLS enabled · direct user access denied · service repository owner-scoped · RPC-only mutation** — NOT user-JWT owner RLS (no authenticated-user policies exist, intentionally); service_role holds SELECT only; all writes go through the RPCs.
 - **No hosted/production apply. LOCAL DISPOSABLE-DATABASE VERIFICATION ONLY.** Rollback classification: `LOCAL_DISPOSABLE_SCHEMA_ROLLBACK` — the documented drop statements were EXECUTED and verified in the disposable DB; **no production rollback is claimed** (no production migration occurred).
 
 ## 6. Correction & deletion semantics (§13/§14)
 
 - One visible record per `entryLocalDate`; correction = new version (prior versions preserved; `current_version` pointer updates atomically in the RPC transaction); correction reason is the bounded code `user_correction` (free-text reasons rejected).
 - Timezone rule: corrections keep the ORIGINAL `entryLocalDate` + captured timezone — past entries never re-bucket; server validation rejects date/timezone mismatches (`entry_date_timezone_mismatch`).
-- Deletion: soft-hide (`deleted_at`) + content-free `deleted` tombstone event; never converted into a correction; owner-authorized; second delete is a no-op; a new entry for the date is allowed afterwards. Honest boundary: version-content rows REMAIN in the append-only history layer (never served to any user surface) per CPV1 audit policy; physical purge belongs to the existing account-level data-rights flow (`yorisou_account_deletion_requests`), not this RPC.
+- Deletion (DCI-1.1 §8 — supersedes the DCI-1 soft-hide model, defect DCI-C5): the user 消す action performs governed **PRIVATE-CONTENT ERASURE**: the deletion RPC removes ALL version content rows and the current record row under a transaction-local governed-erase flag, then appends ONE content-free tombstone event (record id, owner ref, last version count, deletion time, bounded reason code, `retention_expires_at` = 12 months). No raw structured state, option value, memo, acknowledgement copy or recommendation tag survives anywhere (DB-swept in tests AND in the full-stack browser harness). Tombstone retention class: bounded audit metadata; after expiry the account-level data-rights purge path removes it; no indefinite-retention claim is made. Deletion is never converted into a correction; second delete is a no-op; a new entry for the date is allowed afterwards. UI copy states the erasure truthfully (「内容（選んだ状態とメモ）は消去され、復元できません」).
 
 ## 7. Route & feature gating (§9)
 
@@ -72,3 +72,44 @@ No navigation card, no `/tests` catalog listing (smoke-tested: zero links), no s
 ## 8. Events (§19)
 
 Bounded contract recorded in `lib/yorisou/methods/daily-check-in/events.ts` (6 names; ISO timestamp only; NO raw selections/memo/result content). **Emission deferred** — the existing governed event infra is open-testing-scoped; widening it would be an unrelated-subsystem change. A future package wires emission against this contract.
+
+
+---
+
+# DCI-1.1 — Storage Integrity, Server-Authoritative Time & Full-Stack Corrections
+
+## Defects present at `1a59eaa` (recorded honestly)
+
+| # | Defect | Correction |
+|---|---|---|
+| DCI-C1 | service-role direct writes could bypass atomic RPC invariants (INSERT/UPDATE grants existed) | ALL table writes revoked from service_role (SELECT only); mutation is possible EXCLUSIVELY through the SECURITY DEFINER RPCs; every direct write path (INSERT/UPDATE/DELETE/TRUNCATE × 3 tables) proven to fail under `SET ROLE service_role` |
+| DCI-C2 | create timestamp and local date were client-authoritative | Server generates `producedAt` and derives `entryLocalDate` from the validated IANA timezone; client `producedAt`/`entryLocalDate` fields are REJECTED (422 `time_identity_is_server_authoritative`); no backdated or future records |
+| DCI-C3 | correction validated against the old timestamp but stored a new one under the same field | Coherent contract: record identity keeps the INITIAL `produced_at` (never overwritten); each version row carries its own server instant; content validated against the stored identity |
+| DCI-C4 | anonymous continuation dropped the original completion time and timezone | Pending contract v2 preserves `completedAt` + original timezone + method/schema versions; server accepts them only within 10 min (+120s skew); local date derives from the ORIGINAL timezone (midnight-crossing + timezone-change tested); expired time returns a bounded error, never a silent backdate |
+| DCI-C5 | user deletion retained raw private state and memo indefinitely | Governed private-content ERASURE (see §6 above) with a 12-month-retention content-free tombstone |
+| DCI-C6 | authenticated browser-to-real-backend round-trip not executed | Full-stack local harness (below) executed and PASSED; also runs in the DCI CI workflow |
+| DCI-C7 | remote CI did not execute DCI-specific gates | `.github/workflows/dci-1-ci.yml` runs every DCI gate remotely, including the DB harness and the authenticated full-stack browser harness against CI service containers |
+
+## Access architecture (correct terminology)
+
+`DIRECT_USER_DENY + SERVER_REPOSITORY_OWNER_SCOPE + RPC_ONLY_DATABASE_MUTATION` — RLS enabled; direct user access denied (no policies exist, intentionally — this is NOT user-JWT owner RLS); the server repository is owner-scoped in every query; database mutation is RPC-only. Note on Supabase parity: hosted `service_role` carries BYPASSRLS, so read access rests on the SELECT-only grant and write denial rests on grants (privilege checks precede RLS); disposable test stacks create `service_role` with BYPASSRLS to match.
+
+## Database privilege matrix (final)
+
+| Role | records | versions | events | RPCs |
+|---|---|---|---|---|
+| public | none | none | none | none |
+| anon | none | none | none | none |
+| authenticated | none | none | none | none |
+| service_role | SELECT | SELECT | SELECT | EXECUTE (create/correct/delete) |
+| definer owner (inside RPCs only) | bounded insert/update/governed delete | insert + governed erase | insert | — |
+
+Append-only guards: versions UPDATE/TRUNCATE always blocked, DELETE only under the transaction-local governed-erase flag set inside the deletion RPC; events immutable forever; records TRUNCATE blocked.
+
+## Server-authoritative time contract
+
+Standard create: `producedAt = server now`; `entryLocalDate = localDate(producedAt, submitted valid IANA tz)`; UTC offset derived server-side. Resumed create: original `completedAt` + original timezone preserved iff valid ISO, ≤10 min old, ≤120s future skew; date derived by the server from `completedAt` in the ORIGINAL timezone. Correction: accepted only while `serverNow` in the record's STORED timezone still equals `entryLocalDate` — enforced in the API AND inside the database RPC (`daily_record_correction_window_closed`), never only by UI hiding.
+
+## Full-stack authenticated local acceptance (DCI-C6)
+
+One documented command: `bash tests/daily-check-in/fullstack-local.sh` — disposable PostgreSQL (ephemeral initdb) + PostgREST (local supabase/postgrest image) + /rest/v1 prefix proxy + production app build + isolated auth file-store; executes tests/smoke/daily-check-in-fullstack.spec.ts through the real browser → gated route → cookie auth/session layer → API handlers → server repository → PostgREST REST/RPC → migrated database. Result: **5/5 PASSED**, then full teardown (all test data removed). Covered: signed-in create → server-derived date → history → same-day correction (v2; v1 preserved pre-deletion) → delete → DB-swept content erasure + tombstone; API negatives (time overrides, expired/future resumed time, invalid timezone, duplicate → 409, past-date PATCH, malformed 400, oversized 413); resumed identity preserved across login incl. a UTC+14 timezone whose local date differs from the server's UTC date; anonymous UI completion → login → single-use resumed review → explicit save (with a visible discard control); two-account isolation; unauthenticated denial of all four methods.

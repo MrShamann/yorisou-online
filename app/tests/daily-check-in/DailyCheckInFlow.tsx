@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { DAILY_CHECK_IN_DEFINITION } from "@/lib/yorisou/methods/daily-check-in/definition.generated";
 import { selectAcknowledgement } from "@/lib/yorisou/methods/daily-check-in/acknowledgement";
 import { hintForEntry } from "@/lib/yorisou/methods/daily-check-in/hints";
-import { localDateForInstant } from "@/lib/yorisou/method-runtime/recordedState";
 import { optionLabelJa } from "@/lib/yorisou/methods/daily-check-in/longitudinal";
 import { storePendingDailyEntry, takePendingDailyEntry, type PendingDailyEntry } from "./pendingEntry";
 
@@ -62,6 +61,8 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [deleteConfirmDate, setDeleteConfirmDate] = useState<string | null>(null);
   const [resumed, setResumed] = useState(false);
+  const [completedAt, setCompletedAt] = useState<string | null>(null);
+  const [resumedContext, setResumedContext] = useState<{ completedAt: string; timezone: string } | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -101,6 +102,9 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
       setValues((prev) => ({ ...prev, ...pending.values }));
       setMemoOptIn(pending.memoOptIn);
       setMemo(pending.memo ?? "");
+      // Preserve the ORIGINAL completion instant + timezone for the resumed save;
+      // never recomputed from the post-login browser timezone (DCI-C4).
+      setResumedContext({ completedAt: pending.completedAt, timezone: pending.timezone });
       setResumed(true);
     });
   }, [authenticated]);
@@ -113,14 +117,16 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
     setValidationJa(null);
     const isFirst = authenticated ? (history?.records.length ?? 0) === 0 : true;
     setAck(selectAcknowledgement(values, isFirst));
+    setCompletedAt(new Date().toISOString());
     setPhase("ack");
   };
 
   const save = async (asCorrection: string | null) => {
     setSaveState({ kind: "saving" });
-    const producedAt = new Date().toISOString();
-    const entryLocalDate = localDateForInstant(producedAt, timezone) ?? producedAt.slice(0, 10);
     try {
+      const createBody = resumedContext
+        ? { values, memoOptIn, memo: memoOptIn && memo ? memo : null, timezone: resumedContext.timezone, resumed: true, completedAt: resumedContext.completedAt }
+        : { values, memoOptIn, memo: memoOptIn && memo ? memo : null, timezone };
       const res = asCorrection
         ? await fetch(`/api/tests/daily-check-in/records/${asCorrection}`, {
             method: "PATCH",
@@ -130,10 +136,18 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
         : await fetch("/api/tests/daily-check-in/records", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ values, memoOptIn, memo: memoOptIn && memo ? memo : null, producedAt, entryLocalDate, timezone }),
+            body: JSON.stringify(createBody),
           });
       if (res.status === 401) {
-        storePendingDailyEntry({ values, memoOptIn, memo: memoOptIn && memo ? memo : null, entryLocalDate, timezone });
+        storePendingDailyEntry({
+          values,
+          memoOptIn,
+          memo: memoOptIn && memo ? memo : null,
+          completedAt: completedAt ?? new Date().toISOString(),
+          timezone,
+          methodVersion: DEF.methodVersion,
+          schemaVersion: DEF.schemaVersion,
+        });
         setSaveState({ kind: "login_needed" });
         return;
       }
@@ -153,6 +167,7 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
       setAck({ ackId: data.ackId, copyJa: data.acknowledgementJa });
       setSaveState({ kind: "saved", version: data.currentVersion });
       setEditingDate(null);
+      setResumedContext(null);
       void loadHistory();
     } catch {
       setSaveState({ kind: "error" });
@@ -186,9 +201,23 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
       </header>
 
       {resumed && phase === "entry" ? (
-        <p className="surface-panel-soft mb-4 rounded-lg p-3 text-sm" data-testid="daily-resumed-note">
-          とちゅうの記録を引き継ぎました。内容を確かめてから保存できます。
-        </p>
+        <div className="surface-panel-soft mb-4 rounded-lg p-3 text-sm" data-testid="daily-resumed-note">
+          <p>とちゅうの記録を引き継ぎました。内容を確かめてから保存できます。記録の時刻は、入力したときのものが保たれます。</p>
+          <button
+            type="button"
+            className="soft-link mt-2 text-sm"
+            data-testid="daily-resumed-discard"
+            onClick={() => {
+              setResumedContext(null);
+              setResumed(false);
+              setValues(Object.fromEntries(DEF.fields.map((f) => [f.fieldId, null])));
+              setMemoOptIn(false);
+              setMemo("");
+            }}
+          >
+            引き継いだ記録を破棄する
+          </button>
+        </div>
       ) : null}
 
       {phase === "entry" ? (
@@ -482,7 +511,7 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
                       {deleteConfirmDate === r.entryLocalDate ? (
                         <div className="w-full rounded-lg border p-3" style={{ borderColor: "var(--border-soft)" }} role="alertdialog" aria-label="記録の削除の確認" data-testid="daily-delete-confirm">
                           <p className="text-sm" style={{ color: "var(--text-main)" }}>
-                            {r.entryLocalDate} の記録を消しますか。表示からは消え、内容は見えなくなります。
+                            {r.entryLocalDate} の記録を消しますか。記録の内容（選んだ状態とメモ）は消去され、復元できません。
                           </p>
                           <div className="mt-2 flex gap-3">
                             <button type="button" className="rounded-full border px-4 py-1.5 text-sm" style={{ borderColor: "var(--cta-main)", color: "var(--cta-main)" }} onClick={() => void deleteEntry(r.entryLocalDate)} data-testid="daily-delete-confirm-yes">

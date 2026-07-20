@@ -1,13 +1,21 @@
 import { NextResponse } from "next/server";
-// DCI-1 — per-date record operations (owner-scoped; server-side gated).
-// PATCH: versioned same-day correction (prior versions preserved; atomic RPC).
-// DELETE: governed deletion (soft-hide + content-free tombstone event).
+// DCI-1.1 — per-date record operations (owner-scoped; server-side gated).
+// PATCH: versioned same-day correction. The record's initial producedAt and
+//        local-date identity are never overwritten; the new version carries the
+//        SERVER correction instant; corrections are accepted only while the
+//        server's now in the record's STORED timezone is still the record's
+//        entryLocalDate (enforced here AND in the database RPC — never only by
+//        the UI hiding the edit button).
+// DELETE: governed PRIVATE-CONTENT ERASURE — version content and the current
+//        row are removed; only a content-free tombstone event remains.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { dailyCheckInAccess } from "@/lib/yorisou/methods/daily-check-in/access";
 import { DAILY_CHECK_IN_RUNTIME_DEFINITION } from "@/lib/yorisou/methods/daily-check-in/runtimeDefinition";
 import { executeRecordedState } from "@/lib/yorisou/method-runtime/recordedState";
+import { correctionWindowOpen } from "@/lib/yorisou/methods/daily-check-in/timeContract";
 import { selectAcknowledgement } from "@/lib/yorisou/methods/daily-check-in/acknowledgement";
+import { mapDailyStoreError, readBoundedJson } from "@/lib/server/dailyCheckInApi";
 import { correctDailyRecord, deleteDailyRecord, getDailyRecordForOwner } from "@/lib/server/dailyCheckInStore";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -25,30 +33,34 @@ export async function PATCH(request: Request, context: Context) {
   try {
     const existing = await getDailyRecordForOwner(ownerAccountId, date);
     if (!existing) return NextResponse.json({ error: "record_not_found" }, { status: 404 });
-    const body = (await request.json().catch(() => null)) as { values?: unknown; memoOptIn?: unknown; memo?: unknown } | null;
-    if (!body || typeof body.values !== "object" || body.values === null) {
+    // §7 — correction only while the server's now in the STORED timezone is
+    // still the record's local date (also enforced inside the DB RPC).
+    if (!correctionWindowOpen(existing.entry_local_date, existing.timezone)) {
+      return NextResponse.json({ error: "correction_window_closed" }, { status: 409 });
+    }
+    const read = await readBoundedJson(request);
+    if (!read.ok) return NextResponse.json({ error: read.error }, { status: read.status });
+    const body = read.body as { values?: unknown; memoOptIn?: unknown; memo?: unknown } | null;
+    if (!body || typeof body !== "object" || typeof body.values !== "object" || body.values === null) {
       return NextResponse.json({ error: "invalid_request" }, { status: 400 });
     }
     const values: Record<string, string | null> = {};
     for (const [k, v] of Object.entries(body.values as Record<string, unknown>)) {
       values[k] = typeof v === "string" && v ? v : null;
     }
-    const producedAt = new Date().toISOString();
-    // Correction identity keeps the ORIGINAL entryLocalDate + timezone (past
-    // entries never re-bucket); the runtime date/timezone consistency check is
-    // therefore run against the stored timezone with the stored local date.
-    const execution = executeRecordedState(
-      DAILY_CHECK_IN_RUNTIME_DEFINITION,
-      {
-        values,
-        memoOptIn: body.memoOptIn === true,
-        memo: typeof body.memo === "string" && body.memo ? body.memo : null,
-        producedAt: existing.produced_at, // identity fields validated as stored
-        entryLocalDate: existing.entry_local_date,
-        timezone: existing.timezone,
-        utcOffsetMinutes: existing.utc_offset_minutes,
-      },
-    );
+    // Coherent timestamp semantics: content is validated against the record's
+    // STORED identity (initial producedAt + local date + timezone); the version
+    // row then carries the server correction instant via the RPC. No field is
+    // validated under one timestamp and stored under another.
+    const execution = executeRecordedState(DAILY_CHECK_IN_RUNTIME_DEFINITION, {
+      values,
+      memoOptIn: body.memoOptIn === true,
+      memo: typeof body.memo === "string" && body.memo ? body.memo : null,
+      producedAt: existing.produced_at,
+      entryLocalDate: existing.entry_local_date,
+      timezone: existing.timezone,
+      utcOffsetMinutes: existing.utc_offset_minutes,
+    });
     if (!execution.ok) {
       return NextResponse.json({ error: "validation_failed", codes: execution.errors.map((e) => e.code) }, { status: 422 });
     }
@@ -57,18 +69,16 @@ export async function PATCH(request: Request, context: Context) {
     const version = await correctDailyRecord({
       ownerAccountId,
       entryLocalDate: date,
-      producedAt,
+      producedAt: new Date().toISOString(), // server instant of THIS version
       state: execution.envelope.stateValues,
       memo,
       ackId: ack.ackId,
     });
     return NextResponse.json({ entryLocalDate: date, currentVersion: version, ackId: ack.ackId, acknowledgementJa: ack.copyJa });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "unknown";
-    if (message === "daily_record_not_found") return NextResponse.json({ error: "record_not_found" }, { status: 404 });
-    if (message === "daily_persistence_not_configured") return NextResponse.json({ error: "backend_unavailable" }, { status: 503 });
-    console.error("daily-check-in correction failed", { code: message });
-    return NextResponse.json({ error: "daily_correction_failed" }, { status: 500 });
+    const mapped = mapDailyStoreError(error, "daily_correction_failed");
+    if (mapped.status === 500) console.error("daily-check-in correction failed", { code: mapped.internalCode });
+    return NextResponse.json({ error: mapped.error }, { status: mapped.status });
   }
 }
 
@@ -83,11 +93,10 @@ export async function DELETE(_request: Request, context: Context) {
   try {
     const deleted = await deleteDailyRecord(ownerAccountId, date);
     if (!deleted) return NextResponse.json({ error: "record_not_found" }, { status: 404 });
-    return NextResponse.json({ deleted: true, entryLocalDate: date });
+    return NextResponse.json({ deleted: true, erased: true, entryLocalDate: date });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "unknown";
-    if (message === "daily_persistence_not_configured") return NextResponse.json({ error: "backend_unavailable" }, { status: 503 });
-    console.error("daily-check-in delete failed", { code: message });
-    return NextResponse.json({ error: "daily_delete_failed" }, { status: 500 });
+    const mapped = mapDailyStoreError(error, "daily_delete_failed");
+    if (mapped.status === 500) console.error("daily-check-in delete failed", { code: mapped.internalCode });
+    return NextResponse.json({ error: mapped.error }, { status: mapped.status });
   }
 }

@@ -15,6 +15,13 @@ import { selectAcknowledgement } from "../acknowledgement";
 import { sevenDaySummaries, thirtyDayView, type TimelineEntry } from "../longitudinal";
 import { hintForEntry } from "../hints";
 import { DAILY_CHECK_IN_EVENTS } from "../events";
+import {
+  serverTimeIdentity,
+  resumedTimeIdentity,
+  correctionWindowOpen,
+  RESUMED_MAX_AGE_MS,
+  RESUMED_FUTURE_SKEW_MS,
+} from "../timeContract";
 import { CPV1_METHOD_UNIVERSE, DAILY_CHECK_IN_RECONCILIATION, getMethod, methodActivationState } from "../../../../cpv1/methods";
 import { dailyCheckInAccess } from "../access";
 
@@ -367,5 +374,64 @@ check("event contract is bounded and content-free (emission deferred)", () => {
     "return_visit",
   ]);
 });
+
+console.log("DCI-1.1 — server-authoritative time contract");
+{
+  const NOW_FIXED = new Date("2026-07-20T15:30:00.000Z"); // 2026-07-21 00:30 JST — crosses midnight
+
+  check("standard create: server generates producedAt and derives entryLocalDate in the submitted timezone", () => {
+    const r = serverTimeIdentity("Asia/Tokyo", NOW_FIXED);
+    assert.ok(r.ok);
+    if (r.ok) {
+      assert.equal(r.identity.producedAt, NOW_FIXED.toISOString());
+      assert.equal(r.identity.entryLocalDate, "2026-07-21"); // JST local date, not UTC date
+      assert.equal(r.identity.utcOffsetMinutes, 540);
+    }
+    const ny = serverTimeIdentity("America/New_York", NOW_FIXED);
+    assert.ok(ny.ok && ny.ok === true && ny.identity.entryLocalDate === "2026-07-20");
+  });
+  check("standard create: unknown timezone rejected", () => {
+    const r = serverTimeIdentity("Tokyo/Nowhere", NOW_FIXED);
+    assert.ok(!r.ok && r.code === "invalid_timezone");
+  });
+  check("resumed create: valid recent completedAt preserved; local date derived in the ORIGINAL timezone", () => {
+    const completed = new Date(NOW_FIXED.getTime() - 5 * 60 * 1000).toISOString();
+    const r = resumedTimeIdentity(completed, "Asia/Tokyo", NOW_FIXED);
+    assert.ok(r.ok);
+    if (r.ok) {
+      assert.equal(r.identity.producedAt, completed);
+      assert.equal(r.identity.entryLocalDate, "2026-07-21");
+    }
+  });
+  check("resumed create: completion before midnight + login after midnight keeps the ORIGINAL local date", () => {
+    // Completed 23:58 JST (14:58Z); resumed 00:05 JST next local day (15:05Z).
+    const completed = "2026-07-20T14:58:00.000Z";
+    const resumedAt = new Date("2026-07-20T15:05:00.000Z");
+    const r = resumedTimeIdentity(completed, "Asia/Tokyo", resumedAt);
+    assert.ok(r.ok);
+    if (r.ok) assert.equal(r.identity.entryLocalDate, "2026-07-20"); // the completion's local date
+  });
+  check("resumed create: browser timezone change between completion and login does not re-bucket (original tz used)", () => {
+    const completed = new Date(NOW_FIXED.getTime() - 3 * 60 * 1000).toISOString();
+    const r = resumedTimeIdentity(completed, "Asia/Tokyo", NOW_FIXED); // caller passes the ORIGINAL tz from the pending entry
+    assert.ok(r.ok);
+    if (r.ok) assert.equal(r.identity.timezone, "Asia/Tokyo");
+  });
+  check("resumed create: expired (>10min), future (>skew), malformed all rejected with bounded codes", () => {
+    const expired = resumedTimeIdentity(new Date(NOW_FIXED.getTime() - RESUMED_MAX_AGE_MS - 1000).toISOString(), "Asia/Tokyo", NOW_FIXED);
+    assert.ok(!expired.ok && expired.code === "resumed_time_expired");
+    const future = resumedTimeIdentity(new Date(NOW_FIXED.getTime() + RESUMED_FUTURE_SKEW_MS + 1000).toISOString(), "Asia/Tokyo", NOW_FIXED);
+    assert.ok(!future.ok && future.code === "resumed_time_future");
+    const malformed = resumedTimeIdentity("not-a-time", "Asia/Tokyo", NOW_FIXED);
+    assert.ok(!malformed.ok && malformed.code === "resumed_time_invalid");
+    const missing = resumedTimeIdentity(undefined, "Asia/Tokyo", NOW_FIXED);
+    assert.ok(!missing.ok && missing.code === "resumed_time_invalid");
+  });
+  check("correction window: open on the record's local day in its STORED timezone; closed after local midnight", () => {
+    assert.equal(correctionWindowOpen("2026-07-21", "Asia/Tokyo", NOW_FIXED), true); // 00:30 JST on the 21st
+    assert.equal(correctionWindowOpen("2026-07-20", "Asia/Tokyo", NOW_FIXED), false); // yesterday in JST
+    assert.equal(correctionWindowOpen("2026-07-20", "America/New_York", NOW_FIXED), true); // still the 20th in NY
+  });
+}
 
 console.log(`\nDCI-1 daily-check-in contract: ${passed} checks passed.`);

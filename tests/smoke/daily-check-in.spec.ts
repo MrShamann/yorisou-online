@@ -79,7 +79,7 @@ test.describe("/tests/daily-check-in (DCI-1)", () => {
   test("anonymous save: API denies with 401; UI stores pending entry and offers sign-in continuation", async ({ page }) => {
     // API-level denial before any store access.
     const api = await page.request.post(`${BASE}/api/tests/daily-check-in/records`, {
-      data: { values: { kokoro_tenki: "hare" }, memoOptIn: false, memo: null, producedAt: new Date().toISOString(), entryLocalDate: "2026-07-20", timezone: "Asia/Tokyo" },
+      data: { values: { kokoro_tenki: "hare" }, memoOptIn: false, memo: null, timezone: "Asia/Tokyo" },
     });
     expect(api.status()).toBe(401);
     expect(await api.json()).toEqual({ error: "authentication_required" });
@@ -91,8 +91,10 @@ test.describe("/tests/daily-check-in (DCI-1)", () => {
     await page.getByTestId("daily-save").click();
     await expect(page.getByTestId("daily-login-needed")).toBeVisible();
     await expect(page.getByRole("link", { name: "サインインへ進む" })).toHaveAttribute("href", "/login?next=/tests/daily-check-in");
-    const pending = await page.evaluate(() => sessionStorage.getItem("yorisou.daily-check-in.pending-save.v1"));
+    const pending = await page.evaluate(() => sessionStorage.getItem("yorisou.daily-check-in.pending-save.v2"));
     expect(pending).toContain("yasumi");
+    expect(pending).toContain("completedAt"); // original completion instant preserved (DCI-C4)
+    expect(pending).toContain("timezone");
     // Privacy: the memo/state never appears in the URL.
     expect(page.url()).not.toContain("yasumi");
     await expectNoSeriousAxeViolations(page, "authentication continuation state");

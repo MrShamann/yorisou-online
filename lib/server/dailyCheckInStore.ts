@@ -23,7 +23,6 @@ export type DailyStateRecord = {
   current_version: number;
   created_at: string;
   updated_at: string;
-  deleted_at: string | null;
 };
 
 function config() {
@@ -55,7 +54,7 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
 }
 
 const RECORD_COLUMNS =
-  "id,owner_account_id,method_id,method_version,schema_version,ack_version,produced_at,entry_local_date,timezone,utc_offset_minutes,state,memo,ack_id,current_version,created_at,updated_at,deleted_at";
+  "id,owner_account_id,method_id,method_version,schema_version,ack_version,produced_at,entry_local_date,timezone,utc_offset_minutes,state,memo,ack_id,current_version,created_at,updated_at";
 
 export async function createDailyRecord(input: {
   ownerAccountId: string;
@@ -118,7 +117,6 @@ export async function listDailyRecordsForOwner(ownerAccountId: string, sinceLoca
     select: RECORD_COLUMNS,
     owner_account_id: `eq.${ownerAccountId}`,
     entry_local_date: `gte.${sinceLocalDate}`,
-    deleted_at: "is.null",
     order: "entry_local_date.desc",
     limit: String(limit),
   });
@@ -132,7 +130,6 @@ export async function getDailyRecordForOwner(ownerAccountId: string, entryLocalD
     select: RECORD_COLUMNS,
     owner_account_id: `eq.${ownerAccountId}`,
     entry_local_date: `eq.${entryLocalDate}`,
-    deleted_at: "is.null",
     limit: "1",
   });
   const response = await request(`${RECORDS}?${params}`, { method: "GET" });
