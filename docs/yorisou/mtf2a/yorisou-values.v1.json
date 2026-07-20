@@ -1,0 +1,443 @@
+{
+  "specVersion": "mtf2a-yorisou-values-v1.0.0",
+  "identity": {
+    "methodId": "yorisou-values",
+    "methodVersion": "values-v1.0",
+    "nameJa": "いま大事にしたいことチェック",
+    "subtitleJa": "最近の選び方から、いまの優先順位を見てみる",
+    "family": "yorisou_original_assessment",
+    "methodEvidenceClass": "yorisou_original_reflection",
+    "executionModel": "scored",
+    "rightsRoute": "YORISOU_ORIGINAL_REBUILD_CANDIDATE",
+    "originalityStatus": "YORISOU_ORIGINAL_AUTHORED_PENDING_FOUNDER_REVIEW",
+    "activationState": "gated",
+    "supportedChannels": ["web", "line_liff", "ios", "android"],
+    "language": "ja"
+  },
+  "definition": {
+    "kind": "scored",
+    "bankVersion": "values-bank-v1.0",
+    "bankContentHashPolicy": "sha256 over the canonical JSON item array; computed at implementation time and pinned in the runtime registry; any content change re-hashes and invalidates saved progress",
+    "scoringVersion": "values-scoring-v1.0",
+    "resultSchemaVersion": "values-result-v1.0",
+    "reportSchemaVersion": "values-report-outline-v1.0",
+    "sourceRegister": "docs/yorisou/mtf2a/MTF2A_SOURCE_AND_ORIGINALITY_REGISTER.md"
+  },
+  "benchmarkDecision": {
+    "status": "recorded",
+    "selectedItemCount": 48,
+    "selectedFormat": "A/B forced trade-off (one pair per screen)",
+    "expectedCompletionMinutes": 8,
+    "assessmentTier": "main",
+    "comparedFormats": [
+      { "format": "24-item multi-choice", "verdict": "rejected — multi-choice invites socially-desirable middle answers on values; trade-off pressure is the construct itself" },
+      { "format": "48-item A/B", "verdict": "SELECTED — 21 dimension-pairs each measured twice (+6 third passes) gives every pair repeated evidence at ~8 minutes; strong free-result credibility without deep-tier burden" },
+      { "format": "60-item A/B", "verdict": "rejected — coverage gain over 48 is marginal (pairs measured 2.9x vs 2.3x) but pushes past the 10-minute casual-mobile ceiling" },
+      { "format": "72-item A/B", "verdict": "rejected — deep-tier burden without deep-tier positioning; abandonment risk on mobile" },
+      { "format": "84-item A/B", "verdict": "rejected — competes with the 120Q deep anchor; wrong tier for a retakeable priorities check" }
+    ],
+    "rationaleJa": "価値観は「どちらも大事なときに、いまはどちらを選ぶか」に表れる。48問のA/B形式は、7つの優先軸の全21組み合わせを2回以上ずつ確かめられる最小構成。約8分で、スマホでも途中で疲れにくい。",
+    "noScientificValidationClaimed": true
+  },
+  "dimensions": [
+    {
+      "dimensionId": "anshin",
+      "nameJa": "見通しの安心",
+      "definitionJa": "先が読めること、足場が揺らがないことを保ちたい気持ち。",
+      "behavioralAnchorsJa": ["決める前に情報や保証を確かめる", "備えや貯えを先に整える", "実績のある選択肢を選びやすい"],
+      "commonTensionsJa": "「のびしろの手応え」や「心が動く瞬間」と引っ張り合いやすい。",
+      "notMeaningJa": "臆病さや保守的な性格のことではありません。いまの選び方の傾向です。",
+      "publicPrivateSuitability": "public_safe"
+    },
+    {
+      "dimensionId": "pace",
+      "nameJa": "自分のペース",
+      "definitionJa": "自分で選び、自分の速度で進めることを保ちたい気持ち。",
+      "behavioralAnchorsJa": ["裁量のある役割を選びやすい", "予定を詰めすぎない", "急かされると消耗しやすい"],
+      "commonTensionsJa": "「つながりの温度」や「役に立つ実感」と引っ張り合いやすい。",
+      "notMeaningJa": "わがままやマイペースという評価ではありません。",
+      "publicPrivateSuitability": "public_safe"
+    },
+    {
+      "dimensionId": "tsunagari",
+      "nameJa": "つながりの温度",
+      "definitionJa": "人とのあたたかい関わりを近くに置いておきたい気持ち。",
+      "behavioralAnchorsJa": ["大切な人との予定を先に決める", "会って話すことで回復する", "関係のための時間を惜しまない"],
+      "commonTensionsJa": "「自分のペース」や「暮らしの整い」と引っ張り合いやすい。",
+      "notMeaningJa": "社交的かどうかの話ではありません。",
+      "publicPrivateSuitability": "public_safe"
+    },
+    {
+      "dimensionId": "seicho",
+      "nameJa": "のびしろの手応え",
+      "definitionJa": "できることが増えていく感覚を確かめたい気持ち。",
+      "behavioralAnchorsJa": ["少し背伸びの環境を選びやすい", "停滞すると物足りなくなる", "学びに時間を回しやすい"],
+      "commonTensionsJa": "「見通しの安心」や「暮らしの整い」と引っ張り合いやすい。",
+      "notMeaningJa": "向上心の強さの採点ではありません。",
+      "publicPrivateSuitability": "public_safe"
+    },
+    {
+      "dimensionId": "yakuwari",
+      "nameJa": "役に立つ実感",
+      "definitionJa": "だれかの力になれている実感を確かめたい気持ち。",
+      "behavioralAnchorsJa": ["頼まれると断りにくい", "「助かった」の一言が効く", "調整役を引き受けやすい"],
+      "commonTensionsJa": "「自分のペース」や「暮らしの整い」と引っ張り合いやすい。",
+      "notMeaningJa": "自己犠牲的という意味ではありません。",
+      "publicPrivateSuitability": "public_safe"
+    },
+    {
+      "dimensionId": "totonoi",
+      "nameJa": "暮らしの整い",
+      "definitionJa": "生活のリズムと余白が保たれていることを大事にしたい気持ち。",
+      "behavioralAnchorsJa": ["いつもの習慣が崩れると疲れやすい", "片づくと気持ちも片づく", "夜のリズムを守りたい"],
+      "commonTensionsJa": "「つながりの温度」や「心が動く瞬間」と引っ張り合いやすい。",
+      "notMeaningJa": "几帳面さの採点ではありません。",
+      "publicPrivateSuitability": "public_safe"
+    },
+    {
+      "dimensionId": "jikkan",
+      "nameJa": "心が動く瞬間",
+      "definitionJa": "楽しさ、面白さ、心が動く体験を近くに置いておきたい気持ち。",
+      "behavioralAnchorsJa": ["「面白そう」で動ける", "初めての場に惹かれる", "変化のない日が続くと乾きやすい"],
+      "commonTensionsJa": "「見通しの安心」や「暮らしの整い」と引っ張り合いやすい。",
+      "notMeaningJa": "飽きっぽさという評価ではありません。",
+      "publicPrivateSuitability": "public_safe"
+    }
+  ],
+  "questionBank": {
+    "bankVersion": "values-bank-v1.0",
+    "itemCount": 48,
+    "answerFormat": "ab_forced_tradeoff",
+    "pairCoverage": "all 21 dimension pairs x2 (items 1-42) + 6 third-pass pairs (items 43-48)",
+    "dimensionAppearances": { "anshin": 14, "pace": 13, "tsunagari": 14, "seicho": 14, "yakuwari": 13, "totonoi": 14, "jikkan": 14 },
+    "sensitivityDefault": "P1_answers_only — no item asks for financial, medical, legal or intimate detail",
+    "items": [
+      { "itemId": "VAL_Q01", "pair": ["anshin", "pace"], "promptJa": "転職や異動を考えるとき、心が向くのは", "choiceA": { "textJa": "長くつづけられそうな安心感", "dimension": "anshin" }, "choiceB": { "textJa": "進め方を自分で決められる裁量", "dimension": "pace" }, "sensitivity": "work_context" },
+      { "itemId": "VAL_Q02", "pair": ["anshin", "tsunagari"], "promptJa": "住む場所を選ぶなら、より重視したいのは", "choiceA": { "textJa": "生活の安定と安心", "dimension": "anshin" }, "choiceB": { "textJa": "大切な人たちとの近さ", "dimension": "tsunagari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q03", "pair": ["anshin", "seicho"], "promptJa": "新しい役割の打診があったら", "choiceA": { "textJa": "いまの確実な役割を大事にしたい", "dimension": "anshin" }, "choiceB": { "textJa": "未経験でも伸びそうな方を試したい", "dimension": "seicho" }, "sensitivity": "work_context" },
+      { "itemId": "VAL_Q04", "pair": ["anshin", "yakuwari"], "promptJa": "忙しい時期に少し余裕ができたら", "choiceA": { "textJa": "まず自分の備えをととのえる", "dimension": "anshin" }, "choiceB": { "textJa": "困っている人の手伝いにまわる", "dimension": "yakuwari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q05", "pair": ["anshin", "totonoi"], "promptJa": "日曜の夕方にやりたくなるのは", "choiceA": { "textJa": "来週の予定を確かめて安心する", "dimension": "anshin" }, "choiceB": { "textJa": "部屋と持ちものをととのえる", "dimension": "totonoi" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q06", "pair": ["anshin", "jikkan"], "promptJa": "連休の過ごし方として心地よいのは", "choiceA": { "textJa": "予定を決めて見通しよく過ごす", "dimension": "anshin" }, "choiceB": { "textJa": "その場で心が動く方へ行く", "dimension": "jikkan" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q07", "pair": ["pace", "tsunagari"], "promptJa": "誘いが重なった夜、先に守りたいのは", "choiceA": { "textJa": "自分の予定と自分の時間", "dimension": "pace" }, "choiceB": { "textJa": "会いたい人との時間", "dimension": "tsunagari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q08", "pair": ["pace", "seicho"], "promptJa": "なにかを学ぶなら、合っているのは", "choiceA": { "textJa": "自分の速度で進められるやり方", "dimension": "pace" }, "choiceB": { "textJa": "少し背伸びが必要な環境", "dimension": "seicho" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q09", "pair": ["pace", "yakuwari"], "promptJa": "頼まれごとが増えてきたとき", "choiceA": { "textJa": "まず自分のペースを守りたい", "dimension": "pace" }, "choiceB": { "textJa": "多少崩れても力になりたい", "dimension": "yakuwari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q10", "pair": ["pace", "totonoi"], "promptJa": "平日の夜に近いのは", "choiceA": { "textJa": "気の向くままに過ごす", "dimension": "pace" }, "choiceB": { "textJa": "いつものリズムで過ごす", "dimension": "totonoi" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q11", "pair": ["pace", "jikkan"], "promptJa": "旅の魅力を選ぶなら", "choiceA": { "textJa": "しばられない自由さ", "dimension": "pace" }, "choiceB": { "textJa": "心が動く体験", "dimension": "jikkan" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q12", "pair": ["tsunagari", "seicho"], "promptJa": "講座やイベントのあと、好きな時間は", "choiceA": { "textJa": "参加者と話してつながる時間", "dimension": "tsunagari" }, "choiceB": { "textJa": "学んだことをひとりで深める時間", "dimension": "seicho" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q13", "pair": ["tsunagari", "yakuwari"], "promptJa": "友人から相談を受けたら", "choiceA": { "textJa": "まず、そばで聞いていたい", "dimension": "tsunagari" }, "choiceB": { "textJa": "力になれる方法を探したい", "dimension": "yakuwari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q14", "pair": ["tsunagari", "totonoi"], "promptJa": "疲れた週の回復のしかたに近いのは", "choiceA": { "textJa": "気の置けない人と過ごす", "dimension": "tsunagari" }, "choiceB": { "textJa": "ひとりで暮らしをととのえる", "dimension": "totonoi" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q15", "pair": ["tsunagari", "jikkan"], "promptJa": "集まりに行くなら惹かれるのは", "choiceA": { "textJa": "いつもの気の合う顔ぶれ", "dimension": "tsunagari" }, "choiceB": { "textJa": "初めての面白そうな場", "dimension": "jikkan" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q16", "pair": ["seicho", "yakuwari"], "promptJa": "仕事で役割を選べるなら", "choiceA": { "textJa": "新しい力が身につく役割", "dimension": "seicho" }, "choiceB": { "textJa": "人の役に立つ実感がある役割", "dimension": "yakuwari" }, "sensitivity": "work_context" },
+      { "itemId": "VAL_Q17", "pair": ["seicho", "totonoi"], "promptJa": "朝に30分の余白があったら", "choiceA": { "textJa": "学びや練習にあてたい", "dimension": "seicho" }, "choiceB": { "textJa": "暮らしをととのえることにあてたい", "dimension": "totonoi" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q18", "pair": ["seicho", "jikkan"], "promptJa": "習いごとを選ぶ決め手は", "choiceA": { "textJa": "上達の手応えがあること", "dimension": "seicho" }, "choiceB": { "textJa": "とにかく楽しいと思えること", "dimension": "jikkan" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q19", "pair": ["yakuwari", "totonoi"], "promptJa": "身近な集まりや当番ごとでは", "choiceA": { "textJa": "役割を引き受けて力になりたい", "dimension": "yakuwari" }, "choiceB": { "textJa": "まず自分の生活の整いを保ちたい", "dimension": "totonoi" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q20", "pair": ["yakuwari", "jikkan"], "promptJa": "手伝いの依頼と楽しみな予定が重なったら", "choiceA": { "textJa": "手伝いを優先しやすい", "dimension": "yakuwari" }, "choiceB": { "textJa": "楽しみな予定を優先しやすい", "dimension": "jikkan" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q21", "pair": ["totonoi", "jikkan"], "promptJa": "「良い一日だった」と思うのは", "choiceA": { "textJa": "整った、落ち着いた一日", "dimension": "totonoi" }, "choiceB": { "textJa": "心が動いた、あたらしい一日", "dimension": "jikkan" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q22", "pair": ["anshin", "pace"], "promptJa": "大きめの買いものを決めるとき", "choiceA": { "textJa": "納得いくまで自分のペースで選びたい", "dimension": "pace" }, "choiceB": { "textJa": "実績や保証のある安心な方にしたい", "dimension": "anshin" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q23", "pair": ["anshin", "tsunagari"], "promptJa": "不安なことがあった夜は", "choiceA": { "textJa": "人と話して落ち着きたい", "dimension": "tsunagari" }, "choiceB": { "textJa": "調べて見通しを立てて落ち着きたい", "dimension": "anshin" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q24", "pair": ["anshin", "seicho"], "promptJa": "これからの理想に近いのは", "choiceA": { "textJa": "できることが増えつづけること", "dimension": "seicho" }, "choiceB": { "textJa": "足場が揺らがないこと", "dimension": "anshin" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q25", "pair": ["anshin", "yakuwari"], "promptJa": "少し余裕のあるお金の使いみちなら", "choiceA": { "textJa": "応援したい人や活動に使う", "dimension": "yakuwari" }, "choiceB": { "textJa": "まず先々の備えにあてる", "dimension": "anshin" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q26", "pair": ["anshin", "totonoi"], "promptJa": "新生活の最初の週にやりたいのは", "choiceA": { "textJa": "部屋と生活リズムをととのえる", "dimension": "totonoi" }, "choiceB": { "textJa": "手続きと備えを先に固める", "dimension": "anshin" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q27", "pair": ["anshin", "jikkan"], "promptJa": "外食のお店を選ぶなら", "choiceA": { "textJa": "気になっていた新しい店", "dimension": "jikkan" }, "choiceB": { "textJa": "味の分かっている定番の店", "dimension": "anshin" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q28", "pair": ["pace", "tsunagari"], "promptJa": "長い休みの計画は", "choiceA": { "textJa": "大切な人との予定から決める", "dimension": "tsunagari" }, "choiceB": { "textJa": "まず自分の自由な時間を確保する", "dimension": "pace" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q29", "pair": ["pace", "seicho"], "promptJa": "上達が止まったと感じたら", "choiceA": { "textJa": "負荷を上げて壁を越えたい", "dimension": "seicho" }, "choiceB": { "textJa": "ペースを落としてでも続けたい", "dimension": "pace" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q30", "pair": ["pace", "yakuwari"], "promptJa": "チームでの役回りとして選びやすいのは", "choiceA": { "textJa": "頼られる調整役", "dimension": "yakuwari" }, "choiceB": { "textJa": "自分の裁量が保てる役割", "dimension": "pace" }, "sensitivity": "work_context" },
+      { "itemId": "VAL_Q31", "pair": ["pace", "totonoi"], "promptJa": "休日の午前に近いのは", "choiceA": { "textJa": "いつもの家事や習慣を先に済ませる", "dimension": "totonoi" }, "choiceB": { "textJa": "その日の気分で決める", "dimension": "pace" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q32", "pair": ["pace", "jikkan"], "promptJa": "面白そうな急な誘いが来たら", "choiceA": { "textJa": "心が動いたら乗る", "dimension": "jikkan" }, "choiceB": { "textJa": "自分の予定は崩したくない", "dimension": "pace" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q33", "pair": ["tsunagari", "seicho"], "promptJa": "転機のときに頼りにしたいのは", "choiceA": { "textJa": "学んで力をつけること", "dimension": "seicho" }, "choiceB": { "textJa": "信頼できる人とのつながり", "dimension": "tsunagari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q34", "pair": ["tsunagari", "yakuwari"], "promptJa": "職場や学校でうれしいのは", "choiceA": { "textJa": "「助かった」と言われること", "dimension": "yakuwari" }, "choiceB": { "textJa": "気持ちよく雑談できる関係", "dimension": "tsunagari" }, "sensitivity": "work_context" },
+      { "itemId": "VAL_Q35", "pair": ["tsunagari", "totonoi"], "promptJa": "平日の夜の連絡ごとについて近いのは", "choiceA": { "textJa": "夜のリズムは崩したくない", "dimension": "totonoi" }, "choiceB": { "textJa": "やりとりの時間を大事にしたい", "dimension": "tsunagari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q36", "pair": ["tsunagari", "jikkan"], "promptJa": "記憶に残っているのは、どちらの時間", "choiceA": { "textJa": "初めての体験に飛び込んだ時間", "dimension": "jikkan" }, "choiceB": { "textJa": "大切な人と笑っていた時間", "dimension": "tsunagari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q37", "pair": ["seicho", "yakuwari"], "promptJa": "自由な時間を投資するなら", "choiceA": { "textJa": "誰かの支えになる活動", "dimension": "yakuwari" }, "choiceB": { "textJa": "自分の伸びしろへの挑戦", "dimension": "seicho" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q38", "pair": ["seicho", "totonoi"], "promptJa": "忙しい時期の夜、先に選ぶのは", "choiceA": { "textJa": "暮らしの最低限をととのえて眠る", "dimension": "totonoi" }, "choiceB": { "textJa": "少しでも学びを進めて眠る", "dimension": "seicho" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q39", "pair": ["seicho", "jikkan"], "promptJa": "続いている趣味の、続いている理由は", "choiceA": { "textJa": "単純に楽しいから", "dimension": "jikkan" }, "choiceB": { "textJa": "上達の手応えがあるから", "dimension": "seicho" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q40", "pair": ["yakuwari", "totonoi"], "promptJa": "頼まれごとで休日が埋まりそうなとき", "choiceA": { "textJa": "生活の整いを守って断ることもある", "dimension": "totonoi" }, "choiceB": { "textJa": "役に立てるなら引き受けたい", "dimension": "yakuwari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q41", "pair": ["yakuwari", "jikkan"], "promptJa": "満たされた気持ちになるのは", "choiceA": { "textJa": "心が動く体験をしたとき", "dimension": "jikkan" }, "choiceB": { "textJa": "誰かの役に立てたとき", "dimension": "yakuwari" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q42", "pair": ["totonoi", "jikkan"], "promptJa": "部屋に手を入れるなら", "choiceA": { "textJa": "心が動く遊び心を足したい", "dimension": "jikkan" }, "choiceB": { "textJa": "使いやすくととのえたい", "dimension": "totonoi" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q43", "pair": ["anshin", "seicho"], "promptJa": "資格やスキルの勉強を始めるなら、動機に近いのは", "choiceA": { "textJa": "先々の安心につながるから", "dimension": "anshin" }, "choiceB": { "textJa": "できることを増やしたいから", "dimension": "seicho" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q44", "pair": ["pace", "totonoi"], "promptJa": "暮らしの理想に近いのは", "choiceA": { "textJa": "よい習慣が決まってまわっている", "dimension": "totonoi" }, "choiceB": { "textJa": "その時々で自由に組み替えられる", "dimension": "pace" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q45", "pair": ["tsunagari", "jikkan"], "promptJa": "週末に出かけるなら", "choiceA": { "textJa": "いつもの人と、ゆっくり深く", "dimension": "tsunagari" }, "choiceB": { "textJa": "面白そうなら知らない場でも", "dimension": "jikkan" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q46", "pair": ["seicho", "yakuwari"], "promptJa": "人に教える立場になったら、うれしいのは", "choiceA": { "textJa": "相手の力になれていること", "dimension": "yakuwari" }, "choiceB": { "textJa": "教えることで自分も伸びること", "dimension": "seicho" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q47", "pair": ["anshin", "tsunagari"], "promptJa": "大きな決断の前にしたいのは", "choiceA": { "textJa": "信頼する人に相談する", "dimension": "tsunagari" }, "choiceB": { "textJa": "情報を集めて見通しを固める", "dimension": "anshin" }, "sensitivity": "none" },
+      { "itemId": "VAL_Q48", "pair": ["totonoi", "jikkan"], "promptJa": "理想の平日の夜に近いのは", "choiceA": { "textJa": "整った部屋で静かに過ごす", "dimension": "totonoi" }, "choiceB": { "textJa": "予定外の楽しいことが起きる", "dimension": "jikkan" }, "sensitivity": "none" }
+    ]
+  },
+  "scoring": {
+    "scoringVersion": "values-scoring-v1.0",
+    "model": "pairwise win-rate",
+    "calculation": "each answered item adds one win to the chosen dimension; dimensionScore = wins / appearances(dimension) among ANSWERED items only (method-local normalization; unequal exposure 13-14 handled by the denominator)",
+    "minimumCoverage": { "answeredItems": 40, "belowMinimumBehavior": "fallback result VAL_R_MIXED with the low-coverage note; no partial primary is claimed" },
+    "primaryAssembly": "primary = highest win-rate dimension; secondary = second-highest (always shown as a secondary signal, never as a second result)",
+    "tieBreak": [
+      "1. direct head-to-head: among tied dimensions, compare wins on the items where they faced each other",
+      "2. if still tied, the mixed result VAL_R_MIXED is used (a tie this deep IS the finding — priorities are genuinely in motion)"
+    ],
+    "mixedRule": "if (top1.winRate - top2.winRate) < 0.08 AND head-to-head between top1/top2 is tied, the result is VAL_R_MIXED",
+    "modifiers": "none in v1.0",
+    "deterministic": true,
+    "reproducibility": "same (bankVersion, scoringVersion, answers) always yields the same result on every channel",
+    "invalidResponseHandling": "unanswered items are excluded from both numerator and denominator; duplicate answers to one item are impossible by format",
+    "confidencePolicy": { "kind": "none_stated", "userFacingBoundaryJa": "このテストは、統計的に検証された確信度スコアを提供するものではありません。いまの選び方の傾向を、ことばで整理するためのものです。" },
+    "noUniversalScore": true,
+    "noCrossMethodNumericComparison": true
+  },
+  "resultModelBenchmark": {
+    "status": "recorded",
+    "comparedStructures": [
+      { "structure": "7 single-dimension results", "verdict": "rejected — no texture; secondary priority is the most interesting part of a values reading and would be lost" },
+      { "structure": "21 unordered top-2 pair results", "verdict": "rejected — copy fragments into thin variants; retest churn (small answer changes flip pair identity); maintenance burden ~3x" },
+      { "structure": "7 x 2 'flavored' results (14)", "verdict": "rejected — flavor split duplicates copy without adding recognition value" },
+      { "structure": "7 dimension-led results + 1 mixed, with the secondary rendered as a live signal", "verdict": "SELECTED — result identity follows the 7-dimension construct; texture comes from secondarySignals (native to ArchetypeResult) instead of result multiplication; mixed avoids forcing a false primary" }
+    ],
+    "selectedResultCount": 8,
+    "countDerivation": "derived from the 7-dimension construct model + 1 honest mixed state — NOT a default; alternatives and rejections recorded above",
+    "retestInterpretationJa": "結果が変わるのは自然なことです。優先順位は状況とともに動きます。前回との違いは「変化した点」としてことばで示され、優劣では示されません。"
+  },
+  "results": [
+    {
+      "resultId": "VAL_R_ANSHIN",
+      "primaryDimension": "anshin",
+      "public": {
+        "displayNameJa": "見通しを確かめたい時期",
+        "hookJa": "いまは、足場をたしかめながら進みたいとき。",
+        "recognitionJa": "最近の選び方には「先が読めること」を大事にする傾向が出ています。",
+        "bulletsJa": ["決める前に、確かめたくなる", "備えがあると、動きやすくなる", "実績のある選択肢に手が伸びる"],
+        "gentleNextStepJa": "確かめたいことを、ひとつだけ紙に書き出してみる。",
+        "shareLineJa": "いまは「見通しを確かめたい時期」でした。"
+      },
+      "private": {
+        "detailJa": "安心は臆病さではなく、次に動くための足場づくりです。いまのあなたの選び方は、揺れの少ない土台を先に確保しようとしています。",
+        "currentPriorityPatternJa": "「読めること」を基準に選びやすい。読めない選択肢は、内容が良くても後回しになりやすい。",
+        "innerTensionJa": "のびしろや心が動く体験への気持ちと、見通しへの気持ちが引っ張り合うことがあります。",
+        "workContextJa": "仕事では、確実に果たせる役割を選びやすい時期。挑戦は「小さく試せる形」なら受け取りやすい。",
+        "relationshipContextJa": "関係でも見通しを求めやすく、あいまいな距離感が続くと消耗しやすい。",
+        "dailyLifeContextJa": "備えや確認に時間を使うと落ち着く。決まっていない予定が多い週は疲れやすい。",
+        "overlookedNeedJa": "確かめる作業のなかで、休むことが後回しになっていないか。",
+        "overextensionRiskJa": "すべてを確かめようとすると、動き出せなくなることがある。確かめる範囲を絞るのがこつ。",
+        "correctionPromptJa": "この読みが違うと感じたら、それが正解です。近い方に直してください。",
+        "reportBridgeJa": "レポートでは、見通しの安心が他の6つの軸とどう釣り合っているかを見られます。",
+        "recommendationTags": ["organize_hint", "rest_hint"],
+        "nextTests": ["c02-current-state", "daily-check-in"]
+      }
+    },
+    {
+      "resultId": "VAL_R_PACE",
+      "primaryDimension": "pace",
+      "public": {
+        "displayNameJa": "自分のペースを取り戻したい時期",
+        "hookJa": "いまは、自分の速度に戻りたいとき。",
+        "recognitionJa": "最近の選び方には「自分で決めて、自分の速度で進むこと」を守る傾向が出ています。",
+        "bulletsJa": ["裁量のある方を選びたくなる", "急かされると消耗しやすい", "予定は詰めすぎたくない"],
+        "gentleNextStepJa": "今週、誰にも渡さない自分の時間をひと枠だけ確保する。",
+        "shareLineJa": "いまは「自分のペースを取り戻したい時期」でした。"
+      },
+      "private": {
+        "detailJa": "ペースを守りたい気持ちは、周りへの拒否ではなく、自分の質を保つ方法です。いまの選び方は、速度の主導権を取り戻そうとしています。",
+        "currentPriorityPatternJa": "「自分で決められるか」を基準に選びやすい。良い話でも、速度を奪われそうだと引きやすい。",
+        "innerTensionJa": "つながりや役に立ちたい気持ちと、ペースを守りたい気持ちが引っ張り合いやすい。",
+        "workContextJa": "裁量のある進め方だと力が出る時期。細かい管理下では消耗しやすい。",
+        "relationshipContextJa": "距離を調整したいだけなのに「そっけない」と受け取られることがある。ひとこと添えると誤解が減る。",
+        "dailyLifeContextJa": "余白のある予定表が回復につながる。空白の時間は、さぼりではなく燃料。",
+        "overlookedNeedJa": "ペースを守る理由を、大切な人に伝えられているか。",
+        "overextensionRiskJa": "守りが強くなりすぎると、助けを借りる選択肢まで手放しやすい。",
+        "correctionPromptJa": "この読みが違うと感じたら、近い方に直してください。それがこの記録の正しい使い方です。",
+        "reportBridgeJa": "レポートでは、ペースの軸がどの場面で強く出るかを見られます。",
+        "recommendationTags": ["solo_time_hint", "rest_hint"],
+        "nextTests": ["work-rhythm", "daily-check-in"]
+      }
+    },
+    {
+      "resultId": "VAL_R_TSUNAGARI",
+      "primaryDimension": "tsunagari",
+      "public": {
+        "displayNameJa": "あたたかさを近くに置きたい時期",
+        "hookJa": "いまは、人のあたたかさが効くとき。",
+        "recognitionJa": "最近の選び方には「大切な人との時間」を先に置く傾向が出ています。",
+        "bulletsJa": ["会って話すと回復する", "大切な人の予定を先に確保する", "ひとりが続くと乾きやすい"],
+        "gentleNextStepJa": "会いたい人にひとこと、短い連絡をしてみる。",
+        "shareLineJa": "いまは「あたたかさを近くに置きたい時期」でした。"
+      },
+      "private": {
+        "detailJa": "つながりを求めるのは依存ではなく、いまのあなたの回復経路です。選び方が、あたたかい関わりを優先しています。",
+        "currentPriorityPatternJa": "「誰といるか」を基準に選びやすい。内容よりも顔ぶれで決まることがある。",
+        "innerTensionJa": "自分のペースや暮らしの整いと、人との時間が引っ張り合いやすい。",
+        "workContextJa": "関係の良いチームだと力が出る時期。孤立した作業が続くと消耗しやすい。",
+        "relationshipContextJa": "与える側に回りすぎることがある。受け取る側になる時間も回復に必要。",
+        "dailyLifeContextJa": "短いやりとりでも効く時期。長い集まりでなくてよい。",
+        "overlookedNeedJa": "会えない日の過ごし方を、自分なりに持てているか。",
+        "overextensionRiskJa": "相手の都合に合わせすぎて、自分の残量が減っていることに気づきにくい。",
+        "correctionPromptJa": "違うと感じたら、近い方に直してください。",
+        "reportBridgeJa": "レポートでは、つながりの温度と自分のペースの釣り合いを見られます。",
+        "recommendationTags": ["connect_hint"],
+        "nextTests": ["relationship-fatigue-24q", "daily-check-in"]
+      }
+    },
+    {
+      "resultId": "VAL_R_SEICHO",
+      "primaryDimension": "seicho",
+      "public": {
+        "displayNameJa": "のびしろに手を伸ばしたい時期",
+        "hookJa": "いまは、少し背伸びがしたいとき。",
+        "recognitionJa": "最近の選び方には「できることが増える方」へ向かう傾向が出ています。",
+        "bulletsJa": ["停滞すると物足りなくなる", "少し難しい方に惹かれる", "学びに時間を回したくなる"],
+        "gentleNextStepJa": "伸ばしたいことをひとつ選び、15分だけ手をつけてみる。",
+        "shareLineJa": "いまは「のびしろに手を伸ばしたい時期」でした。"
+      },
+      "private": {
+        "detailJa": "手応えを求める気持ちが強まっている時期です。挑戦の選択肢が、安心や整いより先に目に入るようになっています。",
+        "currentPriorityPatternJa": "「伸びるかどうか」を基準に選びやすい。成長が見えない環境からは気持ちが離れやすい。",
+        "innerTensionJa": "見通しの安心や暮らしの整いと、背伸びしたい気持ちが引っ張り合いやすい。",
+        "workContextJa": "新しい領域を任されると力が出る時期。同じ作業の繰り返しは消耗のもと。",
+        "relationshipContextJa": "自分の挑戦に時間を使いたくて、人との時間が細ることがある。伝えておくと誤解が減る。",
+        "dailyLifeContextJa": "学びの時間が確保できた日は満足度が高い。詰め込みすぎには注意。",
+        "overlookedNeedJa": "伸びること以外の回復——休みや遊び——が痩せていないか。",
+        "overextensionRiskJa": "負荷を上げ続けると、楽しさが義務に変わりやすい。",
+        "correctionPromptJa": "違うと感じたら、近い方に直してください。",
+        "reportBridgeJa": "レポートでは、のびしろの軸と安心・整いの軸の釣り合いを見られます。",
+        "recommendationTags": ["learning_hint", "small_win_hint"],
+        "nextTests": ["f01-work-fit", "c02-current-state"]
+      }
+    },
+    {
+      "resultId": "VAL_R_YAKUWARI",
+      "primaryDimension": "yakuwari",
+      "public": {
+        "displayNameJa": "役に立つ実感を確かめたい時期",
+        "hookJa": "いまは、「助かった」のひとことが効くとき。",
+        "recognitionJa": "最近の選び方には「誰かの力になれること」を優先する傾向が出ています。",
+        "bulletsJa": ["頼まれると応えたくなる", "役に立てた日は満ちる", "調整役を引き受けやすい"],
+        "gentleNextStepJa": "今週引き受けたことをひとつ数えて、自分にも「よくやった」と言う。",
+        "shareLineJa": "いまは「役に立つ実感を確かめたい時期」でした。"
+      },
+      "private": {
+        "detailJa": "貢献の実感は、あなたにとって大きな燃料になっています。ただしこの軸は、残量を超えて働きやすい軸でもあります。",
+        "currentPriorityPatternJa": "「力になれるか」を基準に選びやすい。断る選択肢が最初から消えていることがある。",
+        "innerTensionJa": "自分のペースや暮らしの整いと、応えたい気持ちが引っ張り合いやすい。",
+        "workContextJa": "感謝が見える環境だと力が出る時期。貢献が数字でしか測られない場では乾きやすい。",
+        "relationshipContextJa": "聞き役・支え役に固定されやすい。役割を降りる時間も関係を長持ちさせる。",
+        "dailyLifeContextJa": "自分のための時間に罪悪感が出やすい時期。それは手放してよい罪悪感。",
+        "overlookedNeedJa": "あなた自身は、誰に頼れているか。",
+        "overextensionRiskJa": "限界を超えて引き受けると、いちばん大切にしたい人への余力から先に減っていく。",
+        "correctionPromptJa": "違うと感じたら、近い方に直してください。",
+        "reportBridgeJa": "レポートでは、役に立つ実感と自分のペースの釣り合いを見られます。",
+        "recommendationTags": ["rest_hint", "solo_time_hint"],
+        "nextTests": ["relationship-fatigue-24q", "daily-check-in"]
+      }
+    },
+    {
+      "resultId": "VAL_R_TOTONOI",
+      "primaryDimension": "totonoi",
+      "public": {
+        "displayNameJa": "暮らしをととのえたい時期",
+        "hookJa": "いまは、リズムと余白がいちばんの味方。",
+        "recognitionJa": "最近の選び方には「生活の整い」を守る傾向が出ています。",
+        "bulletsJa": ["いつもの習慣が崩れると疲れる", "片づくと気持ちも片づく", "夜のリズムを守りたい"],
+        "gentleNextStepJa": "今夜、ひとつだけ小さく片づける場所を決める。",
+        "shareLineJa": "いまは「暮らしをととのえたい時期」でした。"
+      },
+      "private": {
+        "detailJa": "整いを求めるのは退屈さではなく、回復と集中の土台づくりです。いまの選び方は、生活のリズムを守ろうとしています。",
+        "currentPriorityPatternJa": "「リズムが守れるか」を基準に選びやすい。楽しそうな話でも、生活が乱れそうだと引きやすい。",
+        "innerTensionJa": "つながりや心が動く体験と、整いを守りたい気持ちが引っ張り合いやすい。",
+        "workContextJa": "決まった流れで進む仕事だと力が出る時期。突発対応が続くと消耗しやすい。",
+        "relationshipContextJa": "誘いを断ることが増えるかもしれない。理由をひとこと添えると関係は守られる。",
+        "dailyLifeContextJa": "小さな片づけ・同じ時間の食事と睡眠が効く時期。",
+        "overlookedNeedJa": "整えた先で、なにをしたいのか。整い自体が目的化していないか。",
+        "overextensionRiskJa": "乱れを許せなくなると、整いが窮屈さに変わることがある。",
+        "correctionPromptJa": "違うと感じたら、近い方に直してください。",
+        "reportBridgeJa": "レポートでは、暮らしの整いと心が動く瞬間の釣り合いを見られます。",
+        "recommendationTags": ["organize_hint", "rest_hint"],
+        "nextTests": ["work-rhythm", "daily-check-in"]
+      }
+    },
+    {
+      "resultId": "VAL_R_JIKKAN",
+      "primaryDimension": "jikkan",
+      "public": {
+        "displayNameJa": "心が動くほうへ行きたい時期",
+        "hookJa": "いまは、「面白そう」を信じていいとき。",
+        "recognitionJa": "最近の選び方には「心が動くかどうか」を優先する傾向が出ています。",
+        "bulletsJa": ["初めての場に惹かれる", "「面白そう」で動ける", "変化のない日が続くと乾く"],
+        "gentleNextStepJa": "今週、いつもと違う小さな選択をひとつだけしてみる。",
+        "shareLineJa": "いまは「心が動くほうへ行きたい時期」でした。"
+      },
+      "private": {
+        "detailJa": "心が動く体験を求める気持ちが強まっています。それは逃避ではなく、いまのあなたに必要な栄養です。",
+        "currentPriorityPatternJa": "「心が動くか」を基準に選びやすい。正しいけれど退屈な選択肢からは気持ちが離れやすい。",
+        "innerTensionJa": "見通しの安心や暮らしの整いと、動きたい気持ちが引っ張り合いやすい。",
+        "workContextJa": "変化と裁量のある仕事だと力が出る時期。単調さが続くと集中が切れやすい。",
+        "relationshipContextJa": "新しい出会いに向かうエネルギーが強い時期。いつもの関係の手入れも忘れずに。",
+        "dailyLifeContextJa": "小さな冒険——道・店・過ごし方を変える——で十分に満ちる。大きく賭ける必要はない。",
+        "overlookedNeedJa": "動き続けた後の、静かな回復の時間。",
+        "overextensionRiskJa": "刺激が義務になると、楽しさの感度そのものが下がる。",
+        "correctionPromptJa": "違うと感じたら、近い方に直してください。",
+        "reportBridgeJa": "レポートでは、心が動く瞬間と見通しの安心の釣り合いを見られます。",
+        "recommendationTags": ["connect_hint", "small_win_hint"],
+        "nextTests": ["c02-current-state", "daily-check-in"]
+      }
+    },
+    {
+      "resultId": "VAL_R_MIXED",
+      "primaryDimension": null,
+      "public": {
+        "displayNameJa": "優先順位が動いている時期",
+        "hookJa": "いまは、大事なものが入れ替わっている途中。",
+        "recognitionJa": "最近の選び方には、複数の優先軸がほぼ同じ強さで表れています。これは迷いではなく、移行の印です。",
+        "bulletsJa": ["場面によって選ぶ基準が変わる", "どれも捨てられない感覚がある", "少し先に、新しい配置が見えてくる"],
+        "gentleNextStepJa": "いま同じくらい大事なものを、ふたつだけ名前にしてみる。",
+        "shareLineJa": "いまは「優先順位が動いている時期」でした。"
+      },
+      "private": {
+        "detailJa": "優先順位が拮抗しているのは、答えが出ていないからではなく、生活のどこかが変わりつつあるからです。この時期の記録は、あとから見るといちばん面白い記録になります。",
+        "currentPriorityPatternJa": "上位の軸が入れ替わりながら並んでいます。場面ごとに別の基準で選んでいる可能性があります。",
+        "innerTensionJa": "拮抗している軸同士の綱引きが、疲れの原因になっていることがあります。",
+        "workContextJa": "いまは大きな一択を迫らないほうがよい時期。小さく試して様子を見る選び方が合っています。",
+        "relationshipContextJa": "人との距離感も揺れやすい時期。揺れをそのまま伝えられる相手がいると楽になります。",
+        "dailyLifeContextJa": "日によって過ごし方が変わって構いません。一貫性はいまの課題ではありません。",
+        "overlookedNeedJa": "決めないことを、自分に許すこと。",
+        "overextensionRiskJa": "早く決めようと焦ると、どの軸の満足も削れます。",
+        "correctionPromptJa": "違うと感じたら、近い方に直してください。",
+        "reportBridgeJa": "レポートでは、拮抗している軸の組み合わせと、その綱引きの中身を見られます。",
+        "recommendationTags": ["rest_hint", "organize_hint"],
+        "nextTests": ["daily-check-in", "c02-current-state"]
+      }
+    }
+  ],
+  "secondarySignalRendering": {
+    "rule": "the second-highest dimension always renders as a named secondary signal (「二番目に強い軸」) with its dimension nameJa and one line of its recognition copy; it is never a separate result",
+    "strengthWords": ["faint", "present", "strong"],
+    "strengthMappingNote": "words derived from win-rate gap bands (documented in the product spec); never numeric on any user surface"
+  },
+  "reportOutline": {
+    "version": "values-report-outline-v1.0",
+    "optional": true,
+    "noPaymentExists": true,
+    "noPaymentNoteJa": "このレポートに購入・課金は存在しません。実装もされていません。",
+    "modules": [
+      { "moduleId": "now_matters", "titleJa": "いま、大事にしていること", "contentNote": "primary + secondary in plain words" },
+      { "moduleId": "visible_invisible", "titleJa": "見えている優先と、見えにくい優先", "contentNote": "high dims vs quiet dims" },
+      { "moduleId": "tensions", "titleJa": "内側の綱引き", "contentNote": "top tension pairs from the answer pattern" },
+      { "moduleId": "decision_patterns", "titleJa": "最近の決め方のかたち", "contentNote": "how the priority shows up in choices" },
+      { "moduleId": "relationships", "titleJa": "人との関わりへの表れ", "contentNote": "relationship implications, non-judgmental" },
+      { "moduleId": "work_learning", "titleJa": "仕事と学びへの表れ", "contentNote": "work/learning implications" },
+      { "moduleId": "changing", "titleJa": "変わりはじめているかもしれないこと", "contentNote": "retest deltas in words when history exists" },
+      { "moduleId": "reflection_prompts", "titleJa": "考えるための小さな問い", "contentNote": "3-4 gentle prompts" },
+      { "moduleId": "limits", "titleJa": "このテストの限界と作り方", "contentNote": "methodology + limits + no-validated-confidence statement" }
+    ]
+  },
+  "recommendationPolicy": {
+    "governedTags": ["work_style_hint", "relationship_hint", "rest_hint", "learning_hint", "organize_hint", "connect_hint", "solo_time_hint", "small_win_hint"],
+    "tagsAreHintsOnly": true,
+    "noCommercialRecommendations": true,
+    "followUpUniverse": ["c02-current-state", "daily-check-in", "work-rhythm", "relationship-fatigue-24q", "f01-work-fit"]
+  },
+  "resultObjectContract": {
+    "resultVariant": "ArchetypeResult",
+    "understandingPolicy": "method_derived_eligible",
+    "confirmation": { "required": true, "policy": "per CPV1 — confirm / correct / reject" },
+    "provenance": { "kind": "scored", "bankVersion": "values-bank-v1.0", "scoringVersion": "values-scoring-v1.0", "methodVersion": "values-v1.0", "deterministic": true, "seed": null },
+    "publicPrivateBoundary": "private layer never appears in share cards or URLs; share carries displayName + shareLine only"
+  },
+  "privacy": { "privacyClass": "P1_answers_only", "privateByDefault": true },
+  "interpretationLimitsJa": "いまの選び方の傾向の整理です。性格の診断でも、優劣の判定でもありません。統計的に検証された確信度スコアは提供しません。結果は状況とともに変わります。"
+}

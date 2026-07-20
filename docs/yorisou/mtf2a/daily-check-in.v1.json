@@ -1,0 +1,227 @@
+{
+  "specVersion": "mtf2a-daily-check-in-v1.0.0",
+  "identity": {
+    "methodId": "daily-check-in",
+    "methodVersion": "daily-check-in-v1.0",
+    "nameJa": "きょうの空模様",
+    "subtitleJa": "30秒のじぶん記録",
+    "family": "yorisou_state",
+    "methodEvidenceClass": "yorisou_original_reflection",
+    "executionModel": "recorded_state",
+    "rightsRoute": "YORISOU_ORIGINAL_REBUILD_CANDIDATE",
+    "originalityStatus": "YORISOU_ORIGINAL_AUTHORED_PENDING_FOUNDER_REVIEW",
+    "activationState": "gated",
+    "supportedChannels": ["web", "line_liff", "ios", "android"],
+    "language": "ja"
+  },
+  "definition": {
+    "kind": "recorded_state",
+    "inputSchemaVersion": "daily-state-schema-v1",
+    "cadenceSchema": "daily",
+    "acknowledgementCopyVersion": "daily-ack-v1",
+    "yorisouScoring": null
+  },
+  "benchmarkDecision": {
+    "status": "recorded",
+    "selectedFormat": "5-input standard check, one-screen, optional private free-text (opt-in)",
+    "targetCompletionSeconds": 45,
+    "comparedFormats": [
+      "3-input ultra-quick (rejected: timeline too thin — weather-only history has low reflection value)",
+      "5-input standard (SELECTED)",
+      "7-input richer (rejected: daily fatigue and abandonment risk outweigh coverage gain)",
+      "one-screen multi-input (SELECTED as rendering mode: daily ritual speed beats stepper)",
+      "one-item-per-screen (rejected for daily cadence: 5 taps + 4 transitions ≈ 90s, too slow for every day)",
+      "free-text default-on (rejected: emotional burden + privacy weight daily; opt-in note instead)",
+      "30s target (rejected: forces 3-input)",
+      "45-60s target (SELECTED)",
+      "90s target (rejected: daily abandonment risk)"
+    ],
+    "rationaleJa": "毎日つづけられることが最優先。5項目・1画面・約45秒は、記録の速さとタイムラインの見ごたえの釣り合いが最も良い。入力数に科学的根拠は主張しない。",
+    "noScientificBasisClaimed": true
+  },
+  "stateSchema": {
+    "version": "daily-state-schema-v1",
+    "entryRule": "an entry is saved when at least one field has a value; unanswered fields are stored as null (never defaulted, never treated as a worst value)",
+    "timestampPolicy": "producedAt = device-local save time (ISO); one entry per calendar day per method-local timezone; re-entry same day overwrites after user confirmation",
+    "fields": [
+      {
+        "fieldId": "kokoro_tenki",
+        "labelJa": "こころの天気",
+        "helperJa": "いまの気分に近いものをひとつ",
+        "required": false,
+        "options": [
+          { "optionId": "hare", "labelJa": "はれ" },
+          { "optionId": "usugumori", "labelJa": "うすぐもり" },
+          { "optionId": "kumori", "labelJa": "くもり" },
+          { "optionId": "ame", "labelJa": "あめ" },
+          { "optionId": "kaze", "labelJa": "かぜが強い" }
+        ]
+      },
+      {
+        "fieldId": "karada_juden",
+        "labelJa": "からだの充電",
+        "helperJa": "元気の残量のイメージで",
+        "required": false,
+        "options": [
+          { "optionId": "tappuri", "labelJa": "たっぷり" },
+          { "optionId": "maamaa", "labelJa": "まあまあ" },
+          { "optionId": "sukuname", "labelJa": "少なめ" },
+          { "optionId": "hobo_kara", "labelJa": "ほぼ空" }
+        ]
+      },
+      {
+        "fieldId": "atama_yohaku",
+        "labelJa": "あたまの余白",
+        "helperJa": "考えごとの詰まり具合",
+        "required": false,
+        "options": [
+          { "optionId": "sukkiri", "labelJa": "すっきり" },
+          { "optionId": "futsuu", "labelJa": "ふつう" },
+          { "optionId": "gisshiri", "labelJa": "ぎっしり" },
+          { "optionId": "guruguru", "labelJa": "ぐるぐるしている" }
+        ]
+      },
+      {
+        "fieldId": "hito_kyori",
+        "labelJa": "ひととの距離",
+        "helperJa": "きょうのちょうどいい距離感",
+        "required": false,
+        "options": [
+          { "optionId": "chikaku", "labelJa": "近くにいたい" },
+          { "optionId": "itsumo_doori", "labelJa": "いつも通り" },
+          { "optionId": "sotto", "labelJa": "少しそっとしていたい" },
+          { "optionId": "hitori", "labelJa": "ひとりの時間がほしい" }
+        ]
+      },
+      {
+        "fieldId": "kyou_hoshii",
+        "labelJa": "きょうほしいもの",
+        "helperJa": "いちばん近いものをひとつ",
+        "required": false,
+        "options": [
+          { "optionId": "yasumi", "labelJa": "やすみ" },
+          { "optionId": "seiri", "labelJa": "整理する時間" },
+          { "optionId": "kibun_tenkan", "labelJa": "気分転換" },
+          { "optionId": "hanasu", "labelJa": "だれかと話すこと" },
+          { "optionId": "hitori_jikan", "labelJa": "ひとりの時間" },
+          { "optionId": "tassei", "labelJa": "小さな達成感" }
+        ]
+      }
+    ],
+    "privateReflection": {
+      "fieldId": "hitokoto_memo",
+      "labelJa": "ひとことメモ（任意・自分だけに残る）",
+      "enabled": "opt_in",
+      "defaultOff": true,
+      "maxLength": 140,
+      "privacyClass": "P5_free_text",
+      "neverInShareOrUrl": true
+    },
+    "validationRules": [
+      "each field accepts exactly one optionId from its declared set or null",
+      "hitokoto_memo accepted only when the user has opted in; stored private-only",
+      "no numeric conversion of any option; options are words, not scores"
+    ],
+    "missingInputHandling": "null fields render as 「未記入」 in timelines; no imputation; acknowledgement rules skip null fields"
+  },
+  "acknowledgementRules": {
+    "version": "daily-ack-v1",
+    "note": "deterministic selection of a finite acknowledgement set; NOT psychological scoring; no good/bad ranking",
+    "priorityCascade": [
+      { "rule": "first_entry_ever", "ackId": "ACK_FIRST" },
+      { "rule": "kokoro_tenki == ame", "ackId": "ACK_RAIN" },
+      { "rule": "kokoro_tenki == kaze", "ackId": "ACK_WIND" },
+      { "rule": "karada_juden == hobo_kara", "ackId": "ACK_LOWBATT" },
+      { "rule": "atama_yohaku == guruguru", "ackId": "ACK_SWIRL" },
+      { "rule": "kyou_hoshii == yasumi", "ackId": "ACK_NEED_YASUMI" },
+      { "rule": "kyou_hoshii == seiri", "ackId": "ACK_NEED_SEIRI" },
+      { "rule": "kyou_hoshii == kibun_tenkan", "ackId": "ACK_NEED_TENKAN" },
+      { "rule": "kyou_hoshii == hanasu", "ackId": "ACK_NEED_HANASU" },
+      { "rule": "kyou_hoshii == hitori_jikan", "ackId": "ACK_NEED_HITORI" },
+      { "rule": "kyou_hoshii == tassei", "ackId": "ACK_NEED_TASSEI" },
+      { "rule": "kokoro_tenki == hare", "ackId": "ACK_SUNNY" },
+      { "rule": "default", "ackId": "ACK_NEUTRAL" }
+    ],
+    "acknowledgements": [
+      { "ackId": "ACK_FIRST", "copyJa": "きょうの空模様、はじめの一枚が残りました。ここから少しずつ、じぶんの天気図ができていきます。" },
+      { "ackId": "ACK_RAIN", "copyJa": "あめの日の記録も、大事な一枚です。きょうはこのまま、無理のない過ごし方で。" },
+      { "ackId": "ACK_WIND", "copyJa": "落ち着かない日は、そういう日として残しておけば大丈夫。風はずっとは吹きません。" },
+      { "ackId": "ACK_LOWBATT", "copyJa": "充電少なめの日ですね。記録できただけで、きょうの分はもう十分です。" },
+      { "ackId": "ACK_SWIRL", "copyJa": "考えごとがぐるぐるする日。ここに一度置いておくと、少しだけ余白ができるかもしれません。" },
+      { "ackId": "ACK_NEED_YASUMI", "copyJa": "きょうほしいのは、やすみ。それが分かっているだけで、選び方が少し変わります。" },
+      { "ackId": "ACK_NEED_SEIRI", "copyJa": "整理する時間がほしい日。小さくひとつ片づくだけでも、景色は変わります。" },
+      { "ackId": "ACK_NEED_TENKAN", "copyJa": "気分転換がほしい日。いつもと違う道を少し歩くくらいで、ちょうどいいかもしれません。" },
+      { "ackId": "ACK_NEED_HANASU", "copyJa": "だれかと話したい日。短いやりとりでも、きょうはそれが効きそうです。" },
+      { "ackId": "ACK_NEED_HITORI", "copyJa": "ひとりの時間がほしい日。それは閉じることではなく、ととのえる時間です。" },
+      { "ackId": "ACK_NEED_TASSEI", "copyJa": "小さな達成感がほしい日。ハードルは低いほど、きょうはうまくいきます。" },
+      { "ackId": "ACK_SUNNY", "copyJa": "はれの日の記録です。こういう日が、あとで見返すときの目印になります。" },
+      { "ackId": "ACK_NEUTRAL", "copyJa": "きょうの一枚が残りました。それだけで、きょうの記録は完了です。" }
+    ]
+  },
+  "copyBundles": {
+    "version": "daily-copy-v1",
+    "entryHookJa": "きょうのじぶんを、天気にたとえるなら。",
+    "startPageJa": "30秒だけ、きょうのわたしを記録します。点数は出ません。だれにも見えません。",
+    "progressJa": "のこり少しです",
+    "skipJa": "この項目はとばす",
+    "exitJa": "とちゅうでやめる（記録は保存されません）",
+    "completionJa": "きょうの記録が残りました。",
+    "retestJa": "また明日、気が向いたら。",
+    "privacyJa": "この記録はあなただけのものです。共有されることはありません。",
+    "shareBoundaryJa": "共有できるのは「記録をつづけていること」だけ。中身は共有されません。",
+    "emptyHistoryJa": "まだ記録はありません。きょうの一枚から始まります。",
+    "firstEntryJa": "はじめての記録です。まずは、いまの天気から。",
+    "timeline7Ja": "この7日の空模様",
+    "timeline30Ja": "この30日の空模様",
+    "correctionJa": "きょうの記録をなおす",
+    "rejectionJa": "きょうの記録を消す（元に戻せません）",
+    "accessibilityLabels": {
+      "fieldGroupJa": "きょうの状態の選択肢",
+      "optionSelectedJa": "選択中",
+      "timelineJa": "日ごとの記録の一覧",
+      "memoJa": "自分だけのひとことメモ入力欄"
+    }
+  },
+  "resultSchema": {
+    "resultVariant": "StateRecordResult",
+    "noArchetype": true,
+    "fields": ["stateValues", "privateReflection", "cadence", "acknowledgementJa", "comparisonPolicy", "understandingPolicy", "provenance", "confirmation"],
+    "comparisonPolicy": "method_local_timeline_only",
+    "understandingPolicy": "method_derived_eligible",
+    "understandingNoteJa": "この記録は「いまの状態の文脈」として、本人の同意の範囲でだけ理解に使われます。他のテストの結果と数値で混ぜられることはありません。",
+    "provenance": {
+      "kind": "recorded_state",
+      "schemaVersion": "daily-state-schema-v1",
+      "methodVersion": "daily-check-in-v1.0",
+      "yorisouScoring": null
+    },
+    "confirmation": { "required": true, "policy": "per CPV1 — user may confirm, correct, or delete any entry" }
+  },
+  "deepOutput": {
+    "kind": "longitudinal_experience_not_report",
+    "modules": [
+      "recent-pattern summary (words, not scores)",
+      "7-day timeline",
+      "30-day timeline",
+      "user-confirmed recurring context (opt-in)",
+      "gentle reflection prompts"
+    ],
+    "noConventionalDeepReport": true
+  },
+  "recommendationPolicy": {
+    "tags": ["rest_hint", "organize_hint", "connect_hint", "solo_time_hint", "small_win_hint"],
+    "tagsAreHintsOnly": true,
+    "noCommercialRecommendationInPublicCopy": true,
+    "noPaymentOrPricingExists": true
+  },
+  "privacy": {
+    "privacyClass": "P5_free_text",
+    "privateByDefault": true,
+    "nothingInUrlsOrShareCards": true
+  },
+  "cadence": { "type": "daily", "streakFree": true, "noPenaltyForGaps": true, "gapCopyJa": "あいだが空いても、なにも失われません。きょうの一枚からまた始まります。" },
+  "prohibitions": [
+    "no score of any kind", "no good/bad day ranking", "no severity language", "no worsening claims",
+    "no diagnostic interpretation", "no permanent identity statements", "no crisis/medical triage in this package"
+  ]
+}
