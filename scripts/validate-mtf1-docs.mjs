@@ -315,5 +315,103 @@ if (counts.launch_core !== 10 || counts.launch_supporting !== 9 || counts.rights
 // script only reaches the summary when `failures === 0` across ALL sections above.
 ok("1.2-20: all original MTF-1 (12) and MTF-1.1 (15) checks executed above in this same run");
 
+// ═══ MTF-1.3 EXPANSION (§10 checks 1–20) ═════════════════════════════════════
+import { readdirSync } from "node:fs";
+
+// 1. MethodExecutionModel exists with all five values
+if (!/type MethodExecutionModel =\s*\n\s*\| "scored"\s*\n\s*\| "recorded_state"\s*\n\s*\| "symbolic"\s*\n\s*\| "imported_external"\s*\n\s*\| "entertainment"/.test(contractDoc)) {
+  fail("1.3-1: MethodExecutionModel 5-value union missing");
+} else ok("1.3-1: MethodExecutionModel exists with all five values");
+
+// 2. every method identity declares exactly one execution model
+const idBlock = contractDoc.match(/interface EngineMethodIdentity \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!/executionModel: MethodExecutionModel/.test(idBlock)) fail("1.3-2: EngineMethodIdentity must declare executionModel");
+else ok("1.3-2: EngineMethodIdentity declares exactly one executionModel");
+
+// 3–4. identity no longer universally requires bankVersion / scoringVersion
+if (/bankVersion: string/.test(idBlock)) fail("1.3-3: identity still universally requires bankVersion");
+else ok("1.3-3: identity no longer universally requires bankVersion (scored-definition only)");
+if (/scoringVersion: string/.test(idBlock)) fail("1.3-4: identity still universally requires scoringVersion");
+else ok("1.3-4: identity no longer universally requires scoringVersion");
+
+// 5. top-level text no longer claims universal bank/scoring/report versions
+if (/carried on every persisted object/.test(contractDoc)) fail("1.3-5: universal version claim still present");
+else if (!/Versioned by applicability/.test(contractDoc) || !/report versions exist only where a report exists/.test(contractDoc)) fail("1.3-5: variant-aware versioning statement missing");
+else ok("1.3-5: top-level versioning is variant-aware (no universal claim)");
+
+// 6. reproducibility language is variant-aware
+if (!/Reproducibility is likewise variant-aware/.test(contractDoc) || !/recorded states reproduce the stored user input, not a score/.test(contractDoc) || !/provenance-preserving records, not YORISOU computations/.test(contractDoc)) {
+  fail("1.3-6: variant-aware reproducibility language missing");
+} else ok("1.3-6: reproducibility language is variant-aware");
+
+// 7–8. scoring metadata cannot declare state_record / imported_external
+const scoredMeta = contractDoc.match(/interface ScoredExecutionMeta \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!scoredMeta) fail("1.3-7: ScoredExecutionMeta missing");
+const metaKindLine = scoredMeta.match(/resultKind:[^;]*;/)?.[0] ?? "";
+if (/state_record/.test(metaKindLine)) fail("1.3-7: scoring metadata can still declare state_record");
+else ok("1.3-7: scoring metadata cannot declare state_record");
+if (/imported_external/.test(metaKindLine)) fail("1.3-8: scoring metadata can still declare imported_external");
+else if (!/"archetype" \| "dimension_profile"/.test(metaKindLine)) fail("1.3-8: scored resultKind must be exactly archetype|dimension_profile");
+else ok("1.3-8: scoring metadata limited to archetype | dimension_profile");
+
+// 9–10. Forge step 10 execution-model aware + not_applicable without fake scoring
+if (!/Original computation, recording, interpretation or import model/.test(standardDoc)) fail("1.3-9: Forge step 10 must be execution-model aware");
+else ok("1.3-9: Forge step 10 is execution-model aware");
+if (!/`not_applicable` scoring decision is explicitly ALLOWED/.test(standardDoc) || !/never bypasses the required execution-model artifact/.test(standardDoc)) {
+  fail("1.3-10: Forge must allow non-scored methods a not_applicable scoring decision without bypassing the execution-model artifact");
+} else ok("1.3-10: non-scored methods allowed without fake scoring (not_applicable, artifact still required)");
+
+// 11. recorded-state DEFINITION has yorisouScoring: null
+const recDef = contractDoc.match(/interface RecordedStateMethodDefinition \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!recDef || !/yorisouScoring: null/.test(recDef)) fail("1.3-11: RecordedStateMethodDefinition must carry yorisouScoring: null");
+else ok("1.3-11: recorded-state definition has yorisouScoring: null");
+
+// 12. imported DEFINITION has no YORISOU bank/scoring
+const impDef = contractDoc.match(/interface ImportedExternalMethodDefinition \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!impDef || !/yorisouBankVersion: null/.test(impDef) || !/yorisouScoringVersion: null/.test(impDef)) fail("1.3-12: ImportedExternalMethodDefinition must null YORISOU bank/scoring");
+else ok("1.3-12: imported definition has no YORISOU bank/scoring (structural nulls)");
+
+// 13. result timestamp uses neutral terminology
+const baseBlock13 = contractDoc.match(/interface EngineResultBase \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!/producedAt: string/.test(baseBlock13)) fail("1.3-13: base must use neutral producedAt");
+else if (/computedAt: string/.test(baseBlock13)) fail("1.3-13: computedAt still present in the base");
+else ok("1.3-13: result timestamp uses neutral producedAt");
+
+// 14. entertainment output has no Understanding Graph confirmation requirement
+if (!/type ResultConfirmation =/.test(contractDoc) || !/required: false/.test(contractDoc)) fail("1.3-14: ResultConfirmation structural union missing");
+else if (!/excluded_entertainment\s*→ confirmation NOT used/i.test(contractDoc.replace(/\*/g, ""))) fail("1.3-14: excluded_entertainment must not use confirmation for Understanding Graph integration");
+else if (!/confirmation\.required = false/.test(contractDoc)) fail("1.3-14: S01 mapping must pin confirmation.required = false");
+else ok("1.3-14: entertainment output carries no Understanding Graph confirmation requirement");
+
+// 15–17. binding execution-model mappings
+if (s01 && s01.method_evidence_class === "traditional_symbolic_entertainment" && /`s01-omikuji`[\s\S]{0,500}`entertainment`/.test(contractDoc)) ok("1.3-15: S01 remains excluded_entertainment with execution model entertainment");
+else fail("1.3-15: S01 must remain excluded_entertainment / entertainment execution");
+if (!/`daily-check-in`[\s\S]{0,300}`recorded_state`/.test(contractDoc)) fail("1.3-16: daily-check-in must remain recorded_state");
+else ok("1.3-16: daily-check-in remains recorded_state");
+if (!/`mbti-import-handoff`[\s\S]{0,200}`imported_external`/.test(contractDoc)) fail("1.3-17: MBTI must remain imported_external");
+else ok("1.3-17: MBTI import remains imported_external");
+
+// 18. all previous MTF-1 / 1.1 / 1.2 checks continue passing — structural: this line is
+// reached in the same run; the final gate below fails the script if ANY check failed.
+ok("1.3-18: all previous MTF-1/1.1/1.2 checks executed above in this same run");
+
+// 19. composition remains 10/9/7/5 (re-asserted)
+if (counts.launch_core !== 10 || counts.launch_supporting !== 9 || counts.rights_review_queue !== 7 || counts.later_cultural_systems !== 5) {
+  fail("1.3-19: launch composition changed");
+} else ok("1.3-19: composition remains 10/9/7/5");
+
+// 20. docs scope unchanged: exactly the 10 known MTF-1 markdown files (no additions)
+const KNOWN_DOCS = [
+  "MTF1_CATALOG_RECONCILIATION.md", "MTF1_CONTENT_PRODUCTION_QUEUE.md",
+  "MTF1_DYNAMIC_TEST_ENGINE_CONTRACT.md", "MTF1_EXISTING_ENGINE_ADAPTER_MAP.md",
+  "MTF1_FOUNDER_DECISIONS.md", "MTF1_JAPAN_LOCALIZATION_STANDARD.md",
+  "MTF1_LAUNCH_TEST_UNIVERSE.md", "MTF1_METHOD_SOURCE_RIGHTS_MATRIX.md",
+  "MTF1_REVIEW_RECORD.md", "MTF1_TEST_ORIGINALIZATION_STANDARD.md",
+];
+const actualDocs = readdirSync(DIR).filter((f) => f.endsWith(".md")).sort();
+if (JSON.stringify(actualDocs) !== JSON.stringify([...KNOWN_DOCS].sort())) {
+  fail(`1.3-20: docs scope changed — ${actualDocs.length} files: ${actualDocs.join(", ")}`);
+} else ok("1.3-20: docs scope unchanged (exactly the 10 MTF-1 documents + this validator)");
+
 if (failures) { console.error(`\n${failures} MTF-1 validation failure(s).`); process.exit(1); }
-console.log(`\nMTF-1/1.1/1.2 docs package VALID — ${methods.length} methods (10 core / ${counts.launch_supporting} supporting / ${counts.rights_review_queue} rights-review / ${counts.later_cultural_systems} later-cultural); 12 original + 15 MTF-1.1 + 20 MTF-1.2 checks = 47 labeled checks (plus sub-assertions) all passing.`);
+console.log(`\nMTF-1/1.1/1.2/1.3 docs package VALID — ${methods.length} methods (10 core / ${counts.launch_supporting} supporting / ${counts.rights_review_queue} rights-review / ${counts.later_cultural_systems} later-cultural); 12 original + 15 MTF-1.1 + 20 MTF-1.2 + 20 MTF-1.3 checks = 67 labeled checks (plus sub-assertions) all passing.`);

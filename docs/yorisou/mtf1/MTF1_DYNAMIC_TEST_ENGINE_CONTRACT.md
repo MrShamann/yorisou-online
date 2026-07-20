@@ -8,7 +8,7 @@
 2. **120Q is an adapter, not the engine.** The engine must NOT be designed as a thin alias around the 120Q pipeline. The 120Q, the shared C02/F01/F02 rule engine, the RF/LD/micro flows, and the pair/draw flows each get an **adapter** implementing this contract (see `MTF1_EXISTING_ENGINE_ADAPTER_MAP.md`). The dormant DTE engine is not resurrected.
 3. **Source separation is structural.** Every result is bound to exactly one `methodId`+`methodVersion`. **No universal cross-method score exists, and none may be added** — cross-method meaning arises only in the CPV1 understanding layer as user-confirmable, source-tagged observations.
 4. **CPV1 compatibility.** Identity/maturity/activation vocabulary REUSES the canonical clean-main CPV1 contract (`lib/cpv1/methods.ts` — `MethodActivationState` 5-state set, evidence-gated deployment/Founder, separate maturity dimensions). This contract does not fork or overwrite CPV1 semantics; where the engine needs more granularity it composes, never redefines.
-5. **Versioned everything.** Method, bank, scoring, result, and report versions are independent, explicit, and carried on every persisted object. Reproducibility: same `(methodVersion, scoringVersion, bankVersion, inputs, seed)` ⇒ same result, on every channel.
+5. **Versioned by applicability (MTF-1.3).** Every method and result carries its APPLICABLE versions — not a universal scoring-shaped set: scored methods carry bank + scoring versions; recorded-state methods carry input/state schema versions; symbolic methods carry source/school/interpretation versions; imported methods carry provider/import references; entertainment methods carry content/draw versions; report versions exist only where a report exists. **Reproducibility is likewise variant-aware:** scored deterministic results reproduce from their declared `(bank, scoring, inputs, seed)` tuple on every channel; recorded states reproduce the stored user input, not a score; symbolic calculations claim determinism only where the calculation is actually deterministic; imported external results are provenance-preserving records, not YORISOU computations.
 
 ## 1. Method identity
 
@@ -52,23 +52,96 @@ type MethodEvidenceClass =
   | "traditional_symbolic"               // symbolic-reflection layer ONLY (see §7 two-class boundary)
   | "traditional_symbolic_entertainment"; // S01 class: fully understanding-isolated
 
+/**
+ * MTF-1.3 Correction A — explicit method execution model. Every method declares
+ * EXACTLY ONE execution model; it determines which definition, evaluation, and
+ * provenance fields are valid. Execution model is NEVER inferred from result type
+ * or method family. Examples: 120Q/C02/RF/LD/values → "scored"; daily-check-in →
+ * "recorded_state"; rights-cleared astrology/ziwei/symbolic interpretation →
+ * "symbolic"; MBTI import/handoff → "imported_external"; S01 omikuji → "entertainment".
+ */
+type MethodExecutionModel =
+  | "scored"
+  | "recorded_state"
+  | "symbolic"
+  | "imported_external"
+  | "entertainment";
+
+/**
+ * MTF-1.3 Correction B — variant-aware method DEFINITION provenance. The former
+ * identity block universally required bankVersion/bankContentHash/scoringVersion,
+ * which is false for non-scored methods. Fake values (bankVersion: "external",
+ * scoringVersion: "none", empty hashes, fabricated deterministic flags) are PROHIBITED
+ * — the correct definition variant is used instead.
+ */
+type MethodDefinitionProvenance =
+  | ScoredMethodDefinition
+  | RecordedStateMethodDefinition
+  | SymbolicMethodDefinition
+  | ImportedExternalMethodDefinition
+  | EntertainmentMethodDefinition;
+
+interface ScoredMethodDefinition {
+  kind: "scored";
+  bankVersion: string;
+  bankContentHash: string;             // invalidates saved progress on content change (fixes T12)
+  scoringVersion: string;
+  resultSchemaVersion: string;
+  reportSchemaVersion: string | null;  // null when the method has no report
+  sourceRegister: string;              // pointer to Forge step-2/3 artifacts
+}
+
+interface RecordedStateMethodDefinition {
+  kind: "recorded_state";
+  inputSchemaVersion: string;          // the state-field schema — NOT a scoring version
+  cadenceSchema: "daily" | "weekly" | "monthly" | "seasonal" | "annual";
+  acknowledgementCopyVersion: string | null;
+  yorisouScoring: null;                // structurally none
+}
+
+interface SymbolicMethodDefinition {
+  kind: "symbolic";
+  sourceTextOrTradition: string;
+  schoolVariant: string;
+  interpretationVersion: string;       // calculation or interpretation corpus version
+  corpusVersion: string;
+  rightsSourceRegister: string;
+  scientificValidation: null;          // structurally none — no validation implication
+}
+
+interface ImportedExternalMethodDefinition {
+  kind: "imported_external";
+  provider: string;
+  importMode: "user_declared" | "official_handoff";
+  providerVersionRef: string | null;
+  displayMappingVersion: string;       // how the external label is displayed, nothing more
+  yorisouBankVersion: null;            // structural nulls — no fake values
+  yorisouScoringVersion: null;
+  frameworkOwnership: "external";
+}
+
+interface EntertainmentMethodDefinition {
+  kind: "entertainment";
+  drawContentVersion: string;          // output pool / verse content version
+  drawMechanismVersion: string | null; // selection/draw mechanism version where relevant
+  shareCopyVersion: string;
+  understandingPolicy: "excluded_entertainment"; // pinned at the definition level
+  psychologyScoring: null;             // structurally none — no psychology scoring requirement
+}
+
 interface EngineMethodIdentity {
   methodId: string;                    // canonical, e.g. "relationship-pair-check"
   methodVersion: string;               // e.g. "pair-check-v1.0"
   family: EngineMethodFamily;          // STRICT union — no arbitrary strings
   methodEvidenceClass: MethodEvidenceClass;
+  executionModel: MethodExecutionModel; // MTF-1.3 — exactly one; determines valid fields
   rightsStatus: string;                // from the CPV1 rights model (cleared/review_required/…)
   contentStatus: "authored" | "in_review" | "not_authored";
   privacyClass: "P1_answers_only" | "P2_name_input" | "P3_two_person" | "P4_birth_data" | "P5_free_text";
   activationState: MethodActivationState; // CPV1-evidence-gated; engine NEVER self-activates a method
   supportedChannels: ReadonlyArray<"web" | "line_liff" | "ios" | "android">;
   language: "ja" | "en";               // ja-first; per-language bundles, one canonical content source
-  provenance: {                        // truth chain, not marketing
-    bankVersion: string;               // content-hash-bearing (NOT count-only — fixes T12)
-    bankContentHash: string;           // invalidates saved progress on content change
-    scoringVersion: string;
-    sourceRegister: string;            // pointer to Forge step-2/3 artifacts
-  };
+  definition: MethodDefinitionProvenance; // MTF-1.3 — the execution-model-matching variant ONLY
 }
 ```
 
@@ -107,20 +180,42 @@ type EngineScoringSpec =
   | { kind: "nonnumeric_vector"; version: string; signalModel: string }                  // 120Q-style signal counting
   | { kind: "branching"; version: string; graph: BranchNode[] };                         // conditional item paths
 
-interface EngineScoringMeta {
+/**
+ * MTF-1.3 Correction D — the scoring contract applies ONLY to scored methods.
+ * The former `EngineScoringMeta` could describe state_record / symbolic_reflection /
+ * imported_external result kinds, which was structurally wrong: no scoring exists for
+ * those. Scoring metadata is now bound inside a scored-only execution spec.
+ */
+interface ScoredExecutionSpec {
+  executionModel: "scored";
+  scoringSpec: EngineScoringSpec;      // §3 union above (weighted/tag/deterministic/pair/vector/branching)
+  scoringMeta: ScoredExecutionMeta;
+}
+
+interface ScoredExecutionMeta {
   methodVersion: string;
   scoringVersion: string;
   bankContentHash: string;
-  reproducible: true;                  // structurally required — no nondeterminism outside declared seeds
-  // MTF-1.1 Correction C: the former `multiResult: boolean` flag was REMOVED as
-  // insufficient — multi-dimensional output is a real structure, `DimensionProfileResult`
-  // (see §4), not a boolean on a single-archetype shape.
-  resultKind: "archetype" | "state_record" | "dimension_profile" | "symbolic_reflection" | "imported_external";
+  reproducible: true;                  // structurally required for SCORED methods — no nondeterminism outside declared seeds
+  // MTF-1.1 removed the insufficient `multiResult: boolean`; MTF-1.3 narrows resultKind:
+  // a scored execution may produce ONLY genuinely scored result variants.
+  resultKind: "archetype" | "dimension_profile"; // pair comparison still produces an archetype/pair-profile UNDER "scored"
   confidencePolicy:
     | { kind: "none_stated" }          // DEFAULT. Honest absence: "このバージョンは統計的に検証された確信度スコアを提供しません"
     | { kind: "validated"; validationRef: string }; // ONLY with a real, Founder-approved validation reference
   // PROHIBITED: numeric confidence without validationRef; any cross-method universal score.
 }
+
+// Non-scored execution models have their OWN execution contracts — the scored spec can
+// never describe them:
+//   recorded_state      → RecordedStateMethodDefinition + StateRecordResult (no scoring, no confidence policy)
+//   symbolic            → SymbolicMethodDefinition + SymbolicReflectionResult (a clearly-scoped deterministic
+//                         symbolic CALCULATOR — e.g. calendar mapping — uses the separate symbolic-computation
+//                         contract in SymbolicComputationProvenance, never EngineScoringSpec)
+//   imported_external   → ImportedExternalMethodDefinition + ImportedExternalResult (provenance-preserving record)
+//   entertainment       → EntertainmentMethodDefinition + entertainment output (draw mechanism, no psychology scoring)
+// The confidence policy is NOT silently imposed on imported or entertainment outputs —
+// it exists only inside ScoredExecutionMeta.
 ```
 
 Confidence rule (binding, per Founder decision D-3.5): the engine never fabricates certainty. Until a validation exists, every method uses `none_stated`; UI copy states the honest absence and NEVER attributes low confidence to false causes (the 120Q "insufficient answers" copy is the canonical violation, gated for correction as G-1).
@@ -142,7 +237,17 @@ type EngineComputationProvenance =
   | ScoredComputationProvenance
   | RecordedStateProvenance
   | SymbolicComputationProvenance
-  | ImportedExternalProvenance;
+  | ImportedExternalProvenance
+  | EntertainmentDrawProvenance; // MTF-1.3 — entertainment output carries its own draw record, never fake scoring
+
+/** Entertainment draws (S01 etc.) — a deterministic DRAW record, not psychology scoring. */
+interface EntertainmentDrawProvenance {
+  kind: "entertainment_draw";
+  drawContentVersion: string;
+  drawMechanismVersion: string | null;
+  deterministicDraw: boolean;          // truthful: S01's seeded draw is deterministic
+  psychologyScoring: null;             // structurally none
+}
 
 /** YORISOU scored methods (archetype + dimension-profile computation). */
 interface ScoredComputationProvenance {
@@ -198,23 +303,48 @@ type UnderstandingPolicy =
   | "imported_user_confirmed_only"     // imported external results: never treated as YORISOU-derived; the user must confirm the imported label BEFORE it enters private understanding
   | "excluded_entertainment";          // traditional_symbolic_entertainment (incl. S01): structurally excluded from the Understanding Graph, psychological/personality observations, compatibility synthesis, recommendation, Companion memory, Community matching, and archive-derived identity summaries. May still support sharing, casual return, and non-personal usage analytics where consent and policy permit.
 
+/**
+ * MTF-1.3 Correction F — confirmation applicability is STRUCTURAL. Recorded and
+ * imported outputs are produced/recorded, not necessarily computed; entertainment
+ * output never enters the Understanding Graph, so it must not carry a fake CPV1
+ * confirmation requirement merely because it shares the result base.
+ * Rules by understandingPolicy:
+ *   method_derived_eligible      → confirmation supported per CPV1 policy (required: true)
+ *   symbolic_private_only        → confirmation REQUIRED before understanding contribution (required: true)
+ *   imported_user_confirmed_only → confirmation REQUIRED before understanding contribution (required: true)
+ *   excluded_entertainment       → confirmation NOT used for Understanding Graph integration (required: false)
+ */
+type ResultConfirmation =
+  | {
+      required: true;
+      status: "unreviewed" | "confirmed" | "corrected" | "rejected";
+      correctedNoteRef: string | null; // structured ref — no personal free text in audit events (CPV1 rule)
+    }
+  | {
+      required: false;                 // e.g. S01 entertainment output — no fake CPV1 confirmation
+      status: null;
+      correctedNoteRef: null;
+    };
+
 /** Shared base — EVERY variant carries all of this. */
 interface EngineResultBase {
   resultId: string;                    // method-SPECIFIC id — no global namespace
   resultKind: "archetype" | "state_record" | "dimension_profile" | "symbolic_reflection" | "imported_external";
   methodId: string;
   methodVersion: string;
-  computedAt: string;                  // ISO
+  producedAt: string;                  // ISO — MTF-1.3: neutral term (recorded/imported outputs are not "computed")
   reasons: Array<{ itemRefs: string[]; explanationJa: string }> | null; // explainability where applicable
   limits: string;                      // mandatory interpretation-limit line (「診断ではありません」…)
   publicCopy: { recognitionJa: string; shareLineJa: string };      // screenshot-safe layer ONLY
   privateCopy: { highlightsJa: string[]; gentleNextStepJa: string } | null; // never in URLs/share cards
-  recommendationTags: string[];        // suggestions, never verdicts; ALWAYS empty for *_entertainment
+  // MTF-1.3 §9 applicability: recommendation tags may be EXPLICITLY UNAVAILABLE (empty);
+  // entertainment methods have NO personalized recommendation tags; imported methods do
+  // NOT automatically inherit YORISOU recommendations; reports are optional and
+  // execution/result-model dependent — no method is forced to produce a deep report
+  // merely to satisfy this schema.
+  recommendationTags: string[];        // suggestions, never verdicts; ALWAYS empty for *_entertainment and imports-by-default
   retestGuidance: { cadence: string; noteJa: string };             // no "you got worse" framing
-  confirmation: {                      // CPV1 understanding integration (source-separated)
-    status: "unreviewed" | "confirmed" | "corrected" | "rejected";
-    correctedNoteRef: string | null;   // structured ref — no personal free text in audit events (CPV1 rule)
-  };
+  confirmation: ResultConfirmation;    // MTF-1.3 — structural applicability (see rules above)
   methodEvidenceClass: MethodEvidenceClass;
   understandingPolicy: UnderstandingPolicy; // MTF-1.2 — exactly one per result; structural, not conventional
   provenance: EngineComputationProvenance;  // MTF-1.2 — the variant-appropriate provenance (no fake scoring fields)
@@ -288,9 +418,9 @@ type EngineResult =
   | ImportedExternalResult;
 ```
 
-Universe mapping (binding, incl. MTF-1.2 provenance + policy):
+Universe mapping (binding, incl. MTF-1.3 execution model + policy; result-level computation provenance follows the execution model):
 
-| Method / class | Result variant | Provenance variant | understandingPolicy |
+| Method / class | Result variant | Execution model | understandingPolicy |
 |---|---|---|---|
 | Shipped + rebuilt YORISOU originals (120Q, C02, F01/F02, RF, LD, WR, NI, values, motivation, pair-check, …) | `ArchetypeResult` | `scored` | `method_derived_eligible` |
 | `daily-check-in` (and future cadence records) | `StateRecordResult` (no archetype) | `recorded_state` (no scoring; none claimed) | `method_derived_eligible` (source-separated current-state context; `comparisonPolicy: method_local_timeline_only`) |
@@ -298,7 +428,7 @@ Universe mapping (binding, incl. MTF-1.2 provenance + policy):
 | `big-five-ipip` (post rights review) | `DimensionProfileResult` | `scored` | `method_derived_eligible` |
 | Rights-cleared `traditional_symbolic` methods | `SymbolicReflectionResult` | `symbolic` | `symbolic_private_only` |
 | `mbti-import-handoff` | `ImportedExternalResult` | `imported_external` | `imported_user_confirmed_only` |
-| `s01-omikuji` (and any `traditional_symbolic_entertainment`) | entertainment output (archetype-shaped rendering permitted) | `scored` (its seeded draw IS a deterministic YORISOU computation) | **`excluded_entertainment`** — the exclusion is carried STRUCTURALLY by this policy, not merely by empty `recommendationTags` or convention |
+| `s01-omikuji` (and any `traditional_symbolic_entertainment`) | entertainment output (archetype-shaped rendering permitted) | `entertainment` (deterministic seeded draw recorded truthfully in its EntertainmentMethodDefinition — NOT psychology scoring; confirmation.required = false) | **`excluded_entertainment`** — the exclusion is carried STRUCTURALLY by this policy, not merely by empty `recommendationTags` or convention |
 
 ## 5. Persistence & continuity
 

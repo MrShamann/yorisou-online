@@ -1,6 +1,6 @@
-# MTF-1 / MTF-1.1 / MTF-1.2 — Structured Review Record (§7, corrected)
+# MTF-1 / MTF-1.1 / MTF-1.2 / MTF-1.3 — Structured Review Record (§7, corrected)
 
-This record supersedes the initial MTF-1 review, which incorrectly reported blanket PASS across all dimensions while the package still contained contract defects. The corrected record distinguishes: **(a)** defects present at the initial MTF-1 HEAD `51a3916`, **(b)** corrections applied in MTF-1.1, **(a2)** defects still present at the MTF-1.1 HEAD `9e74b15`, **(b2)** corrections applied in MTF-1.2, **(c)** remaining genuine future implementation gates, and **(d)** the invariant that no runtime code and no CPV1 code was mutated in any of the three packages.
+This record supersedes the initial MTF-1 review, which incorrectly reported blanket PASS across all dimensions while the package still contained contract defects. The corrected record distinguishes: **(a)** defects present at the initial MTF-1 HEAD `51a3916`, **(b)** corrections applied in MTF-1.1, **(a2)** defects still present at the MTF-1.1 HEAD `9e74b15`, **(b2)** corrections applied in MTF-1.2, **(a3)** defects still present at the MTF-1.2 HEAD `d7b602c`, **(b3)** corrections applied in MTF-1.3, **(c)** remaining genuine future implementation gates, and **(d)** the invariant that no runtime code and no CPV1 code was mutated in any of the four packages.
 
 ## (a) Defects present at MTF-1 HEAD `51a3916` (found by Founder review, fixed in MTF-1.1)
 
@@ -47,6 +47,30 @@ These defects existed at `9e74b15`; the MTF-1.1 review did not catch them.
 | D2 | Daily-state semantics made explicit: `comparisonPolicy: "method_local_timeline_only"` (never numerically compared or averaged with another method; no universal score) SEPARATED from `understandingPolicy: "method_derived_eligible"` (may provide source-separated current-state context — timing/context relations — inside CPV1); `crossMethod: false` no longer exists to be misread. |
 | E2 | Validator expanded 27 → 47 labeled checks (§7 list); adapter map S01 row aligned to the structural policy. |
 
+## (a3) Defects still present at the MTF-1.2 HEAD `d7b602c` (found by Founder review, fixed in MTF-1.3)
+
+These are specification defects that existed at `d7b602c` — not future implementation choices.
+
+| # | Defect |
+|---|---|
+| DF-12 | **Method identity still universally required bank/scoring provenance** — `EngineMethodIdentity.provenance` forced `bankVersion`/`bankContentHash`/`scoringVersion` onto every method, contradicting the MTF-1.2 result-level provenance correction at the method-definition level (false for recorded/symbolic/imported/entertainment methods). |
+| DF-13 | **`EngineScoringMeta` still included non-scored result kinds** — its `resultKind` union listed `state_record` / `symbolic_reflection` / `imported_external`, letting scoring metadata describe outputs for which no scoring exists. |
+| DF-14 | **Forge step 10 still forced scoring for all methods** — "Original scoring" was mandatory regardless of execution model. |
+| DF-15 | **Top-level version/reproducibility statement remained universally scoring-oriented** — design position §5 claimed bank/scoring/report versions on every persisted object and a universal `(methodVersion, scoringVersion, bankVersion, inputs, seed)` reproduction rule. |
+| DF-16 | **Universal `computedAt` / confirmation semantics were not fully applicable** — recorded and imported outputs are not "computed", and entertainment output carried a CPV1-shaped confirmation requirement it never uses. |
+
+## (b3) Corrections applied in MTF-1.3
+
+| # | Correction |
+|---|---|
+| A3 | `MethodExecutionModel` (scored / recorded_state / symbolic / imported_external / entertainment) — exactly one per `EngineMethodIdentity`; determines valid definition/evaluation/provenance fields; never inferred from result type or family; canonical examples pinned (120Q→scored, daily-check-in→recorded_state, ziwei→symbolic, MBTI→imported_external, S01→entertainment). |
+| B3 | `MethodDefinitionProvenance` 5-variant tagged union replaces the universal identity provenance block; `RecordedStateMethodDefinition.yorisouScoring: null`; `ImportedExternalMethodDefinition` structurally nulls YORISOU bank/scoring; `EntertainmentMethodDefinition` pins `understandingPolicy: "excluded_entertainment"` + `psychologyScoring: null`; fake values prohibited. |
+| C3 | Design position §5 rewritten variant-aware ("Versioned by applicability"): applicable versions only; report versions only where a report exists; reproducibility per variant (scored tuple / stored input / truthful symbolic determinism / provenance-preserving imports). |
+| D3 | `ScoredExecutionSpec` + `ScoredExecutionMeta` — scoring metadata bound to `executionModel: "scored"`; `resultKind` narrowed to `archetype \| dimension_profile` (pair comparison stays under scored); non-scored models get their own execution contracts; confidence policy exists only inside the scored meta (never imposed on imported/entertainment). |
+| E3 | Forge step 10 → "Original computation, recording, interpretation or import model" with per-execution-model artifacts; recorded `not_applicable` scoring decision allowed for non-scored models without bypassing the execution-model artifact. |
+| F3 | `computedAt` → `producedAt` (neutral); `ResultConfirmation` structural union (`required: true` with CPV1 status vs `required: false` for entertainment); policy-to-confirmation rules recorded; S01 carries no fake CPV1 confirmation; recommendation/report applicability made explicit (tags may be unavailable; entertainment never personalized; imports inherit nothing automatically; reports optional). |
+| G3 | Validator expanded 47 → 67 labeled checks; mapping table now carries execution model per method class (S01 → `entertainment`). |
+
 ## (c) Remaining genuine future gates (NOT defects of this package)
 
 1. **CPV1 MethodFamily additive extension** — required before registering `relationship_compatibility` / `japanese_cultural_symbolic` methods (implementation prerequisite; exact union specified in the contract).
@@ -55,9 +79,9 @@ These defects existed at `9e74b15`; the MTF-1.1 review did not catch them.
 4. Engine implementation itself (all of it) — later package; nothing in MTF-1/1.1 is runtime code.
 5. Two-person consent transport design; `repeated_check` cadence/history capability; image/color/card formats; `DimensionProfileResult` rendering — engine-package work items.
 
-## (d) Non-mutation invariant (all three packages)
+## (d) Non-mutation invariant (all four packages)
 
-No file under `app/`, `lib/`, `content/`, `data/`, `public/`, or `supabase/` changed; no migration changed; `lib/cpv1` untouched (all CPV1 references are documentation comparisons); Production `main` untouched; PR #113/#114 untouched; across MTF-1, MTF-1.1 and MTF-1.2 the only non-doc file is the non-runtime docs validator `scripts/validate-mtf1-docs.mjs`, imported by nothing.
+No file under `app/`, `lib/`, `content/`, `data/`, `public/`, or `supabase/` changed; no migration changed; `lib/cpv1` untouched (all CPV1 references are documentation comparisons); Production `main` untouched; PR #113/#114 untouched; across MTF-1, MTF-1.1, MTF-1.2 and MTF-1.3 the only non-doc file is the non-runtime docs validator `scripts/validate-mtf1-docs.mjs`, imported by nothing.
 
 ## Dimension review (post-correction status)
 
