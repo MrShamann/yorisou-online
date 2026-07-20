@@ -169,10 +169,10 @@ if (!/type EngineResult =\s*\n?\s*\| ArchetypeResult\s*\n?\s*\| StateRecordResul
 
 // 8. no-archetype StateRecordResult exists (and daily-check-in maps to it)
 if (!/interface StateRecordResult/.test(contractDoc) || !/no forced personality interpretation|NOT an interpretation/i.test(contractDoc)) fail("1.1-8: StateRecordResult (no archetype) missing");
-else if (!/`daily-check-in` → `StateRecordResult`/.test(contractDoc)) fail("1.1-8: daily-check-in must map to StateRecordResult");
+else if (!/`daily-check-in`[^|\n]*\| `StateRecordResult` \(no archetype\)/.test(contractDoc)) fail("1.1-8: daily-check-in must map to StateRecordResult");
 else ok("1.1-8: StateRecordResult exists; daily-check-in maps to it (no archetype)");
 // image-color-reflection reflective mapping without mandatory archetype
-if (!/`image-color-reflection` → `StateRecordResult` or `SymbolicReflectionResult`/.test(contractDoc)) fail("1.1-8b: image-color-reflection must map to a reflective (non-mandatory-archetype) variant");
+if (!/`image-color-reflection`[^|\n]*\| `StateRecordResult` or `SymbolicReflectionResult`/.test(contractDoc)) fail("1.1-8b: image-color-reflection must map to a reflective (non-mandatory-archetype) variant");
 else ok("1.1-8b: image-color-reflection uses a reflective variant (no mandatory archetype)");
 
 // 9. DimensionProfileResult exists with real structure (and the boolean flag is gone)
@@ -230,5 +230,90 @@ if (counts.launch_core !== 10 || counts.launch_supporting !== 9 || counts.rights
   fail(`1.1-15: composition changed — ${JSON.stringify(counts)} (must be 10/9/7/5)`);
 } else ok("1.1-15: launch composition unchanged (10/9/7/5)");
 
+// ═══ MTF-1.2 EXPANSION (§7 checks 1–20) ══════════════════════════════════════
+
+// 1–2. Forge contains "Original result model" and no longer mandates archetypes for all
+if (!/Original result model/.test(standardDoc)) fail("1.2-1: Forge must contain the 'Original result model' step");
+else ok("1.2-1: Forge contains 'Original result model'");
+if (/\| 11 \| \*\*Original result archetypes\*\*/.test(standardDoc) || /per archetype, current-state framed \|/.test(standardDoc)) {
+  fail("1.2-2: Forge still mandates archetypes for all methods");
+} else if (!/no archetype, no deep report, a timeline instead of a report/.test(standardDoc)) {
+  fail("1.2-2: Forge must state that non-archetype/no-report outcomes are legitimate");
+} else ok("1.2-2: Forge no longer mandates archetypes; template-forcing prohibited");
+
+// 3–7. variant-specific production requirements exist
+const prodReq = standardDoc;
+if (!/\*\*State record result\*\*[\s\S]*?No mandatory archetype\. No forced personality interpretation\./.test(prodReq)) fail("1.2-3: StateRecord production requirements missing");
+else ok("1.2-3: StateRecord production requirements present");
+if (!/\*\*Dimension profile result\*\*[\s\S]*?No mandatory single primary type\./.test(prodReq)) fail("1.2-4: DimensionProfile production requirements missing");
+else ok("1.2-4: DimensionProfile production requirements present");
+if (!/\*\*Symbolic reflection result\*\*[\s\S]*?No scientific weighting\. No deterministic life prediction\./.test(prodReq)) fail("1.2-5: SymbolicReflection production requirements missing");
+else ok("1.2-5: SymbolicReflection production requirements present");
+if (!/\*\*Imported external result\*\*[\s\S]*?No YORISOU re-scoring\. No copied report content\./.test(prodReq)) fail("1.2-6: ImportedExternal production rules must prohibit YORISOU re-scoring");
+else ok("1.2-6: ImportedExternal production rules prohibit re-scoring/copying");
+if (!/\*\*Entertainment-only output\*\*[\s\S]*?excluded_entertainment/.test(prodReq)) fail("1.2-7: entertainment-only output production model missing");
+else ok("1.2-7: entertainment-only output explicitly supported");
+
+// 8–10. EngineResultBase no longer universally requires bank/scoring/deterministic
+const baseBlock = contractDoc.match(/interface EngineResultBase \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!baseBlock) fail("1.2-8: EngineResultBase not found");
+if (/^\s*bankVersion: string;/m.test(baseBlock)) fail("1.2-8: EngineResultBase still universally requires bankVersion");
+else ok("1.2-8: bankVersion removed from the universal base");
+if (/^\s*scoringVersion: string;/m.test(baseBlock)) fail("1.2-9: EngineResultBase still universally requires scoringVersion");
+else ok("1.2-9: scoringVersion removed from the universal base");
+if (/reproducibility: \{ deterministic: true/.test(baseBlock)) fail("1.2-10: universal deterministic:true still present in the base");
+else ok("1.2-10: universal deterministic:true removed from the base");
+
+// 11. EngineComputationProvenance is a tagged union
+if (!/type EngineComputationProvenance =\s*\n?\s*\| ScoredComputationProvenance\s*\n?\s*\| RecordedStateProvenance\s*\n?\s*\| SymbolicComputationProvenance\s*\n?\s*\| ImportedExternalProvenance/.test(contractDoc)) {
+  fail("1.2-11: EngineComputationProvenance must be the 4-variant tagged union");
+} else ok("1.2-11: EngineComputationProvenance is a 4-variant tagged union");
+if (!/provenance: EngineComputationProvenance/.test(baseBlock)) fail("1.2-11b: base must carry the variant-appropriate provenance");
+else ok("1.2-11b: base carries EngineComputationProvenance");
+
+// 12. recorded-state provenance has no scoring
+const recBlock = contractDoc.match(/interface RecordedStateProvenance \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!recBlock || !/yorisouScoring: null/.test(recBlock) || /scoringVersion: string/.test(recBlock)) fail("1.2-12: RecordedStateProvenance must have yorisouScoring: null and no scoring version");
+else ok("1.2-12: recorded-state provenance carries no scoring");
+
+// 13. imported provenance has no YORISOU bank/scoring
+const impBlock = contractDoc.match(/interface ImportedExternalProvenance \{[\s\S]*?\n\}/)?.[0] ?? "";
+if (!impBlock || !/yorisouBankVersion: null/.test(impBlock) || !/yorisouScoringVersion: null/.test(impBlock) || !/yorisouRescoring: null/.test(impBlock)) {
+  fail("1.2-13: ImportedExternalProvenance must null out YORISOU bank/scoring/rescoring");
+} else ok("1.2-13: imported provenance has no YORISOU bank/scoring (structural nulls)");
+// fake-value prohibition stated
+if (!/Fake values[\s\S]{0,200}PROHIBITED|fake values[\s\S]{0,200}prohibited/i.test(contractDoc)) fail("1.2-13b: fake-provenance-value prohibition must be stated");
+else ok("1.2-13b: fake provenance values explicitly prohibited");
+
+// 14. every result has an UnderstandingPolicy (union values may carry trailing comments)
+if (!/type UnderstandingPolicy =[^\n]*\n\s*\| "method_derived_eligible"[^\n]*\n\s*\| "symbolic_private_only"[^\n]*\n\s*\| "imported_user_confirmed_only"[^\n]*\n\s*\| "excluded_entertainment"/.test(contractDoc)) {
+  fail("1.2-14: UnderstandingPolicy 4-value union missing");
+} else if (!/understandingPolicy: UnderstandingPolicy/.test(baseBlock)) {
+  fail("1.2-14: EngineResultBase must carry exactly one understandingPolicy");
+} else ok("1.2-14: every result carries exactly one UnderstandingPolicy");
+
+// 15–17. binding policy mappings
+if (!/`s01-omikuji`[\s\S]{0,400}`excluded_entertainment`/.test(contractDoc)) fail("1.2-15: s01-omikuji must map to excluded_entertainment");
+else ok("1.2-15: s01-omikuji maps to excluded_entertainment (structural, not convention)");
+if (!/`traditional_symbolic` methods \| `SymbolicReflectionResult` \| `symbolic` \| `symbolic_private_only`/.test(contractDoc)) fail("1.2-16: symbolic results must map to symbolic_private_only");
+else ok("1.2-16: symbolic results map to symbolic_private_only");
+if (!/`mbti-import-handoff` \| `ImportedExternalResult` \| `imported_external` \| `imported_user_confirmed_only`/.test(contractDoc)) fail("1.2-17: imported results must map to imported_user_confirmed_only");
+else ok("1.2-17: imported external results map to imported_user_confirmed_only");
+
+// 18. daily check-in: method-local comparison + understanding-eligible context
+if (!/comparisonPolicy: "method_local_timeline_only"/.test(contractDoc)) fail("1.2-18: StateRecordResult must declare comparisonPolicy method_local_timeline_only");
+else if (!/did NOT mean "invisible to the Understanding Graph"|NOT.*invisible to the Understanding Graph/i.test(contractDoc)) fail("1.2-18: the crossMethod ambiguity must be explicitly resolved");
+else if (!/`daily-check-in`[\s\S]{0,400}`method_derived_eligible`/.test(contractDoc)) fail("1.2-18: daily-check-in must be understanding-eligible as source-separated context");
+else ok("1.2-18: daily state = method-local comparison BUT understanding-eligible source-separated context");
+
+// 19. launch composition unchanged (re-asserted for 1.2)
+if (counts.launch_core !== 10 || counts.launch_supporting !== 9 || counts.rights_review_queue !== 7 || counts.later_cultural_systems !== 5) {
+  fail("1.2-19: launch composition changed");
+} else ok("1.2-19: launch composition remains 10/9/7/5");
+
+// 20. all original MTF-1 + MTF-1.1 checks still pass — structurally guaranteed: this
+// script only reaches the summary when `failures === 0` across ALL sections above.
+ok("1.2-20: all original MTF-1 (12) and MTF-1.1 (15) checks executed above in this same run");
+
 if (failures) { console.error(`\n${failures} MTF-1 validation failure(s).`); process.exit(1); }
-console.log(`\nMTF-1/1.1 docs package VALID — ${methods.length} methods (10 core / ${counts.launch_supporting} supporting / ${counts.rights_review_queue} rights-review / ${counts.later_cultural_systems} later-cultural); 12 original + 15 MTF-1.1 expansion checks (27 total, plus sub-assertions) all passing.`);
+console.log(`\nMTF-1/1.1/1.2 docs package VALID — ${methods.length} methods (10 core / ${counts.launch_supporting} supporting / ${counts.rights_review_queue} rights-review / ${counts.later_cultural_systems} later-cultural); 12 original + 15 MTF-1.1 + 20 MTF-1.2 checks = 47 labeled checks (plus sub-assertions) all passing.`);

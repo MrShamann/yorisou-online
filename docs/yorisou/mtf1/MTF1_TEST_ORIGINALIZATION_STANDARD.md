@@ -16,9 +16,9 @@
 | 8 | **Original question structure** — section plan, ordering logic, completion-time budget, all consistent with the step-5 benchmark decision (item count comes FROM step 5, never assumed) | structure sheet |
 | 9 | **Original answer options** — option scales/choices written fresh; trade-off options must trade REAL things | option style guide + examples |
 | 10 | **Original scoring** — scoring logic designed from the dimension sheet (weights, rules, tie-breaks, fallback); versioned from day one | scoring spec (versioned) |
-| 11 | **Original result archetypes** — result set (count from the step-5 benchmark, ids, JA names) authored fresh; names must not collide with any existing YORISOU taxonomy (see naming-collision register T1/T2) | archetype sheet |
-| 12 | **Original free-result copy** — recognition line, highlights, gentle next step, share line — per archetype, current-state framed | free-copy sheet |
-| 13 | **Original deep-report structure** — section skeleton + editorial intent per section; private-by-default | report skeleton |
+| 11 | **Original result model** (MTF-1.2 — replaces the archetype-only step) — FIRST select the result variant from the Dynamic Test Engine contract (`ArchetypeResult` / `StateRecordResult` / `DimensionProfileResult` / `SymbolicReflectionResult` / `ImportedExternalResult` / entertainment-only output), justified by the method's ACTUAL user need — never by template habit. Then produce the variant-specific artifacts (see "Result-model production requirements" below). A method may legitimately have **no archetype, no deep report, a timeline instead of a report, a profile instead of a type, or an acknowledgement instead of an interpretation.** The Forge must never force content solely to satisfy a template. | result-model decision + variant artifact set |
+| 12 | **Original free-result copy** — result-variant-aware: recognition/acknowledgement line, share-safe line, and (where the variant defines them) highlights and gentle next step — current-state framed; per result entry for archetype/profile/symbolic variants, per state-set for state records | free-copy sheet (variant-appropriate) |
+| 13 | **Original deep-output structure** — result-variant-aware: report skeleton where the variant warrants a report; change-over-time timeline for state records; profile explanation for dimension profiles; NO mandatory report for every method; private-by-default | deep-output skeleton (or a recorded "no deep output" decision) |
 | 14 | **Recommendation tags** — which service families each result may route to; tags are suggestions, never verdicts | tag map |
 | 15 | **Japanese cultural adaptation** — pass the full `MTF1_JAPAN_LOCALIZATION_STANDARD.md` checklist | localization checklist result |
 | 16 | **Public/private copy separation** — explicit split: screenshot-safe public copy vs private-only copy; nothing sensitive in URLs or share cards | copy-boundary sheet |
@@ -28,6 +28,22 @@
 | 20 | **Founder review before activation** — the CPV1 gate: founder decision ref + deployment evidence required for `public_active`; content completion NEVER auto-activates | founder decision record |
 
 Existing completed methods retain their verified actual counts (120/36/60/60/24/18/6/5/4 and the R01/R04/S01 pools) — the benchmark stage governs NEW and REBUILD methods, not retroactive changes to shipped banks.
+
+## Result-model production requirements (Forge step 11, MTF-1.2)
+
+The selected variant determines EXACTLY what content is produced. Producing archetype-shaped content for a non-archetype method is a Forge violation.
+
+**Archetype result** — produce: result IDs; Japanese result names (collision-checked per the naming rule); recognition lines; secondary signals or modifiers; per-result free copy; report structure where applicable.
+
+**State record result** (daily check-in and similar) — produce: structured state fields; allowed values; acknowledgement copy; optional private-reflection design; cadence; change-over-time presentation. **No mandatory archetype. No forced personality interpretation.**
+
+**Dimension profile result** — produce: dimension definitions; qualitative bands; validated numeric handling ONLY if a real validation exists; profile explanation; method-local comparison rules. **No mandatory single primary type.**
+
+**Symbolic reflection result** (rights-cleared traditional/symbolic) — produce: source/school/version record; symbol or interpretation entries; symbolic boundary copy; confirmation/correction/rejection behavior. **No scientific weighting. No deterministic life prediction.**
+
+**Imported external result** — produce ONLY: provider mapping; import mode; label-display rules; ownership and trademark boundary; user-confirmation flow. **No new YORISOU type. No YORISOU re-scoring. No copied report content.**
+
+**Entertainment-only output** (`traditional_symbolic_entertainment`) — produce: entertainment output model; share-safe copy; return behavior; and the explicit exclusion from Understanding Graph, recommendation, and Companion memory (carried structurally as `understandingPolicy: "excluded_entertainment"`).
 
 ## Absolute prohibitions
 
