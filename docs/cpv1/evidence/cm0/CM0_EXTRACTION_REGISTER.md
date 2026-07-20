@@ -40,3 +40,14 @@ foundation). Destination branch: **`feat/cpv1-clean-main-foundation`** (from cle
 
 **No object was copied merely because it exists in PR #114.** No stacked-branch completion claim or
 branch-specific evidence was carried over as current clean-main truth.
+
+## CM0.1 corrections (schema/contract parity — same branch, no new PR)
+
+| Object | Change |
+|---|---|
+| `202607200002` registry snapshot | activation_state enum → the 5 TS states (drop `rights_blocked`/`contract_only`; add `implemented_route_verified`/`gated`); added 10 explicit maturity fields + 4 consistency constraints (evidence-gated deployment/Founder; public_active=10; implemented_route_verified=6) |
+| `202607200002` comments | corrected stale APP-2 dependency (→ `202607200001`) + history-guard (→ `yorisou_cpv1_block_mutation`) |
+| `lib/cpv1/methods.ts` | exported canonical `METHOD_ACTIVATION_STATES` |
+| `lib/cpv1/__tests__/cpv1Contract.test.ts` | +2 parity checks (DB set === TS set; fields+constraints present) — 62 checks |
+| `scripts/validate-cpv1-migrations.mjs` | hard-gate: obsolete `rights_blocked`/`contract_only` in executable SQL fails (negative-control verified) |
+| `docs/cpv1/evidence/cm0/cm0_rls_verify.sh` | +20 registry schema-contract checks — 45/45 |

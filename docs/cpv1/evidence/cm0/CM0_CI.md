@@ -12,14 +12,16 @@ draft PR to `main`.
 **Recorded run tied to the final HEAD:** see the final report / PR comment (URL + conclusion + head SHA),
 GitHub-verified via `gh run view`.
 
-## Recorded runs (final HEAD `49f4b69`, GitHub-verified)
+## Recorded runs (final HEAD `f99a22c`, GitHub-verified)
 
 | Run | Workflow | Event | Head SHA | Conclusion |
 |---|---|---|---|---|
-| 29713878435 | CPV1-CM0 CI (PR-check) | pull_request | 49f4b69 | success |
-| 29713860844 | CPV1-CM0 CI | push | 49f4b69 | success |
-| 29713878489 | Yorisou Check (main full suite — bonus non-regression) | pull_request | 49f4b69 | success |
+| 29714805258 | CPV1-CM0 CI (PR-check) | pull_request | f99a22c | success |
+| 29714803873 | CPV1-CM0 CI | push | f99a22c | success |
+| 29714805285 | Yorisou Check (main full suite — bonus non-regression) | pull_request | f99a22c | success |
 
-- URL: https://github.com/MrShamann/yorisou-online/actions/runs/29713878435
-- The clean-main branch additionally passes `main`'s own full CI ("Yorisou Check"), confirming the CPV1
-  foundation introduces no regression to production `main`.
+- URL: https://github.com/MrShamann/yorisou-online/actions/runs/29714805258
+- The clean-main branch additionally passes `main`'s own full CI ("Yorisou Check"), confirming no
+  regression to production `main`.
+- (Prior CM0 final HEAD `aec9d93` runs were CPV1-CM0 CI `29714007641` + Yorisou Check `29714007605`;
+  CM0.1 supersedes them with the `f99a22c` runs above.)

@@ -6,7 +6,7 @@ PR #114 stacked branches.
 
 ## Repository state
 - **Starting `main` HEAD:** `70da80a09491b375c0e066be60bfe6411dc7cabc` (clean).
-- **Final branch HEAD:** `49f4b69` (this report adds one docs commit; its own CI verified green at closeout).
+- **Final branch HEAD:** `f99a22c` (CM0.1). Draft PR #115 changed-file count: **23**.
 - **Branch:** `feat/cpv1-clean-main-foundation` (from clean `main`; NOT from PR #113/#114).
 - **Draft PR:** **#115** → base `main`, OPEN, **draft**, unmerged.
 - Working tree clean (the two untracked audit/export files were never staged; Supabase CLI `.branches`/
@@ -30,14 +30,15 @@ PR #114 stacked branches.
   (`revealContent` / `productCards` / `lineCallbackContract`) → removed.
 
 ## Migration / RLS results
-**25/25** checks in an isolated disposable DB (`cpv1cm0_verify`, dropped): self-contained apply,
+**45/45** checks (25 migration/RLS + 20 CM0.1 registry schema-contract) in an isolated disposable DB
+(`cpv1cm0_verify`, dropped): self-contained apply,
 CPV1-owned helpers present (APP-2 absent), RLS enabled+forced, grants, anon denial, user isolation,
 forged-id denial, exact identity, independent consent + revocation, deleted flag, data-rights
 no-free-text, append-only, registry admin-only, teardown, reapply, cleanup. Rollback =
 `LOCAL_DISPOSABLE_SCHEMA_ROLLBACK`. See `CM0_MIGRATION_RLS.md`.
 
 ## Test results
-`tsc` 0 · focused eslint clean · **CPV1 clean-main contract test 60 checks** (pure `lib/cpv1`; incl. 8
+`tsc` 0 · focused eslint clean · **CPV1 clean-main contract test 62 checks** (pure `lib/cpv1`; incl. 8
 R1.1A negative activation-state gates) · migration guard PASS · changed-content gitleaks clean · `next
 build` ✓ · clean-main regression `test:c02` + `test:relationship-fatigue` pass. See
 `CM0_CONTRACT_VERIFICATION.md`.
@@ -48,12 +49,13 @@ activation; no inferred production deployment; enum-without-evidence not accepte
 multi-dimension gated; no external calculation/interpretation content. The 9 product routes are NOT
 converted into CPV1 public activation.
 
-## CI run tied to final HEAD
-`CPV1-CM0 CI` SUCCESS on `49f4b69` — PR-check `pull_request` run
-[29713878435](https://github.com/MrShamann/yorisou-online/actions/runs/29713878435) + `push` run
-[29713860844](https://github.com/MrShamann/yorisou-online/actions/runs/29713860844). The main-targeting
-"Yorisou Check" full suite also passed on the PR (run 29713878489) — confirming no regression to `main`.
-(This report's docs commit CI is verified green at closeout; URL in the PR #115 comment.)
+## CI run tied to final HEAD (`f99a22c`)
+`CPV1-CM0 CI` SUCCESS — PR-check `pull_request` run
+[29714805258](https://github.com/MrShamann/yorisou-online/actions/runs/29714805258) + `push` run
+[29714803873](https://github.com/MrShamann/yorisou-online/actions/runs/29714803873). The main-targeting
+"Yorisou Check" full suite also passed (run 29714805285) — no regression to `main`. All run→sha bindings
+GitHub-verified. (Prior CM0 final-HEAD `aec9d93` runs were `29714007641` / Yorisou Check `29714007605`,
+now superseded.)
 
 ## Invariants
 - **Production `main` UNCHANGED** at `70da80a0`.
@@ -67,4 +69,17 @@ converted into CPV1 public activation.
 Writer lock released at closeout after evidence + handoff; handoff records the remaining scope (build the
 CPV1 UI/product surfaces, external-method rights + content, Companion/Community/Legacy — none in CM0).
 
-**Status:** `CPV1_CM0_CLEAN_MAIN_FOUNDATION_READY_FOR_FOUNDER_REVIEW`
+## CM0.1 — schema/contract parity corrections
+- DB `activation_state` enum now EXACTLY the 5 TypeScript `MethodActivationState` values (removed obsolete
+  `rights_blocked`/`contract_only`; added `implemented_route_verified`/`gated`).
+- Registry snapshot gains 10 explicit R1.1A maturity fields + 4 consistency constraints (evidence-gated
+  deployment/Founder; `public_active` = all 10; `implemented_route_verified` = 6, route alone insufficient).
+- Stale APP-2 dependency/guard comments in `202607200002` corrected.
+- Cross-layer parity enforced (canonical `METHOD_ACTIVATION_STATES` + contract test + validator hard-gate).
+- Disposable-DB verification extended to **45/45** (20 registry schema-contract checks).
+
+## Final activation-state sets (parity)
+- **TypeScript** (`METHOD_ACTIVATION_STATES`): `public_active, implemented_route_verified, implemented_private, gated, retired`.
+- **Database** (`activation_state` CHECK): the same five, exactly. No `rights_blocked`/`contract_only`.
+
+**Status:** `CPV1_CM0_1_SCHEMA_CONTRACT_PARITY_READY_FOR_FOUNDER_REVIEW`
