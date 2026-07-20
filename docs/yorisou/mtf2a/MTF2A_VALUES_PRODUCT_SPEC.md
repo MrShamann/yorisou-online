@@ -28,12 +28,12 @@ Each dimension carries behavioral anchors, a 「〜ではありません」 not-
 
 **48 items · A/B forced trade-off · all 21 dimension pairs ×2 (items 1–42, sides balanced) + 6 third-pass pairs (43–48).** Appearances: anshin/tsunagari/seicho/totonoi/jikkan 14 · pace/yakuwari 13 (denominator-normalized). All items P1 (no financial/medical/legal/intimate detail); `work_context` flagged items use neutral workplace situations, never employer-screening framing. Full bank: `MTF2A_VALUES_QUESTION_BANK.md` + JSON.
 
-## 4. Scoring (values-scoring-v1.1 — execution-model artifact, Forge step 10; MTF-2A.1 corrected)
+## 4. Scoring (values-scoring-v1.0 — execution-model artifact; MTF-2A.2 final)
 
 - **Pairwise win-rate:** each answered item adds one win to the chosen dimension; `dimensionScore = wins / appearances` among answered items (method-local normalization only).
 - **Primary/secondary:** highest / second-highest win-rate; the secondary ALWAYS renders as a named signal, never a second result.
 - **Mixed rule (pair-independent):** gap(top1, top2) < 0.05 → `VAL_R_MIXED`. The threshold sits below the smallest single-answer increment (1/14), so identical normalized relationships classify identically regardless of which pair is on top — the former head-to-head conjunct was removed because three-comparison pairs could never satisfy a direct tie at full completion. Tie-break is now a SEPARATE concept (secondary-signal ordering only, by bank declaration order).
-- **Insufficient coverage (MTF-2A.1):** fewer than 40 answered items → execution state `insufficient_coverage` — NOT a result: no primary, no secondary, no VAL_R_MIXED; resume offered; copy states how many more items are needed, without shame language.
+- **Insufficient coverage (MTF-2A.1):** a canonical result requires ALL 48 answers (identical 13/14 exposure for every result — scoring integrity, not scientific validation); 0-47 answers → `insufficient_coverage`: no primary/secondary/Mixed, resume offered, exact remaining count shown, no imputation, no partial win-rate interpretation.
 - **Internal numerics truth:** method-local win rates exist internally; they are never user-facing ranking scores, never exposed, never used to compare people.
 - **Deterministic + reproducible:** same (bankVersion, scoringVersion, answers) ⇒ same result on every channel; bank content hash pinned at implementation.
 - **No universal score. No cross-method numeric comparison. `confidence_policy: none_stated`** with the natural-language boundary: 「このテストは、統計的に検証された確信度スコアを提供するものではありません。」

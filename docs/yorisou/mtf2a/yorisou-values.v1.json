@@ -1,5 +1,5 @@
 {
-  "specVersion": "mtf2a-yorisou-values-v1.1.0",
+  "specVersion": "mtf2a-yorisou-values-v1.2.0",
   "identity": {
     "methodId": "yorisou-values",
     "methodVersion": "values-v1.0",
@@ -30,7 +30,7 @@
     "contentHash": {
       "algorithm": "sha256",
       "serialization": "sha256 over the compact JSON serialization (separators ',' ':' , ensure_ascii=False, key order as authored) of questionBank.items — reproduce: python3 json.dumps(items, ensure_ascii=False, separators=(',',':'))",
-      "value": "8b45209f035999500cc1053e9076b11ad544574f83fd9b87dc9a1241fec9a804"
+      "value": "919f17251a280bb34258f6042db46bb9fd543763b33e041de64c36b305eaa9a6"
     }
   },
   "benchmarkDecision": {
@@ -230,13 +230,13 @@
           "anshin",
           "yakuwari"
         ],
-        "promptJa": "忙しい時期に少し余裕ができたら",
+        "promptJa": "新しい場に入って、最初にしたいのは",
         "choiceA": {
-          "textJa": "まず自分の備えをととのえる",
+          "textJa": "様子をつかんで、足場を固めること",
           "dimension": "anshin"
         },
         "choiceB": {
-          "textJa": "困っている人の手伝いにまわる",
+          "textJa": "できる役割を、引き受けてみること",
           "dimension": "yakuwari"
         },
         "sensitivity": "none"
@@ -587,13 +587,13 @@
           "anshin",
           "yakuwari"
         ],
-        "promptJa": "使っていないものを手放すか迷ったら",
+        "promptJa": "催しや集まりに関わるなら",
         "choiceA": {
-          "textJa": "使ってくれる人に譲りたい",
+          "textJa": "運営や手伝いの側で、動きたい",
           "dimension": "yakuwari"
         },
         "choiceB": {
-          "textJa": "万一に備えて手元に残したい",
+          "textJa": "参加する側で、見通しよく楽しみたい",
           "dimension": "anshin"
         },
         "sensitivity": "none"
@@ -998,14 +998,15 @@
     ]
   },
   "scoring": {
-    "scoringVersion": "values-scoring-v1.1",
+    "scoringVersion": "values-scoring-v1.0",
     "model": "pairwise win-rate",
-    "calculation": "each answered item adds one win to the chosen dimension; dimensionScore = wins / appearances(dimension) among ANSWERED items only (method-local normalization; unequal exposure 13-14 handled by the denominator)",
+    "calculation": "each item adds one win to the chosen dimension; dimensionScore = wins / appearances(dimension) over the COMPLETE 48-item bank (13/14 exposure structure identical for every canonical result)",
     "minimumCoverage": {
-      "answeredItems": 40,
-      "belowMinimumBehavior": "execution state `insufficient_coverage` — NOT a result: no primary, no secondary signal, no VAL_R_MIXED; resume is offered; the copy states how many more items are needed",
+      "requiredAnsweredItems": 48,
+      "belowRequiredBehavior": "execution state `insufficient_coverage` for 0-47 answers — NOT a result: no primary, no secondary signal, no VAL_R_MIXED; save/resume remains available; the exact remaining count is shown; unanswered items are never imputed; no partial win-rate interpretation is produced",
       "insufficientCoverageCopyJa": "あと{remaining}問こたえると、結果が出せます。とちゅうから再開できます。",
-      "noShameRule": "the copy never uses failure/shame language and never claims priorities are moving or tied"
+      "noShameRule": "the copy never uses failure/shame language and never claims priorities are moving or tied",
+      "rationale": "scoring integrity, not scientific validation: every canonical result uses the same complete 13/14 exposure structure"
     },
     "primaryAssembly": "primary = highest win-rate dimension; secondary = second-highest (always shown as a secondary signal, never as a second result)",
     "mixedRule": "MTF-2A.1 pair-independent rule: if (top1.winRate - top2.winRate) < 0.05, the result is VAL_R_MIXED. The 0.05 threshold sits below the smallest single-answer increment (1/14 ≈ 0.071), so Mixed fires exactly when the top two normalized rates are equal or crossing due to unequal denominators — identical relationships classify identically regardless of WHICH pair is on top or whether that pair received a third-pass item. VAL_R_MIXED is reserved for FULLY VALID scoring outcomes only (coverage met).",
@@ -1015,10 +1016,10 @@
       "2. mixed-cluster membership listing order → bank declaration order",
       "note: exact top1/top2 equality never needs a primary tie-break — a 0 gap is < 0.05 and classifies as VAL_R_MIXED"
     ],
-    "modifiers": "none in v1.1",
+    "modifiers": "none in v1.0",
     "deterministic": true,
     "reproducibility": "same (bankVersion, scoringVersion, answers) always yields the same result on every channel; answer ORDER and A/B side labels never affect the outcome (scoring reads dimensions, not sides)",
-    "invalidResponseHandling": "unanswered items are excluded from both numerator and denominator; duplicate answers to one item are impossible by format",
+    "invalidResponseHandling": "a canonical result requires all 48 answers; any unanswered item -> insufficient_coverage; duplicate answers to one item are impossible by format",
     "confidencePolicy": {
       "kind": "none_stated",
       "userFacingBoundaryJa": "このテストは、統計的に検証された確信度スコアを提供するものではありません。いまの選び方の傾向を、ことばで整理するためのものです。"
@@ -1065,7 +1066,7 @@
           "実績のある選択肢に手が伸びる"
         ],
         "gentleNextStepJa": "確かめたいことを、ひとつだけ紙に書き出してみる。",
-        "shareLineJa": "見通しを確かめたい時期、らしい。"
+        "shareLineJa": "決める前に、いったん確かめたい派でした。"
       },
       "private": {
         "detailJa": "安心は臆病さではなく、次に動くための足場づくりです。いまのあなたの選び方は、揺れの少ない土台を先に確保しようとしています。",
@@ -1073,7 +1074,7 @@
         "innerTensionJa": "のびしろや心が動く体験への気持ちと、見通しへの気持ちが引っ張り合うことがあります。",
         "workContextJa": "仕事では、確実に果たせる役割を選びやすい時期。挑戦は「小さく試せる形」なら受け取りやすい。",
         "relationshipContextJa": "関係でも見通しを求めやすく、あいまいな距離感が続くと消耗しやすい。",
-        "dailyLifeContextJa": "備えや確認に時間を使うと落ち着く。決まっていない予定が多い週は疲れやすい。",
+        "dailyLifeContextJa": "回答では、備えや確認にあたる選択が多めでした。決まっていない予定の多い週は、負荷が上がりやすいかもしれません。",
         "overlookedNeedJa": "確かめる作業のなかで、休むことが後回しになっていないか。",
         "overextensionRiskJa": "すべてを確かめようとすると、動き出せなくなることがある。確かめる範囲を絞るのがこつ。",
         "correctionPromptJa": "この読みが違うと感じたら、それが正解です。近い方に直してください。",
@@ -1085,6 +1086,22 @@
         "nextTests": [
           "c02-current-state",
           "daily-check-in"
+        ],
+        "recommendations": [
+          {
+            "tag": "need_order",
+            "fitReasonJa": "備え・確認を選ぶ回答パターンに、整えごと系のヒントが対応するため",
+            "evidenceSource": "anshin chosen on >=3 of its preparation/order-flavored items",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only; never in share/URL"
+          },
+          {
+            "tag": "need_rest",
+            "fitReasonJa": "確認ごとに時間を使う選択が続く場合の休息ヒントとして",
+            "evidenceSource": "anshin win-rate >= 0.7 (one-sided pattern)",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          }
         ]
       }
     },
@@ -1101,17 +1118,17 @@
           "予定は詰めすぎたくない"
         ],
         "gentleNextStepJa": "今週、誰にも渡さない自分の時間をひと枠だけ確保する。",
-        "shareLineJa": "いまの優先は「自分のペース」でした。"
+        "shareLineJa": "予定は詰めすぎない。いまはそれが最優先みたい。"
       },
       "private": {
         "detailJa": "ペースを守りたい気持ちは、周りへの拒否ではなく、自分の質を保つ方法です。いまの選び方は、速度の主導権を自分の側に置いています。",
         "currentPriorityPatternJa": "「自分で決められるか」を基準に選びやすい。良い話でも、速度を奪われそうだと引きやすい。",
         "innerTensionJa": "つながりや役に立ちたい気持ちと、ペースを守りたい気持ちが引っ張り合いやすい。",
         "workContextJa": "裁量のある進め方だと力が出る時期。細かい管理下では消耗しやすい。",
-        "relationshipContextJa": "距離を調整したいだけなのに「そっけない」と受け取られることがある。ひとこと添えると誤解が減る。",
+        "relationshipContextJa": "距離を調整したい時期は、意図が伝わりにくいことがあります。ひとこと添えると誤解が減るかもしれません。",
         "dailyLifeContextJa": "余白のある予定表が回復につながる。空白の時間は、さぼりではなく燃料。",
         "overlookedNeedJa": "ペースを守る理由を、大切な人に伝えられているか。",
-        "overextensionRiskJa": "守りが強くなりすぎると、助けを借りる選択肢まで手放しやすい。",
+        "overextensionRiskJa": "守りが強くなりすぎる場合は、助けを借りる選択肢が視野から外れることもあります。",
         "correctionPromptJa": "この読みが違うと感じたら、近い方に直してください。それがこの記録の正しい使い方です。",
         "reportBridgeJa": "レポートでは、ペースの軸がどの場面で強く出るかを見られます。",
         "recommendationTags": [
@@ -1121,6 +1138,22 @@
         "nextTests": [
           "work-rhythm",
           "daily-check-in"
+        ],
+        "recommendations": [
+          {
+            "tag": "need_solo",
+            "fitReasonJa": "自分の時間を守る回答パターンに対応するため",
+            "evidenceSource": "pace chosen over tsunagari/yakuwari on >=3 of those items",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          },
+          {
+            "tag": "need_rest",
+            "fitReasonJa": "ペースを守る選択が強い場合の休息ヒントとして",
+            "evidenceSource": "pace win-rate >= 0.7",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          }
         ]
       }
     },
@@ -1137,17 +1170,17 @@
           "ひとりが続くと乾きやすい"
         ],
         "gentleNextStepJa": "会いたい人にひとこと、短い連絡をしてみる。",
-        "shareLineJa": "あたたかさを近くに置きたい時期だって。"
+        "shareLineJa": "会って話すと回復するタイプ、いまのわたし。"
       },
       "private": {
         "detailJa": "選び方のうえで、あたたかい関わりが優先されています。これは依存ではなく、いまのあなたの選び方の特徴です。",
         "currentPriorityPatternJa": "「誰といるか」を基準に選びやすい。内容よりも顔ぶれで決まることがある。",
         "innerTensionJa": "自分のペースや暮らしの整いと、人との時間が引っ張り合いやすい。",
         "workContextJa": "関係の良いチームだと力が出る時期。孤立した作業が続くと消耗しやすい。",
-        "relationshipContextJa": "与える側に回りすぎることがある。受け取る側になる時間も回復に必要。",
+        "relationshipContextJa": "回答では、関わりに時間を割く選択が多めでした。受け取る側になる時間も、同じくらい選択肢に入れてよいかもしれません。",
         "dailyLifeContextJa": "回答の傾向からは、短いやりとりにも時間を割きたい時期に見えます。長い集まりである必要はありません。",
         "overlookedNeedJa": "会えない日の過ごし方を、自分なりに持てているか。",
-        "overextensionRiskJa": "相手の都合に合わせすぎて、自分の残量が減っていることに気づきにくい。",
+        "overextensionRiskJa": "相手に合わせる選択が続く場合、自分の残量が後回しになることがあります。",
         "correctionPromptJa": "違うと感じたら、近い方に直してください。",
         "reportBridgeJa": "レポートでは、つながりの温度と自分のペースの釣り合いを見られます。",
         "recommendationTags": [
@@ -1156,6 +1189,15 @@
         "nextTests": [
           "relationship-fatigue-24q",
           "daily-check-in"
+        ],
+        "recommendations": [
+          {
+            "tag": "need_connect",
+            "fitReasonJa": "人との時間を選ぶ回答パターンに対応するため",
+            "evidenceSource": "tsunagari chosen on >=3 relationship_context items",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          }
         ]
       }
     },
@@ -1172,14 +1214,14 @@
           "学びに時間を回したくなる"
         ],
         "gentleNextStepJa": "伸ばしたいことをひとつ選び、15分だけ手をつけてみる。",
-        "shareLineJa": "のびしろに手を伸ばしたい時期、とのこと。"
+        "shareLineJa": "ちょっと難しいほうを選びたくなってるらしい。"
       },
       "private": {
         "detailJa": "手応えを求める気持ちが強まっている時期です。挑戦の選択肢が、安心や整いより先に目に入るようになっています。",
         "currentPriorityPatternJa": "「伸びるかどうか」を基準に選びやすい。成長が見えない環境からは気持ちが離れやすい。",
         "innerTensionJa": "見通しの安心や暮らしの整いと、背伸びしたい気持ちが引っ張り合いやすい。",
         "workContextJa": "新しい領域を任されると力が出る時期。同じ作業の繰り返しは消耗のもと。",
-        "relationshipContextJa": "自分の挑戦に時間を使いたくて、人との時間が細ることがある。伝えておくと誤解が減る。",
+        "relationshipContextJa": "挑戦に時間を回す選択が続く場合は、そのことを周りに伝えておくと誤解が減ります。",
         "dailyLifeContextJa": "学びの時間が確保できた日は満足度が高い。詰め込みすぎには注意。",
         "overlookedNeedJa": "伸びること以外の回復——休みや遊び——が痩せていないか。",
         "overextensionRiskJa": "負荷を上げ続けると、楽しさが義務に変わりやすい。",
@@ -1192,6 +1234,22 @@
         "nextTests": [
           "f01-work-fit",
           "c02-current-state"
+        ],
+        "recommendations": [
+          {
+            "tag": "content_learning",
+            "fitReasonJa": "学び・挑戦を選ぶ回答パターンに対応するため",
+            "evidenceSource": "seicho chosen on >=3 learning-flavored items",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          },
+          {
+            "tag": "need_small_win",
+            "fitReasonJa": "手応えを求める回答パターンに対応するため",
+            "evidenceSource": "seicho win-rate >= 0.7",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          }
         ]
       }
     },
@@ -1208,17 +1266,17 @@
           "調整役を引き受けやすい"
         ],
         "gentleNextStepJa": "今週引き受けたことをひとつ数えて、自分にも「よくやった」と言う。",
-        "shareLineJa": "「役に立つ実感」が、いまのキーワードでした。"
+        "shareLineJa": "「助かった」の一言がいちばん効く時期でした。"
       },
       "private": {
         "detailJa": "貢献の実感は、あなたにとって大きな燃料になっています。ただしこの軸は、残量を超えて働きやすい軸でもあります。",
-        "currentPriorityPatternJa": "「力になれるか」を基準に選びやすい。断る選択肢が最初から消えていることがある。",
+        "currentPriorityPatternJa": "回答では「力になれるか」を基準にした選択が多めでした。",
         "innerTensionJa": "自分のペースや暮らしの整いと、応えたい気持ちが引っ張り合いやすい。",
         "workContextJa": "感謝が見える環境だと力が出る時期。貢献が数字でしか測られない場では乾きやすい。",
-        "relationshipContextJa": "聞き役・支え役に固定されやすい。役割を降りる時間も関係を長持ちさせる。",
+        "relationshipContextJa": "応じる側の選択が続く場合は、役割を降りる時間をつくることも選択肢になります。",
         "dailyLifeContextJa": "回答では、自分の時間より応じることが先に選ばれやすい傾向が出ています。自分の時間の優先度を、意識的に決めどころに乗せるのがこの時期の論点です。",
         "overlookedNeedJa": "あなた自身は、誰に頼れているか。",
-        "overextensionRiskJa": "限界を超えて引き受けると、いちばん大切にしたい人への余力から先に減っていく。",
+        "overextensionRiskJa": "応じる選択がほぼ一方向に偏っている場合、余力の配分が論点になります。",
         "correctionPromptJa": "違うと感じたら、近い方に直してください。",
         "reportBridgeJa": "レポートでは、役に立つ実感と自分のペースの釣り合いを見られます。",
         "recommendationTags": [
@@ -1228,6 +1286,22 @@
         "nextTests": [
           "relationship-fatigue-24q",
           "daily-check-in"
+        ],
+        "recommendations": [
+          {
+            "tag": "need_rest",
+            "fitReasonJa": "応じる選択が一方向に偏る場合の休息ヒントとして",
+            "evidenceSource": "yakuwari chosen over pace/totonoi on >=3 of those items",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          },
+          {
+            "tag": "need_solo",
+            "fitReasonJa": "自分の時間が後回しになる回答パターンに対応するため",
+            "evidenceSource": "yakuwari win-rate >= 0.7",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          }
         ]
       }
     },
@@ -1244,26 +1318,34 @@
           "夜のリズムを守りたい"
         ],
         "gentleNextStepJa": "今夜、ひとつだけ小さく片づける場所を決める。",
-        "shareLineJa": "暮らしをととのえたい時期みたいです。"
+        "shareLineJa": "いつものリズムが崩れると弱い。当たってる。"
       },
       "private": {
         "detailJa": "整いを求めるのは退屈さではなく、回復と集中の土台づくりです。いまの選び方は、生活のリズムを守ろうとしています。",
         "currentPriorityPatternJa": "「リズムが守れるか」を基準に選びやすい。楽しそうな話でも、生活が乱れそうだと引きやすい。",
         "innerTensionJa": "つながりや心が動く体験と、整いを守りたい気持ちが引っ張り合いやすい。",
-        "workContextJa": "決まった流れで進む仕事だと力が出る時期。突発対応が続くと消耗しやすい。",
-        "relationshipContextJa": "誘いを断ることが増えるかもしれない。理由をひとこと添えると関係は守られる。",
+        "workContextJa": "回答の傾向では、決まった流れのある進め方が選ばれやすくなっています。突発対応の続く時期は消耗しやすいかもしれません。",
+        "relationshipContextJa": "リズムを守る選択が続くと、誘いを見送る場面もあるかもしれません。そのときは理由をひとこと添えるのがこつです。",
         "dailyLifeContextJa": "小さな片づけ・同じ時間の食事と睡眠が効く時期。",
         "overlookedNeedJa": "整えた先で、なにをしたいのか。整い自体が目的化していないか。",
         "overextensionRiskJa": "乱れを許せなくなると、整いが窮屈さに変わることがある。",
         "correctionPromptJa": "違うと感じたら、近い方に直してください。",
         "reportBridgeJa": "レポートでは、暮らしの整いと心が動く瞬間の釣り合いを見られます。",
         "recommendationTags": [
-          "need_order",
-          "need_rest"
+          "need_order"
         ],
         "nextTests": [
           "work-rhythm",
           "daily-check-in"
+        ],
+        "recommendations": [
+          {
+            "tag": "need_order",
+            "fitReasonJa": "リズムと整いを選ぶ回答パターンに対応するため",
+            "evidenceSource": "totonoi chosen on >=3 order-flavored items",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          }
         ]
       }
     },
@@ -1280,13 +1362,13 @@
           "変化のない日が続くと乾く"
         ],
         "gentleNextStepJa": "今週、いつもと違う小さな選択をひとつだけしてみる。",
-        "shareLineJa": "心が動くほうへ——が、いまの答えでした。"
+        "shareLineJa": "「面白そう」で動いていい時期だそうです。"
       },
       "private": {
         "detailJa": "心が動く体験を選ぶ傾向が強まっています。回答のうえでは、それが逃避ではなく、いまの選び方の中心にあります。",
         "currentPriorityPatternJa": "「心が動くか」を基準に選びやすい。正しいけれど退屈な選択肢からは気持ちが離れやすい。",
         "innerTensionJa": "見通しの安心や暮らしの整いと、動きたい気持ちが引っ張り合いやすい。",
-        "workContextJa": "変化と裁量のある仕事だと力が出る時期。単調さが続くと集中が切れやすい。",
+        "workContextJa": "回答の傾向では、変化のある選択が選ばれやすくなっています。単調な時期は物足りなさを感じやすいかもしれません。",
         "relationshipContextJa": "新しい出会いに向かうエネルギーが強い時期。いつもの関係の手入れも忘れずに。",
         "dailyLifeContextJa": "小さな冒険——道・店・過ごし方を変える——で十分に満ちる。大きく賭ける必要はない。",
         "overlookedNeedJa": "動き続けた後の、静かな回復の時間。",
@@ -1294,12 +1376,20 @@
         "correctionPromptJa": "違うと感じたら、近い方に直してください。",
         "reportBridgeJa": "レポートでは、心が動く瞬間と見通しの安心の釣り合いを見られます。",
         "recommendationTags": [
-          "need_change",
-          "need_small_win"
+          "need_change"
         ],
         "nextTests": [
           "c02-current-state",
           "daily-check-in"
+        ],
+        "recommendations": [
+          {
+            "tag": "need_change",
+            "fitReasonJa": "変化・体験を選ぶ回答パターンに対応するため",
+            "evidenceSource": "jikkan chosen on >=3 novelty-flavored items",
+            "consent": "recommendation purpose consent required",
+            "boundary": "private-only"
+          }
         ]
       }
     },
@@ -1316,26 +1406,34 @@
           "答えの傾向に、はっきりした一位がない"
         ],
         "gentleNextStepJa": "いま同じくらい大事なものを、ふたつだけ名前にしてみる。",
-        "shareLineJa": "いまは、大事なことが並んでいるようです。"
+        "shareLineJa": "一位が決められない結果が出た。どれも大事らしい。"
       },
       "private": {
-        "detailJa": "上位の軸の差が小さい、というのがこの結果の意味のすべてです。回答から言えるのはそこまでで、それ以上の推測はこの結果には含まれません。",
-        "currentPriorityPatternJa": "上位の軸がほぼ同じ強さで並んでいます。場面ごとに別の基準で選んでいる可能性があります。",
-        "innerTensionJa": "近い軸同士が同じ場面にかかると、選ぶのに時間がかかることがあります。",
-        "workContextJa": "ひとつの基準に寄せる必要はありません。決めごとは、案件ごとに基準を選んで構いません。",
-        "relationshipContextJa": "人との予定も、日によって選ぶ基準が変わって自然です。",
-        "dailyLifeContextJa": "日によって過ごし方が変わって構いません。一貫性はいまの課題ではありません。",
-        "overlookedNeedJa": "順位をつけないままでいることを、自分に許すこと。",
-        "overextensionRiskJa": "無理にひとつへ絞ろうとすると、どの軸の満足も削れます。",
+        "detailJa": "上位の軸の差が小さい、というのがこの結果の意味のすべてです。近かった軸の名前と、その回答上の表れは、この下に示されます。",
+        "currentPriorityPatternJa": "上位の軸がほぼ同じ強さで並んでいます。どの軸がどの選択で選ばれたかは、回答の記録から確認できます。",
+        "innerTensionJa": "近かった軸同士が同じ場面で向かい合った回答があれば、その項目が綱引きの実例です。該当がない場合、綱引きの有無はこの結果からは分かりません。",
+        "workContextJa": "仕事の場面への表れは、仕事の場面の回答が十分にある場合にだけ示されます。今回の回答から読み取れない場合、この方法では推測しません。",
+        "relationshipContextJa": "人との関わりへの表れも同様に、該当する回答がある場合にだけ示されます。",
+        "dailyLifeContextJa": "暮らしへの表れも、該当する回答の範囲でだけ示されます。",
+        "overlookedNeedJa": "この結果から「見落としている必要」を推測することはできません。",
+        "overextensionRiskJa": "この結果から「無理のしすぎ」を推測することはできません。",
         "correctionPromptJa": "違うと感じたら、近い方に直してください。",
-        "reportBridgeJa": "レポートでは、差が小さかった軸の組み合わせと、回答上の表れ方を見られます。",
+        "reportBridgeJa": "レポートでは、近かった軸の組み合わせと、それぞれがどの回答で選ばれたかを見られます。",
         "recommendationTags": [
-          "need_rest",
-          "need_order"
+          "no_recommendation"
         ],
         "nextTests": [
           "daily-check-in",
           "c02-current-state"
+        ],
+        "recommendations": [
+          {
+            "tag": "no_recommendation",
+            "fitReasonJa": "拮抗した結果からは、特定のヒントを導けないため（既定）",
+            "evidenceSource": "default for Mixed; a hint may appear only when a separate supported answer pattern justifies it",
+            "consent": "n/a",
+            "boundary": "n/a"
+          }
         ]
       }
     }
@@ -1423,7 +1521,8 @@
       "relationship-fatigue-24q",
       "f01-work-fit"
     ],
-    "taxonomyNote": "governed taxonomy shared with daily-check-in; groups need_*/context_*/content_*; no_recommendation explicit; tags are hints requiring the applicable consent; never commercial; never in public copy"
+    "taxonomyNote": "governed taxonomy shared with daily-check-in; groups need_*/context_*/content_*; no_recommendation explicit; tags are hints requiring the applicable consent; never commercial; never in public copy",
+    "traceabilityRule": "a need_* tag is never inferred from the primary dimension alone; each tag carries fitReasonJa + evidenceSource + consent applicability + boundary; Mixed defaults to no_recommendation"
   },
   "resultObjectContract": {
     "resultVariant": "ArchetypeResult",
@@ -1448,5 +1547,50 @@
   },
   "interpretationLimitsJa": "いまの選び方の傾向の整理です。性格の診断でも、優劣の判定でもありません。統計的に検証された確信度スコアは提供しません。結果は状況とともに変わります。採用・配属・評価・選考など、第三者による判断の材料には使えません。",
   "usageBoundaryJa": "この結果は、本人がじぶんの選び方をふり返るためのものです。採用・配属・人事評価・入学選考・保険や与信の判断など、第三者が人を選んだり評価したりする目的には適していません。使わないでください。",
-  "touImplementationRegister": "a future Terms-of-Use clause prohibiting employment/placement/evaluation/selection screening is REQUIRED at implementation (Founder/legal item FD-3); this content boundary ships now"
+  "touImplementationRegister": "a future Terms-of-Use clause prohibiting employment/placement/evaluation/selection screening is REQUIRED at implementation (Founder/legal item FD-3); this content boundary ships now",
+  "privateRenderingContract": {
+    "version": "values-private-rendering-v1",
+    "principle": "no private context section renders solely because a dimension ranked first; every rendered claim must be traceable to dimension scores, secondary/close axes, or item/context aggregates",
+    "sections": {
+      "innerTension": {
+        "evidence": "secondary win-rate within 0.15 of primary OR Mixed close set",
+        "minSupport": "secondary gap <= 0.15",
+        "insufficientBehavior": "omit",
+        "fallbackJa": "今回の回答では、はっきりした綱引きは読み取れませんでした。"
+      },
+      "workContext": {
+        "evidence": "answered work_context items where the primary (or a close axis) was chosen",
+        "minSupport": 3,
+        "insufficientBehavior": "soften_or_omit",
+        "fallbackJa": "仕事の場面については、今回の回答からは十分に読み取れません。"
+      },
+      "relationshipContext": {
+        "evidence": "answered relationship_context items where the primary (or a close axis) was chosen",
+        "minSupport": 3,
+        "insufficientBehavior": "soften_or_omit",
+        "fallbackJa": "人との関わりの場面については、今回の回答からは十分に読み取れません。"
+      },
+      "dailyLifeContext": {
+        "evidence": "answered none-sensitivity items where the primary was chosen (the bank is daily-life-wide)",
+        "minSupport": 4,
+        "insufficientBehavior": "soften",
+        "fallbackJa": "暮らしの場面での表れ方は、次の機会の回答も合わせて見えてきます。"
+      },
+      "overlookedNeed": {
+        "evidence": "the primary's LOSING trade-offs (items where the primary lost to a specific other dimension)",
+        "minSupport": 2,
+        "insufficientBehavior": "omit (no fallback copy — the section simply does not render)"
+      },
+      "overextensionRisk": {
+        "evidence": "a one-sided pattern: primary chosen in >= 12 of its 13-14 items",
+        "minSupport": "primary win-rate >= 0.85",
+        "insufficientBehavior": "omit (no fallback copy — the section simply does not render)"
+      }
+    },
+    "resultReasons": {
+      "spec": "machine-readable reasons feeding the MTF-1 reasons.itemRefs contract",
+      "shape": "{ dimensionScores: {dim: winRate x7}, secondary: dim|null, closeSet: dim[]|null, itemRefs: itemIds where the primary dimension was the chosen side }",
+      "rule": "every rendered private claim must be attributable to one of: dimensionScores, secondary/closeSet, or an itemRefs/context aggregate defined above"
+    }
+  }
 }

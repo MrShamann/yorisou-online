@@ -1,5 +1,5 @@
 {
-  "specVersion": "mtf2a-daily-check-in-v1.1.0",
+  "specVersion": "mtf2a-daily-check-in-v1.2.0",
   "identity": {
     "methodId": "daily-check-in",
     "methodVersion": "daily-check-in-v1.0",
@@ -23,12 +23,12 @@
     "kind": "recorded_state",
     "inputSchemaVersion": "daily-state-schema-v1.1",
     "cadenceSchema": "daily",
-    "acknowledgementCopyVersion": "daily-ack-v1.1",
+    "acknowledgementCopyVersion": "daily-ack-v1.2",
     "yorisouScoring": null,
     "contentHash": {
       "algorithm": "sha256",
       "serialization": "sha256 over the compact JSON serialization (separators ',' ':' , ensure_ascii=False, key order as authored) of [stateSchema.fields, stateSchema.privateReflection, acknowledgementRules]",
-      "value": "773602f36066a66f2eb42b15c89bac6f53aa7fec4c844e99af910c49dbe4c1a2"
+      "value": "4107f004e0099bfd4ef82936f9801c421d256eb6d7ccacda8e762a7a132a8bd3"
     }
   },
   "benchmarkDecision": {
@@ -226,7 +226,7 @@
     "missingInputHandling": "null fields render as 「未記入」 in timelines; no imputation; acknowledgement rules skip null fields"
   },
   "acknowledgementRules": {
-    "version": "daily-ack-v1.1",
+    "version": "daily-ack-v1.2",
     "note": "deterministic selection of a finite acknowledgement set; NOT psychological scoring; no good/bad ranking; copy recognizes the recorded day and never predicts outcomes, guarantees improvement, assumes mobility, or gives quasi-therapeutic advice",
     "priorityCascade": [
       {
@@ -290,8 +290,8 @@
       },
       {
         "ackId": "ACK_RAIN",
-        "copyJa": "あめの日の記録も、大事な一枚です。きょうはこのまま、無理のない過ごし方で。",
-        "reviewDecision": "lock_keep"
+        "copyJa": "あめの日の記録も、大事な一枚です。きょうの空模様として、そのまま残りました。",
+        "reviewDecision": "rewrite_required (MTF-2A.2: removed the how-to-spend-the-day advice)"
       },
       {
         "ackId": "ACK_WIND",
@@ -300,8 +300,8 @@
       },
       {
         "ackId": "ACK_LOWBATT",
-        "copyJa": "充電少なめの日ですね。記録できただけで、きょうの分はもう十分です。",
-        "reviewDecision": "lock_keep"
+        "copyJa": "充電少なめの日。その状態が、きょうの一枚として残りました。",
+        "reviewDecision": "rewrite_required (MTF-2A.2: removed the your-day-is-already-sufficient evaluation)"
       },
       {
         "ackId": "ACK_SWIRL",
@@ -367,44 +367,52 @@
       "rules": [
         {
           "summaryId": "SUM_RAIN_RUN",
-          "condition": "kokoro_tenki == ame on >=3 recorded days in the last 7",
-          "copyJa": "この7日は、あめの日が多めでした。"
+          "condition": "kokoro_tenki == ame on >=3 of the days where kokoro_tenki was answered (min 3 field-valid observations)",
+          "minFieldValid": 3,
+          "copyJa": "記録した日の中では、あめの日が多めでした。"
         },
         {
           "summaryId": "SUM_LOWBATT_RUN",
-          "condition": "karada_juden == hobo_kara on >=3 recorded days",
-          "copyJa": "この7日は、充電少なめの日が続きました。"
+          "condition": "karada_juden == hobo_kara on >=3 field-valid days",
+          "minFieldValid": 3,
+          "copyJa": "記録した日の中では、充電少なめの日が目立ちました。"
         },
         {
           "summaryId": "SUM_SWIRL_RUN",
-          "condition": "atama_yohaku == guruguru on >=3 recorded days",
-          "copyJa": "この7日は、考えごとの多い日が目立ちました。"
+          "condition": "atama_yohaku == guruguru on >=3 field-valid days",
+          "minFieldValid": 3,
+          "copyJa": "記録した日の中では、考えごとの多い日が目立ちました。"
         },
         {
           "summaryId": "SUM_NEED_REPEAT",
-          "condition": "the same kyou_hoshii option on >=3 recorded days",
-          "copyJa": "この7日、いちばん多かった「ほしいもの」は「{need}」でした。"
+          "condition": "the same kyou_hoshii option on >=3 of the days where kyou_hoshii was answered",
+          "minFieldValid": 3,
+          "copyJa": "記録した日の中でいちばん多かった「ほしいもの」は「{need}」でした。"
         },
         {
           "summaryId": "SUM_SUNNY_RUN",
-          "condition": "kokoro_tenki == hare on >=4 recorded days",
-          "copyJa": "この7日は、はれの日が多めでした。"
+          "condition": "kokoro_tenki == hare on >=4 field-valid days",
+          "minFieldValid": 4,
+          "copyJa": "記録した日の中では、はれの日が多めでした。"
         },
         {
           "summaryId": "SUM_MIXED_WEATHER",
-          "condition": ">=4 distinct kokoro_tenki values across recorded days",
-          "copyJa": "この7日は、日ごとに天気の変わる一週間でした。"
+          "condition": ">=4 distinct kokoro_tenki values among field-valid days (min 4 observations)",
+          "minFieldValid": 4,
+          "copyJa": "記録した日の天気は、いろいろでした。"
         }
       ],
-      "conflictResolution": "evaluate in priorityOrder; emit at most maxSimultaneousSummaries; a need placeholder {need} is filled with the option labelJa; ties between needs emit the tied labels joined by 「と」",
-      "boundaries": "summaries are OBSERVATIONS of recorded entries only — never condition claims, never worsening/deterioration language, never advice; forbidden meanings: 悪化している/落ち込んでいる/危険なパターン/治療が必要"
+      "conflictResolution": "evaluate in priorityOrder; emit at most maxSimultaneousSummaries; {need} filled with the option labelJa; need ties emit tied labels joined by 「と」; a rule whose minFieldValid is not met simply does not fire",
+      "boundaries": "summaries are OBSERVATIONS of recorded entries only — never condition claims, never worsening/deterioration language, never advice; forbidden meanings: 悪化している/落ち込んでいる/危険なパターン/治療が必要",
+      "denominatorRule": "for every field-specific summary, the denominator is ONLY the recorded entries where that field was answered (field-valid observations); missing entries and null fields are neutral and excluded; unrecorded days are never treated as known states"
     },
     "thirtyDaySummary": {
       "weatherStrip": "one cell per calendar day; recorded days show the kokoro_tenki icon (or 記録あり dot when weather is null); unrecorded days render as blank cells — blanks are neutral, never highlighted as failures",
-      "mostFrequentNeed": "the modal kyou_hoshii label over recorded days; ties list all tied labels joined by 「と」; fewer than 3 need-answers shows nothing",
+      "mostFrequentNeed": "modal kyou_hoshii label over the days where kyou_hoshii was answered; ties list all tied labels joined by 「と」; fewer than 3 field-valid need answers shows nothing",
       "minimumRecordedDays": 7,
       "insufficientDataCopyJa": "この30日の眺めは、記録が7日分たまってからです。急がなくて大丈夫です。",
-      "noStreakPressure": "no streaks, completion percentages, or continuity praise/pressure anywhere"
+      "noStreakPressure": "no streaks, completion percentages, or continuity praise/pressure anywhere",
+      "denominatorRule": "same field-valid principle: the most-frequent need counts only days where kyou_hoshii was answered; weather cells only render answered weather; blanks (unrecorded or unanswered) are neutral"
     },
     "reflectionPrompts": {
       "cadence": "at most one prompt per 7 days; optional; dismissible; private; answerable by selection or silence — free text never required",

@@ -1,4 +1,4 @@
-# MTF-2A — Daily Check-in「きょうの空模様」Complete Copy System (daily-copy-v1.1 / daily-ack-v1.1)
+# MTF-2A — Daily Check-in「きょうの空模様」Complete Copy System (daily-copy-v1.1 / daily-ack-v1.2)
 
 Canonical copy lives in `daily-check-in.v1.json` (`copyBundles`, `stateSchema`, `acknowledgementRules`). This document presents it for editorial review. Every sentence is newly authored for YORISOU.
 
@@ -36,14 +36,14 @@ Canonical copy lives in `daily-check-in.v1.json` (`copyBundles`, `stateSchema`, 
 
 空の履歴: 「まだ記録はありません。きょうの一枚から始まります。」 · 7日: 「この7日の空模様」 · 30日: 「この30日の空模様」 · 修正: 「きょうの記録をなおす（前の内容は履歴として残ります）」 · 削除: 「きょうの記録を消す」（版管理された訂正モデル：破壊的上書きなし・CPV1履歴ポリシーで旧版保全）
 
-## Acknowledgements (きょうのひとこと — full set, 13 · daily-ack-v1.1, MTF-2A.1 risk-reviewed)
+## Acknowledgements (きょうのひとこと — full set, 13 · daily-ack-v1.2)
 
 | ackId | 条件 | コピー | 判定 |
 |---|---|---|---|
 | ACK_FIRST | 初回 | きょうの空模様、はじめの一枚が残りました。ここから少しずつ、じぶんの天気図ができていきます。 | lock_keep |
-| ACK_RAIN | 天気=あめ | あめの日の記録も、大事な一枚です。きょうはこのまま、無理のない過ごし方で。 | lock_keep |
+| ACK_RAIN | 天気=あめ | あめの日の記録も、大事な一枚です。きょうの空模様として、そのまま残りました。 | rewrite_required |
 | ACK_WIND | 天気=かぜ | かぜが強い日。落ち着かないまま記録して大丈夫です。 | rewrite_required |
-| ACK_LOWBATT | 充電=ほぼ空 | 充電少なめの日ですね。記録できただけで、きょうの分はもう十分です。 | lock_keep |
+| ACK_LOWBATT | 充電=ほぼ空 | 充電少なめの日。その状態が、きょうの一枚として残りました。 | rewrite_required |
 | ACK_SWIRL | 余白=ぐるぐる | 考えごとがぐるぐるする日。ぐるぐるのまま、ここに置いておけます。 | rewrite_required |
 | ACK_NEED_YASUMI | ほしいもの=やすみ | きょうほしいのは、やすみ。その声が、きょうのいちばんの手がかりです。 | rewrite_required |
 | ACK_NEED_SEIRI | =整理する時間 | 整理する時間がほしい日。その気持ちから、きょうの一枚が残りました。 | rewrite_required |
@@ -54,22 +54,22 @@ Canonical copy lives in `daily-check-in.v1.json` (`copyBundles`, `stateSchema`, 
 | ACK_SUNNY | 天気=はれ | はれの日の記録です。あとで見返すときの、目印のひとつになります。 | polish_candidate |
 | ACK_NEUTRAL | 既定 | きょうの一枚が残りました。それだけで、きょうの記録は完了です。 | lock_keep |
 
-MTF-2A.1 risk pass: 未来の予測・改善の保証・行動が「効く」示唆・歩行の前提・求められていない助言をすべて除去（keep 4 / polish 2 / rewrite 7 — 判定列参照）。
+MTF-2A.2 second risk pass: ACK_RAIN（過ごし方の助言を除去）・ACK_LOWBATT（「もう十分」という評価を除去）を再訂正。全13件は観察のみ・非予測・非指示・移動前提なし・非臨床。
 
-## Longitudinal copy (daily-longitudinal-v1 — MTF-2A.1 completion)
+## Longitudinal copy (daily-longitudinal-v1 · MTF-2A.2 field-valid denominators)
 
-**7日サマリー** — 最少3日分の記録で作動・同時最大2件・優先順は canonical JSON の priorityOrder・不足時: 「まだ7日分の景色にはなっていません。記録が3日分たまると、ここに様子が出ます。」
+**7日サマリー** — 分母は「その項目に回答した記録日」のみ（field-valid）。未記録日・未回答項目は中立で、既知の状態として扱わない。最少観測数は各ルールに明記・同時最大2件・不足時: 「まだ7日分の景色にはなっていません。記録が3日分たまると、ここに様子が出ます。」
 
 | summaryId | 条件 | コピー |
 |---|---|---|
-| SUM_RAIN_RUN | kokoro_tenki == ame on >=3 recorded days in the last 7 | この7日は、あめの日が多めでした。 |
-| SUM_LOWBATT_RUN | karada_juden == hobo_kara on >=3 recorded days | この7日は、充電少なめの日が続きました。 |
-| SUM_SWIRL_RUN | atama_yohaku == guruguru on >=3 recorded days | この7日は、考えごとの多い日が目立ちました。 |
-| SUM_NEED_REPEAT | the same kyou_hoshii option on >=3 recorded days | この7日、いちばん多かった「ほしいもの」は「{need}」でした。 |
-| SUM_SUNNY_RUN | kokoro_tenki == hare on >=4 recorded days | この7日は、はれの日が多めでした。 |
-| SUM_MIXED_WEATHER | >=4 distinct kokoro_tenki values across recorded days | この7日は、日ごとに天気の変わる一週間でした。 |
+| SUM_RAIN_RUN | kokoro_tenki == ame on >=3 of the days where kokoro_tenki was answered (min 3 field-valid observations) | 記録した日の中では、あめの日が多めでした。 |
+| SUM_LOWBATT_RUN | karada_juden == hobo_kara on >=3 field-valid days | 記録した日の中では、充電少なめの日が目立ちました。 |
+| SUM_SWIRL_RUN | atama_yohaku == guruguru on >=3 field-valid days | 記録した日の中では、考えごとの多い日が目立ちました。 |
+| SUM_NEED_REPEAT | the same kyou_hoshii option on >=3 of the days where kyou_hoshii was answered | 記録した日の中でいちばん多かった「ほしいもの」は「{need}」でした。 |
+| SUM_SUNNY_RUN | kokoro_tenki == hare on >=4 field-valid days | 記録した日の中では、はれの日が多めでした。 |
+| SUM_MIXED_WEATHER | >=4 distinct kokoro_tenki values among field-valid days (min 4 observations) | 記録した日の天気は、いろいろでした。 |
 
-**30日ビュー** — 天気ストリップ（1日1マス、記録なしは空欄＝中立）・最頻「ほしいもの」（同数は「と」で併記、3件未満は非表示）・最少7日分・不足時: 「この30日の眺めは、記録が7日分たまってからです。急がなくて大丈夫です。」・連続記録の称賛/圧力なし。
+**30日ビュー** — 天気ストリップ（回答した天気だけ描画、空欄は中立）・最頻「ほしいもの」は kyou_hoshii 回答日のみを分母に（同数は「と」併記、3件未満は非表示）・不足時: 「この30日の眺めは、記録が7日分たまってからです。急がなくて大丈夫です。」・連続記録の称賛/圧力なし。
 
 **リフレクション・プロンプト（3件・週1まで・任意・非公開・自由記述不要）**
 - **RP_1**: この一週間の記録で、いちばん「自分らしい」と感じる一枚はどれですか。

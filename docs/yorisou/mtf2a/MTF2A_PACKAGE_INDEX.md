@@ -14,7 +14,7 @@ Both methods completed the full **20-step Test Pattern Forge** (`MTF1_TEST_ORIGI
 | File | Content |
 |---|---|
 | `daily-check-in.v1.json` | **Canonical spec (v1.1)** — identity (1分), record contract (UTC+local date+timezone, versioned corrections), state schema v1.1, ack rules v1.1 (risk-reviewed), longitudinal system (7/30-day + prompts), governed recommendation mapping, content hash |
-| `yorisou-values.v1.json` | **Canonical spec (v1.1)** — identity, scored definition + content hash, benchmark, 7 dimensions, 48-item bank (MTF-2A.1 audited), scoring v1.1 (pair-independent Mixed, insufficient_coverage), 8 results (renames + distinct share lines), non-graded secondary, anti-screening boundary |
+| `yorisou-values.v1.json` | **Canonical spec (v1.1)** — identity, scored definition + content hash, benchmark, 7 dimensions, 48-item bank (MTF-2A.1 audited), scoring v1.0 (pair-independent Mixed, insufficient_coverage), 8 results (renames + distinct share lines), non-graded secondary, anti-screening boundary |
 | `MTF2A_DAILY_CHECK_IN_BENCHMARK.md` | Forge step-5 record (formats compared, selection, rationale) |
 | `MTF2A_DAILY_CHECK_IN_PRODUCT_SPEC.md` | Product spec (identity, state schema, recording model, timeline semantics, deep output) |
 | `MTF2A_DAILY_CHECK_IN_COPY_SYSTEM.md` | Complete Japanese copy system incl. acknowledgement set |

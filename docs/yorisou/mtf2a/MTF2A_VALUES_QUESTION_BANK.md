@@ -1,15 +1,15 @@
-# MTF-2A — Yorisou Values: Complete V1 Question Bank (values-bank-v1.0 / scoring v1.1)
+# MTF-2A — Yorisou Values: Complete V1 Question Bank (values-bank-v1.0 / values-scoring-v1.0)
 
-**Canonical data: `yorisou-values.v1.json` → `questionBank.items` (single source of truth; this table is regenerated from it).** 48 items · A/B forced trade-off · one pair per screen · fixed bank order · every sentence newly authored for YORISOU. Canonical bank hash (sha256): `8b45209f035999500cc1053e9076b11ad544574f83fd9b87dc9a1241fec9a804`.
+**Canonical data: `yorisou-values.v1.json` → `questionBank.items` (single source of truth; this table is regenerated from it).** 48 items · A/B forced trade-off · one pair per screen · fixed bank order. **A canonical result requires all 48 answers** (0–47 → `insufficient_coverage`; scoring integrity — every result uses the identical 13/14 exposure structure). Canonical bank hash (sha256): `919f17251a280bb34258f6042db46bb9fd543763b33e041de64c36b305eaa9a6`.
 
-Sensitivity vocabulary (MTF-2A.1): `none` · `work_context` · `relationship_context` · `emotional_context` — every item explicitly classified; no item asks for financial, medical, legal or intimate detail (the former money item VAL_Q25 was replaced with a non-financial trade-off).
+Sensitivity vocabulary: `none` · `work_context` · `relationship_context` · `emotional_context`. MTF-2A.2 blinded answer-attractiveness audit: 46 items keep; **VAL_Q04 and VAL_Q25 rewritten** to remove moral-attractiveness bias (the helping side no longer reads as kinder/more generous; both sides equally legitimate role choices; Q25 remains non-financial and now non-charitable).
 
 | # | Pair | Prompt | A (dim) | B (dim) | Sensitivity |
 |---|---|---|---|---|---|
 | VAL_Q01 | anshin–pace | 転職や異動を考えるとき、心が向くのは | 長くつづけられそうな安心感 (anshin) | 進め方を自分で決められる裁量 (pace) | work_context |
 | VAL_Q02 | anshin–tsunagari | 住む場所を選ぶなら、より重視したいのは | 生活の安定と安心 (anshin) | 大切な人たちとの近さ (tsunagari) | relationship_context |
 | VAL_Q03 | anshin–seicho | 新しい役割の打診があったら | いまの確実な役割を大事にしたい (anshin) | 未経験でも伸びそうな方を試したい (seicho) | work_context |
-| VAL_Q04 | anshin–yakuwari | 忙しい時期に少し余裕ができたら | まず自分の備えをととのえる (anshin) | 困っている人の手伝いにまわる (yakuwari) | none |
+| VAL_Q04 | anshin–yakuwari | 新しい場に入って、最初にしたいのは | 様子をつかんで、足場を固めること (anshin) | できる役割を、引き受けてみること (yakuwari) | none |
 | VAL_Q05 | anshin–totonoi | 日曜の夕方にやりたくなるのは | 来週の予定を確かめて安心する (anshin) | 部屋と持ちものをととのえる (totonoi) | none |
 | VAL_Q06 | anshin–jikkan | 連休の過ごし方として心地よいのは | 予定を決めて見通しよく過ごす (anshin) | その場で心が動く方へ行く (jikkan) | none |
 | VAL_Q07 | pace–tsunagari | 誘いが重なった夜、先に守りたいのは | 自分の予定と自分の時間 (pace) | 会いたい人との時間 (tsunagari) | relationship_context |
@@ -30,7 +30,7 @@ Sensitivity vocabulary (MTF-2A.1): `none` · `work_context` · `relationship_con
 | VAL_Q22 | anshin–pace | 大きめの買いものを決めるとき | 納得いくまで自分のペースで選びたい (pace) | 実績や保証のある安心な方にしたい (anshin) | none |
 | VAL_Q23 | anshin–tsunagari | 不安なことがあった夜は | 人と話して落ち着きたい (tsunagari) | 調べて見通しを立てて落ち着きたい (anshin) | emotional_context |
 | VAL_Q24 | anshin–seicho | これからの理想に近いのは | できることが増えつづけること (seicho) | 足場が揺らがないこと (anshin) | none |
-| VAL_Q25 | anshin–yakuwari | 使っていないものを手放すか迷ったら | 使ってくれる人に譲りたい (yakuwari) | 万一に備えて手元に残したい (anshin) | none |
+| VAL_Q25 | anshin–yakuwari | 催しや集まりに関わるなら | 運営や手伝いの側で、動きたい (yakuwari) | 参加する側で、見通しよく楽しみたい (anshin) | none |
 | VAL_Q26 | anshin–totonoi | 新生活の最初の週にやりたいのは | 部屋と生活リズムをととのえる (totonoi) | 手続きと備えを先に固める (anshin) | none |
 | VAL_Q27 | anshin–jikkan | 外食のお店を選ぶなら | 気になっていた新しい店 (jikkan) | 味の分かっている定番の店 (anshin) | none |
 | VAL_Q28 | pace–tsunagari | 長い休みの計画は | 大切な人との予定から決める (tsunagari) | まず自分の自由な時間を確保する (pace) | relationship_context |
@@ -55,9 +55,8 @@ Sensitivity vocabulary (MTF-2A.1): `none` · `work_context` · `relationship_con
 | VAL_Q47 | anshin–tsunagari | 大きな決断の前にしたいのは | 信頼する人に相談する (tsunagari) | 情報を集めて見通しを固める (anshin) | emotional_context |
 | VAL_Q48 | totonoi–jikkan | 理想の平日の夜に近いのは | 整った部屋で静かに過ごす (totonoi) | 予定外の楽しいことが起きる (jikkan) | none |
 
-## Design rules honored (MTF-2A.1 item audit applied)
+## Design rules honored
 
-- **Side balance:** each pair's two base scenarios flip which dimension sits on A; per-dimension A-side exposure is 43–57% of appearances (validator-checked tolerance 40–60%); third-pass items (43–48) audited for side advantage.
-- **Genuine trade-offs, no moral asymmetry:** MTF-2A.1 rewrote VAL_Q09/Q20/Q25/Q37/Q38/Q40 so both options are equally legitimate and socially acceptable — no self-sacrifice romanticization, no unhealthy-choice framing (Q38 no longer contrasts basic living needs with studying anyway).
-- **Scenario diversity:** semantic-overlap pass removed near-duplicates; no stem reuse within a pair.
-- **Not alignable item-by-item with any external instrument** — situations and wording are YORISOU-authored; the pairwise-comparison abstract pattern is unprotectable common ground.
+- **Side balance:** paired repeats flip A/B; per-dimension A-side exposure 43–57% (validator tolerance 40–60%); third-pass items audited.
+- **Blinded attractiveness audit (MTF-2A.2):** each side assessed without its dimension label for kinder/healthier/more-responsible/more-generous/selfish/fearful/lazy readings — Q04/Q25 rewritten; all other items keep (both options comparably legitimate).
+- **Not alignable item-by-item with any external instrument.**

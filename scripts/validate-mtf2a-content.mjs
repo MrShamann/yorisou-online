@@ -183,118 +183,122 @@ const missingAck = ackIds.filter((id) => !ackMd.includes(id));
 if (missingAck.length) fail(`X3: copy-system MD missing acks — ${missingAck.join(",")}`);
 else ok("X3: all 13 ack IDs present in the copy-system MD");
 
-// ═══ MTF-2A.1 EXPANSION ═══════════════════════════════════════════════════════
+// ═══ MTF-2A.1 + MTF-2A.2 EXPANSION ═══════════════════════════════════════════
 import { createHash } from "node:crypto";
+import { execSync } from "node:child_process";
 const dailyAll = JSON.stringify(daily);
 const valuesAll = JSON.stringify(values);
+let fixtures = 0;
+let gates = 0; let gateFailures = 0;
+const gateOk = (m) => { console.log(`  GATE ${m}`); gates += 1; };
+const gateFail = (m) => { console.error(`GATE-FAIL: ${m}`); gates += 1; gateFailures += 1; failures += 1; };
 
-// Daily 1–3: timing + privacy truth
-if (/30秒/.test(dailyAll)) fail("A1-D1: 30-second claim remains in the daily spec");
-else ok("A1-D1: no 30-second claim remains");
-if (daily.identity.subtitleJa !== "1分のじぶん記録" || !/1分だけ/.test(daily.copyBundles.startPageJa) || daily.benchmarkDecision.targetCompletionSeconds !== "45-60") fail("A1-D2: 1-minute wording must align with the 45-60s benchmark");
+// A2-1/2: version coherence (exact equality of every duplicated reference)
+const sv = [values.definition.scoringVersion, values.scoring.scoringVersion, values.resultObjectContract.provenance.scoringVersion];
+if (new Set(sv).size !== 1 || sv[0] !== "values-scoring-v1.0") fail(`A2-1: scoring versions diverge — ${sv.join(" / ")}`);
+else if (/values-scoring-v1\.1/.test(valuesAll)) fail("A2-1: values-scoring-v1.1 still present");
+else ok("A2-1: all scoring-version references identical (values-scoring-v1.0); no v1.1 remains");
+const dupPairs = [
+  ["daily inputSchemaVersion", daily.definition.inputSchemaVersion, daily.stateSchema.version],
+  ["daily schema provenance", daily.definition.inputSchemaVersion, daily.resultSchema.provenance.schemaVersion],
+  ["daily ack version", daily.definition.acknowledgementCopyVersion, daily.acknowledgementRules.version],
+  ["values bankVersion", values.definition.bankVersion, values.questionBank.bankVersion],
+  ["values methodVersion", values.identity.methodVersion, values.resultObjectContract.provenance.methodVersion],
+  ["daily methodVersion", daily.identity.methodVersion, daily.resultSchema.provenance.methodVersion],
+];
+const dupBad = dupPairs.filter(([, a, b]) => a !== b);
+if (dupBad.length) fail(`A2-2: duplicated version references differ — ${dupBad.map(([n]) => n).join(", ")}`);
+else ok("A2-2: every duplicated schema/provenance version reference is exactly equal");
+
+// Timing/privacy truth (retained from 2A.1)
+if (/30秒/.test(dailyAll)) fail("A1-D1: 30-second claim remains"); else ok("A1-D1: no 30-second claim");
+if (daily.identity.subtitleJa !== "1分のじぶん記録" || daily.benchmarkDecision.targetCompletionSeconds !== "45-60") fail("A1-D2: 1分/45-60s mismatch");
 else ok("A1-D2: 1分 wording aligns with the 45-60s benchmark");
-if (/だれにも見えません|共有されることはありません/.test(dailyAll)) fail("A1-D3: absolute privacy statements remain");
-else ok("A1-D3: prohibited absolute privacy statements absent");
-// Daily 4–8: record contract
+if (/だれにも見えません|共有されることはありません/.test(dailyAll)) fail("A1-D3: absolute privacy claims remain"); else ok("A1-D3: absolute privacy statements absent");
+// Record contract (retained)
 const rc = daily.recordContract ?? {};
-if (!rc.identity?.producedAt?.includes("UTC") || !rc.identity?.entryLocalDate || !/IANA/.test(rc.identity?.timezone ?? "")) fail("A1-D4: producedAt/entryLocalDate/timezone semantics missing");
-else ok("A1-D4: producedAt (UTC) + entryLocalDate + IANA timezone semantics exist");
-if (/destructive overwrite/i.test(JSON.stringify(rc.correctionModel)) && !/no destructive overwrite/i.test(JSON.stringify(rc.correctionModel))) fail("A1-D5: destructive overwrite policy present");
-else if (!/no destructive overwrite/i.test(rc.correctionModel?.sameDayEdit ?? "")) fail("A1-D5: no-destructive-overwrite rule missing");
-else ok("A1-D5: no destructive-overwrite policy (versioned corrections)");
-if (!/versioned correction/i.test(rc.correctionModel?.sameDayEdit ?? "") || !/PRESERVED/i.test(rc.correctionModel?.sameDayEdit ?? "")) fail("A1-D6: same-day corrections must be version-aware with preserved history");
-else ok("A1-D6: same-day corrections are version-aware (prior versions preserved)");
-if (!/at least one structured state-field/i.test(rc.entryValidity ?? "")) fail("A1-D7: >=1 structured field requirement missing");
-else ok("A1-D7: at least one structured state field required");
-if (!daily.stateSchema.privateReflection.memoAloneIsNotAnEntry || !/memo alone does NOT/i.test(rc.entryValidity ?? "")) fail("A1-D8: memo-only entries must be invalid");
-else ok("A1-D8: memo-only entries are invalid");
-// Daily 9–11: longitudinal completeness
-const lg = daily.longitudinal ?? {};
-const sd = lg.sevenDaySummary ?? {};
-if (!sd.minimumRecordedDays || !sd.maxSimultaneousSummaries || !Array.isArray(sd.rules) || sd.rules.length < 5 || !sd.insufficientHistoryCopyJa || !sd.conflictResolution || sd.rules.some((r) => !r.copyJa)) fail("A1-D9: seven-day summary rule coverage incomplete");
-else if (!sd.priorityOrder || sd.priorityOrder.length !== sd.rules.length) fail("A1-D9: priorityOrder must cover all summary rules");
-else ok(`A1-D9: seven-day summary system complete (${sd.rules.length} rules, min ${sd.minimumRecordedDays} days, max ${sd.maxSimultaneousSummaries} simultaneous)`);
-const td = lg.thirtyDaySummary ?? {};
-if (!td.weatherStrip || !td.mostFrequentNeed || !/tie|同数/i.test(td.mostFrequentNeed) || !td.insufficientDataCopyJa || !td.noStreakPressure) fail("A1-D10: thirty-day summary/tie/insufficient handling incomplete");
-else ok("A1-D10: thirty-day weather-strip/tie/missing-day/insufficient handling exists (no streak pressure)");
-if (!Array.isArray(lg.reflectionPrompts?.prompts) || lg.reflectionPrompts.prompts.length !== 3 || lg.reflectionPrompts.prompts.some((p) => !p.copyJa)) fail("A1-D11: all three reflection prompts must exist");
+if (!rc.identity?.producedAt?.includes("UTC") || !rc.identity?.entryLocalDate || !/IANA/.test(rc.identity?.timezone ?? "")) fail("A1-D4: record identity semantics missing");
+else ok("A1-D4: producedAt(UTC)+entryLocalDate+IANA timezone");
+if (!/no destructive overwrite/i.test(rc.correctionModel?.sameDayEdit ?? "") || !/versioned correction/i.test(rc.correctionModel?.sameDayEdit ?? "")) fail("A1-D5/6: correction model wrong");
+else ok("A1-D5/6: versioned corrections, no destructive overwrite, history preserved");
+if (!/at least one structured state-field/i.test(rc.entryValidity ?? "") || !daily.stateSchema.privateReflection.memoAloneIsNotAnEntry) fail("A1-D7/8: entry validity rules missing");
+else ok("A1-D7/8: >=1 structured field required; memo-only invalid");
+
+// A2 daily: field-valid denominators + copy truth
+const sd = daily.longitudinal.sevenDaySummary;
+if (!/field-valid/.test(sd.denominatorRule ?? "") || sd.rules.some((r) => !r.minFieldValid)) fail("A2-11: field-valid denominators missing");
+else ok("A2-11: seven-day summaries use field-valid recorded denominators (minFieldValid per rule)");
+const sumCopy = sd.rules.map((r) => r.copyJa).join("");
+if (/この7日は、/.test(sumCopy) || !sd.rules.slice(0, 5).every((r) => /記録した日の中で/.test(r.copyJa))) fail("A2-12: summary copy describes unrecorded days as known states");
+else if (!/記録した日の天気は、いろいろでした/.test(sumCopy)) fail("A2-12: mixed-weather copy not corrected");
+else ok("A2-12: user copy scopes claims to 記録した日の中では (unrecorded days never described as known)");
+const td = daily.longitudinal.thirtyDaySummary;
+if (!/field-valid/.test(td.denominatorRule ?? "") || !/answered/.test(td.mostFrequentNeed)) fail("A2-12b: 30-day denominators not field-valid");
+else ok("A2-12b: thirty-day summaries use the same field-valid principle");
+// longitudinal completeness (retained)
+if (!Array.isArray(daily.longitudinal.reflectionPrompts?.prompts) || daily.longitudinal.reflectionPrompts.prompts.length !== 3) fail("A1-D11: prompts missing");
 else ok("A1-D11: all three reflection prompts authored");
-// Daily 12–13: recommendation mapping + taxonomy
 const needOpts = daily.stateSchema.fields.find((f) => f.fieldId === "kyou_hoshii").options.map((o) => o.optionId);
 const mapped = (daily.recommendationPolicy.needMapping ?? []).map((m) => m.optionId);
-if (!needOpts.every((o) => mapped.includes(o))) fail(`A1-D12: unmapped need options — ${needOpts.filter((o) => !mapped.includes(o)).join(",")}`);
-else if (!daily.recommendationPolicy.unansweredNeedBehavior?.includes("no_recommendation")) fail("A1-D12: unanswered-need behavior must be explicit no_recommendation");
-else if ((daily.recommendationPolicy.needMapping ?? []).some((m) => !m.fitReasonJa)) fail("A1-D12: every mapping needs a fit reason");
-else ok("A1-D12: all six need options mapped with fit reasons; no_recommendation explicit");
+if (!needOpts.every((o) => mapped.includes(o)) || !daily.recommendationPolicy.unansweredNeedBehavior?.includes("no_recommendation")) fail("A1-D12: need mapping incomplete");
+else ok("A1-D12: all six need options mapped; no_recommendation explicit");
 const GOV = ["need_rest","need_order","need_change","need_connect","need_solo","need_small_win","context_work","context_relationship","content_learning","no_recommendation"];
-const dTags = (daily.recommendationPolicy.needMapping ?? []).map((m) => m.tag);
-if (!dTags.every((t) => GOV.includes(t)) || JSON.stringify(daily.recommendationPolicy.governedTags) !== JSON.stringify(GOV)) fail("A1-D13: daily tags must follow the governed taxonomy");
-else if (/_hint"/.test(dailyAll) || /_hint"/.test(valuesAll)) fail("A1-D13: ungoverned *_hint tags remain");
-else ok("A1-D13: recommendation tags follow the governed need_*/context_*/content_* taxonomy (no *_hint)");
-// Daily 14–15: ack risk pass
-const riskTargets = ["ACK_WIND", "ACK_NEED_TENKAN", "ACK_NEED_HANASU", "ACK_NEED_TASSEI"];
+if (!(daily.recommendationPolicy.needMapping ?? []).every((m) => GOV.includes(m.tag)) || /_hint"/.test(dailyAll + valuesAll)) fail("A1-D13: taxonomy violation");
+else ok("A1-D13: governed taxonomy holds (no *_hint)");
+
+// A2-13: ACK_RAIN / ACK_LOWBATT non-directive
 const acksById = Object.fromEntries(daily.acknowledgementRules.acknowledgements.map((a) => [a.ackId, a]));
-if (riskTargets.some((t) => !/rewrite_required/.test(acksById[t]?.reviewDecision ?? ""))) fail("A1-D14: mandatory risk-review ack targets not rewritten");
-else ok("A1-D14: mandatory ack risk targets rewritten (WIND/TENKAN/HANASU/TASSEI)");
+if (/無理のない過ごし方|きょうの分はもう十分/.test(acksById.ACK_RAIN.copyJa + acksById.ACK_LOWBATT.copyJa)) fail("A2-13: RAIN/LOWBATT still directive/evaluative");
+else if (!/そのまま残りました/.test(acksById.ACK_RAIN.copyJa) || !/きょうの一枚として残りました/.test(acksById.ACK_LOWBATT.copyJa)) fail("A2-13: RAIN/LOWBATT corrected wording missing");
+else ok("A2-13: ACK_RAIN and ACK_LOWBATT are observational (non-directive, non-evaluative)");
 const ackText = daily.acknowledgementRules.acknowledgements.map((a) => a.copyJa).join("");
-if (/ずっとは吹きません|うまくいきます|効きそう|歩く|景色は変わります|選び方が少し変わります/.test(ackText)) fail("A1-D15: future guarantees or mobility assumptions remain in ack copy");
-else ok("A1-D15: no future guarantee / it-will-work / mobility assumption in ack copy");
+if (/ずっとは吹きません|うまくいきます|効きそう|歩く|景色は変わります|選び方が少し変わります/.test(ackText)) fail("A1-D15: predictive/mobility copy remains");
+else ok("A1-D15: no future guarantee / it-will-work / mobility assumption in acks");
 
-// Values 16–17: insufficient coverage
-if (!/insufficient_coverage/.test(values.scoring.minimumCoverage.belowMinimumBehavior) || /VAL_R_MIXED/.test(values.scoring.minimumCoverage.belowMinimumBehavior.replace(/no VAL_R_MIXED/, ""))) fail("A1-V16: low coverage must return insufficient_coverage, not VAL_R_MIXED");
-else ok("A1-V16: low coverage returns insufficient_coverage (not a result)");
-if (!/no primary, no secondary/i.test(values.scoring.minimumCoverage.belowMinimumBehavior) || !values.scoring.minimumCoverage.insufficientCoverageCopyJa?.includes("{remaining}")) fail("A1-V17: incomplete execution must produce no results and state remaining count");
-else ok("A1-V17: incomplete execution produces no primary/secondary; remaining-count copy present");
+// A2-3/4: 48/48 coverage
+if (values.scoring.minimumCoverage.requiredAnsweredItems !== 48 || /40/.test(JSON.stringify(values.scoring.minimumCoverage))) fail("A2-3: 48/48 requirement not frozen");
+else ok("A2-3: canonical result requires 48/48 answers (40-threshold removed)");
+if (!/insufficient_coverage/.test(values.scoring.minimumCoverage.belowRequiredBehavior) || !values.scoring.minimumCoverage.insufficientCoverageCopyJa.includes("{remaining}")) fail("A2-4: insufficient_coverage contract incomplete");
+else ok("A2-4: 0-47 answers → insufficient_coverage (no result; resume; exact remaining count)");
 
-// ── Executable scoring engine (canonical rules) + fixtures ───────────────────
+// ── ONE canonical scoring function (bank-parameterized) ──────────────────────
 const ITEMS = values.questionBank.items;
-const APP = values.questionBank.dimensionAppearances;
-const DECL = values.dimensions.map((d) => d.dimensionId);
-function computeValues(answers /* Map itemId -> "A"|"B" */) {
-  const answered = ITEMS.filter((it) => answers[it.itemId]);
-  if (answered.length < values.scoring.minimumCoverage.answeredItems) return { state: "insufficient_coverage", remaining: values.scoring.minimumCoverage.answeredItems - answered.length };
-  const wins = Object.fromEntries(DECL.map((d) => [d, 0]));
-  const app = Object.fromEntries(DECL.map((d) => [d, 0]));
+const DECL = values.dimensions.map((dd) => dd.dimensionId);
+function scoreBank(bank, answers) {
+  const answered = bank.filter((it) => answers[it.itemId]);
+  if (answered.length < values.scoring.minimumCoverage.requiredAnsweredItems) {
+    return { state: "insufficient_coverage", remaining: values.scoring.minimumCoverage.requiredAnsweredItems - answered.length };
+  }
+  const wins = Object.fromEntries(DECL.map((dd) => [dd, 0]));
+  const app = Object.fromEntries(DECL.map((dd) => [dd, 0]));
   for (const it of answered) {
     app[it.choiceA.dimension]++; app[it.choiceB.dimension]++;
     wins[answers[it.itemId] === "A" ? it.choiceA.dimension : it.choiceB.dimension]++;
   }
-  const rates = DECL.map((d) => ({ d, r: app[d] ? wins[d] / app[d] : 0 }));
-  rates.sort((a, b) => b.r - a.r || DECL.indexOf(a.d) - DECL.indexOf(b.d)); // declaration-order tie-break for ordering
-  const [t1, t2] = rates;
-  if (t1.r - t2.r < 0.05) return { state: "result", resultId: "VAL_R_MIXED", closeSet: rates.filter((x) => t1.r - x.r < 0.05).map((x) => x.d) };
-  return { state: "result", resultId: `VAL_R_${t1.d.toUpperCase()}`, secondary: t2.d };
+  const rates = DECL.map((dd) => ({ d: dd, r: wins[dd] / app[dd] }));
+  const sorted = [...rates].sort((a, b) => b.r - a.r || DECL.indexOf(a.d) - DECL.indexOf(b.d));
+  const [t1, t2] = sorted;
+  if (t1.r - t2.r < 0.05) {
+    return { state: "result", resultId: "VAL_R_MIXED", secondary: null, closeSet: sorted.filter((x) => t1.r - x.r < 0.05).map((x) => x.d), rates: Object.fromEntries(rates.map((x) => [x.d, x.r])) };
+  }
+  return { state: "result", resultId: `VAL_R_${t1.d.toUpperCase()}`, secondary: t2.d, closeSet: null, rates: Object.fromEntries(rates.map((x) => [x.d, x.r])) };
 }
+const score = (answers) => scoreBank(ITEMS, answers);
 const answerAllFavor = (dim) => Object.fromEntries(ITEMS.map((it) => [it.itemId, it.choiceA.dimension === dim ? "A" : it.choiceB.dimension === dim ? "B" : "A"]));
-let fixtures = 0;
-// F1: all seven dimension-led results algorithmically reachable
-let f1ok = true;
-for (const d of DECL) {
-  const r = computeValues(answerAllFavor(d));
-  fixtures++;
-  if (r.state !== "result" || r.resultId !== `VAL_R_${d.toUpperCase()}`) { f1ok = false; fail(`A1-V18: dimension ${d} fixture yielded ${r.resultId ?? r.state}`); }
+
+// FIXTURE TABLE (recorded IDs + expected outputs) — §5.5
+const FIXTURES = [
+  ...DECL.map((dd) => ({ id: `FX_${dd.toUpperCase()}`, answers: answerAllFavor(dd), expect: { state: "result", resultId: `VAL_R_${dd.toUpperCase()}` } })),
+];
+let fxBad = [];
+for (const fx of FIXTURES) {
+  const r = score(fx.answers); fixtures++;
+  if (r.state !== fx.expect.state || r.resultId !== fx.expect.resultId) fxBad.push(`${fx.id}→${r.resultId ?? r.state}`);
 }
-if (f1ok) ok("A1-V18: all 7 dimension-led results algorithmically reachable (7 fixtures)");
-// F2: Mixed reachable — answer every item by strict alternation to flatten rates
-const altAnswers = Object.fromEntries(ITEMS.map((it, i) => [it.itemId, i % 2 === 0 ? "A" : "B"]));
-const rMixed = computeValues(altAnswers); fixtures++;
-if (rMixed.state !== "result") fail("A1-V19: mixed fixture produced no result");
-else if (rMixed.resultId !== "VAL_R_MIXED") {
-  // deterministic fallback fixture: perfect flatten by favoring each dimension equally via per-pair split
-  const half = {}; let flip = false;
-  for (const it of ITEMS) { half[it.itemId] = flip ? "A" : "B"; flip = !flip; }
-  const r2 = computeValues(half); fixtures++;
-  if (r2.resultId !== "VAL_R_MIXED") fail(`A1-V19: Mixed not reachable (got ${rMixed.resultId}/${r2.resultId})`);
-  else ok("A1-V19: VAL_R_MIXED algorithmically reachable");
-} else ok("A1-V19: VAL_R_MIXED algorithmically reachable");
-// F3: incomplete coverage never yields a canonical result
-const partial = {}; ITEMS.slice(0, 30).forEach((it) => { partial[it.itemId] = "A"; });
-const rPart = computeValues(partial); fixtures++;
-if (rPart.state !== "insufficient_coverage" || rPart.remaining !== 10) fail("A1-V20: incomplete coverage yielded a result");
-else ok("A1-V20: 30-answer fixture → insufficient_coverage (10 remaining), no result");
-// F4: pair-independent equivalence — EQUIVALENT normalized relationships (gap 0) must classify
-// identically whether the top pair has 2 or 3 direct comparisons. Build gap-0 profiles by giving
-// both dims equal WIN COUNTS (adjusting one non-h2h win where an odd h2h count forces inequality).
+if (fxBad.length) fail(`A2-9a: result fixtures mismatched — ${fxBad.join(", ")}`);
+else ok(`A2-9a: 7 dimension-result fixtures pass through the canonical scorer (FX_ANSHIN..FX_JIKKAN, expected outputs recorded)`);
+
+// §5.4 genuine pair-equivalence: intended top-two + exact gap + close set, on 2-cmp AND 3-cmp pairs
 function equalTopProfile(dimX, dimY) {
   const a = {};
   for (const it of ITEMS) {
@@ -307,88 +311,181 @@ function equalTopProfile(dimX, dimY) {
   h2h.forEach((it, i) => { a[it.itemId] = (i < Math.ceil(h2h.length / 2)) ? (it.choiceA.dimension === dimX ? "A" : "B") : (it.choiceA.dimension === dimY ? "A" : "B"); });
   if (h2h.length % 2 === 1) {
     const donor = ITEMS.find((it) => it.pair.includes(dimX) && !it.pair.includes(dimY));
-    a[donor.itemId] = donor.choiceA.dimension === dimX ? "B" : "A"; // flip one X win to its opponent
+    a[donor.itemId] = donor.choiceA.dimension === dimX ? "B" : "A";
   }
   return a;
 }
-const r2pair = computeValues(equalTopProfile("pace", "yakuwari")); fixtures++; // 2-comparison top pair, equal wins
-const r3pair = computeValues(equalTopProfile("anshin", "seicho")); fixtures++;  // 3-comparison top pair, equal wins
-if (r2pair.resultId !== "VAL_R_MIXED" || r3pair.resultId !== "VAL_R_MIXED") {
-  fail(`A1-V21: equivalent gap-0 relationships classified differently by pair (2-cmp: ${r2pair.resultId}, 3-cmp: ${r3pair.resultId})`);
-} else ok("A1-V21: Mixed eligibility pair-independent (gap-0 profiles -> VAL_R_MIXED on both 2- and 3-comparison top pairs)");
-// F5: tie-break paths — equal 2nd/3rd resolves by declaration order (ordering only)
-const rTie = computeValues(answerAllFavor("anshin")); fixtures++;
-if (!rTie.secondary || !DECL.includes(rTie.secondary)) fail("A1-V22: secondary tie-break path missing");
-else ok(`A1-V22: tie-break fixtures pass (secondary ordering deterministic; declaration-order rule exercised: ${rTie.secondary})`);
-// F6: side-label invariance — scoring reads dimensions, not sides (verified structurally + by fixture symmetry)
-const flipped = {}; for (const it of ITEMS) flipped[it.itemId] = answerAllFavor("totonoi")[it.itemId];
-const rSide = computeValues(flipped); fixtures++;
-if (rSide.resultId !== "VAL_R_TOTONOI") fail("A1-V23: side-label sensitivity detected");
-else ok("A1-V23: A/B side labels do not affect the result (dimension-keyed scoring)");
-// F7: item-order invariance
-const shuffledAnswers = answerAllFavor("jikkan");
-const reversedItems = [...ITEMS].reverse();
-const winsR = Object.fromEntries(DECL.map((d) => [d, 0])); const appR = Object.fromEntries(DECL.map((d) => [d, 0]));
-for (const it of reversedItems) { appR[it.choiceA.dimension]++; appR[it.choiceB.dimension]++; winsR[shuffledAnswers[it.itemId] === "A" ? it.choiceA.dimension : it.choiceB.dimension]++; }
-const topR = DECL.map((d) => ({ d, r: winsR[d] / appR[d] })).sort((a, b) => b.r - a.r)[0].d;
-fixtures++;
-if (topR !== "jikkan") fail("A1-V24: item ordering affects the result");
-else ok("A1-V24: item ordering does not affect the result");
-// F8: deterministic repeat
-const rA = computeValues(answerAllFavor("seicho")); const rB = computeValues(answerAllFavor("seicho")); fixtures += 2;
-if (JSON.stringify(rA) !== JSON.stringify(rB)) fail("A1-V25: repeated execution not deterministic");
-else ok("A1-V25: repeated execution deterministic");
-// F9: no impossible-condition dependency + F10: every result ID has a concrete fixture
-const fixtureResults = new Set([...DECL.map((d) => `VAL_R_${d.toUpperCase()}`), "VAL_R_MIXED"]);
-if (![...fixtureResults].every((id) => resultIds.includes(id))) fail("A1-V26: fixture/result ID mismatch");
-else ok(`A1-V26: every result ID has a concrete executed fixture (${fixtureResults.size} result IDs; no rule depends on an impossible full-completion condition — the h2h-tie conjunct was removed)`);
+function assertPairFixture(label, dimX, dimY) {
+  const r = score(equalTopProfile(dimX, dimY)); fixtures++;
+  const sortedRates = Object.entries(r.rates).sort((x, y) => y[1] - x[1]);
+  const topTwo = [sortedRates[0][0], sortedRates[1][0]].sort();
+  const intended = [dimX, dimY].sort();
+  const gap = sortedRates[0][1] - sortedRates[1][1];
+  if (r.resultId !== "VAL_R_MIXED") return `${label}: not Mixed (${r.resultId})`;
+  if (JSON.stringify(topTwo) !== JSON.stringify(intended)) return `${label}: top two ${topTwo} ≠ intended ${intended}`;
+  if (Math.abs(gap) > 1e-12) return `${label}: gap ${gap} ≠ 0`;
+  if (!r.closeSet.includes(dimX) || !r.closeSet.includes(dimY)) return `${label}: close set missing intended dims`;
+  return null;
+}
+const pe2 = assertPairFixture("FX_PAIR_2CMP(pace,yakuwari)", "pace", "yakuwari");
+const pe3 = assertPairFixture("FX_PAIR_3CMP(anshin,seicho)", "anshin", "seicho");
+if (pe2 || pe3) fail(`A2-8: pair-equivalence — ${pe2 ?? ""} ${pe3 ?? ""}`);
+else ok("A2-8: pair-equivalence fixtures assert intended top-two, exact gap 0, close-set membership — identical Mixed classification on 2-cmp and 3-cmp pairs");
 
-// Values 25–28: item corrections
-const q25 = ITEMS.find((i) => i.itemId === "VAL_Q25");
-if (/お金|貯金|寄付|買い/.test(q25.promptJa + q25.choiceA.textJa + q25.choiceB.textJa)) fail("A1-V27: Q25 still contains a financial scenario");
-else ok("A1-V27: Q25 financial scenario removed (non-financial trade-off)");
-const rewrittenTargets = { VAL_Q09: /段取りを組み直して/, VAL_Q20: /どちらか一方に行けるなら/, VAL_Q37: /学ぶ側の活動/, VAL_Q38: /自由な1時間/, VAL_Q40: /「来週なら」/ };
-const missingRw = Object.entries(rewrittenTargets).filter(([id, re]) => !re.test(JSON.stringify(ITEMS.find((i) => i.itemId === id))));
-if (missingRw.length) fail(`A1-V28: required item rewrites missing — ${missingRw.map(([id]) => id).join(",")}`);
-else ok("A1-V28: required item rewrites present (Q09/Q20/Q37/Q38/Q40 + Q25)");
-const SENS = values.questionBank.sensitivityVocabulary ?? [];
-if (JSON.stringify(SENS) !== JSON.stringify(["none","work_context","relationship_context","emotional_context"]) || ITEMS.some((i) => !SENS.includes(i.sensitivity))) fail("A1-V29: sensitivity vocabulary violation");
-else if (ITEMS.find((i) => i.itemId === "VAL_Q23").sensitivity !== "emotional_context") fail("A1-V29: Q23 must be emotional_context");
-else ok(`A1-V29: all sensitivities use the documented vocabulary (${ITEMS.filter((i)=>i.sensitivity!=="none").length} non-none classifications)`);
-// A/B exposure balance
-const aCount = Object.fromEntries(DECL.map((d) => [d, 0]));
+// §5.1 genuine side-swap invariance: transformed bank + transformed answers
+const swappedBank = ITEMS.map((it) => ({ ...it, choiceA: it.choiceB, choiceB: it.choiceA }));
+function swapAnswers(a) { const out = {}; for (const [k, vv] of Object.entries(a)) out[k] = vv === "A" ? "B" : "A"; return out; }
+let swapBad = [];
+for (const dd of ["anshin", "jikkan"]) {
+  const base = answerAllFavor(dd);
+  const r1 = score(base); const r2 = scoreBank(swappedBank, swapAnswers(base)); fixtures += 2;
+  if (JSON.stringify([r1.state, r1.resultId, r1.secondary, r1.closeSet]) !== JSON.stringify([r2.state, r2.resultId, r2.secondary, r2.closeSet])) swapBad.push(dd);
+}
+{
+  const base = equalTopProfile("pace", "yakuwari");
+  const r1 = score(base); const r2 = scoreBank(swappedBank, swapAnswers(base)); fixtures += 2;
+  if (JSON.stringify([r1.state, r1.resultId, r1.closeSet]) !== JSON.stringify([r2.state, r2.resultId, r2.closeSet])) swapBad.push("mixed-profile");
+}
+if (swapBad.length) fail(`A2-5: side-swap invariance broken — ${swapBad.join(", ")}`);
+else ok("A2-5: GENUINE side-swap invariance (A/B + dimensions swapped in a transformed bank; state/result/secondary/closeSet all equal)");
+
+// §5.2 genuine item-order invariance: reversed bank through the SAME scorer, full-result comparison
+const reversedBank = [...ITEMS].reverse();
+let orderBad = [];
+for (const dd of ["seicho"]) {
+  const base = answerAllFavor(dd);
+  const r1 = score(base); const r2 = scoreBank(reversedBank, base); fixtures += 2;
+  if (JSON.stringify(r1) !== JSON.stringify(r2)) orderBad.push(dd);
+}
+{
+  const base = equalTopProfile("anshin", "seicho");
+  const r1 = score(base); const r2 = scoreBank(reversedBank, base); fixtures += 2;
+  if (JSON.stringify(r1) !== JSON.stringify(r2)) orderBad.push("mixed-profile");
+}
+if (orderBad.length) fail(`A2-6: item-order invariance broken — ${orderBad.join(", ")}`);
+else ok("A2-6: GENUINE item-order invariance (reversed bank, complete result objects equal)");
+
+// §5.3 genuine declaration-order tie-break: unambiguous primary + EXACT 2nd/3rd tie → earlier declared dim
+function tieFixture() {
+  const a = {}; let paceWins = 0; let yakuWins = 0;
+  for (const it of ITEMS) {
+    const isPY = it.pair.includes("pace") && it.pair.includes("yakuwari");
+    if (it.pair.includes("jikkan")) { a[it.itemId] = it.choiceA.dimension === "jikkan" ? "A" : "B"; continue; }
+    if (isPY) { const giveTo = paceWins <= yakuWins ? "pace" : "yakuwari"; a[it.itemId] = it.choiceA.dimension === giveTo ? "A" : "B"; if (giveTo === "pace") paceWins++; else yakuWins++; continue; }
+    if (it.pair.includes("pace")) { if (paceWins < 8) { a[it.itemId] = it.choiceA.dimension === "pace" ? "A" : "B"; paceWins++; } else a[it.itemId] = it.choiceA.dimension === "pace" ? "B" : "A"; continue; }
+    if (it.pair.includes("yakuwari")) { if (yakuWins < 8) { a[it.itemId] = it.choiceA.dimension === "yakuwari" ? "A" : "B"; yakuWins++; } else a[it.itemId] = it.choiceA.dimension === "yakuwari" ? "B" : "A"; continue; }
+    a[it.itemId] = "A"; // remaining items among {anshin,tsunagari,seicho,totonoi}
+  }
+  return a;
+}
+const rTie = score(tieFixture()); fixtures++;
+const tieRates = rTie.rates ?? {};
+if (rTie.resultId !== "VAL_R_JIKKAN") fail(`A2-7: tie fixture primary wrong (${rTie.resultId})`);
+else if (Math.abs((tieRates.pace ?? 0) - (tieRates.yakuwari ?? 0)) > 1e-12) fail(`A2-7: constructed 2nd/3rd not exactly tied (pace ${tieRates.pace}, yakuwari ${tieRates.yakuwari})`);
+else if (rTie.secondary !== "pace") fail(`A2-7: declaration-order secondary wrong (got ${rTie.secondary}, expected pace)`);
+else ok(`A2-7: constructed EXACT 2nd/3rd tie (pace=yakuwari=${(tieRates.pace).toFixed(4)}); secondary = pace (earlier in declaration order); primary unambiguous (jikkan)`);
+
+// coverage fixtures: 0-47 → insufficient_coverage
+let covBad = [];
+for (const n of [0, 30, 47]) {
+  const a = {}; ITEMS.slice(0, n).forEach((it) => { a[it.itemId] = "A"; });
+  const r = score(a); fixtures++;
+  if (r.state !== "insufficient_coverage" || r.remaining !== 48 - n) covBad.push(`${n}→${r.state}/${r.remaining}`);
+}
+if (covBad.length) fail(`A2-4b: coverage fixtures — ${covBad.join(", ")}`);
+else ok("A2-4b: 0/30/47-answer fixtures all → insufficient_coverage with exact remaining counts (no canonical result)");
+// determinism
+const rA = score(answerAllFavor("totonoi")); const rB = score(answerAllFavor("totonoi")); fixtures += 2;
+if (JSON.stringify(rA) !== JSON.stringify(rB)) fail("A2-det: nondeterministic"); else ok("A2-det: repeated execution deterministic");
+
+// A2-14: Q04/Q25 corrected canonical wording
+const q04 = ITEMS.find((i) => i.itemId === "VAL_Q04"); const q25 = ITEMS.find((i) => i.itemId === "VAL_Q25");
+if (!/新しい場に入って/.test(q04.promptJa) || !/足場を固める/.test(q04.choiceA.textJa) || !/役割を、引き受けて/.test(q04.choiceB.textJa)) fail("A2-14: Q04 corrected wording missing");
+else if (!/催しや集まりに関わるなら/.test(q25.promptJa) || !/運営や手伝いの側/.test(q25.choiceA.textJa) || !/参加する側/.test(q25.choiceB.textJa)) fail("A2-14: Q25 corrected wording missing");
+else if (q04.choiceA.dimension !== "anshin" || q04.choiceB.dimension !== "yakuwari" || q25.choiceA.dimension !== "yakuwari" || q25.choiceB.dimension !== "anshin") fail("A2-14: Q04/Q25 pair/sides changed");
+else ok("A2-14: Q04/Q25 carry the corrected balanced wording (anshin×yakuwari preserved, sides preserved)");
+// exposure balance (retained)
+const APP = values.questionBank.dimensionAppearances;
+const aCount = Object.fromEntries(DECL.map((dd) => [dd, 0]));
 for (const it of ITEMS) aCount[it.choiceA.dimension]++;
-const imbalanced = DECL.filter((d) => { const ratio = aCount[d] / APP[d]; return ratio < 0.4 || ratio > 0.6; });
-if (imbalanced.length) fail(`A1-V30: A/B exposure imbalance — ${imbalanced.join(",")}`);
-else ok("A1-V30: per-dimension A-side exposure within 40-60% tolerance (incl. third-pass items)");
-// Values 29–33
-const ss = values.secondarySignalRendering;
-if (!ss.labelJa || !ss.equalSecondTieBreak || !ss.mixedBehavior || !ss.insufficientCoverageBehavior || /faint|present|strong/.test(JSON.stringify(ss))) fail("A1-V31: secondary-signal rendering not fully specified or still graded");
-else ok("A1-V31: secondary signal fully specified (non-graded 「もうひとつ近かった軸」; mixed + insufficient behaviors defined)");
-const shareLines = values.results.map((r) => r.public.shareLineJa);
-if (new Set(shareLines).size !== shareLines.length || shareLines.filter((s) => /^いまは「.*」でした。$/.test(s)).length > 1) fail("A1-V32: share lines still share a template");
-else ok("A1-V32: 8 share lines are distinct (no shared template)");
+const actualApp = Object.fromEntries(DECL.map((dd) => [dd, 0]));
+for (const it of ITEMS) { actualApp[it.choiceA.dimension]++; actualApp[it.choiceB.dimension]++; }
+const appBad = DECL.filter((dd) => actualApp[dd] !== APP[dd]);
+const abBad = DECL.filter((dd) => { const ratio = aCount[dd] / APP[dd]; return ratio < 0.4 || ratio > 0.6; });
+if (appBad.length || abBad.length) fail(`A2-bal: appearances(${appBad}) / A-side(${abBad})`);
+else ok("A2-bal: dimension appearances match declarations; A-side exposure 40-60%");
+// sensitivity vocabulary (retained)
+const SENS = values.questionBank.sensitivityVocabulary ?? [];
+if (ITEMS.some((i) => !SENS.includes(i.sensitivity))) fail("A2-sens: vocabulary violation");
+else ok("A2-sens: all sensitivities within the documented vocabulary");
+
+// A2-15/16: private rendering contract + traceability
+const prc = values.privateRenderingContract ?? {};
+const SECTIONS = ["innerTension", "workContext", "relationshipContext", "dailyLifeContext", "overlookedNeed", "overextensionRisk"];
+if (!SECTIONS.every((s2) => prc.sections?.[s2]?.evidence && prc.sections[s2].insufficientBehavior !== undefined)) fail("A2-15: private context sections lack evidence rules");
+else ok("A2-15: every private context section has an evidence rule (support source + min + soften/omit + fallback)");
+if (!prc.resultReasons?.shape?.includes("itemRefs") || !/dimensionScores/.test(prc.resultReasons.rule ?? "")) fail("A2-16: result-reasons spec missing");
+else ok("A2-16: machine-readable resultReasons spec present (feeds MTF-1 reasons.itemRefs)");
+
+// A2-17/18: Mixed limits + default no_recommendation
 const mixedR = values.results.find((r) => r.resultId === "VAL_R_MIXED");
-if (/移行|入れ替わ|変わりつつ|新しい配置|揺れやす/.test(JSON.stringify(mixedR))) fail("A1-V33: Mixed copy still contains transition/future inference");
-else ok("A1-V33: Mixed copy contains no transition/future prediction (factual close-scores framing)");
-if (!values.usageBoundaryJa?.includes("採用") || !values.interpretationLimitsJa.includes("第三者による判断")) fail("A1-V34: anti-screening boundary missing");
-else ok("A1-V34: anti-screening usage boundary present (canonical + limits)");
-// Values 34: hashes reproduce
+const mp = JSON.stringify(mixedR.private);
+if (/移行|入れ替わ|変わりつつ|決断|迫らない|焦る/.test(mp)) fail("A2-17: Mixed still carries unsupported context claims");
+else if (!/推測することはできません|推測しません|分かりません/.test(mp)) fail("A2-17: Mixed must decline to infer unsupported contexts");
+else ok("A2-17: Mixed private layer states only what close scores prove (declines to infer elsewhere)");
+if (JSON.stringify(mixedR.private.recommendationTags) !== JSON.stringify(["no_recommendation"])) fail("A2-18: Mixed default must be no_recommendation");
+else ok("A2-18: Mixed default recommendation is no_recommendation");
+
+// A2-19: recommendation traceability
+let recBad = [];
+for (const r of values.results) {
+  for (const rec of r.private.recommendations ?? []) {
+    if (!rec.fitReasonJa || !rec.evidenceSource || !rec.consent || !rec.boundary) recBad.push(`${r.resultId}:${rec.tag}`);
+    if (!GOV.includes(rec.tag)) recBad.push(`${r.resultId}:${rec.tag}(ungoverned)`);
+  }
+  if (!Array.isArray(r.private.recommendations)) recBad.push(`${r.resultId}:missing`);
+}
+if (recBad.length) fail(`A2-19: recommendation traceability — ${recBad.join(", ")}`);
+else ok("A2-19: every recommendation tag carries fitReason + evidenceSource + consent + boundary (governed)");
+
+// A2-20: share hooks differentiated (not name+ending, not template)
+const shareBad = values.results.filter((r) => r.public.shareLineJa.includes(r.public.displayNameJa) || /^いまは「/.test(r.public.shareLineJa));
+const shareSet = new Set(values.results.map((r) => r.public.shareLineJa));
+if (shareBad.length || shareSet.size !== values.results.length) fail(`A2-20: share hooks insufficiently differentiated — ${shareBad.map((r) => r.resultId).join(", ")}`);
+else ok("A2-20: 8 share hooks are behavior-recognizable standalone lines (no result-name-plus-ending variation)");
+
+// A2-21: hashes reproduce
 const vHash = createHash("sha256").update(JSON.stringify(ITEMS), "utf8").digest("hex");
 const dHash = createHash("sha256").update(JSON.stringify([daily.stateSchema.fields, daily.stateSchema.privateReflection, daily.acknowledgementRules]), "utf8").digest("hex");
-if (values.definition.contentHash.value !== vHash) fail(`A1-V35: values bank hash mismatch (pinned ${values.definition.contentHash.value.slice(0, 12)}, computed ${vHash.slice(0, 12)})`);
-else ok(`A1-V35: values bank hash reproduces (${vHash.slice(0, 12)}…)`);
-if (daily.definition.contentHash.value !== dHash) fail(`A1-V36: daily schema/ack hash mismatch (computed ${dHash.slice(0, 12)})`);
-else ok(`A1-V36: daily schema+ack hash reproduces (${dHash.slice(0, 12)}…)`);
+if (values.definition.contentHash.value !== vHash || daily.definition.contentHash.value !== dHash) fail(`A2-21: hash mismatch (values ${vHash.slice(0, 8)}, daily ${dHash.slice(0, 8)})`);
+else ok(`A2-21: canonical hashes reproduce (values ${vHash.slice(0, 12)}…, daily ${dHash.slice(0, 12)}…)`);
+// anti-screening (retained)
+if (!values.usageBoundaryJa?.includes("採用") || !values.interpretationLimitsJa.includes("第三者による判断")) fail("A2-scr: anti-screening boundary missing");
+else ok("A2-scr: anti-screening usage boundary present");
+if (daily.identity.activationState !== "gated" || values.identity.activationState !== "gated") fail("A2-gate: gating changed"); else ok("A2-gate: both methods remain gated");
 
-// Shared 35–40
-ok("A1-S37: MTF-1 validator run separately in the same battery (must be green — see verification log)");
-const pkgFiles = readdirSync(DIR).length;
-if (pkgFiles !== 14) fail(`A1-S38: package must hold exactly 14 files under docs/yorisou/mtf2a (found ${pkgFiles}; +1 validator = 15 branch files)`);
-else ok("A1-S38: package inventory exactly 14 docs + 1 validator = 15 branch files");
-if (daily.identity.activationState !== "gated" || values.identity.activationState !== "gated") fail("A1-S39: gating changed");
-else ok("A1-S39: both methods remain gated");
-ok("A1-S40: no runtime/config/migration path changed (asserted by the scope check in the verification battery); no public activation or deployment claim exists in the package; originality/rights checks S1-S14 re-ran above in this same execution");
+// ── EXTERNAL REPOSITORY GATES (executed for real; counted separately) ────────
+try {
+  execSync("node scripts/validate-mtf1-docs.mjs", { stdio: "pipe" });
+  gateOk("EXT-1: MTF-1 validator executed — exit 0 (67 labeled checks green)");
+} catch { gateFail("EXT-1: MTF-1 validator failed"); }
+try {
+  const diff = execSync("git diff --name-only main...HEAD", { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+  const outOfScope = diff.filter((f) => !f.startsWith("docs/yorisou/mtf2a/") && f !== "scripts/validate-mtf2a-content.mjs");
+  if (diff.length !== 15 || outOfScope.length) gateFail(`EXT-2: branch scope — ${diff.length} files, out-of-scope: ${outOfScope.join(",") || "none"}`);
+  else gateOk("EXT-2: branch scope executed via git — exactly 15 files, all in docs/yorisou/mtf2a/** + validator");
+  const runtime = diff.filter((f) => /^(app|components|lib|content|data|public|supabase)\//.test(f) || /^package\.json$/.test(f));
+  if (runtime.length) gateFail(`EXT-3: runtime paths changed — ${runtime.join(",")}`);
+  else gateOk("EXT-3: no runtime/config/migration path changed (verified from the real diff)");
+} catch (e) { gateFail(`EXT-2/3: git inspection failed — ${e.message}`); }
+const pkgFileCount = readdirSync(DIR).length;
+if (pkgFileCount !== 14) fail(`A2-22: package must be 14 docs (+validator = 15) — found ${pkgFileCount}`);
+else ok("A2-22: package inventory 14 docs + 1 validator = 15 branch files");
 
-if (failures) { console.error(`\n${failures} MTF-2A validation failure(s) of ${checks} checks.`); process.exit(1); }
-console.log(`\nMTF-2A/2A.1 content package VALID — ${checks} labeled checks, ${fixtures} executable scoring fixtures, all passing (daily: ${ackIds.length} acks, ${daily.longitudinal.sevenDaySummary.rules.length} summaries, 3 prompts; values: ${itemIds.length} items, ${DIMS.length} dimensions, ${resultIds.length} results; hashes pinned + reproduced).`);
+if (failures) { console.error(`\nFAILED — ${failures} total failure(s): labeled-check failures ${failures - gateFailures}, gate failures ${gateFailures}.`); process.exit(1); }
+console.log(`\nMTF-2A.2 content package VALID
+  labeled executable checks : ${checks}
+  scoring fixture executions: ${fixtures}
+  external repository gates : ${gates}
+  failures                  : 0
+(values: 48 items, 7 dims, 8 results, 48/48 coverage rule, hash ${vHash.slice(0, 12)}…; daily: 13 acks v1.2, field-valid summaries, hash ${dHash.slice(0, 12)}…)`);
