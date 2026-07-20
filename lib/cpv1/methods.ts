@@ -485,6 +485,11 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
   }),
 
   // Reflection cadence originals (contract-level; understanding integration) ---
+  // DCI-1 §8 — RETAINED as the UMBRELLA planning entry for periodic reflection
+  // (weekly/monthly/seasonal/annual). NOT renamed, NOT deleted. The first CONCRETE
+  // implementable method under this umbrella is `daily-check-in` (next entry);
+  // see DAILY_CHECK_IN_RECONCILIATION. The two entries are distinct method
+  // identities — no duplicate public identity exists (contract-tested).
   {
     ...originalRouteVerified({
       methodId: "reflection-cadence",
@@ -494,7 +499,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
       role: "reflection_cadence",
       requiredInputs: ["text"],
       sensitiveInputs: ["text"],
-      model: "structured periodic reflection prompts → private reflection observations",
+      model: "structured periodic reflection prompts → private reflection observations (umbrella planning entry; daily cadence realized concretely by daily-check-in)",
       methodVersion: "reflect-cadence-v0.1",
       resultSchema: "reflection-observation",
       reportSchema: "change-over-time-report",
@@ -505,6 +510,38 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     tests: "not_run",
     routeEvidence: "none", // §4 — unbuilt: no route exists on production main
     // Real original method, but CPV1 surface integration is contract-level (not yet public).
+  },
+
+  // DCI-1 — daily-check-in「きょうの空模様」: the concrete recorded_state daily
+  // method (canonical content: docs/yorisou/mtf2a/daily-check-in.v1.json, content
+  // status FOUNDER_APPROVED_IMPLEMENTATION_GATED after MTF-2A Forge step 20).
+  // Implementation exists as a DCI-1 feature-branch candidate pending Founder
+  // Review — `implementation` stays "in_progress" (NOT "complete") until Founder
+  // acceptance, so the derived activation state remains exactly `gated`.
+  // routeEvidence is "none": the route is NOT on production main. founderActivation
+  // "closed": content approval is NOT public-activation. devFlagged: Preview only
+  // behind dci_daily_check_in_preview.
+  {
+    ...originalRouteVerified({
+      methodId: "daily-check-in",
+      nameJa: "きょうの空模様",
+      nameEn: "Daily check-in",
+      family: "yorisou_state",
+      role: "reflection_cadence",
+      requiredInputs: ["selection"],
+      sensitiveInputs: ["selection", "text"],
+      model: "recorded_state: 5 structured state fields + optional private memo → StateRecordResult (yorisouScoring: null; no archetype, no score)",
+      methodVersion: "daily-check-in-v1.0",
+      resultSchema: "StateRecordResult",
+      reportSchema: "daily-longitudinal-v1 (7/30-day field-valid timelines; no conventional report)",
+      interpretationLimits: "状態の記録。診断・点数・優劣の判定ではない。",
+      refreshModel: "daily, streak-free (gaps carry no penalty)",
+    }),
+    optionalInputs: ["text"],
+    implementation: "in_progress", // DCI-1 candidate on feature branch; pending Founder Review
+    routeEvidence: "none", // route NOT on production main (branch only)
+    founderActivation: "closed", // content approved (step 20) ≠ public activation
+    devFlagged: true,
   },
 
   // Chinese cultural & traditional — RIGHTS_BLOCKED (no fabricated content) -----
@@ -792,6 +829,16 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     routeEvidence: "none", // §4 — unbuilt: no route exists on production main
   },
 ] as const;
+
+// DCI-1 §8 — explicit, contract-tested registry reconciliation between the
+// umbrella planning entry and the first concrete implementable method under it.
+// Neither entry was renamed or deleted; the identities stay distinct.
+export const DAILY_CHECK_IN_RECONCILIATION = {
+  umbrellaMethodId: "reflection-cadence",
+  concreteMethodId: "daily-check-in",
+  relationship:
+    "daily-check-in is the concrete daily recorded_state method realizing the daily cadence of the reflection-cadence umbrella; reflection-cadence remains a future planning entry for weekly/monthly/seasonal/annual cadences and is not superseded",
+} as const;
 
 const BY_ID = new Map(CPV1_METHOD_UNIVERSE.map((m) => [m.methodId, m]));
 export function getMethod(id: string): MethodRegistryEntry | undefined {
