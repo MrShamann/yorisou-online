@@ -1,0 +1,85 @@
+name: CPV1-CM0 CI
+
+# CPV1-CM0 — focused CI for the clean-main CPV1 contract/schema/verification foundation.
+# The CM0 branch (feat/cpv1-clean-main-foundation) is stacked ONLY on clean `main`, not on
+# PR #113/#114. This workflow runs the clean CPV1 contract test, typecheck, focused lint,
+# the migration-SQL guard, a changed-content secret scan, and the build — all independent
+# of the stacked branches. No axe: CM0 changes no user-facing route markup.
+
+on:
+  push:
+    branches: [feat/cpv1-clean-main-foundation]
+  pull_request:
+    branches: [main, feat/cpv1-clean-main-foundation]
+  workflow_dispatch:
+
+concurrency:
+  group: cpv1-cm0-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  foundation:
+    name: CPV1-CM0 contracts, types, migration + secret guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the branch-diff secret scan can resolve origin/main..HEAD
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Focused lint (CPV1 foundation — hard gate)
+        run: npx eslint lib/cpv1 scripts/validate-cpv1-migrations.mjs
+
+      - name: Migration-SQL guard (forward additive; rollback = LOCAL_DISPOSABLE_SCHEMA_ROLLBACK)
+        run: node scripts/validate-cpv1-migrations.mjs
+
+      - name: Secret-pattern hard gate
+        run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"
+
+      - name: Install gitleaks
+        run: |
+          curl -sSL -o /tmp/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+
+      - name: Changed-content secret scan (HARD gate — origin/main..HEAD)
+        run: |
+          git fetch --no-tags origin main
+          /tmp/gitleaks detect --no-banner --redact --exit-code 1 --log-opts="origin/main..HEAD"
+
+      - name: gitleaks full history (report-only — pre-existing main debt)
+        run: /tmp/gitleaks detect --no-banner --redact --exit-code 0 || true
+
+      - name: CPV1 clean-main contract test (pure lib/cpv1; no branch-only imports)
+        run: npm run test:cpv1
+
+      - name: Clean-main regression (definitions, return-loop — proving no CPV1 regression on main)
+        run: |
+          npm run test:c02
+          npm run test:relationship-fatigue
+
+  build:
+    name: Build (clean main + CPV1 foundation, independent of PR #113/#114)
+    runs-on: ubuntu-latest
+    needs: foundation
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          YORISOU_SHARED_STORE_REGION: us-east-2
+          OPENAI_MODEL: gpt-4.1-mini
+          MISTRAL_MODEL: mistral-small-latest
