@@ -4,7 +4,7 @@ Runtime-truth audit: every method previously classified public-active was checke
 for an **actual runtime chain** (route → flow → result), not a registry
 declaration. A registry entry is not evidence of implementation. Methods whose
 full runtime chain could not be proven were downgraded. **Corrected count: 9
-public-active (was 10).**
+production-route-verified (`implemented_route_verified`, was over-claimed as 10 `public_active`; R1.1 §4: 0 `public_active`).**
 
 ## Public-active — PROVEN (9)
 
@@ -41,9 +41,9 @@ real questions/scoring/result. Live-verified in the CPV1 Preview build.
 ## Result
 
 - **Public-active method count corrected everywhere: 9** (not 10). The registry,
-  `publicMethods()`, the capability matrix, and the evidence now use 9.
+  `productionRouteVerifiedMethods()`, the capability matrix, and the evidence now use 9 route-verified (0 `public_active`).
 - No protected questions, scoring, taxonomy, result IDs, or report mappings were
   changed — only the maturity classification of unbuilt methods.
-- Enforced by `cpv1Completion.test.ts` §5 (exactly 9 public, each with a real
+- Enforced by `cpv1Completion.test.ts` §5 (exactly 9 production-route-verified, each with a real
   non-redirect route + flow; `yorisou-values` downgraded; redirect-only routes
   unregistered).

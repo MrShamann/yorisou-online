@@ -23,15 +23,16 @@ work is local/Preview only; production is untouched.
 - **Rights-route matrix + per-route fixtures** — `lib/cpv1/rights.ts` (`ROUTE_RULES`,
   `rightsResolutionReport`); contract tests `cpv1Completion.test.ts` §3 (per-route pass/fail).
 - **Seven maturity dimensions** — `methodMaturity()` (implementation · rights · content · privacy ·
-  tests · founderActivation · publicRoute); `methodActivationState` ∈ `public_active |
-  implemented_private | gated | retired` (no collapsed `rights_blocked`). Tests §4.
-- **Corrected public count** — **9 public-active** (`publicMethods().length === 9`); 18 gated.
+  tests · route · founderActivation · publicRoute); `methodActivationState` ∈ `public_active |
+  implemented_route_verified | implemented_private | gated | retired` (no collapsed `rights_blocked`;
+  route/deployment/Founder-activation are separate — R1.1 §4). Tests §4.
+- **Corrected count (R1.1 §4)** — **0 `public_active`** (no evidenced Founder activation; `publicMethods()`===0); **9 `implemented_route_verified`** (`productionRouteVerifiedMethods()`===9); 18 gated. See METHOD_STATE_TRUTH_TABLE_R1.1.
   See [`RUNTIME_TRUTH_R1.md`](./RUNTIME_TRUTH_R1.md) and `92_CPV1_METHOD_RUNTIME_RECONCILIATION.md`.
 
 ## Runtime truth (per method)
 
 [`RUNTIME_TRUTH_R1.md`](./RUNTIME_TRUTH_R1.md) — all 27 methods with route / reachability / input /
-calculation / result / report / save-history / tests / maturity / public-route decision. 9 public-active
+calculation / result / report / save-history / tests / maturity / public-route decision. 9 `implemented_route_verified`
 (real non-redirect routes + flows), 3 unbuilt originals + 15 external all `gated` (route: none).
 
 ## History, consent and deletion
@@ -72,7 +73,10 @@ protection (exact blocker recorded, not bypassed).
 [`REMOTE_CI_R1.md`](./REMOTE_CI_R1.md) + closeout report — `CPV1-R1 CI` workflow.
 - **Hard gates**: tsc, focused lint (R1/CPV1), migration-SQL guard, secret-pattern grep, **changed-content
   gitleaks (`origin/main..HEAD`, 11A.8)**, fresh axe. **Report-only**: full-repo eslint, full-history gitleaks.
-- Final-HEAD run URL + conclusion recorded in the §16 closeout after the last push.
+- **Final HEAD `231aa7e`**: PR-check run (tied to the final HEAD) = `pull_request` run
+  [29693246945](https://github.com/MrShamann/yorisou-online/actions/runs/29693246945) — SUCCESS; the
+  `push` run [29693245585](https://github.com/MrShamann/yorisou-online/actions/runs/29693245585) is also
+  SUCCESS on 231aa7e. Both bindings GitHub-verified.
 
 ## Capability matrix and blockers (separated)
 

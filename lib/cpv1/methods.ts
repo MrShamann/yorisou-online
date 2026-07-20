@@ -37,24 +37,36 @@ export type MethodRightsStatus = "review_required" | "cleared" | "blocked";
 export type ContentStatus = "not_authored" | "draft" | "authored" | "licensed";
 export type PrivacyStatus = "not_reviewed" | "reviewed";
 export type TestStatus = "not_run" | "passing";
-export type FounderActivationStatus = "closed" | "open";
+// CPV1-R1.1 §4 — Founder PUBLIC activation is its own concept and is NEVER inferred
+// from a code constructor. `unverified` is the honest default: no evidenced Founder
+// decision to make the method publicly available. It is distinct from the method's
+// RIGHTS activation gate (rights.activationGate) and from route/deployment state.
+export type FounderActivationStatus = "unverified" | "closed" | "open";
+// CPV1-R1.1 §4 — where a method's route is EVIDENCED to exist. `production_main_present`
+// means the route file is present on production `main` (git-verified) — this is NOT a
+// claim that a live server is serving it, nor that CPV1 has Founder-activated it.
+export type RouteStatus = "none" | "preview_only" | "production_main_present";
 export type PublicRouteStatus = "unavailable" | "available";
 
 export type MethodMaturity = {
-  implementation: ImplementationStatus;
-  rights: MethodRightsStatus;
-  content: ContentStatus;
-  privacy: PrivacyStatus;
-  tests: TestStatus;
-  founderActivation: FounderActivationStatus;
-  publicRoute: PublicRouteStatus;
+  implementation: ImplementationStatus; // is the method's own logic built?
+  rights: MethodRightsStatus; // rights clearance
+  content: ContentStatus; // interpretation/result content authored/licensed?
+  privacy: PrivacyStatus; // privacy review recorded?
+  tests: TestStatus; // tests passing?
+  route: RouteStatus; // route existence + environment where evidenced (§4)
+  founderActivation: FounderActivationStatus; // explicit Founder public-activation (§4)
+  publicRoute: PublicRouteStatus; // DERIVED public availability — true only if ALL above hold
 };
 
-// A coarse summary label (NOT a replacement for the seven dimensions — read
-// methodMaturity() for the real per-dimension truth). Never collapses blockers.
+// A coarse summary label (NOT a replacement for the maturity dimensions — read
+// methodMaturity() for the real per-dimension truth). Never collapses blockers, and
+// never equates "route exists on main" with "deployed to production" with "Founder
+// public-activation".
 export type MethodActivationState =
-  | "public_active" // every dimension passes; on a public route
-  | "implemented_private" // implemented + rights cleared, not yet Founder-activated
+  | "public_active" // ALL evidenced incl. production deployment + explicit Founder activation
+  | "implemented_route_verified" // implemented + tests pass + route present on production main, but NO evidenced Founder public-activation (§4)
+  | "implemented_private" // implemented + rights cleared, no production route
   | "gated" // one or more dimensions unmet (see methodMaturity for which)
   | "retired";
 
@@ -88,6 +100,10 @@ export type MethodRegistryEntry = {
   privacy: PrivacyStatus;
   tests: TestStatus;
   rights: RightsRecord; // rights status derives from the route-specific gate
+  // CPV1-R1.1 §4 — route/environment and Founder public-activation are SEPARATE,
+  // explicit fields (never inferred from a constructor).
+  routeEvidence: RouteStatus; // where the method's route is evidenced to exist
+  founderActivation: FounderActivationStatus; // explicit Founder public-activation decision
   devFlagged: boolean; // true ⇒ visible only in dev preview, never public
 };
 
@@ -127,12 +143,17 @@ function deriveRightsStatus(r: RightsRecord): MethodRightsStatus {
   return report.unresolved.some((u) => u.includes(":blocked")) ? "blocked" : "review_required";
 }
 
-// CPV1-R1 §4 — the seven separate maturity dimensions. `founderActivation` is the
-// single source of truth (the rights activation gate). `publicRoute` is available
-// ONLY when every dimension passes AND the method is not dev-flagged.
+// CPV1-R1 §4 / R1.1 §4 — the separate maturity dimensions. `founderActivation` is an
+// EXPLICIT registry field (never derived from the rights gate or a constructor).
+// `route` is the evidenced route/environment. `publicRoute` (public AVAILABILITY) is
+// available ONLY when every internal dimension passes AND an explicit Founder
+// public-activation is recorded (`open`) AND the route is present on production main
+// AND the method is not dev-flagged. Route-exists / deployed / Founder-approved are
+// never equated.
 export function methodMaturity(m: MethodRegistryEntry): MethodMaturity {
   const rights = deriveRightsStatus(m.rights);
-  const founderActivation: FounderActivationStatus = m.rights.activationGate;
+  const founderActivation: FounderActivationStatus = m.founderActivation;
+  const route: RouteStatus = m.routeEvidence;
   const publicRoute: PublicRouteStatus =
     m.implementation === "complete" &&
     rights === "cleared" &&
@@ -140,6 +161,7 @@ export function methodMaturity(m: MethodRegistryEntry): MethodMaturity {
     m.privacy === "reviewed" &&
     m.tests === "passing" &&
     founderActivation === "open" &&
+    route === "production_main_present" &&
     !m.devFlagged
       ? "available"
       : "unavailable";
@@ -149,6 +171,7 @@ export function methodMaturity(m: MethodRegistryEntry): MethodMaturity {
     content: m.content,
     privacy: m.privacy,
     tests: m.tests,
+    route,
     founderActivation,
     publicRoute,
   };
@@ -169,16 +192,23 @@ export function methodPrimaryBlocker(m: MethodRegistryEntry): keyof MethodMaturi
   if (mt.content !== "authored" && mt.content !== "licensed") return "content";
   if (mt.privacy !== "reviewed") return "privacy";
   if (mt.tests !== "passing") return "tests";
+  if (mt.route !== "production_main_present") return "route";
   if (mt.founderActivation !== "open") return "founderActivation";
   if (m.devFlagged) return "dev_flagged";
   return null;
 }
 
 // A coarse summary label. The real truth is methodMaturity(); this never collapses
-// distinct blockers into one.
+// distinct blockers into one, and never equates route-exists with production
+// deployment or with Founder public-activation.
 export function methodActivationState(m: MethodRegistryEntry): MethodActivationState {
   const mt = methodMaturity(m);
   if (mt.publicRoute === "available") return "public_active";
+  // Implemented + tested + route present on production main, but WITHOUT an evidenced
+  // Founder public-activation ⇒ route-verified, NOT publicly activated (§4).
+  if (mt.implementation === "complete" && mt.tests === "passing" && mt.route === "production_main_present") {
+    return "implemented_route_verified";
+  }
   if (mt.implementation === "complete" && mt.rights === "cleared") return "implemented_private";
   return "gated";
 }
@@ -193,9 +223,13 @@ const common = {
   deletionRule: "user-deletable; deletion propagates to derived understanding",
 };
 
-// A YORISOU-original, already-implemented, publicly-active method (mirrors the
-// real shipped assessments/reflections).
-function originalActive(
+// A YORISOU-original method whose route is verified PRESENT on production `main`
+// (git-evidenced) and whose logic/content/tests are complete. R1.1 §4: this does NOT
+// assert an evidenced Founder PUBLIC-activation — `founderActivation` is `unverified`
+// (never inferred from this constructor). Its coarse state is therefore
+// `implemented_route_verified`, not `public_active`. Rights are cleared (YORISOU owns
+// them) but rights-activation is a separate concept from Founder public-activation.
+function originalRouteVerified(
   e: Pick<MethodRegistryEntry, "methodId" | "nameJa" | "nameEn" | "family" | "role" | "requiredInputs" | "sensitiveInputs" | "model" | "methodVersion" | "resultSchema" | "reportSchema" | "interpretationLimits" | "refreshModel">,
 ): MethodRegistryEntry {
   return {
@@ -208,7 +242,9 @@ function originalActive(
     content: "authored",
     privacy: "reviewed",
     tests: "passing",
-    rights: yorisouOriginal(e.methodId, { activated: true }),
+    rights: yorisouOriginal(e.methodId, { activated: true }), // rights cleared (self-owned)
+    routeEvidence: "production_main_present", // route file present on production main (git-verified)
+    founderActivation: "unverified", // §4 — NOT inferred; no evidenced Founder public-activation
     devFlagged: false,
     ...e,
   } as MethodRegistryEntry;
@@ -241,6 +277,8 @@ function externalRightsBlocked(
       requiresEphemeris: e.requiresEphemeris,
       requiresArtwork: e.requiresArtwork,
     }),
+    routeEvidence: "none", // §4 — no route exists for an unbuilt external method
+    founderActivation: "closed", // §4 — explicitly not Founder-activated
     devFlagged: true,
     ...e,
   } as MethodRegistryEntry;
@@ -249,7 +287,7 @@ function externalRightsBlocked(
 // ── The method universe ───────────────────────────────────────────────────────
 export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
   // YORISOU-original, implemented, active (mirror of the shipped app) ----------
-  originalActive({
+  originalRouteVerified({
     methodId: "imairo-120q",
     nameJa: "いま色テスト（120問）",
     nameEn: "Imairo 120Q",
@@ -264,7 +302,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "今の傾向の整理。医学的・心理的診断ではない。回答はその日の状態でも変わる。",
     refreshModel: "retake anytime; history-preserving",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "c02-current-state",
     nameJa: "今のわたしチェック",
     nameEn: "Current-state check",
@@ -279,7 +317,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "今の状態のスナップショット。判定ではない。",
     refreshModel: "frequent; snapshot per completion",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "relationship-fatigue-24q",
     nameJa: "人間関係の疲れチェック",
     nameEn: "Relationship-fatigue check",
@@ -294,7 +332,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "会う・返す・合わせるの負担の傾向。関係の結論を決めるものではない。",
     refreshModel: "retake anytime",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "f01-work-fit",
     nameJa: "向いている働き方",
     nameEn: "Work-fit",
@@ -309,7 +347,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "向いている方向の傾向。適職や能力の断定ではない。",
     refreshModel: "retake anytime",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "f02-workplace-fit",
     nameJa: "職場環境フィット",
     nameEn: "Workplace-fit",
@@ -324,7 +362,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "環境との相性の傾向。職場の良し悪しの判定ではない。",
     refreshModel: "retake anytime",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "love-distance",
     nameJa: "恋愛の距離感チェック",
     nameEn: "Love-distance",
@@ -339,7 +377,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "距離の取り方の傾向。恋愛の成否や相性の判定ではない。",
     refreshModel: "retake anytime",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "work-rhythm",
     nameJa: "仕事のリズムチェック",
     nameEn: "Work-rhythm",
@@ -354,7 +392,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "今のリズムの傾向。能力や健康状態の判定ではない。",
     refreshModel: "retake anytime",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "local-life",
     nameJa: "暮らしの関心チェック",
     nameEn: "Local-life",
@@ -369,7 +407,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "今の関心とリズムの傾向。暮らしの良し悪しの判定ではない。",
     refreshModel: "retake anytime",
   }),
-  originalActive({
+  originalRouteVerified({
     methodId: "name-impression",
     nameJa: "名前の印象チェック",
     nameEn: "Name-impression",
@@ -387,7 +425,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
 
   // Reflection cadence originals (contract-level; understanding integration) ---
   {
-    ...originalActive({
+    ...originalRouteVerified({
       methodId: "reflection-cadence",
       nameJa: "ふり返り（日次・週次・月次・季節・年次）",
       nameEn: "Reflection cadence",
@@ -404,6 +442,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     }),
     implementation: "not_started",
     tests: "not_run",
+    routeEvidence: "none", // §4 — unbuilt: no route exists on production main
     // Real original method, but CPV1 surface integration is contract-level (not yet public).
   },
 
@@ -641,7 +680,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     rightsSource: "trademarked; import/handoff/licence only",
   }),
   {
-    ...originalActive({
+    ...originalRouteVerified({
       methodId: "yorisou-values",
       nameJa: "価値観リフレクション",
       nameEn: "Values reflection",
@@ -664,10 +703,12 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     content: "not_authored",
     tests: "not_run",
     rights: yorisouOriginal("yorisou-values", { activated: false }),
+    routeEvidence: "none", // §4 — unbuilt: no route exists on production main
+    founderActivation: "unverified",
     devFlagged: true,
   },
   {
-    ...originalActive({
+    ...originalRouteVerified({
       methodId: "yorisou-motivation",
       nameJa: "動機リフレクション",
       nameEn: "Motivation reflection",
@@ -684,6 +725,7 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     }),
     implementation: "not_started",
     tests: "not_run", // original but CPV1 surface integration is contract-level (not yet public)
+    routeEvidence: "none", // §4 — unbuilt: no route exists on production main
   },
 ] as const;
 
@@ -692,9 +734,20 @@ export function getMethod(id: string): MethodRegistryEntry | undefined {
   return BY_ID.get(id);
 }
 
-// Methods that MAY be shown on a public route right now (gate passes).
+// Methods CPV1 asserts as PUBLICLY ACTIVATED right now — requires ALL dimensions
+// incl. an EXPLICIT evidenced Founder public-activation (§4). This is deliberately
+// strict: with no evidenced Founder activation, this is empty. It does NOT mean the
+// underlying product routes are offline (see productionRouteVerifiedMethods).
 export function publicMethods(): MethodRegistryEntry[] {
   return CPV1_METHOD_UNIVERSE.filter(methodPublicallyActivatable);
+}
+
+// Methods whose route is verified PRESENT on production `main` (git-evidenced) and
+// whose logic/content/tests are complete — but WITHOUT an evidenced CPV1 Founder
+// public-activation. §4: "route present on production main" is NOT equated with
+// "CPV1-activated public availability".
+export function productionRouteVerifiedMethods(): MethodRegistryEntry[] {
+  return CPV1_METHOD_UNIVERSE.filter((m) => methodActivationState(m) === "implemented_route_verified");
 }
 
 // Rights-blocked methods (never public; visible in dev preview only).

@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 // CPV1 / CPV1-R1 migration-SQL guard (CI-runnable, no database required).
 //
-// The CPV1 platform migrations are contractually ADDITIVE, REVERSIBLE and
-// RLS-preserving (never destructive to existing production data). This static
-// validator enforces that contract in CI so a regression cannot land unnoticed.
-// It does NOT replace the local-Supabase apply+reversibility proof (that ran on a
-// real Postgres) — it guards the same invariants on every push.
+// Scope of what this guard certifies (R1.1-corrected wording): it certifies the
+// FORWARD migration is ADDITIVE (idempotent column adds, no destructive statement in
+// executable SQL). It does NOT — and must NOT — certify the ROLLBACK as
+// non-destructive. The CPV1 rollback recipes drop tables/columns/constraints and are
+// therefore STRUCTURALLY + DATA DESTRUCTIVE; their classification is
+// `LOCAL_DISPOSABLE_SCHEMA_ROLLBACK` (safe only in a disposable local/test database;
+// NOT a production rollback). This validator additionally REQUIRES that any migration
+// whose rollback recipe drops objects declares that classification explicitly.
+// It does NOT replace the local-Supabase apply proof (that ran on a real Postgres).
 //
 // Checks per CPV1 migration file:
 //   1. Column adds use `add column if not exists` (idempotent + additive).
@@ -15,6 +19,9 @@
 //      comments (the documented rollback recipe).
 //   4. The R1 event-type constraint is named (not an anonymous check) so it can be
 //      dropped/re-added deterministically.
+//   5. Any migration whose COMMENTS contain a drop-based rollback recipe must carry
+//      the truthful `LOCAL_DISPOSABLE_SCHEMA_ROLLBACK` classification and must NOT
+//      claim the rollback is "non-destructive".
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -80,6 +87,19 @@ for (const file of TARGETS) {
       if (re.test(stmt)) fail(file, `destructive statement head in executable SQL: "${label}" → ${stmt.slice(0, 60)}…`);
     }
   }
+
+  // 5. truthful rollback classification. A rollback recipe that drops tables/columns
+  //    is DESTRUCTIVE and must be declared LOCAL_DISPOSABLE_SCHEMA_ROLLBACK and must
+  //    NOT be labelled "non-destructive".
+  const rollbackDrops = /drop\s+(table|column)/i.test(raw);
+  if (rollbackDrops) {
+    if (!/LOCAL_DISPOSABLE_SCHEMA_ROLLBACK/.test(raw)) {
+      fail(file, "drop-based rollback recipe without the truthful LOCAL_DISPOSABLE_SCHEMA_ROLLBACK classification");
+    }
+    if (/non-destructive/i.test(raw)) {
+      fail(file, 'rollback recipe drops tables/columns but the file claims "non-destructive" somewhere');
+    }
+  }
 }
 
 // 4. R1 constraint is named (only the R1 migration is required to carry it)
@@ -95,5 +115,8 @@ if (failures) {
   console.error(`\n${failures} migration validation failure(s).`);
   process.exit(1);
 }
-console.log(`CPV1 migration guard: ${TARGETS.length} file(s) additive + reversible + non-destructive.`);
+console.log(
+  `CPV1 migration guard: ${TARGETS.length} file(s) — FORWARD additive; rollback classified ` +
+    `LOCAL_DISPOSABLE_SCHEMA_ROLLBACK (destructive; disposable-local only — NOT a production rollback).`,
+);
 console.log(`  ${TARGETS.join("\n  ")}`);

@@ -1,11 +1,27 @@
-# CPV1-R1 §11 — Remote CI evidence (recorded successful run)
+# CPV1-R1 — Remote CI evidence (recorded successful runs)
 
 **Workflow:** `CPV1-R1 CI` ([`.github/workflows/cpv1-r1-ci.yml`](../../../../.github/workflows/cpv1-r1-ci.yml)) · id `316191987`
-**Recorded run:** [`29689729276`](https://github.com/MrShamann/yorisou-online/actions/runs/29689729276)
-**Event:** `push` · **Branch:** `feat/cpv1-integrated-platform` · **Head SHA:** `8439b86de76a37c9b47847be8eea89b3b82eb4aa`
-**Conclusion:** ✅ `success` · **Window:** 2026-07-19T13:52:51Z → 13:55:47Z
 
-This satisfies the §11 rule: GitHub Actions success is claimed **only** against a recorded run whose head SHA equals the pushed Part-A HEAD (`git rev-parse HEAD` = `8439b86…`, identical to the run's `headSha`). A second run (`pull_request` event) also fired for PR #114.
+## FINAL HEAD `231aa7e` (R1.1-corrected)
+
+GitHub records two green `CPV1-R1 CI` runs on the final HEAD `231aa7e7a8748bcb48044c623e3821aae5d5f339`;
+**both are on the final HEAD, both `success`.** The **PR-check run tied to the final HEAD** is the
+`pull_request` run:
+
+| Run | Event | Head SHA | Conclusion |
+|---|---|---|---|
+| [`29693246945`](https://github.com/MrShamann/yorisou-online/actions/runs/29693246945) **(PR-check / final-HEAD)** | `pull_request` | `231aa7e` | ✅ success |
+| [`29693245585`](https://github.com/MrShamann/yorisou-online/actions/runs/29693245585) | `push` | `231aa7e` | ✅ success |
+
+Both run→sha bindings were verified from GitHub via `gh run view`. (An earlier evidence draft cited only
+the `push` run `29693245585`; R1.1 §2 corrects the canonical reference to the `pull_request` PR-check run
+`29693246945`, and lists both.)
+
+## Part-A HEAD `8439b86` (historical, full code surface)
+
+**Recorded run:** [`29689729276`](https://github.com/MrShamann/yorisou-online/actions/runs/29689729276)
+**Event:** `push` · **Head SHA:** `8439b86de76a37c9b47847be8eea89b3b82eb4aa` · **Conclusion:** ✅ `success`.
+The step tables below are from this Part-A run (the workflow definition is identical on the final HEAD).
 
 ## Job 1 — Contracts, types, migration + secret guards → success
 

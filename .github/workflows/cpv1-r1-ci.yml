@@ -42,7 +42,7 @@ jobs:
       - name: Full-repo lint (report-only — pre-existing debt on origin/main)
         run: npm run lint || true
 
-      - name: Migration-SQL guard (additive + reversible + non-destructive)
+      - name: Migration-SQL guard (forward additive; rollback = LOCAL_DISPOSABLE_SCHEMA_ROLLBACK)
         run: node scripts/validate-cpv1-migrations.mjs
 
       - name: Secret-pattern hard gate

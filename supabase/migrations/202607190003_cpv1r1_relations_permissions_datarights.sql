@@ -3,7 +3,7 @@
 --   event types + deletion tombstone; §9 independent consent purposes + visibility.
 -- LOCAL Supabase verification only — never production. Depends on 202607190002.
 --
--- ROLLBACK CLASSIFICATION: LOCAL_DISPOSABLE_SCHEMA_ROLLBACK (NOT non-destructive).
+-- ROLLBACK CLASSIFICATION: LOCAL_DISPOSABLE_SCHEMA_ROLLBACK (structurally + data destructive).
 --   Dropping these columns/constraints DESTROYS the data stored in them. It is safe
 --   ONLY in an isolated disposable local/test database, and is NOT approved for any
 --   persistent environment. No production migration is authorized; a persistent

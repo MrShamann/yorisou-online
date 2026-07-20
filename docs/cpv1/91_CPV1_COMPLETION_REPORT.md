@@ -5,18 +5,22 @@
 > This status replaces the earlier `CPV1_PARTIALLY_READY_WITH_EXPLICIT_RIGHTS_BLOCKERS`.
 > Rights are **not** the only blocker: the external method universe is unbuilt across
 > **implementation, content, privacy, tests, rights, Founder-activation and public-route**
-> dimensions independently (CPV1-R1 §4). The truthful outcome is: 9 methods publicly active,
-> the rest contract/architecture-only or unbuilt.
+> dimensions independently (CPV1-R1 §4). R1.1 §4 further separates route/deployment/Founder-activation:
+> the truthful outcome is **0 `public_active`** (no evidenced Founder activation), **9
+> `implemented_route_verified`** (route present on production `main`), the rest contract/architecture-only
+> or unbuilt.
 
 1. **Governance preflight** — `AUTHORIZED_BOUNDED_IMPLEMENTATION`. Production `main @ 70da80a`
    UNCHANGED; PR #113 OPEN (protected APP-2 baseline); lock held. Untracked audit/export files untouched.
 2. **Branch & PR** — `feat/cpv1-integrated-platform`; **draft PR #114**, base
    `feat/aix-1-ai-native-experience` (NOT main). Not merged, not marked ready.
 3. **Method-by-method status (runtime-verified, CPV1-R1 §5 + Part-B audit)** — 27 methods
-   registered; `methodActivationState` returns exactly `public_active | implemented_private |
-   gated | retired`. Runtime truth: **9 `public_active`**, **18 `gated`**. There is **no**
+   registered; `methodActivationState` returns exactly `public_active | implemented_route_verified |
+   implemented_private | gated | retired`. Runtime truth (R1.1 §4): **0 `public_active`** (no evidenced
+   Founder public-activation), **9 `implemented_route_verified`** (route present on production `main`),
+   **18 `gated`**. There is **no**
    collapsed "rights_blocked" bucket.
-   - **9 public-active** (each a REAL non-redirect route + working flow on production `main`):
+   - **9 `implemented_route_verified`** (each a REAL non-redirect route present on production `main`, but with NO evidenced Founder public-activation — see METHOD_STATE_TRUTH_TABLE_R1.1):
      imairo-120q, c02-current-state, relationship-fatigue-24q, f01-work-fit, f02-workplace-fit,
      love-distance, work-rhythm, local-life, name-impression — see
      `92_CPV1_METHOD_RUNTIME_RECONCILIATION.md`.
@@ -28,14 +32,14 @@
      Big Five, MBTI: each carries **independent unmet dimensions** — `implementation not_started`,
      `content not_authored`, `privacy not_reviewed`, `tests not_run`, `rights review_required`,
      Founder gate closed, public route unavailable. They are **not** merely "rights-blocked".
-   - `publicMethods()` returns exactly the 9; every `gated` method is off all public routes.
+   - `productionRouteVerifiedMethods()` returns exactly the 9; `publicMethods()` (Founder-activated) returns **0**; every `gated` method is off all public routes.
 4. **Rights registry** — route-specific gate (CPV1-R1 §3); `rightsClears()` requires all
    applicable fields with no pending status. **Clearing rights is necessary but not sufficient** —
    an external method also needs implementation, authored/licensed content, privacy review, tests
    and Founder activation before it could be public.
 5. **P0 defect status** — A1 (120/120 completion honest, confidence band withheld, defect kept
    in-code as evidence), A2 (120問 re-badge), A3 (family reports reachable), A5 (LINE truthfulness,
-   real assertion replacing the former `|| true`). Verified by the contract suite (**57 checks**).
+   real assertion replacing the former `|| true`). Verified by the contract suite (**58 checks**).
 6. **Understanding (WS-D) — `CONTRACT_CPV1`** — `lib/cpv1/understanding.ts`: source-separated,
    no universal score; relation-based contradiction (§7); cross_method_recurring requires ≥2
    distinct methods, within_method_recurring is separate (11A.6). Backend types + tests only; **no
@@ -61,7 +65,7 @@
     data-rights no-free-text, registry admin-only, teardown, reapply, cleanup) — see
     `evidence/r1/MIGRATION_RLS_R1.md`. Rollback classified **`LOCAL_DISPOSABLE_SCHEMA_ROLLBACK`**
     (drops destroy data; local-only; NOT production-approved).
-17. **Tests** — tsc 0 errors; **contract suite 57 checks**; regression aix4/aix5/sr1/sr2/app1/app2 +
+17. **Tests** — tsc 0 errors; **contract suite 58 checks**; regression aix4/aix5/sr1/sr2/app1/app2 +
     c02/relationship-fatigue/result-reveal all pass. **Enforced (hard) gates**: tsc, focused
     lint (R1/CPV1 surface), migration-SQL guard, secret-pattern grep, changed-content gitleaks
     (`origin/main..HEAD`), and the fresh axe gate. **Report-only (non-gating)**: full-repo eslint
@@ -78,7 +82,7 @@
     supplier contact, no public method activation, no public Legacy. Codex excluded.
 
 ## Why not INTEGRATED_PREVIEW_READY
-The foundation (9 public-active methods + typed contracts + local schema, all tested and
+The foundation (9 production-route-verified methods + typed contracts + local schema, all tested and
 local-verified) is real, but the external method universe is **unbuilt across multiple independent
 dimensions** (implementation, content, privacy, tests, rights, Founder activation), and the
 Legacy/Memory-Q&A surfaces are legally gated. A TypeScript module is not a user-facing

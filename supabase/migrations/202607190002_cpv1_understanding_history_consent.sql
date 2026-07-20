@@ -6,7 +6,7 @@
 -- never production. Depends on public.yorisou_current_account_id() from
 -- migration 202607190001 (APP-2).
 --
--- ROLLBACK CLASSIFICATION: LOCAL_DISPOSABLE_SCHEMA_ROLLBACK (NOT non-destructive).
+-- ROLLBACK CLASSIFICATION: LOCAL_DISPOSABLE_SCHEMA_ROLLBACK (structurally + data destructive).
 --   Dropping these tables DESTROYS all rows they hold. Safe ONLY in an isolated
 --   disposable local/test database; NOT approved for any persistent environment; no
 --   production migration authorized. A persistent environment would require a

@@ -12,6 +12,7 @@ import {
   methodPrimaryBlocker,
   methodPublicallyActivatable,
   publicMethods,
+  productionRouteVerifiedMethods,
   rightsBlockedMethods,
   blockedAdapter,
 } from "@/lib/cpv1/methods";
@@ -87,12 +88,23 @@ check("method universe has original + external families", () => {
     assert.ok(fams.has(f as never), `family ${f} present`);
   }
 });
-check("shipped originals are public-active", () => {
+check("R1.1 §4 shipped originals are implemented_route_verified — NOT public_active (no evidenced Founder activation)", () => {
   for (const id of ["imairo-120q", "relationship-fatigue-24q", "f01-work-fit", "love-distance", "name-impression"]) {
     const m = getMethod(id);
     assert.ok(m, `${id} present`);
-    assert.equal(methodActivationState(m!), "public_active", `${id} public_active`);
+    const mt = methodMaturity(m!);
+    // Route existence, environment, and Founder activation are SEPARATE, never equated.
+    assert.equal(mt.implementation, "complete", `${id} implemented`);
+    assert.equal(mt.tests, "passing", `${id} tests pass`);
+    assert.equal(mt.route, "production_main_present", `${id} route present on production main`);
+    assert.equal(mt.founderActivation, "unverified", `${id} Founder public-activation NOT evidenced (never inferred from a constructor)`);
+    assert.equal(mt.publicRoute, "unavailable", `${id} public availability requires evidenced Founder activation`);
+    assert.equal(methodActivationState(m!), "implemented_route_verified", `${id} route-verified, not public_active`);
   }
+});
+check("R1.1 §4 NOTHING is public_active without an evidenced Founder activation; 9 are route-verified", () => {
+  assert.equal(publicMethods().length, 0, "no method has an evidenced CPV1 Founder public-activation");
+  assert.equal(productionRouteVerifiedMethods().length, 9, "exactly 9 production-route-verified methods");
 });
 check("§4 EVERY external method exposes SEPARATE unmet dimensions (never collapsed)", () => {
   const external = CPV1_METHOD_UNIVERSE.filter((m) => m.family === "chinese_traditional" || m.family === "western_symbolic");
@@ -107,6 +119,7 @@ check("§4 EVERY external method exposes SEPARATE unmet dimensions (never collap
     assert.equal(mt.privacy, "not_reviewed", `${m.methodId} privacy not_reviewed`);
     assert.equal(mt.tests, "not_run", `${m.methodId} tests not_run`);
     assert.equal(mt.founderActivation, "closed", `${m.methodId} founder gate closed`);
+    assert.equal(mt.route, "none", `${m.methodId} no route (§4 route dimension)`);
     assert.equal(mt.publicRoute, "unavailable", `${m.methodId} public route unavailable`);
     assert.equal(m.devFlagged, true, `${m.methodId} dev-flagged`);
     assert.equal(methodPublicallyActivatable(m), false, `${m.methodId} not publicly activatable`);
@@ -164,11 +177,11 @@ const PROVEN_PUBLIC: Array<[string, string]> = [
   ["local-life", "app/tests/local-life/page.tsx"],
   ["name-impression", "app/tests/name-impression/page.tsx"],
 ];
-check("§5 exactly 9 public-active methods, each with a real route + flow (not a declaration)", () => {
-  const pub = publicMethods().map((m) => m.methodId);
-  assert.equal(pub.length, 9, "exactly 9 public-active (corrected from an over-claimed 10)");
+check("§5/R1.1 §4 exactly 9 production-route-verified methods, each with a real route + flow (not public_active)", () => {
+  const rv = productionRouteVerifiedMethods().map((m) => m.methodId);
+  assert.equal(rv.length, 9, "exactly 9 production-route-verified (corrected from an over-claimed 10, and from a mis-stated 'public_active')");
   for (const [id, route] of PROVEN_PUBLIC) {
-    assert.ok(pub.includes(id), `${id} is public-active`);
+    assert.ok(rv.includes(id), `${id} is production-route-verified`);
     assert.ok(has(route), `${id} route ${route} exists`);
     const src = read(route);
     assert.ok(!/redirect\(/.test(src), `${id} route is not a redirect`);

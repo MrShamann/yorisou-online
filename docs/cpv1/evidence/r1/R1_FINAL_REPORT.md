@@ -12,15 +12,15 @@ draft PR #114). Local/Preview only; production untouched.
 
 ## Results
 
-- **9-method runtime result** — `publicMethods().length === 9`; all 27 methods enumerated in
-  `RUNTIME_TRUTH_R1.md`. 9 public-active (real non-redirect routes+flows); 18 `gated` (3 unbuilt
+- **9-method runtime result (R1.1 §4)** — `productionRouteVerifiedMethods().length === 9`, `publicMethods()` === 0; all 27 methods enumerated in
+  `RUNTIME_TRUTH_R1.md` + `METHOD_STATE_TRUTH_TABLE_R1.1`. 9 `implemented_route_verified` (route present on production `main`, NOT Founder-activated); 18 `gated` (3 unbuilt
   originals + 15 external, each `route: none`, `implementation not_started`).
 - **Rights-gate result** — route-specific `ROUTE_RULES` + `rightsResolutionReport`; no pending
   applicable field clears; per-route pass/fail fixtures pass (§3).
 - **Maturity-model result** — seven independent dimensions; `methodActivationState` ∈
-  `public_active | implemented_private | gated | retired` — no collapsed `rights_blocked` (§4).
+  `public_active | implemented_route_verified | implemented_private | gated | retired` — no collapsed `rights_blocked`; route/deployment/Founder-activation kept separate (R1.1 §4).
 - **Invalid-test remediation** — the always-pass LINE `|| true` was replaced by a real runtime
-  assertion (§6); contract suite is now **57 real checks**.
+  assertion (§6); contract suite is now **58 real checks** (R1.1 added the §4 route/Founder-activation separation tests).
 - **Synthesis result** — relation-based contradiction (§7); cross_method_recurring requires ≥2
   DISTINCT method ids, within_method_recurring is separate (11A.6); `NO_UNIVERSAL_SCORE` upheld.
 - **Exact identity / history result** — enforced composite identity (11A.1: kind+method+version+ref);
@@ -38,15 +38,20 @@ draft PR #114). Local/Preview only; production untouched.
 - **Hosted Preview axe result / blocker** — **NOT verified**: Vercel Preview is behind Vercel SSO
   deployment protection; the exact blocker is recorded (`AXE_A11Y_R1.md`), not bypassed, not claimed.
   This is an isolated external hosted-verification blocker, not a concealed product defect.
-- **Remote CI result** — `CPV1-R1 CI`; recorded **success** on `cb01442` (run
-  [29693071494](https://github.com/MrShamann/yorisou-online/actions/runs/29693071494)); this report's
-  own commit CI is verified green at closeout (URL in the PR #114 comment).
+- **Remote CI result** — `CPV1-R1 CI`. On the **final HEAD `231aa7e`** GitHub records two green runs;
+  the **PR-check run tied to the final HEAD is the `pull_request` run
+  [29693246945](https://github.com/MrShamann/yorisou-online/actions/runs/29693246945)** (SUCCESS,
+  `headSha` 231aa7e), with the equivalent `push` run
+  [29693245585](https://github.com/MrShamann/yorisou-online/actions/runs/29693245585) also SUCCESS on
+  231aa7e. (Prior code/evidence HEAD `cb01442` was green at run
+  [29693071494](https://github.com/MrShamann/yorisou-online/actions/runs/29693071494).) All run→sha
+  bindings verified from GitHub via `gh run view`.
 - **Hard-gate vs report-only truth** — HARD gates (must pass): tsc, focused lint (R1/CPV1 surface),
   migration-SQL guard, secret-pattern grep, **changed-content gitleaks (`origin/main..HEAD`)**, fresh
   axe. REPORT-ONLY (non-gating, pre-existing `origin/main` debt): full-repo eslint, full-history
   gitleaks. Neither report-only check is claimed clean as a hard gate.
 - **Corrected capability matrix** — `90` / `91` / `00` + specs 11/15/16/17/18/19 corrected: 9
-  public-active; external methods multi-dimension blocked (not merely rights); understanding/consent/
+  route-verified (0 `public_active`); external methods multi-dimension blocked (not merely rights); understanding/consent/
   history = `CONTRACT_CPV1` (no wired UI); Companion/Community/Archive/Legacy = architecture-only;
   Legacy legal-blocked; Founder/Admin CPV1 + Preview auth = contract-only.
 - **Remaining blockers** (Part-B unresolved, by class) — implementation (external unbuilt); content

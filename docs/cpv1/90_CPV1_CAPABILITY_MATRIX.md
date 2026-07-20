@@ -33,7 +33,7 @@ Founder activation.
 | B1 | Method Registry (full field set) | `IMPLEMENTED_CPV1` | `lib/cpv1/methods.ts`, cpv1 tests |
 | B2 | Method/Content Rights Registry (governed routes) | `IMPLEMENTED_CPV1` | `lib/cpv1/rights.ts`, cpv1 tests |
 | B3 | Public activation gate (logic+rights+privacy+tests+Founder) | `IMPLEMENTED_CPV1` | `methodPublicallyActivatable`, cpv1 tests |
-| C (originals: 9 public-active) | imairo-120q, c02-current-state, relationship-fatigue-24q, f01-work-fit, f02-workplace-fit, love-distance, work-rhythm, local-life, name-impression — each a REAL non-redirect route + flow | `LIVE_APP2` + `IMPLEMENTED_CPV1` | `publicMethods()`===9; runtime reconciliation `92_*` |
+| C (originals: 9 `implemented_route_verified`; 0 `public_active`) | imairo-120q, c02-current-state, relationship-fatigue-24q, f01-work-fit, f02-workplace-fit, love-distance, work-rhythm, local-life, name-impression — each a REAL non-redirect route present on production `main`, but with NO evidenced Founder public-activation (§4) | `LIVE_APP2` (underlying route) + `implemented_route_verified` (CPV1) | `productionRouteVerifiedMethods()`===9, `publicMethods()`===0; `METHOD_STATE_TRUTH_TABLE_R1.1` |
 | C (originals: 3 UNBUILT) | yorisou-values (downgraded), reflection-cadence, yorisou-motivation — no route, no flow | `gated` (implementation `not_started`) | registry overrides; cpv1 test §5 |
 | C (external: 15, each MULTI-dimension blocked) | Zi Wei Dou Shu, Ba Zi, Cheng Gu, I Ching, Five Elements, Chinese Zodiac, name-hanzi, astrology, Tarot, numerology, dream, symbolic-cards, image-color, Big Five, MBTI | `gated` — implementation `not_started` · content `not_authored` · privacy `not_reviewed` · tests `not_run` · rights `review_required` · Founder gate closed (NOT merely rights-blocked) | registry entries + `methodMaturity`; off public routes; cpv1 §4 tests |
 | D | Source-separated understanding model (no universal score; AI-synthesis distinct) | `CONTRACT_CPV1` (backend types + tests; no wired UI) | `lib/cpv1/understanding.ts` + local schema (§12 verified) |
@@ -62,7 +62,7 @@ Founder activation.
 
 ## Why the honest program status is `CPV1_PARTIAL_9_METHODS_ACTIVE_EXTERNAL_UNBUILT_MULTI_DIMENSION_BLOCKED`
 
-Runtime truth: **9 methods are public-active** (real routes + flows); **18 are `gated`** — 3
+Runtime truth (R1.1 §4): **9 methods are `implemented_route_verified`** (routes present on production `main`, but NO evidenced Founder public-activation ⇒ **0 `public_active`**); **18 are `gated`** — 3
 YORISOU-originals are **unbuilt** (implementation `not_started`) and 15 external methods are unbuilt
 across **multiple independent dimensions** (implementation, original content, privacy review, tests,
 rights clearance, Founder activation). The platform foundation (P0 corrections, registries,

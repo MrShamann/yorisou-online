@@ -77,7 +77,7 @@ or "coming soon" surface.
 |---|---|---|
 | A | P0 current-product corrections (120/120 completion, badges, report nav, responsive, LINE truthfulness) | `IMPLEMENTED_CPV1` |
 | B | Method Registry + Method/Content Rights Registry + activation gate | `IMPLEMENTED_CPV1` |
-| C | Method-adapter contract + method universe registration | originals: **9 public-active** + 3 unbuilt (`gated`, implementation `not_started`); external: **15 `gated`** — implementation `not_started` · content `not_authored` · privacy `not_reviewed` · tests `not_run` · rights `review_required` (multi-dimension, not merely rights) |
+| C | Method-adapter contract + method universe registration | originals: **9 `implemented_route_verified`** (route on production `main`, NOT Founder-activated ⇒ 0 `public_active`) + 3 unbuilt (`gated`, implementation `not_started`); external: **15 `gated`** — implementation `not_started` · content `not_authored` · privacy `not_reviewed` · tests `not_run` · rights `review_required` (multi-dimension, not merely rights) |
 | D | Source-separated understanding model (no universal score) | `CONTRACT_CPV1` (backend types + tests; no wired UI) |
 | E | Method-level consent + sensitive inputs | `CONTRACT_CPV1` |
 | F | Longitudinal history events | `CONTRACT_CPV1` |
