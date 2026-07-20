@@ -100,6 +100,16 @@ for (const file of TARGETS) {
       fail(file, 'rollback recipe drops tables/columns but the file claims "non-destructive" somewhere');
     }
   }
+
+  // 6. (CM0.1 §6) obsolete activation states must NEVER appear in EXECUTABLE SQL.
+  //    The registry `activation_state` set must match the TypeScript contract exactly;
+  //    `rights_blocked` / `contract_only` were removed. (Comments are stripped, so a
+  //    historical note about the old states does not trip this.)
+  for (const obsolete of ["'rights_blocked'", "'contract_only'"]) {
+    if (exec.includes(obsolete)) {
+      fail(file, `obsolete activation state ${obsolete} present in executable SQL — must be exactly the 5 MethodActivationState values`);
+    }
+  }
 }
 
 // 4. R1 constraint is named (only the R1 migration is required to carry it)

@@ -16,11 +16,17 @@ only in an isolated disposable local/test DB; **NOT a production rollback**; no 
 authorized. Enforced by the migration validator (fails on a drop-based rollback lacking the classification
 or claiming "non-destructive").
 
-## Result — 25 checks, 0 failures
+## Result — 45 checks, 0 failures (CM0.1: 25 migration/RLS + 20 registry schema-contract)
 1. migrations apply in order (200001 prereqs → 002 → 003 → 004), SELF-CONTAINED. 2. CPV1-owned helpers
 present (2), APP-2 helpers absent (0). 3–4. RLS enabled + forced on all 4 CPV1 tables. 5. grants: anon none;
 authenticated SELECT-only on history. 6. anon denied. 7. user isolation (A sees 1 of 2). 8. forged-id
 denied (WITH CHECK, via CPV1-owned account resolver). 9. exact identity persists. 10–11. independent consent
 + revocation on next read. 12. deleted flag. 13. data-rights audit rejects personal free text (a/b denied,
 c OK). 14–15. append-only UPDATE/DELETE blocked by `yorisou_cpv1_block_mutation`. 16. registry snapshot
-admin/service-role only. 17. teardown. 18. reapplication after teardown. 19. disposable DB dropped (0 rows survive).
+admin/service-role only. **CM0.1 §7 registry schema-contract (20 checks):** all 5 activation states
+accepted under valid dimensions; `rights_blocked`/`contract_only` rejected; `implemented_route_verified`
+rejected when rights uncleared / content incomplete / privacy unreviewed / tests not passing / no
+production-main route; `public_active` rejected when deployment unverified / verified-without-evidence-ref /
+Founder unverified-or-closed / Founder-open-without-decision-ref; a fully-valid `public_active` row
+accepted; authenticated denied + service_role retains registry access. 17. teardown. 18. reapplication.
+19. disposable DB dropped (0 rows survive).

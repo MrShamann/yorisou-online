@@ -93,6 +93,42 @@ echo "== 16. registry snapshot admin/service-role only =="
 expect_deny authenticated '{"app_account_id":"acctA"}' "select count(*) from public.yorisou_cpv1_method_registry_snapshot;" "16a. authenticated denied on registry snapshot"
 expect_ok service_role '{}' "select count(*) from public.yorisou_cpv1_method_registry_snapshot;" "16b. service_role reads registry snapshot"
 
+echo "== CM0.1 §7 — registry activation-state SCHEMA-CONTRACT constraints =="
+rc=0
+# reg <ok|deny> <label> <state> <impl> <rights> <content> <privacy> <test> <route> <deploy> <deploy_ref> <founder> <founder_ref> <dev_flagged>
+reg(){
+  rc=$((rc+1))
+  local sql="insert into public.yorisou_cpv1_method_registry_snapshot(method_id,name_ja,family,rights_route,method_version,implementation_status,rights_status,content_status,privacy_status,test_status,route_status,deployment_status,deployment_evidence_ref,founder_activation,founder_decision_ref,dev_flagged,activation_state) values('reg-$rc','n','f','RIGHTS_REVIEW_REQUIRED','v','$4','$5','$6','$7','$8','$9','${10}',${11},'${12}',${13},${14},'$3');"
+  if [ "$1" = ok ]; then expect_ok service_role '{}' "$sql" "$2"; else expect_deny service_role '{}' "$sql" "$2"; fi
+}
+# 1. all five current activation states accepted under valid dimension combinations
+reg ok  "S1a public_active (fully valid) accepted"          public_active            complete cleared authored reviewed passing production_main_present production_verified "'ev://x'" open "'dec://y'" false
+reg ok  "S1b implemented_route_verified (valid) accepted"   implemented_route_verified complete cleared authored reviewed passing production_main_present unverified NULL unverified NULL true
+reg ok  "S1c implemented_private accepted"                  implemented_private      complete cleared authored reviewed passing none                    unverified NULL unverified NULL true
+reg ok  "S1d gated accepted"                                gated                    not_started review_required not_authored not_reviewed not_run none unverified NULL closed NULL true
+reg ok  "S1e retired accepted"                              retired                  complete cleared authored reviewed passing none                    unverified NULL unverified NULL true
+# 2-3. obsolete states rejected (enum)
+reg deny "S2 rights_blocked REJECTED (obsolete)"            rights_blocked           not_started review_required not_authored not_reviewed not_run none unverified NULL closed NULL true
+reg deny "S3 contract_only REJECTED (obsolete)"            contract_only            not_started review_required not_authored not_reviewed not_run none unverified NULL closed NULL true
+# 4-8. implemented_route_verified partial-dimension rejections
+reg deny "S4 route_verified + rights uncleared REJECTED"    implemented_route_verified complete review_required authored reviewed passing production_main_present unverified NULL unverified NULL true
+reg deny "S5 route_verified + content incomplete REJECTED"  implemented_route_verified complete cleared not_authored reviewed passing production_main_present unverified NULL unverified NULL true
+reg deny "S6 route_verified + privacy unreviewed REJECTED"  implemented_route_verified complete cleared authored not_reviewed passing production_main_present unverified NULL unverified NULL true
+reg deny "S7 route_verified + tests not passing REJECTED"   implemented_route_verified complete cleared authored reviewed not_run production_main_present unverified NULL unverified NULL true
+reg deny "S8 route_verified + no prod-main route REJECTED"  implemented_route_verified complete cleared authored reviewed passing none                    unverified NULL unverified NULL true
+# 9-12. public_active gate rejections
+reg deny "S9 public_active + deploy unverified REJECTED"    public_active            complete cleared authored reviewed passing production_main_present unverified NULL open "'dec://y'" false
+reg deny "S10 public_active + verified deploy NO evidence ref REJECTED" public_active complete cleared authored reviewed passing production_main_present production_verified NULL open "'dec://y'" false
+reg deny "S11a public_active + Founder unverified REJECTED" public_active            complete cleared authored reviewed passing production_main_present production_verified "'ev://x'" unverified NULL false
+reg deny "S11b public_active + Founder closed REJECTED"     public_active            complete cleared authored reviewed passing production_main_present production_verified "'ev://x'" closed NULL false
+reg deny "S12 public_active + Founder open NO decision ref REJECTED" public_active     complete cleared authored reviewed passing production_main_present production_verified "'ev://x'" open NULL false
+# 13. fully valid public_active accepted (re-affirmed distinctly)
+reg ok  "S13 fully-valid public_active accepted"            public_active            complete cleared authored reviewed passing production_main_present production_verified "'ev://run-999'" open "'dec://2026'" false
+# 14-15. registry access controls (schema-contract layer)
+expect_deny authenticated '{"app_account_id":"acctA"}' "select count(*) from public.yorisou_cpv1_method_registry_snapshot;" "S14 authenticated CANNOT access registry snapshot"; rc=$((rc+1))
+expect_ok service_role '{}' "select count(*) from public.yorisou_cpv1_method_registry_snapshot;" "S15 service_role retains registry access"; rc=$((rc+1))
+echo "  (schema-contract sub-checks added: $rc)"
+
 echo "== 17. teardown (disposable rollback) =="
 docker exec -i "$C" psql -U postgres -v ON_ERROR_STOP=1 -q -d "$DB" >/tmp/cm0td.out 2>&1 <<'SQL'
 drop trigger if exists yorisou_cpv1_history_no_mutate on public.yorisou_cpv1_history_events;

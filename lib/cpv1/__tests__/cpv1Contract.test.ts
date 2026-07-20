@@ -18,6 +18,7 @@ import {
   productionRouteVerifiedMethods,
   rightsBlockedMethods,
   blockedAdapter,
+  METHOD_ACTIVATION_STATES,
   type MethodRegistryEntry,
 } from "@/lib/cpv1/methods";
 import {
@@ -620,6 +621,31 @@ check("CM0 self-contained migrations present (own helpers; no APP-2 dependency)"
   assert.ok(/yorisou_cpv1_current_account_id/.test(prereq), "CPV1-owned account-id helper defined");
   const tables = read("supabase/migrations/202607200002_cpv1_understanding_history_consent.sql");
   assert.ok(!/yorisou_app2_block_mutation|public\.yorisou_current_account_id/.test(tables), "no APP-2 helper dependency");
+  // §5 — the stale APP-2 dependency/guard comments are corrected.
+  assert.ok(!/migration 202607190001 \(APP-2\)|Reuse the APP-2 append-only guard/.test(tables), "stale APP-2 dependency/guard comments removed");
+});
+
+console.log("CPV1-CM0.1 §6 — cross-layer activation-state parity (TypeScript ⇄ database)");
+check("DB registry activation_state constraint accepts EXACTLY the 5 TS MethodActivationState values", () => {
+  const sql = read("supabase/migrations/202607200002_cpv1_understanding_history_consent.sql");
+  // Extract the executable `activation_state ... check (activation_state in ( ... ))` list.
+  const m = sql.match(/activation_state\s+text\s+not\s+null\s+check\s*\(\s*activation_state\s+in\s*\(([^)]*)\)/i);
+  assert.ok(m, "activation_state check constraint found");
+  const dbStates = Array.from(m![1].matchAll(/'([a-z_]+)'/g)).map((x) => x[1]).sort();
+  const tsStates = [...METHOD_ACTIVATION_STATES].sort();
+  assert.deepEqual(dbStates, tsStates, `DB states ${JSON.stringify(dbStates)} must equal TS states ${JSON.stringify(tsStates)}`);
+  // Obsolete states must not appear anywhere in the registry-state SQL.
+  assert.ok(!/'rights_blocked'|'contract_only'/.test(sql), "no obsolete rights_blocked/contract_only in registry SQL");
+});
+check("DB registry snapshot carries the explicit R1.1A maturity fields + consistency constraints (§3/§4)", () => {
+  const sql = read("supabase/migrations/202607200002_cpv1_understanding_history_consent.sql");
+  for (const f of ["implementation_status", "rights_status", "content_status", "privacy_status", "test_status", "route_status", "deployment_status", "deployment_evidence_ref", "founder_activation", "founder_decision_ref"]) {
+    assert.ok(new RegExp(`\\b${f}\\b`).test(sql), `field ${f} present`);
+  }
+  assert.ok(/rights_route text not null/.test(sql), "rights_route kept (distinct from rights_status)");
+  for (const c of ["yorisou_cpv1_reg_deploy_evidence", "yorisou_cpv1_reg_founder_evidence", "yorisou_cpv1_reg_public_active", "yorisou_cpv1_reg_route_verified"]) {
+    assert.ok(sql.includes(c), `constraint ${c} present`);
+  }
 });
 
 console.log(`\nCPV1 foundation contract: ${passed} checks passed.`);

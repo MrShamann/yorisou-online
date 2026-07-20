@@ -79,6 +79,17 @@ export type MethodActivationState =
   | "gated" // one or more dimensions unmet (see methodMaturity for which)
   | "retired";
 
+// CM0.1 §6 — the CANONICAL activation-state set. The DB registry-snapshot
+// `activation_state` CHECK constraint must accept EXACTLY these (cross-layer parity),
+// and must never contain the obsolete `rights_blocked` / `contract_only`.
+export const METHOD_ACTIVATION_STATES: readonly MethodActivationState[] = [
+  "public_active",
+  "implemented_route_verified",
+  "implemented_private",
+  "gated",
+  "retired",
+];
+
 export type MethodRegistryEntry = {
   methodId: string;
   nameJa: string;

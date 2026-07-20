@@ -38,6 +38,28 @@
 == 16. registry snapshot admin/service-role only ==
   PASS  16a. authenticated denied on registry snapshot (denied)
   PASS  16b. service_role reads registry snapshot
+== CM0.1 §7 — registry activation-state SCHEMA-CONTRACT constraints ==
+  PASS  S1a public_active (fully valid) accepted
+  PASS  S1b implemented_route_verified (valid) accepted
+  PASS  S1c implemented_private accepted
+  PASS  S1d gated accepted
+  PASS  S1e retired accepted
+  PASS  S2 rights_blocked REJECTED (obsolete) (denied)
+  PASS  S3 contract_only REJECTED (obsolete) (denied)
+  PASS  S4 route_verified + rights uncleared REJECTED (denied)
+  PASS  S5 route_verified + content incomplete REJECTED (denied)
+  PASS  S6 route_verified + privacy unreviewed REJECTED (denied)
+  PASS  S7 route_verified + tests not passing REJECTED (denied)
+  PASS  S8 route_verified + no prod-main route REJECTED (denied)
+  PASS  S9 public_active + deploy unverified REJECTED (denied)
+  PASS  S10 public_active + verified deploy NO evidence ref REJECTED (denied)
+  PASS  S11a public_active + Founder unverified REJECTED (denied)
+  PASS  S11b public_active + Founder closed REJECTED (denied)
+  PASS  S12 public_active + Founder open NO decision ref REJECTED (denied)
+  PASS  S13 fully-valid public_active accepted
+  PASS  S14 authenticated CANNOT access registry snapshot (denied)
+  PASS  S15 service_role retains registry access
+  (schema-contract sub-checks added: 20)
 == 17. teardown (disposable rollback) ==
   PASS  17. teardown succeeds
 == 18. reapplication after teardown ==
@@ -46,4 +68,4 @@
   dropped cpv1cm0_verify
   PASS  19. disposable database dropped
 
-== SUMMARY: 25 passed, 0 failed ==
+== SUMMARY: 45 passed, 0 failed ==
