@@ -1,0 +1,49 @@
+== 0. create disposable database + minimal role usage (roles are cluster-wide) ==
+  created cpv1cm0_verify
+== 1. migrations apply in order (200001 prereqs -> 002 -> 003 -> 004), SELF-CONTAINED ==
+  applied 202607200001_cpv1_foundation_prereqs
+  applied 202607200002_cpv1_understanding_history_consent
+  applied 202607200003_cpv1r1_relations_permissions_datarights
+  applied 202607200004_cpv1r1_datarights_reason_codes
+  PASS  1. self-contained migrations apply in order (no APP-2 helper needed)
+== 2. CPV1-owned helpers exist (not APP-2) ==
+  PASS  2. CPV1-owned helpers present (2); APP-2 helpers absent (0)
+== 3-4. RLS enabled + forced on all 4 CPV1 tables ==
+  PASS  3-4. RLS enabled + forced on all 4 CPV1 tables
+== 5. grants: anon none; authenticated SELECT-only on history ==
+  PASS  5a. anon has NO grants
+  PASS  5b. authenticated SELECT-only on history
+== 6. anon denied ==
+  PASS  6. anon SELECT denied (denied)
+== 7-8. user isolation + forged-id denial (via CPV1-owned account resolver) ==
+  PASS  7a. user A inserts own row
+  PASS  7b. user B inserts own row
+  PASS  8a. user A sees ONLY own row (1 of 2)
+  PASS  8b. user A CANNOT forge account_id=acctB (denied)
+== 9. exact identity persists ==
+  PASS  9. history event persists exact object_ref+version
+== 10-11. independent consent + revocation on next read ==
+  PASS  10. consent independent booleans persist
+  PASS  11a. revoke community_use
+  PASS  11b. revocation visible next read; report independent (false/false)
+== 12. deleted flag ==
+  PASS  12. observation deletable (downstream gate reads flag)
+== 13. data-rights audit rejects personal free text (004 CHECK) ==
+  PASS  13a. data-rights without reason_code denied (denied)
+  PASS  13b. personal free-text safe_detail denied (denied)
+  PASS  13c. reason_code + fixed message OK
+== 14-15. append-only: update/delete blocked by CPV1-owned guard ==
+  PASS  14/15a. UPDATE blocked (yorisou_cpv1_block_mutation) (denied)
+  PASS  15b. DELETE blocked (append-only) (denied)
+== 16. registry snapshot admin/service-role only ==
+  PASS  16a. authenticated denied on registry snapshot (denied)
+  PASS  16b. service_role reads registry snapshot
+== 17. teardown (disposable rollback) ==
+  PASS  17. teardown succeeds
+== 18. reapplication after teardown ==
+  PASS  18. reapplication after teardown succeeds
+== 19. cleanup: drop disposable database (no synthetic rows survive) ==
+  dropped cpv1cm0_verify
+  PASS  19. disposable database dropped
+
+== SUMMARY: 25 passed, 0 failed ==
