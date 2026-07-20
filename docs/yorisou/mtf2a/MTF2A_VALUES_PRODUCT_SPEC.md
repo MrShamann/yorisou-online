@@ -28,19 +28,19 @@ Each dimension carries behavioral anchors, a 「〜ではありません」 not-
 
 **48 items · A/B forced trade-off · all 21 dimension pairs ×2 (items 1–42, sides balanced) + 6 third-pass pairs (43–48).** Appearances: anshin/tsunagari/seicho/totonoi/jikkan 14 · pace/yakuwari 13 (denominator-normalized). All items P1 (no financial/medical/legal/intimate detail); `work_context` flagged items use neutral workplace situations, never employer-screening framing. Full bank: `MTF2A_VALUES_QUESTION_BANK.md` + JSON.
 
-## 4. Scoring (values-scoring-v1.0 — execution-model artifact, Forge step 10)
+## 4. Scoring (values-scoring-v1.1 — execution-model artifact, Forge step 10; MTF-2A.1 corrected)
 
 - **Pairwise win-rate:** each answered item adds one win to the chosen dimension; `dimensionScore = wins / appearances` among answered items (method-local normalization only).
 - **Primary/secondary:** highest / second-highest win-rate; the secondary ALWAYS renders as a named signal, never a second result.
-- **Tie-break:** (1) head-to-head wins on the items where the tied dimensions faced each other; (2) if still tied → `VAL_R_MIXED` (a deep tie is the finding).
-- **Mixed rule:** gap(top1, top2) < 0.08 AND head-to-head tied → `VAL_R_MIXED`.
-- **Coverage:** <40 answered items → `VAL_R_MIXED` with the low-coverage note; no partial primary claimed.
+- **Mixed rule (pair-independent):** gap(top1, top2) < 0.05 → `VAL_R_MIXED`. The threshold sits below the smallest single-answer increment (1/14), so identical normalized relationships classify identically regardless of which pair is on top — the former head-to-head conjunct was removed because three-comparison pairs could never satisfy a direct tie at full completion. Tie-break is now a SEPARATE concept (secondary-signal ordering only, by bank declaration order).
+- **Insufficient coverage (MTF-2A.1):** fewer than 40 answered items → execution state `insufficient_coverage` — NOT a result: no primary, no secondary, no VAL_R_MIXED; resume offered; copy states how many more items are needed, without shame language.
+- **Internal numerics truth:** method-local win rates exist internally; they are never user-facing ranking scores, never exposed, never used to compare people.
 - **Deterministic + reproducible:** same (bankVersion, scoringVersion, answers) ⇒ same result on every channel; bank content hash pinned at implementation.
 - **No universal score. No cross-method numeric comparison. `confidence_policy: none_stated`** with the natural-language boundary: 「このテストは、統計的に検証された確信度スコアを提供するものではありません。」
 
 ## 5. Results (8) & rendering
 
-7 dimension-led results (「〜たい時期」 current-priority naming) + `VAL_R_MIXED` 「優先順位が動いている時期」. Count derivation and rejected alternatives: `MTF2A_VALUES_BENCHMARK.md` §B. Secondary-signal strength renders as words (faint/present/strong bands from win-rate gaps; numeric bands documented internally, never shown to users). Full public+private copy: `MTF2A_VALUES_RESULT_COPY.md` + JSON.
+7 dimension-led results (「〜たい時期」 current-priority naming) + `VAL_R_MIXED` 「大事なことが並ぶ時期」 (renamed in MTF-2A.1); PACE renamed 「自分のペースを守りたい時期」. Count derivation and rejected alternatives: `MTF2A_VALUES_BENCHMARK.md` §B. Secondary signal (v1.1, honest non-graded): 「もうひとつ近かった軸」 — name + one recognition line, NO strength bands or thresholds in V1; equal seconds resolve by bank declaration order; MIXED shows the close set; insufficient_coverage shows nothing. Full public+private copy: `MTF2A_VALUES_RESULT_COPY.md` + JSON.
 
 Collision check (against 24 public archetypes, 31 personas both name layers, RF 7, LD 7, C02/F01/F02 8×3, R01 8, WR/NI 4+4, companions 8): the 「〜たい時期」 pattern and all eight names are new coinages with zero collisions.
 
@@ -54,4 +54,8 @@ Governed tags only (8-tag list in the JSON); hints, never verdicts; no commercia
 
 ## 8. Interpretation limits (user-facing)
 
-「いまの選び方の傾向の整理です。性格の診断でも、優劣の判定でもありません。統計的に検証された確信度スコアは提供しません。結果は状況とともに変わります。」
+「いまの選び方の傾向の整理です。性格の診断でも、優劣の判定でもありません。統計的に検証された確信度スコアは提供しません。結果は状況とともに変わります。採用・配属・評価・選考など、第三者による判断の材料には使えません。」
+
+## 9. Usage boundary (MTF-2A.1 — anti-screening, Founder decision 3.3)
+
+「この結果は、本人がじぶんの選び方をふり返るためのものです。採用・配属・人事評価・入学選考・保険や与信の判断など、第三者が人を選んだり評価したりする目的には適していません。使わないでください。」 — carried canonically in `usageBoundaryJa` and merged into the interpretation limits. A Terms-of-Use clause prohibiting screening use is REQUIRED at implementation (register FD-3).

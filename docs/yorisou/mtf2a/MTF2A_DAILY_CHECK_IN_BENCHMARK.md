@@ -25,7 +25,7 @@ Per MTF-1 §6.2 the 24/48/60/72/84 main-assessment ladder does **not** apply to 
 
 ## Decision (recorded)
 
-**5 required-optional inputs · one-screen · ~45s target · opt-in private memo (default off).**
+**5 required-optional inputs · one-screen · 45-60s target (user-facing claim: 1分 — no sub-minute promise) · opt-in private memo (default off).**
 
 いまの選定に科学的根拠は主張しない（「5項目が心理学的に最適」という主張は行わない）。選定理由は継続性とタイムラインの読みごたえの製品的な釣り合いである。
 

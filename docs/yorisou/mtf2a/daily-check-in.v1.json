@@ -1,48 +1,78 @@
 {
-  "specVersion": "mtf2a-daily-check-in-v1.0.0",
+  "specVersion": "mtf2a-daily-check-in-v1.1.0",
   "identity": {
     "methodId": "daily-check-in",
     "methodVersion": "daily-check-in-v1.0",
     "nameJa": "きょうの空模様",
-    "subtitleJa": "30秒のじぶん記録",
+    "subtitleJa": "1分のじぶん記録",
     "family": "yorisou_state",
     "methodEvidenceClass": "yorisou_original_reflection",
     "executionModel": "recorded_state",
     "rightsRoute": "YORISOU_ORIGINAL_REBUILD_CANDIDATE",
     "originalityStatus": "YORISOU_ORIGINAL_AUTHORED_PENDING_FOUNDER_REVIEW",
     "activationState": "gated",
-    "supportedChannels": ["web", "line_liff", "ios", "android"],
+    "supportedChannels": [
+      "web",
+      "line_liff",
+      "ios",
+      "android"
+    ],
     "language": "ja"
   },
   "definition": {
     "kind": "recorded_state",
-    "inputSchemaVersion": "daily-state-schema-v1",
+    "inputSchemaVersion": "daily-state-schema-v1.1",
     "cadenceSchema": "daily",
-    "acknowledgementCopyVersion": "daily-ack-v1",
-    "yorisouScoring": null
+    "acknowledgementCopyVersion": "daily-ack-v1.1",
+    "yorisouScoring": null,
+    "contentHash": {
+      "algorithm": "sha256",
+      "serialization": "sha256 over the compact JSON serialization (separators ',' ':' , ensure_ascii=False, key order as authored) of [stateSchema.fields, stateSchema.privateReflection, acknowledgementRules]",
+      "value": "773602f36066a66f2eb42b15c89bac6f53aa7fec4c844e99af910c49dbe4c1a2"
+    }
   },
   "benchmarkDecision": {
     "status": "recorded",
     "selectedFormat": "5-input standard check, one-screen, optional private free-text (opt-in)",
-    "targetCompletionSeconds": 45,
+    "targetCompletionSeconds": "45-60",
+    "userFacingTimeClaimJa": "1分（正確な所要時間は人によって異なるため、分未満の断定はしない）",
     "comparedFormats": [
-      "3-input ultra-quick (rejected: timeline too thin — weather-only history has low reflection value)",
+      "3-input ultra-quick (rejected: timeline too thin)",
       "5-input standard (SELECTED)",
-      "7-input richer (rejected: daily fatigue and abandonment risk outweigh coverage gain)",
-      "one-screen multi-input (SELECTED as rendering mode: daily ritual speed beats stepper)",
-      "one-item-per-screen (rejected for daily cadence: 5 taps + 4 transitions ≈ 90s, too slow for every day)",
-      "free-text default-on (rejected: emotional burden + privacy weight daily; opt-in note instead)",
+      "7-input richer (rejected: daily fatigue)",
+      "one-screen multi-input (SELECTED as rendering mode)",
+      "one-item-per-screen (rejected for daily cadence)",
+      "free-text default-on (rejected: daily burden + privacy weight; opt-in instead)",
       "30s target (rejected: forces 3-input)",
-      "45-60s target (SELECTED)",
-      "90s target (rejected: daily abandonment risk)"
+      "45-60s target (SELECTED; user-facing claim rounds honestly to 1分)",
+      "90s target (rejected: abandonment risk)"
     ],
-    "rationaleJa": "毎日つづけられることが最優先。5項目・1画面・約45秒は、記録の速さとタイムラインの見ごたえの釣り合いが最も良い。入力数に科学的根拠は主張しない。",
+    "rationaleJa": "毎日つづけられることが最優先。5項目・1画面は、記録の速さとタイムラインの読みごたえの釣り合いが最も良い。入力数に科学的根拠は主張しない。",
     "noScientificBasisClaimed": true
   },
+  "recordContract": {
+    "version": "daily-record-contract-v1",
+    "identity": {
+      "producedAt": "UTC ISO 8601 timestamp of the save",
+      "entryLocalDate": "user-facing calendar date (YYYY-MM-DD) in the entry timezone",
+      "timezone": "IANA timezone captured at entry time (e.g. Asia/Tokyo)",
+      "utcOffsetMinutes": "optional display diagnostic"
+    },
+    "visibilityRule": "one visible entry per entryLocalDate; the latest confirmed version is the visible version",
+    "correctionModel": {
+      "sameDayEdit": "versioned correction — a new version supersedes the visible one; prior versions are PRESERVED per CPV1 history/audit policy; no destructive overwrite; no silent replacement",
+      "explicitActions": [
+        "confirm",
+        "correct (new version)",
+        "reject/delete (explicit, irreversible for the user-visible layer, audit-preserved per CPV1)"
+      ]
+    },
+    "timezoneChangeRule": "entryLocalDate is fixed by the timezone captured at save time; travel never re-buckets past entries; if a timezone change makes a new local date available, a new entry may be created for that date; duplicate-date collisions resolve to the versioned-correction flow",
+    "entryValidity": "an entry REQUIRES at least one structured state-field selection; a memo alone does NOT create a StateRecordResult",
+    "unansweredFields": "stored as null (never defaulted, never treated as a worst value)"
+  },
   "stateSchema": {
-    "version": "daily-state-schema-v1",
-    "entryRule": "an entry is saved when at least one field has a value; unanswered fields are stored as null (never defaulted, never treated as a worst value)",
-    "timestampPolicy": "producedAt = device-local save time (ISO); one entry per calendar day per method-local timezone; re-entry same day overwrites after user confirmation",
+    "version": "daily-state-schema-v1.1",
     "fields": [
       {
         "fieldId": "kokoro_tenki",
@@ -50,11 +80,26 @@
         "helperJa": "いまの気分に近いものをひとつ",
         "required": false,
         "options": [
-          { "optionId": "hare", "labelJa": "はれ" },
-          { "optionId": "usugumori", "labelJa": "うすぐもり" },
-          { "optionId": "kumori", "labelJa": "くもり" },
-          { "optionId": "ame", "labelJa": "あめ" },
-          { "optionId": "kaze", "labelJa": "かぜが強い" }
+          {
+            "optionId": "hare",
+            "labelJa": "はれ"
+          },
+          {
+            "optionId": "usugumori",
+            "labelJa": "うすぐもり"
+          },
+          {
+            "optionId": "kumori",
+            "labelJa": "くもり"
+          },
+          {
+            "optionId": "ame",
+            "labelJa": "あめ"
+          },
+          {
+            "optionId": "kaze",
+            "labelJa": "かぜが強い"
+          }
         ]
       },
       {
@@ -63,10 +108,22 @@
         "helperJa": "元気の残量のイメージで",
         "required": false,
         "options": [
-          { "optionId": "tappuri", "labelJa": "たっぷり" },
-          { "optionId": "maamaa", "labelJa": "まあまあ" },
-          { "optionId": "sukuname", "labelJa": "少なめ" },
-          { "optionId": "hobo_kara", "labelJa": "ほぼ空" }
+          {
+            "optionId": "tappuri",
+            "labelJa": "たっぷり"
+          },
+          {
+            "optionId": "maamaa",
+            "labelJa": "まあまあ"
+          },
+          {
+            "optionId": "sukuname",
+            "labelJa": "少なめ"
+          },
+          {
+            "optionId": "hobo_kara",
+            "labelJa": "ほぼ空"
+          }
         ]
       },
       {
@@ -75,10 +132,22 @@
         "helperJa": "考えごとの詰まり具合",
         "required": false,
         "options": [
-          { "optionId": "sukkiri", "labelJa": "すっきり" },
-          { "optionId": "futsuu", "labelJa": "ふつう" },
-          { "optionId": "gisshiri", "labelJa": "ぎっしり" },
-          { "optionId": "guruguru", "labelJa": "ぐるぐるしている" }
+          {
+            "optionId": "sukkiri",
+            "labelJa": "すっきり"
+          },
+          {
+            "optionId": "futsuu",
+            "labelJa": "ふつう"
+          },
+          {
+            "optionId": "gisshiri",
+            "labelJa": "ぎっしり"
+          },
+          {
+            "optionId": "guruguru",
+            "labelJa": "ぐるぐるしている"
+          }
         ]
       },
       {
@@ -87,10 +156,22 @@
         "helperJa": "きょうのちょうどいい距離感",
         "required": false,
         "options": [
-          { "optionId": "chikaku", "labelJa": "近くにいたい" },
-          { "optionId": "itsumo_doori", "labelJa": "いつも通り" },
-          { "optionId": "sotto", "labelJa": "少しそっとしていたい" },
-          { "optionId": "hitori", "labelJa": "ひとりの時間がほしい" }
+          {
+            "optionId": "chikaku",
+            "labelJa": "近くにいたい"
+          },
+          {
+            "optionId": "itsumo_doori",
+            "labelJa": "いつも通り"
+          },
+          {
+            "optionId": "sotto",
+            "labelJa": "少しそっとしていたい"
+          },
+          {
+            "optionId": "hitori",
+            "labelJa": "ひとりの時間がほしい"
+          }
         ]
       },
       {
@@ -99,82 +180,267 @@
         "helperJa": "いちばん近いものをひとつ",
         "required": false,
         "options": [
-          { "optionId": "yasumi", "labelJa": "やすみ" },
-          { "optionId": "seiri", "labelJa": "整理する時間" },
-          { "optionId": "kibun_tenkan", "labelJa": "気分転換" },
-          { "optionId": "hanasu", "labelJa": "だれかと話すこと" },
-          { "optionId": "hitori_jikan", "labelJa": "ひとりの時間" },
-          { "optionId": "tassei", "labelJa": "小さな達成感" }
+          {
+            "optionId": "yasumi",
+            "labelJa": "やすみ"
+          },
+          {
+            "optionId": "seiri",
+            "labelJa": "整理する時間"
+          },
+          {
+            "optionId": "kibun_tenkan",
+            "labelJa": "気分転換"
+          },
+          {
+            "optionId": "hanasu",
+            "labelJa": "だれかと話すこと"
+          },
+          {
+            "optionId": "hitori_jikan",
+            "labelJa": "ひとりの時間"
+          },
+          {
+            "optionId": "tassei",
+            "labelJa": "小さな達成感"
+          }
         ]
       }
     ],
     "privateReflection": {
       "fieldId": "hitokoto_memo",
-      "labelJa": "ひとことメモ（任意・自分だけに残る）",
+      "labelJa": "ひとことメモ（任意・非公開）",
       "enabled": "opt_in",
       "defaultOff": true,
       "maxLength": 140,
       "privacyClass": "P5_free_text",
-      "neverInShareOrUrl": true
+      "neverInShareOrUrl": true,
+      "memoAloneIsNotAnEntry": true
     },
     "validationRules": [
       "each field accepts exactly one optionId from its declared set or null",
+      "an entry requires at least one non-null structured field; hitokoto_memo alone is rejected",
       "hitokoto_memo accepted only when the user has opted in; stored private-only",
       "no numeric conversion of any option; options are words, not scores"
     ],
     "missingInputHandling": "null fields render as 「未記入」 in timelines; no imputation; acknowledgement rules skip null fields"
   },
   "acknowledgementRules": {
-    "version": "daily-ack-v1",
-    "note": "deterministic selection of a finite acknowledgement set; NOT psychological scoring; no good/bad ranking",
+    "version": "daily-ack-v1.1",
+    "note": "deterministic selection of a finite acknowledgement set; NOT psychological scoring; no good/bad ranking; copy recognizes the recorded day and never predicts outcomes, guarantees improvement, assumes mobility, or gives quasi-therapeutic advice",
     "priorityCascade": [
-      { "rule": "first_entry_ever", "ackId": "ACK_FIRST" },
-      { "rule": "kokoro_tenki == ame", "ackId": "ACK_RAIN" },
-      { "rule": "kokoro_tenki == kaze", "ackId": "ACK_WIND" },
-      { "rule": "karada_juden == hobo_kara", "ackId": "ACK_LOWBATT" },
-      { "rule": "atama_yohaku == guruguru", "ackId": "ACK_SWIRL" },
-      { "rule": "kyou_hoshii == yasumi", "ackId": "ACK_NEED_YASUMI" },
-      { "rule": "kyou_hoshii == seiri", "ackId": "ACK_NEED_SEIRI" },
-      { "rule": "kyou_hoshii == kibun_tenkan", "ackId": "ACK_NEED_TENKAN" },
-      { "rule": "kyou_hoshii == hanasu", "ackId": "ACK_NEED_HANASU" },
-      { "rule": "kyou_hoshii == hitori_jikan", "ackId": "ACK_NEED_HITORI" },
-      { "rule": "kyou_hoshii == tassei", "ackId": "ACK_NEED_TASSEI" },
-      { "rule": "kokoro_tenki == hare", "ackId": "ACK_SUNNY" },
-      { "rule": "default", "ackId": "ACK_NEUTRAL" }
+      {
+        "rule": "first_entry_ever",
+        "ackId": "ACK_FIRST"
+      },
+      {
+        "rule": "kokoro_tenki == ame",
+        "ackId": "ACK_RAIN"
+      },
+      {
+        "rule": "kokoro_tenki == kaze",
+        "ackId": "ACK_WIND"
+      },
+      {
+        "rule": "karada_juden == hobo_kara",
+        "ackId": "ACK_LOWBATT"
+      },
+      {
+        "rule": "atama_yohaku == guruguru",
+        "ackId": "ACK_SWIRL"
+      },
+      {
+        "rule": "kyou_hoshii == yasumi",
+        "ackId": "ACK_NEED_YASUMI"
+      },
+      {
+        "rule": "kyou_hoshii == seiri",
+        "ackId": "ACK_NEED_SEIRI"
+      },
+      {
+        "rule": "kyou_hoshii == kibun_tenkan",
+        "ackId": "ACK_NEED_TENKAN"
+      },
+      {
+        "rule": "kyou_hoshii == hanasu",
+        "ackId": "ACK_NEED_HANASU"
+      },
+      {
+        "rule": "kyou_hoshii == hitori_jikan",
+        "ackId": "ACK_NEED_HITORI"
+      },
+      {
+        "rule": "kyou_hoshii == tassei",
+        "ackId": "ACK_NEED_TASSEI"
+      },
+      {
+        "rule": "kokoro_tenki == hare",
+        "ackId": "ACK_SUNNY"
+      },
+      {
+        "rule": "default",
+        "ackId": "ACK_NEUTRAL"
+      }
     ],
     "acknowledgements": [
-      { "ackId": "ACK_FIRST", "copyJa": "きょうの空模様、はじめの一枚が残りました。ここから少しずつ、じぶんの天気図ができていきます。" },
-      { "ackId": "ACK_RAIN", "copyJa": "あめの日の記録も、大事な一枚です。きょうはこのまま、無理のない過ごし方で。" },
-      { "ackId": "ACK_WIND", "copyJa": "落ち着かない日は、そういう日として残しておけば大丈夫。風はずっとは吹きません。" },
-      { "ackId": "ACK_LOWBATT", "copyJa": "充電少なめの日ですね。記録できただけで、きょうの分はもう十分です。" },
-      { "ackId": "ACK_SWIRL", "copyJa": "考えごとがぐるぐるする日。ここに一度置いておくと、少しだけ余白ができるかもしれません。" },
-      { "ackId": "ACK_NEED_YASUMI", "copyJa": "きょうほしいのは、やすみ。それが分かっているだけで、選び方が少し変わります。" },
-      { "ackId": "ACK_NEED_SEIRI", "copyJa": "整理する時間がほしい日。小さくひとつ片づくだけでも、景色は変わります。" },
-      { "ackId": "ACK_NEED_TENKAN", "copyJa": "気分転換がほしい日。いつもと違う道を少し歩くくらいで、ちょうどいいかもしれません。" },
-      { "ackId": "ACK_NEED_HANASU", "copyJa": "だれかと話したい日。短いやりとりでも、きょうはそれが効きそうです。" },
-      { "ackId": "ACK_NEED_HITORI", "copyJa": "ひとりの時間がほしい日。それは閉じることではなく、ととのえる時間です。" },
-      { "ackId": "ACK_NEED_TASSEI", "copyJa": "小さな達成感がほしい日。ハードルは低いほど、きょうはうまくいきます。" },
-      { "ackId": "ACK_SUNNY", "copyJa": "はれの日の記録です。こういう日が、あとで見返すときの目印になります。" },
-      { "ackId": "ACK_NEUTRAL", "copyJa": "きょうの一枚が残りました。それだけで、きょうの記録は完了です。" }
+      {
+        "ackId": "ACK_FIRST",
+        "copyJa": "きょうの空模様、はじめの一枚が残りました。ここから少しずつ、じぶんの天気図ができていきます。",
+        "reviewDecision": "lock_keep"
+      },
+      {
+        "ackId": "ACK_RAIN",
+        "copyJa": "あめの日の記録も、大事な一枚です。きょうはこのまま、無理のない過ごし方で。",
+        "reviewDecision": "lock_keep"
+      },
+      {
+        "ackId": "ACK_WIND",
+        "copyJa": "かぜが強い日。落ち着かないまま記録して大丈夫です。",
+        "reviewDecision": "rewrite_required (removed the weather-will-pass prediction)"
+      },
+      {
+        "ackId": "ACK_LOWBATT",
+        "copyJa": "充電少なめの日ですね。記録できただけで、きょうの分はもう十分です。",
+        "reviewDecision": "lock_keep"
+      },
+      {
+        "ackId": "ACK_SWIRL",
+        "copyJa": "考えごとがぐるぐるする日。ぐるぐるのまま、ここに置いておけます。",
+        "reviewDecision": "rewrite_required (removed the implied relief outcome)"
+      },
+      {
+        "ackId": "ACK_NEED_YASUMI",
+        "copyJa": "きょうほしいのは、やすみ。その声が、きょうのいちばんの手がかりです。",
+        "reviewDecision": "rewrite_required (removed the choices-will-change guarantee)"
+      },
+      {
+        "ackId": "ACK_NEED_SEIRI",
+        "copyJa": "整理する時間がほしい日。その気持ちから、きょうの一枚が残りました。",
+        "reviewDecision": "rewrite_required (removed the scenery-will-change guarantee)"
+      },
+      {
+        "ackId": "ACK_NEED_TENKAN",
+        "copyJa": "気分転換がほしい日。どんな形が合うかは、あなたが決めてよいことです。",
+        "reviewDecision": "rewrite_required (removed walking advice and mobility assumption)"
+      },
+      {
+        "ackId": "ACK_NEED_HANASU",
+        "copyJa": "だれかと話したい日。その気持ちも、大事な状態のひとつです。",
+        "reviewDecision": "rewrite_required (removed the it-will-work claim)"
+      },
+      {
+        "ackId": "ACK_NEED_HITORI",
+        "copyJa": "ひとりの時間がほしい日。その距離感も、きょうのあなたの一部です。",
+        "reviewDecision": "polish_candidate (removed the reframing declaration)"
+      },
+      {
+        "ackId": "ACK_NEED_TASSEI",
+        "copyJa": "小さな達成感がほしい日。そう選んだことが、きょうの記録です。",
+        "reviewDecision": "rewrite_required (removed the low-bar success guarantee)"
+      },
+      {
+        "ackId": "ACK_SUNNY",
+        "copyJa": "はれの日の記録です。あとで見返すときの、目印のひとつになります。",
+        "reviewDecision": "polish_candidate (hedged the future-utility claim)"
+      },
+      {
+        "ackId": "ACK_NEUTRAL",
+        "copyJa": "きょうの一枚が残りました。それだけで、きょうの記録は完了です。",
+        "reviewDecision": "lock_keep"
+      }
     ]
   },
+  "longitudinal": {
+    "version": "daily-longitudinal-v1",
+    "sevenDaySummary": {
+      "minimumRecordedDays": 3,
+      "maxSimultaneousSummaries": 2,
+      "priorityOrder": [
+        "SUM_RAIN_RUN",
+        "SUM_LOWBATT_RUN",
+        "SUM_SWIRL_RUN",
+        "SUM_NEED_REPEAT",
+        "SUM_SUNNY_RUN",
+        "SUM_MIXED_WEATHER"
+      ],
+      "insufficientHistoryCopyJa": "まだ7日分の景色にはなっていません。記録が3日分たまると、ここに様子が出ます。",
+      "rules": [
+        {
+          "summaryId": "SUM_RAIN_RUN",
+          "condition": "kokoro_tenki == ame on >=3 recorded days in the last 7",
+          "copyJa": "この7日は、あめの日が多めでした。"
+        },
+        {
+          "summaryId": "SUM_LOWBATT_RUN",
+          "condition": "karada_juden == hobo_kara on >=3 recorded days",
+          "copyJa": "この7日は、充電少なめの日が続きました。"
+        },
+        {
+          "summaryId": "SUM_SWIRL_RUN",
+          "condition": "atama_yohaku == guruguru on >=3 recorded days",
+          "copyJa": "この7日は、考えごとの多い日が目立ちました。"
+        },
+        {
+          "summaryId": "SUM_NEED_REPEAT",
+          "condition": "the same kyou_hoshii option on >=3 recorded days",
+          "copyJa": "この7日、いちばん多かった「ほしいもの」は「{need}」でした。"
+        },
+        {
+          "summaryId": "SUM_SUNNY_RUN",
+          "condition": "kokoro_tenki == hare on >=4 recorded days",
+          "copyJa": "この7日は、はれの日が多めでした。"
+        },
+        {
+          "summaryId": "SUM_MIXED_WEATHER",
+          "condition": ">=4 distinct kokoro_tenki values across recorded days",
+          "copyJa": "この7日は、日ごとに天気の変わる一週間でした。"
+        }
+      ],
+      "conflictResolution": "evaluate in priorityOrder; emit at most maxSimultaneousSummaries; a need placeholder {need} is filled with the option labelJa; ties between needs emit the tied labels joined by 「と」",
+      "boundaries": "summaries are OBSERVATIONS of recorded entries only — never condition claims, never worsening/deterioration language, never advice; forbidden meanings: 悪化している/落ち込んでいる/危険なパターン/治療が必要"
+    },
+    "thirtyDaySummary": {
+      "weatherStrip": "one cell per calendar day; recorded days show the kokoro_tenki icon (or 記録あり dot when weather is null); unrecorded days render as blank cells — blanks are neutral, never highlighted as failures",
+      "mostFrequentNeed": "the modal kyou_hoshii label over recorded days; ties list all tied labels joined by 「と」; fewer than 3 need-answers shows nothing",
+      "minimumRecordedDays": 7,
+      "insufficientDataCopyJa": "この30日の眺めは、記録が7日分たまってからです。急がなくて大丈夫です。",
+      "noStreakPressure": "no streaks, completion percentages, or continuity praise/pressure anywhere"
+    },
+    "reflectionPrompts": {
+      "cadence": "at most one prompt per 7 days; optional; dismissible; private; answerable by selection or silence — free text never required",
+      "prompts": [
+        {
+          "promptId": "RP_1",
+          "copyJa": "この一週間の記録で、いちばん「自分らしい」と感じる一枚はどれですか。"
+        },
+        {
+          "promptId": "RP_2",
+          "copyJa": "「ほしいもの」に何度か出てきたものがあれば、それはいまの暮らしのどこと関係していそうですか。"
+        },
+        {
+          "promptId": "RP_3",
+          "copyJa": "きょうの空模様を、半年後の自分が見たら、どんなひとことを添えると思いますか。"
+        }
+      ]
+    }
+  },
   "copyBundles": {
-    "version": "daily-copy-v1",
+    "version": "daily-copy-v1.1",
     "entryHookJa": "きょうのじぶんを、天気にたとえるなら。",
-    "startPageJa": "30秒だけ、きょうのわたしを記録します。点数は出ません。だれにも見えません。",
+    "startPageJa": "1分だけ、きょうのわたしを記録します。点数は出ません。記録は非公開が基本です。",
     "progressJa": "のこり少しです",
     "skipJa": "この項目はとばす",
     "exitJa": "とちゅうでやめる（記録は保存されません）",
     "completionJa": "きょうの記録が残りました。",
     "retestJa": "また明日、気が向いたら。",
-    "privacyJa": "この記録はあなただけのものです。共有されることはありません。",
-    "shareBoundaryJa": "共有できるのは「記録をつづけていること」だけ。中身は共有されません。",
+    "privacyJa": "この記録は非公開が基本です。ほかの利用者に公開されることはなく、内容が共有カードやURLに載ることもありません。記録の保存・処理はプライバシーポリシーにもとづいて行われ、理解への活用にはそのつどの同意が必要です。",
+    "shareBoundaryJa": "共有できるのは「記録をつづけていること」だけ。状態の中身は共有カードやURLに載りません。",
     "emptyHistoryJa": "まだ記録はありません。きょうの一枚から始まります。",
     "firstEntryJa": "はじめての記録です。まずは、いまの天気から。",
     "timeline7Ja": "この7日の空模様",
     "timeline30Ja": "この30日の空模様",
-    "correctionJa": "きょうの記録をなおす",
-    "rejectionJa": "きょうの記録を消す（元に戻せません）",
+    "correctionJa": "きょうの記録をなおす（前の内容は履歴として残ります）",
+    "rejectionJa": "きょうの記録を消す",
     "accessibilityLabels": {
       "fieldGroupJa": "きょうの状態の選択肢",
       "optionSelectedJa": "選択中",
@@ -185,43 +451,105 @@
   "resultSchema": {
     "resultVariant": "StateRecordResult",
     "noArchetype": true,
-    "fields": ["stateValues", "privateReflection", "cadence", "acknowledgementJa", "comparisonPolicy", "understandingPolicy", "provenance", "confirmation"],
+    "fields": [
+      "stateValues",
+      "privateReflection",
+      "cadence",
+      "acknowledgementJa",
+      "comparisonPolicy",
+      "understandingPolicy",
+      "provenance",
+      "confirmation"
+    ],
     "comparisonPolicy": "method_local_timeline_only",
     "understandingPolicy": "method_derived_eligible",
     "understandingNoteJa": "この記録は「いまの状態の文脈」として、本人の同意の範囲でだけ理解に使われます。他のテストの結果と数値で混ぜられることはありません。",
     "provenance": {
       "kind": "recorded_state",
-      "schemaVersion": "daily-state-schema-v1",
+      "schemaVersion": "daily-state-schema-v1.1",
       "methodVersion": "daily-check-in-v1.0",
       "yorisouScoring": null
     },
-    "confirmation": { "required": true, "policy": "per CPV1 — user may confirm, correct, or delete any entry" }
-  },
-  "deepOutput": {
-    "kind": "longitudinal_experience_not_report",
-    "modules": [
-      "recent-pattern summary (words, not scores)",
-      "7-day timeline",
-      "30-day timeline",
-      "user-confirmed recurring context (opt-in)",
-      "gentle reflection prompts"
-    ],
-    "noConventionalDeepReport": true
+    "confirmation": {
+      "required": true,
+      "policy": "per CPV1 — user may confirm, correct (versioned), or delete any entry; corrections preserve prior versions per CPV1 history/audit policy"
+    }
   },
   "recommendationPolicy": {
-    "tags": ["rest_hint", "organize_hint", "connect_hint", "solo_time_hint", "small_win_hint"],
+    "taxonomyNote": "governed taxonomy shared with yorisou-values; groups: need_* (state-derived needs), context_* (life areas), content_* (content affinities); no_recommendation is explicit",
+    "governedTags": [
+      "need_rest",
+      "need_order",
+      "need_change",
+      "need_connect",
+      "need_solo",
+      "need_small_win",
+      "context_work",
+      "context_relationship",
+      "content_learning",
+      "no_recommendation"
+    ],
+    "needMapping": [
+      {
+        "optionId": "yasumi",
+        "tag": "need_rest",
+        "fitReasonJa": "「やすみ」を選んだ日の状態に、休息系のヒントが対応するため"
+      },
+      {
+        "optionId": "seiri",
+        "tag": "need_order",
+        "fitReasonJa": "「整理する時間」を選んだ日の状態に、整えごと系のヒントが対応するため"
+      },
+      {
+        "optionId": "kibun_tenkan",
+        "tag": "need_change",
+        "fitReasonJa": "「気分転換」を選んだ日の状態に、変化・切り替え系のヒントが対応するため"
+      },
+      {
+        "optionId": "hanasu",
+        "tag": "need_connect",
+        "fitReasonJa": "「だれかと話すこと」を選んだ日の状態に、つながり系のヒントが対応するため"
+      },
+      {
+        "optionId": "hitori_jikan",
+        "tag": "need_solo",
+        "fitReasonJa": "「ひとりの時間」を選んだ日の状態に、ひとり時間系のヒントが対応するため"
+      },
+      {
+        "optionId": "tassei",
+        "tag": "need_small_win",
+        "fitReasonJa": "「小さな達成感」を選んだ日の状態に、小さな一歩系のヒントが対応するため"
+      }
+    ],
+    "unansweredNeedBehavior": "no_recommendation (explicit; a day without kyou_hoshii produces no hint)",
+    "consentApplicability": "recommendation use requires the applicable CPV1 purpose consent; without it, tags are stored but never surfaced",
     "tagsAreHintsOnly": true,
     "noCommercialRecommendationInPublicCopy": true,
+    "noPublicCopyExposure": "tags and hints never appear in share cards or URLs",
     "noPaymentOrPricingExists": true
   },
   "privacy": {
     "privacyClass": "P5_free_text",
     "privateByDefault": true,
-    "nothingInUrlsOrShareCards": true
+    "notPublishedToOtherUsers": true,
+    "nothingInUrlsOrShareCards": true,
+    "processingNote": "saved records are processed and stored by the service under the privacy policy; downstream use requires the applicable consent; no absolute-invisibility claim is made"
   },
-  "cadence": { "type": "daily", "streakFree": true, "noPenaltyForGaps": true, "gapCopyJa": "あいだが空いても、なにも失われません。きょうの一枚からまた始まります。" },
+  "cadence": {
+    "type": "daily",
+    "streakFree": true,
+    "noPenaltyForGaps": true,
+    "gapCopyJa": "あいだが空いても、なにも失われません。きょうの一枚からまた始まります。"
+  },
   "prohibitions": [
-    "no score of any kind", "no good/bad day ranking", "no severity language", "no worsening claims",
-    "no diagnostic interpretation", "no permanent identity statements", "no crisis/medical triage in this package"
+    "no score of any kind",
+    "no good/bad day ranking",
+    "no severity language or severity calculation",
+    "no worsening claims",
+    "no diagnostic interpretation",
+    "no automatic crisis classification or medical inference",
+    "no automatic hotline/consultation pointer triggered by daily selections alone (V1 Founder decision 3.2)",
+    "no permanent identity statements",
+    "no streak pressure"
   ]
 }

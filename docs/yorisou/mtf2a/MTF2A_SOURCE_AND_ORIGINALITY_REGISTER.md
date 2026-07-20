@@ -4,7 +4,7 @@
 
 | Field | Record |
 |---|---|
-| User need | 毎日30秒で、点数なしに自分の状態を残し、あとから変化を眺めたい |
+| User need | 毎日1分ほどで、点数なしに自分の状態を残し、あとから変化を眺めたい |
 | Source classification | first-party original build; abstract pattern only |
 | Rights route | `YORISOU_ORIGINAL_REBUILD_CANDIDATE` |
 | Abstract patterns used | periodic self-report check-in (generic, unprotectable); weather-as-mood metaphor (common cultural metaphor, unprotectable as a concept — all wording, option sets, and the acknowledgement system are newly authored) |

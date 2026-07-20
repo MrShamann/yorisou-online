@@ -6,15 +6,15 @@ Both methods completed the full **20-step Test Pattern Forge** (`MTF1_TEST_ORIGI
 
 | Method | Execution model | Result variant | Format decided at benchmark |
 |---|---|---|---|
-| `daily-check-in` 「きょうの空模様」 | `recorded_state` | `StateRecordResult` (no archetype, no score) | 5-input, one-screen, ~45s, opt-in private memo |
+| `daily-check-in` 「きょうの空模様」 | `recorded_state` | `StateRecordResult` (no archetype, no score) | 5-input, one-screen, ~45-60s (user claim: 1分), opt-in private memo |
 | `yorisou-values` 「いま大事にしたいことチェック」 | `scored` | `ArchetypeResult` | 48-item A/B forced trade-off, main tier, ~8 min |
 
 ## Inventory
 
 | File | Content |
 |---|---|
-| `daily-check-in.v1.json` | **Canonical machine-readable spec** — identity, recorded_state definition, state schema (5 fields + opt-in memo), acknowledgement rules (13 entries), copy bundles, StateRecordResult contract |
-| `yorisou-values.v1.json` | **Canonical machine-readable spec** — identity, scored definition, benchmark decision, 7 dimensions, complete 48-item bank, scoring v1, result-model benchmark, 8 complete results, report outline, recommendations |
+| `daily-check-in.v1.json` | **Canonical spec (v1.1)** — identity (1分), record contract (UTC+local date+timezone, versioned corrections), state schema v1.1, ack rules v1.1 (risk-reviewed), longitudinal system (7/30-day + prompts), governed recommendation mapping, content hash |
+| `yorisou-values.v1.json` | **Canonical spec (v1.1)** — identity, scored definition + content hash, benchmark, 7 dimensions, 48-item bank (MTF-2A.1 audited), scoring v1.1 (pair-independent Mixed, insufficient_coverage), 8 results (renames + distinct share lines), non-graded secondary, anti-screening boundary |
 | `MTF2A_DAILY_CHECK_IN_BENCHMARK.md` | Forge step-5 record (formats compared, selection, rationale) |
 | `MTF2A_DAILY_CHECK_IN_PRODUCT_SPEC.md` | Product spec (identity, state schema, recording model, timeline semantics, deep output) |
 | `MTF2A_DAILY_CHECK_IN_COPY_SYSTEM.md` | Complete Japanese copy system incl. acknowledgement set |
@@ -31,3 +31,5 @@ Both methods completed the full **20-step Test Pattern Forge** (`MTF1_TEST_ORIGI
 **Canonicity rule:** the two `.v1.json` files are the single source of truth for IDs, items, options, rules and copy; the Markdown documents present and justify them. The validator cross-checks that every JSON item/result ID appears in its Markdown counterpart.
 
 **Activation truth:** both methods remain `gated` (CPV1 evidence-gated model). Content authoring does NOT activate anything; Founder review is Forge step 20.
+
+**Inventory truth (MTF-2A.1):** the branch package is exactly **15 files** — the 14 listed above under `docs/yorisou/mtf2a/` plus `scripts/validate-mtf2a-content.mjs`. (An earlier PR-body claim of 16 was incorrect and is corrected.)

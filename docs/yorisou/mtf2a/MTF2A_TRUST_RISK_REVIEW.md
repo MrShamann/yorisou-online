@@ -32,7 +32,7 @@
 |---|---|
 | Moral ranking | PASS — all seven dimensions written as equally legitimate; notMeaning lines defuse the negative reading of each |
 | Political/religious inference | PASS — no item touches politics, religion, or ideology; contribution items are everyday-scale (手伝い/当番/応援) |
-| Employer screening misuse | **ESCALATION E-2 (recorded)** — any values instrument can be misused for screening. Mitigations in-package: results are current-state (unstable by design), no numeric scores exist to rank candidates, limits copy states unsuitability for judgment. A future terms-of-use clause against employment screening is recommended (Founder/legal item). |
+| Employer screening misuse | **ESCALATION E-2 (recorded)** — any values instrument can be misused for screening. Mitigations in-package (MTF-2A.1): the anti-screening usage boundary now SHIPS in canonical copy (usageBoundaryJa + interpretation limits); results are current-state (unstable by design); ACCURATE numerics statement: method-local numeric calculations exist internally but are never user-facing ranking scores, never exposed, and never usable to compare people; a Terms-of-Use clause against employment/placement/evaluation/selection screening is REQUIRED at implementation (FD-3). |
 | Compatibility certainty | PASS — no compatibility output exists; cross-method numeric comparison structurally prohibited |
 | Permanent identity labeling | PASS — 「〜たい時期」 naming + current-state recognition lines + retest framing (変化は自然) |
 
@@ -44,3 +44,10 @@
 ## Outcome
 
 **PASS with two recorded escalations (E-1, E-2)** — both are future policy decisions, not defects in the authored content.
+
+## MTF-2A.1 additions
+
+- **Founder decision 3.2 recorded (V1 sustained-low-state policy):** no automatic crisis classification, no medical inference, no automatic hotline/consultation pointer triggered by daily selections alone, no worsening language, no severity calculation. Timeline stays neutral/descriptive (canonical `prohibitions` updated). A global, user-initiated safety/resource surface may be designed later under a separate Founder-authorized policy package. Escalation E-1 is thereby RESOLVED for V1 (superseded by this policy).
+- **Anti-screening boundary (3.3) shipped** in `yorisou-values.v1.json` (`usageBoundaryJa`) + product spec §9 + interpretation limits; ToU implementation requirement registered (FD-3 remains a legal follow-up).
+- **Acknowledgement risk pass:** 13/13 reviewed — future predictions, outcome guarantees, it-will-work claims, mobility assumptions and unrequested advice removed (keep 4 / polish 2 / rewrite 7; per-ack decisions in the JSON).
+- **Privacy language:** absolute claims removed; accurate boundary copy shipped (daily privacyJa/shareBoundaryJa + privacy.processingNote).
