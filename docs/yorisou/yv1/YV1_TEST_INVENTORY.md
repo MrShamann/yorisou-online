@@ -1,5 +1,8 @@
 # YV-1 — Test Inventory
 
+> ## FINAL CONTROL BLOCK — YV-1-MERGE (controlling status)
+> Founder decision: `YORISOU_YV_1_2_FOUNDER_REVIEW_ACCEPTED_MERGE_AUTHORIZED` — **Founder Review: ACCEPTED · Merge: AUTHORIZED · Implementation after merge: complete · Derived availability: `implemented_private`**. Hosted migration: NOT AUTHORIZED / NOT APPLIED · Preview flag: NOT AUTHORIZED / NOT ENABLED · Production route activation: NOT AUTHORIZED (route + APIs 404) · Purge schedule: NOT AUTHORIZED / NOT CREATED · Public navigation/catalog/sitemap: NONE. The registry contract test now asserts `implementation === complete`, `methodActivationState === implemented_private`, and that yorisou-values is in neither `publicMethods()` nor `productionRouteVerifiedMethods()`. Historical YV-1/1.1/1.2 evidence (incl. the five-vs-six-field correction) is preserved below.
+
 > Updated by **YV-1.2** (six-field provenance incl. `method_id`, complete
 > anonymous→login explicit-save continuation, truthful/idempotent confirmation).
 > **Correction:** the YV-1.1 inventory said the provenance gate covered "6

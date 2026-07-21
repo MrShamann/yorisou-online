@@ -784,16 +784,20 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
   // YV-1 — yorisou-values「いま大事にしたいことチェック」: the concrete SCORED method,
   // reconciling the former `values-v0.1` "価値観リフレクション" placeholder (same
   // methodId, no duplicate identity). Canonical content
-  // docs/yorisou/mtf2a/yorisou-values.v1.json; Founder decision
-  // YORISOU_YV_1_CANONICAL_CONTENT_APPROVED_FOR_GATED_IMPLEMENTATION. Gated
-  // NON-PUBLIC implementation candidate on the feature branch: implementation
-  // "in_progress" (NOT complete — that requires a later Founder Review + merge),
-  // so the derived activation state remains exactly `gated`. content "authored"
-  // (canonical, frozen); tests "passing" (YV-1 contract suite); rights YORISOU-
-  // owned + cleared for this gated implementation; routeEvidence "none" (no
-  // production-main route); founderActivation "closed" (content approval ≠ public
-  // activation); deploymentStatus unverified; devFlagged (Preview only behind
-  // yorisou_values_preview; Production route 404s server-side).
+  // docs/yorisou/mtf2a/yorisou-values.v1.json (bank hash 919f1725, frozen).
+  //
+  // YV-1-MERGE (Founder decision YORISOU_YV_1_2_FOUNDER_REVIEW_ACCEPTED_MERGE_
+  // AUTHORIZED): the accepted private implementation (with the YV-1.1 + YV-1.2
+  // corrections) is MERGED. implementation "complete" + rights cleared ⇒ the
+  // derived coarse label is `implemented_private` — implementation + canonical
+  // content + tests complete, private/gated capability implemented, but NOT
+  // public_active and NOT implemented_route_verified. It is NON-PUBLIC by every
+  // remaining gate: routeEvidence "none" (no production-main route; Production
+  // route + APIs 404 server-side), founderActivation "closed" (content/impl
+  // acceptance ≠ public activation), deploymentStatus "unverified" (no hosted
+  // persistence/route verification), devFlagged (Preview only behind
+  // yorisou_values_preview, enabled in NO environment). No hosted migration
+  // applied, no purge schedule, no Preview flag, no Production route activation.
   {
     ...originalRouteVerified({
       methodId: "yorisou-values",
@@ -810,12 +814,17 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
       interpretationLimits: "いまの選び方の傾向の整理。性格診断でも優劣判定でもない。第三者による選考の材料には使えない。",
       refreshModel: "retake anytime; history-preserving",
     }),
-    implementation: "in_progress", // YV-1 candidate on feature branch; pending Founder Review
+    implementation: "complete", // YV-1 accepted + merged (YV-1.1 + YV-1.2 corrections)
     content: "authored", // canonical MTF-2A content (frozen)
     tests: "passing", // YV-1 contract suite
-    rights: yorisouOriginal("yorisou-values", { activated: false }), // owned; not public-activated
-    routeEvidence: "none", // route NOT on production main (branch only)
-    founderActivation: "closed", // content approved ≠ public activation
+    // Rights CLEARED (YORISOU owns the content + logic; Founder reviewed at merge).
+    // Rights-clearance is a SEPARATE concept from Founder PUBLIC activation — this
+    // does NOT open the route: founderActivation stays `closed`, routeEvidence
+    // `none`, deploymentStatus `unverified`. With implementation `complete` the
+    // derived coarse label is therefore `implemented_private`.
+    rights: yorisouOriginal("yorisou-values", { activated: true }),
+    routeEvidence: "none", // route NOT on production main (Production 404s)
+    founderActivation: "closed", // impl/content acceptance ≠ public activation
     deploymentStatus: "unverified",
     deploymentEvidenceRef: null,
     founderDecisionRef: null,

@@ -1,5 +1,19 @@
 # YV-1 — Verification Evidence & Privacy/Consent Review
 
+> ## FINAL CONTROL BLOCK — YV-1-MERGE (controlling status)
+> Founder decision: `YORISOU_YV_1_2_FOUNDER_REVIEW_ACCEPTED_MERGE_AUTHORIZED`
+> - **Founder Review: ACCEPTED** · **Merge: AUTHORIZED**
+> - **Implementation status after merge: complete** · **Derived availability: `implemented_private`**
+> - **Hosted migration: NOT AUTHORIZED / NOT APPLIED**
+> - **Preview flag: NOT AUTHORIZED / NOT ENABLED**
+> - **Production route activation: NOT AUTHORIZED** (Production route + APIs 404)
+> - **Purge schedule: NOT AUTHORIZED / NOT CREATED**
+> - **Public navigation / catalog / sitemap exposure: NONE**
+>
+> Historical YV-1 / YV-1.1 / YV-1.2 evidence below is preserved, including the
+> explicit five-vs-six-field provenance correction. Earlier incomplete tests are
+> not retroactively described as correct.
+
 > **Updated by YV-1.1.** The contract-suite row below now reflects the corrected,
 > genuine scoring proofs (concrete real-bank Mixed fixture, exact 0.05 boundary,
 > side-swapped A/B inversion) that replaced three previously vacuous tests, plus

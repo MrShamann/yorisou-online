@@ -1,6 +1,22 @@
 # YV-1 — Architecture Decision Record & Repository Dependency Map
 
-**Package:** YV-1 yorisou-values「いま大事にしたいことチェック」scored vertical slice · **Base:** `main @ e6dd59d` · **Founder decision:** `YORISOU_YV_1_CANONICAL_CONTENT_APPROVED_FOR_GATED_IMPLEMENTATION` · **Status:** gated, non-public implementation candidate. Registry `implementation: in_progress` (activation `gated`). This is NOT merge, activation, hosted migration, or public availability.
+> ## FINAL CONTROL BLOCK — YV-1-MERGE (controlling status)
+> Founder decision: `YORISOU_YV_1_2_FOUNDER_REVIEW_ACCEPTED_MERGE_AUTHORIZED`
+> - **Founder Review: ACCEPTED**
+> - **Merge: AUTHORIZED**
+> - **Implementation status after merge: complete**
+> - **Derived availability: `implemented_private`** (implementation + canonical content + tests complete; private/gated capability implemented; NOT `public_active`, NOT `implemented_route_verified`)
+> - **Hosted migration: NOT AUTHORIZED / NOT APPLIED**
+> - **Preview flag (`yorisou_values_preview`): NOT AUTHORIZED / NOT ENABLED**
+> - **Production route activation: NOT AUTHORIZED** (Production `/tests/yorisou-values` + APIs 404)
+> - **Purge schedule: NOT AUTHORIZED / NOT CREATED**
+> - **Public navigation / catalog / sitemap exposure: NONE**
+>
+> The YV-1, YV-1.1 and YV-1.2 records below are preserved as history — including the
+> explicit correction that YV-1.1 verified only five provenance fields (YV-1.2 added
+> the sixth). Earlier incomplete tests are NOT retroactively described as correct.
+
+**Package:** YV-1 yorisou-values「いま大事にしたいことチェック」scored vertical slice · **Base:** `main @ e6dd59d` · **Founder decision (content approval):** `YORISOU_YV_1_CANONICAL_CONTENT_APPROVED_FOR_GATED_IMPLEMENTATION` · **Original candidate status (superseded by the control block above):** gated, non-public implementation candidate with registry `implementation: in_progress`. Post-YV-1-MERGE the registry is `implementation: complete` deriving `implemented_private` — still non-public (no route on production main, Production 404, no hosted persistence, founderActivation closed). This is NOT public activation, hosted migration, or Production route availability.
 
 ## 1. Canonical source & loading (§4/§8)
 Single source of truth: `docs/yorisou/mtf2a/yorisou-values.v1.json` (BYTE-FROZEN; bank hash `919f17251a280bb34258f6042db46bb9fd543763b33e041de64c36b305eaa9a6`). Strategy: **deterministic generated artifact** via `scripts/generate-yorisou-values-runtime.mjs` — re-verifies the pinned bank hash (sha256 over the compact serialization of `questionBank.items`) BEFORE generation, distills the runtime subset (no Japanese copy rewritten), emits `lib/yorisou/methods/yorisou-values/definition.generated.ts` marked GENERATED with the source hash. Drift fails the contract test (`--check` byte comparison + independent hash reproduction). Regenerate: `npm run generate:yorisou-values`.

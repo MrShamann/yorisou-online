@@ -16,7 +16,7 @@ import { hintsForResult } from "../hints";
 import { yorisouValuesAccess } from "../access";
 import { CANONICAL_VALUES_PROVENANCE, recordProvenanceMatchesCanonical, firstUnknownKey } from "../contract";
 import { checkPendingValuesCompatibility } from "../../../../../app/tests/yorisou-values/pendingProgress";
-import { getMethod, methodActivationState } from "../../../../cpv1/methods";
+import { getMethod, methodActivationState, publicMethods, productionRouteVerifiedMethods } from "../../../../cpv1/methods";
 
 const DEF = YORISOU_VALUES_DEFINITION;
 let passed = 0;
@@ -332,14 +332,21 @@ check("route gate: production + unknown 404; local/test open; preview needs the 
   assert.deepEqual(yorisouValuesAccess({ VERCEL_ENV: "preview", YORISOU_CPV1_DEV_FLAGS: "yorisou_values_preview" }), { allowed: true, reason: "preview_flag_on" });
   assert.deepEqual(yorisouValuesAccess({ VERCEL_ENV: "production", YORISOU_CPV1_DEV_FLAGS: "yorisou_values_preview" }), { allowed: false, reason: "denied_production" });
 });
-check("registry: yorisou-values gated + non-public on every gate; daily-check-in unchanged", () => {
+check("registry (YV-1-MERGE): yorisou-values complete → implemented_private, never public/route-verified; daily-check-in unchanged", () => {
   const yv = getMethod("yorisou-values")!;
-  assert.equal(yv.implementation, "in_progress");
-  assert.equal(methodActivationState(yv), "gated");
+  // Accepted + merged private implementation.
+  assert.equal(yv.implementation, "complete");
+  assert.equal(methodActivationState(yv), "implemented_private");
+  // Still non-public by every remaining gate.
   assert.equal(yv.founderActivation, "closed");
   assert.equal(yv.routeEvidence, "none");
   assert.equal(yv.deploymentStatus, "unverified");
   assert.equal(yv.devFlagged, true);
+  // The coarse label MUST NOT collapse to a public/route-verified state.
+  assert.notEqual(methodActivationState(yv), "public_active");
+  assert.notEqual(methodActivationState(yv), "implemented_route_verified");
+  assert.ok(!publicMethods().some((m) => m.methodId === "yorisou-values"), "yorisou-values is NOT public");
+  assert.ok(!productionRouteVerifiedMethods().some((m) => m.methodId === "yorisou-values"), "yorisou-values route NOT production-verified");
   const daily = getMethod("daily-check-in")!;
   assert.equal(daily.implementation, "complete"); // DCI-1-MERGE state preserved
 });
