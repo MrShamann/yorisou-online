@@ -71,6 +71,8 @@ type CreateBody = {
   timezone?: unknown;
   resumed?: unknown;
   completedAt?: unknown;
+  methodVersion?: unknown; // required on resumed saves (DCI-1.2 §7)
+  schemaVersion?: unknown; // required on resumed saves (DCI-1.2 §7)
   // Rejected if present — canonical time identity is server-authoritative:
   producedAt?: unknown;
   entryLocalDate?: unknown;
@@ -93,6 +95,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "time_identity_is_server_authoritative" }, { status: 422 });
   }
   const timezone = typeof body.timezone === "string" ? body.timezone : "";
+  // DCI-1.2 §7 — resumed saves must carry the EXACT current canonical method and
+  // schema versions; a stale/missing pending contract never creates a record.
+  if (
+    body.resumed === true &&
+    (body.methodVersion !== DAILY_CHECK_IN_DEFINITION.methodVersion || body.schemaVersion !== DAILY_CHECK_IN_DEFINITION.schemaVersion)
+  ) {
+    return NextResponse.json({ error: "resumed_contract_version_mismatch" }, { status: 422 });
+  }
   const time =
     body.resumed === true
       ? resumedTimeIdentity(body.completedAt, timezone)

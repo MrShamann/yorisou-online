@@ -9,7 +9,7 @@ import { DAILY_CHECK_IN_DEFINITION } from "@/lib/yorisou/methods/daily-check-in/
 import { selectAcknowledgement } from "@/lib/yorisou/methods/daily-check-in/acknowledgement";
 import { hintForEntry } from "@/lib/yorisou/methods/daily-check-in/hints";
 import { optionLabelJa } from "@/lib/yorisou/methods/daily-check-in/longitudinal";
-import { storePendingDailyEntry, takePendingDailyEntry, type PendingDailyEntry } from "./pendingEntry";
+import { checkPendingCompatibility, storePendingDailyEntry, takePendingDailyEntry, type PendingDailyEntry } from "./pendingEntry";
 
 const DEF = DAILY_CHECK_IN_DEFINITION;
 const COPY = DEF.copy;
@@ -63,6 +63,7 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
   const [resumed, setResumed] = useState(false);
   const [completedAt, setCompletedAt] = useState<string | null>(null);
   const [resumedContext, setResumedContext] = useState<{ completedAt: string; timezone: string } | null>(null);
+  const [staleResume, setStaleResume] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -98,6 +99,17 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
     if (!authenticated) return;
     const pending: PendingDailyEntry | null = takePendingDailyEntry();
     if (!pending) return;
+    // DCI-1.2 §7 — verify pending provenance BEFORE applying it to UI state;
+    // a stale/incompatible payload is never silently coerced.
+    const compat = checkPendingCompatibility(pending, {
+      methodVersion: DEF.methodVersion,
+      schemaVersion: DEF.schemaVersion,
+      fields: DEF.fields,
+    });
+    if (!compat.compatible) {
+      queueMicrotask(() => setStaleResume(true));
+      return;
+    }
     queueMicrotask(() => {
       setValues((prev) => ({ ...prev, ...pending.values }));
       setMemoOptIn(pending.memoOptIn);
@@ -125,7 +137,16 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
     setSaveState({ kind: "saving" });
     try {
       const createBody = resumedContext
-        ? { values, memoOptIn, memo: memoOptIn && memo ? memo : null, timezone: resumedContext.timezone, resumed: true, completedAt: resumedContext.completedAt }
+        ? {
+            values,
+            memoOptIn,
+            memo: memoOptIn && memo ? memo : null,
+            timezone: resumedContext.timezone,
+            resumed: true,
+            completedAt: resumedContext.completedAt,
+            methodVersion: DEF.methodVersion,
+            schemaVersion: DEF.schemaVersion,
+          }
         : { values, memoOptIn, memo: memoOptIn && memo ? memo : null, timezone };
       const res = asCorrection
         ? await fetch(`/api/tests/daily-check-in/records/${asCorrection}`, {
@@ -200,6 +221,11 @@ export function DailyCheckInFlow({ authenticated }: { authenticated: boolean }) 
         </p>
       </header>
 
+      {staleResume && phase === "entry" ? (
+        <p className="surface-panel-soft mb-4 rounded-lg p-3 text-sm" data-testid="daily-stale-resume-note">
+          チェックインの形式が新しくなったため、とちゅうの記録は引き継げませんでした。お手数ですが、いまの内容であらためて記録してください。
+        </p>
+      ) : null}
       {resumed && phase === "entry" ? (
         <div className="surface-panel-soft mb-4 rounded-lg p-3 text-sm" data-testid="daily-resumed-note">
           <p>とちゅうの記録を引き継ぎました。内容を確かめてから保存できます。記録の時刻は、入力したときのものが保たれます。</p>

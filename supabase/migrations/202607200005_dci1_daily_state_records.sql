@@ -36,6 +36,7 @@
 --   destructive in a disposable local/test database only; NOT a production
 --   rollback; no production migration has occurred). Rollback (disposable local
 --   DB only):
+--     drop function if exists public.yorisou_daily_tombstone_purge_expired(integer);
 --     drop function if exists public.yorisou_daily_record_delete(text, date, text);
 --     drop function if exists public.yorisou_daily_record_correct(text, date, timestamptz, jsonb, text, text, text);
 --     drop function if exists public.yorisou_daily_record_create(text, text, text, text, timestamptz, date, text, integer, jsonb, text, text);
@@ -152,15 +153,19 @@ drop trigger if exists yorisou_daily_state_records_no_truncate on public.yorisou
 create trigger yorisou_daily_state_records_no_truncate
   before truncate on public.yorisou_daily_state_records
   for each statement execute function public.yorisou_dci_block_mutation();
--- Events: tombstones are immutable, forever (CPV1-CM0 absolute guard).
+-- Events (DCI-1.2): UPDATE/TRUNCATE never; DELETE only inside a governed-erasure
+-- transaction — used by (a) the user-deletion RPC to remove the record's prior
+-- created/corrected audit rows (deletion event minimization, DCI-C9) and (b) the
+-- bounded tombstone-expiry purge RPC. Direct DELETE stays denied for every
+-- application role by grants AND by this guard.
 drop trigger if exists yorisou_daily_state_history_events_no_mutate on public.yorisou_daily_state_history_events;
 create trigger yorisou_daily_state_history_events_no_mutate
   before update or delete on public.yorisou_daily_state_history_events
-  for each row execute function public.yorisou_cpv1_block_mutation();
+  for each row execute function public.yorisou_dci_block_mutation();
 drop trigger if exists yorisou_daily_state_history_events_no_truncate on public.yorisou_daily_state_history_events;
 create trigger yorisou_daily_state_history_events_no_truncate
   before truncate on public.yorisou_daily_state_history_events
-  for each statement execute function public.yorisou_cpv1_block_mutation();
+  for each statement execute function public.yorisou_dci_block_mutation();
 
 -- 4. Privilege matrix (DCI-1.1 §4):
 --      public/anon/authenticated : NO access
@@ -295,10 +300,13 @@ begin
 end;
 $$;
 
--- DELETE: governed PRIVATE-CONTENT ERASURE (DCI-1.1 §8). Removes all version
--- content rows and the current record row; appends ONE content-free tombstone
--- event (record id, owner ref, last version count, deletion time, bounded reason
--- code, retention expiry = 12 months → account-level data-rights purge path).
+-- DELETE: governed PRIVATE-CONTENT ERASURE (DCI-1.1 §8 + DCI-1.2 §5 event
+-- minimization). Removes all version content rows, the current record row AND
+-- all prior created/corrected audit events for the record; leaves EXACTLY ONE
+-- retained DCI object — a content-free deletion tombstone (event id, former
+-- record id, owner ref, last version count, deletion time, bounded reason code,
+-- retention expiry). No structured state, option value, memo, acknowledgement
+-- id/copy, hint tag, timezone or result copy survives.
 create or replace function public.yorisou_daily_record_delete(
   p_owner_account_id text,
   p_entry_local_date date,
@@ -319,10 +327,12 @@ begin
   if not found then
     return false;
   end if;
-  -- Transaction-local governed-erase flag: the ONLY path that may delete content.
+  -- Transaction-local governed-erase flag: the ONLY context that may delete
+  -- content or audit rows.
   perform set_config('yorisou.dci_governed_erase', 'on', true);
   delete from public.yorisou_daily_state_record_versions where record_id = v_record.id;
   delete from public.yorisou_daily_state_records where id = v_record.id;
+  delete from public.yorisou_daily_state_history_events where record_id = v_record.id;
   perform set_config('yorisou.dci_governed_erase', 'off', true);
   insert into public.yorisou_daily_state_history_events
     (record_id, owner_account_id, event_type, version, reason_code, retention_expires_at)
@@ -331,26 +341,70 @@ begin
 end;
 $$;
 
+-- DCI-1.2 §6 — bounded, EXECUTABLE tombstone-expiry purge. The 12-month period
+-- is a GATED IMPLEMENTATION CANDIDATE, not an activated Production legal policy:
+-- no hosted migration has occurred, NO purge schedule is created anywhere, and
+-- hosted apply / public activation requires a later Founder-approved privacy and
+-- operations decision. Deletes ONLY expired 'deleted' tombstones (which contain
+-- no state or memo by construction), in bounded batches; service-role execute
+-- only; no user-facing API route exists.
+create or replace function public.yorisou_daily_tombstone_purge_expired(
+  p_limit integer default 500
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_deleted integer;
+begin
+  if p_limit is null or p_limit < 1 or p_limit > 5000 then
+    raise exception 'daily_purge_invalid_limit';
+  end if;
+  perform set_config('yorisou.dci_governed_erase', 'on', true);
+  with expired as (
+    select id from public.yorisou_daily_state_history_events
+    where event_type = 'deleted'
+      and retention_expires_at is not null
+      and retention_expires_at <= now()
+    order by retention_expires_at
+    limit p_limit
+    for update
+  )
+  delete from public.yorisou_daily_state_history_events e
+  using expired
+  where e.id = expired.id;
+  get diagnostics v_deleted = row_count;
+  perform set_config('yorisou.dci_governed_erase', 'off', true);
+  return v_deleted;
+end;
+$$;
+
 -- RPC permissions: service-role execute only.
 revoke all on function public.yorisou_daily_record_create(text, text, text, text, timestamptz, date, text, integer, jsonb, text, text) from public;
 revoke all on function public.yorisou_daily_record_correct(text, date, timestamptz, jsonb, text, text, text) from public;
 revoke all on function public.yorisou_daily_record_delete(text, date, text) from public;
+revoke all on function public.yorisou_daily_tombstone_purge_expired(integer) from public;
 do $$
 begin
   if exists (select 1 from pg_roles where rolname = 'anon') then
     execute 'revoke all on function public.yorisou_daily_record_create(text, text, text, text, timestamptz, date, text, integer, jsonb, text, text) from anon';
     execute 'revoke all on function public.yorisou_daily_record_correct(text, date, timestamptz, jsonb, text, text, text) from anon';
     execute 'revoke all on function public.yorisou_daily_record_delete(text, date, text) from anon';
+    execute 'revoke all on function public.yorisou_daily_tombstone_purge_expired(integer) from anon';
   end if;
   if exists (select 1 from pg_roles where rolname = 'authenticated') then
     execute 'revoke all on function public.yorisou_daily_record_create(text, text, text, text, timestamptz, date, text, integer, jsonb, text, text) from authenticated';
     execute 'revoke all on function public.yorisou_daily_record_correct(text, date, timestamptz, jsonb, text, text, text) from authenticated';
     execute 'revoke all on function public.yorisou_daily_record_delete(text, date, text) from authenticated';
+    execute 'revoke all on function public.yorisou_daily_tombstone_purge_expired(integer) from authenticated';
   end if;
   if exists (select 1 from pg_roles where rolname = 'service_role') then
     execute 'grant execute on function public.yorisou_daily_record_create(text, text, text, text, timestamptz, date, text, integer, jsonb, text, text) to service_role';
     execute 'grant execute on function public.yorisou_daily_record_correct(text, date, timestamptz, jsonb, text, text, text) to service_role';
     execute 'grant execute on function public.yorisou_daily_record_delete(text, date, text) to service_role';
+    execute 'grant execute on function public.yorisou_daily_tombstone_purge_expired(integer) to service_role';
   end if;
 end $$;
 

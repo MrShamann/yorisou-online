@@ -70,13 +70,13 @@ Longitudinal: 10 deterministic test groups — rain / low-battery / swirl / repe
 |---|---|
 | DCI contract suite (`npm run test:daily-check-in`) | **41 checks passed** (adds the server-authoritative time contract: server identity, resumed windows, midnight crossing, timezone-change no-re-bucket, correction window) |
 | Disposable-DB harness (`npm run test:daily-check-in:db`) | **ALL CHECKS PASSED** — DCI-1.1 additions: every direct write (INSERT/UPDATE/DELETE/TRUNCATE × 3 tables) FAILS under `SET ROLE service_role` while the RPCs succeed; initial `produced_at` never overwritten; version rows carry their own server timestamps; past-local-date correction rejected in-database; governed erasure sweeps (record row gone, zero version rows, memo string absent database-wide, content-free tombstone with 12-month retention); **two concurrent corrections serialize to exactly v3 with three distinct version rows**; rollback executed (incl. dropping `yorisou_dci_block_mutation`) |
-| Full-stack authenticated acceptance (`bash tests/daily-check-in/fullstack-local.sh`) | **5/5 PASSED** — see the architecture doc's DCI-1.1 section for the exact coverage |
+| Full-stack authenticated acceptance (`bash tests/daily-check-in/fullstack-local.sh`) | **5/5 PASSED** *(historical note: the DCI-1.1 run's cross-account case was the weak 2020-01-01 fixture — superseded by the DCI-1.2 true-isolation fixture below)* |
 | API negatives | malformed JSON → 400; >16KB body → 413; client `producedAt`/`entryLocalDate` → 422 `time_identity_is_server_authoritative`; expired/future resumed time → 422 bounded codes; duplicate day → 409; correction after local midnight → 409 `correction_window_closed`; internal Postgres text never exposed (allowlisted `RPC_ERROR_MAP` only) |
 | DCI-focused remote CI | `.github/workflows/dci-1-ci.yml` — generator drift, contract suite, MTF validators (both modes), migration guard, DB harness (CI service Postgres), tsc, focused eslint, secret scan, build, focused browser tests, authenticated full-stack harness (CI PostgREST + real app) |
 
 ## Deletion retention rule (canonical)
 
-Tombstone purpose: bounded deletion audit + duplicate/idempotency handling. Retention class: metadata-only (record id, owner ref, method id via record linkage, last version count, deletion instant, reason code). Expiry: `retention_expires_at` = deletion + 12 months; purge path: the account-level data-rights flow (`yorisou_account_deletion_requests`); access boundary: service-role SELECT only, never served to any user surface. No documented legal basis exists for indefinite retention, so none is claimed.
+Tombstone purpose: bounded deletion audit + duplicate/idempotency handling. Retention class: metadata-only (event id, former record id, owner ref, last version count, deletion instant, reason code, expiry). Expiry: `retention_expires_at` = deletion + 12 months — a GATED IMPLEMENTATION CANDIDATE, not an activated Production policy. *(DCI-1.2 correction: the DCI-1.1 wording implied the account-level data-rights flow was an operating purge path for these tombstones — it was not; no executable purge existed before DCI-1.2.)* Executable purge now exists: `yorisou_daily_tombstone_purge_expired(p_limit)` (service-role only; deleted-events + expired only; bounded batches; NO schedule is configured and none is authorized by DCI-1.2). Access boundary: service-role SELECT only, never served to any user surface. No documented legal basis exists for indefinite retention, so none is claimed.
 
 ## Status of DCI-1's unresolved items
 
@@ -84,3 +84,17 @@ Tombstone purpose: bounded deletion audit + duplicate/idempotency handling. Rete
 2. Event emission — still deferred by design (contract recorded); unchanged.
 3. Rate limiting — still a platform-level follow-up (no repository-wide limiter pattern exists); unchanged.
 4. JS-failure degradation — unchanged (consistent with every existing test flow).
+
+
+---
+
+# DCI-1.2 — Verification Addendum
+
+| Check | Result |
+|---|---|
+| DCI contract suite | **45 checks passed** (adds the pending-provenance compatibility matrix: valid, stale method, stale schema, missing versions, malformed, unsupported marker, unknown field/option, midnight/timezone-change stability) |
+| Disposable-DB harness | **ALL CHECKS PASSED** — DCI-1.2 additions: created+corrected events exist pre-deletion and EXACTLY ONE row (the tombstone) remains post-deletion; whole-DB erasure sweep re-verified; purge matrix (public/anon/authenticated denied, service-role allowed, pre-expiry 0, expired purged count=1, non-expired survives, created events ineligible, limit 0 and 999999 rejected, direct tombstone DELETE denied under SET ROLE service_role); executed rollback incl. dropping the purge function |
+| Full-stack acceptance (`bash tests/daily-check-in/fullstack-local.sh`) | **5/5 PASSED** — incl. the TRUE two-account isolation fixture (real Honolulu/Kiritimati records; attack on A's actual date; A re-verified unchanged with zero tombstones), stale resumed-version rejections (method/schema/missing → 422, DB row-count unchanged), and the exactly-one-tombstone deletion proof |
+| Resumed provenance (server) | resumed POST requires exact `daily-check-in-v1.0` + `daily-state-schema-v1.1`; mismatch → 422 `resumed_contract_version_mismatch`, no record created |
+| Resumed provenance (client) | stale/incompatible pending payloads are never applied to UI state; the user sees 「チェックインの形式が新しくなったため、とちゅうの記録は引き継げませんでした。…」 (no internal version numbers) and records a fresh current entry |
+| DCI CI (main-push readiness) | workflow triggers on path-filtered `main` pushes + feature pushes + PRs + dispatch; context-aware secret-scan ranges; all existing gates retained unweakened |

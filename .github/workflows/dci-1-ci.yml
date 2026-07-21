@@ -11,7 +11,20 @@ name: DCI-1 CI
 
 on:
   push:
-    branches: [feat/dci-1-daily-check-in-vertical-slice]
+    # DCI-1.2 §8 — runs on the feature branch AND automatically after a merge to
+    # main whenever the push touches DCI files (path-filtered).
+    branches: [feat/dci-1-daily-check-in-vertical-slice, main]
+    paths:
+      - "app/tests/daily-check-in/**"
+      - "app/api/tests/daily-check-in/**"
+      - "lib/yorisou/**"
+      - "lib/server/dailyCheckIn*"
+      - "supabase/migrations/202607200005_dci1_daily_state_records.sql"
+      - "scripts/generate-daily-check-in-runtime.mjs"
+      - "scripts/validate-mtf2a-content.mjs"
+      - "tests/daily-check-in/**"
+      - "tests/smoke/daily-check-in*.spec.ts"
+      - ".github/workflows/dci-1-ci.yml"
   pull_request:
     branches: [main]
     paths:
@@ -88,9 +101,27 @@ jobs:
       - name: Focused lint (DCI slice — hard gate)
         run: npx eslint app/tests/daily-check-in app/api/tests/daily-check-in lib/yorisou lib/server/dailyCheckInStore.ts lib/server/dailyCheckInApi.ts tests/smoke/daily-check-in.spec.ts tests/smoke/daily-check-in-fullstack.spec.ts scripts/validate-mtf2a-content.mjs
 
-      - name: Changed-content secret scan (hard gate)
+      - name: Changed-content secret scan (hard gate, context-aware — DCI-1.2 §8)
         run: |
-          git diff --name-only origin/main...HEAD | while read -r f; do
+          # Resolve the diff range per event context. PR: base...HEAD. Main push:
+          # event.before..sha (all-zero before → single-commit fallback). Feature
+          # push: explicit merge-base with origin/main (never an ambient empty
+          # range assumption).
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="origin/${{ github.base_ref }}...HEAD"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            BEFORE="${{ github.event.before }}"
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              RANGE="HEAD~1..HEAD"
+            else
+              RANGE="$BEFORE..${{ github.sha }}"
+            fi
+          else
+            BASE=$(git merge-base origin/main HEAD)
+            RANGE="$BASE..HEAD"
+          fi
+          echo "secret-scan range: $RANGE"
+          git diff --name-only "$RANGE" | while read -r f; do
             [ -f "$f" ] || continue
             if grep -nEi "(api[_-]?key|secret|password|token)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9]{16,}" "$f" | grep -v "example\|fixture\|dci11-local\|POSTGRES_PASSWORD"; then
               echo "potential secret in $f"; exit 1

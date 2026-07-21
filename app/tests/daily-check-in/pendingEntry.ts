@@ -23,6 +23,34 @@ export type PendingDailyEntry = {
 const KEY = "yorisou.daily-check-in.pending-save.v2";
 const TTL_MS = 10 * 60 * 1000;
 
+// DCI-1.2 §7 — pending-provenance compatibility (pure; unit-tested). A pending
+// payload may be applied to UI state ONLY when its contract marker is supported,
+// its method/schema versions equal the CURRENT canonical versions, and every
+// field/option id is still valid. Stale payloads are never silently coerced.
+export type PendingCompatibility =
+  | { compatible: true }
+  | { compatible: false; reason: "unsupported_contract" | "stale_method_version" | "stale_schema_version" | "unknown_field" | "unknown_option" | "malformed" };
+
+export function checkPendingCompatibility(
+  entry: unknown,
+  current: { methodVersion: string; schemaVersion: string; fields: readonly { fieldId: string; options: readonly { optionId: string }[] }[] },
+): PendingCompatibility {
+  const p = entry as PendingDailyEntry | null;
+  if (!p || typeof p !== "object" || p.v !== 2) return { compatible: false, reason: "unsupported_contract" };
+  if (typeof p.values !== "object" || p.values === null || typeof p.completedAt !== "string" || typeof p.timezone !== "string") {
+    return { compatible: false, reason: "malformed" };
+  }
+  if (p.methodVersion !== current.methodVersion) return { compatible: false, reason: "stale_method_version" };
+  if (p.schemaVersion !== current.schemaVersion) return { compatible: false, reason: "stale_schema_version" };
+  const known = new Map(current.fields.map((f) => [f.fieldId, new Set(f.options.map((o) => o.optionId))]));
+  for (const [fieldId, optionId] of Object.entries(p.values)) {
+    const options = known.get(fieldId);
+    if (!options) return { compatible: false, reason: "unknown_field" };
+    if (optionId !== null && !options.has(optionId)) return { compatible: false, reason: "unknown_option" };
+  }
+  return { compatible: true };
+}
+
 export function storePendingDailyEntry(entry: Omit<PendingDailyEntry, "storedAt" | "v">): void {
   try {
     sessionStorage.setItem(KEY, JSON.stringify({ ...entry, v: 2, storedAt: Date.now() }));

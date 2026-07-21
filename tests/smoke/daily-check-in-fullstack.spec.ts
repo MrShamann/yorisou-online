@@ -94,10 +94,13 @@ test.describe.serial("DCI-1.1 full-stack authenticated acceptance", () => {
     expect(afterVersions).toHaveLength(0);
     const memoSweep = await restRows(page, `yorisou_daily_state_record_versions?select=id&memo=eq.${encodeURIComponent("フルスタック検証メモ")}`);
     expect(memoSweep).toHaveLength(0);
-    const tombstones = await restRows(page, `yorisou_daily_state_history_events?select=event_type,version,reason_code,retention_expires_at&record_id=eq.${recordRow!.id}&event_type=eq.deleted`);
-    expect(tombstones).toHaveLength(1);
-    expect(tombstones[0].reason_code).toBe("user_deleted");
-    expect(tombstones[0].retention_expires_at).toBeTruthy();
+    // DCI-1.2 §5 — deletion event minimization: EXACTLY ONE retained DCI row for
+    // the record (the content-free tombstone); prior created/corrected events gone.
+    const allEvents = await restRows(page, `yorisou_daily_state_history_events?select=event_type,version,reason_code,retention_expires_at&record_id=eq.${recordRow!.id}`);
+    expect(allEvents).toHaveLength(1);
+    expect(allEvents[0].event_type).toBe("deleted");
+    expect(allEvents[0].reason_code).toBe("user_deleted");
+    expect(allEvents[0].retention_expires_at).toBeTruthy();
   });
 
   test("API negatives (authenticated): server-authoritative time, duplicates, timezone, oversized/malformed", async ({ page }) => {
@@ -114,12 +117,12 @@ test.describe.serial("DCI-1.1 full-stack authenticated acceptance", () => {
     expect(dateOverride.status()).toBe(422);
     // Expired / future resumed time rejected with bounded codes.
     const expired = await page.request.post(`${BASE}/api/tests/daily-check-in/records`, {
-      data: { values: { kokoro_tenki: "hare" }, timezone: "Asia/Tokyo", resumed: true, completedAt: new Date(Date.now() - 11 * 60 * 1000).toISOString() },
+      data: { values: { kokoro_tenki: "hare" }, timezone: "Asia/Tokyo", resumed: true, completedAt: new Date(Date.now() - 11 * 60 * 1000).toISOString(), methodVersion: "daily-check-in-v1.0", schemaVersion: "daily-state-schema-v1.1" },
     });
     expect(expired.status()).toBe(422);
     expect((await expired.json()).codes).toContain("resumed_time_expired");
     const future = await page.request.post(`${BASE}/api/tests/daily-check-in/records`, {
-      data: { values: { kokoro_tenki: "hare" }, timezone: "Asia/Tokyo", resumed: true, completedAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() },
+      data: { values: { kokoro_tenki: "hare" }, timezone: "Asia/Tokyo", resumed: true, completedAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(), methodVersion: "daily-check-in-v1.0", schemaVersion: "daily-state-schema-v1.1" },
     });
     expect((await future.json()).codes).toContain("resumed_time_future");
     // Invalid timezone.
@@ -154,9 +157,26 @@ test.describe.serial("DCI-1.1 full-stack authenticated acceptance", () => {
     // the ORIGINAL timezone, not the login browser's.
     const completedAt = new Date(Date.now() - 4 * 60 * 1000).toISOString();
     const res = await page.request.post(`${BASE}/api/tests/daily-check-in/records`, {
-      data: { values: { kokoro_tenki: "hare" }, timezone: "Pacific/Kiritimati", resumed: true, completedAt },
+      data: { values: { kokoro_tenki: "hare" }, timezone: "Pacific/Kiritimati", resumed: true, completedAt, methodVersion: "daily-check-in-v1.0", schemaVersion: "daily-state-schema-v1.1" },
     });
     expect(res.status()).toBe(201);
+
+    // DCI-1.2 §7 — stale resumed provenance NEVER creates a record.
+    const countBefore = (await restRows(page, `yorisou_daily_state_records?select=id`)).length;
+    const stale = await page.request.post(`${BASE}/api/tests/daily-check-in/records`, {
+      data: { values: { kokoro_tenki: "hare" }, timezone: "Asia/Tokyo", resumed: true, completedAt: new Date().toISOString(), methodVersion: "daily-check-in-v0.9", schemaVersion: "daily-state-schema-v1.1" },
+    });
+    expect(stale.status()).toBe(422);
+    expect((await stale.json()).error).toBe("resumed_contract_version_mismatch");
+    const staleSchema = await page.request.post(`${BASE}/api/tests/daily-check-in/records`, {
+      data: { values: { kokoro_tenki: "hare" }, timezone: "Asia/Tokyo", resumed: true, completedAt: new Date().toISOString(), methodVersion: "daily-check-in-v1.0", schemaVersion: "daily-state-schema-v1.0" },
+    });
+    expect(staleSchema.status()).toBe(422);
+    const missingVersions = await page.request.post(`${BASE}/api/tests/daily-check-in/records`, {
+      data: { values: { kokoro_tenki: "hare" }, timezone: "Asia/Tokyo", resumed: true, completedAt: new Date().toISOString() },
+    });
+    expect(missingVersions.status()).toBe(422);
+    expect((await restRows(page, `yorisou_daily_state_records?select=id`)).length).toBe(countBefore); // no rows created
     const created = (await res.json()) as { entryLocalDate: string };
     const expectedLocal = new Intl.DateTimeFormat("en-CA", { timeZone: "Pacific/Kiritimati", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(completedAt));
     expect(created.entryLocalDate).toBe(expectedLocal);
@@ -193,31 +213,87 @@ test.describe.serial("DCI-1.1 full-stack authenticated acceptance", () => {
     await context.close();
   });
 
-  test("two-account isolation + unauthenticated denial", async ({ browser }) => {
-    // Account B sees only its own data and cannot touch A/C records.
+  test("TRUE two-account isolation (real records, guaranteed-different local dates) + unauthenticated denial", async ({ browser }) => {
+    const ISO_A = `dci12-iso-a-${Date.now()}@example.test`;
+    const ISO_B = `dci12-iso-b-${Date.now()}@example.test`;
+
+    // Account A: real persisted record in Pacific/Honolulu (UTC-10).
+    const aContext = await browser.newContext();
+    const aPage = await aContext.newPage();
+    await registerAndSignIn(aPage, ISO_A);
+    const aCreate = await aPage.request.post(`${BASE}/api/tests/daily-check-in/records`, {
+      data: { values: { kokoro_tenki: "kumori", kyou_hoshii: "seiri" }, timezone: "Pacific/Honolulu" },
+    });
+    expect(aCreate.status()).toBe(201);
+    const aRecord = (await aCreate.json()) as { recordId: string; entryLocalDate: string };
+    const aRowsBefore = await restRows(aPage, `yorisou_daily_state_records?select=id,owner_account_id,state,current_version&id=eq.${aRecord.recordId}`);
+    expect(aRowsBefore).toHaveLength(1);
+    const aOwner = aRowsBefore[0].owner_account_id as string;
+    const aStateBefore = JSON.stringify(aRowsBefore[0].state);
+
+    // Account B: real persisted record in Pacific/Kiritimati (UTC+14) — its local
+    // date is GUARANTEED to differ from A's (24h apart), independent of the
+    // runner's UTC calendar date.
     const bContext = await browser.newContext();
     const bPage = await bContext.newPage();
-    await bPage.request.post(`${BASE}/api/auth/login`, { data: { email: B_EMAIL, password: "Dci1.1-Str0ng-Pass!" } });
-    const bHistory = (await (await bPage.request.get(`${BASE}/api/tests/daily-check-in/records?timezone=Asia/Tokyo`)).json()) as { records: { entryLocalDate: string }[] };
-    for (const r of bHistory.records) {
-      // B's history contains only B's single resumed record.
-      expect(r.entryLocalDate).toBeTruthy();
-    }
-    expect(bHistory.records.length).toBe(1);
-    // B PATCH/DELETE against A's surviving record date (A's duplicate-test record).
-    const aHistoryDate = new Date().toISOString().slice(0, 10);
-    const patch = await bPage.request.patch(`${BASE}/api/tests/daily-check-in/records/2020-01-01`, { data: { values: { kokoro_tenki: "hare" } } });
-    expect(patch.status()).toBe(404); // never leaks another owner's record
-    void aHistoryDate;
+    await registerAndSignIn(bPage, ISO_B);
+    const bCreate = await bPage.request.post(`${BASE}/api/tests/daily-check-in/records`, {
+      data: { values: { kokoro_tenki: "hare" }, timezone: "Pacific/Kiritimati" },
+    });
+    expect(bCreate.status()).toBe(201);
+    const bRecord = (await bCreate.json()) as { entryLocalDate: string };
+    expect(bRecord.entryLocalDate).not.toBe(aRecord.entryLocalDate);
+
+    // 1. B's history excludes A's record entirely.
+    const bHistory = (await (await bPage.request.get(`${BASE}/api/tests/daily-check-in/records?timezone=Pacific/Kiritimati`)).json()) as {
+      records: { entryLocalDate: string; stateValues: Record<string, string | null> }[];
+    };
+    expect(bHistory.records).toHaveLength(1);
+    expect(bHistory.records[0].entryLocalDate).toBe(bRecord.entryLocalDate);
+    expect(bHistory.records.some((r) => r.entryLocalDate === aRecord.entryLocalDate)).toBe(false);
+    expect(JSON.stringify(bHistory)).not.toContain("seiri"); // no cross-account content
+
+    // 2/3. B attacks A's ACTUAL entryLocalDate: PATCH and DELETE must 404 with the
+    // same bounded body as an unknown date (no existence leak), and change nothing.
+    const bPatch = await bPage.request.patch(`${BASE}/api/tests/daily-check-in/records/${aRecord.entryLocalDate}`, {
+      data: { values: { kokoro_tenki: "ame" } },
+    });
+    expect(bPatch.status()).toBe(404);
+    expect(await bPatch.json()).toEqual({ error: "record_not_found" });
+    const bDelete = await bPage.request.delete(`${BASE}/api/tests/daily-check-in/records/${aRecord.entryLocalDate}`);
+    expect(bDelete.status()).toBe(404);
+    expect(await bDelete.json()).toEqual({ error: "record_not_found" });
+
+    // 5. B's OWN record stays readable and mutable (correction window is open in
+    // its stored timezone).
+    const bOwnPatch = await bPage.request.patch(`${BASE}/api/tests/daily-check-in/records/${bRecord.entryLocalDate}`, {
+      data: { values: { kokoro_tenki: "usugumori" } },
+    });
+    expect(bOwnPatch.status()).toBe(200);
+    expect(((await bOwnPatch.json()) as { currentVersion: number }).currentVersion).toBe(2);
     await bContext.close();
-    // Unauthenticated context: all methods denied.
+
+    // Back as A: record exists, state unchanged, version unchanged, NO tombstone.
+    const aRowsAfter = await restRows(aPage, `yorisou_daily_state_records?select=id,owner_account_id,state,current_version&id=eq.${aRecord.recordId}`);
+    expect(aRowsAfter).toHaveLength(1);
+    expect(aRowsAfter[0].owner_account_id).toBe(aOwner);
+    expect(JSON.stringify(aRowsAfter[0].state)).toBe(aStateBefore);
+    expect(aRowsAfter[0].current_version).toBe(1);
+    const aTombstones = await restRows(aPage, `yorisou_daily_state_history_events?select=id&record_id=eq.${aRecord.recordId}&event_type=eq.deleted`);
+    expect(aTombstones).toHaveLength(0);
+    // A can still read its record through the API.
+    const aHistory = (await (await aPage.request.get(`${BASE}/api/tests/daily-check-in/records?timezone=Pacific/Honolulu`)).json()) as { records: { entryLocalDate: string }[] };
+    expect(aHistory.records.some((r) => r.entryLocalDate === aRecord.entryLocalDate)).toBe(true);
+    await aContext.close();
+
+    // Unauthenticated context: all four methods denied.
     const anon = await browser.newContext();
     const anonPage = await anon.newPage();
     for (const [method, url] of [
       ["get", `${BASE}/api/tests/daily-check-in/records`],
       ["post", `${BASE}/api/tests/daily-check-in/records`],
-      ["patch", `${BASE}/api/tests/daily-check-in/records/2026-01-01`],
-      ["delete", `${BASE}/api/tests/daily-check-in/records/2026-01-01`],
+      ["patch", `${BASE}/api/tests/daily-check-in/records/${aRecord.entryLocalDate}`],
+      ["delete", `${BASE}/api/tests/daily-check-in/records/${aRecord.entryLocalDate}`],
     ] as const) {
       const res = await anonPage.request[method](url, method === "get" || method === "delete" ? undefined : { data: { values: {} } });
       expect(res.status(), `${method} ${url}`).toBe(401);

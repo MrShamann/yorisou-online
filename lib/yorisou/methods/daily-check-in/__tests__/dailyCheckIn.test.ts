@@ -15,6 +15,7 @@ import { selectAcknowledgement } from "../acknowledgement";
 import { sevenDaySummaries, thirtyDayView, type TimelineEntry } from "../longitudinal";
 import { hintForEntry } from "../hints";
 import { DAILY_CHECK_IN_EVENTS } from "../events";
+import { checkPendingCompatibility } from "../../../../../app/tests/daily-check-in/pendingEntry";
 import {
   serverTimeIdentity,
   resumedTimeIdentity,
@@ -431,6 +432,49 @@ console.log("DCI-1.1 — server-authoritative time contract");
     assert.equal(correctionWindowOpen("2026-07-21", "Asia/Tokyo", NOW_FIXED), true); // 00:30 JST on the 21st
     assert.equal(correctionWindowOpen("2026-07-20", "Asia/Tokyo", NOW_FIXED), false); // yesterday in JST
     assert.equal(correctionWindowOpen("2026-07-20", "America/New_York", NOW_FIXED), true); // still the 20th in NY
+  });
+}
+
+console.log("DCI-1.2 — pending-entry provenance compatibility");
+{
+  const current = {
+    methodVersion: DAILY_CHECK_IN_DEFINITION.methodVersion,
+    schemaVersion: DAILY_CHECK_IN_DEFINITION.schemaVersion,
+    fields: DAILY_CHECK_IN_DEFINITION.fields,
+  };
+  const valid = {
+    v: 2 as const,
+    values: { kokoro_tenki: "hare", karada_juden: null, atama_yohaku: null, hito_kyori: null, kyou_hoshii: "yasumi" },
+    memoOptIn: false,
+    memo: null,
+    completedAt: "2026-07-20T14:58:00.000Z",
+    timezone: "Asia/Tokyo",
+    methodVersion: current.methodVersion,
+    schemaVersion: current.schemaVersion,
+    storedAt: 0,
+  };
+  check("valid matching method/schema payload is compatible", () => {
+    assert.deepEqual(checkPendingCompatibility(valid, current), { compatible: true });
+  });
+  check("stale method version, stale schema version, missing versions all rejected", () => {
+    assert.equal((checkPendingCompatibility({ ...valid, methodVersion: "daily-check-in-v0.9" }, current) as { reason: string }).reason, "stale_method_version");
+    assert.equal((checkPendingCompatibility({ ...valid, schemaVersion: "daily-state-schema-v1.0" }, current) as { reason: string }).reason, "stale_schema_version");
+    assert.equal((checkPendingCompatibility({ ...valid, methodVersion: undefined }, current) as { reason: string }).reason, "stale_method_version");
+  });
+  check("malformed payload, unsupported contract marker, unknown field, unknown option all rejected", () => {
+    assert.equal((checkPendingCompatibility(null, current) as { reason: string }).reason, "unsupported_contract");
+    assert.equal((checkPendingCompatibility({ ...valid, v: 1 }, current) as { reason: string }).reason, "unsupported_contract");
+    assert.equal((checkPendingCompatibility({ ...valid, values: null }, current) as { reason: string }).reason, "malformed");
+    assert.equal((checkPendingCompatibility({ ...valid, values: { mood: "hare" } }, current) as { reason: string }).reason, "unknown_field");
+    assert.equal((checkPendingCompatibility({ ...valid, values: { kokoro_tenki: "sunny" } }, current) as { reason: string }).reason, "unknown_option");
+  });
+  check("valid payload stays compatible across midnight and browser-timezone change (compat is content-based)", () => {
+    // Compatibility depends only on contract/version/field validity — the resumed
+    // TIME window is enforced separately by resumedTimeIdentity (tested above),
+    // so a payload completed before midnight or under a different browser
+    // timezone remains structurally compatible.
+    assert.deepEqual(checkPendingCompatibility({ ...valid, completedAt: "2026-07-20T14:59:59.000Z" }, current), { compatible: true });
+    assert.deepEqual(checkPendingCompatibility({ ...valid, timezone: "Pacific/Kiritimati" }, current), { compatible: true });
   });
 }
 
