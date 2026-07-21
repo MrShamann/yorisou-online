@@ -781,33 +781,51 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "外部結果の取り込み。YORISOUの判定ではない。",
     rightsSource: "trademarked; import/handoff/licence only",
   }),
+  // YV-1 — yorisou-values「いま大事にしたいことチェック」: the concrete SCORED method,
+  // reconciling the former `values-v0.1` "価値観リフレクション" placeholder (same
+  // methodId, no duplicate identity). Canonical content
+  // docs/yorisou/mtf2a/yorisou-values.v1.json (bank hash 919f1725, frozen).
+  //
+  // YV-1-MERGE (Founder decision YORISOU_YV_1_2_FOUNDER_REVIEW_ACCEPTED_MERGE_
+  // AUTHORIZED): the accepted private implementation (with the YV-1.1 + YV-1.2
+  // corrections) is MERGED. implementation "complete" + rights cleared ⇒ the
+  // derived coarse label is `implemented_private` — implementation + canonical
+  // content + tests complete, private/gated capability implemented, but NOT
+  // public_active and NOT implemented_route_verified. It is NON-PUBLIC by every
+  // remaining gate: routeEvidence "none" (no production-main route; Production
+  // route + APIs 404 server-side), founderActivation "closed" (content/impl
+  // acceptance ≠ public activation), deploymentStatus "unverified" (no hosted
+  // persistence/route verification), devFlagged (Preview only behind
+  // yorisou_values_preview, enabled in NO environment). No hosted migration
+  // applied, no purge schedule, no Preview flag, no Production route activation.
   {
     ...originalRouteVerified({
       methodId: "yorisou-values",
-      nameJa: "価値観リフレクション",
-      nameEn: "Values reflection",
-      family: "psychology_preference",
+      nameJa: "いま大事にしたいことチェック",
+      nameEn: "Yorisou Values",
+      family: "yorisou_original_assessment",
       role: "preference_reflection",
       requiredInputs: ["answers"],
       sensitiveInputs: ["answers"],
-      model: "YORISOU-original values reflection",
-      methodVersion: "values-v0.1",
-      resultSchema: "values-result",
-      reportSchema: "family-report:values",
-      interpretationLimits: "今大事にしていることの整理。判定ではない。",
-      refreshModel: "retake anytime",
+      model: "scored: 48 A/B forced trade-offs over 7 method-local dimensions → pairwise win-rate (values-scoring-v1.0) → 7 dimension-led results + VAL_R_MIXED (ArchetypeResult; no universal score; internal win rates never exposed)",
+      methodVersion: "values-v1.0",
+      resultSchema: "values-result-v1.0 (8 results)",
+      reportSchema: "values-report-outline-v1.0 (outline only)",
+      interpretationLimits: "いまの選び方の傾向の整理。性格診断でも優劣判定でもない。第三者による選考の材料には使えない。",
+      refreshModel: "retake anytime; history-preserving",
     }),
-    // CPV1-R1 §5 runtime reconciliation: DOWNGRADED. This YORISOU-original concept
-    // is REGISTERED but NOT BUILT — no route, no flow, no result implementation
-    // (nothing outside the registry references it). It was wrongly classified
-    // public_active on a registry declaration alone. Corrected to unbuilt.
-    implementation: "not_started",
-    content: "not_authored",
-    tests: "not_run",
-    rights: yorisouOriginal("yorisou-values", { activated: false }),
-    routeEvidence: "none", // §4 — unbuilt: no route exists on production main
-    founderActivation: "unverified",
-    deploymentStatus: "unverified", // R1.1A §2 — no deployment evidence
+    implementation: "complete", // YV-1 accepted + merged (YV-1.1 + YV-1.2 corrections)
+    content: "authored", // canonical MTF-2A content (frozen)
+    tests: "passing", // YV-1 contract suite
+    // Rights CLEARED (YORISOU owns the content + logic; Founder reviewed at merge).
+    // Rights-clearance is a SEPARATE concept from Founder PUBLIC activation — this
+    // does NOT open the route: founderActivation stays `closed`, routeEvidence
+    // `none`, deploymentStatus `unverified`. With implementation `complete` the
+    // derived coarse label is therefore `implemented_private`.
+    rights: yorisouOriginal("yorisou-values", { activated: true }),
+    routeEvidence: "none", // route NOT on production main (Production 404s)
+    founderActivation: "closed", // impl/content acceptance ≠ public activation
+    deploymentStatus: "unverified",
     deploymentEvidenceRef: null,
     founderDecisionRef: null,
     devFlagged: true,
