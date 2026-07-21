@@ -83,3 +83,22 @@ export function resolveRelationshipFatigueSavedResult(answers: AnswerMap): {
 export function relationshipFatigueStateTag(archetypeId: ArchetypeId): string {
   return RF_STATE_TAGS[archetypeId] || "今の状態";
 }
+
+/**
+ * Maps a save attempt outcome to a user-facing state. The auth gate (401) is
+ * an expected flow, never a generic failure; only transport errors are
+ * retryable; everything else keeps the on-screen result and exits safely.
+ */
+export type SaveFailureKind = "auth_required" | "network_retryable" | "service_unavailable";
+
+export function classifySaveFailure(httpStatus: number | null): SaveFailureKind {
+  if (httpStatus === 401) return "auth_required";
+  if (httpStatus === null) return "network_retryable";
+  return "service_unavailable";
+}
+
+export const RF_SAVE_FAILURE_COPY: Record<SaveFailureKind, string> = {
+  auth_required: "保存するには、ログインまたはLINE連携が必要です。結果はこの画面に残っています。",
+  network_retryable: "保存できませんでした。結果は失われていません。もう一度試してください。",
+  service_unavailable: "現在保存機能を利用できません。結果はこの画面で確認できます。",
+};

@@ -29,25 +29,25 @@ export default function RelationshipFatigueSaveReturnPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
+    <main className="min-h-screen bg-[var(--yorisou-color-surface-bg)] text-[var(--yorisou-color-neutral-800)]">
       <div className="container py-12">
-        <div className="mx-auto max-w-lg rounded-[1.25rem] border border-[rgba(23,59,53,0.11)] bg-white/95 p-6">
+        <div className="mx-auto max-w-lg rounded-[1.25rem] border border-[var(--yorisou-color-neutral-100)] bg-white/95 p-6">
           {savedId ? (
             <>
               <p className="text-[15px] leading-8">結果を非公開で保存しました。</p>
-              <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
+              <p className="mt-1 text-[13px] leading-7 text-[var(--yorisou-color-neutral-500)]">
                 保存した結果はあなたにだけ表示されます。ここから次の入口を選べます。
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
                   href={`/saved/tests/${savedId}`}
-                  className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white"
+                  className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[var(--yorisou-color-primary-500)] bg-[var(--yorisou-color-primary-500)] px-5 text-[14px] font-semibold text-white"
                 >
                   保存した結果を開く
                 </Link>
                 <Link
                   href="/recommendations/graph"
-                  className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-[14px] font-semibold text-[#315F50]"
+                  className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[var(--yorisou-color-neutral-200)] bg-white px-5 text-[14px] font-semibold text-[var(--yorisou-color-neutral-800)]"
                 >
                   今の状態から選択肢を見る
                 </Link>
@@ -60,12 +60,12 @@ export default function RelationshipFatigueSaveReturnPage() {
               <p className="text-[15px] leading-8">
                 {state === "missing" ? "保存する結果が見つかりませんでした。" : "結果を保存できませんでした。"}
               </p>
-              <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
+              <p className="mt-1 text-[13px] leading-7 text-[var(--yorisou-color-neutral-500)]">
                 もう一度チェックすると、結果を保存し直せます。
               </p>
               <Link
                 href="/tests/relationship-fatigue"
-                className="mt-5 inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white"
+                className="mt-5 inline-flex min-h-[46px] items-center justify-center rounded-full border border-[var(--yorisou-color-primary-500)] bg-[var(--yorisou-color-primary-500)] px-5 text-[14px] font-semibold text-white"
               >
                 チェックに戻る
               </Link>

@@ -3,8 +3,9 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
+import AppHeader from "./AppHeader";
+import MobileBottomNav from "./MobileBottomNav";
 import SiteFooter from "./SiteFooter";
-import SiteHeader from "./SiteHeader";
 
 type Props = {
   children: ReactNode;
@@ -19,7 +20,7 @@ const SHELL_SUPPRESSED_EXACT = new Set([
   "/result",
 ]);
 
-const SHELL_SUPPRESSED_PREFIXES = ["/line", "/reports/self-understanding"];
+const SHELL_SUPPRESSED_PREFIXES = ["/line", "/reports/self-understanding", "/prototype"];
 
 function isSuppressedRoute(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -38,9 +39,12 @@ export default function AppShell({ children }: Props) {
 
   return (
     <>
-      <SiteHeader />
-      {children}
-      <SiteFooter />
+      <AppHeader />
+      <div className="pb-[74px] md:pb-0">
+        {children}
+        <SiteFooter />
+      </div>
+      <MobileBottomNav />
     </>
   );
 }

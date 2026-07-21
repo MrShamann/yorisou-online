@@ -3,10 +3,12 @@ import assert from "node:assert/strict";
 import { RF_ARCHETYPES, RF_QUESTIONS, computeRFResult } from "@/app/tests/relationship-fatigue/data";
 import {
   RF_DIMENSION_LABELS,
+  RF_SAVE_FAILURE_COPY,
   RF_SCORING_VERSION,
   RF_STATE_TAGS,
   RF_TEST_ID,
   RF_TEST_VERSION,
+  classifySaveFailure,
   relationshipFatigueStateTag,
   resolveRelationshipFatigueSavedResult,
   validateRelationshipFatigueAnswers,
@@ -79,8 +81,22 @@ if (recoveryValidation.ok) {
   );
 }
 
+// Save-failure classification: the auth gate is never a generic error.
+assert.equal(classifySaveFailure(401), "auth_required", "401 is the expected auth gate, not a failure");
+assert.equal(classifySaveFailure(null), "network_retryable", "transport failure is retryable");
+assert.equal(classifySaveFailure(500), "service_unavailable", "5xx keeps the result and exits safely");
+assert.equal(classifySaveFailure(503), "service_unavailable");
+assert.equal(classifySaveFailure(400), "service_unavailable", "unexpected 4xx never claims the result was lost");
+for (const kind of ["auth_required", "network_retryable", "service_unavailable"] as const) {
+  assert.ok(RF_SAVE_FAILURE_COPY[kind].length > 0, `${kind} has explicit Japanese next-step copy`);
+}
+assert.ok(RF_SAVE_FAILURE_COPY.auth_required.includes("結果はこの画面に残っています"), "auth gate copy preserves the result");
+assert.ok(RF_SAVE_FAILURE_COPY.network_retryable.includes("もう一度"), "network copy offers retry");
+assert.ok(RF_SAVE_FAILURE_COPY.service_unavailable.includes("この画面で確認できます"), "service copy keeps a safe exit");
+
 console.log("Relationship-fatigue return-loop checks passed:", {
   questions: RF_QUESTIONS.length,
   archetypes: Object.keys(RF_ARCHETYPES).length,
   stateTags: Object.keys(RF_STATE_TAGS).length,
+  saveFailureKinds: 3,
 });

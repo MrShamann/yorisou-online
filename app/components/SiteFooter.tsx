@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import YorisouLogo from "./YorisouLogo";
 
 export default function SiteFooter() {
   const pathname = usePathname() || "/";
@@ -20,11 +21,8 @@ export default function SiteFooter() {
       <div className="container py-12">
         <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-start">
           <div className="flex gap-4">
-            <div className="flex items-start justify-center pt-1">
-              <Image src="/images/brand/tsuru-logo.png" alt="YORISOU" width={70} height={70} className="h-auto w-[64px] object-contain" />
-            </div>
             <div className="max-w-xl">
-              <div className="display-serif text-[1.45rem] font-semibold tracking-[0.08em]">YORISOU</div>
+              <YorisouLogo variant="primary" size={30} />
               <p className="mt-3 max-w-[28rem] text-sm leading-7 text-[var(--muted)]">
                 {isEn
                   ? "A quiet way to reflect on your current state and return when you need the next step."
