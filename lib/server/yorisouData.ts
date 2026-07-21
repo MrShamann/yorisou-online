@@ -154,7 +154,6 @@ const dataDir =
   (process.env.NODE_ENV === "production" ? path.join("/tmp", "yorisou-phase1") : path.join(process.cwd(), "data"));
 const sharedStoreBucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
 const sharedStoreRegion = process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
-const shouldUseSharedStore = Boolean(sharedStoreBucket);
 
 // MPV-1C — optional S3-COMPATIBLE endpoint support (e.g. Supabase Storage), WITHOUT
 // changing the default AWS behavior. When no endpoint is configured the store behaves
@@ -174,22 +173,37 @@ export type SharedStoreMode = "disabled" | "aws" | "s3-compatible" | "supabase-r
 
 // Pure resolver (exported for tests). Never returns a mode whose required inputs are
 // absent — it throws a bounded, secret-free error instead (fail closed).
+//
+// MPV-1D — the ONLY configuration that may resolve to "disabled" (local-file mode) is a
+// FULLY-ABSENT shared-store config: no bucket AND no endpoint AND no access key AND no
+// secret/token AND forcePathStyle false/absent. Any shared-store-specific variable set
+// without a bucket is an orphaned/misconfigured shared store and MUST throw
+// `shared_store_bucket_required` — never silently fall back to ephemeral local storage.
 export function resolveSharedStoreMode(env: {
   bucket?: string;
   endpoint?: string;
   accessKeyId?: string;
   secretAccessKey?: string;
+  forcePathStyle?: boolean;
 } = {
   bucket: sharedStoreBucket,
   endpoint: sharedStoreEndpoint,
   accessKeyId: sharedStoreAccessKeyId,
   secretAccessKey: sharedStoreSecretAccessKey,
+  forcePathStyle: sharedStoreForcePathStyle,
 }): SharedStoreMode {
   const bucket = (env.bucket || "").trim();
   const endpoint = (env.endpoint || "").trim();
   const accessKeyId = (env.accessKeyId || "").trim();
   const secretAccessKey = (env.secretAccessKey || "").trim();
-  if (!bucket) return "disabled";
+  const forcePathStyle = env.forcePathStyle === true;
+  if (!bucket) {
+    // Fail closed: shared-store-specific config without a bucket is invalid, not local.
+    if (endpoint || accessKeyId || secretAccessKey || forcePathStyle) {
+      throw new Error("shared_store_bucket_required");
+    }
+    return "disabled";
+  }
   if (!endpoint) return "aws";
   // Supabase Storage REST base: ".../storage/v1" (optionally trailing slash).
   if (/\/storage\/v1\/?$/.test(endpoint)) {
@@ -202,7 +216,11 @@ export function resolveSharedStoreMode(env: {
   return "s3-compatible";
 }
 
-const sharedStoreMode: SharedStoreMode = shouldUseSharedStore ? resolveSharedStoreMode() : "disabled";
+// Authoritative resolution at module initialization: a malformed shared-store config
+// throws HERE (fail at startup) rather than silently selecting local storage. There is
+// no separate `shouldUseSharedStore` bypass — the resolver alone decides disabled/valid.
+const sharedStoreMode: SharedStoreMode = resolveSharedStoreMode();
+const shouldUseSharedStore = sharedStoreMode !== "disabled";
 const sharedRestBase = sharedStoreEndpoint.replace(/\/$/, ""); // ".../storage/v1"
 
 const accountsFile: DataFile<AccountRecord[]> = {
