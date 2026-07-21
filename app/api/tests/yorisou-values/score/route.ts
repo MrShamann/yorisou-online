@@ -15,7 +15,7 @@ import { NextResponse } from "next/server";
 // endpoint deliberately has no confirmation field (confirmation is a property of
 // a stored record, and there is no record here).
 
-import { yorisouValuesAccess } from "@/lib/yorisou/methods/yorisou-values/access";
+import { resolveYorisouValuesRouteAccess } from "@/lib/cpv1/pilotRouteAccess";
 import { assembleYorisouValuesResult } from "@/lib/yorisou/methods/yorisou-values/scoring";
 import { hintsForResult } from "@/lib/yorisou/methods/yorisou-values/hints";
 import { YORISOU_VALUES_BANK_HASH } from "@/lib/yorisou/methods/yorisou-values/definition.generated";
@@ -44,8 +44,12 @@ function normalizeAnswers(raw: unknown): Record<string, "A" | "B"> | null {
 }
 
 export async function POST(request: Request) {
-  const access = yorisouValuesAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // PPR-1 — same route gate as the persisted endpoints. On Preview this stays
+  // anonymous (preview flag). In Production the private-pilot gate requires an
+  // authenticated Founder/Admin, so anonymous production scoring is 404 (never
+  // exposed during the private pilot).
+  const gate = await resolveYorisouValuesRouteAccess();
+  if (!gate.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const read = await readBoundedJson(request);
   if (!read.ok) return NextResponse.json({ error: read.error }, { status: read.status });

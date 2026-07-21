@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 //       client cannot inject a result.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { yorisouValuesAccess } from "@/lib/yorisou/methods/yorisou-values/access";
+import { resolveYorisouValuesRouteAccess } from "@/lib/cpv1/pilotRouteAccess";
 import { assembleYorisouValuesResult } from "@/lib/yorisou/methods/yorisou-values/scoring";
 import { YORISOU_VALUES_DEFINITION, YORISOU_VALUES_BANK_HASH } from "@/lib/yorisou/methods/yorisou-values/definition.generated";
 import { mapValuesStoreError, readBoundedJson, firstUnknownKey } from "@/lib/server/yorisouValuesApi";
@@ -29,9 +29,9 @@ function normalizeAnswers(raw: unknown): Record<string, "A" | "B"> | null {
 }
 
 export async function GET() {
-  const access = yorisouValuesAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
+  const gate = await resolveYorisouValuesRouteAccess();
+  if (!gate.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const viewer = gate.viewer ?? (await getViewerContext());
   const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   try {
@@ -69,9 +69,9 @@ type CreateBody = {
 };
 
 export async function POST(request: Request) {
-  const access = yorisouValuesAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
+  const gate = await resolveYorisouValuesRouteAccess();
+  if (!gate.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const viewer = gate.viewer ?? (await getViewerContext());
   const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const read = await readBoundedJson(request);

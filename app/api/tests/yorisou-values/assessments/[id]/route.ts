@@ -14,7 +14,7 @@ import { NextResponse } from "next/server";
 // deletable.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { yorisouValuesAccess } from "@/lib/yorisou/methods/yorisou-values/access";
+import { resolveYorisouValuesRouteAccess } from "@/lib/cpv1/pilotRouteAccess";
 import { assembleYorisouValuesResult } from "@/lib/yorisou/methods/yorisou-values/scoring";
 import { hintsForResult } from "@/lib/yorisou/methods/yorisou-values/hints";
 import {
@@ -53,16 +53,23 @@ function renderResult(record: { answers: Record<string, "A" | "B">; bank_content
   };
 }
 
-async function requireOwner(): Promise<string | null> {
-  const viewer = await getViewerContext();
-  return viewer.account?.id || viewer.legacyAccount?.id || null;
+// PPR-1 — resolve the route gate (Preview OR production private-pilot) AND the
+// owner in one step. Denied → 404 (route-concealing); authenticated non-owner-less
+// → 401. Returns the owner account id when the gate + auth both pass.
+type GatedOwner = { denied: 404 | 401 } | { ownerAccountId: string };
+async function gatedOwner(): Promise<GatedOwner> {
+  const gate = await resolveYorisouValuesRouteAccess();
+  if (!gate.allowed) return { denied: 404 };
+  const viewer = gate.viewer ?? (await getViewerContext());
+  const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
+  if (!ownerAccountId) return { denied: 401 };
+  return { ownerAccountId };
 }
 
 export async function GET(request: Request, context: Context) {
-  const access = yorisouValuesAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const ownerAccountId = await requireOwner();
-  if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
+  const gated = await gatedOwner();
+  if ("denied" in gated) return NextResponse.json({ error: gated.denied === 404 ? "not_found" : "authentication_required" }, { status: gated.denied });
+  const ownerAccountId = gated.ownerAccountId;
   const { id } = await context.params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   try {
@@ -84,10 +91,9 @@ export async function GET(request: Request, context: Context) {
 }
 
 export async function PATCH(request: Request, context: Context) {
-  const access = yorisouValuesAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const ownerAccountId = await requireOwner();
-  if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
+  const gated = await gatedOwner();
+  if ("denied" in gated) return NextResponse.json({ error: gated.denied === 404 ? "not_found" : "authentication_required" }, { status: gated.denied });
+  const ownerAccountId = gated.ownerAccountId;
   const { id } = await context.params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   const read = await readBoundedJson(request);
@@ -151,10 +157,9 @@ export async function PATCH(request: Request, context: Context) {
 }
 
 export async function DELETE(_request: Request, context: Context) {
-  const access = yorisouValuesAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const ownerAccountId = await requireOwner();
-  if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
+  const gated = await gatedOwner();
+  if ("denied" in gated) return NextResponse.json({ error: gated.denied === 404 ? "not_found" : "authentication_required" }, { status: gated.denied });
+  const ownerAccountId = gated.ownerAccountId;
   const { id } = await context.params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   try {
