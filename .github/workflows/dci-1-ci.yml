@@ -1,0 +1,186 @@
+name: DCI-1 CI
+
+# DCI-1.1 §10 — focused CI for the daily-check-in recorded-state vertical slice.
+# Runs every DCI gate remotely: canonical generator drift check, DCI contract
+# suite, MTF validators (default + historical scope mode), migration static
+# guard, the disposable-PostgreSQL integration harness (against a CI service
+# container), TypeScript, focused eslint, changed-content secret scan, build,
+# the focused DCI browser tests, AND the authenticated full-stack browser
+# harness (PostgreSQL + PostgREST services + real app; deterministic in CI).
+# Nothing hosted is contacted; the CI databases are ephemeral job services.
+
+on:
+  push:
+    # DCI-1.2 §8 — runs on the feature branch AND automatically after a merge to
+    # main whenever the push touches DCI files (path-filtered).
+    branches: [feat/dci-1-daily-check-in-vertical-slice, main]
+    paths:
+      - "app/tests/daily-check-in/**"
+      - "app/api/tests/daily-check-in/**"
+      - "lib/yorisou/**"
+      - "lib/server/dailyCheckIn*"
+      - "supabase/migrations/202607200005_dci1_daily_state_records.sql"
+      - "scripts/generate-daily-check-in-runtime.mjs"
+      - "scripts/validate-mtf2a-content.mjs"
+      - "tests/daily-check-in/**"
+      - "tests/smoke/daily-check-in*.spec.ts"
+      - ".github/workflows/dci-1-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/tests/daily-check-in/**"
+      - "app/api/tests/daily-check-in/**"
+      - "lib/yorisou/**"
+      - "lib/server/dailyCheckIn*"
+      - "supabase/migrations/202607200005_dci1_daily_state_records.sql"
+      - "scripts/generate-daily-check-in-runtime.mjs"
+      - "scripts/validate-mtf2a-content.mjs"
+      - "tests/daily-check-in/**"
+      - "tests/smoke/daily-check-in*.spec.ts"
+      - ".github/workflows/dci-1-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: dci-1-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dci-gates:
+    name: DCI contracts, validators, DB harness, build, browser + full-stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: yorisou_daily_check_in_test
+        ports: ["55446:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+
+      - name: Canonical generator drift check
+        run: node scripts/generate-daily-check-in-runtime.mjs --check
+
+      - name: DCI contract suite (canonical/runtime/ack/longitudinal/time/registry/gate)
+        run: npm run test:daily-check-in
+
+      - name: MTF-1 validator
+        run: node scripts/validate-mtf1-docs.mjs
+
+      - name: MTF-2A validator (default mode)
+        run: node scripts/validate-mtf2a-content.mjs
+
+      - name: MTF-2A validator (historical package-scope mode)
+        run: node scripts/validate-mtf2a-content.mjs --scope-base d992a6e0a95cf2db0d6b64c6a1c3a556232e3550 --scope-head cf9aee9d286200a66bbb80214b14aad3a342d132
+
+      - name: CPV1 migration static guard
+        run: node scripts/validate-cpv1-migrations.mjs
+
+      - name: Disposable-PostgreSQL integration harness (migration/RLS/RPC/erasure)
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:55446/yorisou_daily_check_in_test
+        run: bash tests/daily-check-in/postgres-integration.sh
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Focused lint (DCI slice — hard gate)
+        run: npx eslint app/tests/daily-check-in app/api/tests/daily-check-in lib/yorisou lib/server/dailyCheckInStore.ts lib/server/dailyCheckInApi.ts tests/smoke/daily-check-in.spec.ts tests/smoke/daily-check-in-fullstack.spec.ts scripts/validate-mtf2a-content.mjs
+
+      - name: Changed-content secret scan (hard gate, context-aware — DCI-1.2 §8)
+        run: |
+          # Resolve the diff range per event context. PR: base...HEAD. Main push:
+          # event.before..sha (all-zero before → single-commit fallback). Feature
+          # push: explicit merge-base with origin/main (never an ambient empty
+          # range assumption).
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="origin/${{ github.base_ref }}...HEAD"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            BEFORE="${{ github.event.before }}"
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              RANGE="HEAD~1..HEAD"
+            else
+              RANGE="$BEFORE..${{ github.sha }}"
+            fi
+          else
+            BASE=$(git merge-base origin/main HEAD)
+            RANGE="$BASE..HEAD"
+          fi
+          echo "secret-scan range: $RANGE"
+          git diff --name-only "$RANGE" | while read -r f; do
+            [ -f "$f" ] || continue
+            if grep -nEi "(api[_-]?key|secret|password|token)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9]{16,}" "$f" | grep -v "example\|fixture\|dci11-local\|POSTGRES_PASSWORD"; then
+              echo "potential secret in $f"; exit 1
+            fi
+          done
+
+      - name: Build (production)
+        run: npm run build
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Focused DCI browser tests (gated route, anonymous lifecycle, real axe)
+        run: |
+          YORISOU_CI_TEST=1 npx next start -p 3000 &
+          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:3000/ && break; sleep 1; done
+          npx playwright test tests/smoke/daily-check-in.spec.ts --project=desktop
+          kill %1
+
+      - name: Recreate DB for full-stack harness (fresh schema after harness rollback)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 55446 -U postgres -d postgres -c "drop database if exists yorisou_daily_check_in_test"
+          psql -h localhost -p 55446 -U postgres -d postgres -c "create database yorisou_daily_check_in_test"
+          psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -c "create extension if not exists pgcrypto"
+          psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -c "do \$\$ begin create role service_role login bypassrls; exception when duplicate_object then null; end \$\$; alter role service_role bypassrls; do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$; do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;"
+          psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -v ON_ERROR_STOP=1 -f supabase/migrations/202607200001_cpv1_foundation_prereqs.sql
+          psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -v ON_ERROR_STOP=1 -f supabase/migrations/202607200005_dci1_daily_state_records.sql
+
+      - name: Authenticated full-stack browser harness (PostgREST + real app)
+        env:
+          PGRST_JWT_SECRET: dci11-ci-fullstack-secret-0123456789abcdef0123456789abcdef
+        run: |
+          SERVICE_KEY=$(S="$PGRST_JWT_SECRET" node -e "const c=require('crypto');const b=(o)=>Buffer.from(JSON.stringify(o)).toString('base64url');const h=b({alg:'HS256',typ:'JWT'});const p=b({role:'service_role',iss:'dci11-ci',exp:Math.floor(Date.now()/1000)+86400});const s=c.createHmac('sha256',process.env.S).update(h+'.'+p).digest('base64url');console.log(h+'.'+p+'.'+s)")
+          docker run -d --name dci-postgrest --network host \
+            -e PGRST_DB_URI="postgres://postgres:postgres@localhost:55446/yorisou_daily_check_in_test" \
+            -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon -e PGRST_SERVER_PORT=55448 \
+            -e PGRST_JWT_SECRET="$PGRST_JWT_SECRET" postgrest/postgrest:v12.2.3
+          node -e "
+          const http=require('http');
+          http.createServer((req,res)=>{
+            const path=req.url.replace(/^\/rest\/v1/,'')||'/';
+            const up=http.request({host:'localhost',port:55448,path,method:req.method,headers:req.headers},(u)=>{res.writeHead(u.statusCode,u.headers);u.pipe(res);});
+            up.on('error',()=>{res.writeHead(502);res.end();});
+            req.pipe(up);
+          }).listen(55449);
+          " &
+          for i in $(seq 1 60); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" "http://localhost:55448/yorisou_daily_state_records?select=id&limit=1" || true)
+            [ "$CODE" = "200" ] && break; sleep 1
+          done
+          [ "$CODE" = "200" ] || { echo "PostgREST unhealthy ($CODE)"; docker logs dci-postgrest | tail -20; exit 1; }
+          mkdir -p /tmp/dci-auth-store
+          YORISOU_CI_TEST=1 SUPABASE_URL=http://localhost:55449 SUPABASE_SERVICE_ROLE_KEY="$SERVICE_KEY" \
+            YORISOU_DATA_DIR=/tmp/dci-auth-store \
+            YORISOU_AUTH_COOKIE_SECRET=dci11-ci-cookie-secret-0123456789abcdef0123456789abcdef \
+            npx next start -p 3200 &
+          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:3200/ && break; sleep 1; done
+          DCI_FULLSTACK=1 DCI_REST_URL=http://localhost:55448 DCI_SERVICE_KEY="$SERVICE_KEY" \
+            PLAYWRIGHT_BASE_URL=http://localhost:3200 \
+            npx playwright test tests/smoke/daily-check-in-fullstack.spec.ts --project=desktop

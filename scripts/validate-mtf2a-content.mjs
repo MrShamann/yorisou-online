@@ -189,9 +189,22 @@ import { execSync } from "node:child_process";
 const dailyAll = JSON.stringify(daily);
 const valuesAll = JSON.stringify(values);
 let fixtures = 0;
-let gates = 0; let gateFailures = 0;
+let gates = 0; let gateFailures = 0; let gatesNA = 0;
 const gateOk = (m) => { console.log(`  GATE ${m}`); gates += 1; };
 const gateFail = (m) => { console.error(`GATE-FAIL: ${m}`); gates += 1; gateFailures += 1; failures += 1; };
+const gateNA = (m) => { console.log(`  GATE-N/A ${m}`); gatesNA += 1; };
+
+// Context (DCI-1 §5): default mode runs content/mirror/fixture/hash checks only and
+// never assumes `main...HEAD` identifies the historical MTF-2A package diff.
+// Historical package-scope mode: --scope-base <sha> --scope-head <sha>.
+const argIdx = (f) => process.argv.indexOf(f);
+const SCOPE_BASE = argIdx("--scope-base") > -1 ? process.argv[argIdx("--scope-base") + 1] : null;
+const SCOPE_HEAD = argIdx("--scope-head") > -1 ? process.argv[argIdx("--scope-head") + 1] : null;
+if ((SCOPE_BASE && !SCOPE_HEAD) || (!SCOPE_BASE && SCOPE_HEAD)) {
+  console.error("FAIL: --scope-base and --scope-head must be provided together");
+  process.exit(1);
+}
+const SCOPE_MODE = Boolean(SCOPE_BASE && SCOPE_HEAD);
 
 // A2-1/2: version coherence (exact equality of every duplicated reference)
 const sv = [values.definition.scoringVersion, values.scoring.scoringVersion, values.resultObjectContract.provenance.scoringVersion];
@@ -550,23 +563,34 @@ try {
   execSync("node scripts/validate-mtf1-docs.mjs", { stdio: "pipe" });
   gateOk("EXT-1: MTF-1 validator executed — exit 0 (67 labeled checks green)");
 } catch { gateFail("EXT-1: MTF-1 validator failed"); }
-try {
-  const diff = execSync("git diff --name-only main...HEAD", { encoding: "utf8" }).trim().split("\n").filter(Boolean);
-  const outOfScope = diff.filter((f) => !f.startsWith("docs/yorisou/mtf2a/") && f !== "scripts/validate-mtf2a-content.mjs");
-  if (diff.length !== 15 || outOfScope.length) gateFail(`EXT-2: branch scope — ${diff.length} files, out-of-scope: ${outOfScope.join(",") || "none"}`);
-  else gateOk("EXT-2: branch scope executed via git — exactly 15 files, all in docs/yorisou/mtf2a/** + validator");
-  const runtime = diff.filter((f) => /^(app|components|lib|content|data|public|supabase)\//.test(f) || /^package\.json$/.test(f));
-  if (runtime.length) gateFail(`EXT-3: runtime paths changed — ${runtime.join(",")}`);
-  else gateOk("EXT-3: no runtime/config/migration path changed (verified from the real diff)");
-} catch (e) { gateFail(`EXT-2/3: git inspection failed — ${e.message}`); }
+if (SCOPE_MODE) {
+  // Historical package-scope mode: verify the EXACT historical MTF-2A delta between
+  // the explicitly provided base and head — no ambient branch assumptions.
+  try {
+    const diff = execSync(`git diff --name-only ${SCOPE_BASE} ${SCOPE_HEAD}`, { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+    const outOfScope = diff.filter((f) => !f.startsWith("docs/yorisou/mtf2a/") && f !== "scripts/validate-mtf2a-content.mjs");
+    if (diff.length !== 15 || outOfScope.length) gateFail(`EXT-2(scope): historical delta ${SCOPE_BASE.slice(0, 7)}..${SCOPE_HEAD.slice(0, 7)} — ${diff.length} files, out-of-scope: ${outOfScope.join(",") || "none"}`);
+    else gateOk(`EXT-2(scope): historical MTF-2A delta ${SCOPE_BASE.slice(0, 7)}..${SCOPE_HEAD.slice(0, 7)} — exactly 15 files, all docs/yorisou/mtf2a/** + validator`);
+    const runtime = diff.filter((f) => /^(app|components|lib|content|data|public|supabase)\//.test(f) || /^package\.json$/.test(f));
+    if (runtime.length) gateFail(`EXT-3(scope): runtime/migration paths in historical delta — ${runtime.join(",")}`);
+    else gateOk("EXT-3(scope): no runtime/config/migration path in the historical delta");
+  } catch (e) { gateFail(`EXT-2/3(scope): git inspection failed — ${e.message}`); }
+} else {
+  // Default mode: package-scope gates are NOT APPLICABLE — the historical MTF-2A
+  // package diff cannot be inferred from the current branch state. Use
+  // --scope-base/--scope-head to run them against the recorded package refs.
+  gateNA("EXT-2: package-scope gate not applicable in default mode (use --scope-base/--scope-head)");
+  gateNA("EXT-3: package-scope runtime-absence gate not applicable in default mode (use --scope-base/--scope-head)");
+}
 const pkgFileCount = readdirSync(DIR).length;
 if (pkgFileCount !== 14) fail(`A2-22: package must be 14 docs (+validator = 15) — found ${pkgFileCount}`);
 else ok("A2-22: package inventory 14 docs + 1 validator = 15 branch files");
 
 if (failures) { console.error(`\nFAILED — ${failures} total failure(s): labeled-check failures ${failures - gateFailures}, gate failures ${gateFailures}.`); process.exit(1); }
-console.log(`\nMTF-2A.2 content package VALID
+console.log(`\nMTF-2A.2 content package VALID (${SCOPE_MODE ? "historical package-scope mode" : "default mode"})
   labeled executable checks : ${checks}
   scoring fixture executions: ${fixtures}
   external repository gates : ${gates}
+  not-applicable gates      : ${gatesNA}
   failures                  : 0
 (values: 48 items, 7 dims, 8 results, 48/48 coverage rule, hash ${vHash.slice(0, 12)}…; daily: 13 acks v1.2, field-valid summaries, hash ${dHash.slice(0, 12)}…)`);
