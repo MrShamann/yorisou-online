@@ -1,8 +1,24 @@
 # MPV-1 — Isolated Free Hosted Preview: Acceptance Evidence
 
-> **DO NOT MERGE.** This branch/PR carries MPV-1 Preview evidence only. It does not change
-> Production application behavior and authorizes no merge into `main`. No secrets, passwords,
-> tokens, service-role keys or full connection strings are committed here.
+> **✅ FOUNDER ACCEPTED — MERGE AUTHORIZED (2026-07-21).**
+> Founder decision: `YORISOU_MPV_1D_FOUNDER_REVIEW_ACCEPTED_MERGE_AUTHORIZED`.
+> - Founder accepted the MPV-1C hosted Preview verification (`YORISOU_MPV_1_ISOLATED_FREE_HOSTED_PREVIEW_VERIFIED`).
+> - Founder accepted the MPV-1D fail-closed hardening (`YORISOU_MPV_1D_FINAL_HARDENED_READY_FOR_FOUNDER_MERGE_REVIEW`).
+> - **PR #120 merge into `main` is authorized.**
+> - **The merge does NOT activate either method publicly** — `/tests/daily-check-in` and
+>   `/tests/yorisou-values` remain gated/404 in Production; no nav / catalog / sitemap entry.
+> - **No Production Supabase migration and no Production environment change are authorized.**
+> - The isolated Preview infrastructure (Free `Yorisou Preview` org, `yorisou-preview` project
+>   `nbltsbonsnbpfptihomc`, private `yorisou-preview-auth` bucket) **remains isolated and non-production**;
+>   Production continues to use its pre-existing AWS/default shared-store behavior.
+>
+> The pre-merge "DO NOT MERGE" guidance below applied to the review phase and is now superseded by the
+> Founder authorization above. The historical MPV-1B / MPV-1C / MPV-1D records are preserved unchanged;
+> prior blockers and the MPV-1D defect are recorded as they occurred (§8, §9, §10) and are not rewritten.
+
+> **(review-phase note, superseded)** This branch/PR carries MPV-1 Preview evidence only. It does not
+> change Production application behavior. No secrets, passwords, tokens, service-role keys or full
+> connection strings are committed here.
 
 **Founder decision:** `YORISOU_MPV_1A_BLOCKER_REJECTED_FREE_CAPACITY_CONFIRMED` → MPV-1B authorized
 creation of one dedicated Free organization + one Free project for an isolated non-production Preview
