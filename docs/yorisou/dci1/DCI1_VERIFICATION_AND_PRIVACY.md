@@ -1,3 +1,11 @@
+> **CONTROLLING STATUS (DCI-1-MERGE, 2026-07-21).** The DCI-1 and DCI-1.1 sections
+> below are retained HISTORICAL snapshots; the **DCI-1.2 addendum is the current
+> controlling verification state**. Authenticated full-stack acceptance is CLOSED
+> (5/5, local + CI). The current DCI contract count is **45**. Hosted migration,
+> purge scheduling and public activation remain **UNAUTHORIZED** — Founder Review
+> accepted the implementation for code merge only (`implementation: complete`;
+> every activation gate stays closed).
+
 # DCI-1 — Verification Evidence, Privacy/Consent Review & Test Inventory
 
 ## 1. Validation battery results (all executed on this branch)

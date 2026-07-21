@@ -515,12 +515,16 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
   // DCI-1 — daily-check-in「きょうの空模様」: the concrete recorded_state daily
   // method (canonical content: docs/yorisou/mtf2a/daily-check-in.v1.json, content
   // status FOUNDER_APPROVED_IMPLEMENTATION_GATED after MTF-2A Forge step 20).
-  // Implementation exists as a DCI-1 feature-branch candidate pending Founder
-  // Review — `implementation` stays "in_progress" (NOT "complete") until Founder
-  // acceptance, so the derived activation state remains exactly `gated`.
-  // routeEvidence is "none": the route is NOT on production main. founderActivation
-  // "closed": content approval is NOT public-activation. devFlagged: Preview only
-  // behind dci_daily_check_in_preview.
+  // DCI-1-MERGE: implementation accepted by Founder Review
+  // (YORISOU_DCI_1_2_FOUNDER_REVIEW_ACCEPTED_MERGE_AUTHORIZED) → "complete".
+  // Activation remains NON-PUBLIC on every gate: founderActivation "closed"
+  // (implementation acceptance ≠ public activation), deploymentStatus
+  // "unverified", routeEvidence "none" (updating it requires separate git/deploy
+  // evidence), devFlagged (Preview only behind dci_daily_check_in_preview; the
+  // Production route 404s server-side). Per the CPV1 derivation the coarse label
+  // is `implemented_private` — the model's exact term for implemented + rights
+  // cleared with NO public availability; hosted migration and public activation
+  // remain unauthorized.
   {
     ...originalRouteVerified({
       methodId: "daily-check-in",
@@ -538,9 +542,9 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
       refreshModel: "daily, streak-free (gaps carry no penalty)",
     }),
     optionalInputs: ["text"],
-    implementation: "in_progress", // DCI-1 candidate on feature branch; pending Founder Review
-    routeEvidence: "none", // route NOT on production main (branch only)
-    founderActivation: "closed", // content approved (step 20) ≠ public activation
+    implementation: "complete", // DCI-1-MERGE: Founder Review accepted the implementation
+    routeEvidence: "none", // no production-main route evidence recorded by this package
+    founderActivation: "closed", // implementation acceptance ≠ public activation
     devFlagged: true,
   },
 

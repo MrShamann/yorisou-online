@@ -344,9 +344,15 @@ check("daily-check-in registered; reflection-cadence retained; identities distin
   assert.equal(DAILY_CHECK_IN_RECONCILIATION.umbrellaMethodId, "reflection-cadence");
   assert.equal(DAILY_CHECK_IN_RECONCILIATION.concreteMethodId, "daily-check-in");
 });
-check("daily-check-in activation state is exactly `gated` (never public/route-verified)", () => {
+check("daily-check-in is implemented but NON-PUBLIC on every activation gate (DCI-1-MERGE)", () => {
   const daily = getMethod("daily-check-in")!;
-  assert.equal(methodActivationState(daily), "gated");
+  assert.equal(daily.implementation, "complete"); // Founder Review accepted
+  // Derived coarse label: `implemented_private` — implemented + rights cleared,
+  // no public availability. NEVER public_active / implemented_route_verified.
+  const state = methodActivationState(daily);
+  assert.equal(state, "implemented_private");
+  assert.notEqual(state, "public_active");
+  assert.notEqual(state, "implemented_route_verified");
   assert.equal(daily.founderActivation, "closed");
   assert.equal(daily.routeEvidence, "none");
   assert.equal(daily.deploymentStatus, "unverified");
