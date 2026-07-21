@@ -154,7 +154,74 @@ const dataDir =
   (process.env.NODE_ENV === "production" ? path.join("/tmp", "yorisou-phase1") : path.join(process.cwd(), "data"));
 const sharedStoreBucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
 const sharedStoreRegion = process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
-const shouldUseSharedStore = Boolean(sharedStoreBucket);
+
+// MPV-1C — optional S3-COMPATIBLE endpoint support (e.g. Supabase Storage), WITHOUT
+// changing the default AWS behavior. When no endpoint is configured the store behaves
+// exactly as before (AWS default credential provider). Two non-default modes:
+//   • "s3-compatible": a custom S3 endpoint + explicit access-key credentials (the
+//     existing @aws-sdk/client-s3 path with { endpoint, forcePathStyle, credentials }).
+//   • "supabase-rest": Supabase Storage's REST object API, authenticated by a
+//     server-only bearer token (the isolated Preview service-role key). Used when the
+//     endpoint is the Supabase Storage REST base (".../storage/v1"); needs no S3 keys.
+// Fail closed on partial/malformed configuration. Never log secret values.
+const sharedStoreEndpoint = process.env.YORISOU_SHARED_STORE_ENDPOINT?.trim() || "";
+const sharedStoreForcePathStyle = (process.env.YORISOU_SHARED_STORE_FORCE_PATH_STYLE || "").trim() === "true";
+const sharedStoreAccessKeyId = process.env.YORISOU_SHARED_STORE_ACCESS_KEY_ID?.trim() || "";
+const sharedStoreSecretAccessKey = process.env.YORISOU_SHARED_STORE_SECRET_ACCESS_KEY?.trim() || "";
+
+export type SharedStoreMode = "disabled" | "aws" | "s3-compatible" | "supabase-rest";
+
+// Pure resolver (exported for tests). Never returns a mode whose required inputs are
+// absent — it throws a bounded, secret-free error instead (fail closed).
+//
+// MPV-1D — the ONLY configuration that may resolve to "disabled" (local-file mode) is a
+// FULLY-ABSENT shared-store config: no bucket AND no endpoint AND no access key AND no
+// secret/token AND forcePathStyle false/absent. Any shared-store-specific variable set
+// without a bucket is an orphaned/misconfigured shared store and MUST throw
+// `shared_store_bucket_required` — never silently fall back to ephemeral local storage.
+export function resolveSharedStoreMode(env: {
+  bucket?: string;
+  endpoint?: string;
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  forcePathStyle?: boolean;
+} = {
+  bucket: sharedStoreBucket,
+  endpoint: sharedStoreEndpoint,
+  accessKeyId: sharedStoreAccessKeyId,
+  secretAccessKey: sharedStoreSecretAccessKey,
+  forcePathStyle: sharedStoreForcePathStyle,
+}): SharedStoreMode {
+  const bucket = (env.bucket || "").trim();
+  const endpoint = (env.endpoint || "").trim();
+  const accessKeyId = (env.accessKeyId || "").trim();
+  const secretAccessKey = (env.secretAccessKey || "").trim();
+  const forcePathStyle = env.forcePathStyle === true;
+  if (!bucket) {
+    // Fail closed: shared-store-specific config without a bucket is invalid, not local.
+    if (endpoint || accessKeyId || secretAccessKey || forcePathStyle) {
+      throw new Error("shared_store_bucket_required");
+    }
+    return "disabled";
+  }
+  if (!endpoint) return "aws";
+  // Supabase Storage REST base: ".../storage/v1" (optionally trailing slash).
+  if (/\/storage\/v1\/?$/.test(endpoint)) {
+    if (!secretAccessKey) throw new Error("shared_store_supabase_rest_missing_token");
+    return "supabase-rest";
+  }
+  // Custom S3-compatible endpoint: BOTH credentials required (reject partial creds).
+  if (Boolean(accessKeyId) !== Boolean(secretAccessKey)) throw new Error("shared_store_partial_credentials");
+  if (!accessKeyId || !secretAccessKey) throw new Error("shared_store_endpoint_missing_credentials");
+  return "s3-compatible";
+}
+
+// Authoritative resolution at module initialization: a malformed shared-store config
+// throws HERE (fail at startup) rather than silently selecting local storage. There is
+// no separate `shouldUseSharedStore` bypass — the resolver alone decides disabled/valid.
+const sharedStoreMode: SharedStoreMode = resolveSharedStoreMode();
+const shouldUseSharedStore = sharedStoreMode !== "disabled";
+const sharedRestBase = sharedStoreEndpoint.replace(/\/$/, ""); // ".../storage/v1"
 
 const accountsFile: DataFile<AccountRecord[]> = {
   path: path.join(dataDir, "phase1-accounts.json"),
@@ -185,17 +252,100 @@ let sharedStoreClient: S3Client | null = null;
 let sharedStoreReadyPromise: Promise<void> | null = null;
 
 function getSharedStoreClient() {
-  if (!shouldUseSharedStore) {
+  if (!shouldUseSharedStore || sharedStoreMode === "supabase-rest") {
     return null;
   }
 
   if (!sharedStoreClient) {
-    sharedStoreClient = new S3Client({
-      region: sharedStoreRegion,
-    });
+    if (sharedStoreMode === "s3-compatible") {
+      // Custom S3-compatible endpoint (e.g. Supabase Storage S3): explicit endpoint +
+      // credentials. Never logged.
+      sharedStoreClient = new S3Client({
+        region: sharedStoreRegion,
+        endpoint: sharedStoreEndpoint,
+        forcePathStyle: sharedStoreForcePathStyle,
+        credentials: {
+          accessKeyId: sharedStoreAccessKeyId,
+          secretAccessKey: sharedStoreSecretAccessKey,
+        },
+      });
+    } else {
+      // AWS default — unchanged behavior (default credential provider chain).
+      sharedStoreClient = new S3Client({
+        region: sharedStoreRegion,
+      });
+    }
   }
 
   return sharedStoreClient;
+}
+
+// ── Supabase Storage REST transport (MPV-1C fallback) ────────────────────────
+// A minimal server-only adapter over Supabase Storage's REST object API, used when
+// no S3 access keys are available. Auth is a server-only bearer (the isolated Preview
+// service-role key) — it never reaches the browser. Preserves the existing object-key
+// layout (phase1/**). Same four operations as the S3 path.
+function sharedRestHeaders(extra: Record<string, string> = {}) {
+  return {
+    apikey: sharedStoreSecretAccessKey,
+    Authorization: `Bearer ${sharedStoreSecretAccessKey}`,
+    ...extra,
+  };
+}
+
+async function sharedRestReadJson<T>(key: string): Promise<T | null> {
+  const res = await fetch(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`, {
+    method: "GET",
+    headers: sharedRestHeaders(),
+    cache: "no-store",
+  });
+  if (res.status === 404 || res.status === 400) return null;
+  if (!res.ok) throw new Error(`shared_store_rest_read_failed:${res.status}`);
+  const text = await res.text();
+  if (!text) return null;
+  return JSON.parse(text) as T;
+}
+
+async function sharedRestWriteJson<T>(key: string, value: T): Promise<void> {
+  const res = await fetch(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`, {
+    method: "POST",
+    headers: sharedRestHeaders({ "Content-Type": "application/json", "x-upsert": "true" }),
+    body: JSON.stringify(value, null, 2) + "\n",
+  });
+  if (!res.ok) throw new Error(`shared_store_rest_write_failed:${res.status}`);
+}
+
+async function sharedRestDeleteJson(key: string): Promise<void> {
+  const res = await fetch(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`, {
+    method: "DELETE",
+    headers: sharedRestHeaders(),
+  });
+  if (!res.ok && res.status !== 404) throw new Error(`shared_store_rest_delete_failed:${res.status}`);
+}
+
+async function sharedRestListKeys(prefix: string): Promise<string[]> {
+  // Supabase Storage list is folder-oriented and returns names relative to the prefix;
+  // the store lists single-folder prefixes (phase1/<category>/), so full keys are
+  // reconstructed as prefix + child name for file entries (id present).
+  const folder = prefix.replace(/\/$/, "");
+  const keys: string[] = [];
+  const pageSize = 1000;
+  let offset = 0;
+  for (;;) {
+    const res = await fetch(`${sharedRestBase}/object/list/${sharedStoreBucket}`, {
+      method: "POST",
+      headers: sharedRestHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ prefix: `${folder}/`, limit: pageSize, offset }),
+    });
+    if (!res.ok) throw new Error(`shared_store_rest_list_failed:${res.status}`);
+    const entries = (await res.json()) as { name: string; id: string | null }[];
+    for (const entry of entries) {
+      if (entry.id) keys.push(`${folder}/${entry.name}`);
+    }
+    if (entries.length < pageSize) break;
+    offset += pageSize;
+  }
+  return keys;
 }
 
 function nowIso() {
@@ -328,6 +478,9 @@ function isMissingObjectError(error: unknown) {
 }
 
 async function sharedReadJson<T>(key: string) {
+  if (sharedStoreMode === "supabase-rest") {
+    return sharedRestReadJson<T>(key);
+  }
   const client = getSharedStoreClient();
 
   if (!client || !sharedStoreBucket) {
@@ -357,6 +510,9 @@ async function sharedReadJson<T>(key: string) {
 }
 
 async function sharedWriteJson<T>(key: string, value: T) {
+  if (sharedStoreMode === "supabase-rest") {
+    return sharedRestWriteJson<T>(key, value);
+  }
   const client = getSharedStoreClient();
 
   if (!client || !sharedStoreBucket) {
@@ -374,6 +530,9 @@ async function sharedWriteJson<T>(key: string, value: T) {
 }
 
 async function sharedDeleteJson(key: string) {
+  if (sharedStoreMode === "supabase-rest") {
+    return sharedRestDeleteJson(key);
+  }
   const client = getSharedStoreClient();
 
   if (!client || !sharedStoreBucket) {
@@ -389,6 +548,9 @@ async function sharedDeleteJson(key: string) {
 }
 
 async function sharedListKeys(prefix: string) {
+  if (sharedStoreMode === "supabase-rest") {
+    return sharedRestListKeys(prefix);
+  }
   const client = getSharedStoreClient();
 
   if (!client || !sharedStoreBucket) {
