@@ -204,3 +204,80 @@ tree or branch history; the only credential-shaped strings in the diff are obvio
 **9.11 Classification (MPV-1C):** **`YORISOU_MPV_1_ISOLATED_FREE_HOSTED_PREVIEW_VERIFIED`** — the
 fully-hosted authenticated Vercel Preview is complete on Free/zero-cost infrastructure with a durable
 Supabase-Storage auth store. PR #120 stays **OPEN / draft / DO NOT MERGE**.
+
+---
+
+## 10. MPV-1D — shared-store fail-closed hardening (Founder-review correction)
+
+The MPV-1C hosted acceptance (§9) **remained valid** — nothing in §9 is retracted. During Founder review,
+one shared-store configuration path was found that could **silently fall back to ephemeral local storage**
+instead of failing closed, so PR #120 was not yet authorized for merge. MPV-1D corrects only that path.
+
+**10.1 Defect.** `resolveSharedStoreMode()` returned `"disabled"` (local-file `/tmp`) whenever the **bucket**
+was missing — even when a `YORISOU_SHARED_STORE_ENDPOINT` / access-key / secret-token / `FORCE_PATH_STYLE`
+was set — and module initialization bypassed the resolver entirely via a separate `shouldUseSharedStore`
+short-circuit (`shouldUseSharedStore ? resolveSharedStoreMode() : "disabled"`). A serverless Preview with an
+endpoint + token but a **missing bucket** would therefore persist accounts/sessions to ephemeral `/tmp`.
+
+**10.2 Fix (`4778c5c`, [lib/server/yorisouData.ts](../../../lib/server/yorisouData.ts)).**
+- `"disabled"` (local-file mode) is now returned **only** when the shared-store config is fully absent:
+  no bucket **and** no endpoint **and** no access key **and** no secret/token **and** `forcePathStyle`
+  false/absent.
+- Any **orphaned** shared-store config — any of endpoint / accessKeyId / secretAccessKey / `forcePathStyle=true`
+  present **without a bucket** — throws **`shared_store_bucket_required`** (bounded, **no secret in the message**).
+- `forcePathStyle` is now one of the resolver's inputs.
+- Module initialization resolves through the **single authoritative** `resolveSharedStoreMode()` call
+  (`shouldUseSharedStore` is derived from the resolved mode). A malformed config now **fails at server
+  startup / module initialization**, never silently selecting local storage.
+- `aws` / `supabase-rest` / `s3-compatible` selection and partial-credential rejection are **unchanged**;
+  the AWS default credential-provider chain is untouched; no ref / endpoint / bucket / credential is
+  hardcoded.
+
+**10.3 Resolver truth table (post-MPV-1D).**
+
+| bucket | endpoint | access key | secret/token | forcePathStyle | result |
+|---|---|---|---|---|---|
+| absent | absent | absent | absent | false/absent | `disabled` (local-file) |
+| present | absent | — | — | — | `aws` |
+| present | `…/storage/v1` | — | present | — | `supabase-rest` |
+| present | `…/storage/v1` | — | absent | — | throws `shared_store_supabase_rest_missing_token` |
+| present | custom | present | present | — | `s3-compatible` |
+| present | custom | one only | — | — | throws `shared_store_partial_credentials` |
+| present | custom | absent | absent | — | throws `shared_store_endpoint_missing_credentials` |
+| **absent** | **present** | — | — | — | **throws `shared_store_bucket_required`** |
+| **absent** | — | **present** | — | — | **throws `shared_store_bucket_required`** |
+| **absent** | — | — | **present** | — | **throws `shared_store_bucket_required`** |
+| **absent** | — | — | — | **true** | **throws `shared_store_bucket_required`** |
+
+**10.4 Tests.** [sharedObjectStore.test.ts](../../../lib/server/__tests__/sharedObjectStore.test.ts) expanded
+**7 → 15** checks: all four valid modes, all six orphaned-config cases (each → `shared_store_bucket_required`),
+partial/malformed-credential rejections, no-secret-in-error assertions, **and an initialization-level
+child-process test** proving a malformed process env cannot silently fall back to local-file mode (orphaned
+env → module init throws `shared_store_bucket_required`, exit 3, no secret leaked; fully-absent env →
+clean init in local-file mode).
+
+**10.5 Local validation.** `test:shared-store` **15/15**; `tsc --noEmit` clean; focused ESLint (both changed
+files) **0 problems**; `next build` **success**; YV **27/27**; DCI **45/45**; CPV1 **62/62**;
+changed-content secret scan (CI regex) **clean**.
+
+**10.6 Remote CI (commit `4778c5c`).** Vercel Preview **success/READY** (`dpl_G7SPZ4ZWjRfp6J`,
+`yorisou-online-gtft1tia3-…`); **Yorisou Check success**; **CPV1-CM0 CI success**.
+
+**10.7 Hosted durability smoke (vs the corrected protected Preview) — 10/10 PASS.** Because the branch-scoped
+Preview config carries a valid bucket + endpoint + token, the corrected deploy resolves to `supabase-rest`
+and remains functional: 0 pre-existing objects → register one synthetic account → authenticated read →
+account + session objects present under `phase1/**` → sign out → sign in from a fresh context → session
+validated across **4 separate hosted invocations** → delete the synthetic objects → **bucket returns to 0**.
+Deployment Protection was **not** altered; the existing automation bypass header was used.
+
+**10.8 Synthetic cleanup.** Preview bucket back to **0** objects; the six DCI/YV method tables remain **0**
+rows (the smoke created no records). Free org/project/empty bucket/schemas/branch-scoped vars kept.
+
+**10.9 Production non-regression.** `https://yorisou.online/` → **200**; gated routes/API POSTs → **404**;
+`origin/main` = `d2e2a73`; latest Production deploy = `main`@`d2e2a73` (READY). Production Supabase, Storage,
+Vercel variables, Deployment Protection, and the domain were **not** touched. PR #113 (`8483333`) and
+PR #114 (`b16fa1f`) untouched.
+
+**10.10 Classification (MPV-1D):** **`YORISOU_MPV_1D_FINAL_HARDENED_READY_FOR_FOUNDER_MERGE_REVIEW`** — the
+shared store now fails closed on orphaned configuration; hosted durability re-verified after the correction.
+PR #120 remains **OPEN / draft / DO NOT MERGE** pending Founder merge review.
