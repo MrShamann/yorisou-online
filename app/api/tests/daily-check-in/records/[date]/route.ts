@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 //        row are removed; only a content-free tombstone event remains.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { dailyCheckInAccess } from "@/lib/yorisou/methods/daily-check-in/access";
+import { resolveDailyCheckInRouteAccess } from "@/lib/cpv1/pilotRouteAccess";
 import { DAILY_CHECK_IN_RUNTIME_DEFINITION } from "@/lib/yorisou/methods/daily-check-in/runtimeDefinition";
 import { executeRecordedState } from "@/lib/yorisou/method-runtime/recordedState";
 import { correctionWindowOpen } from "@/lib/yorisou/methods/daily-check-in/timeContract";
@@ -23,9 +23,9 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 type Context = { params: Promise<{ date: string }> };
 
 export async function PATCH(request: Request, context: Context) {
-  const access = dailyCheckInAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
+  const gate = await resolveDailyCheckInRouteAccess();
+  if (!gate.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const viewer = gate.viewer ?? (await getViewerContext());
   const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const { date } = await context.params;
@@ -83,9 +83,9 @@ export async function PATCH(request: Request, context: Context) {
 }
 
 export async function DELETE(_request: Request, context: Context) {
-  const access = dailyCheckInAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
+  const gate = await resolveDailyCheckInRouteAccess();
+  if (!gate.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const viewer = gate.viewer ?? (await getViewerContext());
   const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const { date } = await context.params;

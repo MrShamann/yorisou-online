@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 // no sitemap entry links here. The gate is enforced here and in every API route
 // (client-only hiding is never the gate).
 
-import { dailyCheckInAccess } from "@/lib/yorisou/methods/daily-check-in/access";
+import { resolveDailyCheckInRouteAccess } from "@/lib/cpv1/pilotRouteAccess";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { DailyCheckInFlow } from "./DailyCheckInFlow";
 
@@ -17,9 +17,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function DailyCheckInPage() {
-  const access = dailyCheckInAccess();
-  if (!access.allowed) notFound();
-  const viewer = await getViewerContext();
+  const gate = await resolveDailyCheckInRouteAccess();
+  if (!gate.allowed) notFound();
+  const viewer = gate.viewer ?? (await getViewerContext());
   const authenticated = Boolean(viewer.account?.id || viewer.legacyAccount?.id);
   return <DailyCheckInFlow authenticated={authenticated} />;
 }

@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 //       bounded window (10 min + 120s skew). Client date overrides are rejected.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { dailyCheckInAccess } from "@/lib/yorisou/methods/daily-check-in/access";
+import { resolveDailyCheckInRouteAccess } from "@/lib/cpv1/pilotRouteAccess";
 import { DAILY_CHECK_IN_RUNTIME_DEFINITION } from "@/lib/yorisou/methods/daily-check-in/runtimeDefinition";
 import { DAILY_CHECK_IN_DEFINITION } from "@/lib/yorisou/methods/daily-check-in/definition.generated";
 import { executeRecordedState, localDateForInstant } from "@/lib/yorisou/method-runtime/recordedState";
@@ -29,9 +29,9 @@ function isoDateDaysAgo(fromLocalDate: string, days: number): string {
 }
 
 export async function GET(request: Request) {
-  const access = dailyCheckInAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
+  const gate = await resolveDailyCheckInRouteAccess();
+  if (!gate.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const viewer = gate.viewer ?? (await getViewerContext());
   const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   try {
@@ -79,9 +79,9 @@ type CreateBody = {
 };
 
 export async function POST(request: Request) {
-  const access = dailyCheckInAccess();
-  if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
+  const gate = await resolveDailyCheckInRouteAccess();
+  if (!gate.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const viewer = gate.viewer ?? (await getViewerContext());
   const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const read = await readBoundedJson(request);
