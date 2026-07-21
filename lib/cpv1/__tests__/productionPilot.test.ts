@@ -12,6 +12,7 @@ import {
   isProductionPilotFlagEnabled,
   cpv1ProductionPilotAccess,
   PRODUCTION_PILOT_FLAGS,
+  type ProductionPilotFlag,
 } from "../productionPilot";
 import { dailyCheckInAccess } from "../../yorisou/methods/daily-check-in/access";
 import { yorisouValuesAccess } from "../../yorisou/methods/yorisou-values/access";
@@ -23,8 +24,8 @@ function check(label: string, fn: () => void) {
   console.log(`  ✓ ${label}`);
 }
 
-const DCI = "dci_daily_check_in_private_pilot";
-const YV = "yorisou_values_private_pilot";
+const DCI: ProductionPilotFlag = "dci_daily_check_in_private_pilot";
+const YV: ProductionPilotFlag = "yorisou_values_private_pilot";
 const BOTH = `${DCI},${YV}`;
 
 // Env fixtures. deploymentContext reads VERCEL_ENV first, so VERCEL_ENV="production"
@@ -58,7 +59,7 @@ check("flag enabled ONLY in production (never local/test/preview/unknown)", () =
   assert.equal(isProductionPilotFlagEnabled(DCI, unknownCtx(BOTH)), false);
 });
 
-const ALL = (env: Record<string, string | undefined>, requiredFlag = DCI, over: Partial<{ authenticated: boolean; isFounderAdmin: boolean; routeAuthorized: boolean }> = {}) =>
+const ALL = (env: Record<string, string | undefined>, requiredFlag: ProductionPilotFlag = DCI, over: Partial<{ authenticated: boolean; isFounderAdmin: boolean; routeAuthorized: boolean }> = {}) =>
   cpv1ProductionPilotAccess({ authenticated: true, isFounderAdmin: true, routeAuthorized: true, requiredFlag, env, ...over });
 
 // ── The five-condition truth table ─────────────────────────────────────────────
