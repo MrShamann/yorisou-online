@@ -1,10 +1,13 @@
 # YV-1 — Test Inventory
 
-> Updated by **YV-1.1** (provenance, confirmation, anonymous completion, and
-> test-integrity correction). Three previously vacuous scoring tests were
-> replaced with genuine proofs; counts and descriptions below are current.
+> Updated by **YV-1.2** (six-field provenance incl. `method_id`, complete
+> anonymous→login explicit-save continuation, truthful/idempotent confirmation).
+> **Correction:** the YV-1.1 inventory said the provenance gate covered "6
+> fields" — it verified only FIVE (method_id was not explicitly checked). YV-1.2
+> adds `method_id` so all SIX are now asserted, independently, at contract, DB,
+> and API layers. Counts below are current.
 
-## Contract suite — `lib/yorisou/methods/yorisou-values/__tests__/yorisouValues.test.ts` (26 checks)
+## Contract suite — `lib/yorisou/methods/yorisou-values/__tests__/yorisouValues.test.ts` (27 checks)
 Canonical integrity (hash, generator drift, identity/versions, 48 unique IDs, pair/choice consistency, 7 dimensions, appearance counts, 8 results + copy) · scoring:
 - 48/48 required; 0 & 1..47 → insufficient with exact remaining;
 - every dimension-led result reachable via a favoring set;
@@ -30,26 +33,32 @@ interpretation + anti-screening present) · gate + registry (production/unknown
 daily-check-in unchanged) · resume provenance (valid compatible; stale
 method/bank/scoring/schema/hash/expiry/malformed rejected).
 
-**YV-1.1 API contract gate (pure `contract.ts`)** — provenance gate: canonical
-record matches; EACH of the 6 stored provenance fields, drifted independently,
+**YV-1.2 API contract gate (pure `contract.ts`)** — canonical provenance carries
+all SIX keys incl. `methodId`; provenance gate: canonical record matches; EACH of
+the SIX stored provenance fields (**method_id included**), drifted independently,
 fails closed. Strict-field helper: unknown key reported; allowlisted keys pass;
 empty object passes; `score` allowlist rejects `confirmation`.
 
 ## Disposable-DB harness — `tests/yorisou-values/postgres-integration.sh`
 Privilege matrix + direct-write denial (SET ROLE service_role) + RPC success ·
-retake distinct · **YV-C1/YV-C2 answer-correction** (new 10-arg provenance
-signature): recompute → v2, confirmation UNCHANGED, exactly one `corrected`
-event; byte-equivalent answers rejected (`values_no_answer_change`); stale
-provenance rejected (`values_record_contract_version_mismatch`); cross-owner
-denied · **YV-C1 `set_confirmation`**: grant matrix (anon denied / service
-allowed); confirmation change with NO version increment and NO new version row;
-one `confirmation_changed` event per change (`user_confirmed` / `user_not_quite`);
-invalid confirmation, stale provenance, and cross-owner all rejected · append-only
-enforcement · deletion content-erasure + exactly-one-tombstone (erases
-confirmation events too) + whole-DB answer sweep · purge matrix · two-owner
-isolation · executed rollback (drops both new RPC signatures).
+retake distinct · **YV-C1/YV-C2/YV-C6 answer-correction** (new 11-arg provenance
+signature incl. `p_expected_method_id`): recompute → v2, confirmation UNCHANGED,
+exactly one `corrected` event; byte-equivalent answers rejected
+(`values_no_answer_change`); stale provenance rejected
+(`values_record_contract_version_mismatch`); cross-owner denied · **YV-C1/YV-C6
+`set_confirmation`** (new 9-arg signature incl. `p_expected_method_id`): grant
+matrix (anon denied / service allowed); confirmation change with NO version
+increment and NO new version row; one `confirmation_changed` event per change
+(`user_confirmed` / `user_not_quite`); invalid confirmation, stale provenance, and
+cross-owner all rejected · **YV-C6** a WRONG expected `method_id` is rejected by
+BOTH mutation RPCs · **YV-C8** idempotent `set_confirmation` (requesting the
+current confirmation is a no-op: NO added event, `updated_at` NOT bumped, version
+unchanged) · append-only enforcement · deletion content-erasure +
+exactly-one-tombstone (erases confirmation events too) + whole-DB answer sweep ·
+purge matrix · two-owner isolation · executed rollback (drops both new RPC
+signatures).
 
-## Full-stack acceptance — `tests/smoke/yorisou-values-fullstack.spec.ts` (via `tests/yorisou-values/fullstack-local.sh`, 5 tests)
+## Full-stack acceptance — `tests/smoke/yorisou-values-fullstack.spec.ts` (via `tests/yorisou-values/fullstack-local.sh`, 7 tests)
 Authenticated create→score→read→correct→retake→delete; provenance/insufficient/
 malformed/oversized rejection with no-persistence proof; TRUE two-account
 isolation + unauthenticated denial · **YV-C1 confirmation is a distinct op**
@@ -58,18 +67,28 @@ strict PATCH contract (empty → 400, answers+confirmation ambiguous → 400, un
 field → 400, byte-equal answers → 409) · **YV-C3 anonymous non-persistent
 scoring** (`POST /score` returns a result with `saved:false`, no `assessmentId`,
 no internal numerics, DB row count unchanged; stale provenance / insufficient →
-422; `confirmation` field → 400) + **YV-C4 create rejects unknown fields**. Real
-app/auth/API/repository/PostgREST/database path; disposable, torn down.
+422; `confirmation` field → 400) + **YV-C4 create rejects unknown fields** ·
+**YV-C7 anonymous→login return journey** (anonymous completes 48 → non-persistent
+result, no DB write → sign-in-to-save stores pending → authenticate → return opens
+the completed review DIRECTLY, not question 48 → no auto-persist → ONE explicit
+save creates exactly one assessment + one initial version → pending cleared only
+after save → refresh creates no duplicate) · **YV-C8 truthful/idempotent
+confirmation at the API** (first confirm → 1 event; identical repeat → 200 with no
+added event; genuine change → exactly one more event; answers/result/version
+unchanged). Real app/auth/API/repository/PostgREST/database path; disposable, torn
+down.
 
-## Browser smoke — `tests/smoke/yorisou-values.spec.ts` (7 scenarios × desktop+mobile = 14)
+## Browser smoke — `tests/smoke/yorisou-values.spec.ts` (9 scenarios × desktop+mobile = 18)
 Intro + limits (axe) · one-pair-per-screen + progress + back (axe) ·
 insufficient-coverage resume · **YV-C3 anonymous completion shows a result
 WITHOUT saving, then offers explicit sign-in-to-save** (persistence endpoint still
 401; `/score` returns a non-persistent result; UI shows `yv-result` +
 `yv-anonymous-save`; save CTA stores on-device progress and routes to
-`/login?next=…`; answers never in URL; axe-clean) · all API methods auth-gated +
-provenance mismatch · anonymous history · no catalog exposure. Real axe engine:
-0 serious / 0 critical.
+`/login?next=…`; answers never in URL; axe-clean) · **YV-C7 resume with all 48
+answers opens directly on the completed review (NOT question 48); pending peeked,
+not consumed** (axe-clean) · **YV-C7 stale pending is discarded + truthful
+incompatibility notice shown** · all API methods auth-gated + provenance mismatch ·
+anonymous history · no catalog exposure. Real axe engine: 0 serious / 0 critical.
 
 ## Remote CI — `.github/workflows/yv-1-ci.yml`
 push (feature + main, path-filtered) · PR (main) · dispatch. Runs: generator

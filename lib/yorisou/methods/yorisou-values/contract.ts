@@ -6,8 +6,11 @@
 import { YORISOU_VALUES_DEFINITION, YORISOU_VALUES_BANK_HASH } from "./definition.generated";
 
 // The single source of the expected provenance every stored record and every
-// mutation must match. Fail closed on any drift (YV-C2).
+// mutation must match. Fail closed on any drift (YV-C2). YV-1.2 (YV-C6): the
+// method IDENTITY (`methodId`) is one of the SIX fields — the DB CHECK constraint
+// on method_id is not a substitute for the explicit six-field contract.
 export const CANONICAL_VALUES_PROVENANCE = {
+  methodId: YORISOU_VALUES_DEFINITION.methodId,
   methodVersion: YORISOU_VALUES_DEFINITION.methodVersion,
   bankVersion: YORISOU_VALUES_DEFINITION.bankVersion,
   scoringVersion: YORISOU_VALUES_DEFINITION.scoringVersion,
@@ -15,10 +18,11 @@ export const CANONICAL_VALUES_PROVENANCE = {
   bankContentHash: YORISOU_VALUES_BANK_HASH,
 } as const;
 
-// True only when ALL six provenance fields on the stored record still match the
-// current canonical definition. A stale record is never reinterpreted under a
-// changed definition; it stays deletable.
+// True only when ALL SIX provenance fields on the stored record still match the
+// current canonical definition (method_id included). A stale record is never
+// reinterpreted under a changed definition; it stays deletable.
 export function recordProvenanceMatchesCanonical(record: {
+  method_id: string;
   method_version: string;
   bank_version: string;
   scoring_version: string;
@@ -26,6 +30,7 @@ export function recordProvenanceMatchesCanonical(record: {
   bank_content_hash: string;
 }): boolean {
   return (
+    record.method_id === CANONICAL_VALUES_PROVENANCE.methodId &&
     record.method_version === CANONICAL_VALUES_PROVENANCE.methodVersion &&
     record.bank_version === CANONICAL_VALUES_PROVENANCE.bankVersion &&
     record.scoring_version === CANONICAL_VALUES_PROVENANCE.scoringVersion &&

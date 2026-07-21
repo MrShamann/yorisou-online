@@ -207,4 +207,85 @@ test.describe.serial("YV-1 full-stack authenticated acceptance", () => {
     expect(bad.status()).toBe(400);
     await ctx.close();
   });
+
+  test("YV-C7 anonymous→login return opens the completed review directly; ONE explicit save; refresh creates no duplicate", async ({ browser }) => {
+    const email = `yv-c7-${Date.now()}@example.test`;
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+
+    // (1-3) Anonymous completion → non-persistent result, NO DB writes.
+    await page.goto(`${BASE}/tests/yorisou-values`, { waitUntil: "domcontentloaded" });
+    await page.locator('[data-testid="yorisou-values"][data-hydrated="true"]').waitFor({ timeout: 20_000 });
+    await page.getByTestId("yv-start").click();
+    for (let i = 0; i < 48; i++) await page.getByTestId("yv-choice-a").click();
+    await page.getByTestId("yv-submit").click(); // anonymous → /score
+    await expect(page.getByTestId("yv-result")).toBeVisible();
+    await expect(page.getByTestId("yv-anonymous-save")).toBeVisible();
+
+    // (4) Choose sign-in-to-save → pending stored on device.
+    await page.getByTestId("yv-anonymous-save-cta").click();
+    await page.waitForURL(/\/login/);
+    const pending = await page.evaluate(() => sessionStorage.getItem("yorisou.values.pending-progress.v1"));
+    expect(pending).toContain("VAL_Q48");
+
+    // (5) Authenticate in the SAME context (register signs the cookie in).
+    const reg = await page.request.post(`${BASE}/api/auth/register`, { data: { name: "YV継続", email, password: "Yv1-Str0ng-Pass!", city: "Tokyo", role: "self" } });
+    expect([200, 201]).toContain(reg.status());
+    const ownerRowsBefore = await restRows(page, `yorisou_values_assessments?select=id&order=created_at`);
+
+    // (6-8) Return to the flow → completed review appears DIRECTLY (not question 48).
+    await page.goto(`${BASE}/tests/yorisou-values`, { waitUntil: "domcontentloaded" });
+    await page.locator('[data-testid="yorisou-values"][data-hydrated="true"]').waitFor({ timeout: 20_000 });
+    await expect(page.getByTestId("yv-review")).toBeVisible();
+    await expect(page.getByTestId("yv-question")).toHaveCount(0);
+
+    // (9) No automatic persistence occurred on return.
+    const midRows = await restRows(page, `yorisou_values_assessments?select=id`);
+    expect(midRows.length).toBe(ownerRowsBefore.length);
+
+    // (10-12) Explicit save → EXACTLY one assessment + one initial version; pending cleared.
+    await page.getByTestId("yv-submit").click();
+    await expect(page.getByTestId("yv-result")).toBeVisible();
+    const history = (await (await page.request.get(`${BASE}/api/tests/yorisou-values/assessments`)).json()) as { assessments: { id: string; currentVersion: number }[] };
+    const mine = history.assessments;
+    expect(mine).toHaveLength(1);
+    expect(mine[0].currentVersion).toBe(1);
+    const versions = await restRows(page, `yorisou_values_assessment_versions?select=version&assessment_id=eq.${mine[0].id}`);
+    expect(versions).toHaveLength(1);
+    const clearedPending = await page.evaluate(() => sessionStorage.getItem("yorisou.values.pending-progress.v1"));
+    expect(clearedPending).toBeNull();
+
+    // (13) Refresh does NOT create a duplicate.
+    await page.goto(`${BASE}/tests/yorisou-values`, { waitUntil: "domcontentloaded" });
+    await page.locator('[data-testid="yorisou-values"][data-hydrated="true"]').waitFor({ timeout: 20_000 });
+    const after = (await (await page.request.get(`${BASE}/api/tests/yorisou-values/assessments`)).json()) as { assessments: unknown[] };
+    expect(after.assessments).toHaveLength(1);
+    await ctx.close();
+  });
+
+  test("YV-C8 confirmation is truthful + idempotent at the API: unchanged → no new event; real change → one event; no version churn", async ({ page }) => {
+    await registerAndSignIn(page, `yv-c8-${Date.now()}@example.test`);
+    const create = await page.request.post(`${BASE}/api/tests/yorisou-values/assessments`, { data: { answers: fullAnswers(), ...provenance } });
+    expect(create.status()).toBe(201);
+    const id = ((await create.json()) as { assessmentId: string }).assessmentId;
+    const eventsCount = async () => (await restRows(page, `yorisou_values_assessment_events?select=id&assessment_id=eq.${id}&event_type=eq.confirmation_changed`)).length;
+    const url = `${BASE}/api/tests/yorisou-values/assessments/${id}`;
+
+    // First confirmation → one event.
+    expect((await page.request.patch(url, { data: { confirmation: "confirmed" } })).status()).toBe(200);
+    expect(await eventsCount()).toBe(1);
+    // Idempotent repeat of the SAME confirmation → success, but NO additional event.
+    const repeat = await page.request.patch(url, { data: { confirmation: "confirmed" } });
+    expect(repeat.status()).toBe(200);
+    expect(((await repeat.json()) as { confirmation: string }).confirmation).toBe("confirmed");
+    expect(await eventsCount()).toBe(1);
+    // A genuine change → exactly one more event.
+    expect((await page.request.patch(url, { data: { confirmation: "not_quite" } })).status()).toBe(200);
+    expect(await eventsCount()).toBe(2);
+    // Answers + computed result + version unchanged by any confirmation change.
+    const detail = (await (await page.request.get(url)).json()) as { resultId: string; currentVersion: number; confirmation: string };
+    expect(detail.currentVersion).toBe(1);
+    expect(detail.confirmation).toBe("not_quite");
+    expect(await restRows(page, `yorisou_values_assessment_versions?select=version&assessment_id=eq.${id}`)).toHaveLength(1);
+  });
 });

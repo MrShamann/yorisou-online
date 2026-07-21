@@ -359,10 +359,17 @@ check("valid matching progress compatible; stale versions/hash/expiry/malformed 
   assert.equal((checkPendingValuesCompatibility({ ...valid, v: 2 }, current, 2000) as { reason: string }).reason, "unsupported_contract");
 });
 
-console.log("YV-1.1 — API contract gate (provenance + strict fields)");
-check("provenance gate: canonical record matches; EACH of the 6 stale fields fails closed independently", () => {
+console.log("YV-1.2 — API contract gate (SIX-field provenance + strict fields)");
+check("canonical provenance carries all SIX fields including methodId", () => {
+  const P = CANONICAL_VALUES_PROVENANCE;
+  assert.equal(P.methodId, "yorisou-values");
+  assert.equal(P.methodId, DEF.methodId);
+  assert.deepEqual(Object.keys(P).sort(), ["bankContentHash", "bankVersion", "methodId", "methodVersion", "resultSchemaVersion", "scoringVersion"]);
+});
+check("provenance gate: canonical record matches; EACH of the SIX stale fields (incl. method_id) fails closed independently", () => {
   const P = CANONICAL_VALUES_PROVENANCE;
   const good = {
+    method_id: P.methodId,
     method_version: P.methodVersion,
     bank_version: P.bankVersion,
     scoring_version: P.scoringVersion,
@@ -372,12 +379,14 @@ check("provenance gate: canonical record matches; EACH of the 6 stale fields fai
   assert.equal(recordProvenanceMatchesCanonical(good), true);
   // Drift ANY single field → the gate must reject (no reinterpretation).
   const drifts: [keyof typeof good, string][] = [
+    ["method_id", "not-yorisou-values"],
     ["method_version", "values-v0.9"],
     ["bank_version", "values-bank-v0.9"],
     ["scoring_version", "values-scoring-v0.9"],
     ["result_schema_version", "values-result-v0.9"],
     ["bank_content_hash", "deadbeef"],
   ];
+  assert.equal(drifts.length, 6, "all six fields covered");
   for (const [field, stale] of drifts) {
     assert.equal(recordProvenanceMatchesCanonical({ ...good, [field]: stale }), false, `stale ${field} must fail closed`);
   }

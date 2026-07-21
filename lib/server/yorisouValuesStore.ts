@@ -83,6 +83,7 @@ export async function createValuesAssessment(input: {
 }
 
 export type ExpectedProvenance = {
+  methodId: string;
   methodVersion: string;
   bankVersion: string;
   scoringVersion: string;
@@ -107,6 +108,7 @@ export async function correctValuesAssessment(input: {
     p_answers: input.answers,
     p_result_id: input.resultId,
     p_is_mixed: input.isMixed,
+    p_expected_method_id: input.expected.methodId,
     p_expected_method_version: input.expected.methodVersion,
     p_expected_bank_version: input.expected.bankVersion,
     p_expected_scoring_version: input.expected.scoringVersion,
@@ -127,6 +129,7 @@ export async function setValuesConfirmation(input: {
     p_owner_account_id: input.ownerAccountId,
     p_assessment_id: input.assessmentId,
     p_confirmation: input.confirmation,
+    p_expected_method_id: input.expected.methodId,
     p_expected_method_version: input.expected.methodVersion,
     p_expected_bank_version: input.expected.bankVersion,
     p_expected_scoring_version: input.expected.scoringVersion,

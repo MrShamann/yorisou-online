@@ -14,7 +14,7 @@ import {
   checkPendingValuesCompatibility,
   discardPendingValuesProgress,
   storePendingValuesProgress,
-  takePendingValuesProgress,
+  readPendingValuesProgress,
 } from "./pendingProgress";
 
 const DEF = YORISOU_VALUES_DEFINITION;
@@ -58,6 +58,7 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
   const [result, setResult] = useState<ResultPayload | null>(null);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const [hintsRevealed, setHintsRevealed] = useState(false);
+  const [confirmState, setConfirmState] = useState<"idle" | "saving" | "error">("idle");
   const [history, setHistory] = useState<{ id: string; producedAt: string; displayNameJa: string | null; isMixed: boolean; currentVersion: number }[] | null>(null);
   const [historyState, setHistoryState] = useState<"loading" | "ready" | "unavailable" | "anonymous">("loading");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -93,9 +94,13 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
     queueMicrotask(() => void loadHistory());
   }, [loadHistory]);
 
-  // Resume: verify provenance BEFORE applying pending answers.
+  // Resume (YV-C7): PEEK the pending progress — do NOT consume it merely by
+  // reading. Verify provenance BEFORE applying. A stale/incompatible entry is
+  // discarded and the truthful incompatibility state is shown; a compatible
+  // entry is applied and LEFT in place (recoverable) until the user explicitly
+  // discards it or an authenticated save succeeds.
   useEffect(() => {
-    const pending = takePendingValuesProgress();
+    const pending = readPendingValuesProgress();
     if (!pending) return;
     const compat = checkPendingValuesCompatibility(pending, {
       methodVersion: DEF.methodVersion,
@@ -105,13 +110,24 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
       bankContentHash: YORISOU_VALUES_BANK_HASH,
     });
     if (!compat.compatible) {
+      discardPendingValuesProgress(); // stale/expired → cleared, truthful notice shown
       queueMicrotask(() => setStaleResume(true));
       return;
     }
+    const count = Object.keys(pending.answers).length;
     queueMicrotask(() => {
       setAnswers(pending.answers);
-      setIndex(Math.min(Object.keys(pending.answers).length, TOTAL - 1));
-      setPhase("questions");
+      if (count >= TOTAL) {
+        // All 48 answered — open DIRECTLY on the completed review/save state.
+        // The user is NOT sent back to answer question 48 again, and nothing is
+        // persisted automatically; saving is an explicit action in review.
+        setIndex(TOTAL - 1);
+        setPhase("review");
+      } else {
+        // Partial — resume at the first unanswered question.
+        setIndex(Math.min(count, TOTAL - 1));
+        setPhase("questions");
+      }
     });
   }, []);
 
@@ -174,6 +190,7 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
   // then read back from the owned record.
   const submit = async () => {
     if (answeredCount < TOTAL) return; // insufficient coverage — handled in review UI
+    if (saveState === "saving") return; // YV-C7: guard against duplicate saves (double-click / refresh)
     if (!authenticated) return scoreAnonymously();
     setSaveState("saving");
     try {
@@ -196,6 +213,10 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
         return;
       }
       const created = (await res.json()) as { assessmentId: string };
+      // YV-C7: exactly one owned assessment was created — the pending on-device
+      // progress is now cleared (cleared ONLY on a successful save), so a refresh
+      // cannot resume into review and create a duplicate.
+      discardPendingValuesProgress();
       const detail = await fetch(`/api/tests/yorisou-values/assessments/${created.assessmentId}`, { cache: "no-store" });
       if (detail.ok) {
         setResult((await detail.json()) as ResultPayload);
@@ -204,6 +225,8 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
         setSaveState("idle");
         void loadHistory();
       } else {
+        // The record exists; only the follow-up read failed. Do NOT re-save.
+        setAssessmentId(created.assessmentId);
         setSaveState("error");
       }
     } catch {
@@ -219,14 +242,30 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
     window.location.assign("/login?next=/tests/yorisou-values");
   };
 
+  // YV-C8: truthful confirmation — the displayed confirmation updates ONLY when
+  // the PATCH actually succeeds. On failure the UI is not changed and a truthful
+  // error is shown. Concurrent clicks are ignored while a request is pending.
   const confirm = async (value: "confirmed" | "not_quite") => {
     if (!assessmentId) return;
-    await fetch(`/api/tests/yorisou-values/assessments/${assessmentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ confirmation: value }),
-    }).catch(() => null);
-    setResult((r) => (r ? { ...r, confirmation: value } : r));
+    if (confirmState === "saving") return; // prevent uncontrolled duplicate clicks
+    setConfirmState("saving");
+    try {
+      const res = await fetch(`/api/tests/yorisou-values/assessments/${assessmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: value }),
+      });
+      if (!res.ok) {
+        setConfirmState("error"); // do NOT claim it was recorded
+        return;
+      }
+      const data = (await res.json().catch(() => null)) as { confirmation?: string } | null;
+      const recorded = (data?.confirmation as "confirmed" | "not_quite" | "skipped" | undefined) ?? value;
+      setResult((r) => (r ? { ...r, confirmation: recorded } : r));
+      setConfirmState("idle");
+    } catch {
+      setConfirmState("error");
+    }
   };
 
   const revealHints = async () => {
@@ -346,8 +385,8 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
                   <a href="/login?next=/tests/yorisou-values" className="mt-3 inline-block rounded-full px-5 py-2.5 text-sm font-medium" style={cta}>サインインへ進む</a>
                 </div>
               ) : (
-                <button type="button" onClick={() => void submit()} className="mt-3 rounded-full px-6 py-3 text-base font-medium" style={cta} data-testid="yv-submit">
-                  {authenticated ? "結果を見る" : "結果を見る（保存しない）"}
+                <button type="button" onClick={() => void submit()} disabled={saveState === "saving"} className="mt-3 rounded-full px-6 py-3 text-base font-medium disabled:opacity-60" style={cta} data-testid="yv-submit">
+                  {authenticated ? (saveState === "saving" ? "保存しています…" : "この結果を非公開で保存する") : "結果を見る（保存しない）"}
                 </button>
               )}
               {!authenticated && saveState !== "login_needed" ? (
@@ -396,10 +435,12 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
           {assessmentId ? (
             // Confirmation is a property of a STORED record — only offered when a
             // record exists. It never rewrites the computed result (YV-C1).
-            <div className="mt-4 flex flex-wrap gap-3" data-testid="yv-confirm">
-              <button type="button" onClick={() => void confirm("confirmed")} className="rounded-full border px-4 py-2 text-sm" style={{ borderColor: "var(--cta-main)", color: "var(--cta-main)" }} data-testid="yv-confirm-yes">近いと思う</button>
-              <button type="button" onClick={() => void confirm("not_quite")} className="soft-link text-sm" data-testid="yv-confirm-no">少し違う</button>
-              {result.confirmation !== "skipped" ? <span className="text-sm" style={{ color: "var(--text-soft)" }}>（{result.confirmation === "confirmed" ? "近い" : "少し違う"}と記録しました）</span> : null}
+            <div className="mt-4 flex flex-wrap items-center gap-3" data-testid="yv-confirm">
+              <button type="button" onClick={() => void confirm("confirmed")} disabled={confirmState === "saving"} className="rounded-full border px-4 py-2 text-sm disabled:opacity-50" style={{ borderColor: "var(--cta-main)", color: "var(--cta-main)" }} data-testid="yv-confirm-yes">近いと思う</button>
+              <button type="button" onClick={() => void confirm("not_quite")} disabled={confirmState === "saving"} className="soft-link text-sm disabled:opacity-50" data-testid="yv-confirm-no">少し違う</button>
+              {confirmState === "saving" ? <span className="text-sm" style={{ color: "var(--text-soft)" }} data-testid="yv-confirm-saving">記録しています…</span> : null}
+              {confirmState === "error" ? <span role="alert" className="text-sm" style={{ color: "var(--text-main)" }} data-testid="yv-confirm-error">記録できませんでした。時間をおいてお試しください。</span> : null}
+              {confirmState !== "saving" && confirmState !== "error" && result.confirmation !== "skipped" ? <span className="text-sm" style={{ color: "var(--text-soft)" }} data-testid="yv-confirm-recorded">（{result.confirmation === "confirmed" ? "近い" : "少し違う"}と記録しました）</span> : null}
             </div>
           ) : (
             // Anonymous ephemeral result — nothing was stored. Offer explicit save.

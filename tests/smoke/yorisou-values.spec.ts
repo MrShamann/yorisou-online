@@ -100,6 +100,45 @@ test.describe("/tests/yorisou-values (YV-1)", () => {
     expect(pending).toContain("VAL_Q01");
   });
 
+  test("YV-C7 resume with all 48 answers opens directly on the completed review — NOT question 48; pending not consumed by reading", async ({ page }) => {
+    const HASH = "919f17251a280bb34258f6042db46bb9fd543763b33e041de64c36b305eaa9a6";
+    const answers: Record<string, "A" | "B"> = {};
+    for (let i = 1; i <= 48; i++) answers[`VAL_Q${String(i).padStart(2, "0")}`] = "A";
+    // Seed a compatible COMPLETED pending progress before the page mounts (the
+    // post-anonymous / post-login return state).
+    await page.addInitScript(
+      ([a, h]) => {
+        sessionStorage.setItem(
+          "yorisou.values.pending-progress.v1",
+          JSON.stringify({ v: 1, answers: a, methodVersion: "values-v1.0", bankVersion: "values-bank-v1.0", scoringVersion: "values-scoring-v1.0", resultSchemaVersion: "values-result-v1.0", bankContentHash: h, storedAt: Date.now() }),
+        );
+      },
+      [answers, HASH] as const,
+    );
+    await gotoHydrated(page);
+    // Opens on the completed review/save state directly — the user is NOT sent to answer Q48.
+    await expect(page.getByTestId("yv-review")).toBeVisible();
+    await expect(page.getByTestId("yv-question")).toHaveCount(0);
+    await expect(page.getByTestId("yv-submit")).toBeVisible();
+    // Pending was PEEKED, not consumed — it survives the read (recoverable).
+    const stillThere = await page.evaluate(() => sessionStorage.getItem("yorisou.values.pending-progress.v1"));
+    expect(stillThere).toContain("VAL_Q48");
+    await expectNoSeriousAxeViolations(page, "resume review");
+  });
+
+  test("YV-C7 stale pending is discarded and the truthful incompatibility notice is shown", async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        "yorisou.values.pending-progress.v1",
+        JSON.stringify({ v: 1, answers: { VAL_Q01: "A" }, methodVersion: "values-v0.9", bankVersion: "values-bank-v1.0", scoringVersion: "values-scoring-v1.0", resultSchemaVersion: "values-result-v1.0", bankContentHash: "deadbeef", storedAt: Date.now() }),
+      );
+    });
+    await gotoHydrated(page);
+    await expect(page.getByTestId("yv-stale-resume-note")).toBeVisible();
+    const cleared = await page.evaluate(() => sessionStorage.getItem("yorisou.values.pending-progress.v1"));
+    expect(cleared).toBeNull();
+  });
+
   test("all API methods are auth-gated; provenance mismatch rejected", async ({ page }) => {
     for (const [method, url] of [
       ["get", `${BASE}/api/tests/yorisou-values/assessments`],
