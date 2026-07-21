@@ -28,7 +28,8 @@ export type Cpv1DevFlag =
   | "cpv1_companion_preview" // Companion architecture preview (dev)
   | "cpv1_community_preview" // community architecture preview (dev)
   | "cpv1_archive_legacy_preview" // Archive/Legacy architecture preview (dev)
-  | "dci_daily_check_in_preview"; // DCI-1: daily-check-in vertical slice on authorized Preview only
+  | "dci_daily_check_in_preview" // DCI-1: daily-check-in vertical slice on authorized Preview only
+  | "yorisou_values_preview"; // YV-1: yorisou-values scored vertical slice on authorized Preview only
 
 export const CPV1_DEV_FLAGS: readonly Cpv1DevFlag[] = [
   "cpv1_method_universe_preview",
@@ -37,6 +38,7 @@ export const CPV1_DEV_FLAGS: readonly Cpv1DevFlag[] = [
   "cpv1_community_preview",
   "cpv1_archive_legacy_preview",
   "dci_daily_check_in_preview",
+  "yorisou_values_preview",
 ];
 
 // A minimal env shape (process.env is assignable to this). Kept loose so the

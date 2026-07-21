@@ -1,0 +1,177 @@
+name: YV-1 CI
+
+# YV-1 §19 — focused CI for the yorisou-values scored vertical slice. Runs every
+# YV-1 gate remotely: canonical hash + generator drift, contract suite, MTF
+# validators, migration static guard, disposable-PostgreSQL harness, TypeScript,
+# focused lint, context-aware secret scan, build, browser acceptance, and the
+# authenticated full-stack browser harness. Nothing hosted is contacted; the CI
+# databases are ephemeral job services.
+
+on:
+  push:
+    branches: [feat/yv-1-yorisou-values-vertical-slice, main]
+    paths:
+      - "app/tests/yorisou-values/**"
+      - "app/api/tests/yorisou-values/**"
+      - "lib/yorisou/**"
+      - "lib/server/yorisouValues*"
+      - "lib/cpv1/methods.ts"
+      - "supabase/migrations/202607210001_yv1_values_assessments.sql"
+      - "scripts/generate-yorisou-values-runtime.mjs"
+      - "tests/yorisou-values/**"
+      - "tests/smoke/yorisou-values*.spec.ts"
+      - ".github/workflows/yv-1-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/tests/yorisou-values/**"
+      - "app/api/tests/yorisou-values/**"
+      - "lib/yorisou/**"
+      - "lib/server/yorisouValues*"
+      - "lib/cpv1/methods.ts"
+      - "supabase/migrations/202607210001_yv1_values_assessments.sql"
+      - "scripts/generate-yorisou-values-runtime.mjs"
+      - "tests/yorisou-values/**"
+      - "tests/smoke/yorisou-values*.spec.ts"
+      - ".github/workflows/yv-1-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: yv-1-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  yv-gates:
+    name: YV-1 contracts, validators, DB harness, build, browser + full-stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: yorisou_values_test
+        ports: ["55447:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+
+      - name: Canonical generator drift check
+        run: node scripts/generate-yorisou-values-runtime.mjs --check
+
+      - name: YV-1 contract suite (canonical/scoring/privacy/gate/resume)
+        run: npm run test:yorisou-values
+
+      - name: MTF-1 validator
+        run: node scripts/validate-mtf1-docs.mjs
+
+      - name: MTF-2A validator (default mode)
+        run: node scripts/validate-mtf2a-content.mjs
+
+      - name: MTF-2A validator (historical package-scope mode)
+        run: node scripts/validate-mtf2a-content.mjs --scope-base d992a6e0a95cf2db0d6b64c6a1c3a556232e3550 --scope-head cf9aee9d286200a66bbb80214b14aad3a342d132
+
+      - name: CPV1 migration static guard
+        run: node scripts/validate-cpv1-migrations.mjs
+
+      - name: Disposable-PostgreSQL integration harness (migration/RLS/RPC/erasure/purge)
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:55447/yorisou_values_test
+        run: bash tests/yorisou-values/postgres-integration.sh
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Focused lint (YV-1 slice — hard gate)
+        run: npx eslint app/tests/yorisou-values app/api/tests/yorisou-values lib/yorisou/methods/yorisou-values lib/yorisou/method-runtime/scored.ts lib/server/yorisouValuesStore.ts lib/server/yorisouValuesApi.ts lib/cpv1/methods.ts tests/smoke/yorisou-values.spec.ts tests/smoke/yorisou-values-fullstack.spec.ts
+
+      - name: Changed-content secret scan (hard gate, context-aware)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="origin/${{ github.base_ref }}...HEAD"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            BEFORE="${{ github.event.before }}"
+            if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              RANGE="HEAD~1..HEAD"
+            else
+              RANGE="$BEFORE..${{ github.sha }}"
+            fi
+          else
+            BASE=$(git merge-base origin/main HEAD)
+            RANGE="$BASE..HEAD"
+          fi
+          echo "secret-scan range: $RANGE"
+          git diff --name-only "$RANGE" | while read -r f; do
+            [ -f "$f" ] || continue
+            if grep -nEi "(api[_-]?key|secret|password|token)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9]{16,}" "$f" | grep -v "example\|fixture\|yv1-local\|yv1-ci\|POSTGRES_PASSWORD"; then
+              echo "potential secret in $f"; exit 1
+            fi
+          done
+
+      - name: Build (production)
+        run: npm run build
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Focused YV-1 browser tests (gated route, anonymous lifecycle, real axe)
+        run: |
+          YORISOU_CI_TEST=1 npx next start -p 3000 &
+          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:3000/ && break; sleep 1; done
+          npx playwright test tests/smoke/yorisou-values.spec.ts --project=desktop
+          kill %1
+
+      - name: Recreate DB for full-stack harness (fresh schema after harness rollback)
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 55447 -U postgres -d postgres -c "drop database if exists yorisou_values_test"
+          psql -h localhost -p 55447 -U postgres -d postgres -c "create database yorisou_values_test"
+          psql -h localhost -p 55447 -U postgres -d yorisou_values_test -c "create extension if not exists pgcrypto"
+          psql -h localhost -p 55447 -U postgres -d yorisou_values_test -c "do \$\$ begin create role service_role login bypassrls; exception when duplicate_object then null; end \$\$; alter role service_role bypassrls; do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$; do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;"
+          psql -h localhost -p 55447 -U postgres -d yorisou_values_test -v ON_ERROR_STOP=1 -f supabase/migrations/202607210001_yv1_values_assessments.sql
+
+      - name: Authenticated full-stack browser harness (PostgREST + real app)
+        env:
+          PGRST_JWT_SECRET: yv1-ci-fullstack-secret-0123456789abcdef0123456789abcdef
+        run: |
+          SERVICE_KEY=$(S="$PGRST_JWT_SECRET" node -e "const c=require('crypto');const b=(o)=>Buffer.from(JSON.stringify(o)).toString('base64url');const h=b({alg:'HS256',typ:'JWT'});const p=b({role:'service_role',iss:'yv1-ci',exp:Math.floor(Date.now()/1000)+86400});const s=c.createHmac('sha256',process.env.S).update(h+'.'+p).digest('base64url');console.log(h+'.'+p+'.'+s)")
+          docker run -d --name yv-postgrest --network host \
+            -e PGRST_DB_URI="postgres://postgres:postgres@localhost:55447/yorisou_values_test" \
+            -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon -e PGRST_SERVER_PORT=55448 \
+            -e PGRST_JWT_SECRET="$PGRST_JWT_SECRET" postgrest/postgrest:v12.2.3
+          node -e "
+          const http=require('http');
+          http.createServer((req,res)=>{
+            const path=req.url.replace(/^\/rest\/v1/,'')||'/';
+            const up=http.request({host:'localhost',port:55448,path,method:req.method,headers:req.headers},(u)=>{res.writeHead(u.statusCode,u.headers);u.pipe(res);});
+            up.on('error',()=>{res.writeHead(502);res.end();});
+            req.pipe(up);
+          }).listen(55449);
+          " &
+          for i in $(seq 1 60); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" "http://localhost:55448/yorisou_values_assessments?select=id&limit=1" || true)
+            [ "$CODE" = "200" ] && break; sleep 1
+          done
+          [ "$CODE" = "200" ] || { echo "PostgREST unhealthy ($CODE)"; docker logs yv-postgrest | tail -20; exit 1; }
+          mkdir -p /tmp/yv-auth-store
+          YORISOU_CI_TEST=1 SUPABASE_URL=http://localhost:55449 SUPABASE_SERVICE_ROLE_KEY="$SERVICE_KEY" \
+            YORISOU_DATA_DIR=/tmp/yv-auth-store \
+            YORISOU_AUTH_COOKIE_SECRET=yv1-ci-cookie-secret-0123456789abcdef0123456789abcdef \
+            npx next start -p 3200 &
+          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:3200/ && break; sleep 1; done
+          YV_FULLSTACK=1 YV_REST_URL=http://localhost:55448 YV_SERVICE_KEY="$SERVICE_KEY" \
+            PLAYWRIGHT_BASE_URL=http://localhost:3200 \
+            npx playwright test tests/smoke/yorisou-values-fullstack.spec.ts --project=desktop

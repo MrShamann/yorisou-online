@@ -63,6 +63,14 @@ export default function TermsPage() {
         </div>
       </Section>
 
+      <Section label="4-2" title="チェック結果の利用範囲">
+        <div className="card">
+          <p style={{ margin: 0 }}>
+            本サービスの各チェックの結果は、ご本人がご自身の状態や選び方をふり返るためのものです。採用・配属・人事評価・入学選考・保険や与信の判断など、第三者が人を選んだり評価したりする目的（スクリーニング）に利用することはできません。
+          </p>
+        </div>
+      </Section>
+
       <Section label="5" title="知的財産権">
         <div className="card">
           <ol className="list-clean" style={{ margin: 0, display: "grid", gap: 8, paddingLeft: 18 }}>

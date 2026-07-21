@@ -33,7 +33,10 @@
     "test:cpv1": "node --import tsx lib/cpv1/__tests__/cpv1Contract.test.ts",
     "test:daily-check-in": "node --import tsx lib/yorisou/methods/daily-check-in/__tests__/dailyCheckIn.test.ts",
     "test:daily-check-in:db": "bash tests/daily-check-in/postgres-integration.sh",
-    "generate:daily-check-in": "node scripts/generate-daily-check-in-runtime.mjs"
+    "generate:daily-check-in": "node scripts/generate-daily-check-in-runtime.mjs",
+    "test:yorisou-values": "node --import tsx lib/yorisou/methods/yorisou-values/__tests__/yorisouValues.test.ts",
+    "test:yorisou-values:db": "bash tests/yorisou-values/postgres-integration.sh",
+    "generate:yorisou-values": "node scripts/generate-yorisou-values-runtime.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",

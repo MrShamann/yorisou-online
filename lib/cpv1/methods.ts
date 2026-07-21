@@ -781,33 +781,42 @@ export const CPV1_METHOD_UNIVERSE: readonly MethodRegistryEntry[] = [
     interpretationLimits: "外部結果の取り込み。YORISOUの判定ではない。",
     rightsSource: "trademarked; import/handoff/licence only",
   }),
+  // YV-1 — yorisou-values「いま大事にしたいことチェック」: the concrete SCORED method,
+  // reconciling the former `values-v0.1` "価値観リフレクション" placeholder (same
+  // methodId, no duplicate identity). Canonical content
+  // docs/yorisou/mtf2a/yorisou-values.v1.json; Founder decision
+  // YORISOU_YV_1_CANONICAL_CONTENT_APPROVED_FOR_GATED_IMPLEMENTATION. Gated
+  // NON-PUBLIC implementation candidate on the feature branch: implementation
+  // "in_progress" (NOT complete — that requires a later Founder Review + merge),
+  // so the derived activation state remains exactly `gated`. content "authored"
+  // (canonical, frozen); tests "passing" (YV-1 contract suite); rights YORISOU-
+  // owned + cleared for this gated implementation; routeEvidence "none" (no
+  // production-main route); founderActivation "closed" (content approval ≠ public
+  // activation); deploymentStatus unverified; devFlagged (Preview only behind
+  // yorisou_values_preview; Production route 404s server-side).
   {
     ...originalRouteVerified({
       methodId: "yorisou-values",
-      nameJa: "価値観リフレクション",
-      nameEn: "Values reflection",
-      family: "psychology_preference",
+      nameJa: "いま大事にしたいことチェック",
+      nameEn: "Yorisou Values",
+      family: "yorisou_original_assessment",
       role: "preference_reflection",
       requiredInputs: ["answers"],
       sensitiveInputs: ["answers"],
-      model: "YORISOU-original values reflection",
-      methodVersion: "values-v0.1",
-      resultSchema: "values-result",
-      reportSchema: "family-report:values",
-      interpretationLimits: "今大事にしていることの整理。判定ではない。",
-      refreshModel: "retake anytime",
+      model: "scored: 48 A/B forced trade-offs over 7 method-local dimensions → pairwise win-rate (values-scoring-v1.0) → 7 dimension-led results + VAL_R_MIXED (ArchetypeResult; no universal score; internal win rates never exposed)",
+      methodVersion: "values-v1.0",
+      resultSchema: "values-result-v1.0 (8 results)",
+      reportSchema: "values-report-outline-v1.0 (outline only)",
+      interpretationLimits: "いまの選び方の傾向の整理。性格診断でも優劣判定でもない。第三者による選考の材料には使えない。",
+      refreshModel: "retake anytime; history-preserving",
     }),
-    // CPV1-R1 §5 runtime reconciliation: DOWNGRADED. This YORISOU-original concept
-    // is REGISTERED but NOT BUILT — no route, no flow, no result implementation
-    // (nothing outside the registry references it). It was wrongly classified
-    // public_active on a registry declaration alone. Corrected to unbuilt.
-    implementation: "not_started",
-    content: "not_authored",
-    tests: "not_run",
-    rights: yorisouOriginal("yorisou-values", { activated: false }),
-    routeEvidence: "none", // §4 — unbuilt: no route exists on production main
-    founderActivation: "unverified",
-    deploymentStatus: "unverified", // R1.1A §2 — no deployment evidence
+    implementation: "in_progress", // YV-1 candidate on feature branch; pending Founder Review
+    content: "authored", // canonical MTF-2A content (frozen)
+    tests: "passing", // YV-1 contract suite
+    rights: yorisouOriginal("yorisou-values", { activated: false }), // owned; not public-activated
+    routeEvidence: "none", // route NOT on production main (branch only)
+    founderActivation: "closed", // content approved ≠ public activation
+    deploymentStatus: "unverified",
     deploymentEvidenceRef: null,
     founderDecisionRef: null,
     devFlagged: true,
