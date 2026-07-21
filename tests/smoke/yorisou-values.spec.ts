@@ -68,25 +68,36 @@ test.describe("/tests/yorisou-values (YV-1)", () => {
     await expect(page.getByText("とちゅうの回答が 5/48 問あります。")).toBeVisible();
   });
 
-  test("completion → anonymous save → 401 → login continuation; answers never in URL", async ({ page }) => {
-    // API-level: anonymous POST denied before any store access.
-    const api = await page.request.post(`${BASE}/api/tests/yorisou-values/assessments`, {
-      data: { answers: { VAL_Q01: "A" }, methodVersion: "values-v1.0", bankVersion: "values-bank-v1.0", scoringVersion: "values-scoring-v1.0", resultSchemaVersion: "values-result-v1.0", bankContentHash: "919f17251a280bb34258f6042db46bb9fd543763b33e041de64c36b305eaa9a6" },
-    });
-    expect(api.status()).toBe(401);
-    expect(await api.json()).toEqual({ error: "authentication_required" });
+  test("anonymous completion shows a result WITHOUT saving, then offers explicit sign-in-to-save; answers never in URL", async ({ page }) => {
+    const provenance = { methodVersion: "values-v1.0", bankVersion: "values-bank-v1.0", scoringVersion: "values-scoring-v1.0", resultSchemaVersion: "values-result-v1.0", bankContentHash: "919f17251a280bb34258f6042db46bb9fd543763b33e041de64c36b305eaa9a6" };
+    // API-level: anonymous POST to the PERSISTENCE endpoint is still denied.
+    const persist = await page.request.post(`${BASE}/api/tests/yorisou-values/assessments`, { data: { answers: { VAL_Q01: "A" }, ...provenance } });
+    expect(persist.status()).toBe(401);
+    expect(await persist.json()).toEqual({ error: "authentication_required" });
+    // API-level: anonymous POST to the SCORE endpoint returns a non-persistent result.
+    const score = await page.request.post(`${BASE}/api/tests/yorisou-values/score`, { data: { answers: Object.fromEntries(Array.from({ length: 48 }, (_, i) => [`VAL_Q${String(i + 1).padStart(2, "0")}`, "A"])), ...provenance } });
+    expect(score.status()).toBe(200);
+    const scored = await score.json();
+    expect(scored.saved).toBe(false);
+    expect(scored.assessmentId).toBeUndefined();
 
     await gotoHydrated(page);
     await page.getByTestId("yv-start").click();
     await answerAll(page);
     await expect(page.getByTestId("yv-review")).toBeVisible();
+    // Nothing stored yet — the anonymous note is shown, not a login wall.
+    await expect(page.getByTestId("yv-anonymous-note")).toBeVisible();
     await page.getByTestId("yv-submit").click();
-    await expect(page.getByTestId("yv-login-needed")).toBeVisible();
-    await expect(page.getByRole("link", { name: "サインインへ進む" })).toHaveAttribute("href", "/login?next=/tests/yorisou-values");
+    // The result is visible for the anonymous visitor, with an explicit save CTA.
+    await expect(page.getByTestId("yv-result")).toBeVisible();
+    await expect(page.getByTestId("yv-anonymous-save")).toBeVisible();
+    expect(page.url()).not.toContain("VAL_Q");
+    await expectNoSeriousAxeViolations(page, "anonymous result");
+    // Clicking save stores answers on-device and routes to sign-in continuation.
+    await page.getByTestId("yv-anonymous-save-cta").click();
+    await page.waitForURL(/\/login\?next=%2Ftests%2Fyorisou-values|\/login\?next=\/tests\/yorisou-values/);
     const pending = await page.evaluate(() => sessionStorage.getItem("yorisou.values.pending-progress.v1"));
     expect(pending).toContain("VAL_Q01");
-    expect(page.url()).not.toContain("VAL_Q");
-    await expectNoSeriousAxeViolations(page, "review + login");
   });
 
   test("all API methods are auth-gated; provenance mismatch rejected", async ({ page }) => {

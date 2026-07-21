@@ -2,18 +2,37 @@ import { NextResponse } from "next/server";
 // YV-1 — per-assessment operations (owner-scoped; server-side gated).
 // GET:    the owned assessment's canonical public + private result (recomputed
 //         server-side from stored answers; internal win rates never returned).
-// PATCH:  answer correction (recomputed → new version) and/or confirmation.
+// PATCH:  YV-1.1 (YV-C1) — EITHER an answer correction (recomputed → new
+//         version) OR a confirmation change (no version increment, no
+//         recompute). The two are distinct operations and never combined.
 // DELETE: governed private-content erasure.
+//
+// YV-1.1 (YV-C2): before any read/interpretation or mutation, the stored
+// record's provenance (method/bank/scoring/result-schema/hash) must still match
+// the current canonical definition. A stale record is NEVER reinterpreted under
+// new content — it fails closed with a bounded contract-mismatch code and stays
+// deletable.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { yorisouValuesAccess } from "@/lib/yorisou/methods/yorisou-values/access";
 import { assembleYorisouValuesResult } from "@/lib/yorisou/methods/yorisou-values/scoring";
 import { hintsForResult } from "@/lib/yorisou/methods/yorisou-values/hints";
-import { mapValuesStoreError, readBoundedJson } from "@/lib/server/yorisouValuesApi";
-import { correctValuesAssessment, deleteValuesAssessment, getValuesAssessmentForOwner } from "@/lib/server/yorisouValuesStore";
+import {
+  mapValuesStoreError,
+  readBoundedJson,
+  firstUnknownKey,
+  recordProvenanceMatchesCanonical,
+  CANONICAL_VALUES_PROVENANCE,
+} from "@/lib/server/yorisouValuesApi";
+import { correctValuesAssessment, setValuesConfirmation, deleteValuesAssessment, getValuesAssessmentForOwner } from "@/lib/server/yorisouValuesStore";
 
 type Context = { params: Promise<{ id: string }> };
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// YV-1.1 (YV-C4): strict PATCH contract — exactly these top-level keys, and a
+// request must carry exactly one operation (answers XOR confirmation).
+const PATCH_ALLOWED_KEYS = ["answers", "confirmation"] as const;
+const CONTRACT_MISMATCH = "values_record_contract_version_mismatch";
 
 // Shared: recompute the canonical result payload for a stored record. Internal
 // numerics are excluded by assembleYorisouValuesResult.
@@ -34,17 +53,25 @@ function renderResult(record: { answers: Record<string, "A" | "B">; bank_content
   };
 }
 
+async function requireOwner(): Promise<string | null> {
+  const viewer = await getViewerContext();
+  return viewer.account?.id || viewer.legacyAccount?.id || null;
+}
+
 export async function GET(request: Request, context: Context) {
   const access = yorisouValuesAccess();
   if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
-  const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
+  const ownerAccountId = await requireOwner();
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const { id } = await context.params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   try {
     const record = await getValuesAssessmentForOwner(ownerAccountId, id);
     if (!record) return NextResponse.json({ error: "record_not_found" }, { status: 404 });
+    // YV-C2: refuse to reinterpret a stale record under the current definition.
+    if (!recordProvenanceMatchesCanonical(record)) {
+      return NextResponse.json({ error: CONTRACT_MISMATCH, storedVersion: record.method_version, currentVersion: CANONICAL_VALUES_PROVENANCE.methodVersion, deletable: true }, { status: 409 });
+    }
     const consent = new URL(request.url).searchParams.get("hints") === "1";
     const rendered = renderResult(record, consent);
     if (!rendered) return NextResponse.json({ error: "record_not_found" }, { status: 404 });
@@ -59,8 +86,7 @@ export async function GET(request: Request, context: Context) {
 export async function PATCH(request: Request, context: Context) {
   const access = yorisouValuesAccess();
   if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
-  const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
+  const ownerAccountId = await requireOwner();
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const { id } = await context.params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
@@ -68,26 +94,42 @@ export async function PATCH(request: Request, context: Context) {
   if (!read.ok) return NextResponse.json({ error: read.error }, { status: read.status });
   const body = read.body as { answers?: unknown; confirmation?: unknown } | null;
   if (!body || typeof body !== "object") return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+
+  // YV-C4: strict fields + non-empty + single-operation (answers XOR confirmation).
+  const unknownKey = firstUnknownKey(body as Record<string, unknown>, PATCH_ALLOWED_KEYS);
+  if (unknownKey) return NextResponse.json({ error: "unexpected_field", field: unknownKey }, { status: 400 });
+  const hasAnswers = body.answers !== undefined;
+  const hasConfirmation = body.confirmation !== undefined;
+  if (!hasAnswers && !hasConfirmation) return NextResponse.json({ error: "empty_update" }, { status: 400 });
+  // YV-C1: an answer correction and a confirmation change are distinct events.
+  if (hasAnswers && hasConfirmation) return NextResponse.json({ error: "ambiguous_update" }, { status: 400 });
+
   try {
     const existing = await getValuesAssessmentForOwner(ownerAccountId, id);
     if (!existing) return NextResponse.json({ error: "record_not_found" }, { status: 404 });
-
-    // Answer correction (if provided) recomputes deterministically; otherwise the
-    // stored answers stand and only confirmation changes. Confirmation never
-    // silently rewrites the method-derived result.
-    let answers = existing.answers;
-    if (body.answers !== undefined) {
-      const normalized: Record<string, "A" | "B"> = {};
-      if (typeof body.answers !== "object" || body.answers === null) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
-      for (const [k, v] of Object.entries(body.answers as Record<string, unknown>)) {
-        if (v !== "A" && v !== "B") return NextResponse.json({ error: "invalid_request" }, { status: 400 });
-        normalized[k] = v;
-      }
-      answers = normalized;
+    // YV-C2: a stale record is neither reinterpreted nor mutated (still deletable).
+    if (!recordProvenanceMatchesCanonical(existing)) {
+      return NextResponse.json({ error: CONTRACT_MISMATCH, storedVersion: existing.method_version, currentVersion: CANONICAL_VALUES_PROVENANCE.methodVersion, deletable: true }, { status: 409 });
     }
-    const confirmation = body.confirmation === "confirmed" || body.confirmation === "not_quite" ? body.confirmation : body.confirmation === "skipped" ? "skipped" : existing.confirmation;
 
-    const assembled = assembleYorisouValuesResult(answers, existing.bank_content_hash);
+    // Confirmation-only path — YV-C1: no version increment, no recompute, no
+    // corrected event. Emits a distinct confirmation_changed event in the RPC.
+    if (hasConfirmation) {
+      const c = body.confirmation;
+      if (c !== "confirmed" && c !== "not_quite" && c !== "skipped") return NextResponse.json({ error: "invalid_confirmation" }, { status: 400 });
+      const value = await setValuesConfirmation({ ownerAccountId, assessmentId: id, confirmation: c, expected: CANONICAL_VALUES_PROVENANCE });
+      return NextResponse.json({ assessmentId: id, confirmation: value, currentVersion: existing.current_version });
+    }
+
+    // Answer-correction path — recomputed deterministically; the RPC rejects a
+    // byte-equivalent (no-op) answer change with values_no_answer_change.
+    if (typeof body.answers !== "object" || body.answers === null) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+    const normalized: Record<string, "A" | "B"> = {};
+    for (const [k, v] of Object.entries(body.answers as Record<string, unknown>)) {
+      if (v !== "A" && v !== "B") return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+      normalized[k] = v;
+    }
+    const assembled = assembleYorisouValuesResult(normalized, existing.bank_content_hash);
     if (!assembled.ok) return NextResponse.json({ error: "validation_failed", codes: assembled.codes }, { status: 422 });
     if (assembled.result.execution === "insufficient_coverage") {
       return NextResponse.json({ error: "insufficient_coverage", remaining: assembled.result.remaining }, { status: 422 });
@@ -95,12 +137,12 @@ export async function PATCH(request: Request, context: Context) {
     const version = await correctValuesAssessment({
       ownerAccountId,
       assessmentId: id,
-      answers,
+      answers: normalized,
       resultId: assembled.result.resultId,
       isMixed: assembled.result.isMixed,
-      confirmation,
+      expected: CANONICAL_VALUES_PROVENANCE,
     });
-    return NextResponse.json({ assessmentId: id, currentVersion: version, resultId: assembled.result.resultId, confirmation });
+    return NextResponse.json({ assessmentId: id, currentVersion: version, resultId: assembled.result.resultId, confirmation: existing.confirmation });
   } catch (error) {
     const mapped = mapValuesStoreError(error, "values_correction_failed");
     if (mapped.status === 500) console.error("yorisou-values correction failed", { code: mapped.internalCode });
@@ -111,12 +153,13 @@ export async function PATCH(request: Request, context: Context) {
 export async function DELETE(_request: Request, context: Context) {
   const access = yorisouValuesAccess();
   if (!access.allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const viewer = await getViewerContext();
-  const ownerAccountId = viewer.account?.id || viewer.legacyAccount?.id;
+  const ownerAccountId = await requireOwner();
   if (!ownerAccountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const { id } = await context.params;
   if (!UUID_RE.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
   try {
+    // Deletion never reinterprets content — a stale record is still erasable, so
+    // NO provenance gate here (YV-C2: stale records remain deletable).
     const deleted = await deleteValuesAssessment(ownerAccountId, id);
     if (!deleted) return NextResponse.json({ error: "record_not_found" }, { status: 404 });
     return NextResponse.json({ deleted: true, erased: true, assessmentId: id });

@@ -134,8 +134,47 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
     setPhase("intro");
   };
 
+  const rememberProgress = () =>
+    storePendingValuesProgress({
+      answers,
+      methodVersion: DEF.methodVersion,
+      bankVersion: DEF.bankVersion,
+      scoringVersion: DEF.scoringVersion,
+      resultSchemaVersion: DEF.resultSchemaVersion,
+      bankContentHash: YORISOU_VALUES_BANK_HASH,
+    });
+
+  // Anonymous, non-persistent scoring (YV-C3): a signed-out visitor sees their
+  // result WITHOUT anything being stored. No assessmentId comes back — the
+  // result is ephemeral. Saving requires an explicit sign-in step afterward.
+  const scoreAnonymously = async () => {
+    if (answeredCount < TOTAL) return;
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/tests/yorisou-values/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(provenanceBody(answers)),
+      });
+      if (!res.ok) {
+        setSaveState("error");
+        return;
+      }
+      const data = (await res.json()) as Omit<ResultPayload, "confirmation" | "currentVersion">;
+      setResult({ ...data, confirmation: "skipped", currentVersion: 0 });
+      setAssessmentId(null); // ephemeral: nothing persisted
+      setPhase("result");
+      setSaveState("idle");
+    } catch {
+      setSaveState("error");
+    }
+  };
+
+  // Authenticated persistence: POST creates the record; the recomputed result is
+  // then read back from the owned record.
   const submit = async () => {
     if (answeredCount < TOTAL) return; // insufficient coverage — handled in review UI
+    if (!authenticated) return scoreAnonymously();
     setSaveState("saving");
     try {
       const res = await fetch("/api/tests/yorisou-values/assessments", {
@@ -144,14 +183,7 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
         body: JSON.stringify(provenanceBody(answers)),
       });
       if (res.status === 401) {
-        storePendingValuesProgress({
-          answers,
-          methodVersion: DEF.methodVersion,
-          bankVersion: DEF.bankVersion,
-          scoringVersion: DEF.scoringVersion,
-          resultSchemaVersion: DEF.resultSchemaVersion,
-          bankContentHash: YORISOU_VALUES_BANK_HASH,
-        });
+        rememberProgress();
         setSaveState("login_needed");
         return;
       }
@@ -179,6 +211,14 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
     }
   };
 
+  // From an anonymous ephemeral result: keep the answers on this device and send
+  // the visitor to sign in; after sign-in the pending answers resume and can be
+  // saved as an owned record.
+  const saveAnonymousResult = () => {
+    rememberProgress();
+    window.location.assign("/login?next=/tests/yorisou-values");
+  };
+
   const confirm = async (value: "confirmed" | "not_quite") => {
     if (!assessmentId) return;
     await fetch(`/api/tests/yorisou-values/assessments/${assessmentId}`, {
@@ -190,8 +230,15 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
   };
 
   const revealHints = async () => {
-    if (!assessmentId) return;
-    const res = await fetch(`/api/tests/yorisou-values/assessments/${assessmentId}?hints=1`, { cache: "no-store" });
+    // Owned record → read hints from it; anonymous ephemeral result → re-score
+    // with hints (still non-persistent, answers never stored server-side).
+    const res = assessmentId
+      ? await fetch(`/api/tests/yorisou-values/assessments/${assessmentId}?hints=1`, { cache: "no-store" })
+      : await fetch(`/api/tests/yorisou-values/score?hints=1`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(provenanceBody(answers)),
+        });
     if (res.ok) {
       const data = (await res.json()) as ResultPayload;
       setResult((r) => (r ? { ...r, hints: data.hints } : r));
@@ -300,9 +347,14 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
                 </div>
               ) : (
                 <button type="button" onClick={() => void submit()} className="mt-3 rounded-full px-6 py-3 text-base font-medium" style={cta} data-testid="yv-submit">
-                  {authenticated ? "結果を見る" : "サインインして結果を保存"}
+                  {authenticated ? "結果を見る" : "結果を見る（保存しない）"}
                 </button>
               )}
+              {!authenticated && saveState !== "login_needed" ? (
+                <p className="mt-2 text-xs" style={{ color: "var(--text-soft)" }} data-testid="yv-anonymous-note">
+                  サインインしなくても結果は見られます。保存はサインイン後に選べます。
+                </p>
+              ) : null}
               {saveState === "backend_unavailable" ? <p role="alert" className="mt-2 text-sm" style={{ color: "var(--text-main)" }} data-testid="yv-backend-unavailable">いまは保存先に接続できません。回答はこの画面に残っています。</p> : null}
               {saveState === "error" ? <p role="alert" className="mt-2 text-sm" style={{ color: "var(--text-main)" }}>結果を出せませんでした。時間をおいてお試しください。</p> : null}
             </div>
@@ -341,11 +393,21 @@ export function YorisouValuesFlow({ authenticated }: { authenticated: boolean })
             <p className="mt-3 text-xs" style={{ color: "var(--text-soft)" }}>{result.private.correctionPromptJa}</p>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-3" data-testid="yv-confirm">
-            <button type="button" onClick={() => void confirm("confirmed")} className="rounded-full border px-4 py-2 text-sm" style={{ borderColor: "var(--cta-main)", color: "var(--cta-main)" }} data-testid="yv-confirm-yes">近いと思う</button>
-            <button type="button" onClick={() => void confirm("not_quite")} className="soft-link text-sm" data-testid="yv-confirm-no">少し違う</button>
-            {result.confirmation !== "skipped" ? <span className="text-sm" style={{ color: "var(--text-soft)" }}>（{result.confirmation === "confirmed" ? "近い" : "少し違う"}と記録しました）</span> : null}
-          </div>
+          {assessmentId ? (
+            // Confirmation is a property of a STORED record — only offered when a
+            // record exists. It never rewrites the computed result (YV-C1).
+            <div className="mt-4 flex flex-wrap gap-3" data-testid="yv-confirm">
+              <button type="button" onClick={() => void confirm("confirmed")} className="rounded-full border px-4 py-2 text-sm" style={{ borderColor: "var(--cta-main)", color: "var(--cta-main)" }} data-testid="yv-confirm-yes">近いと思う</button>
+              <button type="button" onClick={() => void confirm("not_quite")} className="soft-link text-sm" data-testid="yv-confirm-no">少し違う</button>
+              {result.confirmation !== "skipped" ? <span className="text-sm" style={{ color: "var(--text-soft)" }}>（{result.confirmation === "confirmed" ? "近い" : "少し違う"}と記録しました）</span> : null}
+            </div>
+          ) : (
+            // Anonymous ephemeral result — nothing was stored. Offer explicit save.
+            <div className="surface-panel mt-4 rounded-xl p-4" data-testid="yv-anonymous-save">
+              <p className="text-sm" style={{ color: "var(--text-main)" }}>この結果はまだ保存されていません。サインインすると、非公開の履歴として残せます。</p>
+              <button type="button" onClick={saveAnonymousResult} className="mt-3 rounded-full px-5 py-2.5 text-sm font-medium" style={cta} data-testid="yv-anonymous-save-cta">サインインして保存</button>
+            </div>
+          )}
 
           <div className="surface-panel mt-4 rounded-xl p-4" data-testid="yv-hints">
             {!hintsRevealed ? (

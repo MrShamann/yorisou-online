@@ -14,6 +14,7 @@ import { executeScored, type ScoredAnswers } from "../../../method-runtime/score
 import { assembleYorisouValuesResult } from "../scoring";
 import { hintsForResult } from "../hints";
 import { yorisouValuesAccess } from "../access";
+import { CANONICAL_VALUES_PROVENANCE, recordProvenanceMatchesCanonical, firstUnknownKey } from "../contract";
 import { checkPendingValuesCompatibility } from "../../../../../app/tests/yorisou-values/pendingProgress";
 import { getMethod, methodActivationState } from "../../../../cpv1/methods";
 
@@ -36,6 +37,50 @@ function answersFavoring(target: string): ScoredAnswers {
     else if (item.choiceB.dimension === target) a[item.itemId] = "B";
     else a[item.itemId] = "A";
   }
+  return a;
+}
+
+// Build a concrete 48-answer set over the REAL bank that lifts TWO dimensions
+// together (select x or y wherever either appears). Used to reach VAL_R_MIXED.
+function answersFavoringTwo(x: string, y: string): ScoredAnswers {
+  const a: ScoredAnswers = {};
+  for (const item of DEF.items) {
+    if (item.choiceA.dimension === x || item.choiceA.dimension === y) a[item.itemId] = "A";
+    else if (item.choiceB.dimension === x || item.choiceB.dimension === y) a[item.itemId] = "B";
+    else a[item.itemId] = "A";
+  }
+  return a;
+}
+
+// Read the server-private win rates the runtime computes (stripped by the API
+// layer, but available here to PROVE exact gaps rather than assert vacuously).
+function winRatesOf(answers: ScoredAnswers, def = YORISOU_VALUES_RUNTIME_DEFINITION, hash = YORISOU_VALUES_BANK_HASH) {
+  const r = executeScored(def, answers, hash);
+  assert.ok(r.ok && r.envelope.execution === "scored" && r.envelope.internal, "expected a scored envelope with internal detail");
+  const env = r.ok ? r.envelope : null;
+  return { env: env!, winRate: env!.internal!.winRate, ordered: env!.internal!.orderedByWinRate };
+}
+
+// A synthetic two-dimension bank with controllable appearance counts, so the
+// 0.05 Mixed boundary can be exercised EXACTLY (a=100, b=100, z=200 items).
+function boundaryDef(appearances: number) {
+  const items: { itemId: string; pair: readonly [string, string]; choiceA: { dimension: string }; choiceB: { dimension: string } }[] = [];
+  for (let i = 0; i < appearances; i++) items.push({ itemId: `A${i}`, pair: ["a", "z"], choiceA: { dimension: "a" }, choiceB: { dimension: "z" } });
+  for (let i = 0; i < appearances; i++) items.push({ itemId: `B${i}`, pair: ["b", "z"], choiceA: { dimension: "b" }, choiceB: { dimension: "z" } });
+  return {
+    ...YORISOU_VALUES_RUNTIME_DEFINITION,
+    dimensionOrder: ["a", "b", "z"] as const,
+    dimensionAppearances: { a: appearances, b: appearances, z: 2 * appearances },
+    items,
+    requiredAnsweredItems: 2 * appearances,
+  };
+}
+// Answer so dimension a wins `ka` of its items and b wins `kb` of its items
+// (the remainder go to z). a rate = ka/app, b rate = kb/app.
+function boundaryAnswers(appearances: number, ka: number, kb: number): ScoredAnswers {
+  const a: ScoredAnswers = {};
+  for (let i = 0; i < appearances; i++) a[`A${i}`] = i < ka ? "A" : "B";
+  for (let i = 0; i < appearances; i++) a[`B${i}`] = i < kb ? "A" : "B";
   return a;
 }
 
@@ -123,68 +168,83 @@ check("every dimension-led result is reachable via a favoring answer set", () =>
     }
   }
 });
-check("VAL_R_MIXED reachable when the top two normalized rates are within 0.05", () => {
-  // Give anshin and tsunagari each exactly the same win rate by splitting.
-  const a = answersFavoring("anshin");
-  // Flip a handful so a second dimension ties the top — construct a balanced set:
-  // select each item's A side (many dimensions) → produces near-uniform low rates
-  // where the top gap is < 0.05.
-  const balanced: ScoredAnswers = Object.fromEntries(DEF.items.map((i, idx) => [i.itemId, (idx % 2 === 0 ? "A" : "B") as "A" | "B"]));
-  const r = assembleYorisouValuesResult(balanced);
-  assert.ok(r.ok && r.result.execution === "scored");
-  // Either it's Mixed (close set present) or a clear primary — assert the Mixed
-  // path is exercised somewhere: force a true tie below.
-  void a;
+check("CONCRETE 48-answer VAL_R_MIXED fixture from the real bank (gap < 0.05, closeSet has both tops)", () => {
+  // A real 48-answer set that lifts seicho and jikkan together. Through the real
+  // runtime this ties them at the top with gap 0 < 0.05 → VAL_R_MIXED.
+  const fixture = answersFavoringTwo("seicho", "jikkan");
+  assert.equal(Object.keys(fixture).length, 48);
+  const { env, winRate, ordered } = winRatesOf(fixture);
+  const gap = winRate[ordered[0]] - winRate[ordered[1]];
+  assert.ok(gap < 0.05, `top gap ${gap} must be < 0.05 to be Mixed`);
+  assert.equal(env.isMixed, true);
+  assert.ok(env.closeSet.includes("seicho") && env.closeSet.includes("jikkan"), `closeSet ${JSON.stringify(env.closeSet)}`);
+  // The assembled canonical result is the Mixed result (not a dimension result).
+  const assembled = assembleYorisouValuesResult(fixture);
+  assert.ok(assembled.ok && assembled.result.execution === "scored");
+  if (assembled.ok && assembled.result.execution === "scored") {
+    assert.equal(assembled.result.isMixed, true);
+    assert.equal(assembled.result.resultId, "VAL_R_MIXED");
+  }
 });
-check("Mixed threshold is exact: a gap >= 0.05 is NOT Mixed; a gap < 0.05 IS Mixed", () => {
-  // Construct via the runtime with a synthetic definition to hit the boundary
-  // deterministically. anshin=14 appearances, seicho=14. 1/14 ≈ 0.0714 > 0.05.
-  const favor = answersFavoring("anshin");
-  const clear = executeScored(YORISOU_VALUES_RUNTIME_DEFINITION, favor, YORISOU_VALUES_BANK_HASH);
-  assert.ok(clear.ok && clear.envelope.execution === "scored" && clear.envelope.isMixed === false);
-  // A perfectly balanced answer set where top two are equal → Mixed.
-  const equal: ScoredAnswers = {};
-  for (const i of DEF.items) equal[i.itemId] = i.choiceA.dimension === "anshin" || i.choiceB.dimension === "anshin" ? (i.choiceA.dimension === "anshin" ? "A" : "B") : i.choiceA.dimension === "tsunagari" ? "A" : i.choiceB.dimension === "tsunagari" ? "B" : "A";
-  // Not asserting Mixed here (data-dependent); the boundary is proven by the
-  // synthetic runtime test below.
-  void equal;
+check("Mixed threshold is EXACT at 0.05: gap<0.05 IS Mixed, gap=0.05 NOT, gap>0.05 NOT (real runtime)", () => {
+  const APP = 100; // a=b=100 appearances, z=200 → win rates on a 1/100 grid
+  const def = boundaryDef(APP);
+  // gap exactly 0.05 (a=1.00, b=0.95) → NOT Mixed (0.05 < 0.05 is false).
+  const atBoundary = executeScored(def, boundaryAnswers(APP, 100, 95), def.bankContentHash);
+  assert.ok(atBoundary.ok && atBoundary.envelope.execution === "scored");
+  if (atBoundary.ok && atBoundary.envelope.execution === "scored") {
+    const wr = atBoundary.envelope.internal!.winRate;
+    assert.ok(Math.abs(wr.a - wr.b - 0.05) < 1e-9, `gap should be exactly 0.05, got ${wr.a - wr.b}`);
+    assert.equal(atBoundary.envelope.isMixed, false);
+    assert.equal(atBoundary.envelope.primaryDimension, "a");
+    assert.equal(atBoundary.envelope.secondaryDimension, "b");
+  }
+  // gap 0.04 (a=1.00, b=0.96) → IS Mixed; closeSet = [a, b] in declaration order.
+  const below = executeScored(def, boundaryAnswers(APP, 100, 96), def.bankContentHash);
+  assert.ok(below.ok && below.envelope.execution === "scored");
+  if (below.ok && below.envelope.execution === "scored") {
+    const wr = below.envelope.internal!.winRate;
+    assert.ok(Math.abs(wr.a - wr.b - 0.04) < 1e-9, `gap should be exactly 0.04, got ${wr.a - wr.b}`);
+    assert.equal(below.envelope.isMixed, true);
+    assert.deepEqual([...below.envelope.closeSet], ["a", "b"]);
+    assert.equal(below.envelope.primaryDimension, null);
+  }
+  // gap 0.06 (a=1.00, b=0.94) → NOT Mixed.
+  const above = executeScored(def, boundaryAnswers(APP, 100, 94), def.bankContentHash);
+  assert.ok(above.ok && above.envelope.execution === "scored");
+  if (above.ok && above.envelope.execution === "scored") {
+    const wr = above.envelope.internal!.winRate;
+    assert.ok(Math.abs(wr.a - wr.b - 0.06) < 1e-9, `gap should be exactly 0.06, got ${wr.a - wr.b}`);
+    assert.equal(above.envelope.isMixed, false);
+  }
 });
-check("synthetic Mixed boundary via the runtime (0.05 exact)", () => {
-  const synthetic = {
+check("GENUINE A/B inversion invariance: side-swapped bank + inverted answers → identical result", () => {
+  // Build a bank where every item's A/B sides (and their dimensions) are
+  // physically swapped, then invert every selected side. A side-biased runtime
+  // would diverge; a dimension-reading runtime must return the identical result.
+  const swapped = {
     ...YORISOU_VALUES_RUNTIME_DEFINITION,
-    items: [
-      { itemId: "S1", pair: ["anshin", "pace"] as const, choiceA: { dimension: "anshin" }, choiceB: { dimension: "pace" } },
-      { itemId: "S2", pair: ["anshin", "pace"] as const, choiceA: { dimension: "anshin" }, choiceB: { dimension: "pace" } },
-    ],
-    dimensionAppearances: { anshin: 2, pace: 2, tsunagari: 1, seicho: 1, yakuwari: 1, totonoi: 1, jikkan: 1 },
-    requiredAnsweredItems: 2,
+    items: YORISOU_VALUES_RUNTIME_DEFINITION.items.map((i) => ({
+      itemId: i.itemId,
+      pair: [i.pair[1], i.pair[0]] as const,
+      choiceA: { dimension: i.choiceB.dimension },
+      choiceB: { dimension: i.choiceA.dimension },
+    })),
   };
-  // anshin 2/2=1.0, pace 0/2=0 → gap 1.0 → NOT mixed.
-  const clear = executeScored(synthetic, { S1: "A", S2: "A" }, synthetic.bankContentHash);
-  assert.ok(clear.ok && clear.envelope.execution === "scored" && clear.envelope.isMixed === false && clear.envelope.primaryDimension === "anshin");
-  // anshin 1/2=0.5, pace 1/2=0.5 → gap 0 < 0.05 → MIXED.
-  const mixed = executeScored(synthetic, { S1: "A", S2: "B" }, synthetic.bankContentHash);
-  assert.ok(mixed.ok && mixed.envelope.execution === "scored" && mixed.envelope.isMixed === true);
-  if (mixed.ok && mixed.envelope.execution === "scored") {
-    assert.ok(mixed.envelope.closeSet.includes("anshin") && mixed.envelope.closeSet.includes("pace"));
-    // close set in declaration order
-    assert.deepEqual(mixed.envelope.closeSet, ["anshin", "pace"]);
-  }
-});
-check("A/B side inversion invariance: swapping every side that keeps dimensions yields the same winner", () => {
-  const favor = answersFavoring("seicho");
-  const r1 = assembleYorisouValuesResult(favor);
-  // Rebuild an equivalent answer set expressed by dimension, then map back to
-  // whichever side carries that dimension — identical result.
-  const byDimension: ScoredAnswers = {};
-  for (const i of DEF.items) {
-    const chosenDim = favor[i.itemId] === "A" ? i.choiceA.dimension : i.choiceB.dimension;
-    byDimension[i.itemId] = i.choiceA.dimension === chosenDim ? "A" : "B";
-  }
-  const r2 = assembleYorisouValuesResult(byDimension);
-  assert.ok(r1.ok && r2.ok && r1.result.execution === "scored" && r2.result.execution === "scored");
-  if (r1.ok && r2.ok && r1.result.execution === "scored" && r2.result.execution === "scored") {
-    assert.equal(r1.result.resultId, r2.result.resultId);
+  // Prove the swap is real: for at least one item the A-side dimension changed.
+  assert.ok(swapped.items.some((s, idx) => s.choiceA.dimension !== YORISOU_VALUES_RUNTIME_DEFINITION.items[idx].choiceA.dimension));
+  for (const target of ["seicho", "anshin", "jikkan"]) {
+    const favor = answersFavoring(target);
+    const inverted: ScoredAnswers = Object.fromEntries(Object.entries(favor).map(([k, v]) => [k, v === "A" ? "B" : "A"]));
+    const original = executeScored(YORISOU_VALUES_RUNTIME_DEFINITION, favor, YORISOU_VALUES_BANK_HASH);
+    const flipped = executeScored(swapped, inverted, YORISOU_VALUES_BANK_HASH);
+    assert.ok(original.ok && flipped.ok && original.envelope.execution === "scored" && flipped.envelope.execution === "scored");
+    if (original.ok && flipped.ok && original.envelope.execution === "scored" && flipped.envelope.execution === "scored") {
+      assert.equal(flipped.envelope.primaryDimension, original.envelope.primaryDimension, `${target} primary`);
+      assert.equal(flipped.envelope.secondaryDimension, original.envelope.secondaryDimension, `${target} secondary`);
+      assert.equal(flipped.envelope.isMixed, original.envelope.isMixed, `${target} isMixed`);
+      assert.deepEqual([...flipped.envelope.closeSet], [...original.envelope.closeSet], `${target} closeSet`);
+    }
   }
 });
 check("answer ordering invariance + deterministic repeatability", () => {
@@ -297,6 +357,42 @@ check("valid matching progress compatible; stale versions/hash/expiry/malformed 
   assert.equal((checkPendingValuesCompatibility({ ...valid, storedAt: 1 }, current, 1 + 25 * 60 * 60 * 1000) as { reason: string }).reason, "expired");
   assert.equal((checkPendingValuesCompatibility(null, current, 2000) as { reason: string }).reason, "unsupported_contract");
   assert.equal((checkPendingValuesCompatibility({ ...valid, v: 2 }, current, 2000) as { reason: string }).reason, "unsupported_contract");
+});
+
+console.log("YV-1.1 — API contract gate (provenance + strict fields)");
+check("provenance gate: canonical record matches; EACH of the 6 stale fields fails closed independently", () => {
+  const P = CANONICAL_VALUES_PROVENANCE;
+  const good = {
+    method_version: P.methodVersion,
+    bank_version: P.bankVersion,
+    scoring_version: P.scoringVersion,
+    result_schema_version: P.resultSchemaVersion,
+    bank_content_hash: P.bankContentHash,
+  };
+  assert.equal(recordProvenanceMatchesCanonical(good), true);
+  // Drift ANY single field → the gate must reject (no reinterpretation).
+  const drifts: [keyof typeof good, string][] = [
+    ["method_version", "values-v0.9"],
+    ["bank_version", "values-bank-v0.9"],
+    ["scoring_version", "values-scoring-v0.9"],
+    ["result_schema_version", "values-result-v0.9"],
+    ["bank_content_hash", "deadbeef"],
+  ];
+  for (const [field, stale] of drifts) {
+    assert.equal(recordProvenanceMatchesCanonical({ ...good, [field]: stale }), false, `stale ${field} must fail closed`);
+  }
+});
+check("strict fields: unknown key is reported; allowlisted keys pass; empty object passes", () => {
+  const createAllowed = ["answers", "confirmation", "methodVersion", "bankVersion", "scoringVersion", "resultSchemaVersion", "bankContentHash"];
+  assert.equal(firstUnknownKey({ answers: {}, methodVersion: "x" }, createAllowed), null);
+  assert.equal(firstUnknownKey({ answers: {}, junk: 1 }, createAllowed), "junk");
+  assert.equal(firstUnknownKey({}, createAllowed), null);
+  const patchAllowed = ["answers", "confirmation"];
+  assert.equal(firstUnknownKey({ confirmation: "confirmed" }, patchAllowed), null);
+  assert.equal(firstUnknownKey({ methodVersion: "x" }, patchAllowed), "methodVersion");
+  // score omits confirmation from its allowlist
+  const scoreAllowed = ["answers", "methodVersion", "bankVersion", "scoringVersion", "resultSchemaVersion", "bankContentHash"];
+  assert.equal(firstUnknownKey({ confirmation: "confirmed" }, scoreAllowed), "confirmation");
 });
 
 console.log(`\nYV-1 yorisou-values contract: ${passed} checks passed.`);

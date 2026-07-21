@@ -37,8 +37,9 @@
 --   rollback). Rollback (disposable local DB only):
 --     drop function if exists public.yorisou_values_tombstone_purge_expired(integer);
 --     drop function if exists public.yorisou_values_assessment_delete(text, uuid);
---     drop function if exists public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, jsonb, text);
---     drop function if exists public.yorisou_values_assessment_create(text, text, text, text, text, jsonb, text, boolean, text, jsonb, text);
+--     drop function if exists public.yorisou_values_assessment_set_confirmation(text, uuid, text, text, text, text, text, text);
+--     drop function if exists public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text, text, text, text);
+--     drop function if exists public.yorisou_values_assessment_create(text, text, text, text, text, jsonb, text, boolean, text, text, text);
 --     drop table if exists public.yorisou_values_assessment_events;
 --     drop table if exists public.yorisou_values_assessment_versions;
 --     drop table if exists public.yorisou_values_assessments;
@@ -97,11 +98,12 @@ create table if not exists public.yorisou_values_assessment_events (
   owner_account_id text not null,
   event_type text not null
     constraint yorisou_values_assessment_events_type_chk
-    check (event_type in ('created', 'corrected', 'deleted')),
+    -- YV-1.1 (YV-C1): confirmation_changed is distinct from corrected.
+    check (event_type in ('created', 'corrected', 'confirmation_changed', 'deleted')),
   version integer not null,
   reason_code text not null
     constraint yorisou_values_assessment_events_reason_chk
-    check (reason_code in ('initial', 'user_correction', 'user_deleted')),
+    check (reason_code in ('initial', 'user_correction', 'user_confirmed', 'user_not_quite', 'user_skipped', 'user_deleted')),
   retention_expires_at timestamptz,
   created_at timestamptz not null default now()
 );
@@ -214,18 +216,24 @@ begin
 end;
 $$;
 
--- CORRECT: answer correction OR confirmation update on an existing owned record.
--- A recomputed result (answers changed) creates a new version; confirmation-only
--- updates also version (audit-preserving) but never rewrite the method-derived
--- result silently — the caller passes the recomputed result_id.
+-- CORRECT (YV-1.1): ANSWER correction only — a genuine answer change recomputes
+-- the result, increments current_version, appends a new version row and a single
+-- corrected/user_correction event. YV-C2: the caller passes the CURRENT expected
+-- provenance, which is re-verified against the LOCKED record inside this
+-- transaction (no time-of-check/time-of-use gap). YV-C1: byte-equivalent answers
+-- are rejected (values_no_answer_change) — confirmation-only changes use the
+-- dedicated set_confirmation RPC. Confirmation is NOT written here.
 create or replace function public.yorisou_values_assessment_correct(
   p_owner_account_id text,
   p_assessment_id uuid,
   p_answers jsonb,
   p_result_id text,
   p_is_mixed boolean,
-  p_confirmation text,
-  p_reason_code text default 'user_correction'
+  p_expected_method_version text,
+  p_expected_bank_version text,
+  p_expected_scoring_version text,
+  p_expected_result_schema_version text,
+  p_expected_bank_content_hash text
 )
 returns integer
 language plpgsql
@@ -236,24 +244,32 @@ declare
   v_record public.yorisou_values_assessments%rowtype;
   v_next integer;
 begin
-  if p_reason_code <> 'user_correction' then
-    raise exception 'values_invalid_reason';
-  end if;
   select * into v_record from public.yorisou_values_assessments
   where id = p_assessment_id and owner_account_id = p_owner_account_id
   for update;
   if not found then
     raise exception 'values_record_not_found';
   end if;
+  -- YV-C2: provenance re-verified against the locked row.
+  if v_record.method_version <> p_expected_method_version
+     or v_record.bank_version <> p_expected_bank_version
+     or v_record.scoring_version <> p_expected_scoring_version
+     or v_record.result_schema_version <> p_expected_result_schema_version
+     or v_record.bank_content_hash <> p_expected_bank_content_hash then
+    raise exception 'values_record_contract_version_mismatch';
+  end if;
+  -- YV-C1: reject a no-op answer correction (byte-equivalent answers).
+  if v_record.answers = p_answers then
+    raise exception 'values_no_answer_change';
+  end if;
   v_next := v_record.current_version + 1;
   insert into public.yorisou_values_assessment_versions
     (assessment_id, version, answers, result_id, is_mixed, confirmation, reason_code, produced_at)
-  values (p_assessment_id, v_next, p_answers, p_result_id, coalesce(p_is_mixed, false), coalesce(p_confirmation, 'skipped'), 'user_correction', now());
+  values (p_assessment_id, v_next, p_answers, p_result_id, coalesce(p_is_mixed, false), v_record.confirmation, 'user_correction', now());
   update public.yorisou_values_assessments
   set answers = p_answers,
       result_id = p_result_id,
       is_mixed = coalesce(p_is_mixed, false),
-      confirmation = coalesce(p_confirmation, 'skipped'),
       current_version = v_next,
       updated_at = now()
   where id = p_assessment_id;
@@ -261,6 +277,61 @@ begin
     (assessment_id, owner_account_id, event_type, version, reason_code)
   values (p_assessment_id, p_owner_account_id, 'corrected', v_next, 'user_correction');
   return v_next;
+end;
+$$;
+
+-- SET CONFIRMATION (YV-1.1 YV-C1): confirmation-only mutation. Does NOT change
+-- answers, does NOT recompute/replace the result, does NOT increment
+-- current_version, does NOT create a version row, does NOT emit a corrected
+-- event. Updates the confirmation state and appends ONE content-free
+-- confirmation_changed event. YV-C2 provenance re-verified against the locked row.
+create or replace function public.yorisou_values_assessment_set_confirmation(
+  p_owner_account_id text,
+  p_assessment_id uuid,
+  p_confirmation text,
+  p_expected_method_version text,
+  p_expected_bank_version text,
+  p_expected_scoring_version text,
+  p_expected_result_schema_version text,
+  p_expected_bank_content_hash text
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_record public.yorisou_values_assessments%rowtype;
+  v_reason text;
+begin
+  if p_confirmation not in ('confirmed', 'not_quite', 'skipped') then
+    raise exception 'values_invalid_confirmation';
+  end if;
+  select * into v_record from public.yorisou_values_assessments
+  where id = p_assessment_id and owner_account_id = p_owner_account_id
+  for update;
+  if not found then
+    raise exception 'values_record_not_found';
+  end if;
+  if v_record.method_version <> p_expected_method_version
+     or v_record.bank_version <> p_expected_bank_version
+     or v_record.scoring_version <> p_expected_scoring_version
+     or v_record.result_schema_version <> p_expected_result_schema_version
+     or v_record.bank_content_hash <> p_expected_bank_content_hash then
+    raise exception 'values_record_contract_version_mismatch';
+  end if;
+  v_reason := case p_confirmation
+    when 'confirmed' then 'user_confirmed'
+    when 'not_quite' then 'user_not_quite'
+    else 'user_skipped'
+  end;
+  update public.yorisou_values_assessments
+  set confirmation = p_confirmation, updated_at = now()
+  where id = p_assessment_id;
+  insert into public.yorisou_values_assessment_events
+    (assessment_id, owner_account_id, event_type, version, reason_code)
+  values (p_assessment_id, p_owner_account_id, 'confirmation_changed', v_record.current_version, v_reason);
+  return p_confirmation;
 end;
 $$;
 
@@ -326,26 +397,30 @@ $$;
 
 -- RPC permissions: service-role execute only.
 revoke all on function public.yorisou_values_assessment_create(text, text, text, text, text, jsonb, text, boolean, text, text, text) from public;
-revoke all on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text) from public;
+revoke all on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text, text, text, text) from public;
+revoke all on function public.yorisou_values_assessment_set_confirmation(text, uuid, text, text, text, text, text, text) from public;
 revoke all on function public.yorisou_values_assessment_delete(text, uuid) from public;
 revoke all on function public.yorisou_values_tombstone_purge_expired(integer) from public;
 do $$
 begin
   if exists (select 1 from pg_roles where rolname = 'anon') then
     execute 'revoke all on function public.yorisou_values_assessment_create(text, text, text, text, text, jsonb, text, boolean, text, text, text) from anon';
-    execute 'revoke all on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text) from anon';
+    execute 'revoke all on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text, text, text, text) from anon';
+    execute 'revoke all on function public.yorisou_values_assessment_set_confirmation(text, uuid, text, text, text, text, text, text) from anon';
     execute 'revoke all on function public.yorisou_values_assessment_delete(text, uuid) from anon';
     execute 'revoke all on function public.yorisou_values_tombstone_purge_expired(integer) from anon';
   end if;
   if exists (select 1 from pg_roles where rolname = 'authenticated') then
     execute 'revoke all on function public.yorisou_values_assessment_create(text, text, text, text, text, jsonb, text, boolean, text, text, text) from authenticated';
-    execute 'revoke all on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text) from authenticated';
+    execute 'revoke all on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text, text, text, text) from authenticated';
+    execute 'revoke all on function public.yorisou_values_assessment_set_confirmation(text, uuid, text, text, text, text, text, text) from authenticated';
     execute 'revoke all on function public.yorisou_values_assessment_delete(text, uuid) from authenticated';
     execute 'revoke all on function public.yorisou_values_tombstone_purge_expired(integer) from authenticated';
   end if;
   if exists (select 1 from pg_roles where rolname = 'service_role') then
     execute 'grant execute on function public.yorisou_values_assessment_create(text, text, text, text, text, jsonb, text, boolean, text, text, text) to service_role';
-    execute 'grant execute on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text) to service_role';
+    execute 'grant execute on function public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text, text, text, text) to service_role';
+    execute 'grant execute on function public.yorisou_values_assessment_set_confirmation(text, uuid, text, text, text, text, text, text) to service_role';
     execute 'grant execute on function public.yorisou_values_assessment_delete(text, uuid) to service_role';
     execute 'grant execute on function public.yorisou_values_tombstone_purge_expired(integer) to service_role';
   end if;

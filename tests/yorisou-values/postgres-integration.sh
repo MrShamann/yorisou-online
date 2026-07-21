@@ -51,18 +51,47 @@ reset role;
 -- Retake = distinct record; correction = new version; confirmation separate -----
 select public.yorisou_values_assessment_create('owner-a'::text,'values-v1.0'::text,'values-bank-v1.0'::text,'values-scoring-v1.0'::text,'values-result-v1.0'::text,'{"VAL_Q01":"B"}'::jsonb,'VAL_R_PACE'::text,false,'skipped'::text,'919f1725'::text,'2026-07-21T01:00:00Z'::text);
 select assert_true((select count(*)=2 from yorisou_values_assessments where owner_account_id='owner-a'),'retake creates a DISTINCT record (2 rows)');
--- correct the first record
+-- YV-1.1 (YV-C1/YV-C2): correction is ANSWER-only; provenance re-verified in the
+-- locked txn; byte-equal answers rejected; confirmation is NOT written by correct.
 do $$
 declare v_id uuid;
 begin
   select id into v_id from yorisou_values_assessments where owner_account_id='owner-a' and result_id='VAL_R_ANSHIN' limit 1;
-  perform public.yorisou_values_assessment_correct('owner-a'::text, v_id, '{"VAL_Q01":"B"}'::jsonb, 'VAL_R_PACE'::text, false, 'confirmed'::text, 'user_correction'::text);
-  perform assert_true((select current_version=2 and result_id='VAL_R_PACE' and confirmation='confirmed' from yorisou_values_assessments where id=v_id),'correction → v2, recomputed result, confirmation stored');
+  perform public.yorisou_values_assessment_correct('owner-a'::text, v_id, '{"VAL_Q01":"B"}'::jsonb, 'VAL_R_PACE'::text, false, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text);
+  perform assert_true((select current_version=2 and result_id='VAL_R_PACE' and confirmation='skipped' from yorisou_values_assessments where id=v_id),'correction → v2, recomputed result, confirmation UNCHANGED (still skipped)');
   perform assert_true((select count(*)=2 from yorisou_values_assessment_versions where assessment_id=v_id),'two version rows preserved');
   perform assert_true((select answers->>'VAL_Q01'='A' from yorisou_values_assessment_versions where assessment_id=v_id and version=1),'version 1 answers preserved');
+  perform assert_true((select count(*)=1 from yorisou_values_assessment_events where assessment_id=v_id and event_type='corrected'),'exactly one corrected event, no confirmation_changed from correction');
 end $$;
-do $$ begin perform public.yorisou_values_assessment_correct('owner-a'::text, gen_random_uuid(), '{}'::jsonb, 'VAL_R_ANSHIN'::text, false, 'skipped'::text, 'bad_reason'::text); raise exception 'invalid reason accepted'; exception when others then if position('values_invalid_reason' in sqlerrm)=0 then raise; end if; end $$;
-do $$ begin perform public.yorisou_values_assessment_correct('owner-b'::text, (select id from yorisou_values_assessments where owner_account_id='owner-a' limit 1), '{}'::jsonb, 'VAL_R_ANSHIN'::text, false, 'skipped'::text, 'user_correction'::text); raise exception 'cross-owner correction accepted'; exception when others then if position('values_record_not_found' in sqlerrm)=0 then raise; end if; end $$;
+-- byte-equivalent (no-op) answer correction rejected (record answers already {"VAL_Q01":"B"})
+do $$ declare v_id uuid; begin select id into v_id from yorisou_values_assessments where owner_account_id='owner-a' and current_version=2 limit 1; perform public.yorisou_values_assessment_correct('owner-a'::text, v_id, '{"VAL_Q01":"B"}'::jsonb, 'VAL_R_PACE'::text, false, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text); raise exception 'byte-equal correction accepted'; exception when others then if position('values_no_answer_change' in sqlerrm)=0 then raise; end if; end $$;
+-- stale provenance correction rejected (no reinterpretation under a changed bank)
+do $$ declare v_id uuid; begin select id into v_id from yorisou_values_assessments where owner_account_id='owner-a' and current_version=2 limit 1; perform public.yorisou_values_assessment_correct('owner-a'::text, v_id, '{"VAL_Q01":"A"}'::jsonb, 'VAL_R_ANSHIN'::text, false, 'values-v1.0'::text, 'values-bank-v0.9'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text); raise exception 'stale provenance correction accepted'; exception when others then if position('values_record_contract_version_mismatch' in sqlerrm)=0 then raise; end if; end $$;
+do $$ begin perform public.yorisou_values_assessment_correct('owner-b'::text, (select id from yorisou_values_assessments where owner_account_id='owner-a' limit 1), '{"VAL_Q01":"A"}'::jsonb, 'VAL_R_ANSHIN'::text, false, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text); raise exception 'cross-owner correction accepted'; exception when others then if position('values_record_not_found' in sqlerrm)=0 then raise; end if; end $$;
+
+-- YV-1.1 (YV-C1): set_confirmation is a DISTINCT operation — no version increment,
+-- no version row, one confirmation_changed event; provenance re-verified.
+select assert_true(not has_function_privilege('anon','public.yorisou_values_assessment_set_confirmation(text,uuid,text,text,text,text,text,text)','execute'),'anon set_confirmation denied');
+select assert_true(has_function_privilege('service_role','public.yorisou_values_assessment_set_confirmation(text,uuid,text,text,text,text,text,text)','execute'),'service-role set_confirmation allowed');
+do $$
+declare v_id uuid; v_versions int;
+begin
+  select id into v_id from yorisou_values_assessments where owner_account_id='owner-a' and current_version=2 limit 1;
+  select count(*) into v_versions from yorisou_values_assessment_versions where assessment_id=v_id;
+  perform public.yorisou_values_assessment_set_confirmation('owner-a'::text, v_id, 'confirmed'::text, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text);
+  perform assert_true((select confirmation='confirmed' and current_version=2 from yorisou_values_assessments where id=v_id),'confirmation set WITHOUT version increment');
+  perform assert_true((select count(*)=v_versions from yorisou_values_assessment_versions where assessment_id=v_id),'no new version row from a confirmation change');
+  perform assert_true((select count(*)=1 from yorisou_values_assessment_events where assessment_id=v_id and event_type='confirmation_changed' and reason_code='user_confirmed'),'one confirmation_changed event, reason user_confirmed');
+  perform public.yorisou_values_assessment_set_confirmation('owner-a'::text, v_id, 'not_quite'::text, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text);
+  perform assert_true((select confirmation='not_quite' from yorisou_values_assessments where id=v_id),'confirmation re-set to not_quite');
+  perform assert_true((select count(*)=2 from yorisou_values_assessment_events where assessment_id=v_id and event_type='confirmation_changed'),'second confirmation_changed event appended (reason_code user_not_quite)');
+  perform assert_true((select count(*)=1 from yorisou_values_assessment_events where assessment_id=v_id and reason_code='user_not_quite'),'reason_code user_not_quite recorded');
+end $$;
+do $$ declare v_id uuid; begin select id into v_id from yorisou_values_assessments where owner_account_id='owner-a' and current_version=2 limit 1; perform public.yorisou_values_assessment_set_confirmation('owner-a'::text, v_id, 'maybe'::text, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text); raise exception 'invalid confirmation accepted'; exception when others then if position('values_invalid_confirmation' in sqlerrm)=0 then raise; end if; end $$;
+do $$ declare v_id uuid; begin select id into v_id from yorisou_values_assessments where owner_account_id='owner-a' and current_version=2 limit 1; perform public.yorisou_values_assessment_set_confirmation('owner-a'::text, v_id, 'confirmed'::text, 'values-v1.0'::text, 'values-bank-v0.9'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text); raise exception 'stale-provenance confirmation accepted'; exception when others then if position('values_record_contract_version_mismatch' in sqlerrm)=0 then raise; end if; end $$;
+do $$ declare v_id uuid; begin select id into v_id from yorisou_values_assessments where owner_account_id='owner-a' and current_version=2 limit 1; perform public.yorisou_values_assessment_set_confirmation('owner-b'::text, v_id, 'confirmed'::text, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text); raise exception 'cross-owner confirmation accepted'; exception when others then if position('values_record_not_found' in sqlerrm)=0 then raise; end if; end $$;
+-- reset confirmation to skipped so the downstream deletion assertions are unaffected
+select public.yorisou_values_assessment_set_confirmation('owner-a'::text, (select id from yorisou_values_assessments where owner_account_id='owner-a' and current_version=2 limit 1), 'skipped'::text, 'values-v1.0'::text, 'values-bank-v1.0'::text, 'values-scoring-v1.0'::text, 'values-result-v1.0'::text, '919f1725'::text);
 
 -- Append-only protection --------------------------------------------------------
 do $$ begin update yorisou_values_assessment_versions set result_id='x' where version=1; raise exception 'version mutation accepted'; exception when others then if position('append_only' in sqlerrm)=0 then raise; end if; end $$;
@@ -109,7 +138,8 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
 create or replace function assert_true(value boolean, message text) returns void language plpgsql as $$ begin if not value then raise exception 'assertion failed: %', message; end if; end $$;
 drop function if exists public.yorisou_values_tombstone_purge_expired(integer);
 drop function if exists public.yorisou_values_assessment_delete(text, uuid);
-drop function if exists public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text);
+drop function if exists public.yorisou_values_assessment_set_confirmation(text, uuid, text, text, text, text, text, text);
+drop function if exists public.yorisou_values_assessment_correct(text, uuid, jsonb, text, boolean, text, text, text, text, text);
 drop function if exists public.yorisou_values_assessment_create(text, text, text, text, text, jsonb, text, boolean, text, text, text);
 drop table if exists public.yorisou_values_assessment_events;
 drop table if exists public.yorisou_values_assessment_versions;

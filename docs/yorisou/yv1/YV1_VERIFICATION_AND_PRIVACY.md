@@ -1,17 +1,23 @@
 # YV-1 — Verification Evidence & Privacy/Consent Review
 
+> **Updated by YV-1.1.** The contract-suite row below now reflects the corrected,
+> genuine scoring proofs (concrete real-bank Mixed fixture, exact 0.05 boundary,
+> side-swapped A/B inversion) that replaced three previously vacuous tests, plus
+> the new provenance / confirmation / anonymous / strict-field coverage. See
+> §"YV-1.1 corrective evidence" below and `YV1_TEST_INVENTORY.md`.
+
 ## Verification battery (all on this branch)
 | Check | Result |
 |---|---|
 | Canonical bank-hash reproduction + generator drift (`--check`) | PASS (`919f1725…`) |
-| YV-1 contract suite (`npm run test:yorisou-values`) | **25 checks passed** — canonical integrity; 48 unique IDs; 7 dimensions; 14/13/14/14/13/14/14 appearances; 8 results; coverage (0 & 1..47 → insufficient); every dimension-led result reachable; VAL_R_MIXED reachable; exact 0.05 boundary (synthetic runtime); A/B inversion + answer-order invariance + determinism; secondary signal + declaration-order tie; malformed/unknown-item/unknown-side/hash-mismatch/unsupported-model rejected; NO internal numerics in output; consent-gated private hints; gate matrix; registry non-public; resume provenance matrix |
-| Disposable-DB harness (`npm run test:yorisou-values:db`) | **ALL CHECKS PASSED** — privilege matrix (service_role SELECT-only; all direct writes fail under SET ROLE); RPC create; retake = distinct record; correction → v2 with v1 answers preserved; append-only enforced; deletion = content erasure + EXACTLY ONE tombstone (12-month expiry); whole-DB answer sweep; purge matrix (pre-expiry 0 / expired 1 / non-expired survives / limit rejection / role denial); two-owner isolation; executed rollback |
-| Full-stack acceptance (`bash tests/yorisou-values/fullstack-local.sh`) | **3/3 PASSED** (disposable Postgres + PostgREST + real app + cookie auth): authenticated create → server scoring (VAL_R_ANSHIN) → read → correct (v2) → retake (distinct) → delete (erased, one tombstone); provenance/hash/insufficient/malformed/oversized rejected before persistence; TRUE two-account isolation (B cannot read/correct/delete A's real record — bounded 404; A unchanged, no tombstone); unauthenticated four-method denial. Complete teardown verified. |
-| Browser smoke (`tests/smoke/yorisou-values.spec.ts`) | **14/14** (desktop + mobile) — intro + interpretation limits, one-pair-per-screen + progress + back, insufficient-coverage resume, anonymous 401 + login continuation (answers never in URL), all API methods auth-gated + provenance mismatch, anonymous history explanation, no catalog exposure |
-| Real axe (desktop + mobile) | **0 serious / 0 critical** across intro, question, review+login states |
+| YV-1 contract suite (`npm run test:yorisou-values`) | **26 checks passed** — canonical integrity; 48 unique IDs; 7 dimensions; 14/13/14/14/13/14/14 appearances; 8 results; coverage (0 & 1..47 → insufficient); every dimension-led result reachable; **concrete real-bank VAL_R_MIXED fixture (gap<0.05, closeSet both tops, resultId MIXED)**; **exact 0.05 boundary through the real runtime (0.05 not / 0.04 Mixed / 0.06 not, internal gap asserted)**; **genuine side-swapped-bank A/B inversion**; answer-order invariance + determinism; secondary signal + declaration-order tie; malformed/unknown-item/unknown-side/hash-mismatch/unsupported-model rejected; NO internal numerics in output; consent-gated private hints; gate matrix; registry non-public; resume provenance matrix; **provenance gate (6 fields independently) + strict-field allowlists** |
+| Disposable-DB harness (`npm run test:yorisou-values:db`) | **ALL CHECKS PASSED** — privilege matrix (service_role SELECT-only; all direct writes fail under SET ROLE); RPC create; retake = distinct record; **answer-correction (10-arg provenance sig) → v2, confirmation unchanged, one `corrected` event; byte-equal rejected; stale provenance rejected**; **`set_confirmation`: grant matrix, no version increment, one `confirmation_changed` event per change, invalid/stale/cross-owner rejected**; append-only enforced; deletion = content erasure + EXACTLY ONE tombstone (12-month expiry, confirmation events erased too); whole-DB answer sweep; purge matrix; two-owner isolation; executed rollback (both new RPC signatures dropped) |
+| Full-stack acceptance (`bash tests/yorisou-values/fullstack-local.sh`) | **5/5 PASSED** (disposable Postgres + PostgREST + real app + cookie auth): authenticated create → server scoring (VAL_R_ANSHIN) → read → correct (v2) → retake (distinct) → delete (erased, one tombstone); provenance/hash/insufficient/malformed/oversized rejected before persistence; TRUE two-account isolation; unauthenticated four-method denial; **YV-C1 confirmation is a distinct op (no version bump, one `confirmation_changed` event) + strict PATCH (empty/ambiguous/unknown → 400, byte-equal → 409)**; **YV-C3 anonymous non-persistent `POST /score` (saved:false, no id, no numerics, nothing persisted; stale/insufficient → 422; confirmation field → 400) + YV-C4 create rejects unknown fields**. Complete teardown verified. |
+| Browser smoke (`tests/smoke/yorisou-values.spec.ts`) | **14/14** (desktop + mobile) — intro + interpretation limits, one-pair-per-screen + progress + back, insufficient-coverage resume, **anonymous completion shows a result WITHOUT saving then explicit sign-in-to-save (persistence still 401; `/score` non-persistent; answers never in URL)**, all API methods auth-gated + provenance mismatch, anonymous history explanation, no catalog exposure |
+| Real axe (desktop + mobile) | **0 serious / 0 critical** across intro, question, anonymous-result states |
 | Regression: MTF-1 67/67 · MTF-2A default + scope 0 failures · CPV1 62/62 · DCI-1 45/45 · DCI DB harness · migration guard · other suites | all green |
-| tsc / eslint / build / secret scan | 0 / 0 / clean / clean |
-| Dependency review | **zero dependencies added** (axe = existing transitive; package.json diff = 3 script commands) |
+| tsc / eslint / build / secret scan | 0 / 0 / clean / clean (secret scan on CI) |
+| Dependency review | **zero dependencies added** |
 
 ## Privacy & consent review (§10/§11/§15/§18)
 - Persisted answers and private result content are **private by default** (P1); server repository owner-scoped in every query; anonymous cannot read/mutate anything (401 before store; RLS deny-all direct + RPC-only mutation).
@@ -27,10 +33,18 @@ Tombstone: bounded audit metadata only (assessment id, owner ref, method id, ver
 ## State separation (truthful)
 - Canonical authored truth: `docs/yorisou/mtf2a/yorisou-values.v1.json` (frozen).
 - Implemented runtime truth: scored runtime + assembly + gated route + persistence candidate.
-- Local test evidence: contract 25, DB harness, full-stack 3, browser 14, axe 0/0.
+- Local test evidence: contract 26, DB harness, full-stack 5, browser 14, axe 0/0.
 - CI evidence: `.github/workflows/yv-1-ci.yml` (recorded on PR).
 - Hosted state: NONE — no hosted migration applied, no hosted Supabase contact, no Vercel change, `yorisou_values_preview` not enabled.
 - Public state: CLOSED — `/tests/yorisou-values` 404 in production/unknown; no nav/catalog/sitemap.
+
+## YV-1.1 corrective evidence (provenance, confirmation, anonymous, test integrity)
+Applied on draft PR #119 by amending migration `202607210001` in place (never hosted/merged). No canonical JSON / question / dimension / scoring / result copy changed; the `< 0.05` Mixed rule is unchanged.
+- **YV-C1** confirmation is a separate mutation: `set_confirmation` RPC (no version increment, one `confirmation_changed` event, reason `user_confirmed`/`user_not_quite`/`user_skipped`); `correct` no longer writes confirmation and rejects a byte-equivalent no-op answer change; API PATCH takes answers XOR confirmation. DB-harness + full-stack + browser verified.
+- **YV-C2** stored-record provenance enforced in the locked transaction (no TOCTOU) and at the API read/write boundary; drift → bounded `values_record_contract_version_mismatch` (409/RPC exception); a stale record is never reinterpreted but stays deletable. Contract test drifts each of the 6 fields independently; DB-harness exercises the RPC gate.
+- **YV-C3** anonymous non-persistent scoring endpoint `POST /api/tests/yorisou-values/score` (gated, no auth, no DB, answers never logged, `saved:false`, no internal numerics). Full-stack proves zero persistence; browser proves the signed-out result-then-explicit-save flow.
+- **YV-C4** strict API contracts on create/score/PATCH (unknown fields rejected; PATCH also rejects empty + ambiguous). Contract + full-stack verified.
+- **YV-C5** three previously vacuous scoring tests replaced with genuine proofs (concrete real-bank Mixed fixture; exact 0.05 boundary via a synthetic 1/100-grid bank; side-swapped-bank A/B inversion); provenance/confirmation/strict/anonymous coverage added at DB, contract, and full-stack levels.
 
 ## NOT claimed
 Hosted migration applied · public route available · Preview accepted · production data verified · live retention purge operational · public activation · LINE/app support · paid report availability · generalized Dynamic Test Engine completion.

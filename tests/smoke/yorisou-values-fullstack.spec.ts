@@ -148,4 +148,63 @@ test.describe.serial("YV-1 full-stack authenticated acceptance", () => {
     }
     await anon.close();
   });
+
+  test("YV-C1 confirmation is a distinct op (no version bump); YV-C4 strict PATCH contract", async ({ page }) => {
+    await registerAndSignIn(page, `yv-c1-${Date.now()}@example.test`);
+    const create = await page.request.post(`${BASE}/api/tests/yorisou-values/assessments`, { data: { answers: fullAnswers(), ...provenance } });
+    expect(create.status()).toBe(201);
+    const id = ((await create.json()) as { assessmentId: string }).assessmentId;
+    const url = `${BASE}/api/tests/yorisou-values/assessments/${id}`;
+
+    // Confirmation-only PATCH → 200, current version stays 1, exactly one
+    // confirmation_changed event, and NO new version row.
+    const conf = await page.request.patch(url, { data: { confirmation: "confirmed" } });
+    expect(conf.status()).toBe(200);
+    expect(((await conf.json()) as { currentVersion: number }).currentVersion).toBe(1);
+    const events = await restRows(page, `yorisou_values_assessment_events?select=event_type,reason_code&assessment_id=eq.${id}&event_type=eq.confirmation_changed`);
+    expect(events).toHaveLength(1);
+    expect(events[0].reason_code).toBe("user_confirmed");
+    expect(await restRows(page, `yorisou_values_assessment_versions?select=version&assessment_id=eq.${id}`)).toHaveLength(1);
+
+    // Strict/ambiguous/empty rejections (YV-C4/YV-C1).
+    expect((await page.request.patch(url, { data: {} })).status()).toBe(400); // empty update
+    expect((await page.request.patch(url, { data: { answers: fullAnswers(), confirmation: "confirmed" } })).status()).toBe(400); // ambiguous (answers XOR confirmation)
+    expect((await page.request.patch(url, { data: { junk: 1 } })).status()).toBe(400); // unknown field
+    // Byte-equivalent answer correction is a no-op → 409, not a silent new version.
+    const noop = await page.request.patch(url, { data: { answers: fullAnswers() } });
+    expect(noop.status()).toBe(409);
+    expect((await noop.json()).error).toBe("values_no_answer_change");
+    expect(await restRows(page, `yorisou_values_assessment_versions?select=version&assessment_id=eq.${id}`)).toHaveLength(1); // still one version
+  });
+
+  test("YV-C3 anonymous non-persistent scoring returns a result WITHOUT storing; YV-C4 strict score/create fields", async ({ browser }) => {
+    const scoreUrl = `${BASE}/api/tests/yorisou-values/score`;
+    const anon = await browser.newContext();
+    const anonPage = await anon.newPage();
+    // No auth cookie: the score endpoint still works.
+    const before = (await restRows(anonPage, `yorisou_values_assessments?select=id`)).length;
+    const scored = await anonPage.request.post(scoreUrl, { data: { answers: fullAnswers(), ...provenance } });
+    expect(scored.status()).toBe(200);
+    const body = (await scored.json()) as Record<string, unknown>;
+    expect(body.saved).toBe(false);
+    expect(body.resultId).toBe("VAL_R_ANSHIN");
+    expect(body.assessmentId).toBeUndefined();
+    expect(JSON.stringify(body)).not.toMatch(/winRate|"wins"/i); // no internal numerics
+    // NOTHING persisted by an anonymous score.
+    expect((await restRows(anonPage, `yorisou_values_assessments?select=id`)).length).toBe(before);
+    // Stale provenance and insufficient coverage are bounded 422.
+    expect((await anonPage.request.post(scoreUrl, { data: { answers: fullAnswers(), ...provenance, bankVersion: "values-bank-v0.9" } })).status()).toBe(422);
+    expect((await anonPage.request.post(scoreUrl, { data: { answers: { VAL_Q01: "A" }, ...provenance } })).status()).toBe(422);
+    // score omits confirmation from its allowlist → unknown field → 400.
+    expect((await anonPage.request.post(scoreUrl, { data: { answers: fullAnswers(), ...provenance, confirmation: "confirmed" } })).status()).toBe(400);
+    await anon.close();
+
+    // create also rejects unknown top-level fields (YV-C4).
+    const ctx = await browser.newContext();
+    const p = await ctx.newPage();
+    await registerAndSignIn(p, `yv-c4-${Date.now()}@example.test`);
+    const bad = await p.request.post(`${BASE}/api/tests/yorisou-values/assessments`, { data: { answers: fullAnswers(), ...provenance, junk: "x" } });
+    expect(bad.status()).toBe(400);
+    await ctx.close();
+  });
 });

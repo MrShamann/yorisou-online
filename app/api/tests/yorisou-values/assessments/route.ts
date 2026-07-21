@@ -10,10 +10,13 @@ import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { yorisouValuesAccess } from "@/lib/yorisou/methods/yorisou-values/access";
 import { assembleYorisouValuesResult } from "@/lib/yorisou/methods/yorisou-values/scoring";
 import { YORISOU_VALUES_DEFINITION, YORISOU_VALUES_BANK_HASH } from "@/lib/yorisou/methods/yorisou-values/definition.generated";
-import { mapValuesStoreError, readBoundedJson } from "@/lib/server/yorisouValuesApi";
+import { mapValuesStoreError, readBoundedJson, firstUnknownKey } from "@/lib/server/yorisouValuesApi";
 import { createValuesAssessment, listValuesAssessmentsForOwner } from "@/lib/server/yorisouValuesStore";
 
 const DEF = YORISOU_VALUES_DEFINITION;
+
+// YV-1.1 (YV-C4): strict create contract — exactly these top-level keys.
+const CREATE_ALLOWED_KEYS = ["answers", "confirmation", "methodVersion", "bankVersion", "scoringVersion", "resultSchemaVersion", "bankContentHash"] as const;
 
 function normalizeAnswers(raw: unknown): Record<string, "A" | "B"> | null {
   if (typeof raw !== "object" || raw === null) return null;
@@ -75,6 +78,8 @@ export async function POST(request: Request) {
   if (!read.ok) return NextResponse.json({ error: read.error }, { status: read.status });
   const body = read.body as CreateBody | null;
   if (!body || typeof body !== "object") return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  const unknownKey = firstUnknownKey(body as Record<string, unknown>, CREATE_ALLOWED_KEYS);
+  if (unknownKey) return NextResponse.json({ error: "unexpected_field", field: unknownKey }, { status: 400 });
 
   // Provenance must match the current canonical versions + hash (fail closed).
   if (

@@ -82,13 +82,24 @@ export async function createValuesAssessment(input: {
   });
 }
 
+export type ExpectedProvenance = {
+  methodVersion: string;
+  bankVersion: string;
+  scoringVersion: string;
+  resultSchemaVersion: string;
+  bankContentHash: string;
+};
+
+// YV-1.1 (YV-C1/YV-C2): ANSWER correction only — provenance re-verified in the
+// locked transaction; byte-equivalent answers rejected by the RPC. Confirmation
+// is NOT written here.
 export async function correctValuesAssessment(input: {
   ownerAccountId: string;
   assessmentId: string;
   answers: Record<string, "A" | "B">;
   resultId: string;
   isMixed: boolean;
-  confirmation: "confirmed" | "not_quite" | "skipped";
+  expected: ExpectedProvenance;
 }): Promise<number> {
   return rpc<number>("yorisou_values_assessment_correct", {
     p_owner_account_id: input.ownerAccountId,
@@ -96,8 +107,31 @@ export async function correctValuesAssessment(input: {
     p_answers: input.answers,
     p_result_id: input.resultId,
     p_is_mixed: input.isMixed,
+    p_expected_method_version: input.expected.methodVersion,
+    p_expected_bank_version: input.expected.bankVersion,
+    p_expected_scoring_version: input.expected.scoringVersion,
+    p_expected_result_schema_version: input.expected.resultSchemaVersion,
+    p_expected_bank_content_hash: input.expected.bankContentHash,
+  });
+}
+
+// YV-1.1 (YV-C1): confirmation-only mutation — no version increment, no version
+// row, no corrected event; one confirmation_changed event. Provenance re-verified.
+export async function setValuesConfirmation(input: {
+  ownerAccountId: string;
+  assessmentId: string;
+  confirmation: "confirmed" | "not_quite" | "skipped";
+  expected: ExpectedProvenance;
+}): Promise<string> {
+  return rpc<string>("yorisou_values_assessment_set_confirmation", {
+    p_owner_account_id: input.ownerAccountId,
+    p_assessment_id: input.assessmentId,
     p_confirmation: input.confirmation,
-    p_reason_code: "user_correction",
+    p_expected_method_version: input.expected.methodVersion,
+    p_expected_bank_version: input.expected.bankVersion,
+    p_expected_scoring_version: input.expected.scoringVersion,
+    p_expected_result_schema_version: input.expected.resultSchemaVersion,
+    p_expected_bank_content_hash: input.expected.bankContentHash,
   });
 }
 
