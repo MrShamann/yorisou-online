@@ -1,0 +1,48 @@
+# YORISOU local Supabase — explicit, repository-owned project identity.
+#
+# WHY THIS FILE EXISTS: on 2026-07-24 another project's migrations were applied
+# to this project's LOCAL database because both defaulted to the shared Supabase
+# ports (54321/54322) and a tool connected to "whatever owned the port".
+# YORISOU therefore pins its OWN project id and a dedicated, non-overlapping port
+# range, and every local DB command must pass scripts/verify-local-supabase-target.mjs.
+#
+# Port allocation across local projects (do not overlap):
+#   mirai-move      : 5532x / 5533x
+#   yorisou-online  : 5534x   <-- this project
+#   (defaults 5432x are deliberately NOT used)
+
+project_id = "yorisou-online"
+
+[api]
+enabled = true
+port = 55341
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 55342
+shadow_port = 55340
+major_version = 17
+
+[studio]
+enabled = false
+
+[inbucket]
+enabled = false
+
+[storage]
+enabled = false
+
+[realtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_signup = true

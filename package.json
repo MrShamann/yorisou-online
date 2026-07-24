@@ -38,7 +38,8 @@
     "test:yorisou-values:db": "bash tests/yorisou-values/postgres-integration.sh",
     "generate:yorisou-values": "node scripts/generate-yorisou-values-runtime.mjs",
     "test:shared-store": "node --import tsx lib/server/__tests__/sharedObjectStore.test.ts",
-    "test:production-pilot": "node --import tsx lib/cpv1/__tests__/productionPilot.test.ts"
+    "test:production-pilot": "node --import tsx lib/cpv1/__tests__/productionPilot.test.ts",
+    "test:isolation": "node --test tests/verify-local-supabase-target.test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
