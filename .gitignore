@@ -59,3 +59,7 @@ data/insight-ingestion-*.json
 
 # Local generated types (stale next-typecheck output; excluded from vercel uploads)
 tmp/
+
+# Supabase CLI local artifacts (machine-specific, never committed)
+supabase/.branches/
+supabase/.temp/
