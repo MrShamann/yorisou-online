@@ -8,7 +8,7 @@ import { execFileSync } from "node:child_process";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 const guardPath = join(REPO, "scripts/verify-local-supabase-target.mjs");
-const { sectionPort } = await import(guardPath);
+const { sectionPort, assessMarker } = await import(guardPath);
 
 function fakeRepo({ project = "yorisou-online", cfgProject = "yorisou-online", apiPort = 55341, dbPort = 55342, withConfig = true } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "yor-guard-"));
@@ -21,7 +21,7 @@ function fakeRepo({ project = "yorisou-online", cfgProject = "yorisou-online", a
   return dir;
 }
 function run(dbUrl, repo, stage = "bootstrap") {
-  const code = `import(${JSON.stringify(guardPath)}).then(m=>{const f=${stage === "bootstrap" ? "m.verifyBootstrap" : "m.verify"};const r=f(${JSON.stringify(dbUrl)},{repo:${JSON.stringify(repo)}});console.log("OK",r.stage)}).catch(e=>{console.error("REFUSED:",e.message);process.exit(1)})`;
+  const code = `import(${JSON.stringify(guardPath)}).then(m=>{const f=${stage === "bootstrap" ? "m.verifyBootstrap" : "m.verify"};const r=f(${JSON.stringify(dbUrl)},{repo:${JSON.stringify(repo)}});console.log("OK",r.stage)}).catch(e=>{console.error("REFUSED:",e.message);for(const[k,v]of Object.entries(e.observed??{}))console.error(k+":",v);process.exit(1)})`;
   try { return { code: 0, out: execFileSync("node", ["-e", code], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }) }; }
   catch (e) { return { code: e.status ?? 1, out: (e.stdout || "") + (e.stderr || "") }; }
 }
@@ -59,7 +59,7 @@ test("remote hosts, unexpected database and unexpected user are refused", () => 
   const repo = fakeRepo();
   assert.match(run("postgresql://postgres@db.supabase.co:55342/postgres", repo).out, /host is not local/);
   assert.match(run("postgresql://postgres@127.0.0.1:55342/mirai", repo).out, /unexpected database name/);
-  assert.match(run("postgresql://intruder@127.0.0.1:55342/postgres", repo).out, /unexpected database user/);
+  assert.match(run("postgresql://intruder@127.0.0.1:55342/postgres", repo).out, /database user missing or unexpected/);
   rmSync(repo, { recursive: true, force: true });
 });
 
@@ -93,4 +93,83 @@ test("committed config pins YORISOU identity and its dedicated range", () => {
   assert.equal(sectionPort(cfg, "db"), 55342);
   assert.ok(!/\bport = 5432[0-9]\b/.test(cfg), "no collision-prone default ports");
   assert.ok(!/\bport = 5532[0-9]\b/.test(cfg), "no overlap with mirai-move's range");
+});
+
+// ── PR #122 pre-merge safety corrections ─────────────────────────────────────
+
+test("marker singleton contract: exactly one row with exactly the right value", () => {
+  // pure assessment of the "<count>|<projects>|<shape>" marker query result
+  assert.deepEqual(assessMarker("1|yorisou-online|singleton"), { ok: true, legacyShapeRequiresConversion: false });
+  const legacy = assessMarker("1|yorisou-online|legacy");
+  assert.equal(legacy.ok, true);
+  assert.equal(legacy.legacyShapeRequiresConversion, true, "legacy correct marker detected as requiring conversion");
+  assert.equal(assessMarker("0||singleton").ok, false, "zero rows rejected");
+  assert.match(assessMarker("0||singleton").reason, /no identity marker row/);
+  assert.equal(assessMarker("2|yorisou-online|legacy").ok, false, "multiple rows rejected even when values agree");
+  assert.match(assessMarker("2|yorisou-online|legacy").reason, /not a singleton/);
+  assert.equal(assessMarker("1|mirai-move|singleton").ok, false, "wrong project rejected");
+  assert.equal(assessMarker("2|mirai-move,yorisou-online|legacy").ok, false, "conflicting marker rejected");
+  assert.equal(assessMarker("garbage").ok, false, "unreadable result rejected");
+  assert.equal(assessMarker("").ok, false);
+});
+
+test("full-mode marker query is deterministic — no unordered LIMIT 1", () => {
+  const src = readFileSync(guardPath, "utf8");
+  assert.ok(!/limit 1/i.test(src.split("MARKER_QUERY")[1].split(";")[0] ?? ""), "marker query has no LIMIT 1");
+  assert.match(src, /count\(\*\)/, "marker query counts rows");
+  assert.match(src, /string_agg\(distinct project/, "marker query aggregates DISTINCT project values");
+  assert.match(src, /column_name='singleton'/, "marker query detects the legacy shape");
+});
+
+test("bootstrap SQL refuses conflicting markers and never silently appends", () => {
+  const sql = readFileSync(join(REPO, "supabase/local-identity-bootstrap.sql"), "utf8");
+  assert.ok(!/on conflict do nothing/i.test(sql), "no ON CONFLICT DO NOTHING silent insert");
+  assert.match(sql, /CONFLICTING_LOCAL_IDENTITY_MARKER/, "conflicting/extra markers raise, not overwrite");
+  assert.match(sql, /singleton boolean primary key default true check \(singleton = true\)/, "new tables use the singleton shape");
+  assert.match(sql, /check \(project = 'yorisou-online'\)/, "project value is constrained");
+  assert.match(sql, /if v_total = 0 then/, "insert happens only into an empty table");
+});
+
+test("legacy→singleton conversion exists as a guarded post-merge step and is not run by bootstrap", () => {
+  const conv = readFileSync(join(REPO, "supabase/local-identity-marker-conversion.sql"), "utf8");
+  assert.match(conv, /POST-MERGE/i, "documented as post-merge maintenance");
+  assert.match(conv, /begin;/i);
+  assert.match(conv, /commit;/i);
+  assert.match(conv, /v_total <> 1 or v_conflicting > 0/, "conversion refuses any conflict");
+  const boot = readFileSync(join(REPO, "supabase/local-identity-bootstrap.sql"), "utf8");
+  assert.ok(!boot.includes("conversion"), "bootstrap does not invoke the conversion");
+  const wrapper = readFileSync(join(REPO, "scripts/yorisou-local-db.mjs"), "utf8");
+  assert.ok(!wrapper.includes("local-identity-marker-conversion"), "wrapper does not auto-run the conversion");
+});
+
+test("database user must be present and exact — missing user is refused", () => {
+  const src = readFileSync(guardPath, "utf8");
+  assert.ok(!/url\.username\s*&&\s*url\.username !==/.test(src), "the permissive 'username && username !==' pattern is gone");
+  assert.match(src, /url\.username !== EXPECTED_USER/, "username must equal the expected user");
+  const repo = fakeRepo();
+  const missing = run("postgresql://127.0.0.1:55342/postgres", repo);
+  assert.notEqual(missing.code, 0);
+  assert.match(missing.out, /database user missing or unexpected/);
+  assert.match(missing.out, /\(missing\)/, "missing username reported without inventing one");
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test("exact postgres user passes the user check (refusal, if any, is later and unrelated)", () => {
+  // Use an in-range port with no declared container conflict potential: the
+  // flow must get PAST the user check; any refusal must be about the container,
+  // never about the user.
+  const repo = fakeRepo({ dbPort: 55343 });
+  const r = run("postgresql://postgres@127.0.0.1:55343/postgres", repo);
+  assert.ok(!/database user missing or unexpected/.test(r.out), "postgres user is not refused");
+  rmSync(repo, { recursive: true, force: true });
+});
+
+test("migrate is blocked pending migration-state reconciliation — no replay path exists", () => {
+  const wrapper = readFileSync(join(REPO, "scripts/yorisou-local-db.mjs"), "utf8");
+  assert.match(wrapper, /YORISOU_LOCAL_MIGRATION_STATE_RECONCILIATION_REQUIRED/, "migrate refuses with the stable blocker token");
+  assert.ok(!wrapper.includes("readdirSync"), "the manual migration-directory replay path is absent");
+  // the migrate branch performs no SQL write: no psql call between verify and die
+  const migrateBranch = wrapper.split('cmd === "migrate"')[1].split('} else if')[0];
+  assert.ok(!migrateBranch.includes("psql("), "blocked migrate attempts no SQL statement");
+  assert.match(migrateBranch, /die\(/, "migrate ends in refusal");
 });

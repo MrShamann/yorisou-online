@@ -36,7 +36,8 @@ The contamination was surgically removed and **all YORISOU local data was preser
 4. **Guarded wrapper** — `scripts/yorisou-local-db.mjs`:
    `bootstrap | verify | migrate | reset | e2e`. Every mutating local-DB operation
    must go through it. `reset` is destructive and additionally requires
-   `--yes-destroy-local-data`.
+   `--yes-destroy-local-data`. **`migrate` is intentionally blocked** and refuses
+   with `YORISOU_LOCAL_MIGRATION_STATE_RECONCILIATION_REQUIRED` (see below).
 
    > **Do not** run raw `supabase db reset`, `psql -f`, or `pg_restore` against the
    > local database — those connect to whatever owns the port.
@@ -54,3 +55,42 @@ The contamination was surgically removed and **all YORISOU local data was preser
 No product code, no schema migration, no remote/Production Supabase, no reset of the
 remediated database, and the full migration chain was **not** applied (the local DB was
 intentionally left at its actual remediated state).
+
+## Pre-merge safety corrections (2026-07-24, code-only)
+
+Three defects found in Founder code review were corrected **without any database
+operation** (no backup, restore, marker write, migration, or Supabase start):
+
+1. **Singleton identity marker.** The original marker (`project text primary key`
+   + unordered `LIMIT 1` + `ON CONFLICT DO NOTHING`) could nondeterministically
+   pass with conflicting rows present. Now: the full guard requires **exactly one
+   row whose project is exactly `yorisou-online`** (deterministic count+value
+   aggregate — never `LIMIT 1`); bootstrap creates new tables in a singleton
+   shape (`singleton boolean primary key check (singleton = true)`), inserts only
+   into an empty table, is idempotent for one correct row, and **refuses** any
+   conflicting/extra/malformed marker instead of overwriting or appending.
+   The live dedicated DB still carries the earlier (legacy) marker shape — its
+   correct single row passes content verification and is flagged
+   `legacy-requires-conversion`. **Post-merge local maintenance:** run the
+   guarded conversion `supabase/local-identity-marker-conversion.sql` via the
+   wrapper's `e2e` mode; it is transactional and refuses any conflict. It was
+   **not** executed in this package.
+
+2. **Mandatory exact database user.** A URL without a username previously passed
+   the guard. Now the user must be present and exactly the expected local user:
+   `postgres` accepted; missing rejected; any other user rejected. Passwords and
+   credential-bearing URLs are never printed.
+
+3. **Migration replay removed.** The previous `migrate` command replayed every
+   file in `supabase/migrations` with raw `psql -f`, bypassing migration history
+   — dangerous for this database, which is intentionally preserved at its actual
+   historical state and was never fully migrated. `migrate` now verifies the
+   target (read-only) and then **refuses** with
+   `YORISOU_LOCAL_MIGRATION_STATE_RECONCILIATION_REQUIRED`. Local migrations
+   stay blocked until a separate governed package reconciles
+   `supabase_migrations.schema_migrations` with the actual applied state and
+   re-enables a migration-aware runner. Raw replay of the migrations directory
+   is prohibited; **local migrations are not currently runnable, by design.**
+
+The isolation itself, the data-preservation evidence and the live cross-project
+refusal verification from the original package remain valid and were not re-run.

@@ -69,13 +69,18 @@ export function verifyBootstrap(dbUrl, opts = {}) {
   const cfgId = (toml.match(/^\s*project_id\s*=\s*"([^"]+)"/m) || [])[1] ?? null;
   if (cfgId !== EXPECTED_PROJECT) refuse("supabase config project_id is not yorisou-online", { config_project_id: cfgId });
 
-  // 3. URL shape — local only, expected db/user; credentials never printed
+  // 3. URL shape — local only, expected db/user; credentials never printed.
+  // The database user must be PRESENT and exactly the expected local user: a
+  // missing username is refused (it would silently bind to whatever identity
+  // the server default resolves to, which is not proof of the intended target).
   let url;
   try { url = new URL(dbUrl); } catch { refuse("db url is not parseable", {}); }
   if (!LOCAL_HOSTS.has(url.hostname)) refuse("db host is not local", { host: url.hostname });
   const dbName = url.pathname.replace(/^\//, "");
   if (dbName !== EXPECTED_DB) refuse("unexpected database name", { database: dbName });
-  if (url.username && url.username !== EXPECTED_USER) refuse("unexpected database user", { user: url.username });
+  if (url.username !== EXPECTED_USER) {
+    refuse("database user missing or unexpected", { user: url.username || "(missing)" });
+  }
 
   // 4. port must equal the EXACT [db].port and sit in YORISOU's dedicated range
   const port = Number(url.port);
@@ -113,17 +118,51 @@ export function verifyBootstrap(dbUrl, opts = {}) {
   return { ok: true, stage: "bootstrap", project: EXPECTED_PROJECT, container, port };
 }
 
-/** Full verification: bootstrap + the local project identity marker. */
+// Deterministic marker query: row count + the DISTINCT project values + the
+// table shape, in one aggregate. Never an unordered LIMIT 1 (which is
+// nondeterministic when more than one row exists and so proves nothing).
+export const MARKER_QUERY =
+  "select (select count(*) from public.yorisou_local_project_identity)::text" +
+  " || '|' || coalesce((select string_agg(distinct project, ',' order by project) from public.yorisou_local_project_identity), '')" +
+  " || '|' || (select case when exists (select 1 from information_schema.columns" +
+  " where table_schema='public' and table_name='yorisou_local_project_identity' and column_name='singleton')" +
+  " then 'singleton' else 'legacy' end)";
+
+/**
+ * Pure singleton assessment of the marker query result "<count>|<projects>|<shape>".
+ * Requires EXACTLY one row whose project is EXACTLY yorisou-online. A correct
+ * row in the legacy (pre-singleton) table shape passes content verification but
+ * is flagged as requiring the guarded post-merge conversion.
+ */
+export function assessMarker(observed) {
+  const parts = String(observed ?? "").trim().split("|");
+  if (parts.length !== 3) return { ok: false, reason: "marker query returned an unreadable result" };
+  const [countStr, projects, shape] = parts;
+  const count = Number(countStr);
+  if (!Number.isInteger(count) || count < 0) return { ok: false, reason: "marker query returned an unreadable count" };
+  if (count === 0) return { ok: false, reason: "no identity marker row exists (run --bootstrap first)" };
+  if (count > 1) return { ok: false, reason: `identity marker is not a singleton (${count} rows) — forensic remediation required` };
+  if (projects !== EXPECTED_PROJECT) return { ok: false, reason: "identity marker does not identify yorisou-online", observed_project: projects };
+  return { ok: true, legacyShapeRequiresConversion: shape === "legacy" };
+}
+
+/** Full verification: bootstrap + the singleton local project identity marker. */
 export function verify(dbUrl, opts = {}) {
   const base = verifyBootstrap(dbUrl, opts);
-  let marker = "";
+  let observed = "";
   try {
-    marker = execFileSync("psql", [dbUrl, "-tAc", "select project from public.yorisou_local_project_identity limit 1"], { encoding: "utf8" }).trim();
+    observed = execFileSync("psql", [dbUrl, "-tAc", MARKER_QUERY], { encoding: "utf8" }).trim();
   } catch {
     refuse("db did not respond or has no yorisou_local_project_identity marker (run --bootstrap first)", { container: base.container, port: base.port });
   }
-  if (marker !== EXPECTED_PROJECT) refuse("db identity marker is not yorisou-online", { observed_project: marker, container: base.container, port: base.port });
-  return { ...base, stage: "full" };
+  const marker = assessMarker(observed);
+  if (!marker.ok) {
+    refuse(marker.reason, { ...(marker.observed_project ? { observed_project: marker.observed_project } : {}), container: base.container, port: base.port });
+  }
+  if (marker.legacyShapeRequiresConversion) {
+    console.error("[yorisou verify-local-supabase-target] WARNING: identity marker uses the legacy table shape — run the guarded singleton conversion (supabase/local-identity-marker-conversion.sql) as a post-merge local maintenance step.");
+  }
+  return { ...base, stage: "full", markerShape: marker.legacyShapeRequiresConversion ? "legacy-requires-conversion" : "singleton" };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
