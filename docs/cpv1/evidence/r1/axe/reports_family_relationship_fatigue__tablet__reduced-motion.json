@@ -1,0 +1,18 @@
+{
+  "surface": "/reports/family/relationship-fatigue",
+  "viewport": {
+    "name": "tablet",
+    "width": 768,
+    "height": 1024
+  },
+  "reducedMotion": true,
+  "base": "http://127.0.0.1:3000",
+  "counts": {
+    "critical": 0,
+    "serious": 0,
+    "moderate": 0,
+    "minor": 0,
+    "total": 0
+  },
+  "violations": []
+}

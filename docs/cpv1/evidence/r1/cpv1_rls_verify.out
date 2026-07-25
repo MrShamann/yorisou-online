@@ -1,0 +1,52 @@
+== 0. create disposable database ==
+  created cpv1_r1_verify
+== bootstrap deps (pgcrypto + roles usage + 2 helper fns from migration 001) ==
+  helpers created
+== 1. migrations apply in the correct order (002 -> 003 -> 004) ==
+  applied 202607190002_cpv1_understanding_history_consent
+  applied 202607190003_cpv1r1_relations_permissions_datarights
+  applied 202607190004_cpv1r1_datarights_reason_codes
+  PASS  1. migrations apply in order
+== 2. reapplication behavior is intentional (once-only migrations) ==
+  PASS  2. reapplication intentionally errors on once-only objects (migrations run once)
+== 3-4. RLS enabled + forced on all CPV1 tables ==
+  yorisou_cpv1_history_events:true/true yorisou_cpv1_method_consent:true/true yorisou_cpv1_method_registry_snapshot:true/true yorisou_cpv1_observations:true/true
+  PASS  3-4. RLS enabled + forced on all 4 CPV1 tables
+== 5. grants match intended operations ==
+  PASS  5a. anon has NO grants on CPV1 tables
+  PASS  5b. authenticated has SELECT-only on history (no insert/update/delete)
+== 6. anonymous users are denied ==
+  PASS  6. anon SELECT on observations denied (denied: HINT:  Grant the required privileges to the current role wit)
+== 7-8. authenticated sees only own rows; cannot forge another account id ==
+  PASS  7a. user A inserts own row
+  PASS  7b. user B inserts own row
+  user A visible rows: 1 (of 2 total)
+  PASS  8a. user A sees ONLY their own row (RLS isolation)
+  PASS  8b. user A CANNOT forge account_id=acctB (WITH CHECK) (denied: ERROR:  new row violates row-level security policy for table)
+== 9. exact result/version confirmation identity persists (history rows are exact-object) ==
+  PASS  9. history event persists exact object_ref+method_version
+== 10-11. independent consent permissions persist + revocation applies on next read ==
+  PASS  10. consent row persists independent booleans
+  PASS  11a. user revokes community_use
+  PASS  11b. revocation visible on user's next read; report_use independent (false/false)
+== 12. deleted/rejected observations flag (downstream exclusion is app-enforced via canUseDownstream) ==
+  PASS  12. observation can be marked deleted (downstream gate reads this flag)
+== 13. data-rights audit cannot contain personal free text (004 CHECK) ==
+  PASS  13a. data-rights event WITHOUT reason_code denied (denied: DETAIL:  Failing row contains (dc1c9be4-7a6e-4379-aea6-2ecea)
+  PASS  13b. data-rights event with personal free-text safe_detail denied (denied: DETAIL:  Failing row contains (cbba7657-4d0a-4efc-87a0-08081)
+  PASS  13c. data-rights event with reason_code + fixed message OK
+== 14-15. history append-only: insert allowed, update/delete/truncate blocked ==
+  PASS  14/15a. UPDATE on history blocked (append-only trigger) (denied: CONTEXT:  PL/pgSQL function yorisou_app2_block_mutation() li)
+  PASS  15b. DELETE on history blocked (append-only trigger) (denied: CONTEXT:  PL/pgSQL function yorisou_app2_block_mutation() li)
+== 16. registry snapshot is admin/service-role only ==
+  PASS  16a. authenticated denied on registry snapshot (denied: HINT:  Grant the required privileges to the current role wit)
+  PASS  16b. service_role may read registry snapshot
+== 17. teardown succeeds (disposable rollback) ==
+  PASS  17. teardown (table drops) succeeds
+== 18. reapplication after teardown succeeds ==
+  PASS  18. reapplication after teardown succeeds
+== 19. final cleanup leaves no synthetic CPV1 rows (drop disposable database) ==
+  dropped cpv1_r1_verify
+  PASS  19. disposable database dropped — zero synthetic CPV1 rows survive
+
+== SUMMARY: 25 passed, 0 failed ==

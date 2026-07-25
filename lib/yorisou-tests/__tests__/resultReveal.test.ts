@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { SOURCE_LABEL, CONFIDENCE_COPY, LIMITATION_COPY, PRIVACY_COPY } from "../../../app/result/reveal/revealContent";
+import { SOURCE_LABEL, COMPLETION_COPY, LIMITATION_COPY, PRIVACY_COPY } from "../../../app/result/reveal/revealContent";
 import { getTemporary120QResultCompatibility } from "../../../app/check-in/resultCompatibility";
 
 const root = process.cwd();
@@ -14,7 +14,7 @@ for (const k of ["ANSWER_DERIVED", "RULE_BASED_INTERPRETATION", "AI_GENERATED_IN
 }
 
 // 2. No fake precision or medical language in reveal copy
-const allCopy = JSON.stringify({ SOURCE_LABEL, CONFIDENCE_COPY, LIMITATION_COPY, PRIVACY_COPY });
+const allCopy = JSON.stringify({ SOURCE_LABEL, COMPLETION_COPY, LIMITATION_COPY, PRIVACY_COPY });
 for (const banned of ["%", "パーセント", "偏差値", "治療", "障害", "臨床", "確実に"]) {
   assert.ok(!allCopy.includes(banned), `banned term in reveal copy: ${banned}`);
 }

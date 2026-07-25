@@ -126,7 +126,7 @@ export default async function ResultPage({ searchParams }: { searchParams?: Sear
                 highlights={compatibility.highlights}
               />,
 
-              <LimitsPanel key="limits" band={confidenceBand} />,
+              <LimitsPanel key="limits" />,
 
               <GentleActions key="actions">
               <div className="space-y-3">

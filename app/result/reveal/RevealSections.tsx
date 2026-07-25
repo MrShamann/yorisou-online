@@ -6,7 +6,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { TraitConstellation } from "./TraitConstellation";
 import {
-  SOURCE_LABEL, CONFIDENCE_COPY, LIMITATION_COPY, AI_UNAVAILABLE_COPY,
+  SOURCE_LABEL, COMPLETION_COPY, LIMITATION_COPY, AI_UNAVAILABLE_COPY,
   PRIVACY_COPY, DECLINE_ALL_COPY, type SourceType,
 } from "./revealContent";
 
@@ -66,16 +66,18 @@ export function ConstellationPanel({ centerLabel, highlights }: { centerLabel: s
   );
 }
 
-export function LimitsPanel({ band }: { band: "low" | "medium" }): ReactElement {
-  const c = CONFIDENCE_COPY[band];
+// CPV1 WS-A1: completion + method presentation (no confidence band, no
+// "too few answers" claim). A valid 120/120 completion reads as complete.
+export function LimitsPanel(): ReactElement {
   return (
     <section aria-labelledby="limits-h" className="aix2-panel space-y-2 p-5">
       <div className="flex items-center justify-between gap-2">
-        <p id="limits-h" className="aix2-eyebrow">たしかさと、限界</p>
+        <p id="limits-h" className="aix2-eyebrow">この結果について</p>
         <SourceChip type="LIMITATION" />
       </div>
-      <p className="text-[13px] font-semibold leading-6 text-[color:var(--tx)]">{c.label}</p>
-      <p className="text-[13px] leading-6 aix2-mut">{c.note}</p>
+      <p className="text-[13px] font-semibold leading-6 text-[color:var(--tx)]">{COMPLETION_COPY.statusComplete}</p>
+      <p className="text-[12.5px] leading-6 aix2-faint">方式: {COMPLETION_COPY.methodVersion}</p>
+      <p className="text-[13px] leading-6 aix2-mut">{COMPLETION_COPY.methodNote}</p>
       <ul className="m-0 grid list-none gap-1 p-0 text-[12.5px] leading-6 aix2-faint">
         {LIMITATION_COPY.map((line) => <li key={line}>・{line}</li>)}
       </ul>
