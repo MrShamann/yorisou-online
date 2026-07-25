@@ -1,0 +1,72 @@
+# ARCHIVE NOTE — YORISOU Governance Pack v0.3.3
+
+**Archive date:** 2026-07-14
+**Source commit (last commit where these files were live):** df4d4928bab491d47a781ebbcde83d51202f78dd (main)
+**Original path:** `resources/governance/current/` (all 31 files listed below lived at that path)
+**Effective window:** 2026-07-11 (v0.3.3 Evidence Amendment approval) → the merge of PR "Governance: activate YORISOU governance pack v0.4.0"
+
+## Reason for supersession
+
+Superseded by YORISOU Governance Pack v0.4.0 (Founder-authorized activation, Package A PR-1).
+The v0.4.0 pack was installed from the audited package
+`YORISOU_FINAL_GOVERNANCE_INSTALLATION_AND_PACKAGE_A_AUTHORIZATION_V1`
+(SHA-256 `34a9fa175add0a0374a7fa6537fd17522bce1d4ebd6c4f7f57684862b4a6124b`).
+
+## Historical status
+
+These files are historical evidence. They are byte-for-byte identical to the files that were live
+in `resources/governance/current/` immediately before this archive (verified by SHA-256 comparison
+at archive time; hashes below equal the pre-change live runtime checksum set). They retain their
+original text, including agent-authority statements that are superseded by the v0.4.0 pack.
+They must never be edited, rewritten, or deleted. They are excluded from runtime governance
+validation, which targets `resources/governance/current/` only.
+
+## Restoration procedure
+
+To restore v0.3.3 as live governance (governance rollback):
+1. Branch `governance/restore-v0-3-3`; `git revert` the v0.4.0 activation merge commit
+   (single-commit revert restores both the governance file tree and
+   `lib/server/agent-runtime/governance-checksums.json` — verify).
+2. If the revert conflicts, manual path: delete `resources/governance/current/` contents
+   (including `annex/`), `git mv` every file below back to `resources/governance/current/`,
+   and restore the archived runtime checksum content recorded in this note's checksum list
+   (the pre-activation `governance-checksums.json` is recoverable from commit df4d4928).
+3. Verify restored bytes against the checksum list below; run the governance loader test
+   (`npm run test:agent-runtime`).
+4. Edward merges the restore PR (sole authority); record a Change Management emergency-class
+   incident the same day if v0.4.0 had already become effective on main.
+5. This archive is never deleted; v0.4.0 remains in Git history for re-attempt.
+
+## SHA-256 checksums of archived files (identical to pre-change live bytes)
+
+b66ab65023c1f6735c661628061979af5172170bb9c8933d29669dab17473812  README.md
+9a27ff46822bc7fcb84d1c9e20f1b56ef44781c838df4362b95ac6dc5337f19a  Yorisou_AI_Native_Product_and_Agent_Capability_Map_v0.3.1.md
+aea6cc335e20678faaa5b5e61bcf581a7d8fbdfa4f2d2fd54ebb5a05079b1ad3  Yorisou_AI_Usage_and_Recommendation_Governance_v0.3.md
+99fda3acc72884f0c45ce995c488f0cfb8a6e8f2a28fa01485804fa4acd05b4b  Yorisou_Agent_Contract_Standard_v0.1.md
+8253b9011aaa88649ff4fe1dc3857010ecb84c76c23002a078ba05a0e394512d  Yorisou_Agent_Operating_System_Execution_Blueprint_v0.3.md
+2e08360ddc7493adcdb28b5ed7be437c3575d89381e1f9a20697c3506cd9d26a  Yorisou_Agent_Skill_OpenClaw_and_Hermes_Governance_v0.3.md
+8e767aa4b327f1d990660cebfe573c10f01e1116ffc58c3150adaf807126d87c  Yorisou_Akari_Platform_Orchestrator_Role_Specification_v0.2.md
+8d7b428a72c6197bae436104680800557e021ddbd414032bb13c04fecdf55ddf  Yorisou_Board_Decision_Register_Template_v0.3.md
+0c667e9d7d43e365b1bdd13ebfd5c5f86c432650888866302189f30f1f2c8f2c  Yorisou_Business_Model_and_Platform_Architecture_Doctrine_v0.3.1.md
+216ab8baaf893c0752089b688ff9d0500eaac0dbd1b040f1170bf9171bbc8e2e  Yorisou_Community_Local_and_Real_World_Connection_Policy_v0.1.md
+5186967e6f54ac3c479f718548bd6c4df45b4adf917f973f5808b3a72a453b07  Yorisou_Concept_Product_and_Pre_Commerce_Policy_v0.3.md
+3a39817cab7fb25192f682e36c1990af0c04a40336257f934e146286ae7fc80e  Yorisou_Content_Result_Copy_and_Methodology_Standard_v0.3.md
+e083b4ff5116a349fd6c29712e0a2dd77d8be04dcc75ead23f7759b07398fbde  Yorisou_Current_Implementation_Baseline_v0.3.3.md
+a868bcf552d4dfbcaac044295ba4c131fd799b9ebd7f33f7522db296d5162fb8  Yorisou_Data_Privacy_Consent_and_Social_Visibility_Governance_v0.3.1.md
+4968bc1667ef62899f895cf1dbbe6a819ddcb4998482bf2ec3a9f8640e23a8f7  Yorisou_Demand_Intelligence_and_External_Report_Policy_v0.3.md
+e2c61aa1edf70871f85931dacd419ec7c0379776c211406e8a143f10ea1b6be0  Yorisou_Digital_Legacy_and_Synthetic_Identity_Governance_v0.1.md
+a15f0075dfef6dc9aced8343e8bb1b3a1a5ef9ee2d9da1e95649a4595d87f751  Yorisou_Digital_Report_Product_Doctrine_v0.3.md
+37077083e8b3a691ea109abe12a33d15acdde110da6013d74d133c9c611eb956  Yorisou_Founder_Decision_Record_v0.3.3.md
+3d688e0a743bfa4f7111466e1b3a18b67f68d41ea668473d68fd547e02511345  Yorisou_Governance_Migration_Note_v0.3.3.md
+45be0c4400d5c65a42e136b789ee79a374934951b40ddb24374e91c13ff4bba8  Yorisou_Hinata_User_Intelligence_and_Companion_Role_Specification_v0.2.md
+639aaf96610d365211604011d408b666a4935461cb91e0ac18074a2f0aaf729d  Yorisou_Nightly_Autonomous_Workflow_SOP_v0.2.md
+5c3dd913cdb8395a4ad58d25d3fa3a0999cc8a6601698a85b8dab1cb6d081fd4  Yorisou_Participation_and_Reward_Policy_v0.3.md
+ffc6838c99139f57ab1b4e9a12810d2f501a08390d08937b586779ced2074a8c  Yorisou_Product_Doctrine_and_UX_Boundary_v0.3.1.md
+6e0eab305edda00dadc929e0d0d05b4810ecc6cdbd625b7e048452c564f8354c  Yorisou_Project_Constitution_v0.3.1.md
+34e28b34beb0af4c0e07c9bc5bfbc8d6191004fd26ade45d6e3b073c87e22e2e  Yorisou_Recommendation_and_Resource_Matching_Policy_v0.3.md
+c295665580c0f33e800c2fa687cdc0798764fbd3d5e5d91d1b226534ed532ce9  Yorisou_Revenue_Model_and_Commercial_Ethics_Policy_v0.3.md
+6a83d3143c4d052bbface6ff0e67f223eabcf2e240c4ccf15ce8565127595397  Yorisou_Risk_Register_Template_v0.3.md
+ea568aff68d706e39e9c3bc5279cd119b60cd698207781f12267866d7d5b5c87  Yorisou_Stakeholder_Communication_and_External_Representation_Governance_v0.3.1.md
+925cf1a3ea12e6ebe7c664d07f5edc1a61281850db58605c645697f809c14d30  Yorisou_Strategic_Doctrine_v0.3.1.md
+64aab97068b2447508564b8fc34624e05a15d4e08fb6fc2a9523e1b9da037a25  Yorisou_Task_and_Execution_Register_Template_v0.3.md
+9c103c96fb3456e159dddc25e9810d6d6ea0298abb13d670fd4c68816b98cee4  Yorisou_Technical_Architecture_and_Execution_Protocol_v0.3.1.md
