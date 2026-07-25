@@ -33,8 +33,132 @@
   --text: var(--text-main);
   --muted: var(--text-soft);
   --accent: var(--cta-main);
-  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
+  --font-sans: var(--font-noto-jp, "Noto Sans JP"), "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
   --font-serif: "Iowan Old Style", "Palatino Linotype", "Hiragino Mincho ProN", "Yu Mincho", serif;
+
+  /* ── YORISOU unified AI-native tokens (Phase 3B-UX1) ───────────────── */
+  /* Primary — Iris Violet */
+  --yorisou-color-primary-50: #f7f4ff;
+  --yorisou-color-primary-100: #eee9ff;
+  --yorisou-color-primary-500: #6c4cff;
+  --yorisou-color-primary-600: #5836eb;
+  --yorisou-color-primary-700: #4326c7;
+  /* Deep AI surface — Ink Plum */
+  --yorisou-color-deep-950: #0f0b1a;
+  --yorisou-color-deep-900: #151027;
+  --yorisou-color-deep-800: #201842;
+  --yorisou-color-deep-700: #2a2057;
+  /* Main background — Warm Ivory */
+  --yorisou-color-surface-bg: #faf8f3;
+  --yorisou-color-surface-card: #ffffff;
+  --yorisou-color-surface-raised: #fefdfb;
+  /* Neutral — Mist Lavender */
+  --yorisou-color-neutral-100: #e9e6f3;
+  --yorisou-color-neutral-200: #d9d4e8;
+  --yorisou-color-neutral-500: #817a96;
+  --yorisou-color-neutral-800: #302a3d;
+  /* AI accent — Mint Signal */
+  --yorisou-color-accent-100: #ddf9f5;
+  --yorisou-color-accent-500: #2ad3c1;
+  --yorisou-color-accent-600: #17b8a8;
+  /* State visualization only (never brand) */
+  --yorisou-color-state-blue: #6d8bff;
+  --yorisou-color-state-peach: #ff9d7a;
+  --yorisou-color-state-rose: #f483b5;
+  --yorisou-color-state-amber: #f4b84a;
+  /* Radius */
+  --yorisou-radius-button: 13px;
+  --yorisou-radius-card: 18px;
+  --yorisou-radius-hero: 24px;
+  --yorisou-radius-pill: 999px;
+  /* Space */
+  --yorisou-space-1: 4px;
+  --yorisou-space-2: 8px;
+  --yorisou-space-3: 12px;
+  --yorisou-space-4: 16px;
+  --yorisou-space-5: 20px;
+  --yorisou-space-6: 24px;
+  --yorisou-space-7: 32px;
+  --yorisou-space-8: 40px;
+  /* Shadow — low intensity, violet-grey only */
+  --yorisou-shadow-card: 0 8px 22px rgba(67, 38, 199, 0.06);
+  --yorisou-shadow-raised: 0 14px 30px rgba(32, 24, 66, 0.1);
+  /* Motion */
+  --yorisou-motion-tap: 120ms;
+  --yorisou-motion-card: 220ms;
+  --yorisou-motion-section: 280ms;
+  --yorisou-motion-result: 600ms;
+  --yorisou-motion-ease: cubic-bezier(0.22, 0.7, 0.35, 1);
+}
+
+/* Result reveal — bounded, once, respects reduced motion */
+@keyframes yorisou-reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.yorisou-reveal {
+  animation: yorisou-reveal var(--yorisou-motion-result) var(--yorisou-motion-ease) both;
+}
+.yorisou-reveal-late {
+  animation: yorisou-reveal var(--yorisou-motion-result) var(--yorisou-motion-ease) 120ms both;
+}
+/* Ambient orbit breathing for the brand mark (AI-state surfaces only) */
+@keyframes yorisou-orbit-breathe {
+  0%, 100% { opacity: 0.32; }
+  50% { opacity: 0.5; }
+}
+.yorisou-orbit-breathe {
+  animation: yorisou-orbit-breathe 14s ease-in-out infinite;
+}
+
+/* ── Founder-reference visual core: soft violet glow orb (pure CSS) ── */
+.yorisou-orb {
+  position: relative;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.85) 0%, rgba(238, 233, 255, 0.55) 22%, rgba(108, 76, 255, 0.5) 58%, rgba(88, 54, 235, 0.72) 100%);
+  box-shadow:
+    0 0 44px rgba(108, 76, 255, 0.32),
+    0 0 120px rgba(108, 76, 255, 0.18),
+    inset 0 0 34px rgba(255, 255, 255, 0.4);
+}
+.yorisou-orb::after {
+  content: "";
+  position: absolute;
+  inset: -14%;
+  border-radius: 50%;
+  border: 1px solid rgba(108, 76, 255, 0.28);
+  transform: rotate(-18deg) scaleY(0.42);
+}
+.yorisou-orb-float {
+  animation: yorisou-orb-float 12s ease-in-out infinite;
+}
+@keyframes yorisou-orb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+.yorisou-glow-field {
+  background:
+    radial-gradient(circle at 72% 30%, rgba(108, 76, 255, 0.1), transparent 46%),
+    radial-gradient(circle at 20% 80%, rgba(42, 211, 193, 0.06), transparent 40%);
+}
+/* Mint success pop for save confirmation */
+@keyframes yorisou-success-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.yorisou-success-pop {
+  animation: yorisou-success-pop 320ms var(--yorisou-motion-ease) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .yorisou-reveal,
+  .yorisou-reveal-late,
+  .yorisou-orbit-breathe,
+  .yorisou-orb-float,
+  .yorisou-success-pop {
+    animation: none;
+  }
 }
 
 * {

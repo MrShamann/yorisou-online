@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import YorisouLogo from "@/app/components/YorisouLogo";
+
 import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { RecommendationSignalMountTracker } from "@/app/components/YorisouSignalTracker";
@@ -62,19 +64,17 @@ export default async function MiniAppEntryPage({
         className="pointer-events-none absolute inset-x-0 top-0 h-[360px]"
         style={{
           background:
-            "radial-gradient(ellipse 90% 55% at 50% -5%, rgba(23,59,53,0.08) 0%, transparent 68%)",
+            "radial-gradient(ellipse 90% 55% at 50% -5%, rgba(108,76,255,0.1) 0%, transparent 68%)",
         }}
       />
 
       <div className="relative mx-auto max-w-md px-5 pt-7">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <span className="display-serif text-[1.22rem] font-semibold tracking-[0.09em] text-[#22201D]">
-            YORISOU
-          </span>
+          <YorisouLogo variant="primary" size={26} />
           <span
-            className="rounded-full px-3 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-[#4D7A69]"
-            style={{ border: "1px solid rgba(23,59,53,0.14)", background: "rgba(23,59,53,0.05)" }}
+            className="rounded-full px-3 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-[#06C755]"
+            style={{ border: "1px solid rgba(6,199,85,0.3)", background: "rgba(6,199,85,0.08)" }}
           >
             LINE
           </span>
@@ -90,20 +90,20 @@ export default async function MiniAppEntryPage({
         <div
           className="mt-4 rounded-[1.4rem] p-5"
           style={{
-            background: "rgba(23,59,53,0.04)",
-            border: "1px solid rgba(23,59,53,0.12)",
+            background: "rgba(108,76,255,0.05)",
+            border: "1px solid rgba(233,230,243,1)",
           }}
         >
           <div className="flex items-center gap-2">
             <span className="signal-orb" aria-hidden="true" />
-            <span className="text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#4D7A69" }}>
+            <span className="text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#5836EB" }}>
               おすすめ
             </span>
           </div>
 
           <h1
-            className="display-serif mt-3 leading-[1.22] text-[#22201D]"
-            style={{ fontSize: "1.55rem" }}
+            className="mt-3 font-bold leading-[1.34] text-[#302A3D]"
+            style={{ fontSize: "1.32rem" }}
           >
             最近の診断や関心をもとに、<br />
             次に試しやすい入口を出します。
@@ -120,7 +120,7 @@ export default async function MiniAppEntryPage({
 
         <div className="mt-5 space-y-2">
           <div>
-            <p className="text-[11px] font-semibold tracking-[0.12em] text-[#4D7A69]">今日の返り道</p>
+            <p className="text-[11px] font-semibold tracking-[0.12em] text-[#5836EB]">今日の返り道</p>
             <p className="mt-1 text-[12px] leading-6 text-[#7A7068]">
               まずは相棒で今の続き方をひとつ見て、その下で次の入口を選べます。
             </p>
@@ -150,10 +150,10 @@ export default async function MiniAppEntryPage({
             tracking={{ eventName: "open_testing_start_clicked", route: "/line/mini-app", source: "line_mini_app", entrySource: "line-mini-app" }}
             className="flex min-h-[52px] w-full items-center justify-center rounded-full text-[15px] transition active:scale-[0.975]"
             style={{
-              background: "#173B35",
+              background: "#6C4CFF",
               color: "#fff",
               fontWeight: 800,
-              boxShadow: "0 12px 26px rgba(23,59,53,0.26)",
+              boxShadow: "0 12px 26px rgba(108,76,255,0.3)",
             }}
           >
             120問から始める
@@ -161,13 +161,13 @@ export default async function MiniAppEntryPage({
           <div className="grid grid-cols-2 gap-2.5">
             <Link
               href="/tests"
-              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
+              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[#E9E6F3] bg-white/85 px-4 text-[13px] font-semibold text-[#4326C7]"
             >
               入口を選ぶ
             </Link>
             <Link
               href="/open-testing"
-              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[rgba(23,59,53,0.09)] bg-white/82 px-4 text-[13px] font-semibold text-[#173B35]"
+              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[#E9E6F3] bg-white/85 px-4 text-[13px] font-semibold text-[#4326C7]"
             >
               公開テスト案内
             </Link>
@@ -194,7 +194,7 @@ export default async function MiniAppEntryPage({
               className="flex items-center justify-between gap-3 rounded-[1.1rem] px-4 py-3.5 transition active:scale-[0.99]"
               style={{
                 background: "rgba(255,255,255,0.82)",
-                border: "1px solid rgba(23,59,53,0.09)",
+                border: "1px solid rgba(129,122,150,0.16)",
               }}
             >
               <div>
@@ -214,7 +214,7 @@ export default async function MiniAppEntryPage({
         </div>
 
         {/* Coming soon section */}
-        <div className="mt-10 border-t pt-6" style={{ borderColor: "rgba(23,59,53,0.07)" }}>
+        <div className="mt-10 border-t pt-6" style={{ borderColor: "rgba(129,122,150,0.12)" }}>
           <p className="mb-3 text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#9A9088" }}>
             これから増えるチェック
           </p>
@@ -223,12 +223,12 @@ export default async function MiniAppEntryPage({
               <div
                 key={label}
                 className="flex items-center justify-between rounded-[0.9rem] px-4 py-3"
-                style={{ background: "rgba(23,59,53,0.03)", border: "1px solid rgba(23,59,53,0.06)" }}
+                style={{ background: "rgba(129,122,150,0.06)", border: "1px solid rgba(129,122,150,0.1)" }}
               >
                 <span className="text-[13px] text-[#B0A89E]">{label}</span>
                 <span
                   className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "rgba(23,59,53,0.06)", color: "#9A9088" }}
+                  style={{ background: "rgba(129,122,150,0.1)", color: "#9A9088" }}
                 >
                   準備中
                 </span>

@@ -1,348 +1,220 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import MotionReveal from "./components/MotionReveal";
-import OpenTestingNotice from "./components/OpenTestingNotice";
-import { MvpCard, MvpSection } from "./components/MvpSurface";
-import {
-  COMMUNITY_CARDS,
-  DESIGN_CARDS,
-  DESIGN_FUTURE_NOTE,
-  HOME_ENTRY_GUIDE,
-  HOME_PLATFORM_BRANCHES,
-  HOME_PRODUCT_LOOP,
-  LOCAL_LIFE_THEMES,
-  MARKETPLACE_CARDS,
-  PLATFORM_ENTRY_LINKS,
-  PLATFORM_PILLARS,
-  SELECT_CARDS,
-} from "./data/platformNarrative";
+import { YorisouSymbol } from "./components/YorisouLogo";
 
 export const metadata: Metadata = {
-  title: "Yorisou | 今の状態を理解し、次の選択肢につなげる",
+  title: "YORISOU | AIと整える、わたしの毎日。",
   description:
-    "Yorisouは、今の状態を理解し、チェック、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチング、LINE継続へつなげる日本語ファーストのプラットフォームです。",
+    "YORISOUは、今の状態をやさしく理解し、小さな一歩とおすすめ、保存とふり返り、LINEでの継続につなぐ日本語ファーストのセルフリフレクションサービスです。診断や占いではありません。",
 };
+
+const HERO_CHIPS = ["やさしく理解する", "小さく始める", "続けて、整えていく"] as const;
+
+const JOURNEY_STEPS = [
+  { step: "1", title: "今を知る", body: "かんたんセルフチェックで、今のわたしを可視化。", href: "/tests" },
+  { step: "2", title: "整える", body: "結果とやさしい気づきで、今の状態を整理。", href: "/tests/relationship-fatigue" },
+  { step: "3", title: "役立てる", body: "非公開で保存し、有限のおすすめから小さく試す。", href: "/recommendations/graph" },
+  { step: "4", title: "振り返る", body: "保存した結果から、変化をゆっくり確かめる。", href: "/saved" },
+  { step: "5", title: "続ける", body: "LINEで、やさしく習慣化をサポート。", href: "/line/mini-app" },
+] as const;
+
+const ARCHITECTURE_CARDS = [
+  {
+    title: "セルフチェック",
+    body: "1〜6分の公開チェックで、今の状態を言葉にします。",
+    href: "/tests",
+    label: "チェックを見る",
+  },
+  {
+    title: "結果とレポート",
+    body: "決めつけない結果と、必要なときに深く読めるレポート。",
+    href: "/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low",
+    label: "レポートの見本",
+  },
+  {
+    title: "おすすめ・次の一歩",
+    body: "理由が見える有限のおすすめ。合わないときは選ばなくて大丈夫。",
+    href: "/recommendations/graph",
+    label: "おすすめを開く",
+  },
+  {
+    title: "わたしの今",
+    body: "保存した結果はあなたにだけ。あとから変化を見返せます。",
+    href: "/saved",
+    label: "保存を見る",
+  },
+  {
+    title: "体験を見つける",
+    body: "同じような状態の人の体験から、合いそうな方法を探す。",
+    href: "/experiences",
+    label: "体験を見る",
+  },
+  {
+    title: "LINEで続ける",
+    body: "結果の保存と見返し、やさしい再開。通知は選べます。",
+    href: "/line/mini-app",
+    label: "LINEで開く",
+  },
+] as const;
 
 export default function HomePage() {
   return (
-    <main className="frontstage-page">
-      <section className="frontstage-hero">
-        <div className="container">
-          <div className="frontstage-hero-inner md:grid-cols-[minmax(0,1fr)_20rem]">
-            <MotionReveal className="frontstage-hero-copy" delay={20} distance={18}>
-              <p className="service-kicker">今の状態を理解し、次の選択肢へ。</p>
-              <h1 className="display-serif frontstage-hero-title max-w-[10.5em]">
-                Yorisouは、
-                <br className="hidden md:block" />
-                今の状態を理解し、
-                <br className="hidden md:block" />
-                次に合う入口や
-                <br className="hidden md:block" />
-                レポート、おすすめへつなぐ場所です。
-              </h1>
-              <p className="frontstage-hero-lead max-w-[37rem]">
-                チェック、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチング、LINE継続までを、ひとつの流れで見通せるように整えています。
+    <main className="yorisou-glow-field min-h-screen bg-[var(--yorisou-color-surface-bg)] text-[var(--yorisou-color-neutral-800)]">
+      {/* ── Hero: value prop + visual core ── */}
+      <section className="border-b border-[var(--yorisou-color-neutral-100)]">
+        <div className="container grid items-center gap-10 py-12 md:grid-cols-[1.05fr_0.95fr] md:py-16">
+          <div className="space-y-5">
+            <p className="text-[12px] font-bold tracking-[0.14em] text-[var(--yorisou-color-primary-600)]">
+              AIと整える、わたしの毎日。
+            </p>
+            <h1 className="text-[1.9rem] font-bold leading-[1.32] text-[var(--yorisou-color-neutral-800)] md:text-[2.6rem]">
+              今の状態を理解し、
+              <br />
+              次の一歩へ、やさしくつなぐ。
+            </h1>
+            <p className="max-w-[30rem] text-[15px] leading-8 text-[var(--yorisou-color-neutral-500)]">
+              AIと一緒に、あなたの今をやさしく理解。小さな一歩を、続けていくためのパーソナルサポートです。
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/tests/relationship-fatigue"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-[var(--yorisou-radius-pill)] bg-[var(--yorisou-color-primary-500)] px-6 text-[15px] font-bold text-white no-underline shadow-[0_14px_30px_rgba(108,76,255,0.28)] transition hover:bg-[var(--yorisou-color-primary-600)]"
+              >
+                無料でセルフチェックを始める
+              </Link>
+              <Link
+                href="/tests"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-[var(--yorisou-radius-pill)] border border-[var(--yorisou-color-neutral-200)] bg-white px-6 text-[14px] font-semibold text-[var(--yorisou-color-neutral-800)] no-underline"
+              >
+                チェックを選ぶ
+              </Link>
+            </div>
+            <p className="text-[12px] leading-6 text-[var(--yorisou-color-neutral-500)]">
+              ログインなしで始められます。診断や占いではありません。
+            </p>
+          </div>
+
+          {/* Visual core: glow orb + orbit + floating chips */}
+          <div className="relative mx-auto flex h-[280px] w-[280px] items-center justify-center md:h-[340px] md:w-[340px]" aria-hidden="true">
+            <div className="yorisou-orb yorisou-orb-float flex h-[190px] w-[190px] items-center justify-center md:h-[230px] md:w-[230px]">
+              <YorisouSymbol variant="white" size={92} breathing />
+            </div>
+            {HERO_CHIPS.map((chip, index) => (
+              <span
+                key={chip}
+                className={`absolute rounded-[var(--yorisou-radius-pill)] border border-[var(--yorisou-color-neutral-100)] bg-white/92 px-3.5 py-1.5 text-[12px] font-semibold text-[var(--yorisou-color-primary-700)] shadow-[var(--yorisou-shadow-card)] ${
+                  index === 0 ? "right-0 top-6" : index === 1 ? "left-0 top-1/2" : "bottom-6 right-4"
+                }`}
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Core journey ── */}
+      <section className="container py-10 md:py-12">
+        <p className="text-[12px] font-bold tracking-[0.12em] text-[var(--yorisou-color-neutral-500)]">体験の流れ</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {JOURNEY_STEPS.map((step) => (
+            <Link
+              key={step.step}
+              href={step.href}
+              className="group rounded-[var(--yorisou-radius-card)] border border-[var(--yorisou-color-neutral-100)] bg-white p-4 no-underline shadow-[var(--yorisou-shadow-card)] transition duration-[var(--yorisou-motion-card)] hover:-translate-y-0.5"
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--yorisou-color-primary-100)] text-[13px] font-bold text-[var(--yorisou-color-primary-700)]">
+                {step.step}
+              </span>
+              <p className="mt-2.5 text-[15px] font-bold text-[var(--yorisou-color-neutral-800)] group-hover:text-[var(--yorisou-color-primary-600)]">
+                {step.title}
               </p>
-              <div className="frontstage-hero-actions">
-                <Link href="/open-testing" className="btn btn-primary">
-                  はじめる
-                </Link>
-                <Link href="/tests" className="btn btn-secondary">
-                  チェックを選ぶ
-                </Link>
-              </div>
-              <div className="surface-link-row mt-4 text-[13px] font-semibold text-[#315F50]">
-                <Link href="/#yorisou-design" className="hover:underline">
-                  よりそうデザインを見る
-                </Link>
-                <Link href="/#yorisou-community" className="hover:underline">
-                  コミュニティを見る
-                </Link>
-                <Link href="/#yorisou-market" className="hover:underline">
-                  マッチングを見る
-                </Link>
-              </div>
-              <div className="frontstage-capability-grid mt-5">
-                {PLATFORM_PILLARS.map((pillar) => (
-                  <div key={pillar.title} className="frontstage-capability-card">
-                    <p className="frontstage-capability-title">{pillar.title}</p>
-                    <p className="frontstage-capability-body">{pillar.body}</p>
-                  </div>
-                ))}
-              </div>
-            </MotionReveal>
-
-            <MotionReveal className="surface-panel-soft self-end space-y-4" delay={110} distance={16}>
-              <div>
-                <p className="surface-meta">プラットフォームの見取り図</p>
-                <p className="mt-2 text-[13px] leading-7 text-[#6F625C]">
-                  まずはチェックから始め、結果、レポート、おすすめ、コミュニティ、よりそうデザイン、マッチングへと静かにつながります。
-                </p>
-              </div>
-              <div className="frontstage-mini-stack">
-                <div>
-                  <p className="frontstage-mini-title">最初にすること</p>
-                  <p className="frontstage-mini-body">公開テストから始めるか、チェック一覧から近い入口を選びます。</p>
-                </div>
-                <div>
-                  <p className="frontstage-mini-title">このあと</p>
-                  <p className="frontstage-mini-body">結果を読み、レポートやおすすめへ進み、必要なら声や関心を残せます。</p>
-                </div>
-                <div>
-                  <p className="frontstage-mini-title">領域</p>
-                  <p className="frontstage-mini-body">LINEは戻り道のひとつであり、Yorisou.online自体が全体の入口と見取り図です。</p>
-                </div>
-              </div>
-            </MotionReveal>
-          </div>
-
-          <MotionReveal className="frontstage-loop-panel mt-4" delay={150} distance={16}>
-            <div className="frontstage-loop-head">
-              <p className="surface-meta">プラットフォームの流れ</p>
-              <p className="frontstage-loop-copy">チェックだけで終わらず、結果、レポート、おすすめ、参加、将来の選択肢、LINE継続まで見渡せるようにしています。</p>
-            </div>
-            <div className="frontstage-loop-grid">
-              {HOME_PRODUCT_LOOP.map((step, index) => (
-                <div key={step.title} className="frontstage-loop-item">
-                  <div className="frontstage-loop-step">{index + 1}</div>
-                  <p className="frontstage-loop-title">{step.title}</p>
-                  <p className="frontstage-loop-body">{step.body}</p>
-                </div>
-              ))}
-            </div>
-          </MotionReveal>
+              <p className="mt-1 text-[12.5px] leading-6 text-[var(--yorisou-color-neutral-500)]">{step.body}</p>
+            </Link>
+          ))}
         </div>
       </section>
 
-      <section className="container py-6 md:py-8">
-        <div className="mx-auto max-w-[52rem]">
-          <OpenTestingNotice
-            title="いま使える核"
-            body="いまは、チェック、結果、詳しいレポート、LINE保存、感想送信、おすすめの入口までを実際に試せます。コミュニティ、よりそうデザイン、マッチングはコンセプトや関心の段階として育てています。"
-            primaryHref="/contact?topic=open-testing"
-            primaryLabel="感想や不具合を送る"
-            secondaryHref="/open-testing"
-            secondaryLabel="公開中の入口を見る"
-          />
+      {/* ── Product architecture ── */}
+      <section className="container pb-10 md:pb-12">
+        <p className="text-[12px] font-bold tracking-[0.12em] text-[var(--yorisou-color-neutral-500)]">YORISOUでできること</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {ARCHITECTURE_CARDS.map((card) => (
+            <Link
+              key={card.title}
+              href={card.href}
+              className="group flex flex-col rounded-[var(--yorisou-radius-card)] border border-[var(--yorisou-color-neutral-100)] bg-[var(--yorisou-color-surface-raised)] p-5 no-underline shadow-[var(--yorisou-shadow-card)] transition duration-[var(--yorisou-motion-card)] hover:-translate-y-0.5"
+            >
+              <p className="text-[15px] font-bold text-[var(--yorisou-color-neutral-800)]">{card.title}</p>
+              <p className="mt-1.5 flex-1 text-[13px] leading-7 text-[var(--yorisou-color-neutral-500)]">{card.body}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--yorisou-color-primary-600)]">
+                {card.label}
+                <span aria-hidden="true" className="transition group-hover:translate-x-0.5">→</span>
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
 
-      <MvpSection
-        title="この場で見える、Yorisouの入口。"
-        lead="Yorisou.onlineは、ひとつの診断ページではなく、今の状態理解から次の選択肢までを並べて見渡せるプラットフォームの入口です。"
-        className="!py-7 md:!py-8"
-      >
-        <div className="grid gap-3 md:grid-cols-3">
-          {HOME_PLATFORM_BRANCHES.map((entry) => (
-            <Link
-              key={entry.title}
-              href={entry.href}
-              className="surface-panel group space-y-3 no-underline transition hover:-translate-y-0.5"
-            >
-              <span className="inline-flex rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold text-[#49615B]">
-                {entry.status}
-              </span>
-              <p className="text-[15px] font-semibold leading-7 text-[#173B35]">{entry.title}</p>
-              <p className="text-[13px] leading-7 text-[#6F625C]">{entry.body}</p>
-              <span className="inline-flex min-h-[40px] items-center rounded-full border border-[rgba(23,59,53,0.1)] bg-[#F8F7F4] px-4 text-[12px] font-semibold text-[#315F50]">
-                {entry.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </MvpSection>
-
-      <MvpSection
-        title="最初の入口をどう選ぶか。"
-        lead="まず始める、近いテーマから選ぶ、次のおすすめを見る。初めての人にも選びやすい3つの始め方を先に並べています。"
-        className="!py-6 md:!py-7"
-      >
-        <div className="grid gap-3 md:grid-cols-3">
-          {[...HOME_ENTRY_GUIDE, ...PLATFORM_ENTRY_LINKS].slice(0, 6).map((entry) => (
-            <Link
-              key={entry.title}
-              href={entry.href}
-              className="surface-panel group space-y-3 no-underline transition hover:-translate-y-0.5"
-            >
-              <p className="text-[15px] font-semibold leading-7 text-[#173B35]">{entry.title}</p>
-              <p className="text-[13px] leading-7 text-[#6F625C]">{entry.body}</p>
-              <span className="inline-flex min-h-[40px] items-center rounded-full border border-[rgba(23,59,53,0.1)] bg-[#F8F7F4] px-4 text-[12px] font-semibold text-[#315F50]">
-                {entry.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </MvpSection>
-
-      <MvpSection
-        title="LINEは、戻り道として使える。"
-        lead="Yorisouの中心はサイト全体ですが、結果を保存し、あとで見返し、必要なときだけ続きを受け取る戻り道としてLINEも使えます。"
-        className="!py-6 md:!py-7"
-      >
-        <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-          <div className="surface-panel space-y-4">
-            <p className="surface-meta">今つながっていること</p>
-            <div className="surface-list">
-              <div className="text-[13px] leading-7 text-[#5F5750]">結果をLINEに保存して見返す</div>
-              <div className="text-[13px] leading-7 text-[#5F5750]">必要なときだけ次の入口を受け取る</div>
-              <div className="text-[13px] leading-7 text-[#5F5750]">深いレポートや関連情報へ戻る</div>
-              <div className="text-[13px] leading-7 text-[#5F5750]">不要なときは通知を止める</div>
+      {/* ── AI understanding (deep surface) ── */}
+      <section className="container pb-10 md:pb-12">
+        <div className="grid gap-4 rounded-[var(--yorisou-radius-hero)] bg-[var(--yorisou-color-deep-900)] p-6 text-white md:grid-cols-[1fr_0.9fr] md:items-center md:p-8">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <YorisouSymbol variant="white" size={22} breathing />
+              <span className="text-[11px] font-bold tracking-[0.12em] text-white/70">YORISOU AI</span>
             </div>
-          </div>
-          <div className="surface-panel-soft space-y-3">
-            <p className="surface-meta">LINEから始める</p>
-            <p className="text-[13px] leading-7 text-[#6F625C]">
-              LINEは、診断の代わりではなく、結果や振り返りを無理なく続けるための戻り道です。
+            <h2 className="text-[1.4rem] font-bold leading-[1.4] md:text-[1.7rem]">
+              AIは、あなたを決めつけない。
+              <br />
+              今の状態を、一緒に整理する。
+            </h2>
+            <p className="max-w-[26rem] text-[13.5px] leading-7 text-white/75">
+              チェックの結果から、疲れが出やすい場面と戻りやすい形をやさしく言葉に。おすすめには理由が添えられ、合わないときは「今は合わない」を選べます。
             </p>
-            <Link href="/line/mini-app" className="btn btn-secondary inline-flex">
-              LINEでYorisouを開く
-            </Link>
+          </div>
+          <div className="space-y-2.5">
+            {["整理しています", "見つかったこと", "次に試せること"].map((state, index) => (
+              <div
+                key={state}
+                className="flex items-center gap-3 rounded-[var(--yorisou-radius-button)] border border-white/10 bg-white/[0.06] px-4 py-3"
+              >
+                <span
+                  className={`inline-flex h-2 w-2 rounded-full ${index === 2 ? "bg-[var(--yorisou-color-accent-500)]" : "bg-[var(--yorisou-color-primary-500)]"}`}
+                  aria-hidden="true"
+                />
+                <span className="text-[13px] font-semibold text-white/85">{state}</span>
+              </div>
+            ))}
+            <p className="pt-1 text-[11.5px] leading-5 text-white/55">
+              保存はすべて非公開。内容はあなたにだけ表示され、いつでも削除できます。
+            </p>
           </div>
         </div>
-      </MvpSection>
+      </section>
 
-      <MvpSection
-        id="yorisou-report"
-        title="レポートは、Yorisouの一層です。"
-        lead="無料結果だけでは見えにくい傾向や、関係・仕事・選び方のリズムを、もう少し具体的に整理します。レポートは、あなたの状態を決めつけるものではなく、次の選択肢を考えるための読みものです。"
-        className="!py-6 md:!py-8"
-      >
-        <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-          <MvpCard className="space-y-3 bg-white/94">
-            <p className="text-[14px] leading-7 text-[#5F5750]">
-              今の自分の流れや関係の距離、仕事や生活で整えやすいペースを、無料結果より少し深く読むための入口があります。
+      {/* ── LINE continuation ── */}
+      <section className="container pb-14 md:pb-16">
+        <div className="grid gap-4 rounded-[var(--yorisou-radius-hero)] border border-[var(--yorisou-color-neutral-100)] bg-white p-6 shadow-[var(--yorisou-shadow-card)] md:grid-cols-[1fr_auto] md:items-center md:p-8">
+          <div className="space-y-2">
+            <p className="text-[12px] font-bold tracking-[0.12em] text-[#06C755]">LINEで続ける</p>
+            <h2 className="text-[1.3rem] font-bold leading-[1.4] text-[var(--yorisou-color-neutral-800)] md:text-[1.5rem]">
+              いつものLINEから、そっと自分を整える。
+            </h2>
+            <p className="max-w-[32rem] text-[13.5px] leading-7 text-[var(--yorisou-color-neutral-500)]">
+              LINEは別の製品ではなく、続きです。結果の保存と見返し、やさしい再開までを、あなたのペースで。通知はいつでも止められます。
             </p>
-            <p className="text-[14px] leading-7 text-[#5F5750]">
-              いまは公開テスト中のため、全文レポートと保存導線も確認できます。
-            </p>
-            <div className="flex flex-col gap-2.5 sm:flex-row">
-              <Link href="/contact?topic=open-testing" className="btn btn-primary">
-                レポート案内を受け取る
-              </Link>
-              <Link href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low" className="btn btn-secondary">
-                レポートの見本を見る
-              </Link>
-            </div>
-          </MvpCard>
-          <MvpCard className="space-y-3 bg-white/94">
-            <p className="surface-meta">関連する入口</p>
-            <div className="surface-link-row flex-col !gap-2.5">
-              <Link href="/reports/self-understanding/EM-AK" className="text-[14px] font-semibold text-[#315F50] hover:underline">
-                自己理解レポートの見本を見る
-              </Link>
-              <Link href="/result?resultId=EM-AK&overlayId=balancing&confidence=low" className="text-[14px] font-semibold text-[#315F50] hover:underline">
-                結果ページの見本を見る
-              </Link>
-            </div>
-          </MvpCard>
+          </div>
+          <Link
+            href="/line/mini-app"
+            className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-[var(--yorisou-radius-pill)] bg-[#06C755] px-6 text-[14px] font-bold text-white no-underline transition hover:bg-[#05B34C]"
+          >
+            <span className="inline-flex h-[16px] w-[16px] items-center justify-center rounded-full bg-white text-[9.5px] font-black text-[#06C755]" aria-hidden="true">L</span>
+            LINEでYORISOUを開く
+          </Link>
         </div>
-      </MvpSection>
-
-      <MvpSection
-        id="yorisou-recommendations"
-        title="おすすめは、次の選択肢の層です。"
-        lead="診断結果やフィードバックをもとに、今の状態に合いそうな読みもの、道具、サービス、商品候補を少しずつ提案していきます。"
-        className="!py-6 md:!py-7"
-      >
-        <div className="grid gap-3 md:grid-cols-4">
-          {SELECT_CARDS.map((item) => (
-            <MvpCard key={item.title} className="space-y-2 bg-white/94">
-              <span className="inline-flex rounded-full bg-[#F3FAF6] px-2.5 py-1 text-[11px] font-semibold text-[#49615B]">
-                {item.status}
-              </span>
-              <p className="text-[14px] font-semibold leading-6 text-[#173B35]">{item.title}</p>
-              <p className="text-[13px] leading-6 text-[#7A7068]">{item.body}</p>
-            </MvpCard>
-          ))}
-        </div>
-        <p className="text-[12px] leading-6 text-[#8A7E78]">
-          ここではまだ、購入や申込みは行いません。いまは提案候補や関心の入口として、無理のない形で整えています。
-        </p>
-      </MvpSection>
-
-      <MvpSection
-        id="yorisou-design"
-        title="あると助かるものを、声から育てる。"
-        lead="診断やフィードバックから見えてきた「あると助かるもの」を、アイデア、試用、共創、商品化へと少しずつ育てていきます。"
-        className="!py-6 md:!py-7"
-      >
-        <div className="grid gap-3 md:grid-cols-3">
-          {DESIGN_CARDS.map((item) => (
-            <MvpCard key={item.title} className="space-y-3 bg-white/94">
-              <p className="text-[14px] font-semibold leading-6 text-[#173B35]">{item.title}</p>
-              <p className="text-[13px] leading-7 text-[#6F625C]">{item.body}</p>
-            </MvpCard>
-          ))}
-        </div>
-        <p className="text-[12px] leading-6 text-[#8A7E78]">{DESIGN_FUTURE_NOTE}</p>
-      </MvpSection>
-
-      <MvpSection
-        id="yorisou-community"
-        title="参加は任意で、声は次の改善につながる。"
-        lead="気になるテーマには、フィードバック、試用、生活の観察、アイデアづくりとして参加できます。参加は任意です。あなたの声は、よりよい診断、レポート、おすすめ、サービスや商品アイデアにつながります。"
-        className="!py-6 md:!py-7"
-      >
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {COMMUNITY_CARDS.map((item) => (
-            <MvpCard key={item.title} className="space-y-2 bg-white/94">
-              <p className="text-[14px] font-semibold leading-6 text-[#173B35]">{item.title}</p>
-              <p className="text-[13px] leading-6 text-[#7A7068]">{item.body}</p>
-            </MvpCard>
-          ))}
-        </div>
-      </MvpSection>
-
-      <MvpSection
-        id="yorisou-market"
-        title="マッチングは、将来の選択肢やつながりを育てる層です。"
-        lead="まだ販売や注文の場所ではなく、どんな提案やつながりが役に立ちそうかを、関心ベースで整理していく準備中の領域です。"
-        className="!py-6 md:!py-7"
-      >
-        <div className="grid gap-3 md:grid-cols-3">
-          {MARKETPLACE_CARDS.map((item) => (
-            <MvpCard key={item.title} className="space-y-3 bg-white/94">
-              <p className="text-[14px] font-semibold leading-6 text-[#173B35]">{item.title}</p>
-              <p className="text-[13px] leading-7 text-[#6F625C]">{item.body}</p>
-            </MvpCard>
-          ))}
-        </div>
-        <p className="text-[12px] leading-6 text-[#8A7E78]">
-          ここではまだ、購入、決済、在庫、配送、申込みは行いません。将来のおすすめやマッチングの可能性を整理する段階です。
-        </p>
-      </MvpSection>
-
-      <MvpSection
-        id="yorisou-local-life"
-        title="言葉にしにくい揺れを、次の一歩のヒントに。"
-        lead="生活リズム、気持ちの戻り方、人との距離、小さな行動。まだ大きな悩みになる前の揺れも、Yorisouでは今の関心を整理する入口として受け止めます。"
-        className="!py-6 md:!pb-14"
-      >
-        <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-          <MvpCard className="space-y-3 bg-white/94">
-            <p className="surface-meta">関心を寄せているテーマ</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {LOCAL_LIFE_THEMES.map((theme) => (
-                <div
-                  key={theme}
-                  className="rounded-[1rem] border border-[rgba(23,59,53,0.08)] bg-[#F3FAF6] px-4 py-3 text-[13px] leading-6 text-[#2F2A28]"
-                >
-                  {theme}
-                </div>
-              ))}
-            </div>
-          </MvpCard>
-          <MvpCard className="space-y-3 bg-white/94">
-            <p className="text-[14px] leading-7 text-[#5F5750]">
-              いまは、暮らしを直接引き受けるサービスではなく、今の関心や戻り方を整理する入口として扱っています。受け取った声は、次の案内や小さな改善につなげる材料として慎重に見ています。
-            </p>
-            <Link href="/contact?topic=open-testing" className="btn btn-secondary">
-              感想や関心を送る
-            </Link>
-          </MvpCard>
-        </div>
-      </MvpSection>
+      </section>
     </main>
   );
 }

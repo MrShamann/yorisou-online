@@ -1,9 +1,23 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
+import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import AppShell from "./components/AppShell";
 import { getReleaseMarker } from "@/lib/releaseMarker";
+
+const notoSansJp = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-noto-jp",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -24,7 +38,7 @@ export default async function RootLayout({
   const localeCookie = cookieStore.get("yorisou_locale")?.value;
   const locale = localeHeader === "en" || localeCookie === "en" ? "en" : "ja";
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${notoSansJp.variable} ${inter.variable}`}>
       <body>
         <div id="yorisou-release" hidden data-release={releaseMarker} />
         <AppShell>{children}</AppShell>
