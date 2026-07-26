@@ -26,7 +26,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const DIR = join(process.cwd(), "supabase/migrations");
+const DIR = join(process.cwd(), "supabase/local-only-migrations/cpv1");
 const TARGETS = readdirSync(DIR)
   .filter((f) => /cpv1/i.test(f) && f.endsWith(".sql"))
   .sort();

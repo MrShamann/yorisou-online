@@ -149,7 +149,7 @@ jobs:
           psql -h localhost -p 55446 -U postgres -d postgres -c "create database yorisou_daily_check_in_test"
           psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -c "create extension if not exists pgcrypto"
           psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -c "do \$\$ begin create role service_role login bypassrls; exception when duplicate_object then null; end \$\$; alter role service_role bypassrls; do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$; do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;"
-          psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -v ON_ERROR_STOP=1 -f supabase/migrations/202607200001_cpv1_foundation_prereqs.sql
+          psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -v ON_ERROR_STOP=1 -f supabase/local-only-migrations/cpv1/202607200001_cpv1_foundation_prereqs.sql
           psql -h localhost -p 55446 -U postgres -d yorisou_daily_check_in_test -v ON_ERROR_STOP=1 -f supabase/migrations/202607200005_dci1_daily_state_records.sql
 
       - name: Authenticated full-stack browser harness (PostgREST + real app)

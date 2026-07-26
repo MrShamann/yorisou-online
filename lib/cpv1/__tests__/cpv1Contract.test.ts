@@ -615,11 +615,11 @@ check("all 7 CPV1 contract modules present", () => {
   assert.ok(has("lib/cpv1/deploymentContext.ts"), "deployment-context module present");
 });
 check("CM0 self-contained migrations present (own helpers; no APP-2 dependency)", () => {
-  assert.ok(has("supabase/migrations/202607200001_cpv1_foundation_prereqs.sql"), "prereq helpers migration");
-  assert.ok(has("supabase/migrations/202607200002_cpv1_understanding_history_consent.sql"), "tables migration");
-  const prereq = read("supabase/migrations/202607200001_cpv1_foundation_prereqs.sql");
+  assert.ok(has("supabase/local-only-migrations/cpv1/202607200001_cpv1_foundation_prereqs.sql"), "prereq helpers migration");
+  assert.ok(has("supabase/local-only-migrations/cpv1/202607200002_cpv1_understanding_history_consent.sql"), "tables migration");
+  const prereq = read("supabase/local-only-migrations/cpv1/202607200001_cpv1_foundation_prereqs.sql");
   assert.ok(/yorisou_cpv1_current_account_id/.test(prereq), "CPV1-owned account-id helper defined");
-  const tables = read("supabase/migrations/202607200002_cpv1_understanding_history_consent.sql");
+  const tables = read("supabase/local-only-migrations/cpv1/202607200002_cpv1_understanding_history_consent.sql");
   assert.ok(!/yorisou_app2_block_mutation|public\.yorisou_current_account_id/.test(tables), "no APP-2 helper dependency");
   // §5 — the stale APP-2 dependency/guard comments are corrected.
   assert.ok(!/migration 202607190001 \(APP-2\)|Reuse the APP-2 append-only guard/.test(tables), "stale APP-2 dependency/guard comments removed");
@@ -627,7 +627,7 @@ check("CM0 self-contained migrations present (own helpers; no APP-2 dependency)"
 
 console.log("CPV1-CM0.1 §6 — cross-layer activation-state parity (TypeScript ⇄ database)");
 check("DB registry activation_state constraint accepts EXACTLY the 5 TS MethodActivationState values", () => {
-  const sql = read("supabase/migrations/202607200002_cpv1_understanding_history_consent.sql");
+  const sql = read("supabase/local-only-migrations/cpv1/202607200002_cpv1_understanding_history_consent.sql");
   // Extract the executable `activation_state ... check (activation_state in ( ... ))` list.
   const m = sql.match(/activation_state\s+text\s+not\s+null\s+check\s*\(\s*activation_state\s+in\s*\(([^)]*)\)/i);
   assert.ok(m, "activation_state check constraint found");
@@ -638,7 +638,7 @@ check("DB registry activation_state constraint accepts EXACTLY the 5 TS MethodAc
   assert.ok(!/'rights_blocked'|'contract_only'/.test(sql), "no obsolete rights_blocked/contract_only in registry SQL");
 });
 check("DB registry snapshot carries the explicit R1.1A maturity fields + consistency constraints (§3/§4)", () => {
-  const sql = read("supabase/migrations/202607200002_cpv1_understanding_history_consent.sql");
+  const sql = read("supabase/local-only-migrations/cpv1/202607200002_cpv1_understanding_history_consent.sql");
   for (const f of ["implementation_status", "rights_status", "content_status", "privacy_status", "test_status", "route_status", "deployment_status", "deployment_evidence_ref", "founder_activation", "founder_decision_ref"]) {
     assert.ok(new RegExp(`\\b${f}\\b`).test(sql), `field ${f} present`);
   }

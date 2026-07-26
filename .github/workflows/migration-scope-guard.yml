@@ -1,0 +1,47 @@
+name: Migration Scope Guard
+
+# Fails when the repository migration lineage is inconsistent — e.g. a local-only migration is stored
+# under supabase/migrations/ (which would make Production `migration list` / `db push --dry-run` treat
+# it as a pending Production migration forever). Source of truth: supabase/MIGRATION_SCOPE_MANIFEST.md.
+# Static + read-only: no database, no secrets, no network.
+
+on:
+  push:
+    branches: [main, feat/migration-lineage-reconciliation]
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/local-only-migrations/**"
+      - "supabase/preview-only-migrations/**"
+      - "supabase/MIGRATION_SCOPE_MANIFEST.md"
+      - "scripts/validate-migration-scope.mjs"
+      - "scripts/validate-cpv1-migrations.mjs"
+      - ".github/workflows/migration-scope-guard.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/local-only-migrations/**"
+      - "supabase/preview-only-migrations/**"
+      - "supabase/MIGRATION_SCOPE_MANIFEST.md"
+      - "scripts/validate-migration-scope.mjs"
+      - "scripts/validate-cpv1-migrations.mjs"
+      - ".github/workflows/migration-scope-guard.yml"
+
+concurrency:
+  group: migration-scope-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: Migration scope guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Migration-scope manifest guard (scope ↔ directory, checksums, coverage)
+        run: node scripts/validate-migration-scope.mjs
+      - name: CPV1 local-only migration validator (runs from the relocated directory)
+        run: node scripts/validate-cpv1-migrations.mjs
