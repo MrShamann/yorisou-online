@@ -62,7 +62,17 @@ test.describe.serial("DCI-1.1 full-stack authenticated acceptance", () => {
     await expect(page.getByTestId("daily-saved")).toBeVisible();
 
     // Server-derived local date: the record in history equals the server's today.
-    const history = await (await page.request.get(`${BASE}/api/tests/daily-check-in/records?timezone=Asia/Tokyo`)).json();
+    // The record was created through the real UI in the BROWSER's timezone
+    // (DailyCheckInFlow derives it once via Intl…resolvedOptions().timeZone and uses
+    // that same value for both create and history read). The test must therefore read
+    // history in that SAME browser timezone — reading it in a different fixed zone
+    // compares an entryLocalDate and a `today` computed in two different zones, which
+    // deterministically diverge whenever the browser zone and the fixed zone fall on
+    // different calendar dates (the UTC↔local boundary window). This is a test-only
+    // consistency requirement; runtime is already timezone-consistent (create tz ==
+    // read tz), so this assertion holds regardless of wall-clock time.
+    const browserTz = await page.evaluate(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Tokyo");
+    const history = await (await page.request.get(`${BASE}/api/tests/daily-check-in/records?timezone=${encodeURIComponent(browserTz)}`)).json();
     expect(history.records).toHaveLength(1);
     const today: string = history.today;
     expect(history.records[0].entryLocalDate).toBe(today);

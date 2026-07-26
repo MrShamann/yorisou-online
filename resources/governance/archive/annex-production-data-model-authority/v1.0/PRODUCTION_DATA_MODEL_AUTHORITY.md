@@ -1,7 +1,7 @@
-# YORISOU Production Data Model Authority (Binding Annex) v1.1
+# YORISOU Production Data Model Authority (Binding Annex) v1.0
 
 **Status:** Approved
-**Pack:** YORISOU Governance Pack v0.4.1 · **Annex of:** `Yorisou_Personal_Archive_and_Memory_Governance_v1.0.md` · **Approver:** Edward
+**Pack:** YORISOU Governance Pack v0.4.0 · **Annex of:** `Yorisou_Personal_Archive_and_Memory_Governance_v1.0.md` · **Approver:** Edward
 
 This annex is binding effective governance. If it conflicts with a v0.4.0 primary governance
 document, the primary document outranks this annex. This annex is a design authority only: it
@@ -42,87 +42,3 @@ pending Edward's retention approval.
 Permission checks are a single shared service (one code path — mirrors the validated
 `memoryEligibleForReflection` discipline); the resurfacing check runs at EVERY memory read.
 Hard rule: no existing user data is ever reinterpreted as memory or consent.
-
-## Bounded Private Method-State Pilot Schema Authority
-
-The core 18-entity long-term production data model above is unchanged. This section adds explicit,
-bounded schema authority for six **already-existing** Production tables created for the private
-Daily Check-In (DCI) and Yorisou Values (YV) method-state pilot. It defines no new long-term entity
-and grants no activation.
-
-Recognized private-pilot tables:
-
-- Daily Check-In: `public.yorisou_daily_state_records`, `public.yorisou_daily_state_record_versions`,
-  `public.yorisou_daily_state_history_events`
-- Yorisou Values: `public.yorisou_values_assessments`, `public.yorisou_values_assessment_versions`,
-  `public.yorisou_values_assessment_events`
-
-### Domain status
-
-- The six tables are an already-existing **bounded Production-private pilot domain**.
-- Their existence does **not** create public method activation.
-- They are **not** part of the public method catalog.
-- They are **not** navigation or sitemap entities.
-- They are **not** a general-purpose memory subsystem.
-
-### No reinterpretation
-
-- DCI/YV records are **not** `memory_candidate`.
-- DCI/YV records are **not** `confirmed_memory`.
-- DCI/YV records are **not** consent.
-- DCI/YV records are **not** companion memory.
-- Existing user data must never be reinterpreted as memory or consent (the cross-cutting hard rule
-  above applies in full).
-- Any future conversion of DCI/YV state into another domain requires explicit user action and a
-  separately authorized package.
-
-### Identity and access
-
-- Ownership is account-scoped.
-- RLS is mandatory on all six tables.
-- Direct-table access for `public`, `anon` and `authenticated` roles is prohibited (no such policies
-  or grants exist).
-- Server-side `service_role` reads are permitted only through the governed repository path.
-- Cross-account access is prohibited.
-- Anonymous scoring and anonymous persistence remain prohibited in Production.
-
-### Mutation model
-
-- Mutations occur only through bounded `SECURITY DEFINER` RPCs.
-- Direct table `insert`/`update`/`delete`/`truncate` is prohibited to application roles.
-- Version rows preserve correction history while a record exists.
-- Append-only controls protect version and event history.
-- User deletion erases private content.
-- Deletion may retain only the governed content-free tombstone.
-- No private answers, memo, result copy or recommendation payload may survive governed content erasure.
-
-### Pilot boundary
-
-- Founder/Admin-only private access is permitted only after a separately recorded Production
-  activation decision.
-- Schema existence alone does not authorize route exposure.
-- This annex does not set or authorize `YORISOU_PRIVATE_PILOT_FLAGS`.
-- This annex does not authorize Production release.
-- This annex does not authorize Founder/Admin acceptance.
-- Ordinary authenticated users remain denied.
-- Anonymous users remain denied.
-- Public activation remains closed.
-
-### Existing Production truth
-
-Recorded truthfully, and not created or applied by this amendment:
-
-- The six tables already exist in **dormant** Production state from historical PPR-1.
-- They were verified as RLS-enabled.
-- No direct `anon`/`authenticated` table policies exist.
-- Current synthetic row count was **zero** at the accepted PPR-1R audit.
-- Migration-history reconciliation remains **incomplete** and is separately governed (a future
-  Founder-authorized package will run the official `supabase migration repair`).
-
-## Version history
-
-- **v1.1 (Pack v0.4.1, 2026-07-26)** — GOVERNED-DOCUMENT amendment (Change Management §3): added the
-  *Bounded Private Method-State Pilot Schema Authority* section for the six existing dormant DCI/YV
-  private-pilot tables. Core 18-entity model unchanged. Prior v1.0 archived byte-for-byte at
-  `resources/governance/archive/annex-production-data-model-authority/v1.0/`.
-- **v1.0 (Pack v0.4.0, 2026-07-14)** — initial approved binding annex.

@@ -484,4 +484,36 @@ console.log("DCI-1.2 — pending-entry provenance compatibility");
   });
 }
 
+// PPR-1 Completion Phase 1 (WS-A regression) — the DCI local-date derivation is
+// timezone-consistent: for ANY single timezone, the entryLocalDate derived at create
+// equals the `today` derived at read (create tz == read tz). This holds at fixed
+// boundary instants (no dependence on the CI runner's wall-clock window), which is why
+// the authenticated full-stack test must read history in the SAME browser timezone it
+// created in. The historical full-stack failure was a TEST-ONLY defect: it created in
+// the browser timezone (UTC on CI) but read history in a hardcoded Asia/Tokyo, so the
+// two dates were computed in different zones and diverged across the UTC↔local boundary.
+check("PPR-1 completion — local-date derivation is timezone-consistent across the UTC↔local boundary (wall-clock independent)", () => {
+  // Instants deliberately spanning the boundary: 15:30Z and 23:59:30Z are UTC 07-21 but
+  // Asia/Tokyo 07-22; 02:00Z is 07-21 in both. The invariant must hold at all of them.
+  const instants = ["2026-07-21T15:30:00.000Z", "2026-07-21T23:59:30.000Z", "2026-07-21T02:00:00.000Z"];
+  const zones = ["UTC", "Asia/Tokyo", "Pacific/Kiritimati", "Pacific/Honolulu"];
+  for (const iso of instants) {
+    for (const tz of zones) {
+      const created = serverTimeIdentity(tz, new Date(iso));
+      assert.ok(created.ok, `serverTimeIdentity ok (${tz} @ ${iso})`);
+      // `today` computed from the SAME instant in the SAME timezone — the runtime
+      // contract (one browser timezone used for both create and history read).
+      const today = localDateForInstant(iso, tz);
+      assert.equal(created.ok && created.identity.entryLocalDate, today, `entryLocalDate === today (${tz} @ ${iso})`);
+    }
+  }
+  // Root-cause documentation: comparing across DIFFERENT zones at a boundary instant
+  // diverges by exactly one calendar day (what the old full-stack test did); runtime
+  // never mixes zones this way.
+  const boundary = "2026-07-21T15:30:00.000Z";
+  assert.equal(localDateForInstant(boundary, "UTC"), "2026-07-21");
+  assert.equal(localDateForInstant(boundary, "Asia/Tokyo"), "2026-07-22");
+  assert.notEqual(localDateForInstant(boundary, "UTC"), localDateForInstant(boundary, "Asia/Tokyo"));
+});
+
 console.log(`\nDCI-1 daily-check-in contract: ${passed} checks passed.`);

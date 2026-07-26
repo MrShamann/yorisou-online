@@ -1,0 +1,22 @@
+# Gitleaks configuration for yorisou-online.
+#
+# Extends the full default gitleaks ruleset (no rule is removed or weakened) and
+# allowlists ONLY the governance integrity checksum manifests. Those two files are
+# SHA-256 digests of PUBLIC governance documents, verified byte-for-byte by the
+# governance integrity gate (`npm run test:agent-runtime`). A digest keyed by a
+# filename containing an "auth" substring (e.g. `annex/PRODUCTION_DATA_MODEL_AUTHORITY.md`)
+# can false-positive the `generic-api-key` rule when the hex digest's entropy crosses
+# the threshold, but these files contain no credentials, tokens, or secrets. This
+# allowlist does not weaken secret detection anywhere else in the tree.
+title = "yorisou-online gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Governance integrity checksum manifests (public-document digests, not secrets)"
+paths = [
+  '''lib/server/agent-runtime/governance-checksums\.json''',
+  '''resources/governance/(current|archive)/.*/?SHA256SUMS\.txt''',
+  '''resources/governance/(current|archive)/.*SHA256SUMS\.txt''',
+]

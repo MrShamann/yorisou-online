@@ -55,7 +55,12 @@
   /* Neutral — Mist Lavender */
   --yorisou-color-neutral-100: #e9e6f3;
   --yorisou-color-neutral-200: #d9d4e8;
-  --yorisou-color-neutral-500: #817a96;
+  /* neutral-500 darkened from #817a96 → #635c73 so muted text meets WCAG 2.2 AA
+     (4.5:1) on every light surface it is used on: surface-bg #faf8f3, surface-card
+     #ffffff, surface-raised #fefdfb, the ivory header, and the neutral-100 pill
+     (worst case 5.16:1). Same Mist Lavender hue; only used as muted text on light
+     surfaces (dark Ink Plum surfaces use text-white). PPR-1 Completion Phase 1 a11y. */
+  --yorisou-color-neutral-500: #635c73;
   --yorisou-color-neutral-800: #302a3d;
   /* AI accent — Mint Signal */
   --yorisou-color-accent-100: #ddf9f5;
