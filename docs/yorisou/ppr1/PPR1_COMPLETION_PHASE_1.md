@@ -140,7 +140,29 @@ evidence doc. **No DCI/YV runtime code, private-pilot gate, Production API autho
 public navigation/homepage/catalog/sitemap, method-registry activation, authentication, shared-store, Vercel
 or Supabase configuration was modified.**
 
+## Security — gitleaks false-positive on a governance checksum (corrected, not weakened)
+
+The CPV1-CM0 hard secret-scan gate (`gitleaks detect … origin/main..HEAD`) initially failed with one
+finding: rule `generic-api-key` matched the **SHA-256 checksum** of the amended annex in
+`lib/server/agent-runtime/governance-checksums.json` — the entry key
+`annex/PRODUCTION_DATA_MODEL_AUTHORITY.md` contains the substring "**AUTH**ORITY" (an `auth` keyword) and
+the new digest's entropy crossed gitleaks' threshold. It is a public-document checksum, not a secret (the
+prior digest happened to fall below the threshold, which is why `main` passed). The repo had no gitleaks
+config, so a minimal `.gitleaks.toml` was added that **`[extend] useDefault = true`** (keeps every default
+rule) and allowlists **only** the two governance integrity checksum manifests
+(`governance-checksums.json`, `SHA256SUMS.txt`). Verified locally with gitleaks v8.18.4: the diff scan now
+reports **no leaks**, and default rules remain active (a private-key probe is still flagged). This does not
+weaken secret detection anywhere else in the tree.
+
 ## Validation
 
 _(Local validation, remote CI, and the read-only Production non-mutation check are recorded below as they
 complete.)_
+
+### Local (this branch)
+
+tsc clean · eslint 0 errors · `next build` success · DCI **46** · YV **27** · CPV1 **62** · production-pilot
+**12** · shared-store **15** · DCI canonical generator in-sync · governance integrity gate
+(`test:agent-runtime`) ok (34 files, positive + 24 tamper-negatives, activation loader 34 / checksums 34 /
+SHA256SUMS 33 / annexes 4) · changed-content secret scan (gitleaks v8.18.4, extended default rules) **clean**
+· no Production ref in executable product code (the target ref appears only in this WS-C repair plan).
