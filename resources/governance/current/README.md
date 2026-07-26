@@ -1,4 +1,4 @@
-# YORISOU Governance Pack v0.4.0 — Approved
+# YORISOU Governance Pack v0.4.1 — Approved
 
 **Status:** Approved
 **Approved as activation candidate:** 2026-07-14

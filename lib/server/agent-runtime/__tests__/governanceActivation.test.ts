@@ -19,10 +19,10 @@ async function currentFiles(): Promise<string[]> {
 
 /** PR-1 governance activation validation: loader, manifest/checksum, binding links, agent authority, package scope. */
 export async function runGovernanceActivationTests() {
-  // 1. Governance loader test — the runtime loads the v0.4.0 pack successfully.
+  // 1. Governance loader test — the runtime loads the v0.4.1 pack successfully.
   const resources = await validateGovernanceResources();
-  assert.equal(resources.length, 34, "loader must return all 34 v0.4.0 pack files");
-  assert.equal(checksums.packageVersion, "v0.4.0");
+  assert.equal(resources.length, 34, "loader must return all 34 v0.4.1 pack files");
+  assert.equal(checksums.packageVersion, "v0.4.1");
 
   // 2. Manifest/checksum test — entries match files, hashes match bytes, no orphans, none missing.
   const files = await currentFiles();

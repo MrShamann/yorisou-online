@@ -67,7 +67,7 @@ async function validate(root: string, checksumFiles: Record<string, string>): Pr
     const content = await fs.readFile(resolved, "utf8");
     if (!/^[a-f0-9]{64}$/.test(checksumFiles[filename] || "")) fail(`checksum_manifest_invalid:${filename}`);
     if (checksumFiles[filename] !== hash(content)) fail(`checksum_mismatch:${filename}`);
-    const metadata = filename === README ? { version: "v0.4.0", documentType: "Governance Pack" } : filename === SHASUMS ? { version: "v0.4.0", documentType: "Integrity Checksums" } : parseHeader(content, filename);
+    const metadata = filename === README ? { version: "v0.4.1", documentType: "Governance Pack" } : filename === SHASUMS ? { version: "v0.4.1", documentType: "Integrity Checksums" } : parseHeader(content, filename);
     if (/\b(Draft|Rev|Superseded|Intermediate)\b/i.test(filename) || /\*\*Status:\*\*\s*(Draft|Rev|Superseded|Intermediate)/i.test(content)) fail(`inactive_resource:${filename}`);
     return { filename, ...metadata, status: "Approved" as const, sha256: hash(content), resourceClass: filename === README || filename === SHASUMS ? "manifest" as const : "governance" as const, project_id: YORISOU_PROJECT_ID, loaded_at: new Date().toISOString(), sourcePath: `resources/governance/current/${filename}`, parseStatus: "valid" as const, domain: domainOf(filename), authorityPriority: priorityOf(filename), content };
   }));

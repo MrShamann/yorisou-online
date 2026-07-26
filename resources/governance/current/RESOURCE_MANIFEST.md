@@ -1,7 +1,9 @@
-# RESOURCE_MANIFEST — YORISOU Governance Pack v0.4.0
+# RESOURCE_MANIFEST — YORISOU Governance Pack v0.4.1
 
 **Status:** Approved
-**Pack:** YORISOU Governance Pack v0.4.0 · **Approved as activation candidate:** 2026-07-14 · **Approver:** Edward
+**Pack:** YORISOU Governance Pack v0.4.1 · **Approved as activation candidate:** 2026-07-14 · **Approver:** Edward
+
+**Version history:** v0.4.1 (2026-07-26) — GOVERNED-DOCUMENT amendment (Change Management §3): `annex/PRODUCTION_DATA_MODEL_AUTHORITY.md` v1.0 → v1.1 adding the *Bounded Private Method-State Pilot Schema Authority* section for the six existing dormant DCI/YV private-pilot tables; prior annex text archived byte-for-byte under `resources/governance/archive/annex-production-data-model-authority/v1.0/`; SHA256SUMS + runtime checksums regenerated. No other active document changed; file count/index unchanged (34 files / 32 index entries / 33 SHA256SUMS lines). v0.4.0 (2026-07-14) — initial approved pack (Package A PR-1), superseding archived v0.3.3.
 
 Installation location: `resources/governance/current/` (v0.3.3 archived at
 `resources/governance/archive/v0.3.3/`). Pack contents: 33 Markdown documents (27 governance
