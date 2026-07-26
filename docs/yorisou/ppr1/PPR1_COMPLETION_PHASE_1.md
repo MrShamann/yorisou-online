@@ -154,10 +154,73 @@ rule) and allowlists **only** the two governance integrity checksum manifests
 reports **no leaks**, and default rules remain active (a private-key probe is still flagged). This does not
 weaken secret detection anywhere else in the tree.
 
+## WS-D — Shared color-contrast regression fixed (Founder-authorized bounded a11y expansion)
+
+Running the full DCI-1/YV-1 CI battery for this package surfaced a **second, distinct** red beyond the WS-A
+timezone defect: the focused DCI/YV browser axe gate reported **`color-contrast`** serious/critical violations
+(the ~103-line axe object) on the entry/validation/completion/continuation states. Investigation proved this
+is a **pre-existing, app-wide accessibility regression**, not caused by this package:
+
+- The DCI/YV **flow components are unchanged** since their merge (`DailyCheckInFlow.tsx` last touched at #118);
+  this package changed **zero** rendering files, so the branch renders the DCI/YV pages byte-identically to
+  `main`. The failing nodes originate from the **shared AppShell tokens/header**, which the #105
+  unified-experience merge pulled onto the previously-minimal gated routes. `--yorisou-color-neutral-500` did
+  not exist before #105.
+- Two shared treatments failed WCAG 2.2 AA (4.5:1): the muted-text token `#817a96` (3.31–4.07:1 on every light
+  surface it lands on) and the shared LINE CTA label (white on the `#06C755` brand green, 2.25:1).
+
+The Founder authorized a **bounded in-package correction**
+(`YORISOU_PPR_1_COMPLETION_PHASE_1_A11Y_SCOPE_EXPANSION_AUTHORIZED`) — fix the two shared treatments only, no
+product-logic or DCI/YV-runtime change. **Exactly two shared presentation files changed:**
+
+| file | before | after | contrast (before → after) |
+|---|---|---|---|
+| `app/globals.css` | `--yorisou-color-neutral-500: #817a96` | `#635c73` (same Mist Lavender hue) | light surfaces 3.31–4.07:1 → **5.16–6.35:1** (worst case = neutral-100 pill) |
+| `app/components/AppHeader.tsx` (×2: desktop + mobile LINE CTA) | `text-white` on `bg-[#06C755]` | `text-[var(--yorisou-color-deep-900)]` on the **preserved** `#06C755` | 2.25:1 → **8.20:1** (6.66:1 on hover `#05B34C`) |
+
+Safety of the token darkening: `--yorisou-color-neutral-500` is used **only as muted text on light surfaces**
+(75 usages audited); every dark Ink Plum surface uses `text-white`, so **no dark-surface contrast is reduced**
+and no new violation is introduced. The LINE fix **preserves** the brand green, wording, destination, and
+hover/focus states; the decorative badge is `aria-hidden` (axe-exempt). No route-specific DCI/YV override was
+added — a single coherent global correction. The DCI flow's own sign-in button (white on `--cta-main #173b35`,
+12.26:1) already passed and was left unchanged.
+
+**No DCI/YV runtime, questions, scoring, methodology, copy, API, auth, private-pilot gate, Production flags,
+migrations, or navigation changed.** Scope verified: `git diff main` for this step = `app/globals.css` +
+`app/components/AppHeader.tsx` only.
+
 ## Validation
 
-_(Local validation, remote CI, and the read-only Production non-mutation check are recorded below as they
-complete.)_
+### Local (this branch, HEAD `3f9c943`)
+
+tsc clean · eslint 0 errors (incl. `AppHeader.tsx`) · DCI **46** · YV **27** · CPV1 **62** ·
+production-pilot **12** · shared-store **15** · governance integrity gate (`test:agent-runtime`) ok (34 files,
+v0.4.1, positive + 24 tamper-negatives) · DCI canonical generator in-sync · changed-content secret scan
+(gitleaks) **clean**. WCAG contrast recomputed deterministically for every affected surface (values in the
+WS-D table). `next build` + the focused-browser axe run are performed authoritatively on CI (local `next
+build` is blocked only by the offline `next/font/google` fetch — an environment limitation, not a code issue).
+
+### Remote CI (PR #123, final HEAD) and Production non-mutation
+
+On the final PR HEAD every workflow is green:
+
+- **Yorisou Check** (Lint, Build & Env) — success
+- **CPV1-CM0 CI** (contracts, types, migration + secret guards) — success
+- **DCI-1 CI** (contracts, validators, DB harness, build, **focused browser axe + full-stack**) — success.
+  The focused DCI browser axe gate reports **0 serious/critical violations** — the ~103 `color-contrast`
+  failures are eliminated.
+- **YV-1 CI** (contracts, validators, DB harness, build, **focused browser axe + full-stack**) — success.
+  (An earlier attempt failed only on a transient GitHub-Actions **Docker service-container pull** — an
+  infrastructure flake with 0 test/axe failures — and passed on re-run.)
+- **Vercel Preview** deploy + comments — success
+- Agent Runtime PostgreSQL Integration + clean-main build — success
+
+**Read-only Production non-mutation check** (`https://yorisou.online`, GET-only): root **200**;
+`/tests/daily-check-in`, `/tests/yorisou-values`, `GET /api/tests/{daily-check-in,yorisou-values}/records`,
+and `POST /api/tests/yorisou-values/score` (anonymous) all **404**; `sitemap.xml` and the `/tests` catalog
+contain **0** DCI/YV references. Production deployment is unchanged (no activation redeploy); this session made
+**no** Supabase, env, migration-history, or flag mutation; `YORISOU_PRIVATE_PILOT_FLAGS` remains absent (gate
+closed — every DCI/YV Production route/API 404). PR #123 remains **unmerged**.
 
 ### Local (this branch)
 
