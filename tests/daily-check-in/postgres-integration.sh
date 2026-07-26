@@ -9,7 +9,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c 'create extension if not exists pg
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "do \$\$ begin create role service_role login bypassrls; exception when duplicate_object then null; end \$\$; do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$; do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;"
 # Prerequisite (clean-main CM0 helper) then the DCI migration, in order.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "alter role service_role bypassrls;" # Supabase parity: hosted service_role carries BYPASSRLS; write denial rests on grants (privilege check precedes RLS)
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607200001_cpv1_foundation_prereqs.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/local-only-migrations/cpv1/202607200001_cpv1_foundation_prereqs.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607200005_dci1_daily_state_records.sql
 # Idempotence: re-apply must succeed without error.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f supabase/migrations/202607200005_dci1_daily_state_records.sql
