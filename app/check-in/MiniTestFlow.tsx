@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAssessmentAttempt } from "./useAssessmentAttempt";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
@@ -34,6 +35,8 @@ function getIntroFacts(totalQuestions: number) {
 }
 
 export default function MiniTestFlow() {
+  // UX-2: server-authoritative attempt persistence (resume across refresh; real persisted result).
+  const attempt = useAssessmentAttempt();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>("intro");
@@ -43,6 +46,22 @@ export default function MiniTestFlow() {
   const autoAdvanceTimerRef = useRef<number | null>(null);
   const navigationFallbackTimerRef = useRef<number | null>(null);
   const resultNavigationStartedRef = useRef(false);
+
+  // UX-2: a persisted in-progress attempt is offered EXPLICITLY rather than silently restored —
+  // the user is never teleported into the middle of a quiz they did not just ask to resume.
+  const resumableAttempt =
+    attempt.restored && attempt.restored.answeredCount > 0 ? attempt.restored : null;
+
+  function resumeSavedAttempt() {
+    if (!resumableAttempt) return;
+    clearAutoAdvanceTimer();
+    clearNavigationFallbackTimer();
+    resultNavigationStartedRef.current = false;
+    setNavigationFallbackHref(null);
+    setAnswers(resumableAttempt.answers as CurrentStateAnswerMap);
+    setCurrentIndex(Math.min(resumableAttempt.answeredCount, currentStateQuestions.length - 1));
+    setPhase("quiz");
+  }
 
   const totalQuestions = currentStateQuestions.length;
   const currentQuestion = currentStateQuestions[currentIndex];
@@ -125,6 +144,10 @@ export default function MiniTestFlow() {
     resultNavigationStartedRef.current = true;
     const target = preparedTarget ?? buildPreparedResultTarget(nextAnswers);
     saveCurrentStateResult(target.payload);
+    // UX-2: complete the attempt SERVER-SIDE. The server re-runs the governed scoring and
+    // persists an immutable result, so the outcome no longer depends on the URL surviving.
+    // Best-effort and non-blocking: navigation still proceeds if persistence is unavailable.
+    void attempt.completeAttempt(nextAnswers as Record<string, string>);
     void trackOpenTestingEvent({
       eventName: "test_completed",
       route: "/check-in",
@@ -190,6 +213,8 @@ export default function MiniTestFlow() {
     setPhase("quiz");
     setCurrentIndex(0);
     setAnswers({});
+    // UX-2: create the server-side attempt so progress and the result can be persisted.
+    void attempt.startAttempt(isMiniAppEntry ? "line-mini-app" : "open-testing");
     void trackOpenTestingEvent({
       eventName: "test_started",
       route: "/check-in",
@@ -210,6 +235,8 @@ export default function MiniTestFlow() {
     };
 
     setAnswers(nextAnswers);
+    // UX-2: persist progress server-side (debounced) so a refresh does not destroy the journey.
+    attempt.saveProgress(nextAnswers as Record<string, string>);
     void trackOpenTestingEvent({
       eventName: "question_answered",
       route: "/check-in",
@@ -285,6 +312,26 @@ export default function MiniTestFlow() {
                   </p>
                 </div>
 
+                {resumableAttempt ? (
+                  <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.16)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#22201D]">前回の途中から続けられます</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      {resumableAttempt.answeredCount} / {totalQuestions} 問まで保存されています。
+                    </p>
+                    <button
+                      type="button"
+                      onClick={resumeSavedAttempt}
+                      className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full px-5 py-3 text-[15px] transition hover:opacity-95 active:scale-[0.975]"
+                      style={{ background: "#173B35", color: "#fff", fontWeight: 700 }}
+                    >
+                      続きからはじめる
+                    </button>
+                    <p className="text-[11px] leading-5 text-[#9A9088]">
+                      はじめからやり直す場合は、下のボタンを選んでください。
+                    </p>
+                  </MvpCard>
+                ) : null}
+
                 <div>
                   <button
                     type="button"
@@ -292,7 +339,7 @@ export default function MiniTestFlow() {
                     className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] transition hover:opacity-95 active:scale-[0.975]"
                     style={{ background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
                   >
-                    いま色テストをはじめる
+                    {resumableAttempt ? "はじめからやり直す" : "いま色テストをはじめる"}
                   </button>
                   <p className="mt-2.5 text-[11px] leading-6 text-[#9A9088]">
                     診断ではありません · <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
