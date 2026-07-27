@@ -142,9 +142,22 @@ export default function UnderstandingField({
           </g>
         ) : null}
 
-        {/* the person, at the centre of their own field */}
-        <circle cx={CX} cy={CY} r="7.5" fill="none" stroke="var(--yorisou-color-neutral-500)" strokeWidth="1.2" />
-        <circle cx={CX} cy={CY} r="2.6" fill="var(--yorisou-color-neutral-500)" />
+        {/* The person, at the centre of their own field. Deliberately given real
+            visual weight and a label: the claim "you are the centre, not the result"
+            is only true if you can actually see yourself there. */}
+        <circle cx={CX} cy={CY} r="19" fill="currentColor" opacity="0.06" />
+        <circle cx={CX} cy={CY} r="11.5" fill="none" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1.4" />
+        <circle cx={CX} cy={CY} r="4.5" fill="currentColor" fillOpacity="0.85" />
+        <text
+          x={CX}
+          y={CY + 34}
+          textAnchor="middle"
+          fill="currentColor"
+          fillOpacity="0.62"
+          style={{ fontSize: "12px", fontWeight: 600 }}
+        >
+          あなた
+        </text>
 
         {/* the current reading */}
         <g
