@@ -46,6 +46,8 @@ export default function MiniTestFlow() {
   const autoAdvanceTimerRef = useRef<number | null>(null);
   const navigationFallbackTimerRef = useRef<number | null>(null);
   const resultNavigationStartedRef = useRef(false);
+  const [completing, setCompleting] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
 
   // UX-2: a persisted in-progress attempt is offered EXPLICITLY rather than silently restored —
   // the user is never teleported into the middle of a quiz they did not just ask to resume.
@@ -58,6 +60,7 @@ export default function MiniTestFlow() {
     clearNavigationFallbackTimer();
     resultNavigationStartedRef.current = false;
     setNavigationFallbackHref(null);
+    attempt.adoptRestoredAttempt(resumableAttempt);
     setAnswers(resumableAttempt.answers as CurrentStateAnswerMap);
     setCurrentIndex(Math.min(resumableAttempt.answeredCount, currentStateQuestions.length - 1));
     setPhase("quiz");
@@ -144,10 +147,27 @@ export default function MiniTestFlow() {
     resultNavigationStartedRef.current = true;
     const target = preparedTarget ?? buildPreparedResultTarget(nextAnswers);
     saveCurrentStateResult(target.payload);
-    // UX-2: complete the attempt SERVER-SIDE. The server re-runs the governed scoring and
-    // persists an immutable result, so the outcome no longer depends on the URL surviving.
-    // Best-effort and non-blocking: navigation still proceeds if persistence is unavailable.
-    void attempt.completeAttempt(nextAnswers as Record<string, string>);
+    // UX-2: completion is AWAITED and authoritative. We navigate only after the server has
+    // persisted an immutable result, carrying that stable identity. On failure we stay put with
+    // every answer intact, emit no success analytics, and offer retry.
+    setCompletionError(null);
+    setCompleting(true);
+    void attempt.completeAttempt(nextAnswers as Record<string, string>).then((outcome) => {
+      setCompleting(false);
+      if (!outcome.ok) {
+        resultNavigationStartedRef.current = false;
+        setCompletionError(outcome.error);
+        return;
+      }
+      finishNavigation(target, outcome.resultRowId);
+    });
+  }
+
+  // Navigation carries the PERSISTED result identity so /result can resolve the real record.
+  // No raw answers ever enter the URL.
+  function finishNavigation(target: PreparedResultNavigationTarget, resultRowId: string) {
+    const withResult = (href: string) =>
+      `${href}${href.includes("?") ? "&" : "?"}result=${encodeURIComponent(resultRowId)}`;
     void trackOpenTestingEvent({
       eventName: "test_completed",
       route: "/check-in",
@@ -173,19 +193,19 @@ export default function MiniTestFlow() {
     clearNavigationFallbackTimer();
 
     if (typeof window !== "undefined" && isMiniAppEntry) {
-      window.location.assign(target.absoluteHref);
+      window.location.assign(withResult(target.absoluteHref));
       return;
     }
 
-    router.push(target.loadingHref);
+    router.push(withResult(target.loadingHref));
 
     if (typeof window !== "undefined") {
       navigationFallbackTimerRef.current = window.setTimeout(() => {
         navigationFallbackTimerRef.current = null;
         const { pathname } = window.location;
         if (pathname !== "/report-loading" && pathname !== "/result") {
-          setNavigationFallbackHref(target.absoluteHref);
-          window.location.assign(target.absoluteHref);
+          setNavigationFallbackHref(withResult(target.absoluteHref));
+          window.location.assign(withResult(target.absoluteHref));
         }
       }, RESULT_NAVIGATION_FALLBACK_DELAY_MS);
     }
@@ -205,16 +225,19 @@ export default function MiniTestFlow() {
     }, AUTO_ADVANCE_DELAY_MS);
   }
 
-  function begin() {
+  async function begin() {
     clearAutoAdvanceTimer();
     clearNavigationFallbackTimer();
     resultNavigationStartedRef.current = false;
     setNavigationFallbackHref(null);
-    setPhase("quiz");
     setCurrentIndex(0);
     setAnswers({});
-    // UX-2: create the server-side attempt so progress and the result can be persisted.
-    void attempt.startAttempt(isMiniAppEntry ? "line-mini-app" : "open-testing");
+    setCompletionError(null);
+    // UX-2: the attempt must EXIST before question 1 is answerable, otherwise the first progress
+    // saves silently no-op. Creation is awaited; the quiz opens only on success.
+    const createdId = await attempt.startAttempt(isMiniAppEntry ? "line-mini-app" : "open-testing");
+    if (!createdId) return;
+    setPhase("quiz");
     void trackOpenTestingEvent({
       eventName: "test_started",
       route: "/check-in",
@@ -312,6 +335,35 @@ export default function MiniTestFlow() {
                   </p>
                 </div>
 
+                {attempt.startState === "error" ? (
+                  <MvpCard className="space-y-2 rounded-[1.2rem] border-[rgba(138,46,46,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#8A2E2E]">はじめられませんでした</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      通信が不安定なようです。もう一度「いま色テストをはじめる」を選んでください。
+                    </p>
+                  </MvpCard>
+                ) : null}
+
+                {completionError ? (
+                  <MvpCard className="space-y-2 rounded-[1.2rem] border-[rgba(138,46,46,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#8A2E2E]">結果を保存できませんでした</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      {completionError === "attempt_expired"
+                        ? "保存できる期間が過ぎました。お手数ですが、はじめからやり直してください。"
+                        : "回答は残っています。通信状況を確かめて、もう一度お試しください。"}
+                    </p>
+                  </MvpCard>
+                ) : null}
+
+                {attempt.expired ? (
+                  <MvpCard className="space-y-2 rounded-[1.2rem] border-[rgba(138,46,46,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#8A2E2E]">保存期間が過ぎました</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      途中の回答は保存できる期間を過ぎました。はじめからやり直してください。
+                    </p>
+                  </MvpCard>
+                ) : null}
+
                 {resumableAttempt ? (
                   <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.16)] bg-white p-4">
                     <p className="text-[13px] font-semibold text-[#22201D]">前回の途中から続けられます</p>
@@ -335,11 +387,12 @@ export default function MiniTestFlow() {
                 <div>
                   <button
                     type="button"
-                    onClick={begin}
+                    onClick={() => { void begin(); }}
+                    disabled={attempt.startState === "starting" || completing}
                     className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] transition hover:opacity-95 active:scale-[0.975]"
                     style={{ background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
                   >
-                    {resumableAttempt ? "はじめからやり直す" : "いま色テストをはじめる"}
+                    {attempt.startState === "starting" ? "準備しています…" : resumableAttempt ? "はじめからやり直す" : "いま色テストをはじめる"}
                   </button>
                   <p className="mt-2.5 text-[11px] leading-6 text-[#9A9088]">
                     診断ではありません · <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />

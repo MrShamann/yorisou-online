@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 // from persisted identity instead of a URL query string.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { getResultById, listResponsesForResult, deriveCurrentUnderstanding, deleteAssessmentResult, hashClaimToken, getAttemptForToken } from "@/lib/server/assessmentAttemptStore";
+import { getResultById, listResponsesForResult, deriveCurrentUnderstanding, eraseAssessmentResult, hashClaimToken, getAttemptForToken } from "@/lib/server/assessmentAttemptStore";
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
 
 export const runtime = "nodejs";
@@ -67,11 +67,13 @@ export async function DELETE(_request: Request, context: Context) {
   const ownerId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   try {
-    const deleted = await deleteAssessmentResult(id, ownerId);
-    if (!deleted) return NextResponse.json({ error: "result_not_found" }, { status: 404 });
-    return NextResponse.json({ deleted: true, erased: true });
+    const erased = await eraseAssessmentResult(id, ownerId);
+    if (!erased) return NextResponse.json({ error: "result_not_found" }, { status: 404 });
+    // Truthful: the answers, the interpretation responses and the result content are gone —
+    // only a content-free tombstone remains.
+    return NextResponse.json({ erased: true, answersErased: true, responsesErased: true });
   } catch (error) {
-    console.error("assessment result delete failed", { code: error instanceof Error ? error.message : "unknown" });
-    return NextResponse.json({ error: "result_delete_failed" }, { status: 500 });
+    console.error("assessment result erase failed", { code: error instanceof Error ? error.message : "unknown" });
+    return NextResponse.json({ error: "result_erase_failed" }, { status: 500 });
   }
 }
