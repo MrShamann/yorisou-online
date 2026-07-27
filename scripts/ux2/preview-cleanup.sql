@@ -1,16 +1,47 @@
--- UX-2 / ICP-1 — Preview-only synthetic data cleanup.
--- PREVIEW ONLY (yorisou-preview / nbltsbonsnbpfptihomc). NEVER run against Production.
+-- UX-2 / ICP-1 — Preview-only synthetic acceptance-data cleanup.
 --
--- Interpretation responses are append-only by trigger, which correctly blocks even the
--- FK cascade. Governed user-facing deletion is a SOFT delete (yorisou_assessment_result_delete
--- sets deleted_at and erases dimension_output) and never needs this. This script exists only to
--- remove SYNTHETIC acceptance data from the isolated Preview project.
-begin;
-alter table public.yorisou_interpretation_responses disable trigger yorisou_interpretation_responses_no_update;
-delete from public.yorisou_interpretation_responses
- where owner_account_id like 'acct_test%' or owner_account_id like 'ux2synth%';
+-- PREVIEW ONLY (yorisou-preview / nbltsbonsnbpfptihomc). NEVER run against Production.
+-- Verify the project ref before executing.
+--
+-- This script deliberately uses the SAME governed erasure path as the runtime
+-- (yorisou_assessment_result_erase) rather than a weaker maintenance shortcut. It does NOT
+-- disable the append-only trigger globally: the earlier version did, which taught a weaker
+-- deletion pattern than the product itself enforces.
+--
+-- Runtime user-facing deletion is TRUE erasure (answers, responses, result identifiers and owner
+-- linkage removed, content-free tombstone retained) — not a soft delete.
+do $$
+declare r record;
+begin
+  -- 1. Erase synthetic RESULTS through the governed owner-scoped path.
+  for r in
+    select res.id, res.owner_account_id
+      from public.yorisou_assessment_results res
+      join public.yorisou_assessment_attempts att on att.id = res.attempt_id
+     where res.deleted_at is null
+       and (res.owner_account_id like 'acct_test%'
+            or res.owner_account_id like 'acct_g%'
+            or att.entry_source in ('test','chain','gate','gate4','ux2-acceptance','restart'))
+  loop
+    perform public.yorisou_assessment_result_erase(r.id, r.owner_account_id);
+  end loop;
+
+  -- 2. Abandon any synthetic attempts that never produced a result (governed RPC, not raw DML).
+  for r in
+    select att.id, att.claim_token_hash, att.owner_account_id
+      from public.yorisou_assessment_attempts att
+     where att.status = 'in_progress'
+       and (att.entry_source in ('test','chain','gate','gate4','ux2-acceptance','restart')
+            or att.owner_account_id like 'acct_test%'
+            or att.owner_account_id like 'acct_g%')
+  loop
+    perform public.yorisou_attempt_abandon(r.id, r.claim_token_hash, r.owner_account_id, 'erased');
+  end loop;
+end $$;
+
+-- 3. Remove the now content-free synthetic tombstone + attempt shells. These rows hold no user
+--    content at this point (step 1 erased it), so this is housekeeping, not deletion of data.
 delete from public.yorisou_assessment_attempts
- where entry_source in ('test','chain','ux2-acceptance')
-    or owner_account_id like 'acct_test%' or owner_account_id like 'ux2synth%';
-alter table public.yorisou_interpretation_responses enable trigger yorisou_interpretation_responses_no_update;
-commit;
+ where status = 'abandoned'
+   and answered_count = 0
+   and entry_source in ('test','chain','gate','gate4','ux2-acceptance','restart','user_restarted','erased');

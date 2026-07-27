@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAssessmentAttempt } from "./useAssessmentAttempt";
 
@@ -80,18 +80,9 @@ export default function MiniTestFlow() {
     searchParams.get("source") === "line" ||
     searchParams.get("source") === "mini_app" ||
     searchParams.get("nav") === "hard";
-  const lineMiniAppFinalResultHref = useMemo(() => {
-    if (!(phase === "quiz" && isMiniAppEntry && isFinalQuestion && currentAnswer)) {
-      return null;
-    }
-
-    const scoring = scoreCurrentStateCheck(answers);
-    return buildAbsolutePublicResultUrl("/result", {
-      resultId: scoring.resultId,
-      overlayId: scoring.overlayId,
-      confidenceBand: scoring.confidenceBand,
-    });
-  }, [answers, currentAnswer, isFinalQuestion, isMiniAppEntry, phase]);
+  // UX-2: the client-side LINE result-URL builder was REMOVED. A client-constructed result
+  // URL is exactly the unpersisted bypass this package eliminates — every completion path
+  // now goes through the awaited server completion and navigates by persisted identity.
   const lineMiniAppReleaseMarker = `line handoff v${LINE_MINI_APP_NAV_VERSION}`;
 
   useEffect(() => {
@@ -146,7 +137,8 @@ export default function MiniTestFlow() {
 
     resultNavigationStartedRef.current = true;
     const target = preparedTarget ?? buildPreparedResultTarget(nextAnswers);
-    saveCurrentStateResult(target.payload);
+    // NOTE: the legacy local store is written ONLY after the server persists (see below). Writing
+    // it here would leave a convincing "saved" artefact behind a failed completion.
     // UX-2: completion is AWAITED and authoritative. We navigate only after the server has
     // persisted an immutable result, carrying that stable identity. On failure we stay put with
     // every answer intact, emit no success analytics, and offer retry.
@@ -159,6 +151,9 @@ export default function MiniTestFlow() {
         setCompletionError(outcome.error);
         return;
       }
+      // Compatibility cache only — the server record is the source of truth. Written after
+      // success so a failed completion can never leave a false local "saved result".
+      saveCurrentStateResult(target.payload);
       finishNavigation(target, outcome.resultRowId);
     });
   }
@@ -516,27 +511,34 @@ export default function MiniTestFlow() {
                     >
                       戻る
                     </button>
-                    {isMiniAppEntry && isFinalQuestion && lineMiniAppFinalResultHref ? (
+                    {isMiniAppEntry && isFinalQuestion ? (
                       <div className="flex-1 space-y-2">
-                        <a
-                          href={lineMiniAppFinalResultHref}
-                          onClick={() => saveCurrentStateResult(buildPreparedResultTarget(answers).payload)}
-                          className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full px-4 py-3 text-[16px] font-extrabold text-white transition hover:opacity-95"
+                        {/* UX-2: the LINE Mini App no longer has its own client-authoritative
+                            completion. It calls the SAME awaited server completion as the Web
+                            path; the hard WebView navigation happens only after persistence. */}
+                        <button
+                          type="button"
+                          onClick={() => routeToResult(answers)}
+                          disabled={completing}
+                          className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full px-4 py-3 text-[16px] font-extrabold text-white transition hover:opacity-95 disabled:opacity-70"
                           style={{ background: "#173B35", boxShadow: "0 14px 28px rgba(23,59,53,0.26)" }}
                         >
-                          結果へ進む
-                        </a>
+                          {completing ? "保存しています…" : "結果へ進む"}
+                        </button>
                         <div className="rounded-[0.95rem] border border-[rgba(23,59,53,0.08)] bg-white/92 px-4 py-3">
                           <p className="text-[12px] leading-6 text-[#6F6760]">
-                            進まない場合は、下のリンクから結果ページを開いてください。
+                            {completionError
+                              ? "結果を保存できませんでした。回答は残っています。もう一度お試しください。"
+                              : "進まない場合は、もう一度「結果へ進む」を選んでください。"}
                           </p>
-                          <a
-                            href={lineMiniAppFinalResultHref}
-                            onClick={() => saveCurrentStateResult(buildPreparedResultTarget(answers).payload)}
-                            className="mt-2 inline-flex min-h-[44px] items-center justify-center text-[13px] font-semibold text-[#315F50] underline underline-offset-4"
-                          >
-                            結果ページを開く
-                          </a>
+                          {navigationFallbackHref ? (
+                            <a
+                              href={navigationFallbackHref}
+                              className="mt-2 inline-flex min-h-[44px] items-center justify-center text-[13px] font-semibold text-[#315F50] underline underline-offset-4"
+                            >
+                              結果ページを開く
+                            </a>
+                          ) : null}
                           <p className="mt-2 text-[10px] leading-5 text-[#9A9088]">
                             {lineMiniAppReleaseMarker}
                           </p>

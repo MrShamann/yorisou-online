@@ -180,10 +180,14 @@ export async function claimAttempt(input: {
 }
 
 // ── reads (owner- or token-scoped; never unscoped) ───────────────────────────
+// Anonymous token access requires a live, unexpired, non-abandoned attempt. Expiry is enforced
+// by the SERVER on reads too — never left to browser cookie expiry.
 export async function getAttemptForToken(attemptId: string, claimTokenHash: string): Promise<AssessmentAttempt | null> {
   const params = new URLSearchParams({
     id: `eq.${attemptId}`,
     claim_token_hash: `eq.${claimTokenHash}`,
+    status: "in.(in_progress,completed)",   // never resume an abandoned attempt
+    expires_at: `gt.${new Date().toISOString()}`,
     limit: "1",
   });
   const r = await request(`${ATTEMPTS}?${params}`, { method: "GET" });
@@ -195,6 +199,7 @@ export async function getAttemptForOwner(attemptId: string, ownerAccountId: stri
   const params = new URLSearchParams({
     id: `eq.${attemptId}`,
     owner_account_id: `eq.${ownerAccountId}`,
+    status: "in.(in_progress,completed)",
     limit: "1",
   });
   const r = await request(`${ATTEMPTS}?${params}`, { method: "GET" });
@@ -209,6 +214,7 @@ export async function getResultById(resultRowId: string): Promise<AssessmentResu
   return ((await r.json()) as AssessmentResult[])[0] || null;
 }
 
+// Erased rows are excluded from every owner-scoped listing (deleted_at is.null below).
 export async function listResultsForOwner(ownerAccountId: string, limit = 50): Promise<AssessmentResult[]> {
   const params = new URLSearchParams({
     owner_account_id: `eq.${ownerAccountId}`,
@@ -264,6 +270,22 @@ export async function listResponsesForOwner(ownerAccountId: string, limit = 100)
 
 // TRUE erasure (not a soft hide): removes the raw answers, the interpretation responses and the
 // result content, leaving only a content-free tombstone. The API wording matches this behaviour.
+// Governed abandon — the real rule behind "start over". Closes the previous attempt, erases its
+// answers and invalidates its claim token so it can never be resumed, completed or claimed.
+export async function abandonAttempt(input: {
+  attemptId: string;
+  claimTokenHash: string | null;
+  ownerAccountId: string | null;
+  reason: "user_restarted" | "expired" | "erased";
+}): Promise<boolean> {
+  return rpc<boolean>("yorisou_attempt_abandon", {
+    p_attempt_id: input.attemptId,
+    p_claim_token_hash: input.claimTokenHash,
+    p_owner_account_id: input.ownerAccountId,
+    p_reason: input.reason,
+  });
+}
+
 export async function eraseAssessmentResult(resultRowId: string, ownerAccountId: string): Promise<boolean> {
   return rpc<boolean>("yorisou_assessment_result_erase", {
     p_result_row_id: resultRowId,
