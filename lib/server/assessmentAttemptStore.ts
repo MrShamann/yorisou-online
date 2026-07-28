@@ -266,7 +266,11 @@ export async function listResponsesForResult(resultRowId: string, ownerAccountId
   const params = new URLSearchParams({
     result_row_id: `eq.${resultRowId}`,
     owner_account_id: `eq.${ownerAccountId}`,
-    order: "created_at.desc",
+    // Ordered by the monotonic sequence, not created_at: two responses written in one transaction
+    // share a timestamp, which made "the latest answer" arbitrary. Found while proving the
+    // recommendation graph, where a `corrected` response lost to a `deferred` one written moments
+    // earlier in the same transaction and wrongly withheld permission.
+    order: "sequence_no.desc",
   });
   const r = await request(`${RESPONSES}?${params}`, { method: "GET" });
   if (!r.ok) throw new Error(`assessment_persistence_failed:${r.status}`);
