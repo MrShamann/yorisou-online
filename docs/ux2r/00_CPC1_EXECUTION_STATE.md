@@ -20,9 +20,9 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 | WS | scope | status |
 |---|---|---|
 | 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
-| 1 | Canonical result cutover (Wave A) | **TRANSPORT COMPLETE + DESTINATION CUTOVER IN PROGRESS** — producer side done (exclusive persisted mode, `{"v":"pds-v1"}` envelope at write/DB/read, mode split, honest `/report-loading`, public-safe share, save = claim). Destinations: `/recommendations` **cut over and server-enforced**; `/private-state` **canonical panel added**; `/reports/self-understanding/[publicCode]` and `/recommendations/graph` and LINE **not yet consuming canonical identity** |
+| 1 | Canonical result cutover (Wave A) | **DESTINATION CUTOVER DONE for result / recommendations / graph / report page / report download**; LINE not audited |
 | 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
-| 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; persisted-mode pending CLAIM INTENT (opaque row id only) crosses the login boundary via `/result/return`. Login/register surface bridges not yet reworked |
+| 3 | Authentication continuity | **DONE for the interpretation loop** — claim + pending intent with peek/acknowledge lifecycle and DB-enforced exactly-once. Login/register surface polish outstanding |
 | 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
 | 5 | Private continuity (`/private-state`) | **NOT STARTED** |
 | 6 | Recommendation + action loop | **NOT STARTED** (Preview lacks `yorisou_recommendation_*`; migration required) |
@@ -150,11 +150,23 @@ the rule being softened.
 continuity audit; recommendation generation/feedback persistence (Wave C); the full Preview
 acceptance journey (§10).
 
+## Durable state accuracy note
+
+An earlier version of this file understated completed work (it still listed report/graph as not cut
+over, four Preview migrations, and interpretation as API-only). Corrected here, inside a runtime
+checkpoint rather than as a documentation-only edit.
+
+## Current Preview migrations: 7 (`PREVIEW_ONLY`)
+
+`202607270001` tables+RPCs · `202607270002` grants · `202607270003` lifecycle/expiry/erasure ·
+`202607270004` true tombstone + abandon · `202607280001` envelope guard ·
+`202607280002` interpretation idempotency · `202607280003` idempotency hardening.
+
 ## Verification state
 
 tsc **0** · ESLint clean · production build passes · migration-scope guard passes ·
-`npm run test:ux2-envelope` **9/9 against the real governed runtime** ·
-`npm run test:ux2-routes` **8/8** (route-continuity + share-safety) · `npm run test:ux2-consent` **6/6**
+`test:ux2-envelope` 9/9 · `test:ux2-routes` 8/8 · `test:ux2-consent` 7/7 · `test:ux2-intent` 8/8 ·
+`test:ux2-gate` 8/8 (destination authorization). Preview round trip proven:
 (consent gate, against the real derivation) · Preview round trip proven:
 raw payload REJECTED, extra-field REJECTED, canonical accepted and stored exactly, erase clears all.
 Unsafe legacy Preview rows **found: 0, deleted: 0**.
