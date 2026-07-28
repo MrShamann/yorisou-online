@@ -29,7 +29,8 @@ export type PersistedResultView = {
   methodId: string;
   methodVersion: string;
   producedAt: string;
-  dimensionOutput: PersistedResultEnvelopeV1 | null;
+  /** Always present: a live row that fails the envelope invariant does not produce a view at all. */
+  dimensionOutput: PersistedResultEnvelopeV1;
   claimed: boolean;
   isOwner: boolean;
   understanding: ReturnType<typeof deriveCurrentUnderstanding>;
@@ -55,6 +56,25 @@ export async function loadPersistedAssessmentResult(resultRowId: string): Promis
     }
     if (!authorized) return null;
 
+    // §1.1 STRICT LIVE-ENVELOPE ENFORCEMENT.
+    //
+    // Previously a malformed envelope only produced `dimensionOutput: null` while the rest of the
+    // view was returned intact, so a live row whose stored payload violated the invariant still
+    // reached /result, the canonical context, /recommendations, the report and /private-state. The
+    // module claimed malformed live envelopes were refused; they were merely blanked.
+    //
+    // `{"v":"pds-v1"}` is a LIVE-ROW INVARIANT. A live row that does not satisfy it is not a result
+    // we are willing to render, so the whole load fails closed into the concealed unavailable state.
+    // (Erased rows never get here: getResultById already excludes them, so an erased `{}` is
+    // handled as erased, not misread as malformed live content.)
+    const envelope = readPersistedResultEnvelope(result.dimension_output);
+    if (!envelope) {
+      console.error("persisted result rejected: live envelope invariant violated", {
+        resultRowId: result.id,
+      });
+      return null;
+    }
+
     const responses = isOwner && ownerId ? await listResponsesForResult(resultRowId, ownerId) : [];
     return {
       resultRowId: result.id,
@@ -66,7 +86,7 @@ export async function loadPersistedAssessmentResult(resultRowId: string): Promis
       producedAt: result.produced_at,
       // STRICT: the canonical reader returns the typed envelope or null. A legacy raw payload or
       // an unknown version can never enter the view model, and is never partially honoured.
-      dimensionOutput: readPersistedResultEnvelope(result.dimension_output),
+      dimensionOutput: envelope,
       claimed: Boolean(result.owner_account_id),
       isOwner,
       understanding: deriveCurrentUnderstanding(result, responses),

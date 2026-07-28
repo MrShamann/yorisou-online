@@ -244,6 +244,12 @@ export async function recordInterpretationResponse(input: {
   correctedResultId?: string | null;
   reasonCode?: string | null;
   source?: "web" | "line" | "import";
+  /**
+   * Client-supplied idempotency nonce (§1.2). When present, the RPC returns the ORIGINAL response
+   * for a replay instead of appending a second one, and rejects a replay whose payload differs.
+   * Absent for a directly-authenticated response, where there is no login round trip to survive.
+   */
+  intentNonce?: string | null;
 }): Promise<string> {
   return rpc<string>("yorisou_interpretation_respond", {
     p_result_row_id: input.resultRowId,
@@ -252,6 +258,7 @@ export async function recordInterpretationResponse(input: {
     p_corrected_result_id: input.correctedResultId ?? null,
     p_reason_code: input.reasonCode ?? null,
     p_source: input.source ?? "web",
+    p_intent_nonce: input.intentNonce ?? null,
   });
 }
 

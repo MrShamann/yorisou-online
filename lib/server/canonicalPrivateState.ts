@@ -35,16 +35,30 @@ export type CanonicalAssessmentEntry = {
   history: { responseType: string; correctedResultId: string | null; createdAt: string }[];
 };
 
-export async function loadCanonicalPrivateState(): Promise<CanonicalAssessmentEntry[] | null> {
+/**
+ * A DISCRIMINATED load result.
+ *
+ * The first version returned `[]` on failure, so a database outage rendered as "まだ保存された結果は
+ * ありません" — telling someone their records do not exist when in fact we could not read them. That
+ * is the worst possible lie for this particular surface, and it is not recoverable by the user
+ * because nothing suggests retrying.
+ */
+export type CanonicalPrivateStateLoad =
+  | { outcome: "unauthenticated" }
+  | { outcome: "empty" }
+  | { outcome: "ok"; entries: CanonicalAssessmentEntry[] }
+  | { outcome: "temporarily_unavailable" };
+
+export async function loadCanonicalPrivateState(): Promise<CanonicalPrivateStateLoad> {
   const viewer = await getViewerContext();
   const ownerId = viewer.account?.id || viewer.legacyAccount?.id;
-  if (!ownerId) return null;
+  if (!ownerId) return { outcome: "unauthenticated" };
 
   try {
     // Erased rows are already excluded by the store's owner-scoped listing.
     const results: AssessmentResult[] = await listResultsForOwner(ownerId);
 
-    return await Promise.all(
+    const entries = await Promise.all(
       results.map(async (result) => {
         const responses = await listResponsesForResult(result.id, ownerId);
         const u = deriveCurrentUnderstanding(result, responses);
@@ -67,10 +81,13 @@ export async function loadCanonicalPrivateState(): Promise<CanonicalAssessmentEn
         };
       }),
     );
+
+    return entries.length === 0 ? { outcome: "empty" } : { outcome: "ok", entries };
   } catch (error) {
     console.error("canonical private state load failed", {
       code: error instanceof Error ? error.message : "unknown",
     });
-    return [];
+    // Never convert a read failure into an empty-history message.
+    return { outcome: "temporarily_unavailable" };
   }
 }

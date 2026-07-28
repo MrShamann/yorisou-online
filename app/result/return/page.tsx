@@ -45,13 +45,21 @@ export default function ImairoSaveReturnPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(
               intent.responseType === "corrected"
-                ? { responseType: intent.responseType, correctedResultId: intent.correctedResultId }
-                : { responseType: intent.responseType },
+                ? {
+                    responseType: intent.responseType,
+                    correctedResultId: intent.correctedResultId,
+                    intentNonce: intent.nonce,
+                  }
+                : { responseType: intent.responseType, intentNonce: intent.nonce },
             ),
           });
           // The claim is the part that must not be lost. If only the response failed, the person
           // still owns the result and can answer again on the result page — so this is not an error
           // state, and saying "failed" would be untrue.
+          //
+          // A retry is SAFE now regardless of what happened here: the nonce makes the server return
+          // the original response rather than appending a second one, so an ambiguous network
+          // outcome (server wrote the row, reply never arrived) can no longer produce a duplicate.
           if (!responded.ok) console.warn("pending interpretation not applied");
           setClaimedRowId(intent.resultRowId);
         } catch {

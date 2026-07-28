@@ -14,18 +14,32 @@ export const dynamic = "force-dynamic";
 // two competing answers to "what is my current state" is exactly the defect that the duplicate
 // saved record was, one layer up.
 export default async function PrivateStatePage() {
-  const entries = await loadCanonicalPrivateState();
+  const load = await loadCanonicalPrivateState();
 
   return (
     <>
-      {entries ? (
+      {load.outcome === "temporarily_unavailable" ? (
         <section className="container pt-8">
-          <div className="mx-auto w-full max-w-[42rem]">
-            <CanonicalAssessmentPanel entries={entries} />
+          <div
+            role="alert"
+            className="mx-auto w-full max-w-[42rem] rounded-[1.25rem] border border-[rgba(23,59,53,0.12)] bg-white/90 px-5 py-5"
+          >
+            <p className="text-[13px] font-semibold text-[#315F50]">いまの状態</p>
+            <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
+              保存された結果を読み込めませんでした。記録が消えたわけではありません。
+              少し時間をおいて、もう一度開いてみてください。
+            </p>
           </div>
         </section>
       ) : null}
-      {entries && entries.length > 0 ? (
+      {load.outcome === "ok" || load.outcome === "empty" ? (
+        <section className="container pt-8">
+          <div className="mx-auto w-full max-w-[42rem]">
+            <CanonicalAssessmentPanel entries={load.outcome === "ok" ? load.entries : []} />
+          </div>
+        </section>
+      ) : null}
+      {load.outcome === "ok" ? (
         <section className="container pt-6">
           <div className="mx-auto w-full max-w-[42rem]">
             <p className="text-[12px] leading-6 text-[#7A7068]">
