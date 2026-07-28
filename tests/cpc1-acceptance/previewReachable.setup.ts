@@ -15,7 +15,7 @@ import { expect, test as setup } from "@playwright/test";
 //
 // So the run is bound to an exact commit before any product assertion executes.
 
-setup("hosted Preview is the application, and is the expected commit", async ({ page, request }) => {
+setup("hosted Preview is the application, and is the expected commit", async ({ page }) => {
   const base = process.env.PLAYWRIGHT_BASE_URL;
   const expectedSha = process.env.EXPECTED_GIT_SHA;
   expect(base, "PLAYWRIGHT_BASE_URL must be the hosted Preview URL").toBeTruthy();
@@ -37,17 +37,30 @@ setup("hosted Preview is the application, and is the expected commit", async ({ 
   expect(body, "Preview served a Vercel auth page, not the product").not.toContain("Log in to Vercel");
 
   // ── 2. It must be the expected COMMIT ────────────────────────────────────
-  const identityResponse = await request.get("/api/build-identity");
+  //
+  // Fetched through the PAGE, not a separate APIRequestContext. Deployment Protection admits the
+  // browser (which carries the SSO cookie) but refuses a bare API context — using the latter would
+  // make an environment refusal look like a missing endpoint.
+  const identityResponse = await page.goto("/api/build-identity", { waitUntil: "domcontentloaded" });
   expect(
-    identityResponse.status(),
+    identityResponse?.status(),
     "build-identity must resolve; without it the tested commit is unknown",
   ).toBe(200);
 
-  const identity = (await identityResponse.json()) as {
-    commitSha: string | null;
-    commitRef: string | null;
-    environment: string;
-  };
+  const raw = await page.locator("body").innerText();
+  let identity: { commitSha: string | null; commitRef: string | null; environment: string };
+  try {
+    identity = JSON.parse(raw);
+  } catch {
+    // HTML here means the route does not exist on this deployment, which is itself the answer:
+    // the deployment predates the commit that added /api/build-identity, so it cannot be the one
+    // under test. Say that, rather than surfacing a JSON SyntaxError that hides the real finding.
+    throw new Error(
+      `/api/build-identity did not return JSON on ${base}. The endpoint is absent, so this ` +
+        `deployment predates the commit under test (${expectedSha}). Deploy the current HEAD and ` +
+        `point PLAYWRIGHT_BASE_URL at that deployment.\nFirst 200 chars: ${raw.slice(0, 200)}`,
+    );
+  }
 
   // Printed on every run so a later reader can attribute results to a commit without guessing.
   console.log(
