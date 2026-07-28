@@ -7,6 +7,9 @@ import Link from "next/link";
 import { requireRecommendationContext } from "@/lib/server/canonicalResultContext";
 import RecommendationWithheld from "./RecommendationWithheld";
 import PersistedResultUnavailable from "../result/PersistedResultUnavailable";
+import CanonicalRecommendationList from "./CanonicalRecommendationList";
+import { loadRecommendationSet } from "@/lib/server/recommendationStore";
+import { getViewerContext } from "@/lib/server/yorisouAuth";
 
 export const metadata: Metadata = {
   title: "次にほしいヒント | Yorisou",
@@ -62,6 +65,40 @@ export default async function RecommendationsPage({
         />
       );
     }
+    // The list surface renders the SAME persisted set as the graph — one canonical source, two
+    // presentations, so a signal recorded in either place is immediately true in both.
+    const viewer = await getViewerContext();
+    const ownerId = viewer.account?.id || viewer.legacyAccount?.id;
+    if (ownerId) {
+      const recs = await loadRecommendationSet(loaded.context.resultRowId, ownerId, "recommendations");
+      if (recs.outcome === "ok") {
+        return (
+          <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF7F1_0%,_#fffdf9_44%,_#F4FAF7_100%)] text-[#2F2A28]">
+            <section className="container py-8">
+              <div className="mx-auto w-full max-w-[44rem] space-y-5">
+                <MvpPill>今のヒント</MvpPill>
+                <MvpCard className="space-y-5 p-5 sm:p-7">
+                  <h1 className="display-serif text-[2rem] leading-[1.16] md:text-[2.4rem]">
+                    いまのあなたに合わせた入口
+                  </h1>
+                  <CanonicalRecommendationList set={recs.set} />
+                </MvpCard>
+              </div>
+            </section>
+          </main>
+        );
+      }
+      if (recs.outcome === "withheld") {
+        return (
+          <RecommendationWithheld
+            status={loaded.context.status}
+            resultHref={`/result?result=${encodeURIComponent(loaded.context.resultRowId)}`}
+          />
+        );
+      }
+      return <PersistedResultUnavailable />;
+    }
+
     return renderRecommendations({
       // The ACCEPTED result — the person's correction when they made one. Continuing to quote the
       // machine's original at someone who already said it was wrong is the failure this prevents.

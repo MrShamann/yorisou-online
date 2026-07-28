@@ -77,7 +77,7 @@ function config() {
   return { url: url.replace(/\/$/, ""), key };
 }
 
-async function request(path: string, init: RequestInit) {
+export async function request(path: string, init: RequestInit) {
   const { url, key } = config();
   return fetch(`${url}/rest/v1/${path}`, {
     ...init,
@@ -86,13 +86,15 @@ async function request(path: string, init: RequestInit) {
   });
 }
 
-async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+// Shared with the recommendation store: one place decides how service-role credentials are used
+// and how database errors are reduced to bounded codes. Client code never sees either.
+export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   const response = await request(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     // Surface only bounded, allowlisted codes; never raw Postgres text.
     const known =
-      /attempt_[a-z_]+|claim_[a-z_]+|result_[a-z_]+|assessment_[a-z_]+/.exec(text)?.[0] ||
+      /attempt_[a-z_]+|claim_[a-z_]+|result_[a-z_]+|assessment_[a-z_]+|recommendation_[a-z_]+|interpretation_[a-z_]+/.exec(text)?.[0] ||
       `assessment_persistence_failed:${response.status}`;
     throw new Error(known);
   }
