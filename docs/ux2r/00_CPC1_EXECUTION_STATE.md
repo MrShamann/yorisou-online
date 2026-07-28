@@ -20,7 +20,7 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 | WS | scope | status |
 |---|---|---|
 | 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
-| 1 | Canonical result cutover | **PARTIAL** — see the WS1 finding below; exclusive persisted mode + concealed unavailable state + `dimensionOutput` on the view model **done** |
+| 1 | Canonical result cutover (Wave A) | **PARTIAL** — exclusive persisted mode, concealed unavailable state, `dimensionOutput` on the view model, **and the supporting-signals surface (rendered + 10 contract tests)** all done. Remaining in Wave A: persisted/legacy mode split, honest `/report-loading`, WS2 identity propagation |
 | 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
 | 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; pending-intent, login/register bridges not done |
 | 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
@@ -55,16 +55,25 @@ never substituted from URL data.
 
 ## Exact next action
 
-**WS1 →** (a) add a NEW bounded supporting-signals section fed by persisted `dimension_output`
-(do NOT touch Evidence/Constellation — see the finding above); (b) split `PersistedResultMode` from
-`LegacyCompatibilityResultMode`; (c) make `/report-loading` an honest transition that preserves
-`?result` and never simulates computation.
+**Wave A remainder, in order:**
+1. Split `PersistedResultMode` from `LegacyCompatibilityResultMode` in `app/result/page.tsx` (the
+   two authorities are currently interleaved in one component even though the *selection* is
+   already exclusive).
+2. Make `/report-loading` an honest stable-identity transition — preserve `?result`, never
+   recompute, never simulate AI computation after server completion.
+3. WS2 identity propagation: carry `resultRowId` through report / recommendation entry; classify
+   share as a public-safe derivative that does not expose the private UUID; change persisted-mode
+   `PrivateResultSave` to CLAIM the existing canonical result instead of creating a second one;
+   remove duplicate saved presentation.
+
+Then continue into Wave B (ownership + interpretation + private continuity) without reporting.
 **Then WS2 →** route `resultRowId` through share / report / recommendation / save; stop
 `PrivateResultSave` creating a second result (in persisted mode "save" = claim).
 
 ## Verification state
 
-tsc **0** · ESLint clean · production build passes · migration-scope guard passes.
+tsc **0** · ESLint clean · production build passes · migration-scope guard passes ·
+`npm run test:ux2-signals` **10/10**.
 No Preview-backed E2E exists yet. No a11y run yet for the new surfaces.
 Production non-regression at this HEAD: **42 tables / 12 migrations / 0 leaked**, PR #113 and #125
 untouched.
