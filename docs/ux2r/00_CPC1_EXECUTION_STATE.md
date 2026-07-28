@@ -20,7 +20,7 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 | WS | scope | status |
 |---|---|---|
 | 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
-| 1 | Canonical result cutover (Wave A) | **PARTIAL** — exclusive persisted mode, concealed unavailable state, `dimensionOutput` on the view model, **and the supporting-signals surface (rendered + 10 contract tests)** all done. Remaining in Wave A: persisted/legacy mode split, honest `/report-loading`, WS2 identity propagation |
+| 1 | Canonical result cutover (Wave A) | **PARTIAL** — exclusive persisted mode, concealed unavailable state, and **PersistedDimensionSummaryV1** (bounded persisted payload; privacy fix) done. Supporting Signals **withdrawn** (see below). Remaining: persisted/legacy mode split, honest `/report-loading`, WS2 identity propagation |
 | 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
 | 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; pending-intent, login/register bridges not done |
 | 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
@@ -40,7 +40,25 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 
 Guard: `PRODUCTION_LINEAGE=12` (unchanged), `LOCAL_ONLY=4`, `PREVIEW_ONLY=4`.
 
-## WS1 finding (2026-07-28) — narrows the remaining work, read before coding
+## Persisted payload contract (2026-07-28) — READ BEFORE TOUCHING dimension_output
+
+`scoringOutput.groupedBySubdimension` is `Record<SubdimensionCode, OptionScore[]>` over **24**
+codes (`AR_CONTINUATION`, `BD_ROLE_DISTANCE`, …) — **not** the Yorisou Values keys
+(`anshin`/`pace`/…), which belong to a different method. Every `OptionScore` carries `questionId`
+and `optionId`, so persisting it verbatim keeps the answer trail reconstructable even after
+`answers` is erased.
+
+**Canonical persisted payload is now `PersistedDimensionSummaryV1`** (`lib/server/persistedDimensionSummary.ts`):
+`{ v, answeredRows, formulaStatus, dimensionCounts }` — aggregate counts only. Unknown versions are
+rejected, never guessed. `containsForbiddenKey()` is the guard; the contract test drives the REAL
+`scoreCurrentStateCheck` so schema drift fails the build rather than shipping silently.
+
+**Supporting Signals is WITHDRAWN**, not deferred-and-half-wired: the repo has no governed
+public-safe labels for the 24 subdimension codes and no approved relative-strength derivation
+(bucket length mostly reflects fixed bank structure). Re-introducing it requires methodology
+authority for public labels + a defensible derivation. Do **not** invent labels.
+
+## Superseded WS1 finding (kept for context)
 
 `EvidencePanel` / `ConstellationPanel` consume `compatibility.highlights`, which resolve from the
 **governed taxonomy content keyed by `resultId`** — they are NOT derived from scoring output. In
@@ -73,7 +91,7 @@ Then continue into Wave B (ownership + interpretation + private continuity) with
 ## Verification state
 
 tsc **0** · ESLint clean · production build passes · migration-scope guard passes ·
-`npm run test:ux2-signals` **10/10**.
+`npm run test:ux2-dimension-summary` **9/9 against the real governed runtime**.
 No Preview-backed E2E exists yet. No a11y run yet for the new surfaces.
 Production non-regression at this HEAD: **42 tables / 12 migrations / 0 leaked**, PR #113 and #125
 untouched.
