@@ -36,3 +36,37 @@ export function takePendingImairoSave(): PendingImairoSave | null {
     return null;
   }
 }
+
+// ── UX-2R / CPC-1 Wave A — persisted mode carries an INTENT, not a copy ──────────────────────
+//
+// In legacy mode the pending save had to carry the result itself, because nothing existed on the
+// server yet. In persisted mode the record already exists and is owner-scoped, so crossing the
+// login boundary needs nothing but an opaque row id: the browser never holds result content, and
+// a stolen sessionStorage value is useless without the httpOnly attempt credential.
+
+export type PendingResultClaim = { resultRowId: string };
+
+const PENDING_RESULT_CLAIM_KEY = "yorisou.result.pending-claim.v1";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function storePendingResultClaim(resultRowId: string) {
+  if (!UUID_RE.test(resultRowId)) return;
+  window.sessionStorage.setItem(
+    PENDING_RESULT_CLAIM_KEY,
+    JSON.stringify({ resultRowId, createdAt: Date.now() }),
+  );
+}
+
+export function takePendingResultClaim(): PendingResultClaim | null {
+  const raw = window.sessionStorage.getItem(PENDING_RESULT_CLAIM_KEY);
+  window.sessionStorage.removeItem(PENDING_RESULT_CLAIM_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { resultRowId?: unknown; createdAt?: unknown };
+    if (typeof parsed.createdAt !== "number" || Date.now() - parsed.createdAt > 10 * 60 * 1000) return null;
+    if (typeof parsed.resultRowId !== "string" || !UUID_RE.test(parsed.resultRowId)) return null;
+    return { resultRowId: parsed.resultRowId };
+  } catch {
+    return null;
+  }
+}

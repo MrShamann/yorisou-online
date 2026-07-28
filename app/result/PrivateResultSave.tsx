@@ -9,7 +9,11 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { storePendingImairoSave, type PendingImairoSave } from "./pendingSave";
+import {
+  storePendingImairoSave,
+  storePendingResultClaim,
+  type PendingImairoSave,
+} from "./pendingSave";
 import { trackOpenTestingEvent } from "@/app/components/OpenTestingTracker";
 
 const RETURN_PATH = "/result/return";
@@ -43,7 +47,24 @@ const FEEDBACK_ACTIONS = [
   ["not_relevant", "今の自分には合わない"],
 ] as const;
 
-export default function PrivateResultSave({ context }: { context: PendingImairoSave }) {
+// UX-2R / CPC-1 Wave A — SAVE MEANS CLAIM.
+//
+// The defect this removes: in persisted mode the result already existed in
+// `yorisou_assessment_results`, yet "この結果を保存する" POSTed to /api/tests/imairo/results and
+// created a SECOND, unrelated saved record from URL parameters. The person then had two artefacts
+// for one assessment — with two identifiers, two deletion paths and no link between them — and the
+// canonical record was still unowned. Deleting the visible one left the real record behind.
+//
+// Now, when a persisted identity is present, saving CLAIMS the existing canonical record for the
+// account. No second record is created, and the continuation surface is /private-state rather than
+// a duplicate /saved/tests/<id> page.
+export default function PrivateResultSave({
+  context,
+  resultRowId = null,
+}: {
+  context: PendingImairoSave;
+  resultRowId?: string | null;
+}) {
   const [state, setState] = useState<"idle" | "saving" | "saved" | "login" | "error">("idle");
   const [savedId, setSavedId] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<RecommendationData | null>(null);
@@ -72,7 +93,34 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
     }
   }
 
+  async function claimPersistedResult(rowId: string) {
+    setState("saving");
+    try {
+      const response = await fetch(`/api/assessment/results/${rowId}/claim`, { method: "POST" });
+      if (response.status === 401) {
+        // Only the opaque row id crosses the login boundary — never the result content.
+        storePendingResultClaim(rowId);
+        setState("login");
+        return;
+      }
+      if (!response.ok) throw new Error("claim_failed");
+      setState("saved");
+      void trackOpenTestingEvent({
+        eventName: "result_viewed",
+        route: RETURN_PATH,
+        source: "imairo-result-claim",
+        resultId: context.resultId,
+      });
+    } catch {
+      setState("error");
+    }
+  }
+
   async function save() {
+    if (resultRowId) {
+      await claimPersistedResult(resultRowId);
+      return;
+    }
     setState("saving");
     try {
       const response = await fetch("/api/tests/imairo/results", {
@@ -139,7 +187,17 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
         <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
           保存した結果はあなたにだけ表示されます。あとから見返して、変化をゆっくり確かめられます。
         </p>
-        {state === "saved" && savedId ? (
+        {state === "saved" && resultRowId ? (
+          // Persisted mode: one record, one continuation surface. No duplicate saved page.
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/private-state"
+              className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white"
+            >
+              わたしの今を開く
+            </Link>
+          </div>
+        ) : state === "saved" && savedId ? (
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href={`/saved/tests/${savedId}`}
@@ -181,7 +239,11 @@ export default function PrivateResultSave({ context }: { context: PendingImairoS
             disabled={state === "saving"}
             className="mt-4 inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white disabled:opacity-60"
           >
-            {state === "saving" ? "保存しています" : "この結果を保存する"}
+            {state === "saving"
+              ? "保存しています"
+              : resultRowId
+                ? "この結果を自分のものとして保存する"
+                : "この結果を保存する"}
           </button>
         )}
         {state === "error" ? (

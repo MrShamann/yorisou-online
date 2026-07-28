@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import PersistedResultUnavailable from "./PersistedResultUnavailable";
-import { loadPersistedAssessmentResult } from "@/lib/server/persistedResultView";
+import { resolveResultMode } from "./resultMode";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
-import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import { getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import {
+  buildPrivateContinuityHref,
+  buildPublicShareHref,
+  legacyIdentity,
+  persistedIdentity,
+} from "./resultIdentityRoutes";
 import ResultShareActions from "../components/ResultShareActions";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
@@ -20,11 +26,6 @@ export const metadata: Metadata = {
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-function readParam(params: Record<string, string | string[] | undefined>, key: string) {
-  const value = params[key];
-  return typeof value === "string" ? value : null;
-}
 
 function buildHighlightSummary(highlights: { text: string }[]) {
   if (highlights.length === 0) {
@@ -45,42 +46,35 @@ export default async function ResultPage({
 }) {
   const params = (await searchParams) || {};
 
-  // UX-2: PERSISTED IDENTITY IS AUTHORITATIVE — EXCLUSIVE MODE SELECTION.
-  //
-  // The mere PRESENCE of ?result selects persisted mode. If the persisted load fails for any
-  // reason (invalid uuid, unauthorized, expired credential, erased, missing) we render the safe
-  // unavailable state and NEVER inspect legacy parameters. Falling back would let an attacker pair
-  // an inaccessible stable UUID with a public legacy result code and still render a result, and it
-  // would also leak whether that UUID exists.
-  const persistedResultRowId = readParam(params, "result");
-  const persistedMode = Boolean(persistedResultRowId);
-  const persisted = persistedMode ? await loadPersistedAssessmentResult(persistedResultRowId as string) : null;
-
-  if (persistedMode && !persisted) {
+  // UX-2R Wave A: mode resolution lives in ./resultMode, and the two modes are DISTINCT TYPES.
+  // Nothing below re-derives which mode it is in from nullable fields.
+  const mode = await resolveResultMode(params);
+  if (mode.kind === "unavailable") {
     return <PersistedResultUnavailable />;
   }
 
-  const legacyResultId = persistedMode ? null : readParam(params, "resultId");
-  const legacyOverlayId = persistedMode ? null : readParam(params, "overlayId");
-
-  if (persisted && readParam(params, "resultId") && readParam(params, "resultId") !== persisted.resultId) {
-    // Bounded mismatch fact only — no answers, no account identifier, no result content.
-    console.warn("result identity mismatch: persisted record wins", { persistedRowId: persistedResultRowId });
-  }
-
-  // In persisted mode every field comes from the database, including an authoritative null
-  // overlay. A legacy value may never fill a persisted null.
-  const resultId = persisted ? persisted.resultId : legacyResultId;
-  const overlayId = persisted ? persisted.overlayId : legacyOverlayId;
-  const confidenceBand = persisted ? "low" : readParam(params, "confidence") === "medium" ? "medium" : "low";
-  const payloadKey = persisted ? null : readParam(params, "payloadKey");
+  const { resultId, overlayId, confidenceBand, payloadKey } = mode;
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
-  const resultShareHref = buildPublicResultHref("/result/share", routeContext);
-  const recommendationHref = buildPublicResultHref("/recommendations", routeContext);
-  const fullReportHref = compatibility.assignment
+
+  // Wave A: outbound links are split by INTENT, not built by one shared helper.
+  //   • private continuity keeps the stable identity so the destination reads the record;
+  //   • the share surface is a public derivative and can never receive the private row id.
+  const identity =
+    mode.kind === "persisted"
+      ? persistedIdentity(mode.resultRowId, routeContext)
+      : legacyIdentity(routeContext);
+  const resultShareHref = buildPublicShareHref("/result/share", identity);
+  const recommendationHref = buildPrivateContinuityHref("/recommendations", identity);
+  const reportEntryHref = compatibility.assignment
     ? buildSelfUnderstandingReportHref(compatibility.assignment.publicCode)
     : null;
+  // The report entry is private continuity: it must carry the stable identity so a return trip
+  // resolves the same persisted record rather than re-deriving one from the public code.
+  const fullReportHref =
+    reportEntryHref && identity.mode === "persisted"
+      ? buildPrivateContinuityHref(reportEntryHref, identity)
+      : reportEntryHref;
   const highlightSummary = buildHighlightSummary(compatibility.highlights);
   const publicTypeLabel = compatibility.assignment
     ? `${compatibility.assignment.clanJapanese}のタイプ`
@@ -251,6 +245,7 @@ export default async function ResultPage({
                   confidence: confidenceBand,
                   payloadKey,
                 }}
+                resultRowId={identity.mode === "persisted" ? identity.persisted.resultRowId : null}
               />
             ) : null}
           </div>

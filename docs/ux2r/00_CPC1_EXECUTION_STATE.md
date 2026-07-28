@@ -20,9 +20,9 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 | WS | scope | status |
 |---|---|---|
 | 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
-| 1 | Canonical result cutover (Wave A) | **PARTIAL** — exclusive persisted mode, concealed unavailable state, and **PersistedDimensionSummaryV1** (bounded persisted payload; privacy fix) done. Supporting Signals **withdrawn** (see below). Remaining: persisted/legacy mode split, honest `/report-loading`, WS2 identity propagation |
+| 1 | Canonical result cutover (Wave A) | **DONE** — exclusive persisted mode + concealed unavailable state; minimal `{"v":"pds-v1"}` envelope enforced at write/DB/read; `PersistedResultMode` split from `LegacyCompatibilityResultMode`; honest `/report-loading`; identity propagation with public-safe share; save = claim (no duplicate saved record) |
 | 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
-| 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; pending-intent, login/register bridges not done |
+| 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; persisted-mode pending CLAIM INTENT (opaque row id only) crosses the login boundary via `/result/return`. Login/register surface bridges not yet reworked (Wave B) |
 | 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
 | 5 | Private continuity (`/private-state`) | **NOT STARTED** |
 | 6 | Recommendation + action loop | **NOT STARTED** (Preview lacks `yorisou_recommendation_*`; migration required) |
@@ -65,46 +65,35 @@ envelope and validates), DATABASE (migration `202607280001` — `yorisou_attempt
 payload that is not exactly one key `v='pds-v1'`), READ (`loadPersistedAssessmentResult` uses the
 strict reader → typed envelope or null). The reader **rejects rather than sanitises**.
 
-**Supporting Signals is WITHDRAWN**, not deferred-and-half-wired: the repo has no governed
-public-safe labels for the 24 subdimension codes and no approved relative-strength derivation
-(bucket length mostly reflects fixed bank structure). Re-introducing it requires methodology
-authority for public labels + a defensible derivation. Do **not** invent labels.
-
-## Superseded WS1 finding (kept for context)
-
-`EvidencePanel` / `ConstellationPanel` consume `compatibility.highlights`, which resolve from the
-**governed taxonomy content keyed by `resultId`** — they are NOT derived from scoring output. In
-persisted mode `resultId` already comes from the database, so **that path is already
-contract-correct** (contract 02: governed copy is resolved *by* the persisted identifier and never
-duplicated into the DB). Do not rewrite it.
-
-What is actually missing is narrower: the persisted `dimension_output`
-(`{ groupedBySubdimension, formulaStatus }`, written at completion) has **no surface at all**. It
-needs its own bounded "supporting signals" section, shape-validated, omitted when malformed, and
-never substituted from URL data.
+**Supporting Signals is WITHDRAWN and is NOT part of any remaining scope** — it is not deferred,
+not pending and not a Wave B item. The repo has no governed public-safe labels for the 24
+subdimension codes and no approved relative-strength derivation (bucket length mostly reflects
+fixed bank structure). It would only ever return under a separate Founder-authorized methodology
+package. Do **not** invent labels, and do not treat this paragraph as an open task.
 
 ## Exact next action
 
-**Wave A remainder, in order:**
-0. (done) canonical envelope + three-boundary enforcement.
-1. Split `PersistedResultMode` from `LegacyCompatibilityResultMode` in `app/result/page.tsx` (the
-   two authorities are currently interleaved in one component even though the *selection* is
-   already exclusive).
-2. Make `/report-loading` an honest stable-identity transition — preserve `?result`, never
-   recompute, never simulate AI computation after server completion.
-3. WS2 identity propagation: carry `resultRowId` through report / recommendation entry; classify
-   share as a public-safe derivative that does not expose the private UUID; change persisted-mode
-   `PrivateResultSave` to CLAIM the existing canonical result instead of creating a second one;
-   remove duplicate saved presentation.
+**Wave A is complete.** Delivered, in order:
+0. Canonical `{"v":"pds-v1"}` envelope + three-boundary enforcement.
+1. `PersistedResultMode` split from `LegacyCompatibilityResultMode` (`app/result/resultMode.ts`) —
+   the two authorities are now distinct types produced by one resolver, so a legacy value can no
+   longer fill a persisted null anywhere a ternary was forgotten.
+2. `/report-loading` is an honest stable-identity transition: the four fake analysis steps and the
+   3.9s/4.4s artificial delays are gone, `?result` is preserved, and the copy states plainly that
+   nothing is being computed there.
+3. Identity propagation (`app/result/resultIdentityRoutes.ts`): private continuity routes carry the
+   stable identity ALONE; the share surface is structurally incapable of carrying the private row
+   id. Persisted-mode `PrivateResultSave` CLAIMS the canonical record instead of creating a second
+   one, and the duplicate `/saved/tests/<id>` presentation is retired in persisted mode.
 
-Then continue into Wave B (ownership + interpretation + private continuity) without reporting.
-**Then WS2 →** route `resultRowId` through share / report / recommendation / save; stop
-`PrivateResultSave` creating a second result (in persisted mode "save" = claim).
+**Next: Wave B** — ownership, interpretation and private continuity, continuing without an
+intervening report.
 
 ## Verification state
 
 tsc **0** · ESLint clean · production build passes · migration-scope guard passes ·
-`npm run test:ux2-envelope` **9/9 against the real governed runtime** · Preview round trip proven:
+`npm run test:ux2-envelope` **9/9 against the real governed runtime** ·
+`npm run test:ux2-routes` **8/8** (route-continuity + share-safety contract) · Preview round trip proven:
 raw payload REJECTED, extra-field REJECTED, canonical accepted and stored exactly, erase clears all.
 Unsafe legacy Preview rows **found: 0, deleted: 0**.
 No Preview-backed E2E exists yet. No a11y run yet for the new surfaces.

@@ -8,14 +8,32 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { buildPublicResultHref } from "../../check-in/resultCompatibility";
-import { takePendingImairoSave, type PendingImairoSave } from "../pendingSave";
+import {
+  takePendingImairoSave,
+  takePendingResultClaim,
+  type PendingImairoSave,
+} from "../pendingSave";
 
 export default function ImairoSaveReturnPage() {
   const [state, setState] = useState<"saving" | "missing" | "error">("saving");
   const [savedId, setSavedId] = useState<string | null>(null);
   const [context, setContext] = useState<PendingImairoSave | null>(null);
+  // UX-2R Wave A: in persisted mode the return trip CLAIMS the existing canonical record. It never
+  // re-posts result content, so nothing is created twice across the login boundary.
+  const [claimedRowId, setClaimedRowId] = useState<string | null>(null);
 
   useEffect(() => {
+    const claim = takePendingResultClaim();
+    if (claim) {
+      fetch(`/api/assessment/results/${claim.resultRowId}/claim`, { method: "POST" })
+        .then((response) => {
+          if (!response.ok) throw new Error("claim_failed");
+          setClaimedRowId(claim.resultRowId);
+        })
+        .catch(() => setState("error"));
+      return;
+    }
+
     const pending = takePendingImairoSave();
     if (!pending) {
       queueMicrotask(() => setState("missing"));
@@ -35,7 +53,9 @@ export default function ImairoSaveReturnPage() {
       .catch(() => setState("error"));
   }, []);
 
-  const resultHref = context
+  const resultHref = claimedRowId
+    ? `/result?result=${encodeURIComponent(claimedRowId)}`
+    : context
     ? buildPublicResultHref("/result", {
         resultId: context.resultId,
         overlayId: context.overlayId,
@@ -48,7 +68,28 @@ export default function ImairoSaveReturnPage() {
     <main className="min-h-screen bg-[linear-gradient(180deg,_#FFF9F2_0%,_#fffdf8_44%,_#F3FAF6_100%)] text-[#2F2A28]">
       <div className="container py-12">
         <div className="mx-auto max-w-lg rounded-[1.25rem] border border-[rgba(23,59,53,0.11)] bg-white/95 p-6">
-          {savedId ? (
+          {claimedRowId ? (
+            <>
+              <p className="text-[15px] leading-8">この結果をあなたのものとして保存しました。</p>
+              <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
+                新しく結果が作られたのではなく、いま見ていた結果がそのままあなたのアカウントに紐づきました。
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href={resultHref}
+                  className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white"
+                >
+                  結果に戻る
+                </Link>
+                <Link
+                  href="/private-state"
+                  className="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[rgba(23,59,53,0.14)] bg-white px-5 text-[14px] font-semibold text-[#315F50]"
+                >
+                  わたしの今を開く
+                </Link>
+              </div>
+            </>
+          ) : savedId ? (
             <>
               <p className="text-[15px] leading-8">結果を非公開で保存しました。</p>
               <p className="mt-1 text-[13px] leading-7 text-[#5F5750]">
