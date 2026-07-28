@@ -1,81 +1,56 @@
-// CPC-1 Wave A — bounded persisted dimension summary (PersistedDimensionSummaryV1).
+// CPC-1 Wave A — the canonical persisted result envelope.
 //
 // PURE and free of `server-only` so the node contract suite exercises it directly (repo pattern:
 // lib/yorisou/methods/yorisou-values/contract.ts).
 //
-// WHY THIS EXISTS — a real defect found in review:
-// completion previously persisted `scoringOutput.groupedBySubdimension` verbatim, which is
-// `Record<SubdimensionCode, OptionScore[]>`. Every OptionScore carries `questionId` AND `optionId`,
-// so that payload could RECONSTRUCT THE USER'S ANSWER TRAIL. That contradicts contract 04
-// ("no raw answers") and falsified the erasure guarantee, because erasing `answers` while keeping
-// the scoring rows leaves the answers recoverable.
+// HISTORY AND ACCURATE FRAMING
+// Completion originally persisted `scoringOutput.groupedBySubdimension` verbatim, i.e.
+// Record<SubdimensionCode, OptionScore[]>, where each row carries questionId and optionId. That was
+// a LIVE OVER-RETENTION defect: reconstructable answer information was kept for the lifetime of the
+// row without an approved use. It was NOT an erasure failure — migration 202607270004's
+// yorisou_assessment_result_erase already clears dimension_output to '{}', clears answers, and
+// nulls the result identifiers and owner linkage, and a lifecycle constraint enforces that shape.
+// Keep that distinction exact in all reporting.
 //
-// This module reduces the governed scoring output to a bounded, versioned, non-reconstructable
-// summary. It intentionally carries NO questionId, NO optionId, NO sourceRow, NO per-row data.
+// MINIMIZATION DECISION
+// An intermediate version stored { answeredRows, formulaStatus, dimensionCounts }. Those carry
+// essentially no user information: a completed 120Q always answers every item, formulaStatus is
+// methodology metadata, and dimensionCode/subdimensionCode are FIXED properties of the question
+// bank rather than user choices — so per-dimension counts mostly describe how the bank is
+// structured, not what the person selected. With no governed public dimension projection, storing
+// a user-looking summary that is really bank structure fails data minimization. The live envelope
+// is therefore reduced to a version marker only. The user's actual outcome is carried by
+// `result_id`; provenance is carried by the dedicated scoring_version / result_schema_version
+// columns.
 
-export const PERSISTED_DIMENSION_SUMMARY_VERSION = "pds-v1" as const;
+export const PERSISTED_RESULT_ENVELOPE_VERSION = "pds-v1" as const;
 
-export type PersistedDimensionSummaryV1 = {
-  v: typeof PERSISTED_DIMENSION_SUMMARY_VERSION;
-  /** Number of governed rows that contributed. Aggregate only. */
-  answeredRows: number;
-  /** Coverage completeness reported by the governed aggregator. */
-  formulaStatus: string | null;
-  /** Per-dimension contribution COUNTS only — never the rows themselves. */
-  dimensionCounts: Record<string, number>;
-};
+/** The ONLY payload shape permitted in yorisou_assessment_results.dimension_output. */
+export type PersistedResultEnvelopeV1 = { v: typeof PERSISTED_RESULT_ENVELOPE_VERSION };
 
-type LooseRow = { dimensionCode?: unknown };
+export function buildPersistedResultEnvelope(): PersistedResultEnvelopeV1 {
+  return { v: PERSISTED_RESULT_ENVELOPE_VERSION };
+}
 
 /**
- * Reduce governed scoring output to the bounded persisted summary.
- * Accepts the REAL shape: Record<SubdimensionCode, OptionScore[]>.
+ * Strict reader. Returns the typed envelope or null — never an arbitrary object.
+ * Rejects (does not sanitise) unknown versions, extra top-level fields, arrays and malformed input.
  */
-export function buildPersistedDimensionSummary(scoringOutput: unknown): PersistedDimensionSummaryV1 {
-  const out: PersistedDimensionSummaryV1 = {
-    v: PERSISTED_DIMENSION_SUMMARY_VERSION,
-    answeredRows: 0,
-    formulaStatus: null,
-    dimensionCounts: {},
-  };
-  if (!scoringOutput || typeof scoringOutput !== "object") return out;
-
-  const status = (scoringOutput as { formulaStatus?: unknown }).formulaStatus;
-  out.formulaStatus = typeof status === "string" ? status : null;
-
-  const grouped = (scoringOutput as { groupedBySubdimension?: unknown }).groupedBySubdimension;
-  if (!grouped || typeof grouped !== "object" || Array.isArray(grouped)) return out;
-
-  for (const rows of Object.values(grouped as Record<string, unknown>)) {
-    if (!Array.isArray(rows)) continue;
-    for (const row of rows as LooseRow[]) {
-      out.answeredRows += 1;
-      const dim = typeof row?.dimensionCode === "string" ? row.dimensionCode : null;
-      if (dim) out.dimensionCounts[dim] = (out.dimensionCounts[dim] ?? 0) + 1;
-    }
-  }
-  return out;
-}
-
-/** Accept only the exact known version; anything else is treated as absent. */
-export function readPersistedDimensionSummary(raw: unknown): PersistedDimensionSummaryV1 | null {
+export function readPersistedResultEnvelope(raw: unknown): PersistedResultEnvelopeV1 | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const r = raw as Partial<PersistedDimensionSummaryV1>;
-  if (r.v !== PERSISTED_DIMENSION_SUMMARY_VERSION) return null;
-  if (typeof r.answeredRows !== "number" || !Number.isFinite(r.answeredRows)) return null;
-  if (!r.dimensionCounts || typeof r.dimensionCounts !== "object" || Array.isArray(r.dimensionCounts)) return null;
-  return {
-    v: PERSISTED_DIMENSION_SUMMARY_VERSION,
-    answeredRows: r.answeredRows,
-    formulaStatus: typeof r.formulaStatus === "string" ? r.formulaStatus : null,
-    dimensionCounts: r.dimensionCounts as Record<string, number>,
-  };
+  const keys = Object.keys(raw as Record<string, unknown>);
+  // Exact shape: exactly one key, exactly the known version. Anything else is refused outright
+  // rather than stripped-and-accepted, so a legacy raw payload can never be partially honoured.
+  if (keys.length !== 1 || keys[0] !== "v") return null;
+  if ((raw as { v?: unknown }).v !== PERSISTED_RESULT_ENVELOPE_VERSION) return null;
+  return { v: PERSISTED_RESULT_ENVELOPE_VERSION };
 }
 
-/** Forbidden keys that must never appear anywhere in a persisted payload. */
+/** Fields that must never appear anywhere in a persisted payload. */
 export const FORBIDDEN_PERSISTED_KEYS = [
-  "questionId", "optionId", "sourceRow", "answers", "primarySignal",
-  "secondarySignals", "primaryAxisContribution", "secondaryAxisModifiers",
+  "questionId", "optionId", "sourceRow", "answers", "primarySignal", "secondarySignals",
+  "primaryAxisContribution", "secondaryAxisModifiers", "signalStrength", "groupedBySubdimension",
+  "groupedByDimension", "groupedByPrimarySignal",
 ] as const;
 
 export function containsForbiddenKey(value: unknown): string | null {

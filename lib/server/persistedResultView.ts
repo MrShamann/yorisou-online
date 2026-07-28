@@ -14,6 +14,10 @@ import {
   deriveCurrentUnderstanding,
 } from "@/lib/server/assessmentAttemptStore";
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
+import {
+  type PersistedResultEnvelopeV1,
+  readPersistedResultEnvelope,
+} from "@/lib/server/persistedDimensionSummary";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,7 +29,7 @@ export type PersistedResultView = {
   methodId: string;
   methodVersion: string;
   producedAt: string;
-  dimensionOutput: Record<string, unknown> | null;
+  dimensionOutput: PersistedResultEnvelopeV1 | null;
   claimed: boolean;
   isOwner: boolean;
   understanding: ReturnType<typeof deriveCurrentUnderstanding>;
@@ -60,12 +64,9 @@ export async function loadPersistedAssessmentResult(resultRowId: string): Promis
       methodId: result.method_id,
       methodVersion: result.method_version,
       producedAt: result.produced_at,
-      // Bounded shape validation: a malformed payload yields null so the surface omits the
-      // dimension section rather than falling back to URL-provided values.
-      dimensionOutput:
-        result.dimension_output && typeof result.dimension_output === "object" && !Array.isArray(result.dimension_output)
-          ? (result.dimension_output as Record<string, unknown>)
-          : null,
+      // STRICT: the canonical reader returns the typed envelope or null. A legacy raw payload or
+      // an unknown version can never enter the view model, and is never partially honoured.
+      dimensionOutput: readPersistedResultEnvelope(result.dimension_output),
       claimed: Boolean(result.owner_account_id),
       isOwner,
       understanding: deriveCurrentUnderstanding(result, responses),

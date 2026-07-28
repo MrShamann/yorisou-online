@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { scoreCurrentStateCheck } from "@/app/check-in/currentStateCheckV1";
-import { buildPersistedDimensionSummary } from "@/lib/server/persistedDimensionSummary";
+import { buildPersistedResultEnvelope } from "@/lib/server/persistedDimensionSummary";
 import { completeAttempt, hashClaimToken } from "@/lib/server/assessmentAttemptStore";
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
 import {
@@ -65,7 +65,7 @@ export async function POST(request: Request, context: Context) {
       // Record<SubdimensionCode, OptionScore[]> and every row carries questionId + optionId, so
       // persisting it verbatim would keep the user's answer trail reconstructable even after the
       // answers themselves are erased.
-      dimensionOutput: buildPersistedDimensionSummary(scored.scoringOutput),
+      dimensionOutput: buildPersistedResultEnvelope(),
       scoringVersion: CURRENT_STATE_SCORING_VERSION,
       resultSchemaVersion: CURRENT_STATE_RESULT_SCHEMA_VERSION,
     });

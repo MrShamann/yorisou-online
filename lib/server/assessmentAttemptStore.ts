@@ -11,6 +11,10 @@ import "server-only";
 // asked to register, and then safely claim it after authenticating.
 
 import { createHash, randomBytes } from "crypto";
+import {
+  type PersistedResultEnvelopeV1,
+  readPersistedResultEnvelope,
+} from "@/lib/server/persistedDimensionSummary";
 
 const ATTEMPTS = "yorisou_assessment_attempts";
 const RESULTS = "yorisou_assessment_results";
@@ -149,10 +153,15 @@ export async function completeAttempt(input: {
   answeredCount: number;
   resultId: string;
   overlayId: string | null;
-  dimensionOutput: Record<string, unknown>;
+  // Only the canonical envelope may be persisted — never an arbitrary object.
+  dimensionOutput: PersistedResultEnvelopeV1;
   scoringVersion: string;
   resultSchemaVersion: string;
 }): Promise<string> {
+  // Defence in depth: validate at the write boundary as well as in the database guard.
+  if (!readPersistedResultEnvelope(input.dimensionOutput)) {
+    throw new Error("assessment_persisted_envelope_invalid");
+  }
   return rpc<string>("yorisou_attempt_complete", {
     p_attempt_id: input.attemptId,
     p_claim_token_hash: input.claimTokenHash,
