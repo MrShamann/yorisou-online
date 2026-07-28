@@ -184,42 +184,50 @@ abandon kills token + blocks resume/save/complete/claim.
 ## CONTINUATION_CURSOR
 
 ```
-current_head: (this commit on feat/ux2-integrated-core-experience)
-last_completed_capability: hosted Preview acceptance running at a VERIFIED deployment.
-  deployed_sha == expected_sha (a454d0b), env=preview. 55 passed / 6 unique failures.
-  Suites: previewReachable.setup (identity gate), lineAnonymousNetwork, authorityMatrix,
-  securityMatrix, qualityGates (axe/keyboard/focus/reduced-motion/copy), verticalJourney.
+current_head: (this commit)
+last_completed_capability: hosted Preview harness at a VERIFIED deployment (deployed_sha ==
+  expected_sha, env=preview). 55 assertions passing across desktop+mobile.
 
-HOW TO RUN (bypass secret is NOT in the repo — read it from Vercel each time):
-  SECRET=$(curl -s -H "Authorization: Bearer $(python3 -c "import json;print(json.load(open('$HOME/Library/Application Support/com.vercel.cli/auth.json'))['token'])")" \
-    https://api.vercel.com/v9/projects/yorisou-online | python3 -c "import json,sys;print(next(iter((json.load(sys.stdin).get('protectionBypass') or {}).keys()),''))")
-  npx vercel deploy --scope shigeru-naganos-projects --yes     # if no deployment at HEAD
-  EXPECTED_GIT_SHA=$(git rev-parse HEAD) PLAYWRIGHT_BASE_URL=<deployment-url> \
-    VERCEL_AUTOMATION_BYPASS_SECRET=$SECRET npm run test:cpc1-acceptance
+SCOPE CORRECTION: what is passing is NOT the frozen vertical journey. verticalJourney.spec.ts
+  answers 3 questions and substitutes a legacy result URL for completion. It does not complete the
+  120-question assessment, register, claim, act on recommendations, recover across sign-out/in, or
+  erase. Coverage today is unauthenticated routing, concealment, denial and quality assertions.
 
-next_file: tests/cpc1-acceptance/lineAnonymousNetwork.spec.ts (first), then qualityGates.spec.ts
-next_function_or_route: resolve the 6 remaining failures, in this order:
-  1. lineAnonymousNetwork "issues no request to any private endpoint" — PRINT the captured URL
-     first. Either the pattern is over-broad (/api/recommendations also matches nothing private
-     on this page) or something client-side genuinely reaches for it. This is the only one with
-     privacy implications; treat it as real until the URL proves otherwise.
-  2. axe serious/critical on /, /check-in, /tests, /line/mini-app — read the violation ids from
-     the failure output and fix the markup. These are REAL and must not be relaxed.
-  3. verticalJourney resume-after-refresh — capture the body; the resume affordance may render
-     different wording than /続き|再開|前回/.
-  4. securityMatrix "concealed state reveals nothing" — 削除/期限/権限 probably come from shared
-     nav/footer, not the concealed state. Scope the assertion to <main>, do not delete it.
-  5. qualityGates diagnosis-claim — assertion scans whole body; scope it to the occurrence's own
-     context rather than the page.
-next_command: see HOW TO RUN above
+HOW TO RUN:
+  VERCEL_AUTOMATION_BYPASS_SECRET must be supplied securely at runtime. Never commit it, never
+  print it, never store the retrieval procedure here.
+  npx vercel deploy --scope shigeru-naganos-projects --yes    # Preview only, never --prod
+  EXPECTED_GIT_SHA=<application-sha> PLAYWRIGHT_BASE_URL=<deployment-url> \
+    VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> npm run test:cpc1-acceptance
+
+next_file: tests/cpc1-acceptance/lineAnonymousNetwork.spec.ts
+next_function_or_route: resolve the 6 findings, then build the REAL lifecycle
+  1. LINE anonymous network — print method/pathname/query/resourceType before judging. Genuine
+     private read => fix product. Over-broad pattern => narrow to exact endpoints. Never weaken
+     the rule that anonymous LINE reads no private state.
+  2. axe serious/critical on /, /check-in, /tests, /line/mini-app — capture route/viewport/
+     violation id/impact/selector/summary; fix markup. Never suppress rules or lower the threshold.
+  3. resume — prove ATTEMPT IDENTITY continuity (same attempt id, no second attempt created),
+     not Japanese keywords.
+  4. concealed-state — scope leakage assertions to <main>; footer privacy copy must not create
+     false failures. Keep byte-identical inaccessible proof.
+  5. 診断 scan — evaluate each occurrence in its local context; explicit denials are valid.
+  6. Then replace the shallow journey with the real browser lifecycle: complete all 120 questions
+     once (wait on question-index transitions, not fixed 400ms sleeps), capture attempt identity /
+     canonical resultRowId / synthetic account / recommendation set id, then correction →
+     registration → claim → exactly-once pending correction → private-state → report → download →
+     recommendations → graph → save/try/tried/helpful/change/hide → sign out → sign in → recovery
+     → canonical LINE return → erase → all surfaces concealed + records zeroed per contract.
+     Two isolated synthetic users for the cross-owner variants. Clean every fixture, including on
+     failure where practical.
+next_command: see HOW TO RUN
 remaining_terminal_gates:
-  - resolve the 6 failures
-  - authenticated journey (registration → claim → recommendation actions → sign-out/in → erase)
-    still needs auth fixtures; currently only unauthenticated paths are covered
-  - erasure proof through the application (Web + LINE)
-  - full battery once (tsc/lint/build/unit are already green at this HEAD)
-  - full rewrite of PR #126 body and this file (PR still says 5 migrations; actual 11)
-known_real_blockers: none. Vercel git-integration deployments lag; `npx vercel deploy` produces a
-  Preview at HEAD immediately and is Preview-only (never --prod).
+  - 6 findings; real authenticated lifecycle; authenticated security variants; erasure proof
+  - full battery once; complete rewrite of PR #126 body and this file (PR still says 5 migrations;
+    actual 11)
+deployment_identity_rule: a454d0b remains valid for harness-only changes. After ANY change under
+  app/, lib/, supabase/ or other runtime code, redeploy and require deployed_sha == that new
+  application sha, environment == preview.
+known_real_blockers: none.
 lock_state: released
 ```
