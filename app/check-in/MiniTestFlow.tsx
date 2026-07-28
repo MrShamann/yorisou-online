@@ -48,6 +48,9 @@ export default function MiniTestFlow() {
   const resultNavigationStartedRef = useRef(false);
   const [completing, setCompleting] = useState(false);
   const [completionError, setCompletionError] = useState<string | null>(null);
+  const [restartConfirming, setRestartConfirming] = useState(false);
+  const [restartError, setRestartError] = useState<string | null>(null);
+  const [restarting, setRestarting] = useState(false);
 
   // UX-2: a persisted in-progress attempt is offered EXPLICITLY rather than silently restored —
   // the user is never teleported into the middle of a quiz they did not just ask to resume.
@@ -220,6 +223,32 @@ export default function MiniTestFlow() {
     }, AUTO_ADVANCE_DELAY_MS);
   }
 
+  // Entry point for the primary CTA. When saved answers exist, restarting is a destructive act,
+  // so it must be confirmed and the old attempt explicitly abandoned before a new one is created.
+  async function beginOrConfirmRestart() {
+    if (resumableAttempt && !restartConfirming) {
+      setRestartConfirming(true);
+      return;
+    }
+    await begin();
+  }
+
+  async function confirmRestart() {
+    if (restarting || !resumableAttempt) return;
+    setRestarting(true);
+    setRestartError(null);
+    const abandoned = await attempt.abandonAttempt(resumableAttempt.id);
+    if (!abandoned) {
+      // The previous attempt is preserved and NO new attempt is created.
+      setRestarting(false);
+      setRestartError("restart_failed");
+      return;
+    }
+    setRestartConfirming(false);
+    await begin();
+    setRestarting(false);
+  }
+
   async function begin() {
     clearAutoAdvanceTimer();
     clearNavigationFallbackTimer();
@@ -359,6 +388,40 @@ export default function MiniTestFlow() {
                   </MvpCard>
                 ) : null}
 
+                {restartConfirming && resumableAttempt ? (
+                  <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#22201D]">保存した回答を消して、はじめからやり直しますか？</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      {resumableAttempt.answeredCount} / {totalQuestions} 問の回答は削除され、元に戻せません。
+                    </p>
+                    {restartError ? (
+                      <p role="alert" className="text-[13px] leading-6 text-[#8A2E2E]">
+                        やり直しの処理ができませんでした。前回の回答はそのまま残っています。もう一度お試しください。
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { void confirmRestart(); }}
+                        disabled={restarting}
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full px-5 text-[14px] disabled:opacity-60"
+                        style={{ background: "#173B35", color: "#fff", fontWeight: 700 }}
+                      >
+                        {restarting ? "処理しています…" : "削除してやり直す"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setRestartConfirming(false); setRestartError(null); }}
+                        disabled={restarting}
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border px-5 text-[14px] disabled:opacity-60"
+                        style={{ borderColor: "rgba(23,59,53,0.2)", color: "#315F50", fontWeight: 700 }}
+                      >
+                        やめる
+                      </button>
+                    </div>
+                  </MvpCard>
+                ) : null}
+
                 {resumableAttempt ? (
                   <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.16)] bg-white p-4">
                     <p className="text-[13px] font-semibold text-[#22201D]">前回の途中から続けられます</p>
@@ -382,8 +445,8 @@ export default function MiniTestFlow() {
                 <div>
                   <button
                     type="button"
-                    onClick={() => { void begin(); }}
-                    disabled={attempt.startState === "starting" || completing}
+                    onClick={() => { void beginOrConfirmRestart(); }}
+                    disabled={attempt.startState === "starting" || completing || restarting}
                     className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] transition hover:opacity-95 active:scale-[0.975]"
                     style={{ background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
                   >

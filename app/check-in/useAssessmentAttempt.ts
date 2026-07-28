@@ -173,6 +173,23 @@ export function useAssessmentAttempt() {
     [setAttempt, startState],
   );
 
+  // Governed restart: the previous attempt is explicitly abandoned server-side BEFORE a new one
+  // is created, so a restart can never leave an orphaned in-progress attempt with a live token.
+  const abandonAttempt = useCallback(async (targetAttemptId: string) => {
+    try {
+      const res = await fetch(`/api/assessment/attempts/${targetAttemptId}/abandon`, { method: "POST" });
+      if (!res.ok) return false;
+      pendingRef.current = null;
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+      setAttempt(null);
+      setRestored(null);
+      setSaveState("idle");
+      return true;
+    } catch {
+      return false;
+    }
+  }, [setAttempt]);
+
   const adoptRestoredAttempt = useCallback(
     (snapshot: AttemptSnapshot) => {
       setAttempt(snapshot.id);
@@ -221,6 +238,7 @@ export function useAssessmentAttempt() {
     expired,
     hasPendingSave: pendingRef.current !== null,
     startAttempt,
+    abandonAttempt,
     adoptRestoredAttempt,
     saveProgress,
     retrySave,
