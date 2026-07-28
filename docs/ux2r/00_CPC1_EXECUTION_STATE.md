@@ -184,50 +184,42 @@ abandon kills token + blocks resume/save/complete/claim.
 ## CONTINUATION_CURSOR
 
 ```
-current_head: c3516a1ac99e9749de3d94723ebb69ce05b07bed
-last_completed_capability: deployment-identity binding for hosted acceptance.
-  - app/api/build-identity/route.ts — commitSha/commitRef/environment from Vercel build metadata
-    (never from request headers/query). No secrets.
-  - tests/cpc1-acceptance/previewReachable.setup.ts — now fails before ANY product assertion when
-    identity is unresolvable, SHA absent, SHA != EXPECTED_GIT_SHA, environment is production, or
-    the root navigation left the tested origin. Prints expected_sha/deployed_sha/tested_base_url/
-    final_root_url every run.
-  - authorityMatrix download assertion hardened: maxRedirects 0; redirect / markdown-attachment /
-    non-404 distinguished explicitly; status+location+content-type captured on failure.
+current_head: (this commit on feat/ux2-integrated-core-experience)
+last_completed_capability: hosted Preview acceptance running at a VERIFIED deployment.
+  deployed_sha == expected_sha (a454d0b), env=preview. 55 passed / 6 unique failures.
+  Suites: previewReachable.setup (identity gate), lineAnonymousNetwork, authorityMatrix,
+  securityMatrix, qualityGates (axe/keyboard/focus/reduced-motion/copy), verticalJourney.
 
-next_file: tests/cpc1-acceptance (no code changes needed first — RUN it)
-next_function_or_route: rerun the 3 open failures against a deployment CONFIRMED at HEAD
-next_command:
-  # 1. find the deployment whose build-identity matches HEAD:
-  npx vercel ls yorisou-online --scope shigeru-naganos-projects
-  curl -s "<candidate-url>/api/build-identity"     # must return commitSha == HEAD
-  # 2. then:
-  EXPECTED_GIT_SHA=$(git rev-parse HEAD) \
-  PLAYWRIGHT_BASE_URL=<confirmed-url> \
-  npm run test:cpc1-acceptance
+HOW TO RUN (bypass secret is NOT in the repo — read it from Vercel each time):
+  SECRET=$(curl -s -H "Authorization: Bearer $(python3 -c "import json;print(json.load(open('$HOME/Library/Application Support/com.vercel.cli/auth.json'))['token'])")" \
+    https://api.vercel.com/v9/projects/yorisou-online | python3 -c "import json,sys;print(next(iter((json.load(sys.stdin).get('protectionBypass') or {}).keys()),''))")
+  npx vercel deploy --scope shigeru-naganos-projects --yes     # if no deployment at HEAD
+  EXPECTED_GIT_SHA=$(git rev-parse HEAD) PLAYWRIGHT_BASE_URL=<deployment-url> \
+    VERCEL_AUTOMATION_BYPASS_SECRET=$SECRET npm run test:cpc1-acceptance
 
-IMPORTANT OBSERVATION FOR THE NEXT SESSION:
-  curl against the Preview URL redirects to vercel.com/sso ("Redirecting..."), but the Playwright
-  BROWSER reached the app fine in the previous run. Playwright's request.get() (APIRequestContext)
-  may behave like curl and hit the SSO wall — which would make the download assertion fail for an
-  environment reason, not a product one. If the identity gate's request.get("/api/build-identity")
-  fails while page.goto("/") succeeds, supply VERCEL_AUTOMATION_BYPASS_SECRET (the config already
-  applies x-vercel-protection-bypass when it is set) rather than weakening the assertion.
-
-  Do NOT change product code or the three assertions until identity is confirmed. Repository truth
-  says all three behaviors exist at HEAD: MS-KI is governed as 気配読み and legacy-only mode renders
-  the assignment nickname; the download route returns a concealed 404 via requireContinuityContext;
-  anonymous /line/mini-app renders 120問から始める as SSR text.
-
+next_file: tests/cpc1-acceptance/lineAnonymousNetwork.spec.ts (first), then qualityGates.spec.ts
+next_function_or_route: resolve the 6 remaining failures, in this order:
+  1. lineAnonymousNetwork "issues no request to any private endpoint" — PRINT the captured URL
+     first. Either the pattern is over-broad (/api/recommendations also matches nothing private
+     on this page) or something client-side genuinely reaches for it. This is the only one with
+     privacy implications; treat it as real until the URL proves otherwise.
+  2. axe serious/critical on /, /check-in, /tests, /line/mini-app — read the violation ids from
+     the failure output and fix the markup. These are REAL and must not be relaxed.
+  3. verticalJourney resume-after-refresh — capture the body; the resume affordance may render
+     different wording than /続き|再開|前回/.
+  4. securityMatrix "concealed state reveals nothing" — 削除/期限/権限 probably come from shared
+     nav/footer, not the concealed state. Scope the assertion to <main>, do not delete it.
+  5. qualityGates diagnosis-claim — assertion scans whole body; scope it to the occurrence's own
+     context rather than the page.
+next_command: see HOW TO RUN above
 remaining_terminal_gates:
-  - confirm deployment identity, rerun and classify the 3 failures (stale deployment vs real defect)
-  - full vertical journey + remaining frozen security variants + fixture cleanup
-  - application-level erasure proof (Web + LINE)
-  - quality battery ONCE: tsc, lint, build, all unit, Preview integration, hosted E2E, desktop,
-    mobile, keyboard-only, focus, reduced motion, axe (0 serious/critical), Japanese copy review,
-    rollback evidence, Production non-regression
+  - resolve the 6 failures
+  - authenticated journey (registration → claim → recommendation actions → sign-out/in → erase)
+    still needs auth fixtures; currently only unauthenticated paths are covered
+  - erasure proof through the application (Web + LINE)
+  - full battery once (tsc/lint/build/unit are already green at this HEAD)
   - full rewrite of PR #126 body and this file (PR still says 5 migrations; actual 11)
-known_real_blockers: none verified. Preview Deployment Protection is active; browser access works,
-  API-context access may not.
+known_real_blockers: none. Vercel git-integration deployments lag; `npx vercel deploy` produces a
+  Preview at HEAD immediately and is Preview-only (never --prod).
 lock_state: released
 ```
