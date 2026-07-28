@@ -19,8 +19,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// `reported` is deliberately ABSENT. A report action implies a governed reason taxonomy, a
+// moderation queue and a review contract; none of those exist for this surface yet, and a report
+// button that goes nowhere is worse than none at all.
 const ACTIONS: RecommendationAction[] = [
-  "saved", "try_intent", "tried", "helpful", "not_helpful", "not_relevant", "hidden", "reported", "resource_opened",
+  "saved", "try_intent", "tried", "helpful", "not_helpful", "not_relevant", "hidden", "resource_opened",
 ];
 const SURFACES: RecommendationSurface[] = ["result", "recommendations", "graph", "private_state", "line"];
 
@@ -52,7 +55,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   if (typeof body.resultRowId === "string") {
-    if (!UUID_RE.test(id)) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    // Both identifiers must be well-formed before either reaches the database, and the RPC then
+    // verifies item -> set -> result agreement so a claimed result cannot be paired with someone
+    // else's item — including another of the caller's OWN results.
+    if (!UUID_RE.test(id) || !UUID_RE.test(body.resultRowId)) {
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
     const action = body.action as RecommendationAction;
     if (!ACTIONS.includes(action)) return NextResponse.json({ error: "invalid_action" }, { status: 400 });
 
@@ -65,6 +73,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const result = await recordRecommendationAction({
       itemId: id,
+      resultRowId: body.resultRowId,
       ownerAccountId: account,
       action,
       surface,

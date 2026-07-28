@@ -1,17 +1,21 @@
 // UX-2R / CPC-1 — the governed recommendation catalogue.
 //
-// Deterministic and finite by construction. No external provider, no generated prose, no numeric
-// confidence presented as fact. The same accepted result always yields the same set, which is what
-// makes a recommendation auditable rather than merely plausible.
+// CORRECTED after review. The first version hashed the accepted result to pick three entries and
+// then displayed entry-specific claims — "少し早く動きがちな傾向", "考えが重なりやすい時期",
+// "負荷が高め". Determinism made the SELECTION reproducible; it did nothing to make those claims
+// TRUE. A hash cannot license a statement about a person's tendencies, and asserting one anyway is
+// the fabricated-inference failure this product exists to avoid.
 //
-// Governance requires every recommendation to be explainable: WHY it appeared, WHAT kind of thing
-// it is, that it is OPTIONAL, what its LIMITS are, and whether anyone paid for it to be there. A
-// recommendation a person cannot interrogate is indistinguishable from an instruction, and this
-// product must never give instructions about someone's inner life.
+// The reason a recommendation appears must now be traceable to governed content. Where the
+// approved taxonomy supports a result-specific mapping, that mapping is stated explicitly below.
+// Where it does not — which is currently everywhere, because no such mapping has been approved —
+// the reason falls back to something that asserts nothing about the person beyond the fact they
+// confirmed a result. That fallback is deliberately dull. A dull true sentence is worth more than
+// an evocative invented one.
 //
-// The copy here is ordinary supportive Japanese, not clinical or diagnostic language.
+// Determinism is retained for auditability: the same accepted result always yields the same set.
 
-export const GOVERNED_RECOMMENDATION_CONTENT_VERSION = "grc-v1" as const;
+export const GOVERNED_RECOMMENDATION_CONTENT_VERSION = "grc-v2" as const;
 
 export type GovernedSourceClass =
   | "yorisou_internal"
@@ -24,23 +28,37 @@ export type GovernedCommercialStatus = "none" | "disclosed_sponsored" | "disclos
 export type GovernedRecommendation = {
   recommendationKey: string;
   title: string;
-  /** Why this appeared, in plain language the person can check against their own sense. */
-  reason: string;
   objectType: "resource" | "experience_card" | "internal_route";
   sourceClass: GovernedSourceClass;
   commercialStatus: GovernedCommercialStatus;
-  /** What this is NOT. Always shown; never collapsed into a footnote. */
   limitations: string;
   internalRoute?: string;
 };
 
-// A small shared pool. Every entry is YORISOU-internal and non-commercial today; the fields exist
-// so that a future partner entry cannot be added without declaring its classification.
+/**
+ * Result-specific reason mappings.
+ *
+ * EMPTY BY DESIGN. Populating it requires methodology authority to state which governed taxonomy
+ * content supports which recommendation, and no such authorization exists. Until then every reason
+ * comes from the conservative fallback, and nothing claims a trait.
+ *
+ * Shape, so a future approved mapping has somewhere correct to land:
+ *   "MS-KI": { pause_small: "…governed Japanese reason derived from approved MS-KI content…" }
+ */
+export const GOVERNED_RESULT_REASON_MAP: Record<string, Record<string, string>> = {};
+
+/**
+ * The conservative reason. It states only what is demonstrably true: the person confirmed a
+ * result, and this is offered as a low-cost option. No tendency, no state, no inference.
+ */
+export const CONSERVATIVE_REASON =
+  "あなたが確認した今の結果から、負担の少ない選択肢として表示しています。特定の傾向があると判断したものではありません。";
+
+/** Every catalogue entry describes only ITSELF. None describes the reader. */
 const CATALOGUE: GovernedRecommendation[] = [
   {
     recommendationKey: "pause_small",
     title: "ひと呼吸おく時間を、今日だけ決めてみる",
-    reason: "いまの結果には、少し早く動きがちな傾向が出ていました。",
     objectType: "experience_card",
     sourceClass: "yorisou_internal",
     commercialStatus: "none",
@@ -49,7 +67,6 @@ const CATALOGUE: GovernedRecommendation[] = [
   {
     recommendationKey: "name_one_thing",
     title: "気になっていることを、ひとつだけ書き出す",
-    reason: "いまは考えが重なりやすい時期として整理されています。",
     objectType: "experience_card",
     sourceClass: "yorisou_internal",
     commercialStatus: "none",
@@ -58,7 +75,6 @@ const CATALOGUE: GovernedRecommendation[] = [
   {
     recommendationKey: "distance_check",
     title: "人との距離のとり方を、いまの自分に合わせて見直す",
-    reason: "人との関わり方に、いまの状態が出やすいと整理されています。",
     objectType: "internal_route",
     sourceClass: "yorisou_internal",
     commercialStatus: "none",
@@ -68,7 +84,6 @@ const CATALOGUE: GovernedRecommendation[] = [
   {
     recommendationKey: "revisit_later",
     title: "しばらくしてから、もう一度いまの状態をみる",
-    reason: "状態は変わるものなので、いまの結果を固定しないための入口です。",
     objectType: "internal_route",
     sourceClass: "yorisou_internal",
     commercialStatus: "none",
@@ -78,7 +93,6 @@ const CATALOGUE: GovernedRecommendation[] = [
   {
     recommendationKey: "rest_first",
     title: "やることを増やす前に、減らせるものを探す",
-    reason: "いまは負荷が高めに出ているため、足すより減らす方向を先に置いています。",
     objectType: "experience_card",
     sourceClass: "yorisou_internal",
     commercialStatus: "none",
@@ -93,19 +107,32 @@ export function findGovernedRecommendation(key: string): GovernedRecommendation 
 }
 
 /**
- * Deterministic selection: the same accepted result always produces the same three, in the same
- * order. A stable hash of the result code chooses the starting offset, so different results get
- * different sets without any randomness — reproducibility is what lets a recommendation be
- * explained after the fact.
+ * Resolve the displayed reason.
+ *
+ * An approved result-specific reason wins; otherwise the conservative one. A reason is NEVER
+ * synthesised from the recommendation's own content, which is how the previous version ended up
+ * asserting things about the reader.
+ */
+export function resolveGovernedReason(acceptedResultId: string, recommendationKey: string): string {
+  return GOVERNED_RESULT_REASON_MAP[acceptedResultId]?.[recommendationKey] ?? CONSERVATIVE_REASON;
+}
+
+/** True when the reason shown is a governed result-specific one rather than the fallback. */
+export function hasGovernedResultMapping(acceptedResultId: string, recommendationKey: string) {
+  return Boolean(GOVERNED_RESULT_REASON_MAP[acceptedResultId]?.[recommendationKey]);
+}
+
+/**
+ * Deterministic selection — the same accepted result always yields the same three, in the same
+ * order, so a set can be explained after the fact. Selection is reproducible; it is NOT evidence
+ * about the person, and the reason copy no longer pretends otherwise.
  */
 export function buildGovernedRecommendationItems(acceptedResultId: string) {
   let hash = 0;
   for (const ch of acceptedResultId) hash = (hash * 31 + ch.charCodeAt(0)) % 100003;
 
   const picked: GovernedRecommendation[] = [];
-  for (let i = 0; i < 3; i += 1) {
-    picked.push(CATALOGUE[(hash + i) % CATALOGUE.length]);
-  }
+  for (let i = 0; i < 3; i += 1) picked.push(CATALOGUE[(hash + i) % CATALOGUE.length]);
 
   return picked.map((r) => ({
     recommendationKey: r.recommendationKey,

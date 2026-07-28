@@ -17,6 +17,8 @@ import {
   GOVERNED_RECOMMENDATION_CONTENT_VERSION,
   buildGovernedRecommendationItems,
   findGovernedRecommendation,
+  resolveGovernedReason,
+  hasGovernedResultMapping,
   type GovernedRecommendation,
 } from "@/lib/yorisou/recommendations/governed";
 
@@ -36,6 +38,13 @@ export type RecommendationSurface = "result" | "recommendations" | "graph" | "pr
 export type RecommendationItemView = GovernedRecommendation & {
   itemId: string;
   rank: number;
+  /**
+   * Resolved at read time from the governed mapping, never from the item's own content — that
+   * inversion is how the previous version ended up asserting traits about the reader.
+   */
+  reason: string;
+  /** False when the conservative fallback was used, i.e. no approved result-specific mapping. */
+  reasonIsResultSpecific: boolean;
   /** Every action the person has taken on this item, newest first. Append-only. */
   actions: { action: RecommendationAction; createdAt: string }[];
 };
@@ -113,6 +122,11 @@ async function hydrate(set: SetRow, ownerAccountId: string): Promise<Recommendat
           ...governed,
           itemId: item.id,
           rank: item.rank,
+          reason: resolveGovernedReason(set.accepted_result_id, item.recommendation_key),
+          reasonIsResultSpecific: hasGovernedResultMapping(
+            set.accepted_result_id,
+            item.recommendation_key,
+          ),
           actions: actions
             .filter((a) => a.item_id === item.id)
             .map((a) => ({ action: a.action, createdAt: a.created_at })),
@@ -171,6 +185,8 @@ export async function loadRecommendationSet(
  */
 export async function recordRecommendationAction(input: {
   itemId: string;
+  /** The result the caller CLAIMS to be acting within. Verified against the item's own lineage. */
+  resultRowId: string;
   ownerAccountId: string;
   action: RecommendationAction;
   surface: RecommendationSurface;
@@ -183,6 +199,7 @@ export async function recordRecommendationAction(input: {
       p_action: input.action,
       p_source_surface: input.surface,
       p_intent_nonce: input.intentNonce ?? null,
+      p_result_row_id: input.resultRowId,
     });
     return { outcome: "ok", actionId };
   } catch (error) {
@@ -196,20 +213,32 @@ export async function recordRecommendationAction(input: {
   }
 }
 
-/** Read-only history for /private-state. Never materializes, so viewing history cannot create data. */
+/**
+ * Read-only history for /private-state. Never materializes, so viewing history cannot create data.
+ *
+ * DISCRIMINATED: the first version returned `[]` on failure, which would render a database outage
+ * as "you have no recommendation history" — the same lie the private-state loader had to be fixed
+ * for, and equally unrecoverable because nothing would suggest retrying.
+ */
+export type RecommendationHistoryLoad =
+  | { outcome: "ok"; sets: RecommendationSetView[] }
+  | { outcome: "empty" }
+  | { outcome: "temporarily_unavailable" };
+
 export async function listRecommendationHistory(
   resultRowId: string,
   ownerAccountId: string,
-): Promise<RecommendationSetView[]> {
+): Promise<RecommendationHistoryLoad> {
   try {
     const sets = await select<SetRow>(
       `yorisou_recommendation_sets?result_row_id=eq.${resultRowId}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=generated_at.desc`,
     );
-    return await Promise.all(sets.map((s) => hydrate(s, ownerAccountId)));
+    if (sets.length === 0) return { outcome: "empty" };
+    return { outcome: "ok", sets: await Promise.all(sets.map((s) => hydrate(s, ownerAccountId))) };
   } catch (error) {
     console.error("recommendation history failed", {
       code: error instanceof Error ? error.message : "unknown",
     });
-    return [];
+    return { outcome: "temporarily_unavailable" };
   }
 }

@@ -81,7 +81,7 @@ export default async function RecommendationsPage({
                   <h1 className="display-serif text-[2rem] leading-[1.16] md:text-[2.4rem]">
                     いまのあなたに合わせた入口
                   </h1>
-                  <CanonicalRecommendationList set={recs.set} />
+                  <CanonicalRecommendationList set={recs.set} surface="recommendations" />
                 </MvpCard>
               </div>
             </section>

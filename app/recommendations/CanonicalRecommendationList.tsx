@@ -12,6 +12,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { acquireActionNonce, releaseActionNonce } from "./pendingAction";
+
 export type ActionKey =
   | "saved" | "try_intent" | "tried" | "helpful" | "not_helpful" | "not_relevant" | "hidden";
 
@@ -20,6 +22,7 @@ export type ItemView = {
   rank: number;
   title: string;
   reason: string;
+  reasonIsResultSpecific: boolean;
   objectType: "resource" | "experience_card" | "internal_route";
   sourceClass: string;
   commercialStatus: string;
@@ -70,9 +73,32 @@ const COMMERCIAL_LABEL: Record<string, string> = {
   disclosed_affiliate: "アフィリエイトを含みます",
 };
 
-const ORDER: ActionKey[] = ["saved", "try_intent", "tried", "helpful", "not_helpful", "not_relevant", "hidden"];
+// Actions fall into groups with different semantics, and flattening them into one row of toggles
+// was wrong: it let "役に立った" and "今は合わない" both appear selected at once, which describes
+// nobody's actual state.
+//
+//   PROGRESS  saved / try_intent / tried — cumulative; each is a thing that happened.
+//   FEEDBACK  helpful / not_helpful / not_relevant — mutually exclusive; only the LATEST is current.
+//   REMOVAL   hidden — terminal for this surface; the card leaves the active list.
+//
+// The underlying data stays append-only. This only changes what is presented as CURRENT.
+const PROGRESS: ActionKey[] = ["saved", "try_intent", "tried"];
+const FEEDBACK: ActionKey[] = ["helpful", "not_helpful", "not_relevant"];
 
-export default function CanonicalRecommendationList({ set }: { set: SetView }) {
+function currentFeedback(actions: { action: string }[]): ActionKey | null {
+  // `actions` arrives newest-first, so the first feedback entry is the current one.
+  const latest = actions.find((a) => FEEDBACK.includes(a.action as ActionKey));
+  return (latest?.action as ActionKey) ?? null;
+}
+
+export default function CanonicalRecommendationList({
+  set,
+  surface,
+}: {
+  set: SetView;
+  /** Where the action actually happened. Hardcoding "graph" mislabelled every list action. */
+  surface: "recommendations" | "graph" | "private_state" | "line";
+}) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -82,9 +108,14 @@ export default function CanonicalRecommendationList({ set }: { set: SetView }) {
     Object.fromEntries(set.items.map((i) => [i.itemId, i.actions.map((a) => a.action)])),
   );
 
+  // Newest-first, matching how the server returns history.
+  const history = (itemId: string) => (applied[itemId] || []).map((action) => ({ action }));
+
   async function act(itemId: string, action: ActionKey) {
     setPending(`${itemId}:${action}`);
     setFailed(null);
+    // Reused across retries, so a request the server already committed resolves to the SAME row.
+    const nonce = acquireActionNonce(set.resultRowId, itemId, action);
     try {
       const res = await fetch(`/api/recommendations/${itemId}`, {
         method: "POST",
@@ -92,20 +123,30 @@ export default function CanonicalRecommendationList({ set }: { set: SetView }) {
         body: JSON.stringify({
           action,
           resultRowId: set.resultRowId,
-          source: "graph",
-          // Makes a double tap or a retry after a lost reply resolve to the same row.
-          idempotencyKey: crypto.randomUUID(),
+          source: surface,
+          idempotencyKey: nonce,
         }),
       });
       if (res.status === 403) {
+        // Terminal: consent was withdrawn. Retrying can never succeed, so the nonce is released.
+        releaseActionNonce(set.resultRowId, itemId, action);
         setFailed("この結果への答えが変わったため、いまは記録できません。結果ページで答えを確認してください。");
         router.refresh();
         return;
       }
+      if (res.status >= 400 && res.status < 500) {
+        releaseActionNonce(set.resultRowId, itemId, action);
+        throw new Error("action_rejected");
+      }
+      // 5xx falls through to catch WITHOUT releasing, so a retry replays the same nonce.
       if (!res.ok) throw new Error("action_failed");
-      setApplied((prev) => ({ ...prev, [itemId]: [...(prev[itemId] || []), action] }));
+      releaseActionNonce(set.resultRowId, itemId, action);
+      // Prepend: newest-first, so "current feedback" reads correctly without re-fetching.
+      setApplied((prev) => ({ ...prev, [itemId]: [action, ...(prev[itemId] || [])] }));
     } catch {
-      setFailed("記録できませんでした。時間をおいてもう一度お試しください。まだ記録されていません。");
+      // Deliberately does NOT claim the action was not recorded: an ambiguous network failure may
+      // have committed it. Retrying is safe because the nonce is retained and replays.
+      setFailed("記録できたかどうか確認できませんでした。もう一度押しても、二重に記録されることはありません。");
     } finally {
       setPending(null);
     }
@@ -126,6 +167,10 @@ export default function CanonicalRecommendationList({ set }: { set: SetView }) {
 
       <ul className="grid gap-4">
         {set.items.map((item) => {
+          const past = history(item.itemId);
+          // A hidden item leaves the ACTIVE list; its history remains in わたしの今.
+          if (past.some((a) => a.action === "hidden")) return null;
+          const feedback = currentFeedback(past);
           const done = applied[item.itemId] || [];
           return (
             <li key={item.itemId} className="rounded-[1.25rem] border border-[rgba(23,59,53,0.12)] bg-white/92 p-5">
@@ -158,27 +203,68 @@ export default function CanonicalRecommendationList({ set }: { set: SetView }) {
                 </a>
               ) : null}
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {ORDER.map((a) => {
-                  const isDone = done.includes(a);
-                  const isPending = pending === `${item.itemId}:${a}`;
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => act(item.itemId, a)}
-                      disabled={pending !== null}
-                      aria-pressed={isDone}
-                      className={`min-h-[40px] rounded-full border px-3 text-[13px] transition disabled:opacity-60 ${
-                        isDone
-                          ? "border-[#173B35] bg-[#173B35] text-white"
-                          : "border-[rgba(23,59,53,0.16)] bg-white text-[#2F2A28] hover:border-[#173B35]"
-                      }`}
-                    >
-                      {isPending ? "記録しています" : isDone ? ACTION_DONE[a] : ACTION_LABEL[a]}
-                    </button>
-                  );
-                })}
+              <div className="mt-4 space-y-3">
+                <div className="flex flex-wrap gap-2" role="group" aria-label="この候補への行動">
+                  {PROGRESS.map((a) => {
+                    const isDone = done.includes(a);
+                    const isPending = pending === `${item.itemId}:${a}`;
+                    return (
+                      <button
+                        key={a}
+                        type="button"
+                        onClick={() => act(item.itemId, a)}
+                        disabled={pending !== null}
+                        aria-pressed={isDone}
+                        className={`min-h-[40px] rounded-full border px-3 text-[13px] transition disabled:opacity-60 ${
+                          isDone
+                            ? "border-[#173B35] bg-[#173B35] text-white"
+                            : "border-[rgba(23,59,53,0.16)] bg-white text-[#2F2A28] hover:border-[#173B35]"
+                        }`}
+                      >
+                        {isPending ? "記録しています" : isDone ? ACTION_DONE[a] : ACTION_LABEL[a]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Mutually exclusive: only the latest answer is current. */}
+                <div className="flex flex-wrap gap-2" role="group" aria-label="この候補はどうでしたか">
+                  {FEEDBACK.map((a) => {
+                    const isCurrent = feedback === a;
+                    const isPending = pending === `${item.itemId}:${a}`;
+                    return (
+                      <button
+                        key={a}
+                        type="button"
+                        onClick={() => act(item.itemId, a)}
+                        disabled={pending !== null}
+                        aria-pressed={isCurrent}
+                        className={`min-h-[40px] rounded-full border px-3 text-[13px] transition disabled:opacity-60 ${
+                          isCurrent
+                            ? "border-[#173B35] bg-[#173B35] text-white"
+                            : "border-[rgba(23,59,53,0.16)] bg-white text-[#2F2A28] hover:border-[#173B35]"
+                        }`}
+                      >
+                        {isPending ? "記録しています" : isCurrent ? ACTION_DONE[a] : ACTION_LABEL[a]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => act(item.itemId, "hidden")}
+                  disabled={pending !== null}
+                  className="text-[13px] font-semibold text-[#7A7068] underline disabled:opacity-60"
+                >
+                  {pending === `${item.itemId}:hidden` ? "記録しています" : "この候補を表示しない"}
+                </button>
+
+                {feedback ? (
+                  <p className="text-[12px] leading-6 text-[#7A7068]">
+                    答えはいつでも変えられます。前の答えも記録として残ります。
+                  </p>
+                ) : null}
               </div>
             </li>
           );
