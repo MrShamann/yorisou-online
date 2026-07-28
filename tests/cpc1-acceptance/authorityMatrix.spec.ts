@@ -57,10 +57,26 @@ test.describe("recommendation destinations are server-enforced", () => {
   }
 
   test("the private report download refuses an inaccessible identity", async ({ request }) => {
-    const response = await request.get(
-      `/reports/self-understanding/MS-KI/download?result=${INACCESSIBLE}`,
-    );
-    // One concealed 404: a distinguishable refusal would make this an existence oracle.
-    expect(response.status()).toBe(404);
+    const path = `/reports/self-understanding/MS-KI/download?result=${INACCESSIBLE}`;
+    // maxRedirects: 0 — an automatically-followed redirect must never be mistaken for the route's
+    // own answer. A 302 to an SSO page followed to a 200 would otherwise read as "the download
+    // succeeded", which is the opposite of the truth.
+    const response = await request.get(path, { maxRedirects: 0 });
+
+    const status = response.status();
+    const location = response.headers()["location"] ?? "<none>";
+    const contentType = response.headers()["content-type"] ?? "<none>";
+    const detail = `status=${status} location=${location} content-type=${contentType} url=${response.url()}`;
+
+    // Distinguish the four outcomes explicitly rather than accepting any non-200.
+    expect(status, `download redirected instead of refusing — ${detail}`).not.toBe(302);
+    expect(status, `download redirected instead of refusing — ${detail}`).not.toBe(307);
+    expect(
+      contentType.includes("text/markdown"),
+      `an inaccessible identity returned a markdown attachment — ${detail}`,
+    ).toBe(false);
+
+    // The canonical concealed response, once the deployment identity is confirmed.
+    expect(status, `expected a concealed 404 — ${detail}`).toBe(404);
   });
 });

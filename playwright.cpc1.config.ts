@@ -15,17 +15,17 @@ export default defineConfig({
   projects: [
     // Reachability runs FIRST and gates everything else: this suite is mostly negative
     // assertions, which pass trivially against an auth wall.
-    { name: "reachable", testMatch: /previewReachable\.setup\.ts/ },
+    { name: "identity", testMatch: /previewReachable\.setup\.ts/ },
     {
       name: "desktop",
       use: { ...devices["Desktop Chrome"] },
-      dependencies: ["reachable"],
+      dependencies: ["identity"],
       testIgnore: /previewReachable\.setup\.ts/,
     },
     {
       name: "mobile",
       use: { ...devices["Pixel 5"] },
-      dependencies: ["reachable"],
+      dependencies: ["identity"],
       testIgnore: /previewReachable\.setup\.ts/,
     },
   ],
