@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import PersistedSupportingSignals from "./PersistedSupportingSignals";
-import { buildSupportingSignals } from "@/lib/server/persistedSupportingSignals";
 import PersistedResultUnavailable from "./PersistedResultUnavailable";
 import { loadPersistedAssessmentResult } from "@/lib/server/persistedResultView";
 
@@ -76,10 +74,6 @@ export default async function ResultPage({
   const overlayId = persisted ? persisted.overlayId : legacyOverlayId;
   const confidenceBand = persisted ? "low" : readParam(params, "confidence") === "medium" ? "medium" : "low";
   const payloadKey = persisted ? null : readParam(params, "payloadKey");
-  // Wave A: the persisted server-computed signal. Legacy mode has no such payload, so this is
-  // strictly persisted-only and is omitted when the stored shape is malformed.
-  const supportingSignals = persisted ? buildSupportingSignals(persisted.dimensionOutput) : null;
-
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
   const resultShareHref = buildPublicResultHref("/result/share", routeContext);
@@ -170,9 +164,6 @@ export default async function ResultPage({
               </div>,
 
               <EvidencePanel key="evidence" highlights={compatibility.highlights} />,
-              ...(supportingSignals
-                ? [<PersistedSupportingSignals key="supporting-signals" data={supportingSignals} />]
-                : []),
 
               <ConstellationPanel
                 key="constellation"
