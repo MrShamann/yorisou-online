@@ -184,26 +184,32 @@ abandon kills token + blocks resume/save/complete/claim.
 ## CONTINUATION_CURSOR
 
 ```
-current_head: (this commit)
-last_completed_capability: LINE parity COMPLETE — canonical return mode (shared loader, owner
-  authorization, permissions, persisted set, surface="line") AND anonymous entry isolation
-  (no history claim, no return-session signal, no legacy Companion/Slot, no private read).
-  Governed origin builder in place. test:ux2-line 6/6.
-next_file: docs/ux2r/05_CPC1_ACCEPTANCE_CONTRACT.md — read the frozen variant list, then author
-  the hosted Preview E2E under tests/
-next_function_or_route: hosted Preview vertical journey — anonymous start → resume → complete →
-  correction → registration → claim → report → recommendations → graph →
-  save/try/tried/feedback/change/hide → private-state → sign out/in → canonical LINE return → erase
-next_command: npm run build && (author + run hosted Preview E2E against the Vercel Preview URL)
+current_head: see git rev-parse HEAD on branch feat/ux2-integrated-core-experience
+last_completed_capability: hosted Preview acceptance suite authored + first run.
+  tests/cpc1-acceptance/{previewReachable.setup,lineAnonymousNetwork,authorityMatrix}.spec.ts
+  playwright.cpc1.config.ts (reachability gate blocks vacuous passes; bypass header supported)
+  Result: 21 passed / 3 failed, identical desktop + mobile.
+next_file: tests/cpc1-acceptance/authorityMatrix.spec.ts and lineAnonymousNetwork.spec.ts
+next_function_or_route: RESOLVE 3 OPEN FAILURES FIRST, against a deployment confirmed at HEAD:
+  1. /result?resultId=MS-KI&overlayId=balancing does not render the archetype name — determine
+     whether the expected nickname is wrong or legacy-only mode regressed (this test guards
+     against over-correction, so either answer needs a fix).
+  2. /reports/self-understanding/MS-KI/download?result=<inaccessible-uuid> did not return 404.
+  3. /line/mini-app did not show 「120問から始める」 — confirm the deployment is at HEAD first
+     (`npx vercel ls yorisou-online --scope shigeru-naganos-projects`), then re-check the CTA.
+next_command: PLAYWRIGHT_BASE_URL=<preview-url-at-HEAD> npm run test:cpc1-acceptance
 remaining_terminal_gates:
-  - hosted Preview vertical E2E + frozen security variants + fixture cleanup
-  - application-level erasure proof (Web + LINE return)
+  - resolve the 3 open failures
+  - author + run the full vertical journey (anonymous → resume → complete → correction →
+    registration → claim → report → recommendations → graph → save/try/tried/feedback/hide →
+    private-state → sign out/in → canonical LINE return → erase)
+  - remaining frozen security variants; fixture cleanup
+  - application-level erasure proof (Web + LINE)
   - quality battery ONCE: tsc, lint, build, all unit, Preview integration, hosted E2E,
     desktop, mobile, keyboard-only, focus, reduced motion, axe (0 serious/critical),
     Japanese copy review, rollback evidence, Production non-regression
   - full rewrite of PR #126 body and this file (PR still says 5 migrations; actual 11)
-known_real_blockers: none. No Preview LINE sandbox confirmed — if none exists, prove LINE
-  structurally with signed synthetic Preview fixtures and label it as structural proof. Only
-  reportable as GENUINE_BLOCKER once every non-LINE gate has passed.
+known_real_blockers: none. Preview Deployment Protection is active but the browser reaches the app;
+  if a future run hits the SSO wall, the reachability gate fails loudly with the bypass instructions.
 lock_state: released
 ```
