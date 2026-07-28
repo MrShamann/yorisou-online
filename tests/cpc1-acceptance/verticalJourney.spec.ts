@@ -16,81 +16,99 @@ import { expect, test, type Page } from "@playwright/test";
 const UNIQUE = () => `cpc1-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 /**
+ * The real option element from MiniTestFlow.tsx. A generic `button:visible` locator clicked page
+ * chrome instead of answers, so no attempt was ever created — and a looser text filter would have
+ * clicked MORE wrong things, not fewer.
+ */
+const ANSWER_OPTION = "button.answer-btn";
+
+type Attempt = { id: string; answeredCount: number; requiredCount: number; status: string };
+
+/**
  * Read the attempt identity the server issued.
  *
  * Resume must be proven by IDENTITY, not by Japanese wording: a page that says 「続き」 while
  * silently creating a second attempt has lost the person's answers and still passes a keyword
- * check. `GET /api/assessment/attempts` returns the visitor's in-progress attempt.
+ * check.
  */
-async function currentAttempt(page: Page) {
+async function readCurrentAttempt(page: Page): Promise<Attempt | null> {
   const response = await page.request.get("/api/assessment/attempts");
   if (!response.ok()) return null;
-  const data = (await response.json()) as {
-    attempt: { id: string; answeredCount: number; requiredCount: number } | null;
-  };
+  const data = (await response.json()) as { attempt: Attempt | null };
   return data.attempt;
 }
 
+async function startAttempt(page: Page): Promise<Attempt> {
+  await page.goto("/check-in", { waitUntil: "domcontentloaded" });
+  const begin = page.getByRole("button", { name: /いま色テストをはじめる|続きからはじめる/ }).first();
+  await begin.waitFor({ state: "visible", timeout: 20_000 });
+  await begin.click();
+
+  await page.locator(ANSWER_OPTION).first().waitFor({ state: "visible", timeout: 20_000 });
+  const attempt = await readCurrentAttempt(page);
+  expect(attempt, "starting the flow must create a server-backed attempt").not.toBeNull();
+  return attempt!;
+}
+
 /**
- * Answer questions until `stop` is satisfied.
+ * Answer exactly one question and wait for the SAME attempt to report one more answer.
  *
- * Waits on the answered-count actually advancing rather than sleeping a fixed interval: a fixed
- * sleep is both slower than needed and unreliable on a cold serverless response.
+ * Observing the server count is both faster and stricter than a fixed sleep: it proves the answer
+ * was persisted, not merely that the UI advanced.
  */
-async function answerUntil(page: Page, stop: (answered: number) => boolean, cap = 130) {
-  for (let i = 0; i < cap; i += 1) {
-    const attempt = await currentAttempt(page);
-    if (attempt && stop(attempt.answeredCount)) return attempt;
+async function answerOneQuestion(page: Page, expected: Attempt): Promise<Attempt> {
+  const options = page.locator(ANSWER_OPTION);
+  const count = await options.count();
+  expect(
+    count,
+    `no answer option visible at answeredCount=${expected.answeredCount} url=${page.url()}`,
+  ).toBeGreaterThan(0);
 
-    const option = page
-      .locator('button:visible')
-      .filter({ hasNotText: /戻る|やり直|スキップ|保存|ログイン|閉じる/ });
-    const count = await option.count();
-    if (count === 0) break;
-    await option.first().click();
+  await options.first().click();
 
-    // The flow auto-advances; wait for the server-side count to move rather than guessing.
-    await page
-      .waitForFunction(
-        async () => {
-          const r = await fetch("/api/assessment/attempts", { cache: "no-store" });
-          if (!r.ok) return false;
-          const d = await r.json();
-          return typeof d?.attempt?.answeredCount === "number";
-        },
-        undefined,
-        { timeout: 10_000 },
-      )
-      .catch(() => undefined);
+  const target = expected.answeredCount + 1;
+  const deadline = Date.now() + 20_000;
+  while (Date.now() < deadline) {
+    const next = await readCurrentAttempt(page);
+    if (next && next.id === expected.id && next.answeredCount >= target) return next;
+    // The final answer completes the attempt, so it stops being "in progress" — that is success,
+    // not a stall, and the caller handles it.
+    if (!next) return { ...expected, answeredCount: target, status: "completed" };
+    await page.waitForTimeout(150);
   }
-  return currentAttempt(page);
+
+  const labels = (await options.allInnerTexts()).slice(0, 4).join(" | ");
+  throw new Error(
+    `answer did not persist: attempt=${expected.id} from=${expected.answeredCount} ` +
+      `expected>=${target} url=${page.url()} options=[${labels}]`,
+  );
+}
+
+async function answerUntilCount(page: Page, attempt: Attempt, target: number): Promise<Attempt> {
+  let current = attempt;
+  while (current.answeredCount < target && current.status !== "completed") {
+    current = await answerOneQuestion(page, current);
+  }
+  return current;
 }
 
 test.describe("principal journey", () => {
   test.describe.configure({ mode: "serial", timeout: 300_000 });
 
   test("resume recovers the SAME attempt — proven by identity, not by wording", async ({ page }) => {
-    await page.goto("/check-in", { waitUntil: "domcontentloaded" });
-
-    // Begin is awaited server-side: question 1 cannot be answered before the attempt exists.
-    const begin = page.getByRole("button", { name: /はじめる|始める|スタート/ }).first();
-    if (await begin.isVisible().catch(() => false)) await begin.click();
-
-    const started = await answerUntil(page, (n) => n >= 3);
-    expect(started, "an attempt must exist after answering").not.toBeNull();
-    const attemptId = started!.id;
-    const answeredBefore = started!.answeredCount;
-    expect(answeredBefore).toBeGreaterThanOrEqual(3);
+    const started = await startAttempt(page);
+    const progressed = await answerUntilCount(page, started, 3);
+    expect(progressed.answeredCount).toBeGreaterThanOrEqual(3);
 
     await page.reload({ waitUntil: "domcontentloaded" });
 
-    const afterReload = await currentAttempt(page);
+    const afterReload = await readCurrentAttempt(page);
     expect(afterReload, "the attempt must survive a refresh").not.toBeNull();
-    expect(afterReload!.id, "refresh must not silently create a SECOND attempt").toBe(attemptId);
+    expect(afterReload!.id, "refresh must not silently create a SECOND attempt").toBe(started.id);
     expect(
       afterReload!.answeredCount,
       "answers must remain associated with the same attempt",
-    ).toBeGreaterThanOrEqual(answeredBefore);
+    ).toBeGreaterThanOrEqual(progressed.answeredCount);
   });
 
   test("an anonymous result is persisted and addressed by a canonical row id", async ({ page }) => {
@@ -174,17 +192,17 @@ test.describe("canonical lifecycle", () => {
   } = {};
 
   test("completes all 120 questions and receives a canonical resultRowId", async ({ page }) => {
-    await page.goto("/check-in", { waitUntil: "domcontentloaded" });
-    const begin = page.getByRole("button", { name: /はじめる|始める|スタート/ }).first();
-    if (await begin.isVisible().catch(() => false)) await begin.click();
+    const started = await startAttempt(page);
+    state.attemptId = started.id;
 
-    const attempt = await answerUntil(page, (n) => n >= 120, 200);
-    expect(attempt, "an attempt must exist").not.toBeNull();
-    state.attemptId = attempt!.id;
-    expect(
-      attempt!.answeredCount,
-      `answered ${attempt?.answeredCount}/${attempt?.requiredCount} — the journey must complete`,
-    ).toBe(attempt!.requiredCount);
+    // Answer up to the LAST question, then handle completion separately: the final answer ends the
+    // attempt, so it stops being readable as "in progress" — which is success, not a stall.
+    const required = started.requiredCount;
+    const penultimate = await answerUntilCount(page, started, required - 1);
+    expect(penultimate.id, "the attempt identity must hold for the whole run").toBe(started.id);
+    expect(penultimate.answeredCount).toBe(required - 1);
+
+    await page.locator(ANSWER_OPTION).first().click();
 
     // Completion is server-authoritative and navigation is awaited: the canonical id must appear
     // in the URL, never a URL-encoded result.
