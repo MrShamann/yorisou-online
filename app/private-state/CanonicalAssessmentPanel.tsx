@@ -13,15 +13,79 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+type RecItem = {
+  itemId: string;
+  title: string;
+  sourceClass: string;
+  commercialStatus: string;
+  actions: { action: string; createdAt: string }[];
+};
+type RecSet = {
+  setId: string;
+  contentVersion: string;
+  acceptedResultId: string;
+  eligibilityBasis: string;
+  generatedAt: string;
+  items: RecItem[];
+};
+
 export type CanonicalEntry = {
   resultRowId: string;
   originalResultId: string | null;
   acceptedResultId: string | null;
+  originalResultName: string | null;
+  acceptedResultName: string | null;
+  scoringVersion: string | null;
+  resultSchemaVersion: string | null;
+  methodId: string;
+  methodVersion: string;
   status: "confirmed" | "corrected" | "rejected" | "deferred" | "unanswered";
   recommendationUsePermitted: boolean;
   continuityUsePermitted: boolean;
   producedAt: string;
-  history: { responseType: string; correctedResultId: string | null; createdAt: string }[];
+  history: {
+    responseId: string;
+    responseType: string;
+    correctedResultId: string | null;
+    correctedResultName: string | null;
+    reasonCode: string | null;
+    source: string | null;
+    supersedesResponseId: string | null;
+    sequenceNo: number | null;
+    createdAt: string;
+  }[];
+  recommendations:
+    | { outcome: "ok"; sets: RecSet[] }
+    | { outcome: "empty" }
+    | { outcome: "temporarily_unavailable" };
+};
+
+const PROGRESS = ["saved", "try_intent", "tried"];
+const FEEDBACK = ["helpful", "not_helpful", "not_relevant"];
+
+const ACTION_JA: Record<string, string> = {
+  saved: "保存した",
+  try_intent: "試すことにした",
+  tried: "試した",
+  helpful: "役に立った",
+  not_helpful: "あまり合わなかった",
+  not_relevant: "今は合わない",
+  hidden: "表示しないことにした",
+  resource_opened: "開いた",
+};
+
+const SOURCE_JA: Record<string, string> = {
+  web: "この画面から",
+  line: "LINEから",
+  import: "取り込み",
+};
+
+const REASON_JA: Record<string, string> = {
+  not_me_now: "今の自分とは違う",
+  partly_true: "半分は合っている",
+  changed_recently: "最近変わった",
+  wrong_emphasis: "強調のしかたが違う",
+  other_bounded: "その他",
 };
 
 const STATUS_LABEL: Record<CanonicalEntry["status"], string> = {
@@ -50,6 +114,10 @@ export default function CanonicalAssessmentPanel({ entries }: { entries: Canonic
   const [confirmingErase, setConfirmingErase] = useState<string | null>(null);
   const [erasing, setErasing] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+
+  // Presentation-only. The stored data is append-only; this decides what counts as CURRENT.
+  const currentFeedbackOf = (actions: { action: string }[]) =>
+    actions.find((a) => FEEDBACK.includes(a.action))?.action ?? null;
 
   async function erase(resultRowId: string) {
     setErasing(resultRowId);
@@ -91,16 +159,19 @@ export default function CanonicalAssessmentPanel({ entries }: { entries: Canonic
           <p className="text-[12px] text-[#7A7068]">{formatDate(entry.producedAt)}のチェック</p>
 
           <dl className="mt-2 grid gap-1 text-[13px] leading-7">
+            {/* Governed Japanese names lead; raw codes are provenance, not self-description. */}
             <div className="flex gap-2">
               <dt className="shrink-0 text-[#7A7068]">テストの結果</dt>
-              <dd className="text-[#2F2A28]">{entry.originalResultId ?? "—"}</dd>
+              <dd className="text-[#2F2A28]">
+                {entry.originalResultName ?? (entry.originalResultId ? "（名称を表示できません）" : "—")}
+              </dd>
             </div>
             {/* Original and accepted are shown SEPARATELY and always. A correction adds the
                 person's answer beside the method's; it never replaces it. */}
             <div className="flex gap-2">
               <dt className="shrink-0 text-[#7A7068]">あなたの答え</dt>
               <dd className="text-[#2F2A28]">
-                {entry.acceptedResultId ?? "まだありません"}
+                {entry.acceptedResultName ?? "まだありません"}
               </dd>
             </div>
           </dl>
@@ -112,11 +183,14 @@ export default function CanonicalAssessmentPanel({ entries }: { entries: Canonic
               <summary className="cursor-pointer text-[13px] font-semibold text-[#315F50]">
                 答えの記録（{entry.history.length}件）
               </summary>
-              <ul className="mt-2 grid gap-1 text-[12px] leading-6 text-[#7A7068]">
+              <ul className="mt-2 grid gap-2 text-[12px] leading-6 text-[#7A7068]">
                 {entry.history.map((h) => (
-                  <li key={h.createdAt}>
+                  <li key={h.responseId}>
                     {formatDate(h.createdAt)}・{RESPONSE_LABEL[h.responseType] ?? h.responseType}
-                    {h.correctedResultId ? `（${h.correctedResultId}）` : ""}
+                    {h.correctedResultName ? `（${h.correctedResultName}）` : ""}
+                    {h.reasonCode ? `・理由: ${REASON_JA[h.reasonCode] ?? h.reasonCode}` : ""}
+                    {h.source ? `・${SOURCE_JA[h.source] ?? h.source}` : ""}
+                    {h.supersedesResponseId ? "・前の答えを更新" : ""}
                   </li>
                 ))}
               </ul>
@@ -125,6 +199,61 @@ export default function CanonicalAssessmentPanel({ entries }: { entries: Canonic
               </p>
             </details>
           ) : null}
+
+          {/* Recommendation history — read-only. Viewing never creates a set. */}
+          {entry.recommendations.outcome === "temporarily_unavailable" ? (
+            <p role="alert" className="mt-3 text-[12px] leading-6 text-[#9b3a34]">
+              ヒントの記録を読み込めませんでした。記録が消えたわけではありません。時間をおいて開いてみてください。
+            </p>
+          ) : entry.recommendations.outcome === "ok" ? (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-[13px] font-semibold text-[#315F50]">
+                ヒントの記録
+              </summary>
+              {entry.recommendations.sets.map((set) => (
+                <div key={set.setId} className="mt-2 border-l-2 border-[rgba(23,59,53,0.1)] pl-3">
+                  <p className="text-[12px] text-[#7A7068]">
+                    {formatDate(set.generatedAt)}・{set.contentVersion}・
+                    {set.eligibilityBasis === "corrected" ? "選び直した結果から" : "確認した結果から"}
+                  </p>
+                  <ul className="mt-1 grid gap-1.5 text-[12px] leading-6">
+                    {set.items.map((item) => {
+                      const current = currentFeedbackOf(item.actions);
+                      const progress = item.actions
+                        .filter((a) => PROGRESS.includes(a.action))
+                        .map((a) => ACTION_JA[a.action]);
+                      const isHidden = item.actions.some((a) => a.action === "hidden");
+                      return (
+                        <li key={item.itemId} className="text-[#5F5750]">
+                          <span className="text-[#2F2A28]">{item.title}</span>
+                          {isHidden ? "（表示しない）" : ""}
+                          {progress.length ? `・${[...new Set(progress)].join("・")}` : ""}
+                          {current ? `・いまの答え: ${ACTION_JA[current]}` : ""}
+                          {item.actions.length > 1 ? (
+                            <span className="block text-[11px] text-[#7A7068]">
+                              記録: {item.actions.map((a) => ACTION_JA[a.action] ?? a.action).join(" ← ")}
+                            </span>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </details>
+          ) : null}
+
+          <details className="mt-2">
+            <summary className="cursor-pointer text-[12px] text-[#7A7068]">記録の詳細</summary>
+            <dl className="mt-1 grid gap-0.5 text-[11px] leading-5 text-[#7A7068]">
+              <div>方法: {entry.methodId} / {entry.methodVersion}</div>
+              {entry.scoringVersion ? <div>採点: {entry.scoringVersion}</div> : null}
+              {entry.resultSchemaVersion ? <div>形式: {entry.resultSchemaVersion}</div> : null}
+              {entry.originalResultId ? <div>結果コード: {entry.originalResultId}</div> : null}
+              <div>おすすめの利用: {entry.recommendationUsePermitted ? "許可されています" : "許可されていません"}</div>
+              <div>履歴での利用: {entry.continuityUsePermitted ? "許可されています" : "許可されていません"}</div>
+            </dl>
+          </details>
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Link

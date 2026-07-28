@@ -19,6 +19,21 @@ import {
 } from "./assessmentAttemptStore";
 import { deriveCurrentUnderstanding } from "./currentUnderstanding";
 import { getViewerContext } from "./yorisouAuth";
+import { listRecommendationHistory, type RecommendationHistoryLoad } from "./recommendationStore";
+import { findPublicArchetypeByCode } from "@/lib/yorisou/public-result";
+
+/**
+ * Governed display name for a result code.
+ *
+ * Raw codes like `MS-KI` are internal provenance, not something to put in front of a person as
+ * their primary self-description. An unrecognised code returns null rather than being echoed — an
+ * identity we cannot name is one we should not present as if we understood it.
+ */
+function governedName(code: string | null): string | null {
+  if (!code) return null;
+  const a = findPublicArchetypeByCode(code);
+  return a ? `${a.nickname}（${a.clanJapanese}のタイプ）` : null;
+}
 
 export type CanonicalAssessmentEntry = {
   resultRowId: string;
@@ -31,8 +46,27 @@ export type CanonicalAssessmentEntry = {
   producedAt: string;
   methodId: string;
   methodVersion: string;
-  /** Append-only, newest first. Earlier answers are superseded, never destroyed. */
-  history: { responseType: string; correctedResultId: string | null; createdAt: string }[];
+  /** Governed Japanese names. Null when the taxonomy does not recognise the code. */
+  originalResultName: string | null;
+  acceptedResultName: string | null;
+  scoringVersion: string | null;
+  resultSchemaVersion: string | null;
+  /** Append-only, newest first by monotonic sequence. Earlier answers superseded, never destroyed. */
+  history: {
+    responseId: string;
+    responseType: string;
+    correctedResultId: string | null;
+    correctedResultName: string | null;
+    reasonCode: string | null;
+    source: string | null;
+    supersedesResponseId: string | null;
+    recommendationUsePermittedAtResponse: boolean;
+    continuityUsePermittedAtResponse: boolean;
+    sequenceNo: number | null;
+    createdAt: string;
+  }[];
+  /** Discriminated: a read failure must never render as "no recommendations". */
+  recommendations: RecommendationHistoryLoad;
 };
 
 /**
@@ -60,7 +94,11 @@ export async function loadCanonicalPrivateState(): Promise<CanonicalPrivateState
 
     const entries = await Promise.all(
       results.map(async (result) => {
-        const responses = await listResponsesForResult(result.id, ownerId);
+        const [responses, recommendations] = await Promise.all([
+          listResponsesForResult(result.id, ownerId),
+          // Read-only: viewing history must never materialize a recommendation set.
+          listRecommendationHistory(result.id, ownerId),
+        ]);
         const u = deriveCurrentUnderstanding(result, responses);
         return {
           resultRowId: result.id,
@@ -73,11 +111,26 @@ export async function loadCanonicalPrivateState(): Promise<CanonicalPrivateState
           producedAt: result.produced_at,
           methodId: result.method_id,
           methodVersion: result.method_version,
+          originalResultName: governedName(u.originalResultId),
+          acceptedResultName: governedName(u.acceptedResultId),
+          scoringVersion: (result as { scoring_version?: string | null }).scoring_version ?? null,
+          resultSchemaVersion:
+            (result as { result_schema_version?: string | null }).result_schema_version ?? null,
           history: responses.map((r) => ({
+            responseId: r.id,
             responseType: r.response_type,
             correctedResultId: r.corrected_result_id,
+            correctedResultName: governedName(r.corrected_result_id),
+            reasonCode: (r as { reason_code?: string | null }).reason_code ?? null,
+            source: (r as { source?: string | null }).source ?? null,
+            supersedesResponseId:
+              (r as { supersedes_response_id?: string | null }).supersedes_response_id ?? null,
+            recommendationUsePermittedAtResponse: r.recommendation_use_permitted === true,
+            continuityUsePermittedAtResponse: r.continuity_use_permitted === true,
+            sequenceNo: (r as { sequence_no?: number | null }).sequence_no ?? null,
             createdAt: r.created_at,
           })),
+          recommendations,
         };
       }),
     );
