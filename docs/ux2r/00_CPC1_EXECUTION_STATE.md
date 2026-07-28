@@ -200,26 +200,34 @@ HOW TO RUN:
   EXPECTED_GIT_SHA=<application-sha> PLAYWRIGHT_BASE_URL=<deployment-url> \
     VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> npm run test:cpc1-acceptance
 
-next_file: tests/cpc1-acceptance/verticalJourney.spec.ts -> startAttempt()
-next_function_or_route: the start button now clicks (text locator; getByRole regex did not match a
-  nested-span accessible name). Blocker moved to: button.answer-btn does not appear within 45s
-  after start. The failure now prints url + visible button labels — RUN IT and read that list.
-  Likely: an intro/consent step between start and question 1, or hydration on cold start.
-  Then continue the megapackage: one browser context, test.step, full lifecycle through erase.
-next_command: EXPECTED_GIT_SHA=<app-sha> PLAYWRIGHT_BASE_URL=<preview-url> \
-  VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> \
-  npx playwright test --config=playwright.cpc1.config.ts --project=desktop -g "resume recovers"
+next_file: axe contrast fixes across app/ (see exact pairs below), then
+  tests/cpc1-acceptance/verticalJourney.spec.ts to run the one-context lifecycle
+next_function_or_route: AXE — exact failing pairs captured from the hosted run at the CURRENT app
+  commit (LINE green already fixed from 2.25 -> the homepage node is gone):
+    bg #067a34, contrastRatio 3.38  <- foreground is NOT pure white; find the actual fg (likely a
+                                       translucent/near-white token) and darken bg or solidify fg
+    bg #fbfaf6, contrastRatio 2.99  <- page background; the muted text token on it is too light
+    bg #ffffff, contrastRatio 4.28  <- just under 4.5; a small darkening of that text token fixes it
+  Routes still failing: / , /check-in , /tests , /line/mini-app , /result?resultId=MS-KI
+  Re-run with --reporter=line and grep the JSON for "fgColor" to get each foreground token.
+  Do NOT suppress rules, exclude nodes or lower the threshold.
 
-FIXED THIS SESSION: .answer-btn is the real option element (was button:visible clicking chrome);
-  deterministic helpers startAttempt/readCurrentAttempt/answerOneQuestion/answerUntilCount that
-  wait on persisted answer counts and fail with attempt id + counts + URL + option labels;
-  final-answer completion no longer mistaken for a stall; concealed-state scoped to <main>;
-  診断 judged per sentence with denials allowed.
-STILL OPEN: LINE private-read capture (needs a completed run), axe violation ids, full lifecycle
-  (registration/claim/exactly-once/recommendation actions/sign-out-in/LINE return/erase),
-  authenticated cross-owner matrix, fixture cleanup utility.
-NOTE: retrieve the bypass with curl, not urllib — the local Python lacks CA certs and returns an
-  empty secret silently, which then hits the SSO wall.
+  LIFECYCLE — the one-context test is written (test.step, real 続きからはじめる resume, network-
+  classified start). It has NOT yet been run to completion. Run it next; startAttempt now reports
+  status / content-type / cookie-set / failure-UI / body when it fails, so the next failure is
+  self-classifying.
+next_command: EXPECTED_GIT_SHA=$(git rev-parse HEAD) PLAYWRIGHT_BASE_URL=<fresh-preview> \
+  VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> \
+  npx playwright test --config=playwright.cpc1.config.ts --project=desktop -g "principal lifecycle"
+
+FIXED THIS SESSION: LINE brand green contrast on public surfaces (#06C755 -> #067A34, hover
+  #05622A; LineBrandIcon keeps the true brand fill as a logo with no text on it); start POST now
+  network-classified instead of guessed; null attempt before the final question is a hard failure
+  rather than assumed completion; lifecycle converted to ONE browser context with test.step.
+CORRECTED: my earlier "hydration / intro step" and "nested spans" explanations were speculation
+  stated as fact. There is no intro step; the source renders direct button text.
+NOTE: retrieve the bypass with curl, not urllib — local Python lacks CA certs and silently yields
+  an empty secret, which then hits the SSO wall.
 
 remaining_terminal_gates:
   - 6 findings; real authenticated lifecycle; authenticated security variants; erasure proof
