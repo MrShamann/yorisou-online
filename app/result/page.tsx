@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { loadPersistedAssessmentResult } from "@/lib/server/persistedResultView";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
@@ -42,8 +43,27 @@ export default async function ResultPage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readParam(params, "resultId");
-  const overlayId = readParam(params, "overlayId");
+
+  // UX-2: PERSISTED IDENTITY IS AUTHORITATIVE.
+  // When ?result=<uuid> is present the server record decides what is rendered. Legacy resultId /
+  // overlayId / confidence / payloadKey are compatibility inputs only and can never override it —
+  // if they conflict, the persisted record wins and the mismatch is logged without private data.
+  const persistedResultRowId = readParam(params, "result");
+  const persisted = persistedResultRowId ? await loadPersistedAssessmentResult(persistedResultRowId) : null;
+
+  const legacyResultId = readParam(params, "resultId");
+  const legacyOverlayId = readParam(params, "overlayId");
+
+  if (persisted && legacyResultId && legacyResultId !== persisted.resultId) {
+    console.warn("result identity mismatch: persisted record wins", {
+      persistedRowId: persistedResultRowId,
+      // Only the fact of a mismatch is recorded — never answers or account identifiers.
+      legacyDifferent: true,
+    });
+  }
+
+  const resultId = persisted ? persisted.resultId : legacyResultId;
+  const overlayId = persisted ? persisted.overlayId ?? legacyOverlayId : legacyOverlayId;
   const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
   const payloadKey = readParam(params, "payloadKey");
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
