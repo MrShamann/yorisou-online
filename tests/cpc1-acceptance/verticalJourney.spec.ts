@@ -40,11 +40,27 @@ async function readCurrentAttempt(page: Page): Promise<Attempt | null> {
 
 async function startAttempt(page: Page): Promise<Attempt> {
   await page.goto("/check-in", { waitUntil: "domcontentloaded" });
-  const begin = page.getByRole("button", { name: /いま色テストをはじめる|続きからはじめる/ }).first();
-  await begin.waitFor({ state: "visible", timeout: 20_000 });
+  // Text locator, not getByRole: the accessible name is composed from nested spans, so a role
+  // query with a regex name did not match the rendered button.
+  const begin = page
+    .locator("button", { hasText: /いま色テストをはじめる|続きからはじめる/ })
+    .first();
+  await begin.waitFor({ state: "visible", timeout: 30_000 });
+  await begin.scrollIntoViewIfNeeded();
   await begin.click();
 
-  await page.locator(ANSWER_OPTION).first().waitFor({ state: "visible", timeout: 20_000 });
+  // Attempt creation is awaited server-side before question 1 renders, so this can be slow on a
+  // cold serverless start. Failing here reports what WAS on screen rather than a bare timeout.
+  await page
+    .locator(ANSWER_OPTION)
+    .first()
+    .waitFor({ state: "visible", timeout: 45_000 })
+    .catch(async () => {
+      const visible = (await page.locator("button:visible").allInnerTexts()).slice(0, 6).join(" | ");
+      throw new Error(
+        `no ${ANSWER_OPTION} appeared after starting. url=${page.url()} buttons=[${visible}]`,
+      );
+    });
   const attempt = await readCurrentAttempt(page);
   expect(attempt, "starting the flow must create a server-backed attempt").not.toBeNull();
   return attempt!;
