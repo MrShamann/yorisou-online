@@ -31,6 +31,17 @@ export default async function RecommendationGraphPage({
         />
       );
     }
+    // Authorization alone would leave a generic graph behind a lock. Pass the canonical identity
+    // through so this is actually THEIR graph, derived from the result they accepted.
+    return (
+      <RecommendationGraphView
+        canonical={{
+          resultRowId: loaded.context.resultRowId,
+          effectiveResultId: loaded.context.effectiveResultId as string,
+          eligibilityBasis: loaded.context.status === "corrected" ? "corrected" : "confirmed",
+        }}
+      />
+    );
   }
 
   return <RecommendationGraphView />;

@@ -12,7 +12,8 @@ import test, { beforeEach } from "node:test";
 // safe as long as the stub exists before the first call.
 import {
   storePendingInterpretationIntent,
-  takePendingInterpretationIntent,
+  peekPendingInterpretationIntent,
+  clearPendingInterpretationIntent,
 } from "../pendingSave";
 
 const store = new Map<string, string>();
@@ -40,20 +41,47 @@ test("a valid intent round-trips", () => {
     correctedResultId: null,
     reasonCode: null,
   });
-  const taken = takePendingInterpretationIntent();
+  const taken = peekPendingInterpretationIntent();
   assert.equal(taken?.resultRowId, ROW);
   assert.equal(taken?.responseType, "rejected");
 });
 
-test("SINGLE USE — the record is consumed on read, so it cannot be replayed", () => {
+test("PEEK does NOT consume — the answer survives a crash or a failed claim", () => {
+  // The earlier destructive read made a browser replay impossible but lost the person's answer the
+  // moment the page loaded. Duplicate prevention now lives in the database, so holding the intent
+  // until acknowledgement is both safe and necessary for recovery.
   storePendingInterpretationIntent({
     resultRowId: ROW,
     responseType: "confirmed",
     correctedResultId: null,
     reasonCode: null,
   });
-  assert.ok(takePendingInterpretationIntent());
-  assert.equal(takePendingInterpretationIntent(), null, "a second read must yield nothing");
+  const first = peekPendingInterpretationIntent();
+  const second = peekPendingInterpretationIntent();
+  assert.ok(first);
+  assert.deepEqual(second, first, "a reload must find the same intent, with the same nonce");
+});
+
+test("the nonce is stable across reads, so a retry is a REPLAY rather than a new write", () => {
+  storePendingInterpretationIntent({
+    resultRowId: ROW,
+    responseType: "rejected",
+    correctedResultId: null,
+    reasonCode: null,
+  });
+  assert.equal(peekPendingInterpretationIntent()?.nonce, peekPendingInterpretationIntent()?.nonce);
+});
+
+test("clearing is explicit, and only then is the intent gone", () => {
+  storePendingInterpretationIntent({
+    resultRowId: ROW,
+    responseType: "deferred",
+    correctedResultId: null,
+    reasonCode: null,
+  });
+  assert.ok(peekPendingInterpretationIntent());
+  clearPendingInterpretationIntent();
+  assert.equal(peekPendingInterpretationIntent(), null);
 });
 
 test("a correction without a governed target is never stored", () => {
@@ -78,8 +106,8 @@ test("a tampered stored record is rejected on read", () => {
   ];
   for (const c of cases) {
     store.set(KEY, JSON.stringify(c));
-    assert.equal(takePendingInterpretationIntent(), null, JSON.stringify(c));
-    assert.equal(store.size, 0, "a rejected record is still cleared, never left to be retried");
+    assert.equal(peekPendingInterpretationIntent(), null, JSON.stringify(c));
+    assert.equal(store.size, 0, "an unusable record is dropped, not re-read forever");
   }
 });
 
@@ -95,5 +123,5 @@ test("free text can never reach the corrected identity", () => {
 
 test("malformed JSON is rejected rather than thrown", () => {
   store.set(KEY, "{not json");
-  assert.equal(takePendingInterpretationIntent(), null);
+  assert.equal(peekPendingInterpretationIntent(), null);
 });

@@ -113,13 +113,29 @@ export function storePendingInterpretationIntent(
 }
 
 /**
- * Read and REMOVE the intent. Removal happens before the network call, so a replay of the same
- * intent is impossible even if the request is retried or the page is reopened.
+ * PEEK — read and validate WITHOUT removing.
+ *
+ * The first version removed the intent before any network call. That made a browser-level replay
+ * impossible, but it also destroyed the only record of what the person had said the moment the
+ * page was read — so a crash, a closed tab, or a failed claim lost the answer with no way back.
+ * Duplicate prevention now lives in the database (unique nonce per result+owner), which frees the
+ * browser to HOLD the intent until the server has actually acknowledged it.
+ *
+ * Lifecycle: peek → claim → submit with the same nonce → server returns created or replayed →
+ * only then clear.
  */
-export function takePendingInterpretationIntent(): PendingInterpretationIntent | null {
+export function peekPendingInterpretationIntent(): PendingInterpretationIntent | null {
   const raw = window.sessionStorage.getItem(PENDING_INTENT_KEY);
-  window.sessionStorage.removeItem(PENDING_INTENT_KEY);
   if (!raw) return null;
+
+  const parsed = parseIntent(raw);
+  // A record that fails validation can NEVER be used, so it is dropped rather than re-read on
+  // every visit. Only a record that is still usable survives a peek.
+  if (!parsed) window.sessionStorage.removeItem(PENDING_INTENT_KEY);
+  return parsed;
+}
+
+function parseIntent(raw: string): PendingInterpretationIntent | null {
   try {
     const p = JSON.parse(raw) as Record<string, unknown>;
     if (typeof p.createdAt !== "number" || Date.now() - p.createdAt > INTENT_TTL_MS) return null;
@@ -144,4 +160,18 @@ export function takePendingInterpretationIntent(): PendingInterpretationIntent |
   } catch {
     return null;
   }
+}
+
+/**
+ * Clear the intent. Called ONLY after the server confirms the response was created or replayed,
+ * or when the failure is terminal (validation/conflict) and retrying could never succeed.
+ * An unresolved network failure deliberately leaves it in place so a reload can resume.
+ */
+export function clearPendingInterpretationIntent() {
+  window.sessionStorage.removeItem(PENDING_INTENT_KEY);
+}
+
+/** Discard a stored record that failed validation — it can never be used and must not linger. */
+export function quarantinePendingInterpretationIntent() {
+  window.sessionStorage.removeItem(PENDING_INTENT_KEY);
 }

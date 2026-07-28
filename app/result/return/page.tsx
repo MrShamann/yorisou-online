@@ -11,7 +11,8 @@ import { buildPublicResultHref } from "../../check-in/resultCompatibility";
 import {
   takePendingImairoSave,
   takePendingResultClaim,
-  takePendingInterpretationIntent,
+  peekPendingInterpretationIntent,
+  clearPendingInterpretationIntent,
   type PendingImairoSave,
 } from "../pendingSave";
 
@@ -24,9 +25,17 @@ export default function ImairoSaveReturnPage() {
   const [claimedRowId, setClaimedRowId] = useState<string | null>(null);
 
   useEffect(() => {
-    // §4: an interpretation intent implies a claim. Both are taken (and therefore CONSUMED) up
-    // front, so neither can be replayed by reopening this page or retrying the request.
-    const intent = takePendingInterpretationIntent();
+    // §1: ACKNOWLEDGEMENT LIFECYCLE — peek, act, and only then clear.
+    //
+    // The intent used to be deleted the instant this page loaded. That made a browser replay
+    // impossible, but it also destroyed the record of what the person had said before anything had
+    // actually happened: a crash, a closed tab or a failed claim lost the answer with no way back,
+    // and the person had to find and press it again.
+    //
+    // Duplicate prevention now lives in the database (unique nonce per result+owner), so the
+    // browser is free to HOLD the intent until the server confirms. A retry with the same nonce
+    // returns the original response instead of appending a second one, which makes resuming safe.
+    const intent = peekPendingInterpretationIntent();
     const claim = takePendingResultClaim();
 
     if (intent) {
@@ -35,11 +44,9 @@ export default function ImairoSaveReturnPage() {
           const claimed = await fetch(`/api/assessment/results/${intent.resultRowId}/claim`, {
             method: "POST",
           });
+          // Intent deliberately NOT cleared: a reload can retry the whole sequence.
           if (!claimed.ok) throw new Error("claim_failed");
 
-          // Same-result matching is structural: the response goes to the row we just claimed, and
-          // the server independently verifies owner scope. A cross-owner or mismatched intent
-          // cannot succeed even if sessionStorage were tampered with.
           const responded = await fetch(`/api/assessment/results/${intent.resultRowId}/response`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -53,29 +60,26 @@ export default function ImairoSaveReturnPage() {
                 : { responseType: intent.responseType, intentNonce: intent.nonce },
             ),
           });
-          // The claim is the part that must not be lost. If only the response failed, the person
-          // still owns the result and can answer again on the result page — so this is not an error
-          // state, and saying "failed" would be untrue.
-          //
-          // A retry is SAFE now regardless of what happened here: the nonce makes the server return
-          // the original response rather than appending a second one, so an ambiguous network
-          // outcome (server wrote the row, reply never arrived) can no longer produce a duplicate.
-          if (!responded.ok) console.warn("pending interpretation not applied");
+
+          if (responded.ok) {
+            // Created OR replayed — both mean the answer is recorded exactly once.
+            clearPendingInterpretationIntent();
+          } else if (responded.status >= 400 && responded.status < 500) {
+            // Terminal: a validation failure or a genuine conflict can never succeed on retry, so
+            // holding the intent would only make every future visit fail the same way.
+            clearPendingInterpretationIntent();
+            console.warn("pending interpretation rejected", { status: responded.status });
+          } else {
+            // Server-side or unresolved: keep the intent so a reload can resume with the same nonce.
+            console.warn("pending interpretation unresolved", { status: responded.status });
+          }
           setClaimedRowId(intent.resultRowId);
         } catch {
+          // Network failure of unknown outcome. The intent stays; the nonce makes a retry safe even
+          // if the server did commit the response and only the reply was lost.
           setState("error");
         }
       })();
-      return;
-    }
-
-    if (claim) {
-      fetch(`/api/assessment/results/${claim.resultRowId}/claim`, { method: "POST" })
-        .then((response) => {
-          if (!response.ok) throw new Error("claim_failed");
-          setClaimedRowId(claim.resultRowId);
-        })
-        .catch(() => setState("error"));
       return;
     }
 
