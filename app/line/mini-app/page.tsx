@@ -3,8 +3,6 @@ import Link from "next/link";
 
 import YorisouLogo from "@/app/components/YorisouLogo";
 
-import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
-import { RecommendationSignalMountTracker } from "@/app/components/YorisouSignalTracker";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
 import { requireRecommendationContext } from "@/lib/server/canonicalResultContext";
 import { loadRecommendationSet } from "@/lib/server/recommendationStore";
@@ -66,7 +64,7 @@ export default async function MiniAppEntryPage({
     const loaded = await requireRecommendationContext(rawRowId);
     if (loaded.outcome === "unavailable") return <PersistedResultUnavailable />;
 
-    const resultHref = `/result?result=${encodeURIComponent(loaded.outcome === "withheld" ? loaded.context.resultRowId : loaded.context.resultRowId)}`;
+    const resultHref = `/result?result=${encodeURIComponent(loaded.context.resultRowId)}`;
     if (loaded.outcome === "withheld") {
       return (
         <RecommendationWithheld status={loaded.context.status} resultHref={resultHref} />
@@ -116,15 +114,8 @@ export default async function MiniAppEntryPage({
       style={{ paddingBottom: "max(40px, env(safe-area-inset-bottom, 0px))" }}
     >
       <OpenTestingPageTracker eventName="line_entry_opened" route="/line/mini-app" source="line_mini_app" entrySource="line-mini-app" />
-      <RecommendationSignalMountTracker
-        signal={{
-          source: "line_mini_app",
-          signalType: "return_surface_viewed",
-          testId: "current-state",
-          recommendationMode: "return_session",
-          pagePath: "/line/mini-app",
-        }}
-      />
+      {/* No return-session signal is emitted here. Anonymous entry has no session to return to,
+          and recording one would make the analytics claim a continuity the runtime cannot read. */}
       {/* Ambient glow */}
       <div
         aria-hidden="true"
@@ -147,12 +138,8 @@ export default async function MiniAppEntryPage({
           </span>
         </div>
 
-        {/* Launcher headline */}
-        <div className="mt-8">
-          <p className="text-[11px] font-semibold tracking-[0.08em] text-[#9A9088]">
-            前回の続きから、少しだけ。
-          </p>
-        </div>
+        {/* No "continue where you left off" line: at this point nothing has been read, and there
+            may be nothing to continue. */}
 
         <div
           className="mt-4 rounded-[1.4rem] p-5"
@@ -181,28 +168,10 @@ export default async function MiniAppEntryPage({
           </p>
 
           <p className="mt-2 text-[11px] text-[#9A9088]">
-            保存やヒントの引き継ぎにはログインが必要です
+            保存された結果はここでは読み込みません。ログイン後の結果ページから開けます。
           </p>
         </div>
 
-        <div className="mt-5 space-y-2">
-          <div>
-            <p className="text-[11px] font-semibold tracking-[0.12em] text-[#5836EB]">はじめる</p>
-            <p className="mt-1 text-[12px] leading-6 text-[#7A7068]">
-              保存した結果がある場合は、結果ページのリンクから開くと続きを見られます。
-            </p>
-          </div>
-          {/* Legacy device-local companion content. Deliberately NOT presented as canonical
-              state: in anonymous mode there is no authorized record to read, and two competing
-              answers to "what is my current state" is the defect this package exists to remove. */}
-          <YorisouCompanionCard
-            testId="current-state"
-            source="line_mini_app"
-            pagePath="/line/mini-app"
-            mode="return_session"
-            variant="return"
-          />
-        </div>
 
         <div className="mt-5 grid gap-2.5">
           <OpenTestingTrackingLink
@@ -218,20 +187,9 @@ export default async function MiniAppEntryPage({
           >
             120問から始める
           </OpenTestingTrackingLink>
-          <div className="grid grid-cols-2 gap-2.5">
-            <Link
-              href="/tests"
-              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[#E9E6F3] bg-white/85 px-4 text-[13px] font-semibold text-[#4326C7]"
-            >
-              入口を選ぶ
-            </Link>
-            <Link
-              href="/open-testing"
-              className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-[#E9E6F3] bg-white/85 px-4 text-[13px] font-semibold text-[#4326C7]"
-            >
-              公開テスト案内
-            </Link>
-          </div>
+        </div>
+
+        <div className="mt-5">
           <div className="surface-link-row text-[13px] font-semibold text-[#315F50]">
             <Link href="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low" className="hover:underline">
               レポートの見本を見る
@@ -241,7 +199,7 @@ export default async function MiniAppEntryPage({
             </Link>
           </div>
           <p className="mt-1 text-[11px] leading-5 text-[#7A7068]">
-            まだ記録が少ない場合は、公開テスト案内や診断一覧から続けやすい入口を案内します。不要なお知らせはいつでも止められます。
+            公開テスト案内や診断一覧から、気になる入口を選べます。不要なお知らせはいつでも止められます。
           </p>
         </div>
 
