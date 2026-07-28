@@ -30,9 +30,12 @@ test.describe("unauthorized is indistinguishable from non-existent", () => {
 
   test("the concealed state reveals nothing about why", async ({ page }) => {
     await page.goto(`/result?result=${STOLEN}`, { waitUntil: "domcontentloaded" });
-    const body = await page.locator("body").innerText();
+    // Scoped to <main>: the shared footer carries privacy copy that legitimately mentions 削除 and
+    // 期限, and failing on that would be judging the wrong text. The property under test is what
+    // the CONCEALED STATE itself says.
+    const main = await page.locator("main").innerText();
     for (const leak of ["削除", "期限", "権限", "他のアカウント", "存在しません"]) {
-      expect(body, `concealed state must not explain the reason: ${leak}`).not.toContain(leak);
+      expect(main, `concealed state must not explain the reason: ${leak}`).not.toContain(leak);
     }
   });
 });

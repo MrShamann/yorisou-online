@@ -94,12 +94,23 @@ test.describe("Japanese copy", () => {
   });
 
   test("no surface claims a diagnosis", async ({ page }) => {
+    // Judged per OCCURRENCE, in its own sentence. A page-wide check fails whenever a legitimate
+    // denial appears anywhere, and passes whenever one does — both wrong. Safety disclosures like
+    // 「医療・心理診断ではなく」 must survive; a positive claim must not.
+    const DENIALS = ["診断ではなく", "診断ではありません", "診断ではない", "診断ではないです"];
     for (const route of [...PUBLIC_ROUTES, ...RESULT_ROUTES]) {
       await page.goto(route, { waitUntil: "domcontentloaded" });
       const body = await page.locator("body").innerText();
-      // 診断 is permitted only where it appears inside an explicit denial.
-      const claims = body.includes("診断") && !body.includes("診断ではなく") && !body.includes("診断ではありません");
-      expect(claims, `${route} claims a diagnosis`).toBe(false);
+
+      const offenders: string[] = [];
+      for (const sentence of body.split(/[。\n]/)) {
+        if (!sentence.includes("診断")) continue;
+        if (DENIALS.some((d) => sentence.includes(d))) continue;
+        // A bare navigational/product label such as 「診断一覧」 is not a claim about the reader.
+        if (/診断(一覧|履歴|結果ページ)/.test(sentence)) continue;
+        offenders.push(sentence.trim().slice(0, 80));
+      }
+      expect(offenders, `${route} claims a diagnosis: ${offenders.join(" | ")}`).toHaveLength(0);
     }
   });
 });
