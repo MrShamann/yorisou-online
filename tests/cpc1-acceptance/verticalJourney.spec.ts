@@ -38,39 +38,76 @@ async function readCurrentAttempt(page: Page): Promise<Attempt | null> {
   return data.attempt;
 }
 
+/**
+ * Start an attempt and CLASSIFY the outcome from the actual network response.
+ *
+ * There is no intermediate product step between the start button and the quiz: begin() awaits
+ * POST /api/assessment/attempts and switches to the quiz phase only once that returns an
+ * attemptId. So when no option renders, the answer is in that response — not in speculation about
+ * hydration or a hidden intro screen.
+ */
 async function startAttempt(page: Page): Promise<Attempt> {
   await page.goto("/check-in", { waitUntil: "domcontentloaded" });
-  // Text locator, not getByRole: the accessible name is composed from nested spans, so a role
-  // query with a regex name did not match the rendered button.
+
   const begin = page
     .locator("button", { hasText: /いま色テストをはじめる|続きからはじめる/ })
     .first();
   await begin.waitFor({ state: "visible", timeout: 30_000 });
   await begin.scrollIntoViewIfNeeded();
-  await begin.click();
 
-  // Attempt creation is awaited server-side before question 1 renders, so this can be slow on a
-  // cold serverless start. Failing here reports what WAS on screen rather than a bare timeout.
+  const postPromise = page
+    .waitForResponse(
+      (r) => r.url().includes("/api/assessment/attempts") && r.request().method() === "POST",
+      { timeout: 30_000 },
+    )
+    .catch(() => null);
+
+  await begin.click();
+  const post = await postPromise;
+
+  if (!post) {
+    const labels = (await page.locator("button:visible").allInnerTexts()).slice(0, 6).join(" | ");
+    throw new Error(
+      `no POST /api/assessment/attempts was observed after clicking start — the wrong element was ` +
+        `clicked or the handler did not fire. url=${page.url()} buttons=[${labels}]`,
+    );
+  }
+
+  const status = post.status();
+  const contentType = post.headers()["content-type"] ?? "<none>";
+  const body = await post.text().catch(() => "<unreadable>");
+  const setCookie = post.headers()["set-cookie"] ? "yes" : "no";
+  const failureShown = (await page.locator("body").innerText()).includes("はじめられませんでした");
+
+  if (status !== 201 && status !== 200) {
+    throw new Error(
+      `attempt start failed: status=${status} content-type=${contentType} ` +
+        `attempt-cookie-set=${setCookie} failure-ui-shown=${failureShown} url=${page.url()} ` +
+        `body=${body.slice(0, 300)}`,
+    );
+  }
+
   await page
     .locator(ANSWER_OPTION)
     .first()
     .waitFor({ state: "visible", timeout: 45_000 })
     .catch(async () => {
-      const visible = (await page.locator("button:visible").allInnerTexts()).slice(0, 6).join(" | ");
+      const labels = (await page.locator("button:visible").allInnerTexts()).slice(0, 6).join(" | ");
       throw new Error(
-        `no ${ANSWER_OPTION} appeared after starting. url=${page.url()} buttons=[${visible}]`,
+        `start returned ${status} (cookie-set=${setCookie}) but no ${ANSWER_OPTION} rendered. ` +
+          `url=${page.url()} buttons=[${labels}] body=${body.slice(0, 200)}`,
       );
     });
+
   const attempt = await readCurrentAttempt(page);
-  expect(attempt, "starting the flow must create a server-backed attempt").not.toBeNull();
+  expect(attempt, "a successful start must be readable as an in-progress attempt").not.toBeNull();
   return attempt!;
 }
 
 /**
- * Answer exactly one question and wait for the SAME attempt to report one more answer.
- *
- * Observing the server count is both faster and stricter than a fixed sleep: it proves the answer
- * was persisted, not merely that the UI advanced.
+ * Answer one NON-FINAL question. A disappearing attempt here is a hard failure, never success:
+ * treating null as "completed" would silently pass a lost cookie, a failing GET, or a backend
+ * error mid-run — exactly the states this journey exists to catch.
  */
 async function answerOneQuestion(page: Page, expected: Attempt): Promise<Attempt> {
   const options = page.locator(ANSWER_OPTION);
@@ -84,19 +121,21 @@ async function answerOneQuestion(page: Page, expected: Attempt): Promise<Attempt
 
   const target = expected.answeredCount + 1;
   const deadline = Date.now() + 20_000;
+  let last: Attempt | null = null;
   while (Date.now() < deadline) {
-    const next = await readCurrentAttempt(page);
-    if (next && next.id === expected.id && next.answeredCount >= target) return next;
-    // The final answer completes the attempt, so it stops being "in progress" — that is success,
-    // not a stall, and the caller handles it.
-    if (!next) return { ...expected, answeredCount: target, status: "completed" };
+    last = await readCurrentAttempt(page);
+    if (last && last.id === expected.id && last.answeredCount >= target) return last;
     await page.waitForTimeout(150);
   }
 
   const labels = (await options.allInnerTexts()).slice(0, 4).join(" | ");
   throw new Error(
-    `answer did not persist: attempt=${expected.id} from=${expected.answeredCount} ` +
-      `expected>=${target} url=${page.url()} options=[${labels}]`,
+    last === null
+      ? `the in-progress attempt disappeared BEFORE the final question — lost cookie, failing ` +
+        `read, or a backend error. was=${expected.id} at=${expected.answeredCount}/` +
+        `${expected.requiredCount} url=${page.url()}`
+      : `answer did not persist: attempt=${expected.id} from=${expected.answeredCount} ` +
+        `expected>=${target} got=${last.answeredCount} url=${page.url()} options=[${labels}]`,
   );
 }
 
@@ -188,65 +227,96 @@ test.describe("registration and claim continuity", () => {
 // nothing extra and doubles the wall-clock. Viewport coverage comes from the surrounding suites.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test.describe("canonical lifecycle", () => {
-  test.describe.configure({ mode: "serial", timeout: 900_000 });
-  // Runs once on desktop: completing 120 questions twice proves nothing extra and doubles the
-  // wall-clock. Viewport coverage comes from the surrounding suites.
-  test.beforeEach(({}, testInfo) => {
-    test.skip(
-      testInfo.project.name !== "desktop",
-      "the full completion runs once; viewport coverage comes from the other suites",
-    );
-  });
+// ─────────────────────────────────────────────────────────────────────────────
+// THE PRINCIPAL LIFECYCLE — ONE BROWSER CONTEXT.
+//
+// Separate Playwright tests get separate contexts, so the anonymous attempt cookie, the claim
+// credential, the sessionStorage pending intent and the authenticated session would all be
+// discarded between steps. A JS object carrying resultRowId across tests looks like continuity and
+// is not: it proves nothing about whether the PERSON could have made the same journey.
+//
+// One context, one page, named steps.
+// ─────────────────────────────────────────────────────────────────────────────
+test("CPC-1 principal lifecycle", async ({ browser }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "desktop",
+    "the full completion runs once; viewport coverage comes from the other suites",
+  );
+  test.setTimeout(900_000);
 
-  // Carried between the serial steps.
-  const state: {
-    attemptId?: string;
-    resultRowId?: string;
-    email?: string;
-    password?: string;
-  } = {};
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-  test("completes all 120 questions and receives a canonical resultRowId", async ({ page }) => {
-    const started = await startAttempt(page);
-    state.attemptId = started.id;
+  let attemptId = "";
+  let resultRowId = "";
 
-    // Answer up to the LAST question, then handle completion separately: the final answer ends the
-    // attempt, so it stops being readable as "in progress" — which is success, not a stall.
-    const required = started.requiredCount;
-    const penultimate = await answerUntilCount(page, started, required - 1);
-    expect(penultimate.id, "the attempt identity must hold for the whole run").toBe(started.id);
-    expect(penultimate.answeredCount).toBe(required - 1);
+  try {
+    await test.step("anonymous start creates a server-backed attempt", async () => {
+      const started = await startAttempt(page);
+      attemptId = started.id;
+      expect(started.answeredCount).toBe(0);
+    });
 
-    await page.locator(ANSWER_OPTION).first().click();
+    await test.step("partial answers persist against the same attempt", async () => {
+      const attempt = await readCurrentAttempt(page);
+      const progressed = await answerUntilCount(page, attempt!, 3);
+      expect(progressed.id).toBe(attemptId);
+      expect(progressed.answeredCount).toBeGreaterThanOrEqual(3);
+    });
 
-    // Completion is server-authoritative and navigation is awaited: the canonical id must appear
-    // in the URL, never a URL-encoded result.
-    await page.waitForURL(/\/(result|report-loading)\?.*result=/, { timeout: 60_000 });
-    await page.waitForURL(/\/result\?.*result=/, { timeout: 60_000 });
+    await test.step("refresh preserves the attempt, and explicit resume adopts the SAME one", async () => {
+      await page.reload({ waitUntil: "domcontentloaded" });
+      const afterReload = await readCurrentAttempt(page);
+      expect(afterReload, "the attempt must survive a refresh").not.toBeNull();
+      expect(afterReload!.id, "refresh must not create a second attempt").toBe(attemptId);
 
-    const rowId = canonicalRowId(page.url());
-    expect(rowId, "completion must produce a canonical resultRowId").toBeTruthy();
-    state.resultRowId = rowId!;
+      // Prove the explicit affordance actually resumes — reading the API alone would pass even if
+      // the button started a fresh attempt.
+      const resume = page.locator("button", { hasText: "続きからはじめる" }).first();
+      await resume.waitFor({ state: "visible", timeout: 30_000 });
+      await resume.click();
+      await page.locator(ANSWER_OPTION).first().waitFor({ state: "visible", timeout: 45_000 });
 
-    // Legacy parameters must NOT ride along on the canonical link.
-    const params = new URL(page.url()).searchParams;
-    expect(params.get("resultId"), "legacy id must not accompany the canonical id").toBeNull();
-  });
+      const resumed = await readCurrentAttempt(page);
+      expect(resumed!.id, "resume must adopt the same attempt").toBe(attemptId);
+      expect(resumed!.answeredCount).toBeGreaterThanOrEqual(afterReload!.answeredCount);
+    });
 
-  test("the canonical result survives a refresh and is addressed by the same row id", async ({ page }) => {
-    expect(state.resultRowId, "prior step must have produced a row id").toBeTruthy();
-    await page.goto(`/result?result=${state.resultRowId}`, { waitUntil: "domcontentloaded" });
-    const body = await page.locator("main").innerText();
-    expect(body.length).toBeGreaterThan(0);
-    // Anonymous owner of a fresh attempt holds the credential, so this must NOT be concealed.
-    expect(body).not.toContain("結果を開けませんでした");
-  });
+    await test.step("completing all questions produces a canonical resultRowId", async () => {
+      const current = await readCurrentAttempt(page);
+      const required = current!.requiredCount;
+      const penultimate = await answerUntilCount(page, current!, required - 1);
+      expect(penultimate.id).toBe(attemptId);
 
-  test("an unanswered result withholds recommendations — deferred is not consent", async ({ page }) => {
-    await page.goto(`/recommendations?result=${state.resultRowId}`, { waitUntil: "domcontentloaded" });
-    const body = await page.locator("main").innerText();
-    // Nothing has been confirmed yet, so the destination must withhold rather than generate.
-    expect(body).not.toContain("保存する");
-  });
+      await page.locator(ANSWER_OPTION).first().click();
+      await page.waitForURL(/\/(result|report-loading)\?.*result=/, { timeout: 90_000 });
+      await page.waitForURL(/\/result\?.*result=/, { timeout: 90_000 });
+
+      const rowId = canonicalRowId(page.url());
+      expect(rowId, "completion must produce a canonical resultRowId").toBeTruthy();
+      resultRowId = rowId!;
+
+      // Legacy parameters must not ride along on the canonical link.
+      expect(new URL(page.url()).searchParams.get("resultId")).toBeNull();
+    });
+
+    await test.step("the canonical result survives a refresh for its credential holder", async () => {
+      await page.goto(`/result?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      const main = await page.locator("main").innerText();
+      expect(main).not.toContain("結果を開けませんでした");
+    });
+
+    await test.step("an unanswered interpretation withholds recommendations", async () => {
+      await page.goto(`/recommendations?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      const main = await page.locator("main").innerText();
+      expect(main, "nothing accepted yet, so nothing may be recommended").not.toContain("保存する");
+    });
+
+    // Remaining steps (correction -> registration -> claim -> exactly-once -> private-state ->
+    // report/download -> recommendations/graph -> actions -> sign-out/in -> LINE return -> erase)
+    // append here, inside this same context.
+  } finally {
+    await context.close();
+  }
 });
+
