@@ -46,7 +46,8 @@
     "test:ux2-intent": "node --import tsx --test app/result/__tests__/pendingInterpretationIntent.test.ts",
     "test:ux2-gate": "node --import tsx --test lib/server/__tests__/canonicalDestinationGate.test.ts",
     "test:ux2-reason": "node --import tsx --test lib/yorisou/recommendations/__tests__/governedReason.test.ts",
-    "test:ux2-line": "node --import tsx --test app/line/__tests__/anonymousEntryIsolation.test.ts"
+    "test:ux2-line": "node --import tsx --test app/line/__tests__/anonymousEntryIsolation.test.ts",
+    "test:cpc1-acceptance": "playwright test --config=playwright.cpc1.config.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
