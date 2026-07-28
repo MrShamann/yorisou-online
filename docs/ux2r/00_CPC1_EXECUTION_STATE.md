@@ -8,7 +8,8 @@
 ```
 Branch : feat/ux2-integrated-core-experience
 PR     : #126 (DRAFT — do not merge, do not mark ready)
-HEAD   : b36f06011b44cbae7e8c7f111729dfd53a2d5438
+HEAD   : (authoritative = `git rev-parse HEAD`; this file is written inside the checkpoint commit,
+         so any HEAD quoted here is its pre-handoff parent. Parent at last write: 2dae63fa…)
 Base   : main @ c8d8a8ad6a72949c248adb098a626d1ab9d6a579  (unchanged)
 Env    : Preview only (yorisou-preview / nbltsbonsnbpfptihomc)
 Status : YORISOU_CPC1_CONTINUATION_REQUIRED
@@ -19,7 +20,7 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 | WS | scope | status |
 |---|---|---|
 | 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
-| 1 | Canonical result cutover | **PARTIAL** — exclusive persisted mode + concealed unavailable state + `dimensionOutput` on the view model **done**; persisted dimensions not yet *rendered*; `/report-loading` not yet honest; persisted/legacy component split not done |
+| 1 | Canonical result cutover | **PARTIAL** — see the WS1 finding below; exclusive persisted mode + concealed unavailable state + `dimensionOutput` on the view model **done** |
 | 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
 | 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; pending-intent, login/register bridges not done |
 | 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
@@ -39,11 +40,25 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 
 Guard: `PRODUCTION_LINEAGE=12` (unchanged), `LOCAL_ONLY=4`, `PREVIEW_ONLY=4`.
 
+## WS1 finding (2026-07-28) — narrows the remaining work, read before coding
+
+`EvidencePanel` / `ConstellationPanel` consume `compatibility.highlights`, which resolve from the
+**governed taxonomy content keyed by `resultId`** — they are NOT derived from scoring output. In
+persisted mode `resultId` already comes from the database, so **that path is already
+contract-correct** (contract 02: governed copy is resolved *by* the persisted identifier and never
+duplicated into the DB). Do not rewrite it.
+
+What is actually missing is narrower: the persisted `dimension_output`
+(`{ groupedBySubdimension, formulaStatus }`, written at completion) has **no surface at all**. It
+needs its own bounded "supporting signals" section, shape-validated, omitted when malformed, and
+never substituted from URL data.
+
 ## Exact next action
 
-**WS1 →** render persisted `dimensionOutput` in the result surface (Evidence / Constellation), split
-`PersistedResultMode` from `LegacyCompatibilityResultMode`, and make `/report-loading` an honest
-transition that preserves `?result` and never simulates computation.
+**WS1 →** (a) add a NEW bounded supporting-signals section fed by persisted `dimension_output`
+(do NOT touch Evidence/Constellation — see the finding above); (b) split `PersistedResultMode` from
+`LegacyCompatibilityResultMode`; (c) make `/report-loading` an honest transition that preserves
+`?result` and never simulates computation.
 **Then WS2 →** route `resultRowId` through share / report / recommendation / save; stop
 `PrivateResultSave` creating a second result (in persisted mode "save" = claim).
 
