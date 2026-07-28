@@ -48,10 +48,22 @@ codes (`AR_CONTINUATION`, `BD_ROLE_DISTANCE`, …) — **not** the Yorisou Value
 and `optionId`, so persisting it verbatim keeps the answer trail reconstructable even after
 `answers` is erased.
 
-**Canonical persisted payload is now `PersistedDimensionSummaryV1`** (`lib/server/persistedDimensionSummary.ts`):
-`{ v, answeredRows, formulaStatus, dimensionCounts }` — aggregate counts only. Unknown versions are
-rejected, never guessed. `containsForbiddenKey()` is the guard; the contract test drives the REAL
-`scoreCurrentStateCheck` so schema drift fails the build rather than shipping silently.
+**ACCURACY — this was a LIVE OVER-RETENTION defect, NOT an erasure failure.** Migration
+`202607270004`'s erase RPC already cleared `dimension_output`, `answers`, identifiers and owner
+linkage, with a lifecycle constraint enforcing it. The defect was that reconstructable data was
+retained for the row's lifetime without an approved use. Keep this distinction exact in all
+reporting; do not overstate it as erasure failure.
+
+**Canonical persisted payload is `PersistedResultEnvelopeV1` = `{"v":"pds-v1"}` — a version marker
+only.** An intermediate `{answeredRows, formulaStatus, dimensionCounts}` was rejected as retention
+without purpose: a completed 120Q always answers every item, formulaStatus is methodology metadata,
+and `dimensionCode` is a FIXED bank property, so counts describe bank structure rather than the
+person. The outcome lives in `result_id`; provenance in the dedicated version columns.
+
+**Enforced at three boundaries, not by caller discipline:** WRITE (`completeAttempt` takes the typed
+envelope and validates), DATABASE (migration `202607280001` — `yorisou_attempt_complete` rejects any
+payload that is not exactly one key `v='pds-v1'`), READ (`loadPersistedAssessmentResult` uses the
+strict reader → typed envelope or null). The reader **rejects rather than sanitises**.
 
 **Supporting Signals is WITHDRAWN**, not deferred-and-half-wired: the repo has no governed
 public-safe labels for the 24 subdimension codes and no approved relative-strength derivation
@@ -74,6 +86,7 @@ never substituted from URL data.
 ## Exact next action
 
 **Wave A remainder, in order:**
+0. (done) canonical envelope + three-boundary enforcement.
 1. Split `PersistedResultMode` from `LegacyCompatibilityResultMode` in `app/result/page.tsx` (the
    two authorities are currently interleaved in one component even though the *selection* is
    already exclusive).
@@ -91,7 +104,9 @@ Then continue into Wave B (ownership + interpretation + private continuity) with
 ## Verification state
 
 tsc **0** · ESLint clean · production build passes · migration-scope guard passes ·
-`npm run test:ux2-dimension-summary` **9/9 against the real governed runtime**.
+`npm run test:ux2-envelope` **9/9 against the real governed runtime** · Preview round trip proven:
+raw payload REJECTED, extra-field REJECTED, canonical accepted and stored exactly, erase clears all.
+Unsafe legacy Preview rows **found: 0, deleted: 0**.
 No Preview-backed E2E exists yet. No a11y run yet for the new surfaces.
 Production non-regression at this HEAD: **42 tables / 12 migrations / 0 leaked**, PR #113 and #125
 untouched.
