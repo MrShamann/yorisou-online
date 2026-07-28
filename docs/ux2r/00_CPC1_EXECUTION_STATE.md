@@ -200,19 +200,26 @@ HOW TO RUN:
   EXPECTED_GIT_SHA=<application-sha> PLAYWRIGHT_BASE_URL=<deployment-url> \
     VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> npm run test:cpc1-acceptance
 
-next_file: tests/cpc1-acceptance/lineAnonymousNetwork.spec.ts
-next_function_or_route: re-run the LINE finding with a WORKING bypass and read the captured
-  method/pathname/query/resourceType (the capture is now committed). Then findings 2-5, then the
-  real lifecycle.
+next_file: tests/cpc1-acceptance/verticalJourney.spec.ts -> answerUntil()
+next_function_or_route: the 120-question loop clicks chrome, not answers. Read
+  app/check-in/MiniTestFlow.tsx and use its REAL option element (data attribute / role / stable
+  class). GET /api/assessment/attempts returned null for 4.7 min, proving no attempt was created.
+  Do not widen the text filter — that clicks more wrong things, not fewer.
+  Then: correction -> registration -> claim -> exactly-once -> private-state -> report/download ->
+  recommendations/graph -> save/try/tried/helpful/change/hide -> sign out/in -> LINE return ->
+  erase. Two synthetic users for cross-owner variants. Clean fixtures.
 
-BLOCKING NOTE FOR THE NEXT RUN: the last attempt hit the Vercel SSO page again — the identity gate
-  failed with "Preview served a Vercel auth page". Either the bypass value was not supplied to the
-  process, or deployment mjgnabr38 no longer honours it. Verify the secret is present in the
-  environment BEFORE interpreting any assertion result; a suite run against the auth wall produces
-  vacuous passes and false failures in equal measure. If mjgnabr38 will not accept the bypass,
-  create a fresh Preview deployment and bind EXPECTED_GIT_SHA to that application commit.
+STILL OPEN from the six findings (2 fixed this session):
+  - LINE anonymous private-read: capture is committed but the run has not yet printed it.
+  - axe serious/critical on /, /check-in, /tests, /line/mini-app: violation ids not yet captured.
+  - resume: rewritten as attempt-identity proof, not yet green (same root cause as above).
+  - FIXED: concealed-state scoped to <main>; 診断 judged per sentence with denials allowed.
 
-next_command: see HOW TO RUN
+VERIFIED WORKING: deployment identity gate, bypass supplied at runtime (retrieve via the Vercel
+  API with the CLI token; curl, not urllib — the local Python lacks CA certs).
+next_command: EXPECTED_GIT_SHA=<app-sha> PLAYWRIGHT_BASE_URL=<preview-url> \
+  VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> npm run test:cpc1-acceptance
+
 remaining_terminal_gates:
   - 6 findings; real authenticated lifecycle; authenticated security variants; erasure proof
   - full battery once; complete rewrite of PR #126 body and this file (PR still says 5 migrations;
