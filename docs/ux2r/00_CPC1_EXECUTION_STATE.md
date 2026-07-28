@@ -184,24 +184,25 @@ abandon kills token + blocks resume/save/complete/claim.
 ## CONTINUATION_CURSOR
 
 ```
-current_head: 022bc066af5926dd43b11c8b537a521bd37c2379
-last_completed_capability: LINE canonical parity — mode split (canonical return vs anonymous
-  entry), surface="line" actions, legacy RecommendationSlot removed, Companion demoted to
-  labelled device-local, governed origin builder replacing hardcoded Production URLs
-next_file: docs/ux2r/05_CPC1_ACCEPTANCE_CONTRACT.md (read the frozen variant list), then author
+current_head: (this commit)
+last_completed_capability: LINE parity COMPLETE — canonical return mode (shared loader, owner
+  authorization, permissions, persisted set, surface="line") AND anonymous entry isolation
+  (no history claim, no return-session signal, no legacy Companion/Slot, no private read).
+  Governed origin builder in place. test:ux2-line 6/6.
+next_file: docs/ux2r/05_CPC1_ACCEPTANCE_CONTRACT.md — read the frozen variant list, then author
   the hosted Preview E2E under tests/
 next_function_or_route: hosted Preview vertical journey — anonymous start → resume → complete →
-  correction → registration → claim → report → recommendations → graph → save/try/tried/feedback
-  /change/hide → private-state → sign out/in → canonical LINE return → erase
+  correction → registration → claim → report → recommendations → graph →
+  save/try/tried/feedback/change/hide → private-state → sign out/in → canonical LINE return → erase
 next_command: npm run build && (author + run hosted Preview E2E against the Vercel Preview URL)
 remaining_terminal_gates:
   - hosted Preview vertical E2E + frozen security variants + fixture cleanup
   - application-level erasure proof (Web + LINE return)
-  - quality battery once: tsc, lint, build, all unit, Preview integration, hosted E2E,
+  - quality battery ONCE: tsc, lint, build, all unit, Preview integration, hosted E2E,
     desktop, mobile, keyboard-only, focus, reduced motion, axe (0 serious/critical),
     Japanese copy review, rollback evidence, Production non-regression
   - full rewrite of PR #126 body and this file (PR still says 5 migrations; actual 11)
-known_real_blockers: none. No Preview LINE sandbox confirmed yet — if none exists, prove LINE
+known_real_blockers: none. No Preview LINE sandbox confirmed — if none exists, prove LINE
   structurally with signed synthetic Preview fixtures and label it as structural proof. Only
   reportable as GENUINE_BLOCKER once every non-LINE gate has passed.
 lock_state: released
