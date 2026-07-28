@@ -156,8 +156,14 @@ test.describe("registration and claim continuity", () => {
 
 test.describe("canonical lifecycle", () => {
   test.describe.configure({ mode: "serial", timeout: 900_000 });
-  test.skip(({ browserName }, testInfo) => testInfo.project.name !== "desktop",
-    "the full completion runs once; viewport coverage comes from the other suites");
+  // Runs once on desktop: completing 120 questions twice proves nothing extra and doubles the
+  // wall-clock. Viewport coverage comes from the surrounding suites.
+  test.beforeEach(({}, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "desktop",
+      "the full completion runs once; viewport coverage comes from the other suites",
+    );
+  });
 
   // Carried between the serial steps.
   const state: {
