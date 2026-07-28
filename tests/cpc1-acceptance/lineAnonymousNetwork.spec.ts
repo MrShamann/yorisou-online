@@ -17,11 +17,16 @@ const FORBIDDEN_PATTERNS = [
 
 test.describe("anonymous LINE entry performs no private read", () => {
   test("issues no request to any canonical or legacy private endpoint", async ({ page }) => {
+    // Capture enough to CLASSIFY the request, not merely to fail. A finding that says only
+    // "something matched" cannot distinguish a genuine private read from an over-broad pattern,
+    // and that distinction decides whether product code or the test changes.
     const observed: string[] = [];
     page.on("request", (request) => {
       const url = new URL(request.url());
       if (FORBIDDEN_PATTERNS.some((p) => url.pathname.startsWith(p))) {
-        observed.push(`${request.method()} ${url.pathname}${url.search}`);
+        observed.push(
+          `${request.method()} ${url.pathname}${url.search} [${request.resourceType()}]`,
+        );
       }
     });
 
