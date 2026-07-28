@@ -56,9 +56,9 @@ export default function AppHeader() {
           <div className="hidden items-center gap-3 md:flex">
             <Link
               href="/line/mini-app"
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[var(--yorisou-radius-pill)] bg-[#06C755] px-4 text-[13px] font-bold text-[var(--yorisou-color-deep-900)] no-underline shadow-[var(--yorisou-shadow-card)] transition hover:bg-[#05B34C]"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[var(--yorisou-radius-pill)] bg-[#067A34] px-4 text-[13px] font-bold text-[var(--yorisou-color-deep-900)] no-underline shadow-[var(--yorisou-shadow-card)] transition hover:bg-[#05622A]"
             >
-              <span className="inline-flex h-[15px] w-[15px] items-center justify-center rounded-full bg-white text-[9px] font-black text-[#06C755]" aria-hidden="true">L</span>
+              <span className="inline-flex h-[15px] w-[15px] items-center justify-center rounded-full bg-white text-[9px] font-black text-[#067A34]" aria-hidden="true">L</span>
               LINEで続ける
             </Link>
             <Link
@@ -113,9 +113,9 @@ export default function AppHeader() {
                 <Link
                   href="/line/mini-app"
                   onClick={() => setOpen(false)}
-                  className="inline-flex min-h-[46px] items-center justify-center gap-1.5 rounded-[var(--yorisou-radius-pill)] bg-[#06C755] px-4 text-[14px] font-bold text-[var(--yorisou-color-deep-900)] no-underline"
+                  className="inline-flex min-h-[46px] items-center justify-center gap-1.5 rounded-[var(--yorisou-radius-pill)] bg-[#067A34] px-4 text-[14px] font-bold text-[var(--yorisou-color-deep-900)] no-underline"
                 >
-                  <span className="inline-flex h-[15px] w-[15px] items-center justify-center rounded-full bg-white text-[9px] font-black text-[#06C755]" aria-hidden="true">L</span>
+                  <span className="inline-flex h-[15px] w-[15px] items-center justify-center rounded-full bg-white text-[9px] font-black text-[#067A34]" aria-hidden="true">L</span>
                   LINEで続ける
                 </Link>
                 <Link

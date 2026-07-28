@@ -244,9 +244,9 @@ export default function HookPrototype() {
                   setReturnChoice("line");
                   setStage("complete");
                 }}
-                className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-[var(--yorisou-radius-pill)] bg-[#06C755] px-5 text-[14.5px] font-bold text-white transition duration-[var(--yorisou-motion-tap)] hover:bg-[#05B34C] active:scale-[0.99]"
+                className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-[var(--yorisou-radius-pill)] bg-[#067A34] px-5 text-[14.5px] font-bold text-white transition duration-[var(--yorisou-motion-tap)] hover:bg-[#05622A] active:scale-[0.99]"
               >
-                <span className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-white text-[10px] font-black text-[#06C755]" aria-hidden="true">L</span>
+                <span className="inline-flex h-[17px] w-[17px] items-center justify-center rounded-full bg-white text-[10px] font-black text-[#067A34]" aria-hidden="true">L</span>
                 LINEで受け取る
               </button>
               <button

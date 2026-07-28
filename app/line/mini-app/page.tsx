@@ -131,7 +131,7 @@ export default async function MiniAppEntryPage({
         <div className="flex items-center justify-between">
           <YorisouLogo variant="primary" size={26} />
           <span
-            className="rounded-full px-3 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-[#06C755]"
+            className="rounded-full px-3 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-[#067A34]"
             style={{ border: "1px solid rgba(6,199,85,0.3)", background: "rgba(6,199,85,0.08)" }}
           >
             LINE
