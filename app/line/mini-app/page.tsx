@@ -4,9 +4,14 @@ import Link from "next/link";
 import YorisouLogo from "@/app/components/YorisouLogo";
 
 import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
-import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import { RecommendationSignalMountTracker } from "@/app/components/YorisouSignalTracker";
 import { buildMiniAppCheckInHandoffHref } from "@/lib/server/miniAppEntryRouting";
+import { requireRecommendationContext } from "@/lib/server/canonicalResultContext";
+import { loadRecommendationSet } from "@/lib/server/recommendationStore";
+import { getViewerContext } from "@/lib/server/yorisouAuth";
+import CanonicalRecommendationList from "@/app/recommendations/CanonicalRecommendationList";
+import RecommendationWithheld from "@/app/recommendations/RecommendationWithheld";
+import PersistedResultUnavailable from "@/app/result/PersistedResultUnavailable";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "@/app/components/OpenTestingTracker";
 
 export const metadata: Metadata = {
@@ -35,12 +40,74 @@ const comingSoonTests = [
   "月次チェック",
 ] as const;
 
+// UX-2R / CPC-1 — LINE has TWO structurally separate modes.
+//
+// Before this, one page served both and claimed things neither could support: recommendations
+// "based on recent diagnoses and interests" (there was no canonical read at all) and
+// "LINE / Web 継続用 · ログインなし" (private continuation without authentication, which is not a
+// thing this product does or should do). LINE was effectively its own truth.
+//
+// CANONICAL RETURN MODE — `?result=<row-id>` present. Exclusively canonical: the same loader, the
+// same owner authorization and the same permissions as Web. No LINE-specific result, recommendation
+// or feedback record exists anywhere.
+//
+// ANONYMOUS ENTRY MODE — no identity. Offers starting a check and nothing else. It must not imply
+// a personal history it cannot read.
 export default async function MiniAppEntryPage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const resolvedSearchParams = await searchParams;
+  const rawRowId =
+    typeof resolvedSearchParams?.result === "string" ? resolvedSearchParams.result : null;
+
+  if (rawRowId) {
+    const loaded = await requireRecommendationContext(rawRowId);
+    if (loaded.outcome === "unavailable") return <PersistedResultUnavailable />;
+
+    const resultHref = `/result?result=${encodeURIComponent(loaded.outcome === "withheld" ? loaded.context.resultRowId : loaded.context.resultRowId)}`;
+    if (loaded.outcome === "withheld") {
+      return (
+        <RecommendationWithheld status={loaded.context.status} resultHref={resultHref} />
+      );
+    }
+
+    const viewer = await getViewerContext();
+    const ownerId = viewer.account?.id || viewer.legacyAccount?.id;
+    if (!ownerId) return <PersistedResultUnavailable />;
+
+    const recs = await loadRecommendationSet(loaded.context.resultRowId, ownerId, "line");
+    if (recs.outcome === "withheld") {
+      return <RecommendationWithheld status={loaded.context.status} resultHref={resultHref} />;
+    }
+    if (recs.outcome !== "ok") return <PersistedResultUnavailable />;
+
+    return (
+      <main
+        className="relative min-h-screen overflow-hidden bg-[#FBFAF6] text-[#22201D]"
+        style={{ paddingBottom: "max(40px, env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="mx-auto w-full max-w-[30rem] px-4 py-6">
+          <YorisouLogo />
+          <h1 className="mt-4 text-[1.3rem] font-bold leading-[1.34] text-[#302A3D]">
+            今の結果のあとに選べる、負担の少ない入口
+          </h1>
+          <p className="mt-2 text-[13px] leading-[1.85] text-[#6F6760]">
+            Webで見ているものと同じ記録です。ここで選んだことも、そのまま残ります。
+          </p>
+          <div className="mt-5">
+            {/* surface="line" — the same canonical action graph, attributed to where it happened. */}
+            <CanonicalRecommendationList set={recs.set} surface="line" />
+          </div>
+          <Link href={resultHref} className="mt-6 inline-block text-[13px] font-semibold text-[#315F50] underline">
+            結果に戻る
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   const startHref = buildMiniAppCheckInHandoffHref({ locale: "ja", searchParams: resolvedSearchParams || {} });
 
   return (
@@ -105,42 +172,35 @@ export default async function MiniAppEntryPage({
             className="mt-3 font-bold leading-[1.34] text-[#302A3D]"
             style={{ fontSize: "1.32rem" }}
           >
-            最近の診断や関心をもとに、<br />
-            次に試しやすい入口を出します。
+            まずは、今の状態を<br />
+            軽く整理するところから。
           </h1>
 
           <p className="mt-2 text-[13px] leading-[1.85] text-[#6F6760]">
-            最近の診断や関心をもとに、次に試しやすい入口を表示します。医療・心理診断ではなく、今の状態を見つめるための小さな手がかりです。
+            チェックを終えると、その結果から選べる入口が表示されます。医療・心理診断ではなく、今の状態を見つめるための小さな手がかりです。
           </p>
 
           <p className="mt-2 text-[11px] text-[#9A9088]">
-            LINE / Web 継続用 · ログインなし
+            保存やヒントの引き継ぎにはログインが必要です
           </p>
         </div>
 
         <div className="mt-5 space-y-2">
           <div>
-            <p className="text-[11px] font-semibold tracking-[0.12em] text-[#5836EB]">今日の返り道</p>
+            <p className="text-[11px] font-semibold tracking-[0.12em] text-[#5836EB]">はじめる</p>
             <p className="mt-1 text-[12px] leading-6 text-[#7A7068]">
-              まずは相棒で今の続き方をひとつ見て、その下で次の入口を選べます。
+              保存した結果がある場合は、結果ページのリンクから開くと続きを見られます。
             </p>
           </div>
+          {/* Legacy device-local companion content. Deliberately NOT presented as canonical
+              state: in anonymous mode there is no authorized record to read, and two competing
+              answers to "what is my current state" is the defect this package exists to remove. */}
           <YorisouCompanionCard
             testId="current-state"
             source="line_mini_app"
             pagePath="/line/mini-app"
             mode="return_session"
             variant="return"
-          />
-        </div>
-
-        <div className="mt-5">
-          <YorisouRecommendationSlot
-            testId="current-state"
-            source="line_mini_app"
-            pagePath="/line/mini-app"
-            mode="return_session"
-            title="前回の続き"
           />
         </div>
 
