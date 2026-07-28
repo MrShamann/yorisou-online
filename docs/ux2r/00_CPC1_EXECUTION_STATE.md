@@ -201,25 +201,17 @@ HOW TO RUN:
     VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> npm run test:cpc1-acceptance
 
 next_file: tests/cpc1-acceptance/lineAnonymousNetwork.spec.ts
-next_function_or_route: resolve the 6 findings, then build the REAL lifecycle
-  1. LINE anonymous network — print method/pathname/query/resourceType before judging. Genuine
-     private read => fix product. Over-broad pattern => narrow to exact endpoints. Never weaken
-     the rule that anonymous LINE reads no private state.
-  2. axe serious/critical on /, /check-in, /tests, /line/mini-app — capture route/viewport/
-     violation id/impact/selector/summary; fix markup. Never suppress rules or lower the threshold.
-  3. resume — prove ATTEMPT IDENTITY continuity (same attempt id, no second attempt created),
-     not Japanese keywords.
-  4. concealed-state — scope leakage assertions to <main>; footer privacy copy must not create
-     false failures. Keep byte-identical inaccessible proof.
-  5. 診断 scan — evaluate each occurrence in its local context; explicit denials are valid.
-  6. Then replace the shallow journey with the real browser lifecycle: complete all 120 questions
-     once (wait on question-index transitions, not fixed 400ms sleeps), capture attempt identity /
-     canonical resultRowId / synthetic account / recommendation set id, then correction →
-     registration → claim → exactly-once pending correction → private-state → report → download →
-     recommendations → graph → save/try/tried/helpful/change/hide → sign out → sign in → recovery
-     → canonical LINE return → erase → all surfaces concealed + records zeroed per contract.
-     Two isolated synthetic users for the cross-owner variants. Clean every fixture, including on
-     failure where practical.
+next_function_or_route: re-run the LINE finding with a WORKING bypass and read the captured
+  method/pathname/query/resourceType (the capture is now committed). Then findings 2-5, then the
+  real lifecycle.
+
+BLOCKING NOTE FOR THE NEXT RUN: the last attempt hit the Vercel SSO page again — the identity gate
+  failed with "Preview served a Vercel auth page". Either the bypass value was not supplied to the
+  process, or deployment mjgnabr38 no longer honours it. Verify the secret is present in the
+  environment BEFORE interpreting any assertion result; a suite run against the auth wall produces
+  vacuous passes and false failures in equal measure. If mjgnabr38 will not accept the bypass,
+  create a fresh Preview deployment and bind EXPECTED_GIT_SHA to that application commit.
+
 next_command: see HOW TO RUN
 remaining_terminal_gates:
   - 6 findings; real authenticated lifecycle; authenticated security variants; erasure proof
