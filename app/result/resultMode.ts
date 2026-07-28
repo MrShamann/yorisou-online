@@ -26,6 +26,15 @@ export type PersistedResultMode = {
   /** Persisted results have no URL-encoded payload and no caller-supplied confidence band. */
   confidenceBand: "low";
   payloadKey: null;
+  /** Whether the viewer owns this record — only an owner may answer the interpretation. */
+  isOwner: boolean;
+  /** Derived current understanding. `resolved` is the ONLY gate for downstream use. */
+  understanding: {
+    status: "confirmed" | "corrected" | "rejected" | "deferred" | "unanswered";
+    resolved: boolean;
+    recommendationUsePermitted: boolean;
+    continuityUsePermitted: boolean;
+  };
 };
 
 export type LegacyCompatibilityResultMode = {
@@ -76,6 +85,13 @@ export async function resolveResultMode(params: ResultRouteParams): Promise<Resu
       overlayId: persisted.overlayId,
       confidenceBand: "low",
       payloadKey: null,
+      isOwner: persisted.isOwner,
+      understanding: {
+        status: persisted.understanding.status,
+        resolved: persisted.understanding.resolved,
+        recommendationUsePermitted: persisted.understanding.recommendationUsePermitted,
+        continuityUsePermitted: persisted.understanding.continuityUsePermitted,
+      },
     };
   }
 

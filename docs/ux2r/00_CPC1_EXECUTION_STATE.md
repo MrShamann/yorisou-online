@@ -22,7 +22,7 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 | 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
 | 1 | Canonical result cutover (Wave A) | **DONE** — exclusive persisted mode + concealed unavailable state; minimal `{"v":"pds-v1"}` envelope enforced at write/DB/read; `PersistedResultMode` split from `LegacyCompatibilityResultMode`; honest `/report-loading`; identity propagation with public-safe share; save = claim (no duplicate saved record) |
 | 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
-| 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; persisted-mode pending CLAIM INTENT (opaque row id only) crosses the login boundary via `/result/return`. Login/register surface bridges not yet reworked (Wave B) |
+| 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; persisted-mode pending CLAIM INTENT (opaque row id only) crosses the login boundary via `/result/return`. Login/register surface bridges not yet reworked |
 | 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
 | 5 | Private continuity (`/private-state`) | **NOT STARTED** |
 | 6 | Recommendation + action loop | **NOT STARTED** (Preview lacks `yorisou_recommendation_*`; migration required) |
@@ -86,14 +86,36 @@ package. Do **not** invent labels, and do not treat this paragraph as an open ta
    id. Persisted-mode `PrivateResultSave` CLAIMS the canonical record instead of creating a second
    one, and the duplicate `/saved/tests/<id>` presentation is retired in persisted mode.
 
-**Next: Wave B** — ownership, interpretation and private continuity, continuing without an
-intervening report.
+## Wave B — in progress
+
+**The interpretation loop is now wired.** The RPC and API for confirm / correct / reject / defer
+existed and were proven against the real Preview DB, but nothing in the product ever called them:
+the assessment spoke and the person could only accept it by silence. `InterpretationResponse`
+gives the person an answer, and the answer has consequences:
+
+- **Deferred is not consent, in the product and not only in the database.** Without an accepting
+  answer the recommendation entry is not offered — on the primary action AND on the secondary link
+  in the open-testing notice, so the withheld entry is not reachable one card lower. The reason is
+  stated rather than the control silently vanishing.
+- **Rejection does not delete.** It stops the interpretation being presented as accepted
+  understanding; erasure stays a separate, explicit act, and the copy says so.
+- **A correction preserves the original.** `original_result_id` never changes.
+- Answering is owner-scoped; before the record is claimed the surface says so instead of offering
+  a control that would fail.
+
+`deriveCurrentUnderstanding` moved to `lib/server/currentUnderstanding.ts`, free of `server-only`,
+so `test:ux2-consent` exercises the REAL rule instead of restating it — a restatement cannot catch
+the rule being softened.
+
+**Wave B remaining:** private continuity surfaces (`/private-state` reading the canonical record),
+history across attempts, correction UI (choosing a different archetype), erasure entry point.
 
 ## Verification state
 
 tsc **0** · ESLint clean · production build passes · migration-scope guard passes ·
 `npm run test:ux2-envelope` **9/9 against the real governed runtime** ·
-`npm run test:ux2-routes` **8/8** (route-continuity + share-safety contract) · Preview round trip proven:
+`npm run test:ux2-routes` **8/8** (route-continuity + share-safety) · `npm run test:ux2-consent` **6/6**
+(consent gate, against the real derivation) · Preview round trip proven:
 raw payload REJECTED, extra-field REJECTED, canonical accepted and stored exactly, erase clears all.
 Unsafe legacy Preview rows **found: 0, deleted: 0**.
 No Preview-backed E2E exists yet. No a11y run yet for the new surfaces.

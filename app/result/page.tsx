@@ -17,6 +17,7 @@ import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import RevealExperience from "./reveal/RevealExperience";
 import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
 import PrivateResultSave from "./PrivateResultSave";
+import InterpretationResponse from "./InterpretationResponse";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -75,6 +76,10 @@ export default async function ResultPage({
     reportEntryHref && identity.mode === "persisted"
       ? buildPrivateContinuityHref(reportEntryHref, identity)
       : reportEntryHref;
+  // Legacy mode has no stored answer and no owner, so it keeps its existing behaviour; only
+  // persisted mode can withhold on the basis of a recorded response.
+  const recommendationPermitted =
+    mode.kind !== "persisted" || mode.understanding.recommendationUsePermitted;
   const highlightSummary = buildHighlightSummary(compatibility.highlights);
   const publicTypeLabel = compatibility.assignment
     ? `${compatibility.assignment.clanJapanese}のタイプ`
@@ -198,12 +203,21 @@ export default async function ResultPage({
                       今の詳しいレポートを読む
                     </OpenTestingTrackingLink>
                   ) : null}
-                  <MvpActionLink
-                    href={recommendationHref}
-                    label="今のヒントを見る"
-                    tone="secondary"
-                    className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none"
-                  />
+                  {/* Wave B: "deferred is not consent" is enforced in the PRODUCT, not only in the
+                      database. Without an accepting answer the recommendation entry is not offered,
+                      and the reason is stated instead of the control being silently missing. */}
+                  {recommendationPermitted ? (
+                    <MvpActionLink
+                      href={recommendationHref}
+                      label="今のヒントを見る"
+                      tone="secondary"
+                      className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none"
+                    />
+                  ) : (
+                    <p className="text-[13px] leading-6 text-[#7A7068]">
+                      この結果が合っているかを答えると、それに合わせたヒントを出せます。答えるまでは、この結果をもとに何かをすすめることはありません。
+                    </p>
+                  )}
                 </div>
               </div>
               </GentleActions>,
@@ -230,12 +244,33 @@ export default async function ResultPage({
                 body="現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。"
                 primaryHref="/contact?topic=open-testing"
                 primaryLabel="感想や不具合を送る"
-                secondaryHref={fullReportHref ?? recommendationHref}
-                secondaryLabel={fullReportHref ? "詳しいレポートへ進む" : "今のヒントを見る"}
+                // The consent gate must hold on EVERY route to recommendations, including this
+                // secondary link — otherwise the withheld entry is reachable one card lower.
+                secondaryHref={fullReportHref ?? (recommendationPermitted ? recommendationHref : "/tests")}
+                secondaryLabel={
+                  fullReportHref
+                    ? "詳しいレポートへ進む"
+                    : recommendationPermitted
+                      ? "今のヒントを見る"
+                      : "ほかのチェックを見る"
+                }
               />
               </div>,
               ]} />
             </MvpCard>
+
+            {mode.kind === "persisted" ? (
+              <InterpretationResponse
+                resultRowId={mode.resultRowId}
+                isOwner={mode.isOwner}
+                initial={{
+                  status: mode.understanding.status,
+                  resolved: mode.understanding.resolved,
+                  recommendationUsePermitted: mode.understanding.recommendationUsePermitted,
+                  continuityUsePermitted: mode.understanding.continuityUsePermitted,
+                }}
+              />
+            ) : null}
 
             {compatibility.assignment ? (
               <PrivateResultSave
