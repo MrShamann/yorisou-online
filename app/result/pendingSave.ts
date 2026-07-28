@@ -70,3 +70,78 @@ export function takePendingResultClaim(): PendingResultClaim | null {
     return null;
   }
 }
+
+// ── UX-2R / CPC-1 §4 — pending INTERPRETATION intent across the login boundary ────────────────
+//
+// The claim intent only remembered "which row do I want to own". It did not remember what the
+// person was in the middle of SAYING. Someone who chose 「しっくりこない」 while anonymous was sent
+// to login, claimed the record, and then had to find and press the same answer again — the product
+// forgetting the one thing they had just told it.
+//
+// Bounded by construction: an opaque row id, a governed response type, a governed corrected code,
+// a bounded reason code, a nonce and an expiry. No result copy, no answers, no free text.
+
+export type PendingInterpretationIntent = {
+  resultRowId: string;
+  responseType: "confirmed" | "corrected" | "rejected" | "deferred";
+  correctedResultId: string | null;
+  reasonCode: string | null;
+  nonce: string;
+};
+
+const PENDING_INTENT_KEY = "yorisou.result.pending-intent.v1";
+const INTENT_TTL_MS = 10 * 60 * 1000;
+const RESPONSE_TYPES = new Set(["confirmed", "corrected", "rejected", "deferred"]);
+const CODE_RE = /^[A-Za-z0-9_-]{1,32}$/;
+
+export function storePendingInterpretationIntent(
+  intent: Omit<PendingInterpretationIntent, "nonce">,
+) {
+  if (!UUID_RE.test(intent.resultRowId)) return;
+  if (!RESPONSE_TYPES.has(intent.responseType)) return;
+  if (intent.correctedResultId !== null && !CODE_RE.test(intent.correctedResultId)) return;
+  if (intent.reasonCode !== null && !CODE_RE.test(intent.reasonCode)) return;
+  // A correction without a target is not a correction; storing it would produce a request the
+  // server must reject after the person has already gone through login.
+  if (intent.responseType === "corrected" && !intent.correctedResultId) return;
+
+  const nonce = crypto.randomUUID();
+  window.sessionStorage.setItem(
+    PENDING_INTENT_KEY,
+    JSON.stringify({ ...intent, nonce, createdAt: Date.now() }),
+  );
+}
+
+/**
+ * Read and REMOVE the intent. Removal happens before the network call, so a replay of the same
+ * intent is impossible even if the request is retried or the page is reopened.
+ */
+export function takePendingInterpretationIntent(): PendingInterpretationIntent | null {
+  const raw = window.sessionStorage.getItem(PENDING_INTENT_KEY);
+  window.sessionStorage.removeItem(PENDING_INTENT_KEY);
+  if (!raw) return null;
+  try {
+    const p = JSON.parse(raw) as Record<string, unknown>;
+    if (typeof p.createdAt !== "number" || Date.now() - p.createdAt > INTENT_TTL_MS) return null;
+    if (typeof p.resultRowId !== "string" || !UUID_RE.test(p.resultRowId)) return null;
+    if (typeof p.responseType !== "string" || !RESPONSE_TYPES.has(p.responseType)) return null;
+    if (typeof p.nonce !== "string" || !UUID_RE.test(p.nonce)) return null;
+
+    const correctedResultId =
+      typeof p.correctedResultId === "string" && CODE_RE.test(p.correctedResultId)
+        ? p.correctedResultId
+        : null;
+    if (p.responseType === "corrected" && !correctedResultId) return null;
+
+    return {
+      resultRowId: p.resultRowId,
+      responseType: p.responseType as PendingInterpretationIntent["responseType"],
+      correctedResultId,
+      reasonCode:
+        typeof p.reasonCode === "string" && CODE_RE.test(p.reasonCode) ? p.reasonCode : null,
+      nonce: p.nonce,
+    };
+  } catch {
+    return null;
+  }
+}

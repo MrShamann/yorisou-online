@@ -11,6 +11,7 @@ import { buildPublicResultHref } from "../../check-in/resultCompatibility";
 import {
   takePendingImairoSave,
   takePendingResultClaim,
+  takePendingInterpretationIntent,
   type PendingImairoSave,
 } from "../pendingSave";
 
@@ -23,7 +24,43 @@ export default function ImairoSaveReturnPage() {
   const [claimedRowId, setClaimedRowId] = useState<string | null>(null);
 
   useEffect(() => {
+    // §4: an interpretation intent implies a claim. Both are taken (and therefore CONSUMED) up
+    // front, so neither can be replayed by reopening this page or retrying the request.
+    const intent = takePendingInterpretationIntent();
     const claim = takePendingResultClaim();
+
+    if (intent) {
+      (async () => {
+        try {
+          const claimed = await fetch(`/api/assessment/results/${intent.resultRowId}/claim`, {
+            method: "POST",
+          });
+          if (!claimed.ok) throw new Error("claim_failed");
+
+          // Same-result matching is structural: the response goes to the row we just claimed, and
+          // the server independently verifies owner scope. A cross-owner or mismatched intent
+          // cannot succeed even if sessionStorage were tampered with.
+          const responded = await fetch(`/api/assessment/results/${intent.resultRowId}/response`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              intent.responseType === "corrected"
+                ? { responseType: intent.responseType, correctedResultId: intent.correctedResultId }
+                : { responseType: intent.responseType },
+            ),
+          });
+          // The claim is the part that must not be lost. If only the response failed, the person
+          // still owns the result and can answer again on the result page — so this is not an error
+          // state, and saying "failed" would be untrue.
+          if (!responded.ok) console.warn("pending interpretation not applied");
+          setClaimedRowId(intent.resultRowId);
+        } catch {
+          setState("error");
+        }
+      })();
+      return;
+    }
+
     if (claim) {
       fetch(`/api/assessment/results/${claim.resultRowId}/claim`, { method: "POST" })
         .then((response) => {

@@ -20,7 +20,7 @@ Status : YORISOU_CPC1_CONTINUATION_REQUIRED
 | WS | scope | status |
 |---|---|---|
 | 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
-| 1 | Canonical result cutover (Wave A) | **DONE** — exclusive persisted mode + concealed unavailable state; minimal `{"v":"pds-v1"}` envelope enforced at write/DB/read; `PersistedResultMode` split from `LegacyCompatibilityResultMode`; honest `/report-loading`; identity propagation with public-safe share; save = claim (no duplicate saved record) |
+| 1 | Canonical result cutover (Wave A) | **TRANSPORT COMPLETE + DESTINATION CUTOVER IN PROGRESS** — producer side done (exclusive persisted mode, `{"v":"pds-v1"}` envelope at write/DB/read, mode split, honest `/report-loading`, public-safe share, save = claim). Destinations: `/recommendations` **cut over and server-enforced**; `/private-state` **canonical panel added**; `/reports/self-understanding/[publicCode]` and `/recommendations/graph` and LINE **not yet consuming canonical identity** |
 | 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
 | 3 | Authentication continuity | **PARTIAL** — claim-by-result API done incl. replay cookie rule; persisted-mode pending CLAIM INTENT (opaque row id only) crosses the login boundary via `/result/return`. Login/register surface bridges not yet reworked |
 | 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
@@ -86,6 +86,18 @@ package. Do **not** invent labels, and do not treat this paragraph as an open ta
    id. Persisted-mode `PrivateResultSave` CLAIMS the canonical record instead of creating a second
    one, and the duplicate `/saved/tests/<id>` presentation is retired in persisted mode.
 
+## Correction to a claim I made
+
+I previously reported **"Wave A complete"**. That was not accurate. What Wave A shipped was
+identity **transport** — /result learned to attach `?result=<row-id>` to every private link. It did
+not ship identity **consumption**: the destinations kept reading `resultId`/`overlayId`/`payloadKey`
+and ignored the row id, so a persisted user arrived with a correct link at a page that did not
+understand it and fell through to generic content. Worse, hiding the recommendation link on
+/result was the *only* thing between an unanswered result and its recommendations — and hiding a
+link is not authorization.
+
+The durable status now reads **transport complete / destination cutover in progress**.
+
 ## Wave B — in progress
 
 **The interpretation loop is now wired.** The RPC and API for confirm / correct / reject / defer
@@ -107,8 +119,36 @@ gives the person an answer, and the answer has consequences:
 so `test:ux2-consent` exercises the REAL rule instead of restating it — a restatement cannot catch
 the rule being softened.
 
-**Wave B remaining:** private continuity surfaces (`/private-state` reading the canonical record),
-history across attempts, correction UI (choosing a different archetype), erasure entry point.
+### Added in the closed-loop tranche
+
+- **One canonical result-context loader** (`lib/server/canonicalResultContext.ts`). Every private
+  destination calls it; none re-implements the rules. It distinguishes *unavailable* (concealed —
+  one state for invalid/missing/expired/erased/unauthorized/cross-owner) from *withheld* (the
+  viewer owns the result; the gate is their own answer, and saying so is the point).
+- **`/recommendations` cut over and SERVER-enforced.** `?result` selects canonical mode; typing the
+  URL obeys the same rule as clicking the button. A correction is honoured — the accepted result is
+  used, not the machine's original. `resultRowId` survives the hop to `/recommendations/graph`
+  and `/saved`.
+- **Permission derivation hardened.** `recommendationUsePermitted` / `continuityUsePermitted` were
+  returned straight from the stored columns, so a malformed row with `permitted = true` beside
+  `response_type = 'rejected'` would have granted access. The response type now decides and the
+  stored flag can only narrow. The test asserts the permission fields, not only `resolved`.
+- **Consent is reactive.** The response API's canonical understanding is consumed (rather than the
+  rule being recomputed client-side) and `router.refresh()` re-renders the server tree, so the
+  surrounding CTAs react in BOTH directions without a manual reload.
+- **Continuity gated separately** from recommendation, per the frozen contract.
+- **Correction UI** bounded to the governed archetype taxonomy — no free text, no self-described
+  diagnosis.
+- **Pending interpretation intent** (§4): the ANSWER, not just the row, survives login. Bounded to
+  an opaque row id, governed response type, governed corrected code, bounded reason code, nonce and
+  expiry; consumed on read so it cannot be replayed; re-validated on the way back in.
+- **Canonical `/private-state` panel** with original vs accepted shown separately, append-only
+  answer history, per-attempt entries (never collapsed), and an **erasure control** that states
+  exactly what is removed.
+
+**Wave B remaining:** report route and `/recommendations/graph` destination cutover; LINE
+continuity audit; recommendation generation/feedback persistence (Wave C); the full Preview
+acceptance journey (§10).
 
 ## Verification state
 

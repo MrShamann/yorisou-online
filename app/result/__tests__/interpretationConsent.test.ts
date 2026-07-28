@@ -50,14 +50,33 @@ test("DEFERRED IS NOT CONSENT — 'later' withholds exactly as a rejection does"
   }
 });
 
-test("a stored permission flag cannot override a non-accepting response type", () => {
-  // Defence in depth: even if a row somehow carried permitted=true with a rejecting type, the
-  // derivation must not resolve it.
+test("a stored permission flag cannot GRANT what the response type withholds", () => {
+  // The earlier version of this test asserted only `resolved`, which left the actual permission
+  // fields unproven — and they were in fact returned straight from the stored columns. Assert the
+  // fields that downstream code reads.
+  for (const type of ["rejected", "deferred"] as const) {
+    const u = deriveCurrentUnderstanding(RESULT, [
+      response({
+        response_type: type,
+        recommendation_use_permitted: true,
+        continuity_use_permitted: true,
+      }),
+    ]);
+    assert.equal(u.resolved, false, type);
+    assert.equal(u.acceptedResultId, null, type);
+    assert.equal(u.recommendationUsePermitted, false, `${type}: recommendation must stay withheld`);
+    assert.equal(u.continuityUsePermitted, false, `${type}: continuity must stay withheld`);
+  }
+});
+
+test("a stored flag CAN still narrow an accepting response", () => {
+  // The flag is a further constraint, never the authority.
   const u = deriveCurrentUnderstanding(RESULT, [
-    response({ response_type: "rejected", recommendation_use_permitted: true }),
+    response({ response_type: "confirmed", continuity_use_permitted: false }),
   ]);
-  assert.equal(u.resolved, false);
-  assert.equal(u.acceptedResultId, null);
+  assert.equal(u.resolved, true);
+  assert.equal(u.recommendationUsePermitted, true);
+  assert.equal(u.continuityUsePermitted, false);
 });
 
 test("confirmation accepts the method's own result", () => {

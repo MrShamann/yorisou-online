@@ -27,9 +27,14 @@ export function deriveCurrentUnderstanding(result: AssessmentResult, responses: 
     status: type ?? "unanswered",
     resolved: permitted,
     respondedAt: latest?.created_at ?? null,
-    // Never default to true: downstream use requires an explicit accepting response.
-    recommendationUsePermitted: latest ? latest.recommendation_use_permitted : false,
-    continuityUsePermitted: latest ? latest.continuity_use_permitted : false,
+    // A stored flag can never GRANT what the response type withholds.
+    //
+    // The previous version returned the stored columns directly, so a malformed or tampered row
+    // carrying `recommendation_use_permitted = true` alongside `response_type = 'rejected'` would
+    // have handed out permission. The stored flags are now an additional constraint, not the
+    // authority: the response type decides, and the flag can only ever narrow it further.
+    recommendationUsePermitted: permitted && latest !== null && latest.recommendation_use_permitted === true,
+    continuityUsePermitted: permitted && latest !== null && latest.continuity_use_permitted === true,
     responseCount: responses.length,
   } as const;
 }

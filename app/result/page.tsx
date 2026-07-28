@@ -18,6 +18,7 @@ import RevealExperience from "./reveal/RevealExperience";
 import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
 import PrivateResultSave from "./PrivateResultSave";
 import InterpretationResponse from "./InterpretationResponse";
+import { PUBLIC_ARCHETYPE_TAXONOMY } from "@/lib/yorisou/public-result";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -65,6 +66,12 @@ export default async function ResultPage({
     mode.kind === "persisted"
       ? persistedIdentity(mode.resultRowId, routeContext)
       : legacyIdentity(routeContext);
+  const recommendationPermitted =
+    mode.kind !== "persisted" || mode.understanding.recommendationUsePermitted;
+  // The frozen contract keeps the two permissions SEPARATE. Gating the report on the recommendation
+  // flag would quietly grant one on the strength of the other.
+  const continuityPermitted =
+    mode.kind !== "persisted" || mode.understanding.continuityUsePermitted;
   const resultShareHref = buildPublicShareHref("/result/share", identity);
   const recommendationHref = buildPrivateContinuityHref("/recommendations", identity);
   const reportEntryHref = compatibility.assignment
@@ -72,14 +79,13 @@ export default async function ResultPage({
     : null;
   // The report entry is private continuity: it must carry the stable identity so a return trip
   // resolves the same persisted record rather than re-deriving one from the public code.
-  const fullReportHref =
-    reportEntryHref && identity.mode === "persisted"
+  const fullReportHref = !continuityPermitted
+    ? null
+    : reportEntryHref && identity.mode === "persisted"
       ? buildPrivateContinuityHref(reportEntryHref, identity)
       : reportEntryHref;
   // Legacy mode has no stored answer and no owner, so it keeps its existing behaviour; only
   // persisted mode can withhold on the basis of a recorded response.
-  const recommendationPermitted =
-    mode.kind !== "persisted" || mode.understanding.recommendationUsePermitted;
   const highlightSummary = buildHighlightSummary(compatibility.highlights);
   const publicTypeLabel = compatibility.assignment
     ? `${compatibility.assignment.clanJapanese}のタイプ`
@@ -269,6 +275,12 @@ export default async function ResultPage({
                   recommendationUsePermitted: mode.understanding.recommendationUsePermitted,
                   continuityUsePermitted: mode.understanding.continuityUsePermitted,
                 }}
+                archetypes={PUBLIC_ARCHETYPE_TAXONOMY.map((a) => ({
+                  publicCode: a.publicCode,
+                  nickname: a.nickname,
+                  clanJapanese: a.clanJapanese,
+                }))}
+                originalResultId={resultId}
               />
             ) : null}
 

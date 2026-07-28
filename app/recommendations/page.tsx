@@ -4,6 +4,9 @@ import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
 import RecommendationSignalForm from "./RecommendationSignalForm";
 import Link from "next/link";
+import { requireRecommendationContext } from "@/lib/server/canonicalResultContext";
+import RecommendationWithheld from "./RecommendationWithheld";
+import PersistedResultUnavailable from "../result/PersistedResultUnavailable";
 
 export const metadata: Metadata = {
   title: "次にほしいヒント | Yorisou",
@@ -39,10 +42,60 @@ export default async function RecommendationsPage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readParam(params, "resultId");
-  const overlayId = readParam(params, "overlayId");
-  const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
-  const payloadKey = readParam(params, "payloadKey");
+
+  // CPC-1 DESTINATION CUTOVER. Wave A attached `?result=<row-id>` to this link; this page ignored
+  // it and read the legacy parameters instead, so a persisted user arrived with a correct link at
+  // a page that fell through to generic content — and typing the URL by hand bypassed the /result
+  // consent gate entirely, because hiding a link is not authorization.
+  //
+  // Presence of `?result` now selects canonical mode and the SERVER decides. There is no path from
+  // here back to legacy reconstruction.
+  const canonicalRowId = readParam(params, "result");
+  if (canonicalRowId) {
+    const loaded = await requireRecommendationContext(canonicalRowId);
+    if (loaded.outcome === "unavailable") return <PersistedResultUnavailable />;
+    if (loaded.outcome === "withheld") {
+      return (
+        <RecommendationWithheld
+          status={loaded.context.status}
+          resultHref={`/result?result=${encodeURIComponent(loaded.context.resultRowId)}`}
+        />
+      );
+    }
+    return renderRecommendations({
+      // The ACCEPTED result — the person's correction when they made one. Continuing to quote the
+      // machine's original at someone who already said it was wrong is the failure this prevents.
+      resultId: loaded.context.effectiveResultId,
+      overlayId: loaded.context.overlayId,
+      confidenceBand: "low" as const,
+      payloadKey: null,
+      canonicalRowId: loaded.context.resultRowId,
+    });
+  }
+
+  return renderRecommendations({
+    resultId: readParam(params, "resultId"),
+    overlayId: readParam(params, "overlayId"),
+    confidenceBand: readParam(params, "confidence") === "medium" ? ("medium" as const) : ("low" as const),
+    payloadKey: readParam(params, "payloadKey"),
+    canonicalRowId: null,
+  });
+}
+
+function renderRecommendations({
+  resultId,
+  overlayId,
+  confidenceBand,
+  payloadKey,
+  canonicalRowId,
+}: {
+  resultId: string | null;
+  overlayId: string | null;
+  confidenceBand: "low" | "medium";
+  payloadKey: string | null;
+  /** Present in canonical mode; every outbound private link must carry it forward. */
+  canonicalRowId: string | null;
+}) {
   const routeContext = {
     resultId,
     overlayId,
@@ -50,7 +103,10 @@ export default async function RecommendationsPage({
     payloadKey,
   } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
-  const savedHref = buildPublicResultHref("/saved", routeContext);
+  // Identity must survive every hop out of this page, not just the hop into it.
+  const carry = (href: string) =>
+    canonicalRowId ? `${href.split("?")[0]}?result=${encodeURIComponent(canonicalRowId)}` : href;
+  const savedHref = carry(buildPublicResultHref("/saved", routeContext));
   const confidenceLabel = confidenceBand === "medium" ? "公開結果を確認中" : "公開結果を表示中";
   const genericTraitChips = compatibility.assignment
     ? compatibility.heroChips
@@ -102,7 +158,7 @@ export default async function RecommendationsPage({
                 <div className="service-kicker">状態から選ぶ</div>
                 <h2 className="display-serif text-[1.36rem] leading-[1.38]">有限のおすすめを見る</h2>
                 <p className="text-[14px] leading-7 text-[var(--text)]">保存、試す、振り返りまでを自分のペースで記録できます。</p>
-                <Link href="/recommendations/graph" className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] px-5 py-3 text-sm font-semibold text-[#315F50]">おすすめを開く</Link>
+                <Link href={carry("/recommendations/graph")} className="inline-flex rounded-full border border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] px-5 py-3 text-sm font-semibold text-[#315F50]">おすすめを開く</Link>
               </MvpCard>
               <MvpCard className="space-y-3 rounded-[1.15rem] border-[rgba(105,151,130,0.14)] bg-white/92 shadow-[0_14px_30px_rgba(105,151,130,0.08)]">
                 <div className="service-kicker">今の傾向を保存する</div>
