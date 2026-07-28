@@ -25,6 +25,7 @@ export type PersistedResultView = {
   methodId: string;
   methodVersion: string;
   producedAt: string;
+  dimensionOutput: Record<string, unknown> | null;
   claimed: boolean;
   isOwner: boolean;
   understanding: ReturnType<typeof deriveCurrentUnderstanding>;
@@ -59,6 +60,12 @@ export async function loadPersistedAssessmentResult(resultRowId: string): Promis
       methodId: result.method_id,
       methodVersion: result.method_version,
       producedAt: result.produced_at,
+      // Bounded shape validation: a malformed payload yields null so the surface omits the
+      // dimension section rather than falling back to URL-provided values.
+      dimensionOutput:
+        result.dimension_output && typeof result.dimension_output === "object" && !Array.isArray(result.dimension_output)
+          ? (result.dimension_output as Record<string, unknown>)
+          : null,
       claimed: Boolean(result.owner_account_id),
       isOwner,
       understanding: deriveCurrentUnderstanding(result, responses),

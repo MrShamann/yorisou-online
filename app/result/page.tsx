@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PersistedResultUnavailable from "./PersistedResultUnavailable";
 import { loadPersistedAssessmentResult } from "@/lib/server/persistedResultView";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
@@ -44,28 +45,35 @@ export default async function ResultPage({
 }) {
   const params = (await searchParams) || {};
 
-  // UX-2: PERSISTED IDENTITY IS AUTHORITATIVE.
-  // When ?result=<uuid> is present the server record decides what is rendered. Legacy resultId /
-  // overlayId / confidence / payloadKey are compatibility inputs only and can never override it —
-  // if they conflict, the persisted record wins and the mismatch is logged without private data.
+  // UX-2: PERSISTED IDENTITY IS AUTHORITATIVE — EXCLUSIVE MODE SELECTION.
+  //
+  // The mere PRESENCE of ?result selects persisted mode. If the persisted load fails for any
+  // reason (invalid uuid, unauthorized, expired credential, erased, missing) we render the safe
+  // unavailable state and NEVER inspect legacy parameters. Falling back would let an attacker pair
+  // an inaccessible stable UUID with a public legacy result code and still render a result, and it
+  // would also leak whether that UUID exists.
   const persistedResultRowId = readParam(params, "result");
-  const persisted = persistedResultRowId ? await loadPersistedAssessmentResult(persistedResultRowId) : null;
+  const persistedMode = Boolean(persistedResultRowId);
+  const persisted = persistedMode ? await loadPersistedAssessmentResult(persistedResultRowId as string) : null;
 
-  const legacyResultId = readParam(params, "resultId");
-  const legacyOverlayId = readParam(params, "overlayId");
-
-  if (persisted && legacyResultId && legacyResultId !== persisted.resultId) {
-    console.warn("result identity mismatch: persisted record wins", {
-      persistedRowId: persistedResultRowId,
-      // Only the fact of a mismatch is recorded — never answers or account identifiers.
-      legacyDifferent: true,
-    });
+  if (persistedMode && !persisted) {
+    return <PersistedResultUnavailable />;
   }
 
+  const legacyResultId = persistedMode ? null : readParam(params, "resultId");
+  const legacyOverlayId = persistedMode ? null : readParam(params, "overlayId");
+
+  if (persisted && readParam(params, "resultId") && readParam(params, "resultId") !== persisted.resultId) {
+    // Bounded mismatch fact only — no answers, no account identifier, no result content.
+    console.warn("result identity mismatch: persisted record wins", { persistedRowId: persistedResultRowId });
+  }
+
+  // In persisted mode every field comes from the database, including an authoritative null
+  // overlay. A legacy value may never fill a persisted null.
   const resultId = persisted ? persisted.resultId : legacyResultId;
-  const overlayId = persisted ? persisted.overlayId ?? legacyOverlayId : legacyOverlayId;
-  const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
-  const payloadKey = readParam(params, "payloadKey");
+  const overlayId = persisted ? persisted.overlayId : legacyOverlayId;
+  const confidenceBand = persisted ? "low" : readParam(params, "confidence") === "medium" ? "medium" : "low";
+  const payloadKey = persisted ? null : readParam(params, "payloadKey");
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
   const resultShareHref = buildPublicResultHref("/result/share", routeContext);

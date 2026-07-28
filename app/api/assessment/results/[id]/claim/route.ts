@@ -27,13 +27,20 @@ export async function POST(_request: Request, context: Context) {
   const result = await getResultById(id);
   if (!result) return NextResponse.json({ error: "result_not_found" }, { status: 404 });
 
+  const cookie = await readAttemptCookie();
+
   // Idempotent for the same owner; never re-targets someone else's result.
   if (result.owner_account_id) {
-    if (result.owner_account_id === ownerId) return NextResponse.json({ claimed: true, resultRowId: id });
+    if (result.owner_account_id === ownerId) {
+      const response = NextResponse.json({ claimed: true, resultRowId: id });
+      // A lost first response can leave a spent credential in the browser. Clear it — but ONLY
+      // when it belongs to this result's attempt, so an unrelated active attempt survives.
+      if (cookie && cookie.attemptId === result.attempt_id) clearAttemptCookie(response);
+      return response;
+    }
     return NextResponse.json({ error: "result_not_found" }, { status: 404 });
   }
 
-  const cookie = await readAttemptCookie();
   // The credential must belong to THIS result's attempt.
   if (!cookie || cookie.attemptId !== result.attempt_id) {
     return NextResponse.json({ error: "claim_credential_missing" }, { status: 403 });
