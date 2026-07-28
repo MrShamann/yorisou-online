@@ -15,6 +15,8 @@
 //
 // Determinism is retained for auditability: the same accepted result always yields the same set.
 
+import { findPublicArchetypeByCode } from "@/lib/yorisou/public-result";
+
 export const GOVERNED_RECOMMENDATION_CONTENT_VERSION = "grc-v2" as const;
 
 export type GovernedSourceClass =
@@ -24,6 +26,15 @@ export type GovernedSourceClass =
   | "partner_sponsored";
 
 export type GovernedCommercialStatus = "none" | "disclosed_sponsored" | "disclosed_affiliate";
+
+/**
+ * A result identity is only usable if the approved public taxonomy recognises it. This is the
+ * single gate; nothing infers validity from string shape.
+ */
+export function isGovernedAcceptedResult(acceptedResultId: string | null | undefined): boolean {
+  if (!acceptedResultId) return false;
+  return Boolean(findPublicArchetypeByCode(acceptedResultId));
+}
 
 export type GovernedRecommendation = {
   recommendationKey: string;
@@ -128,6 +139,12 @@ export function hasGovernedResultMapping(acceptedResultId: string, recommendatio
  * about the person, and the reason copy no longer pretends otherwise.
  */
 export function buildGovernedRecommendationItems(acceptedResultId: string) {
+  // FAIL CLOSED. Previously any string hashed into a valid set, so an unknown, retired or
+  // drifted result code would keep producing recommendations instead of stopping. A taxonomy
+  // constraint that develops a hole must halt the recommendation system, not be routed around by
+  // it — the conservative reason makes the copy safe, it does not make the identity real.
+  if (!isGovernedAcceptedResult(acceptedResultId)) return null;
+
   let hash = 0;
   for (const ch of acceptedResultId) hash = (hash * 31 + ch.charCodeAt(0)) % 100003;
 

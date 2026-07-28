@@ -60,7 +60,7 @@ export default async function RecommendationGraphPage({
             <MvpPill>今の状態から、小さく選ぶ</MvpPill>
             <MvpCard className="space-y-5 p-5 sm:p-7">
               <h1 className="display-serif text-[2rem] leading-[1.16] md:text-[2.4rem]">
-                いまのあなたに合わせた入口
+                今の結果から選べる、小さな入口
               </h1>
               <CanonicalRecommendationList set={recs.set} surface="graph" />
             </MvpCard>

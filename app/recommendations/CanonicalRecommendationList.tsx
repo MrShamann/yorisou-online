@@ -157,11 +157,11 @@ export default function CanonicalRecommendationList({
       <div className="rounded-[1rem] border border-[rgba(23,59,53,0.12)] bg-[#F7FBF8] px-4 py-3">
         <p className="text-[13px] leading-7 text-[#2F2A28]">
           {set.eligibilityBasis === "corrected"
-            ? "あなたが選び直した内容をもとにしています。"
-            : "あなたが「合っている」と答えた内容をもとにしています。"}
+            ? "あなたが選び直した結果のあとに選べることです。"
+            : "あなたが「合っている」と答えた結果のあとに選べることです。"}
         </p>
         <p className="mt-1 text-[12px] leading-6 text-[#7A7068]">
-          どれも任意です。合わないと感じたら、選ばなくて構いません。答えを変えると、ここも変わります。
+          どれも任意です。あなたに合うと判断したものではなく、負担の少ない選択肢を並べています。合わないと感じたら、選ばなくて構いません。
         </p>
       </div>
 

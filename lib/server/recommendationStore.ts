@@ -79,7 +79,7 @@ type SetRow = {
   generated_at: string;
 };
 type ItemRow = { id: string; rank: number; recommendation_key: string };
-type ActionRow = { item_id: string; action: RecommendationAction; created_at: string };
+type ActionRow = { item_id: string; action: RecommendationAction; created_at: string; sequence_no: number };
 
 function classify(error: unknown): "withheld" | "unavailable" {
   const code = error instanceof Error ? error.message : "";
@@ -102,7 +102,9 @@ async function hydrate(set: SetRow, ownerAccountId: string): Promise<Recommendat
       `yorisou_recommendation_items?set_id=eq.${set.id}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=rank.asc`,
     ),
     select<ActionRow>(
-      `yorisou_recommendation_actions?set_id=eq.${set.id}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=created_at.desc`,
+      // Monotonic sequence, not created_at: same-transaction actions would otherwise have no defined
+      // order and "current feedback" would be whichever the database happened to return first.
+      `yorisou_recommendation_actions?set_id=eq.${set.id}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=sequence_no.desc`,
     ),
   ]);
 
@@ -152,8 +154,13 @@ export async function loadRecommendationSet(
     const accepted = eligibility[0]?.accepted_result_id;
     if (!accepted) return { outcome: "withheld" };
 
-    // Deterministic, finite, governed. No external provider, no generated prose.
+    // Deterministic, finite, governed — and fail-closed: an accepted result the approved taxonomy
+    // does not recognise produces NO set at all, rather than conservative copy over a bad identity.
     const items = buildGovernedRecommendationItems(accepted);
+    if (!items) {
+      console.error("recommendation refused: accepted result not in governed taxonomy");
+      return { outcome: "unavailable" };
+    }
 
     const setId = await rpc<string>("yorisou_recommendation_materialize", {
       p_result_row_id: resultRowId,
