@@ -10,7 +10,8 @@ import { useEffect, useState } from "react";
 import { buildPublicResultHref } from "../../check-in/resultCompatibility";
 import {
   takePendingImairoSave,
-  takePendingResultClaim,
+  peekPendingResultClaim,
+  clearPendingResultClaim,
   peekPendingInterpretationIntent,
   clearPendingInterpretationIntent,
   type PendingImairoSave,
@@ -36,7 +37,7 @@ export default function ImairoSaveReturnPage() {
     // browser is free to HOLD the intent until the server confirms. A retry with the same nonce
     // returns the original response instead of appending a second one, which makes resuming safe.
     const intent = peekPendingInterpretationIntent();
-    const claim = takePendingResultClaim();
+    const claim = peekPendingResultClaim();
 
     if (intent) {
       (async () => {
@@ -62,8 +63,10 @@ export default function ImairoSaveReturnPage() {
           });
 
           if (responded.ok) {
-            // Created OR replayed — both mean the answer is recorded exactly once.
+            // Created OR replayed — both mean the answer is recorded exactly once. The claim
+            // happened on the way, so a parallel pending-claim record is acknowledged too.
             clearPendingInterpretationIntent();
+            clearPendingResultClaim();
           } else if (responded.status >= 400 && responded.status < 500) {
             // Terminal: a validation failure or a genuine conflict can never succeed on retry, so
             // holding the intent would only make every future visit fail the same way.
@@ -77,6 +80,33 @@ export default function ImairoSaveReturnPage() {
         } catch {
           // Network failure of unknown outcome. The intent stays; the nonce makes a retry safe even
           // if the server did commit the response and only the reply was lost.
+          setState("error");
+        }
+      })();
+      return;
+    }
+
+    // Pure claim — the person pressed 「この結果を自分のものとして保存する」 while anonymous and
+    // logged in without answering the interpretation. This branch previously consumed the record
+    // and never acted on it, so the promised automatic save silently became 「見つかりませんでした」.
+    if (claim) {
+      (async () => {
+        try {
+          const claimed = await fetch(`/api/assessment/results/${claim.resultRowId}/claim`, {
+            method: "POST",
+          });
+          if (claimed.ok) {
+            clearPendingResultClaim();
+            setClaimedRowId(claim.resultRowId);
+          } else if (claimed.status >= 400 && claimed.status < 500) {
+            // Terminal: expired, concealed, or missing credential — retrying cannot succeed.
+            clearPendingResultClaim();
+            setState("error");
+          } else {
+            // Server-side failure of unknown outcome: keep the record so a reload can resume.
+            setState("error");
+          }
+        } catch {
           setState("error");
         }
       })();

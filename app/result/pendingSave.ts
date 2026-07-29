@@ -57,10 +57,21 @@ export function storePendingResultClaim(resultRowId: string) {
   );
 }
 
-export function takePendingResultClaim(): PendingResultClaim | null {
+/**
+ * PEEK — read and validate WITHOUT removing (same acknowledgement lifecycle as the
+ * interpretation intent below). The claim RPC is idempotent for the same owner, so holding the
+ * record until the server confirms costs nothing and survives a crash mid-claim.
+ * A record that fails validation can never be used and is dropped on read.
+ */
+export function peekPendingResultClaim(): PendingResultClaim | null {
   const raw = window.sessionStorage.getItem(PENDING_RESULT_CLAIM_KEY);
-  window.sessionStorage.removeItem(PENDING_RESULT_CLAIM_KEY);
   if (!raw) return null;
+  const parsed = parseClaim(raw);
+  if (!parsed) window.sessionStorage.removeItem(PENDING_RESULT_CLAIM_KEY);
+  return parsed;
+}
+
+function parseClaim(raw: string): PendingResultClaim | null {
   try {
     const parsed = JSON.parse(raw) as { resultRowId?: unknown; createdAt?: unknown };
     if (typeof parsed.createdAt !== "number" || Date.now() - parsed.createdAt > 10 * 60 * 1000) return null;
@@ -69,6 +80,11 @@ export function takePendingResultClaim(): PendingResultClaim | null {
   } catch {
     return null;
   }
+}
+
+/** Clear the claim record — only after the server confirmed the claim, or on a terminal 4xx. */
+export function clearPendingResultClaim() {
+  window.sessionStorage.removeItem(PENDING_RESULT_CLAIM_KEY);
 }
 
 // ── UX-2R / CPC-1 §4 — pending INTERPRETATION intent across the login boundary ────────────────
