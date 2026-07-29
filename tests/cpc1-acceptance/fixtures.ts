@@ -191,9 +191,8 @@ export async function eraseResultThroughApp(page: Page, resultRowId: string) {
 }
 
 export async function abandonAttemptViaApi(page: Page, attemptId: string) {
-  return page.request.post(`/api/assessment/attempts/${attemptId}/abandon`, {
-    data: { reason: "restart" },
-  });
+  // The route derives the credential and the bounded reason server-side; it reads no body.
+  return page.request.post(`/api/assessment/attempts/${attemptId}/abandon`);
 }
 
 /**
@@ -289,6 +288,24 @@ export async function readAttemptRowFromPreviewDb(attemptId: string): Promise<At
   if (!response.ok) throw new Error(`preview_db_read_failed_${response.status}`);
   const rows = (await response.json()) as AttemptRowSnapshot[];
   return rows[0] ?? null;
+}
+
+export type RecommendationActionRow = {
+  item_id: string;
+  action: string;
+  sequence_no: number;
+};
+
+/** Read-only action rows for one item, ordered by the monotonic sequence. */
+export async function readRecommendationActionsFromPreviewDb(
+  itemId: string,
+): Promise<RecommendationActionRow[]> {
+  const response = await dbRequest(
+    `yorisou_recommendation_actions?item_id=eq.${itemId}` +
+      `&select=item_id,action,sequence_no&order=sequence_no.asc`,
+  );
+  if (!response.ok) throw new Error(`preview_db_read_failed_${response.status}`);
+  return (await response.json()) as RecommendationActionRow[];
 }
 
 /**
