@@ -246,7 +246,7 @@ export default async function MiniAppEntryPage({
                 <span className="text-[13px] text-[#6F6760]">{label}</span>
                 <span
                   className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "rgba(129,122,150,0.1)", color: "#6F6760" }}
+                  style={{ background: "rgba(129,122,150,0.1)", color: "#5F5750" }}
                 >
                   準備中
                 </span>
