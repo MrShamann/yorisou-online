@@ -21,6 +21,18 @@ setup("hosted Preview is the application, and is the expected commit", async ({ 
   expect(base, "PLAYWRIGHT_BASE_URL must be the hosted Preview URL").toBeTruthy();
   expect(expectedSha, "EXPECTED_GIT_SHA must be the commit under test").toBeTruthy();
 
+  // The bypass has silently arrived EMPTY twice — once because the local Python lacks CA certs,
+  // once because the Vercel project API returned 403. Both times the suite then ran against the
+  // SSO wall, where negative assertions pass vacuously and positive ones fail for the wrong
+  // reason. An empty value is worse than a missing one, so refuse it explicitly.
+  const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  expect(
+    bypass && bypass.length > 0,
+    "VERCEL_AUTOMATION_BYPASS_SECRET is empty or unset. Retrieval can fail silently (CA certs, " +
+      "or a 403 from the Vercel project API). Verify it is non-empty BEFORE running: a run against " +
+      "Deployment Protection produces vacuous passes and false failures in equal measure.",
+  ).toBe(true);
+
   // ── 1. It must be the application, not an auth wall ──────────────────────
   const response = await page.goto("/", { waitUntil: "domcontentloaded" });
   const finalUrl = page.url();
