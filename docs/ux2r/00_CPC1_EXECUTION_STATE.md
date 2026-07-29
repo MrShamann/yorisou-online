@@ -200,34 +200,29 @@ HOW TO RUN:
   EXPECTED_GIT_SHA=<application-sha> PLAYWRIGHT_BASE_URL=<deployment-url> \
     VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> npm run test:cpc1-acceptance
 
-next_file: axe contrast fixes across app/ (see exact pairs below), then
-  tests/cpc1-acceptance/verticalJourney.spec.ts to run the one-context lifecycle
-next_function_or_route: AXE — exact failing pairs captured from the hosted run at the CURRENT app
-  commit (LINE green already fixed from 2.25 -> the homepage node is gone):
-    bg #067a34, contrastRatio 3.38  <- foreground is NOT pure white; find the actual fg (likely a
-                                       translucent/near-white token) and darken bg or solidify fg
-    bg #fbfaf6, contrastRatio 2.99  <- page background; the muted text token on it is too light
-    bg #ffffff, contrastRatio 4.28  <- just under 4.5; a small darkening of that text token fixes it
-  Routes still failing: / , /check-in , /tests , /line/mini-app , /result?resultId=MS-KI
-  Re-run with --reporter=line and grep the JSON for "fgColor" to get each foreground token.
-  Do NOT suppress rules, exclude nodes or lower the threshold.
+next_file: tests/cpc1-acceptance/verticalJourney.spec.ts (extend the ONE-CONTEXT lifecycle past
+  the "unanswered withholds recommendations" step — everything after it is still a comment)
 
-  LIFECYCLE — the one-context test is written (test.step, real 続きからはじめる resume, network-
-  classified start). It has NOT yet been run to completion. Run it next; startAttempt now reports
-  status / content-type / cookie-set / failure-UI / body when it fails, so the next failure is
-  self-classifying.
-next_command: EXPECTED_GIT_SHA=$(git rev-parse HEAD) PLAYWRIGHT_BASE_URL=<fresh-preview> \
-  VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> \
-  npx playwright test --config=playwright.cpc1.config.ts --project=desktop -g "principal lifecycle"
+EXTERNAL CONDITION TO RESOLVE FIRST (hosted runs only):
+  GET https://api.vercel.com/v9/projects/yorisou-online now returns 403 for the CLI token, so the
+  automation bypass cannot be retrieved and every hosted run hits the SSO wall. The identity gate
+  now refuses an empty secret rather than running vacuously. Resolve by supplying
+  VERCEL_AUTOMATION_BYPASS_SECRET directly in the environment, or restoring token access.
+  This blocks HOSTED verification only — lifecycle code, contrast fixes and unit suites continue.
 
-FIXED THIS SESSION: LINE brand green contrast on public surfaces (#06C755 -> #067A34, hover
-  #05622A; LineBrandIcon keeps the true brand fill as a logo with no text on it); start POST now
-  network-classified instead of guessed; null attempt before the final question is a hard failure
-  rather than assumed completion; lifecycle converted to ONE browser context with test.step.
-CORRECTED: my earlier "hydration / intro step" and "nested spans" explanations were speculation
-  stated as fact. There is no intro step; the source renders direct button text.
-NOTE: retrieve the bypass with curl, not urllib — local Python lacks CA certs and silently yields
-  an empty secret, which then hits the SSO wall.
+next_function_or_route: implement, inside the same context and test.step chain:
+  correction -> registration/auth -> claim -> exactly-once -> private-state -> report -> download ->
+  recommendations -> graph -> save/try/tried/helpful/change/hide -> full action history ->
+  sign out -> denied -> sign in -> recovery -> canonical LINE return -> erase -> all concealed.
+  Then: authenticated cross-owner matrix, fixture cleanup, final battery, PR + doc rewrite.
+
+AXE — still open, partial evidence only (bg + ratio captured, fgColor/selector NOT yet):
+  bg #067a34 ratio 3.38 (fg is not pure white) · bg #fbfaf6 ratio 2.99 · bg #ffffff ratio 4.28
+  Routes: / , /check-in , /tests , /line/mini-app , /result?resultId=MS-KI
+  Re-run with --reporter=line and grep the JSON for "fgColor" and "target" per node.
+LINE anonymous private-read: STILL UNCLASSIFIED. The capture code is committed; no run has yet
+  reached it because of the bypass condition above.
+FIXED EARLIER THIS SESSION: LINE brand green contrast (#06C755 -> #067A34, 2.25 -> 5.47:1).
 
 remaining_terminal_gates:
   - 6 findings; real authenticated lifecycle; authenticated security variants; erasure proof
