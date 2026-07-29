@@ -1,5 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { findPublicArchetypeByCode } from "../../lib/yorisou/public-result/taxonomy";
+import {
+  canonicalRowId,
+  previewDbConfigured,
+  readAttemptRowFromPreviewDb,
+  readResultRowFromPreviewDb,
+  signOut,
+  syntheticUser,
+} from "./fixtures";
+
 // CPC-1 acceptance — the PRINCIPAL JOURNEY from the frozen contract, in a real browser.
 //
 //   anonymous entry → start → answer partially → refresh → resume → complete
@@ -12,8 +22,6 @@ import { expect, test, type Page } from "@playwright/test";
 // The distinction matters most at the boundaries: resume must recover the SAME attempt, the
 // correction must survive login exactly once, and erasure must make every surface unavailable —
 // each of those has been a real defect in this package at some point.
-
-const UNIQUE = () => `cpc1-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 /**
  * The real option element from MiniTestFlow.tsx. A generic `button:visible` locator clicked page
@@ -247,8 +255,12 @@ test("CPC-1 principal lifecycle", async ({ browser }, testInfo) => {
   const context = await browser.newContext();
   const page = await context.newPage();
 
+  const user = syntheticUser("journey");
   let attemptId = "";
   let resultRowId = "";
+  let correctedCode = "";
+  let correctedNickname = "";
+  let downloadHref = "";
 
   try {
     await test.step("anonymous start creates a server-backed attempt", async () => {
@@ -312,9 +324,346 @@ test("CPC-1 principal lifecycle", async ({ browser }, testInfo) => {
       expect(main, "nothing accepted yet, so nothing may be recommended").not.toContain("保存する");
     });
 
-    // Remaining steps (correction -> registration -> claim -> exactly-once -> private-state ->
-    // report/download -> recommendations/graph -> actions -> sign-out/in -> LINE return -> erase)
-    // append here, inside this same context.
+    await test.step("selecting a correction while anonymous parks the intent instead of losing it", async () => {
+      await page.goto(`/result?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      await page.getByRole("button", { name: /近いものを自分で選び直す/ }).click();
+
+      // Any governed archetype that is NOT the current result. The taxonomy is bounded, so the
+      // first non-current entry is as valid a correction as any other.
+      const target = page
+        .locator("button", { hasText: "のタイプ" })
+        .filter({ hasNotText: "（いまの結果）" })
+        .first();
+      await target.waitFor({ state: "visible", timeout: 15_000 });
+      await target.click();
+
+      // The anonymous viewer is not the owner: the POST answers 401 and the product must PARK the
+      // answer, not lose it.
+      await expect(
+        page.getByText("答えを覚えています。ログインすると", { exact: false }),
+        "an anonymous answer must be parked, not lost",
+      ).toBeVisible({ timeout: 20_000 });
+    });
+
+    await test.step("the pending intent exists — bounded, typed, and aimed at this row", async () => {
+      const raw = await page.evaluate(() =>
+        window.sessionStorage.getItem("yorisou.result.pending-intent.v1"),
+      );
+      expect(raw, "the pending interpretation intent must be stored").toBeTruthy();
+      const intent = JSON.parse(raw!) as {
+        resultRowId: string;
+        responseType: string;
+        correctedResultId: string;
+        nonce: string;
+      };
+      expect(intent.resultRowId).toBe(resultRowId);
+      expect(intent.responseType).toBe("corrected");
+      expect(intent.nonce).toMatch(/^[0-9a-f]{8}-[0-9a-f-]{27}$/i);
+
+      correctedCode = intent.correctedResultId;
+      const archetype = findPublicArchetypeByCode(correctedCode);
+      expect(archetype, "the corrected code must be in the governed taxonomy").toBeTruthy();
+      correctedNickname = archetype!.nickname;
+    });
+
+    await test.step("the login boundary carries the return path", async () => {
+      await page.getByRole("link", { name: "ログインして続ける" }).click();
+      await page.waitForURL(/\/login\?.*next=%2Fresult%2Freturn/, { timeout: 30_000 });
+    });
+
+    await test.step("a unique synthetic Preview user registers through the real form", async () => {
+      // Registration in this product is immediate (no email confirmation exists), so the real
+      // browser form is usable end-to-end without external mail delivery.
+      await page.goto("/register?next=%2Fresult%2Freturn", { waitUntil: "domcontentloaded" });
+      await page.getByLabel("お名前").fill(user.name);
+      await page.getByLabel("メールアドレス").fill(user.email);
+      await page.getByLabel("パスワード", { exact: true }).fill(user.password);
+      await page.getByLabel("地域").fill(user.city);
+      await page.getByRole("button", { name: "登録する" }).click();
+      await page.waitForURL(/\/result\/return/, { timeout: 45_000 });
+    });
+
+    await test.step("the return trip claims the record and applies the parked correction", async () => {
+      await expect(
+        page.getByText("この結果をあなたのものとして保存しました。"),
+      ).toBeVisible({ timeout: 45_000 });
+      await expect(
+        page.getByText("新しく結果が作られたのではなく、いま見ていた結果がそのままあなたのアカウントに紐づきました。"),
+      ).toBeVisible();
+
+      const raw = await page.evaluate(() =>
+        window.sessionStorage.getItem("yorisou.result.pending-intent.v1"),
+      );
+      expect(raw, "the intent is cleared only after the server acknowledged it").toBeNull();
+    });
+
+    await test.step("the correction was applied exactly once — a revisit has nothing to replay", async () => {
+      await page.goto("/result/return", { waitUntil: "domcontentloaded" });
+      await expect(page.getByText("保存する結果が見つかりませんでした。")).toBeVisible({
+        timeout: 30_000,
+      });
+    });
+
+    await test.step("the result page presents the corrected understanding and keeps the original", async () => {
+      await page.goto(`/result?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByText(
+          "あなたが選び直した内容を、いまの理解として残しました。もとの結果も記録に残っています。",
+        ),
+      ).toBeVisible({ timeout: 30_000 });
+    });
+
+    await test.step("refresh adds no duplicate response — the answer history holds exactly one entry", async () => {
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await page.goto("/private-state", { waitUntil: "domcontentloaded" });
+      await expect(page.getByText("答えの記録（1件）")).toBeVisible({ timeout: 30_000 });
+    });
+
+    await test.step("/private-state shows the full private continuity for the claimed record", async () => {
+      await expect(page.getByText("いまの状態（保存された結果）")).toBeVisible();
+      await expect(page.getByText("あなたが選び直した内容です")).toBeVisible();
+      await expect(page.getByText(correctedNickname).first()).toBeVisible();
+
+      await page.getByText("答えの記録（1件）").click();
+      await expect(page.getByText("選び直した").first()).toBeVisible();
+      await expect(
+        page.getByText("前の答えは書き換えられません。新しい答えが記録に足されます。"),
+      ).toBeVisible();
+
+      await page.getByText("記録の詳細").click();
+      await expect(page.getByText(/おすすめの利用: 許可されています/)).toBeVisible();
+      await expect(page.getByText(/履歴での利用: 許可されています/)).toBeVisible();
+    });
+
+    await test.step("the private report is built from the ACCEPTED result, not the machine's original", async () => {
+      await page.goto(`/result?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      const reportLink = page.getByRole("link", { name: "今の詳しいレポートを読む" }).first();
+      await expect(reportLink).toBeVisible({ timeout: 30_000 });
+
+      const href = await reportLink.getAttribute("href");
+      expect(href, "the report route must target the corrected code").toContain(
+        `/reports/self-understanding/${correctedCode}`,
+      );
+      expect(href, "the report link must carry the stable identity").toContain(
+        `result=${resultRowId}`,
+      );
+
+      await reportLink.click();
+      await page.waitForURL(new RegExp(`/reports/self-understanding/${correctedCode}`), {
+        timeout: 30_000,
+      });
+      await expect(
+        page.getByRole("heading", { name: correctedNickname }).first(),
+      ).toBeVisible({ timeout: 30_000 });
+    });
+
+    await test.step("the report downloads for its owner", async () => {
+      downloadHref = `/reports/self-understanding/${correctedCode}/download?result=${resultRowId}`;
+      const response = await page.request.get(downloadHref);
+      expect(response.status(), "the owner must be able to download the report").toBe(200);
+      expect(response.headers()["content-type"] ?? "").toContain("text/markdown");
+      expect(response.headers()["content-disposition"] ?? "").toContain("attachment");
+    });
+
+    await test.step("recommendations flow from the corrected understanding and persist", async () => {
+      await page.goto(`/recommendations?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByRole("heading", { name: "今の結果から選べる、小さな入口" }),
+      ).toBeVisible({ timeout: 30_000 });
+      await expect(
+        page.getByText("あなたが選び直した結果のあとに選べることです。"),
+        "the ACCEPTED (corrected) result must be the basis, not the original",
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "保存する", exact: true }).first()).toBeVisible();
+    });
+
+    await test.step("the recommendation graph presents the same canonical set", async () => {
+      await page.goto(`/recommendations/graph?result=${resultRowId}`, {
+        waitUntil: "domcontentloaded",
+      });
+      await expect(page.getByText("今の状態から、小さく選ぶ")).toBeVisible({ timeout: 30_000 });
+      await expect(
+        page.getByRole("heading", { name: "今の結果から選べる、小さな入口" }),
+      ).toBeVisible();
+    });
+
+    await test.step("save, try intent, tried, and helpful are each persisted", async () => {
+      await page.goto(`/recommendations?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      const sequence = [
+        ["保存する", "保存しました"],
+        ["試してみる", "試すことにしました"],
+        ["試した", "試したと記録しました"],
+        ["役に立った", "役に立ったと記録しました"],
+      ] as const;
+      for (const [idle, done] of sequence) {
+        await page.getByRole("button", { name: idle, exact: true }).first().click();
+        await expect(
+          page.getByRole("button", { name: done }).first(),
+          `${idle} must be acknowledged as ${done}`,
+        ).toBeVisible({ timeout: 20_000 });
+      }
+    });
+
+    await test.step("feedback can change; the previous answer stays in the record", async () => {
+      await page.getByRole("button", { name: "あまり合わなかった", exact: true }).first().click();
+      await expect(
+        page.getByRole("button", { name: "合わなかったと記録しました" }).first(),
+      ).toBeVisible({ timeout: 20_000 });
+      await expect(
+        page.getByText("答えはいつでも変えられます。前の答えも記録として残ります。").first(),
+      ).toBeVisible();
+    });
+
+    await test.step("hiding removes an item from the active list, not from history", async () => {
+      const hideButtons = page.getByRole("button", { name: "この候補を表示しない" });
+      const before = await hideButtons.count();
+      expect(before, "the governed set must offer items to hide").toBeGreaterThan(1);
+      await hideButtons.last().click();
+      await expect(hideButtons).toHaveCount(before - 1, { timeout: 20_000 });
+    });
+
+    await test.step("the complete action history is visible in わたしの今", async () => {
+      await page.goto("/private-state", { waitUntil: "domcontentloaded" });
+      await page.getByText("ヒントの記録", { exact: true }).click();
+
+      // Progress markers accumulate; feedback shows the CURRENT answer with the full chain
+      // beneath; the hidden item stays in the record with an explicit marker.
+      await expect(page.getByText(/・保存した/).first()).toBeVisible();
+      await expect(page.getByText(/・試すことにした/).first()).toBeVisible();
+      await expect(page.getByText(/・試した/).first()).toBeVisible();
+      await expect(page.getByText(/いまの答え: あまり合わなかった/).first()).toBeVisible();
+      await expect(
+        page.getByText(/記録: .*←/).first(),
+        "the full chain must be shown, not only the latest state",
+      ).toBeVisible();
+      await expect(page.getByText("（表示しない）").first()).toBeVisible();
+    });
+
+    await test.step("sign out removes private access on every surface", async () => {
+      // There is NO sign-out control anywhere in the product UI (recorded CPC-1 gap) — the
+      // logout route is the only real application boundary available to cross.
+      await signOut(page);
+
+      await page.goto("/private-state", { waitUntil: "domcontentloaded" });
+      const body = await page.locator("body").innerText();
+      expect(body).not.toContain("いまの状態（保存された結果）");
+      expect(body).not.toContain(correctedNickname);
+
+      for (const route of [
+        `/result?result=${resultRowId}`,
+        `/recommendations?result=${resultRowId}`,
+        `/recommendations/graph?result=${resultRowId}`,
+        `/line/mini-app?result=${resultRowId}`,
+      ]) {
+        await page.goto(route, { waitUntil: "domcontentloaded" });
+        await expect(
+          page.getByText("この結果は表示できません").first(),
+          `${route} must conceal after sign-out`,
+        ).toBeVisible({ timeout: 30_000 });
+      }
+
+      const denied = await page.request.get(downloadHref);
+      expect(denied.status(), "the download must deny a signed-out viewer").toBe(404);
+    });
+
+    await test.step("sign in restores the same server-backed state", async () => {
+      await page.goto("/login", { waitUntil: "domcontentloaded" });
+      await page.getByLabel("メールアドレス").fill(user.email);
+      await page.getByLabel("パスワード", { exact: true }).fill(user.password);
+      await page.getByRole("button", { name: "ログインする" }).click();
+      await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 45_000 });
+
+      await page.goto("/private-state", { waitUntil: "domcontentloaded" });
+      await expect(page.getByText("答えの記録（1件）")).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText("あなたが選び直した内容です")).toBeVisible();
+
+      await page.goto(`/result?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByText(
+          "あなたが選び直した内容を、いまの理解として残しました。もとの結果も記録に残っています。",
+        ),
+        "recovery must restore the recorded answer, not a blank state",
+      ).toBeVisible({ timeout: 30_000 });
+    });
+
+    await test.step("the canonical LINE return shows the SAME record for the same row id", async () => {
+      await page.goto(`/line/mini-app?result=${resultRowId}`, { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByText("今の結果のあとに選べる、負担の少ない入口"),
+      ).toBeVisible({ timeout: 30_000 });
+      await expect(
+        page.getByText("Webで見ているものと同じ記録です。ここで選んだことも、そのまま残ります。"),
+      ).toBeVisible();
+      await expect(
+        page.getByText("あなたが選び直した結果のあとに選べることです。"),
+        "LINE must honour the corrected basis exactly as Web does",
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "保存しました" }).first(),
+        "actions recorded on Web must be visible on LINE — one record, two surfaces",
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "この候補を表示しない" })).toHaveCount(2);
+    });
+
+    await test.step("erasure is an explicit act that states its consequences", async () => {
+      await page.goto("/private-state", { waitUntil: "domcontentloaded" });
+      await page.getByRole("button", { name: "この結果を削除する" }).click();
+      await expect(
+        page.getByText("この結果を削除すると、次のものが消えます。元に戻すことはできません。"),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "完全に削除する" }).click();
+      await expect(
+        page.getByText("まだ保存された結果はありません。", { exact: false }),
+        "after erasure the private list must be empty, not erroring",
+      ).toBeVisible({ timeout: 30_000 });
+    });
+
+    await test.step("after erasure every surface conceals — even for the former owner", async () => {
+      for (const route of [
+        `/result?result=${resultRowId}`,
+        `/recommendations?result=${resultRowId}`,
+        `/recommendations/graph?result=${resultRowId}`,
+        `/line/mini-app?result=${resultRowId}`,
+        `/reports/self-understanding/${correctedCode}?result=${resultRowId}`,
+      ]) {
+        await page.goto(route, { waitUntil: "domcontentloaded" });
+        await expect(
+          page.getByText("この結果は表示できません").first(),
+          `${route} must conceal the erased record`,
+        ).toBeVisible({ timeout: 30_000 });
+      }
+      const download = await page.request.get(downloadHref);
+      expect(download.status(), "the download must deny the erased record").toBe(404);
+    });
+
+    await test.step("the database tombstone matches the frozen contract", async () => {
+      // Frozen contract: migration 202607270004's lifecycle constraint — an erased row keeps its
+      // id (content-free tombstone) with result identifiers, owner linkage and dimension_output
+      // cleared, and the attempt's answers wiped.
+      if (!previewDbConfigured()) {
+        testInfo.annotations.push({
+          type: "cpc1-tombstone-verification",
+          description:
+            "application-level concealment proven on every surface; the direct row-level " +
+            "tombstone check requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY supplied " +
+            "securely at runtime and was not silently skipped — it is recorded here.",
+        });
+        return;
+      }
+      const row = await readResultRowFromPreviewDb(resultRowId);
+      expect(row, "the tombstone row itself must remain").toBeTruthy();
+      expect(row!.deleted_at, "deleted_at must be set").not.toBeNull();
+      expect(row!.result_id).toBeNull();
+      expect(row!.original_result_id).toBeNull();
+      expect(row!.overlay_id).toBeNull();
+      expect(row!.owner_account_id).toBeNull();
+      expect(row!.dimension_output).toEqual({});
+
+      const attempt = await readAttemptRowFromPreviewDb(row!.attempt_id);
+      expect(attempt, "the attempt shell must be readable").toBeTruthy();
+      expect(attempt!.answers, "the answers themselves must be erased").toEqual({});
+      expect(attempt!.owner_account_id).toBeNull();
+    });
   } finally {
     await context.close();
   }
