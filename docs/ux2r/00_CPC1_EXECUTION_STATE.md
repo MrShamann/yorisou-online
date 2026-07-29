@@ -7,230 +7,133 @@
 
 ```
 Branch : feat/ux2-integrated-core-experience
-PR     : #126 (DRAFT — do not merge, do not mark ready)
-HEAD   : (authoritative = `git rev-parse HEAD`; this file is written inside the checkpoint commit,
-         so any HEAD quoted here is its pre-handoff parent. Parent at last write: 2dae63fa…)
+PR     : #126 (DRAFT — do not merge, do not mark ready; body rewrite is gated to AFTER hosted acceptance)
+HEAD   : (authoritative = `git rev-parse HEAD`; this file is written inside the checkpoint commit)
 Base   : main @ c8d8a8ad6a72949c248adb098a626d1ab9d6a579  (unchanged)
 Env    : Preview only (yorisou-preview / nbltsbonsnbpfptihomc)
-Status : YORISOU_CPC1_CONTINUATION_REQUIRED
+Status : YORISOU_CPC1_IMPLEMENTATION_COMPLETE_HOSTED_VERIFICATION_EXTERNALLY_BLOCKED
 ```
 
-## Workstream status
+## 2026-07-29 session — all five deployment-independent workstreams COMPLETE
 
-| WS | scope | status |
-|---|---|---|
-| 0 | Architecture freeze (5 contracts in `docs/ux2r/`) | **DONE** |
-| 1 | Canonical result cutover (Wave A) | **DESTINATION CUTOVER DONE for result / recommendations / graph / report page / report download**; LINE not audited |
-| 2 | Stable identity propagation + legacy retirement | **NOT STARTED** (this is ICP-1 defect #4) |
-| 3 | Authentication continuity | **DONE for the interpretation loop** — claim + pending intent with peek/acknowledge lifecycle and DB-enforced exactly-once. Login/register surface polish outstanding |
-| 4 | Interpretation + Living Understanding Field | **API ONLY** — response RPC + endpoint done; no UI |
-| 5 | Private continuity (`/private-state`) | **NOT STARTED** |
-| 6 | Recommendation + action loop | **NOT STARTED** (Preview lacks `yorisou_recommendation_*`; migration required) |
-| 7 | Core UX + route consolidation | **NOT STARTED** |
-| 8 | Acceptance train | **NOT STARTED** |
+**WS1 — one-context principal lifecycle: COMPLETE, no placeholders.**
+`tests/cpc1-acceptance/verticalJourney.spec.ts` now runs the frozen journey end-to-end in one
+browser context: anonymous 120Q completion → corrected interpretation parked across the 401 →
+pending intent proven (bounded/typed/nonced) → real browser registration of a unique synthetic
+Preview user → return trip claims + applies the parked correction → exactly-once proven (empty
+replay + 1-entry answer history) → private-state continuity → accepted-result report + owner
+download → corrected-basis recommendations (list + graph) → save/try/tried/helpful → feedback
+change → hide → complete action history with the full `記録: A ← B` chain → sign-out through the
+REAL UI control → denial on every surface → browser sign-in recovery → canonical LINE return
+showing the SAME record → UI erasure stating its consequences → all surfaces concealed → DB
+tombstone check against migration 202607270004's lifecycle constraint (env-gated; recorded as an
+explicit annotation when Preview DB access is absent — never silently skipped).
+The spec previously referenced an UNDEFINED `canonicalRowId` (tests are excluded from app tsc);
+two tests would have thrown ReferenceError. Fixed; the whole suite now type-checks via
+`npm run typecheck:cpc1-tests` (tsconfig.tests.json).
 
-## Preview migrations applied (all PREVIEW_ONLY, none in Production)
+**WS2 — governed fixtures: COMPLETE.** `tests/cpc1-acceptance/fixtures.ts`: synthetic identities
+(per-run generated passwords, nothing committed or logged), attempt/result/interpretation/
+recommendation drivers through the REAL routes, governed app-boundary cleanup, env-gated
+read-only Preview-DB reads (`SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` at runtime only), and a
+ttl-0 expired-attempt mint that is impossible through the app. Registration is immediate by
+design (cookie-session over an object store, no email confirmation exists), so browser-UI
+registration needs no external mail — the recorded "email delivery" limitation does not apply.
 
-| id | content |
-|---|---|
-| `202607270001` | attempts / results / interpretation_responses + 6 RPCs + RLS forced + service_role SELECT-only |
-| `202607270002` | compensating rollback |
-| `202607270003` | expiry on every anonymous write, deferred≠consent, first erasure, DB invariants |
-| `202607270004` | nullable result identifiers + lifecycle constraint, **true content-free tombstone**, governed `attempt_abandon` |
+**WS3 — authenticated security matrix: COMPLETE (authored + type-checked; hosted run pending).**
+`tests/cpc1-acceptance/authenticatedSecurityMatrix.spec.ts`: all cross-owner denials concealed as
+the same 404 an outsider sees (read/claim/interpretation/report/download/materialize/action —
+including the owned-result pairing attack — /erase/LINE), wrong-credential 403 on an unclaimed
+record, env-gated expired-credential denial, claim + interpretation replay idempotency to the
+ORIGINAL rows, 409 on conflicting interpretation nonce reuse, concealed-404 on conflicting
+recommendation key reuse (route maps the RPC conflict into concealment by design), monotonic
+action sequence (API order + env-gated raw sequence_no), sign-out closes every boundary, sign-in
+restores only owner data, erased state unrecoverable through every boundary after fresh auth.
 
-Guard: `PRODUCTION_LINEAGE=12` (unchanged), `LOCAL_ONLY=4`, `PREVIEW_ONLY=4`.
+**WS4 — contrast: FIXED AT SOURCE with exact-ratio attribution, locally PROVEN.**
+- bg `#067A34` @ 3.38 = `--yorisou-color-deep-900` text on AppHeader's LINE buttons → `text-white` (5.47).
+- bg `#FBFAF6` @ 2.99 = `#9A9088` → `#6F6760` (5.31); also `#B0A89E` (2.25) and `#9A918B` (2.96).
+- bg `#FFFFFF` @ 4.28 = `#8A7764` on /tests → `#7A664F` (5.47); `#8A7F78` (3.73–3.90) in result
+  reveal → `#6F625C`.
+- One composite case only a rendered run could catch: the mini-app 準備中 chip composites
+  `rgba(129,122,150,0.1)` over `#FBFAF6` to `#E8E6E7`, where `#6F6760` is 4.46 → `#5F5750` (5.70).
+**Local evidence: 10/10 — zero serious/critical axe violations** on `/`, `/check-in`, `/tests`,
+`/line/mini-app`, `/result?resultId=MS-KI` at desktop+mobile against the locally served
+production build, same AxeBuilder machinery and thresholds as the hosted gate. No rules
+suppressed, no nodes excluded, no thresholds lowered. Hosted axe proof still pending.
 
-## Persisted payload contract (2026-07-28) — READ BEFORE TOUCHING dimension_output
+**WS5 — deployment-independent battery: ALL GREEN at this HEAD.**
+tsc 0 · tests-tsc 0 · ESLint 0 errors (8 pre-existing warnings) · clean `next build` exit 0
+(one attempt failed on the known `next/font/google` network transient; clean rebuild passed) ·
+migration-scope guard `PRODUCTION_LINEAGE=12 / LOCAL_ONLY=4 / PREVIEW_ONLY=11` ·
+ux2 suites: envelope 9 · routes 8 · consent 7 · intent 8 · gate 8 · reason 7 · line 6 — 0 fail ·
+cpv1 62 · recommendation-graph 16 · imairo-snapshot 8 · result-reveal 7 · c02 24 ·
+relationship-fatigue · daily-check-in 46 · yorisou-values 27 · candidate-intake 9 ·
+experience-cards 8 · shared-store 15 · production-pilot 12 · private-ai-providers 6 ·
+DB integration on a DISPOSABLE local Postgres (Colima): yorisou-values ALL PASS ·
+daily-check-in ALL PASS · agent-runtime full pass (script asserts under ON_ERROR_STOP; exit 0).
 
-`scoringOutput.groupedBySubdimension` is `Record<SubdimensionCode, OptionScore[]>` over **24**
-codes (`AR_CONTINUATION`, `BD_ROLE_DISTANCE`, …) — **not** the Yorisou Values keys
-(`anshin`/`pace`/…), which belong to a different method. Every `OptionScore` carries `questionId`
-and `optionId`, so persisting it verbatim keeps the answer trail reconstructable even after
-`answers` is erased.
+**Product fixes shipped this session (all Preview-branch only):**
+1. `/result/return` pure-claim path: the pending claim was consumed and never executed, so
+   save-then-login dead-ended at 「見つかりませんでした」. Now peek → claim → acknowledge, same
+   lifecycle as the intent; 5xx keeps the record for resume (`app/result/pendingSave.ts`,
+   `app/result/return/page.tsx`).
+2. Sign-out exists: `app/private-state/SignOutControl.tsx` on every AUTHENTICATED outcome of
+   /private-state (including read failure — ending the session must not depend on the results
+   read). Verified locally: absent when anonymous, click ends the server session → /login.
+   Previously /api/auth/logout had ZERO call sites in the product.
+3. Contrast tokens as above.
 
-**ACCURACY — this was a LIVE OVER-RETENTION defect, NOT an erasure failure.** Migration
-`202607270004`'s erase RPC already cleared `dimension_output`, `answers`, identifiers and owner
-linkage, with a lifecycle constraint enforcing it. The defect was that reconstructable data was
-retained for the row's lifetime without an approved use. Keep this distinction exact in all
-reporting; do not overstate it as erasure failure.
+## Hosted verification boundary — the ONLY remaining work (externally blocked)
 
-**Canonical persisted payload is `PersistedResultEnvelopeV1` = `{"v":"pds-v1"}` — a version marker
-only.** An intermediate `{answeredRows, formulaStatus, dimensionCounts}` was rejected as retention
-without purpose: a completed 120Q always answers every item, formulaStatus is methodology metadata,
-and `dimensionCode` is a FIXED bank property, so counts describe bank structure rather than the
-person. The outcome lives in `result_id`; provenance in the dedicated version columns.
+`GET https://api.vercel.com/v9/projects/yorisou-online` returns 403 for the CLI token; the
+automation bypass cannot be retrieved and every hosted run hits the SSO wall. The identity gate
+refuses an empty secret rather than running vacuously. **Do not retrieve/print/rotate secrets.**
+A Founder or authorized operator restores access or supplies a non-empty
+`VERCEL_AUTOMATION_BYPASS_SECRET` at runtime. Checked once this session: absent.
 
-**Enforced at three boundaries, not by caller discipline:** WRITE (`completeAttempt` takes the typed
-envelope and validates), DATABASE (migration `202607280001` — `yorisou_attempt_complete` rejects any
-payload that is not exactly one key `v='pds-v1'`), READ (`loadPersistedAssessmentResult` uses the
-strict reader → typed envelope or null). The reader **rejects rather than sanitises**.
+When access returns, in order (never `--prod`):
+1. fresh Preview deployment; 2. deployed_sha == HEAD application sha, env == preview
+   (`previewReachable.setup.ts` enforces); 3. focused LINE anonymous-network capture (code
+   committed at `lineAnonymousNetwork.spec.ts` — still UNCLASSIFIED, no run has reached it);
+4. full axe evidence (expected clean; token fixes locally proven); 5. one-context principal
+   lifecycle; 6. `authenticatedSecurityMatrix.spec.ts` + erasure (supply `SUPABASE_URL` +
+   `SUPABASE_SERVICE_ROLE_KEY` at runtime for the env-gated tombstone/sequence/expiry checks);
+7. full battery re-run; 8. LAST: complete rewrite of PR #126 body and this file (PR body still
+   says 5 migrations; actual 11).
 
-**Supporting Signals is WITHDRAWN and is NOT part of any remaining scope** — it is not deferred,
-not pending and not a Wave B item. The repo has no governed public-safe labels for the 24
-subdimension codes and no approved relative-strength derivation (bucket length mostly reflects
-fixed bank structure). It would only ever return under a separate Founder-authorized methodology
-package. Do **not** invent labels, and do not treat this paragraph as an open task.
+Run:
+```
+EXPECTED_GIT_SHA=<application-sha> PLAYWRIGHT_BASE_URL=<deployment-url> \
+  VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> \
+  SUPABASE_URL=<preview-url> SUPABASE_SERVICE_ROLE_KEY=<supplied> \
+  npm run test:cpc1-acceptance
+```
 
-## Exact next action
+## Standing accuracy notes (do not relitigate)
 
-**Wave A is complete.** Delivered, in order:
-0. Canonical `{"v":"pds-v1"}` envelope + three-boundary enforcement.
-1. `PersistedResultMode` split from `LegacyCompatibilityResultMode` (`app/result/resultMode.ts`) —
-   the two authorities are now distinct types produced by one resolver, so a legacy value can no
-   longer fill a persisted null anywhere a ternary was forgotten.
-2. `/report-loading` is an honest stable-identity transition: the four fake analysis steps and the
-   3.9s/4.4s artificial delays are gone, `?result` is preserved, and the copy states plainly that
-   nothing is being computed there.
-3. Identity propagation (`app/result/resultIdentityRoutes.ts`): private continuity routes carry the
-   stable identity ALONE; the share surface is structurally incapable of carrying the private row
-   id. Persisted-mode `PrivateResultSave` CLAIMS the canonical record instead of creating a second
-   one, and the duplicate `/saved/tests/<id>` presentation is retired in persisted mode.
-
-## Correction to a claim I made
-
-I previously reported **"Wave A complete"**. That was not accurate. What Wave A shipped was
-identity **transport** — /result learned to attach `?result=<row-id>` to every private link. It did
-not ship identity **consumption**: the destinations kept reading `resultId`/`overlayId`/`payloadKey`
-and ignored the row id, so a persisted user arrived with a correct link at a page that did not
-understand it and fell through to generic content. Worse, hiding the recommendation link on
-/result was the *only* thing between an unanswered result and its recommendations — and hiding a
-link is not authorization.
-
-The durable status now reads **transport complete / destination cutover in progress**.
-
-## Wave B — in progress
-
-**The interpretation loop is now wired.** The RPC and API for confirm / correct / reject / defer
-existed and were proven against the real Preview DB, but nothing in the product ever called them:
-the assessment spoke and the person could only accept it by silence. `InterpretationResponse`
-gives the person an answer, and the answer has consequences:
-
-- **Deferred is not consent, in the product and not only in the database.** Without an accepting
-  answer the recommendation entry is not offered — on the primary action AND on the secondary link
-  in the open-testing notice, so the withheld entry is not reachable one card lower. The reason is
-  stated rather than the control silently vanishing.
-- **Rejection does not delete.** It stops the interpretation being presented as accepted
-  understanding; erasure stays a separate, explicit act, and the copy says so.
-- **A correction preserves the original.** `original_result_id` never changes.
-- Answering is owner-scoped; before the record is claimed the surface says so instead of offering
-  a control that would fail.
-
-`deriveCurrentUnderstanding` moved to `lib/server/currentUnderstanding.ts`, free of `server-only`,
-so `test:ux2-consent` exercises the REAL rule instead of restating it — a restatement cannot catch
-the rule being softened.
-
-### Added in the closed-loop tranche
-
-- **One canonical result-context loader** (`lib/server/canonicalResultContext.ts`). Every private
-  destination calls it; none re-implements the rules. It distinguishes *unavailable* (concealed —
-  one state for invalid/missing/expired/erased/unauthorized/cross-owner) from *withheld* (the
-  viewer owns the result; the gate is their own answer, and saying so is the point).
-- **`/recommendations` cut over and SERVER-enforced.** `?result` selects canonical mode; typing the
-  URL obeys the same rule as clicking the button. A correction is honoured — the accepted result is
-  used, not the machine's original. `resultRowId` survives the hop to `/recommendations/graph`
-  and `/saved`.
-- **Permission derivation hardened.** `recommendationUsePermitted` / `continuityUsePermitted` were
-  returned straight from the stored columns, so a malformed row with `permitted = true` beside
-  `response_type = 'rejected'` would have granted access. The response type now decides and the
-  stored flag can only narrow. The test asserts the permission fields, not only `resolved`.
-- **Consent is reactive.** The response API's canonical understanding is consumed (rather than the
-  rule being recomputed client-side) and `router.refresh()` re-renders the server tree, so the
-  surrounding CTAs react in BOTH directions without a manual reload.
-- **Continuity gated separately** from recommendation, per the frozen contract.
-- **Correction UI** bounded to the governed archetype taxonomy — no free text, no self-described
-  diagnosis.
-- **Pending interpretation intent** (§4): the ANSWER, not just the row, survives login. Bounded to
-  an opaque row id, governed response type, governed corrected code, bounded reason code, nonce and
-  expiry; consumed on read so it cannot be replayed; re-validated on the way back in.
-- **Canonical `/private-state` panel** with original vs accepted shown separately, append-only
-  answer history, per-attempt entries (never collapsed), and an **erasure control** that states
-  exactly what is removed.
-
-**Wave B remaining:** report route and `/recommendations/graph` destination cutover; LINE
-continuity audit; recommendation generation/feedback persistence (Wave C); the full Preview
-acceptance journey (§10).
-
-## Durable state accuracy note
-
-An earlier version of this file understated completed work (it still listed report/graph as not cut
-over, four Preview migrations, and interpretation as API-only). Corrected here, inside a runtime
-checkpoint rather than as a documentation-only edit.
-
-## Current Preview migrations: 7 (`PREVIEW_ONLY`)
-
-`202607270001` tables+RPCs · `202607270002` grants · `202607270003` lifecycle/expiry/erasure ·
-`202607270004` true tombstone + abandon · `202607280001` envelope guard ·
-`202607280002` interpretation idempotency · `202607280003` idempotency hardening.
-
-## Verification state
-
-tsc **0** · ESLint clean · production build passes · migration-scope guard passes ·
-`test:ux2-envelope` 9/9 · `test:ux2-routes` 8/8 · `test:ux2-consent` 7/7 · `test:ux2-intent` 8/8 ·
-`test:ux2-gate` 8/8 (destination authorization). Preview round trip proven:
-(consent gate, against the real derivation) · Preview round trip proven:
-raw payload REJECTED, extra-field REJECTED, canonical accepted and stored exactly, erase clears all.
-Unsafe legacy Preview rows **found: 0, deleted: 0**.
-No Preview-backed E2E exists yet. No a11y run yet for the new surfaces.
-Production non-regression at this HEAD: **42 tables / 12 migrations / 0 leaked**, PR #113 and #125
-untouched.
-
-## Known-good invariants already proven against the real Preview DB
-
-idempotent completion · claim single-use + owner-scoped · correction preserves the original ·
-rejection and defer withhold both permissions · expiry denied at save/complete/read ·
-append-only enforced outside the erasure context · true content-free tombstone ·
-abandon kills token + blocks resume/save/complete/claim.
+- Erasure semantics: 202607270004 was a LIVE OVER-RETENTION fix, never an erasure failure.
+- Canonical persisted payload: `{"v":"pds-v1"}` only, enforced at write/DB/read.
+- Supporting Signals is WITHDRAWN, not deferred. Do not invent labels.
+- Preview migrations: 11 PREVIEW_ONLY (…270001–…280007); Production untouched at 12.
+- Known-good DB invariants proven on the real Preview DB in prior sessions: idempotent
+  completion · claim single-use/owner-scoped · correction preserves original · rejection/defer
+  withhold permissions · expiry denied · append-only outside erasure · content-free tombstone ·
+  abandon kills token.
+- The `yorisou_recommendation_*` table names collide with legacy PRODUCTION_LINEAGE migration
+  202607110003 (`create table if not exists` in 202607280004 would silently no-op if the legacy
+  tables ever existed on Preview). Prior hosted materialization worked, so Preview holds the new
+  shapes — but verify against the live schema before trusting fixtures after any Preview reset.
 
 ## CONTINUATION_CURSOR
 
 ```
-current_head: (this commit)
-last_completed_capability: hosted Preview harness at a VERIFIED deployment (deployed_sha ==
-  expected_sha, env=preview). 55 assertions passing across desktop+mobile.
-
-SCOPE CORRECTION: what is passing is NOT the frozen vertical journey. verticalJourney.spec.ts
-  answers 3 questions and substitutes a legacy result URL for completion. It does not complete the
-  120-question assessment, register, claim, act on recommendations, recover across sign-out/in, or
-  erase. Coverage today is unauthenticated routing, concealment, denial and quality assertions.
-
-HOW TO RUN:
-  VERCEL_AUTOMATION_BYPASS_SECRET must be supplied securely at runtime. Never commit it, never
-  print it, never store the retrieval procedure here.
-  npx vercel deploy --scope shigeru-naganos-projects --yes    # Preview only, never --prod
-  EXPECTED_GIT_SHA=<application-sha> PLAYWRIGHT_BASE_URL=<deployment-url> \
-    VERCEL_AUTOMATION_BYPASS_SECRET=<supplied> npm run test:cpc1-acceptance
-
-next_file: tests/cpc1-acceptance/verticalJourney.spec.ts (extend the ONE-CONTEXT lifecycle past
-  the "unanswered withholds recommendations" step — everything after it is still a comment)
-
-EXTERNAL CONDITION TO RESOLVE FIRST (hosted runs only):
-  GET https://api.vercel.com/v9/projects/yorisou-online now returns 403 for the CLI token, so the
-  automation bypass cannot be retrieved and every hosted run hits the SSO wall. The identity gate
-  now refuses an empty secret rather than running vacuously. Resolve by supplying
-  VERCEL_AUTOMATION_BYPASS_SECRET directly in the environment, or restoring token access.
-  This blocks HOSTED verification only — lifecycle code, contrast fixes and unit suites continue.
-
-next_function_or_route: implement, inside the same context and test.step chain:
-  correction -> registration/auth -> claim -> exactly-once -> private-state -> report -> download ->
-  recommendations -> graph -> save/try/tried/helpful/change/hide -> full action history ->
-  sign out -> denied -> sign in -> recovery -> canonical LINE return -> erase -> all concealed.
-  Then: authenticated cross-owner matrix, fixture cleanup, final battery, PR + doc rewrite.
-
-AXE — still open, partial evidence only (bg + ratio captured, fgColor/selector NOT yet):
-  bg #067a34 ratio 3.38 (fg is not pure white) · bg #fbfaf6 ratio 2.99 · bg #ffffff ratio 4.28
-  Routes: / , /check-in , /tests , /line/mini-app , /result?resultId=MS-KI
-  Re-run with --reporter=line and grep the JSON for "fgColor" and "target" per node.
-LINE anonymous private-read: STILL UNCLASSIFIED. The capture code is committed; no run has yet
-  reached it because of the bypass condition above.
-FIXED EARLIER THIS SESSION: LINE brand green contrast (#06C755 -> #067A34, 2.25 -> 5.47:1).
-
-remaining_terminal_gates:
-  - 6 findings; real authenticated lifecycle; authenticated security variants; erasure proof
-  - full battery once; complete rewrite of PR #126 body and this file (PR still says 5 migrations;
-    actual 11)
-deployment_identity_rule: a454d0b remains valid for harness-only changes. After ANY change under
-  app/, lib/, supabase/ or other runtime code, redeploy and require deployed_sha == that new
-  application sha, environment == preview.
-known_real_blockers: none.
-lock_state: released
+implementation_state: COMPLETE for WS1–WS5 of the 2026-07-29 continuation directive.
+pending: hosted verification only (items 1–8 above), plus the PR-body/doc rewrite gated behind it.
+external_condition: Vercel API 403 / no VERCEL_AUTOMATION_BYPASS_SECRET in the environment.
+next_file: none to write — next ACTION is the hosted run sequence above.
+deployment_identity_rule: after ANY change under app/, lib/, supabase/, redeploy and require
+  deployed_sha == new application sha, environment == preview.
+known_real_blockers: hosted access only.
+lock_state: released at end of session (see lock file).
 ```
