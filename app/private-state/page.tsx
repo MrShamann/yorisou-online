@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import PrivateStateHome from "./view";
 import CanonicalAssessmentPanel from "./CanonicalAssessmentPanel";
+import SignOutControl from "./SignOutControl";
 import { loadCanonicalPrivateState } from "@/lib/server/canonicalPrivateState";
 
 export const metadata: Metadata = { title: "わたしの今 | Yorisou" };
@@ -36,6 +37,15 @@ export default async function PrivateStatePage() {
         <section className="container pt-8">
           <div className="mx-auto w-full max-w-[42rem]">
             <CanonicalAssessmentPanel entries={load.outcome === "ok" ? load.entries : []} />
+          </div>
+        </section>
+      ) : null}
+      {/* Every AUTHENTICATED outcome — including a read failure. Ending the session must never
+          depend on the results read succeeding; an anonymous visitor has no session to end. */}
+      {load.outcome !== "unauthenticated" ? (
+        <section className="container pt-4">
+          <div className="mx-auto w-full max-w-[42rem]">
+            <SignOutControl />
           </div>
         </section>
       ) : null}

@@ -82,8 +82,9 @@ export async function loginSyntheticUser(page: Page, user: SyntheticUser): Promi
 }
 
 /**
- * Sign out through the application boundary. There is no sign-out CONTROL anywhere in the UI
- * (a recorded CPC-1 product gap) — the route is the only real boundary available to cross.
+ * Sign out through the application boundary. The UI control lives on /private-state
+ * (SignOutControl) and is exercised by the principal lifecycle; the API-level matrix crosses the
+ * route directly.
  */
 export async function signOut(page: Page): Promise<void> {
   const response = await page.request.post("/api/auth/logout");

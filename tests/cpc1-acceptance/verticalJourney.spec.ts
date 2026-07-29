@@ -6,7 +6,6 @@ import {
   previewDbConfigured,
   readAttemptRowFromPreviewDb,
   readResultRowFromPreviewDb,
-  signOut,
   syntheticUser,
 } from "./fixtures";
 
@@ -540,9 +539,14 @@ test("CPC-1 principal lifecycle", async ({ browser }, testInfo) => {
     });
 
     await test.step("sign out removes private access on every surface", async () => {
-      // There is NO sign-out control anywhere in the product UI (recorded CPC-1 gap) — the
-      // logout route is the only real application boundary available to cross.
-      await signOut(page);
+      // Through the real control on the private continuity surface — the person signs out where
+      // they can see the state they are leaving, and the copy promises it will come back.
+      await page.goto("/private-state", { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByText("ログアウトしても、保存された記録は消えません。", { exact: false }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "ログアウトする" }).click();
+      await page.waitForURL(/\/login/, { timeout: 30_000 });
 
       await page.goto("/private-state", { waitUntil: "domcontentloaded" });
       const body = await page.locator("body").innerText();
