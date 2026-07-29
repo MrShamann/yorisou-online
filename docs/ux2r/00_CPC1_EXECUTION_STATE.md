@@ -1,106 +1,102 @@
 # CPC-1 — Execution State (durable, same-package handoff)
 
 > **Read this first.** It is the resume point. Do **not** repeat broad archaeology.
-> Authorization: `YORISOU_CPC1_CANONICAL_CORE_PRODUCT_CUTOVER_AND_FOUNDER_ACCEPTANCE_AUTHORIZED`.
+> Authorization: `YORISOU_CPC1_CANONICAL_CORE_PRODUCT_CUTOVER_AND_FOUNDER_ACCEPTANCE_AUTHORIZED`,
+> continued by the Founder's 2026-07-29 terminal package (remote reconciliation + hosted terminal acceptance).
 
 ## Position
 
 ```
 Branch : feat/ux2-integrated-core-experience
-PR     : #126 (DRAFT — do not merge, do not mark ready; body rewrite is gated to AFTER hosted acceptance)
-HEAD   : (authoritative = `git rev-parse HEAD`; this file is written inside the checkpoint commit)
-Base   : main @ c8d8a8ad6a72949c248adb098a626d1ab9d6a579  (unchanged)
+PR     : #126 (DRAFT — do not merge, do not mark ready; body updated 2026-07-29 to the truthful
+         pre-hosted-acceptance state: 11 migrations, full evidence, hosted gates explicitly NOT RUN)
+HEAD   : code HEAD 34adc28b466f834d45d12a54642fe756fabd16f5; the commit carrying this file is its
+         docs-only descendant — `git rev-parse HEAD` is authoritative and must equal the remote
+         branch head and PR #126 head
+Base   : main @ c8d8a8ad6a72949c248adb098a626d1ab9d6a579  (Production, unchanged, re-verified read-only)
 Env    : Preview only (yorisou-preview / nbltsbonsnbpfptihomc)
-Status : YORISOU_CPC1_IMPLEMENTATION_COMPLETE_HOSTED_VERIFICATION_EXTERNALLY_BLOCKED
+Status : YORISOU_CPC1_GENUINE_BLOCKER — every deployment-independent gate green at HEAD;
+         the ONLY remaining gates require Preview access behind Vercel Authentication.
 ```
 
-## 2026-07-29 session — all five deployment-independent workstreams COMPLETE
+## 2026-07-29 terminal session — remote reconciliation + CI recovery COMPLETE
 
-**WS1 — one-context principal lifecycle: COMPLETE, no placeholders.**
-`tests/cpc1-acceptance/verticalJourney.spec.ts` now runs the frozen journey end-to-end in one
-browser context: anonymous 120Q completion → corrected interpretation parked across the 401 →
-pending intent proven (bounded/typed/nonced) → real browser registration of a unique synthetic
-Preview user → return trip claims + applies the parked correction → exactly-once proven (empty
-replay + 1-entry answer history) → private-state continuity → accepted-result report + owner
-download → corrected-basis recommendations (list + graph) → save/try/tried/helpful → feedback
-change → hide → complete action history with the full `記録: A ← B` chain → sign-out through the
-REAL UI control → denial on every surface → browser sign-in recovery → canonical LINE return
-showing the SAME record → UI erasure stating its consequences → all surfaces concealed → DB
-tombstone check against migration 202607270004's lifecycle constraint (env-gated; recorded as an
-explicit annotation when Preview DB access is absent — never silently skipped).
-The spec previously referenced an UNDEFINED `canonicalRowId` (tests are excluded from app tsc);
-two tests would have thrown ReferenceError. Fixed; the whole suite now type-checks via
-`npm run typecheck:cpc1-tests` (tsconfig.tests.json).
+**Repository-truth reconciliation (Case A).** Local HEAD `4a2f0cb` was a clean 7-commit fast-forward
+descendant of remote `75d8c78`; every claimed artifact was verified in the actual commits
+(`git log --reverse --stat`, `git diff --check` clean) before push. No recovery, no cherry-picks,
+no force-push. Pushed fast-forward; then two REAL CI-blocking defects surfaced and were fixed:
 
-**WS2 — governed fixtures: COMPLETE.** `tests/cpc1-acceptance/fixtures.ts`: synthetic identities
-(per-run generated passwords, nothing committed or logged), attempt/result/interpretation/
-recommendation drivers through the REAL routes, governed app-boundary cleanup, env-gated
-read-only Preview-DB reads (`SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` at runtime only), and a
-ttl-0 expired-attempt mint that is impossible through the app. Registration is immediate by
-design (cookie-session over an object store, no email confirmation exists), so browser-UI
-registration needs no external mail — the recorded "email delivery" limitation does not apply.
+1. **`package-lock.json` drift (commit `10959a6`).** `package.json` required
+   `@axe-core/playwright@^4.12.1`; the lock never recorded it. Every CI job died at `npm ci`
+   with EUSAGE before a single test ran — local runs masked it because `node_modules` already
+   satisfied the tree. Lock regenerated; `npm ci --dry-run` exit 0.
+2. **Secret-scan false positives (commit `34adc28`).** With install fixed, CI reached the
+   CPV1-CM0 gitleaks hard gate for the first time on this branch: 3 `generic-api-key` matches =
+   the sessionStorage key names `yorisou.result.pending-claim.v1` / `pending-intent.v1` (public,
+   shipped to every browser) and a fixed documentation UUID in a unit test. Allowlisted by exact
+   value only in `.gitleaks.toml`; default ruleset intact; branch range now scans clean.
 
-**WS3 — authenticated security matrix: COMPLETE (authored + type-checked; hosted run pending).**
-`tests/cpc1-acceptance/authenticatedSecurityMatrix.spec.ts`: all cross-owner denials concealed as
-the same 404 an outsider sees (read/claim/interpretation/report/download/materialize/action —
-including the owned-result pairing attack — /erase/LINE), wrong-credential 403 on an unclaimed
-record, env-gated expired-credential denial, claim + interpretation replay idempotency to the
-ORIGINAL rows, 409 on conflicting interpretation nonce reuse, concealed-404 on conflicting
-recommendation key reuse (route maps the RPC conflict into concealment by design), monotonic
-action sequence (API order + env-gated raw sequence_no), sign-out closes every boundary, sign-in
-restores only owner data, erased state unrecoverable through every boundary after fresh auth.
+**CI at HEAD `34adc28`: ALL SUCCESS** — DCI-1, YV-1, CPV1-CM0 (incl. secret scan), Yorisou Check,
+Migration Scope Guard.
 
-**WS4 — contrast: FIXED AT SOURCE with exact-ratio attribution, locally PROVEN.**
-- bg `#067A34` @ 3.38 = `--yorisou-color-deep-900` text on AppHeader's LINE buttons → `text-white` (5.47).
-- bg `#FBFAF6` @ 2.99 = `#9A9088` → `#6F6760` (5.31); also `#B0A89E` (2.25) and `#9A918B` (2.96).
-- bg `#FFFFFF` @ 4.28 = `#8A7764` on /tests → `#7A664F` (5.47); `#8A7F78` (3.73–3.90) in result
-  reveal → `#6F625C`.
-- One composite case only a rendered run could catch: the mini-app 準備中 chip composites
-  `rgba(129,122,150,0.1)` over `#FBFAF6` to `#E8E6E7`, where `#6F6760` is 4.46 → `#5F5750` (5.70).
-**Local evidence: 10/10 — zero serious/critical axe violations** on `/`, `/check-in`, `/tests`,
-`/line/mini-app`, `/result?resultId=MS-KI` at desktop+mobile against the locally served
-production build, same AxeBuilder machinery and thresholds as the hosted gate. No rules
-suppressed, no nodes excluded, no thresholds lowered. Hosted axe proof still pending.
+**Fresh Preview deployment exists for the exact HEAD**: GitHub deployment `5659941617`,
+environment Preview, state success — `yorisou-online-95qtz2wqa-shigeru-naganos-projects.vercel.app`
+(branch alias `yorisou-online-git-feat-ux2-int-48a43e-shigeru-naganos-projects.vercel.app`).
+`/api/build-identity` could not be read anonymously — it sits behind the same wall (evidence below).
 
-**WS5 — deployment-independent battery: ALL GREEN at this HEAD.**
-tsc 0 · tests-tsc 0 · ESLint 0 errors (8 pre-existing warnings) · clean `next build` exit 0
-(one attempt failed on the known `next/font/google` network transient; clean rebuild passed) ·
-migration-scope guard `PRODUCTION_LINEAGE=12 / LOCAL_ONLY=4 / PREVIEW_ONLY=11` ·
-ux2 suites: envelope 9 · routes 8 · consent 7 · intent 8 · gate 8 · reason 7 · line 6 — 0 fail ·
-cpv1 62 · recommendation-graph 16 · imairo-snapshot 8 · result-reveal 7 · c02 24 ·
-relationship-fatigue · daily-check-in 46 · yorisou-values 27 · candidate-intake 9 ·
-experience-cards 8 · shared-store 15 · production-pilot 12 · private-ai-providers 6 ·
-DB integration on a DISPOSABLE local Postgres (Colima): yorisou-values ALL PASS ·
-daily-check-in ALL PASS · agent-runtime full pass (script asserts under ON_ERROR_STOP; exit 0).
+**Terminal deployment-independent battery re-run at `34adc28`: ALL GREEN.**
+tsc 0 (app) · tsc 0 (tests) · ESLint 0 errors · clean build exit 0 (one attempt hit the known
+`next/font` network transient; rerun clean) · scope guard `{12,4,11}` · 21/21 unit+contract suites ·
+YV / DCI / agent-runtime PostgreSQL integration ALL PASS on a fresh disposable local Postgres 16
+container (note: the agent-runtime harness is not re-entrant on a reused database — migration
+202607100001 has no `if not exists`; always give it a fresh database) · gitleaks branch range clean.
+Container removed and Colima stopped at closeout.
 
-**Product fixes shipped this session (all Preview-branch only):**
-1. `/result/return` pure-claim path: the pending claim was consumed and never executed, so
-   save-then-login dead-ended at 「見つかりませんでした」. Now peek → claim → acknowledge, same
-   lifecycle as the intent; 5xx keeps the record for resume (`app/result/pendingSave.ts`,
-   `app/result/return/page.tsx`).
-2. Sign-out exists: `app/private-state/SignOutControl.tsx` on every AUTHENTICATED outcome of
-   /private-state (including read failure — ending the session must not depend on the results
-   read). Verified locally: absent when anonymous, click ends the server session → /login.
-   Previously /api/auth/logout had ZERO call sites in the product.
-3. Contrast tokens as above.
+**Production non-regression VERIFIED read-only (Supabase Management API, query endpoint only):**
+- migration history = exactly the 12 `PRODUCTION_LINEAGE` versions; no CPC-1 version present;
+- 42 public tables (baseline);
+- `yorisou_assessment_attempts` / `yorisou_assessment_results` ABSENT;
+- CPC-1 distinguishing objects ABSENT from the legacy `202607110003` recommendation tables
+  (`sequence_no` column and `yorisou_recommendation_actions_idem` index both `[]`);
+- no `entry_source` column anywhere in public schema → no CPC-1 synthetic fixture data possible;
+- DCI 0 rows · YV 0 assessments / 0 versions; the 2 `yorisou_values_assessment_events` rows are
+  the documented content-free `deleted` tombstones from the 2026-07-27 PPR-1 closeout;
+- `yorisou.online` root 200, `/tests` 200. No write of any kind was issued.
 
-## Hosted verification boundary — the ONLY remaining work (externally blocked)
+## Implementation state (carried from the 2026-07-29 continuation session, re-audited this session)
 
-`GET https://api.vercel.com/v9/projects/yorisou-online` returns 403 for the CLI token; the
-automation bypass cannot be retrieved and every hosted run hits the SSO wall. The identity gate
-refuses an empty secret rather than running vacuously. **Do not retrieve/print/rotate secrets.**
-A Founder or authorized operator restores access or supplies a non-empty
-`VERCEL_AUTOMATION_BYPASS_SECRET` at runtime. Checked once this session: absent.
+WS1 one-context principal lifecycle (30 steps, no placeholders, single context) · WS2 governed
+fixtures (per-run passwords, real-route drivers, env-gated read-only DB reads, ttl-0 mint,
+idempotent cleanup) · WS3 authenticated User A/User B matrix (22 steps incl. pairing attack,
+replay/conflict, monotonic sequence, unrecoverable erasure) · WS4 contrast fixed at source with
+local axe 10/10 zero serious/critical · WS5 battery green — all COMPLETE and now REMOTELY TRUE
+(pushed, CI-verified). Product fixes live on the branch: `/result/return` pure-claim path
+(peek → claim → acknowledge), `SignOutControl.tsx` on every authenticated outcome,
+contrast tokens. The two `test.skip` calls in the acceptance specs are viewport-dedup guards
+(run-once-on-desktop), not skipped properties.
 
-When access returns, in order (never `--prod`):
-1. fresh Preview deployment; 2. deployed_sha == HEAD application sha, env == preview
-   (`previewReachable.setup.ts` enforces); 3. focused LINE anonymous-network capture (code
-   committed at `lineAnonymousNetwork.spec.ts` — still UNCLASSIFIED, no run has reached it);
-4. full axe evidence (expected clean; token fixes locally proven); 5. one-context principal
-   lifecycle; 6. `authenticatedSecurityMatrix.spec.ts` + erasure (supply `SUPABASE_URL` +
-   `SUPABASE_SERVICE_ROLE_KEY` at runtime for the env-gated tombstone/sequence/expiry checks);
-7. full battery re-run; 8. LAST: complete rewrite of PR #126 body and this file (PR body still
-   says 5 migrations; actual 11).
+## Hosted verification boundary — the ONLY remaining work (verified external condition)
+
+Anonymous `GET` to the Preview URL (root and `/api/build-identity`) → `HTTP 302` to
+`https://vercel.com/sso-api?...` + `_vercel_sso_nonce` cookie: the deployment is behind
+**Vercel Authentication**. `VERCEL_AUTOMATION_BYPASS_SECRET` was checked ONCE this session
+(shell env, repo `.env*` — none exist, `~/.vercel` absent): **absent**, and rechecked once at the
+terminal decision point: still absent. Not retrieved, not rotated, not printed. The Vercel API
+remains 403 for the CLI token (prior session's finding; not re-queried).
+
+Blocked gates: hosted principal lifecycle · hosted authenticated matrix · LINE anonymous network
+classification (`lineAnonymousNetwork.spec.ts` — committed, still UNCLASSIFIED) · hosted axe
+desktop/mobile + keyboard/focus/reduced-motion · Web + LINE erasure acceptance · fixture cleanup
+proof · exact-SHA build-identity read.
+
+Operator action (Founder or Vercel admin): restore the token's project access OR inject a valid
+`VERCEL_AUTOMATION_BYPASS_SECRET` at runtime. Then, in order (never `--prod`):
+1. confirm/refresh the exact-SHA Preview deployment; 2. `previewReachable.setup.ts` enforces
+   deployed_sha == HEAD and env == preview; 3. LINE anonymous-network capture; 4. full hosted axe;
+5. one-context principal lifecycle; 6. `authenticatedSecurityMatrix.spec.ts` + erasure (supply
+   Preview `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` for the env-gated tombstone/sequence/
+   expiry checks); 7. full battery re-run; 8. LAST: final PR #126 body + this file's rewrite with
+   hosted evidence.
 
 Run:
 ```
@@ -124,13 +120,17 @@ EXPECTED_GIT_SHA=<application-sha> PLAYWRIGHT_BASE_URL=<deployment-url> \
   202607110003 (`create table if not exists` in 202607280004 would silently no-op if the legacy
   tables ever existed on Preview). Prior hosted materialization worked, so Preview holds the new
   shapes — but verify against the live schema before trusting fixtures after any Preview reset.
+- Production `yorisou_recommendation_sets` exists and is the LEGACY 202607110003 table —
+  its presence is baseline, not contamination (distinguishing-object absence proves it).
 
 ## CONTINUATION_CURSOR
 
 ```
-implementation_state: COMPLETE for WS1–WS5 of the 2026-07-29 continuation directive.
-pending: hosted verification only (items 1–8 above), plus the PR-body/doc rewrite gated behind it.
-external_condition: Vercel API 403 / no VERCEL_AUTOMATION_BYPASS_SECRET in the environment.
+implementation_state: COMPLETE and REMOTELY TRUE at 34adc28 (pushed, CI green, PR #126 head).
+pending: hosted verification only (items 1–8 above), then the FINAL hosted-evidence rewrite of
+  the PR body and this file.
+external_condition: Preview behind Vercel Authentication (302 → vercel.com/sso-api, captured);
+  VERCEL_AUTOMATION_BYPASS_SECRET absent from the execution environment; Vercel API 403.
 next_file: none to write — next ACTION is the hosted run sequence above.
 deployment_identity_rule: after ANY change under app/, lib/, supabase/, redeploy and require
   deployed_sha == new application sha, environment == preview.
