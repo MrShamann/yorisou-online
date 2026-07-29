@@ -274,7 +274,7 @@ export default function PrivateResultSave({
                   {topItem.yorisou_resources?.description || topItem.yorisou_experience_cards?.situation}
                 </p>
                 <p className="mt-2.5 text-[12px] leading-6 text-[#7A7068]">{topItem.reason}</p>
-                <p className="mt-1 text-[11px] leading-6 text-[#9A918B]">{topItem.disclosure}</p>
+                <p className="mt-1 text-[11px] leading-6 text-[#6F6760]">{topItem.disclosure}</p>
               </div>
               {feedbackDone ? (
                 <p className="text-[13px] leading-7 text-[#315F50]">
@@ -296,7 +296,7 @@ export default function PrivateResultSave({
                   ))}
                 </div>
               )}
-              <p className="text-[12px] leading-6 text-[#9A918B]">
+              <p className="text-[12px] leading-6 text-[#6F6760]">
                 候補はここまでです。無理に選ぶ必要はありません。
               </p>
             </div>

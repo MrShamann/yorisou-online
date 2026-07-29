@@ -353,7 +353,7 @@ export default function MiniTestFlow() {
                   <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.6rem]">
                     今のあなたの“いま色”を見てみる
                   </h1>
-                  <p className="text-[11px] tracking-[0.06em] text-[#9A9088]">{getIntroFacts(totalQuestions)}</p>
+                  <p className="text-[11px] tracking-[0.06em] text-[#6F6760]">{getIntroFacts(totalQuestions)}</p>
                   <p className="max-w-[35rem] text-[14px] leading-7 text-[#6F6760]">
                     結果は固定タイプではなく、120Qから見た今の動き方です。
                   </p>
@@ -436,7 +436,7 @@ export default function MiniTestFlow() {
                     >
                       続きからはじめる
                     </button>
-                    <p className="text-[11px] leading-5 text-[#9A9088]">
+                    <p className="text-[11px] leading-5 text-[#6F6760]">
                       はじめからやり直す場合は、下のボタンを選んでください。
                     </p>
                   </MvpCard>
@@ -452,7 +452,7 @@ export default function MiniTestFlow() {
                   >
                     {attempt.startState === "starting" ? "準備しています…" : resumableAttempt ? "はじめからやり直す" : "いま色テストをはじめる"}
                   </button>
-                  <p className="mt-2.5 text-[11px] leading-6 text-[#9A9088]">
+                  <p className="mt-2.5 text-[11px] leading-6 text-[#6F6760]">
                     診断ではありません · <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
                   </p>
                 </div>
@@ -491,7 +491,7 @@ export default function MiniTestFlow() {
             {phase === "quiz" && currentQuestion ? (
               <div className="grid gap-4">
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[12px] text-[#9A9088]">
+                  <div className="flex items-center justify-between text-[12px] text-[#6F6760]">
                     <span>{stepLabel}</span>
                     <span>残り{remainingQuestions}問</span>
                   </div>
@@ -602,7 +602,7 @@ export default function MiniTestFlow() {
                               結果ページを開く
                             </a>
                           ) : null}
-                          <p className="mt-2 text-[10px] leading-5 text-[#9A9088]">
+                          <p className="mt-2 text-[10px] leading-5 text-[#6F6760]">
                             {lineMiniAppReleaseMarker}
                           </p>
                         </div>

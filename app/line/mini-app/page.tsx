@@ -167,7 +167,7 @@ export default async function MiniAppEntryPage({
             チェックを終えると、その結果から選べる入口が表示されます。医療・心理診断ではなく、今の状態を見つめるための小さな手がかりです。
           </p>
 
-          <p className="mt-2 text-[11px] text-[#9A9088]">
+          <p className="mt-2 text-[11px] text-[#6F6760]">
             保存された結果はここでは読み込みません。ログイン後の結果ページから開けます。
           </p>
         </div>
@@ -218,7 +218,7 @@ export default async function MiniAppEntryPage({
               <div>
                 <p
                   className="text-[10px] font-semibold uppercase tracking-[0.13em]"
-                  style={{ color: "#9A9088" }}
+                  style={{ color: "#6F6760" }}
                 >
                   {test.kicker}
                 </p>
@@ -226,14 +226,14 @@ export default async function MiniAppEntryPage({
                   {test.title}
                 </p>
               </div>
-              <span className="shrink-0 text-[18px] leading-none text-[#B0A89E]">›</span>
+              <span className="shrink-0 text-[18px] leading-none text-[#6F6760]">›</span>
             </Link>
           ))}
         </div>
 
         {/* Coming soon section */}
         <div className="mt-10 border-t pt-6" style={{ borderColor: "rgba(129,122,150,0.12)" }}>
-          <p className="mb-3 text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#9A9088" }}>
+          <p className="mb-3 text-[10px] font-semibold tracking-[0.08em]" style={{ color: "#6F6760" }}>
             これから増えるチェック
           </p>
           <div className="space-y-1.5">
@@ -243,10 +243,10 @@ export default async function MiniAppEntryPage({
                 className="flex items-center justify-between rounded-[0.9rem] px-4 py-3"
                 style={{ background: "rgba(129,122,150,0.06)", border: "1px solid rgba(129,122,150,0.1)" }}
               >
-                <span className="text-[13px] text-[#B0A89E]">{label}</span>
+                <span className="text-[13px] text-[#6F6760]">{label}</span>
                 <span
                   className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
-                  style={{ background: "rgba(129,122,150,0.1)", color: "#9A9088" }}
+                  style={{ background: "rgba(129,122,150,0.1)", color: "#6F6760" }}
                 >
                   準備中
                 </span>
