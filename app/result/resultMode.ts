@@ -32,6 +32,10 @@ export type PersistedResultMode = {
   understanding: {
     status: "confirmed" | "corrected" | "rejected" | "deferred" | "unanswered";
     resolved: boolean;
+    /** The code the PERSON accepted (original when confirmed, corrected code when corrected).
+     *  Continuity surfaces such as the report must be built from this, never from the
+     *  machine's original assignment. Null when nothing is accepted. */
+    acceptedResultId: string | null;
     recommendationUsePermitted: boolean;
     continuityUsePermitted: boolean;
   };
@@ -89,6 +93,7 @@ export async function resolveResultMode(params: ResultRouteParams): Promise<Resu
       understanding: {
         status: persisted.understanding.status,
         resolved: persisted.understanding.resolved,
+        acceptedResultId: persisted.understanding.acceptedResultId,
         recommendationUsePermitted: persisted.understanding.recommendationUsePermitted,
         continuityUsePermitted: persisted.understanding.continuityUsePermitted,
       },

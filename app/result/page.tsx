@@ -74,9 +74,15 @@ export default async function ResultPage({
     mode.kind !== "persisted" || mode.understanding.continuityUsePermitted;
   const resultShareHref = buildPublicShareHref("/result/share", identity);
   const recommendationHref = buildPrivateContinuityHref("/recommendations", identity);
-  const reportEntryHref = compatibility.assignment
-    ? buildSelfUnderstandingReportHref(compatibility.assignment.publicCode)
-    : null;
+  // The report is built from the ACCEPTED understanding: the machine's original assignment is
+  // kept on the page for honesty, but the person's confirmed/corrected code decides what the
+  // report is ABOUT. In persisted mode nothing accepted ⇒ no report entry (continuity is
+  // withheld anyway); legacy mode has no interpretation and keeps the assignment code.
+  const reportCode =
+    mode.kind === "persisted"
+      ? mode.understanding.acceptedResultId
+      : compatibility.assignment?.publicCode ?? null;
+  const reportEntryHref = reportCode ? buildSelfUnderstandingReportHref(reportCode) : null;
   // The report entry is private continuity: it must carry the stable identity so a return trip
   // resolves the same persisted record rather than re-deriving one from the public code.
   const fullReportHref = !continuityPermitted
