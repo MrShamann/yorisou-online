@@ -38,6 +38,35 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/yorisou_agent_runtime_test
       - run: npx tsc --noEmit
 
+  por1-deletion-resume-postgres:
+    name: POR-1 Deletion Resume Engine + Mutation Fence (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: yorisou_por1_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d yorisou_por1_test"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      # The eleven required concurrency scenarios, driven by explicit latches rather than by timing,
+      # against a disposable database. The grace-period cases use the injected clock, so the whole
+      # suite runs in seconds instead of waiting out three real minutes.
+      - name: POR-1 barrier proofs (cursor, single-writer executor, fence, grace)
+        run: npm run test:por1-resume:db
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/yorisou_por1_test
+
   check:
     name: Lint, Build & Env Check
     runs-on: ubuntu-latest
@@ -83,6 +112,28 @@ jobs:
 
       - name: Candidate intake contracts (CIF-1 foundation)
         run: npm run test:candidate-intake
+
+      # ── POR-1 ────────────────────────────────────────────────────────────────
+      - name: POR-1 runtime controls and flag-off baseline equivalence
+        run: |
+          npm run test:por1-controls
+          npm run gate:por1-flag-off-baseline
+
+      - name: POR-1 mutation-fence rollout rule and write contexts
+        run: |
+          npm run test:por1-fence
+          npm run test:por1-context
+
+      - name: POR-1 identity scope, deletion lock and store boundary
+        run: |
+          npm run test:por1-deletion
+          npm run test:por1-boundary
+          npm run test:por1-namespace
+
+      # The fence is enforced at runtime by write contexts; this guards the half a runtime check
+      # cannot see — a new caller reaching past the fenced API, or the minting function leaking.
+      - name: POR-1 raw-write source guard
+        run: npm run guard:por1-raw-writes
 
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"

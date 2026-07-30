@@ -235,33 +235,151 @@ of the four controls and the flag-off baseline gate.
 
 4 permanent tests (`npm run test:por1-fence`).
 
-### ⛔ NOT YET DONE — the fence is not yet proven
+### CI at `43186db` — five green, verified at that exact HEAD
 
-The pieces exist and are consistent, but the concurrency proof has NOT been run. Do not treat the
-fence as verified.
+The readiness contract did restore the two suites the fence had broken. Confirmed by querying the
+runs at the SHA rather than by carrying a status forward:
 
-Outstanding before the hosted train:
+```
+success  Migration Scope Guard · Yorisou Check · CPV1-CM0 CI · YV-1 CI · DCI-1 CI
+```
 
-0. **CI must be re-verified remotely.** The readiness contract is the intended fix for YV-1/DCI-1
-   but has NOT yet been confirmed on a remote run.
-1. **Durable cursor is recorded but NOT authoritative.** `failed_retryable` still closes the gate and
-   advances to `locked` regardless of the stage it failed at, so `execution_cursor` is written and
-   never read. Needs `202607300005` with one unambiguous "next stage that must execute" meaning.
-2. **Deterministic concurrency test with explicit barriers** (not sleeps): worker A takes a lease
-   and pauses before its write; worker B closes the gate and must stay in `mutation_draining`; A
-   writes and releases; B drains, closes, erases, verifies absence. Plus: begin-denied-after-draining,
-   begin-denied-after-completion via fingerprint, crashed-lease drain after execution grace,
-   old-generation replay, and zero identity-store writes during `verifying`.
-3. **Remaining write paths, more than previously stated.** `ensureCanonicalUserForAccount` writes
-   UserProfile + email AuthIdentity + LINE AuthIdentity directly; `updateCanonicalSupportProfile`
-   saves the foundation profile BEFORE the leased compatibility update, so one lease does not cover
-   the whole read-transform-write window; LINE binding and LINE-primary provisioning write foundation
-   identity directly; and `getViewerContext` / principal-landing migration / session binding still
-   call `touchSession` unfenced, which can recreate a session during deletion.
-3. **Source guard** failing on raw `upsertAccountRecord` calls from unapproved modules.
-4. Then: durable target manifest, full identity inventory (password-resets, consultations, LINE
-   events/index, foundation mirrors), canonical key module, transport proof per family, fully
-   populated hosted lifecycle, and the concurrent exact-SHA train.
+The earlier correction above stands as the record of how that went wrong the first time; the rule it
+produced — read the status at your own HEAD, never inherit it — is the reason this line can be
+written at all.
+
+## `202607300005` — the deletion resume engine
+
+The three items below were the outstanding blockers. All three are now implemented and proven; what
+remains outstanding is the HOSTED run, which is a different claim and is stated as such at the end.
+
+### 1. The cursor is authoritative, and means exactly one thing
+
+```
+execution_cursor = THE NEXT STAGE THAT MUST EXECUTE
+```
+
+Not "the last stage that completed", which is what `202607300004` documented while the orchestrator
+wrote the opposite. A field with two meanings is a field with none, and that ambiguity is what let a
+run which failed at VERIFICATION resume from `locked` — replaying session revocation and the account
+hold, re-writing the identity it had just erased.
+
+Nine stages, ranked, with movement restricted to exactly one step forward:
+
+```
+mutation_draining → lock_marker → session_revocation → database_erasure
+→ storage_erasure → identity_erasure → verifying → finalizing → completed
+```
+
+`lock_marker` and `session_revocation` were previously both hidden inside `locked`, which is
+precisely why a retry could replay them. A retryable failure now PRESERVES the cursor —
+`record_retryable_error` deliberately does not touch it — and a retry executes that stage directly.
+Nothing infers a resume point from `failed_retryable` any more; it is a note about the previous
+attempt, never an instruction about where to start.
+
+`202607300004`'s unguarded `mark_cursor` is retired in place: it took no executor, no expected value
+and no legality check, so leaving it callable would have left a way around every invariant below.
+
+### 2. The executor is single-writer
+
+A bounded claim — token hash, generation, expiry — is required to move the cursor at all. Every step
+validates six things in ONE statement under a row lock: executor ownership, executor generation, the
+expected current cursor, a legal next cursor, the mutation-lease invariant, and irreversibility.
+
+`p_expected_cursor` is what makes two concurrent runs safe: the second one's expectation no longer
+matches, so it is refused rather than repeating a completed stage. Two confirm requests no longer
+drive one saga; the second is told `in_progress`, which is the honest answer to a double-click.
+
+`irreversible_started_at` is set ONCE, at the crossing into `lock_marker`, after the gate is proven
+closed and drained. After that: cancellation denied, cursor monotonic, and no retry can clear it —
+and cancellation is refused on the recorded FACT, not on a state string, so a job sitting in
+`failed_retryable` half-way through erasure is correctly not cancellable.
+
+### 3. The fence is complete, and unforgeable at runtime
+
+A TypeScript brand is a compile-time fiction: `{} as AccountMutationContext` satisfies it. So a write
+context is an opaque object recorded in a module-private `WeakSet` at mint time, and every low-level
+writer checks MEMBERSHIP rather than shape. A literal, a clone, a `JSON.parse` result and a spread of
+a real context all fail. Contexts are REVOKED when their window closes, so one captured in a closure
+and replayed later fails exactly as a forged one does.
+
+Three kinds, because three different things authorise them: `mutation` and `provisioning` by a lease,
+`deletion` by the executor claim (a deletion cannot lease against its own closed gate).
+
+Now fenced as ONE window each — the previous split is what left half of each outside the fence:
+
+- `ensureCanonicalUserForAccount` — UserProfile + email AuthIdentity + LINE AuthIdentity
+- `updateCanonicalSupportProfile` — foundation save AND the legacy mirror, re-read inside the window
+- `bindLineIdentityToUserProfile` / email attachment — including the activity rebind
+- `resolveOrCreateLinePrimaryUser` — account record + mirror + binding, per branch
+- account registration, password-reset issuance, account recovery, cookie restoration
+- account-linked session creation, binding, and the principal-landing migration
+
+`getViewerContext` NO LONGER WRITES. It used to `touchSession` on every authenticated request,
+folding the cookie's `userId` and landing contract back into the stored record — a write-on-read, and
+the cleanest resurrection path in the product, on a path far too hot to lease. The merge still
+happens, in memory; what no longer happens is persisting it.
+
+Enforcement has two halves. The runtime half is the context. The source half is
+`scripts/por1-raw-write-source-guard.mjs`: EXACT path + symbol allowlists over nine guarded symbols
+and five identity key families, with no directory-level exemptions, plus a self-check that fails if a
+rule stops matching real code. Verified by negative control — a probe file using
+`upsertAccountRecord` and building an `accounts/by-id/` key was caught on both rules.
+
+### The durable target manifest
+
+Frozen before the crossing, immutable in the database (a second write is a no-op, never an
+overwrite). Erasure destroys the record that names everything else, so a later stage that re-enumerated
+would find nothing and report "nothing to erase" — indistinguishable from success, and the most
+dangerous possible failure mode for a deletion.
+
+Hashes and stable ids only: no raw password, cookie, email address or LINE id. The email and LINE id
+appear solely inside the hashed lookup keys the store itself uses.
+
+Erasure inventory now also covers password-reset tokens, consultations, LINE events, the foundation
+UserProfile and both AuthIdentities, and support conversations. The shared recent-LINE-subject index
+is PRUNED IN PLACE rather than deleted — it is one array covering every subject, so deleting it to
+erase one person would erase everyone's — and `identityKeyScope` refuses that key by name so a future
+caller cannot reach for the simpler, wrong operation.
+
+### Deterministic concurrency proof
+
+`tests/por1/postgres-integration.sh`, against a disposable local database. All eleven required
+scenarios pass. The genuinely concurrent cases run TWO PERSISTENT SESSIONS WITH AN EXPLICIT LATCH:
+session A opens a transaction and stops, the harness confirms via `pg_stat_activity` that B is blocked
+on the row lock, and only then does A commit. Nothing sleeps waiting for a race.
+
+The two grace-period cases use an INJECTED CLOCK (`yorisou.deletion_clock_skew_seconds`, unset in
+every deployed environment) rather than 180 seconds of real waiting — proving both that an
+expired-but-in-grace lease still blocks at 175s of a 180s grace, and that it drains at 200s.
+
+```
+1-3  stale account / foundation / session writer versus deletion
+4    two deletion executors against one job — refused, and latched under contention
+5    crash after every external action, before cursor advancement — cursor preserved, no replay
+6    lease denial during draining, closed and completed (the last via fingerprint)
+7    released, drained and stale-generation lease replay denial
+8    expired lease inside grace remains blocking
+9    expired lease after grace drains
+10   verification performs no identity write — proven by snapshotting every governed table
+11   user B unchanged, and still able to write
+```
+
+### Local gates at this commit
+
+```
+tsc 0 · acceptance-suite tsc 0 · ESLint 0 errors · build ok
+migration scope 32/32 · flag-off baseline 12 · raw-write source guard (9 symbols, negative-controlled)
+por1-deletion 18 · por1-boundary 13 · por1-fence 4 · por1-controls 5 · por1-namespace 6 · por1-context 7
+POR-1 resume/fence DB proofs: all 11 scenarios · YV-1 DB · DCI-1 DB
+```
+
+### ⛔ STILL UNPROVEN — the hosted run
+
+Everything above is proven locally and in a disposable database. The HOSTED exact-SHA acceptance —
+isolated Preview identity store, four capabilities on, at least two workers, a fully populated
+synthetic account, and the four concurrent adversaries running during a real deletion — has NOT been
+run. Do not treat the fence as hosted-verified until it has.
 
 ## Remaining CTO sequence (D onward)
 

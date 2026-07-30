@@ -493,7 +493,20 @@ export async function ensureSessionPrincipalLandingShadowWrite(
     return session;
   }
 
-  return (await touchSession(session.id, session.userId, sessionWithShadow.principalLanding || null)) || sessionWithShadow;
+  // POR-1 — this binds an account to a session, so it is an account-linked write and holds a lease
+  // across the whole window. An anonymous session has nothing to fence and takes the plain path.
+  const accountId = session.userId || input.legacyAccount?.id || null;
+  if (!accountId) {
+    return (await touchSession(null, session.id, session.userId, sessionWithShadow.principalLanding || null)) || sessionWithShadow;
+  }
+  return (
+    (await withAccountMutationLease({
+      accountId,
+      operation: "session_identity_upgrade",
+      execute: (context) =>
+        touchSession(context, session.id, session.userId, sessionWithShadow.principalLanding || null),
+    })) || sessionWithShadow
+  );
 }
 
 export async function switchSessionToPrincipalLandingTruth(
@@ -510,10 +523,21 @@ export async function switchSessionToPrincipalLandingTruth(
     return session;
   }
 
-  return (await touchSession(session.id, null, contract)) || {
-    ...sessionWithShadow,
-    userId: null,
-  };
+  // The contract still names the account even though `userId` becomes null, so this is account-linked
+  // and leased. Fencing only the `userId` form would leave the migration path — the one that produced
+  // the session the erasure probe found still live — outside the fence.
+  const accountId = contract.legacyAccountId || session.userId || input.legacyAccount?.id || null;
+  const fallback = { ...sessionWithShadow, userId: null };
+  if (!accountId) {
+    return (await touchSession(null, session.id, null, contract)) || fallback;
+  }
+  return (
+    (await withAccountMutationLease({
+      accountId,
+      operation: "session_identity_upgrade",
+      execute: (context) => touchSession(context, session.id, null, contract),
+    })) || fallback
+  );
 }
 
 export async function inspectSessionPrincipalLandingCoverage(input: {
@@ -644,15 +668,29 @@ export async function getViewerContext(
     const accountCookie = decodeAccountCookie(cookieStore.get(ACCOUNT_COOKIE)?.value);
 
     if (sessionCookie) {
+      // POR-1 — READING A SESSION NO LONGER WRITES ONE.
+      //
+      // This used to `touchSession` on every authenticated request, folding the COOKIE's `userId`
+      // and principal-landing contract back into the stored record. That is a write-on-read, and it
+      // is the cleanest resurrection path in the product: a browser holding a stale cookie would
+      // re-assert the identity of a person whose session had just been revoked, on nothing more than
+      // a page view — and it would do so on a path far too hot to take a lease on.
+      //
+      // The merge still happens, in memory, so a viewer whose cookie carries a contract the record
+      // has not caught up with is unaffected. What no longer happens is persisting it. Every path
+      // that genuinely needs the record updated — login, binding, the principal-landing switch —
+      // does so deliberately, under a lease, and is unchanged.
       const storedSession = await findSessionById(sessionCookie.id);
-      const session =
-        storedSession
-          ? ((await touchSession(
-              sessionCookie.id,
-              sessionCookie.userId,
-              sessionCookie.principalLanding === undefined ? undefined : sessionCookie.principalLanding || null,
-            )) || storedSession)
-          : createSyntheticSession(sessionCookie);
+      const session = storedSession
+        ? {
+            ...storedSession,
+            userId: sessionCookie.userId === undefined ? storedSession.userId : sessionCookie.userId,
+            principalLanding:
+              sessionCookie.principalLanding === undefined
+                ? storedSession.principalLanding || null
+                : sessionCookie.principalLanding || null,
+          }
+        : createSyntheticSession(sessionCookie);
       const principalLanding = resolveSessionPrincipalLandingContext({
         sessionUserId: session.userId,
         contractValue: session.principalLanding || sessionCookie.principalLanding || null,
@@ -677,7 +715,8 @@ export async function getViewerContext(
     if (rawSessionValue) {
       const session = await findSessionById(rawSessionValue);
       if (session) {
-        const touchedSession = (await touchSession(session.id, session.userId)) || session;
+        // Same rule on the legacy raw-cookie path: reading a session must not rewrite it.
+        const touchedSession = session;
         const account = accountUnlessDeletionLocked(
           touchedSession.userId ? await findAccountById(touchedSession.userId) : null,
           includeHeldAccount,
@@ -739,7 +778,13 @@ export async function ensureViewerSession() {
   if (viewer.session) {
     return viewer.session;
   }
-  return createSession(viewer.account?.id || null);
+  const accountId = viewer.account?.id || null;
+  if (!accountId) return createSession(null, null);
+  return withAccountMutationLease({
+    accountId,
+    operation: "session_account_binding",
+    execute: (context) => createSession(context, accountId),
+  });
 }
 
 export async function bindSessionToUser(
@@ -754,8 +799,17 @@ export async function bindSessionToUser(
     legacyAccount: options?.legacyAccount || (await findAccountById(userId)),
     source: options?.source || "session_upgrade",
   });
-  const session = await touchSession(sessionId, userId, contract || undefined);
-  await assignSessionConsultationsToUser(sessionId, userId);
+  // The whole read-transform-write window, including the consultation rebind: an account-linked
+  // activity rebind that landed after an erasure would re-point erased rows at a deleted person.
+  const session = await withAccountMutationLease({
+    accountId: userId,
+    operation: "session_account_binding",
+    execute: async (context) => {
+      const bound = await touchSession(context, sessionId, userId, contract || undefined);
+      await assignSessionConsultationsToUser(sessionId, userId);
+      return bound;
+    },
+  });
   return session;
 }
 
@@ -780,7 +834,7 @@ export async function restoreAccountFromCookie(account: AccountRecord | null) {
   await withAccountMutationLease({
     accountId: account.id,
     operation: "identity_mirror_sync",
-    execute: () => upsertAccountRecord(account),
+    execute: (context) => upsertAccountRecord(context, account),
   });
   return account;
 }

@@ -1,8 +1,8 @@
 // POR-1 WS2/WS7 — the identity-deletion adapter is narrow by construction.
 //
 // The requirement it enforces: no arbitrary path deletion, no generic bucket administration, no
-// secret-gated backdoor. The only thing the adapter can remove is an identity object inside one of
-// five named families.
+// secret-gated backdoor. The only thing the adapter can remove is an account-linked object inside one
+// of seven named families — and, within those, never the one shared index that belongs to everybody.
 
 import assert from "node:assert/strict";
 import test from "node:test";
@@ -11,14 +11,30 @@ import {
   assertIdentityKey,
   classifyIdentityKey,
   IDENTITY_KEY_PREFIXES,
+  SHARED_LINE_SUBJECT_INDEX_KEY,
   SHARED_STORE_PREFIX,
 } from "../identityKeyScope";
 
-test("the five identity families, and only those, are deletable", () => {
-  assert.equal(IDENTITY_KEY_PREFIXES.length, 5);
+test("the seven account-linked families, and only those, are deletable", () => {
+  // Five identity families, plus the two POR-1 added deliberately: `consultations/` and
+  // `line-events/`. Those two cannot be logged into, which is why they were originally out of scope —
+  // but a completed deletion that left them behind has not deleted the person, it has only made them
+  // unable to log in and look. The count is asserted so that widening the scope stays a decision
+  // somebody makes rather than a line somebody adds.
+  assert.equal(IDENTITY_KEY_PREFIXES.length, 7);
   for (const prefix of IDENTITY_KEY_PREFIXES) {
     assert.equal(classifyIdentityKey(`${prefix}abc.json`), null, prefix);
   }
+});
+
+test("the SHARED line-subject index is inside an allowed family and still not deletable", () => {
+  // `admin-recent-subjects.json` is one array holding entries for every LINE subject. Deleting it to
+  // erase one person would erase everyone's, so it is pruned in place instead — and the scope rule
+  // refuses it by name rather than trusting a caller to remember.
+  assert.equal(classifyIdentityKey(SHARED_LINE_SUBJECT_INDEX_KEY), "identity_key_out_of_scope");
+  // A per-event object in the SAME family is still deletable, so the exclusion is exact and not a
+  // retreat from the family.
+  assert.equal(classifyIdentityKey(`${SHARED_STORE_PREFIX}/line-events/evt_123.json`), null);
 });
 
 test("a person's CONTENT is out of scope — the adapter deletes identity, not records", () => {

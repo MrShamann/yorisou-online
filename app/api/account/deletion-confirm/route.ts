@@ -114,6 +114,17 @@ export async function POST(request: Request) {
       return response;
     }
 
+    // ANOTHER EXECUTOR IS DRIVING THIS JOB.
+    //
+    // Deletion is now single-writer: a second confirm — a double-click, a refresh, a retry that
+    // arrived while the first was still running — is refused the claim rather than allowed to drive
+    // the same saga alongside it. That is not a failure and must not be reported as one; telling the
+    // person their deletion failed while it is actively succeeding would invite them to retry into
+    // the same refusal.
+    if (result.outcome === "in_progress") {
+      return NextResponse.json({ state: "in_progress", retryable: false }, { status: 202 });
+    }
+
     // Bounded failure class only — the internal code can name tables.
     return NextResponse.json(
       {

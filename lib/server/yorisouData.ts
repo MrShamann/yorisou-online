@@ -4,7 +4,16 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 
 import { assertIdentityKey, SHARED_STORE_PREFIX } from "./identityKeyScope";
 import { assertSharedStoreEnvironmentBoundary } from "./sharedStoreBoundary";
-import { withAccountMutationLease } from "./accountMutationLease";
+import {
+  withAccountMutationLease,
+  withAccountProvisioningLease,
+  withLegacyBootstrapContext,
+} from "./accountMutationLease";
+import {
+  assertAccountWriteContext,
+  type AccountDeletionContext,
+  type AccountWriteContext,
+} from "./accountWriteContext";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -662,7 +671,11 @@ async function getSharedAccountByLineUserId(lineUserId: string) {
   return account;
 }
 
-async function putSharedAccountRecord(account: AccountRecord) {
+// The lowest-level account writer there is: the primary record plus every index that resolves to it.
+// It takes a context so that no path — not even one inside this module — can reach the store without
+// naming the authority it is writing under.
+async function putSharedAccountRecord(context: AccountWriteContext, account: AccountRecord) {
+  assertAccountWriteContext(context, account.id);
   const normalizedEmail = normalizeEmail(account.email);
   const normalizedAccount = {
     ...account,
@@ -692,7 +705,11 @@ async function putSharedAccountRecord(account: AccountRecord) {
   return normalizedAccount;
 }
 
-async function putSharedSessionRecord(session: SessionRecord) {
+// A session record naming an account IS a credential for that account, so writing one is governed
+// exactly like writing the account. An anonymous session names nobody and needs no context.
+async function putSharedSessionRecord(context: AccountWriteContext | null, session: SessionRecord) {
+  const linkedAccountId = session.userId || session.principalLanding?.legacyAccountId || null;
+  if (linkedAccountId) assertAccountWriteContext(context, linkedAccountId);
   await sharedWriteJson(sessionRecordKey(session.id), session);
   return session;
 }
@@ -861,11 +878,18 @@ async function migrateLegacyFilesToSharedStore() {
   ]);
 
   for (const account of legacyAccounts) {
-    await putSharedAccountRecord(account);
+    await withLegacyBootstrapContext(account.id, (context) => putSharedAccountRecord(context, account));
   }
 
   for (const session of legacySessions) {
-    await putSharedSessionRecord(session);
+    const linkedAccountId = session.userId || session.principalLanding?.legacyAccountId || null;
+    if (linkedAccountId) {
+      await withLegacyBootstrapContext(linkedAccountId, (context) =>
+        putSharedSessionRecord(context, session),
+      );
+    } else {
+      await putSharedSessionRecord(null, session);
+    }
   }
 
   for (const consultation of legacyConsultations) {
@@ -901,6 +925,43 @@ export async function deleteSharedIdentityObject(key: string): Promise<void> {
     if (/not.?found|NoSuchKey|404/i.test(code)) return;
     throw error;
   }
+}
+
+/**
+ * POR-1 — prune one person's entries from the SHARED recent-LINE-subject index.
+ *
+ * This index is a single array covering every LINE subject, so it is the one account-linked object
+ * that must be rewritten rather than deleted: deleting it to erase one person would erase everyone.
+ *
+ * Matched by FINGERPRINT — sha256 of the LINE user id — so the caller never needs the raw id it is
+ * erasing, and the deletion manifest never has to keep one.
+ *
+ * Requires a deletion context like every other account-linked write.
+ */
+export async function pruneRecentLineWebhookSubjects(
+  context: AccountDeletionContext,
+  lineUserIdFingerprints: string[],
+): Promise<number> {
+  assertAccountWriteContext(context);
+  if (lineUserIdFingerprints.length === 0) return 0;
+  const wanted = new Set(lineUserIdFingerprints);
+  const matches = (record: RecentLineWebhookSubjectRecord) =>
+    wanted.has(createHash("sha256").update(record.lineUserId).digest("hex"));
+
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    const records = await getSharedRecentLineWebhookSubjects();
+    const kept = records.filter((record) => !matches(record));
+    if (kept.length === records.length) return 0;
+    await putSharedRecentLineWebhookSubjects(kept);
+    return records.length - kept.length;
+  }
+
+  const records = await readLocalJson(recentLineWebhookSubjectsFile);
+  const kept = records.filter((record) => !matches(record));
+  if (kept.length === records.length) return 0;
+  await writeLocalJson(recentLineWebhookSubjectsFile, kept);
+  return records.length - kept.length;
 }
 
 /** Existence probe used only to VERIFY erasure before finalization. */
@@ -1000,60 +1061,88 @@ export async function createAccount(input: {
   role: AccountRole;
 }) {
   const normalizedEmail = normalizeEmail(input.email);
+  // The id is minted BEFORE the lease, because a lease is taken on an account id and there is no
+  // other way to name an account that does not exist yet. A brand-new id has an open gate, so this
+  // is not a formality: it is what stops a registration racing a deletion of the SAME id, and what
+  // makes the existence check and the write one window rather than two.
+  const accountId = createId("acct");
 
-  if (shouldUseSharedStore) {
-    await ensureSharedStoreReady();
-    const existing = await getSharedAccountByEmail(normalizedEmail);
+  return withAccountProvisioningLease({
+    accountId,
+    operation: "account_registration",
+    execute: async (context) => {
+      if (shouldUseSharedStore) {
+        await ensureSharedStoreReady();
+        const existing = await getSharedAccountByEmail(normalizedEmail);
 
-    if (existing) {
-      return { ok: false as const, reason: "email_exists" as const };
-    }
+        if (existing) {
+          return { ok: false as const, reason: "email_exists" as const };
+        }
 
-    const account: AccountRecord = {
-      id: createId("acct"),
-      name: input.name,
-      email: normalizedEmail,
-      passwordHash: hashPassword(input.password),
-      city: input.city,
-      role: input.role,
-      createdAt: nowIso(),
-      updatedAt: nowIso(),
-      supportProfile: defaultSupportProfile(),
-    };
+        const account: AccountRecord = {
+          id: accountId,
+          name: input.name,
+          email: normalizedEmail,
+          passwordHash: hashPassword(input.password),
+          city: input.city,
+          role: input.role,
+          createdAt: nowIso(),
+          updatedAt: nowIso(),
+          supportProfile: defaultSupportProfile(),
+        };
 
-    await putSharedAccountRecord(account);
-    return { ok: true as const, account };
-  }
+        await putSharedAccountRecord(context, account);
+        return { ok: true as const, account };
+      }
 
-  const accounts = await listAccounts();
-  const existing = accounts.find((account) => normalizeEmail(account.email) === normalizedEmail);
+      const accounts = await listAccounts();
+      const existing = accounts.find((account) => normalizeEmail(account.email) === normalizedEmail);
 
-  if (existing) {
-    return { ok: false as const, reason: "email_exists" as const };
-  }
+      if (existing) {
+        return { ok: false as const, reason: "email_exists" as const };
+      }
 
-  const account: AccountRecord = {
-    id: createId("acct"),
-    name: input.name,
-    email: normalizedEmail,
-    passwordHash: hashPassword(input.password),
-    city: input.city,
-    role: input.role,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-    supportProfile: defaultSupportProfile(),
-  };
+      const account: AccountRecord = {
+        id: accountId,
+        name: input.name,
+        email: normalizedEmail,
+        passwordHash: hashPassword(input.password),
+        city: input.city,
+        role: input.role,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+        supportProfile: defaultSupportProfile(),
+      };
 
-  accounts.unshift(account);
-  await writeLocalJson(accountsFile, accounts);
-  return { ok: true as const, account };
+      accounts.unshift(account);
+      await writeLocalJson(accountsFile, accounts);
+      return { ok: true as const, account };
+    },
+  });
 }
 
 function hashPasswordForStorage(password: string) {
   return hashPassword(password);
 }
 
-export async function upsertAccountRecord(account: AccountRecord): Promise<AccountRecord> {
+/**
+ * Write the primary account record.
+ *
+ * POR-1 — this is THE resurrection primitive. It is a read-modify-upsert of the identity itself, and
+ * every account-deleting failure this package has seen ended here: a request that had read the
+ * account before a deletion started, writing its stale copy afterwards.
+ *
+ * So it now requires a live write context, which only `accountMutationLease` can mint and which only
+ * exists inside a held lease. A caller that has not taken the lease cannot call this at all, and a
+ * caller that took one and then let it lapse holds a REVOKED context — which fails the same check a
+ * forged one does. The lease is what makes the ordering decidable; the context is what makes the
+ * lease unavoidable.
+ */
+export async function upsertAccountRecord(
+  context: AccountWriteContext,
+  account: AccountRecord,
+): Promise<AccountRecord> {
+  assertAccountWriteContext(context, account.id);
   const normalizedAccount = {
     ...account,
     email: normalizeEmail(account.email),
@@ -1061,7 +1150,7 @@ export async function upsertAccountRecord(account: AccountRecord): Promise<Accou
 
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
-    await putSharedAccountRecord(normalizedAccount);
+    await putSharedAccountRecord(context, normalizedAccount);
     return normalizedAccount;
   }
 
@@ -1085,15 +1174,26 @@ export async function upsertAccountRecord(account: AccountRecord): Promise<Accou
 //
 // The lease is taken BEFORE the read, deliberately. Taking it just before the write would leave the
 // exact window this exists to close: read the account, a deletion runs, write the stale copy back.
-export async function updateAccountPassword(userId: string, password: string): Promise<AccountRecord | null> {
+export async function updateAccountPassword(
+  userId: string,
+  password: string,
+  context?: AccountWriteContext,
+): Promise<AccountRecord | null> {
+  // `context` lets account recovery hold ONE window across validate → password → token retirement,
+  // instead of a lease that covers only the middle step.
+  if (context) return updateAccountPasswordUnderLease(context, userId, password);
   return withAccountMutationLease({
     accountId: userId,
     operation: "password_update",
-    execute: () => updateAccountPasswordUnderLease(userId, password),
+    execute: (ctx) => updateAccountPasswordUnderLease(ctx, userId, password),
   });
 }
 
-async function updateAccountPasswordUnderLease(userId: string, password: string): Promise<AccountRecord | null> {
+async function updateAccountPasswordUnderLease(
+  context: AccountWriteContext,
+  userId: string,
+  password: string,
+): Promise<AccountRecord | null> {
   const account = await findAccountById(userId);
 
   if (!account) {
@@ -1106,7 +1206,7 @@ async function updateAccountPasswordUnderLease(userId: string, password: string)
     updatedAt: nowIso(),
   };
 
-  await upsertAccountRecord(updatedAccount);
+  await upsertAccountRecord(context, updatedAccount);
   return updatedAccount;
 }
 
@@ -1116,7 +1216,12 @@ async function updateAccountPasswordUnderLease(userId: string, password: string)
  * Returns false when the record is already gone: an erased account needs no marker, and the
  * caller must not read that as a failure to lock.
  */
-export async function setAccountDeletionLock(userId: string, locked: boolean): Promise<boolean> {
+export async function setAccountDeletionLock(
+  context: AccountWriteContext,
+  userId: string,
+  locked: boolean,
+): Promise<boolean> {
+  assertAccountWriteContext(context, userId);
   const account = await findAccountById(userId);
   if (!account) return false;
 
@@ -1127,19 +1232,34 @@ export async function setAccountDeletionLock(userId: string, locked: boolean): P
     delete next.deletionLockedAt;
   }
 
-  await upsertAccountRecord(next);
+  await upsertAccountRecord(context, next);
   return true;
 }
 
-export async function updateSupportProfile(userId: string, patch: Partial<SupportProfile>): Promise<AccountRecord | null> {
+/**
+ * `context` is optional so a caller already inside a window extends it rather than opening a second
+ * one. The canonical support-profile update is exactly that case: it saves the foundation profile and
+ * then this legacy mirror, and those two writes have to be ONE window — the previous split is what
+ * left the foundation half outside the fence.
+ */
+export async function updateSupportProfile(
+  userId: string,
+  patch: Partial<SupportProfile>,
+  context?: AccountWriteContext,
+): Promise<AccountRecord | null> {
+  if (context) return updateSupportProfileUnderLease(context, userId, patch);
   return withAccountMutationLease({
     accountId: userId,
     operation: "support_profile_update",
-    execute: () => updateSupportProfileUnderLease(userId, patch),
+    execute: (ctx) => updateSupportProfileUnderLease(ctx, userId, patch),
   });
 }
 
-async function updateSupportProfileUnderLease(userId: string, patch: Partial<SupportProfile>): Promise<AccountRecord | null> {
+async function updateSupportProfileUnderLease(
+  context: AccountWriteContext,
+  userId: string,
+  patch: Partial<SupportProfile>,
+): Promise<AccountRecord | null> {
   const account = await findAccountById(userId);
 
   if (!account) {
@@ -1155,7 +1275,7 @@ async function updateSupportProfileUnderLease(userId: string, patch: Partial<Sup
     },
   };
 
-  await upsertAccountRecord(updatedAccount);
+  await upsertAccountRecord(context, updatedAccount);
   return updatedAccount;
 }
 
@@ -1169,11 +1289,11 @@ export async function bindLineIdentity(input: {
   return withAccountMutationLease({
     accountId: input.userId,
     operation: "line_binding",
-    execute: () => bindLineIdentityUnderLease(input),
+    execute: (context) => bindLineIdentityUnderLease(context, input),
   });
 }
 
-async function bindLineIdentityUnderLease(input: {
+async function bindLineIdentityUnderLease(context: AccountWriteContext, input: {
   userId: string;
   lineUserId: string;
   lineDisplayName: string;
@@ -1205,7 +1325,7 @@ async function bindLineIdentityUnderLease(input: {
     },
   };
 
-  await upsertAccountRecord(updatedAccount);
+  await upsertAccountRecord(context, updatedAccount);
   return updatedAccount;
 }
 
@@ -1228,7 +1348,20 @@ export async function findSessionById(id: string): Promise<SessionRecord | null>
   return sessions.find((session) => session.id === id) || null;
 }
 
-export async function createSession(userId: string | null): Promise<SessionRecord> {
+/**
+ * POR-1 — mint a session.
+ *
+ * An account-linked session IS a credential for that account, so creating one is governed exactly
+ * like writing the account: without this, a stale request could mint a fresh live session for a
+ * person whose deletion had already closed the gate.
+ *
+ * An anonymous session (`userId === null`) is not a credential for anyone and needs no context.
+ */
+export async function createSession(
+  context: AccountWriteContext | null,
+  userId: string | null,
+): Promise<SessionRecord> {
+  if (userId) assertAccountWriteContext(context, userId);
   const session: SessionRecord = {
     id: createId("sess"),
     userId,
@@ -1238,7 +1371,7 @@ export async function createSession(userId: string | null): Promise<SessionRecor
 
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
-    await putSharedSessionRecord(session);
+    await putSharedSessionRecord(context, session);
     return session;
   }
 
@@ -1248,11 +1381,31 @@ export async function createSession(userId: string | null): Promise<SessionRecor
   return session;
 }
 
+/**
+ * POR-1 — update a session record.
+ *
+ * A session is account-linked state, and `touchSession` is how an account gets BOUND to one. So an
+ * account-linked touch requires a live write context, exactly like an account write: a stale cookie
+ * arriving after a deletion must not be able to re-create the session that names the erased person.
+ *
+ * An ANONYMOUS touch (no account on the session, and none being attached) needs no context. It
+ * carries no identity, so there is nothing for a deletion to race with — and requiring a lease for it
+ * would mean taking one on every anonymous page view.
+ */
 export async function touchSession(
+  context: AccountWriteContext | null,
   id: string,
   userId?: string | null,
   principalLanding?: SessionPrincipalLanding | null,
 ): Promise<SessionRecord | null> {
+  const attachesAccount =
+    (typeof userId === "string" && userId.length > 0) ||
+    Boolean(principalLanding && (principalLanding.legacyAccountId || principalLanding.principalId));
+  if (attachesAccount) {
+    // Account-linked: the context is mandatory, and it must name the account being attached.
+    assertAccountWriteContext(context, userId || principalLanding?.legacyAccountId || undefined);
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     const session = await getSharedSessionById(id);
@@ -1267,7 +1420,7 @@ export async function touchSession(
       principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
       updatedAt: nowIso(),
     };
-    await putSharedSessionRecord(updatedSession);
+    await putSharedSessionRecord(context, updatedSession);
     return updatedSession;
   }
 
@@ -1453,6 +1606,13 @@ async function upsertPasswordResetToken(record: PasswordResetTokenRecord) {
   return record;
 }
 
+/**
+ * POR-1 — issuing a password-reset token is an account-linked write.
+ *
+ * A live reset token is a credential: minting one for an account whose deletion has begun would hand
+ * out a way back into an identity that is being erased, and the token object would then have to be
+ * chased down by the erasure that had already enumerated its targets. Fenced like any other.
+ */
 export async function createPasswordResetToken(input: {
   accountId: string;
   email: string;
@@ -1462,6 +1622,18 @@ export async function createPasswordResetToken(input: {
     throw new Error("placeholder_email_not_resettable");
   }
 
+  return withAccountMutationLease({
+    accountId: input.accountId,
+    operation: "password_reset_issue",
+    execute: () => createPasswordResetTokenUnderLease(input),
+  });
+}
+
+async function createPasswordResetTokenUnderLease(input: {
+  accountId: string;
+  email: string;
+  expiresInMinutes?: number;
+}) {
   const token = randomBytes(32).toString("base64url");
   const createdAt = nowIso();
   const expiresAt = new Date(Date.now() + (input.expiresInMinutes || 60) * 60 * 1000).toISOString();
@@ -1535,6 +1707,14 @@ export async function validatePasswordResetToken(token: string) {
   };
 }
 
+/**
+ * POR-1 — account recovery: validate the token, rewrite the password, retire the tokens.
+ *
+ * The whole sequence is one window. `updateAccountPassword` takes its own lease, and that lease
+ * covers only the password write — so a recovery whose token was validated before a deletion started
+ * could still retire tokens against an account mid-erasure. The outer window closes that, and the
+ * inner call reuses this context rather than opening a second one.
+ */
 export async function consumePasswordResetToken(token: string, password: string) {
   const validation = await validatePasswordResetToken(token);
 
@@ -1542,7 +1722,19 @@ export async function consumePasswordResetToken(token: string, password: string)
     return validation;
   }
 
-  const updatedAccount = await updateAccountPassword(validation.account.id, password);
+  return withAccountMutationLease({
+    accountId: validation.account.id,
+    operation: "account_recovery",
+    execute: (context) => consumePasswordResetTokenUnderLease(context, validation.account.id, password),
+  });
+}
+
+async function consumePasswordResetTokenUnderLease(
+  context: AccountWriteContext,
+  accountId: string,
+  password: string,
+) {
+  const updatedAccount = await updateAccountPassword(accountId, password, context);
 
   if (!updatedAccount) {
     return { ok: false as const, reason: "invalid_token" as const };
@@ -1550,7 +1742,7 @@ export async function consumePasswordResetToken(token: string, password: string)
 
   const allTokens = await listPasswordResetTokens();
   const relatedActiveTokens = allTokens.filter(
-    (entry) => entry.accountId === validation.account.id && entry.usedAt === null,
+    (entry) => entry.accountId === accountId && entry.usedAt === null,
   );
   const usedAt = nowIso();
 

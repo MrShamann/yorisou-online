@@ -17,13 +17,35 @@
 /** Root of the shared object store. Owned here so the scope rule and the store cannot disagree. */
 export const SHARED_STORE_PREFIX = "phase1";
 
+// POR-1 — two families added deliberately, because the erasure inventory named them and the adapter
+// could not reach them.
+//
+// `consultations/` and `line-events/` are account-LINKED rather than identity-DEFINING: they cannot
+// be logged into, so they were outside the original five. But a completed deletion that left a
+// person's consultations and their LINE event history in the bucket has not deleted that person, it
+// has only made them unable to log in and look. Each is named individually here, and each object is
+// still addressed by an id taken from the frozen manifest — never by a listing and never by a prefix
+// sweep, so this remains an allowlist of families rather than a licence over a subtree.
 export const IDENTITY_KEY_PREFIXES = [
   `${SHARED_STORE_PREFIX}/accounts/by-id/`,
   `${SHARED_STORE_PREFIX}/accounts/by-email/`,
   `${SHARED_STORE_PREFIX}/accounts/by-line-user/`,
   `${SHARED_STORE_PREFIX}/sessions/`,
   `${SHARED_STORE_PREFIX}/password-resets/`,
+  `${SHARED_STORE_PREFIX}/consultations/`,
+  `${SHARED_STORE_PREFIX}/line-events/`,
 ] as const;
+
+/**
+ * The one object in `line-events/` that must NEVER be deleted by the adapter.
+ *
+ * `admin-recent-subjects.json` is a SHARED array holding entries for every LINE subject, so deleting
+ * it to erase one person's entries would erase everyone's. It is pruned in place instead, which is a
+ * write rather than a delete — and this constant is what stops a future caller from reaching for the
+ * simpler, wrong operation.
+ */
+export const SHARED_LINE_SUBJECT_INDEX_KEY =
+  `${SHARED_STORE_PREFIX}/line-events/admin-recent-subjects.json` as const;
 
 export type IdentityKeyRejection = "identity_key_invalid" | "identity_key_out_of_scope";
 
@@ -34,6 +56,9 @@ export function classifyIdentityKey(key: string): IdentityKeyRejection | null {
   // allowed prefix cannot climb back out of it.
   if (key.includes("..") || key.includes("//")) return "identity_key_invalid";
   if (!IDENTITY_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))) return "identity_key_out_of_scope";
+  // The shared LINE-subject index is inside an allowed family and is still not deletable: one
+  // person's erasure must not take everyone else's entries with it.
+  if (key === SHARED_LINE_SUBJECT_INDEX_KEY) return "identity_key_out_of_scope";
   return null;
 }
 

@@ -18,19 +18,31 @@ import "server-only";
 //
 // The lease must be taken BEFORE the read. Taking it just before the write leaves exactly the
 // window this exists to close.
+//
+// This module is also the ONLY place that mints an account-write context. That is what turns the
+// fence from a discipline into a mechanism: the low-level writers require a context, contexts exist
+// only for the duration of a lease, and nothing else can make one.
 
 import { rpc } from "./assessmentAttemptStore";
 import { isPor1CapabilityEnabled } from "./por1RuntimeControls";
 import { resolveFenceMode } from "./accountMutationFenceRollout";
+import {
+  mintAccountWriteContext,
+  revokeAccountWriteContext,
+  type AccountDeletionContext,
+  type AccountMutationContext,
+  type AccountMutationOperation,
+  type AccountProvisioningContext,
+  type AccountWriteContext,
+} from "./accountWriteContext";
 
-export type AccountMutationOperation =
-  | "support_profile_update"
-  | "password_update"
-  | "line_binding"
-  | "account_profile_update"
-  | "identity_mirror_sync"
-  | "session_identity_upgrade"
-  | "account_recovery";
+export type { AccountMutationOperation } from "./accountWriteContext";
+export type {
+  AccountWriteContext,
+  AccountMutationContext,
+  AccountProvisioningContext,
+  AccountDeletionContext,
+} from "./accountWriteContext";
 
 /** Bounded refusal reasons. None of them names a person, a key or a store. */
 export type AccountMutationDenial =
@@ -116,11 +128,15 @@ async function release(leaseId: string): Promise<void> {
 }
 
 /**
- * Run an account mutation under a lease.
+ * Run an account mutation under a lease, with a live write context.
  *
  * `execute` must contain the ENTIRE stale-data window — the read, the transform and every write it
  * implies (account record, email index, LINE index, identity mirror). If any part of that happens
  * outside, the fence has a hole exactly the width of the part left outside.
+ *
+ * The context handed to `execute` is revoked the moment this returns, so it cannot be stashed and
+ * replayed. Every low-level writer demands one, which is what makes "the whole window" enforceable
+ * rather than merely requested.
  *
  * Throws `AccountMutationDenied` when the account is closed to ordinary writes. Callers should
  * surface a bounded refusal; they must never retry past it or fall back to an unguarded write.
@@ -130,7 +146,34 @@ export async function withAccountMutationLease<T>(input: {
   operation: AccountMutationOperation;
   /** Bound to the platform request ceiling; a longer lease would outlive the process holding it. */
   ttlSeconds?: number;
-  execute: () => Promise<T>;
+  execute: (context: AccountMutationContext) => Promise<T>;
+}): Promise<T> {
+  return runUnderLease({ ...input, kind: "mutation" }) as Promise<T>;
+}
+
+/**
+ * The same window, for the creation of an account that does not exist yet.
+ *
+ * Kept distinct from a mutation because the questions differ: "may I create this?" is answered by an
+ * open gate on a brand-new id, while "may I still change this?" is answered by a deletion that may
+ * already be running. Sharing one context type would let a provisioning path be used to re-create an
+ * account whose deletion had already begun.
+ */
+export async function withAccountProvisioningLease<T>(input: {
+  accountId: string;
+  operation: AccountMutationOperation;
+  ttlSeconds?: number;
+  execute: (context: AccountProvisioningContext) => Promise<T>;
+}): Promise<T> {
+  return runUnderLease({ ...input, kind: "provisioning" }) as Promise<T>;
+}
+
+async function runUnderLease<T>(input: {
+  accountId: string;
+  operation: AccountMutationOperation;
+  ttlSeconds?: number;
+  kind: "mutation" | "provisioning";
+  execute: (context: never) => Promise<T>;
 }): Promise<T> {
   const mode = resolveFenceMode({
     schemaReady: accountMutationFenceSchemaReady(),
@@ -141,16 +184,44 @@ export async function withAccountMutationLease<T>(input: {
     // Deletion can run but the fence cannot. Refusing the write is the only safe answer.
     throw new AccountMutationDenied("account_mutation_unavailable");
   }
+
   if (mode === "legacy_no_schema") {
-    // Deployments that predate the fence migration keep their exact previous behaviour, and make no
+    // Deployments that predate the fence migration keep their exact previous behaviour and make no
     // RPC call — a call that cannot succeed must not be attempted just to be caught.
-    return input.execute();
+    //
+    // A context is still minted and still revoked. The low-level writers require one unconditionally,
+    // because a guard that is only active in some deployments is a guard nobody can reason about;
+    // here it carries no lease, and the fence's ORDERING guarantee is simply absent, exactly as it
+    // was before the migration existed.
+    const context = mintAccountWriteContext({
+      kind: input.kind,
+      accountId: input.accountId,
+      operation: input.operation,
+      leaseId: null,
+      generation: 0,
+    });
+    try {
+      return await input.execute(context as never);
+    } finally {
+      revokeAccountWriteContext(context);
+    }
   }
 
   const lease = await begin(input.accountId, input.operation, input.ttlSeconds ?? 30);
+  const context = mintAccountWriteContext({
+    kind: input.kind,
+    accountId: input.accountId,
+    operation: input.operation,
+    leaseId: lease.leaseId,
+    generation: lease.generation,
+  });
   try {
-    return await input.execute();
+    return await input.execute(context as never);
   } finally {
+    // Revoke BEFORE releasing. If the order were reversed there would be a window in which the gate
+    // considers the writer gone while a captured context could still authorise a write — small, but
+    // it is the same window the whole fence exists to close.
+    revokeAccountWriteContext(context);
     await release(lease.leaseId);
   }
 }
@@ -161,26 +232,6 @@ export type MutationGateStatus = {
   activeLeases: number;
   drained: boolean;
 };
-
-/**
- * Deletion side: stop new writers, then wait for the ones already inside.
- *
- * Returns `drained: true` only when the gate is closed AND no lease remains. The caller must not
- * erase anything until that is true — an in-flight writer has to finish before its target is
- * destroyed, not after.
- */
-export async function closeAccountMutationGate(accountId: string): Promise<MutationGateStatus> {
-  const result = await rpc<MutationGateStatus>("yorisou_account_deletion_close_mutation_gate", {
-    p_owner_account_id: accountId,
-  });
-  const row = Array.isArray(result) ? result[0] : result;
-  return {
-    gateState: row?.gateState ?? "open",
-    generation: row?.generation ?? 1,
-    activeLeases: row?.activeLeases ?? 0,
-    drained: row?.drained === true,
-  };
-}
 
 export async function readMutationGateStatus(accountId: string): Promise<MutationGateStatus> {
   const result = await rpc<MutationGateStatus>("yorisou_account_deletion_mutation_gate_status", {
@@ -195,20 +246,83 @@ export async function readMutationGateStatus(accountId: string): Promise<Mutatio
   };
 }
 
-/** Record the last completed stage, and the irreversible crossing as a durable fact. */
-export async function markDeletionCursor(
-  accountId: string,
-  cursor: "identity_verified" | "mutation_draining" | "locked" | "database_erasure" | "storage_erasure" | "identity_erasure" | "verifying",
-  irreversible = false,
-): Promise<void> {
-  await rpc<string>("yorisou_account_deletion_mark_cursor", {
-    p_owner_account_id: accountId,
-    p_cursor: cursor,
-    p_irreversible: irreversible,
-  });
-}
-
 /** At completion the gate stops naming a person, exactly as the deletion job does. */
 export async function finalizeAccountMutationGate(accountId: string): Promise<void> {
   await rpc<boolean>("yorisou_account_mutation_gate_finalize", { p_owner_account_id: accountId });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE DELETION EXECUTOR'S OWN CONTEXT.
+//
+// The executor writes too — it places the account hold and revokes sessions — and those writes must
+// be governed as strictly as any other. They cannot take a mutation lease: by then the gate is
+// deliberately closed, and a deletion that had to lease against its own closed gate could never run.
+//
+// So the authority is the EXECUTOR CLAIM instead. The context is minted per stage and revoked when
+// the stage ends, so a captured reference cannot authorise a write at a later stage either.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function withAccountDeletionContext<T>(input: {
+  accountId: string;
+  operation: AccountMutationOperation;
+  execute: (context: AccountDeletionContext) => Promise<T>;
+}): Promise<T> {
+  const context = mintAccountWriteContext({
+    kind: "deletion",
+    accountId: input.accountId,
+    operation: input.operation,
+    leaseId: null,
+    generation: 0,
+  });
+  try {
+    return await input.execute(context as AccountDeletionContext);
+  } finally {
+    revokeAccountWriteContext(context);
+  }
+}
+
+/**
+ * THE ONE-TIME LEGACY BOOTSTRAP.
+ *
+ * Copying the pre-shared-store JSON files into the object store is a write to every account at once,
+ * on a store that by definition contains none of them yet. There is no deletion to race — no account
+ * exists to be deleted — and taking a lease per record would mean thousands of round-trips to defend
+ * against a case that cannot occur.
+ *
+ * It still gets a context rather than a bypass, because the low-level writers must never have a
+ * "sometimes no context" path: the guarantee that every account-linked write names its authority is
+ * worth more than the one call site it costs here. Named narrowly and deliberately so that reaching
+ * for it in a request path reads as obviously wrong.
+ */
+export async function withLegacyBootstrapContext<T>(
+  accountId: string,
+  execute: (context: AccountWriteContext) => Promise<T>,
+): Promise<T> {
+  // Minted per RECORD, with that record's real id. A single wildcard context covering the whole
+  // migration would need `assertAccountWriteContext` to accept "any account", and that exemption
+  // would then exist for every other caller too.
+  const context = mintAccountWriteContext({
+    kind: "provisioning",
+    accountId,
+    operation: "account_registration",
+    leaseId: null,
+    generation: 0,
+  });
+  try {
+    return await execute(context);
+  } finally {
+    revokeAccountWriteContext(context);
+  }
+}
+
+/**
+ * Escape hatch for reads that must happen outside any window.
+ *
+ * Deliberately NOT exported as a context factory — it returns nothing. It exists so the intent of
+ * "this path performs no account-linked write" can be stated where a reader would otherwise wonder
+ * why there is no context.
+ */
+export const ACCOUNT_WRITE_CONTEXT_NOT_REQUIRED = Symbol("por1.readOnlyAccountPath");
+
+/** Re-exported for the guard tests, which assert the runtime set matches the SQL constraint. */
+export { ACCOUNT_MUTATION_OPERATIONS } from "./accountWriteContext";
+export { AccountWriteContextViolation, assertAccountWriteContext } from "./accountWriteContext";
