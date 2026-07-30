@@ -142,33 +142,60 @@ observable):
 - The durable failure recorded only `identity_residue` with no family, costing a deploy-and-rerun
   cycle per diagnosis. It now records the families.
 
-## ⛔ OPEN DEFECT — the account record survives its own deletion on the isolated transport
+## Erasure correctness — three CTO findings fixed, one defect isolated
 
-Blocks the WS8 rerun and therefore WS9+. This is an ordinary implementation defect, not a blocker.
+**Fixed at `9847559`, each confirmed against repository truth before changing anything:**
 
-**Evidence, at `04b8a5e`:**
+- **The LINE lookup was never deleted.** The store writes `accounts/by-line-user/<sha256(lineUserId)>`;
+  deletion built `accounts/by-line/<raw lineUserId>`. Erasing a LINE-bound account left the real
+  index — a live login route to a deleted person — and put a RAW LINE id in an object key. The
+  allowlist named the same fiction. No acceptance identity had ever been LINE-bound, so nothing
+  caught it.
+- **The retry re-locked, and the lock is an UPSERT.** `executeDeletion` treated `failed_retryable`
+  exactly like `identity_verified`, so a retry re-ran `setAccountDeletionLock` — a read-modify-upsert
+  that rewrites the account record and its email index from a stale copy. Past the irreversible
+  boundary that resurrects what was just deleted. Retries now resume without re-locking.
+- **Existence could not fail safely.** `sharedIdentityObjectExists` caught every error and answered
+  `false`, so a timeout, 403, 429, 5xx or malformed response all read as "gone" — the one wrong
+  answer that lets a deletion finalize over data it never removed. `false` now means proven absent;
+  anything undetermined throws.
+
+**Hypothesis REJECTED:** `ensureSharedStoreReady()` cannot re-seed in `supabase-rest` mode —
+`getSharedStoreClient()` returns null and `migrateLegacyFilesToSharedStore()` returns immediately.
+
+### ⛔ OPEN — the residue is CONCURRENCY-dependent
+
+Isolated by bisection, and this is the fact the next session should start from:
 
 ```
-state            : failed_retryable
-last_error_code  : identity_residue:account_record,account_resolvable
+accountDeletion.spec.ts, --workers=1  → 10 passed
+full train,              --workers=2  → identity_residue:account_record,account_resolvable
 ```
 
-- The saga is behaving correctly: it refuses to finalize because it cannot prove the erasure. It has
-  never claimed a completion it did not earn.
-- `email_lookup` is NOT in the residue, so `deleteSharedIdentityObject` works on the same code path
-  for the index. Only the primary record survives.
-- Bounded retry (5 attempts over ~4s) does NOT clear it, so it is not a short consistency lag.
-- A hand-run curl probe of the same flow DID delete the record (count 1 → 0) and denied re-login.
-  Whatever the cause is, it distinguishes the test's flow from the probe's.
+Also established by direct probe against the hosted deployment: a plain deletion completes, and a
+deletion after request→cancel completes. Neither the data shape nor the cancel path reproduces it.
 
-**Leading hypothesis, unverified:** something re-creates the account record after deletion —
-`ensureSharedStoreReady()` re-seeding from local data on a cold function instance is the first thing
-to rule out. Do not act on this without checking it; two earlier guesses in this area each cost a
-deploy cycle.
+So an account record is being written back by a CONCURRENT in-flight request that loaded it before
+the lock. That is exactly the stale-write resurrection the CTO directive anticipates, and the fix is
+the ordinary-account-mutation guard: once the durable deletion state is at or past `locked`, every
+ordinary account write is denied — support profile, password, LINE binding, upsert, session upgrade,
+recovery — with only the deletion executor's own narrow lock/delete operations permitted.
 
-**Next step.** Instrument or read `getSharedAccountById` / `ensureSharedStoreReady` on the
-supabase-rest path before changing anything, then rerun `npm run test:por1-deletion` and the hosted
-`accountDeletion.spec.ts` at the fixed SHA, then the full train.
+Do NOT attempt this with a request-body flag or a generic privileged upsert.
+
+## Remaining CTO sequence (D onward)
+
+```
+D. stale-write mutation guard          <- START HERE; the isolated defect above
+B. durable retry cursor migration      (forward-only, after 202607300003)
+E. canonical key module (lib/server/sharedIdentityKeys.ts)
+G. complete deletion target inventory  (password-resets, consultations, LINE events/index)
+H. durable target manifest             (resume without re-reading a deleted account)
+J. focused isolated-store transport proof, per family
+K. fully populated deletion lifecycle  (LINE-bound, multi-session, reset token, consultation)
+L. complete exact-SHA hosted train
+M-W. cleanup, bucket audit, WS9 promotion delta, rehearsal, merge, activation, closeout
+```
 
 ## Not yet done — exact remaining sequence
 
@@ -226,8 +253,10 @@ implement → flags OFF → apply additive Production migration → verify old a
 ## CONTINUATION_CURSOR
 
 ```
-next_action: resolve the open defect above (account record survives deletion on the isolated
-  transport), then rerun the full hosted train at the fixed SHA, then WS9.
+next_action: D — the ordinary-account-mutation guard. The residue is concurrency-dependent
+  (serial 10/10, concurrent fails); a stale in-flight write resurrects the account after the lock.
+last_full_train: 86 passed / 2 failed at 9847559 (both failures are the same residue defect).
+last_serial_deletion_run: 10/10 at 9847559.
 preview_isolation_state: REPAIRED and proven at object level. All three Preview scopes isolated.
   Permanent runtime guard + acceptance gate + env audit in place.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
