@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 
 import { expect, type Page } from "@playwright/test";
 
@@ -391,4 +391,260 @@ export async function countDeletionAuditRowsInPreviewDb(jobFingerprint: string):
   if (!response.ok) throw new Error(`preview_db_read_failed_${response.status}`);
   const rows = (await response.json()) as unknown[];
   return rows.length;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// POR-1 — ISOLATED PREVIEW IDENTITY-STORE ACCESS.
+//
+// The deletion acceptance has to prove that objects are GONE, and "gone" is a statement about the
+// store, not about what a route chose to show. So this reads the isolated Preview bucket directly.
+//
+// Two things it is NOT. It is not a way to manufacture product state that the app could not reach —
+// everything the acceptance asserts on is created through real routes, with one deliberate,
+// documented exception below. And it is not reachable from the application: these helpers live in
+// the test process, read their key from the environment, and never appear in a shipped bundle.
+//
+// Keys are derived exactly as the runtime derives them. A verification that computed its own key
+// scheme would prove that the test's scheme is empty, which is not the question.
+// ═════════════════════════════════════════════════════════════════════════════
+
+const STORE_PREFIX = "phase1";
+
+function previewStore(): { base: string; bucket: string; key: string } | null {
+  const base = (process.env.YORISOU_SHARED_STORE_ENDPOINT || "").replace(/\/$/, "");
+  const bucket = process.env.YORISOU_SHARED_STORE_BUCKET || "";
+  const key = process.env.YORISOU_SHARED_STORE_SECRET_ACCESS_KEY || "";
+  if (!base || !bucket || !key) return null;
+  return { base, bucket, key };
+}
+
+export function previewStoreConfigured(): boolean {
+  return previewStore() !== null;
+}
+
+function storeHeaders(extra: Record<string, string> = {}) {
+  const config = previewStore();
+  if (!config) throw new Error("preview_store_not_configured");
+  return { apikey: config.key, Authorization: `Bearer ${config.key}`, ...extra };
+}
+
+export async function readStoreObject<T>(key: string): Promise<T | null> {
+  const config = previewStore();
+  if (!config) throw new Error("preview_store_not_configured");
+  const res = await fetch(`${config.base}/object/${config.bucket}/${key}`, {
+    method: "GET",
+    headers: storeHeaders(),
+    cache: "no-store",
+  });
+  if (res.status === 404 || res.status === 400) return null;
+  if (!res.ok) throw new Error(`store_read_failed:${res.status}`);
+  const text = await res.text();
+  return text ? (JSON.parse(text) as T) : null;
+}
+
+export async function writeStoreObject<T>(key: string, value: T): Promise<void> {
+  const config = previewStore();
+  if (!config) throw new Error("preview_store_not_configured");
+  const res = await fetch(`${config.base}/object/${config.bucket}/${key}`, {
+    method: "POST",
+    headers: storeHeaders({ "Content-Type": "application/json", "x-upsert": "true" }),
+    body: JSON.stringify(value, null, 2) + "\n",
+  });
+  if (!res.ok) throw new Error(`store_write_failed:${res.status}`);
+}
+
+export async function storeObjectExists(key: string): Promise<boolean> {
+  return (await readStoreObject(key)) !== null;
+}
+
+export async function listStoreKeys(prefix: string): Promise<string[]> {
+  const config = previewStore();
+  if (!config) throw new Error("preview_store_not_configured");
+  const folder = prefix.replace(/\/$/, "");
+  const keys: string[] = [];
+  let offset = 0;
+  for (;;) {
+    const res = await fetch(`${config.base}/object/list/${config.bucket}`, {
+      method: "POST",
+      headers: storeHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ prefix: `${folder}/`, limit: 1000, offset }),
+    });
+    if (!res.ok) throw new Error(`store_list_failed:${res.status}`);
+    const entries = (await res.json()) as { name: string; id: string | null }[];
+    for (const entry of entries) if (entry.id) keys.push(`${folder}/${entry.name}`);
+    if (entries.length < 1000) break;
+    offset += 1000;
+  }
+  return keys;
+}
+
+// ── Key derivations, mirroring lib/server/yorisouData.ts exactly ──────────────
+export const storeKeys = {
+  account: (id: string) => `${STORE_PREFIX}/accounts/by-id/${id}.json`,
+  emailLookup: (email: string) =>
+    `${STORE_PREFIX}/accounts/by-email/${createHash("sha256").update(email.trim().toLowerCase()).digest("hex")}.json`,
+  lineLookup: (lineUserId: string) =>
+    `${STORE_PREFIX}/accounts/by-line-user/${createHash("sha256").update(lineUserId).digest("hex")}.json`,
+  session: (id: string) => `${STORE_PREFIX}/sessions/${id}.json`,
+  passwordReset: (tokenHash: string) => `${STORE_PREFIX}/password-resets/${tokenHash}.json`,
+  consultation: (id: string) => `${STORE_PREFIX}/consultations/${id}.json`,
+  lineEvent: (id: string) => `${STORE_PREFIX}/line-events/${id}.json`,
+  recentLineSubjects: () => `${STORE_PREFIX}/line-events/admin-recent-subjects.json`,
+  // The foundation prefix is `phase1/foundation-v1`, not `phase1/foundation`. Getting this wrong
+  // makes every foundation assertion vacuously pass against an empty listing — which is exactly how
+  // the missing Preview transport stayed invisible.
+  foundationUserProfile: (id: string) => `${STORE_PREFIX}/foundation-v1/user-profiles/${id}.json`,
+  foundationAuthIdentity: (id: string) => `${STORE_PREFIX}/foundation-v1/auth-identities/${id}.json`,
+  foundationUserProfiles: () => `${STORE_PREFIX}/foundation-v1/user-profiles`,
+  foundationAuthIdentities: () => `${STORE_PREFIX}/foundation-v1/auth-identities`,
+};
+
+/**
+ * THE ONE DELIBERATE EXCEPTION: binding a LINE identity onto a synthetic account.
+ *
+ * Every other piece of state in this suite is created through a real route. A LINE binding cannot
+ * be, because it requires a genuine LINE OAuth authorization code from a real person's LINE
+ * account — there is no product path that reaches it with synthetic credentials, and inventing one
+ * would be a far worse idea than this.
+ *
+ * So the binding is written into the isolated Preview store using the runtime's own key derivations
+ * and record shape, producing exactly the state a real LINE login would leave. It is called out
+ * here rather than hidden inside a helper named something else, because a reader deserves to know
+ * which part of the fixture is a real flow and which part is a stand-in.
+ *
+ * A LINE-BOUND account is not optional coverage: the LINE lookup key was wrong for the entire life
+ * of the deletion adapter, and no test caught it precisely because no acceptance identity had ever
+ * been LINE-bound.
+ */
+export async function bindLineIdentityInPreviewStore(
+  accountId: string,
+  lineUserId: string,
+): Promise<void> {
+  const account = await readStoreObject<Record<string, unknown>>(storeKeys.account(accountId));
+  if (!account) throw new Error("account_not_found_in_preview_store");
+  const now = new Date().toISOString();
+
+  await writeStoreObject(storeKeys.account(accountId), {
+    ...account,
+    lineUserId,
+    lineConnectedAt: now,
+    lineIdTokenSubject: lineUserId,
+    updatedAt: now,
+    supportProfile: {
+      ...((account.supportProfile as Record<string, unknown>) ?? {}),
+      lineBindingStatus: "connected",
+      lineDisplayName: "POR1検証LINE",
+    },
+  });
+  await writeStoreObject(storeKeys.lineLookup(lineUserId), {
+    accountId,
+    lineUserId,
+    updatedAt: now,
+  });
+}
+
+/** A LINE user id shaped like the real thing: `U` plus 32 hex characters. */
+export function syntheticLineUserId(): string {
+  return `U${randomBytes(16).toString("hex")}`;
+}
+
+/**
+ * Establish LINE ACTIVITY for a subject: a LINE event record and an entry in the shared
+ * recent-subject index.
+ *
+ * Two paths, and which one ran is REPORTED rather than hidden.
+ *
+ * The real route is preferred and is signed exactly as LINE signs it, so the signature check — the
+ * thing that makes a public webhook safe — is exercised rather than bypassed. But the isolated
+ * Preview environment deliberately holds NO LINE channel secret: Preview is not a LINE tenant, and
+ * giving it a real messaging credential to make a test more elegant would be a worse trade than any
+ * test is worth. Without the secret the route answers 401, correctly.
+ *
+ * So when there is no secret, the two records are written into the isolated Preview store using the
+ * runtime's own key derivations and record shapes — producing exactly the state a delivered webhook
+ * would leave. The erasure inventory names LINE events and the recent-subject index explicitly, and
+ * skipping them because the environment is awkward would leave the least-tested families untested.
+ */
+export type LineActivityOrigin = "signed_webhook" | "seeded_store";
+
+export async function establishLineActivity(
+  baseUrl: string,
+  lineUserId: string,
+  accountId: string,
+): Promise<{ origin: LineActivityOrigin; eventId: string; status: number }> {
+  const secret = process.env.LINE_MESSAGING_CHANNEL_SECRET || process.env.LINE_CHANNEL_SECRET || "";
+  const eventId = `por1-${randomUUID()}`;
+  const now = new Date().toISOString();
+
+  if (secret) {
+    const body = JSON.stringify({
+      destination: "por1-acceptance",
+      events: [
+        {
+          type: "message",
+          mode: "active",
+          timestamp: Date.now(),
+          source: { type: "user", userId: lineUserId },
+          webhookEventId: eventId,
+          deliveryContext: { isRedelivery: false },
+          message: { id: `${Date.now()}`, type: "text", text: "POR-1 受入" },
+        },
+      ],
+    });
+    const signature = createHmac("sha256", secret).update(body).digest("base64");
+    const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    const response = await fetch(`${baseUrl}/api/line/webhook`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-line-signature": signature,
+        ...(bypass ? { "x-vercel-protection-bypass": bypass } : {}),
+      },
+      body,
+    });
+    if (response.ok) return { origin: "signed_webhook", eventId, status: response.status };
+    // A signed request that is still refused means the deployment's secret differs from the one
+    // here. Fall through to seeding rather than reporting a product failure for an env mismatch.
+  }
+
+  const record = {
+    id: eventId,
+    accountId,
+    lineUserId,
+    sourceType: "user",
+    eventType: "message",
+    messageType: "text",
+    messageText: "POR-1 受入",
+    postbackData: null,
+    replyTokenPresent: false,
+    replyStatus: "not_attempted" as const,
+    replyError: null,
+    webhookEventId: eventId,
+    deliveryMode: "active",
+    isRedelivery: false,
+    eventTimestamp: now,
+    receivedAt: now,
+  };
+  await writeStoreObject(storeKeys.lineEvent(eventId), record);
+
+  const existing =
+    (await readStoreObject<Record<string, unknown>[]>(storeKeys.recentLineSubjects())) ?? [];
+  await writeStoreObject(storeKeys.recentLineSubjects(), [
+    {
+      eventId,
+      webhookEventId: eventId,
+      lineUserId,
+      accountId,
+      sourceType: "user",
+      eventType: "message",
+      messageType: "text",
+      messageText: "POR-1 受入",
+      postbackData: null,
+      eventTimestamp: now,
+      receivedAt: now,
+    },
+    ...existing,
+  ]);
+
+  return { origin: "seeded_store", eventId, status: 0 };
 }

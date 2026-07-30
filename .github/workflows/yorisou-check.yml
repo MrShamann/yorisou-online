@@ -123,6 +123,7 @@ jobs:
         run: |
           npm run test:por1-fence
           npm run test:por1-context
+          npm run test:por1-transport
 
       - name: POR-1 identity scope, deletion lock and store boundary
         run: |
