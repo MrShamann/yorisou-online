@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 
+import { resolveSharedStoreMode } from "../yorisouData";
+
 // POR-1 — THE FOUNDATION STORE AND THE IDENTITY STORE MUST SPEAK THE SAME TRANSPORT.
 //
 // THE DEFECT THIS EXISTS TO PREVENT, WHICH HAD ALREADY HAPPENED.
@@ -99,5 +101,38 @@ test("foundation deletion removes the record under EVERY read prefix", () => {
     /getFoundationReadPrefixes\(\)/,
     "a record written under the legacy prefix and deleted only under the primary one still resolves " +
       "on read — which is an erasure that leaves the login route intact",
+  );
+});
+
+test("the PRODUCTION configuration still resolves to plain AWS — this change is a no-op there", () => {
+  // Production sets a bucket and a region and NOTHING else: no store endpoint, no store-specific
+  // access keys. It authenticates with the ambient AWS credentials, exactly as the old foundation
+  // client did.
+  //
+  // Asserted because the fix has to be provably inert where it is not needed. A transport change
+  // that quietly re-pointed Production's identity mirror would be far worse than the Preview gap it
+  // was written to close.
+  assert.equal(
+    resolveSharedStoreMode({
+      bucket: "yorisou-phase1-shared-prod-20260321",
+      endpoint: "",
+      accessKeyId: "",
+      secretAccessKey: "",
+      forcePathStyle: false,
+    }),
+    "aws",
+  );
+
+  // And the isolated Preview shape — bucket + Supabase storage endpoint + a service token — resolves
+  // to the REST mode the foundation store previously could not speak.
+  assert.equal(
+    resolveSharedStoreMode({
+      bucket: "yorisou-preview-auth",
+      endpoint: "https://nbltsbonsnbpfptihomc.supabase.co/storage/v1",
+      accessKeyId: "",
+      secretAccessKey: "service-token",
+      forcePathStyle: false,
+    }),
+    "supabase-rest",
   );
 });
