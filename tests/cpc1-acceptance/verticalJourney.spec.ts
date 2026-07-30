@@ -54,7 +54,18 @@ async function readCurrentAttempt(page: Page): Promise<Attempt | null> {
  * hydration or a hidden intro screen.
  */
 async function startAttempt(page: Page): Promise<Attempt> {
+  // The mount probe (GET /api/assessment/attempts) is issued by client-side JS, so its response
+  // proves React has hydrated. A click before hydration lands on inert server HTML and silently
+  // does nothing — on a loaded worker that race is real (observed hosted: the same click fired
+  // POST on one run and nothing on the next).
+  const hydrated = page
+    .waitForResponse(
+      (r) => r.url().includes("/api/assessment/attempts") && r.request().method() === "GET",
+      { timeout: 30_000 },
+    )
+    .catch(() => null);
   await page.goto("/check-in", { waitUntil: "domcontentloaded" });
+  await hydrated;
 
   const begin = page
     .locator("button", { hasText: /いま色テストをはじめる|続きからはじめる/ })
