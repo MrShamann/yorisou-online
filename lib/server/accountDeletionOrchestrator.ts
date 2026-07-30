@@ -155,11 +155,23 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
   try {
     let state: DeletionState = status.state;
 
-    if (state === "identity_verified" || state === "failed_retryable") {
+    // THE HOLD IS PLACED ONCE, ON THE WAY IN — NEVER ON A RETRY.
+    //
+    // `setAccountDeletionLock` is a read-modify-UPSERT of the account record. Running it on a
+    // retry, after erasure has already begun, would rewrite the primary identity (and its email
+    // index) from a stale in-memory copy — resurrecting the very record the saga had just deleted,
+    // then deleting it again, forever. A retry must resume from where it failed; it must not walk
+    // back through a step that writes identity.
+    const firstEntry = state === "identity_verified";
+    if (firstEntry) {
       state = (await advance(accountId, "locked")) as DeletionState;
       // Hold the account BEFORE anything irreversible runs. A failure here must abort the run:
       // erasing while the account can still authenticate is the one ordering we cannot allow.
       await setAccountDeletionLock(accountId, true);
+    } else if (state === "failed_retryable") {
+      // Resume without re-locking. Past the irreversible boundary the DURABLE JOB — not a rewritten
+      // object-store record — is the authority for refusing authentication.
+      state = (await advance(accountId, "locked")) as DeletionState;
     }
 
     if (state === "locked") {

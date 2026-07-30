@@ -903,12 +903,45 @@ export async function deleteSharedIdentityObject(key: string): Promise<void> {
 }
 
 /** Existence probe used only to VERIFY erasure before finalization. */
+/**
+ * Existence probe used ONLY to verify erasure — and therefore strict.
+ *
+ * It used to catch every error and answer `false`. A timeout, a 403, a 429, a 5xx or a malformed
+ * response all became "the object is gone", which is the one wrong answer that lets a deletion
+ * finalize over data it never removed. `false` now means PROVEN ABSENT and nothing else; anything
+ * undetermined throws, and the saga moves to `failed_retryable` rather than declaring success.
+ *
+ * It also does NOT go through `sharedReadJson`, which folds HTTP 400 into `null` — convenient for
+ * an ordinary read, fatal for a proof.
+ */
 export async function sharedIdentityObjectExists(key: string): Promise<boolean> {
   assertIdentityKey(key);
+
+  if (sharedStoreMode === "supabase-rest") {
+    const response = await fetch(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`, {
+      method: "GET",
+      headers: sharedRestHeaders(),
+      cache: "no-store",
+    });
+    if (response.status === 404) return false;
+    if (response.ok) return true;
+    if (response.status === 400) {
+      // Supabase answers 400 for some missing-object shapes. Accept ONLY an explicit not-found
+      // classification — a malformed request also returns 400 and must not read as absence.
+      const body = await response.text().catch(() => "");
+      if (/not[_ -]?found|NoSuchKey|Object not found/i.test(body)) return false;
+      throw new Error("shared_store_existence_undetermined:400");
+    }
+    throw new Error(`shared_store_existence_undetermined:${response.status}`);
+  }
+
   try {
     return (await sharedReadJson<unknown>(key)) !== null;
-  } catch {
-    return false;
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "";
+    // Only a provider not-found is absence; everything else is undetermined.
+    if (/NoSuchKey|NotFound|404/i.test(code)) return false;
+    throw new Error("shared_store_existence_undetermined");
   }
 }
 

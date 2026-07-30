@@ -48,8 +48,18 @@ function sessionRecordKey(sessionId: string) {
   return `${SHARED_PREFIX}/sessions/${sessionId}.json`;
 }
 
+/**
+ * The LINE lookup key, derived exactly as the runtime writer derives it.
+ *
+ * This was wrong: deletion built `accounts/by-line/<raw lineUserId>` while the store writes
+ * `accounts/by-line-user/<sha256(lineUserId)>`. So deleting a LINE-bound account left the real
+ * index in place — a live login route to an erased person — and the deletion adapter was putting a
+ * RAW LINE user id into an object key, which the hashed form exists to avoid. No test caught it
+ * because no acceptance identity had ever been LINE-bound.
+ */
 function lineUserLookupKey(lineUserId: string) {
-  return `${SHARED_PREFIX}/accounts/by-line/${lineUserId}.json`;
+  const digest = createHash("sha256").update(lineUserId).digest("hex");
+  return `${SHARED_PREFIX}/accounts/by-line-user/${digest}.json`;
 }
 
 /**

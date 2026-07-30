@@ -61,3 +61,29 @@ test("assertIdentityKey throws the classification, so callers cannot silently co
   assert.throws(() => assertIdentityKey("phase1/sessions/../x"), /identity_key_invalid/);
   assert.doesNotThrow(() => assertIdentityKey("phase1/sessions/abc.json"));
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The allowlist must name the key families that actually exist.
+//
+// It named `accounts/by-line/`, which no writer has ever used, while the real family —
+// `accounts/by-line-user/<sha256(lineUserId)>` — sat outside it. So the guard authorised a
+// fiction and refused the truth, and deleting a LINE-bound account left the live index behind.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("the LINE family in the allowlist is the hashed one the store actually writes", () => {
+  assert.equal(classifyIdentityKey(`${SHARED_STORE_PREFIX}/accounts/by-line-user/abc123.json`), null);
+  assert.equal(
+    classifyIdentityKey(`${SHARED_STORE_PREFIX}/accounts/by-line/U1234567890.json`),
+    "identity_key_out_of_scope",
+    "the unhashed family is not a real key family and must not be authorised",
+  );
+});
+
+test("a raw LINE user id can never be a valid lookup key", () => {
+  // LINE ids start with `U`. The hashed family is 64 hex chars; a raw id is not, and the point of
+  // hashing is that the id never appears in a key at all.
+  assert.equal(
+    classifyIdentityKey(`${SHARED_STORE_PREFIX}/accounts/by-line/Udeadbeefdeadbeefdeadbeef.json`),
+    "identity_key_out_of_scope",
+  );
+});

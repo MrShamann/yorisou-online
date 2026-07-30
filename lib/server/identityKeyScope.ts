@@ -7,6 +7,10 @@
 // So the scope is an allowlist of the five identity families, and everything else is refused —
 // including anything that tries to escape a family with traversal or an empty path segment.
 //
+// The `by-line-user` prefix is the REAL one. An earlier version of this list named
+// `accounts/by-line/`, which no writer has ever used — so the allowlist happily authorised a key
+// family that did not exist while the family that did was outside it.
+//
 // This lives outside `yorisouData` (and without `server-only`) so the permanent tests exercise the
 // REAL rule rather than a copy of it that can drift.
 
@@ -16,7 +20,7 @@ export const SHARED_STORE_PREFIX = "phase1";
 export const IDENTITY_KEY_PREFIXES = [
   `${SHARED_STORE_PREFIX}/accounts/by-id/`,
   `${SHARED_STORE_PREFIX}/accounts/by-email/`,
-  `${SHARED_STORE_PREFIX}/accounts/by-line/`,
+  `${SHARED_STORE_PREFIX}/accounts/by-line-user/`,
   `${SHARED_STORE_PREFIX}/sessions/`,
   `${SHARED_STORE_PREFIX}/password-resets/`,
 ] as const;
