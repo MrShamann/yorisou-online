@@ -20,6 +20,8 @@ import "server-only";
 // window this exists to close.
 
 import { rpc } from "./assessmentAttemptStore";
+import { isPor1CapabilityEnabled } from "./por1RuntimeControls";
+import { resolveFenceMode } from "./accountMutationFenceRollout";
 
 export type AccountMutationOperation =
   | "support_profile_update"
@@ -54,6 +56,32 @@ function classify(error: unknown): AccountMutationDenial {
   // Fail CLOSED. If the fence cannot be consulted we do not know whether a deletion is running, and
   // "we could not check" must never read as "go ahead".
   return "account_mutation_unavailable";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEMA READINESS IS NOT ACTIVATION.
+//
+// The fence RPCs live in a Preview-only migration. The current Production-lineage CI databases do
+// not have them, so requiring a lease unconditionally broke authenticated login there — YV-1 and
+// DCI-1 went red, and downstream 422s became 401s. That is a rollout-ordering problem, not a reason
+// to soften the fence.
+//
+// So readiness (does the schema exist?) and activation (may deletion run?) are separate facts:
+//
+//   ready=false, executor=off → exact legacy behaviour, no RPC call at all
+//   ready=false, executor=on  → FAIL CLOSED before any identity mutation
+//   ready=true                → leases mandatory; every failure is a denial
+//
+// Turning the deletion executor OFF must never turn the fence off once the schema is deployed:
+// an emergency kill switch that reopened ordinary writes against an in-flight deletion would
+// reintroduce the exact resurrection this exists to stop.
+//
+// This is infrastructure readiness, deliberately NOT a fifth user-facing capability — it must not
+// appear in the four POR-1 controls or in the flag-off baseline equivalence gate.
+const SCHEMA_READY_ENV = "YORISOU_POR1_ACCOUNT_MUTATION_FENCE_SCHEMA_READY";
+
+export function accountMutationFenceSchemaReady(): boolean {
+  return process.env[SCHEMA_READY_ENV] === "on";
 }
 
 type LeaseHandle = { leaseId: string; generation: number };
@@ -104,6 +132,21 @@ export async function withAccountMutationLease<T>(input: {
   ttlSeconds?: number;
   execute: () => Promise<T>;
 }): Promise<T> {
+  const mode = resolveFenceMode({
+    schemaReady: accountMutationFenceSchemaReady(),
+    deletionExecutorEnabled: isPor1CapabilityEnabled("ACCOUNT_DELETION_EXECUTOR"),
+  });
+
+  if (mode === "fail_closed") {
+    // Deletion can run but the fence cannot. Refusing the write is the only safe answer.
+    throw new AccountMutationDenied("account_mutation_unavailable");
+  }
+  if (mode === "legacy_no_schema") {
+    // Deployments that predate the fence migration keep their exact previous behaviour, and make no
+    // RPC call — a call that cannot succeed must not be attempted just to be caught.
+    return input.execute();
+  }
+
   const lease = await begin(input.accountId, input.operation, input.ttlSeconds ?? 30);
   try {
     return await input.execute();

@@ -53,6 +53,7 @@
     "test:por1-controls": "node --import tsx --test lib/server/__tests__/por1RuntimeControls.test.ts",
     "audit:por1-preview-env-isolation": "node scripts/por1-preview-env-isolation-audit.mjs",
     "gate:por1-flag-off-baseline": "node scripts/por1-flag-off-baseline-equivalence.mjs",
+    "test:por1-fence": "node --import tsx --test lib/server/__tests__/por1MutationFenceRollout.test.ts",
     "test:por1-boundary": "node --import tsx --test lib/server/__tests__/por1SharedStoreBoundary.test.ts",
     "test:por1-deletion": "node --import tsx --test lib/server/__tests__/por1AccountDeletionLock.test.ts lib/server/__tests__/por1IdentityKeyScope.test.ts"
   },

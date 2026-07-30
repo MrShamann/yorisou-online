@@ -201,6 +201,40 @@ records that erasure never began. At completion the gate stops naming a person, 
 Verified locally: tsc 0 · build ok · ESLint 0 errors · por1-deletion 17/17 · por1-boundary 13/13 ·
 migration scope 31/31.
 
+### CORRECTION — remote CI at `36eb903` was NOT green
+
+I reported five green workflows. Verified at that HEAD:
+
+```
+success  Migration Scope Guard · Yorisou Check · CPV1-CM0 CI
+failure  YV-1 CI · DCI-1 CI
+```
+
+Both failed in the authenticated full-stack harness with
+`AccountMutationDenied: account_mutation_unavailable` — the fence RPCs live in a Preview-only
+migration and the current Production-lineage CI databases do not have them, so login failed and
+downstream 422s became 401s. I had carried the status forward instead of checking it at my own HEAD.
+
+### Rollout compatibility — schema readiness is NOT activation
+
+`lib/server/accountMutationFenceRollout.ts` (pure, tested directly):
+
+```
+ready=false, executor=off → legacy_no_schema  (exact previous behaviour, NO RPC attempted)
+ready=false, executor=on  → fail_closed       (deletion can run, fence cannot — refuse the write)
+ready=true,  executor=off → fenced            (kill-switching DELETION must not reopen writes)
+ready=true,  executor=on  → fenced
+```
+
+Readiness is `YORISOU_POR1_ACCOUNT_MUTATION_FENCE_SCHEMA_READY` — a deployment FACT, never inferred
+from a runtime error. A missing RPC, schema-cache miss, timeout or 5xx is not evidence of an old
+schema, so none of them grants permission to write. Set to `on` for the POR-1 Preview branch, which
+has `202607300004` applied; absent everywhere else, which is what restores YV-1 and DCI-1 without
+softening the fence. Deliberately NOT a fifth capability — infrastructure readiness, so it stays out
+of the four controls and the flag-off baseline gate.
+
+4 permanent tests (`npm run test:por1-fence`).
+
 ### ⛔ NOT YET DONE — the fence is not yet proven
 
 The pieces exist and are consistent, but the concurrency proof has NOT been run. Do not treat the
@@ -208,13 +242,22 @@ fence as verified.
 
 Outstanding before the hosted train:
 
-1. **Deterministic concurrency test with explicit barriers** (not sleeps): worker A takes a lease
+0. **CI must be re-verified remotely.** The readiness contract is the intended fix for YV-1/DCI-1
+   but has NOT yet been confirmed on a remote run.
+1. **Durable cursor is recorded but NOT authoritative.** `failed_retryable` still closes the gate and
+   advances to `locked` regardless of the stage it failed at, so `execution_cursor` is written and
+   never read. Needs `202607300005` with one unambiguous "next stage that must execute" meaning.
+2. **Deterministic concurrency test with explicit barriers** (not sleeps): worker A takes a lease
    and pauses before its write; worker B closes the gate and must stay in `mutation_draining`; A
    writes and releases; B drains, closes, erases, verifies absence. Plus: begin-denied-after-draining,
    begin-denied-after-completion via fingerprint, crashed-lease drain after execution grace,
    old-generation replay, and zero identity-store writes during `verifying`.
-2. **Remaining write paths** — `identityService` (`upsertAccountRecord` at :553,
-   `updateSupportProfile` at :384) and `createAccount` are NOT yet leased.
+3. **Remaining write paths, more than previously stated.** `ensureCanonicalUserForAccount` writes
+   UserProfile + email AuthIdentity + LINE AuthIdentity directly; `updateCanonicalSupportProfile`
+   saves the foundation profile BEFORE the leased compatibility update, so one lease does not cover
+   the whole read-transform-write window; LINE binding and LINE-primary provisioning write foundation
+   identity directly; and `getViewerContext` / principal-landing migration / session binding still
+   call `touchSession` unfenced, which can recreate a session during deletion.
 3. **Source guard** failing on raw `upsertAccountRecord` calls from unapproved modules.
 4. Then: durable target manifest, full identity inventory (password-resets, consultations, LINE
    events/index, foundation mirrors), canonical key module, transport proof per family, fully
