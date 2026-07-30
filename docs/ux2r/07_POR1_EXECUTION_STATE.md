@@ -98,57 +98,77 @@ applied to Preview and smoke-tested end to end.
   Both failure modes were exercised deliberately (helper imported but not called; capability
   mis-assigned) and the gate rejects each.
 
-## ⛔ BLOCKER — the Preview identity store is not isolated on this branch
+## Preview identity isolation — REPAIRED (CTO decision, not a Founder decision)
 
-Found while attempting the WS8 synthetic-identity cleanup. **Production promotion (WS9-WS11) must
-not proceed until a Founder decision resolves this.**
+The earlier classification of this as a Founder decision was wrong and was corrected by the CTO.
+The scope architecture was already authorized; only the engineering remained.
 
-What is verified, by direct observation:
+**What was wrong.** The isolated Preview store was configured as a BRANCH-SCOPED Vercel variable
+set. Every other Preview branch inherited a Preview-wide default naming the Production bucket with
+no endpoint, which `resolveSharedStoreMode` maps to plain AWS S3. Preview wrote account identities
+there while its assessment records went to the isolated Preview database. Nothing failed.
 
-1. Registering an account against this branch's hosted Preview **succeeds**.
-2. **No object appears** under `phase1/accounts/by-id` in `yorisou-preview-auth` — the only bucket
-   that exists on the isolated Preview Supabase project (`nbltsbonsnbpfptihomc`). Verified by listing
-   the bucket immediately before and after a registration.
-3. For branch `feat/ux2-integrated-core-experience`, `vercel env pull --environment=preview` resolves
-   `YORISOU_SHARED_STORE_BUCKET` to **`yorisou-phase1-shared-prod-20260321`**, region `us-east-2`,
-   with **no** `YORISOU_SHARED_STORE_ENDPOINT` at that scope.
-4. `resolveSharedStoreMode` maps "bucket set, endpoint absent" to mode **`aws`** — real AWS S3 via
-   the default credential chain — not to the isolated Supabase Storage transport.
-5. The MPV-1 isolation variables (`YORISOU_SHARED_STORE_ENDPOINT`, `_SECRET_ACCESS_KEY`, and the
-   `yorisou-preview-auth` bucket) are scoped **only** to branch `feat/mpv-1-isolated-hosted-preview`.
+**What was done.**
 
-The conclusion this supports: **every Preview branch except `feat/mpv-1-isolated-hosted-preview`
-falls back to the production-named identity bucket.** Assessment records go to the isolated Preview
-Postgres; account identities do not go with them.
+1. Branch-scoped isolated store configured for `feat/ux2-integrated-core-experience`.
+2. `lib/server/sharedStoreBoundary.ts` — the boundary as a property of the code, asserted at module
+   initialization so it throws before the first identity write. 13 permanent tests
+   (`npm run test:por1-boundary`), the first of which is the exact configuration that shipped.
+3. `/api/build-identity` attests `sharedStoreMode` / `sharedStoreBoundary` / `sharedStoreProjectMatch`
+   — bounded, non-secret. The acceptance identity gate reads it BEFORE registering anyone.
+4. Preview-wide default replaced with the isolated store. All three Preview scopes now verified:
+   `(default)`, `feat/ux2-integrated-core-experience`, `feat/mpv-1-isolated-hosted-preview` →
+   `yorisou-preview-auth`. Production and Development scopes untouched.
+5. `npm run audit:por1-preview-env-isolation` — operator-runnable matrix audit. Bucket and endpoint
+   are now stored readable (they are infrastructure identifiers, not secrets) so the audit can
+   actually check them; an encrypted one is a FAILURE, not a note. The first version of this script
+   passed on exactly the two scopes that mattered — corrected before commit.
 
-Not proven directly: the AWS key value returned by `vercel env pull` is empty locally, so the bucket
-could not be listed from here to confirm the objects landed in it. Points 1-5 are observations;
-point 6 is the inference they support, and it is stated as an inference.
+**Proof, at deployment `8b7c323`:** attestation `isolated-preview`, project match true. Register →
+account/email/session objects appear in `yorisou-preview-auth`; governed deletion → all gone;
+re-login 401. A branch with NO override resolves to the isolated store (verified by resolving the
+effective variable set, which is the same mechanism a deployment uses — Vercel did not auto-deploy
+the throwaway branch, so this is a configuration-resolution proof, not a running-deployment one).
 
-**Consequences that must not be glossed over.**
+**Defects the repair made visible** (each existed before; the production bucket was simply never
+observable):
 
-- The acceptance runs in this package created `@synthetic-preview.invalid` identities. If the
-  inference is right, those identities were written to the production-named bucket, and the ones the
-  deletion lifecycle erased were erased from it.
-- "Production untouched" can still be said of the Production **database** (`main @ c8d8a8ad`,
-  12 migrations, canonical objects absent — re-verified). It **cannot** currently be said of the
-  identity store.
-- The WS8 acceptance result (88/88 at `51f0fb1`) is still a true statement about application
-  behaviour. It is **not** evidence of Preview isolation, and it was never designed to be.
+- Session revocation, target enumeration and erasure verification all matched sessions on `userId`
+  alone, while CPV1 moved session identity into the principal-landing contract. A live session
+  naming a deleted person survived every deletion. Fixed in all three; the orphan left by the
+  pre-fix probe was removed through the adapter by ACCOUNT ID, verified idempotent.
+- Verification trusted the object listing, which is not immediately consistent. Candidates are now
+  confirmed by key.
+- The durable failure recorded only `identity_residue` with no family, costing a deploy-and-rerun
+  cycle per diagnosis. It now records the families.
 
-**What was done about it.** Nothing destructive, and no attempt to "clean up" a store whose identity
-is unconfirmed — deleting from the wrong bucket is exactly the mistake this package exists to make
-impossible. One probe account created during the investigation was removed through the product's own
-deletion flow and its re-login refused (401).
+## ⛔ OPEN DEFECT — the account record survives its own deletion on the isolated transport
 
-**What is needed before WS9.**
+Blocks the WS8 rerun and therefore WS9+. This is an ordinary implementation defect, not a blocker.
 
-1. A Founder decision on whether the shared-store variables should be promoted from branch scope to
-   Preview-wide scope, or set explicitly per branch.
-2. A direct listing of `yorisou-phase1-shared-prod-20260321` with working credentials, to establish
-   exactly which synthetic identities are in it and remove them through the governed path.
-3. Re-run of the WS8 train once isolation is confirmed, so the acceptance evidence and the isolation
-   claim rest on the same configuration.
+**Evidence, at `04b8a5e`:**
+
+```
+state            : failed_retryable
+last_error_code  : identity_residue:account_record,account_resolvable
+```
+
+- The saga is behaving correctly: it refuses to finalize because it cannot prove the erasure. It has
+  never claimed a completion it did not earn.
+- `email_lookup` is NOT in the residue, so `deleteSharedIdentityObject` works on the same code path
+  for the index. Only the primary record survives.
+- Bounded retry (5 attempts over ~4s) does NOT clear it, so it is not a short consistency lag.
+- A hand-run curl probe of the same flow DID delete the record (count 1 → 0) and denied re-login.
+  Whatever the cause is, it distinguishes the test's flow from the probe's.
+
+**Leading hypothesis, unverified:** something re-creates the account record after deletion —
+`ensureSharedStoreReady()` re-seeding from local data on a cold function instance is the first thing
+to rule out. Do not act on this without checking it; two earlier guesses in this area each cost a
+deploy cycle.
+
+**Next step.** Instrument or read `getSharedAccountById` / `ensureSharedStoreReady` on the
+supabase-rest path before changing anything, then rerun `npm run test:por1-deletion` and the hosted
+`accountDeletion.spec.ts` at the fixed SHA, then the full train.
 
 ## Not yet done — exact remaining sequence
 
@@ -206,18 +226,10 @@ implement → flags OFF → apply additive Production migration → verify old a
 ## CONTINUATION_CURSOR
 
 ```
-next_action: BLOCKED. Resolve the Preview identity-store isolation finding above before any
-  Production work. WS8 application acceptance is COMPLETE (88/88 at 51f0fb1, deletion lifecycle
-  included); what is not complete is the synthetic-identity cleanup, because the store it would
-  operate on is not confirmed.
-superseded_next_action: WS8 — Preview exact-SHA terminal acceptance. Set the four YORISOU_POR1_* Preview
-  variables to "on", deploy this branch, confirm the deployed build identity, then run the hosted
-  train including the deletion lifecycle and the User A / User B matrix.
-next_command: apply nothing new to Preview — 202607300002 and
-  202607300003 are ALREADY applied — deploy the branch and run:
-  EXPECTED_GIT_SHA=<sha> PLAYWRIGHT_BASE_URL=<preview-url>
-  VERCEL_AUTOMATION_BYPASS_SECRET=<project bypass> SUPABASE_URL=<preview>
-  SUPABASE_SERVICE_ROLE_KEY=<preview> npm run test:cpc1-acceptance
+next_action: resolve the open defect above (account record survives deletion on the isolated
+  transport), then rerun the full hosted train at the fixed SHA, then WS9.
+preview_isolation_state: REPAIRED and proven at object level. All three Preview scopes isolated.
+  Permanent runtime guard + acceptance gate + env audit in place.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
 rollback_state: nothing to roll back; every change so far is branch-local or Preview-only.
 lock_state: released at session boundary (see lock file).
