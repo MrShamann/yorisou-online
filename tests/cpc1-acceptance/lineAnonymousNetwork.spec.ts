@@ -30,10 +30,13 @@ test.describe("anonymous LINE entry performs no private read", () => {
       }
     });
 
-    await page.goto("/line/mini-app", { waitUntil: "networkidle" });
-    // Client effects and deferred fetches settle after networkidle in practice; give them room
-    // rather than asserting on an instant that may simply be too early to be meaningful.
-    await page.waitForTimeout(2000);
+    // `networkidle` is unreachable on the hosted Preview: the platform keeps live connections
+    // open (Vercel preview tooling), so the page never goes network-quiet and goto times out at
+    // the platform level with zero requests classified. The property under test is the CAPTURE
+    // SET, not idleness — wait for `load`, then give client effects and deferred fetches a fixed,
+    // generous settle window. FORBIDDEN_PATTERNS are unchanged.
+    await page.goto("/line/mini-app", { waitUntil: "load" });
+    await page.waitForTimeout(5000);
 
     expect(observed, `anonymous entry must not read private state: ${observed.join(", ")}`)
       .toEqual([]);

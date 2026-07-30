@@ -102,10 +102,16 @@ test.describe("Japanese copy", () => {
       await page.goto(route, { waitUntil: "domcontentloaded" });
       const body = await page.locator("body").innerText();
 
+      // Compound denials such as 「診断や占いではありません」 put another noun between 診断 and
+      // the negation, so exact substrings miss them. A denial is still a denial: 診断 followed
+      // within the same clause by では{ありません/ない/なく}. Positive claims have no negation and
+      // still fail.
+      const COMPOUND_DENIAL = /診断[^\n。]{0,20}では(ありません|ない|なく)/;
       const offenders: string[] = [];
       for (const sentence of body.split(/[。\n]/)) {
         if (!sentence.includes("診断")) continue;
         if (DENIALS.some((d) => sentence.includes(d))) continue;
+        if (COMPOUND_DENIAL.test(sentence)) continue;
         // A bare navigational/product label such as 「診断一覧」 is not a claim about the reader.
         if (/診断(一覧|履歴|結果ページ)/.test(sentence)) continue;
         offenders.push(sentence.trim().slice(0, 80));

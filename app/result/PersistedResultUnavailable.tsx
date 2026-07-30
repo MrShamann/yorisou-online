@@ -11,9 +11,12 @@ export default function PersistedResultUnavailable() {
         <h1 className="display-serif text-[1.75rem] leading-[1.3] text-[#22201D]">
           この結果は表示できません
         </h1>
+        {/* The concealed state must not enumerate reasons (not-found / expired / erased /
+            unauthorized are indistinguishable by contract) — naming any of them here would be
+            an oracle about a specific result id. State only the access model. */}
         <p className="text-[14px] leading-7 text-[#6F6760]">
-          結果が見つからないか、保存できる期間が過ぎたか、削除された可能性があります。
           結果はご本人だけが見られるようになっています。
+          ご自身の結果は、ログインすると確認できます。
         </p>
         <div className="flex flex-wrap gap-3 pt-2">
           <Link
