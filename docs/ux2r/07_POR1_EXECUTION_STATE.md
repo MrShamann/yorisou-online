@@ -98,6 +98,58 @@ applied to Preview and smoke-tested end to end.
   Both failure modes were exercised deliberately (helper imported but not called; capability
   mis-assigned) and the gate rejects each.
 
+## ⛔ BLOCKER — the Preview identity store is not isolated on this branch
+
+Found while attempting the WS8 synthetic-identity cleanup. **Production promotion (WS9-WS11) must
+not proceed until a Founder decision resolves this.**
+
+What is verified, by direct observation:
+
+1. Registering an account against this branch's hosted Preview **succeeds**.
+2. **No object appears** under `phase1/accounts/by-id` in `yorisou-preview-auth` — the only bucket
+   that exists on the isolated Preview Supabase project (`nbltsbonsnbpfptihomc`). Verified by listing
+   the bucket immediately before and after a registration.
+3. For branch `feat/ux2-integrated-core-experience`, `vercel env pull --environment=preview` resolves
+   `YORISOU_SHARED_STORE_BUCKET` to **`yorisou-phase1-shared-prod-20260321`**, region `us-east-2`,
+   with **no** `YORISOU_SHARED_STORE_ENDPOINT` at that scope.
+4. `resolveSharedStoreMode` maps "bucket set, endpoint absent" to mode **`aws`** — real AWS S3 via
+   the default credential chain — not to the isolated Supabase Storage transport.
+5. The MPV-1 isolation variables (`YORISOU_SHARED_STORE_ENDPOINT`, `_SECRET_ACCESS_KEY`, and the
+   `yorisou-preview-auth` bucket) are scoped **only** to branch `feat/mpv-1-isolated-hosted-preview`.
+
+The conclusion this supports: **every Preview branch except `feat/mpv-1-isolated-hosted-preview`
+falls back to the production-named identity bucket.** Assessment records go to the isolated Preview
+Postgres; account identities do not go with them.
+
+Not proven directly: the AWS key value returned by `vercel env pull` is empty locally, so the bucket
+could not be listed from here to confirm the objects landed in it. Points 1-5 are observations;
+point 6 is the inference they support, and it is stated as an inference.
+
+**Consequences that must not be glossed over.**
+
+- The acceptance runs in this package created `@synthetic-preview.invalid` identities. If the
+  inference is right, those identities were written to the production-named bucket, and the ones the
+  deletion lifecycle erased were erased from it.
+- "Production untouched" can still be said of the Production **database** (`main @ c8d8a8ad`,
+  12 migrations, canonical objects absent — re-verified). It **cannot** currently be said of the
+  identity store.
+- The WS8 acceptance result (88/88 at `51f0fb1`) is still a true statement about application
+  behaviour. It is **not** evidence of Preview isolation, and it was never designed to be.
+
+**What was done about it.** Nothing destructive, and no attempt to "clean up" a store whose identity
+is unconfirmed — deleting from the wrong bucket is exactly the mistake this package exists to make
+impossible. One probe account created during the investigation was removed through the product's own
+deletion flow and its re-login refused (401).
+
+**What is needed before WS9.**
+
+1. A Founder decision on whether the shared-store variables should be promoted from branch scope to
+   Preview-wide scope, or set explicitly per branch.
+2. A direct listing of `yorisou-phase1-shared-prod-20260321` with working credentials, to establish
+   exactly which synthetic identities are in it and remove them through the governed path.
+3. Re-run of the WS8 train once isolation is confirmed, so the acceptance evidence and the isolation
+   claim rest on the same configuration.
+
 ## Not yet done — exact remaining sequence
 
 1. ~~**Account-deletion application layer.**~~ **DONE — see G4.** Original scope, for the record: Orchestrator in `lib/server/` driving the saga; narrow
@@ -154,7 +206,11 @@ implement → flags OFF → apply additive Production migration → verify old a
 ## CONTINUATION_CURSOR
 
 ```
-next_action: WS8 — Preview exact-SHA terminal acceptance. Set the four YORISOU_POR1_* Preview
+next_action: BLOCKED. Resolve the Preview identity-store isolation finding above before any
+  Production work. WS8 application acceptance is COMPLETE (88/88 at 51f0fb1, deletion lifecycle
+  included); what is not complete is the synthetic-identity cleanup, because the store it would
+  operate on is not confirmed.
+superseded_next_action: WS8 — Preview exact-SHA terminal acceptance. Set the four YORISOU_POR1_* Preview
   variables to "on", deploy this branch, confirm the deployed build identity, then run the hosted
   train including the deletion lifecycle and the User A / User B matrix.
 next_command: apply nothing new to Preview — 202607300002 and
