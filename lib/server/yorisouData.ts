@@ -958,18 +958,20 @@ export async function pruneRecentLineWebhookSubjects(
     // contains it, while the prune reports success. Measured on the isolated Preview transport: a
     // GET issued a minute after a successful overwrite still returned the previous version.
     //
-    // So the prune re-reads and repeats until the entries are provably absent. Bounded, because an
-    // erasure that cannot be proven in a few seconds deserves the retryable state the caller gives
-    // it — and a loop that never gives up would hold a deletion open forever.
+    // So the prune re-reads and repeats until the entries are provably absent. The window is sized
+    // from the MEASURED lag on this transport — an overwrite took 5.4 seconds to become visible on
+    // this very key — with room to spare, rather than from a number that felt about right. Still
+    // bounded: an erasure that cannot be proven in a few seconds deserves the retryable state the
+    // caller gives it, and a loop that never gives up would hold a deletion open forever.
     let removed = 0;
-    for (let attempt = 0; attempt < 6; attempt += 1) {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
       const records = await getSharedRecentLineWebhookSubjects();
       const stillPresent = records.filter(matches);
       if (stillPresent.length === 0) return removed;
 
       await putSharedRecentLineWebhookSubjects(records.filter((record) => !matches(record)));
       removed += stillPresent.length;
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
     }
 
     // Refuse to report a clean prune we could not confirm. The caller records a retryable failure and

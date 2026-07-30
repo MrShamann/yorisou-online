@@ -472,13 +472,16 @@ export async function storeObjectExists(key: string): Promise<boolean> {
 export async function readStoreObjectUntil<T>(
   key: string,
   predicate: (value: T | null) => boolean,
-  attempts = 8,
+  // Sized from the measured lag on this transport (5.4s for an overwrite to become visible on the
+  // shared LINE-subject index), not from a guess. A window shorter than the thing it is waiting for
+  // is a flaky test wearing a retry loop.
+  attempts = 20,
 ): Promise<T | null> {
   let value: T | null = null;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     value = await readStoreObject<T>(key);
     if (predicate(value)) return value;
-    await new Promise((resolve) => setTimeout(resolve, 750));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   return value;
 }
