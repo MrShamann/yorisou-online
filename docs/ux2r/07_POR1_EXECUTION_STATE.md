@@ -163,25 +163,62 @@ observable):
 **Hypothesis REJECTED:** `ensureSharedStoreReady()` cannot re-seed in `supabase-rest` mode —
 `getSharedStoreClient()` returns null and `migrateLegacyFilesToSharedStore()` returns immediately.
 
-### ⛔ OPEN — the residue is CONCURRENCY-dependent
+### The mutation fence — implemented (CTO ruling: a pre-write check is TOCTOU-vulnerable)
 
-Isolated by bisection, and this is the fact the next session should start from:
+A check before the write only moves the race — read state, deletion happens, write the stale copy.
+So the database is now the serialization point, under row locks.
 
-```
-accountDeletion.spec.ts, --workers=1  → 10 passed
-full train,              --workers=2  → identity_residue:account_record,account_resolvable
-```
+**`202607300004_por1_account_mutation_fence.sql`** — forward-only, PREVIEW_ONLY, applied to Preview
+and registered in the scope manifest (31 migrations, validator green). Adds:
 
-Also established by direct probe against the hosted deployment: a plain deletion completes, and a
-deletion after request→cancel completes. Neither the data shape nor the cancel path reproduces it.
+- `execution_cursor`, `irreversible_started_at`, `mutation_gate_closed_at` on the deletion job.
+  `failed_retryable` alone could not say WHERE a run failed, which is what let a retry walk back
+  through a stage that writes identity. Irreversibility is now a durable fact, not a state-string
+  inference.
+- `yorisou_account_mutation_gates` — one per account, `open → draining → closed → completed`, with a
+  GENERATION so a lease issued microseconds before a close cannot authorise a write after it.
+- `yorisou_account_mutation_leases` — bounded, content-free, closed enum of operation codes.
+- RPCs: `mutation_begin` / `mutation_release` / `close_mutation_gate` / `mutation_gate_status` /
+  `mark_cursor` / `gate_finalize`. RLS enabled and forced, service_role SELECT only, writes only
+  through the functions.
+- **Execution grace of 180s** before an unreleased lease is abandoned — three times the 60s route
+  ceiling. Expiry alone is not proof that no write can still land; the process may still be running.
 
-So an account record is being written back by a CONCURRENT in-flight request that loaded it before
-the lock. That is exactly the stale-write resurrection the CTO directive anticipates, and the fix is
-the ordinary-account-mutation guard: once the durable deletion state is at or past `locked`, every
-ordinary account write is denied — support profile, password, LINE binding, upsert, session upgrade,
-recovery — with only the deletion executor's own narrow lock/delete operations permitted.
+**Application side.** `lib/server/accountMutationLease.ts` wraps it. `withAccountMutationLease`
+takes the lease BEFORE the read, deliberately: taking it just before the write leaves exactly the
+window this closes. It fails CLOSED — if the fence cannot be consulted, "we could not check" must
+never read as "go ahead".
 
-Do NOT attempt this with a request-body flag or a generic privileged upsert.
+**Wired:** `updateAccountPassword`, `updateSupportProfile`, `bindLineIdentity` (all three are
+read-modify-write, now leased end to end) and the `restoreAccountFromCookie` write in
+`yorisouAuth` — that one is a ready-made resurrection without a lease, since a browser holding a
+stale account cookie could write it back after an erasure.
+
+**Deletion executor:** `identity_verified → close gate → drain → locked → lock marker → erase`.
+When leases are still outstanding it returns retryable WITHOUT erasing anything, and the cursor
+records that erasure never began. At completion the gate stops naming a person, like the job.
+
+Verified locally: tsc 0 · build ok · ESLint 0 errors · por1-deletion 17/17 · por1-boundary 13/13 ·
+migration scope 31/31.
+
+### ⛔ NOT YET DONE — the fence is not yet proven
+
+The pieces exist and are consistent, but the concurrency proof has NOT been run. Do not treat the
+fence as verified.
+
+Outstanding before the hosted train:
+
+1. **Deterministic concurrency test with explicit barriers** (not sleeps): worker A takes a lease
+   and pauses before its write; worker B closes the gate and must stay in `mutation_draining`; A
+   writes and releases; B drains, closes, erases, verifies absence. Plus: begin-denied-after-draining,
+   begin-denied-after-completion via fingerprint, crashed-lease drain after execution grace,
+   old-generation replay, and zero identity-store writes during `verifying`.
+2. **Remaining write paths** — `identityService` (`upsertAccountRecord` at :553,
+   `updateSupportProfile` at :384) and `createAccount` are NOT yet leased.
+3. **Source guard** failing on raw `upsertAccountRecord` calls from unapproved modules.
+4. Then: durable target manifest, full identity inventory (password-resets, consultations, LINE
+   events/index, foundation mirrors), canonical key module, transport proof per family, fully
+   populated hosted lifecycle, and the concurrent exact-SHA train.
 
 ## Remaining CTO sequence (D onward)
 
@@ -253,8 +290,8 @@ implement → flags OFF → apply additive Production migration → verify old a
 ## CONTINUATION_CURSOR
 
 ```
-next_action: D — the ordinary-account-mutation guard. The residue is concurrency-dependent
-  (serial 10/10, concurrent fails); a stale in-flight write resurrects the account after the lock.
+next_action: the deterministic concurrency proof for the mutation fence, then lease the remaining
+  identityService write paths and add the source guard. The fence is implemented but UNPROVEN.
 last_full_train: 86 passed / 2 failed at 9847559 (both failures are the same residue defect).
 last_serial_deletion_run: 10/10 at 9847559.
 preview_isolation_state: REPAIRED and proven at object level. All three Preview scopes isolated.

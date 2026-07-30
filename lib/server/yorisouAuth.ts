@@ -18,6 +18,7 @@ import {
   type SessionRecord,
 } from "@/lib/server/yorisouData";
 import { sessionMayActAsAccount } from "@/lib/server/accountDeletionLock";
+import { withAccountMutationLease } from "@/lib/server/accountMutationLease";
 
 export const SESSION_COOKIE = "yorisou_session";
 export const ACCOUNT_COOKIE = "yorisou_account";
@@ -773,7 +774,14 @@ export async function restoreAccountFromCookie(account: AccountRecord | null) {
     return null;
   }
 
-  await upsertAccountRecord(account);
+  // POR-1 — the cookie-restore path writes the account record, so it takes a lease like any other
+  // ordinary mutation. Without one it is a ready-made resurrection: a browser holding a stale
+  // account cookie could write it back after an erasure.
+  await withAccountMutationLease({
+    accountId: account.id,
+    operation: "identity_mirror_sync",
+    execute: () => upsertAccountRecord(account),
+  });
   return account;
 }
 

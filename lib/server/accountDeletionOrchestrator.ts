@@ -22,6 +22,11 @@ import {
 import { rpc } from "./assessmentAttemptStore";
 import { setAccountDeletionLock } from "./yorisouData";
 import {
+  closeAccountMutationGate,
+  finalizeAccountMutationGate,
+  markDeletionCursor,
+} from "./accountMutationLease";
+import {
   decideAccountAuthentication,
   type AccountAuthenticationDecision,
 } from "./accountDeletionLock";
@@ -164,25 +169,51 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
     // back through a step that writes identity.
     const firstEntry = state === "identity_verified";
     if (firstEntry) {
+      // ── CLOSE THE GATE, THEN DRAIN. This is the fence. ──────────────────────
+      //
+      // Ordinary writes and this erasure race over one record across two systems. Closing stops new
+      // writers; draining waits for the ones already inside. Only when both are true may anything
+      // be destroyed — an in-flight writer must finish BEFORE its target is erased, not after,
+      // because "after" is how a stale copy resurrects a deleted account.
+      await markDeletionCursor(accountId, "mutation_draining");
+      const gate = await closeAccountMutationGate(accountId);
+      if (!gate.drained) {
+        // Not a failure — writers are still finishing. Retry resumes here, and the durable cursor
+        // remembers that erasure never began.
+        await advance(accountId, "failed_retryable", `mutation_draining:${gate.activeLeases}`);
+        return { outcome: "retryable", errorCode: `mutation_gate_${gate.gateState}` };
+      }
+
       state = (await advance(accountId, "locked")) as DeletionState;
-      // Hold the account BEFORE anything irreversible runs. A failure here must abort the run:
-      // erasing while the account can still authenticate is the one ordering we cannot allow.
+      // Hold the account BEFORE anything irreversible runs, and only now — with the gate closed,
+      // nothing else can be mid-write, so this lock upsert cannot race an ordinary mutation.
       await setAccountDeletionLock(accountId, true);
+      await markDeletionCursor(accountId, "locked", true);
     } else if (state === "failed_retryable") {
       // Resume without re-locking. Past the irreversible boundary the DURABLE JOB — not a rewritten
       // object-store record — is the authority for refusing authentication.
+      //
+      // If the earlier run never got past draining, the gate is still the thing to finish.
+      const gate = await closeAccountMutationGate(accountId);
+      if (!gate.drained) {
+        await advance(accountId, "failed_retryable", `mutation_draining:${gate.activeLeases}`);
+        return { outcome: "retryable", errorCode: `mutation_gate_${gate.gateState}` };
+      }
       state = (await advance(accountId, "locked")) as DeletionState;
+      await markDeletionCursor(accountId, "locked", true);
     }
 
     if (state === "locked") {
       // Revoked BEFORE erasure: no live session may observe a partially deleted account.
       await revokeAccountSessions(accountId);
       state = (await advance(accountId, "database_erasure")) as DeletionState;
+      await markDeletionCursor(accountId, "database_erasure", true);
     }
 
     if (state === "database_erasure") {
       await rpc("yorisou_account_deletion_erase_database", { p_owner_account_id: accountId });
       state = (await advance(accountId, "storage_erasure")) as DeletionState;
+      await markDeletionCursor(accountId, "storage_erasure", true);
     }
 
     let targets: IdentityDeletionTargets | null = null;
@@ -196,12 +227,14 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
         await revokeAccountSessions(accountId);
       }
       state = (await advance(accountId, "identity_erasure")) as DeletionState;
+      await markDeletionCursor(accountId, "identity_erasure", true);
     }
 
     if (state === "identity_erasure") {
       targets = targets ?? (await enumerateDeletionTargets(accountId));
       if (targets) await deletePrimaryIdentity(targets);
       state = (await advance(accountId, "verifying")) as DeletionState;
+      await markDeletionCursor(accountId, "verifying", true);
     }
 
     if (state === "verifying") {
@@ -236,6 +269,8 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
       // finalize() re-verifies the database and refuses if anything remains, then replaces the
       // raw account id with a one-way fingerprint. Completion is earned, not asserted.
       await rpc<boolean>("yorisou_account_deletion_finalize", { p_owner_account_id: accountId });
+      // The gate stops naming a person at the same moment the job does.
+      await finalizeAccountMutationGate(accountId);
       return { outcome: "completed" };
     }
 

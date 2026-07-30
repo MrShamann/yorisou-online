@@ -4,6 +4,7 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 
 import { assertIdentityKey, SHARED_STORE_PREFIX } from "./identityKeyScope";
 import { assertSharedStoreEnvironmentBoundary } from "./sharedStoreBoundary";
+import { withAccountMutationLease } from "./accountMutationLease";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -1080,7 +1081,19 @@ export async function upsertAccountRecord(account: AccountRecord): Promise<Accou
   return normalizedAccount;
 }
 
+// POR-1 — every read-modify-write of an account runs under a mutation lease.
+//
+// The lease is taken BEFORE the read, deliberately. Taking it just before the write would leave the
+// exact window this exists to close: read the account, a deletion runs, write the stale copy back.
 export async function updateAccountPassword(userId: string, password: string): Promise<AccountRecord | null> {
+  return withAccountMutationLease({
+    accountId: userId,
+    operation: "password_update",
+    execute: () => updateAccountPasswordUnderLease(userId, password),
+  });
+}
+
+async function updateAccountPasswordUnderLease(userId: string, password: string): Promise<AccountRecord | null> {
   const account = await findAccountById(userId);
 
   if (!account) {
@@ -1119,6 +1132,14 @@ export async function setAccountDeletionLock(userId: string, locked: boolean): P
 }
 
 export async function updateSupportProfile(userId: string, patch: Partial<SupportProfile>): Promise<AccountRecord | null> {
+  return withAccountMutationLease({
+    accountId: userId,
+    operation: "support_profile_update",
+    execute: () => updateSupportProfileUnderLease(userId, patch),
+  });
+}
+
+async function updateSupportProfileUnderLease(userId: string, patch: Partial<SupportProfile>): Promise<AccountRecord | null> {
   const account = await findAccountById(userId);
 
   if (!account) {
@@ -1139,6 +1160,20 @@ export async function updateSupportProfile(userId: string, patch: Partial<Suppor
 }
 
 export async function bindLineIdentity(input: {
+  userId: string;
+  lineUserId: string;
+  lineDisplayName: string;
+  linePictureUrl?: string;
+  lineIdTokenSubject?: string;
+}): Promise<AccountRecord | null> {
+  return withAccountMutationLease({
+    accountId: input.userId,
+    operation: "line_binding",
+    execute: () => bindLineIdentityUnderLease(input),
+  });
+}
+
+async function bindLineIdentityUnderLease(input: {
   userId: string;
   lineUserId: string;
   lineDisplayName: string;
