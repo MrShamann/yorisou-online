@@ -83,3 +83,46 @@ test("a cancelled or pre-erasure job does not block a cookie-restored login", ()
     );
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Session ownership is not `userId` alone.
+//
+// CPV1 moved session identity into the principal-landing contract, and
+// `switchSessionToPrincipalLandingTruth` leaves `userId` null while the contract still names the
+// account. A revocation matching only `userId` left a live session object naming a deleted person.
+// The rule below mirrors `sessionBelongsToAccount` in accountIdentityDeletion; it is asserted here
+// because that module imports `server-only`, and it is asserted END-TO-END by the hosted
+// isolated-store probe, which is what found the miss in the first place.
+// ─────────────────────────────────────────────────────────────────────────────
+
+type LandingLike = { principalId: string; userProfileId: string; legacyAccountId: string | null };
+
+function belongs(session: { userId: string | null; principalLanding?: LandingLike | null }, id: string) {
+  if (session.userId === id) return true;
+  const l = session.principalLanding;
+  return Boolean(l && (l.principalId === id || l.userProfileId === id || l.legacyAccountId === id));
+}
+
+const ACCOUNT = "acct_1785402518337_47ed7b2fa8e6";
+
+test("a session is owned when userId names the account", () => {
+  assert.equal(belongs({ userId: ACCOUNT }, ACCOUNT), true);
+});
+
+test("a session with userId NULL is still owned when the landing contract names the account", () => {
+  // The exact residue the probe found in the isolated bucket after a completed deletion.
+  for (const field of ["principalId", "userProfileId", "legacyAccountId"] as const) {
+    const landing: LandingLike = { principalId: "x", userProfileId: "y", legacyAccountId: null };
+    landing[field] = ACCOUNT as never;
+    assert.equal(belongs({ userId: null, principalLanding: landing }, ACCOUNT), true, field);
+  }
+});
+
+test("an unrelated session is left alone — deletion must not revoke other people", () => {
+  assert.equal(
+    belongs({ userId: null, principalLanding: { principalId: "a", userProfileId: "b", legacyAccountId: "c" } }, ACCOUNT),
+    false,
+  );
+  assert.equal(belongs({ userId: null, principalLanding: null }, ACCOUNT), false);
+  assert.equal(belongs({ userId: null }, ACCOUNT), false);
+});

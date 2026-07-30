@@ -23,6 +23,7 @@ import {
   sharedIdentityObjectExists,
   normalizeAccountEmail,
 } from "./yorisouData";
+import type { SessionRecord } from "./yorisouData";
 
 const SHARED_PREFIX = "phase1";
 
@@ -75,9 +76,33 @@ export async function enumerateDeletionTargets(
  * Idempotent by construction: deleting an already-absent session is success. This runs BEFORE the
  * destructive steps so a half-completed deletion can never be observed through a live session.
  */
+/**
+ * Does this session belong to the account, by ANY of the links the product uses?
+ *
+ * `userId` alone is not the answer. CPV1 moved session identity into the principal-landing
+ * contract, and `switchSessionToPrincipalLandingTruth` leaves `userId` null while the contract
+ * carries `principalId` / `userProfileId` / `legacyAccountId`. A revocation that matched only
+ * `userId` therefore left a live session object naming a deleted person — found by the POR-1
+ * isolated-store probe, which listed the bucket after a completed deletion and found one still
+ * there.
+ *
+ * Matching on every link is the point: a residue check that shares the revocation's blind spot
+ * cannot see what the revocation missed.
+ */
+function sessionBelongsToAccount(session: SessionRecord, accountId: string): boolean {
+  if (session.userId === accountId) return true;
+  const landing = session.principalLanding;
+  if (!landing) return false;
+  return (
+    landing.principalId === accountId ||
+    landing.userProfileId === accountId ||
+    landing.legacyAccountId === accountId
+  );
+}
+
 export async function revokeAccountSessions(accountId: string): Promise<number> {
   const sessions = await listSessions();
-  const owned = sessions.filter((s) => s.userId === accountId);
+  const owned = sessions.filter((session) => sessionBelongsToAccount(session, accountId));
   for (const session of owned) {
     await deleteSession(session.id);
   }
@@ -128,7 +153,7 @@ export async function verifyIdentityErasure(
   }
 
   const sessions = await listSessions();
-  if (sessions.some((s) => s.userId === accountId)) residue.push("sessions");
+  if (sessions.some((session) => sessionBelongsToAccount(session, accountId))) residue.push("sessions");
 
   // The account must be unreachable by its own id — the check a login would make.
   if (await findAccountById(accountId)) residue.push("account_resolvable");
