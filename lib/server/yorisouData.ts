@@ -850,6 +850,59 @@ async function migrateLegacyFilesToSharedStore() {
   } satisfies MigrationState);
 }
 
+// ── POR-1: narrow identity-lifecycle primitives ─────────────────────────────
+//
+// Exported ONLY for the account-deletion adapter, which derives every key from stored account
+// data. There is deliberately no exported list-and-delete pair and no caller-supplied key path:
+// a generic object-deletion capability reachable from the app is a much larger risk than the
+// deletion problem it would solve. The guard below refuses anything outside the identity prefixes
+// so a future caller cannot widen this by accident.
+
+const IDENTITY_KEY_PREFIXES = [
+  `${SHARED_PREFIX}/accounts/by-id/`,
+  `${SHARED_PREFIX}/accounts/by-email/`,
+  `${SHARED_PREFIX}/accounts/by-line/`,
+  `${SHARED_PREFIX}/sessions/`,
+  `${SHARED_PREFIX}/password-resets/`,
+];
+
+function assertIdentityKey(key: string) {
+  if (key.includes("..") || key.includes("//")) {
+    throw new Error("identity_key_invalid");
+  }
+  if (!IDENTITY_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))) {
+    throw new Error("identity_key_out_of_scope");
+  }
+}
+
+/** Delete one identity object. Missing is success — deletion is idempotent by contract. */
+export async function deleteSharedIdentityObject(key: string): Promise<void> {
+  assertIdentityKey(key);
+  try {
+    await sharedDeleteJson(key);
+  } catch (error) {
+    // A missing object is the desired end state, not a failure to retry.
+    const code = error instanceof Error ? error.message : "";
+    if (/not.?found|NoSuchKey|404/i.test(code)) return;
+    throw error;
+  }
+}
+
+/** Existence probe used only to VERIFY erasure before finalization. */
+export async function sharedIdentityObjectExists(key: string): Promise<boolean> {
+  assertIdentityKey(key);
+  try {
+    return (await sharedReadJson<unknown>(key)) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/** The same normalization the email index is built from, so deletion targets the right digest. */
+export function normalizeAccountEmail(email: string): string {
+  return normalizeEmail(email);
+}
+
 export async function listAccounts(): Promise<AccountRecord[]> {
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
