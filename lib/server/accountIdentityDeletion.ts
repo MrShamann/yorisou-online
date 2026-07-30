@@ -44,38 +44,14 @@ function accountEmailLookupKey(email: string) {
   return `${SHARED_PREFIX}/accounts/by-email/${digest}.json`;
 }
 
+function sessionRecordKey(sessionId: string) {
+  return `${SHARED_PREFIX}/sessions/${sessionId}.json`;
+}
+
 function lineUserLookupKey(lineUserId: string) {
   return `${SHARED_PREFIX}/accounts/by-line/${lineUserId}.json`;
 }
 
-/**
- * Enumerate what this account owns, from the stored record only.
- *
- * Returns null when the account is already absent — which is a legitimate resumption state, not a
- * failure: a job that crashed after deleting the identity must be able to finish.
- */
-export async function enumerateDeletionTargets(
-  accountId: string,
-): Promise<IdentityDeletionTargets | null> {
-  const account = await findAccountById(accountId);
-  if (!account) return null;
-
-  const sessions = await listSessions();
-  return {
-    accountRecordKey: accountRecordKey(account.id),
-    emailLookupKey: account.email ? accountEmailLookupKey(account.email) : null,
-    lineLookupKey: account.lineUserId ? lineUserLookupKey(account.lineUserId) : null,
-    // Session ownership comes from the stored session records, never from a caller-supplied list.
-    sessionIds: sessions.filter((s) => s.userId === accountId).map((s) => s.id),
-  };
-}
-
-/**
- * Revoke every session for the account.
- *
- * Idempotent by construction: deleting an already-absent session is success. This runs BEFORE the
- * destructive steps so a half-completed deletion can never be observed through a live session.
- */
 /**
  * Does this session belong to the account, by ANY of the links the product uses?
  *
@@ -100,6 +76,35 @@ function sessionBelongsToAccount(session: SessionRecord, accountId: string): boo
   );
 }
 
+/**
+ * Enumerate what this account owns, from the stored record only.
+ *
+ * Returns null when the account is already absent — which is a legitimate resumption state, not a
+ * failure: a job that crashed after deleting the identity must be able to finish.
+ */
+export async function enumerateDeletionTargets(
+  accountId: string,
+): Promise<IdentityDeletionTargets | null> {
+  const account = await findAccountById(accountId);
+  if (!account) return null;
+
+  const sessions = await listSessions();
+  return {
+    accountRecordKey: accountRecordKey(account.id),
+    emailLookupKey: account.email ? accountEmailLookupKey(account.email) : null,
+    lineLookupKey: account.lineUserId ? lineUserLookupKey(account.lineUserId) : null,
+    // Session ownership comes from the stored session records, never from a caller-supplied list —
+    // and by EVERY link, not `userId` alone. This had the same blind spot as the revocation.
+    sessionIds: sessions.filter((session) => sessionBelongsToAccount(session, accountId)).map((s) => s.id),
+  };
+}
+
+/**
+ * Revoke every session for the account.
+ *
+ * Idempotent by construction: deleting an already-absent session is success. This runs BEFORE the
+ * destructive steps so a half-completed deletion can never be observed through a live session.
+ */
 export async function revokeAccountSessions(accountId: string): Promise<number> {
   const sessions = await listSessions();
   const owned = sessions.filter((session) => sessionBelongsToAccount(session, accountId));
@@ -152,8 +157,21 @@ export async function verifyIdentityErasure(
     residue.push("line_lookup");
   }
 
+  // Sessions are confirmed by KEY, not by trusting the listing.
+  //
+  // The object-store list is not immediately consistent: on the isolated Preview transport a list
+  // issued milliseconds after a delete still returned the deleted session, and the saga refused to
+  // finalize over a phantom. Listing is the right way to FIND candidates — a session created after
+  // enumeration would otherwise be missed — but only a direct existence probe can say whether one
+  // is really still there.
   const sessions = await listSessions();
-  if (sessions.some((session) => sessionBelongsToAccount(session, accountId))) residue.push("sessions");
+  const candidates = sessions.filter((session) => sessionBelongsToAccount(session, accountId));
+  for (const candidate of candidates) {
+    if (await sharedIdentityObjectExists(sessionRecordKey(candidate.id))) {
+      residue.push("sessions");
+      break;
+    }
+  }
 
   // The account must be unreachable by its own id — the check a login would make.
   if (await findAccountById(accountId)) residue.push("account_resolvable");
