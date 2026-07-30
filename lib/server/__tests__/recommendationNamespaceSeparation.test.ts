@@ -117,16 +117,35 @@ test("no migration conceals a collision with a bare create-if-not-exists on a sh
   );
 });
 
-test("the Preview chain ends on the canonical names, with the corrective migration last", () => {
+test("no migration after the rename reintroduces the pre-rename names", () => {
+  // The invariant is ORDERING, not position: once the corrective migration has renamed the family,
+  // nothing later in the chain may create or address the pre-rename names, or a fresh chain would
+  // not converge on the canonical family. Later migrations MAY (and do) use the canonical names.
   const dir = "supabase/preview-only-migrations";
   const files = readdirSync(join(ROOT, dir)).filter((f) => f.endsWith(".sql")).sort();
   const corrective = files.find((f) => f.includes("por1_canonical_recommendation_namespace"));
   assert.ok(corrective, "the POR-1 corrective migration must be present in the Preview chain");
-  assert.equal(
-    files[files.length - 1],
-    corrective,
-    "the rename must be the LAST Preview migration, otherwise a later migration could recreate the " +
-      "pre-rename names and the fresh chain would not converge on the canonical family",
+
+  // DDL is the thing that must not happen. DML against the LEGACY family remains legitimate —
+  // account deletion, for one, must remove a person's rows from both the legacy and the canonical
+  // family, so a blanket ban on mentioning the names would forbid correct code.
+  const after = files.slice(files.indexOf(corrective!) + 1);
+  const offenders: string[] = [];
+  for (const file of after) {
+    const source = readFileSync(join(ROOT, dir, file), "utf8");
+    for (const table of LEGACY_TABLES) {
+      const ddl = new RegExp(
+        `(create\\s+table|alter\\s+table|rename\\s+to)\\s+(if\\s+not\\s+exists\\s+)?(public\\.)?${table}\\b`,
+        "i",
+      );
+      if (ddl.test(source)) offenders.push(`${file} → ${table}`);
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    "a migration ordered after the rename must not create, alter or rename the pre-rename names — " +
+      "that would resurrect the collision a fresh chain is supposed to have left behind",
   );
 
   const source = readFileSync(join(ROOT, dir, corrective!), "utf8");
@@ -145,10 +164,12 @@ test("the Preview chain ends on the canonical names, with the corrective migrati
 test("applied Preview migrations were not rewritten to perform the rename", () => {
   // POR-1 §3: the rename is forward-only. If an already-applied migration were edited to use the
   // canonical names, its checksum would change and a fresh chain would diverge from the applied one.
+  // Only migrations ordered BEFORE the rename are suspect: a canonical name in one of those could
+  // only have got there by editing history. Migrations after the rename legitimately use them.
   const dir = "supabase/preview-only-migrations";
-  for (const file of readdirSync(join(ROOT, dir))) {
-    if (!file.endsWith(".sql")) continue;
-    if (file.includes("por1_canonical_recommendation_namespace")) continue;
+  const files = readdirSync(join(ROOT, dir)).filter((f) => f.endsWith(".sql")).sort();
+  const corrective = files.findIndex((f) => f.includes("por1_canonical_recommendation_namespace"));
+  for (const file of files.slice(0, corrective)) {
     const source = readFileSync(join(ROOT, dir, file), "utf8");
     assert.deepEqual(
       referencesCanonical(source),
