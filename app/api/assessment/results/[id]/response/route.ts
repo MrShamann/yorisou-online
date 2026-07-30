@@ -84,7 +84,9 @@ export async function POST(request: Request, context: Context) {
     if (code === "interpretation_intent_conflict") {
       return NextResponse.json({ error: "interpretation_intent_conflict" }, { status: 409 });
     }
-    if (code === "result_not_found" || code === "result_not_owned") {
+    // Erased is deliberately in the same bucket: an erased record must be indistinguishable
+    // from one that never existed, byte-for-byte, or the response becomes an erasure oracle.
+    if (code === "result_not_found" || code === "result_not_owned" || code === "result_erased") {
       return NextResponse.json({ error: "result_not_found" }, { status: 404 });
     }
     console.error("interpretation response failed", { code });

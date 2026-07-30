@@ -7,7 +7,6 @@ import { useAssessmentAttempt } from "./useAssessmentAttempt";
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { trackOpenTestingEvent } from "../components/OpenTestingTracker";
-import { buildPublicResultHref } from "./resultCompatibility";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import {
   buildCurrentStateResultPayload,
@@ -24,8 +23,6 @@ const AUTO_ADVANCE_DELAY_MS = 320;
 const RESULT_NAVIGATION_FALLBACK_DELAY_MS = 320;
 
 type PreparedResultNavigationTarget = {
-  relativeHref: string;
-  loadingHref: string;
   payload: ReturnType<typeof buildCurrentStateResultPayload>;
 };
 
@@ -112,23 +109,7 @@ export default function MiniTestFlow() {
   function buildPreparedResultTarget(nextAnswers: CurrentStateAnswerMap): PreparedResultNavigationTarget {
     const scoring = scoreCurrentStateCheck(nextAnswers);
     const payload = buildCurrentStateResultPayload(scoring, nextAnswers);
-    const publicRouteContext = {
-      resultId: scoring.resultId,
-      overlayId: scoring.overlayId,
-      confidenceBand: scoring.confidenceBand,
-    } as const;
-    const loadingRouteContext = {
-      resultId: scoring.resultId,
-      overlayId: scoring.overlayId,
-      payloadKey: scoring.payloadKey,
-      confidenceBand: scoring.confidenceBand,
-    } as const;
-
-    return {
-      relativeHref: buildPublicResultHref("/result", publicRouteContext),
-      loadingHref: buildPublicResultHref("/report-loading", loadingRouteContext),
-      payload,
-    };
+    return { payload };
   }
 
   function routeToResult(nextAnswers: CurrentStateAnswerMap, preparedTarget?: PreparedResultNavigationTarget) {
@@ -162,8 +143,11 @@ export default function MiniTestFlow() {
   // Navigation carries the PERSISTED result identity so /result can resolve the real record.
   // No raw answers ever enter the URL.
   function finishNavigation(target: PreparedResultNavigationTarget, resultRowId: string) {
-    const withResult = (href: string) =>
-      `${href}${href.includes("?") ? "&" : "?"}result=${encodeURIComponent(resultRowId)}`;
+    // Completion always has a persisted identity, and the canonical link travels ALONE — legacy
+    // parameters riding along would let /result be addressed two ways at once and leak scoring
+    // context into history/referrers. The legacy payload already went to the compatibility cache.
+    const canonical = (pathname: string) =>
+      `${pathname}?result=${encodeURIComponent(resultRowId)}`;
     void trackOpenTestingEvent({
       eventName: "test_completed",
       route: "/check-in",
@@ -193,19 +177,19 @@ export default function MiniTestFlow() {
     // their canonical private row id in the query string. The person is already on the correct
     // origin; a relative href keeps them there in every environment, including the LINE webview.
     if (typeof window !== "undefined" && isMiniAppEntry) {
-      window.location.assign(withResult(target.relativeHref));
+      window.location.assign(canonical("/result"));
       return;
     }
 
-    router.push(withResult(target.loadingHref));
+    router.push(canonical("/report-loading"));
 
     if (typeof window !== "undefined") {
       navigationFallbackTimerRef.current = window.setTimeout(() => {
         navigationFallbackTimerRef.current = null;
         const { pathname } = window.location;
         if (pathname !== "/report-loading" && pathname !== "/result") {
-          setNavigationFallbackHref(withResult(target.relativeHref));
-          window.location.assign(withResult(target.relativeHref));
+          setNavigationFallbackHref(canonical("/result"));
+          window.location.assign(canonical("/result"));
         }
       }, RESULT_NAVIGATION_FALLBACK_DELAY_MS);
     }
