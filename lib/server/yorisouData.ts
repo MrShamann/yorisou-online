@@ -3,6 +3,7 @@ import path from "path";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 
 import { assertIdentityKey, SHARED_STORE_PREFIX } from "./identityKeyScope";
+import { assertSharedStoreEnvironmentBoundary } from "./sharedStoreBoundary";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -179,6 +180,11 @@ const sharedStoreForcePathStyle = (process.env.YORISOU_SHARED_STORE_FORCE_PATH_S
 const sharedStoreAccessKeyId = process.env.YORISOU_SHARED_STORE_ACCESS_KEY_ID?.trim() || "";
 const sharedStoreSecretAccessKey = process.env.YORISOU_SHARED_STORE_SECRET_ACCESS_KEY?.trim() || "";
 
+/** Exposed so the non-secret runtime attestation reports the same value the store actually uses. */
+export function currentSharedStoreMode(): SharedStoreMode {
+  return sharedStoreMode;
+}
+
 export type SharedStoreMode = "disabled" | "aws" | "s3-compatible" | "supabase-rest";
 
 // Pure resolver (exported for tests). Never returns a mode whose required inputs are
@@ -230,6 +236,21 @@ export function resolveSharedStoreMode(env: {
 // throws HERE (fail at startup) rather than silently selecting local storage. There is
 // no separate `shouldUseSharedStore` bypass — the resolver alone decides disabled/valid.
 const sharedStoreMode: SharedStoreMode = resolveSharedStoreMode();
+
+// POR-1 — the environment boundary, checked at initialization alongside the mode.
+//
+// Resolving a VALID configuration is not the same as resolving the RIGHT one. A Preview deployment
+// pointed at the Production identity bucket resolves perfectly well; that is how it went unnoticed.
+// This asserts which side of the boundary the resolved configuration actually lands on, and throws
+// before any identity object can be written.
+export const sharedStoreBoundary = assertSharedStoreEnvironmentBoundary({
+  deploymentEnvironment: process.env.VERCEL_ENV || "development",
+  sharedStoreMode,
+  bucket: sharedStoreBucket,
+  endpoint: sharedStoreEndpoint,
+  supabaseUrl: process.env.SUPABASE_URL,
+});
+
 const shouldUseSharedStore = sharedStoreMode !== "disabled";
 const sharedRestBase = sharedStoreEndpoint.replace(/\/$/, ""); // ".../storage/v1"
 

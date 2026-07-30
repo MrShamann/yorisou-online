@@ -60,7 +60,14 @@ setup("hosted Preview is the application, and is the expected commit", async ({ 
   ).toBe(200);
 
   const raw = await page.locator("body").innerText();
-  let identity: { commitSha: string | null; commitRef: string | null; environment: string };
+  let identity: {
+    commitSha: string | null;
+    commitRef: string | null;
+    environment: string;
+    sharedStoreMode?: string;
+    sharedStoreBoundary?: string;
+    sharedStoreProjectMatch?: boolean;
+  };
   try {
     identity = JSON.parse(raw);
   } catch {
@@ -81,8 +88,37 @@ setup("hosted Preview is the application, and is the expected commit", async ({ 
       `[cpc1] expected_sha=${expectedSha}\n` +
       `[cpc1] deployed_sha=${identity.commitSha ?? "<absent>"}\n` +
       `[cpc1] deployed_ref=${identity.commitRef ?? "<absent>"}\n` +
-      `[cpc1] environment=${identity.environment}`,
+      `[cpc1] environment=${identity.environment}\n` +
+      `[cpc1] shared_store_mode=${identity.sharedStoreMode ?? "<absent>"}\n` +
+      `[cpc1] shared_store_boundary=${identity.sharedStoreBoundary ?? "<absent>"}\n` +
+      `[cpc1] shared_store_project_match=${identity.sharedStoreProjectMatch ?? "<absent>"}`,
   );
+
+  // ── 3. It must be bound to an ISOLATED identity store ────────────────────
+  //
+  // This gate exists because a Preview deployment once wrote real account identities into the
+  // production-named bucket while its assessment records went to the isolated Preview database.
+  // Every individual check passed. So before this suite registers ANYONE, the deployment has to say
+  // which store it is bound to — a run that creates a synthetic identity in the wrong place is
+  // worse than a run that does not happen.
+  expect(
+    identity.sharedStoreBoundary,
+    "deployment does not report a shared-store boundary; it predates the isolation guard and " +
+      "must not be used for acceptance",
+  ).toBeTruthy();
+  expect(
+    identity.sharedStoreBoundary,
+    `deployment is bound to '${identity.sharedStoreBoundary}' storage, not an isolated Preview ` +
+      "store. Refusing to register synthetic identities.",
+  ).toBe("isolated-preview");
+  expect(
+    identity.sharedStoreProjectMatch,
+    "the identity store and the database are different projects — records and identities would split",
+  ).toBe(true);
+  expect(
+    identity.sharedStoreMode,
+    "Preview must not use the AWS default transport",
+  ).not.toBe("aws");
 
   expect(identity.commitSha, "deployment reported no commit SHA").toBeTruthy();
   expect(
