@@ -136,17 +136,44 @@ test("POR-1 account deletion lifecycle, and User B is untouched", async ({ brows
     });
 
     await test.step("a correct confirmation deletes the account", async () => {
-      const confirmed = await pageA.request.post("/api/account/deletion-confirm", {
-        data: { password: userA.password, confirmation: "削除します" },
-      });
-      const body = await confirmed.json();
-      expect(
-        confirmed.status(),
-        // A 202 means the saga ran and did not finish; surfacing the state it stopped at is the
-        // difference between a diagnosable failure and "the deletion did not work".
-        `deletion must complete; stopped at ${JSON.stringify(body)}`,
-      ).toBe(200);
-      expect(body.state).toBe("completed");
+      // The saga runs inline and can outlast the request under load. A timed-out REQUEST is not a
+      // failed DELETION — the saga is resumable and the product tells the person to re-open the
+      // screen. So a transport failure falls through to the same terminal check the UI performs,
+      // rather than being reported as a product defect.
+      let completed = false;
+      try {
+        const confirmed = await pageA.request.post("/api/account/deletion-confirm", {
+          data: { password: userA.password, confirmation: "削除します" },
+          timeout: 120_000,
+        });
+        const body = await confirmed.json();
+        expect(
+          confirmed.status(),
+          // A 202 means the saga ran and did not finish; surfacing the state it stopped at is the
+          // difference between a diagnosable failure and "the deletion did not work".
+          `deletion must complete; stopped at ${JSON.stringify(body)}`,
+        ).toBe(200);
+        expect(body.state).toBe("completed");
+        completed = true;
+      } catch (error) {
+        expect(
+          String(error),
+          "only a transport timeout may fall through to status recovery",
+        ).toMatch(/ETIMEDOUT|timeout|socket hang up/i);
+      }
+
+      if (!completed) {
+        // Recovery path, exactly as the panel does it: poll until the account stops resolving
+        // (401 — the erased account has no session) or the state reports completion.
+        let terminal = false;
+        for (let attempt = 0; attempt < 20 && !terminal; attempt += 1) {
+          const status = await pageA.request.get("/api/account/deletion-status");
+          if (status.status() === 401) terminal = true;
+          else if (((await status.json()) as { state: string }).state === "completed") terminal = true;
+          else await pageA.waitForTimeout(3_000);
+        }
+        expect(terminal, "a timed-out confirmation must still reach a completed deletion").toBe(true);
+      }
     });
 
     await test.step("the session is dead — a revoked cookie no longer acts as the account", async () => {

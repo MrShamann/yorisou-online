@@ -22,6 +22,12 @@ import {
 import { requirePor1Capability } from "@/lib/server/por1RuntimeControls";
 
 export const runtime = "nodejs";
+// The saga is dozens of database round-trips plus object-store deletions, and it runs inline so the
+// person gets a real answer rather than a spinner and a promise. Under load that exceeded the
+// platform default and the request timed out mid-erasure — which the saga survives (it is
+// resumable) but which reads to the person as a failure. Raised deliberately; the client still
+// treats a timeout as "check the status", never as "it did not happen".
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 /** The person must type this exactly. A single button is too easy to reach by accident. */
