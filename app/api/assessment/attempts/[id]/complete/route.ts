@@ -73,6 +73,9 @@ export async function POST(request: Request, context: Context) {
   } catch (error) {
     const code = error instanceof Error ? error.message : "unknown";
     if (code === "attempt_not_found_or_not_writable") return NextResponse.json({ error: code }, { status: 404 });
+    // Concealed 404 status (no expiry oracle at the transport level); the body names expiry for
+    // the credential holder's own journey UI. See the save route for the full rationale.
+    if (code === "attempt_expired") return NextResponse.json({ error: code }, { status: 404 });
     if (code === "attempt_incomplete_coverage") return NextResponse.json({ error: code }, { status: 422 });
     console.error("assessment completion failed", { code });
     return NextResponse.json({ error: "attempt_complete_failed" }, { status: 500 });

@@ -7,7 +7,7 @@ import { useAssessmentAttempt } from "./useAssessmentAttempt";
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { trackOpenTestingEvent } from "../components/OpenTestingTracker";
-import { buildAbsolutePublicResultUrl, buildPublicResultHref } from "./resultCompatibility";
+import { buildPublicResultHref } from "./resultCompatibility";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import {
   buildCurrentStateResultPayload,
@@ -24,7 +24,6 @@ const AUTO_ADVANCE_DELAY_MS = 320;
 const RESULT_NAVIGATION_FALLBACK_DELAY_MS = 320;
 
 type PreparedResultNavigationTarget = {
-  absoluteHref: string;
   relativeHref: string;
   loadingHref: string;
   payload: ReturnType<typeof buildCurrentStateResultPayload>;
@@ -126,7 +125,6 @@ export default function MiniTestFlow() {
     } as const;
 
     return {
-      absoluteHref: buildAbsolutePublicResultUrl("/result", publicRouteContext),
       relativeHref: buildPublicResultHref("/result", publicRouteContext),
       loadingHref: buildPublicResultHref("/report-loading", loadingRouteContext),
       payload,
@@ -190,8 +188,12 @@ export default function MiniTestFlow() {
     setNavigationFallbackHref(null);
     clearNavigationFallbackTimer();
 
+    // Same-origin RELATIVE navigation, always. The absolute production-origin URL sent a person
+    // who completed on a Preview deployment to yorisou.online — a different environment — with
+    // their canonical private row id in the query string. The person is already on the correct
+    // origin; a relative href keeps them there in every environment, including the LINE webview.
     if (typeof window !== "undefined" && isMiniAppEntry) {
-      window.location.assign(withResult(target.absoluteHref));
+      window.location.assign(withResult(target.relativeHref));
       return;
     }
 
@@ -202,8 +204,8 @@ export default function MiniTestFlow() {
         navigationFallbackTimerRef.current = null;
         const { pathname } = window.location;
         if (pathname !== "/report-loading" && pathname !== "/result") {
-          setNavigationFallbackHref(withResult(target.absoluteHref));
-          window.location.assign(withResult(target.absoluteHref));
+          setNavigationFallbackHref(withResult(target.relativeHref));
+          window.location.assign(withResult(target.relativeHref));
         }
       }, RESULT_NAVIGATION_FALLBACK_DELAY_MS);
     }

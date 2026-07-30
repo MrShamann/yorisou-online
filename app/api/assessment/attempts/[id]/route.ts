@@ -39,6 +39,10 @@ export async function PATCH(request: Request, context: Context) {
   } catch (error) {
     const code = error instanceof Error ? error.message : "unknown";
     if (code === "attempt_not_found_or_not_writable") return NextResponse.json({ error: code }, { status: 404 });
+    // Same concealed 404 as not-found — the STATUS must not be an existence/expiry oracle. The
+    // body still names expiry: the caller presented the correct credential, so telling THEM the
+    // attempt expired reveals nothing they don't already own, and the journey UI depends on it.
+    if (code === "attempt_expired") return NextResponse.json({ error: code }, { status: 404 });
     console.error("assessment progress save failed", { code });
     return NextResponse.json({ error: "attempt_save_failed" }, { status: 500 });
   }
