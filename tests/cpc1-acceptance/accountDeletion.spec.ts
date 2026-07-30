@@ -139,11 +139,14 @@ test("POR-1 account deletion lifecycle, and User B is untouched", async ({ brows
       const confirmed = await pageA.request.post("/api/account/deletion-confirm", {
         data: { password: userA.password, confirmation: "削除します" },
       });
+      const body = await confirmed.json();
       expect(
         confirmed.status(),
-        "the executor is enabled in Preview, so this must complete rather than 503",
+        // A 202 means the saga ran and did not finish; surfacing the state it stopped at is the
+        // difference between a diagnosable failure and "the deletion did not work".
+        `deletion must complete; stopped at ${JSON.stringify(body)}`,
       ).toBe(200);
-      expect((await confirmed.json()).state).toBe("completed");
+      expect(body.state).toBe("completed");
     });
 
     await test.step("the session is dead — a revoked cookie no longer acts as the account", async () => {

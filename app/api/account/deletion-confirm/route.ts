@@ -85,8 +85,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ state: existing.state, retryable: false }, { status: 409 });
     }
 
-    if (!existing) await openDeletionJob(accountId);
-    if (!existing || existing.state === "requested") {
+    // `openDeletionJob` both creates a job and REOPENS a cancelled one (resetting it to
+    // `requested`). Someone who changes their mind twice must not be permanently unable to leave,
+    // and the job row is unique per account, so skipping the open on a cancelled job would have
+    // left executeDeletion refusing forever with `account_deletion_cancelled`.
+    const needsOpening = !existing || existing.state === "cancelled";
+    if (needsOpening) await openDeletionJob(accountId);
+    if (needsOpening || existing?.state === "requested") {
       // The saga owns the transition; an illegal one is rejected there rather than here.
       await advanceToIdentityVerified(accountId);
     }
