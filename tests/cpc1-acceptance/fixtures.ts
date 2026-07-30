@@ -472,10 +472,15 @@ export async function storeObjectExists(key: string): Promise<boolean> {
 export async function readStoreObjectUntil<T>(
   key: string,
   predicate: (value: T | null) => boolean,
-  // Sized from the measured lag on this transport (5.4s for an overwrite to become visible on the
-  // shared LINE-subject index), not from a guess. A window shorter than the thing it is waiting for
-  // is a flaky test wearing a retry loop.
-  attempts = 20,
+  // Sized from the MEASURED lag on this transport, and the measurement is the point: an overwrite of
+  // the shared LINE-subject index became visible after 4.5s, 5.4s and 11s on three separate probes.
+  // It is not a fixed delay, it is a distribution, so the window has to clear the tail rather than
+  // the median. A window shorter than the thing it waits for is a flaky test wearing a retry loop.
+  //
+  // Safe in both directions. Waiting for PRESENCE just delays a precondition. Waiting for ABSENCE
+  // cannot pass vacuously: a stale read still showing the deleted entry keeps retrying and then
+  // fails, which is exactly what a real residue would do.
+  attempts = 60,
 ): Promise<T | null> {
   let value: T | null = null;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
