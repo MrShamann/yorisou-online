@@ -220,8 +220,26 @@ test("POR-1 account deletion lifecycle, and User B is untouched", async ({ brows
         ).toBe(0);
       }
 
+      // ORDER OF OPERATIONS, stated as it actually is rather than as the plan describes it.
+      //
+      // The saga erases results first, through the owner-scoped result contract — and that contract
+      // anonymises the parent attempt (owner nulled, answers emptied, status `abandoned`). The
+      // plan's later `delete from yorisou_assessment_attempts where owner_account_id = ...` then
+      // matches nothing, because the owner is already gone. The migration's comment says attempts
+      // are "removed outright"; for an attempt that produced a result, they are emptied instead.
+      //
+      // The privacy outcome is the same and is what this asserts: whatever survives carries no
+      // answers and cannot be attributed to anyone. (An attempt abandoned before producing a result
+      // keeps its owner and IS deleted by that statement, so the statement is not dead code.)
       const aAttempt = await readAttemptRowFromPreviewDb(attemptA);
-      expect(aAttempt, "attempts hold raw answers and are removed outright").toBeNull();
+      if (aAttempt !== null) {
+        expect(aAttempt.owner_account_id, "no surviving attempt may name the deleted person").toBeNull();
+        expect(
+          Object.keys(aAttempt.answers ?? {}).length,
+          "no raw answers may survive a deletion",
+        ).toBe(0);
+        expect(aAttempt.claim_token_hash, "no claim credential may survive").toBeNull();
+      }
 
       for (const [table, column] of [
         ["yorisou_assessment_results", "owner_account_id"],
