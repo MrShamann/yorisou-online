@@ -124,9 +124,9 @@ select
   (select count(*) from public.yorisou_assessment_results where deleted_at is null)     as live_results,
   (select count(*) from public.yorisou_assessment_results where deleted_at is not null) as erased_tombstones,
   (select count(*) from public.yorisou_interpretation_responses)                        as responses,
-  (select count(*) from public.yorisou_recommendation_sets)                             as recommendation_sets,
-  (select count(*) from public.yorisou_recommendation_items)                            as recommendation_items,
-  (select count(*) from public.yorisou_recommendation_actions)                          as recommendation_actions,
+  (select count(*) from public.yorisou_canonical_recommendation_sets)                             as recommendation_sets,
+  (select count(*) from public.yorisou_canonical_recommendation_items)                            as recommendation_items,
+  (select count(*) from public.yorisou_canonical_recommendation_actions)                          as recommendation_actions,
   (select count(*) from public.yorisou_assessment_results
     where deleted_at is not null
       and (result_id is not null or owner_account_id is not null or dimension_output <> '{}'::jsonb))

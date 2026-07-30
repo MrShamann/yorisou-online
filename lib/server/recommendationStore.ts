@@ -99,12 +99,12 @@ async function select<T>(path: string): Promise<T[]> {
 async function hydrate(set: SetRow, ownerAccountId: string): Promise<RecommendationSetView> {
   const [items, actions] = await Promise.all([
     select<ItemRow>(
-      `yorisou_recommendation_items?set_id=eq.${set.id}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=rank.asc`,
+      `yorisou_canonical_recommendation_items?set_id=eq.${set.id}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=rank.asc`,
     ),
     select<ActionRow>(
       // Monotonic sequence, not created_at: same-transaction actions would otherwise have no defined
       // order and "current feedback" would be whichever the database happened to return first.
-      `yorisou_recommendation_actions?set_id=eq.${set.id}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=sequence_no.desc`,
+      `yorisou_canonical_recommendation_actions?set_id=eq.${set.id}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=sequence_no.desc`,
     ),
   ]);
 
@@ -147,7 +147,7 @@ export async function loadRecommendationSet(
   try {
     const eligibility = await rpc<
       { accepted_result_id: string; original_result_id: string | null; basis: string }[]
-    >("yorisou_recommendation_eligibility", {
+    >("yorisou_canonical_recommendation_eligibility", {
       p_result_row_id: resultRowId,
       p_owner_account_id: ownerAccountId,
     });
@@ -162,7 +162,7 @@ export async function loadRecommendationSet(
       return { outcome: "unavailable" };
     }
 
-    const setId = await rpc<string>("yorisou_recommendation_materialize", {
+    const setId = await rpc<string>("yorisou_canonical_recommendation_materialize", {
       p_result_row_id: resultRowId,
       p_owner_account_id: ownerAccountId,
       p_content_version: GOVERNED_RECOMMENDATION_CONTENT_VERSION,
@@ -170,7 +170,7 @@ export async function loadRecommendationSet(
       p_items: items,
     });
 
-    const rows = await select<SetRow>(`yorisou_recommendation_sets?id=eq.${setId}`);
+    const rows = await select<SetRow>(`yorisou_canonical_recommendation_sets?id=eq.${setId}`);
     if (!rows[0]) return { outcome: "unavailable" };
     return { outcome: "ok", set: await hydrate(rows[0], ownerAccountId) };
   } catch (error) {
@@ -200,7 +200,7 @@ export async function recordRecommendationAction(input: {
   intentNonce?: string | null;
 }): Promise<{ outcome: "ok"; actionId: string } | { outcome: "withheld" | "unavailable" }> {
   try {
-    const actionId = await rpc<string>("yorisou_recommendation_act", {
+    const actionId = await rpc<string>("yorisou_canonical_recommendation_act", {
       p_item_id: input.itemId,
       p_owner_account_id: input.ownerAccountId,
       p_action: input.action,
@@ -238,7 +238,7 @@ export async function listRecommendationHistory(
 ): Promise<RecommendationHistoryLoad> {
   try {
     const sets = await select<SetRow>(
-      `yorisou_recommendation_sets?result_row_id=eq.${resultRowId}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=generated_at.desc`,
+      `yorisou_canonical_recommendation_sets?result_row_id=eq.${resultRowId}&owner_account_id=eq.${encodeURIComponent(ownerAccountId)}&order=generated_at.desc`,
     );
     if (sets.length === 0) return { outcome: "empty" };
     return { outcome: "ok", sets: await Promise.all(sets.map((s) => hydrate(s, ownerAccountId))) };

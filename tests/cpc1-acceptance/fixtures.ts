@@ -302,7 +302,7 @@ export async function readRecommendationActionsFromPreviewDb(
   itemId: string,
 ): Promise<RecommendationActionRow[]> {
   const response = await dbRequest(
-    `yorisou_recommendation_actions?item_id=eq.${itemId}` +
+    `yorisou_canonical_recommendation_actions?item_id=eq.${itemId}` +
       `&select=item_id,action,sequence_no&order=sequence_no.asc`,
   );
   if (!response.ok) throw new Error(`preview_db_read_failed_${response.status}`);
