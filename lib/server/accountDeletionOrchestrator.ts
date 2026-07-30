@@ -198,7 +198,10 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
       if (identityTargets) {
         const verification = await verifyIdentityErasure(accountId, identityTargets);
         if (!verification.clean) {
-          await advance(accountId, "failed_retryable", "identity_residue");
+          // Record WHICH families blocked it. Family names only — never a key, which would embed
+          // an email hash or a live session identifier. A durable failure that cannot say what it
+          // found costs an entire deploy-and-rerun cycle to diagnose, which is what it just cost.
+          await advance(accountId, "failed_retryable", `identity_residue:${verification.residue.join(",")}`);
           return { outcome: "retryable", errorCode: `identity_residue:${verification.residue.join(",")}` };
         }
       }
