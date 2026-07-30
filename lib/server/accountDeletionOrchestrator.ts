@@ -196,7 +196,22 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
       // Verify the object store here; the database verifies its own residue inside finalize().
       const identityTargets = targets ?? (await enumerateDeletionTargets(accountId));
       if (identityTargets) {
-        const verification = await verifyIdentityErasure(accountId, identityTargets);
+        // THE STORE IS NOT READ-AFTER-DELETE CONSISTENT.
+        //
+        // The isolated Preview transport returned the account record as still present for a short
+        // window after a successful delete, so verification found "residue" that was already gone
+        // and the saga refused to finalize — correctly, on the evidence it had. A hand-run probe
+        // with seconds between the steps never saw it; the saga runs them back to back.
+        //
+        // Retrying does NOT weaken the guarantee: a real residue survives every attempt and is
+        // still refused. It only stops a consistency lag from being mistaken for a failed erasure.
+        // Bounded deliberately — this runs inside a request, and an erasure that cannot be proven
+        // in a few seconds deserves the retryable state it gets.
+        let verification = await verifyIdentityErasure(accountId, identityTargets);
+        for (let attempt = 0; attempt < 5 && !verification.clean; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          verification = await verifyIdentityErasure(accountId, identityTargets);
+        }
         if (!verification.clean) {
           // Record WHICH families blocked it. Family names only — never a key, which would embed
           // an email hash or a live session identifier. A durable failure that cannot say what it
