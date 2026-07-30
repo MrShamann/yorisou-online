@@ -37,6 +37,7 @@ import {
   previewStoreConfigured,
   readDeletionJobFromPreviewDb,
   readStoreObject,
+  readStoreObjectUntil,
   recordRecommendationAction,
   registerSyntheticUser,
   respondToInterpretation,
@@ -240,7 +241,10 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
         "a LINE event record exists for A",
       ).toBe(true);
 
-      const recent = await readStoreObject<{ lineUserId: string }[]>(storeKeys.recentLineSubjects());
+      const recent = await readStoreObjectUntil<{ lineUserId: string }[]>(
+        storeKeys.recentLineSubjects(),
+        (value) => (value ?? []).some((entry) => entry.lineUserId === lineUserId),
+      );
       expect(
         (recent ?? []).some((entry) => entry.lineUserId === lineUserId),
         "A appears in the SHARED recent-subject index",
@@ -430,7 +434,10 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
       }
 
       // The shared recent-subject index is PRUNED, not deleted: everyone else's entries must remain.
-      const recent = await readStoreObject<{ lineUserId: string }[]>(storeKeys.recentLineSubjects());
+      const recent = await readStoreObjectUntil<{ lineUserId: string }[]>(
+        storeKeys.recentLineSubjects(),
+        (value) => !(value ?? []).some((entry) => entry.lineUserId === lineUserId),
+      );
       expect(
         (recent ?? []).some((entry) => entry.lineUserId === lineUserId),
         "A's entries are pruned from the shared LINE-subject index",

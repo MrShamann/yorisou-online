@@ -950,11 +950,32 @@ export async function pruneRecentLineWebhookSubjects(
 
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
-    const records = await getSharedRecentLineWebhookSubjects();
-    const kept = records.filter((record) => !matches(record));
-    if (kept.length === records.length) return 0;
-    await putSharedRecentLineWebhookSubjects(kept);
-    return records.length - kept.length;
+
+    // THE STORE IS NOT READ-AFTER-WRITE CONSISTENT, AND THIS IS A READ-MODIFY-WRITE.
+    //
+    // A single pass is not enough. A read that returns a slightly stale copy of this shared array
+    // can miss the very entry being erased — and then the write puts back a document that still
+    // contains it, while the prune reports success. Measured on the isolated Preview transport: a
+    // GET issued a minute after a successful overwrite still returned the previous version.
+    //
+    // So the prune re-reads and repeats until the entries are provably absent. Bounded, because an
+    // erasure that cannot be proven in a few seconds deserves the retryable state the caller gives
+    // it — and a loop that never gives up would hold a deletion open forever.
+    let removed = 0;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const records = await getSharedRecentLineWebhookSubjects();
+      const stillPresent = records.filter(matches);
+      if (stillPresent.length === 0) return removed;
+
+      await putSharedRecentLineWebhookSubjects(records.filter((record) => !matches(record)));
+      removed += stillPresent.length;
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+
+    // Refuse to report a clean prune we could not confirm. The caller records a retryable failure and
+    // the cursor stays put, which is exactly right: nothing later depends on this having succeeded,
+    // and claiming it did would be the one lie a deletion must never tell.
+    throw new Error("recent_line_subject_prune_unconfirmed");
   }
 
   const records = await readLocalJson(recentLineWebhookSubjectsFile);

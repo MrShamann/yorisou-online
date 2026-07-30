@@ -457,6 +457,32 @@ export async function storeObjectExists(key: string): Promise<boolean> {
   return (await readStoreObject(key)) !== null;
 }
 
+/**
+ * Read an object until a condition holds, or give up.
+ *
+ * The isolated Preview transport is NOT read-after-write consistent: a GET issued a minute after a
+ * successful overwrite was measured still returning the previous version. An immediate read-back is
+ * therefore an assertion about the CDN, not about the product — and a suite that fails on it reports
+ * a deletion defect that is really a cache.
+ *
+ * Used only where the test itself just wrote, or where the product just wrote and the test is
+ * confirming. A residue check that a real failure would survive is unaffected: a genuinely present
+ * object survives every attempt.
+ */
+export async function readStoreObjectUntil<T>(
+  key: string,
+  predicate: (value: T | null) => boolean,
+  attempts = 8,
+): Promise<T | null> {
+  let value: T | null = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    value = await readStoreObject<T>(key);
+    if (predicate(value)) return value;
+    await new Promise((resolve) => setTimeout(resolve, 750));
+  }
+  return value;
+}
+
 export async function listStoreKeys(prefix: string): Promise<string[]> {
   const config = previewStore();
   if (!config) throw new Error("preview_store_not_configured");
