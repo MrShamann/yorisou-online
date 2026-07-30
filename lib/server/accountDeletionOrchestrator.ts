@@ -84,6 +84,13 @@ export async function readDeletionStatus(accountId: string): Promise<DeletionSta
   );
   const row = Array.isArray(rows) ? rows[0] : (rows as unknown as { state: DeletionState; error_code: string | null });
   if (!row) return null;
+
+  // The RPC answers "no job" with a SENTINEL, `{"state":"none"}`, not with an empty result. Passing
+  // that through as if it were a saga state is what a null-check alone misses: `none` is truthy, so
+  // the confirm route would skip opening a job and skip the opening transition, and executeDeletion
+  // would fall through every branch and report `unexpected_state:none`. Deletion would never run.
+  // The sentinel is normalised HERE, once, so no caller has to know about it.
+  if ((row.state as string) === "none") return null;
   return {
     state: row.state,
     irreversible: !isCancellable(row.state),

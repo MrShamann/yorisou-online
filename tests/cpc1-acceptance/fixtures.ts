@@ -336,3 +336,59 @@ export async function createExpiredAttemptInPreviewDb(): Promise<{
   const cookieValue = Buffer.from(JSON.stringify({ attemptId, token }), "utf8").toString("base64url");
   return { attemptId, cookieValue };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POR-1 — account deletion verification helpers.
+//
+// Read-only, and deliberately COUNTING rather than reading content: proving an erasure does not
+// require reading what was erased, and a verification helper that returns a person's answers is a
+// data-extraction tool with a test-shaped name.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** How many rows in `table` still carry this owner. Zero is the proof of erasure. */
+export async function countRowsForOwnerInPreviewDb(
+  table: string,
+  ownerColumn: string,
+  ownerAccountId: string,
+): Promise<number> {
+  const response = await dbRequest(`${table}?${ownerColumn}=eq.${ownerAccountId}&select=${ownerColumn}`, {
+    headers: { Prefer: "count=exact" },
+  });
+  if (!response.ok) throw new Error(`preview_db_count_failed_${response.status}`);
+  const rows = (await response.json()) as unknown[];
+  return rows.length;
+}
+
+export type DeletionJobSnapshot = {
+  state: string;
+  owner_account_id: string | null;
+  owner_fingerprint: string | null;
+  attempt_count: number;
+};
+
+/**
+ * The durable job, looked up by the raw account id. After a completed deletion this returns null:
+ * finalize() drops the raw id for a one-way fingerprint, which is exactly the behaviour a caller
+ * should assert rather than work around.
+ */
+export async function readDeletionJobFromPreviewDb(
+  ownerAccountId: string,
+): Promise<DeletionJobSnapshot | null> {
+  const response = await dbRequest(
+    `yorisou_account_deletion_jobs?owner_account_id=eq.${ownerAccountId}` +
+      `&select=state,owner_account_id,owner_fingerprint,attempt_count`,
+  );
+  if (!response.ok) throw new Error(`preview_db_read_failed_${response.status}`);
+  const rows = (await response.json()) as DeletionJobSnapshot[];
+  return rows[0] ?? null;
+}
+
+/** Audit rows are content-free by construction; this asserts only that the trail EXISTS. */
+export async function countDeletionAuditRowsInPreviewDb(jobFingerprint: string): Promise<number> {
+  const response = await dbRequest(
+    `yorisou_account_deletion_jobs?owner_fingerprint=eq.${jobFingerprint}&select=id`,
+  );
+  if (!response.ok) throw new Error(`preview_db_read_failed_${response.status}`);
+  const rows = (await response.json()) as unknown[];
+  return rows.length;
+}
