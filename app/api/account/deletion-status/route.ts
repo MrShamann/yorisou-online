@@ -7,14 +7,14 @@ import { NextResponse } from "next/server";
 // exactly what remains is an inventory of the person's data, and after finalization the account id
 // itself no longer exists in the record — only a one-way fingerprint.
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { getDeletionSurfaceViewerContext } from "@/lib/server/yorisouAuth";
 import { readDeletionStatus } from "@/lib/server/accountDeletionOrchestrator";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const viewer = await getViewerContext();
+  const viewer = await getDeletionSurfaceViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!accountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
 

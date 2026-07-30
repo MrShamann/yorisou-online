@@ -11,6 +11,7 @@ import CanonicalRecommendationList from "@/app/recommendations/CanonicalRecommen
 import RecommendationWithheld from "@/app/recommendations/RecommendationWithheld";
 import PersistedResultUnavailable from "@/app/result/PersistedResultUnavailable";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "@/app/components/OpenTestingTracker";
+import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 export const metadata: Metadata = {
   title: "Yorisou | チェックを始める",
@@ -57,8 +58,10 @@ export default async function MiniAppEntryPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const rawRowId =
-    typeof resolvedSearchParams?.result === "string" ? resolvedSearchParams.result : null;
+  const rawRowId = canonicalRowIdWhenEnabled(
+    typeof resolvedSearchParams?.result === "string" ? resolvedSearchParams.result : null,
+    "LINE_CANONICAL_RETURN",
+  );
 
   if (rawRowId) {
     const loaded = await requireRecommendationContext(rawRowId);

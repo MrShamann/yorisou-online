@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { findAccountByEmail, verifyPassword } from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
+import { evaluateAuthenticationLock } from "@/lib/server/accountDeletionOrchestrator";
 import {
   bindSessionToUser,
   ensureViewerSession,
@@ -86,6 +87,22 @@ export async function POST(request: Request) {
         return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=invalid_credentials`), { status: 303 });
       }
       return NextResponse.json({ success: false, error: "invalid_credentials" }, { status: 401 });
+    }
+
+    // POR-1 WS5 — an account under deletion may not authenticate, and an erased account may not be
+    // resurrected from the `yorisou_account` cookie fallback above. Enforced unconditionally: this
+    // is not behind the deletion capability flag, because turning that flag off mid-erasure must
+    // not hand the account back.
+    const lock = await evaluateAuthenticationLock({
+      accountId: account.id,
+      storeRecordFound: Boolean(accountFromStore),
+      deletionLockedAt: account.deletionLockedAt,
+    });
+    if (!lock.allowed) {
+      if (isDocumentRequest) {
+        return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=${lock.reason}`), { status: 303 });
+      }
+      return NextResponse.json({ success: false, error: lock.reason }, { status: 403 });
     }
 
     await restoreAccountFromCookie(account);

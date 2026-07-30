@@ -10,6 +10,7 @@ import PersistedResultUnavailable from "../result/PersistedResultUnavailable";
 import CanonicalRecommendationList from "./CanonicalRecommendationList";
 import { loadRecommendationSet } from "@/lib/server/recommendationStore";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 export const metadata: Metadata = {
   title: "次にほしいヒント | Yorisou",
@@ -53,7 +54,7 @@ export default async function RecommendationsPage({
   //
   // Presence of `?result` now selects canonical mode and the SERVER decides. There is no path from
   // here back to legacy reconstruction.
-  const canonicalRowId = readParam(params, "result");
+  const canonicalRowId = canonicalRowIdWhenEnabled(readParam(params, "result"), "CANONICAL_RECOMMENDATIONS");
   if (canonicalRowId) {
     const loaded = await requireRecommendationContext(canonicalRowId);
     if (loaded.outcome === "unavailable") return <PersistedResultUnavailable />;

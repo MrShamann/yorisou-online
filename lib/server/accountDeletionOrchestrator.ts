@@ -20,6 +20,11 @@ import {
   type IdentityDeletionTargets,
 } from "./accountIdentityDeletion";
 import { rpc } from "./assessmentAttemptStore";
+import { setAccountDeletionLock } from "./yorisouData";
+import {
+  decideAccountAuthentication,
+  type AccountAuthenticationDecision,
+} from "./accountDeletionLock";
 
 export type DeletionState =
   | "requested"
@@ -43,7 +48,12 @@ export type DeletionStatus = {
 };
 
 /** States from which nothing destructive has yet happened, so cancelling is still honest. */
-const CANCELLABLE: DeletionState[] = ["requested", "identity_verified", "locked"];
+// Mirrors the applied migration exactly: `advance(...,'cancelled')` is legal only from `requested`
+// and `identity_verified`. `locked` is NOT cancellable — by then sessions have been revoked and the
+// run is committed to finishing. Listing `locked` here would have offered the person a cancel
+// button whose database call always throws, and would have released the hold on an account whose
+// job was still live.
+const CANCELLABLE: DeletionState[] = ["requested", "identity_verified"];
 
 export function isCancellable(state: DeletionState) {
   return CANCELLABLE.includes(state);
@@ -81,6 +91,40 @@ export async function readDeletionStatus(accountId: string): Promise<DeletionSta
   };
 }
 
+/**
+ * POR-1 WS5 — the authentication gate.
+ *
+ * Called at every point where credentials would mint a new session. The durable job is consulted
+ * ONLY when the account record is missing, because that is the one case the record-borne marker
+ * cannot answer: the record that would have carried it has already been erased.
+ *
+ * That path fails CLOSED. A store miss is already abnormal; refusing a login there costs a person
+ * one retry, while allowing it would let an erased account be resurrected from a stale cookie.
+ */
+export async function evaluateAuthenticationLock(input: {
+  accountId: string;
+  storeRecordFound: boolean;
+  deletionLockedAt: string | null | undefined;
+}): Promise<AccountAuthenticationDecision> {
+  if (input.deletionLockedAt) {
+    return decideAccountAuthentication({ ...input, durableDeletionState: undefined });
+  }
+  if (input.storeRecordFound) {
+    return { allowed: true };
+  }
+
+  let durableDeletionState: string | null;
+  try {
+    durableDeletionState = (await readDeletionStatus(input.accountId))?.state ?? null;
+  } catch (error) {
+    console.error("deletion lock lookup failed; refusing cookie-restored login");
+    void error;
+    return { allowed: false, reason: "account_deleted" };
+  }
+
+  return decideAccountAuthentication({ ...input, durableDeletionState });
+}
+
 export type DeletionOutcome =
   | { outcome: "completed" }
   | { outcome: "retryable"; errorCode: string }
@@ -106,6 +150,9 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
 
     if (state === "identity_verified" || state === "failed_retryable") {
       state = (await advance(accountId, "locked")) as DeletionState;
+      // Hold the account BEFORE anything irreversible runs. A failure here must abort the run:
+      // erasing while the account can still authenticate is the one ordering we cannot allow.
+      await setAccountDeletionLock(accountId, true);
     }
 
     if (state === "locked") {
@@ -178,6 +225,10 @@ export async function cancelDeletion(accountId: string): Promise<boolean> {
   // Refuse rather than pretend: once erasure has begun there is nothing left to cancel, and
   // reporting success would tell the person their data still exists when it does not.
   if (!isCancellable(status.state)) return false;
+  // The durable transition is the cancellation; the marker is only its enforcement shadow. At a
+  // legal cancel point (`requested` / `identity_verified`) no hold has been placed yet, so the
+  // clear below is a defensive no-op rather than the thing that frees the account.
   await advance(accountId, "cancelled");
+  await setAccountDeletionLock(accountId, false);
   return true;
 }

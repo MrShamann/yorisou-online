@@ -13,6 +13,7 @@ import { loadRecommendationSet } from "@/lib/server/recommendationStore";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import CanonicalRecommendationList from "../CanonicalRecommendationList";
 import { MvpCard, MvpPill } from "../../components/MvpSurface";
+import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,10 @@ export default async function RecommendationGraphPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = (await searchParams) || {};
-  const rawRowId = typeof query.result === "string" ? query.result : null;
+  const rawRowId = canonicalRowIdWhenEnabled(
+    typeof query.result === "string" ? query.result : null,
+    "CANONICAL_RECOMMENDATIONS",
+  );
 
   if (rawRowId) {
     const loaded = await requireRecommendationContext(rawRowId);

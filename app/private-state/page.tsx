@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 
 import PrivateStateHome from "./view";
 import CanonicalAssessmentPanel from "./CanonicalAssessmentPanel";
+import AccountDeletionPanel from "./AccountDeletionPanel";
 import SignOutControl from "./SignOutControl";
 import { loadCanonicalPrivateState } from "@/lib/server/canonicalPrivateState";
+import { isPor1CapabilityEnabled } from "@/lib/server/por1RuntimeControls";
 
 export const metadata: Metadata = { title: "わたしの今 | Yorisou" };
 export const dynamic = "force-dynamic";
@@ -15,11 +17,12 @@ export const dynamic = "force-dynamic";
 // two competing answers to "what is my current state" is exactly the defect that the duplicate
 // saved record was, one layer up.
 export default async function PrivateStatePage() {
+  const canonicalCore = isPor1CapabilityEnabled("CANONICAL_CORE");
   const load = await loadCanonicalPrivateState();
 
   return (
     <>
-      {load.outcome === "temporarily_unavailable" ? (
+      {canonicalCore && load.outcome === "temporarily_unavailable" ? (
         <section className="container pt-8">
           <div
             role="alert"
@@ -33,7 +36,9 @@ export default async function PrivateStatePage() {
           </div>
         </section>
       ) : null}
-      {load.outcome === "ok" || load.outcome === "empty" ? (
+      {/* WS6: with CANONICAL_CORE off this panel is absent entirely, leaving the legacy private
+          view below as the only answer — the baseline shape, not an empty new container. */}
+      {canonicalCore && (load.outcome === "ok" || load.outcome === "empty") ? (
         <section className="container pt-8">
           <div className="mx-auto w-full max-w-[42rem]">
             <CanonicalAssessmentPanel entries={load.outcome === "ok" ? load.entries : []} />
@@ -49,7 +54,7 @@ export default async function PrivateStatePage() {
           </div>
         </section>
       ) : null}
-      {load.outcome === "ok" ? (
+      {canonicalCore && load.outcome === "ok" ? (
         <section className="container pt-6">
           <div className="mx-auto w-full max-w-[42rem]">
             <p className="text-[12px] leading-6 text-[#7A7068]">
@@ -59,6 +64,16 @@ export default async function PrivateStatePage() {
         </section>
       ) : null}
       <PrivateStateHome />
+
+      {/* Account deletion lives with the person's own records, not buried in a support page.
+          Last on the page: it is the end of the relationship, not a step in it. */}
+      {load.outcome !== "unauthenticated" ? (
+        <section className="container py-8">
+          <div className="mx-auto w-full max-w-[42rem]">
+            <AccountDeletionPanel />
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

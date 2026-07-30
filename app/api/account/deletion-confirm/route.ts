@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 // client. An endpoint that deletes whatever account the body names is an account-deletion oracle
 // pointed at everyone else.
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { getDeletionSurfaceViewerContext } from "@/lib/server/yorisouAuth";
 import { findAccountById, verifyPassword } from "@/lib/server/yorisouData";
 import {
   advanceToIdentityVerified,
@@ -29,7 +29,10 @@ const REQUIRED_CONFIRMATION = "削除します";
 const ALLOWED_KEYS = ["password", "confirmation"];
 
 export async function POST(request: Request) {
-  const viewer = await getViewerContext();
+  // A retry after a failed run arrives with the account ALREADY held, so this resolves the held
+  // account deliberately. Reauthentication below is unchanged: the hold is not a substitute for
+  // proving who is at the keyboard.
+  const viewer = await getDeletionSurfaceViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!accountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
 
@@ -66,9 +69,27 @@ export async function POST(request: Request) {
   }
 
   try {
-    await openDeletionJob(accountId);
-    // The saga owns the transition; an illegal one is rejected there rather than here.
-    await advanceToIdentityVerified(accountId);
+    // RETRY SAFETY. A confirm that arrives after a `failed_retryable` run must resume, not restart:
+    // re-running `advanceToIdentityVerified` from a mid-saga state is an illegal transition, which
+    // executeDeletion classifies as TERMINAL — a transient object-store hiccup would have burned
+    // the job permanently. Only a fresh or still-unverified job takes the opening steps.
+    const existing = await readDeletionStatus(accountId);
+
+    if (existing?.state === "completed") {
+      const response = NextResponse.json({ state: "completed" }, { status: 200 });
+      response.cookies.delete("yorisou_session");
+      response.cookies.delete("yorisou_account");
+      return response;
+    }
+    if (existing?.state === "legal_hold" || existing?.state === "failed_terminal") {
+      return NextResponse.json({ state: existing.state, retryable: false }, { status: 409 });
+    }
+
+    if (!existing) await openDeletionJob(accountId);
+    if (!existing || existing.state === "requested") {
+      // The saga owns the transition; an illegal one is rejected there rather than here.
+      await advanceToIdentityVerified(accountId);
+    }
 
     const result = await executeDeletion(accountId);
     const status = await readDeletionStatus(accountId);

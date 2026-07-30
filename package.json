@@ -50,7 +50,9 @@
     "test:cpc1-acceptance": "playwright test --config=playwright.cpc1.config.ts",
     "typecheck:cpc1-tests": "tsc --noEmit -p tsconfig.tests.json",
     "test:por1-namespace": "node --import tsx --test lib/server/__tests__/recommendationNamespaceSeparation.test.ts",
-    "test:por1-controls": "node --import tsx --test lib/server/__tests__/por1RuntimeControls.test.ts"
+    "test:por1-controls": "node --import tsx --test lib/server/__tests__/por1RuntimeControls.test.ts",
+    "gate:por1-flag-off-baseline": "node scripts/por1-flag-off-baseline-equivalence.mjs",
+    "test:por1-deletion": "node --import tsx --test lib/server/__tests__/por1AccountDeletionLock.test.ts lib/server/__tests__/por1IdentityKeyScope.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",

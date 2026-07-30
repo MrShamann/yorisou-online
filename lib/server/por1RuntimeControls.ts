@@ -57,3 +57,19 @@ export function requirePor1Capability(
     ? { allowed: true }
     : { allowed: false, reason: "capability_disabled" };
 }
+
+/**
+ * POR-1 WS6 — the flag-off baseline-equivalence primitive.
+ *
+ * Every canonical surface has the same shape: `if (rawRowId) { canonical } else { legacy }`. So the
+ * way to make a control genuinely equivalent to the pre-POR-1 baseline is not to refuse the request
+ * — a refusal screen is new behaviour too — but to stop RECOGNISING the canonical parameter. With
+ * the control off the row id is dropped, the else-branch runs, and the surface is byte-for-byte the
+ * one Production serves today.
+ */
+export function canonicalRowIdWhenEnabled(
+  rawRowId: string | null,
+  capability: Por1Capability,
+): string | null {
+  return isPor1CapabilityEnabled(capability) ? rawRowId : null;
+}

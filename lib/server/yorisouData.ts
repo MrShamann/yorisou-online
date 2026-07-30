@@ -1,6 +1,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+
+import { assertIdentityKey, SHARED_STORE_PREFIX } from "./identityKeyScope";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -41,6 +43,13 @@ export type AccountRecord = {
   lineConnectedAt?: string;
   linePictureUrl?: string;
   lineIdTokenSubject?: string;
+  /**
+   * POR-1 WS5 — set when the deletion saga reaches `locked`, cleared on cancellation. Its presence
+   * means this account may not authenticate and no session may act as it. The durable job in the
+   * database remains the source of truth for the saga; this is the enforcement marker that rides
+   * along with the record every authenticated request already loads.
+   */
+  deletionLockedAt?: string;
   supportProfile: SupportProfile;
 };
 
@@ -146,7 +155,8 @@ type MigrationState = {
 };
 
 const DEFAULT_SHARED_REGION = "us-east-2";
-const SHARED_PREFIX = "phase1";
+// Single definition, shared with the identity-deletion scope rule so the two cannot drift apart.
+const SHARED_PREFIX = SHARED_STORE_PREFIX;
 const MIGRATION_VERSION = 2;
 
 const dataDir =
@@ -858,23 +868,6 @@ async function migrateLegacyFilesToSharedStore() {
 // deletion problem it would solve. The guard below refuses anything outside the identity prefixes
 // so a future caller cannot widen this by accident.
 
-const IDENTITY_KEY_PREFIXES = [
-  `${SHARED_PREFIX}/accounts/by-id/`,
-  `${SHARED_PREFIX}/accounts/by-email/`,
-  `${SHARED_PREFIX}/accounts/by-line/`,
-  `${SHARED_PREFIX}/sessions/`,
-  `${SHARED_PREFIX}/password-resets/`,
-];
-
-function assertIdentityKey(key: string) {
-  if (key.includes("..") || key.includes("//")) {
-    throw new Error("identity_key_invalid");
-  }
-  if (!IDENTITY_KEY_PREFIXES.some((prefix) => key.startsWith(prefix))) {
-    throw new Error("identity_key_out_of_scope");
-  }
-}
-
 /** Delete one identity object. Missing is success — deletion is idempotent by contract. */
 export async function deleteSharedIdentityObject(key: string): Promise<void> {
   assertIdentityKey(key);
@@ -1048,6 +1041,27 @@ export async function updateAccountPassword(userId: string, password: string): P
 
   await upsertAccountRecord(updatedAccount);
   return updatedAccount;
+}
+
+/**
+ * POR-1 WS5 — hold or release the account.
+ *
+ * Returns false when the record is already gone: an erased account needs no marker, and the
+ * caller must not read that as a failure to lock.
+ */
+export async function setAccountDeletionLock(userId: string, locked: boolean): Promise<boolean> {
+  const account = await findAccountById(userId);
+  if (!account) return false;
+
+  const next: AccountRecord = { ...account, updatedAt: nowIso() };
+  if (locked) {
+    next.deletionLockedAt = nowIso();
+  } else {
+    delete next.deletionLockedAt;
+  }
+
+  await upsertAccountRecord(next);
+  return true;
 }
 
 export async function updateSupportProfile(userId: string, patch: Partial<SupportProfile>): Promise<AccountRecord | null> {

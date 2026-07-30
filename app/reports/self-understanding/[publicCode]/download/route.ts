@@ -1,6 +1,7 @@
 import { buildSanitizedSelfUnderstandingReportMarkdown } from "@/lib/yorisou/reports/loader";
 import { recordReportEvent } from "@/lib/server/relationship-intelligence/service";
 import { requireContinuityContext } from "@/lib/server/canonicalResultContext";
+import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 // UX-2R / CPC-1 §2 — the download route was a canonical BYPASS.
 //
@@ -21,7 +22,10 @@ export async function GET(
   { params }: { params: Promise<{ publicCode: string }> },
 ) {
   const { publicCode } = await params;
-  const rawRowId = new URL(request.url).searchParams.get("result");
+  const rawRowId = canonicalRowIdWhenEnabled(
+    new URL(request.url).searchParams.get("result"),
+    "CANONICAL_CORE",
+  );
 
   if (rawRowId) {
     const loaded = await requireContinuityContext(rawRowId);

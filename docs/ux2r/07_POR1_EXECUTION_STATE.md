@@ -8,7 +8,7 @@
 ```
 Branch      : feat/ux2-integrated-core-experience
 PR          : #126 (DRAFT / OPEN / UNMERGED, base main)
-HEAD        : 81f1a69c6adedf528beaa50c90c1eac68dd34747
+HEAD        : see `git rev-parse HEAD` — last recorded: a78c4e5 + this commit (WS1-WS7)
 Production  : main @ c8d8a8ad6a72949c248adb098a626d1ab9d6a579 — UNTOUCHED
 Preview DB  : yorisou-preview (nbltsbonsnbpfptihomc)
 Migrations  : PRODUCTION_LINEAGE 12 · LOCAL_ONLY 4 · PREVIEW_ONLY 14
@@ -58,18 +58,57 @@ applied to Preview and smoke-tested end to end.
 - Smoke proof: idempotent open · illegal jump to `completed` rejected · full progression · verified
   finalize · id dropped · 9 audit rows · status still resolvable by fingerprint. Smoke row removed.
 
+**G4 — account-deletion application layer (WS1-WS5) and runtime controls (WS6), with WS7 tests.**
+
+- `lib/server/accountDeletionOrchestrator.ts` drives the saga and is resumable: every step is either
+  idempotent or rejected by the database state machine, so a crashed run is recoverable rather than
+  a permanently half-deleted account.
+- `lib/server/accountIdentityDeletion.ts` + `lib/server/identityKeyScope.ts` — the narrow adapter.
+  Five allowlisted identity families; traversal and empty segments refused; a person's CONTENT is
+  out of scope and is erased only by the database saga. No arbitrary path deletion, no generic
+  bucket admin, no secret-gated route.
+- Four API routes (`deletion-request` / `-confirm` / `-status` / `-cancel`). `-confirm` is the
+  irreversible boundary: session-resolved account only, unexpected body fields rejected, typed
+  `削除します` confirmation, password reauthentication, capability-gated, cookies cleared on
+  completion. It is retry-safe — a confirm after `failed_retryable` resumes rather than re-running
+  the opening transition, which the state machine would have classified as terminal.
+- `app/private-state/AccountDeletionPanel.tsx` — the authenticated UI. States: idle, disclosure,
+  processing (polled, survives a closed tab), completed, retryable failure, terminal failure. It
+  never renders a failure as success.
+- WS5 lock/session semantics, `lib/server/accountDeletionLock.ts`. Two real defects closed:
+  (a) the session cookie is self-contained and `getViewerContext` fabricates a synthetic session
+  from it, so deleting session objects did **not** end a session — a held account now resolves as
+  absent; (b) `/api/auth/login` falls back to the `yorisou_account` cookie when the store misses,
+  which would have let an erased account log back in — the durable job now distinguishes an erasure
+  from a store blip, and that path fails closed. LINE login obeys the same hold. Status and cancel
+  use a deliberately lock-tolerant resolver, because blinding someone to their own in-flight
+  deletion is not a safety property.
+- **Defect found and corrected against the applied migration:** the application listed `locked` as
+  cancellable while the database allows `cancelled` only from `requested` / `identity_verified`.
+  That combination would have shown a cancel button whose RPC always throws and released the hold on
+  an account whose job was still live. The application now mirrors the database.
+- WS6 controls wired at every canonical entry point via `canonicalRowIdWhenEnabled`: with a control
+  unset the row id is dropped and the pre-existing legacy branch runs, which is what makes flag-off
+  equivalent to today's Production rather than a new refusal screen.
+- WS7 permanent tests: `npm run test:por1-controls` (5), `npm run test:por1-deletion` (12),
+  `npm run test:por1-namespace` (6).
+- **`npm run gate:por1-flag-off-baseline`** — FLAG_OFF_BASELINE_EQUIVALENCE, 12 source-level checks.
+  Scope is stated in the script: it proves nothing new is *reachable* with the controls unset; it
+  does **not** prove rendered-output equivalence. That claim belongs to the hosted exact-SHA run.
+  Both failure modes were exercised deliberately (helper imported but not called; capability
+  mis-assigned) and the gate rejects each.
+
 ## Not yet done — exact remaining sequence
 
-1. **Account-deletion application layer.** Orchestrator in `lib/server/` driving the saga; narrow
+1. ~~**Account-deletion application layer.**~~ **DONE — see G4.** Original scope, for the record: Orchestrator in `lib/server/` driving the saga; narrow
    permanent identity-store adapter over the existing `sharedDeleteJson` / `deleteSession`
    primitives (allowlisted key patterns only: `phase1/accounts/by-id`, `accounts/by-email`,
    `sessions`, LINE lookup, consultations, password-reset); API routes; authenticated UI with
    explicit scope disclosure, reconfirmation and reauthentication; cancel-before-erasure.
    **No arbitrary object-path deletion, no generic storage admin, no temporary secret route.**
-2. **Runtime activation controls.** `CANONICAL_CORE`, `ACCOUNT_DELETION_EXECUTOR`,
-   `CANONICAL_RECOMMENDATIONS`, `LINE_CANONICAL_RETURN` — server-side, default OFF in Production,
-   ON in Preview, fail closed when unset, each independently stoppable. Then prove
-   `FLAG_OFF_BASELINE_EQUIVALENCE` before merge.
+2. ~~**Runtime activation controls.**~~ **DONE — see G4.** Remaining part of this item: setting the
+   four `YORISOU_POR1_*` variables to `on` in the Preview environment (they are unset there today,
+   so Preview currently serves the flag-off baseline). Production stays unset.
 3. **Full Preview acceptance at the new namespace.** The historical 79/0 predates the rename and no
    longer counts. Requires: exact-SHA deploy, build-identity check, the complete hosted train, the
    account-deletion lifecycle, the User A/User B deletion matrix, deletion of the existing
@@ -115,9 +154,10 @@ implement → flags OFF → apply additive Production migration → verify old a
 ## CONTINUATION_CURSOR
 
 ```
-next_action: build the account-deletion application layer (item 1 above), starting with the
-  orchestrator + identity-store adapter in lib/server/, then routes, then UI.
-next_command: (after that layer exists) apply nothing new to Preview — 202607300002 and
+next_action: WS8 — Preview exact-SHA terminal acceptance. Set the four YORISOU_POR1_* Preview
+  variables to "on", deploy this branch, confirm the deployed build identity, then run the hosted
+  train including the deletion lifecycle and the User A / User B matrix.
+next_command: apply nothing new to Preview — 202607300002 and
   202607300003 are ALREADY applied — deploy the branch and run:
   EXPECTED_GIT_SHA=<sha> PLAYWRIGHT_BASE_URL=<preview-url>
   VERCEL_AUTOMATION_BYPASS_SECRET=<project bypass> SUPABASE_URL=<preview>

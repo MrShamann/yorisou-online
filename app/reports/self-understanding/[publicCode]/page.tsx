@@ -17,6 +17,7 @@ import {
   buildSelfUnderstandingReportDownloadHref,
   loadSelfUnderstandingPublicReportByCode,
 } from "@/lib/yorisou/reports/loader";
+import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 export async function generateStaticParams() {
   return PUBLIC_ARCHETYPE_TAXONOMY.map((item) => ({ publicCode: item.publicCode }));
@@ -87,7 +88,10 @@ export default async function SelfUnderstandingReportPage({
 }) {
   const { publicCode } = await params;
   const query = (await searchParams) || {};
-  const rawRowId = typeof query.result === "string" ? query.result : null;
+  const rawRowId = canonicalRowIdWhenEnabled(
+    typeof query.result === "string" ? query.result : null,
+    "CANONICAL_CORE",
+  );
 
   // CPC-1 §2 — PRIVATE CANONICAL REPORT MODE.
   //

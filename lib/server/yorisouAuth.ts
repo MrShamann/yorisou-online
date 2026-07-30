@@ -17,6 +17,7 @@ import {
   type SessionPrincipalLanding,
   type SessionRecord,
 } from "@/lib/server/yorisouData";
+import { sessionMayActAsAccount } from "@/lib/server/accountDeletionLock";
 
 export const SESSION_COOKIE = "yorisou_session";
 export const ACCOUNT_COOKIE = "yorisou_account";
@@ -379,6 +380,22 @@ export function parseSessionPrincipalLanding(value: unknown): SessionPrincipalLa
   };
 }
 
+/**
+ * POR-1 WS5 — a held account is resolved as absent.
+ *
+ * The session cookie is self-contained, so revoking stored session objects does not by itself end a
+ * session. This is where a revoked session actually stops being able to act: the account record it
+ * resolves to carries the hold, and a held record yields no account and no principal.
+ */
+function accountUnlessDeletionLocked(
+  account: AccountRecord | null,
+  includeHeldAccount: boolean,
+): AccountRecord | null {
+  if (includeHeldAccount) return account;
+  if (account && !sessionMayActAsAccount(account.deletionLockedAt)) return null;
+  return account;
+}
+
 function toViewerPrincipal(account: AccountRecord | null): ViewerPrincipal | null {
   if (!account) {
     return null;
@@ -609,7 +626,16 @@ export function setViewerAccountCookie(response: NextResponse, account: AccountR
   });
 }
 
-export async function getViewerContext(): Promise<ViewerContext> {
+export async function getViewerContext(
+  /**
+   * POR-1 WS5 — escape hatch for the deletion surfaces ONLY; use
+   * `getDeletionSurfaceViewerContext()` rather than passing this by hand. A held account must still
+   * be able to read the status of, and cancel, the deletion it asked for. Blinding someone to their
+   * own in-flight deletion is not a safety property.
+   */
+  options?: { includeHeldAccount?: boolean },
+): Promise<ViewerContext> {
+  const includeHeldAccount = options?.includeHeldAccount === true;
   try {
     const cookieStore = await cookies();
     const rawSessionValue = cookieStore.get(SESSION_COOKIE)?.value;
@@ -634,7 +660,10 @@ export async function getViewerContext(): Promise<ViewerContext> {
         session.userId ||
         sessionCookie.userId ||
         (principalLanding.restoreSource === "contract_legacy_account" ? principalLanding.contract?.legacyAccountId || null : null);
-      const account = accountId ? (await findAccountById(accountId)) || (accountCookie?.id === accountId ? accountCookie : null) : null;
+      const account = accountUnlessDeletionLocked(
+        accountId ? (await findAccountById(accountId)) || (accountCookie?.id === accountId ? accountCookie : null) : null,
+        includeHeldAccount,
+      );
       return {
         session,
         account,
@@ -648,7 +677,10 @@ export async function getViewerContext(): Promise<ViewerContext> {
       const session = await findSessionById(rawSessionValue);
       if (session) {
         const touchedSession = (await touchSession(session.id, session.userId)) || session;
-        const account = touchedSession.userId ? await findAccountById(touchedSession.userId) : null;
+        const account = accountUnlessDeletionLocked(
+          touchedSession.userId ? await findAccountById(touchedSession.userId) : null,
+          includeHeldAccount,
+        );
         return {
           session: touchedSession,
           account,
@@ -662,11 +694,12 @@ export async function getViewerContext(): Promise<ViewerContext> {
       }
     }
 
+    const unlockedAccountCookie = accountUnlessDeletionLocked(accountCookie || null, includeHeldAccount);
     return {
       session: null,
-      account: accountCookie || null,
-      legacyAccount: accountCookie || null,
-      principal: toViewerPrincipal(accountCookie || null),
+      account: unlockedAccountCookie,
+      legacyAccount: unlockedAccountCookie,
+      principal: toViewerPrincipal(unlockedAccountCookie),
       principalLanding: {
         contract: null,
         contractStatus: "absent",
@@ -688,6 +721,16 @@ export async function getViewerContext(): Promise<ViewerContext> {
       },
     };
   }
+}
+
+/**
+ * POR-1 WS5 — viewer resolution for the account-deletion surfaces.
+ *
+ * Identical to `getViewerContext()` except that a held account still resolves. Nothing but the
+ * deletion status and cancel paths may use it: everywhere else, a hold means the session cannot act.
+ */
+export async function getDeletionSurfaceViewerContext(): Promise<ViewerContext> {
+  return getViewerContext({ includeHeldAccount: true });
 }
 
 export async function ensureViewerSession() {

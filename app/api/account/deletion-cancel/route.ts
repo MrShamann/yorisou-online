@@ -5,14 +5,14 @@ import { NextResponse } from "next/server";
 // After erasure begins there is nothing left to cancel, and reporting success would tell someone
 // their data still exists when it does not. Refusing is the honest answer.
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { getDeletionSurfaceViewerContext } from "@/lib/server/yorisouAuth";
 import { cancelDeletion, readDeletionStatus } from "@/lib/server/accountDeletionOrchestrator";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const viewer = await getViewerContext();
+  const viewer = await getDeletionSurfaceViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!accountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
 

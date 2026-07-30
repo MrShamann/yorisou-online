@@ -14,6 +14,7 @@ import "server-only";
 
 import { loadPersistedAssessmentResult } from "@/lib/server/persistedResultView";
 import type { PublicResultConfidenceBand } from "../check-in/resultCompatibility";
+import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 export type ResultRouteParams = Record<string, string | string[] | undefined>;
 
@@ -70,7 +71,7 @@ function readParam(params: ResultRouteParams, key: string) {
  * with a public result code and still render a result, and it would leak whether that row exists.
  */
 export async function resolveResultMode(params: ResultRouteParams): Promise<ResultMode> {
-  const requestedRowId = readParam(params, "result");
+  const requestedRowId = canonicalRowIdWhenEnabled(readParam(params, "result"), "CANONICAL_CORE");
 
   if (requestedRowId) {
     const persisted = await loadPersistedAssessmentResult(requestedRowId);
