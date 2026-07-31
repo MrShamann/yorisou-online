@@ -434,8 +434,26 @@ export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+/**
+ * POR-1 — newest first, TOTALLY.
+ *
+ * `T extends { createdAt: string }` is a claim about a type, not about the bytes in the store. These
+ * lists are built by parsing arbitrary JSON out of an object store, so the compiler's guarantee ends
+ * exactly where the data begins — and `b.createdAt.localeCompare(...)` dereferences the right-hand
+ * operand, so one record without the field turns an entire listing into a TypeError.
+ *
+ * It does so INTERMITTENTLY, which is what makes it worth guarding rather than tolerating: the bad
+ * record is harmless while the sort holds it in `a` and fatal the moment it lands in `b`, so whether
+ * a listing works depends on how many siblings it has. All four callers — accounts, sessions,
+ * consultations, password-resets — are families `buildDeletionManifest` enumerates, so a single
+ * malformed object anywhere in them makes erasure unreachable rather than merely slower.
+ *
+ * A missing timestamp sorts LAST and is still returned. Dropping the record would hide a real defect
+ * behind a listing that looks healthy, and the deletion manifest in particular must keep enumerating
+ * an object it cannot date — that object still belongs to someone.
+ */
 function sortByCreatedAtDesc<T extends { createdAt: string }>(entries: T[]) {
-  return [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return [...entries].sort((a, b) => (b?.createdAt ?? "").localeCompare(a?.createdAt ?? ""));
 }
 
 export function defaultSupportProfile(): SupportProfile {
@@ -908,8 +926,11 @@ function mergeRecentLineWebhookSubjectRecords(
   limit = 20,
 ) {
   const next = [incoming, ...records.filter((entry) => entry.eventId !== incoming.eventId)];
+  // Total, for the same reason as `sortByCreatedAtDesc`: `records` is parsed from a stored array and
+  // one entry without `receivedAt` would throw here rather than sort late — on the webhook write
+  // path, where the failure would be a dropped LINE event.
   return next
-    .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
+    .sort((a, b) => (b?.receivedAt ?? "").localeCompare(a?.receivedAt ?? ""))
     .slice(0, Math.max(1, limit));
 }
 

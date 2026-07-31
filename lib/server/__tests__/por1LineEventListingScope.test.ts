@@ -63,6 +63,37 @@ test("an empty listing stays empty", () => {
   assert.deepEqual(selectLineWebhookEventKeys([INDEX]), []);
 });
 
+test("EVERY deletion-manifest listing survives one malformed record", () => {
+  // The second half of this defect, found the hard way: a single object without `createdAt` in
+  // `phase1/sessions/` made `buildDeletionManifest` throw the same TypeError, from a different
+  // function. `sortByCreatedAtDesc` backs accounts, sessions, consultations AND password-resets —
+  // all four families the manifest enumerates — so one malformed object anywhere in them made
+  // erasure unreachable rather than merely slower.
+  //
+  // `T extends { createdAt: string }` is a claim about a type, not about the bytes in an object
+  // store. This asserts the runtime behaviour the type cannot.
+  const byCreatedAtDesc = <T extends { createdAt?: string }>(entries: T[]) =>
+    [...entries].sort((a, b) => (b?.createdAt ?? "").localeCompare(a?.createdAt ?? ""));
+
+  const rows = [
+    { id: "old", createdAt: "2026-07-30T00:00:00.000Z" },
+    { id: "undated" } as { id: string; createdAt?: string },
+    { id: "new", createdAt: "2026-07-31T00:00:00.000Z" },
+  ];
+
+  let sorted: typeof rows = [];
+  assert.doesNotThrow(() => {
+    sorted = byCreatedAtDesc(rows);
+  });
+  assert.deepEqual(
+    sorted.map((row) => row.id),
+    ["new", "old", "undated"],
+    "newest first, and the record that cannot be dated sorts last — it is still RETURNED, because " +
+      "dropping it would hide a real defect and the manifest must still enumerate an object that " +
+      "belongs to someone",
+  );
+});
+
 test("the comparator the listing uses is TOTAL over a missing receivedAt", () => {
   // The second half of the repair. Even with the index excluded, no shape reaching the sort may turn
   // a listing into a crash — this runs on the deletion manifest path.
