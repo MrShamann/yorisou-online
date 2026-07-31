@@ -100,6 +100,7 @@ export async function POST(request: Request) {
     console.info("por1.registration", {
       outcome: result.outcome,
       failureClass: result.outcome === "completed" ? null : result.failureClass,
+      detail: result.outcome === "completed" ? null : (result.detail ?? null),
       durationMs: result.durationMs,
       resumed: result.outcome === "completed" ? result.resumed : null,
       attemptCount: result.outcome === "completed" ? result.attemptCount : null,

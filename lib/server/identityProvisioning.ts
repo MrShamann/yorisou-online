@@ -54,7 +54,14 @@ import {
   type ProvisioningOutcome,
 } from "./identityProvisioningRollout";
 import { AccountMutationDenied } from "./accountMutationLease";
-import { createAccount, findAccountById, findSessionById, normalizeEmail } from "./yorisouData";
+import {
+  createAccount,
+  findAccountById,
+  findSessionById,
+  insertSessionRecordIfAbsent,
+  normalizeEmail,
+} from "./yorisouData";
+import { withAccountProvisioningLease } from "./accountMutationLease";
 import type { AccountRecord, SessionRecord } from "./yorisouData";
 import {
   bindSessionToUser,
@@ -101,7 +108,31 @@ export type ProvisioningResult =
       resumed: boolean;
       attemptCount: number;
     }
-  | { outcome: Exclude<ProvisioningOutcome, "completed">; failureClass: ProvisioningFailureClass; durationMs: number };
+  | {
+      outcome: Exclude<ProvisioningOutcome, "completed">;
+      failureClass: ProvisioningFailureClass;
+      /**
+       * Which check actually refused, within the class.
+       *
+       * The saga's `failure_class` is a closed enum on purpose, so it stays small enough to reason
+       * about and cannot become somewhere an exception message is stored. But "session_binding_failed"
+       * has four distinct causes with four different operator responses, and a log line that cannot
+       * tell them apart costs a deploy-and-rerun cycle per diagnosis — the exact tax the deletion
+       * work paid before it started recording residue FAMILIES.
+       *
+       * Bounded, closed, and non-PII, like the class it refines.
+       */
+      detail?: ProvisioningFailureDetail;
+      durationMs: number;
+    };
+
+export type ProvisioningFailureDetail =
+  | "bind_returned_null"
+  | "session_not_stored"
+  | "session_landing_missing"
+  | "session_account_link_missing"
+  | "session_insert_failed"
+  | "bind_threw";
 
 /**
  * The intent identity.
@@ -181,7 +212,12 @@ export async function provisionRegistration(input: {
     }
     const session = await bindAndProve(account);
     if (!session.ok) {
-      return { outcome: "retryable", failureClass: session.failureClass, durationMs: Date.now() - startedAt };
+      return {
+        outcome: "retryable",
+        failureClass: session.failureClass,
+        detail: session.detail,
+        durationMs: Date.now() - startedAt,
+      };
     }
     return {
       outcome: "completed",
@@ -230,6 +266,7 @@ export async function provisionRegistration(input: {
   const fail = async (
     failureClass: ProvisioningFailureClass,
     terminal: boolean,
+    detail?: ProvisioningFailureDetail,
   ): Promise<ProvisioningResult> => {
     try {
       await rpc("yorisou_provisioning_record_failure", {
@@ -247,6 +284,7 @@ export async function provisionRegistration(input: {
     return {
       outcome: terminal ? "terminal" : "retryable",
       failureClass,
+      detail,
       durationMs: Date.now() - startedAt,
     };
   };
@@ -322,12 +360,12 @@ export async function provisionRegistration(input: {
     let session: SessionRecord | null = null;
     if (cursor === "session_binding") {
       const bound = await bindAndProve(account);
-      if (!bound.ok) return fail(bound.failureClass, false);
+      if (!bound.ok) return fail(bound.failureClass, false, bound.detail);
       session = bound.session;
       await step("session_binding", { sessionFingerprint: fingerprint(session.id) });
     } else {
       const bound = await bindAndProve(account);
-      if (!bound.ok) return fail(bound.failureClass, false);
+      if (!bound.ok) return fail(bound.failureClass, false, bound.detail);
       session = bound.session;
     }
 
@@ -367,14 +405,31 @@ export async function provisionRegistration(input: {
  */
 async function bindAndProve(
   account: AccountRecord,
-): Promise<{ ok: true; session: SessionRecord } | { ok: false; failureClass: ProvisioningFailureClass }> {
+): Promise<
+  | { ok: true; session: SessionRecord }
+  | { ok: false; failureClass: ProvisioningFailureClass; detail?: ProvisioningFailureDetail }
+> {
   try {
     const session = await ensureViewerSession();
+
+    // The cookie is self-contained, so `ensureViewerSession` can return a SYNTHETIC session that the
+    // store has never seen — and `touchSession` updates in place, so binding it would silently do
+    // nothing. Persist the row first, keeping the id: a new id would break the anonymous→register
+    // continuity that is the reason someone registers from a session that already has activity.
+    const persisted = await withAccountProvisioningLease({
+      accountId: account.id,
+      operation: "session_account_binding",
+      execute: (context) => insertSessionRecordIfAbsent(context, session),
+    });
+    if (!persisted) {
+      return { ok: false, failureClass: "session_binding_failed", detail: "session_insert_failed" };
+    }
+
     const bound = await bindSessionToUser(session.id, account.id, {
       legacyAccount: account,
       source: "register",
     });
-    if (!bound) return { ok: false, failureClass: "session_binding_failed" };
+    if (!bound) return { ok: false, failureClass: "session_binding_failed", detail: "bind_returned_null" };
 
     const withLanding = await switchSessionToPrincipalLandingTruth(bound, {
       legacyAccount: account,
@@ -383,16 +438,20 @@ async function bindAndProve(
 
     // Resolved back out of the store, not trusted from the return value.
     const stored = await findSessionById(withLanding.id);
-    if (!stored) return { ok: false, failureClass: "session_binding_failed" };
+    if (!stored) return { ok: false, failureClass: "session_binding_failed", detail: "session_not_stored" };
 
     const landing = parseSessionPrincipalLanding(stored.principalLanding);
-    const namesAccount = stored.userId === account.id || landing?.legacyAccountId === account.id;
-    if (!landing || !namesAccount) return { ok: false, failureClass: "session_binding_failed" };
+    if (!landing) {
+      return { ok: false, failureClass: "session_binding_failed", detail: "session_landing_missing" };
+    }
+    if (stored.userId !== account.id && landing.legacyAccountId !== account.id) {
+      return { ok: false, failureClass: "session_binding_failed", detail: "session_account_link_missing" };
+    }
 
     return { ok: true, session: withLanding };
   } catch (error) {
     if (error instanceof AccountMutationDenied) return { ok: false, failureClass: "mutation_fence_denied" };
-    return { ok: false, failureClass: "session_binding_failed" };
+    return { ok: false, failureClass: "session_binding_failed", detail: "bind_threw" };
   }
 }
 
@@ -472,7 +531,12 @@ async function runInline(
 
     const bound = await bindAndProve(created.account);
     if (!bound.ok) {
-      return { outcome: "retryable", failureClass: bound.failureClass, durationMs: Date.now() - startedAt };
+      return {
+        outcome: "retryable",
+        failureClass: bound.failureClass,
+        detail: bound.detail,
+        durationMs: Date.now() - startedAt,
+      };
     }
 
     const proof = await proveCanonicalIdentity(created.account, bound.session);

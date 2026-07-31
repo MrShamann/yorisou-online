@@ -1479,6 +1479,58 @@ export async function createSession(
 }
 
 /**
+ * POR-1 — INSERT a session row that does not exist yet, keeping its id.
+ *
+ * WHY THIS EXISTS. The session cookie is SELF-CONTAINED, and `getViewerContext` fabricates a
+ * synthetic session from it when the store has no matching row. That is deliberate and it is what
+ * keeps an anonymous visitor working across a store blip — but it means `ensureViewerSession()` can
+ * hand back a session id the store has never seen, and `touchSession` (which updates in place) then
+ * finds nothing and returns null.
+ *
+ * Registration used to paper over exactly that with `|| { ...session, userId: account.id }`: an
+ * in-memory object shaped like a bound session, from which a cookie was then minted. The browser
+ * ended up authenticated with no server-side session record at all.
+ *
+ * So the row is created, keeping the ID — a new id would break anonymous→register continuity, which
+ * is the whole point of registering from a session that already has activity.
+ *
+ * DELIBERATELY NOT AN UPSERT, and `touchSession` deliberately stays update-only. An upsert on this
+ * table is a resurrection primitive: session revocation deletes rows, and a stale cookie replaying
+ * against an upsert would recreate the session it just lost. This inserts ONLY when absent, requires
+ * a write context exactly as every other account-linked write does, and returns the existing row
+ * untouched when there is one.
+ */
+export async function insertSessionRecordIfAbsent(
+  context: AccountWriteContext | null,
+  session: SessionRecord,
+): Promise<SessionRecord | null> {
+  const attachesAccount =
+    Boolean(session.userId) ||
+    Boolean(session.principalLanding && (session.principalLanding.legacyAccountId || session.principalLanding.principalId));
+  if (attachesAccount) {
+    assertAccountWriteContext(
+      context,
+      session.userId || session.principalLanding?.legacyAccountId || undefined,
+    );
+  }
+
+  const existing = await findSessionById(session.id);
+  if (existing) return existing;
+
+  const record: SessionRecord = { ...session, updatedAt: nowIso() };
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    await putSharedSessionRecord(context, record);
+    return record;
+  }
+
+  const sessions = await listSessions();
+  sessions.unshift(record);
+  await writeLocalJson(sessionsFile, sessions);
+  return record;
+}
+
+/**
  * POR-1 — update a session record.
  *
  * A session is account-linked state, and `touchSession` is how an account gets BOUND to one. So an

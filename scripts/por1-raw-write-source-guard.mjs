@@ -78,6 +78,20 @@ const GUARDED = [
     ],
   },
   {
+    symbol: "insertSessionRecordIfAbsent",
+    why:
+      "Creates a session row for an existing id. Insert-only, but on the table whose deletion ends " +
+      "a session — a second caller is a second way a stale cookie could get its row back.",
+    allow: ["lib/server/yorisouData.ts", "lib/server/identityProvisioning.ts"],
+  },
+  {
+    symbol: "recordCanonicalLineEvent",
+    why:
+      "The canonical LINE activity write. It crosses the subject-erasure barrier, so a second " +
+      "caller is a second place the barrier could be forgotten.",
+    allow: ["lib/server/canonicalLineActivity.ts", "lib/server/yorisouData.ts"],
+  },
+  {
     symbol: "provisionRegistration",
     why:
       "Creates an account and its canonical identity. ONE route may drive it; a second caller is a " +
