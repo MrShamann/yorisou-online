@@ -1054,6 +1054,80 @@ bounded allowlist. Two causes, both real:
 immutable; a later `create or replace` is how this project changes behaviour without rewriting
 history.
 
+### A second defect the repair introduced — and it was the same mistake, one layer up
+
+`yorisou_identity_links_sync` took "the COMPLETE set of links this account should hold" and retired
+anything absent from it. That contract is only safe if the caller knows the whole truth, and it does
+not: `putSharedAccountRecord` derives the set from `identityLinksForAccount(account)`, and `account`
+came from the very object read that can be served stale for tens of seconds.
+
+**So a stale account record — one written before a LINE binding — produced a link set with no LINE
+subject, and the sync ERASED the strongly consistent record of a binding that had really happened.**
+The registry became destroyable by the cache it exists to be independent of.
+
+Observed across two hosted runs at two SHAs, which is what made it unambiguous:
+
+```
+09:23  job 9d73b498  canonicalIdentityLinkCount=2  identityLookupKeys=2  manifest named LINE ✓
+09:40  job c0764ea9  canonicalIdentityLinkCount=1  identityLookupKeys=1  manifest named LINE ✗
+```
+
+Same code path, same fixture. The only difference was which copy of the account object the writer
+happened to read.
+
+The rule the whole design rests on is that **a stale read may only ever WIDEN, never narrow.** The
+manifest obeyed it; the writer did not — and a writer that can narrow the authority is worse than no
+authority, because everything downstream now trusts it.
+
+`202607310006` makes the sync **additive**: it never retires. A retirement is a deliberate act with
+its own entry point, called from the one place that can genuinely observe an unbind — the account
+writer comparing the PREVIOUS record's LINE subject against the new one, which is a comparison of two
+known values rather than an inference from an absence. It is owner-scoped (retiring a link you do not
+own would cut a living person off from their own login) and replayable. The migration asserts against
+the **live** function definition that the sync no longer retires, so a later `create or replace`
+cannot silently reinstate it.
+
+### The repair is PROVEN HOSTED — defect 4 is closed
+
+At `b024dfd`, five workflows green, deployed and identity-gated, the deletion **completed on the
+first attempt**:
+
+```
+job ff1c010a   state=completed   cursor=completed   attempt_count=1   last_error=null
+               manifest_named_line=TRUE   identityLookupKeys=2   canonicalIdentityLinkCount=2
+```
+
+The manifest named the LINE lookup — supplied by the registry through the union — the absence sweep
+passed for every family, and **no orphaned `accounts/by-line-user/` object was left behind**. The
+three that survive in Preview all pre-date the repair:
+
+```
+05:40:57  never subject to a deletion at all — ordinary synthetic residue
+06:01:25  the ORIGINAL orphan (manifest named no LINE scope) — preserved evidence
+09:40:21  the orphan from the additive-sync defect, before 202607310006
+```
+
+Three consecutive runs at one SHA are still required before WS-F can be called done; this is one
+clean run, not three.
+
+### STILL OPEN — a surviving cookie is still answered after erasure
+
+The same run then failed **later**, at post-deletion denial, and this is a different defect that
+predates the identity-link work:
+
+```
+GET /api/account/deletion-status   with User A's cookie, after A was erased
+expected 401   received 200
+```
+
+The session cookie is self-contained (AES-256-GCM over the account), so a route that trusts it
+without confirming the account still resolves will answer an erased person. Every other denial in
+that block — login, password reset, reports, downloads, recommendations — has not been re-checked
+past this assertion, because the test stops here.
+
+**This is the next action.** It is a real post-deletion denial defect, not a test artifact: contract
+§14 requires `cookie restoration denied`, and a 200 from an account-scoped route is the opposite.
+
 ## WS-D — the identity mutation graph re-audit, COMPLETE
 
 The §11 invariant, restated so it can be checked rather than admired:
@@ -1171,63 +1245,57 @@ architecture produces, and the regression test has to reproduce them before the 
 
 ```
 package: YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT (Founder, 2026-07-31)
-workstream: A complete - B complete - C complete - D partial - E complete for this candidate
-            - F IN PROGRESS: the concurrency property now reaches the ABSENCE SWEEP; four defects
-              found, three fixed at root, one open and diagnosed below
+workstream: A complete - B complete - C complete - D COMPLETE (the full graph re-audit, §11)
+            - E complete for this candidate
+            - F IN PROGRESS: the deletion property now COMPLETES on the first attempt with a
+              complete manifest and leaves no orphan; the run then fails at the post-deletion
+              DENIAL block (surviving cookie answered 200)
             - G..M not started
 
-next_action: DEFECT 4 IS ROOT-CAUSED (see the section above, which also corrects two wrong statements
-  in the previous cursor). The evidence is preserved and nothing has been cleaned.
+next_action: DEFECT 4 IS CLOSED — root-caused, repaired architecturally, and PROVEN HOSTED at
+  b024dfd (job ff1c010a: completed, first attempt, manifest named the LINE lookup, no orphan left).
+  The full record, including the two defects the repair itself introduced and how each was found by
+  RUNNING it, is in the sections above.
 
-  PROVEN by the Preview record: the job that lost the LINE scope did NOT complete and did NOT report
-  clean; the job that DID complete named its LINE lookup and erased it. The manifest that omitted the
-  LINE scope froze 14.0s after a LINE binding that had finished 2.0s BEFORE the deletion was even
-  requested — so no race, nothing for the fence to refuse, only a read that could not see a finished
-  write. Two structural defects, both required to be repaired:
+  THE NEXT ACTION IS THE NEW OPEN DEFECT: after a completed erasure, User A's surviving cookie is
+  answered 200 by `GET /api/account/deletion-status` where §14 requires denial. The cookie is
+  self-contained AES-256-GCM over the account, so a route that trusts it without confirming the
+  account still resolves will answer an erased person. This predates the identity-link work and is
+  not a test artifact.
 
-    4A  buildDeletionManifest derives the whole destructive identity scope from ONE
-        eventually-consistent object read (accountIdentityDeletion.ts:145). A stale copy NARROWS the
-        manifest. Not LINE-specific — email lookup and sessions have the same shape.
-    4B  verifyIdentityErasure iterates the MANIFEST, so a family the manifest omits is never looked
-        at and can be reported clean (accountIdentityDeletion.ts:338/348/355/361/367/386/411).
-        True regardless of what caused the omission — repair it even if 4A were a fixture artifact.
+    1. Fix the denial at the route/session-resolution seam, not in the test.
+    2. Re-check the rest of the §14 denial block, which the run has never reached: login, cookie
+       restoration, password reset, recovery, LINE resolution, reports, downloads, recommendations.
+    3. THEN the concurrency property three consecutive times at one SHA — one clean run is not three.
+    4. 20 consecutive registrations with p50/p95/max.
+    5. The full hosted train with 0 serious / 0 critical axe.
+    6. Cleanup twice, the second deleting nothing.
 
-  REMAINING to distinguish (does not change 4A or 4B, only whether the fixture ALSO needs a gate):
-  whether `bindLineIdentityInPreviewStore` always writes the account record. Evidence so far says it
-  does — the three other runs all left lineUserId present with updated_at equal to the second the
-  lookup was created — but it has not been confirmed by a controlled run.
-
-  REPAIR (contract §9): a strongly consistent canonical identity-link registry in PostgreSQL, written
-  inside the same governed mutation/provisioning transaction that binds or creates identity, as the
-  serialization point. The manifest derives destructive scope from it; finalization verifies identity
-  families from it independently of the manifest. No sleep, no retry-until-visible, no re-read.
-
-  Then finish WS-F: the concurrency property three times at the same SHA - 20 consecutive
-  registrations with p50/p95/max - the full hosted train with 0 serious / 0 critical axe - cleanup
-  twice with the second deleting nothing.
-
-hosted_progress: the deletion now REACHES COMPLETION under four concurrent adversaries, the second
-  executor is refused with a bounded 202, and the stale writers are answered rather than faulted.
-  One hosted deletion (job 8e108939) completed with a COMPLETE manifest and erased every family it
-  named, including the LINE lookup. The failure mode is an under-populated manifest, not a failed
-  erasure.
-last_green_candidate_sha: 0a5967f — five workflows SUCCESS read at that exact SHA
-  (Migration Scope Guard 30618735300 · Yorisou Check 30618735297 · CPV1-CM0 30618735285
-   YV-1 30618735280 · DCI-1 30618735278)
-  991c7ec also five SUCCESS at its own SHA (30617643252 / 30617643242 / 30617643481 /
-   30617643237 / 30617643224)
-last_deployed_preview_sha: 0a5967f, attesting isolated-preview, projectMatch true, FOUR readiness
-  facts true (the new CANONICAL_IDENTITY_LINKS among them) and four capabilities true.
-  NOTE: the git-triggered deployment of 0a5967f attested CANONICAL_IDENTITY_LINKS **false**, because
-  it was built before the variable existed. The identity gate REFUSED it, which is the gate working.
-  A redeploy of the same SHA picked the variable up.
-last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
-  0a5967f reached the second-executor assertion and failed it with a 500 — a defect this session
-  introduced, root-caused and repaired in f3293ea (see the same-owner race above).
-preview_synthetic_state: NOT CLEAN, and DELIBERATELY PRESERVED — counted in the bounded inventory
-  above (21 jobs, 4 manifests, 53 store objects). The orphaned LINE lookup of job 0fdee7d0 is the
-  EVIDENCE for defect 4 and the negative control for §10. WS-G cleans it only after the repair is
-  proven, then proves zero residue twice.
+hosted_progress: the deletion completes under four concurrent adversaries, the second executor is
+  refused with a bounded 202, the stale writers are answered rather than faulted, and — new at
+  b024dfd — the manifest is COMPLETE (LINE lookup named from the registry union) and the absence
+  sweep passes for every family with no orphan left behind. The run now reaches the post-deletion
+  denial block for the first time, and stops there.
+last_green_candidate_sha: b024dfd — five workflows SUCCESS read at that exact SHA
+  (Migration Scope Guard 30621401191 · Yorisou Check 30621401184 · CPV1-CM0 30621401141
+   YV-1 30621401187 · DCI-1 30621401198)
+  Earlier five-green candidates this session, each read at its own SHA:
+   991c7ec (30617643252/242/481/237/224) · 0a5967f (30618735300/297/285/280/278)
+   f3293ea (30620390509/535/523/568/549)
+last_deployed_preview_sha: b024dfd — isolated-preview, projectMatch true, FOUR readiness facts true
+  and four capabilities true, all read back as the literal string `on` (never `[SENSITIVE]`).
+  NOTE worth carrying: the git-triggered deployment of 0a5967f attested CANONICAL_IDENTITY_LINKS
+  FALSE because it was built before the variable existed, and the identity gate REFUSED it. That is
+  the gate working. A redeploy of the same SHA picked the variable up. Set the variable BEFORE the
+  push that will build against it.
+last_accepted_candidate_sha: NONE. No SHA has passed the full hosted exact-SHA acceptance for POR-1.
+  b024dfd is the first to pass the deletion property end to end (completed, first attempt, no
+  orphan) and it then fails at the post-deletion denial block on the surviving-cookie assertion.
+preview_synthetic_state: NOT CLEAN. The pre-repair inventory was 21 jobs / 4 manifests / 53 store
+  objects; this session's hosted runs added more (67 store objects at last count, 3 surviving
+  by-line-user of which 2 are pre-repair orphans and 1 was never deleted). The two orphans are the
+  EVIDENCE for defect 4 and the §10 negative control, and the repair that removes them is now
+  proven — so WS-G may clean, and must then prove zero residue twice.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
 production_activation_state: NONE. All four POR-1 controls unset in Production.
 pr_126_state: OPEN / DRAFT / UNMERGED, body still STALE — WS-J.
