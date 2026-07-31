@@ -807,7 +807,10 @@ next_action: WS-F, exact-SHA hosted Preview acceptance, against
 preview_migrations_applied: 202607310001, 202607310002, 202607310003 — verified by schema inspection
 preview_readiness: all three on, READ BACK as `on` (not `[SENSITIVE]`)
 preview_capabilities: all four on
-last_green_candidate_sha: f657f47 — five workflows SUCCESS, read at that exact SHA
+last_green_candidate_sha: f657f47 — the DEPLOYED candidate; five workflows SUCCESS at that SHA
+final_head: 9b97228 (docs-only descendant) — five workflows SUCCESS, read at that exact SHA:
+  Migration Scope Guard 30604902956 · Yorisou Check 30604903012 · CPV1-CM0 CI 30604903037
+  YV-1 CI 30604902979 · DCI-1 CI 30604903020
 last_hosted_candidate_sha: f6f50a6 — its run did NOT reach the concurrency property
 last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
 preview_synthetic_state: NOT audited this session. WS-G must still clean and prove zero residue.
