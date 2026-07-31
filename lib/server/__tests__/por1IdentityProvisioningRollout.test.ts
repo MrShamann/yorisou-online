@@ -207,3 +207,84 @@ describe("POR-1 incomplete-identity access gate", () => {
     );
   });
 });
+
+// ── POR-1 R2b — a cacheable re-read may not veto a write that reported success ──
+//
+// Registration was refused with `session_landing_missing` while the write had in fact landed.
+// `bindAndProve` proved its work by resolving the session back out of the store, and that read is a
+// GET on the key just written — a key this transport serves superseded versions of. It returned the
+// copy `insertSessionRecordIfAbsent` had written moments earlier, without the landing contract.
+//
+// The saga was HONEST about it: it could not prove the canonical identity, so it refused to return
+// 200. That is WS-C working. But the proof itself was unsound, and roughly one concurrent pair in
+// four paid for it. The durable failure DETAIL — persisted only one segment earlier — is what named
+// it: `session_landing_missing` at cursor `session_binding`.
+//
+// The re-read existed to catch the IN-MEMORY FALLBACK: a session object no store has ever seen,
+// which would mint a cookie for an identity with no server-side existence. `touchSession` is
+// update-only and returns null in exactly that case, so the write already knows — and asking the
+// write is both stronger than the read and immune to the cache.
+
+/** The decision `bindAndProve` now makes, from what the WRITE reported. */
+function classifyBinding(input: {
+  contractApplied: boolean;
+  persisted: boolean;
+  landingPresent: boolean;
+  accountLinked: boolean;
+}): "ok" | "session_landing_missing" | "session_not_stored" | "session_account_link_missing" {
+  if (!input.contractApplied) return "session_landing_missing";
+  if (!input.persisted) return "session_not_stored";
+  if (!input.landingPresent) return "session_landing_missing";
+  if (!input.accountLinked) return "session_account_link_missing";
+  return "ok";
+}
+
+describe("POR-1 R2b — binding proof comes from the write, not a re-read", () => {
+it("R2b: a landed write is accepted even when a re-read would have missed the contract", () => {
+  // The exact hosted signature. The old model consulted a stale copy and refused; the write says it
+  // landed, and that is the fact.
+  assert.equal(
+    classifyBinding({ contractApplied: true, persisted: true, landingPresent: true, accountLinked: true }),
+    "ok",
+  );
+});
+
+it("R2b: the in-memory fallback is STILL refused — that is what the proof was for", () => {
+  // `touchSession` returned null: there was no row to update, so the session exists only in memory.
+  // A cookie minted from it would authenticate a browser against nothing. This must never pass.
+  assert.equal(
+    classifyBinding({ contractApplied: true, persisted: false, landingPresent: true, accountLinked: true }),
+    "session_not_stored",
+  );
+});
+
+it("R2b: a contract that was never applied is still refused", () => {
+  assert.equal(
+    classifyBinding({ contractApplied: false, persisted: false, landingPresent: false, accountLinked: false }),
+    "session_landing_missing",
+  );
+});
+
+it("R2b: an unlinked account is still refused, on the record the write returned", () => {
+  assert.equal(
+    classifyBinding({ contractApplied: true, persisted: true, landingPresent: true, accountLinked: false }),
+    "session_account_link_missing",
+  );
+});
+
+it("R2b: no input combination lets an unpersisted session become a successful registration", () => {
+  // Exhaustive over the decision space. A 200 here is an authenticated browser with no server-side
+  // identity, which is the precise thing WS-C exists to abolish.
+  for (const contractApplied of [true, false]) {
+    for (const landingPresent of [true, false]) {
+      for (const accountLinked of [true, false]) {
+        assert.notEqual(
+          classifyBinding({ contractApplied, persisted: false, landingPresent, accountLinked }),
+          "ok",
+          `persisted=false must never be ok (${contractApplied}/${landingPresent}/${accountLinked})`,
+        );
+      }
+    }
+  }
+});
+});

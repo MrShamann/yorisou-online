@@ -67,7 +67,7 @@ import {
   bindSessionToUser,
   ensureViewerSession,
   parseSessionPrincipalLanding,
-  switchSessionToPrincipalLandingTruth,
+  switchSessionToPrincipalLandingTruthWithProof,
 } from "./yorisouAuth";
 
 /** The bounded failure vocabulary the saga's CHECK constraint accepts. */
@@ -441,20 +441,39 @@ async function bindAndProve(
     });
     if (!bound) return { ok: false, failureClass: "session_binding_failed", detail: "bind_returned_null" };
 
-    const withLanding = await switchSessionToPrincipalLandingTruth(bound, {
+    const switched = await switchSessionToPrincipalLandingTruthWithProof(bound, {
       legacyAccount: account,
       source: "register",
     });
+    const withLanding = switched.session;
 
-    // Resolved back out of the store, not trusted from the return value.
-    const stored = await findSessionById(withLanding.id);
-    if (!stored) return { ok: false, failureClass: "session_binding_failed", detail: "session_not_stored" };
+    // THE WRITE PROVES ITSELF; A CACHEABLE RE-READ CANNOT.
+    //
+    // This used to resolve the session back out of the store and inspect the copy it got. That read
+    // is a GET on the key just written, and this transport serves superseded versions of a key it
+    // has recently seen — so it returned the copy `insertSessionRecordIfAbsent` wrote moments
+    // earlier, WITHOUT the landing contract, and registration was refused with
+    // `session_landing_missing`. Truthfully by its own contract, and wrongly in fact: the write had
+    // landed. Measured 1 in ~4 concurrent pairs, and the durable detail is what finally named it.
+    //
+    // The thing the re-read was invented to catch is the IN-MEMORY FALLBACK — a session object no
+    // store has ever seen, which would mint a cookie for an identity that does not exist server-side.
+    // `touchSession` is update-only and returns null in exactly that case, so the write already knows.
+    // Asking it is both stronger and immune to the cache.
+    if (!switched.contractApplied) {
+      return { ok: false, failureClass: "session_binding_failed", detail: "session_landing_missing" };
+    }
+    if (!switched.persisted) {
+      return { ok: false, failureClass: "session_binding_failed", detail: "session_not_stored" };
+    }
 
-    const landing = parseSessionPrincipalLanding(stored.principalLanding);
+    // The account link is asserted on the record the write RETURNED, which is the row the store now
+    // holds — not on whatever a subsequent read happens to be served.
+    const landing = parseSessionPrincipalLanding(withLanding.principalLanding);
     if (!landing) {
       return { ok: false, failureClass: "session_binding_failed", detail: "session_landing_missing" };
     }
-    if (stored.userId !== account.id && landing.legacyAccountId !== account.id) {
+    if (withLanding.userId !== account.id && landing.legacyAccountId !== account.id) {
       return { ok: false, failureClass: "session_binding_failed", detail: "session_account_link_missing" };
     }
 

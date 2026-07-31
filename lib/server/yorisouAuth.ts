@@ -545,18 +545,36 @@ export async function ensureSessionPrincipalLandingShadowWrite(
   );
 }
 
-export async function switchSessionToPrincipalLandingTruth(
+/**
+ * POR-1 R2b — the same switch, but it SAYS whether the write landed.
+ *
+ * `switchSessionToPrincipalLandingTruth` returns `touchSession(...) || fallback`, and the fallback is
+ * shaped exactly like a successful result. So a caller that needs to know whether the contract was
+ * actually persisted could not ask — it had to re-read the object and look.
+ *
+ * That re-read is a cacheable GET on the key that was just written, and this transport serves
+ * superseded versions of a key it has recently seen. Registration's `bindAndProve` therefore read
+ * back the copy written moments earlier by `insertSessionRecordIfAbsent` — the one WITHOUT the
+ * landing — and refused the registration with `session_landing_missing`. Truthfully, by its own
+ * contract: it could not prove the identity, so it would not return 200. But the write had
+ * succeeded, and the person was told to try again for nothing.
+ *
+ * `persisted` comes from the write itself. `touchSession` is update-only and returns the record it
+ * wrote, or null when there was no row to update — which is precisely the in-memory-fallback case
+ * the read-back was invented to catch.
+ */
+export async function switchSessionToPrincipalLandingTruthWithProof(
   session: SessionRecord,
   input: {
     legacyAccount: AccountRecord | null;
     source: SessionPrincipalLanding["source"];
   },
-): Promise<SessionRecord> {
+): Promise<{ session: SessionRecord; persisted: boolean; contractApplied: boolean }> {
   const sessionWithShadow = await withSessionPrincipalLandingShadow(session, input);
   const contract = parseSessionPrincipalLanding(sessionWithShadow.principalLanding);
 
   if (!contract) {
-    return session;
+    return { session, persisted: false, contractApplied: false };
   }
 
   // The contract still names the account even though `userId` becomes null, so this is account-linked
@@ -564,16 +582,31 @@ export async function switchSessionToPrincipalLandingTruth(
   // the session the erasure probe found still live — outside the fence.
   const accountId = contract.legacyAccountId || session.userId || input.legacyAccount?.id || null;
   const fallback = { ...sessionWithShadow, userId: null };
-  if (!accountId) {
-    return (await touchSession(null, session.id, null, contract)) || fallback;
-  }
-  return (
-    (await withAccountMutationLease({
-      accountId,
-      operation: "session_identity_upgrade",
-      execute: (context) => touchSession(context, session.id, null, contract),
-    })) || fallback
-  );
+
+  const written = accountId
+    ? await withAccountMutationLease({
+        accountId,
+        operation: "session_identity_upgrade",
+        execute: (context) => touchSession(context, session.id, null, contract),
+      })
+    : await touchSession(null, session.id, null, contract);
+
+  return {
+    session: written || fallback,
+    persisted: Boolean(written),
+    contractApplied: true,
+  };
+}
+
+export async function switchSessionToPrincipalLandingTruth(
+  session: SessionRecord,
+  input: {
+    legacyAccount: AccountRecord | null;
+    source: SessionPrincipalLanding["source"];
+  },
+): Promise<SessionRecord> {
+  const result = await switchSessionToPrincipalLandingTruthWithProof(session, input);
+  return result.session;
 }
 
 export async function inspectSessionPrincipalLandingCoverage(input: {
