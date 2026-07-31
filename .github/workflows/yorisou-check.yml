@@ -138,6 +138,12 @@ jobs:
       - name: POR-1 raw-write source guard
         run: npm run guard:por1-raw-writes
 
+      - name: Report library is bundled and in sync with its markdown source
+        run: |
+          npm run check:report-registry
+          npm run test:por1-report-delivery
+          npm run check:evidence-hygiene:selftest
+
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"
 

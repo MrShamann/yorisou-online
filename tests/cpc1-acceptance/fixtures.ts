@@ -1043,3 +1043,125 @@ export async function readProvisioningResidue(accountId: string): Promise<number
   if (!response.ok) throw new Error(`provisioning_residue_failed:${response.status}`);
   return Number(await response.json());
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POR-1 R2 — driving a deletion to a terminal state when the transport may time out.
+//
+// THE DEFECT THIS EXISTS TO CLOSE.
+//
+// The confirm route runs the whole saga inline. Under full-suite load the CLIENT hit its own
+// timeout, and `page.request.post` THROWS on timeout rather than returning a status — so the retry
+// loop, which only ever inspected returned responses, never saw it and the exception escaped the
+// whole step. The deletion itself was fine; the harness could not tell.
+//
+// The fix is not a longer timeout and not a blind repeat. A thrown timeout means THE OUTCOME IS
+// UNKNOWN, and the only honest next move is to ask the durable record what actually happened before
+// deciding whether another confirm is even legal.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Transport failures where the request's fate is genuinely unknown, so reconciliation is legal. */
+function isReconcilableTransportError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("ETIMEDOUT") ||
+    message.includes("ECONNRESET") ||
+    message.includes("socket hang up") ||
+    message.includes("Request timed out")
+  );
+}
+
+export type DeletionDriveResult = {
+  outcome: "completed" | "denied" | "failed_retryable" | "failed_terminal" | "authority_unavailable";
+  attempts: number;
+  timeouts: number;
+  lastState: string | null;
+};
+
+/**
+ * Drive a deletion to a terminal state, reconciling every unknown against the durable record.
+ *
+ * Bounded in BOTH dimensions — attempts and wall clock — so a stuck deployment fails the property
+ * rather than hanging it. A genuinely failed deletion still fails: `failed_terminal` stops
+ * immediately, and exhausting the budget on `failed_retryable` is reported as such rather than
+ * retried into a pass.
+ */
+export async function driveDeletionToTerminal(
+  page: Page,
+  credentials: { password: string },
+  options: { maxAttempts?: number; budgetMs?: number } = {},
+): Promise<DeletionDriveResult> {
+  const maxAttempts = options.maxAttempts ?? 40;
+  const budgetMs = options.budgetMs ?? 600_000;
+  const startedAt = Date.now();
+  let timeouts = 0;
+  let lastState: string | null = null;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if (Date.now() - startedAt > budgetMs) break;
+
+    // THE DURABLE RECORD FIRST, ALWAYS. After a timeout this is the only thing that knows whether
+    // the erasure ran, and asking it before re-confirming is what stops a second destructive
+    // execution being launched over one that already succeeded.
+    let statusCode: number;
+    let state: string | null = null;
+    try {
+      const status = await page.request.get("/api/account/deletion-status", { timeout: 60_000 });
+      statusCode = status.status();
+      if (statusCode === 200) {
+        state = ((await status.json()) as { state: string | null }).state;
+        lastState = state;
+      }
+    } catch (error) {
+      if (!isReconcilableTransportError(error)) throw error;
+      timeouts += 1;
+      await page.waitForTimeout(3_000);
+      continue;
+    }
+
+    // 401 is the erased identity refusing its own former session — the terminal success signal for
+    // a browser whose account no longer exists.
+    if (statusCode === 401) return { outcome: "denied", attempts: attempt + 1, timeouts, lastState };
+    if (state === "completed") return { outcome: "completed", attempts: attempt + 1, timeouts, lastState };
+    if (state === "failed_terminal") {
+      return { outcome: "failed_terminal", attempts: attempt + 1, timeouts, lastState };
+    }
+
+    // Mid-erasure states belong to the executor that owns the job. Polling is correct; a second
+    // confirm here would be contending with a run that is progressing perfectly well.
+    if (state && ["database_erasure", "storage_erasure", "identity_erasure", "verifying"].includes(state)) {
+      await page.waitForTimeout(3_000);
+      continue;
+    }
+
+    // Only a job that is stalled — requested, verified, held, or retryable — may be pushed on.
+    try {
+      const retry = await page.request.post("/api/account/deletion-confirm", {
+        data: { password: credentials.password, confirmation: "削除します" },
+        timeout: 180_000,
+      });
+      if (retry.status() === 401) {
+        return { outcome: "denied", attempts: attempt + 1, timeouts, lastState };
+      }
+      const body = (await retry.json().catch(() => ({}))) as { state?: string };
+      if (body.state === "completed") {
+        return { outcome: "completed", attempts: attempt + 1, timeouts, lastState };
+      }
+      lastState = body.state ?? lastState;
+    } catch (error) {
+      // A thrown confirm is exactly the case that used to escape. It is NOT retried blindly — the
+      // loop returns to the durable read at the top, which is the only thing that can say whether
+      // this attempt actually did the work.
+      if (!isReconcilableTransportError(error)) throw error;
+      timeouts += 1;
+    }
+
+    await page.waitForTimeout(3_000);
+  }
+
+  return {
+    outcome: lastState === "failed_retryable" ? "failed_retryable" : "authority_unavailable",
+    attempts: maxAttempts,
+    timeouts,
+    lastState,
+  };
+}

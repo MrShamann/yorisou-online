@@ -1,4 +1,7 @@
-import { buildSanitizedSelfUnderstandingReportMarkdown } from "@/lib/yorisou/reports/loader";
+import {
+  assertValidSelfUnderstandingReportCode,
+  buildSanitizedSelfUnderstandingReportMarkdown,
+} from "@/lib/yorisou/reports/loader";
 import { recordReportEvent } from "@/lib/server/relationship-intelligence/service";
 import { requireContinuityContext } from "@/lib/server/canonicalResultContext";
 import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
@@ -38,6 +41,39 @@ export async function GET(
     }
   }
 
+  // ── ABSENCE AND FAILURE ARE DIFFERENT ANSWERS ────────────────────────────
+  //
+  // This whole block used to be one `try { … } catch { 404 }`. Any exception at all — a missing
+  // bundle, a parser fault, a telemetry write that failed — was reported to the person as "your
+  // report does not exist". That is how a globally broken download stayed invisible: the endpoint
+  // answered 404 for EVERY report and 404 is exactly what a legitimately absent one returns.
+  //
+  // An unknown code is still concealed with the same indistinguishable 404, because a distinguishable
+  // refusal would turn this endpoint into an oracle. But a report that EXISTS and could not be
+  // produced is an internal failure and says so.
+  try {
+    assertValidSelfUnderstandingReportCode(publicCode);
+  } catch {
+    return new Response("Not found", { status: 404 });
+  }
+
+  let markdown: string;
+  try {
+    markdown = buildSanitizedSelfUnderstandingReportMarkdown(publicCode);
+  } catch (error) {
+    // Bounded and internal-only. No path, no stack, no report content, no identity — the person gets
+    // a generic failure and the operator gets a class.
+    console.error("report_download_build_failed", {
+      publicCode,
+      code: error instanceof Error ? error.message.slice(0, 120) : "unknown",
+    });
+    return new Response("Report temporarily unavailable", { status: 500 });
+  }
+
+  // TELEMETRY IS BEST-EFFORT AND CANNOT DECIDE WHETHER A REPORT EXISTS.
+  //
+  // It used to be awaited FIRST, inside the same catch, so a failed analytics write produced "not
+  // found" for a report that was sitting right there. Observability must never gate the deliverable.
   try {
     await recordReportEvent({
       eventType: "downloaded",
@@ -47,16 +83,18 @@ export async function GET(
       entrySource: "download",
       resultId: publicCode,
     });
-    const markdown = buildSanitizedSelfUnderstandingReportMarkdown(publicCode);
-    const filename = `yorisou_report_${publicCode}_v0.2.1_public.md`;
-
-    return new Response(markdown, {
-      headers: {
-        "Content-Type": "text/markdown; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-      },
+  } catch (error) {
+    console.error("report_download_telemetry_failed", {
+      publicCode,
+      code: error instanceof Error ? error.message.slice(0, 120) : "unknown",
     });
-  } catch {
-    return new Response("Not found", { status: 404 });
   }
+
+  const filename = `yorisou_report_${publicCode}_v0.2.1_public.md`;
+  return new Response(markdown, {
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+  });
 }

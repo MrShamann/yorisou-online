@@ -66,7 +66,12 @@
     "test:por1-resume:db": "bash tests/por1/postgres-integration.sh",
     "guard:por1-raw-writes": "node scripts/por1-raw-write-source-guard.mjs",
     "test:por1-line-scope": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1LineEventListingScope.test.ts",
-    "test:por1-erasure-authority": "node --import tsx --test lib/server/__tests__/por1ErasureVerificationAuthority.test.ts"
+    "test:por1-erasure-authority": "node --import tsx --test lib/server/__tests__/por1ErasureVerificationAuthority.test.ts",
+    "generate:report-registry": "node scripts/generate-self-understanding-report-registry.mjs",
+    "check:report-registry": "node scripts/generate-self-understanding-report-registry.mjs --check",
+    "test:por1-report-delivery": "node --import tsx --test lib/yorisou/reports/__tests__/reportDelivery.test.ts",
+    "check:evidence-hygiene": "node scripts/check-test-evidence-hygiene.mjs",
+    "check:evidence-hygiene:selftest": "node scripts/check-test-evidence-hygiene.mjs --selftest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",

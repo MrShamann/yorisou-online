@@ -31,6 +31,7 @@ import {
   completeAttemptViaApi,
   countRowsForOwnerInPreviewDb,
   deliverFreshLineEvent,
+  driveDeletionToTerminal,
   establishLineActivity,
   listStoreKeys,
   listStoreObjects,
@@ -391,38 +392,24 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
       // Resume exactly as the product's panel does. A concurrent run may legitimately have been
       // refused the claim (`in_progress`) — that is the single-writer property working, not a
       // failure — so the retry loop is what carries it to completion.
-      let terminal = false;
-      for (let attempt = 0; attempt < 40 && !terminal; attempt += 1) {
-        const status = await pageA.request.get("/api/account/deletion-status");
-        if (status.status() === 401) {
-          terminal = true;
-          break;
-        }
-        const body = (await status.json()) as { state: string | null };
-        if (body.state === "completed") {
-          terminal = true;
-          break;
-        }
-        const retry = await pageA.request.post("/api/account/deletion-confirm", {
-          data: { password: userA.password, confirmation: "削除します" },
-          timeout: 180_000,
-        });
-        if (retry.status() === 401) {
-          terminal = true;
-          break;
-        }
-        const retryBody = (await retry.json()) as { state?: string };
-        if (retryBody.state === "completed") {
-          terminal = true;
-          break;
-        }
-        await pageA.waitForTimeout(3_000);
-      }
+      // RECONCILED, not merely retried. The previous loop only inspected RETURNED responses, so when
+      // the confirm request threw `read ETIMEDOUT` under full-suite load the exception escaped the
+      // whole step — the deletion was progressing fine and the harness could not tell. A thrown
+      // timeout means the outcome is UNKNOWN, so the durable record is consulted before deciding
+      // whether another confirm is even legal, and a mid-erasure job is polled rather than contended
+      // with. Bounded in attempts and wall clock, so a stuck deployment fails rather than hangs.
+      const drive = await driveDeletionToTerminal(pageA, { password: userA.password });
       expect(
-        terminal,
-        `deletion did not reach completion; last confirm=${confirmStatus} ${JSON.stringify(confirmBody)} ` +
+        drive.outcome === "completed" || drive.outcome === "denied",
+        `deletion did not reach completion; outcome=${drive.outcome} lastState=${drive.lastState} ` +
+          `attempts=${drive.attempts} transportTimeouts=${drive.timeouts} ` +
+          `firstConfirm=${confirmStatus} ${JSON.stringify(confirmBody)} ` +
           `adversaries=${JSON.stringify(adversaryOutcomes)}`,
       ).toBe(true);
+      console.log(
+        `[por1] confirm_drive outcome=${drive.outcome} attempts=${drive.attempts} ` +
+          `transport_timeouts=${drive.timeouts}`,
+      );
     });
 
     await test.step("ONLY ONE EXECUTOR OWNED THE SAGA", async () => {
