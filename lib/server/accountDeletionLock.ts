@@ -79,6 +79,27 @@ export function decideAccountAuthentication(
 }
 
 /**
+ * Does this saga refusal mean "the engine already owns this job" rather than "this request was
+ * wrong"?
+ *
+ * `yorisou_account_deletion_advance` initialises the execution cursor at `identity_verified` and
+ * then refuses all further forward motion, deliberately, because forward motion belongs to the
+ * executor. A second confirm that read the job as `requested` a moment before the first one took
+ * over is therefore refused — by design, and not because anything went wrong.
+ *
+ * Mapping that refusal to a generic failure is how a deletion that is actively succeeding gets
+ * reported to the person as a 500, which invites them to retry into the same refusal. Both shapes
+ * mean the same thing, and the honest answer is the one the executor already produces on its own:
+ * `in_progress`.
+ */
+export function isDeletionOpeningSuperseded(code: string): boolean {
+  return (
+    code.includes("account_deletion_advance_superseded_by_cursor") ||
+    code.includes("account_deletion_illegal_transition_")
+  );
+}
+
+/**
  * The two surfaces that resolve a viewer from a cookie, and the reason they cannot share one rule.
  *
  * An ordinary surface must refuse a held or erased account outright. The deletion surface must still

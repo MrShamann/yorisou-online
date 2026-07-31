@@ -66,6 +66,7 @@ import {
 } from "./accountDeletionExecutor";
 import {
   decideAccountAuthentication,
+  isDeletionOpeningSuperseded,
   type AccountAuthenticationDecision,
 } from "./accountDeletionLock";
 import { decideCookieRestoredAccount } from "./accountDeletionAuthority";
@@ -111,9 +112,28 @@ export async function openDeletionJob(accountId: string): Promise<string> {
   return rpc<string>("yorisou_account_deletion_open", { p_owner_account_id: accountId });
 }
 
-/** Record that reauthentication succeeded. The saga rejects this from an illegal prior state. */
-export async function advanceToIdentityVerified(accountId: string): Promise<void> {
-  await advance(accountId, "identity_verified");
+/**
+ * Record that reauthentication succeeded. The saga rejects this from an illegal prior state.
+ *
+ * A REFUSAL HERE IS NOT A FAILURE, and reporting it as one is how a deletion that is actively
+ * succeeding gets rendered to the person as a 500. Two confirms — a double-click, a refresh, a retry
+ * that arrived while the first was still running — both read the job as `requested`, and only one of
+ * them can be the one that opens it. The loser is told the engine has it, and the caller's next step
+ * (`executeDeletion`) produces the honest answer: it is refused the claim and reports `in_progress`.
+ *
+ * Only these two shapes are absorbed. Anything else still throws.
+ */
+export async function advanceToIdentityVerified(
+  accountId: string,
+): Promise<"advanced" | "already_owned"> {
+  try {
+    await advance(accountId, "identity_verified");
+    return "advanced";
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "unknown";
+    if (isDeletionOpeningSuperseded(code)) return "already_owned";
+    throw error;
+  }
 }
 
 export async function readDeletionStatus(accountId: string): Promise<DeletionStatus | null> {

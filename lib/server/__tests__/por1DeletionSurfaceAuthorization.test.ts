@@ -22,6 +22,7 @@ import test from "node:test";
 
 import {
   decideCookieRestoredViewer,
+  isDeletionOpeningSuperseded,
   sessionMayActAsAccount,
   type ViewerSurface,
 } from "../accountDeletionLock";
@@ -185,6 +186,43 @@ test("the deletion surface is not a general-purpose bypass", () => {
     resolves: false,
     reason: "account_deleted",
   });
+});
+
+// ── A SECOND CONFIRM IS NOT A FAILURE ────────────────────────────────────────
+//
+// Found by running the hosted property: the second executor was answered 500. Both confirms read
+// the job as `requested`, both tried to open it, and the loser's refusal — which means the winner
+// is already driving — was mapped to a generic fault. Telling someone their deletion failed while
+// it is actively succeeding invites them to retry into the same refusal.
+
+test("a refusal that means 'the engine already owns this job' is recognised as such", () => {
+  assert.equal(
+    isDeletionOpeningSuperseded("account_deletion_advance_superseded_by_cursor"),
+    true,
+    "the cursor guard fires when the winner has already taken the job",
+  );
+  for (const from of ["locked", "database_erasure", "identity_erasure", "verifying", "completed"]) {
+    assert.equal(
+      isDeletionOpeningSuperseded(`account_deletion_illegal_transition_${from}_to_identity_verified`),
+      true,
+      from,
+    );
+  }
+});
+
+test("genuine failures are NOT absorbed by that classification", () => {
+  // The point of naming two shapes is that everything else still throws. A blanket catch here would
+  // turn a real contract violation into a silent 202.
+  for (const code of [
+    "account_deletion_job_not_found",
+    "account_deletion_manifest_missing",
+    "account_deletion_irreversible",
+    "identity_residue:accounts,sessions",
+    "account_mutation_denied_erasing",
+    "unknown",
+  ]) {
+    assert.equal(isDeletionOpeningSuperseded(code), false, code);
+  }
 });
 
 test("the cookie's own marker never GRANTS anything, on either surface", () => {

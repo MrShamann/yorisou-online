@@ -99,6 +99,11 @@ export async function POST(request: Request) {
     if (needsOpening) await openDeletionJob(accountId);
     if (needsOpening || existing?.state === "requested") {
       // The saga owns the transition; an illegal one is rejected there rather than here.
+      //
+      // `existing` is a READ, and by the time the transition is attempted another confirm may
+      // already have opened the same job — both of them saw `requested`, and only one can win. The
+      // loser is told so rather than throwing: `executeDeletion` below is then refused the claim and
+      // reports `in_progress`, which is the true state of a deletion that is actively running.
       await advanceToIdentityVerified(accountId);
     }
 
