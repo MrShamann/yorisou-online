@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { accountMutationFenceSchemaReady } from "@/lib/server/accountMutationLease";
+import { isCanonicalLineActivitySchemaReady } from "@/lib/server/canonicalLineActivityRollout";
+import { isIdentityProvisioningSchemaReady } from "@/lib/server/identityProvisioningRollout";
+import { por1CapabilitySnapshot } from "@/lib/server/por1RuntimeControls";
 import { currentSharedStoreMode, sharedStoreBoundary } from "@/lib/server/yorisouData";
 
 // CPC-1 acceptance — build identity, so a hosted test run can prove WHICH commit it tested.
@@ -35,6 +39,27 @@ export async function GET() {
       sharedStoreMode: currentSharedStoreMode(),
       sharedStoreBoundary: sharedStoreBoundary.boundary,
       sharedStoreProjectMatch: sharedStoreBoundary.projectMatch,
+
+      // POR-1 — INFRASTRUCTURE READINESS, reported separately from the product controls below and
+      // deliberately not merged with them. Readiness says a schema EXISTS; a control says a
+      // capability is ON. Presenting them as one list is how an operator ends up kill-switching a
+      // feature and silently disabling a safety property, or reading "ready" as "active".
+      //
+      // Booleans only. The values are `on`/absent and non-secret, but a boolean is the whole fact
+      // and cannot carry anything else.
+      //
+      // WS-F reads these BEFORE it registers anyone. Without them a deployment that predates a
+      // migration serves the legacy model and the acceptance passes against the code it replaced —
+      // which is a worse outcome than the run not happening, because it looks like proof.
+      por1SchemaReadiness: {
+        ACCOUNT_MUTATION_FENCE: accountMutationFenceSchemaReady(),
+        CANONICAL_LINE_ACTIVITY: isCanonicalLineActivitySchemaReady(),
+        IDENTITY_PROVISIONING: isIdentityProvisioningSchemaReady(),
+      },
+
+      // The four product controls. Exactly four, always all four, so "absent from the response" can
+      // never be mistaken for "off".
+      por1Capabilities: por1CapabilitySnapshot(),
     },
     { headers: { "Cache-Control": "no-store" } },
   );
