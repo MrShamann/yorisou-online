@@ -16,6 +16,7 @@ import {
   sharedObjectTransportMode,
 } from "@/lib/server/sharedObjectTransport";
 
+import type { IdentityObjectAbsenceState } from "@/lib/server/yorisouData";
 import type { AuditLog, AuthIdentity, ConsentLog, Conversation, MessageEvent, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
 
 export type FoundationCollection =
@@ -275,6 +276,52 @@ export async function putFoundationIndexRecord<T>(namespace: FoundationIndexName
   await fs.mkdir(dir, { recursive: true });
   await fs.writeFile(path.join(dir, `${recordId}.json`), JSON.stringify(value, null, 2) + "\n", "utf8");
   return value;
+}
+
+/**
+ * POR-1 — does this foundation record still PHYSICALLY exist?
+ *
+ * `readSharedRecord` answers with a GET on a stable URL — a cacheable method — so a body can be
+ * returned after the record behind it is gone. Erasure verification read that as survival, and a
+ * COMPLETED deletion was recorded `failed_retryable` with `foundation_auth_identity` and
+ * `foundation_user_profile` named as residue.
+ *
+ * The listing is a POST, is not cacheable, and is answered from the storage metadata the object API
+ * resolves a key through. So it is consulted only when the read says "still here" — the case in
+ * doubt — and both prefixes are checked, for the same reason `readSharedRecord` checks both: a
+ * record living only under the legacy root is still the person's record.
+ *
+ * Fails CLOSED. An undetermined answer is never absence.
+ */
+export async function foundationRecordAbsence(
+  collection: FoundationCollection,
+  recordId: string,
+): Promise<IdentityObjectAbsenceState> {
+  let visible: unknown = null;
+  try {
+    visible = await readSharedRecord<unknown>(collection, recordId);
+  } catch {
+    return "AUTHORITY_UNAVAILABLE";
+  }
+  if (!visible) return "AUTHORITATIVELY_ABSENT";
+
+  const wanted = getFoundationReadPrefixes().map((prefix) => foundationKey(prefix, collection, recordId));
+  let listedAnywhere = false;
+  for (const prefixRoot of getFoundationReadPrefixes()) {
+    try {
+      const keys = await listSharedObjectKeys(`${prefixRoot}/${collection}/`);
+      if (keys.some((key) => wanted.includes(key))) {
+        listedAnywhere = true;
+        break;
+      }
+    } catch (error) {
+      // A prefix that does not exist is not an error — the legacy root is absent in most
+      // deployments. Anything else leaves the question open, and open is not absent.
+      if (!isMissingObjectError(error)) return "AUTHORITY_UNAVAILABLE";
+    }
+  }
+
+  return listedAnywhere ? "PHYSICAL_RESIDUE_CONFIRMED" : "STALE_BODY_VISIBLE_BUT_UNLISTED";
 }
 
 export async function deleteFoundationRecord(collection: FoundationCollection, recordId: string) {

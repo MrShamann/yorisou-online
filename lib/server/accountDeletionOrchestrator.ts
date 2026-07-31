@@ -287,6 +287,9 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
   for (;;) {
     const stage: DeletionStage = claim.cursor;
     if (stage === "completed") return { outcome: "completed" };
+    // Bounded, non-PII detail a stage may attach to its own audit row. Reset every iteration so one
+    // stage's evidence can never be recorded against another's.
+    let stageDetail: Record<string, unknown> = {};
 
     // The claim is bounded, and a full erasure can outlive its TTL. Renewing between stages keeps a
     // slow-but-healthy run from losing the job to itself.
@@ -408,6 +411,14 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
             // an email hash or a live session identifier.
             throw new RetryableStageError(`identity_residue:${verification.residue.join(",")}`);
           }
+          // THE MEASUREMENT, taken on the runtime's own path.
+          //
+          // Which of the two reads lags could not be settled from a laptop: the transport code is
+          // byte-identical, so the difference is where the request originates, and only the lambda
+          // can answer from there. These are bounded counts of how each absence question was
+          // ANSWERED — no keys, no ids, nothing owner-linked — carried into the audit row for the
+          // stage that asked them.
+          stageDetail = { absenceStates: verification.absenceStates };
           break;
         }
 
@@ -436,7 +447,7 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
     // The cursor moves ONLY after the stage's external effect has actually happened. A crash between
     // the two leaves the cursor where it was, and the retry re-runs a stage that is idempotent —
     // which is the correct trade, because the alternative is marking work done that never ran.
-    await completeDeletionStep(claim, stage, next);
+    await completeDeletionStep(claim, stage, next, stageDetail);
   }
 }
 

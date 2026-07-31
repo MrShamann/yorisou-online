@@ -131,6 +131,7 @@ jobs:
           npm run test:por1-boundary
           npm run test:por1-namespace
           npm run test:por1-line-scope
+          npm run test:por1-erasure-authority
 
       # The fence is enforced at runtime by write contexts; this guards the half a runtime check
       # cannot see — a new caller reaching past the fenced API, or the minting function leaking.

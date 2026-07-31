@@ -31,6 +31,7 @@ import {
   listLineWebhookEvents,
   deleteSharedIdentityObject,
   sharedIdentityObjectExists,
+  resolveIdentityObjectAbsence,
   normalizeAccountEmail,
 } from "./yorisouData";
 import type {
@@ -62,7 +63,7 @@ import {
   foundationAuthIdentityRepository,
   foundationConversationRepository,
 } from "./foundation/repositories";
-import { deleteFoundationRecord } from "./foundation/store";
+import { deleteFoundationRecord, foundationRecordAbsence } from "./foundation/store";
 import type { DeletionTargetManifest } from "./accountDeletionExecutor";
 import { assertAccountWriteContext, type AccountDeletionContext } from "./accountWriteContext";
 
@@ -403,6 +404,17 @@ export type IdentityErasureVerification = {
   clean: boolean;
   /** Key FAMILIES that still exist — never the key values, which embed identity. */
   residue: string[];
+  /**
+   * How each object-key question was ANSWERED, counted by state. Bounded integers only — no keys, no
+   * ids, nothing owner-linked.
+   *
+   * This is the measurement, taken on the runtime's own path rather than from a laptop. The two
+   * reads that establish absence are answered by different machinery and originate from a different
+   * network location than any local probe, so which of them lags could not be settled from outside.
+   * Recording the tally in the deletion audit answers it from inside, permanently, as a by-product
+   * of the real erasure instead of a throwaway experiment.
+   */
+  absenceStates: Record<string, number>;
 };
 
 /**
@@ -420,8 +432,31 @@ export async function verifyIdentityErasure(
   manifest: DeletionTargetManifest,
 ): Promise<IdentityErasureVerification> {
   const residue: string[] = [];
+  const absenceStates: Record<string, number> = {};
 
-  if (await sharedIdentityObjectExists(manifest.primaryAccountKey)) residue.push("account_record");
+  /**
+   * Does this key still PHYSICALLY exist?
+   *
+   * The old question was `sharedIdentityObjectExists(key)` — a GET on a stable URL, a cacheable
+   * method. That answer is authoritative when it says absent and only suggestive when it says
+   * present, because a body can outlive the object behind it.
+   *
+   * Treating "a body came back" as survival is what recorded SUCCESSFUL erasures as
+   * `failed_retryable`: `storage_erasure` deleted the sessions, and verification 23 seconds later
+   * was still served their bytes. The saga's tolerance was 5 × 800ms against a read measured stale
+   * far longer, so the person was told their deletion failed while it was in fact complete.
+   *
+   * `STALE_BODY_VISIBLE_BUT_UNLISTED` is therefore NOT residue — the object is unreachable by any
+   * lookup, which is the property an erasure owes. `AUTHORITY_UNAVAILABLE` IS residue: an
+   * undetermined answer must never finalize a destruction.
+   */
+  const stillPresent = async (key: string): Promise<boolean> => {
+    const state = await resolveIdentityObjectAbsence(key);
+    absenceStates[state] = (absenceStates[state] ?? 0) + 1;
+    return state === "PHYSICAL_RESIDUE_CONFIRMED" || state === "AUTHORITY_UNAVAILABLE";
+  };
+
+  if (await stillPresent(manifest.primaryAccountKey)) residue.push("account_record");
 
   // Lookup keys, from the UNION the manifest froze rather than from its two singular fields.
   //
@@ -430,7 +465,7 @@ export async function verifyIdentityErasure(
   // entirely and the family was not merely unerased but UNLOOKED-AT. A conditional whose false
   // branch is silence cannot report residue it was never pointed at.
   for (const key of allIdentityLookupKeys(manifest)) {
-    if (await sharedIdentityObjectExists(key)) {
+    if (await stillPresent(key)) {
       residue.push(key.includes("/by-line-user/") ? "line_lookup" : "email_lookup");
       break;
     }
@@ -466,26 +501,26 @@ export async function verifyIdentityErasure(
   // finalize over a phantom. The manifest names exactly what was owned at the moment the gate closed,
   // and nothing could have been added since — the gate was shut.
   for (const sessionId of manifest.sessionIds) {
-    if (await sharedIdentityObjectExists(sessionRecordKey(sessionId))) {
+    if (await stillPresent(sessionRecordKey(sessionId))) {
       residue.push("sessions");
       break;
     }
   }
 
   for (const tokenHash of manifest.passwordResetHashes) {
-    if (await sharedIdentityObjectExists(passwordResetTokenKey(tokenHash))) {
+    if (await stillPresent(passwordResetTokenKey(tokenHash))) {
       residue.push("password_reset");
       break;
     }
   }
   for (const consultationId of manifest.consultationIds) {
-    if (await sharedIdentityObjectExists(consultationRecordKey(consultationId))) {
+    if (await stillPresent(consultationRecordKey(consultationId))) {
       residue.push("consultations");
       break;
     }
   }
   for (const eventId of manifest.lineEventIds) {
-    if (await sharedIdentityObjectExists(lineWebhookEventKey(eventId))) {
+    if (await stillPresent(lineWebhookEventKey(eventId))) {
       residue.push("line_events");
       break;
     }
@@ -529,21 +564,33 @@ export async function verifyIdentityErasure(
   // a legacy prefix as well as the primary one, and a key-level probe of the primary prefix alone
   // would call a record erased while the legacy copy still resolved.
   for (const authIdentityId of manifest.foundationAuthIdentityIds) {
-    if (await foundationAuthIdentityRepository.getById(authIdentityId)) {
+    const state = await foundationRecordAbsence("auth-identities", authIdentityId);
+    absenceStates[state] = (absenceStates[state] ?? 0) + 1;
+    if (state === "PHYSICAL_RESIDUE_CONFIRMED" || state === "AUTHORITY_UNAVAILABLE") {
       residue.push("foundation_auth_identity");
       break;
     }
   }
   if (manifest.foundationUserProfileId) {
-    if (await foundationUserProfileRepository.getById(manifest.foundationUserProfileId)) {
+    const state = await foundationRecordAbsence("user-profiles", manifest.foundationUserProfileId);
+    absenceStates[state] = (absenceStates[state] ?? 0) + 1;
+    if (state === "PHYSICAL_RESIDUE_CONFIRMED" || state === "AUTHORITY_UNAVAILABLE") {
       residue.push("foundation_user_profile");
     }
   }
 
   // The account must be unreachable by its own id — the check a login would make.
-  if (await findAccountById(accountId)) residue.push("account_resolvable");
+  //
+  // Confirmed against the authority for the same reason as every other family: `findAccountById`
+  // resolves through the cacheable read, so a body served after the object is gone would report an
+  // erased account as still reachable. It cannot actually let anyone in — the email index is deleted
+  // and the durable job refuses authentication regardless — so treating a stale body as survival
+  // only ever fails a deletion that succeeded.
+  if (await findAccountById(accountId)) {
+    if (await stillPresent(manifest.primaryAccountKey)) residue.push("account_resolvable");
+  }
 
-  return { clean: residue.length === 0, residue };
+  return { clean: residue.length === 0, residue, absenceStates };
 }
 
 export async function deletePrimaryIdentity(

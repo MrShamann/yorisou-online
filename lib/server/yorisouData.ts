@@ -1209,6 +1209,75 @@ export async function sharedIdentityObjectExists(key: string): Promise<boolean> 
   }
 }
 
+/**
+ * POR-1 — how an object's absence was established, and how much that answer is worth.
+ *
+ * `sharedIdentityObjectExists` asks one question — GET this key — on a stable URL with a cacheable
+ * method. That answer is authoritative when it says ABSENT and merely suggestive when it says
+ * present: a body can be served from a cache after the object behind it is gone.
+ *
+ * These states exist so a caller can tell those apart instead of collapsing every non-null response
+ * into "this survived".
+ */
+export type IdentityObjectAbsenceState =
+  | "AUTHORITATIVELY_ABSENT"
+  | "STALE_BODY_VISIBLE_BUT_UNLISTED"
+  | "PHYSICAL_RESIDUE_CONFIRMED"
+  | "AUTHORITY_UNAVAILABLE";
+
+/**
+ * Establish whether an identity object still physically exists, using both available reads.
+ *
+ * WHY TWO SOURCES.
+ *
+ * The per-key GET and the listing are answered by different machinery. The GET is a cacheable
+ * method on a fixed URL; the listing is a POST, which is not cacheable, and Supabase answers it from
+ * the storage metadata database — the same rows the object API resolves a key through.
+ *
+ * The order is chosen so the common case costs nothing extra: an object that is genuinely gone
+ * answers the GET with not-found and returns immediately. The listing is consulted ONLY when the
+ * GET says "still here", which after a successful erasure is exactly the case in doubt.
+ *
+ * WHY THIS CANNOT FALSELY PASS.
+ *
+ * A surviving, owner-linked object appears in BOTH reads, so it is still `PHYSICAL_RESIDUE_CONFIRMED`
+ * and still blocks finalization. The only path to a false pass would be a listing that omits an
+ * object that really exists — and it cannot, in the direction that matters: the storage API resolves
+ * a key THROUGH the metadata the listing reads, so an object missing from the listing is an object
+ * no lookup can reach. Unreachable is the property an erasure has to deliver.
+ *
+ * This is also deliberately robust to the open question about which read lags. If the LISTING is the
+ * stale one and reports a deleted object as still present, the result is `PHYSICAL_RESIDUE_CONFIRMED`
+ * — the behaviour that exists today, retried by the saga. No regression either way.
+ *
+ * WHAT IS NOT DONE HERE. No sleep, no retry-until-absent, no cache-busting query string. A retry
+ * against an absence check waits out a TTL and then calls it an erasure.
+ */
+export async function resolveIdentityObjectAbsence(
+  key: string,
+): Promise<IdentityObjectAbsenceState> {
+  let visible: boolean;
+  try {
+    visible = await sharedIdentityObjectExists(key);
+  } catch {
+    // Undetermined is not absence. Fail closed.
+    return "AUTHORITY_UNAVAILABLE";
+  }
+  if (!visible) return "AUTHORITATIVELY_ABSENT";
+
+  const folder = key.slice(0, key.lastIndexOf("/"));
+  let listed: string[];
+  try {
+    listed = await sharedListKeys(`${folder}/`);
+  } catch {
+    // The body says present and the authority cannot be reached. Refusing to finalize is the only
+    // honest answer: this is precisely the state where guessing would erase the guarantee.
+    return "AUTHORITY_UNAVAILABLE";
+  }
+
+  return listed.includes(key) ? "PHYSICAL_RESIDUE_CONFIRMED" : "STALE_BODY_VISIBLE_BUT_UNLISTED";
+}
+
 /** The same normalization the email index is built from, so deletion targets the right digest. */
 export function normalizeAccountEmail(email: string): string {
   return normalizeEmail(email);
