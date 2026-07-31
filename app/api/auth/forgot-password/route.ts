@@ -153,6 +153,15 @@ export async function POST(request: Request) {
     trace(`redirect status=json_success documentRequest=false`);
     return NextResponse.json({ success: true });
   } catch (error) {
+    // POR-1 — DELIBERATELY NOT mapped to a bounded fence code, unlike every other leased-write route.
+    //
+    // This endpoint answers `{ success: true }` unconditionally so that "that address is registered"
+    // and "that address is not" are indistinguishable. Answering 409 when the fence refuses because
+    // the account is being deleted would hand back exactly the oracle the uniform response exists to
+    // deny — and it would leak it about someone who is mid-deletion, which is worse than average.
+    //
+    // The refusal is still recorded in the trace below, where an operator can see it and a caller
+    // cannot.
     const details = error instanceof Error ? `name=${error.name} message=${error.message}` : "name=Unknown message=unknown";
     trace(`route_error ${details}`);
     console.error("forgot password route error:", error);

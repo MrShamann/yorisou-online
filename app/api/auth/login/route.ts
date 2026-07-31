@@ -16,6 +16,7 @@ import {
 } from "@/lib/server/yorisouAuth";
 import { inferLocaleFromPaths } from "@/app/api/auth/redirectLocale";
 import { normalizeSafeInternalPath } from "@/lib/server/foundation/safeRedirect";
+import { accountMutationDeniedResponse } from "@/lib/server/accountMutationDeniedResponse";
 
 type LoginPayload = {
   email?: string;
@@ -158,6 +159,10 @@ export async function POST(request: Request) {
     setViewerAccountCookie(response, account);
     return response;
   } catch (error) {
+    // POR-1 — the fence refusing a write is an ANSWER, not a fault. Mapped to a bounded 409/503
+    // before this catch-all can flatten it into an unclassified 500.
+    const denied = accountMutationDeniedResponse(error);
+    if (denied) return denied;
     console.error("login route error:", error);
     if ((request.headers.get("content-type") || "").includes("application/x-www-form-urlencoded")) {
       return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=unexpected_error`), { status: 303 });

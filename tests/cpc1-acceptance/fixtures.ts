@@ -599,7 +599,7 @@ export function syntheticLineUserId(): string {
  * would leave. The erasure inventory names LINE events and the recent-subject index explicitly, and
  * skipping them because the environment is awkward would leave the least-tested families untested.
  */
-export type LineActivityOrigin = "signed_webhook" | "seeded_store";
+export type LineActivityOrigin = "signed_webhook" | "canonical_service_fixture" | "seeded_store";
 
 export async function establishLineActivity(
   baseUrl: string,
@@ -639,6 +639,64 @@ export async function establishLineActivity(
     if (response.ok) return { origin: "signed_webhook", eventId, status: response.status };
     // A signed request that is still refused means the deployment's secret differs from the one
     // here. Fall through to seeding rather than reporting a product failure for an env mismatch.
+  }
+
+  // POR-1 — THE CANONICAL SERVICE SEAM.
+  //
+  // Preview deliberately has NO LINE channel secret, so the signed route above is usually
+  // unavailable and the run falls through. Seeding the object store alone is no longer an
+  // acceptable substitute: since 202607310001/2 the canonical tables are the model, and a fixture
+  // that writes only the legacy array would leave the whole canonical LINE family — and the subject
+  // erasure barrier that this package exists to add — completely unexercised by the hosted run,
+  // while still reporting green.
+  //
+  // So the event is recorded through the SAME governed RPC the application calls, with the
+  // service-role key this test process already holds for verification. That is the seam the
+  // contract permits: no public synthetic route, no generic admin endpoint, no secret-gated
+  // backdoor, nothing added to the deployment at all.
+  if (previewDbConfigured()) {
+    const subjectHash = createHash("sha256").update(lineUserId).digest("hex");
+    const response = await dbRequest("rpc/yorisou_line_event_record", {
+      method: "POST",
+      body: JSON.stringify({
+        p_line_event_id: eventId,
+        p_line_subject_hash: subjectHash,
+        p_event_type: "message",
+        p_line_subject_id: lineUserId,
+        p_webhook_event_id: eventId,
+        p_owner_account_id: accountId,
+        p_owner_fingerprint: createHash("sha256").update(accountId).digest("hex"),
+        p_source_type: "user",
+        p_message_type: "text",
+        p_message_text: "POR-1 受入",
+        p_event_timestamp: now,
+        p_received_at: now,
+      }),
+    });
+    if (response.ok) {
+      // The per-event object is still written, exactly as the application writes it in BOTH modes —
+      // it was always row-addressable and never had the shared-array defect, and keeping it is what
+      // makes an application rollback safe.
+      await writeStoreObject(storeKeys.lineEvent(eventId), {
+        id: eventId,
+        accountId,
+        lineUserId,
+        sourceType: "user",
+        eventType: "message",
+        messageType: "text",
+        messageText: "POR-1 受入",
+        postbackData: null,
+        replyTokenPresent: false,
+        replyStatus: "not_attempted" as const,
+        replyError: null,
+        webhookEventId: eventId,
+        deliveryMode: "active",
+        isRedelivery: false,
+        eventTimestamp: now,
+        receivedAt: now,
+      });
+      return { origin: "canonical_service_fixture", eventId, status: response.status };
+    }
   }
 
   const record = {
@@ -681,4 +739,73 @@ export async function establishLineActivity(
   ]);
 
   return { origin: "seeded_store", eventId, status: 0 };
+}
+
+
+/**
+ * POR-1 — the subject-level LINE erasure barrier, read through the same governed RPCs the deletion
+ * uses. Service-role only, from the test process; nothing is added to the deployment.
+ */
+export async function readLineSubjectState(lineUserId: string): Promise<{
+  state: string;
+  erasedAt: string | null;
+}> {
+  const subjectHash = createHash("sha256").update(lineUserId).digest("hex");
+  const response = await dbRequest("rpc/yorisou_line_subject_state", {
+    method: "POST",
+    body: JSON.stringify({ p_line_subject_hash: subjectHash }),
+  });
+  if (!response.ok) throw new Error(`line_subject_state_failed:${response.status}`);
+  const body = (await response.json()) as { state?: string; erased_at?: string | null };
+  return { state: body?.state ?? "unknown", erasedAt: body?.erased_at ?? null };
+}
+
+/** Active-event rows plus the barrier itself. A subject still `active` is residue with zero rows. */
+export async function readLineErasureResidue(lineUserId: string): Promise<number> {
+  const subjectHash = createHash("sha256").update(lineUserId).digest("hex");
+  const response = await dbRequest("rpc/yorisou_line_subject_erasure_residue", {
+    method: "POST",
+    body: JSON.stringify({ p_line_subject_hash: subjectHash }),
+  });
+  if (!response.ok) throw new Error(`line_erasure_residue_failed:${response.status}`);
+  return Number(await response.json());
+}
+
+/**
+ * Deliver a BRAND-NEW LINE event for a subject, through the governed RPC.
+ *
+ * The whole point of the barrier: after erasure this must be absorbed rather than recorded, and it
+ * must create no row at all. An event-level tombstone cannot refuse an event id it has never seen,
+ * which is why proving redelivery is not the same as proving this.
+ */
+export async function deliverFreshLineEvent(lineUserId: string): Promise<{ outcome: string }> {
+  const subjectHash = createHash("sha256").update(lineUserId).digest("hex");
+  const eventId = `por1-post-erasure-${randomUUID()}`;
+  const response = await dbRequest("rpc/yorisou_line_event_record", {
+    method: "POST",
+    body: JSON.stringify({
+      p_line_event_id: eventId,
+      p_line_subject_hash: subjectHash,
+      p_event_type: "message",
+      p_line_subject_id: lineUserId,
+      p_webhook_event_id: eventId,
+      p_message_text: "POR-1 post-erasure",
+    }),
+  });
+  if (!response.ok) throw new Error(`line_event_record_failed:${response.status}`);
+  const body = (await response.json()) as { outcome?: string };
+  return { outcome: body?.outcome ?? "unknown" };
+}
+
+/** Provisioning-saga residue for an account. Counted, never inferred from an absent read. */
+export async function readProvisioningResidue(accountId: string): Promise<number> {
+  const response = await dbRequest("rpc/yorisou_provisioning_residue", {
+    method: "POST",
+    body: JSON.stringify({
+      p_account_id: accountId,
+      p_owner_fingerprint: createHash("sha256").update(accountId).digest("hex"),
+    }),
+  });
+  if (!response.ok) throw new Error(`provisioning_residue_failed:${response.status}`);
+  return Number(await response.json());
 }

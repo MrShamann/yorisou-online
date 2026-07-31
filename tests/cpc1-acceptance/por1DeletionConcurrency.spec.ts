@@ -30,12 +30,16 @@ import {
   claimResult,
   completeAttemptViaApi,
   countRowsForOwnerInPreviewDb,
+  deliverFreshLineEvent,
   establishLineActivity,
   listStoreKeys,
   materializeRecommendationSet,
   previewDbConfigured,
   previewStoreConfigured,
   readDeletionJobFromPreviewDb,
+  readLineErasureResidue,
+  readLineSubjectState,
+  readProvisioningResidue,
   readStoreObject,
   readStoreObjectUntil,
   recordRecommendationAction,
@@ -241,14 +245,30 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
         "a LINE event record exists for A",
       ).toBe(true);
 
-      const recent = await readStoreObjectUntil<{ lineUserId: string }[]>(
-        storeKeys.recentLineSubjects(),
-        (value) => (value ?? []).some((entry) => entry.lineUserId === lineUserId),
-      );
-      expect(
-        (recent ?? []).some((entry) => entry.lineUserId === lineUserId),
-        "A appears in the SHARED recent-subject index",
-      ).toBe(true);
+      // The precondition must assert the model actually in use, not the one it replaced.
+      //
+      // In canonical mode the shared recent-subject array is deliberately NOT written — a second
+      // writer to a read-modify-write document is the defect `202607310001` removed, so mirroring
+      // into it "for compatibility" would reintroduce it in full. Asserting the array here would
+      // therefore fail on a correct deployment, and passing it would mean the canonical tables were
+      // not the index at all.
+      if (lineActivity.origin === "canonical_service_fixture") {
+        const subject = await readLineSubjectState(lineUserId);
+        expect(subject.state, "A's LINE subject must be ACTIVE before the deletion").toBe("active");
+        expect(
+          await readLineErasureResidue(lineUserId),
+          "A must hold live canonical LINE activity before the deletion, or the erasure proves nothing",
+        ).toBeGreaterThan(0);
+      } else {
+        const recent = await readStoreObjectUntil<{ lineUserId: string }[]>(
+          storeKeys.recentLineSubjects(),
+          (value) => (value ?? []).some((entry) => entry.lineUserId === lineUserId),
+        );
+        expect(
+          (recent ?? []).some((entry) => entry.lineUserId === lineUserId),
+          "A appears in the SHARED recent-subject index",
+        ).toBe(true);
+      }
     });
 
     await test.step("A's foundation mirror exists — profile and both auth identities", async () => {
@@ -519,6 +539,56 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
         await storeObjectExists(storeKeys.lineLookup(lineUserId)),
         "the LINE login route for A's subject must not resolve to anyone",
       ).toBe(false);
+    });
+
+    await test.step("THE LINE SUBJECT IS ERASED, AND A BRAND-NEW EVENT CANNOT REVIVE IT", async () => {
+      // The property `202607310002` exists for, and the one no earlier hosted run could assert.
+      //
+      // Tombstoning the event rows that existed at deletion time protects redelivery of THOSE
+      // events. It does nothing about an event id LINE has not sent yet: the record RPC finds no
+      // row and inserts a live one, and the deleted person's activity is active again. Proved
+      // against a database holding only `202607310001` — outcome `recorded`, one live row, the raw
+      // LINE id back in the table.
+      //
+      // So this asserts the SUBJECT, not the events: terminal state, zero erasure residue (which
+      // counts the barrier as well as the rows), and a genuinely new event id being absorbed.
+      test.skip(!previewDbConfigured(), "requires Preview database access");
+      test.skip(
+        lineActivity.origin === "seeded_store",
+        "LINE activity was seeded into the legacy store only, so the canonical barrier is not " +
+          "under test in this run — recorded rather than passed silently",
+      );
+
+      const subject = await readLineSubjectState(lineUserId);
+      expect(subject.state, "A's LINE subject must be terminally erased").toBe("erased");
+      expect(subject.erasedAt, "an erased subject must carry its timestamp").toBeTruthy();
+
+      expect(
+        await readLineErasureResidue(lineUserId),
+        "erasure residue must be zero — this counts the BARRIER as well as the rows, so a subject " +
+          "left active with no rows is residue, and so is a subject with no registry row at all",
+      ).toBe(0);
+
+      const fresh = await deliverFreshLineEvent(lineUserId);
+      expect(
+        fresh.outcome,
+        "a BRAND-NEW event id for an erased subject must be absorbed, not recorded",
+      ).toBe("erased");
+
+      expect(
+        await readLineErasureResidue(lineUserId),
+        "the absorbed delivery must not have created anything",
+      ).toBe(0);
+    });
+
+    await test.step("NO PARTIAL PROVISIONING STATE SURVIVES, AND THE EMAIL IS RELEASED", async () => {
+      // The saga is keyed by a digest of the email, so one left behind is both account-linked
+      // residue and a permanent lock on an address its owner asked to be forgotten.
+      test.skip(!previewDbConfigured(), "requires Preview database access");
+      expect(
+        await readProvisioningResidue(accountA),
+        "A's provisioning saga must be purged with the account",
+      ).toBe(0);
     });
 
     await test.step("the database holds nothing owner-attributable, and the job is fingerprint-only", async () => {
