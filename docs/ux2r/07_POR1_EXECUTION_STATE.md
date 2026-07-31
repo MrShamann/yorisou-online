@@ -693,38 +693,127 @@ implement → flags OFF → apply additive Production migration → verify old a
   `x-vercel-protection-bypass`.
 - `sha256()` (pg_catalog), not pgcrypto `digest()`, in any function pinned to `search_path = public`.
 
+## Preview promotion state — 2026-07-31, VERIFIED at the project
+
+The three POR-1 migrations are APPLIED to `nbltsbonsnbpfptihomc` and verified by schema inspection,
+not by the apply call returning without error:
+
+```
+202607310001_por1_canonical_line_activity          applied
+202607310002_por1_line_subject_erasure_barrier     applied
+202607310003_por1_identity_provisioning_saga       applied
+
+public tables            17 -> 20
+yorisou_canonical_line_events        present, RLS enabled AND forced
+yorisou_canonical_line_subjects      present, RLS enabled AND forced
+yorisou_identity_provisioning_sagas  present, RLS enabled AND forced
+POR-1 functions          18/18 present
+```
+
+All seven Preview facts are set on the branch scope `feat/ux2-integrated-core-experience` and were
+READ BACK as the literal string `on`:
+
+```
+readiness (infrastructure, not capabilities)
+  YORISOU_POR1_ACCOUNT_MUTATION_FENCE_SCHEMA_READY    on
+  YORISOU_POR1_CANONICAL_LINE_ACTIVITY_SCHEMA_READY   on
+  YORISOU_POR1_IDENTITY_PROVISIONING_SCHEMA_READY     on
+product controls
+  YORISOU_POR1_CANONICAL_CORE                         on
+  YORISOU_POR1_CANONICAL_RECOMMENDATIONS              on
+  YORISOU_POR1_LINE_CANONICAL_RETURN                  on
+  YORISOU_POR1_ACCOUNT_DELETION_EXECUTOR              on
+```
+
+**A correction to an earlier note.** This file previously recorded the four product controls as
+"unset in Preview". They were already set, 21h before this session. Verified rather than assumed.
+
+**The two new readiness variables were first created SENSITIVE and were recreated non-sensitive.**
+A sensitive variable is injected at runtime but cannot be read back, and a readiness fact an
+operator cannot verify is not evidence — the same rule the Preview-isolation audit arrived at when
+it required the bucket and endpoint to be readable. `[SENSITIVE]` is a FAILURE of this check, not
+a note.
+
+**Deployment — the WS-F starting state, attested rather than assumed.**
+
+`/api/build-identity` now also reports `por1SchemaReadiness` and `por1Capabilities`, so a run can
+prove which MODEL the deployment serves rather than only which commit. Read at the deployment:
+
+```
+https://yorisou-online-byfjt7q8t-shigeru-naganos-projects.vercel.app
+
+commitSha        f657f47987fe2ad313474a7b24c0a66fb43917a0   (five-green at this exact SHA)
+commitRef        feat/ux2-integrated-core-experience
+environment      preview
+sharedStoreMode  supabase-rest
+sharedStoreBoundary  isolated-preview        sharedStoreProjectMatch  true
+por1SchemaReadiness  ACCOUNT_MUTATION_FENCE true - CANONICAL_LINE_ACTIVITY true
+                     IDENTITY_PROVISIONING true
+por1Capabilities     CANONICAL_CORE true - CANONICAL_RECOMMENDATIONS true
+                     LINE_CANONICAL_RETURN true - ACCOUNT_DELETION_EXECUTOR true
+```
+
+An earlier deployment of `f193d4c` predated the readiness variables and is NOT a valid target: with
+readiness off the deployment serves the legacy shared array and the inline provisioning path, and an
+acceptance against it passes on the code those migrations replaced.
+
+**Hosted access.** The Preview sits behind Vercel Authentication. The bypass secret is the single
+key of `protectionBypass` from `GET /v9/projects/<projectId>?teamId=<orgId>`; the CLI token in
+`auth.json` EXPIRES and is refreshed by running any `vercel` command, so a 403 there means "run the
+CLI once", not "the token does not work".
+
 ## CONTINUATION_CURSOR
 
 > The pre-2026-07-31 cursor said the next action was the mutation-fence concurrency proof and that
-> the fence was UNPROVEN. Both are complete. That cursor is superseded; it is quoted in the
-> superseded-statements table above rather than left here where it would read as an instruction.
+> the fence was UNPROVEN. Both are complete. Superseded; quoted in the table above rather than left
+> here where it would read as an instruction.
 >
 > The 2026-07-31 cursor said WS-C was next and described TWO swallows in the registration route.
 > There were THREE — the fabricated bound session was the quietest — and all three are gone.
 
 ```
 package: YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT (Founder, 2026-07-31)
-workstream: A complete - B complete incl. subject barrier - C complete (code + local proofs)
-            -> D (identity mutation graph re-audit, partially done) -> E -> the hosted train
-next_action: WS-F preconditions, in this order and not another:
-  1. apply to Preview nbltsbonsnbpfptihomc, in version order:
-       202607310001_por1_canonical_line_activity
-       202607310002_por1_line_subject_erasure_barrier
-       202607310003_por1_identity_provisioning_saga
-  2. set on the POR-1 Preview branch scope:
-       YORISOU_POR1_CANONICAL_LINE_ACTIVITY_SCHEMA_READY=on
-       YORISOU_POR1_IDENTITY_PROVISIONING_SCHEMA_READY=on
-  3. set the four product controls on in Preview (they are unset today, so Preview currently
-     serves the flag-off baseline)
-  4. deploy the exact five-green SHA and verify /api/build-identity before any acceptance
-  WITHOUT 1 and 2 the deployment silently serves the legacy array and the inline provisioning
-  path, and the acceptance proves the old model.
-migrations_not_yet_applied_to_preview: 202607310001, 202607310002, 202607310003
-readiness_variables_not_yet_set: CANONICAL_LINE_ACTIVITY_SCHEMA_READY, IDENTITY_PROVISIONING_SCHEMA_READY
-last_hosted_candidate_sha: f6f50a6 — and its run did NOT reach the concurrency property
+workstream: A complete - B complete incl. the subject barrier - C complete (code + local proofs)
+            - D partially complete (the new writers are audited and guarded; the full graph
+              re-audit is not finished) - E complete for this candidate
+            -> WS-F, which is now UNBLOCKED: every precondition is in place and attested.
+
+next_action: WS-F, exact-SHA hosted Preview acceptance, against
+
+    https://yorisou-online-byfjt7q8t-shigeru-naganos-projects.vercel.app
+    commitSha f657f47987fe2ad313474a7b24c0a66fb43917a0
+
+  Read /api/build-identity FIRST and require: environment preview - isolated-preview -
+  projectMatch true - all three por1SchemaReadiness true - all four por1Capabilities true -
+  commitSha equal to the candidate. That gate is the reason a stale deployment cannot be mistaken
+  for a regression, and readiness-off cannot be mistaken for a pass.
+
+  Then, in order: synthetic User A and User B fully populated (15.1); the LINE fixture through the
+  canonical service seam, since Preview deliberately has NO LINE channel secret (15.2); the four
+  concurrent adversaries during A's deletion on at least two workers (15.3); A's denial matrix and
+  B's preservation matrix (15.4, 15.5); 20 consecutive synthetic registrations with p50/p95/max and
+  zero false-success (15.6); the focused concurrency property THREE times at the same SHA (15.7);
+  the full hosted train with 0 serious / 0 critical axe (15.8); cleanup run twice with the second
+  run deleting nothing (15.9).
+
+  The NEW assertions this candidate adds, which no earlier hosted run could have made:
+    - a brand-new LINE event id for A's subject AFTER deletion is absorbed, and creates no row
+    - A's LINE subject state is `erased`, and erasure residue (barrier + rows) is 0
+    - no registration returns 200 over an unproven canonical identity
+    - a registration retried after a lost response resumes the SAME saga and creates no second
+      account
+    - a partial account cannot log in, reset a password, or bind LINE
+
+preview_migrations_applied: 202607310001, 202607310002, 202607310003 — verified by schema inspection
+preview_readiness: all three on, READ BACK as `on` (not `[SENSITIVE]`)
+preview_capabilities: all four on
+last_green_candidate_sha: f657f47 — five workflows SUCCESS, read at that exact SHA
+last_hosted_candidate_sha: f6f50a6 — its run did NOT reach the concurrency property
 last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
-preview_isolation_state: REPAIRED and proven at object level. All three Preview scopes isolated.
+preview_synthetic_state: NOT audited this session. WS-G must still clean and prove zero residue.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
 production_activation_state: NONE. All four POR-1 controls unset in Production.
+production_store_audit: NOT RUN (WS-G). Requires the permanent narrow operator mechanism.
+pr_126_state: OPEN / DRAFT / UNMERGED, body still STALE — WS-J.
 rollback_state: nothing to roll back; every change so far is branch-local or Preview-only.
 ```
