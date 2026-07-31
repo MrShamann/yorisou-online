@@ -32,6 +32,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 
+import { classifySharedStoreDelete } from "./sharedStoreDeleteClassification";
 import { resolveSharedStoreMode, type SharedStoreMode } from "./yorisouData";
 
 const bucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
@@ -136,9 +137,17 @@ export async function deleteSharedObject(key: string): Promise<void> {
       method: "DELETE",
       headers: restHeaders(),
     });
-    // A missing object is the desired end state, not a failure to retry.
-    if (!res.ok && res.status !== 404) throw new Error(`shared_object_delete_failed:${res.status}`);
-    return;
+    // A missing object is the desired end state, not a failure to retry — the intent was always
+    // right here, the status check was not. Supabase Storage answers **400** for an object that is
+    // already gone, so `!== 404` let a re-run of a resumable erasure fail on the keys the previous
+    // run had successfully deleted. Measured, and shared with the identity store's delete path so
+    // the two cannot drift: a 400 counts as absence ONLY when the body says so, because a malformed
+    // or unauthorized request answers 400 too and reading that as absence is how a deletion
+    // finalizes over data it never removed.
+    if (res.ok) return;
+    const body = await res.text().catch(() => "");
+    if (classifySharedStoreDelete({ status: res.status, body }) === "already_absent") return;
+    throw new Error(`shared_object_delete_failed:${res.status}`);
   }
 
   await s3().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));

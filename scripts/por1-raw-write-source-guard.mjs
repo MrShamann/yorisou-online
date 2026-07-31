@@ -157,6 +157,8 @@ const RETIRED_RPCS = [
   },
 ];
 
+const GUARD_SELF = "scripts/por1-raw-write-source-guard.mjs";
+
 const SCAN_DIRS = ["app", "lib", "scripts", "components"];
 const SCAN_EXT = [".ts", ".tsx", ".mjs", ".js"];
 // Tests exercise the guarded surface on purpose — that is what a test is. They are excluded by exact
@@ -240,7 +242,6 @@ for (const file of files) {
 // explaining WHY a name was retired is allowed to say the name; only a use is a violation.
 //
 // This file is excluded from its own scan: it is the one place the names must appear as data.
-const GUARD_SELF = "scripts/por1-raw-write-source-guard.mjs";
 for (const file of files) {
   if (file === GUARD_SELF) continue;
   const source = stripComments(readFileSync(join(ROOT, file), "utf8"));
@@ -285,6 +286,56 @@ for (const file of files) {
           `gone, so this rule is decorative. Update or delete it.`,
       );
     }
+  }
+}
+
+// Object-store DELETE paths must classify absence from the BODY, never from the status alone.
+//
+// This rule exists because the same defect was written twice, in two files, with the same correct
+// INTENT and the same wrong check: `if (!res.ok && res.status !== 404) throw`. Supabase Storage
+// answers 400 — not 404 — for an object that is already gone, so a resumable erasure failed on every
+// key a previous attempt had successfully deleted, and one hosted deletion job reached attempt 42
+// stuck at `storage_erasure`. Fixing both instances is not enough: a third writer would reach for
+// `!== 404` for exactly the same plausible reason.
+//
+// The rule is deliberately shaped as "if you issue a DELETE to the object store, you must reference
+// the shared classifier" rather than as a forbidden pattern. A forbidden-pattern rule is trivially
+// evaded by rephrasing the comparison; this one requires the decision to go through the one place
+// where it is documented and tested.
+const DELETE_CLASSIFIER = "classifySharedStoreDelete";
+const DELETE_CLASSIFIER_HOME = "lib/server/sharedStoreDeleteClassification.ts";
+for (const file of files) {
+  if (file === DELETE_CLASSIFIER_HOME || file === GUARD_SELF) continue;
+  if (!file.startsWith("lib/server/")) continue;
+  const source = stripComments(readFileSync(join(ROOT, file), "utf8"));
+  const issuesObjectDelete =
+    /method:\s*["']DELETE["']/.test(source) && /\/object\/|sharedRestBase|restBase/.test(source);
+  if (issuesObjectDelete && !source.includes(DELETE_CLASSIFIER)) {
+    failures.push(
+      `${file} issues an object-store DELETE without \`${DELETE_CLASSIFIER}\`.\n` +
+        `    Supabase Storage answers 400, not 404, for an object that is already gone. Classifying ` +
+        `absence\n    from the status alone makes a resumable erasure fail on every key a previous ` +
+        `attempt removed —\n    and the fail-open version (any 400 means gone) lets a deletion ` +
+        `finalize over data it never removed.`,
+    );
+  }
+}
+
+// ...and the classifier must still be reachable from the paths that need it, or the rule above is
+// satisfied by a file that imports it and never calls it.
+{
+  let wired = 0;
+  for (const file of files) {
+    if (file === DELETE_CLASSIFIER_HOME) continue;
+    const source = stripComments(readFileSync(join(ROOT, file), "utf8"));
+    if (new RegExp(`\\b${DELETE_CLASSIFIER}\\s*\\(`).test(source)) wired += 1;
+  }
+  if (wired < 2) {
+    failures.push(
+      `\`${DELETE_CLASSIFIER}\` is CALLED in ${wired} file(s); both object-store delete paths ` +
+        `(the identity store and the foundation transport) must use it, or one of them has silently ` +
+        `gone back to classifying absence by status.`,
+    );
   }
 }
 
