@@ -33,6 +33,8 @@ import {
   deliverFreshLineEvent,
   establishLineActivity,
   listStoreKeys,
+  listStoreObjects,
+  objectAbsenceEvidence,
   materializeRecommendationSet,
   previewDbConfigured,
   previewStoreConfigured,
@@ -49,6 +51,7 @@ import {
   storeObjectExists,
   syntheticLineUserId,
   syntheticUser,
+  type ObjectAbsenceEvidence,
 } from "./fixtures";
 
 type SessionRecord = { id: string; userId: string | null; principalLanding?: unknown };
@@ -455,22 +458,67 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
     // NO STALE IDENTITY OR SESSION SURVIVES. Read from the store, not from a route.
     // ─────────────────────────────────────────────────────────────────────────
     await test.step("EVERY TARGET FAMILY IS ABSENT FROM THE ISOLATED STORE", async () => {
-      const absent: Record<string, boolean> = {
-        account_record: !(await storeObjectExists(storeKeys.account(accountA))),
-        email_lookup: !(await storeObjectExists(storeKeys.emailLookup(userA.email))),
-        line_lookup: !(await storeObjectExists(storeKeys.lineLookup(lineUserId))),
-        line_event: !(await storeObjectExists(storeKeys.lineEvent(lineActivity.eventId))),
-      };
-      for (const [family, isAbsent] of Object.entries(absent)) {
-        expect(isAbsent, `${family} must be gone — a stale write must not have restored it`).toBe(true);
-      }
-
-      for (const sessionId of ownedSessionIds) {
+      // ERASURE IS PROVEN AGAINST THE AUTHORITATIVE LISTING, NOT A FIXED-URL GET.
+      //
+      // A GET on `/object/{bucket}/{key}` is a cacheable method on a stable URL, and this transport
+      // has served a superseded object for 25–30s with `cf-cache-status: HIT`. `POST /object/list`
+      // is not cacheable and is answered by the store. Both are read here in lockstep: the
+      // authoritative one decides, the cached one is recorded, and any disagreement is CLASSIFIED by
+      // the run rather than guessed at afterwards.
+      //
+      // Deliberately single-shot. Adding a retry here is how a cache TTL gets waited out and then
+      // reported as an erasure.
+      const evidence: ObjectAbsenceEvidence[] = [];
+      const families: [string, string][] = [
+        ["account_record", storeKeys.account(accountA)],
+        ["email_lookup", storeKeys.emailLookup(userA.email)],
+        ["line_lookup", storeKeys.lineLookup(lineUserId)],
+        ["line_event", storeKeys.lineEvent(lineActivity.eventId)],
+      ];
+      for (const [family, key] of families) {
+        const found = await objectAbsenceEvidence(key);
+        evidence.push(found);
+        console.log(
+          `[por1] absence family=${family} authoritativeListed=${found.authoritativeListed} ` +
+            `fixedRead=${found.fixedReadStatus} cf=${found.cfCacheStatus ?? "none"} ` +
+            `class=${found.classification}`,
+        );
         expect(
-          await storeObjectExists(storeKeys.session(sessionId)),
-          `session ${sessionId.slice(0, 8)}… must be revoked`,
+          found.authoritativeListed,
+          `${family} must be gone from the authoritative listing — a stale write must not have restored it`,
         ).toBe(false);
       }
+
+      // One listing for every session, so N sessions cost one authoritative call rather than N.
+      const sessionListing = await listStoreObjects("phase1/sessions");
+      for (const sessionId of ownedSessionIds) {
+        const found = await objectAbsenceEvidence(storeKeys.session(sessionId), sessionListing);
+        evidence.push(found);
+        console.log(
+          `[por1] absence family=session key=…${found.keyTail} ` +
+            `authoritativeListed=${found.authoritativeListed} fixedRead=${found.fixedReadStatus} ` +
+            `cf=${found.cfCacheStatus ?? "none"} updatedAt=${found.listedUpdatedAt ?? "n/a"} ` +
+            `class=${found.classification}`,
+        );
+        expect(
+          found.authoritativeListed,
+          `session ${sessionId.slice(0, 8)}… must be revoked — the STORE still lists it` +
+            (found.listedUpdatedAt
+              ? `, updated_at=${found.listedUpdatedAt}. Compare against the revocation: an earlier ` +
+                `timestamp means it was never deleted (a missed ownership scope); a later one means ` +
+                `it was deleted and something WROTE IT BACK (a stale reader resurrecting a record).`
+              : ""),
+        ).toBe(false);
+      }
+
+      // The classification, stated by the run. A cached read of a deleted object is transport
+      // evidence and nothing more — it must never be read as survival, nor survival as caching.
+      const disagreements = evidence.filter((e) => e.classification !== "agree_absent");
+      console.log(
+        `[por1] absence_classification total=${evidence.length} ` +
+          `disagreements=${disagreements.length} ` +
+          `kinds=${[...new Set(disagreements.map((e) => e.classification))].join("|") || "none"}`,
+      );
 
       // The shared recent-subject index is PRUNED, not deleted: everyone else's entries must remain.
       const recent = await readStoreObjectUntil<{ lineUserId: string }[]>(

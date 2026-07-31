@@ -507,6 +507,132 @@ export async function readStoreObjectUntil<T>(
   return value;
 }
 
+/**
+ * POR-1 — the AUTHORITATIVE existence answer, and why a fixed-URL GET is not it.
+ *
+ * `storeObjectExists` issues `GET /object/{bucket}/{key}`. That is a cacheable method on a fixed
+ * URL, and this transport has been measured serving a superseded object for 25–30 seconds with
+ * `cf-cache-status: HIT`. An absence sweep built on it is an assertion about a CDN.
+ *
+ * `POST /object/list/{bucket}` is not a cacheable method. It is answered by the store itself, and it
+ * carries `updated_at` — which is the datum that separates the only two explanations for an object
+ * that is still there after an erasure:
+ *
+ *   • `updated_at` BEFORE the revocation  → it was never deleted. A missed ownership scope.
+ *   • `updated_at` AFTER the revocation   → it was deleted and something WROTE IT BACK. A stale
+ *                                            reader that re-materialised a record it had already
+ *                                            read, which is the resurrection shape this package
+ *                                            has hit before.
+ *
+ * Measured on this deployment with the service-role credentials these fixtures use: the fixed GET
+ * answers `cf-cache-status: DYNAMIC` and a delete is visible at t=0 in every round. So the fixture's
+ * own read is not the cached path — but it is not the AUTHORITATIVE one either, and an acceptance
+ * gate should not rest on a property that happens to hold today.
+ */
+export type StoreObjectEntry = {
+  name: string;
+  updatedAt: string | null;
+  createdAt: string | null;
+};
+
+/** Every object under `prefix`, from the authoritative listing. Folders (null id) are excluded. */
+export async function listStoreObjects(prefix: string): Promise<StoreObjectEntry[]> {
+  const config = previewStore();
+  if (!config) throw new Error("preview_store_not_configured");
+  const folder = prefix.replace(/\/$/, "");
+  const out: StoreObjectEntry[] = [];
+  let offset = 0;
+  for (;;) {
+    const res = await fetch(`${config.base}/object/list/${config.bucket}`, {
+      method: "POST",
+      headers: storeHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ prefix: `${folder}/`, limit: 1000, offset }),
+    });
+    if (!res.ok) throw new Error(`store_list_failed:${res.status}`);
+    const entries = (await res.json()) as {
+      name: string;
+      id: string | null;
+      updated_at?: string | null;
+      created_at?: string | null;
+    }[];
+    for (const entry of entries) {
+      if (entry.id) {
+        out.push({
+          name: `${folder}/${entry.name}`,
+          updatedAt: entry.updated_at ?? null,
+          createdAt: entry.created_at ?? null,
+        });
+      }
+    }
+    if (entries.length < 1000) break;
+    offset += 1000;
+  }
+  return out;
+}
+
+export type ObjectAbsenceEvidence = {
+  /** Bounded synthetic identifier. Never the full key — session ids and email digests live in keys. */
+  keyTail: string;
+  /** The cacheable fixed-URL read. 200 means the CDN or the store answered with bytes. */
+  fixedReadStatus: number;
+  cfCacheStatus: string | null;
+  age: string | null;
+  etag: string | null;
+  /** The authoritative answer. This is what an assertion may rest on. */
+  authoritativeListed: boolean;
+  listedUpdatedAt: string | null;
+  listedCreatedAt: string | null;
+  /** Set when the two reads disagree — the classification, produced by the run rather than assumed. */
+  classification: "agree_absent" | "agree_present" | "cached_read_of_deleted_object" | "listed_but_unreadable";
+};
+
+/**
+ * Both reads of one key, in lockstep, with the headers that classify a disagreement.
+ *
+ * Deliberately SINGLE-SHOT. No retry, no waiting: a retry loop against an absence check is how a
+ * cache TTL gets waited out and reported as an erasure.
+ */
+export async function objectAbsenceEvidence(
+  key: string,
+  listing?: StoreObjectEntry[],
+): Promise<ObjectAbsenceEvidence> {
+  const config = previewStore();
+  if (!config) throw new Error("preview_store_not_configured");
+
+  const res = await fetch(`${config.base}/object/${config.bucket}/${key}`, {
+    method: "GET",
+    headers: storeHeaders(),
+    cache: "no-store",
+  });
+  // 400 is this store's answer for a key that is not there, alongside 404.
+  const readable = res.status !== 404 && res.status !== 400;
+  await res.arrayBuffer().catch(() => undefined);
+
+  const prefix = key.slice(0, key.lastIndexOf("/"));
+  const entries = listing ?? (await listStoreObjects(prefix));
+  const hit = entries.find((entry) => entry.name === key) ?? null;
+
+  const classification: ObjectAbsenceEvidence["classification"] = hit
+    ? readable
+      ? "agree_present"
+      : "listed_but_unreadable"
+    : readable
+      ? "cached_read_of_deleted_object"
+      : "agree_absent";
+
+  return {
+    keyTail: key.slice(-14),
+    fixedReadStatus: res.status,
+    cfCacheStatus: res.headers.get("cf-cache-status"),
+    age: res.headers.get("age"),
+    etag: res.headers.get("etag"),
+    authoritativeListed: Boolean(hit),
+    listedUpdatedAt: hit?.updatedAt ?? null,
+    listedCreatedAt: hit?.createdAt ?? null,
+    classification,
+  };
+}
+
 export async function listStoreKeys(prefix: string): Promise<string[]> {
   const config = previewStore();
   if (!config) throw new Error("preview_store_not_configured");

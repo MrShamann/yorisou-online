@@ -274,7 +274,17 @@ export async function provisionRegistration(input: {
         p_token_hash: token,
         p_generation: generation,
         p_failure_class: failureClass,
-        p_error_code: failureClass,
+        // THE DETAIL, not a second copy of the class.
+        //
+        // `p_error_code` used to be handed `failureClass` again, so the durable record carried the
+        // same word twice and the only place the DETAIL existed was a console line. That made a
+        // hosted failure unclassifiable after the fact: `session_binding_failed` covers a session
+        // that was never inserted, one whose bind returned null, and one that was written and then
+        // did not read back — three different defects with three different repairs, and the row
+        // could not tell them apart.
+        //
+        // The detail is a fixed bounded enum with no PII, which is exactly what this column is for.
+        p_error_code: detail ?? failureClass,
         p_terminal: terminal,
       });
     } catch {
