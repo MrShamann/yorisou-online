@@ -916,6 +916,75 @@ absent now. `sharedIdentityObjectExists` can therefore still see a just-deleted 
 fail-closed and safe — it costs a retry, it cannot let a deletion finalize early — and it is recorded
 here so a future reader does not mistake it for a second erasure failure.
 
+#### The discriminating experiment — run, controlled, and repeated
+
+Three probes, 20 overwrite rounds, against the isolated Preview bucket through the **exact** endpoint,
+headers and cache directive `lib/server/sharedObjectTransport.ts` uses (`GET /object/<bucket>/<key>`,
+`cache: "no-store"`). Every read was issued from a **fresh process** with no connection reuse. Only a
+throwaway `phase1/por1-lag-probe/` prefix was written; all of it was deleted, and the preserved
+evidence was re-counted afterwards and is unchanged (8/6/2/14/5/1).
+
+**Result — a NEW key is visible in ~1.3-2.0s, every time. An OVERWRITTEN key can be served stale for
+longer than the whole budget, repeatedly.**
+
+```
+probe 1  plain polling            4/6 overwrites fresh in ~1.1-2.1s · 2/6 STALE past 30s (54, 59 reads)
+probe 2  + write-status control   5/6 fresh · 1/6 STALE past 25s
+probe 3  + response headers       8/8 STALE past 25s (41-49 reads each)
+```
+
+Two controls, because a probe that measures its own bug proves nothing:
+
+- **C1 — did the overwrite actually happen?** Every write returned HTTP 200, and the store's own
+  listing reported the NEW object size (66 bytes, the larger v2 body) in every round, including the
+  rounds whose reads never saw v2. The store had the new version the whole time.
+- **C2 — is it the store or the read path?** Reading the same key with a cache-busting query string,
+  interleaved in the same loop, returned v2 in ~1.0-1.2s while the runtime's own URL was still
+  returning v1 twenty-five seconds later.
+
+**The mechanism, named rather than guessed:** the stale responses carry `cf-cache-status: HIT`. The
+first read after an overwrite is a `MISS` that populates a Cloudflare cache entry from the OLD
+object, and every later read of that URL is served from it. `cache-control: no-cache` on the response
+and a `Cache-Control: no-store` REQUEST header do not prevent it; a distinct query string does,
+because it is a different cache key. The staleness rate depends on the read pattern, which is why the
+three probes disagree on rate and agree on kind — one unlucky `MISS` pins a stale entry.
+
+So the store is durable and consistent; **the runtime's read path is not**. `findAccountById` at
+`accountIdentityDeletion.ts:145` is exactly that read path.
+
+**Hypothesis A (fixture artifact) is refuted as the cause**, by code and by data:
+`bindLineIdentityInPreviewStore` (`tests/cpc1-acceptance/fixtures.ts:561`) writes the account record
+unconditionally and *then* the lookup, and would reject before the deletion if either write failed;
+and the three other hosted runs all left `lineUserId` present on the account record with `updated_at`
+equal to the second the lookup was created. **Hypothesis B is confirmed.**
+
+One finding from A's territory survives and is worth fixing anyway: the fixture writes objects
+**directly**, bypassing the governed binding transaction, so it can construct a state the product
+cannot. §9's fixture-integrity gate is warranted on its own merits, not as the root cause.
+
+#### Scope of 4A — Preview transport, not proven in Production
+
+`resolveSharedStoreMode` (`lib/server/yorisouData.ts:245`) returns `aws` when no endpoint is
+configured, and Production configures none: Production reads S3 through the AWS SDK, which has been
+strongly read-after-write consistent — including overwrites — since December 2020. **The staleness
+measured above is a property of the `supabase-rest` transport and its Cloudflare front, and this
+record does NOT claim Production deletions have been losing LINE lookups.** That claim is not
+evidenced and must not be made.
+
+What IS true in both environments:
+
+- **4B is transport-independent.** Verification iterating the manifest is pure logic; a manifest
+  omission is invisible in Production exactly as it is in Preview, whatever produced the omission.
+- **4A is a real architectural fragility everywhere.** A destructive scope derived from one read of a
+  mirror is correct only for as long as the mirror's consistency guarantee holds. It is not a
+  property the deletion contract should be resting on, and Production's guarantee is a vendor
+  property that a transport change would silently remove — exactly the kind of change this project
+  made for Preview.
+- **The Preview staleness affects far more than deletion.** Any read-modify-write against an account
+  object on this transport can read a stale copy and write back a document missing a recent change.
+  That is a lost-update hazard across the identity store and a source of hosted-acceptance flakiness
+  unrelated to product defects.
+
 #### The repair this evidence requires
 
 Not a retry, not a sleep, not a re-read. The destructive scope must stop being derivable from a
