@@ -68,6 +68,7 @@ import {
   decideAccountAuthentication,
   type AccountAuthenticationDecision,
 } from "./accountDeletionLock";
+import { decideCookieRestoredAccount } from "./accountDeletionAuthority";
 
 export type DeletionState =
   | "requested"
@@ -158,16 +159,28 @@ export async function evaluateAuthenticationLock(input: {
     return { allowed: true };
   }
 
-  let durableDeletionState: string | null;
-  try {
-    durableDeletionState = (await readDeletionStatus(input.accountId))?.state ?? null;
-  } catch (error) {
-    console.error("deletion lock lookup failed; refusing cookie-restored login");
-    void error;
-    return { allowed: false, reason: "account_deleted" };
-  }
+  // Delegated rather than reimplemented. The login door and the session door were asking the same
+  // question — "the record is missing; is this cookie naming a live account or an erased one?" —
+  // and only this one was asking it. Sharing the gate also closes a gap that was here: a job that
+  // failed TERMINALLY part-way through erasure is not in `ERASED_OR_ERASING` and not `HELD`, so the
+  // state string alone said "allow" about an account whose identity had already been destroyed. The
+  // shared gate consults `irreversible_started_at`, which is the recorded fact and does say so.
+  const decision = await decideCookieRestoredAccount({
+    accountId: input.accountId,
+    deletionLockedAt: input.deletionLockedAt,
+    surface: "ordinary",
+  });
+  if (decision.resolves) return { allowed: true };
 
-  return decideAccountAuthentication({ ...input, durableDeletionState });
+  // `deletion_state_unavailable` maps to `account_deleted` here, unchanged from before: this path
+  // has always failed closed, and the login surface's reason vocabulary is part of its contract.
+  return {
+    allowed: false,
+    reason:
+      decision.reason === "account_deletion_in_progress"
+        ? "account_deletion_in_progress"
+        : "account_deleted",
+  };
 }
 
 export type DeletionOutcome =

@@ -55,7 +55,7 @@
     "gate:por1-flag-off-baseline": "node scripts/por1-flag-off-baseline-equivalence.mjs",
     "test:por1-fence": "node --import tsx --test lib/server/__tests__/por1MutationFenceRollout.test.ts",
     "test:por1-boundary": "node --import tsx --test lib/server/__tests__/por1SharedStoreBoundary.test.ts",
-    "test:por1-deletion": "node --import tsx --test lib/server/__tests__/por1AccountDeletionLock.test.ts lib/server/__tests__/por1IdentityKeyScope.test.ts",
+    "test:por1-deletion": "node --import tsx --test lib/server/__tests__/por1AccountDeletionLock.test.ts lib/server/__tests__/por1IdentityKeyScope.test.ts lib/server/__tests__/por1DeletionSurfaceAuthorization.test.ts",
     "test:por1-context": "node --import tsx --test lib/server/__tests__/por1AccountWriteContext.test.ts",
     "test:por1-line": "node --import tsx --test lib/server/__tests__/por1CanonicalLineActivityRollout.test.ts",
     "test:por1-provisioning": "node --import tsx --test lib/server/__tests__/por1IdentityProvisioningRollout.test.ts",

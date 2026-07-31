@@ -42,6 +42,14 @@ const IN_PROGRESS: DeletionState[] = [
 export default function AccountDeletionPanel() {
   const router = useRouter();
   const [status, setStatus] = useState<Status>({ state: null, cancellable: false });
+  // A 401 IS NOT A DELETION RECEIPT. Once the account is erased the status endpoint stops
+  // answering — correctly, because there is no longer an identity to answer. That refusal proves
+  // only that this browser can no longer authenticate. Tracked separately from `status` so it can
+  // never be mistaken for a state the server reported.
+  const [statusVisible, setStatusVisible] = useState(true);
+  // Set ONLY from a confirm response, which is the one place the browser observes the completion
+  // transition while still authenticated. Nothing inferred from a failed request may set it.
+  const [completedByConfirm, setCompletedByConfirm] = useState(false);
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [typed, setTyped] = useState("");
@@ -51,7 +59,17 @@ export default function AccountDeletionPanel() {
   const refresh = useCallback(async () => {
     try {
       const res = await fetch("/api/account/deletion-status", { cache: "no-store" });
-      if (res.ok) setStatus((await res.json()) as Status);
+      if (res.ok) {
+        setStatus((await res.json()) as Status);
+        setStatusVisible(true);
+        return;
+      }
+      if (res.status === 401) {
+        // Terminal for this view: the credential no longer resolves, so polling can only repeat the
+        // same refusal. What it must NOT do is keep rendering the last in-flight state as if the
+        // deletion were still observably running, or upgrade it to success.
+        setStatusVisible(false);
+      }
     } catch {
       // A status read failure must not be rendered as "nothing is happening".
     }
@@ -62,12 +80,14 @@ export default function AccountDeletionPanel() {
   }, [refresh]);
 
   // While erasure runs the person may close the tab; the job continues server-side. Polling only
-  // keeps THIS view honest.
+  // keeps THIS view honest — and stops at the terminal transition rather than spinning against an
+  // endpoint that has already said no.
   useEffect(() => {
+    if (!statusVisible || completedByConfirm) return;
     if (!status.state || !IN_PROGRESS.includes(status.state)) return;
     const timer = setInterval(() => void refresh(), 3000);
     return () => clearInterval(timer);
-  }, [status.state, refresh]);
+  }, [status.state, statusVisible, completedByConfirm, refresh]);
 
   async function confirm() {
     setBusy(true);
@@ -95,9 +115,11 @@ export default function AccountDeletionPanel() {
 
       setPassword("");
       if (body.state === "completed") {
+        setCompletedByConfirm(true);
         setStatus({ state: "completed", cancellable: false });
         // The account no longer exists; stay on a truthful terminal screen rather than bouncing
-        // them into a logged-out app that looks like an error.
+        // them into a logged-out app that looks like an error. No further status read is made —
+        // there is nothing left to authenticate, and this response is the completion evidence.
         return;
       }
       await refresh();
@@ -121,13 +143,32 @@ export default function AccountDeletionPanel() {
     }
   }
 
-  if (status.state === "completed") {
+  // Rendered on the confirm response alone. `status.state` is never trusted for this: the status
+  // endpoint refuses an erased identity, so a "completed" arriving from anywhere else would mean
+  // something other than what this screen claims.
+  if (completedByConfirm) {
     return (
       <section className="rounded-[1.25rem] border border-[rgba(23,59,53,0.12)] bg-white/90 px-5 py-5">
         <h2 className="text-[14px] font-semibold text-[#315F50]">アカウントを削除しました</h2>
         <p className="mt-2 text-[13px] leading-7 text-[#5F5750]">
           ログイン情報と、保存されていた記録を削除しました。同じアカウントでログインすることはできません。
           ご利用ありがとうございました。
+        </p>
+      </section>
+    );
+  }
+
+  // THE HONEST ANSWER TO A REFUSAL. It says what is true — this browser can no longer be
+  // authenticated — and deliberately claims neither success nor failure of the deletion itself,
+  // because a 401 is evidence of neither.
+  if (!statusVisible) {
+    return (
+      <section className="rounded-[1.25rem] border border-[rgba(23,59,53,0.12)] bg-white/90 px-5 py-5">
+        <h2 className="text-[14px] font-semibold text-[#315F50]">いまの状態を表示できません</h2>
+        <p className="mt-2 text-[13px] leading-7 text-[#5F5750]" role="status">
+          ログイン情報が確認できないため、この画面では削除の状態をお伝えできません。
+          もう一度ログインすると、いまの状態を確認できます。
+          ログインできない場合は、お問い合わせからご連絡ください。
         </p>
       </section>
     );

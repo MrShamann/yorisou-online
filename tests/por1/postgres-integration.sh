@@ -367,6 +367,24 @@ exception when others then if position('denied_deleted' in sqlerrm)=0 then raise
 -- The manifest survives the loss of the id, which is the entire reason it exists.
 select assert_true(public.yorisou_account_deletion_manifest_for_owner('user-a')->>'primaryAccountKey'='phase1/accounts/by-id/user-a.json','manifest still reachable after the id is gone');
 
+-- ── THE ASYMMETRY THE COOKIE GATE RESTS ON ─────────────────────────────────
+--
+-- A completed job no longer carries the account id, so the two durable reads disagree about it BY
+-- DESIGN, and the authorization boundary depends on picking the right one. `status` falls back to
+-- `owner_fingerprint` and still answers "completed"; `resume_state` looks the job up by id alone and
+-- honestly reports "none".
+--
+-- That difference is the whole repair. A viewer resolver reading `resume_state` would be told there
+-- is no job — indistinguishable from a transient store miss — and would hand an erased account back
+-- to whoever still holds the cookie. Asserted here rather than inferred from the function bodies,
+-- because it is the single fact the deletion-surface gate cannot be correct without.
+select assert_true(public.yorisou_account_deletion_status('user-a')->>'state'='completed',
+  'status answers COMPLETED about an account it deliberately no longer names');
+select assert_true(public.yorisou_account_deletion_resume_state('user-a')->>'state'='none',
+  'resume_state cannot answer about a completed job — which is why the gate must not read it');
+select assert_true(public.yorisou_account_deletion_status('never-deleted-user')->>'state'='none',
+  'the completed answer is scoped to that owner and is not a blanket yes');
+
 -- 11. USER B REMAINS UNCHANGED.
 select assert_true((select state='requested' and execution_cursor is null and executor_generation=0 and irreversible_started_at is null
                       from public.yorisou_account_deletion_jobs where owner_account_id='user-b'),'user B untouched');

@@ -120,6 +120,13 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
   let resultA = "";
   let resultB = "";
   const ownedSessionIds: string[] = [];
+  // A's cookies, CAPTURED WHILE THEY STILL WORK and replayed after the erasure.
+  //
+  // Letting a second live context make the request is not the same test: a browser that is simply
+  // still open can be logged out by anything, including a cleared jar. Replaying captured values
+  // into a fresh context asserts the only property that matters — that the cookie ITSELF, correctly
+  // encrypted and correctly presented, no longer authenticates anyone.
+  let capturedCookies: Awaited<ReturnType<typeof contextA.cookies>> = [];
 
   try {
     // ─────────────────────────────────────────────────────────────────────────
@@ -193,6 +200,18 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
         const raw = cookies.find((cookie) => cookie.name === "yorisou_session")?.value;
         expect(raw, "each context must hold a session cookie").toBeTruthy();
       }
+
+      // Snapshot both credentials now, while A genuinely exists. `yorisou_account` is the one that
+      // matters most: it is a 180-day, self-contained, encrypted copy of the account record, and it
+      // is what the viewer resolver used to fall back to whenever the store record was missing —
+      // which, after a completed deletion, is always.
+      capturedCookies = (await contextA.cookies()).filter(
+        (cookie) => cookie.name === "yorisou_session" || cookie.name === "yorisou_account",
+      );
+      expect(
+        capturedCookies.map((cookie) => cookie.name).sort(),
+        "both credentials must be captured before erasure, or the replay proves nothing",
+      ).toEqual(["yorisou_account", "yorisou_session"]);
 
       // Enumerate what A actually owns in the store, by reading the session objects rather than by
       // trusting the cookies: a session whose `userId` is null but whose principal-landing contract
@@ -528,6 +547,66 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
         recommendations.status(),
         "recommendations must not rematerialize for a deleted owner",
       ).not.toBe(200);
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // THE CAPTURED COOKIES ARE REPLAYED, IN EVERY COMBINATION.
+    //
+    // This is the defect that produced this segment. `GET /api/account/deletion-status` answered
+    // 200 to A after A had been erased, because the deletion surface resolved a viewer from the
+    // encrypted account cookie whenever the store record was missing, and the only check it applied
+    // read a `deletionLockedAt` marker that was null when the cookie was minted.
+    //
+    // Clearing a browser's cookies proves nothing here. These are the ORIGINAL values, presented
+    // into a context that never authenticated.
+    // ─────────────────────────────────────────────────────────────────────────
+    await test.step("EVERY REPLAYED COMBINATION OF A's SURVIVING COOKIES RESOLVES TO NOBODY", async () => {
+      const account = capturedCookies.filter((cookie) => cookie.name === "yorisou_account");
+      const session = capturedCookies.filter((cookie) => cookie.name === "yorisou_session");
+
+      const combinations: { label: string; cookies: typeof capturedCookies }[] = [
+        { label: "the account cookie alone", cookies: account },
+        { label: "the session cookie alone", cookies: session },
+        { label: "both cookies together", cookies: capturedCookies },
+      ];
+
+      for (const combination of combinations) {
+        const replay = await browser.newContext();
+        try {
+          await replay.addCookies(combination.cookies);
+          const page = await replay.newPage();
+
+          const status = await page.request.get("/api/account/deletion-status");
+          expect(
+            status.status(),
+            `${combination.label}: a completed deletion must not be answered`,
+          ).toBe(401);
+
+          // Not only the deletion surface. An erased identity must not authenticate ANYWHERE, and
+          // the account-cookie fallback was shared by every surface behind `getViewerContext`.
+          const cancel = await page.request.post("/api/account/deletion-cancel");
+          expect(
+            cancel.status(),
+            `${combination.label}: cancellation of an erased account must be refused`,
+          ).toBe(401);
+
+          const request = await page.request.post("/api/account/deletion-request");
+          expect(
+            request.status(),
+            `${combination.label}: an erased account may not open a new deletion job`,
+          ).toBe(401);
+
+          // PRINCIPAL LANDING MUST NOT COME BACK. The session cookie carries its own landing
+          // contract, which is exactly the shape that could re-assert an identity on a page view.
+          const landing = await page.request.get("/api/private-state");
+          expect(
+            landing.status(),
+            `${combination.label}: private continuity must not be restored from a stale cookie`,
+          ).toBe(401);
+        } finally {
+          await replay.close();
+        }
+      }
     });
 
     await test.step("A's LINE event is gone and the LINE subject resolves to nobody", async () => {

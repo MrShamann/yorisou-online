@@ -17,7 +17,8 @@ import {
   type SessionPrincipalLanding,
   type SessionRecord,
 } from "@/lib/server/yorisouData";
-import { sessionMayActAsAccount } from "@/lib/server/accountDeletionLock";
+import { sessionMayActAsAccount, type ViewerSurface } from "@/lib/server/accountDeletionLock";
+import { decideCookieRestoredAccount } from "@/lib/server/accountDeletionAuthority";
 import { withAccountMutationLease } from "@/lib/server/accountMutationLease";
 
 export const SESSION_COOKIE = "yorisou_session";
@@ -397,6 +398,41 @@ function accountUnlessDeletionLocked(
   return account;
 }
 
+/**
+ * POR-1 — resolve the account a request is acting as, with the cookie demoted to a lookup hint.
+ *
+ * The order is the whole point. The STORE decides whenever it can: a found record carries the real
+ * `deletionLockedAt` and needs no help. Only when the record is missing does the cookie get a say,
+ * and then only if the durable deletion record agrees the name still means something.
+ *
+ * That ordering is also why this costs nothing. The extra reads happen exclusively on the store-miss
+ * path — never on the hot path, and never for an anonymous viewer.
+ */
+async function resolveAccountForViewer(input: {
+  accountId: string | null;
+  /** The decrypted `yorisou_account` cookie, or null on paths that deliberately have no fallback. */
+  accountCookie: AccountRecord | null;
+  surface: ViewerSurface;
+  includeHeldAccount: boolean;
+}): Promise<AccountRecord | null> {
+  if (!input.accountId) return null;
+
+  const stored = await findAccountById(input.accountId);
+  if (stored) return accountUnlessDeletionLocked(stored, input.includeHeldAccount);
+
+  const candidate = input.accountCookie?.id === input.accountId ? input.accountCookie : null;
+  if (!candidate) return null;
+
+  const decision = await decideCookieRestoredAccount({
+    accountId: input.accountId,
+    deletionLockedAt: candidate.deletionLockedAt,
+    surface: input.surface,
+  });
+  if (!decision.resolves) return null;
+
+  return accountUnlessDeletionLocked(candidate, input.includeHeldAccount);
+}
+
 function toViewerPrincipal(account: AccountRecord | null): ViewerPrincipal | null {
   if (!account) {
     return null;
@@ -661,6 +697,9 @@ export async function getViewerContext(
   options?: { includeHeldAccount?: boolean },
 ): Promise<ViewerContext> {
   const includeHeldAccount = options?.includeHeldAccount === true;
+  // `includeHeldAccount` is only ever true for the deletion surfaces, so the two travel together
+  // rather than being passed independently and drifting apart.
+  const surface: ViewerSurface = includeHeldAccount ? "deletion_surface" : "ordinary";
   try {
     const cookieStore = await cookies();
     const rawSessionValue = cookieStore.get(SESSION_COOKIE)?.value;
@@ -699,10 +738,12 @@ export async function getViewerContext(
         session.userId ||
         sessionCookie.userId ||
         (principalLanding.restoreSource === "contract_legacy_account" ? principalLanding.contract?.legacyAccountId || null : null);
-      const account = accountUnlessDeletionLocked(
-        accountId ? (await findAccountById(accountId)) || (accountCookie?.id === accountId ? accountCookie : null) : null,
+      const account = await resolveAccountForViewer({
+        accountId,
+        accountCookie: accountCookie || null,
+        surface,
         includeHeldAccount,
-      );
+      });
       return {
         session,
         account,
@@ -717,10 +758,14 @@ export async function getViewerContext(
       if (session) {
         // Same rule on the legacy raw-cookie path: reading a session must not rewrite it.
         const touchedSession = session;
-        const account = accountUnlessDeletionLocked(
-          touchedSession.userId ? await findAccountById(touchedSession.userId) : null,
+        // `accountCookie: null` on purpose — this legacy path has never had a cookie fallback, and
+        // adding one here would widen the very surface the rest of this change narrows.
+        const account = await resolveAccountForViewer({
+          accountId: touchedSession.userId,
+          accountCookie: null,
+          surface,
           includeHeldAccount,
-        );
+        });
         return {
           session: touchedSession,
           account,
@@ -734,7 +779,15 @@ export async function getViewerContext(
       }
     }
 
-    const unlockedAccountCookie = accountUnlessDeletionLocked(accountCookie || null, includeHeldAccount);
+    // NO SESSION AT ALL — the account cookie alone. This path used to return the decrypted cookie
+    // as the viewer's account without ever asking the store whether that account still existed, so
+    // an erased identity kept authenticating here for as long as the 180-day cookie lived.
+    const unlockedAccountCookie = await resolveAccountForViewer({
+      accountId: accountCookie?.id || null,
+      accountCookie: accountCookie || null,
+      surface,
+      includeHeldAccount,
+    });
     return {
       session: null,
       account: unlockedAccountCookie,
@@ -766,8 +819,17 @@ export async function getViewerContext(
 /**
  * POR-1 WS5 — viewer resolution for the account-deletion surfaces.
  *
- * Identical to `getViewerContext()` except that a held account still resolves. Nothing but the
- * deletion status and cancel paths may use it: everywhere else, a hold means the session cannot act.
+ * Differs from `getViewerContext()` in exactly two ways, both narrow and both deliberate:
+ *
+ *   • a HELD account still resolves, so a person can inspect and cancel the deletion they asked for;
+ *   • while the job is genuinely in flight, the cookie may name an account whose record has ALREADY
+ *     been erased — the `identity_erasure`/`verifying` window, where the durable job is the only
+ *     thing left that can speak for the person.
+ *
+ * Neither concession outlives the job. The moment it completes, the durable record says so — by
+ * fingerprint, about an account it no longer names — and this resolver returns nothing, on this
+ * surface and every other. Nothing but the deletion request, confirm, status and cancel paths may
+ * use it: everywhere else, a hold means the session cannot act.
  */
 export async function getDeletionSurfaceViewerContext(): Promise<ViewerContext> {
   return getViewerContext({ includeHeldAccount: true });
