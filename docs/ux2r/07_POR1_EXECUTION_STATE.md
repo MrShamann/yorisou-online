@@ -1004,6 +1004,56 @@ array, and the run prints which origin was used.
 The identity gate also now refuses a deployment whose `por1SchemaReadiness` or `por1Capabilities` are
 not all true — proving the commit stopped being sufficient once the model went behind readiness flags.
 
+## The repair — canonical identity links (202607310004 + 202607310005)
+
+Both halves of §9, because neither alone closes the hole.
+
+**4A — the scope can only widen.** `yorisou_canonical_identity_links` is the strongly consistent
+record of which account owns which identity, committed inside the same governed mutation that binds
+it. `putSharedAccountRecord` — the one funnel through which every identity key family is written —
+commits the link **before** the mirror objects and **throws** on failure. The order is the safety
+property: a link without an object makes a manifest wider (harmless, deleting an absent key is
+success), an object without a link makes it narrower (a live login route). `buildDeletionManifest`
+takes the **union** of the registry and whatever the record showed, so a stale read can no longer
+narrow anything.
+
+**4B — verification stopped trusting the manifest.** Lookup keys now come from the frozen union, and
+two checks consult no manifest field at all: active links counted by owner **fingerprint** (which
+outlives the account id, so the question can still be asked after erasure) and the reachability
+question a LINE login actually asks. Deliberately **not** gated on readiness — an unready deployment
+reporting clean over surviving identity is the exact failure being closed.
+
+The invariant the object store could never enforce is a partial unique index: at most one ACTIVE
+account owns a given identity. Erasure leaves tombstones a CHECK proves are content-free, and an
+erased address or subject is claimable again — refusing forever would mean a deleted person's
+identity could never be used by anyone, including them.
+
+Digests only. Both key families are addressed by `sha256(value)`, so no raw email or LINE id is kept,
+and CHECK constraints refuse `@` or whitespace in the opaque kinds.
+
+### One defect the repair introduced, found by running it
+
+At the five-green SHA `0a5967f` the hosted train answered **500** for the second executor. The runtime
+log said `assessment_persistence_failed:400` — the signature of a raise whose code is not in the
+bounded allowlist. Two causes, both real:
+
+1. **A same-owner race raised a raw `23505`.** Every account write calls the sync, so a person with
+   several requests in flight has two syncs for ONE account in flight. Both run the `exists`
+   pre-check, both see nothing (the other's insert is uncommitted and therefore invisible), both
+   insert, and the loser dies on the partial unique index. The pre-check could never have fixed it:
+   `select ... for update` locks a row that does not exist yet. **The index is the serialization
+   point and the code was not listening to it.** Repaired forward-only in `202607310005` by catching
+   the violation and then INTERPRETING it under the winner's lock — same owner is a no-op, different
+   owner is the bounded conflict. Not `on conflict do nothing`, which would merge those two facts and
+   swallow a genuine identity conflict.
+2. **`identity_link*` was missing from the `rpc()` bounded-code allowlist** — the third time this
+   package has hit that exact shape. A caller that cannot name the failure can only guess, and "the
+   system is working correctly" and "the system crashed" became the same answer again.
+
+`202607310004` was **not** amended. It was already applied to Preview, and an applied migration is
+immutable; a later `create or replace` is how this project changes behaviour without rewriting
+history.
+
 ## WS-D — the identity mutation graph re-audit, COMPLETE
 
 The §11 invariant, restated so it can be checked rather than admired:
@@ -1161,10 +1211,19 @@ hosted_progress: the deletion now REACHES COMPLETION under four concurrent adver
   One hosted deletion (job 8e108939) completed with a COMPLETE manifest and erased every family it
   named, including the LINE lookup. The failure mode is an under-populated manifest, not a failed
   erasure.
-last_green_candidate_sha: d8e8ac1 — five workflows SUCCESS, read at that exact SHA
-last_deployed_preview_sha: d8e8ac1, attesting isolated-preview, three readiness true, four
-  capabilities true
+last_green_candidate_sha: 0a5967f — five workflows SUCCESS read at that exact SHA
+  (Migration Scope Guard 30618735300 · Yorisou Check 30618735297 · CPV1-CM0 30618735285
+   YV-1 30618735280 · DCI-1 30618735278)
+  991c7ec also five SUCCESS at its own SHA (30617643252 / 30617643242 / 30617643481 /
+   30617643237 / 30617643224)
+last_deployed_preview_sha: 0a5967f, attesting isolated-preview, projectMatch true, FOUR readiness
+  facts true (the new CANONICAL_IDENTITY_LINKS among them) and four capabilities true.
+  NOTE: the git-triggered deployment of 0a5967f attested CANONICAL_IDENTITY_LINKS **false**, because
+  it was built before the variable existed. The identity gate REFUSED it, which is the gate working.
+  A redeploy of the same SHA picked the variable up.
 last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
+  0a5967f reached the second-executor assertion and failed it with a 500 — a defect this session
+  introduced, root-caused and repaired in f3293ea (see the same-owner race above).
 preview_synthetic_state: NOT CLEAN, and DELIBERATELY PRESERVED — counted in the bounded inventory
   above (21 jobs, 4 manifests, 53 store objects). The orphaned LINE lookup of job 0fdee7d0 is the
   EVIDENCE for defect 4 and the negative control for §10. WS-G cleans it only after the repair is

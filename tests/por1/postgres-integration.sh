@@ -36,7 +36,8 @@ for f in 202607300003_por1_account_deletion_lifecycle \
          202607310002_por1_line_subject_erasure_barrier \
          202607310003_por1_identity_provisioning_saga \
          202607310004_por1_canonical_identity_links \
-         202607310005_por1_identity_link_same_owner_race; do
+         202607310005_por1_identity_link_same_owner_race \
+         202607310006_por1_identity_link_sync_is_additive; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
 # Idempotence: re-applying the new migrations must succeed without error.
@@ -51,6 +52,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migra
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310003_por1_identity_provisioning_saga.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310004_por1_canonical_identity_links.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310005_por1_identity_link_same_owner_race.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310006_por1_identity_link_sync_is_additive.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -1025,6 +1027,11 @@ r="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$A_
 if [[ "$(jq -r '.added' <<<"$r")" != "0" || "$(jq -r '.retired' <<<"$r")" != "0" ]]; then
   echo "FAIL: re-sync was not a no-op ($r)" >&2; exit 1
 fi
+# The sync is ADDITIVE and must report so even when asked to hold less than it already does.
+r="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$A_ID','$A_FP','[{\"kind\":\"email\",\"digest\":\"$A_EMAIL\"}]'::jsonb)")"
+if [[ "$(jq -r '.retired' <<<"$r")" != "0" || "$(jq -r '.active' <<<"$r")" != "2" ]]; then
+  echo "FAIL: a narrower set changed the registry ($r)" >&2; exit 1
+fi
 echo "  ok: two links committed; the repeat added nothing and retired nothing"
 
 echo "── scenario 44: one LINE subject cannot be owned by two live accounts ───"
@@ -1122,6 +1129,44 @@ if [[ "$owner" != "$D_ID" ]]; then echo "FAIL: the contended subject resolved to
 n="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_identity_links where link_kind='line_subject' and link_digest='$SHARED_LINE' and link_state='active'")"
 if [[ "$n" != "1" ]]; then echo "FAIL: $n active owners for one subject" >&2; exit 1; fi
 echo "  ok: the second blocked on the lock, then was refused; exactly one owner"
+
+echo "── scenario 53: a STALE link set may not retire a true link ────────────"
+# The defect 202607310006 fixes, and it was mine. sync used to retire anything absent from the
+# caller's set, and the caller derives that set from an ACCOUNT OBJECT READ — the read measured
+# returning the OLD version for more than 25 seconds. So a stale record written before a LINE
+# binding produced a set with no LINE subject, and the sync ERASED the strongly consistent record of
+# a binding that had really happened. Observed in a hosted run: one froze a manifest with two union
+# keys, the next froze one, and the difference was which copy of the account the writer had read.
+H_ID="acct-links-h"; H_FP="$(printf 'acct-links-h' | shasum -a 256 | cut -d' ' -f1)"
+H_EMAIL="$(printf 'h@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+H_LINE="$(printf 'Uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh' | shasum -a 256 | cut -d' ' -f1)"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_identity_links_sync('$H_ID','$H_FP','[{\"kind\":\"email\",\"digest\":\"$H_EMAIL\"},{\"kind\":\"line_subject\",\"digest\":\"$H_LINE\"}]'::jsonb)" >/dev/null
+# ...now a writer holding a STALE copy of the account, from before the LINE binding.
+r="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$H_ID','$H_FP','[{\"kind\":\"email\",\"digest\":\"$H_EMAIL\"}]'::jsonb)")"
+if [[ "$(jq -r '.retired' <<<"$r")" != "0" ]]; then
+  echo "FAIL: a stale link set retired $(jq -r '.retired' <<<"$r") link(s)" >&2; exit 1
+fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_link_owner('line_subject','$H_LINE')")" != "$H_ID" ]]; then
+  echo "FAIL: a stale read erased a true LINE binding" >&2; exit 1
+fi
+# A DELIBERATE unbind still works, and is scoped to the owner.
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_retire('$H_ID','line_subject','$H_LINE')")" != "1" ]]; then
+  echo "FAIL: a deliberate retirement did not happen" >&2; exit 1
+fi
+if [[ -n "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_link_owner('line_subject','$H_LINE')")" ]]; then
+  echo "FAIL: the retired subject still resolves" >&2; exit 1
+fi
+# ...and retiring again is a no-op rather than an error, because a rebind can be replayed.
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_retire('$H_ID','line_subject','$H_LINE')")" != "0" ]]; then
+  echo "FAIL: a repeated retirement was not a no-op" >&2; exit 1
+fi
+# Retiring someone ELSE'S link is refused — it would cut a living person off from their own login.
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_identity_links_sync('$H_ID','$H_FP','[{\"kind\":\"line_subject\",\"digest\":\"$H_LINE\"}]'::jsonb)" >/dev/null
+I_ID="acct-links-i"
+if psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_retire('$I_ID','line_subject','$H_LINE')" >/dev/null 2>&1; then
+  echo "FAIL: a stranger retired someone else's identity link" >&2; exit 1
+fi
+echo "  ok: stale set retires nothing; a deliberate unbind works, replays, and is owner-scoped"
 
 echo "── scenario 52: two concurrent writes of the SAME account, LATCHED ─────"
 # Found by RUNNING the hosted train, not by inspection: every account write calls sync, so two

@@ -120,6 +120,14 @@ const GUARDED = [
     allow: ["lib/server/canonicalIdentityLinks.ts", "lib/server/yorisouData.ts"],
   },
   {
+    symbol: "retireCanonicalIdentityLink",
+    why:
+      "Gives up ONE identity link. It is the only path that may narrow the registry, so a second " +
+      "caller is a second way a living person could be cut off from their own login — and the " +
+      "reason it exists at all is that the additive sync must never narrow on a stale read.",
+    allow: ["lib/server/canonicalIdentityLinks.ts", "lib/server/yorisouData.ts"],
+  },
+  {
     symbol: "eraseCanonicalIdentityLinks",
     why:
       "Terminally tombstones an account's identity links. The deletion path's operation and nothing " +
@@ -157,6 +165,7 @@ const IDENTITY_KEY_WRITERS_ALLOW = ["lib/server/yorisouData.ts", "lib/server/acc
 const IDENTITY_LINK_RPCS = [
   "yorisou_identity_links_sync",
   "yorisou_identity_links_erase",
+  "yorisou_identity_links_retire",
 ];
 const IDENTITY_LINK_RPC_ALLOW = ["lib/server/canonicalIdentityLinks.ts"];
 

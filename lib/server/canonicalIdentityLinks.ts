@@ -71,11 +71,20 @@ export class CanonicalIdentityLinkConflict extends Error {
 type SyncResult = { added: number; retired: number; unchanged: number; active: number };
 
 /**
- * Commit the COMPLETE set of identity links this account should hold.
+ * Commit the identity links this account holds. **ADDITIVE — this never retires anything.**
  *
- * Complete, not a delta — the caller writing the account record already knows its email and its LINE
- * subject, so it can state the whole truth in one statement. A delta API would make "unbind LINE" a
- * second call that somebody eventually forgets, and a forgotten retirement is a live login route.
+ * It used to take "the complete set" and retire whatever was absent, and that was a real defect,
+ * observed in a hosted run: the caller derives its link set from an ACCOUNT OBJECT READ, and that
+ * read can be served stale for tens of seconds. A stale record written before a LINE binding
+ * produced a set with no LINE subject, and the sync erased the strongly consistent record of a
+ * binding that had really happened.
+ *
+ * The rule the whole design rests on is that a stale read may only ever WIDEN, never narrow. The
+ * manifest obeys it. The writer has to as well, or the authority everything downstream trusts is
+ * destroyable by a cache.
+ *
+ * A genuine unbind goes through {@link retireCanonicalIdentityLink}, from the one place that can
+ * actually observe one.
  *
  * Returns null when the registry is not ready, so callers can distinguish "not deployed yet" from
  * "committed nothing".
@@ -139,6 +148,35 @@ export async function resolveCanonicalIdentityOwner(
     p_link_digest: digest,
   });
   return owner ?? null;
+}
+
+/**
+ * Retire ONE link this account is giving up — a rebind or an unbind.
+ *
+ * The deliberate counterpart to the additive sync. Called only where an unbind is genuinely
+ * observed: the account writer comparing the PREVIOUS record's LINE subject against the new one,
+ * which is a comparison of two known values rather than an inference from an absence. A stale
+ * previous record simply names a subject that is no longer active, and retiring an already-retired
+ * link is a no-op.
+ */
+export async function retireCanonicalIdentityLink(input: {
+  accountId: string;
+  kind: IdentityLinkKind;
+  digest: string;
+}): Promise<number | null> {
+  if (!canonicalIdentityLinksEnabled()) return null;
+  try {
+    return await rpc<number>("yorisou_identity_links_retire", {
+      p_owner_account_id: input.accountId,
+      p_link_kind: input.kind,
+      p_link_digest: input.digest,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const match = /identity_link_conflict:([a-z_]+)/.exec(message);
+    if (match) throw new CanonicalIdentityLinkConflict(match[1]);
+    throw error;
+  }
 }
 
 /** Content-free tombstones for every active link this account holds. Returns the count erased. */

@@ -28,6 +28,8 @@ import {
 } from "./canonicalLineActivityRollout";
 import {
   identityLinksForAccount,
+  lineIdentityDigest,
+  retireCanonicalIdentityLink,
   syncCanonicalIdentityLinks,
 } from "./canonicalIdentityLinks";
 import {
@@ -746,6 +748,18 @@ async function putSharedAccountRecord(context: AccountWriteContext, account: Acc
   } satisfies AccountEmailLookup);
 
   if (existingAccount?.lineUserId && existingAccount.lineUserId !== normalizedAccount.lineUserId) {
+    // A rebind or an unbind — and the ONLY place either is genuinely observable, because it is a
+    // comparison of two known LINE subjects rather than an inference from one being absent.
+    //
+    // The canonical link is retired here for exactly that reason. The sync above is additive and
+    // will never retire on absence: it derives its set from an account read that can be served
+    // stale, and letting a stale read retire a link is how a true LINE binding got erased from the
+    // registry between the binding and the deletion that needed it.
+    await retireCanonicalIdentityLink({
+      accountId: normalizedAccount.id,
+      kind: "line_subject",
+      digest: lineIdentityDigest(existingAccount.lineUserId),
+    });
     await sharedDeleteJson(lineUserLookupKey(existingAccount.lineUserId));
   }
 
