@@ -825,10 +825,43 @@ async function putSharedPasswordResetToken(record: PasswordResetTokenRecord) {
   return record;
 }
 
+/**
+ * POR-1 — which keys under `line-events/` are actually events.
+ *
+ * THE RECENT-SUBJECT INDEX IS A SIBLING OF THE EVENTS IT INDEXES. `admin-recent-subjects.json` sits
+ * inside `line-events/` by an accident of key layout, so listing that prefix returns it alongside
+ * the events — and it is an ARRAY, not a `LineWebhookEventRecord`.
+ *
+ * Selected by KEY rather than by shape. Inferring "this is not an event" from a missing field would
+ * also silently discard a genuinely malformed event, which is the opposite of what this codebase
+ * wants: a real defect must stay visible.
+ *
+ * Pure and exported so the permanent test exercises this decision rather than a restatement of it.
+ */
+export function selectLineWebhookEventKeys(keys: string[]): string[] {
+  const indexKey = recentLineWebhookSubjectsKey();
+  return keys.filter((key) => key !== indexKey);
+}
+
+/**
+ * Every stored LINE webhook event, newest first.
+ *
+ * The sort used to be `b.receivedAt.localeCompare(a.receivedAt)` over everything the prefix
+ * returned, and it threw `Cannot read properties of undefined (reading 'localeCompare')` — but only
+ * SOMETIMES, which is the worst way for it to fail. That expression dereferences the right-hand
+ * operand only, so the index object was harmless while the sort happened to hold it in `a` and fatal
+ * the moment it landed in `b`. Whether it threw depended on listing order, so the same code erased
+ * four accounts cleanly and then failed 41 consecutive attempts on the fifth — inside
+ * `buildDeletionManifest`, which is the one step a deletion cannot start without.
+ *
+ * The comparator is total as well as the selection being explicit: an unexpected shape must never
+ * again turn a listing into a crash on the deletion path.
+ */
 async function listSharedLineWebhookEvents() {
-  return (await sharedListJsonObjects<LineWebhookEventRecord>(`${SHARED_PREFIX}/line-events/`)).sort((a, b) =>
-    b.receivedAt.localeCompare(a.receivedAt),
-  );
+  const keys = selectLineWebhookEventKeys(await sharedListKeys(`${SHARED_PREFIX}/line-events/`));
+  const entries = await Promise.all(keys.map((key) => sharedReadJson<LineWebhookEventRecord>(key)));
+  const records = entries.filter((entry): entry is LineWebhookEventRecord => Boolean(entry));
+  return records.sort((a, b) => (b.receivedAt ?? "").localeCompare(a.receivedAt ?? ""));
 }
 
 async function putSharedLineWebhookEvent(record: LineWebhookEventRecord) {
