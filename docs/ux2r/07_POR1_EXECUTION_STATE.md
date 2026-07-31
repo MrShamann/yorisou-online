@@ -1675,3 +1675,126 @@ repository, but run logs must not be pasted anywhere and traces must not be atta
 3. Re-run WS-F5 whole. A code change invalidates the WS-F3 3/3 and WS-F4 20/20 above — both must be
    re-run at the new SHA before any candidate is accepted.
 4. Then WS-F6 axe, WS-G cleanup twice, WS-H..WS-K.
+
+---
+
+## WS-F CLOSED — full Hosted Preview acceptance passes at `0307571`
+
+HEAD `8b37de8` → `0307571`, three commits. Production untouched.
+
+### R1 — the report download was broken for every report. FIXED and PROVEN HOSTED.
+
+`loader.ts` resolved `process.cwd() + content/…` and `fs.readFileSync` it AT REQUEST TIME. The page
+is prerendered so its files exist; the dynamic download route runs in a lambda where they do not.
+The blanket `catch { 404 }` reported that as absence — invisible, because 404 is also the correct
+answer for a report that legitimately does not exist.
+
+Not solved with `outputFileTracingIncludes`: this project builds with Turbopack, and a tracing rule
+that silently stops matching fails the same invisible way. The markdown is embedded by a generator,
+so a missing module fails the BUILD. The markdown stays the one canonical source; the registry is
+generated, never hand-edited, and `check:report-registry` fails CI on drift.
+
+Proven locally BY DELETING THE CONTENT DIRECTORY and serving the built output — the lambda's
+condition exactly — then proven hosted:
+
+```
+24 / 24 governed report codes  ->  200 with content
+invalid code ZZ-ZZ             ->  404 (concealment intact)
+headers: text/markdown; charset=utf-8 · attachment; filename=…
+internal metadata: purchaseStatus / contentStatus / codexExecutableNow / createdFor /
+                   visibility  ALL ABSENT from the downloaded document
+```
+
+Error taxonomy split: an unknown code still gets the indistinguishable 404; a report that EXISTS and
+cannot be produced is an internal failure and says so. Telemetry moved AFTER the content is in hand
+and is best-effort — it used to be awaited first inside the same catch, so a failed analytics write
+produced "report not found" for a report sitting right there.
+
+### R2 — a thrown timeout escaped the retry loop. FIXED.
+
+`page.request.post` throws on `ETIMEDOUT`; the loop only inspected RETURNED responses, so the
+exception escaped the whole step. `driveDeletionToTerminal` reconciles instead: a thrown timeout
+means the outcome is UNKNOWN, so the durable record is read BEFORE deciding whether another confirm
+is legal, mid-erasure jobs are polled rather than contended with, `failed_terminal` stops
+immediately, and the budget is bounded in attempts and wall clock. `maxDuration` untouched.
+
+### PRIORITY B — CLASSIFIED AND GENUINELY REPAIRED. Two unsound proofs, one stage apart.
+
+The durable DETAIL added in the previous segment is what named it:
+
+```
+class=session_binding_failed   DETAIL=session_landing_missing   cursor=session_binding
+```
+
+`bindAndProve` proved its work by re-reading the session — a GET on the key just written, on a
+transport that serves superseded copies. It got the pre-landing version and refused a registration
+that had succeeded. The saga was HONEST (no 200 over an unproven identity — WS-C working); the PROOF
+was unsound.
+
+The re-read existed to catch the IN-MEMORY FALLBACK, and `touchSession` is update-only and returns
+null in exactly that case — so the WRITE already knew, and was discarding that into a fallback
+shaped like success. `switchSessionToPrincipalLandingTruthWithProof` now reports `persisted`.
+
+Fixing that moved the failure ONE STAGE, not away:
+
+```
+class=verification_incomplete   cursor=verification
+```
+
+`proveCanonicalIdentity` re-read the same session and re-checked the same landing. Existence is
+still asked of the store; the CONTRACT is now read from the record the write returned. The
+independent half is deliberately untouched — account, UserProfile and email AuthIdentity are still
+read back from their own stores, because nothing in the request can vouch for them. The missing
+family is now persisted as a bounded code (`missing:user_profile`, `missing:session`, …).
+
+```
+before: 1 non-200 in 16 concurrent registrations
+after : 0 non-200 in 20 concurrent registrations
+```
+
+### R3 — credentials in test evidence. CONTAINED.
+
+Playwright attaches its call log to a thrown request, headers verbatim. R2 removes the dominant
+source. `check:evidence-hygiene` is the backstop: refuses retained trace archives outright, reports
+the FINDING without printing the matched text, and its `--selftest` plants a canary and fails both if
+the scanner misses it and if it fires on a cookie NAME with no value. Verified 0 findings after a
+full passing train.
+
+## THE GATES, replayed from zero at `0307571`
+
+```
+candidate SHA  0307571 1269e0f31e58d79b25a2ca690f4047589
+deployment     dpl 8uucv4cl5 — preview · isolated-preview · projectMatch true · 4 readiness · 4 caps
+CI             Migration Scope Guard 30650702757 · Yorisou Check 30650702881 ·
+               CPV1-CM0 30650704575 · DCI-1 30650704751 · YV-1 30650702978   ALL SUCCESS
+
+WS-F3   3 / 3 consecutive, same SHA and deployment, 0 failed
+        each run a live negative control: disagreements 3 / 1 / 4,
+        all cached_read_of_deleted_object
+        confirm_drive: completed / denied / completed, transport_timeouts 0
+
+WS-F4   20 / 20 · retries 0 · failure classes NONE · p50 16.3s · p95 35.9s · max 35.9s
+        missing link 0 · duplicate link 0 · saga incomplete 0 · duplicate saga 0 · duplicate ids 0
+
+WS-F5   89 passed · 0 FAILED · 4 skipped
+        the 4 skips are the same lifecycle tests on MOBILE only; each declares "a lifecycle runs
+        once; viewport coverage comes from the other suites" and all four ran on desktop.
+        Intentional, documented, non-overlapping.
+
+WS-F6   axe desktop AND mobile across /, /check-in, /tests, /line/mini-app, /result
+        0 serious · 0 critical · nothing suppressed
+```
+
+## ⛔ NOT YET DONE — and why the candidate is not yet recorded as accepted
+
+`last_accepted_candidate_sha` stays NONE until WS-G passes, per the controller's own ordering.
+
+1. **WS-G cleanup twice.** The governed script `scripts/por1-preview-synthetic-cleanup.ts` is
+   Preview-guarded and drives the real saga, but it only matches `@synthetic-preview.invalid`.
+   The probe and WS-F4 registrations this segment used **`@example.com`**, which it will NOT catch.
+   Extend its scope before running, or the second run will not be able to prove zero residue.
+   Preview residue grew substantially: 3 concurrency runs, 20 registrations, ~36 probe
+   registrations, and a full train.
+2. WS-H Production read-only audit · WS-I full-lineage rehearsal (must prove
+   `yorisou_private_recommendations` erasure, which isolated Preview cannot) · WS-J activation and
+   rollback rehearsal · WS-K PR replacement body.
