@@ -35,7 +35,8 @@ for f in 202607300003_por1_account_deletion_lifecycle \
          202607310001_por1_canonical_line_activity \
          202607310002_por1_line_subject_erasure_barrier \
          202607310003_por1_identity_provisioning_saga \
-         202607310004_por1_canonical_identity_links; do
+         202607310004_por1_canonical_identity_links \
+         202607310005_por1_identity_link_same_owner_race; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
 # Idempotence: re-applying the new migrations must succeed without error.
@@ -49,6 +50,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migra
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310002_por1_line_subject_erasure_barrier.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310003_por1_identity_provisioning_saga.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310004_por1_canonical_identity_links.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310005_por1_identity_link_same_owner_race.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -1120,6 +1122,50 @@ if [[ "$owner" != "$D_ID" ]]; then echo "FAIL: the contended subject resolved to
 n="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_identity_links where link_kind='line_subject' and link_digest='$SHARED_LINE' and link_state='active'")"
 if [[ "$n" != "1" ]]; then echo "FAIL: $n active owners for one subject" >&2; exit 1; fi
 echo "  ok: the second blocked on the lock, then was refused; exactly one owner"
+
+echo "── scenario 52: two concurrent writes of the SAME account, LATCHED ─────"
+# Found by RUNNING the hosted train, not by inspection: every account write calls sync, so two
+# in-flight requests for one person race routinely. Both saw no existing row (the other's insert was
+# uncommitted and therefore invisible), both inserted, and the loser died on the partial unique index
+# with a raw 23505 — which reached the deletion route as an unclassified 500 for a system that was
+# working correctly. A same-owner race must be a NO-OP, and only a different owner is a conflict.
+F_ID="acct-links-f"; F_FP="$(printf 'acct-links-f' | shasum -a 256 | cut -d' ' -f1)"
+SAME_EMAIL="$(printf 'f@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+F_SET="[{\"kind\":\"email\",\"digest\":\"$SAME_EMAIL\"}]"
+cat >&3 <<SQLA
+begin;
+select public.yorisou_identity_links_sync('$F_ID','$F_FP','$F_SET'::jsonb);
+SQLA
+sleep 0.5
+cat >&4 <<SQLB
+begin;
+select public.yorisou_identity_links_sync('$F_ID','$F_FP','$F_SET'::jsonb);
+SQLB
+for _ in $(seq 1 50); do
+  waiting="$(psql "$DATABASE_URL" -At -c "select count(*) from pg_stat_activity where wait_event_type='Lock' and query like '%yorisou_identity_links_sync%'")"
+  [[ "$waiting" -ge 1 ]] && break
+  sleep 0.2
+done
+if [[ "${waiting:-0}" -lt 1 ]]; then echo "FAIL: the same-owner race never contended" >&2; exit 1; fi
+printf 'commit;\n' >&3
+sleep 1
+printf 'commit;\n' >&4
+sleep 1
+# The loser must have COMMITTED, not aborted. An aborted transaction is the 500 this scenario exists
+# to forbid.
+n="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_identity_links where link_kind='email' and link_digest='$SAME_EMAIL' and link_state='active'")"
+if [[ "$n" != "1" ]]; then echo "FAIL: $n active rows after a same-owner race" >&2; exit 1; fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_link_owner('email','$SAME_EMAIL')")" != "$F_ID" ]]; then
+  echo "FAIL: the owner changed under a same-owner race" >&2; exit 1
+fi
+# ...and a DIFFERENT owner racing the same digest must still be refused with the BOUNDED code, not a
+# raw 23505. Catching the violation without re-checking the owner would be the fail-open version.
+G_ID="acct-links-g"; G_FP="$(printf 'acct-links-g' | shasum -a 256 | cut -d' ' -f1)"
+err="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$G_ID','$G_FP','$F_SET'::jsonb)" 2>&1 || true)"
+if [[ "$err" != *"identity_link_conflict"* ]]; then
+  echo "FAIL: a different owner was refused with an unbounded error: $err" >&2; exit 1
+fi
+echo "  ok: same-owner race is a no-op; a different owner still gets the bounded conflict"
 
 echo "── scenario 50: nothing may re-link an account after its gate closed ────"
 # The registry alone does NOT prevent this, and saying so plainly matters: a post-erasure sync is a

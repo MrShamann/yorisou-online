@@ -100,8 +100,14 @@ export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise
     // never unsafe, but it meant "this account is being deleted" and "the fence could not be
     // reached" were the same answer. They call for different handling, so they are now distinct.
     // The added families are word-anchored; the original ones are left exactly as they were.
+    //
+    // `identity_link*` joined them for the same reason and after the same symptom: a concurrent
+    // identity-link insert raised, the code was not in this list, it arrived as
+    // `assessment_persistence_failed:400`, and the deletion route answered 500 for a system that was
+    // working correctly. Adding a family here is not cosmetic — it is the difference between a
+    // caller that can decide and a caller that can only guess.
     const known =
-      /attempt_[a-z_]+|claim_[a-z_]+|result_[a-z_]+|assessment_[a-z_]+|recommendation_[a-z_]+|interpretation_[a-z_]+|\baccount_mutation_[a-z_]+|\bline_(?:event|subject|activity)_[a-z_]+|\bdeletion_[a-z_]+/.exec(text)?.[0] ||
+      /attempt_[a-z_]+|claim_[a-z_]+|result_[a-z_]+|assessment_[a-z_]+|recommendation_[a-z_]+|interpretation_[a-z_]+|\baccount_mutation_[a-z_]+|\bline_(?:event|subject|activity)_[a-z_]+|\bdeletion_[a-z_]+|\bidentity_link[a-z_]*/.exec(text)?.[0] ||
       `assessment_persistence_failed:${response.status}`;
     throw new Error(known);
   }
