@@ -4,6 +4,7 @@ import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 
 import { assertIdentityKey, SHARED_STORE_PREFIX } from "./identityKeyScope";
 import { assertSharedStoreEnvironmentBoundary } from "./sharedStoreBoundary";
+import { classifySharedStoreDelete } from "./sharedStoreDeleteClassification";
 import {
   withAccountMutationLease,
   withAccountProvisioningLease,
@@ -372,7 +373,15 @@ async function sharedRestDeleteJson(key: string): Promise<void> {
     method: "DELETE",
     headers: sharedRestHeaders(),
   });
-  if (!res.ok && res.status !== 404) throw new Error(`shared_store_rest_delete_failed:${res.status}`);
+  if (res.ok) return;
+
+  // Supabase Storage answers 400 — not 404 — when the object is already gone, and deleting something
+  // twice is the normal shape of a resumable erasure. The classification is a pure function so the
+  // rule can be exercised exhaustively; see the comment there for why the status alone is not the
+  // evidence and a blanket "400 means gone" would be the fail-open version of the same bug.
+  const body = await res.text().catch(() => "");
+  if (classifySharedStoreDelete({ status: res.status, body }) === "already_absent") return;
+  throw new Error(`shared_store_rest_delete_failed:${res.status}`);
 }
 
 async function sharedRestListKeys(prefix: string): Promise<string[]> {

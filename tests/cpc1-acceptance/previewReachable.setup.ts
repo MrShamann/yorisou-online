@@ -67,6 +67,8 @@ setup("hosted Preview is the application, and is the expected commit", async ({ 
     sharedStoreMode?: string;
     sharedStoreBoundary?: string;
     sharedStoreProjectMatch?: boolean;
+    por1SchemaReadiness?: Record<string, boolean>;
+    por1Capabilities?: Record<string, boolean>;
   };
   try {
     identity = JSON.parse(raw);
@@ -91,7 +93,9 @@ setup("hosted Preview is the application, and is the expected commit", async ({ 
       `[cpc1] environment=${identity.environment}\n` +
       `[cpc1] shared_store_mode=${identity.sharedStoreMode ?? "<absent>"}\n` +
       `[cpc1] shared_store_boundary=${identity.sharedStoreBoundary ?? "<absent>"}\n` +
-      `[cpc1] shared_store_project_match=${identity.sharedStoreProjectMatch ?? "<absent>"}`,
+      `[cpc1] shared_store_project_match=${identity.sharedStoreProjectMatch ?? "<absent>"}\n` +
+      `[cpc1] por1_schema_readiness=${JSON.stringify(identity.por1SchemaReadiness ?? "<absent>")}\n` +
+      `[cpc1] por1_capabilities=${JSON.stringify(identity.por1Capabilities ?? "<absent>")}`,
   );
 
   // ── 3. It must be bound to an ISOLATED identity store ────────────────────
@@ -119,6 +123,46 @@ setup("hosted Preview is the application, and is the expected commit", async ({ 
     identity.sharedStoreMode,
     "Preview must not use the AWS default transport",
   ).not.toBe("aws");
+
+  // ── 4. It must be serving the MODEL under test, not the one it replaced ──
+  //
+  // Proving the commit is not enough after 202607310001..3. Those migrations are behind READINESS
+  // variables, and a deployment with readiness off runs the legacy shared LINE array and the inline
+  // provisioning path — the exact code the migrations exist to replace. Every assertion below would
+  // then pass against the old model and be reported as proof of the new one, which is a worse
+  // outcome than the run not happening.
+  //
+  // Readiness and capabilities are checked SEPARATELY because they mean different things: readiness
+  // says a schema exists, a capability says a feature is on. Requiring one to stand in for the other
+  // is how "we kill-switched a feature" becomes "we silently disabled a safety property".
+  const readiness = identity.por1SchemaReadiness;
+  expect(
+    readiness,
+    "deployment does not report por1SchemaReadiness; it predates the attestation and cannot be " +
+      "shown to be serving the canonical model rather than the legacy one",
+  ).toBeTruthy();
+  for (const fact of ["ACCOUNT_MUTATION_FENCE", "CANONICAL_LINE_ACTIVITY", "IDENTITY_PROVISIONING"]) {
+    expect(
+      readiness?.[fact],
+      `POR-1 schema readiness ${fact} is not true on this deployment. Apply the migration and set ` +
+        `the readiness variable BEFORE acceptance — otherwise this run proves the superseded model.`,
+    ).toBe(true);
+  }
+
+  const capabilities = identity.por1Capabilities;
+  expect(capabilities, "deployment does not report por1Capabilities").toBeTruthy();
+  for (const capability of [
+    "CANONICAL_CORE",
+    "CANONICAL_RECOMMENDATIONS",
+    "LINE_CANONICAL_RETURN",
+    "ACCOUNT_DELETION_EXECUTOR",
+  ]) {
+    expect(
+      capabilities?.[capability],
+      `POR-1 capability ${capability} is off on this deployment. The acceptance train asserts ` +
+        `canonical behaviour; with the control off it would assert the flag-off baseline instead.`,
+    ).toBe(true);
+  }
 
   expect(identity.commitSha, "deployment reported no commit SHA").toBeTruthy();
   expect(
