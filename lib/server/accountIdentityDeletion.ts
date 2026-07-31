@@ -40,7 +40,7 @@ import type {
   SessionRecord,
 } from "./yorisouData";
 import { SHARED_STORE_PREFIX } from "./identityKeyScope";
-import { canonicalLineActivityResidue } from "./canonicalLineActivity";
+import { canonicalLineActivityInventory, canonicalLineActivityResidue } from "./canonicalLineActivity";
 import {
   isCanonicalLineActivitySchemaReady,
   resolveLineActivityMode,
@@ -168,6 +168,22 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
     ? [createHash("sha256").update(account.lineUserId).digest("hex")]
     : [];
 
+  // Freeze what the canonical model currently holds for those subjects — the digest, the subject
+  // state, the owner fingerprint and the counts. Recorded for the operator, never used as the
+  // evidence of erasure: verification re-asks the database, because a frozen count cannot prove
+  // anything about a table that has been written since.
+  const lineSubjectInventory =
+    lineSubjectFingerprints.length > 0 &&
+    resolveLineActivityMode({ schemaReady: isCanonicalLineActivitySchemaReady() }) === "canonical"
+      ? (await canonicalLineActivityInventory(lineSubjectFingerprints)).map((entry) => ({
+          subjectHash: entry.subject_hash,
+          subjectState: entry.subject_state,
+          ownerFingerprint: entry.owner_fingerprint,
+          activeEvents: entry.active_events,
+          erasedEvents: entry.erased_events,
+        }))
+      : undefined;
+
   return {
     primaryAccountKey: accountRecordKey(account.id),
     emailLookupKey: account.email ? accountEmailLookupKey(account.email) : null,
@@ -185,6 +201,7 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
           .map((e: LineWebhookEventRecord) => e.id)
       : [],
     recentSubjectFingerprints: [...new Set<string>(lineSubjectFingerprints)],
+    lineSubjectInventory,
     foundationUserProfileId: profile?.userProfileId ?? null,
     foundationAuthIdentityIds: identities.map((identity) => identity.authIdentityId),
     supportConversationIds: conversations.map((conversation) => conversation.conversationId),
@@ -356,6 +373,11 @@ export async function verifyIdentityErasure(
   // read a stale copy" are the same observation — so a deletion could finalize over activity that
   // was still there. A count of active rows scoped by subject digest has no such ambiguity, and an
   // undetermined result throws rather than reading as zero.
+  //
+  // The probe counts the SUBJECT BARRIER as well as the rows. Zero active rows is not enough: a
+  // subject still in the `active` state has no rows only until LINE sends the next event, and a
+  // subject with no registry row at all was never proven erased. Both count as residue, so neither
+  // can let a deletion finalize over activity that is one webhook away from existing.
   if (
     resolveLineActivityMode({ schemaReady: isCanonicalLineActivitySchemaReady() }) === "canonical" &&
     manifest.recentSubjectFingerprints.length > 0 &&

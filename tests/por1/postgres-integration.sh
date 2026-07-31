@@ -32,12 +32,19 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "alter role service_role bypassrls
 for f in 202607300003_por1_account_deletion_lifecycle \
          202607300004_por1_account_mutation_fence \
          202607300005_por1_deletion_resume_engine \
-         202607310001_por1_canonical_line_activity; do
+         202607310001_por1_canonical_line_activity \
+         202607310002_por1_line_subject_erasure_barrier; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
 # Idempotence: re-applying the new migrations must succeed without error.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607300005_por1_deletion_resume_engine.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310001_por1_canonical_line_activity.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310002_por1_line_subject_erasure_barrier.sql"
+# ...and re-applying 202607310001 AFTER the barrier must NOT silently restore the pre-barrier
+# `yorisou_line_event_record` / `yorisou_line_activity_erase`. Migrations are applied in version
+# order, so this cannot happen in a real environment; it is asserted because a `create or replace`
+# pair across two files is exactly the shape where an out-of-order reapply goes unnoticed.
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310002_por1_line_subject_erasure_barrier.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -511,9 +518,15 @@ fi
 echo "  ok: both writers survived an overlap that the shared array could not"
 
 echo "── scenario 13: overlapping writers for the SAME subject ────────────────"
+# Since the subject-erasure barrier (202607310002) the two writers SERIALIZE on the subject row.
+# That is the price of the barrier and it is deliberately per subject, not global: scenario 12 just
+# proved two different subjects still overlap freely. What must not change is the outcome — every
+# event survives, and one subject still occupies exactly one derived slot.
 send_wait 3 "$WORK/out_a" line_a_begin2 "begin; select public.yorisou_line_event_record('evt-a2','$SUBJ_A','message','Uaaaa1111','wh-a2')->>'outcome';"
-send_wait 4 "$WORK/out_b" line_b_write2 "select public.yorisou_line_event_record('evt-a3','$SUBJ_A','message','Uaaaa1111','wh-a3')->>'outcome';"
+send_async 4 line_b_write2 "select public.yorisou_line_event_record('evt-a3','$SUBJ_A','message','Uaaaa1111','wh-a3')->>'outcome';"
+assert_blocked "yorisou_line_event_record"
 send_wait 3 "$WORK/out_a" line_a_commit2 "commit;"
+await_latch "$WORK/out_b" line_b_write2
 same="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where line_subject_hash='$SUBJ_A' and retention_state='active'")"
 if [[ "$same" != "3" ]]; then
   echo "FAIL: concurrent same-subject events lost one (expected 3, got $same)" >&2; exit 1
@@ -584,6 +597,173 @@ if psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_erase('Uaaaa
   echo "FAIL: a raw LINE id was accepted as an erasure scope" >&2; exit 1
 fi
 echo "  ok: raw identifiers refused at both entry points"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenarios 19-29 — THE SUBJECT-LEVEL ERASURE BARRIER (202607310002).
+#
+# Everything above proves the EVENT model. None of it proves the case that decides whether a
+# deletion holds: a brand-new event id for a subject that was erased. Under 202607310001 alone the
+# record RPC finds no existing row, so it inserts an active one and the deleted person's activity is
+# live again. These scenarios are about the subject, not the event.
+# ─────────────────────────────────────────────────────────────────────────────
+echo
+echo "── scenario 19: a BRAND-NEW event id after erasure is absorbed ──────────"
+# The defect. `evt-a3`/`wh-a3` have never been seen, so no event-level tombstone can refuse them.
+new_id="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-a7','$SUBJ_A','message','Uaaaa1111','wh-a7')->>'outcome'")"
+new_wh="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-a8','$SUBJ_A','message','Uaaaa1111','wh-a8')->>'outcome'")"
+rows="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where line_subject_hash='$SUBJ_A' and retention_state='active'")"
+if [[ "$new_id" != "erased" ]]; then echo "FAIL: a new event id after erasure returned '$new_id'" >&2; exit 1; fi
+if [[ "$new_wh" != "erased" ]]; then echo "FAIL: a new webhook id after erasure returned '$new_wh'" >&2; exit 1; fi
+if [[ "$rows" != "0" ]]; then echo "FAIL: $rows active rows were created for an erased subject" >&2; exit 1; fi
+echo "  ok: new event id and new webhook id both absorbed, zero active rows"
+
+echo "── scenario 20: an absorbed delivery stores NOTHING ─────────────────────"
+# Not "stores a tombstone with the content nulled" — stores no row at all, so there is no place for
+# a raw subject id or a message body to survive.
+stored="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where line_event_id in ('evt-a7','evt-a8') or webhook_event_id in ('wh-a7','wh-a8')")"
+leak2="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where line_subject_hash='$SUBJ_A' and (line_subject_id is not null or message_text is not null or postback_data is not null or reply_error is not null or owner_account_id is not null)")"
+subj_leak="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_subjects where line_subject_hash='$SUBJ_A' and line_subject_hash !~ '^[0-9a-f]{64}\$'")"
+if [[ "$stored" != "0" ]]; then echo "FAIL: an absorbed delivery created $stored rows" >&2; exit 1; fi
+if [[ "$leak2" != "0" ]]; then echo "FAIL: $leak2 erased rows still carry content" >&2; exit 1; fi
+if [[ "$subj_leak" != "0" ]]; then echo "FAIL: the subject registry holds a non-digest address" >&2; exit 1; fi
+echo "  ok: no row, no raw subject id, no message content"
+
+echo "── scenario 21: erasure residue counts the BARRIER, not just the rows ───"
+# An un-erased subject with zero event rows is still residue: the next webhook makes it live.
+fresh="$(printf 'Ufresh9999' | shasum -a 256 | cut -d' ' -f1)"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_event_record('evt-f1','$fresh','message','Ufresh9999','wh-f1')" >/dev/null
+# Clear the EVENT rows only, the way the retired event-scoped erasure would have.
+psql "$DATABASE_URL" -At -q -c "update public.yorisou_canonical_line_events set retention_state='erased', erased_at=now(), message_text=null, postback_data=null, reply_error=null, owner_account_id=null, line_subject_id=null where line_subject_hash='$fresh'" >/dev/null
+ev_only="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_residue('$fresh')")"
+barrier="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erasure_residue('$fresh')")"
+if [[ "$ev_only" != "0" ]]; then echo "FAIL: event residue is $ev_only after clearing every row" >&2; exit 1; fi
+if [[ "$barrier" != "1" ]]; then echo "FAIL: erasure residue is $barrier for a subject that is still active" >&2; exit 1; fi
+# And an unknown subject is residue too — unknown must never mean absent.
+unknown="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erasure_residue(encode(sha256(convert_to('never-seen','utf8')),'hex'))")"
+if [[ "$unknown" != "1" ]]; then echo "FAIL: an unknown subject reported residue $unknown, i.e. proven erased" >&2; exit 1; fi
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_subject_erase('$fresh')" >/dev/null
+closed="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erasure_residue('$fresh')")"
+if [[ "$closed" != "0" ]]; then echo "FAIL: residue is $closed after a real subject erasure" >&2; exit 1; fi
+echo "  ok: rows-clear alone is residue 1; unknown is residue 1; subject erasure is residue 0"
+
+echo "── scenario 22: erasing a subject that was NEVER seen still bars it ─────"
+# A LINE-bound account deleted before its first webhook. There are no rows to sweep, so the state is
+# the only thing that can protect it.
+virgin="$(printf 'Uvirgin0000' | shasum -a 256 | cut -d' ' -f1)"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_subject_erase('$virgin')" >/dev/null
+v_out="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-v1','$virgin','message','Uvirgin0000','wh-v1')->>'outcome'")"
+v_res="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erasure_residue('$virgin')")"
+if [[ "$v_out" != "erased" ]]; then echo "FAIL: the first event for a pre-erased subject returned '$v_out'" >&2; exit 1; fi
+if [[ "$v_res" != "0" ]]; then echo "FAIL: residue $v_res for a pre-erased, never-seen subject" >&2; exit 1; fi
+echo "  ok: erased before it existed, and it stayed erased"
+
+echo "── scenario 23: repeated subject erasure is idempotent ──────────────────"
+r1="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erase('$SUBJ_A')::text")"
+r2="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erase('$SUBJ_A')::text")"
+stamp1="$(psql "$DATABASE_URL" -At -c "select erased_at from public.yorisou_canonical_line_subjects where line_subject_hash='$SUBJ_A'")"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_subject_erase('$SUBJ_A')" >/dev/null
+stamp2="$(psql "$DATABASE_URL" -At -c "select erased_at from public.yorisou_canonical_line_subjects where line_subject_hash='$SUBJ_A'")"
+if [[ "$r1" != *'"events_erased": 0'* || "$r2" != *'"events_erased": 0'* ]]; then
+  echo "FAIL: a repeat erasure claimed to erase rows: $r1 / $r2" >&2; exit 1
+fi
+if [[ "$r2" != *'"already_erased": true'* ]]; then echo "FAIL: a repeat erasure did not report already_erased" >&2; exit 1; fi
+if [[ "$stamp1" != "$stamp2" ]]; then echo "FAIL: a repeat erasure moved erased_at ($stamp1 -> $stamp2)" >&2; exit 1; fi
+echo "  ok: no rows re-erased, already_erased reported, erased_at immutable"
+
+echo "── scenario 24: the record RPC cannot overwrite an erased subject state ─"
+before_state="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_state('$SUBJ_A')->>'state'")"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_event_record('evt-a9','$SUBJ_A','message','Uaaaa1111','wh-a9','acct-a',encode(sha256(convert_to('acct-a','utf8')),'hex'))" >/dev/null
+after_state="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_state('$SUBJ_A')->>'state'")"
+if [[ "$before_state" != "erased" || "$after_state" != "erased" ]]; then
+  echo "FAIL: subject state went '$before_state' -> '$after_state' through the record RPC" >&2; exit 1
+fi
+# Nor may it be reachable directly: every write to the registry goes through a governed function.
+for role in anon authenticated service_role; do
+  for priv in insert update delete; do
+    if [[ "$(psql "$DATABASE_URL" -At -c "select has_table_privilege('$role','public.yorisou_canonical_line_subjects','$priv')")" == "t" ]]; then
+      echo "FAIL: $role holds direct $priv on the subject registry" >&2; exit 1
+    fi
+  done
+done
+if [[ "$(psql "$DATABASE_URL" -At -c "select has_function_privilege('service_role','public.yorisou_line_subject_lock(text,text)','execute')")" == "t" ]]; then
+  echo "FAIL: the bare subject lock is reachable by service_role" >&2; exit 1
+fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select relrowsecurity and relforcerowsecurity from pg_class where relname='yorisou_canonical_line_subjects'")" != "t" ]]; then
+  echo "FAIL: RLS is not enabled AND forced on the subject registry" >&2; exit 1
+fi
+echo "  ok: state terminal through the record path, no direct writes, lock not an entry point"
+
+echo "── scenario 25: an event transaction racing an erasure — one legal order ─"
+# Latched, not timed. C records inside an open transaction and stops; the erasure must BLOCK on the
+# subject row rather than proceed alongside it.
+SUBJ_C="$(printf 'Ucccc3333' | shasum -a 256 | cut -d' ' -f1)"
+send_wait 3 "$WORK/out_a" c_begin "begin; select public.yorisou_line_event_record('evt-c1','$SUBJ_C','message','Ucccc3333','wh-c1')->>'outcome';"
+send_async 4 c_erase "select public.yorisou_line_subject_erase('$SUBJ_C')->>'events_erased';"
+assert_blocked "yorisou_line_subject_erase"
+send_wait 3 "$WORK/out_a" c_commit "commit;"
+await_latch "$WORK/out_b" c_erase
+c_res="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erasure_residue('$SUBJ_C')")"
+if [[ "$c_res" != "0" ]]; then echo "FAIL: the event survived the erasure it raced (residue $c_res)" >&2; exit 1; fi
+echo "  ok: the erasure blocked on the subject row, then swept the committed event"
+
+echo "── scenario 26: two NEW events racing a completed erasure — zero active ──"
+# The erasure holds the subject row; both writers must block on it and both must then be absorbed.
+SUBJ_D="$(printf 'Udddd4444' | shasum -a 256 | cut -d' ' -f1)"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_event_record('evt-d0','$SUBJ_D','message','Udddd4444','wh-d0')" >/dev/null
+send_wait 3 "$WORK/out_a" d_begin "begin; select public.yorisou_line_subject_erase('$SUBJ_D')->>'events_erased';"
+send_async 4 d_write "select public.yorisou_line_event_record('evt-d1','$SUBJ_D','message','Udddd4444','wh-d1')->>'outcome';"
+assert_blocked "yorisou_line_event_record"
+send_wait 3 "$WORK/out_a" d_commit "commit;"
+await_latch "$WORK/out_b" d_write
+d_second="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-d2','$SUBJ_D','message','Udddd4444','wh-d2')->>'outcome'")"
+d_active="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where line_subject_hash='$SUBJ_D' and retention_state='active'")"
+if ! grep -qx "erased" "$WORK/out_b"; then
+  echo "FAIL: a new event racing a completed erasure was not absorbed" >&2; tail -5 "$WORK/out_b" >&2; exit 1
+fi
+if [[ "$d_second" != "erased" ]]; then echo "FAIL: the following new event returned '$d_second'" >&2; exit 1; fi
+if [[ "$d_active" != "0" ]]; then echo "FAIL: $d_active active rows after a completed erasure" >&2; exit 1; fi
+echo "  ok: both blocked on the barrier, both absorbed, zero active rows"
+
+echo "── scenario 27: A erased while B records — B stays active ───────────────"
+SUBJ_E="$(printf 'Ueeee5555' | shasum -a 256 | cut -d' ' -f1)"
+SUBJ_F="$(printf 'Uffff6666' | shasum -a 256 | cut -d' ' -f1)"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_event_record('evt-e1','$SUBJ_E','message','Ueeee5555','wh-e1')" >/dev/null
+send_wait 3 "$WORK/out_a" e_begin "begin; select public.yorisou_line_subject_erase('$SUBJ_E')->>'events_erased';"
+# F is a DIFFERENT subject, so it must not block at all — the barrier is per subject, not global.
+send_wait 4 "$WORK/out_b" f_write "select public.yorisou_line_event_record('evt-f2','$SUBJ_F','message','Uffff6666','wh-f2')->>'outcome';"
+send_wait 3 "$WORK/out_a" e_commit "commit;"
+e_res="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_erasure_residue('$SUBJ_E')")"
+f_state="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_state('$SUBJ_F')->>'state'")"
+f_events="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_residue('$SUBJ_F')")"
+if [[ "$e_res" != "0" ]]; then echo "FAIL: E not erased (residue $e_res)" >&2; exit 1; fi
+if [[ "$f_state" != "active" ]]; then echo "FAIL: F's subject state is '$f_state' after E's erasure" >&2; exit 1; fi
+if [[ "$f_events" != "1" ]]; then echo "FAIL: F has $f_events active events, expected 1" >&2; exit 1; fi
+echo "  ok: E erased, F still active and still receiving"
+
+echo "── scenario 28: the retired event-scoped erasure performs the FULL one ──"
+SUBJ_G="$(printf 'Ugggg7777' | shasum -a 256 | cut -d' ' -f1)"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_line_event_record('evt-g1','$SUBJ_G','message','Ugggg7777','wh-g1')" >/dev/null
+g_count="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_erase('$SUBJ_G')")"
+g_state="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_subject_state('$SUBJ_G')->>'state'")"
+g_new="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-g2','$SUBJ_G','message','Ugggg7777','wh-g2')->>'outcome'")"
+if [[ "$g_count" != "1" ]]; then echo "FAIL: the retired name returned $g_count instead of the row count" >&2; exit 1; fi
+if [[ "$g_state" != "erased" ]]; then echo "FAIL: the retired name left the subject '$g_state'" >&2; exit 1; fi
+if [[ "$g_new" != "erased" ]]; then echo "FAIL: a new event after the retired erasure returned '$g_new'" >&2; exit 1; fi
+echo "  ok: an un-updated caller gets the stronger guarantee, not the weaker one"
+
+echo "── scenario 29: the manifest freezes the subject identity and its state ─"
+inv_g="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_inventory('$SUBJ_G')::text")"
+inv_f="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_inventory('$SUBJ_F')::text")"
+if [[ "$inv_g" != *'"subject_state": "erased"'* || "$inv_g" != *'"active_events": 0'* || "$inv_g" != *'"erased_events": 1'* ]]; then
+  echo "FAIL: inventory does not report the erased subject truthfully: $inv_g" >&2; exit 1
+fi
+if [[ "$inv_f" != *'"subject_state": "active"'* || "$inv_f" != *'"active_events": 1'* ]]; then
+  echo "FAIL: inventory does not report the live subject truthfully: $inv_f" >&2; exit 1
+fi
+if [[ "$inv_g" == *"Ugggg7777"* || "$inv_f" == *"Uffff6666"* ]]; then
+  echo "FAIL: inventory leaked a raw LINE id" >&2; exit 1
+fi
+echo "  ok: subject state and counts frozen, digests only"
 
 printf '\\q\n' >&3; printf '\\q\n' >&4
 exec 3>&-; exec 4>&-

@@ -78,6 +78,13 @@ const GUARDED = [
     ],
   },
   {
+    symbol: "eraseCanonicalLineSubjects",
+    why:
+      "Terminally erases a LINE subject. It is the deletion path's operation and nothing else's; a " +
+      "second caller would be a way to bar a living person's activity.",
+    allow: ["lib/server/canonicalLineActivity.ts", "lib/server/yorisouData.ts"],
+  },
+  {
     symbol: "withLegacyBootstrapContext",
     why: "The one-time file→store migration. Never a request path.",
     allow: ["lib/server/accountMutationLease.ts", "lib/server/yorisouData.ts"],
@@ -95,6 +102,34 @@ const IDENTITY_KEY_LITERALS = [
   "/password-resets/",
 ];
 const IDENTITY_KEY_WRITERS_ALLOW = ["lib/server/yorisouData.ts", "lib/server/accountIdentityDeletion.ts"];
+
+// RPC names that were superseded by a STRONGER operation and must not be reachable from application
+// code again. A symbol allowlist cannot express this: the danger is not who calls it but that it is
+// called at all, because each of these still exists in the database and still does something — just
+// something weaker than the invariant now requires.
+//
+// `yorisou_line_activity_erase` tombstones the event rows that exist right now. That protects
+// redelivery of THOSE events and nothing else: a brand-new event id for the same subject is inserted
+// as live activity for a person who no longer exists. It survives in the database delegating to the
+// subject erasure, so an un-updated caller gets the stronger guarantee — but new code must address
+// the subject, and this is what says so at review time rather than after a deletion has silently
+// held back less than it claimed.
+const RETIRED_RPCS = [
+  {
+    name: "yorisou_line_activity_erase",
+    instead: "yorisou_line_subject_erase (application: eraseCanonicalLineSubjects)",
+  },
+  {
+    name: "yorisou_line_activity_residue",
+    instead:
+      "yorisou_line_subject_erasure_residue (application: canonicalLineActivityResidue) — the " +
+      "event-only count reports zero for a subject that is still active and one webhook from live",
+  },
+  {
+    name: "yorisou_account_deletion_mark_cursor",
+    instead: "yorisou_account_deletion_complete_step, which validates ownership and legality",
+  },
+];
 
 const SCAN_DIRS = ["app", "lib", "scripts", "components"];
 const SCAN_EXT = [".ts", ".tsx", ".mjs", ".js"];
@@ -174,6 +209,59 @@ for (const file of files) {
   }
 }
 
+// Retired RPC names. Scanned across every file with no allowlist at all — there is no legitimate
+// application caller, which is the point of retiring them. Comments are stripped first, so a note
+// explaining WHY a name was retired is allowed to say the name; only a use is a violation.
+//
+// This file is excluded from its own scan: it is the one place the names must appear as data.
+const GUARD_SELF = "scripts/por1-raw-write-source-guard.mjs";
+for (const file of files) {
+  if (file === GUARD_SELF) continue;
+  const source = stripComments(readFileSync(join(ROOT, file), "utf8"));
+  for (const retired of RETIRED_RPCS) {
+    if (source.includes(retired.name)) {
+      failures.push(
+        `${file} references the RETIRED rpc \`${retired.name}\`.\n` +
+          `    use instead: ${retired.instead}`,
+      );
+    }
+  }
+}
+
+// The retired names must still EXIST in the migrations, or this list is describing a world that no
+// longer matches the database and would pass forever without meaning anything.
+{
+  const migrationDirs = [
+    "supabase/migrations",
+    "supabase/preview-only-migrations",
+    "supabase/local-only-migrations",
+  ];
+  const sql = [];
+  const collect = (dir) => {
+    let entries;
+    try {
+      entries = readdirSync(join(ROOT, dir), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const rel = join(dir, entry.name);
+      if (entry.isDirectory()) collect(rel);
+      else if (entry.name.endsWith(".sql")) sql.push(readFileSync(join(ROOT, rel), "utf8"));
+    }
+  };
+  for (const dir of migrationDirs) collect(dir);
+  const allSql = sql.join("\n");
+  for (const retired of RETIRED_RPCS) {
+    if (!allSql.includes(retired.name)) {
+      failures.push(
+        `retired-rpc rule for \`${retired.name}\` matches nothing in any migration — the name is ` +
+          `gone, so this rule is decorative. Update or delete it.`,
+      );
+    }
+  }
+}
+
 // A guard that silently matches nothing is worse than no guard: it reports success forever. Prove
 // the rules still bind to real code by requiring each guarded symbol to exist somewhere it is allowed.
 for (const rule of GUARDED) {
@@ -201,5 +289,5 @@ if (failures.length) {
 
 console.log(
   `POR-1 raw-write source guard: OK (${files.length} files, ${GUARDED.length} guarded symbols, ` +
-    `${IDENTITY_KEY_LITERALS.length} identity key families)`,
+    `${IDENTITY_KEY_LITERALS.length} identity key families, ${RETIRED_RPCS.length} retired rpcs)`,
 );

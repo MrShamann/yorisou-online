@@ -199,24 +199,39 @@ export async function listCanonicalLineEventsForSubject(
   return rows.map(toEventRecord);
 }
 
+export type CanonicalLineSubjectErasure = {
+  subject_state: "erased";
+  events_erased: number;
+  active_residue: number;
+  already_erased: boolean;
+};
+
 /**
- * Erase one subject's activity. Scoped by digest, so the caller never needs the raw id it is
- * erasing and the deletion manifest never has to keep one.
+ * Erase one LINE SUBJECT. Scoped by digest, so the caller never needs the raw id it is erasing and
+ * the deletion manifest never has to keep one.
  *
- * Idempotent: a second call finds nothing active and returns 0. Rows belonging to anyone else are
- * out of scope by construction — there is no shared document to rewrite, which is precisely what
- * made the array's prune dangerous.
+ * This is a stronger operation than the event-scoped erasure it replaces, and the difference is the
+ * whole point. Tombstoning the rows that exist at deletion time protects redelivery of THOSE events.
+ * It does nothing about a brand-new event id for the same subject, which LINE may send at any time
+ * and which the record RPC would have inserted as live activity for a person who no longer exists.
+ * The subject state is what makes erasure a property of the SUBJECT rather than of whichever rows
+ * happened to exist when the deletion ran.
+ *
+ * Idempotent: a second call finds the subject already erased, sweeps nothing, and does not move
+ * `erased_at`. Subjects belonging to anyone else are out of scope by construction — the lock, the
+ * state and the sweep are all keyed by this one digest.
  */
-export async function eraseCanonicalLineActivity(input: {
+export async function eraseCanonicalLineSubjects(input: {
   lineSubjectHashes: string[];
   ownerFingerprint?: string | null;
 }): Promise<number> {
   let erased = 0;
   for (const hash of new Set(input.lineSubjectHashes)) {
-    erased += await rpc<number>("yorisou_line_activity_erase", {
+    const result = await rpc<CanonicalLineSubjectErasure>("yorisou_line_subject_erase", {
       p_line_subject_hash: hash,
       p_owner_fingerprint: input.ownerFingerprint ?? null,
     });
+    erased += result.events_erased;
   }
   return erased;
 }
@@ -225,19 +240,46 @@ export async function eraseCanonicalLineActivity(input: {
  * Residue probe used ONLY to verify erasure before finalization.
  *
  * Unlike the object-store probe it replaces, this one cannot answer "absent" from a stale read: it
- * is a count from the same row-locked table the erase wrote. It does not swallow errors — an
+ * is a count from the same row-locked table the erasure wrote. It does not swallow errors — an
  * undetermined result must never read as "gone".
+ *
+ * It counts the BARRIER as well as the rows. A subject whose events are all tombstoned but whose
+ * state is still `active` is residue: the next webhook makes it live again. So is a subject with no
+ * registry row at all — "we never recorded a state" is not evidence of erasure, and unknown must
+ * never mean absent.
  */
 export async function canonicalLineActivityResidue(lineSubjectHashes: string[]): Promise<number> {
   let residue = 0;
   for (const hash of new Set(lineSubjectHashes)) {
-    residue += await rpc<number>("yorisou_line_activity_residue", { p_line_subject_hash: hash });
+    residue += await rpc<number>("yorisou_line_subject_erasure_residue", { p_line_subject_hash: hash });
   }
   return residue;
 }
 
+export type CanonicalLineSubjectState = {
+  subject_hash: string;
+  state: "active" | "erased" | "unknown";
+  owner_fingerprint: string | null;
+  erased_at: string | null;
+};
+
+/** The authoritative subject state. Bounded and content-free; no raw identifier is returned. */
+export async function canonicalLineSubjectStates(
+  lineSubjectHashes: string[],
+): Promise<CanonicalLineSubjectState[]> {
+  const out: CanonicalLineSubjectState[] = [];
+  for (const hash of new Set(lineSubjectHashes)) {
+    out.push(
+      await rpc<CanonicalLineSubjectState>("yorisou_line_subject_state", { p_line_subject_hash: hash }),
+    );
+  }
+  return out;
+}
+
 export type CanonicalLineActivityInventory = {
   subject_hash: string;
+  subject_state: "active" | "erased" | "unknown";
+  owner_fingerprint: string | null;
   active_events: number;
   erased_events: number;
   latest_received_at: string | null;

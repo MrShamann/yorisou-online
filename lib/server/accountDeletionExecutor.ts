@@ -200,6 +200,23 @@ export type DeletionTargetManifest = {
   consultationIds: string[];
   lineEventIds: string[];
   recentSubjectFingerprints: string[];
+  /**
+   * The canonical LINE subject inventory, frozen before the crossing: digest, subject state, owner
+   * fingerprint and the active/erased event counts at that moment. Bounded and content-free — no
+   * raw LINE id, no message body.
+   *
+   * Optional because a manifest frozen before `202607310002`, or on a deployment whose schema
+   * predates it, legitimately has none. Absent means "not recorded", which is why verification does
+   * not read this field as evidence: it re-asks the database. It exists so an operator can see what
+   * the deletion believed it was erasing.
+   */
+  lineSubjectInventory?: {
+    subjectHash: string;
+    subjectState: "active" | "erased" | "unknown";
+    ownerFingerprint: string | null;
+    activeEvents: number;
+    erasedEvents: number;
+  }[];
   foundationUserProfileId: string | null;
   foundationAuthIdentityIds: string[];
   supportConversationIds: string[];

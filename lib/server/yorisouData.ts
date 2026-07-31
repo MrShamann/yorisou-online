@@ -15,7 +15,7 @@ import {
   type AccountWriteContext,
 } from "./accountWriteContext";
 import {
-  eraseCanonicalLineActivity,
+  eraseCanonicalLineSubjects,
   findCanonicalLineEventById,
   listCanonicalLineEvents,
   listCanonicalRecentLineSubjects,
@@ -979,9 +979,14 @@ export async function pruneRecentLineWebhookSubjects(
     wanted.has(createHash("sha256").update(record.lineUserId).digest("hex"));
 
   if (canonicalLineActivityEnabled()) {
-    // The authoritative erasure: row-scoped by subject digest, so it cannot touch anyone else, and
-    // its result is a committed row count rather than an inference from a re-read.
-    const erased = await eraseCanonicalLineActivity({ lineSubjectHashes: [...wanted] });
+    // The authoritative erasure: SUBJECT-scoped by digest, so it cannot touch anyone else, and its
+    // result is a committed row count rather than an inference from a re-read.
+    //
+    // Subject-scoped, not event-scoped, because tombstoning the rows that exist right now protects
+    // only redelivery of THOSE events. LINE decides when the next event id exists, and a brand-new
+    // one would have been inserted as live activity for a person who no longer exists. The subject
+    // state is terminal, so the barrier holds for deliveries this erasure never saw.
+    const erased = await eraseCanonicalLineSubjects({ lineSubjectHashes: [...wanted] });
 
     // The frozen legacy array may still hold this person's historical entries from before the
     // cutover. Residue is residue, so it is still cleared — but the lost-update hazard is gone,
