@@ -673,6 +673,13 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
     await test.step("the database holds nothing owner-attributable, and the job is fingerprint-only", async () => {
       test.skip(!previewDbConfigured(), "requires Preview database access");
 
+      // Tables in the erasure plan that this database does not have. The isolated Preview is a
+      // deliberate SUBSET of the Production lineage, so absence here is expected — but it is
+      // RECORDED rather than skipped silently, because an absent table proves nothing about erasure
+      // and a silent skip reads exactly like a pass.
+      const KNOWN_ABSENT_IN_PREVIEW = new Set(["yorisou_private_recommendations"]);
+      const absentHere: string[] = [];
+
       for (const [table, column] of [
         ["yorisou_assessment_results", "owner_account_id"],
         ["yorisou_assessment_attempts", "owner_account_id"],
@@ -681,10 +688,21 @@ test("POR-1 concurrent deletion: four adversaries, a fully populated account, an
         ["yorisou_canonical_recommendation_actions", "owner_account_id"],
         ["yorisou_private_recommendations", "owner_account_id"],
       ] as const) {
+        const remaining = await countRowsForOwnerInPreviewDb(table, column, accountA);
+        if (remaining === null) {
+          absentHere.push(table);
+          continue;
+        }
+        expect(remaining, `${table} must retain no row for the deleted account`).toBe(0);
+      }
+
+      console.log(`[por1] erasure_tables_absent_in_preview=${absentHere.join(",") || "none"}`);
+      for (const table of absentHere) {
         expect(
-          await countRowsForOwnerInPreviewDb(table, column, accountA),
-          `${table} must retain no row for the deleted account`,
-        ).toBe(0);
+          KNOWN_ABSENT_IN_PREVIEW.has(table),
+          `${table} is missing from the Preview database and is NOT a known subset gap — its ` +
+            `erasure is unproven here and must be proven in the Production-equivalent rehearsal`,
+        ).toBe(true);
       }
 
       const job = await readDeletionJobFromPreviewDb(accountA);

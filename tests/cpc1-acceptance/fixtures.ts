@@ -350,15 +350,26 @@ export async function createExpiredAttemptInPreviewDb(): Promise<{
 // data-extraction tool with a test-shaped name.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** How many rows in `table` still carry this owner. Zero is the proof of erasure. */
+/**
+ * How many rows in `table` still carry this owner. Zero is the proof of erasure.
+ *
+ * Returns `null` when the table does not exist in THIS database, which PostgREST reports as 404.
+ * The isolated Preview database is a deliberate subset of the Production lineage, so some tables
+ * named in the erasure plan are legitimately absent here.
+ *
+ * Deliberately `null` rather than `0`: an absent table proves nothing about erasure, and counting it
+ * as zero is how a subset database manufactures a green run. The caller has to decide what the
+ * absence means, and say so.
+ */
 export async function countRowsForOwnerInPreviewDb(
   table: string,
   ownerColumn: string,
   ownerAccountId: string,
-): Promise<number> {
+): Promise<number | null> {
   const response = await dbRequest(`${table}?${ownerColumn}=eq.${ownerAccountId}&select=${ownerColumn}`, {
     headers: { Prefer: "count=exact" },
   });
+  if (response.status === 404) return null;
   if (!response.ok) throw new Error(`preview_db_count_failed_${response.status}`);
   const rows = (await response.json()) as unknown[];
   return rows.length;
