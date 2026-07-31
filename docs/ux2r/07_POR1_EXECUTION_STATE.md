@@ -448,6 +448,60 @@ isolated Preview identity store, four capabilities on, at least two workers, a f
 synthetic account, and the four concurrent adversaries running during a real deletion — has NOT been
 run. Do not treat the fence as hosted-verified until it has.
 
+## WS-B — the canonical LINE activity model (`202607310001`)
+
+The shared mutable array is replaced, not patched. `phase1/line-events/admin-recent-subjects.json`
+is no longer written in canonical mode and is no longer the index.
+
+**The table.** `yorisou_canonical_line_events` — ONE ROW PER EVENT, addressed by the event's own
+identity. Two subjects never touch the same row, so the read-modify-write that lost entries has no
+shared state left to lose. "Recent subjects" is DERIVED (`distinct on (line_subject_hash)`), so it
+cannot drift from the events it summarises and there is no second object to keep consistent.
+
+**Idempotency is a constraint.** A partial unique index on `webhook_event_id` makes a redelivery
+land on the same row. The record RPC takes the row lock FIRST, so two concurrent deliveries of one
+event and a delivery racing an erasure are both decided under the lock rather than by whoever writes
+last. Outcomes are distinguishable — `recorded` / `repeated` / `erased` — and reuse of one event
+identity for a DIFFERENT subject RAISES rather than rebinding someone else's activity.
+
+**Erasure is row-scoped.** Matched by `line_subject_hash`, so erasing one person cannot rewrite
+another's — the structural defect that made the array's prune a whole-document rewrite. It leaves a
+CONTENT-FREE TOMBSTONE rather than deleting the row, so a redelivery arriving after the deletion is
+absorbed instead of resurrecting the activity. A database CHECK enforces the tombstone's emptiness;
+it is not left to the erase RPC to be careful.
+
+**Verification stopped being ambiguous.** Residue is a COUNT from the same row-locked table the
+erasure wrote. The family this replaces could not be verified at all: its evidence was a re-read of
+an object whose reads are not consistent, where "absent" and "we read a stale copy" are the same
+observation.
+
+**Addressing is by digest.** `line_subject_hash` is the only thing that keys, indexes, scopes an
+erasure or appears in audit output, and both entry points refuse a raw identifier (proved). The raw
+id survives in ONE ordinary column because the admin timeline must resolve a canonical identity from
+it, and it is nulled by the tombstone.
+
+**Two further defects found on the way, both fixed:**
+
+- `buildDeletionManifest` derived the LINE erasure scope by LISTING that same array. An entry
+  invisible at manifest time would have been left out of the manifest, and therefore never erased
+  and never missed. The subject is a property of the account, so it now comes from the account.
+- `rpc()` surfaced only an allowlist of bounded codes, and neither the fence's nor the deletion's
+  codes were in it. Every one arrived as `assessment_persistence_failed:400`, which `classify()`
+  reduced to `account_mutation_unavailable` — fail-closed, so never unsafe, but it made "this
+  account is being deleted" and "the fence could not be reached" the same answer.
+
+**Rollout.** `YORISOU_POR1_CANONICAL_LINE_ACTIVITY_SCHEMA_READY`, the same readiness-not-activation
+contract as the fence: a deployment predating the migration keeps its exact previous behaviour and
+attempts no RPC that cannot succeed. Deliberately NOT a fifth capability. Per-event objects
+(`phase1/line-events/<id>.json`) are still written in BOTH modes — they were always row-addressable
+and never had the defect — which is what keeps an application rollback safe.
+
+**Proofs.** Scenarios 12-18 in `tests/por1/postgres-integration.sh`, on the existing two-session
+latch: the exact overlap that lost an entry in the array; concurrent same-subject writes; redelivery
+idempotence; refusal of conflicting identity reuse; A erased while B keeps receiving; tombstone
+content-freeness; idempotent re-erase absorbing a late redelivery; raw identifiers refused at both
+entry points. 18 scenarios total. Plus `npm run test:por1-line` (6 rollout-rule properties).
+
 ## Remaining CTO sequence (D onward) — CLOSED, superseded by the terminal package
 
 Retained as the record of how the work was sequenced. Every item below is done; do **not** treat
@@ -527,11 +581,20 @@ implement → flags OFF → apply additive Production migration → verify old a
 
 ```
 package: YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT (Founder, 2026-07-31)
-workstream: A complete -> B in progress (canonical LINE activity model)
-next_action: replace the shared mutable recent-LINE-subject array with a strongly consistent,
-  row-addressable canonical model behind a schema-readiness contract, then WS-C.
+workstream: A complete · B complete (code + local proofs) -> C next
+next_action: WS-C — app/api/auth/register/route.ts has TWO swallows, not one, and both end in a
+  200: the `!deterministicPrincipal.ok` branch logs the reason and continues, and the enclosing
+  `catch (foundationError)` logs and continues. Replace both with an idempotent provisioning saga
+  whose success response means every required piece of canonical identity is durably present. Then WS-D (re-audit the mutation graph, now including the canonical LINE
+  writer), WS-E, and the hosted train.
+  NOTE for WS-F: Preview needs YORISOU_POR1_CANONICAL_LINE_ACTIVITY_SCHEMA_READY=on for this
+  branch AND 202607310001 applied to nbltsbonsnbpfptihomc before the hosted run — otherwise the
+  deployment silently serves the legacy array and the acceptance proves the old model.
 starting_head: b85caaf698eb538f83545151069d435b2c093c14 (local == origin == PR #126 head)
-last_green_candidate_sha: b85caaf (five workflows, run ids in Position above)
+last_green_candidate_sha: 5634a6f — five workflows SUCCESS, read at that exact SHA:
+  Migration Scope Guard 30599368779 · Yorisou Check 30599368749 · CPV1-CM0 CI 30599368789
+  YV-1 CI 30599368814 · DCI-1 CI 30599368751
+  (b85caaf, the package's starting HEAD, was also five-green — run ids in Position above)
 last_hosted_candidate_sha: f6f50a6 — and its run did NOT reach the concurrency property
 last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
 last_full_train: 86 passed / 2 failed at 9847559 (both failures were the same residue defect).
