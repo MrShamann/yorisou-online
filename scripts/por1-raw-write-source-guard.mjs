@@ -111,6 +111,22 @@ const GUARDED = [
     allow: ["lib/server/canonicalLineActivity.ts", "lib/server/yorisouData.ts"],
   },
   {
+    symbol: "syncCanonicalIdentityLinks",
+    why:
+      "Commits WHICH ACCOUNT OWNS WHICH IDENTITY, strongly consistently. It is the serialization " +
+      "point the deletion manifest trusts instead of a cached object read, so a second caller is a " +
+      "second way an identity could be recorded — or silently not recorded, which is the shape that " +
+      "left a live LINE login route to an erased account.",
+    allow: ["lib/server/canonicalIdentityLinks.ts", "lib/server/yorisouData.ts"],
+  },
+  {
+    symbol: "eraseCanonicalIdentityLinks",
+    why:
+      "Terminally tombstones an account's identity links. The deletion path's operation and nothing " +
+      "else's; a second caller would be a way to cut a living person off from their own login.",
+    allow: ["lib/server/canonicalIdentityLinks.ts", "lib/server/accountIdentityDeletion.ts"],
+  },
+  {
     symbol: "withLegacyBootstrapContext",
     why: "The one-time file→store migration. Never a request path.",
     allow: ["lib/server/accountMutationLease.ts", "lib/server/yorisouData.ts"],
@@ -126,8 +142,23 @@ const IDENTITY_KEY_LITERALS = [
   "/accounts/by-line-user/",
   "/sessions/",
   "/password-resets/",
+  // WS-D re-audit: both are account-linked state the deletion manifest names, and both were outside
+  // this list purely because the fence work reached them later. A consultation or a per-event LINE
+  // object written from a new file would be account-linked content nothing fenced.
+  "/consultations/",
+  "/line-events/",
 ];
 const IDENTITY_KEY_WRITERS_ALLOW = ["lib/server/yorisouData.ts", "lib/server/accountIdentityDeletion.ts"];
+
+// The canonical identity-link RPCs, addressed by NAME rather than by the TypeScript symbol that
+// wraps them. A future caller that reaches past `canonicalIdentityLinks.ts` straight to `rpc(...)`
+// would satisfy every symbol rule above and still be a second, ungoverned writer of the table the
+// deletion manifest now trusts.
+const IDENTITY_LINK_RPCS = [
+  "yorisou_identity_links_sync",
+  "yorisou_identity_links_erase",
+];
+const IDENTITY_LINK_RPC_ALLOW = ["lib/server/canonicalIdentityLinks.ts"];
 
 // RPC names that were superseded by a STRONGER operation and must not be reachable from application
 // code again. A symbol allowlist cannot express this: the danger is not who calls it but that it is
@@ -335,6 +366,42 @@ for (const file of files) {
       `\`${DELETE_CLASSIFIER}\` is CALLED in ${wired} file(s); both object-store delete paths ` +
         `(the identity store and the foundation transport) must use it, or one of them has silently ` +
         `gone back to classifying absence by status.`,
+    );
+  }
+}
+
+// The identity-link mutation RPCs, by name, from anywhere that is not their one adapter.
+for (const file of files) {
+  if (IDENTITY_LINK_RPC_ALLOW.includes(file) || file === GUARD_SELF) continue;
+  if (!file.startsWith("lib/") && !file.startsWith("app/")) continue;
+  const source = stripComments(readFileSync(join(ROOT, file), "utf8"));
+  for (const name of IDENTITY_LINK_RPCS) {
+    if (source.includes(name)) {
+      failures.push(
+        `${file} names the identity-link RPC \`${name}\` directly.\n` +
+          `    Identity ownership has exactly one writer (lib/server/canonicalIdentityLinks.ts). A ` +
+          `second one is a\n    second place a binding can be committed — or quietly not committed, ` +
+          `which is what left an\n    orphaned LINE lookup pointing at an erased account.`,
+      );
+    }
+  }
+}
+
+// ...and the identity-link commit must actually be WIRED INTO the account writer, or the rule above
+// is satisfied by a module nobody calls. Shaped as "the account write funnel must call it", because
+// an import that is never invoked looks identical to a repair that was never made.
+{
+  const ACCOUNT_WRITER = "lib/server/yorisouData.ts";
+  const source = stripComments(readFileSync(join(ROOT, ACCOUNT_WRITER), "utf8"));
+  const funnel = source.slice(source.indexOf("async function putSharedAccountRecord"));
+  const body = funnel.slice(0, funnel.indexOf("\nasync function", 1));
+  if (!/\bsyncCanonicalIdentityLinks\s*\(/.test(body)) {
+    failures.push(
+      `\`putSharedAccountRecord\` does not CALL \`syncCanonicalIdentityLinks\`.\n` +
+        `    Every identity key family is written through that one funnel, so it is where the ` +
+        `strongly\n    consistent record of what the account owns has to be committed. Without the ` +
+        `call, the deletion\n    manifest is back to deriving its destructive scope from a cached ` +
+        `object read — the defect that\n    left accounts/by-line-user/<sha256> alive after a deletion.`,
     );
   }
 }

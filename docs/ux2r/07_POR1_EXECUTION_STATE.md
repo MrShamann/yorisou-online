@@ -1004,6 +1004,86 @@ array, and the run prints which origin was used.
 The identity gate also now refuses a deployment whose `por1SchemaReadiness` or `por1Capabilities` are
 not all true — proving the commit stopped being sufficient once the model went behind readiness flags.
 
+## WS-D — the identity mutation graph re-audit, COMPLETE
+
+The §11 invariant, restated so it can be checked rather than admired:
+
+> A mutation legally begun before gate draining may finish while deletion waits. A mutation beginning
+> after draining starts cannot acquire authority. Nothing may recreate identity-linked state after
+> deletion completes.
+
+**How each clause is actually enforced**, not where it is described:
+
+| clause | mechanism | proof |
+| --- | --- | --- |
+| a legally-begun mutation may finish | the execution grace window in `yorisou_account_mutation_begin`, with an injected clock rather than real waiting | postgres scenarios (grace cases) |
+| a post-drain mutation cannot acquire authority | `yorisou_account_deletion_close_mutation_gate` + lease refusal | scenario 50, and the fence scenarios |
+| nothing recreates identity-linked state | every account-linked writer demands an `AccountWriteContext`, and only `accountMutationLease.ts` can mint one | runtime `WeakSet` (unforgeable) + the source guard |
+
+### The 23 families, and where each one is written
+
+Audited by call graph, not by reading the module headers. Every family below reaches its store
+through a writer that takes a lease or a deletion context.
+
+```
+compatibility account ┐
+email lookup          ├─ putSharedAccountRecord (ONE funnel; assertAccountWriteContext at entry)
+LINE lookup           ┘
+canonical identity links  syncCanonicalIdentityLinks, called from that same funnel — NEW, and the
+                          source guard now requires the call rather than the import
+UserProfile           ┐
+email AuthIdentity    ├─ foundation/identityService.ts, 8 lease/context sites
+LINE AuthIdentity     ┘
+session               ┐
+principal landing     ├─ touchSession / putSharedSessionRecord, both context-demanding;
+                      │  bindSessionToUser takes the lease around the whole read-transform-write
+password reset        ┘
+recovery                  updateAccountPassword, which accepts a caller-held context so recovery
+                          holds ONE window across validate -> password -> token retirement
+provisioning saga         identityProvisioning.ts, single-writer by bounded claim
+consultation              assignSessionConsultationsToUser, inside the session-binding lease
+support conversation      foundation/repositories.ts, 3 context sites
+canonical LINE event  ┐
+LINE subject state    ┘   recordCanonicalLineEvent / eraseCanonicalLineSubjects, subject row locked FIRST
+assessment ownership  ┐
+legacy private state  ├─ database-side, owner-scoped RPCs; erased by the declarative delete plan
+canonical recs        │  under a `to_regclass` guard, which records *absent* rather than pretending
+legacy rec linkage    ┘
+report access         ┐
+download access       ┘   derived from ownership; denied once the owner row is gone (no separate store)
+```
+
+### What the re-audit actually changed
+
+Three findings, all now closed:
+
+1. **`syncCanonicalIdentityLinks` and `eraseCanonicalIdentityLinks` were new ungoverned primitives.**
+   Added to the source guard with exact path allowlists (14 → 16 guarded symbols).
+2. **A future caller could reach past the adapter straight to `rpc("yorisou_identity_links_sync")`**
+   and satisfy every symbol rule while being a second, ungoverned writer of the table the deletion
+   manifest now trusts. The RPC names are guarded by name, with no allowlist beyond their one adapter.
+3. **`/consultations/` and `/line-events/` were missing from the identity key families** (5 → 7) —
+   not because anyone decided they were safe, but because the fence work reached them later. Both are
+   account-linked state the manifest names.
+
+Plus a **wiring check**: `putSharedAccountRecord` must *call* `syncCanonicalIdentityLinks`, not merely
+import it. An import that is never invoked looks identical to a repair that was never made — which is
+the same reasoning that shaped the delete-classifier rule.
+
+All three new rules are **negative-controlled**: each was deliberately broken, the guard was confirmed
+to fire, and the tree was restored. A guard that has never been seen to fail is a guard nobody has
+tested.
+
+### Two false positives, recorded so the next reader does not re-chase them
+
+- `app/api/auth/login/route.ts` and `app/api/line/auth/callback/route.ts` call `bindSessionToUser`
+  without naming a lease. `bindSessionToUser` takes the lease **internally**, around the whole
+  read-transform-write window including the consultation rebind (`yorisouAuth.ts:804`).
+- `yorisou_canonical_identity_links` is deliberately **not** in `yorisou_account_deletion_erase_database`.
+  Database erasure runs at `database_erasure`, several stages before `identity_erasure`; erasing the
+  links there would destroy the scope the later stages still need. They are erased last, after every
+  object they describe, and verified separately by fingerprint.
+
 ## Preview synthetic residue — bounded inventory, 2026-07-31T15:5x+08:00 (read-only, nothing removed)
 
 Counted BEFORE any cleanup, because the orphaned LINE lookup is the evidence for defect 4. No PII was
