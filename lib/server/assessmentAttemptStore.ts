@@ -93,8 +93,15 @@ export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     // Surface only bounded, allowlisted codes; never raw Postgres text.
+    //
+    // POR-1 correction: the fence and deletion codes were absent from this list, so every one of
+    // them arrived at the caller as `assessment_persistence_failed:400`. `classify()` in
+    // accountMutationLease then fell through to `account_mutation_unavailable` — fail-closed, so
+    // never unsafe, but it meant "this account is being deleted" and "the fence could not be
+    // reached" were the same answer. They call for different handling, so they are now distinct.
+    // The added families are word-anchored; the original ones are left exactly as they were.
     const known =
-      /attempt_[a-z_]+|claim_[a-z_]+|result_[a-z_]+|assessment_[a-z_]+|recommendation_[a-z_]+|interpretation_[a-z_]+/.exec(text)?.[0] ||
+      /attempt_[a-z_]+|claim_[a-z_]+|result_[a-z_]+|assessment_[a-z_]+|recommendation_[a-z_]+|interpretation_[a-z_]+|\baccount_mutation_[a-z_]+|\bline_(?:event|subject|activity)_[a-z_]+|\bdeletion_[a-z_]+/.exec(text)?.[0] ||
       `assessment_persistence_failed:${response.status}`;
     throw new Error(known);
   }

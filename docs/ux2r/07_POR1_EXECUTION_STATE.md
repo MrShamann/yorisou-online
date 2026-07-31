@@ -1,19 +1,86 @@
 # POR-1 — Execution State (durable)
 
-> Resume point for `YORISOU_POR_1_FULL_PRODUCTION_OPERATIONALIZATION`.
+> Resume point for `YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT`.
 > Read this and `06_POR1_MIGRATION_PROMOTION_ARCHAEOLOGY.md`. Do **not** repeat completed archaeology.
 
-## Position
+## Active package — YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT (Founder, 2026-07-31)
+
+One integrated release train. It **supersedes every earlier POR-1 continuation prompt**, including
+the `next_action` this file carried before 2026-07-31 and the `next_package` recorded in the lock's
+2026-07-30 release block. It terminates only at
+`YORISOU_POR1_PRODUCTION_OPERATIONAL_AND_VERIFIED` or a proven
+`YORISOU_POR1_GENUINE_EXTERNAL_BLOCKER`; a context boundary is a continuation, not a new package,
+and does not require re-authorization.
+
+Workstreams (internal units of ONE package, not separate approvals):
+
+```
+A truth reconciliation + this ledger          H Production promotion migrations
+B canonical LINE activity model               I Production-equivalent rehearsal
+C atomic truthful registration provisioning   J PR #126 truth + exact-head merge
+D identity mutation graph re-audit            K Production release order + activation
+E local proofs + five-green CI                L Production terminal acceptance + cleanup
+F exact-SHA hosted Preview acceptance         M observability, rollback, closeout
+G Preview cleanup + Production store audit
+```
+
+## Position — verified at package start, 2026-07-31
 
 ```
 Branch      : feat/ux2-integrated-core-experience
-PR          : #126 (DRAFT / OPEN / UNMERGED, base main)
-HEAD        : see `git rev-parse HEAD` — last recorded: a78c4e5 + this commit (WS1-WS7)
-Production  : main @ c8d8a8ad6a72949c248adb098a626d1ab9d6a579 — UNTOUCHED
+PR          : #126 OPEN / DRAFT / UNMERGED / MERGEABLE, base main @ c8d8a8ad
+HEAD        : b85caaf698eb538f83545151069d435b2c093c14 — local == origin == PR head
+Working tree: 0 tracked modifications; 2 pre-existing untracked docs, classified NOT POR-1
+CI at HEAD  : five workflows SUCCESS, read at b85caaf, not inherited
+              Migration Scope Guard 30556141681 · Yorisou Check 30556141693
+              CPV1-CM0 CI 30556141673 · YV-1 CI 30556141451 · DCI-1 CI 30556141468
+Production  : main @ c8d8a8ad — UNTOUCHED. 42 public tables, 12 Production-lineage migrations,
+              0 POR-1 canonical objects, no POR-1 deployment, no POR-1 activation.
 Preview DB  : yorisou-preview (nbltsbonsnbpfptihomc)
-Migrations  : PRODUCTION_LINEAGE 12 · LOCAL_ONLY 4 · PREVIEW_ONLY 14
+Migrations  : PRODUCTION_LINEAGE 12 · LOCAL_ONLY 4 · PREVIEW_ONLY 16 (32 total, validator green)
+              (…300002 namespace · 300003 lifecycle · 300004 fence · 300005 resume engine, applied)
+Preview SHA : f6f50a6 was the last HOSTED-tested deployment. b85caaf is CI-green but has NOT been
+              hosted-tested. Do NOT inherit an exact-SHA hosted claim from f6f50a6.
 Status      : POR-1 in execution. No merge, no Production migration, no Production deployment.
 ```
+
+## Superseded statements — corrected, not deleted
+
+These were true when written and are false now. They are listed because an earlier reader acting on
+any one of them would do harm.
+
+| Stale statement | Correction |
+| --- | --- |
+| `202607300005` is not implemented | Implemented, applied to Preview, verified there — see the section below |
+| the execution cursor is not authoritative | It is authoritative and means exactly one thing: the next stage that must execute |
+| the mutation fence is only structurally present | Complete and runtime-unforgeable (module-private `WeakSet`), 11 DB scenarios pass |
+| remote CI still needs checking | Read at `b85caaf`; five green, run ids above |
+| the next fix is to reorder the two writes in `establishLineActivity` | **Explicitly forbidden.** That treats a symptom. The array is replaced — WS-B |
+| the LINE index failure is a test-observability problem | Wrong, and wrong in the dangerous direction. It is a lost-update data-model defect — WS-B |
+| increase the retry window / add retries | Forbidden as a final repair (contract §21) |
+
+## Open defects carried into this package
+
+1. **The shared LINE recent-subject array (WS-B).** `phase1/line-events/admin-recent-subjects.json`
+   is ONE cross-user mutable JSON array updated by read-modify-write on a transport with no
+   read-after-write consistency. Measured visibility lag on this key is a distribution — 4.5s, 5.4s,
+   11s on three probes; reproduced outside Playwright as invisible for ten consecutive 1s reads,
+   then present at read 11. Two concurrent writers can each read a stale document and each write
+   back one missing the other's entry. It is also unusable as deletion evidence: absence in a stale
+   read is indistinguishable from erasure. `pruneRecentLineWebhookSubjects` re-reading until
+   provably absent and throwing `recent_line_subject_prune_unconfirmed` is containment, not repair.
+2. **Registration returns 200 over a failed canonical write (WS-C).** `app/api/auth/register/route.ts`
+   catches the foundation-sync error, logs it, and still returns success. The 2026-07-30 session
+   fixed the transport *underneath* it but not the swallow. A 200 that does not mean the canonical
+   identity exists is a capability-honesty violation.
+3. **Registration latency (WS-C).** Isolated Preview went ~7s → ~11–14s once the foundation
+   transport was repaired, because the canonical mirror is now actually written. One transient 500
+   was observed, followed by three 200s. The route's duration ceiling must be checked before
+   Production activation — and the fix is to remove real duplicated work, never to make canonical
+   completion best-effort.
+4. **Production identity-store audit never run (WS-G).** No AWS credentials exist locally or in
+   Preview (both present-but-empty). Production holds real ones. It must be run from the Production
+   runtime through a permanent narrow operator mechanism — its absence locally is not a blocker.
 
 ## Completed gates
 
@@ -381,18 +448,21 @@ isolated Preview identity store, four capabilities on, at least two workers, a f
 synthetic account, and the four concurrent adversaries running during a real deletion — has NOT been
 run. Do not treat the fence as hosted-verified until it has.
 
-## Remaining CTO sequence (D onward)
+## Remaining CTO sequence (D onward) — CLOSED, superseded by the terminal package
+
+Retained as the record of how the work was sequenced. Every item below is done; do **not** treat
+`D <- START HERE` as live guidance.
 
 ```
-D. stale-write mutation guard          <- START HERE; the isolated defect above
-B. durable retry cursor migration      (forward-only, after 202607300003)
-E. canonical key module (lib/server/sharedIdentityKeys.ts)
-G. complete deletion target inventory  (password-resets, consultations, LINE events/index)
-H. durable target manifest             (resume without re-reading a deleted account)
-J. focused isolated-store transport proof, per family
-K. fully populated deletion lifecycle  (LINE-bound, multi-session, reset token, consultation)
-L. complete exact-SHA hosted train
-M-W. cleanup, bucket audit, WS9 promotion delta, rehearsal, merge, activation, closeout
+D. stale-write mutation guard          DONE (202607300004 + the runtime fence)
+B. durable retry cursor migration      DONE (202607300005)
+E. canonical key module                DONE (lib/server/identityKeyScope.ts)
+G. complete deletion target inventory  DONE (resets, consultations, LINE events/index, foundation)
+H. durable target manifest             DONE (frozen pre-crossing, immutable)
+J. isolated-store transport proof       DONE (and it found the foundation transport defect)
+K. fully populated deletion lifecycle   PARTIAL — the fixture exists; the hosted run is WS-F
+L. complete exact-SHA hosted train      WS-F
+M-W. cleanup, bucket audit, promotion delta, rehearsal, merge, activation, closeout  WS-G..WS-M
 ```
 
 ## Not yet done — exact remaining sequence
@@ -450,14 +520,25 @@ implement → flags OFF → apply additive Production migration → verify old a
 
 ## CONTINUATION_CURSOR
 
+> The pre-2026-07-31 cursor said the next action was the mutation-fence concurrency proof and that
+> the fence was UNPROVEN. Both are now complete (11 scenarios, deterministic barriers). That cursor
+> is superseded; it is quoted in the superseded-statements table above rather than left here where
+> it would read as an instruction.
+
 ```
-next_action: the deterministic concurrency proof for the mutation fence, then lease the remaining
-  identityService write paths and add the source guard. The fence is implemented but UNPROVEN.
-last_full_train: 86 passed / 2 failed at 9847559 (both failures are the same residue defect).
-last_serial_deletion_run: 10/10 at 9847559.
+package: YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT (Founder, 2026-07-31)
+workstream: A complete -> B in progress (canonical LINE activity model)
+next_action: replace the shared mutable recent-LINE-subject array with a strongly consistent,
+  row-addressable canonical model behind a schema-readiness contract, then WS-C.
+starting_head: b85caaf698eb538f83545151069d435b2c093c14 (local == origin == PR #126 head)
+last_green_candidate_sha: b85caaf (five workflows, run ids in Position above)
+last_hosted_candidate_sha: f6f50a6 — and its run did NOT reach the concurrency property
+last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
+last_full_train: 86 passed / 2 failed at 9847559 (both failures were the same residue defect).
 preview_isolation_state: REPAIRED and proven at object level. All three Preview scopes isolated.
   Permanent runtime guard + acceptance gate + env audit in place.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
+production_activation_state: NONE. All four POR-1 controls unset in Production.
 rollback_state: nothing to roll back; every change so far is branch-local or Preview-only.
-lock_state: released at session boundary (see lock file).
+lock_state: HELD by claude-code-2026-07-31-por1-terminal-execution.
 ```

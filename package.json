@@ -57,6 +57,7 @@
     "test:por1-boundary": "node --import tsx --test lib/server/__tests__/por1SharedStoreBoundary.test.ts",
     "test:por1-deletion": "node --import tsx --test lib/server/__tests__/por1AccountDeletionLock.test.ts lib/server/__tests__/por1IdentityKeyScope.test.ts",
     "test:por1-context": "node --import tsx --test lib/server/__tests__/por1AccountWriteContext.test.ts",
+    "test:por1-line": "node --import tsx --test lib/server/__tests__/por1CanonicalLineActivityRollout.test.ts",
     "test:por1-transport": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1FoundationTransportParity.test.ts",
     "test:por1-resume:db": "bash tests/por1/postgres-integration.sh",
     "guard:por1-raw-writes": "node scripts/por1-raw-write-source-guard.mjs"

@@ -29,7 +29,6 @@ import {
   listConsultations,
   listPasswordResetTokens,
   listLineWebhookEvents,
-  listRecentLineWebhookSubjects,
   deleteSharedIdentityObject,
   sharedIdentityObjectExists,
   normalizeAccountEmail,
@@ -38,10 +37,14 @@ import type {
   ConsultationRecord,
   LineWebhookEventRecord,
   PasswordResetTokenRecord,
-  RecentLineWebhookSubjectRecord,
   SessionRecord,
 } from "./yorisouData";
 import { SHARED_STORE_PREFIX } from "./identityKeyScope";
+import { canonicalLineActivityResidue } from "./canonicalLineActivity";
+import {
+  isCanonicalLineActivitySchemaReady,
+  resolveLineActivityMode,
+} from "./canonicalLineActivityRollout";
 import {
   foundationUserProfileRepository,
   foundationAuthIdentityRepository,
@@ -137,12 +140,11 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
   const account = await findAccountById(accountId);
   if (!account) return null;
 
-  const [sessions, consultations, resetTokens, lineEvents, recentSubjects] = await Promise.all([
+  const [sessions, consultations, resetTokens, lineEvents] = await Promise.all([
     listSessions(),
     listConsultations(),
     listPasswordResetTokens(),
     listLineWebhookEvents(),
-    listRecentLineWebhookSubjects(Number.MAX_SAFE_INTEGER),
   ]);
 
   const profile = await foundationUserProfileRepository.getByLegacyAccountId(accountId);
@@ -153,14 +155,17 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
     ? await foundationConversationRepository.listByUserProfileId(profile.userProfileId)
     : [];
 
-  // The recent-subject index is a shared array, not a per-account object, so the entries this
-  // account contributed are identified by a FINGERPRINT of the LINE subject rather than by the
-  // subject itself — the index must be rewritten without them, and the rewrite must not need the
-  // raw id to do it.
+  // LINE activity is scoped by a FINGERPRINT of the subject — sha256 of the LINE user id — so no
+  // later stage needs the raw identifier to erase, verify or count, and the frozen manifest never
+  // has to carry one.
+  //
+  // POR-1 correction: this used to be derived by LISTING the shared recent-subject index and
+  // filtering it. That made the scope of an erasure depend on a read of the very object whose reads
+  // are not consistent — an entry invisible at manifest time would have been left out of the
+  // manifest entirely, and therefore never erased and never missed. The subject is a property of
+  // the account, so it is taken from the account.
   const lineSubjectFingerprints = account.lineUserId
-    ? recentSubjects
-        .filter((entry: RecentLineWebhookSubjectRecord) => entry.lineUserId === account.lineUserId)
-        .map((entry: RecentLineWebhookSubjectRecord) => createHash("sha256").update(entry.lineUserId).digest("hex"))
+    ? [createHash("sha256").update(account.lineUserId).digest("hex")]
     : [];
 
   return {
@@ -342,6 +347,21 @@ export async function verifyIdentityErasure(
       residue.push("line_events");
       break;
     }
+  }
+
+  // Canonical LINE activity, verified by a COUNT from the same row-locked table the erasure wrote.
+  //
+  // This is the family that previously could not be verified at all. Its evidence was a re-read of
+  // one shared array on a transport with no read-after-write consistency, where "absent" and "we
+  // read a stale copy" are the same observation — so a deletion could finalize over activity that
+  // was still there. A count of active rows scoped by subject digest has no such ambiguity, and an
+  // undetermined result throws rather than reading as zero.
+  if (
+    resolveLineActivityMode({ schemaReady: isCanonicalLineActivitySchemaReady() }) === "canonical" &&
+    manifest.recentSubjectFingerprints.length > 0 &&
+    (await canonicalLineActivityResidue(manifest.recentSubjectFingerprints)) > 0
+  ) {
+    residue.push("canonical_line_activity");
   }
 
   // The foundation mirror, checked through its own repositories rather than by key: the store keeps

@@ -31,11 +31,13 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "alter role service_role bypassrls
 
 for f in 202607300003_por1_account_deletion_lifecycle \
          202607300004_por1_account_mutation_fence \
-         202607300005_por1_deletion_resume_engine; do
+         202607300005_por1_deletion_resume_engine \
+         202607310001_por1_canonical_line_activity; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
-# Idempotence: re-applying the new migration must succeed without error.
+# Idempotence: re-applying the new migrations must succeed without error.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607300005_por1_deletion_resume_engine.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310001_por1_canonical_line_activity.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -476,10 +478,117 @@ if ! grep -q "cursor_mismatch" "$WORK/out_b"; then
 fi
 echo "  ok: duplicate step blocked, then refused on the expected-cursor check"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenarios 12-17 — CANONICAL LINE ACTIVITY.
+#
+# The model these replace was one shared mutable JSON array on an object transport with no
+# read-after-write consistency. Scenario 12 is the exact interleaving that lost an entry there: two
+# writers overlapping on the index. It cannot lose one here, because there is no shared row to
+# overwrite — which is the whole claim, so it is proved with a real latch rather than asserted.
+# ─────────────────────────────────────────────────────────────────────────────
+echo
+echo "── scenario 12: overlapping writers for DIFFERENT subjects — no lost update ──"
+
+SUBJ_A="$(printf 'Uaaaa1111' | shasum -a 256 | cut -d' ' -f1)"
+SUBJ_B="$(printf 'Ubbbb2222' | shasum -a 256 | cut -d' ' -f1)"
+
+# A opens a transaction, writes its event, and STOPS inside the transaction — the state in which the
+# array model would have been holding a stale in-memory copy of the whole document.
+send_wait 3 "$WORK/out_a" line_a_begin "begin; select public.yorisou_line_event_record('evt-a1','$SUBJ_A','message','Uaaaa1111','wh-a1')->>'outcome';"
+# B writes and COMMITS while A is still open. Under the array model B's entry is now in a document A
+# has never seen.
+send_wait 4 "$WORK/out_b" line_b_write "select public.yorisou_line_event_record('evt-b1','$SUBJ_B','message','Ubbbb2222','wh-b1')->>'outcome';"
+send_wait 3 "$WORK/out_a" line_a_commit "commit;"
+
+both="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where line_subject_hash in ('$SUBJ_A','$SUBJ_B') and retention_state='active'")"
+if [[ "$both" != "2" ]]; then
+  echo "FAIL: overlapping writers lost an entry (expected 2 active rows, got $both)" >&2; exit 1
+fi
+recent="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_line_recent_subjects(50)")"
+if [[ "$recent" != "2" ]]; then
+  echo "FAIL: derived recent-subject list is missing a subject (got $recent)" >&2; exit 1
+fi
+echo "  ok: both writers survived an overlap that the shared array could not"
+
+echo "── scenario 13: overlapping writers for the SAME subject ────────────────"
+send_wait 3 "$WORK/out_a" line_a_begin2 "begin; select public.yorisou_line_event_record('evt-a2','$SUBJ_A','message','Uaaaa1111','wh-a2')->>'outcome';"
+send_wait 4 "$WORK/out_b" line_b_write2 "select public.yorisou_line_event_record('evt-a3','$SUBJ_A','message','Uaaaa1111','wh-a3')->>'outcome';"
+send_wait 3 "$WORK/out_a" line_a_commit2 "commit;"
+same="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where line_subject_hash='$SUBJ_A' and retention_state='active'")"
+if [[ "$same" != "3" ]]; then
+  echo "FAIL: concurrent same-subject events lost one (expected 3, got $same)" >&2; exit 1
+fi
+# One subject must still occupy exactly one slot in the derived list, newest first.
+slot="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_line_recent_subjects(50) where line_subject_hash='$SUBJ_A'")"
+if [[ "$slot" != "1" ]]; then
+  echo "FAIL: derived recent list returned $slot rows for one subject" >&2; exit 1
+fi
+echo "  ok: three events, one derived subject slot"
+
+echo "── scenario 14: webhook redelivery is idempotent ────────────────────────"
+out1="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-a4','$SUBJ_A','message','Uaaaa1111','wh-a4')->>'outcome'")"
+out2="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-a4','$SUBJ_A','message','Uaaaa1111','wh-a4', p_is_redelivery => true)->>'outcome'")"
+# The same LINE delivery id arriving under a DIFFERENT internal event id is still one delivery.
+out3="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-a4-dup','$SUBJ_A','message','Uaaaa1111','wh-a4')->>'outcome'")"
+dup="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where webhook_event_id='wh-a4'")"
+if [[ "$out1" != "recorded" || "$out2" != "repeated" || "$out3" != "repeated" || "$dup" != "1" ]]; then
+  echo "FAIL: redelivery was not idempotent ($out1/$out2/$out3, rows=$dup)" >&2; exit 1
+fi
+echo "  ok: recorded, then repeated twice, one row"
+
+echo "── scenario 15: conflicting reuse of one event identity is refused ──────"
+if psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-a4','$SUBJ_B','message','Ubbbb2222','wh-a4')" >/dev/null 2>&1; then
+  echo "FAIL: one event identity was allowed to rebind to another subject" >&2; exit 1
+fi
+still_a="$(psql "$DATABASE_URL" -At -c "select line_subject_hash from public.yorisou_canonical_line_events where line_event_id='evt-a4'")"
+if [[ "$still_a" != "$SUBJ_A" ]]; then
+  echo "FAIL: a refused conflict still altered the row" >&2; exit 1
+fi
+echo "  ok: refused, and the existing row is unchanged"
+
+echo "── scenario 16: A is erased while B keeps receiving events ──────────────"
+# B's delivery lands DURING A's erasure — the interleaving in which a whole-document rewrite would
+# have taken B's entry with it.
+send_wait 3 "$WORK/out_a" line_erase_begin "begin; select public.yorisou_line_activity_erase('$SUBJ_A');"
+send_wait 4 "$WORK/out_b" line_b_during "select public.yorisou_line_event_record('evt-b2','$SUBJ_B','message','Ubbbb2222','wh-b2')->>'outcome';"
+send_wait 3 "$WORK/out_a" line_erase_commit "commit;"
+
+a_left="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_residue('$SUBJ_A')")"
+b_left="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_residue('$SUBJ_B')")"
+if [[ "$a_left" != "0" ]]; then echo "FAIL: A has $a_left active events after erasure" >&2; exit 1; fi
+if [[ "$b_left" != "2" ]]; then echo "FAIL: B lost activity to A's erasure (expected 2, got $b_left)" >&2; exit 1; fi
+
+# The tombstone must be content-free, and must not still name the person.
+leak="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_line_events where retention_state='erased' and (line_subject_id is not null or message_text is not null or postback_data is not null or owner_account_id is not null or erased_at is null)")"
+if [[ "$leak" != "0" ]]; then echo "FAIL: $leak erased rows still carry content or a raw LINE id" >&2; exit 1; fi
+echo "  ok: A absent, B intact (2 events), tombstones content-free"
+
+echo "── scenario 17: erasure is idempotent and absorbs a late redelivery ─────"
+again="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_erase('$SUBJ_A')")"
+late="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-a2','$SUBJ_A','message','Uaaaa1111','wh-a2')->>'outcome'")"
+after="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_residue('$SUBJ_A')")"
+if [[ "$again" != "0" ]]; then echo "FAIL: a second erasure claimed to erase $again rows" >&2; exit 1; fi
+if [[ "$late" != "erased" ]]; then echo "FAIL: a redelivery after erasure returned '$late'" >&2; exit 1; fi
+if [[ "$after" != "0" ]]; then echo "FAIL: a redelivery resurrected $after rows" >&2; exit 1; fi
+# And the manifest inventory still reports the family truthfully rather than as absent.
+inv="$(psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_inventory('$SUBJ_A')->>'active_events'")"
+if [[ "$inv" != "0" ]]; then echo "FAIL: inventory reports $inv active events after erasure" >&2; exit 1; fi
+echo "  ok: second erase is a no-op, late redelivery absorbed, residue 0"
+
+echo "── scenario 18: the subject digest is the only accepted address ─────────"
+# A raw LINE id passed where a digest belongs must be refused, not stored.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_line_event_record('evt-raw','Uaaaa1111','message')" >/dev/null 2>&1; then
+  echo "FAIL: a raw LINE id was accepted as a subject address" >&2; exit 1
+fi
+if psql "$DATABASE_URL" -At -c "select public.yorisou_line_activity_erase('Uaaaa1111')" >/dev/null 2>&1; then
+  echo "FAIL: a raw LINE id was accepted as an erasure scope" >&2; exit 1
+fi
+echo "  ok: raw identifiers refused at both entry points"
+
 printf '\\q\n' >&3; printf '\\q\n' >&4
 exec 3>&-; exec 4>&-
 wait "$PID_A" 2>/dev/null || true
 wait "$PID_B" 2>/dev/null || true
 
 echo
-echo "POR-1 deletion resume engine + mutation fence: ALL ASSERTIONS PASSED"
+echo "POR-1 deletion resume engine + mutation fence + canonical LINE activity: ALL ASSERTIONS PASSED"

@@ -15,6 +15,17 @@ import {
   type AccountWriteContext,
 } from "./accountWriteContext";
 import {
+  eraseCanonicalLineActivity,
+  findCanonicalLineEventById,
+  listCanonicalLineEvents,
+  listCanonicalRecentLineSubjects,
+  recordCanonicalLineEvent,
+} from "./canonicalLineActivity";
+import {
+  isCanonicalLineActivitySchemaReady,
+  resolveLineActivityMode,
+} from "./canonicalLineActivityRollout";
+import {
   DeleteObjectCommand,
   GetObjectCommand,
   ListObjectsV2Command,
@@ -811,6 +822,25 @@ function mergeRecentLineWebhookSubjectRecords(
     .slice(0, Math.max(1, limit));
 }
 
+/**
+ * POR-1 — is the canonical LINE activity schema deployed here?
+ *
+ * Readiness, not a capability. A deployment predating `202607310001` keeps its exact previous
+ * behaviour and attempts no RPC that cannot succeed; one that has the tables uses them for BOTH the
+ * read and the write, and stops writing the shared array entirely.
+ */
+function canonicalLineActivityEnabled() {
+  return resolveLineActivityMode({ schemaReady: isCanonicalLineActivitySchemaReady() }) === "canonical";
+}
+
+/**
+ * LEGACY — the shared recent-LINE-subject array.
+ *
+ * Retained for deployments that predate the canonical tables, and for an application rollback onto
+ * one. In canonical mode this is never called: a second writer to a read-modify-write document is
+ * the defect, so mirroring into it "for compatibility" would reintroduce exactly what the canonical
+ * model removes.
+ */
 async function updateRecentLineWebhookSubjectIndex(record: LineWebhookEventRecord) {
   const recentRecord = toRecentLineWebhookSubjectRecord(record);
 
@@ -947,6 +977,38 @@ export async function pruneRecentLineWebhookSubjects(
   const wanted = new Set(lineUserIdFingerprints);
   const matches = (record: RecentLineWebhookSubjectRecord) =>
     wanted.has(createHash("sha256").update(record.lineUserId).digest("hex"));
+
+  if (canonicalLineActivityEnabled()) {
+    // The authoritative erasure: row-scoped by subject digest, so it cannot touch anyone else, and
+    // its result is a committed row count rather than an inference from a re-read.
+    const erased = await eraseCanonicalLineActivity({ lineSubjectHashes: [...wanted] });
+
+    // The frozen legacy array may still hold this person's historical entries from before the
+    // cutover. Residue is residue, so it is still cleared — but the lost-update hazard is gone,
+    // because in canonical mode nothing writes this object any more.
+    let legacyRemoved = 0;
+    if (shouldUseSharedStore) {
+      await ensureSharedStoreReady();
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const records = await getSharedRecentLineWebhookSubjects();
+        const stillPresent = records.filter(matches);
+        if (stillPresent.length === 0) break;
+        await putSharedRecentLineWebhookSubjects(records.filter((record) => !matches(record)));
+        legacyRemoved += stillPresent.length;
+        if (attempt === 9) throw new Error("recent_line_subject_prune_unconfirmed");
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
+    } else {
+      const records = await readLocalJson(recentLineWebhookSubjectsFile);
+      const kept = records.filter((record) => !matches(record));
+      if (kept.length !== records.length) {
+        await writeLocalJson(recentLineWebhookSubjectsFile, kept);
+        legacyRemoved = records.length - kept.length;
+      }
+    }
+
+    return erased + legacyRemoved;
+  }
 
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
@@ -1495,6 +1557,10 @@ export async function listPasswordResetTokens(): Promise<PasswordResetTokenRecor
 }
 
 export async function listLineWebhookEvents(): Promise<LineWebhookEventRecord[]> {
+  if (canonicalLineActivityEnabled()) {
+    return listCanonicalLineEvents();
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     return listSharedLineWebhookEvents();
@@ -1504,6 +1570,10 @@ export async function listLineWebhookEvents(): Promise<LineWebhookEventRecord[]>
 }
 
 export async function findLineWebhookEventById(id: string): Promise<LineWebhookEventRecord | null> {
+  if (canonicalLineActivityEnabled()) {
+    return findCanonicalLineEventById(id);
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     return getSharedLineWebhookEventById(id);
@@ -1516,8 +1586,24 @@ export async function findLineWebhookEventById(id: string): Promise<LineWebhookE
 async function upsertLineWebhookEvent(record: LineWebhookEventRecord) {
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
+
+    // The per-event object is written in BOTH modes. It is already row-addressable — one key per
+    // event, no shared document, no lost update — so it never had the defect, and keeping it is
+    // what makes an application rollback safe: a rolled-back deployment still finds every event
+    // where it expects it.
     await putSharedLineWebhookEvent(record);
+
+    if (canonicalLineActivityEnabled()) {
+      await recordCanonicalLineEvent(record);
+      return record;
+    }
+
     await updateRecentLineWebhookSubjectIndex(record);
+    return record;
+  }
+
+  if (canonicalLineActivityEnabled()) {
+    await recordCanonicalLineEvent(record);
     return record;
   }
 
@@ -1594,6 +1680,13 @@ export async function listLineWebhookEventsForAccount(accountId: string) {
 
 export async function listRecentLineWebhookSubjects(limit = 10): Promise<RecentLineWebhookSubjectRecord[]> {
   const effectiveLimit = Math.max(1, limit);
+
+  if (canonicalLineActivityEnabled()) {
+    // Derived from the events themselves, so it cannot drift from them — and it is read from the
+    // same row-locked table the write committed to, so a fresh entry is visible immediately. That
+    // is the property the object-store array could not provide at any retry count.
+    return listCanonicalRecentLineSubjects(effectiveLimit);
+  }
 
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
