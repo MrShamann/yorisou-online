@@ -1551,3 +1551,127 @@ max 18.9s** — the route is healthy alone.
 
 Note the likely connection: `session_not_stored` is a READ-BACK failure, the same read path that
 Priority A just showed going stale in the other direction. Do not assume it; read the detail.
+
+---
+
+## WS-F1/F3/F4 CLOSED — the cached body was the whole story; WS-F5 found a broken download
+
+HEAD `2a3ed55` → `dc22575`. Five workflows SUCCESS at `dc22575`. Production untouched.
+
+### WS-F1 — erasure verification no longer trusts a cacheable read. CLOSED.
+
+Archaeology first, and it overturned the obvious answer: `sharedRestReadJson` and the fixture probe
+are **byte-identical** — same URL, same service-role headers, same `cache: "no-store"`, same POST
+list. The difference is not the code, it is where the request originates, so no probe from a laptop
+could settle which read lags. That is why the repair landed with the measurement built in.
+
+Four states replace one boolean. `AUTHORITATIVELY_ABSENT` and `STALE_BODY_VISIBLE_BUT_UNLISTED`
+finalize; `PHYSICAL_RESIDUE_CONFIRMED` and `AUTHORITY_UNAVAILABLE` block. The GET is authoritative
+only when it says ABSENT, so the listing is consulted solely in the case in doubt and a healthy
+erasure costs nothing extra.
+
+**THE MEASUREMENT, from inside the lambda, on the real erasure path** (deletion audit,
+`finalizing` rows across the three passing runs):
+
+```
+AUTHORITATIVELY_ABSENT          : 6 / 3 / 4
+STALE_BODY_VISIBLE_BUT_UNLISTED : 6 / 9 / 8
+PHYSICAL_RESIDUE_CONFIRMED      : 0
+AUTHORITY_UNAVAILABLE           : 0
+```
+
+**23 of 35 object questions were answered by a stale body.** Every one would have been reported as
+residue by the old model — which is exactly why deletions were failing. The listing was correct in
+all 23.
+
+**§7.2's contradiction is settled.** The earlier in-code comment claiming the list is not
+immediately consistent is not supported by any evidence gathered here. The listing is the authority;
+the per-key GET is the stale read.
+
+**A correction to this ledger's own previous entry.** Segment 6 recorded that the FIXTURE path is
+not cached (`cf-cache-status: DYNAMIC`, delete visible at t=0, 3/3). The acceptance runs show
+otherwise once the key has been warmed by the run itself:
+
+```
+[por1] absence family=session key=…9fcc817a7.json authoritativeListed=false fixedRead=200 cf=HIT
+       class=cached_read_of_deleted_object
+```
+
+`cf=HIT` on the fixture path. The earlier experiment used freshly-written keys, which Cloudflare had
+no reason to hold. So the previous segment's single unreproduced fixture-side observation is now
+EXPLAINED rather than merely unrepeated: same mechanism, same transport, observed from the test side.
+
+### WS-F3 — three consecutive passes. CLOSED.
+
+```
+SHA        dc225750df17725a4bd6d9f360890e6647d6af8a
+deployment dpl 3zmeddoaf — preview · isolated-preview · projectMatch true · 4 readiness · 4 caps
+runs       3 / 3 PASSED, 0 failed, same SHA, same deployment
+```
+
+Each run also served as a live negative control: `disagreements=3 / 2 / 4`, all
+`cached_read_of_deleted_object`. The old model would have failed all three.
+
+### WS-F4 — 20-registration acceptance. CLOSED.
+
+```
+attempts 20 · successful 20 · retry attempts 0 · failure classes NONE
+p50 17.0s · p95 40.2s · max 40.2s   (the max is the first cold start)
+missing canonical email link 0 · duplicate link 0 · saga not completed 0
+duplicate saga 0 · duplicate account ids 0
+```
+
+Read-back proved from the durable record, not the response: the provisioning saga must be
+`completed` (which the product sets only after reading the canonical identity back) AND the registry
+must hold exactly one active email link per owner.
+
+**Priority B did not reproduce.** 32 registrations on this SHA, including 6 concurrent pairs, with
+zero governed retryable responses. It is NOT claimed as fixed — nothing was changed in that path.
+The bounded detail is deployed, so the next occurrence classifies itself. The bounded governed retry
+in the WS-F4 harness was never exercised (0 retries).
+
+### WS-F5 — full train run. 87 passed / 2 failed / 4 skipped. NOT closed.
+
+**FAILURE 1 — the report download is broken for EVERY report.** Not a corrected-result edge case:
+
+```
+code MS-KI (valid taxonomy code), no `result` param, so the continuity guard is skipped entirely
+  page     200
+  download 404
+```
+
+`loader.ts` does `fs.readFileSync(path.join(CONTENT_DIR, `${publicCode}.md`))` at REQUEST time. The
+page is prerendered (`generateStaticParams`), so its files exist at build. The download route is
+dynamic and runs in a lambda where the content directory is not traced into the serverless bundle,
+so the read throws — and the route's blanket `catch { return 404 }` reports that as "no such
+report". A person is told their report does not exist because a file was not bundled.
+
+Two defects, and both need repair:
+
+```
+1. the report content is not available to the dynamic route at runtime
+2. an internal failure is rendered as ABSENCE — the same collapse this package has fixed repeatedly
+```
+
+The concealment property must survive the fix: a genuinely missing report still 404s. An internal
+failure must not.
+
+**FAILURE 2 — `read ETIMEDOUT` on a deletion-confirm retry under full-suite load.** The confirm runs
+the saga inline with `maxDuration = 60`; under two workers the client hit its own timeout. The spec
+already retries, but `page.request.post` THROWS on timeout instead of returning a status, so the
+retry loop never saw it. Distinct from the standalone runs, which passed 3/3.
+
+**HYGIENE FINDING.** Playwright's failure call-log prints full `yorisou_session` and `yorisou_account`
+cookie values into run output and trace files. `test-results/` is gitignored, so nothing reached the
+repository, but run logs must not be pasted anywhere and traces must not be attached to an artifact.
+
+### ⛔ EXACT NEXT ACTIONS, in order
+
+1. Make report content reachable from the dynamic route (bundle-trace the content dir, or import it
+   statically, or serve the download from the prerendered artifact). Then remove the blanket catch:
+   absence 404s, an internal failure does not masquerade as absence.
+2. Make the concurrency spec's confirm-retry tolerate a THROWN client timeout, not only a returned
+   status. Do not raise `maxDuration` to hide it.
+3. Re-run WS-F5 whole. A code change invalidates the WS-F3 3/3 and WS-F4 20/20 above — both must be
+   re-run at the new SHA before any candidate is accepted.
+4. Then WS-F6 axe, WS-G cleanup twice, WS-H..WS-K.
