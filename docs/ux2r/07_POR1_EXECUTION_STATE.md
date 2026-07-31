@@ -1438,3 +1438,116 @@ passes at one SHA and one deployment — is NOT met and is NOT claimed.
    never for an unclassified failure.
 3. Everything from §9 step 9 onward is untouched: three-run stability, 20 registrations, the full
    train, accessibility, cleanup twice, and the whole Production package (WS-G..WS-M).
+
+---
+
+## WS-F segment 6 — PRIORITY A IS CLASSIFIED: the read is stale, the objects are gone
+
+HEAD `da1869c` → `a0a1c84`, five commits, five workflows SUCCESS read at each SHA at that SHA.
+Production untouched; its Supabase credentials were deliberately not used.
+
+### The classification, with the evidence that produced it
+
+```
+STALE_CACHED_READ_OF_A_DELETED_OBJECT     ← proven
+REAL_SESSION_SURVIVAL                     ← refuted for this signature
+```
+
+Deletion job `2026-07-31T13:41:39`, audit trail from the database:
+
+```
+13:42:01  storage_erasure  ok        ← sessions, lookups and linked objects DELETED here
+13:42:06  verifying        ok  (from identity_erasure)
+13:42:24  verifying        failed    identity_residue:sessions,password_reset,
+                                     foundation_auth_identity,foundation_user_profile
+```
+
+Read back afterwards through the AUTHORITATIVE listing (`POST /object/list`, not a cacheable
+method), with no erasure having run in between — the job never completed, so nothing else deleted
+anything:
+
+```
+sessions naming that erased owner : 0   (of 57 session objects listed)
+account record                    : absent from the listing AND 400 on the fixed URL
+```
+
+So the objects were already gone at 13:42:01, and the product's own `verifyIdentityErasure` reported
+them as present 23 seconds later. **The residue report was a stale read, not a survival.** 23s sits
+squarely inside the 25–30s staleness previously measured on this transport.
+
+Controlled experiment run first, so the discriminator itself is evidence rather than assumption —
+write, warm, delete, then probe both reads in lockstep, 3 rounds:
+
+```
+fixed-URL GET with service-role auth : cf-cache-status: DYNAMIC, delete visible at t=0, 3/3
+```
+
+The FIXTURE's read path is therefore not cached. The RUNTIME's is the one that goes stale, which is
+why the product's verification sees residue the test does not.
+
+### What this does NOT claim
+
+The previous segment's single fixture-side observation of a surviving session is still
+unreproduced. It is no longer able to fail a run for the wrong reason — the absence sweep now
+asserts on the authoritative listing and records any disagreement with the cached read — but it has
+not been positively explained, and this section does not pretend otherwise.
+
+### ⛔ THE NEXT ACTION — verification must stop asking a cacheable question
+
+`verifyIdentityErasure` confirms absence with `sharedIdentityObjectExists`, a per-key GET on a
+stable URL: the cacheable path. Its tolerance is `5 attempts × 800ms = 4s` against a read path
+measured stale for 25–30s, so a SUCCESSFUL erasure is recorded as `failed_retryable` and the person
+is told their deletion failed while it is in fact complete.
+
+The repair is NOT a longer retry, a sleep, or cache-busting-as-authority. It is to prove physical
+deletion with the strongest evidence the store offers — the authoritative listing.
+
+**Measure before switching.** The comment above the session check
+(`accountIdentityDeletion.ts`, "the object-store list is not immediately consistent") records an
+EARLIER measurement that contradicts this segment's. One of the two is stale. Establish which, from
+the runtime's own path, before making the listing the authority — do not swap one unproven
+assumption for another.
+
+### Three product defects fixed by running it
+
+1. **`localeCompare` on the deletion manifest path, intermittently.**
+   `admin-recent-subjects.json` lives inside `phase1/line-events/`, so listing that prefix returned
+   the recent-subject INDEX — an array — alongside the events, and
+   `b.receivedAt.localeCompare(a.receivedAt)` dereferences the right-hand operand only. Harmless
+   while the sort held it in `a`, fatal the moment it landed in `b`. Erased four accounts cleanly,
+   then failed 41 consecutive attempts inside `buildDeletionManifest`. Index excluded by KEY (not by
+   shape — that would hide a genuinely malformed event); comparator made total.
+2. **The same class in `sortByCreatedAtDesc`**, which backs accounts, sessions, consultations AND
+   password-resets — every family the manifest enumerates. `T extends { createdAt: string }` is a
+   claim about a type, not about bytes in an object store. Exposed by a probe artifact of MINE (a
+   session object with no `createdAt`), which has been removed from Preview. One malformed object
+   anywhere in those families made erasure unreachable, not slower.
+3. **`yorisou_account_deletion_open` raced itself** — `select`-then-`insert` with no lock on a
+   UNIQUE column, so two concurrent confirms both inserted and the loser got a raw 23505 answered as
+   500. FOURTH occurrence of this exact shape in this package. Repaired forward-only in
+   `202607310007`, applied to Preview and verified BY SCHEMA INSPECTION. Proven both ways in the
+   harness as latched scenario 54 — the pre-repair definition restored reproduces
+   `duplicate key value violates unique constraint`, the repaired one gives 0 errors, 1 job, same id
+   to both callers, one audit row, and still refuses a legal hold.
+
+### Priority B — classified, product path NOT yet repaired, NO fixture retry added
+
+Reproduced under contention: 1 of 4 concurrent registration pairs returned the governed 503. The
+durable sagas table gives the class:
+
+```
+failed_retryable   session_binding_failed   cursor=session_binding
+```
+
+`last_error_code` was being handed `failureClass` a second time, so the DETAIL — which separates
+`session_insert_failed` from `bind_returned_null` from `session_not_stored`, three defects wanting
+three different repairs — existed only in a console line this deployment does not expose. It is now
+persisted (bounded six-value enum, no PII) and deployed, so the next reproduction is decisive.
+
+**No bounded retry has been added to `registerSyntheticUser`**, deliberately: §6 requires the
+underlying path be repaired unless the class is expected bounded contention, and that cannot be
+decided until the detail is read. Serial baseline at this deployment: **10/10, p50 15.7s, p95 18.9s,
+max 18.9s** — the route is healthy alone.
+
+Note the likely connection: `session_not_stored` is a READ-BACK failure, the same read path that
+Priority A just showed going stale in the other direction. Do not assume it; read the detail.
