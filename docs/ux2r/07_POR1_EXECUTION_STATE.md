@@ -814,33 +814,113 @@ by the test so a future reader cannot "fix" it into a leak.
 
 ### 4. OPEN — the deletion manifest froze with NO LINE scope for a LINE-bound account
 
-**Not yet root-caused. This is the next action, and it is a data-protection defect, not a test bug.**
+**Root-caused 2026-07-31 (4th segment) by a bounded read-only inventory of the Preview database and
+identity store. The inventory CORRECTED the record: two statements written into this file and into
+`CURRENT_HANDOFF.md` after the hosted run were wrong, and acting on either would have sent the repair
+in the wrong direction.**
 
-Evidence, read from the Preview database after a run in which the deletion COMPLETED cleanly:
+#### The record as written, and what the evidence actually says
+
+| Recorded after the hosted run | What the Preview database and store actually hold |
+| --- | --- |
+| the deletion that lost the LINE scope **COMPLETED and reported clean** | the job whose manifest omitted the LINE scope is `failed_retryable`, cursor `verifying`, `identity_residue:sessions,password_reset`. It never completed. |
+| the **completed** job's manifest had `lineLookupKey: null` | the completed job's manifest **named** the LINE lookup, and that lookup **was deleted** — along with the account record, the email lookup, 4 sessions and the reset token. That deletion was genuinely complete. |
+| the run stops at the absence sweep on `line_lookup` | no job ever reported `line_lookup` residue. The surviving lookup was never *looked at* — see defect 4B. |
+
+There was no false clean finalization. The two facts are still bad, and they are different facts.
+
+#### Four frozen manifests, compared against the store as it stands
+
+Job fingerprints are `sha256(job_id)[0:8]`; no identifier, key or body was read into the record.
 
 ```
-manifest:  lineLookupKey: null · lineEventIds: 0 · recentSubjectFingerprints: 0
-account:   lineUserId WAS set (the fixture writes it, and the precondition asserted the lookup object
-           exists before the deletion opened)
-result:    accounts/by-line-user/<sha256> survived the deletion — a LIVE LOGIN ROUTE to a deleted
-           person, and verification reported clean because the manifest never named it
+job 1c516bfa  failed_retryable  cursor=storage_erasure  attempts=41  frozen 05:03:15
+              line lookup NAMED · account record survives (the 400-is-not-404 defect, since fixed)
+job 66213e2c  failed_retryable  cursor=storage_erasure  attempts=42  frozen 05:24:14
+              line lookup NAMED · account record survives (same, since fixed)
+job 8e108939  completed         cursor=completed        attempts=1   frozen 05:46:11
+              line lookup NAMED and DELETED · account, email, 4 sessions, 1 reset all absent
+job 0fdee7d0  failed_retryable  cursor=verifying        attempts=2   frozen 06:01:39
+              line lookup NOT NAMED · 0 line events · 0 subjects · 0 recent subjects · 3 sessions
+              account record and email lookup DELETED — accounts/by-line-user/<sha256> SURVIVES
 ```
 
-All three empty fields derive from `account.lineUserId`, so there is a single root cause: it was
-falsy when `buildDeletionManifest` ran. Both known writers were checked and both re-read fresh
-(`setAccountDeletionLock`, `updateSupportProfileUnderLease`), so neither narrows the record.
+The single orphaned LINE lookup that matters was created at **06:01:25** and resolves to the account
+owned by job `0fdee7d0` (owner fingerprint `d3aba4a9`), whose account record is gone. **It is a live
+LINE login route to an erased account.** (A second surviving `by-line-user` object resolves to an
+account that was never subject to a deletion at all — ordinary synthetic residue, not a defect.)
 
-The leading hypothesis is the one this package has already been bitten by once: **the manifest is
-built from an object-store read, and that store is NOT read-after-write consistent** — measured
-visibility lag on this bucket is a distribution of 4.5s / 5.4s / 11s. A recent legitimate change to
-the account can therefore be invisible at freeze time, and what the manifest never names is never
-erased and never missed. That is verbatim the defect already fixed for the LINE recent-subject array;
-if it is the cause here, the manifest has the same structural weakness for EVERY account field, and
-the repair is architectural rather than a retry.
+#### The timing, at full precision — this excludes the race hypothesis
 
-The alternative — a fixture-timing artifact, because the fixture writes the account object directly
-and the deletion follows almost immediately — must be excluded by a controlled re-run before the
-hypothesis is adopted. Do not fix either one before distinguishing them.
+```
+06:01:25.xxx   LINE lookup object created      ) the binding completes
+06:01:26.xxx   LINE event object created       )
+06:01:27.952   deletion requested                <- 2.0s AFTER the binding finished
+06:01:30.887   identity verified
+06:01:36.489   mutation gate closed
+06:01:39.958   MANIFEST FROZEN  -> lineLookupKey NOT NAMED, 14.0s after the binding
+06:01:40.173   locked / irreversible crossing
+```
+
+The binding did not race an open deletion, and the fence had nothing to refuse: the binding was
+complete and legitimate **before the deletion was requested**. The manifest simply could not see a
+write that had finished fourteen seconds earlier. Measured visibility lag on this bucket was already
+recorded as a distribution of 4.5s / 5.4s / 11s; 14.0s is that distribution's tail.
+
+Evidence against the fixture-artifact alternative, though it is not yet formally excluded: the three
+other runs, produced by the same fixture, all left `lineUserId` **present** on the account record,
+with the record's `updated_at` equal to the second the lookup object was created. The fixture does
+write the account record, and does it in the same operation.
+
+#### 4A — the destructive scope is derived from ONE eventually-consistent read
+
+`lib/server/accountIdentityDeletion.ts:145` — `buildDeletionManifest` opens with
+`const account = await findAccountById(accountId)`, and every LINE field is derived from that one
+object: `lineLookupKey` (`:195`), `lineEventIds` (`:203`), `recentSubjectFingerprints` and
+`lineSubjectInventory` (`:172`). A stale copy therefore **narrows** the manifest — the unsafe
+direction — and what the manifest never names is never erased and never missed.
+
+This is not specific to LINE. `emailLookupKey` has the same derivation, and `sessionIds` has the same
+shape through a different lagging read: `listSessions()` (`:149`) plus `sessionBelongsToAccount`
+(`:124`). A session created seconds before the freeze can be invisible to that list.
+
+**This is verbatim the defect already fixed once in this package** for the shared LINE recent-subject
+array — the fix moved the LINE subject *out* of a lagging list and onto the account record, which is
+itself a lagging read. The class of defect survived the repair.
+
+#### 4B — verification is scoped BY the manifest, so an omission is invisible
+
+`verifyIdentityErasure` (`:328`) checks the LINE lookup only when the manifest named one:
+
+```ts
+if (manifest.lineLookupKey && (await sharedIdentityObjectExists(manifest.lineLookupKey))) {
+  residue.push("line_lookup");
+}
+```
+
+Sessions (`:348`), reset tokens (`:355`), consultations (`:361`), LINE events (`:367`), canonical LINE
+activity (`:386`, gated on `manifest.recentSubjectFingerprints.length > 0`) and the foundation
+identities (`:411`) are all iterated **out of the manifest**. Only `findAccountById` (`:424`) is
+manifest-independent.
+
+So a family the manifest omits is not merely unerased — it is **unlooked-at**, and `clean` can be
+returned for it. Job `0fdee7d0` proves it: it reported residue in two families and never mentioned
+the LINE lookup that was sitting there the whole time. This violates contract §9 ("a manifest
+omission must not make a target family invisible") by construction, and it holds **whatever** caused
+the omission. 4B must be repaired even if 4A turns out to be a fixture artifact.
+
+#### Also observed, not a data-protection defect
+
+`0fdee7d0` reported residue for `sessions` and `password_reset` on manifest-named keys that are all
+absent now. `sharedIdentityObjectExists` can therefore still see a just-deleted key. That is
+fail-closed and safe — it costs a retry, it cannot let a deletion finalize early — and it is recorded
+here so a future reader does not mistake it for a second erasure failure.
+
+#### The repair this evidence requires
+
+Not a retry, not a sleep, not a re-read. The destructive scope must stop being derivable from a
+single read of an eventually-consistent store, and finalization must stop taking the manifest's word
+for which families exist. Both halves are required; neither alone closes the hole.
 
 ### Also corrected: the acceptance was testing the model it replaced
 
@@ -855,6 +935,39 @@ array, and the run prints which origin was used.
 The identity gate also now refuses a deployment whose `por1SchemaReadiness` or `por1Capabilities` are
 not all true — proving the commit stopped being sufficient once the model went behind readiness flags.
 
+## Preview synthetic residue — bounded inventory, 2026-07-31T15:5x+08:00 (read-only, nothing removed)
+
+Counted BEFORE any cleanup, because the orphaned LINE lookup is the evidence for defect 4. No PII was
+read into this record: identifiers appear only as `sha256(...)[0:8]` fingerprints, and no object key,
+email address, LINE id, session id, token or body was printed at any point.
+
+```
+database (nbltsbonsnbpfptihomc)
+  deletion jobs            21   completed 10 · failed_retryable 10 · cancelled 1
+                                of the 10 failed: 6 pre-date the 400-is-not-404 fix (07-30),
+                                2 are the attempts-41/42 storage_erasure jobs, 1 is 0fdee7d0
+  frozen manifests          4   (only jobs that reached the crossing freeze one)
+  public tables            20   RLS enabled AND forced on all POR-1 tables
+
+identity store (bucket yorisou-preview-auth)
+  accounts/by-id            8   3 still carry lineUserId; 2 are targets of stuck jobs
+  accounts/by-email         6
+  accounts/by-line-user     2   1 = ORPHAN of job 0fdee7d0 (PRESERVE — evidence)
+                                1 = account never subject to a deletion (ordinary residue)
+  sessions                 14   4 pre-date this package (07-30); all have userId null by design
+  password-resets           1   owner 110c07b6, never deleted
+  consultations             0
+  line-events               5
+  foundation-v1/user-profiles   8
+  foundation-v1/auth-identities 6
+  foundation-v1/audit-logs      3
+  TOTAL                    53
+```
+
+**Do not clean any of this until the repair is proven.** The orphan, its job, its frozen manifest and
+the two stuck attempts-41/42 jobs are the negative control for §10: they are what the pre-repair
+architecture produces, and the regression test has to reproduce them before the fix removes them.
+
 ## CONTINUATION_CURSOR
 
 ```
@@ -864,23 +977,31 @@ workstream: A complete - B complete - C complete - D partial - E complete for th
               found, three fixed at root, one open and diagnosed below
             - G..M not started
 
-next_action: ROOT-CAUSE DEFECT 4 before anything else. It is the only open finding and it is a
-  data-protection defect: a LINE-bound account was deleted and `accounts/by-line-user/<sha256>`
-  survived, because the frozen manifest named no LINE scope at all.
+next_action: DEFECT 4 IS ROOT-CAUSED (see the section above, which also corrects two wrong statements
+  in the previous cursor). The evidence is preserved and nothing has been cleaned.
 
-  Distinguish the two candidates with a CONTROLLED run — do not repair before distinguishing:
-    (a) the object store is not read-after-write consistent, so `findAccountById` inside
-        `buildDeletionManifest` saw a copy predating the LINE binding. If so the manifest has this
-        weakness for EVERY field and the repair is architectural, not a retry: the deletion scope
-        must not be derivable from a single read of a lagging store.
-    (b) a fixture artifact, because `bindLineIdentityInPreviewStore` writes the account object
-        directly and the deletion follows within the measured 4.5-11s lag window.
-  Cheapest discriminator: re-read the account through `findAccountById` immediately before opening
-  the deletion and assert `lineUserId` is present, then again at freeze time.
+  PROVEN by the Preview record: the job that lost the LINE scope did NOT complete and did NOT report
+  clean; the job that DID complete named its LINE lookup and erased it. The manifest that omitted the
+  LINE scope froze 14.0s after a LINE binding that had finished 2.0s BEFORE the deletion was even
+  requested — so no race, nothing for the fence to refuse, only a read that could not see a finished
+  write. Two structural defects, both required to be repaired:
 
-  If (a): the manifest must confirm the account by key (as `sharedIdentityObjectExists` already
-  does) or derive the LINE scope from the lookup INDEX as well as the record, taking the union so a
-  stale read can only ever WIDEN the scope, never narrow it. Narrowing is the unsafe direction.
+    4A  buildDeletionManifest derives the whole destructive identity scope from ONE
+        eventually-consistent object read (accountIdentityDeletion.ts:145). A stale copy NARROWS the
+        manifest. Not LINE-specific — email lookup and sessions have the same shape.
+    4B  verifyIdentityErasure iterates the MANIFEST, so a family the manifest omits is never looked
+        at and can be reported clean (accountIdentityDeletion.ts:338/348/355/361/367/386/411).
+        True regardless of what caused the omission — repair it even if 4A were a fixture artifact.
+
+  REMAINING to distinguish (does not change 4A or 4B, only whether the fixture ALSO needs a gate):
+  whether `bindLineIdentityInPreviewStore` always writes the account record. Evidence so far says it
+  does — the three other runs all left lineUserId present with updated_at equal to the second the
+  lookup was created — but it has not been confirmed by a controlled run.
+
+  REPAIR (contract §9): a strongly consistent canonical identity-link registry in PostgreSQL, written
+  inside the same governed mutation/provisioning transaction that binds or creates identity, as the
+  serialization point. The manifest derives destructive scope from it; finalization verifies identity
+  families from it independently of the manifest. No sleep, no retry-until-visible, no re-read.
 
   Then finish WS-F: the concurrency property three times at the same SHA - 20 consecutive
   registrations with p50/p95/max - the full hosted train with 0 serious / 0 critical axe - cleanup
@@ -888,13 +1009,17 @@ next_action: ROOT-CAUSE DEFECT 4 before anything else. It is the only open findi
 
 hosted_progress: the deletion now REACHES COMPLETION under four concurrent adversaries, the second
   executor is refused with a bounded 202, and the stale writers are answered rather than faulted.
-  The run currently stops at the absence sweep on `line_lookup` (defect 4).
+  One hosted deletion (job 8e108939) completed with a COMPLETE manifest and erased every family it
+  named, including the LINE lookup. The failure mode is an under-populated manifest, not a failed
+  erasure.
 last_green_candidate_sha: d8e8ac1 — five workflows SUCCESS, read at that exact SHA
 last_deployed_preview_sha: d8e8ac1, attesting isolated-preview, three readiness true, four
   capabilities true
 last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
-preview_synthetic_state: NOT CLEAN. Several synthetic User A/B pairs and at least three
-  `failed_retryable` deletion jobs remain from these runs. WS-G must clean and prove zero residue.
+preview_synthetic_state: NOT CLEAN, and DELIBERATELY PRESERVED — counted in the bounded inventory
+  above (21 jobs, 4 manifests, 53 store objects). The orphaned LINE lookup of job 0fdee7d0 is the
+  EVIDENCE for defect 4 and the negative control for §10. WS-G cleans it only after the repair is
+  proven, then proves zero residue twice.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
 production_activation_state: NONE. All four POR-1 controls unset in Production.
 pr_126_state: OPEN / DRAFT / UNMERGED, body still STALE — WS-J.
