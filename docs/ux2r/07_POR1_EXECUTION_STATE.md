@@ -1301,3 +1301,140 @@ production_activation_state: NONE. All four POR-1 controls unset in Production.
 pr_126_state: OPEN / DRAFT / UNMERGED, body still STALE — WS-J.
 rollback_state: nothing to roll back; every change is branch-local or Preview-only.
 ```
+
+---
+
+## WS-F segment 5 — the surviving cookie is CLOSED; three defects fixed by running it
+
+Continuation of the same Founder package. HEAD `c1b42e3` → `8e67b17`, three commits, five workflows
+SUCCESS read at each code SHA at that SHA. Production untouched throughout.
+
+### Defect 5 — `GET /api/account/deletion-status` answered 200 to an erased person. FIXED.
+
+**The record already existed. Nothing was asking it.**
+
+`yorisou_account_deletion_status` falls back to `owner_fingerprint` once
+`yorisou_account_deletion_finalize_step` sets `owner_account_id = null`, so the database can still
+answer "this account was erased" about an account it deliberately no longer names.
+`evaluateAuthenticationLock` has consulted that answer at the login door since WS5.
+
+`getViewerContext` never consulted it at all. Both of its account-cookie fallbacks —
+`(await findAccountById(id)) || accountCookie` on the session path, and the bare `accountCookie` on
+the no-session path — returned a fully authoritative `AccountRecord` decrypted from the browser's
+own cookie. The only check applied was `sessionMayActAsAccount`, which reads `deletionLockedAt`: a
+field that was `null` when the cookie was minted and that the server can never update in a cookie it
+no longer writes. So every surface behind `getViewerContext` authenticated an erased identity for the
+180-day life of `yorisou_account` — the deletion surface was simply where it was noticed.
+
+**NO MIGRATION.** The durable fact was already there. This is application-side only.
+
+The repair, in one gate:
+
+- `decideCookieRestoredViewer` (pure, in `accountDeletionLock.ts`) — the cookie is demoted to a
+  LOOKUP HINT. Store decides when it can; the durable record decides when it cannot.
+- `accountDeletionAuthority.ts` — the two reads that feed it. **`status`, never `resume_state`**:
+  only `status` has the fingerprint fallback, so `resume_state` reports "no job" about exactly the
+  deletions this gate has to refuse. Proven in the Postgres harness, not inferred.
+- `resolveAccountForViewer` in `yorisouAuth.ts` — the extra reads fire ONLY on a store miss, so the
+  hot path and anonymous viewers are untouched.
+- `evaluateAuthenticationLock` now delegates to the same gate rather than reimplementing it.
+
+Both requirements survive, because they need different answers:
+
+```
+A  held account, AND the identity_erasure/verifying window where the record is already gone
+   → the deletion surface resolves; the job is the only thing left that can speak for the person
+B  completed → refused on EVERY surface, whatever the cookie carries
+```
+
+**Closed in the same pass, same missing question:** a job that failed TERMINALLY past the crossing is
+neither `ERASED_OR_ERASING` nor `HELD`, so the state string alone said "allow" about an account whose
+identity was already destroyed. The gate consults `irreversible_started_at` — the recorded fact.
+
+**Preserved deliberately:** a store miss with NO job still resolves. The Cloudflare-cached read path
+genuinely serves stale reads; refusing every miss would trade this defect for a worse one.
+
+### Defect 6 — a second confirm was told the deletion FAILED while it was succeeding. FIXED.
+
+Found by RUNNING the property, not by reading the code: `the second executor must be answered, not
+faulted (got 500)`.
+
+`advance` initialises the cursor at `identity_verified` then refuses all further forward motion.
+Confirm decides whether to open from a READ, so two confirms both see `requested` and only one can
+win; the loser got `advance_superseded_by_cursor` or `illegal_transition_locked_to_identity_verified`
+and both landed in the generic catch as a 500. The route already had the right answer one branch
+further down — `in_progress` → 202. It never got there.
+
+`isDeletionOpeningSuperseded` classifies exactly those two shapes; everything else still throws, and
+a test asserts that `job_not_found`, `manifest_missing`, `irreversible`, `identity_residue` and
+`mutation_denied` are NOT absorbed. A blanket catch would turn a contract violation into a silent 202.
+
+### Defect 7 — an absent table was a thrown error, not unproven erasure. FIXED (harness).
+
+`yorisou_private_recommendations` is real Production-lineage schema (`202607110001`) and the deletion
+plan names it, but the isolated Preview is a deliberate SUBSET and does not have it. PostgREST
+answers 404, and the count helper treated that as a failed query.
+
+Absence is now a third outcome (`null`). The spec records the absent set in the run log and asserts
+it is a subset of the known Preview gap — so a table that goes missing unexpectedly still fails, and
+one added back becomes a live assertion again instead of staying quietly skipped.
+
+**Carried forward:** erasure of `yorisou_private_recommendations` is UNPROVEN in Preview, by
+construction. It must be proven in the Production-equivalent rehearsal (WS-I), which is built from
+the full Production lineage and is the only place the assertion can mean anything.
+
+### Permanent proofs added
+
+```
+lib/server/__tests__/por1DeletionSurfaceAuthorization.test.ts   33 assertions in test:por1-deletion
+  incl. a NEGATIVE CONTROL that reproduces the pre-fix 200 by showing the marker check passes an
+  erased account, and that the new gate refuses the same input
+tests/por1/postgres-integration.sh   the asymmetry the gate rests on, asserted against the LIVE
+  functions: status('user-a')=completed · resume_state('user-a')=none · status(other)=none
+tests/cpc1-acceptance/por1DeletionConcurrency.spec.ts   A's cookies are CAPTURED while they work and
+  REPLAYED into fresh contexts — account alone, session alone, both — against deletion-status,
+  deletion-cancel, deletion-request and /api/private-state. A still-open second context is not the
+  same test; a cleared jar proves nothing.
+```
+
+### UI/polling contract
+
+The panel was discarding non-ok status reads silently, so an erased person kept seeing
+「削除の処理中です」 and kept polling forever. A 401 is now terminal for the view and renders as a
+refusal that claims neither success nor failure. Completion is taken ONLY from the confirm response —
+the one place the browser observes the transition while still authenticated.
+
+## Hosted evidence at this boundary — stated precisely, not rounded up
+
+```
+5-green CI at 8e67b17 : Migration Scope Guard 30627257883 · Yorisou Check 30627257946
+                        CPV1-CM0 30627257832 · YV-1 30627257828 · DCI-1 30627257789
+Preview deployment    : dpl 9lh52w1bg @ 8e67b17 — preview · isolated-preview · projectMatch true
+                        4 readiness true · 4 capabilities true
+```
+
+**ONE hosted run has passed the post-deletion denial block AND the new stale-cookie replay** — the
+run at `2ad2e3a` (identical application code; `8e67b17` is a test-only descendant). That run then
+failed further along, at the absent-table count, which is defect 7 and is now fixed.
+
+**THAT IS ONE RUN, NOT THREE, AND NOT AT THE CURRENT SHA.** The §9 requirement — three consecutive
+passes at one SHA and one deployment — is NOT met and is NOT claimed.
+
+## Open, and blocking the three-run requirement
+
+1. **A session object read as surviving, once.** One run at `8e67b17` failed
+   `session sess_178…  must be revoked` at the absence sweep, a step EARLIER than the denial block
+   and one that has passed in every prior run. NOT reproduced. Not characterised: the isolated store's
+   read path is documented to serve a deleted key as present for 25–30s (`cf-cache-status: HIT`), so
+   this is either that lag or a real survival, and the two must be told apart before either is
+   believed. **Do not "fix" this with a retry until it has been reproduced and read from the store
+   directly** — the sweep's whole value is that it does not retry into a pass.
+2. **Registration returns a truthful `provisioning_retryable` 503 under contention.** Measured
+   SERIALLY at this deployment: **10/10 success, p50 15.7s, p95 18.9s, max 18.9s** — so the route is
+   healthy on its own. It failed once in the property (which registers A and B nearly together) and
+   once in a back-to-back probe. The class is HONEST (WS-C working: no 200 over an unproven canonical
+   identity), but `registerSyntheticUser` does not retry a retryable class, so the property dies at
+   setup. Fix the contention or give the fixture a bounded retry for `provisioning_retryable` ONLY —
+   never for an unclassified failure.
+3. Everything from §9 step 9 onward is untouched: three-run stability, 20 registrations, the full
+   train, accessibility, cleanup twice, and the whole Production package (WS-G..WS-M).
