@@ -132,7 +132,16 @@ export type ProvisioningFailureDetail =
   | "session_landing_missing"
   | "session_account_link_missing"
   | "session_insert_failed"
-  | "bind_threw";
+  | "bind_threw"
+  // Verification families. Bounded, fixed, and content-free — they name WHICH canonical piece could
+  // not be proved, which is the difference between three unrelated defects wearing one class.
+  | "missing:account"
+  | "missing:user_profile"
+  | "missing:email_auth_identity"
+  | "missing:session"
+  | "missing:principal_landing"
+  | "missing:session_account_link"
+  | "missing:multiple";
 
 /**
  * The intent identity.
@@ -382,7 +391,15 @@ export async function provisionRegistration(input: {
     // ── verification — READ-ONLY, and the only thing that may authorise a 200 ─
     if (cursor === "verification") {
       const proof = await proveCanonicalIdentity(account, session);
-      if (!proof.complete) return fail("verification_incomplete", false);
+      if (!proof.complete) {
+        // WHICH piece, durably. `verification_incomplete` alone covers six different situations, and
+        // the durable record could not tell them apart — the same gap that hid `session_landing_missing`
+        // for an entire package until the detail was persisted.
+        const detail = (
+          proof.missing.length === 1 ? `missing:${proof.missing[0]}` : "missing:multiple"
+        ) as ProvisioningFailureDetail;
+        return fail("verification_incomplete", false, detail);
+      }
       await step("verification");
     }
 
@@ -508,13 +525,22 @@ export async function proveCanonicalIdentity(
   if (!identity || (profile && identity.userProfileId !== profile.userProfileId)) {
     missing.push("email_auth_identity");
   }
+  // EXISTENCE is asked of the store; the CONTRACT is read from the record the write returned.
+  //
+  // Re-reading the landing here reproduced the defect `bindAndProve` had just been repaired for, one
+  // stage later: the session read is a GET on a key written moments ago, and this transport serves
+  // superseded copies of such a key — so verification was handed the pre-landing version and refused
+  // a registration that had fully succeeded. `session` is the row `touchSession` returned, which is
+  // what the store actually holds.
+  //
+  // The independent half is untouched and is the point of WS-C: the account, the UserProfile and the
+  // email AuthIdentity are all read back from their own stores, because nothing in this request can
+  // vouch for them.
   if (!storedSession) missing.push("session");
-  else {
-    const landing = parseSessionPrincipalLanding(storedSession.principalLanding);
-    if (!landing) missing.push("principal_landing");
-    else if (storedSession.userId !== account.id && landing.legacyAccountId !== account.id) {
-      missing.push("session_account_link");
-    }
+  const landing = parseSessionPrincipalLanding(session.principalLanding);
+  if (!landing) missing.push("principal_landing");
+  else if (session.userId !== account.id && landing.legacyAccountId !== account.id) {
+    missing.push("session_account_link");
   }
 
   return { complete: missing.length === 0, missing };
