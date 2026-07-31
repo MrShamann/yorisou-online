@@ -762,61 +762,141 @@ key of `protectionBypass` from `GET /v9/projects/<projectId>?teamId=<orgId>`; th
 `auth.json` EXPIRES and is refreshed by running any `vercel` command, so a 403 there means "run the
 CLI once", not "the token does not work".
 
-## CONTINUATION_CURSOR
+## WS-F — the hosted train, STARTED. Four defects found by running it.
 
-> The pre-2026-07-31 cursor said the next action was the mutation-fence concurrency proof and that
-> the fence was UNPROVEN. Both are complete. Superseded; quoted in the table above rather than left
-> here where it would read as an instruction.
->
-> The 2026-07-31 cursor said WS-C was next and described TWO swallows in the registration route.
-> There were THREE — the fabricated bound session was the quietest — and all three are gone.
+The exact-SHA hosted acceptance had never reached the concurrency property. It does now, and each
+failure below was a REAL defect the local proofs could not have found, fixed at root with a permanent
+gate rather than patched at the call site.
+
+### 1 + 2. Supabase answers 400, not 404, for an object already deleted — in TWO delete paths
+
+Measured against the isolated Preview bucket rather than inferred:
+
+```
+DELETE .../an-object-that-does-not-exist
+HTTP 400  {"statusCode":"404","error":"not_found","message":"Object not found","code":"NoSuchKey"}
+```
+
+`sharedRestDeleteJson` (identity store) and `deleteSharedObject` (foundation transport) both special-
+cased only 404. Deleting something twice is the NORMAL shape of a resumable erasure, so the first key
+a previous attempt had already removed threw and `storage_erasure` could never complete. One hosted
+job reached **attempt 41**, a second **attempt 42** — the same defect, written twice, with the same
+correct intent and the same wrong check. The foundation one's comment even said "a missing object is
+the desired end state, not a failure to retry".
+
+The repair is `classifySharedStoreDelete`, a pure function returning `deleted | already_absent |
+failed`, and the discrimination is the BODY. A blanket "400 means gone" is the fail-open version of
+the same bug: a malformed or unauthorized request also answers 400, and reading that as absence is
+how a deletion finalizes over data it never removed.
+
+**Permanent gate**, because fixing two instances is not the repair — a third writer would reach for
+`!== 404` for the same plausible reason, and the defect is invisible until a deletion is RESUMED. The
+source guard now requires any `lib/server` file issuing an object-store DELETE to go through the
+classifier, plus a wiring check that it is actually CALLED in at least two files. Shaped as "use the
+classifier" rather than "don't write `!== 404`", because a forbidden-pattern rule is evaded by
+rephrasing the comparison. Both rules negative-controlled.
+
+### 3. The fence refusing a write was reported as a crash
+
+Every route performing an account-linked write ends in `catch (error) { ... 500 }`, and
+`AccountMutationDenied` is thrown when the account is being deleted, when the gate is draining, or
+when the fence cannot be consulted — all of which are the system working. The stale writer racing the
+erasure answered **500**, so the acceptance could not tell a correct refusal from a fault. Same shape
+as the earlier `rpc()` defect: fail-closed, never unsafe, and useless to anyone reading it.
+
+Now `409` for deleted/erasing (final — inviting a retry loop against an erasure is worse than saying
+so) and `503` for gate/unavailable (genuinely retryable). 500 keeps its meaning.
+
+DELIBERATELY NOT applied to `forgot-password`, which answers `{ success: true }` unconditionally so a
+caller cannot distinguish a registered address from an unregistered one. A 409 there would hand back
+exactly that oracle, about someone mid-deletion. The omission is documented in the route and asserted
+by the test so a future reader cannot "fix" it into a leak.
+
+### 4. OPEN — the deletion manifest froze with NO LINE scope for a LINE-bound account
+
+**Not yet root-caused. This is the next action, and it is a data-protection defect, not a test bug.**
+
+Evidence, read from the Preview database after a run in which the deletion COMPLETED cleanly:
+
+```
+manifest:  lineLookupKey: null · lineEventIds: 0 · recentSubjectFingerprints: 0
+account:   lineUserId WAS set (the fixture writes it, and the precondition asserted the lookup object
+           exists before the deletion opened)
+result:    accounts/by-line-user/<sha256> survived the deletion — a LIVE LOGIN ROUTE to a deleted
+           person, and verification reported clean because the manifest never named it
+```
+
+All three empty fields derive from `account.lineUserId`, so there is a single root cause: it was
+falsy when `buildDeletionManifest` ran. Both known writers were checked and both re-read fresh
+(`setAccountDeletionLock`, `updateSupportProfileUnderLease`), so neither narrows the record.
+
+The leading hypothesis is the one this package has already been bitten by once: **the manifest is
+built from an object-store read, and that store is NOT read-after-write consistent** — measured
+visibility lag on this bucket is a distribution of 4.5s / 5.4s / 11s. A recent legitimate change to
+the account can therefore be invisible at freeze time, and what the manifest never names is never
+erased and never missed. That is verbatim the defect already fixed for the LINE recent-subject array;
+if it is the cause here, the manifest has the same structural weakness for EVERY account field, and
+the repair is architectural rather than a retry.
+
+The alternative — a fixture-timing artifact, because the fixture writes the account object directly
+and the deletion follows almost immediately — must be excluded by a controlled re-run before the
+hypothesis is adopted. Do not fix either one before distinguishing them.
+
+### Also corrected: the acceptance was testing the model it replaced
+
+`establishLineActivity` fell back to seeding the LEGACY shared array whenever Preview had no LINE
+channel secret — which it deliberately never has. So the canonical LINE family and the subject
+barrier were entirely unexercised by the hosted run, while it reported green. It now records through
+the CANONICAL SERVICE SEAM: the same governed RPC the application calls, with the service-role key the
+test process already holds. No public route, no admin endpoint, nothing added to the deployment. The
+precondition asserts the model actually in use, since canonical mode deliberately stops writing that
+array, and the run prints which origin was used.
+
+The identity gate also now refuses a deployment whose `por1SchemaReadiness` or `por1Capabilities` are
+not all true — proving the commit stopped being sufficient once the model went behind readiness flags.
+
+## CONTINUATION_CURSOR
 
 ```
 package: YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT (Founder, 2026-07-31)
-workstream: A complete - B complete incl. the subject barrier - C complete (code + local proofs)
-            - D partially complete (the new writers are audited and guarded; the full graph
-              re-audit is not finished) - E complete for this candidate
-            -> WS-F, which is now UNBLOCKED: every precondition is in place and attested.
+workstream: A complete - B complete - C complete - D partial - E complete for this candidate
+            - F IN PROGRESS: the concurrency property now reaches the ABSENCE SWEEP; four defects
+              found, three fixed at root, one open and diagnosed below
+            - G..M not started
 
-next_action: WS-F, exact-SHA hosted Preview acceptance, against
+next_action: ROOT-CAUSE DEFECT 4 before anything else. It is the only open finding and it is a
+  data-protection defect: a LINE-bound account was deleted and `accounts/by-line-user/<sha256>`
+  survived, because the frozen manifest named no LINE scope at all.
 
-    https://yorisou-online-byfjt7q8t-shigeru-naganos-projects.vercel.app
-    commitSha f657f47987fe2ad313474a7b24c0a66fb43917a0
+  Distinguish the two candidates with a CONTROLLED run — do not repair before distinguishing:
+    (a) the object store is not read-after-write consistent, so `findAccountById` inside
+        `buildDeletionManifest` saw a copy predating the LINE binding. If so the manifest has this
+        weakness for EVERY field and the repair is architectural, not a retry: the deletion scope
+        must not be derivable from a single read of a lagging store.
+    (b) a fixture artifact, because `bindLineIdentityInPreviewStore` writes the account object
+        directly and the deletion follows within the measured 4.5-11s lag window.
+  Cheapest discriminator: re-read the account through `findAccountById` immediately before opening
+  the deletion and assert `lineUserId` is present, then again at freeze time.
 
-  Read /api/build-identity FIRST and require: environment preview - isolated-preview -
-  projectMatch true - all three por1SchemaReadiness true - all four por1Capabilities true -
-  commitSha equal to the candidate. That gate is the reason a stale deployment cannot be mistaken
-  for a regression, and readiness-off cannot be mistaken for a pass.
+  If (a): the manifest must confirm the account by key (as `sharedIdentityObjectExists` already
+  does) or derive the LINE scope from the lookup INDEX as well as the record, taking the union so a
+  stale read can only ever WIDEN the scope, never narrow it. Narrowing is the unsafe direction.
 
-  Then, in order: synthetic User A and User B fully populated (15.1); the LINE fixture through the
-  canonical service seam, since Preview deliberately has NO LINE channel secret (15.2); the four
-  concurrent adversaries during A's deletion on at least two workers (15.3); A's denial matrix and
-  B's preservation matrix (15.4, 15.5); 20 consecutive synthetic registrations with p50/p95/max and
-  zero false-success (15.6); the focused concurrency property THREE times at the same SHA (15.7);
-  the full hosted train with 0 serious / 0 critical axe (15.8); cleanup run twice with the second
-  run deleting nothing (15.9).
+  Then finish WS-F: the concurrency property three times at the same SHA - 20 consecutive
+  registrations with p50/p95/max - the full hosted train with 0 serious / 0 critical axe - cleanup
+  twice with the second deleting nothing.
 
-  The NEW assertions this candidate adds, which no earlier hosted run could have made:
-    - a brand-new LINE event id for A's subject AFTER deletion is absorbed, and creates no row
-    - A's LINE subject state is `erased`, and erasure residue (barrier + rows) is 0
-    - no registration returns 200 over an unproven canonical identity
-    - a registration retried after a lost response resumes the SAME saga and creates no second
-      account
-    - a partial account cannot log in, reset a password, or bind LINE
-
-preview_migrations_applied: 202607310001, 202607310002, 202607310003 — verified by schema inspection
-preview_readiness: all three on, READ BACK as `on` (not `[SENSITIVE]`)
-preview_capabilities: all four on
-last_green_candidate_sha: f657f47 — the DEPLOYED candidate; five workflows SUCCESS at that SHA
-final_head: 9b97228 (docs-only descendant) — five workflows SUCCESS, read at that exact SHA:
-  Migration Scope Guard 30604902956 · Yorisou Check 30604903012 · CPV1-CM0 CI 30604903037
-  YV-1 CI 30604902979 · DCI-1 CI 30604903020
-last_hosted_candidate_sha: f6f50a6 — its run did NOT reach the concurrency property
+hosted_progress: the deletion now REACHES COMPLETION under four concurrent adversaries, the second
+  executor is refused with a bounded 202, and the stale writers are answered rather than faulted.
+  The run currently stops at the absence sweep on `line_lookup` (defect 4).
+last_green_candidate_sha: d8e8ac1 — five workflows SUCCESS, read at that exact SHA
+last_deployed_preview_sha: d8e8ac1, attesting isolated-preview, three readiness true, four
+  capabilities true
 last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
-preview_synthetic_state: NOT audited this session. WS-G must still clean and prove zero residue.
+preview_synthetic_state: NOT CLEAN. Several synthetic User A/B pairs and at least three
+  `failed_retryable` deletion jobs remain from these runs. WS-G must clean and prove zero residue.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
 production_activation_state: NONE. All four POR-1 controls unset in Production.
-production_store_audit: NOT RUN (WS-G). Requires the permanent narrow operator mechanism.
 pr_126_state: OPEN / DRAFT / UNMERGED, body still STALE — WS-J.
-rollback_state: nothing to roll back; every change so far is branch-local or Preview-only.
+rollback_state: nothing to roll back; every change is branch-local or Preview-only.
 ```
