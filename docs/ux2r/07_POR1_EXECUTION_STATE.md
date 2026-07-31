@@ -502,6 +502,127 @@ idempotence; refusal of conflicting identity reuse; A erased while B keeps recei
 content-freeness; idempotent re-erase absorbing a late redelivery; raw identifiers refused at both
 entry points. 18 scenarios total. Plus `npm run test:por1-line` (6 rollout-rule properties).
 
+## WS-B HARDENING — the subject-level LINE erasure barrier (`202607310002`)
+
+`202607310001` is correct about everything it claims. One row per event, addressed by the event's
+own identity, protects redelivery of an EXISTING event, reuse of an EXISTING event identity, and
+replay against an event-level tombstone. It does not protect the case a deletion has to survive:
+
+```
+account deleted -> every event row for that subject tombstoned
+LINE delivers a BRAND-NEW event id for the SAME subject
+the record RPC finds no existing row, so it INSERTS an active one
+```
+
+**Proved against a database holding only `202607310001`:** outcome `recorded`, one live row, and the
+raw LINE id back in the table. An event tombstone is not a subject tombstone; erasure was a property
+of whichever rows happened to exist at deletion time, and LINE decides when the next event id exists.
+
+**The barrier.** `yorisou_canonical_line_subjects` — keyed by digest, `active | erased`, erased
+TERMINAL. Every event record locks that row FIRST and reads the state under the lock, so the SUBJECT
+row (not the event row) is the serialization point for event-versus-erasure. Erasure transitions the
+subject and then sweeps its rows in one transaction: a row that does not exist yet is covered by the
+state, not by the sweep. Erasing a subject never seen still creates an `erased` row, so an account
+deleted before its first webhook is as protected as one deleted after its thousandth. An absorbed
+delivery writes NO row — there is no tombstone for content to survive in.
+
+`yorisou_line_activity_erase` is RETIRED IN PLACE by delegating to the subject erasure, so an
+un-updated caller gets the stronger guarantee rather than the weaker one, and the source guard now
+refuses the name in new code (a new `RETIRED_RPCS` rule, with a self-check that the names still
+exist in the migrations so the rule cannot become decorative).
+
+Deletion verification counts the BARRIER, not just the rows: a subject whose events are all
+tombstoned but whose state is still `active` is residue, and so is a subject with no registry row —
+unknown must never mean absent. The manifest freezes the subject identity, state and counts.
+
+**Behaviour change, stated rather than discovered later:** same-subject event writers now SERIALIZE
+on the subject row. That is the barrier's cost and it is per subject; two different subjects still
+overlap freely (scenario 12 proves it, scenario 13 proves the serialization).
+
+## WS-C — atomic truthful registration provisioning (`202607310003`)
+
+THREE false-success paths, not two, and all three ended in an authenticated cookie:
+
+```
+if (!deterministicPrincipal.ok) { console.error(...) }        <- logged, then continued
+catch (foundationError)         { console.error(...) }        <- logged, then continued
+(await bindSessionToUser(...)) || { ...session, userId }       <- fabricated a bound session
+```
+
+The third is the quietest: `bindSessionToUser` returns null when the write does not land, and the
+cookie was then minted from an in-memory object no store had ever seen.
+
+Repairing the swallow alone is not enough. Once the response is honest the failure becomes a 5xx on
+a multi-write operation with no record of how far it got, so a retry either duplicates the account or
+gives up. The honest answer and the resumable one had to arrive together.
+
+**The saga.** ONE durable row per registration INTENT, keyed by a digest of the normalized email — so
+"one normalized email -> one active principal" is the PRIMARY KEY, not a check someone remembered.
+ONE cursor meaning THE NEXT STEP THAT MUST EXECUTE, the deletion engine's rule for the deletion
+engine's reason. Single writer by the same bounded claim: token, generation, expiry. Every transition
+validates six things in one statement under a row lock, and the account binding is immutable once
+written, because the one way this could create two accounts is by forgetting which one it made.
+
+**What a 200 now means.** Account, canonical UserProfile, email AuthIdentity, session and
+principal-landing contract, each READ BACK after being written. The old code called every one of
+those functions too; what was missing was anybody asking afterwards whether they had worked.
+
+**Response contract.** 200 completed only - 409 approved identity conflict - 503 retryable (a
+double-submit is retryable, not a conflict) - 500 for a genuinely unclassified failure, now a small
+set. The account-existence oracle is unchanged: `email_exists` keeps its existing wording, and the
+password-reset suppression sits inside the unconditional uniform response.
+
+**Readiness gates DURABILITY, not HONESTY.** `YORISOU_POR1_IDENTITY_PROVISIONING_SCHEMA_READY`. A
+deployment without the saga table runs the same stages with the same proof and the same refusals and
+only loses the resume cursor. Gating truthfulness on a schema flag would mean the old deployment kept
+lying and nobody could tell which deployments were which. Deliberately NOT a fifth capability.
+
+**Incomplete identities** are refused at login, password-reset issuance and LINE binding. The scope
+limit is stated in the code: with no saga table there is no durable record of an incomplete
+registration, so the gate can only allow there.
+
+**Deletion** purges provisioning state and verification counts it. That also RELEASES THE EMAIL — a
+saga keyed by an address that outlived the account would make it unregisterable forever.
+
+### Three defects found in my own work, each proved before being fixed
+
+1. **A saga that created nothing poisoned the address.** Attempting to register an already-taken
+   email opened a saga, created nothing, and recorded `failed_terminal`. That row has neither an
+   account id nor a fingerprint, so no purge could ever find it: the address became permanently
+   unregisterable, including by its real owner after deleting their account. It is now abandoned.
+2. **Anyone could lock any account out of login.** The access gate read any live saga as "this email
+   has an incomplete registration". Combined with (1), submitting someone's address to the
+   registration form denied them login. The gate now refuses only a saga that NAMES that account —
+   a pure function, tested exhaustively rather than through a database.
+3. **The session proof demanded a row the design does not guarantee.** Found by YV-1 CI at `935a8d1`,
+   not by me. The session cookie is SELF-CONTAINED and `getViewerContext` fabricates a synthetic
+   session from it, so `ensureViewerSession()` can return an id the store has never seen and
+   `touchSession` — update-only — returns null. The old fabricated-session fallback is exactly why
+   nobody had seen it. `insertSessionRecordIfAbsent` creates the row KEEPING THE ID (a new id would
+   break anonymous->register continuity); insert-only, because an upsert on the session table is a
+   resurrection primitive.
+
+### Proofs
+
+`tests/por1/postgres-integration.sh` — 43 scenarios on the existing two-session latch:
+
+```
+12-18  canonical LINE activity (as before)
+19-29  the subject barrier: new event id and new webhook id after erasure absorbed; nothing stored;
+       residue counts the barrier; a never-seen subject barred; idempotent re-erase with an
+       immutable erased_at; the record RPC unable to reopen the state; an event transaction and an
+       erasure resolving to one legal serial order; two new events blocked on the barrier and both
+       absorbed; A erased while B keeps receiving; the retired name performing the full erasure
+30-42  the provisioning saga: privilege posture, closed failure vocabulary, six-way transition
+       validation, immutable account binding, cursor preserved across a retryable failure,
+       generation takeover refusing the superseded executor, full progression, a completed saga
+       terminal in both directions, two concurrent opens for one email LATCHED on the row lock,
+       purge by fingerprint releasing the email, and defect (1) above
+```
+
+Plus `npm run test:por1-provisioning` (18), which exercises the pure access decision and the response
+contract directly rather than through a database.
+
 ## Remaining CTO sequence (D onward) — CLOSED, superseded by the terminal package
 
 Retained as the record of how the work was sequenced. Every item below is done; do **not** treat
@@ -575,33 +696,35 @@ implement → flags OFF → apply additive Production migration → verify old a
 ## CONTINUATION_CURSOR
 
 > The pre-2026-07-31 cursor said the next action was the mutation-fence concurrency proof and that
-> the fence was UNPROVEN. Both are now complete (11 scenarios, deterministic barriers). That cursor
-> is superseded; it is quoted in the superseded-statements table above rather than left here where
-> it would read as an instruction.
+> the fence was UNPROVEN. Both are complete. That cursor is superseded; it is quoted in the
+> superseded-statements table above rather than left here where it would read as an instruction.
+>
+> The 2026-07-31 cursor said WS-C was next and described TWO swallows in the registration route.
+> There were THREE — the fabricated bound session was the quietest — and all three are gone.
 
 ```
 package: YORISOU_POR1_TERMINAL_EXECUTION_CONTRACT (Founder, 2026-07-31)
-workstream: A complete · B complete (code + local proofs) -> C next
-next_action: WS-C — app/api/auth/register/route.ts has TWO swallows, not one, and both end in a
-  200: the `!deterministicPrincipal.ok` branch logs the reason and continues, and the enclosing
-  `catch (foundationError)` logs and continues. Replace both with an idempotent provisioning saga
-  whose success response means every required piece of canonical identity is durably present. Then WS-D (re-audit the mutation graph, now including the canonical LINE
-  writer), WS-E, and the hosted train.
-  NOTE for WS-F: Preview needs YORISOU_POR1_CANONICAL_LINE_ACTIVITY_SCHEMA_READY=on for this
-  branch AND 202607310001 applied to nbltsbonsnbpfptihomc before the hosted run — otherwise the
-  deployment silently serves the legacy array and the acceptance proves the old model.
-starting_head: b85caaf698eb538f83545151069d435b2c093c14 (local == origin == PR #126 head)
-last_green_candidate_sha: 5634a6f — five workflows SUCCESS, read at that exact SHA:
-  Migration Scope Guard 30599368779 · Yorisou Check 30599368749 · CPV1-CM0 CI 30599368789
-  YV-1 CI 30599368814 · DCI-1 CI 30599368751
-  (b85caaf, the package's starting HEAD, was also five-green — run ids in Position above)
+workstream: A complete - B complete incl. subject barrier - C complete (code + local proofs)
+            -> D (identity mutation graph re-audit, partially done) -> E -> the hosted train
+next_action: WS-F preconditions, in this order and not another:
+  1. apply to Preview nbltsbonsnbpfptihomc, in version order:
+       202607310001_por1_canonical_line_activity
+       202607310002_por1_line_subject_erasure_barrier
+       202607310003_por1_identity_provisioning_saga
+  2. set on the POR-1 Preview branch scope:
+       YORISOU_POR1_CANONICAL_LINE_ACTIVITY_SCHEMA_READY=on
+       YORISOU_POR1_IDENTITY_PROVISIONING_SCHEMA_READY=on
+  3. set the four product controls on in Preview (they are unset today, so Preview currently
+     serves the flag-off baseline)
+  4. deploy the exact five-green SHA and verify /api/build-identity before any acceptance
+  WITHOUT 1 and 2 the deployment silently serves the legacy array and the inline provisioning
+  path, and the acceptance proves the old model.
+migrations_not_yet_applied_to_preview: 202607310001, 202607310002, 202607310003
+readiness_variables_not_yet_set: CANONICAL_LINE_ACTIVITY_SCHEMA_READY, IDENTITY_PROVISIONING_SCHEMA_READY
 last_hosted_candidate_sha: f6f50a6 — and its run did NOT reach the concurrency property
 last_accepted_candidate_sha: NONE. No SHA has passed hosted exact-SHA acceptance for POR-1.
-last_full_train: 86 passed / 2 failed at 9847559 (both failures were the same residue defect).
 preview_isolation_state: REPAIRED and proven at object level. All three Preview scopes isolated.
-  Permanent runtime guard + acceptance gate + env audit in place.
 production_mutation_state: NONE. main c8d8a8ad, 12 migrations, 42 tables, canonical objects absent.
 production_activation_state: NONE. All four POR-1 controls unset in Production.
 rollback_state: nothing to roll back; every change so far is branch-local or Preview-only.
-lock_state: HELD by claude-code-2026-07-31-por1-terminal-execution.
 ```
