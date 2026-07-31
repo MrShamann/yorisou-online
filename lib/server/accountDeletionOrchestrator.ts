@@ -349,7 +349,7 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
           await withAccountDeletionContext({
             accountId,
             operation: "account_profile_update",
-            execute: (context) => deletePrimaryIdentity(context, targets),
+            execute: (context) => deletePrimaryIdentity(context, targets, accountId),
           });
           break;
         }

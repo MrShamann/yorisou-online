@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { accountMutationFenceSchemaReady } from "@/lib/server/accountMutationLease";
 import { isCanonicalLineActivitySchemaReady } from "@/lib/server/canonicalLineActivityRollout";
+import { isCanonicalIdentityLinksSchemaReady } from "@/lib/server/canonicalIdentityLinksRollout";
 import { isIdentityProvisioningSchemaReady } from "@/lib/server/identityProvisioningRollout";
 import { por1CapabilitySnapshot } from "@/lib/server/por1RuntimeControls";
 import { currentSharedStoreMode, sharedStoreBoundary } from "@/lib/server/yorisouData";
@@ -55,6 +56,7 @@ export async function GET() {
         ACCOUNT_MUTATION_FENCE: accountMutationFenceSchemaReady(),
         CANONICAL_LINE_ACTIVITY: isCanonicalLineActivitySchemaReady(),
         IDENTITY_PROVISIONING: isIdentityProvisioningSchemaReady(),
+        CANONICAL_IDENTITY_LINKS: isCanonicalIdentityLinksSchemaReady(),
       },
 
       // The four product controls. Exactly four, always all four, so "absent from the response" can

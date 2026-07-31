@@ -27,6 +27,10 @@ import {
   resolveLineActivityMode,
 } from "./canonicalLineActivityRollout";
 import {
+  identityLinksForAccount,
+  syncCanonicalIdentityLinks,
+} from "./canonicalIdentityLinks";
+import {
   DeleteObjectCommand,
   GetObjectCommand,
   ListObjectsV2Command,
@@ -709,6 +713,30 @@ async function putSharedAccountRecord(context: AccountWriteContext, account: Acc
     email: normalizedEmail,
   };
   const existingAccount = await getSharedAccountById(normalizedAccount.id);
+
+  // POR-1 — THE SERIALIZATION POINT, and it runs BEFORE the mirror objects, not after.
+  //
+  // This function is the one funnel through which every identity key family is written: the account
+  // record, the email lookup, the retirement of a superseded LINE lookup and the current one. So it
+  // is where the strongly consistent statement of what this account owns belongs.
+  //
+  // The ORDER is the safety property. Commit the link first and a failed object write leaves a link
+  // with no object, which makes a deletion manifest WIDER than it needs to be — harmless, because
+  // deleting an absent key is success. Write the object first and a failed link commit leaves an
+  // object with no link, which makes the manifest NARROWER — and a manifest that never names a key
+  // is a key that is never erased and never missed. That is the defect this whole migration exists
+  // to close, so the order is not an implementation detail.
+  //
+  // It also throws rather than warning. A LINE binding that answers "connected" while the registry
+  // does not record the connection is the false-success shape this package has already had to remove
+  // from registration twice; contract §9 requires the response to wait for the commit.
+  await syncCanonicalIdentityLinks({
+    accountId: normalizedAccount.id,
+    links: identityLinksForAccount({
+      email: normalizedEmail,
+      lineUserId: normalizedAccount.lineUserId,
+    }),
+  });
 
   await sharedWriteJson(accountRecordKey(normalizedAccount.id), normalizedAccount);
   await sharedWriteJson(accountEmailLookupKey(normalizedEmail), {

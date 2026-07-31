@@ -225,6 +225,11 @@ export async function cleanupThroughApp(
 // Preview database access — env-gated, read-only except for minting expired credentials
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** One digest derivation for the fixtures, matching the runtime's object-key derivation exactly. */
+function sha256Hex(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 function previewDb(): { url: string; key: string } | null {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -550,6 +555,19 @@ export const storeKeys = {
  * of the deletion adapter, and no test caught it precisely because no acceptance identity had ever
  * been LINE-bound.
  */
+/**
+ * Bind LINE to a synthetic account, through EVERY store the product writes.
+ *
+ * FIXTURE-INTEGRITY GATE (contract §9). This fixture writes objects directly, so it can construct
+ * states the product cannot — and it did. It used to write the account record and the lookup object
+ * and stop there, which meant a hosted run could assert "this account is LINE-bound" while the
+ * strongly consistent identity registry knew nothing about it. A fixture that can claim a binding
+ * the product would never have produced is a fixture that tests a system nobody ships.
+ *
+ * So the binding is not complete until all three agree, and this function READS BACK each one before
+ * returning. It throws rather than warning: a precondition that reports success over partial state
+ * is how the acceptance ran green for a whole session against the legacy LINE model.
+ */
 export async function bindLineIdentityInPreviewStore(
   accountId: string,
   lineUserId: string,
@@ -557,6 +575,18 @@ export async function bindLineIdentityInPreviewStore(
   const account = await readStoreObject<Record<string, unknown>>(storeKeys.account(accountId));
   if (!account) throw new Error("account_not_found_in_preview_store");
   const now = new Date().toISOString();
+
+  // The canonical link FIRST, in the same order the product's own account writer uses: a link
+  // without an object makes a deletion manifest wider, an object without a link makes it narrower,
+  // and narrower is the direction that leaves a live login route behind.
+  if (previewDbConfigured()) {
+    await syncIdentityLinksInPreviewDb(accountId, [
+      ...(typeof account.email === "string" && account.email
+        ? [{ kind: "email" as const, digest: sha256Hex(String(account.email).trim().toLowerCase()) }]
+        : []),
+      { kind: "line_subject" as const, digest: sha256Hex(lineUserId) },
+    ]);
+  }
 
   await writeStoreObject(storeKeys.account(accountId), {
     ...account,
@@ -575,6 +605,73 @@ export async function bindLineIdentityInPreviewStore(
     lineUserId,
     updatedAt: now,
   });
+
+  // READ BACK. Not "we issued three writes" — "three stores now agree".
+  //
+  // The lookup object is confirmed through `readStoreObjectUntil`, because this transport serves a
+  // freshly written key through a cache that can lag by seconds. That wait is about OBSERVING a
+  // write that has already happened; it is not a retry-until-visible standing in for the repair,
+  // which is exactly why the deletion path no longer reads this store for its scope at all.
+  const lookup = await readStoreObjectUntil<{ accountId?: string }>(
+    storeKeys.lineLookup(lineUserId),
+    (value) => value?.accountId === accountId,
+  );
+  if (!lookup) throw new Error("line_binding_incomplete:lookup_object");
+
+  if (previewDbConfigured()) {
+    const owner = await readIdentityLinkOwnerFromPreviewDb("line_subject", sha256Hex(lineUserId));
+    if (owner !== accountId) {
+      throw new Error(`line_binding_incomplete:canonical_identity_link:${owner ? "other" : "absent"}`);
+    }
+  }
+}
+
+/**
+ * Commit an account's complete identity set through the SAME governed RPC the application calls,
+ * with the service-role key this test process already holds.
+ *
+ * No public route, no admin endpoint, nothing added to the deployment — the same seam
+ * `establishLineActivity` uses for canonical LINE events.
+ */
+export async function syncIdentityLinksInPreviewDb(
+  accountId: string,
+  links: { kind: string; digest: string }[],
+): Promise<void> {
+  const response = await dbRequest("rpc/yorisou_identity_links_sync", {
+    method: "POST",
+    body: JSON.stringify({
+      p_owner_account_id: accountId,
+      p_owner_fingerprint: sha256Hex(accountId),
+      p_links: links,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`identity_link_sync_failed_${response.status}:${(await response.text()).slice(0, 120)}`);
+  }
+}
+
+/** Who actively owns this identity, per the registry? The question a LINE login asks. */
+export async function readIdentityLinkOwnerFromPreviewDb(
+  kind: string,
+  digest: string,
+): Promise<string | null> {
+  const response = await dbRequest("rpc/yorisou_identity_link_owner", {
+    method: "POST",
+    body: JSON.stringify({ p_link_kind: kind, p_link_digest: digest }),
+  });
+  if (!response.ok) throw new Error(`identity_link_owner_read_failed_${response.status}`);
+  const value = (await response.json()) as string | null;
+  return value ?? null;
+}
+
+/** Active identity links remaining for an owner. Content-free, and asked by fingerprint. */
+export async function readIdentityLinkResidueFromPreviewDb(accountId: string): Promise<number> {
+  const response = await dbRequest("rpc/yorisou_identity_links_residue", {
+    method: "POST",
+    body: JSON.stringify({ p_owner_fingerprint: sha256Hex(accountId) }),
+  });
+  if (!response.ok) throw new Error(`identity_link_residue_read_failed_${response.status}`);
+  return (await response.json()) as number;
 }
 
 /** A LINE user id shaped like the real thing: `U` plus 32 hex characters. */

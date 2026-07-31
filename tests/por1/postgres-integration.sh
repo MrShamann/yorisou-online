@@ -34,7 +34,8 @@ for f in 202607300003_por1_account_deletion_lifecycle \
          202607300005_por1_deletion_resume_engine \
          202607310001_por1_canonical_line_activity \
          202607310002_por1_line_subject_erasure_barrier \
-         202607310003_por1_identity_provisioning_saga; do
+         202607310003_por1_identity_provisioning_saga \
+         202607310004_por1_canonical_identity_links; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
 # Idempotence: re-applying the new migrations must succeed without error.
@@ -47,6 +48,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migra
 # pair across two files is exactly the shape where an out-of-order reapply goes unnoticed.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310002_por1_line_subject_erasure_barrier.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310003_por1_identity_provisioning_saga.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310004_por1_canonical_identity_links.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -989,10 +991,166 @@ survived="$(psql "$DATABASE_URL" -At -c "select account_id from public.yorisou_i
 if [[ "$survived" != "acct-prov-owned" ]]; then echo "FAIL: the owning saga did not survive ($survived)" >&2; exit 1; fi
 echo "  ok: unbound saga discarded and the address released; a bound one is refused"
 
+
+# ═════════════════════════════════════════════════════════════════════════════
+# CANONICAL IDENTITY LINKS — 202607310004.
+#
+# The registry exists because the deletion manifest derived its entire destructive identity scope
+# from ONE read of an object store whose read path is not reliable. Measured over 20 controlled
+# overwrite rounds against the isolated Preview bucket, that path returned the OLD version of a
+# just-overwritten object for more than 25 seconds, served `cf-cache-status: HIT`, while the store
+# itself already held the new one. A LINE binding that finished two seconds BEFORE a deletion was
+# requested was therefore invisible when the manifest froze fourteen seconds later, and the lookup
+# object survived the erasure: a live LINE login route to an erased account.
+#
+# These scenarios prove the two halves of the repair — a scope that can only widen, and a
+# verification that does not take the manifest's word for which families exist.
+# ═════════════════════════════════════════════════════════════════════════════
+
+echo "── scenario 43: the identity set is committed, and a repeat is a no-op ──"
+A_ID="acct-links-a"; A_FP="$(printf 'acct-links-a' | shasum -a 256 | cut -d' ' -f1)"
+B_ID="acct-links-b"; B_FP="$(printf 'acct-links-b' | shasum -a 256 | cut -d' ' -f1)"
+A_EMAIL="$(printf 'a@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+B_EMAIL="$(printf 'b@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+A_LINE="$(printf 'Uaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' | shasum -a 256 | cut -d' ' -f1)"
+B_LINE="$(printf 'Ubbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' | shasum -a 256 | cut -d' ' -f1)"
+
+A_SET="[{\"kind\":\"email\",\"digest\":\"$A_EMAIL\"},{\"kind\":\"line_subject\",\"digest\":\"$A_LINE\"}]"
+r="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$A_ID','$A_FP','$A_SET'::jsonb)")"
+if [[ "$(jq -r '.added' <<<"$r")" != "2" ]]; then echo "FAIL: links not committed ($r)" >&2; exit 1; fi
+# Every account write calls sync, so a no-op has to be genuinely free of side effects.
+r="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$A_ID','$A_FP','$A_SET'::jsonb)")"
+if [[ "$(jq -r '.added' <<<"$r")" != "0" || "$(jq -r '.retired' <<<"$r")" != "0" ]]; then
+  echo "FAIL: re-sync was not a no-op ($r)" >&2; exit 1
+fi
+echo "  ok: two links committed; the repeat added nothing and retired nothing"
+
+echo "── scenario 44: one LINE subject cannot be owned by two live accounts ───"
+B_SET="[{\"kind\":\"email\",\"digest\":\"$B_EMAIL\"},{\"kind\":\"line_subject\",\"digest\":\"$A_LINE\"}]"
+if psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$B_ID','$B_FP','$B_SET'::jsonb)" >/dev/null 2>&1; then
+  echo "FAIL: a second account took a live LINE subject" >&2; exit 1
+fi
+# The refusal must be atomic. A partially applied identity set is a state no reader has a name for,
+# and B's own email must not have been committed by the attempt that was rejected.
+n="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_identity_links where owner_account_id='$B_ID' and link_state='active'")"
+if [[ "$n" != "0" ]]; then echo "FAIL: the refused sync left $n links behind" >&2; exit 1; fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_link_owner('line_subject','$A_LINE')")" != "$A_ID" ]]; then
+  echo "FAIL: the subject moved" >&2; exit 1
+fi
+echo "  ok: refused, atomically, and the subject still resolves to its owner"
+
+echo "── scenario 45: NEGATIVE CONTROL — the pre-repair architecture ──────────"
+# This is the shape that produced the orphan, reconstructed deliberately: a frozen manifest that
+# names NO LINE scope for an account that owns a LINE subject.
+#
+# `verifyIdentityErasure` used to iterate the manifest — `if (manifest.lineLookupKey && ...)` — so
+# an omitted family was not merely unerased, it was UNLOOKED-AT, and the deletion could report
+# clean over a live login route. The two queries below are those two verifications, side by side.
+MANIFEST_LINE_SCOPE=0   # what the narrowed manifest named
+manifest_finds="$MANIFEST_LINE_SCOPE"
+registry_finds="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_residue('$A_FP')")"
+if [[ "$manifest_finds" != "0" ]]; then echo "FAIL: the control is not reproducing the omission" >&2; exit 1; fi
+if [[ "$registry_finds" == "0" ]]; then
+  echo "FAIL: the manifest-independent check is as blind as the manifest was" >&2; exit 1
+fi
+echo "  ok: manifest-scoped check finds 0, the registry finds $registry_finds — the omission is visible"
+
+echo "── scenario 46: erasure is content-free, and denies the login route ─────"
+erased="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_erase('$A_ID')")"
+if [[ "$erased" != "2" ]]; then echo "FAIL: expected 2 links erased, got $erased" >&2; exit 1; fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_residue('$A_FP')")" != "0" ]]; then
+  echo "FAIL: active links survived the erasure" >&2; exit 1
+fi
+# The check a LINE login makes.
+if [[ -n "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_link_owner('line_subject','$A_LINE')")" ]]; then
+  echo "FAIL: an erased account's LINE subject still resolves" >&2; exit 1
+fi
+leak="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_identity_links where link_state='erased' and (owner_account_id is not null or link_digest is not null)")"
+if [[ "$leak" != "0" ]]; then echo "FAIL: $leak tombstones still carry content" >&2; exit 1; fi
+echo "  ok: erased, unresolvable, and the tombstones hold neither owner nor digest"
+
+echo "── scenario 47: the erasure is idempotent and does not touch User B ─────"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_identity_links_sync('$B_ID','$B_FP','[{\"kind\":\"email\",\"digest\":\"$B_EMAIL\"},{\"kind\":\"line_subject\",\"digest\":\"$B_LINE\"}]'::jsonb)" >/dev/null
+again="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_erase('$A_ID')")"
+if [[ "$again" != "0" ]]; then echo "FAIL: a second erasure erased $again" >&2; exit 1; fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_residue('$B_FP')")" != "2" ]]; then
+  echo "FAIL: User B lost identity links to User A's deletion" >&2; exit 1
+fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_link_owner('line_subject','$B_LINE')")" != "$B_ID" ]]; then
+  echo "FAIL: User B's LINE subject stopped resolving" >&2; exit 1
+fi
+echo "  ok: second erasure is a no-op; B keeps both links and its LINE route"
+
+echo "── scenario 48: an erased identity is re-registrable, not poisoned ──────"
+# The mirror image of scenario 44. Refusing forever would mean a deleted person's address and LINE
+# account could never be used again by anyone — including by them.
+C_ID="acct-links-c"; C_FP="$(printf 'acct-links-c' | shasum -a 256 | cut -d' ' -f1)"
+r="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$C_ID','$C_FP','[{\"kind\":\"email\",\"digest\":\"$A_EMAIL\"},{\"kind\":\"line_subject\",\"digest\":\"$A_LINE\"}]'::jsonb)")"
+if [[ "$(jq -r '.added' <<<"$r")" != "2" ]]; then echo "FAIL: an erased identity stayed blocked ($r)" >&2; exit 1; fi
+echo "  ok: the erased address and subject were claimable again"
+
+echo "── scenario 49: two concurrent binds of one subject, LATCHED ────────────"
+# Not a timing race. Session A opens a transaction and takes the row, the harness OBSERVES that
+# session B is blocked on it, and only then is A committed.
+D_ID="acct-links-d"; D_FP="$(printf 'acct-links-d' | shasum -a 256 | cut -d' ' -f1)"
+E_ID="acct-links-e"; E_FP="$(printf 'acct-links-e' | shasum -a 256 | cut -d' ' -f1)"
+SHARED_LINE="$(printf 'Ushared-contended-subject' | shasum -a 256 | cut -d' ' -f1)"
+cat >&3 <<SQLA
+begin;
+select public.yorisou_identity_links_sync('$D_ID','$D_FP','[{"kind":"line_subject","digest":"$SHARED_LINE"}]'::jsonb);
+SQLA
+sleep 0.5
+cat >&4 <<SQLB
+begin;
+select public.yorisou_identity_links_sync('$E_ID','$E_FP','[{"kind":"line_subject","digest":"$SHARED_LINE"}]'::jsonb);
+SQLB
+# Wait until B is genuinely WAITING on a lock rather than merely slow.
+for _ in $(seq 1 50); do
+  waiting="$(psql "$DATABASE_URL" -At -c "select count(*) from pg_stat_activity where wait_event_type='Lock' and query like '%yorisou_identity_links_sync%'")"
+  [[ "$waiting" -ge 1 ]] && break
+  sleep 0.2
+done
+if [[ "${waiting:-0}" -lt 1 ]]; then echo "FAIL: the second bind never blocked — no serialization" >&2; exit 1; fi
+printf 'commit;\n' >&3
+sleep 1
+printf 'commit;\n' >&4
+sleep 1
+owner="$(psql "$DATABASE_URL" -At -c "select public.yorisou_identity_link_owner('line_subject','$SHARED_LINE')")"
+if [[ "$owner" != "$D_ID" ]]; then echo "FAIL: the contended subject resolved to $owner" >&2; exit 1; fi
+n="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_canonical_identity_links where link_kind='line_subject' and link_digest='$SHARED_LINE' and link_state='active'")"
+if [[ "$n" != "1" ]]; then echo "FAIL: $n active owners for one subject" >&2; exit 1; fi
+echo "  ok: the second blocked on the lock, then was refused; exactly one owner"
+
+echo "── scenario 50: nothing may re-link an account after its gate closed ────"
+# The registry alone does NOT prevent this, and saying so plainly matters: a post-erasure sync is a
+# legal insert as far as this table is concerned. What forbids it is the mutation fence, which the
+# account write goes through before it ever reaches sync. This asserts the two facts that make the
+# combination sound — the gate is closed for the owner, and the fence refuses a lease under it.
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_account_deletion_open('$A_ID')" >/dev/null
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_account_deletion_close_mutation_gate('$A_ID')" >/dev/null
+gate="$(psql "$DATABASE_URL" -At -c "select public.yorisou_account_deletion_mutation_gate_status('$A_ID')")"
+if [[ "$gate" != *"closed"* && "$gate" != *"draining"* ]]; then
+  echo "FAIL: the gate did not close for a deleting account ($gate)" >&2; exit 1
+fi
+if psql "$DATABASE_URL" -At -c "select public.yorisou_account_mutation_begin('$A_ID','line_binding','$(printf 'tok-late-writer-aaaaaaaaaaaaaaaaaaaa' | shasum -a 256 | cut -d' ' -f1)',30)" >/dev/null 2>&1; then
+  echo "FAIL: the fence granted a lease under a closed gate" >&2; exit 1
+fi
+echo "  ok: gate closed, lease refused — the account write never reaches the registry"
+
+echo "── scenario 51: the registry refuses to hold anything that is not a digest ─"
+for bad in "[{\"kind\":\"email\",\"digest\":\"someone@example.com\"}]" \
+           "[{\"kind\":\"line_subject\",\"digest\":\"Uraw-line-id\"}]" \
+           "[{\"kind\":\"unknown_kind\",\"digest\":\"$A_EMAIL\"}]"; do
+  if psql "$DATABASE_URL" -At -c "select public.yorisou_identity_links_sync('$C_ID','$C_FP','$bad'::jsonb)" >/dev/null 2>&1; then
+    echo "FAIL: the registry accepted $bad" >&2; exit 1
+  fi
+done
+echo "  ok: raw address, raw LINE id and unknown kind all refused"
+
 printf '\\q\n' >&3; printf '\\q\n' >&4
 exec 3>&-; exec 4>&-
 wait "$PID_A" 2>/dev/null || true
 wait "$PID_B" 2>/dev/null || true
 
 echo
-echo "POR-1 deletion resume engine + mutation fence + canonical LINE activity: ALL ASSERTIONS PASSED"
+echo "POR-1 resume engine + mutation fence + canonical LINE activity + identity links: ALL ASSERTIONS PASSED"

@@ -41,6 +41,13 @@ import type {
 } from "./yorisouData";
 import { SHARED_STORE_PREFIX } from "./identityKeyScope";
 import { canonicalLineActivityInventory, canonicalLineActivityResidue } from "./canonicalLineActivity";
+import {
+  canonicalIdentityLinkResidue,
+  eraseCanonicalIdentityLinks,
+  readCanonicalIdentityLinks,
+  resolveCanonicalIdentityOwner,
+} from "./canonicalIdentityLinks";
+import { identityLookupKeysFromManifest } from "./canonicalIdentityLinksRollout";
 import { provisioningResidue } from "./identityProvisioning";
 import {
   isIdentityProvisioningSchemaReady,
@@ -105,7 +112,23 @@ function lineWebhookEventKey(id: string) {
  */
 function lineUserLookupKey(lineUserId: string) {
   const digest = createHash("sha256").update(lineUserId).digest("hex");
+  return lineUserLookupKeyFromDigest(digest);
+}
+
+/**
+ * The same key, built from the DIGEST the canonical registry holds.
+ *
+ * The registry deliberately never stores a raw LINE user id, because the object key is already
+ * addressed by `sha256(id)` — so the digest is everything erasure needs, and the raw identifier is
+ * not kept anywhere it is not required.
+ */
+function lineUserLookupKeyFromDigest(digest: string) {
   return `${SHARED_PREFIX}/accounts/by-line-user/${digest}.json`;
+}
+
+/** The email lookup key from its digest, for the same reason. */
+function accountEmailLookupKeyFromDigest(digest: string) {
+  return `${SHARED_PREFIX}/accounts/by-email/${digest}.json`;
 }
 
 /**
@@ -145,6 +168,28 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
   const account = await findAccountById(accountId);
   if (!account) return null;
 
+  // POR-1 — the strongly consistent identity scope, asked of the database rather than of a mirror.
+  //
+  // `account` above came from an object read, and that read is not a reliable statement about what
+  // is true right now: measured over 20 controlled overwrite rounds on the isolated Preview
+  // transport, it returned the OLD version of a just-overwritten object for more than 25 seconds,
+  // served `cf-cache-status: HIT`, while the store already held the new one. A LINE binding that
+  // finished two seconds BEFORE a deletion was requested was invisible when the manifest froze
+  // fourteen seconds later, and the surviving lookup object was a live login route to an erased
+  // account.
+  //
+  // Every use below is a UNION with what the record showed. That direction is the whole design: a
+  // stale read can then only ever WIDEN the destructive scope, never narrow it. Deleting a key that
+  // is already absent is success, so a manifest that is too wide costs nothing; a manifest that is
+  // too narrow is data that is never erased and never missed.
+  const canonicalLinks = await readCanonicalIdentityLinks(accountId);
+  const canonicalEmailDigests = (canonicalLinks ?? [])
+    .filter((link) => link.kind === "email")
+    .map((link) => link.digest);
+  const canonicalLineDigests = (canonicalLinks ?? [])
+    .filter((link) => link.kind === "line_subject")
+    .map((link) => link.digest);
+
   const [sessions, consultations, resetTokens, lineEvents] = await Promise.all([
     listSessions(),
     listConsultations(),
@@ -169,9 +214,18 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
   // are not consistent — an entry invisible at manifest time would have been left out of the
   // manifest entirely, and therefore never erased and never missed. The subject is a property of
   // the account, so it is taken from the account.
-  const lineSubjectFingerprints = account.lineUserId
-    ? [createHash("sha256").update(account.lineUserId).digest("hex")]
-    : [];
+  //
+  // POR-1 correction, second pass: taking it from the account is better than listing a shared index,
+  // and it is still ONE read of a mirror. The registry's digests are unioned in, so a subject the
+  // account record has not caught up with is still erased.
+  const lineSubjectFingerprints = [
+    ...new Set<string>([
+      ...(account.lineUserId
+        ? [createHash("sha256").update(account.lineUserId).digest("hex")]
+        : []),
+      ...canonicalLineDigests,
+    ]),
+  ];
 
   // Freeze what the canonical model currently holds for those subjects — the digest, the subject
   // state, the owner fingerprint and the counts. Recorded for the operator, never used as the
@@ -189,10 +243,30 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
         }))
       : undefined;
 
+  // Every lookup key this account can be reached by, from BOTH sources.
+  //
+  // `emailLookupKey` and `lineLookupKey` stay exactly as they were — a frozen manifest written
+  // before this change must still be readable by the executor that resumes it, so their meaning is
+  // not allowed to shift. `identityLookupKeys` is the additive union, and it is what the erasure and
+  // the verification actually iterate.
+  const identityLookupKeys = [
+    ...new Set<string>([
+      ...(account.email ? [accountEmailLookupKey(account.email)] : []),
+      ...(account.lineUserId ? [lineUserLookupKey(account.lineUserId)] : []),
+      ...canonicalEmailDigests.map(accountEmailLookupKeyFromDigest),
+      ...canonicalLineDigests.map(lineUserLookupKeyFromDigest),
+    ]),
+  ];
+
   return {
     primaryAccountKey: accountRecordKey(account.id),
     emailLookupKey: account.email ? accountEmailLookupKey(account.email) : null,
     lineLookupKey: account.lineUserId ? lineUserLookupKey(account.lineUserId) : null,
+    identityLookupKeys,
+    // Recorded so an operator reading a frozen manifest can tell "the registry said this account had
+    // no LINE subject" from "the registry was not deployed yet". Those are different facts and only
+    // one of them is evidence.
+    canonicalIdentityLinkCount: canonicalLinks ? canonicalLinks.length : null,
     sessionIds: sessions.filter((s: SessionRecord) => sessionBelongsToAccount(s, accountId)).map((s: SessionRecord) => s.id),
     passwordResetHashes: resetTokens
       .filter((token: PasswordResetTokenRecord) => token.accountId === accountId)
@@ -200,9 +274,16 @@ export async function buildDeletionManifest(accountId: string): Promise<Deletion
     consultationIds: consultations
       .filter((c: ConsultationRecord) => c.userId === accountId)
       .map((c: ConsultationRecord) => c.id),
-    lineEventIds: account.lineUserId
+    // Matched by subject DIGEST, not by raw id, so an event belonging to a subject the account
+    // record has not caught up with is still named.
+    lineEventIds: lineSubjectFingerprints.length
       ? lineEvents
-          .filter((e: LineWebhookEventRecord) => e.lineUserId === account.lineUserId)
+          .filter((e: LineWebhookEventRecord) =>
+            Boolean(e.lineUserId) &&
+            lineSubjectFingerprints.includes(
+              createHash("sha256").update(e.lineUserId as string).digest("hex"),
+            ),
+          )
           .map((e: LineWebhookEventRecord) => e.id)
       : [],
     recentSubjectFingerprints: [...new Set<string>(lineSubjectFingerprints)],
@@ -269,8 +350,17 @@ export async function deleteAccountIndexes(
   manifest: DeletionTargetManifest,
 ): Promise<void> {
   assertAccountWriteContext(context);
-  if (manifest.emailLookupKey) await deleteSharedIdentityObject(manifest.emailLookupKey);
-  if (manifest.lineLookupKey) await deleteSharedIdentityObject(manifest.lineLookupKey);
+  for (const key of allIdentityLookupKeys(manifest)) {
+    await deleteSharedIdentityObject(key);
+  }
+}
+
+/**
+ * Every lookup key a manifest names. The derivation itself is pure and lives in the rollout module,
+ * where the permanent tests exercise it directly rather than through a paraphrase.
+ */
+export function allIdentityLookupKeys(manifest: DeletionTargetManifest): string[] {
+  return identityLookupKeysFromManifest(manifest);
 }
 
 /**
@@ -332,11 +422,41 @@ export async function verifyIdentityErasure(
   const residue: string[] = [];
 
   if (await sharedIdentityObjectExists(manifest.primaryAccountKey)) residue.push("account_record");
-  if (manifest.emailLookupKey && (await sharedIdentityObjectExists(manifest.emailLookupKey))) {
-    residue.push("email_lookup");
+
+  // Lookup keys, from the UNION the manifest froze rather than from its two singular fields.
+  //
+  // The previous shape was `if (manifest.lineLookupKey && ...)`, and that guard is exactly how a
+  // surviving lookup went unnoticed: the manifest named no LINE scope, so the check was skipped
+  // entirely and the family was not merely unerased but UNLOOKED-AT. A conditional whose false
+  // branch is silence cannot report residue it was never pointed at.
+  for (const key of allIdentityLookupKeys(manifest)) {
+    if (await sharedIdentityObjectExists(key)) {
+      residue.push(key.includes("/by-line-user/") ? "line_lookup" : "email_lookup");
+      break;
+    }
   }
-  if (manifest.lineLookupKey && (await sharedIdentityObjectExists(manifest.lineLookupKey))) {
-    residue.push("line_lookup");
+
+  // THE MANIFEST-INDEPENDENT CHECK.
+  //
+  // Contract §9: a manifest omission must not make a target family invisible. Everything above is
+  // still scoped by what the manifest named, so on its own it can only ever find what the manifest
+  // already knew about. This asks the registry directly, by owner FINGERPRINT — which outlives the
+  // account id precisely so the question can still be asked after erasure.
+  //
+  // It holds whatever caused an omission. If the manifest was narrowed by a stale read, by a bug in
+  // a future refactor, or by a fixture that built a state the product cannot, an identity link the
+  // deletion never erased is still an identity link this count finds.
+  const linkResidue = await canonicalIdentityLinkResidue(accountId);
+  if (linkResidue !== null && linkResidue > 0) residue.push("canonical_identity_links");
+
+  // And the reachability question a login actually asks, for every subject the manifest froze. A
+  // registry row erased while its lookup object survived would pass the count above and still leave
+  // a route in; this is the check that refuses to call that clean.
+  for (const digest of manifest.recentSubjectFingerprints) {
+    if (await resolveCanonicalIdentityOwner("line_subject", digest)) {
+      residue.push("line_identity_resolvable");
+      break;
+    }
   }
 
   // Sessions are confirmed by KEY, from the manifest.
@@ -429,7 +549,19 @@ export async function verifyIdentityErasure(
 export async function deletePrimaryIdentity(
   context: AccountDeletionContext,
   manifest: DeletionTargetManifest,
+  accountId?: string,
 ): Promise<void> {
   assertAccountWriteContext(context);
   await deleteSharedIdentityObject(manifest.primaryAccountKey);
+
+  // The canonical links go LAST, after every object they describe.
+  //
+  // Order, again, for the same reason as everywhere else in this file: a link outliving its object
+  // is a registry that over-reports, which a resumed erasure simply re-deletes; an object outliving
+  // its link is a key nothing names, which is how the orphan happened. Erasing the link first would
+  // manufacture exactly that state at every crash point between the two.
+  //
+  // Content-free by construction — the CHECK constraint on the table refuses a tombstone that still
+  // carries an owner or a digest, so this cannot half-erase.
+  if (accountId) await eraseCanonicalIdentityLinks(accountId);
 }

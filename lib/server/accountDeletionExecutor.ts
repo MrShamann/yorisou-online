@@ -193,8 +193,37 @@ export async function drainMutationGate(claim: ExecutorClaim): Promise<{
 /** The bounded, immutable record of what this account owns. Frozen before the crossing. */
 export type DeletionTargetManifest = {
   primaryAccountKey: string;
+  /**
+   * The lookup keys the ACCOUNT RECORD showed at freeze time.
+   *
+   * Kept with their original meaning because a manifest frozen before the canonical identity-link
+   * registry existed must stay readable by the executor that resumes it. They are no longer the
+   * authority on which lookups exist — `identityLookupKeys` is.
+   */
   emailLookupKey: string | null;
   lineLookupKey: string | null;
+  /**
+   * Every lookup key this account can be reached by: the UNION of what the account record showed and
+   * what the strongly consistent identity-link registry holds.
+   *
+   * The union direction is the safety property. The record is an object read, and that read can be
+   * served stale for tens of seconds; a union can therefore only ever WIDEN the destructive scope.
+   * Deleting an already-absent key is success, so a manifest that is too wide costs a request, while
+   * one that is too narrow is a live login route to an erased person — which is precisely what a
+   * narrowed manifest left behind on 2026-07-31.
+   *
+   * Optional because a manifest frozen before this field existed has none; readers fall back to the
+   * two singular keys above.
+   */
+  identityLookupKeys?: string[];
+  /**
+   * How many active identity links the registry held at freeze time, or null when the registry was
+   * not deployed.
+   *
+   * `0` and `null` are different facts — "this account owned no identities" versus "nobody asked" —
+   * and an operator reading a frozen manifest has to be able to tell them apart.
+   */
+  canonicalIdentityLinkCount?: number | null;
   sessionIds: string[];
   passwordResetHashes: string[];
   consultationIds: string[];
