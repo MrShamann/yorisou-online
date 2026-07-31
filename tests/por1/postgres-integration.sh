@@ -37,7 +37,8 @@ for f in 202607300003_por1_account_deletion_lifecycle \
          202607310003_por1_identity_provisioning_saga \
          202607310004_por1_canonical_identity_links \
          202607310005_por1_identity_link_same_owner_race \
-         202607310006_por1_identity_link_sync_is_additive; do
+         202607310006_por1_identity_link_sync_is_additive \
+         202607310007_por1_deletion_open_same_owner_race; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
 # Idempotence: re-applying the new migrations must succeed without error.
@@ -53,6 +54,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migra
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310004_por1_canonical_identity_links.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310005_por1_identity_link_same_owner_race.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310006_por1_identity_link_sync_is_additive.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310007_por1_deletion_open_same_owner_race.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -1255,6 +1257,59 @@ for bad in "[{\"kind\":\"email\",\"digest\":\"someone@example.com\"}]" \
   fi
 done
 echo "  ok: raw address, raw LINE id and unknown kind all refused"
+
+
+echo "── scenario 54: two concurrent OPENS of one deletion job, LATCHED ───────"
+# Found by RUNNING the hosted property: the second executor was answered 500 while the first
+# deletion was succeeding, and the acceptance asserts an adversary must be ANSWERED, not faulted.
+#
+# `yorisou_account_deletion_open` selected by owner and inserted when it found none. `select ... for
+# update` cannot lock a row that does not exist, so two concurrent confirms for one person both saw
+# nothing — each other's insert uncommitted and invisible — and both inserted. `owner_account_id` is
+# UNIQUE, so the loser died on a raw 23505.
+#
+# This is the FOURTH time this package has hit that exact shape. The index is the only thing that can
+# serialize a read-then-write, so the repair is to let it and then INTERPRET what it says.
+O_ID="acct-open-race"
+cat >&3 <<SQLA
+begin;
+select public.yorisou_account_deletion_open('$O_ID');
+SQLA
+sleep 0.5
+cat >&4 <<SQLB
+begin;
+select public.yorisou_account_deletion_open('$O_ID');
+SQLB
+for _ in $(seq 1 50); do
+  waiting="$(psql "$DATABASE_URL" -At -c "select count(*) from pg_stat_activity where wait_event_type='Lock' and query like '%yorisou_account_deletion_open%'")"
+  [[ "$waiting" -ge 1 ]] && break
+  sleep 0.2
+done
+if [[ "${waiting:-0}" -lt 1 ]]; then echo "FAIL: the deletion-open race never contended" >&2; exit 1; fi
+printf 'commit;\n' >&3
+sleep 1
+printf 'commit;\n' >&4
+sleep 1
+# The loser must have COMMITTED and returned the winner's job. An aborted transaction is the 500 this
+# scenario exists to forbid.
+n="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_account_deletion_jobs where owner_account_id='$O_ID'")"
+if [[ "$n" != "1" ]]; then echo "FAIL: $n deletion jobs after a concurrent open" >&2; exit 1; fi
+# Exactly ONE `requested` audit row: the loser must not record a second person asking to be deleted.
+a="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_account_deletion_audit u join public.yorisou_account_deletion_jobs j on j.id=u.job_id where j.owner_account_id='$O_ID' and u.stage='requested'")"
+if [[ "$a" != "1" ]]; then echo "FAIL: $a 'requested' audit rows after a concurrent open" >&2; exit 1; fi
+# A serial repeat is still idempotent and still returns the same job.
+id1="$(psql "$DATABASE_URL" -At -c "select public.yorisou_account_deletion_open('$O_ID')")"
+id2="$(psql "$DATABASE_URL" -At -c "select public.yorisou_account_deletion_open('$O_ID')")"
+if [[ "$id1" != "$id2" ]]; then echo "FAIL: open is not idempotent ($id1 vs $id2)" >&2; exit 1; fi
+# ...and the refusals are NOT skipped just because the race path exists. A legal hold must still
+# refuse, or the race branch would be a way around it.
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "update public.yorisou_account_deletion_jobs set state='legal_hold' where owner_account_id='$O_ID'"
+err="$(psql "$DATABASE_URL" -At -c "select public.yorisou_account_deletion_open('$O_ID')" 2>&1 || true)"
+if [[ "$err" != *"account_deletion_legal_hold"* ]]; then
+  echo "FAIL: a legal hold was not refused by open: $err" >&2; exit 1
+fi
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "delete from public.yorisou_account_deletion_jobs where owner_account_id='$O_ID'"
+echo "  ok: one job, one audit row, idempotent, and legal hold still refuses"
 
 printf '\\q\n' >&3; printf '\\q\n' >&4
 exec 3>&-; exec 4>&-
