@@ -408,7 +408,14 @@ function createId(prefix: string) {
   return `${prefix}_${Date.now()}_${randomBytes(6).toString("hex")}`;
 }
 
-function normalizeEmail(email: string) {
+/**
+ * The authority on what "the same email" means for an account.
+ *
+ * Exported because the provisioning saga is keyed by a digest of the normalized address, and that
+ * key has to agree with the `accounts/by-email` lookup exactly. A fourth private copy of this
+ * two-line function is how the key silently stops matching the account it is supposed to name.
+ */
+export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 

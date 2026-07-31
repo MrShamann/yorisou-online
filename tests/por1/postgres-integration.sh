@@ -33,7 +33,8 @@ for f in 202607300003_por1_account_deletion_lifecycle \
          202607300004_por1_account_mutation_fence \
          202607300005_por1_deletion_resume_engine \
          202607310001_por1_canonical_line_activity \
-         202607310002_por1_line_subject_erasure_barrier; do
+         202607310002_por1_line_subject_erasure_barrier \
+         202607310003_por1_identity_provisioning_saga; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
 # Idempotence: re-applying the new migrations must succeed without error.
@@ -45,6 +46,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migra
 # order, so this cannot happen in a real environment; it is asserted because a `create or replace`
 # pair across two files is exactly the shape where an out-of-order reapply goes unnoticed.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310002_por1_line_subject_erasure_barrier.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310003_por1_identity_provisioning_saga.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -764,6 +766,228 @@ if [[ "$inv_g" == *"Ugggg7777"* || "$inv_f" == *"Uffff6666"* ]]; then
   echo "FAIL: inventory leaked a raw LINE id" >&2; exit 1
 fi
 echo "  ok: subject state and counts frozen, digests only"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenarios 30-41 — THE IDENTITY PROVISIONING SAGA (202607310003).
+#
+# The route this replaces returned 200 over a failed canonical write. Making it honest turns that
+# into a 5xx on a multi-write operation, so the honest answer and the resumable one have to arrive
+# together — these prove the resumable half at the level where it is actually decided.
+# ─────────────────────────────────────────────────────────────────────────────
+PK1="$(printf 'por1-provisioning:v1:a@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+PK2="$(printf 'por1-provisioning:v1:b@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+TOK1="$(printf 'prov-token-1' | shasum -a 256 | cut -d' ' -f1)"
+TOK2="$(printf 'prov-token-2' | shasum -a 256 | cut -d' ' -f1)"
+FP_A="$(printf 'acct-prov-a' | shasum -a 256 | cut -d' ' -f1)"
+
+echo
+echo "── scenario 30: privilege posture and the closed vocabularies ───────────"
+for role in anon authenticated service_role; do
+  for priv in insert update delete; do
+    if [[ "$(psql "$DATABASE_URL" -At -c "select has_table_privilege('$role','public.yorisou_identity_provisioning_sagas','$priv')")" == "t" ]]; then
+      echo "FAIL: $role holds direct $priv on the provisioning saga" >&2; exit 1
+    fi
+  done
+done
+if [[ "$(psql "$DATABASE_URL" -At -c "select relrowsecurity and relforcerowsecurity from pg_class where relname='yorisou_identity_provisioning_sagas'")" != "t" ]]; then
+  echo "FAIL: RLS is not enabled AND forced on the provisioning saga" >&2; exit 1
+fi
+if [[ "$(psql "$DATABASE_URL" -At -c "select has_function_privilege('anon','public.yorisou_provisioning_open(text,text,integer)','execute')")" == "t" ]]; then
+  echo "FAIL: anon may open a provisioning saga" >&2; exit 1
+fi
+# The failure vocabulary is CLOSED — it must not become somewhere to put an exception message.
+if psql "$DATABASE_URL" -At -q -c "insert into public.yorisou_identity_provisioning_sagas(provisioning_key,failure_class) values ('$PK2','TypeError: cannot read property of undefined')" >/dev/null 2>&1; then
+  echo "FAIL: an arbitrary failure class was accepted" >&2; exit 1
+fi
+# And the key is a digest, not an address.
+if psql "$DATABASE_URL" -At -q -c "insert into public.yorisou_identity_provisioning_sagas(provisioning_key) values ('a@synthetic-preview.invalid')" >/dev/null 2>&1; then
+  echo "FAIL: a raw email was accepted as a provisioning key" >&2; exit 1
+fi
+echo "  ok: no direct writes, RLS forced, failure class closed, key is a digest"
+
+echo "── scenario 31: open is idempotent and the cursor starts at step one ────"
+o1="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK1','$TOK1',90)::text")"
+if [[ "$o1" != *'"outcome": "claimed"'* || "$o1" != *'"cursor": "account_creation"'* || "$o1" != *'"state": "requested"'* ]]; then
+  echo "FAIL: first open is wrong: $o1" >&2; exit 1
+fi
+rows="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$rows" != "1" ]]; then echo "FAIL: open created $rows rows" >&2; exit 1; fi
+echo "  ok: one saga, cursor account_creation, state requested"
+
+echo "── scenario 32: a second concurrent registration cannot drive the saga ──"
+o2="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK1','$TOK2',90)::text")"
+if [[ "$o2" != *'"outcome": "in_progress"'* || "$o2" != *'"claimed": false'* ]]; then
+  echo "FAIL: a second executor claimed a live saga: $o2" >&2; exit 1
+fi
+echo "  ok: refused, and told why"
+
+echo "── scenario 33: every transition validates six things ───────────────────"
+G1="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK1','$TOK1',90)->>'generation'")"
+# Wrong token.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK2',$G1,'account_creation','canonical_identity','acct-prov-a','$FP_A')" >/dev/null 2>&1; then
+  echo "FAIL: a foreign token advanced the saga" >&2; exit 1
+fi
+# Stale generation.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$((G1-1)),'account_creation','canonical_identity','acct-prov-a','$FP_A')" >/dev/null 2>&1; then
+  echo "FAIL: a stale generation advanced the saga" >&2; exit 1
+fi
+# Wrong expected cursor.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$G1,'session_binding','verification')" >/dev/null 2>&1; then
+  echo "FAIL: a mismatched expected cursor advanced the saga" >&2; exit 1
+fi
+# Skipping a stage.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$G1,'account_creation','session_binding','acct-prov-a','$FP_A')" >/dev/null 2>&1; then
+  echo "FAIL: the saga skipped a stage" >&2; exit 1
+fi
+# Going backwards.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$G1,'account_creation','account_creation')" >/dev/null 2>&1; then
+  echo "FAIL: the cursor moved backwards" >&2; exit 1
+fi
+still="$(psql "$DATABASE_URL" -At -c "select provisioning_cursor from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$still" != "account_creation" ]]; then echo "FAIL: a refused transition still moved the cursor to $still" >&2; exit 1; fi
+echo "  ok: token, generation, expected cursor, one-step-forward, no rewind"
+
+echo "── scenario 34: the account binding is written once and is then a fact ──"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$G1,'account_creation','canonical_identity','acct-prov-a','$FP_A')" >/dev/null
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$G1,'canonical_identity','session_binding','acct-prov-DIFFERENT')" >/dev/null 2>&1; then
+  echo "FAIL: the saga rebound itself to another account" >&2; exit 1
+fi
+bound="$(psql "$DATABASE_URL" -At -c "select account_id from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+st="$(psql "$DATABASE_URL" -At -c "select state from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$bound" != "acct-prov-a" ]]; then echo "FAIL: account binding is '$bound'" >&2; exit 1; fi
+if [[ "$st" != "account_created" ]]; then echo "FAIL: state is '$st', expected account_created" >&2; exit 1; fi
+echo "  ok: rebind refused, state derived from the cursor"
+
+echo "── scenario 35: a retryable failure PRESERVES the cursor ────────────────"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_record_failure('$PK1','$TOK1',$G1,'canonical_identity_failed','canonical_identity_failed',false)" >/dev/null
+after_fail="$(psql "$DATABASE_URL" -At -c "select provisioning_cursor||'/'||state from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$after_fail" != "canonical_identity/failed_retryable" ]]; then
+  echo "FAIL: a retryable failure left '$after_fail'" >&2; exit 1
+fi
+# ...and the retry RESUMES at that exact cursor rather than restarting.
+o3="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK1','$TOK2',90)::text")"
+if [[ "$o3" != *'"cursor": "canonical_identity"'* || "$o3" != *'"resumed": true'* ]]; then
+  echo "FAIL: the retry did not resume at the recorded cursor: $o3" >&2; exit 1
+fi
+if [[ "$o3" != *'"accountId": "acct-prov-a"'* ]]; then
+  echo "FAIL: the retry lost the account it had already created: $o3" >&2; exit 1
+fi
+echo "  ok: cursor preserved, claim released for the retry, no second account"
+
+echo "── scenario 36: the takeover invalidates the previous executor ──────────"
+G2="$(psql "$DATABASE_URL" -At -c "select executor_generation from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$G2" == "$G1" ]]; then echo "FAIL: the generation did not move on takeover" >&2; exit 1; fi
+# The OLD executor, still in flight, must not be able to advance anything.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$G1,'canonical_identity','session_binding')" >/dev/null 2>&1; then
+  echo "FAIL: an executor replayed a step after being taken over" >&2; exit 1
+fi
+echo "  ok: generation bumped, the superseded executor is refused"
+
+echo "── scenario 37: the full progression, and completion is a proven shape ──"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK2',$G2,'canonical_identity','session_binding')" >/dev/null
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK2',$G2,'session_binding','verification',null,null,'$(printf 'sess-prov-a' | shasum -a 256 | cut -d' ' -f1)')" >/dev/null
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK2',$G2,'verification','finalizing')" >/dev/null
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK2',$G2,'finalizing','completed')" >/dev/null
+final="$(psql "$DATABASE_URL" -At -c "select state||'/'||provisioning_cursor||'/'||coalesce(account_id,'-')||'/'||(completed_at is not null)::text from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$final" != "completed/completed/acct-prov-a/true" ]]; then echo "FAIL: completion shape is '$final'" >&2; exit 1; fi
+echo "  ok: requested -> account_created -> canonical_identity_created -> session_bound -> completed"
+
+echo "── scenario 38: a retry of a COMPLETED registration is not a second one ─"
+o4="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK1','$TOK1',90)::text")"
+if [[ "$o4" != *'"outcome": "completed"'* || "$o4" != *'"accountId": "acct-prov-a"'* ]]; then
+  echo "FAIL: reopening a completed saga returned $o4" >&2; exit 1
+fi
+count="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$count" != "1" ]]; then echo "FAIL: reopening created $count sagas" >&2; exit 1; fi
+# A late failure report from a lost attempt must not un-complete it.
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_record_failure('$PK1','$TOK1',$G2,'unclassified','late',false)" >/dev/null
+late_state="$(psql "$DATABASE_URL" -At -c "select state from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK1'")"
+if [[ "$late_state" != "completed" ]]; then echo "FAIL: a late failure un-completed the saga ($late_state)" >&2; exit 1; fi
+# And a completed saga cannot be advanced further.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_complete_step('$PK1','$TOK1',$G2,'completed','completed')" >/dev/null 2>&1; then
+  echo "FAIL: a completed saga accepted another step" >&2; exit 1
+fi
+echo "  ok: same saga, same account, terminal in both directions"
+
+echo "── scenario 39: two concurrent opens for one email, LATCHED ─────────────"
+# The property the object store could never give: two registrations for the same address decided
+# under a row lock rather than by whoever wrote last.
+PK3="$(printf 'por1-provisioning:v1:c@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+send_wait 3 "$WORK/out_a" prov_a "begin; select public.yorisou_provisioning_open('$PK3','$TOK1',90)->>'outcome';"
+send_async 4 prov_b "select public.yorisou_provisioning_open('$PK3','$TOK2',90)->>'outcome';"
+assert_blocked "yorisou_provisioning_open"
+send_wait 3 "$WORK/out_a" prov_a_commit "commit;"
+await_latch "$WORK/out_b" prov_b
+if ! grep -qx "in_progress" "$WORK/out_b"; then
+  echo "FAIL: two concurrent opens both claimed one saga" >&2; tail -5 "$WORK/out_b" >&2; exit 1
+fi
+sagas="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK3'")"
+if [[ "$sagas" != "1" ]]; then echo "FAIL: one email produced $sagas sagas" >&2; exit 1; fi
+echo "  ok: the second blocked on the row lock, then was refused; one saga"
+
+echo "── scenario 40: a terminal failure stays terminal ───────────────────────"
+G3="$(psql "$DATABASE_URL" -At -c "select executor_generation from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK3'")"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_record_failure('$PK3','$TOK1',$G3,'email_already_registered','email_already_registered',true)" >/dev/null
+o5="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK3','$TOK2',90)::text")"
+if [[ "$o5" != *'"outcome": "failed_terminal"'* || "$o5" != *'"failureClass": "email_already_registered"'* ]]; then
+  echo "FAIL: a terminal saga was reopened: $o5" >&2; exit 1
+fi
+echo "  ok: reopened as terminal, with its bounded class"
+
+echo "── scenario 41: deletion purges provisioning, and the probe counts it ───"
+before="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_residue('acct-prov-a',null)")"
+if [[ "$before" != "1" ]]; then echo "FAIL: residue probe reports $before before deletion" >&2; exit 1; fi
+# By fingerprint, which is all the manifest keeps after the crossing.
+by_fp="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_residue(null,'$FP_A')")"
+if [[ "$by_fp" != "1" ]]; then echo "FAIL: residue by fingerprint reports $by_fp" >&2; exit 1; fi
+purged="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_purge_for_owner(null,'$FP_A')")"
+after="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_residue('acct-prov-a','$FP_A')")"
+again="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_purge_for_owner(null,'$FP_A')")"
+if [[ "$purged" != "1" || "$after" != "0" || "$again" != "0" ]]; then
+  echo "FAIL: purge=$purged residue=$after repeat=$again" >&2; exit 1
+fi
+# Purging RELEASES THE EMAIL: the same address can be registered again.
+reopened="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK1','$TOK1',90)->>'outcome'")"
+if [[ "$reopened" != "claimed" ]]; then
+  echo "FAIL: a deleted person's email stayed unregisterable ($reopened)" >&2; exit 1
+fi
+# A purge with no target is refused rather than deleting everything.
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_purge_for_owner(null,null)" >/dev/null 2>&1; then
+  echo "FAIL: an untargeted purge was accepted" >&2; exit 1
+fi
+# The operator inventory is counts only — no key, no account id, no digest.
+inv="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_partial_inventory()::text")"
+if [[ "$inv" == *"acct-prov"* || "$inv" == *"$PK1"* || "$inv" == *"$FP_A"* ]]; then
+  echo "FAIL: the operator inventory leaks an identifier: $inv" >&2; exit 1
+fi
+if [[ "$inv" != *'"count"'* ]]; then echo "FAIL: the operator inventory reports no counts: $inv" >&2; exit 1; fi
+echo "  ok: purged by fingerprint, idempotent, email released, inventory content-free"
+
+echo "── scenario 42: a saga that created NOTHING is discarded, not recorded ──"
+# Attempting to register an address that is already taken opens a saga and creates nothing. Leaving
+# that row behind would poison the address twice over: permanently unregisterable (a purge keyed by
+# account id or fingerprint cannot find a row that has neither), and read by the access gate as an
+# incomplete registration — so anyone could lock any account out of login by attempting to register
+# its email. It is deleted instead.
+PK4="$(printf 'por1-provisioning:v1:taken@synthetic-preview.invalid' | shasum -a 256 | cut -d' ' -f1)"
+G4="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK4','$TOK1',90)->>'generation'")"
+gone="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_abandon('$PK4','$TOK1',$G4)")"
+left="$(psql "$DATABASE_URL" -At -c "select count(*) from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK4'")"
+if [[ "$gone" != "t" || "$left" != "0" ]]; then echo "FAIL: abandon=$gone rows=$left" >&2; exit 1; fi
+# ...and the address is immediately registerable again.
+reo="$(psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_open('$PK4','$TOK2',90)->>'outcome'")"
+if [[ "$reo" != "claimed" ]]; then echo "FAIL: an abandoned address stayed blocked ($reo)" >&2; exit 1; fi
+
+# But a saga that DOES own an account must never be abandoned — deleting the only record of what it
+# created turns a resumable partial account into an invisible one.
+G5="$(psql "$DATABASE_URL" -At -c "select executor_generation from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK4'")"
+psql "$DATABASE_URL" -At -q -c "select public.yorisou_provisioning_complete_step('$PK4','$TOK2',$G5,'account_creation','canonical_identity','acct-prov-owned','$(printf 'acct-prov-owned' | shasum -a 256 | cut -d' ' -f1)')" >/dev/null
+if psql "$DATABASE_URL" -At -c "select public.yorisou_provisioning_abandon('$PK4','$TOK2',$G5)" >/dev/null 2>&1; then
+  echo "FAIL: a saga owning an account was abandoned" >&2; exit 1
+fi
+survived="$(psql "$DATABASE_URL" -At -c "select account_id from public.yorisou_identity_provisioning_sagas where provisioning_key='$PK4'")"
+if [[ "$survived" != "acct-prov-owned" ]]; then echo "FAIL: the owning saga did not survive ($survived)" >&2; exit 1; fi
+echo "  ok: unbound saga discarded and the address released; a bound one is refused"
 
 printf '\\q\n' >&3; printf '\\q\n' >&4
 exec 3>&-; exec 4>&-

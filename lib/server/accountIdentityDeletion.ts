@@ -41,6 +41,11 @@ import type {
 } from "./yorisouData";
 import { SHARED_STORE_PREFIX } from "./identityKeyScope";
 import { canonicalLineActivityInventory, canonicalLineActivityResidue } from "./canonicalLineActivity";
+import { provisioningResidue } from "./identityProvisioning";
+import {
+  isIdentityProvisioningSchemaReady,
+  resolveProvisioningMode,
+} from "./identityProvisioningRollout";
 import {
   isCanonicalLineActivitySchemaReady,
   resolveLineActivityMode,
@@ -384,6 +389,20 @@ export async function verifyIdentityErasure(
     (await canonicalLineActivityResidue(manifest.recentSubjectFingerprints)) > 0
   ) {
     residue.push("canonical_line_activity");
+  }
+
+  // Partial provisioning state. A half-finished registration holds the account id and a digest of
+  // the email, so leaving one behind leaves an account-linked record of a person who asked to be
+  // forgotten — and keeps their email address permanently unregisterable, because the saga is keyed
+  // by it. Counted, not inferred from an absent read.
+  if (
+    resolveProvisioningMode({ schemaReady: isIdentityProvisioningSchemaReady() }) === "durable_saga" &&
+    (await provisioningResidue({
+      accountId,
+      ownerFingerprint: createHash("sha256").update(accountId).digest("hex"),
+    })) > 0
+  ) {
+    residue.push("identity_provisioning");
   }
 
   // The foundation mirror, checked through its own repositories rather than by key: the store keeps

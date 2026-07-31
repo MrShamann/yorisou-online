@@ -78,6 +78,18 @@ const GUARDED = [
     ],
   },
   {
+    symbol: "provisionRegistration",
+    why:
+      "Creates an account and its canonical identity. ONE route may drive it; a second caller is a " +
+      "second registration path, and the swallow this replaced lived in exactly such a path.",
+    allow: ["lib/server/identityProvisioning.ts", "app/api/auth/register/route.ts"],
+  },
+  {
+    symbol: "purgeProvisioningForOwner",
+    why: "Deletes provisioning state, which releases an email address. Governed deletion only.",
+    allow: ["lib/server/identityProvisioning.ts", "lib/server/accountDeletionOrchestrator.ts"],
+  },
+  {
     symbol: "eraseCanonicalLineSubjects",
     why:
       "Terminally erases a LINE subject. It is the deletion path's operation and nothing else's; a " +

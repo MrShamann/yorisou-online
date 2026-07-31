@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { evaluateProvisioningAccessGate } from "@/lib/server/identityProvisioning";
 import { findAccountByEmail, verifyPassword } from "@/lib/server/yorisouData";
 import { identityFoundationService } from "@/lib/server/foundation/identityService";
 import { evaluateAuthenticationLock } from "@/lib/server/accountDeletionOrchestrator";
@@ -103,6 +104,22 @@ export async function POST(request: Request) {
         return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=${lock.reason}`), { status: 303 });
       }
       return NextResponse.json({ success: false, error: lock.reason }, { status: 403 });
+    }
+
+    // POR-1 WS-C — an INCOMPLETE registration may not authenticate. A saga that created the legacy
+    // account record and then failed at canonical identity leaves an account with a password and an
+    // email lookup but no UserProfile and no email AuthIdentity: able to log in, invisible to the
+    // identity graph. That is the same broken principal the false-success 200 used to create,
+    // reached a different way, so it is refused here as well as prevented there.
+    const provisioningGate = await evaluateProvisioningAccessGate({
+      email: account.email,
+      accountId: account.id,
+    });
+    if (!provisioningGate.allowed) {
+      if (isDocumentRequest) {
+        return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=${provisioningGate.reason}`), { status: 303 });
+      }
+      return NextResponse.json({ success: false, error: provisioningGate.reason }, { status: 403 });
     }
 
     await restoreAccountFromCookie(account);

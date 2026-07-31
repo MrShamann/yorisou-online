@@ -37,7 +37,14 @@ import {
   revokeAccountSessions,
   verifyIdentityErasure,
 } from "./accountIdentityDeletion";
+import { createHash } from "node:crypto";
+
 import { rpc } from "./assessmentAttemptStore";
+import { purgeProvisioningForOwner } from "./identityProvisioning";
+import {
+  isIdentityProvisioningSchemaReady,
+  resolveProvisioningMode,
+} from "./identityProvisioningRollout";
 import { pruneRecentLineWebhookSubjects, setAccountDeletionLock } from "./yorisouData";
 import { finalizeAccountMutationGate, withAccountDeletionContext } from "./accountMutationLease";
 import {
@@ -308,6 +315,16 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
 
         case "database_erasure": {
           await rpc("yorisou_account_deletion_erase_database", { p_owner_account_id: accountId });
+          // Partial provisioning state is account-linked and lives outside the declarative plan,
+          // which is fixed in an applied migration. Removing it also RELEASES THE EMAIL: the saga is
+          // keyed by a digest of the address, so one left behind would make that address permanently
+          // unregisterable by the person who just asked to be forgotten.
+          if (resolveProvisioningMode({ schemaReady: isIdentityProvisioningSchemaReady() }) === "durable_saga") {
+            await purgeProvisioningForOwner({
+              accountId,
+              ownerFingerprint: createHash("sha256").update(accountId).digest("hex"),
+            });
+          }
           break;
         }
 
