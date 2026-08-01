@@ -183,7 +183,15 @@ const IDENTITY_LINK_RPCS = [
   "yorisou_identity_links_erase",
   "yorisou_identity_links_retire",
 ];
-const IDENTITY_LINK_RPC_ALLOW = ["lib/server/canonicalIdentityLinks.ts"];
+const IDENTITY_LINK_RPC_ALLOW = [
+  "lib/server/canonicalIdentityLinks.ts",
+  // The promotion contract test. It names the RPC to assert that the PROMOTED BODY still carries
+  // the additive-synchronisation invariant — it reads a checked-in JSON contract and never opens a
+  // database connection, so it cannot be the second writer this rule exists to prevent. Listed by
+  // exact path rather than by exempting `__tests__`, because the next test added to that directory
+  // would otherwise be exempt without anyone deciding so.
+  "lib/server/__tests__/por1PromotionContract.test.ts",
+];
 
 // RPC names that were superseded by a STRONGER operation and must not be reachable from application
 // code again. A symbol allowlist cannot express this: the danger is not who calls it but that it is

@@ -38,45 +38,428 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
 
 ```json
 [
-  {"version":"202607100001","name":"agent_runtime_phase1","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607100001_agent_runtime_phase1.sql","sha256":"13bcf13a6388c7cc62d24f82cda573366a64af88d752cd2b296afdba75361b66","remote_history":"tracked","repair_cohort":false},
-  {"version":"202607100002","name":"c02_private_results","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607100002_c02_private_results.sql","sha256":"06eec860cd65826a03fa152110cefe42adea4e65ba1620dd93bf60038adc62a3","remote_history":"tracked","repair_cohort":false},
-  {"version":"202607100003","name":"shared_test_engine","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607100003_shared_test_engine.sql","sha256":"6b85f4d7cb44f457f8ab2f3a5e491db8e25eabba5a051186719da2352984c73d","remote_history":"tracked","repair_cohort":false},
-  {"version":"202607100004","name":"line_oauth_state_replay_protection","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607100004_line_oauth_state_replay_protection.sql","sha256":"41e9ffd26b894702e6266244bd582860935a776e12d4ba59358a5c2aa10ff88c","remote_history":"tracked","repair_cohort":false},
-  {"version":"202607110001","name":"private_ai_state_and_harness","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607110001_private_ai_state_and_harness.sql","sha256":"2ebbdf2175a54eee59a7f9ff6ed47af4d9c2f98df9db0c5460516c12f521d18f","remote_history":"tracked","repair_cohort":false},
-  {"version":"202607110002","name":"experience_cards","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607110002_experience_cards.sql","sha256":"67037e127a799a3760f0337fe52e97ca71c02ab1f745ea0148b7bffbff533855","remote_history":"tracked","repair_cohort":false},
-  {"version":"202607110003","name":"recommendation_graph","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607110003_recommendation_graph.sql","sha256":"4d2e67dd981c668fda52458a1d396cb34b65e99eadbbd07a7ab2db60f827f5d1","remote_history":"tracked","repair_cohort":false},
-  {"version":"202607120001","name":"relationship_fatigue_results","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607120001_relationship_fatigue_results.sql","sha256":"ed0737e4c0246862f2d77220742128a853c118c6b93e1a763b12fd3a37a27e93","remote_history":"untracked","repair_cohort":true},
-  {"version":"202607160001","name":"imairo_public_result_snapshot","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607160001_imairo_public_result_snapshot.sql","sha256":"e2976dfcdd7f91271848f573b7de7f3d590b7b1b5650ddd8a7c158e9ee948f78","remote_history":"untracked","repair_cohort":true},
-  {"version":"202607160002","name":"candidate_intake_foundation","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607160002_candidate_intake_foundation.sql","sha256":"70ab2c28d77aaefac4d1c9563b95786c32b422e6167f35702a4793680eec3d7c","remote_history":"untracked","repair_cohort":true},
-  {"version":"202607200005","name":"dci1_daily_state_records","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607200005_dci1_daily_state_records.sql","sha256":"fb130d49e2417f04377ec055a942a0602716bd112dddcda9a2162976593908b0","remote_history":"untracked","repair_cohort":true},
-  {"version":"202607210001","name":"yv1_values_assessments","scope":"PRODUCTION_LINEAGE","path":"supabase/migrations/202607210001_yv1_values_assessments.sql","sha256":"1f76f01e050a9c19eb156a45c556f943ae9f9b76e1fc3fa9658723b8051f004f","remote_history":"untracked","repair_cohort":true},
-  {"version":"202607200001","name":"cpv1_foundation_prereqs","scope":"LOCAL_ONLY","path":"supabase/local-only-migrations/cpv1/202607200001_cpv1_foundation_prereqs.sql","sha256":"2b0203b4d306ef2d5765fbc0908aaafd78c6f7c69b1e7b5b570f1fb9804e3ded","remote_history":"n/a","repair_cohort":false},
-  {"version":"202607200002","name":"cpv1_understanding_history_consent","scope":"LOCAL_ONLY","path":"supabase/local-only-migrations/cpv1/202607200002_cpv1_understanding_history_consent.sql","sha256":"3f140c5909ae68cf0795000122e7b4c9193b381d0fe1005cc8a2f43b6eead76e","remote_history":"n/a","repair_cohort":false},
-  {"version":"202607200003","name":"cpv1r1_relations_permissions_datarights","scope":"LOCAL_ONLY","path":"supabase/local-only-migrations/cpv1/202607200003_cpv1r1_relations_permissions_datarights.sql","sha256":"88a6c4518f2bce08912c8ede728a61241e1348960974f4a5ce5eef1f0f963ad5","remote_history":"n/a","repair_cohort":false},
-  {"version":"202607270001","name":"ux2_assessment_attempt_result_response","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607270001_ux2_assessment_attempt_result_response.sql","sha256":"92634873c5a272b1acd955f7b375cc6247a38ddc0e087a128fdcf97c57c8fc63","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607270002","name":"ux2_assessment_persistence_rollback","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607270002_ux2_assessment_persistence_rollback.sql","sha256":"a4a7a1d799d9bed297796b153057e93e7770cc638a20f6d65a6e46bbc615aebe","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607270003","name":"ux2_lifecycle_semantics_and_erasure","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607270003_ux2_lifecycle_semantics_and_erasure.sql","sha256":"e6905524aa284bbe4d4a9f9c2f2f75bb1c7ba18ae6ae1c844c0bc20e2c64dcc7","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607270004","name":"ux2_true_tombstone_and_abandon","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607270004_ux2_true_tombstone_and_abandon.sql","sha256":"5997e0d6df2725431ee82a30fa0c97274bf541cfba81cd30198b7bc0549a93c7","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607280001","name":"ux2_persisted_envelope_guard","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607280001_ux2_persisted_envelope_guard.sql","sha256":"dd4331146915fbe1afc20b8f6cc20f65d2a4a3c25f0db4290e97cfc56a906c6e","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607280002","name":"ux2_interpretation_idempotency","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607280002_ux2_interpretation_idempotency.sql","sha256":"8b77e263ce78a2d0a776f15213a5edce9b93be0bb9d52e7ac72185275824f157","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607280003","name":"ux2_idempotency_hardening","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607280003_ux2_idempotency_hardening.sql","sha256":"495c7781bdf668271d1f260826aeb0958cdf82ccca834ff005a7e243b460415c","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607280004","name":"ux2_recommendation_persistence","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607280004_ux2_recommendation_persistence.sql","sha256":"f4a796f6233f3290ae021e21439a6a31633933104991dd130cdd47231bea92ae","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607280005","name":"ux2_response_ordering_determinism","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607280005_ux2_response_ordering_determinism.sql","sha256":"3a8378258a9abfa1c1980c05d7d3e43163f5540e33520e552223856c8e200ac3","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607280006","name":"ux2_action_result_binding","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607280006_ux2_action_result_binding.sql","sha256":"f104d5f2fbf4fc1e6a2f97437a14d62f91da4ec23246acf065ee290b880856a4","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607280007","name":"ux2_action_conflict_and_ordering","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607280007_ux2_action_conflict_and_ordering.sql","sha256":"9154bf3ed559ee86f31ebdf9aad3e02c29641e0120298fe16e96aced85bd58e1","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607300001","name":"ux2_expired_credential_mint","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607300001_ux2_expired_credential_mint.sql","sha256":"822c2092edf8027cfc121feace6005241f9106bee11ac2c5330361d696883edc","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607300002","name":"por1_canonical_recommendation_namespace","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607300002_por1_canonical_recommendation_namespace.sql","sha256":"a687b28a694728324b6f3d1b4d88a3c89104c33f4f11f9a7c8fa79957e18fc02","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607300003","name":"por1_account_deletion_lifecycle","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607300003_por1_account_deletion_lifecycle.sql","sha256":"a4e045703c685c94ff969c6e5e65180f74d87c25259a2c10f540155a4004619d","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607300004","name":"por1_account_mutation_fence","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607300004_por1_account_mutation_fence.sql","sha256":"93d2292de23d541df966568b34a102cb9d57eb857d0d1ffcfe76e74ab184f90d","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607300005","name":"por1_deletion_resume_engine","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607300005_por1_deletion_resume_engine.sql","sha256":"92a822cc865a0bc426773c1338a37df051137507c9acbf28b4d7c4699439d6e7","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310001","name":"por1_canonical_line_activity","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310001_por1_canonical_line_activity.sql","sha256":"2bb7e7cf483423735b2ff6c8507446b8dbdf193204fb309d5ea10d12a2ee1720","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310002","name":"por1_line_subject_erasure_barrier","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310002_por1_line_subject_erasure_barrier.sql","sha256":"f37cd6b0bb5edcf4d758de76bad3ef9138e18d5f1dac29492cf01a5a63dbde1b","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310003","name":"por1_identity_provisioning_saga","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310003_por1_identity_provisioning_saga.sql","sha256":"78a5f8957ddbd63c9aa668ae2cbe2db049c73e7ecb1429d2369eb9ed86106c56","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310004","name":"por1_canonical_identity_links","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310004_por1_canonical_identity_links.sql","sha256":"fe1028fea2c3fe5866d907a0f6e4b2cf52aae169de33e746dd5f3cb25498f7e5","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310005","name":"por1_identity_link_same_owner_race","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310005_por1_identity_link_same_owner_race.sql","sha256":"140c2f72f615ed5ca52fb47e6aa04bb0e5507e0e74a04ce6fb95dc8119481439","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310006","name":"por1_identity_link_sync_is_additive","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310006_por1_identity_link_sync_is_additive.sql","sha256":"4f4eda6a3cf721abc81dbf31b8366cc1c788c11d98370e7b729758cea9b326de","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310007","name":"por1_deletion_open_same_owner_race","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310007_por1_deletion_open_same_owner_race.sql","sha256":"c5eea15e04855218892079436279d54117363886cfa8570bd5a80d61847a0e19","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607310008","name":"por1_terminal_deidentification","scope":"PREVIEW_ONLY","path":"supabase/preview-only-migrations/202607310008_por1_terminal_deidentification.sql","sha256":"21d3419e900f6cbb12f84ed9d925b9e5165722e3a5ccfefed7b4d4751c2d00eb","remote_history":"preview_only","repair_cohort":false},
-  {"version":"202607200004","name":"cpv1r1_datarights_reason_codes","scope":"LOCAL_ONLY","path":"supabase/local-only-migrations/cpv1/202607200004_cpv1r1_datarights_reason_codes.sql","sha256":"77144c259d326b7c0b9da31f0900e0c61bd56b4a11d3554d4d788ce756d15734","remote_history":"n/a","repair_cohort":false}
+  {
+    "version": "202607100001",
+    "name": "agent_runtime_phase1",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607100001_agent_runtime_phase1.sql",
+    "sha256": "13bcf13a6388c7cc62d24f82cda573366a64af88d752cd2b296afdba75361b66",
+    "remote_history": "tracked",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607100002",
+    "name": "c02_private_results",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607100002_c02_private_results.sql",
+    "sha256": "06eec860cd65826a03fa152110cefe42adea4e65ba1620dd93bf60038adc62a3",
+    "remote_history": "tracked",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607100003",
+    "name": "shared_test_engine",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607100003_shared_test_engine.sql",
+    "sha256": "6b85f4d7cb44f457f8ab2f3a5e491db8e25eabba5a051186719da2352984c73d",
+    "remote_history": "tracked",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607100004",
+    "name": "line_oauth_state_replay_protection",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607100004_line_oauth_state_replay_protection.sql",
+    "sha256": "41e9ffd26b894702e6266244bd582860935a776e12d4ba59358a5c2aa10ff88c",
+    "remote_history": "tracked",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607110001",
+    "name": "private_ai_state_and_harness",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607110001_private_ai_state_and_harness.sql",
+    "sha256": "2ebbdf2175a54eee59a7f9ff6ed47af4d9c2f98df9db0c5460516c12f521d18f",
+    "remote_history": "tracked",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607110002",
+    "name": "experience_cards",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607110002_experience_cards.sql",
+    "sha256": "67037e127a799a3760f0337fe52e97ca71c02ab1f745ea0148b7bffbff533855",
+    "remote_history": "tracked",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607110003",
+    "name": "recommendation_graph",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607110003_recommendation_graph.sql",
+    "sha256": "4d2e67dd981c668fda52458a1d396cb34b65e99eadbbd07a7ab2db60f827f5d1",
+    "remote_history": "tracked",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607120001",
+    "name": "relationship_fatigue_results",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607120001_relationship_fatigue_results.sql",
+    "sha256": "ed0737e4c0246862f2d77220742128a853c118c6b93e1a763b12fd3a37a27e93",
+    "remote_history": "untracked",
+    "repair_cohort": true
+  },
+  {
+    "version": "202607160001",
+    "name": "imairo_public_result_snapshot",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607160001_imairo_public_result_snapshot.sql",
+    "sha256": "e2976dfcdd7f91271848f573b7de7f3d590b7b1b5650ddd8a7c158e9ee948f78",
+    "remote_history": "untracked",
+    "repair_cohort": true
+  },
+  {
+    "version": "202607160002",
+    "name": "candidate_intake_foundation",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607160002_candidate_intake_foundation.sql",
+    "sha256": "70ab2c28d77aaefac4d1c9563b95786c32b422e6167f35702a4793680eec3d7c",
+    "remote_history": "untracked",
+    "repair_cohort": true
+  },
+  {
+    "version": "202607200001",
+    "name": "cpv1_foundation_prereqs",
+    "scope": "LOCAL_ONLY",
+    "path": "supabase/local-only-migrations/cpv1/202607200001_cpv1_foundation_prereqs.sql",
+    "sha256": "2b0203b4d306ef2d5765fbc0908aaafd78c6f7c69b1e7b5b570f1fb9804e3ded",
+    "remote_history": "n/a",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607200002",
+    "name": "cpv1_understanding_history_consent",
+    "scope": "LOCAL_ONLY",
+    "path": "supabase/local-only-migrations/cpv1/202607200002_cpv1_understanding_history_consent.sql",
+    "sha256": "3f140c5909ae68cf0795000122e7b4c9193b381d0fe1005cc8a2f43b6eead76e",
+    "remote_history": "n/a",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607200003",
+    "name": "cpv1r1_relations_permissions_datarights",
+    "scope": "LOCAL_ONLY",
+    "path": "supabase/local-only-migrations/cpv1/202607200003_cpv1r1_relations_permissions_datarights.sql",
+    "sha256": "88a6c4518f2bce08912c8ede728a61241e1348960974f4a5ce5eef1f0f963ad5",
+    "remote_history": "n/a",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607200004",
+    "name": "cpv1r1_datarights_reason_codes",
+    "scope": "LOCAL_ONLY",
+    "path": "supabase/local-only-migrations/cpv1/202607200004_cpv1r1_datarights_reason_codes.sql",
+    "sha256": "77144c259d326b7c0b9da31f0900e0c61bd56b4a11d3554d4d788ce756d15734",
+    "remote_history": "n/a",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607200005",
+    "name": "dci1_daily_state_records",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607200005_dci1_daily_state_records.sql",
+    "sha256": "fb130d49e2417f04377ec055a942a0602716bd112dddcda9a2162976593908b0",
+    "remote_history": "untracked",
+    "repair_cohort": true
+  },
+  {
+    "version": "202607210001",
+    "name": "yv1_values_assessments",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202607210001_yv1_values_assessments.sql",
+    "sha256": "1f76f01e050a9c19eb156a45c556f943ae9f9b76e1fc3fa9658723b8051f004f",
+    "remote_history": "untracked",
+    "repair_cohort": true
+  },
+  {
+    "version": "202607270001",
+    "name": "ux2_assessment_attempt_result_response",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607270001_ux2_assessment_attempt_result_response.sql",
+    "sha256": "92634873c5a272b1acd955f7b375cc6247a38ddc0e087a128fdcf97c57c8fc63",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607270002",
+    "name": "ux2_assessment_persistence_rollback",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607270002_ux2_assessment_persistence_rollback.sql",
+    "sha256": "a4a7a1d799d9bed297796b153057e93e7770cc638a20f6d65a6e46bbc615aebe",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607270003",
+    "name": "ux2_lifecycle_semantics_and_erasure",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607270003_ux2_lifecycle_semantics_and_erasure.sql",
+    "sha256": "e6905524aa284bbe4d4a9f9c2f2f75bb1c7ba18ae6ae1c844c0bc20e2c64dcc7",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607270004",
+    "name": "ux2_true_tombstone_and_abandon",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607270004_ux2_true_tombstone_and_abandon.sql",
+    "sha256": "5997e0d6df2725431ee82a30fa0c97274bf541cfba81cd30198b7bc0549a93c7",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607280001",
+    "name": "ux2_persisted_envelope_guard",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607280001_ux2_persisted_envelope_guard.sql",
+    "sha256": "dd4331146915fbe1afc20b8f6cc20f65d2a4a3c25f0db4290e97cfc56a906c6e",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607280002",
+    "name": "ux2_interpretation_idempotency",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607280002_ux2_interpretation_idempotency.sql",
+    "sha256": "8b77e263ce78a2d0a776f15213a5edce9b93be0bb9d52e7ac72185275824f157",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607280003",
+    "name": "ux2_idempotency_hardening",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607280003_ux2_idempotency_hardening.sql",
+    "sha256": "495c7781bdf668271d1f260826aeb0958cdf82ccca834ff005a7e243b460415c",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607280004",
+    "name": "ux2_recommendation_persistence",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607280004_ux2_recommendation_persistence.sql",
+    "sha256": "f4a796f6233f3290ae021e21439a6a31633933104991dd130cdd47231bea92ae",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607280005",
+    "name": "ux2_response_ordering_determinism",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607280005_ux2_response_ordering_determinism.sql",
+    "sha256": "3a8378258a9abfa1c1980c05d7d3e43163f5540e33520e552223856c8e200ac3",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607280006",
+    "name": "ux2_action_result_binding",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607280006_ux2_action_result_binding.sql",
+    "sha256": "f104d5f2fbf4fc1e6a2f97437a14d62f91da4ec23246acf065ee290b880856a4",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607280007",
+    "name": "ux2_action_conflict_and_ordering",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607280007_ux2_action_conflict_and_ordering.sql",
+    "sha256": "9154bf3ed559ee86f31ebdf9aad3e02c29641e0120298fe16e96aced85bd58e1",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607300001",
+    "name": "ux2_expired_credential_mint",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607300001_ux2_expired_credential_mint.sql",
+    "sha256": "822c2092edf8027cfc121feace6005241f9106bee11ac2c5330361d696883edc",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607300002",
+    "name": "por1_canonical_recommendation_namespace",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607300002_por1_canonical_recommendation_namespace.sql",
+    "sha256": "a687b28a694728324b6f3d1b4d88a3c89104c33f4f11f9a7c8fa79957e18fc02",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607300003",
+    "name": "por1_account_deletion_lifecycle",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607300003_por1_account_deletion_lifecycle.sql",
+    "sha256": "a4e045703c685c94ff969c6e5e65180f74d87c25259a2c10f540155a4004619d",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607300004",
+    "name": "por1_account_mutation_fence",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607300004_por1_account_mutation_fence.sql",
+    "sha256": "93d2292de23d541df966568b34a102cb9d57eb857d0d1ffcfe76e74ab184f90d",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607300005",
+    "name": "por1_deletion_resume_engine",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607300005_por1_deletion_resume_engine.sql",
+    "sha256": "92a822cc865a0bc426773c1338a37df051137507c9acbf28b4d7c4699439d6e7",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310001",
+    "name": "por1_canonical_line_activity",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310001_por1_canonical_line_activity.sql",
+    "sha256": "2bb7e7cf483423735b2ff6c8507446b8dbdf193204fb309d5ea10d12a2ee1720",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310002",
+    "name": "por1_line_subject_erasure_barrier",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310002_por1_line_subject_erasure_barrier.sql",
+    "sha256": "f37cd6b0bb5edcf4d758de76bad3ef9138e18d5f1dac29492cf01a5a63dbde1b",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310003",
+    "name": "por1_identity_provisioning_saga",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310003_por1_identity_provisioning_saga.sql",
+    "sha256": "78a5f8957ddbd63c9aa668ae2cbe2db049c73e7ecb1429d2369eb9ed86106c56",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310004",
+    "name": "por1_canonical_identity_links",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310004_por1_canonical_identity_links.sql",
+    "sha256": "fe1028fea2c3fe5866d907a0f6e4b2cf52aae169de33e746dd5f3cb25498f7e5",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310005",
+    "name": "por1_identity_link_same_owner_race",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310005_por1_identity_link_same_owner_race.sql",
+    "sha256": "140c2f72f615ed5ca52fb47e6aa04bb0e5507e0e74a04ce6fb95dc8119481439",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310006",
+    "name": "por1_identity_link_sync_is_additive",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310006_por1_identity_link_sync_is_additive.sql",
+    "sha256": "4f4eda6a3cf721abc81dbf31b8366cc1c788c11d98370e7b729758cea9b326de",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310007",
+    "name": "por1_deletion_open_same_owner_race",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310007_por1_deletion_open_same_owner_race.sql",
+    "sha256": "c5eea15e04855218892079436279d54117363886cfa8570bd5a80d61847a0e19",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202607310008",
+    "name": "por1_terminal_deidentification",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202607310008_por1_terminal_deidentification.sql",
+    "sha256": "21d3419e900f6cbb12f84ed9d925b9e5165722e3a5ccfefed7b4d4751c2d00eb",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
+    "version": "202608010001",
+    "name": "por1_function_execute_privilege_repair",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202608010001_por1_function_execute_privilege_repair.sql",
+    "sha256": "70c0b198d553093cbafbc132c26224863497b7da766cec9ba1531b6e3b13813d"
+  },
+  {
+    "version": "202608010101",
+    "name": "por1_canonical_assessment_and_interpretation",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010101_por1_canonical_assessment_and_interpretation.sql",
+    "sha256": "d3563c87c07c85f96a37ed9d7fd7d3dd746e838475ec768ea1fa3b668ba92dff"
+  },
+  {
+    "version": "202608010102",
+    "name": "por1_canonical_recommendations",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010102_por1_canonical_recommendations.sql",
+    "sha256": "b8605c1555d038b7d12bfb3c4ad8d9518bf1d1fedb82b889189336c428b644ea"
+  },
+  {
+    "version": "202608010103",
+    "name": "por1_canonical_identity_and_provisioning",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010103_por1_canonical_identity_and_provisioning.sql",
+    "sha256": "dbce52441f4e187cebcb3eba76891f59ff860a53347ce5f29692dbfc78bb8ba8"
+  },
+  {
+    "version": "202608010104",
+    "name": "por1_canonical_line_activity",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010104_por1_canonical_line_activity.sql",
+    "sha256": "bef695d817adc24d4b385888b8448a738942b4d45a9062ca37a840a8b406cf88"
+  },
+  {
+    "version": "202608010105",
+    "name": "por1_account_mutation_fence",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010105_por1_account_mutation_fence.sql",
+    "sha256": "3c3c91e184b53714edc84dfcf8b58d68579f5d888a0e7953829eae8c4df5d51f"
+  },
+  {
+    "version": "202608010106",
+    "name": "por1_account_deletion_lifecycle",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010106_por1_account_deletion_lifecycle.sql",
+    "sha256": "7a4c663ef84515cbdc1998e6365c8e6e4b46a93a021d4de4174402d966285640"
+  },
+  {
+    "version": "202608010107",
+    "name": "por1_cross_domain_functions",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010107_por1_cross_domain_functions.sql",
+    "sha256": "63ec403a7b7ed0bc167c57fa97f720f05ece5282870ec43678b9ac6bb012973d"
+  },
+  {
+    "version": "202608010108",
+    "name": "por1_promotion_contract_assertion",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010108_por1_promotion_contract_assertion.sql",
+    "sha256": "03c0f287bcbbbc807ef379330250027fdfe4f9b9d3d1f8a42a6fac9abdc4174a"
+  }
 ]
 ```

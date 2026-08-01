@@ -2243,12 +2243,148 @@ Coverage was already complete when the guard was written — so this is not a re
 a NEW Production owner-linked table from being invisible: absent from Preview, skipped by the guard
 clause, and named by no failing test.
 
-## ⛔ REMAINING — M1 authoring onward
+## M1 — PROMOTION COMPILER AND STATIC PRODUCTION MIGRATION SET (complete)
+
+### It is 75 functions, not 74
+
+The 74 recorded earlier was taken before `202607310008` added
+`yorisou_account_deletion_terminal_deidentify`. The delta, measured against both live catalogues:
 
 ```
-author  15 tables + 74 functions + indexes + RLS + FORCE RLS + grants as PRODUCTION_LINEAGE
-        migrations, extracted from the FINAL Preview catalogue (pg_get_functiondef), grouped by
-        dependency / lock / rollback boundary, plus the Production overlay families above
-then    M2 fresh rehearsals A/B + populated-legacy · M3 compatibility/activation/journey
-        M4 erasure/preservation/failure/rollback · M5 dossier + PR body
+15 tables · 75 functions · 2 sequences · 2 triggers · 0 policies
+11 functions common to both projects, ZERO with a drifted body
+no extension is required that Production lacks
+```
+
+The two sequences (`yorisou_interpretation_responses_seq`, `yorisou_recommendation_actions_seq`) and
+the two append-only triggers on `yorisou_interpretation_responses` were absent from every earlier
+count. Nothing in pg_depend links a free-standing counter to the table that advances it, so a
+tables-and-functions diff reports a complete contract while every `nextval` fails at runtime.
+
+### THE DEFECT THIS PHASE FOUND — seven SECURITY DEFINER functions were executable by `anon`
+
+`has_function_privilege('anon', oid, 'EXECUTE')` was TRUE in Preview for:
+
+```
+yorisou_identity_links_erase(text)                      ← erases an owner's canonical links
+yorisou_identity_links_sync(text, text, jsonb)          ← writes them
+yorisou_identity_links_retire(text, text, text)         ← retires one
+yorisou_identity_link_owner(text, text)                 ← link digest  → owner account id
+yorisou_identity_links_for_owner(text)                  ← owner account id → links
+yorisou_identity_links_residue(text)                    ← probes by owner fingerprint
+yorisou_account_deletion_terminal_deidentify(text,text) ← forces terminal de-identification
+```
+
+PostgREST publishes public-schema functions as `POST /rest/v1/rpc/<name>` and the anon key is public
+by construction, so each was one unauthenticated call away from erasing, writing or disclosing
+canonical identity for any account id a caller could name.
+
+**Two independent root causes, which is why one fix would not have been enough.**
+
+1. `202607310004` contains NO function grant statement at all — only a table grant block.
+   `CREATE FUNCTION` grants EXECUTE to PUBLIC by default, so the six identity-link functions simply
+   kept it. The migration is not wrong about anything it says; it is silent, and silence defaults to
+   open.
+2. `202607310008` revoked from `anon` and from `authenticated` and granted `service_role` — which
+   reads exactly like the correct block and is not. **Revoking from a role does not remove a
+   privilege the role holds through PUBLIC.** Both revokes succeeded, changed nothing, and reported
+   success.
+
+Repaired in Preview by `202608010001` (PREVIEW_ONLY, applied and verified: 0 SECURITY DEFINER
+functions anon-executable). Production never had these functions, so Production was never exposed —
+and the promotion set is built so it cannot inherit the hole.
+
+`yorisou_line_subject_lock` keeps EXECUTE for nobody but its owner, deliberately: 202607310002
+states it is a row-lock building block, not an entry point. Recorded so a future blanket grant
+cannot quietly undo it.
+
+`yorisou_dci_block_mutation` / `yorisou_values_block_mutation` remain PUBLIC-executable and were NOT
+touched: they already exist in Production with this exact shape, so they are legacy lineage, and
+their entire body raises. Recorded, not bundled into a POR-1 change.
+
+### The compiler
+
+```
+scripts/por1/extract-catalogue.mjs      catalogue → sanitized contract (Management API or local psql)
+scripts/por1/normalize-sql.mjs          associative-boolean normalization (13 unit tests)
+scripts/por1/promotion-plan.mjs         the ONLY hand-authored input: grouping + reviewed decisions
+scripts/por1/compile-promotion.mjs      contract → static PRODUCTION_LINEAGE SQL
+scripts/por1/verify-promoted-contract.mjs  live catalogue vs contract
+scripts/por1/rehearse-promotion.sh      destroy → 12 baseline → 8 promotion → shape
+```
+
+Derivation is from the FINAL catalogue via `pg_get_functiondef`, never from the 24-migration Preview
+history — `create or replace` means only the last definition is live, so promoting the history would
+promote bodies that were already replaced, including the ones replaced BECAUSE they were wrong.
+
+**Ordering is not a preference; PostgreSQL enforces it.** A plpgsql body is compiled at CREATE time
+and every relation it names is resolved then, so a function cannot precede the tables it reads —
+this is not a plpgsql-is-lazy situation, and assuming otherwise cost one failed apply. Four
+functions genuinely cross domains and are deferred by fixpoint to a cross-domain migration:
+
+```
+yorisou_account_deletion_erase_database · yorisou_account_mutation_begin
+yorisou_account_mutation_gate_finalize  · yorisou_assessment_result_erase
+```
+
+A CHECK constraint calling a promoted function (`yorisou_jsonb_object_length`) forced the opposite
+rule inside a group: functions the table DDL needs are emitted BEFORE the tables.
+
+### The emitted set
+
+```
+202608010101  P1  assessment attempts / results / interpretation   3 tables · 11 fn · 1 seq · 2 trg
+202608010102  P2  canonical recommendations                        3 tables ·  3 fn · 1 seq
+202608010103  P3  canonical identity links + provisioning saga     2 tables · 17 fn
+202608010104  P4  canonical LINE subjects / events                 2 tables · 12 fn
+202608010105  P5  account mutation gates and leases                2 tables ·  3 fn
+202608010106  P6  deletion jobs / manifests / audit                3 tables · 25 fn
+202608010107  P7  cross-domain functions                                    ·  4 fn
+202608010108  P8  whole-contract assertion
+```
+
+All eight registered PRODUCTION_LINEAGE. Additive only — no drop, no alter, no backfill, no write to
+an existing Production table — so with the capability controls unset the schema is inert and the
+incident response is to disable the capability and roll back the application, not to unwind schema.
+
+### Verified, not asserted
+
+```
+compiler determinism        recompile → drift 0
+Rehearsal A (PG 17.10)      12 baseline + 8 promotion applied from a DESTROYED database
+Rehearsal B (PG 17.10)      independently destroyed and recreated
+catalogue hash A == B       91b67372b04becc4…  IDENTICAL
+contract verification       15 tables · 75 functions · 2 sequences · 2 triggers · 0 failures
+anon-executable DEFINER     0
+RLS enabled AND forced      15 / 15
+```
+
+The rehearsal runs on **PostgreSQL 17**, matching Production and Preview (both 17.6). The local
+default was 16.14; a constraint compared unequal, and rather than normalize the difference away it
+was checked — the same difference appeared on 17, so it was associativity, not the version. Both
+were fixed: the rehearsal now refuses any major other than 17, and the normalizer flattens ONLY
+parentheses whose removal associativity guarantees. Its negative controls are the point: `(A OR B)
+AND C` and `A OR (B AND C)` must stay unequal.
+
+### What is proven, and what is only named
+
+`test:por1-promotion-contract` (16 tests) and `test:por1-sql-normalizer` (13 tests) run in CI with no
+database. They prove the promoted contract's shape, privileges, `search_path`, RLS, additivity, and
+that the promoted bodies still carry the corrections their superseded versions were replaced for.
+
+They do NOT prove erasure. The Production-only families are still named by the plan and exercised by
+nothing. That remains M4's job and nothing static substitutes for it.
+
+## ⛔ REMAINING — M2 populated rehearsal onward
+
+
+
+```
+M2  four-principal fixtures · populated-legacy migration (0 unintended change to A and B)
+M3  old-app compatibility at main c8d8a8ad in a temporary worktree · new-app controls-off
+    readiness matrix · capability dependency matrix
+M4  full POR-1 journey · security matrix · ALL-FAMILY erasure including the Production-only
+    families above · no-recreation · terminal de-identification · legacy preservation
+M5  failure injection · rollback classification · kill switches · observability · release runbook
+M6  PR #126 body replacement · final dossier · governance closeout
 ```

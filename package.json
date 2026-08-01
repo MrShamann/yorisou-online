@@ -76,7 +76,13 @@
     "cleanup:por1-preview": "node --conditions=react-server --import tsx scripts/por1-preview-synthetic-cleanup.ts",
     "test:por1-job-recovery": "node --import tsx --test lib/server/__tests__/por1DeletionJobRecovery.test.ts",
     "remediate:por1-preview-orphans": "node --conditions=react-server --import tsx scripts/por1-preview-orphan-remediator.ts",
-    "test:por1-production-coverage": "node --import tsx --test lib/server/__tests__/por1ProductionDeletionCoverage.test.ts"
+    "test:por1-production-coverage": "node --import tsx --test lib/server/__tests__/por1ProductionDeletionCoverage.test.ts",
+    "por1:catalogue-extract": "node scripts/por1/extract-catalogue.mjs",
+    "por1:promotion-compile": "node scripts/por1/compile-promotion.mjs",
+    "por1:promotion-verify": "node scripts/por1/verify-promoted-contract.mjs",
+    "por1:rehearse": "bash scripts/por1/rehearse-promotion.sh",
+    "test:por1-promotion-contract": "node --import tsx --test lib/server/__tests__/por1PromotionContract.test.ts",
+    "test:por1-sql-normalizer": "node --test scripts/por1/__tests__/normalize-sql.test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
