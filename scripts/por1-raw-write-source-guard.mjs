@@ -132,7 +132,23 @@ const GUARDED = [
     why:
       "Terminally tombstones an account's identity links. The deletion path's operation and nothing " +
       "else's; a second caller would be a way to cut a living person off from their own login.",
-    allow: ["lib/server/canonicalIdentityLinks.ts", "lib/server/accountIdentityDeletion.ts"],
+    allow: [
+      "lib/server/canonicalIdentityLinks.ts",
+      "lib/server/accountIdentityDeletion.ts",
+      // POR-1 WS-G-C — the Preview-only orphan remediator, authorized by the Founder decision that
+      // selected terminal de-identification.
+      //
+      // The stated risk is cutting a LIVING person off from their own login. This caller cannot: it
+      // acts ONLY on a DANGLING owner reference — one whose account object no longer exists — and it
+      // refuses to run at all unless every Preview account classifies as synthetic, so there is no
+      // living person on the other end of the link by construction. It is also Preview-guarded by
+      // project ref, never imported by an application route, and takes no identifier from its caller.
+      //
+      // It exists because these links are unreachable through the deletion path: the account and the
+      // frozen manifest are both gone, so `executeDeletion` correctly refuses, and the link would
+      // otherwise stay ACTIVE forever.
+      "scripts/por1-preview-orphan-remediator.ts",
+    ],
   },
   {
     symbol: "withLegacyBootstrapContext",
