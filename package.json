@@ -37,7 +37,7 @@
     "test:yorisou-values": "node --import tsx lib/yorisou/methods/yorisou-values/__tests__/yorisouValues.test.ts",
     "test:yorisou-values:db": "bash tests/yorisou-values/postgres-integration.sh",
     "generate:yorisou-values": "node scripts/generate-yorisou-values-runtime.mjs",
-    "test:shared-store": "node --import tsx lib/server/__tests__/sharedObjectStore.test.ts",
+    "test:shared-store": "node --conditions=react-server --import tsx lib/server/__tests__/sharedObjectStore.test.ts",
     "test:production-pilot": "node --import tsx lib/cpv1/__tests__/productionPilot.test.ts",
     "test:isolation": "node --test tests/verify-local-supabase-target.test.mjs",
     "test:ux2-envelope": "node --import tsx lib/server/__tests__/persistedDimensionSummary.test.ts",
