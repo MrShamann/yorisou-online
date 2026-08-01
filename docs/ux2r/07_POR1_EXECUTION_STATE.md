@@ -1911,3 +1911,87 @@ CPV1-era LINE webhook flags.
 
 23 PREVIEW_ONLY migrations, ~6,300 lines. Production's lineage contains NONE of them, so every one
 requires promotion authoring. WS-I2..WS-I6, WS-J and WS-K are untouched.
+
+---
+
+## WS-G8 — the cleanup model is repaired; WS-G still does not pass
+
+HEAD `58aaac6` → (this commit). Production untouched.
+
+### The model defect, and the live negative control that proves it fixed
+
+Cleanup derived every candidate from surviving ACCOUNTS. That holds until `identity_erasure` removes
+one — after which a failing job leaves satellites with nothing left to enumerate them.
+
+The durable job outlives the account BY DESIGN and the manifest is FROZEN before the crossing, and
+`executeDeletion` already resumes from the cursor against that manifest without re-deriving targets.
+So no new machinery was needed: the job simply had to become a candidate source in its own right.
+
+Proven against live Preview data, in one dry run:
+
+```
+syntheticCandidates : 0     <- the OLD model's entire candidate source
+ownerNamedJobs      : 13
+jobDerivedCandidates: 12    <- the NEW model
+byJobClass: CANCELLED_PRE_IRREVERSIBLE 1 · FAILED_RETRYABLE_PRE_IRREVERSIBLE 6 ·
+            FAILED_RETRYABLE_POST_IRREVERSIBLE 6
+```
+
+`classifyRecoverableDeletionJob` is pure and exhaustive over 11 classes. Four outcomes, because a
+job under a live claim is genuinely none of clean/resumable/escalated — contending with it is the
+second-executor defect this package already fixed, so it is `revisit`ed instead. A test asserts no
+classification can be silently dropped.
+
+Automation refuses, by design: `FAILED_TERMINAL`, `CANCELLED_INVALID_AFTER_IRREVERSIBLE`,
+`UNCLASSIFIED_CORRUPT`, and above all **past the crossing with no frozen manifest** — the manifest is
+the only record of what was owned, and guessing from surviving objects is precisely the mistake that
+produced these orphans.
+
+### Recovery result
+
+```
+failed_retryable jobs      12 -> 0
+completed jobs            173 -> 179   (6 orphaned deletions carried to completion)
+jobs naming an owner       13 -> 7
+accounts / email lookups / password resets    0 (unchanged)
+```
+
+Six `FAILED_RETRYABLE_PRE_IRREVERSIBLE` jobs became `FAILED_TERMINAL`: the saga refused them with
+`account_deletion_manifest_missing` — no account AND no frozen manifest, so it cannot prove what it
+erased and correctly will not call that success. They are pre-irreversible, so they destroyed
+nothing; their accounts were erased by earlier passes before these jobs froze a manifest.
+
+### ⛔ WS-G STILL DOES NOT PASS
+
+```
+REMAINING   6 FAILED_TERMINAL jobs naming an owner   (needsHuman by design)
+            1 CANCELLED_PRE_IRREVERSIBLE job naming an owner
+            1 ACTIVE canonical identity link
+            2 accounts/by-line-user · 1 UserProfile · 2 AuthIdentities
+            24 sessions (21 previously classified anonymous; owner-linkage needs re-checking)
+
+CORRECT BY DESIGN   184 erased identity-link tombstones · 179 de-identified completed jobs
+```
+
+### ⛔ EXACT NEXT ACTION — and the decision it requires
+
+The 6 terminal jobs cannot be resumed by the saga: both the account and the manifest are gone, which
+is exactly the state `executeDeletion` is built to refuse. They never erased anything, and what they
+still do is NAME A PERSON in the database.
+
+That is a genuine design decision, not a mechanical fix, and it was deliberately NOT taken under
+context pressure because it touches the deletion state machine:
+
+```
+OPTION A  a governed terminal de-identification — drop owner_account_id, keep owner_fingerprint,
+          exactly as finalization already does. Destroys no data, removes a name, and needs a new
+          legal transition because `advance` refuses forward motion once a cursor is set.
+OPTION B  leave them for a human, as the classifier currently insists.
+```
+
+Option A is the better privacy outcome and is probably right, but it must be authored as a
+forward-only migration with its own proof, not improvised.
+
+Then: re-check the 24 sessions for owner linkage, resolve the 1 ACTIVE link and the LINE/foundation
+orphans against their owning job, re-run to convergence, and only then run the idempotency pass and
+the second authoritative sweep. WS-I..WS-K remain untouched.
