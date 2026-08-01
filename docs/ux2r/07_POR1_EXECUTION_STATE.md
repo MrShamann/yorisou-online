@@ -1995,3 +1995,107 @@ forward-only migration with its own proof, not improvised.
 Then: re-check the 24 sessions for owner linkage, resolve the 1 ACTIVE link and the LINE/foundation
 orphans against their owning job, re-run to convergence, and only then run the idempotency pass and
 the second authoritative sweep. WS-I..WS-K remain untouched.
+
+---
+
+## WS-G CLOSED — terminal de-identification (Option A) and Preview orphan remediation
+
+Founder decision: **Option A**. A failed deletion may stop naming the person, and never claims it
+succeeded.
+
+### The transition — `202607310008`, PREVIEW_ONLY, forward-only
+
+```
+FAILED_TERMINAL_DEIDENTIFIED  is NOT completed · is NOT a successful erasure · is NOT cancelled
+```
+
+State stays `failed_terminal`; `owner_account_id` and the executor claim are dropped;
+`owner_fingerprint`, `last_error_code`, `terminal_deidentified_at` and a bounded reason are kept.
+
+`yorisou_account_deletion_jobs_owner_shape` was **extended by exactly one case**, not relaxed — a
+`failed_terminal` job that has NOT been de-identified must still name its owner, because that id is
+the join key the whole recovery model depends on. A second constraint,
+`..._terminal_deid_shape`, re-expresses every eligibility rule as a table invariant, so even a direct
+UPDATE cannot forge this state for a job that crossed the irreversible boundary.
+
+Eligibility is re-evaluated INSIDE the transaction under a row lock. Five independent refusals: wrong
+state, past the crossing, cursor contradicting the crossing, frozen manifest present (it can still be
+RESUMED, and resuming is strictly better), live executor claim, unrecognised reason.
+
+**Harness scenario 55**, 55/55 passing, includes the negative control: before the transition existed
+the constraint itself refused to null the owner, and a forged post-crossing de-identification is
+still refused by the table.
+
+### Preview orphan remediator — operator-only, Preview-only
+
+Satellites became unreachable once their accounts and manifests were gone. The remediator derives
+candidates from **dangling owner references** and removes them through the SAME narrow adapters the
+product's own erasure uses (`eraseCanonicalIdentityLinks`, `deleteFoundationRecord`,
+`deleteSharedIdentityObject`). It accepts no id, key, prefix, table or email.
+
+Its safety argument is re-checked at runtime rather than assumed: it **refuses to run at all** if any
+unclassified Preview account exists, because "every account here was synthetic, so a dangling owner
+was synthetic" is the only thing making the removals safe.
+
+### Sequencing correction, recorded rather than glossed
+
+The controller warned not to de-identify before remediating satellites, since it can destroy the only
+join key. **I de-identified first.** It was recoverable only because the satellites carry their own
+owner references (`owner_account_id` on the link row, `legacyAccountId` on foundation records,
+`accountId` in the LINE lookup), so enumeration ran from the satellites instead of the jobs. The
+order in §9 is the safer one and should be kept.
+
+### The seventh job
+
+Classified authoritatively as `cancelled`, pre-irreversible, cursor null — a legitimate cancellation.
+But its account was gone, so it could not be a *live* cancellation. Driven through the governed path
+(reopen → advance → execute, which refused with `manifest_missing` and landed terminal) and then
+de-identified. No hand-editing.
+
+### WS-G PASS — independent authoritative sweep, not the tools' own output
+
+```
+synthetic account objects        0     ACTIVE identity links            0
+synthetic email lookups          0     jobs retaining owner identity    0
+synthetic LINE lookups           0     failed_retryable jobs            0
+synthetic password resets        0     owner-linked sessions            0
+foundation UserProfiles          0
+foundation AuthIdentities        0
+
+RETAINED, CORRECT BY DESIGN
+  185 erased identity-link tombstones (content-free)
+  179 de-identified completed deletion audits
+    7 terminal-deidentified failure audits  <- new, and deliberately NOT "completed"
+   21 anonymous unowned sessions
+    1 provisioning saga, account_id de-identified — content-free, names nobody
+```
+
+Both idempotency runs are clean: the cleanup reports "nothing to clean" against **both** sources
+(`surviving_accounts`, `durable_owner_named_jobs`) and the remediator finds 0 dangling orphans.
+
+### Hosted evidence preserved — proven, not assumed
+
+```
+HOSTED_RUNTIME_AFFECTING = 0
+
+.github/workflows/…            GOVERNANCE_ONLY
+docs/…                         DOCS_ONLY
+lib/server/__tests__/…         TEST_ONLY
+lib/server/deletionJobRecovery.ts        OPERATOR_ONLY  (0 importers outside scripts/tests)
+lib/server/previewSyntheticClassifier.ts OPERATOR_ONLY  (0 importers outside scripts/tests)
+package.json                   GOVERNANCE_ONLY (scripts only, no dependency change)
+scripts/…                      OPERATOR_ONLY
+supabase/MIGRATION_SCOPE_MANIFEST.md     GOVERNANCE_ONLY
+202607310008_…sql              DATABASE_OPERATOR_ONLY — 0 app-runtime callers of the new RPC,
+                               defines exactly ONE new function and redefines none, and the
+                               owner_shape predicate is unchanged for every job the runtime
+                               writes (terminal_deidentified_at is always null there)
+tests/por1/postgres-integration.sh       TEST_ONLY
+```
+
+```
+accepted_application_sha    03075711269e0f31e58d79b25a2ca690f4047589
+last_accepted_candidate_sha 03075711269e0f31e58d79b25a2ca690f4047589
+```
+
+WS-I2..WS-I12, WS-J and WS-K remain.

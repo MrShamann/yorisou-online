@@ -144,6 +144,29 @@ export function classifyRecoverableDeletionJob(job: DeletionJobFacts): DeletionJ
  * "resuming a deletion for an account that does not exist" sees that it is the expected shape rather
  * than a contradiction.
  */
+/**
+ * May this terminally-failed job legally stop naming the person?
+ *
+ * Mirrors the database transition's eligibility exactly, so an operator tool can decide what to
+ * ATTEMPT without the two rules drifting apart. The database still re-evaluates every clause under a
+ * row lock — this predicate selects candidates, it does not authorise anything.
+ *
+ * Fails closed on every uncertainty. A terminal failure that got far enough to destroy something
+ * keeps its identity, because there the job is the only record of what was erased and for whom.
+ */
+export function canTerminallyDeidentifyFailedDeletion(job: DeletionJobFacts): boolean {
+  return (
+    job.state === "failed_terminal" &&
+    job.ownerAccountId !== null &&
+    !job.irreversible &&
+    !job.hasManifest &&
+    !job.executorHeld &&
+    // A cursor at or past the crossing contradicts `irreversible`, and a contradiction is never
+    // resolved in favour of deleting identity.
+    !accountAbsenceIsExpected(job.cursor)
+  );
+}
+
 export function accountAbsenceIsExpected(cursor: string | null): boolean {
   return cursor !== null && POST_ACCOUNT_ERASURE_STAGES.has(cursor);
 }

@@ -22,9 +22,11 @@ import { listAccounts } from "../lib/server/yorisouData";
 import { partitionPreviewIdentities } from "../lib/server/previewSyntheticClassifier";
 import {
   accountAbsenceIsExpected,
+  canTerminallyDeidentifyFailedDeletion,
   classifyRecoverableDeletionJob,
   type DeletionJobFacts,
 } from "../lib/server/deletionJobRecovery";
+import { rpc } from "../lib/server/assessmentAttemptStore";
 
 const PREVIEW_PROJECT_REF = "nbltsbonsnbpfptihomc";
 
@@ -166,8 +168,36 @@ async function main() {
   for (const d of jobDispositions) byJobClass[d.classification] = (byJobClass[d.classification] ?? 0) + 1;
 
   const syntheticIds = new Set(synthetic.map((a) => a.id));
-  const resumableJobs = jobDispositions.filter((d) => d.resumable && !syntheticIds.has(d.job.ownerAccountId));
-  const escalate = jobDispositions.filter((d) => d.needsHuman);
+  // A CANCELLED job whose account no longer exists cannot be a live cancellation.
+  //
+  // Cancelling is a person changing their mind, and the record naming them is correct while they
+  // still exist. Once the account is gone the record is stale — so it is driven through the governed
+  // path (reopen, execute, which refuses with manifest_missing and lands terminal, then
+  // de-identify) rather than either being left naming someone or edited by hand.
+  const survivingAccountIds = new Set(accounts.map((a) => a.id));
+  const staleCancelled = jobDispositions.filter(
+    (d) =>
+      d.classification === "CANCELLED_PRE_IRREVERSIBLE" &&
+      d.job.ownerAccountId !== null &&
+      !survivingAccountIds.has(d.job.ownerAccountId),
+  );
+
+  const resumableJobs = [
+    ...jobDispositions.filter((d) => d.resumable && !syntheticIds.has(d.job.ownerAccountId)),
+    ...staleCancelled,
+  ];
+
+  // FOUNDER-SELECTED RESOLUTION (Option A). A terminal failure that never crossed and has no manifest
+  // cannot be resumed — `executeDeletion` refuses it, correctly, because it cannot prove what it
+  // would erase. It also must not keep naming the person forever. So it stops naming them, WITHOUT
+  // ever claiming the deletion succeeded.
+  const deidentifiable = jobDispositions.filter((d) => canTerminallyDeidentifyFailedDeletion(d.job));
+  const deidentifiableIds = new Set(deidentifiable.map((d) => d.job.ownerAccountId));
+
+  // An escalation only remains one if no governed path now covers it.
+  const escalate = jobDispositions.filter(
+    (d) => d.needsHuman && !deidentifiableIds.has(d.job.ownerAccountId),
+  );
   const revisit = jobDispositions.filter((d) => d.revisit);
 
   // Bounded and non-PII: counts, families, and truncated ids. Never an email.
@@ -186,6 +216,8 @@ async function main() {
       ownerNamedJobs: ownerNamedJobs.length,
       byJobClass,
       jobDerivedCandidates: resumableJobs.length,
+      terminallyDeidentifiable: deidentifiable.length,
+      staleCancelled: staleCancelled.length,
       needsHuman: escalate.length,
       awaitingLiveClaim: revisit.length,
     }),
@@ -205,7 +237,7 @@ async function main() {
     return;
   }
 
-  if (synthetic.length === 0 && resumableJobs.length === 0) {
+  if (synthetic.length === 0 && resumableJobs.length === 0 && deidentifiable.length === 0) {
     // "Nothing to clean" is only meaningful now that BOTH sources are empty. It used to be reported
     // while a dozen half-finished deletions sat in the database, because only one source was asked.
     console.log(
@@ -290,6 +322,12 @@ async function main() {
     const label = `${d.job.ownerAccountId.slice(0, 8)}…`;
     const expected = accountAbsenceIsExpected(d.job.cursor) ? " (account absent by design)" : "";
     try {
+      // `openDeletionJob` reopens a cancelled job (resetting it to `requested`); for every other
+      // resumable class it is a no-op that returns the existing job.
+      if (d.classification === "CANCELLED_PRE_IRREVERSIBLE") {
+        await openDeletionJob(d.job.ownerAccountId);
+        await advanceToIdentityVerified(d.job.ownerAccountId);
+      }
       const result = await executeDeletion(d.job.ownerAccountId);
       if (result.outcome === "completed") {
         resumed += 1;
@@ -305,10 +343,40 @@ async function main() {
     }
   }
 
+  // ── TERMINAL DE-IDENTIFICATION ─────────────────────────────────────────────
+  //
+  // Runs AFTER resumption, deliberately: a job that could still be resumed must be, and only what
+  // genuinely cannot proceed is minimised. The database re-evaluates every eligibility clause under
+  // a row lock, so this loop selects candidates rather than authorising anything.
+  let deidentified = 0;
+  for (const d of deidentifiable) {
+    await sleep(PACE_MS);
+    const label = `${d.job.ownerAccountId!.slice(0, 8)}…`;
+    try {
+      const result = await rpc<{ deidentified?: boolean; outcome?: string }>(
+        "yorisou_account_deletion_terminal_deidentify",
+        { p_owner_account_id: d.job.ownerAccountId, p_reason: "manifest_missing_pre_irreversible" },
+      );
+      const row = Array.isArray(result) ? result[0] : result;
+      if (row?.deidentified === true || row?.outcome === "absent_or_already_deidentified") {
+        deidentified += 1;
+        console.log(`  de-identified ${label} — ${d.classification} (deletion NOT claimed successful)`);
+      } else {
+        unresolved.push({ account: label, outcome: "deidentify_refused", code: row?.outcome });
+        console.error(`  UNRESOLVED ${label} — de-identification refused (${row?.outcome})`);
+      }
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "unknown";
+      unresolved.push({ account: label, outcome: "deidentify_threw", code });
+      console.error(`  THREW ${label} — ${code}`);
+    }
+  }
+
   console.log(
     JSON.stringify({
       completed,
       resumed,
+      deidentified,
       unresolved: unresolved.length,
       needsHuman: escalate.length,
       awaitingLiveClaim: revisit.length,

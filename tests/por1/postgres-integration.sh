@@ -38,7 +38,8 @@ for f in 202607300003_por1_account_deletion_lifecycle \
          202607310004_por1_canonical_identity_links \
          202607310005_por1_identity_link_same_owner_race \
          202607310006_por1_identity_link_sync_is_additive \
-         202607310007_por1_deletion_open_same_owner_race; do
+         202607310007_por1_deletion_open_same_owner_race \
+         202607310008_por1_terminal_deidentification; do
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/$f.sql"
 done
 # Idempotence: re-applying the new migrations must succeed without error.
@@ -55,6 +56,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migra
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310005_por1_identity_link_same_owner_race.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310006_por1_identity_link_sync_is_additive.sql"
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310007_por1_deletion_open_same_owner_race.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/preview-only-migrations/202607310008_por1_terminal_deidentification.sql"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Single-session assertions.
@@ -1310,6 +1312,113 @@ if [[ "$err" != *"account_deletion_legal_hold"* ]]; then
 fi
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -c "delete from public.yorisou_account_deletion_jobs where owner_account_id='$O_ID'"
 echo "  ok: one job, one audit row, idempotent, and legal hold still refuses"
+
+
+echo "── scenario 55: terminal de-identification — a failure stops naming the person ──"
+# Six Preview jobs sat `failed_terminal` with `account_deletion_manifest_missing`: the account was
+# already gone and no manifest had been frozen, so executeDeletion cannot prove what it would erase
+# and correctly refuses. That refusal is not weakened here. What WAS wrong is that the failure record
+# kept `owner_account_id` forever — a person asked to be deleted, it failed, and the failure named
+# them indefinitely. The only two options the state machine allowed were to keep the name or to
+# pretend the deletion completed.
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -At <<'SQL'
+-- An ELIGIBLE job: terminally failed, no manifest, never crossed.
+insert into public.yorisou_account_deletion_jobs (owner_account_id, owner_fingerprint, state, last_error_code)
+values ('deid-eligible', public.yorisou_account_deletion_fingerprint('deid-eligible'),
+        'failed_terminal', 'account_deletion_manifest_missing');
+
+-- NEGATIVE CONTROL: before the transition exists, the ONLY legal shapes keep the owner. Proven by
+-- the constraint itself — nulling the owner on a non-completed job is refused.
+do $$ begin
+  update public.yorisou_account_deletion_jobs set owner_account_id = null
+   where owner_account_id = 'deid-eligible';
+  raise exception 'owner was nulled without the governed transition';
+exception when check_violation then null; end $$;
+
+select assert_true((public.yorisou_account_deletion_terminal_deidentify('deid-eligible')->>'deidentified')::boolean,
+  'an eligible terminal failure is de-identified');
+
+-- Identity gone; the one-way fingerprint, the failure reason and the terminal state all remain.
+select assert_true((select count(*)=0 from public.yorisou_account_deletion_jobs where owner_account_id='deid-eligible'),
+  'the job no longer names the person');
+select assert_true((select count(*)=1 from public.yorisou_account_deletion_jobs
+                     where owner_fingerprint = public.yorisou_account_deletion_fingerprint('deid-eligible')
+                       and state='failed_terminal'
+                       and terminal_deidentified_at is not null
+                       and terminal_deidentification_reason='manifest_missing_pre_irreversible'
+                       and last_error_code='account_deletion_manifest_missing'),
+  'fingerprint, terminal state and failure reason are all retained');
+
+-- IT MUST NOT LOOK LIKE SUCCESS. This is the whole point of not reusing `completed`.
+select assert_true((select count(*)=0 from public.yorisou_account_deletion_jobs
+                     where owner_fingerprint = public.yorisou_account_deletion_fingerprint('deid-eligible')
+                       and state='completed'),
+  'a de-identified failure is never reported as a completed deletion');
+
+-- Idempotent: the id is gone, so a repeat finds nothing and says so instead of faulting.
+select assert_true((public.yorisou_account_deletion_terminal_deidentify('deid-eligible')->>'outcome')
+                    = 'absent_or_already_deidentified', 'the transition is idempotent');
+
+-- ── EVERY REFUSAL ──────────────────────────────────────────────────────────
+-- A job PAST THE CROSSING keeps its identity: there, the job is the only record of what was erased
+-- and for whom, and minimising it would destroy the audit trail of a real deletion.
+insert into public.yorisou_account_deletion_jobs (owner_account_id, owner_fingerprint, state, irreversible_started_at)
+values ('deid-crossed', public.yorisou_account_deletion_fingerprint('deid-crossed'), 'failed_terminal', now());
+do $$ begin
+  perform public.yorisou_account_deletion_terminal_deidentify('deid-crossed');
+  raise exception 'a post-crossing job was de-identified';
+exception when others then if position('refused_irreversible' in sqlerrm)=0 then raise; end if; end $$;
+
+-- A RESUMABLE job must be resumed, not minimised: a manifest means the deletion can still succeed.
+insert into public.yorisou_account_deletion_jobs (owner_account_id, owner_fingerprint, state)
+values ('deid-manifest', public.yorisou_account_deletion_fingerprint('deid-manifest'), 'failed_terminal');
+insert into public.yorisou_account_deletion_manifests (job_id, payload)
+select id, '{"primaryAccountKey":"phase1/accounts/by-id/deid-manifest.json"}'::jsonb
+  from public.yorisou_account_deletion_jobs where owner_account_id='deid-manifest';
+do $$ begin
+  perform public.yorisou_account_deletion_terminal_deidentify('deid-manifest');
+  raise exception 'a job with a frozen manifest was de-identified';
+exception when others then if position('refused_manifest_present' in sqlerrm)=0 then raise; end if; end $$;
+
+-- A live job of any other state keeps the id every operation looks it up by.
+insert into public.yorisou_account_deletion_jobs (owner_account_id, owner_fingerprint, state)
+values ('deid-live', public.yorisou_account_deletion_fingerprint('deid-live'), 'failed_retryable');
+do $$ begin
+  perform public.yorisou_account_deletion_terminal_deidentify('deid-live');
+  raise exception 'a failed_retryable job was de-identified';
+exception when others then if position('refused_state_failed_retryable' in sqlerrm)=0 then raise; end if; end $$;
+
+-- Someone may be driving it right now.
+insert into public.yorisou_account_deletion_jobs
+  (owner_account_id, owner_fingerprint, state, executor_token_hash, executor_expires_at)
+values ('deid-claimed', public.yorisou_account_deletion_fingerprint('deid-claimed'), 'failed_terminal',
+        tok('deid-claim'), now() + interval '60 seconds');
+do $$ begin
+  perform public.yorisou_account_deletion_terminal_deidentify('deid-claimed');
+  raise exception 'a claimed job was de-identified';
+exception when others then if position('refused_executor_held' in sqlerrm)=0 then raise; end if; end $$;
+
+-- An unrecognised reason is refused, so the audit vocabulary cannot drift.
+do $$ begin
+  perform public.yorisou_account_deletion_terminal_deidentify('deid-claimed', 'because_i_said_so');
+  raise exception 'an arbitrary reason was accepted';
+exception when others then if position('refused_' in sqlerrm)=0 then raise; end if; end $$;
+
+-- THE TABLE ITSELF REFUSES A FORGED RECORD. Even a direct UPDATE cannot manufacture a de-identified
+-- terminal record for a job that crossed — the eligibility rules are also a table invariant.
+do $$ begin
+  update public.yorisou_account_deletion_jobs
+     set owner_account_id=null, terminal_deidentified_at=now(),
+         terminal_deidentification_reason='manifest_missing_pre_irreversible'
+   where owner_account_id='deid-crossed';
+  raise exception 'a post-crossing job was forged into a de-identified record';
+exception when check_violation then null; end $$;
+
+delete from public.yorisou_account_deletion_jobs
+ where owner_account_id in ('deid-crossed','deid-manifest','deid-live','deid-claimed')
+    or owner_fingerprint = public.yorisou_account_deletion_fingerprint('deid-eligible');
+SQL
+echo "  ok: identity dropped, fingerprint and failure reason kept, never mistaken for completed"
 
 printf '\\q\n' >&3; printf '\\q\n' >&4
 exec 3>&-; exec 4>&-

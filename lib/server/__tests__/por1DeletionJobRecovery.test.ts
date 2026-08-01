@@ -17,6 +17,7 @@ import test from "node:test";
 
 import {
   accountAbsenceIsExpected,
+  canTerminallyDeidentifyFailedDeletion,
   classifyRecoverableDeletionJob,
   type DeletionJobFacts,
 } from "../deletionJobRecovery";
@@ -163,6 +164,57 @@ test("every classification is either clean, resumable, or escalated — never si
       d.residue === false || d.resumable || d.needsHuman || d.revisit,
       true,
       `${d.classification}: residue must be clean, resumable, escalated, or explicitly revisited`,
+    );
+  }
+});
+
+// ── TERMINAL DE-IDENTIFICATION ELIGIBILITY ───────────────────────────────────
+//
+// The Founder-selected resolution: a terminal failure may stop naming the person, without ever
+// claiming the deletion succeeded. This predicate selects candidates; the database re-evaluates
+// every clause under a row lock, so a drift between the two cannot authorise anything.
+
+test("the exact hosted shape is eligible", () => {
+  // failed_terminal, account gone, no manifest, never crossed — the six jobs in Preview.
+  assert.equal(
+    canTerminallyDeidentifyFailedDeletion(
+      job({ state: "failed_terminal", irreversible: false, hasManifest: false, cursor: null }),
+    ),
+    true,
+  );
+});
+
+test("every ineligible shape is refused", () => {
+  const ineligible: Array<[string, DeletionJobFacts]> = [
+    ["already de-identified / no owner", job({ state: "failed_terminal", ownerAccountId: null, irreversible: false, hasManifest: false })],
+    ["past the crossing", job({ state: "failed_terminal", irreversible: true, hasManifest: false, cursor: null })],
+    ["resumable: manifest present", job({ state: "failed_terminal", irreversible: false, hasManifest: true, cursor: null })],
+    ["not terminal", job({ state: "failed_retryable", irreversible: false, hasManifest: false, cursor: null })],
+    ["completed", job({ state: "completed", irreversible: false, hasManifest: false, cursor: null })],
+    ["cancelled", job({ state: "cancelled", irreversible: false, hasManifest: false, cursor: null })],
+    ["claim held", job({ state: "failed_terminal", irreversible: false, hasManifest: false, cursor: null, executorHeld: true })],
+    ["cursor past the crossing", job({ state: "failed_terminal", irreversible: false, hasManifest: false, cursor: "identity_erasure" })],
+  ];
+  for (const [why, shape] of ineligible) {
+    assert.equal(canTerminallyDeidentifyFailedDeletion(shape), false, why);
+  }
+});
+
+test("eligibility never overlaps with resumability", () => {
+  // A job that can still be resumed must be resumed — minimising a failure that did not have to be
+  // final would throw away a deletion the person actually asked for.
+  const shapes = [
+    job({ state: "failed_terminal", irreversible: false, hasManifest: false, cursor: null }),
+    job({ state: "failed_terminal", irreversible: false, hasManifest: true, cursor: null }),
+    job({ state: "failed_retryable", irreversible: true }),
+    job({ state: "completed" }),
+  ];
+  for (const shape of shapes) {
+    const d = classifyRecoverableDeletionJob(shape);
+    assert.equal(
+      canTerminallyDeidentifyFailedDeletion(shape) && d.resumable,
+      false,
+      `${d.classification}: a job may be resumable or de-identifiable, never both`,
     );
   }
 });
