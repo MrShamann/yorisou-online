@@ -143,6 +143,7 @@ jobs:
           npm run check:report-registry
           npm run test:por1-report-delivery
           npm run check:evidence-hygiene:selftest
+          npm run test:por1-preview-classifier
 
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"

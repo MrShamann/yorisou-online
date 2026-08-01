@@ -71,7 +71,9 @@
     "check:report-registry": "node scripts/generate-self-understanding-report-registry.mjs --check",
     "test:por1-report-delivery": "node --import tsx --test lib/yorisou/reports/__tests__/reportDelivery.test.ts",
     "check:evidence-hygiene": "node scripts/check-test-evidence-hygiene.mjs",
-    "check:evidence-hygiene:selftest": "node scripts/check-test-evidence-hygiene.mjs --selftest"
+    "check:evidence-hygiene:selftest": "node scripts/check-test-evidence-hygiene.mjs --selftest",
+    "test:por1-preview-classifier": "node --import tsx --test lib/server/__tests__/por1PreviewSyntheticClassifier.test.ts",
+    "cleanup:por1-preview": "node --conditions=react-server --import tsx scripts/por1-preview-synthetic-cleanup.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
