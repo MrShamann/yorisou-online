@@ -2403,12 +2403,79 @@ that the promoted bodies still carry the corrections their superseded versions w
 They do NOT prove erasure. The Production-only families are still named by the plan and exercised by
 nothing. That remains M4's job and nothing static substitutes for it.
 
-## ⛔ REMAINING — M2 populated rehearsal onward
+## M2 — POPULATED PRODUCTION-LINEAGE REHEARSAL (partial: the migration claim is proven, the fixture is not complete)
+
+`tests/por1/populated-lineage-rehearsal.sh` builds a fully disposable PostgreSQL 17 cluster (its own
+initdb, its own port, destroyed on exit), applies the 12 Production baseline migrations, seeds two
+unrelated principals across the owner-linked families, records what is there, applies the 8 promotion
+migrations onto POPULATED data, and records it again.
+
+### PROVEN
+
+```
+promotion onto populated data   all 8 applied
+pre-existing tables unchanged   YES — row counts AND full-content md5 fingerprints identical
+promoted contract               15 tables · 75 functions · 2 sequences · 2 triggers · 0 failures
+anon-executable DEFINER         0
+authenticated-executable        0
+PUBLIC-executable DEFINER       0
+RLS enabled and forced          15 / 15
+```
+
+The fingerprint comparison is the part that matters: a row-count manifest alone would miss an
+in-place rewrite, so every seeded family's entire contents are hashed before and after. Nothing
+moved.
+
+Supabase parity is deliberate — `service_role` is created WITH BYPASSRLS, because that is what the
+hosted platform grants it. Creating it without would make the rehearsal prove a protection
+Production does not actually have.
+
+### NOT PROVEN — 2 of the 26 contract families have no fixture row
+
+```
+yorisou_recommendation_actions   needs a row in yorisou_recommendation_items first
+yorisou_recommendation_reports   needs a row in yorisou_recommendation_items first
+yorisou_recommendation_items     violates yorisou_recommendation_items_check (a CROSS-COLUMN check
+                                 the introspective seeder cannot satisfy — it fills every column
+                                 independently and the constraint relates two of them)
+```
+
+The rehearsal FAILS on this rather than reporting a green run over 24 families. That distinction is
+the whole point: a family nobody populated produces a zero after-count that reads exactly like a
+family that was correctly erased, so the coverage assertion is against the checked-in Production
+contract, not against whatever the catalogue scan happened to reach.
+
+Three defects in the seeder were found and fixed on the way, each of which had made the run look
+better than it was:
+
+```
+lifted the first quoted literal out of EVERY check — in `input_hash ~ '^[a-f0-9]{64}$'` that
+  literal IS the pattern; 4 families failed on it, so the constraint's SHAPE is now classified first
+kept the PREVIOUS column's parent key when a lookup found nothing, writing a stale value into an
+  unrelated foreign key; regressed 5 families before it was spotted
+skipped a family whose parent did not exist yet WITHOUT recording it, then reported "0 failed" —
+  the exact shape of the mistake this fixture exists to prevent
+```
+
+The remaining fix is a declared per-table override for the handful of tables with cross-column
+constraints. Generic where it can be, declared where it cannot.
+
+### Not started in M2
+
+```
+old-application compatibility at main c8d8a8ad in a temporary worktree
+new-application controls-off run
+```
+
+## ⛔ REMAINING — finish M2, then M3 onward
+
+
 
 
 
 ```
-M2  four-principal fixtures · populated-legacy migration (0 unintended change to A and B)
+M2  per-table fixture overrides for cross-column checks (recommendation_items and its two
+    owner-linked children) · Principals C and D · old-app compatibility · new-app controls-off
 M3  old-app compatibility at main c8d8a8ad in a temporary worktree · new-app controls-off
     readiness matrix · capability dependency matrix
 M4  full POR-1 journey · security matrix · ALL-FAMILY erasure including the Production-only
