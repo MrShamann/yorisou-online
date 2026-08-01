@@ -2403,68 +2403,108 @@ that the promoted bodies still carry the corrections their superseded versions w
 They do NOT prove erasure. The Production-only families are still named by the plan and exercised by
 nothing. That remains M4's job and nothing static substitutes for it.
 
-## M2 — POPULATED PRODUCTION-LINEAGE REHEARSAL (partial: the migration claim is proven, the fixture is not complete)
+## M2 — POPULATED PRODUCTION-LINEAGE REHEARSAL (migration + fixture portion COMPLETE)
 
-`tests/por1/populated-lineage-rehearsal.sh` builds a fully disposable PostgreSQL 17 cluster (its own
-initdb, its own port, destroyed on exit), applies the 12 Production baseline migrations, seeds two
-unrelated principals across the owner-linked families, records what is there, applies the 8 promotion
-migrations onto POPULATED data, and records it again.
-
-### PROVEN
+`tests/por1/populated-lineage-rehearsal.sh` — disposable PostgreSQL 17 (own initdb, own port,
+destroyed on exit) → 12 Production baseline migrations → two principals seeded across every
+owner-linked contract family → 8 promotion migrations onto POPULATED data → negative controls.
 
 ```
-promotion onto populated data   all 8 applied
-pre-existing tables unchanged   YES — row counts AND full-content md5 fingerprints identical
-promoted contract               15 tables · 75 functions · 2 sequences · 2 triggers · 0 failures
-anon-executable DEFINER         0
-authenticated-executable        0
-PUBLIC-executable DEFINER       0
-RLS enabled and forced          15 / 15
+owner-linked contract families      26 / 26 for Principal A AND Principal B
+promotion onto populated data       all 8 applied
+pre-existing tables unchanged       YES — row counts AND full-content md5 fingerprints identical
+promoted contract                   15 tables · 75 functions · 2 sequences · 2 triggers · 0 failures
+anon / authenticated / PUBLIC executable SECURITY DEFINER    0 / 0 / 0
+RLS enabled and forced              15 / 15
+negative controls                   6 / 6 rejected for the intended reason
 ```
 
-The fingerprint comparison is the part that matters: a row-count manifest alone would miss an
-in-place rewrite, so every seeded family's entire contents are hashed before and after. Nothing
-moved.
-
-Supabase parity is deliberate — `service_role` is created WITH BYPASSRLS, because that is what the
-hosted platform grants it. Creating it without would make the rehearsal prove a protection
-Production does not actually have.
-
-### NOT PROVEN — 2 of the 26 contract families have no fixture row
+### The rule the fixture now states
 
 ```
-yorisou_recommendation_actions   needs a row in yorisou_recommendation_items first
-yorisou_recommendation_reports   needs a row in yorisou_recommendation_items first
-yorisou_recommendation_items     violates yorisou_recommendation_items_check (a CROSS-COLUMN check
-                                 the introspective seeder cannot satisfy — it fills every column
-                                 independently and the constraint relates two of them)
+Generic where structurally safe; explicit domain overrides where relational invariants exist.
 ```
 
-The rehearsal FAILS on this rather than reporting a green run over 24 families. That distinction is
-the whole point: a family nobody populated produces a zero after-count that reads exactly like a
-family that was correctly erased, so the coverage assertion is against the checked-in Production
-contract, not against whatever the catalogue scan happened to reach.
-
-Three defects in the seeder were found and fixed on the way, each of which had made the run look
-better than it was:
+The introspective seeder fills each column independently. That is right for a table whose columns
+are independent and wrong for one whose constraint RELATES two of them.
+`yorisou_recommendation_items` carries
 
 ```
-lifted the first quoted literal out of EVERY check — in `input_hash ~ '^[a-f0-9]{64}$'` that
-  literal IS the pattern; 4 families failed on it, so the constraint's SHAPE is now classified first
+check ((resource_id is not null)::int + (experience_id is not null)::int = 1)
+```
+
+an XOR encoding a domain fact — an item recommends a resource OR an experience, never both, never
+neither — which is not recoverable from column types. Making the seeder cleverer could not fix that
+honestly. `tests/por1/fixture-override-registry.sql` declares the five tables that need explicit
+construction, each with its reason, required parents and invariant; `tests/por1/fixture-overrides.sql`
+builds one semantically coherent graph per principal:
+
+```
+owner → recommendation set → resource-backed item (rank 1) → action + report
+```
+
+No constraint is disabled, no schema altered, no check suppressed.
+
+### The two seeders must not both touch a table
+
+Splitting the registry into its own file was not tidiness. With both seeders live, the generic pass
+for Principal B found the item Principal A's override had just created and attached B's
+recommendation action to A's item. The cross-principal assertion caught it — but a fixture whose
+halves can produce a cross-owner reference at all is not one to trust. The generic seeder now skips
+every table in the override registry.
+
+### Counts are reported separately, never conflated
+
+```
+owner-linked contract families unpopulated   → FATAL (a hole in the erasure proof)
+supporting non-owner tables unpopulated      → classified and reported, not fatal
+declared overrides inserting zero rows       → FATAL (a false green)
+```
+
+Seven supporting tables remain unpopulated with explicit reasons (a singleton control table, four
+awaiting parents outside the owner-linked set, two format-checked columns). None is a contract
+family.
+
+### Negative controls — why the coverage claim means something
+
+A fixture that builds a legal graph proves only that a legal graph is buildable. Each control must
+fail for the INTENDED reason; a NOT NULL violation standing in for a cross-column check would be a
+false pass. One of them caught exactly that on first run — the rejection was correct and my expected
+constraint name was not.
+
+```
+item with BOTH resource_id and experience_id      → yorisou_recommendation_items_check
+item with NEITHER                                 → yorisou_recommendation_items_check
+item with rank outside 1..5                       → rank_check
+action with a too-short idempotency key           → idempotency_key_check
+duplicate report for the same (owner, item)       → unique violation
+por1a action against por1b's item                 → the FIXTURE assertion
+```
+
+The last is the important one: the database does NOT forbid a cross-principal pairing — no
+constraint relates an action's owner to its item's set owner — so only the fixture's own assertion
+stands between a plausible-looking 26/26 and an erasure proof built on someone else's rows.
+
+### Three seeder defects found and fixed on the way
+
+Each had made the run look better than it was:
+
+```
+lifted the first quoted literal from EVERY check — in `input_hash ~ '^[a-f0-9]{64}$'` that literal
+  IS the pattern (4 families); the constraint's SHAPE is now classified first
 kept the PREVIOUS column's parent key when a lookup found nothing, writing a stale value into an
-  unrelated foreign key; regressed 5 families before it was spotted
+  unrelated foreign key (5 families)
 skipped a family whose parent did not exist yet WITHOUT recording it, then reported "0 failed" —
-  the exact shape of the mistake this fixture exists to prevent
+  the exact mistake this fixture exists to prevent
 ```
 
-The remaining fix is a declared per-table override for the handful of tables with cross-column
-constraints. Generic where it can be, declared where it cannot.
-
-### Not started in M2
+### Not yet done in M2
 
 ```
 old-application compatibility at main c8d8a8ad in a temporary worktree
 new-application controls-off run
+PostgreSQL 17 parameterization of tests/yorisou-values/fullstack-local.sh
+Principals C and D
 ```
 
 ## ⛔ REMAINING — finish M2, then M3 onward

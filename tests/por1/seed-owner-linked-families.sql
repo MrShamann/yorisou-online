@@ -81,6 +81,13 @@ begin
        where n.nspname = 'public' and c.relkind = 'r'
          and c.relname like 'yorisou%'
          and not (c.relname = any (v_done))
+         -- A table with a DECLARED OVERRIDE is not the generic seeder's to touch. Letting both run
+         -- is how Principal B's recommendation action ended up attached to Principal A's item: the
+         -- generic pass found a parent row that existed, and had no way to know it belonged to
+         -- someone else.
+         and not exists (
+           select 1 from por1_fixture.override_registry o where o.table_name = c.relname
+         )
        -- EVERY yorisou table, not only the owner-linked ones. An owner-linked child with a NOT NULL
        -- foreign key to a table that carries no owner column (yorisou_recommendation_actions ->
        -- yorisou_recommendation_items) can never be seeded if the parent is out of scope — and the
