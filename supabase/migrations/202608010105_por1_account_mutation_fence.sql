@@ -32,16 +32,39 @@
 
 -- yorisou_account_mutation_gates
 
-create table if not exists public.yorisou_account_mutation_gates (
-  owner_account_id text not null,
-  gate_state text default 'open'::text not null,
-  generation integer default 1 not null,
-  owner_fingerprint text,
-  closed_at timestamp with time zone,
-  completed_at timestamp with time zone,
-  created_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_account_mutation_gates') is null then
+    create table public.yorisou_account_mutation_gates (
+    owner_account_id text not null,
+    gate_state text default 'open'::text not null,
+    generation integer default 1 not null,
+    owner_fingerprint text,
+    closed_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone default now() not null,
+    updated_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_account_mutation_gates'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['owner_account_id', 'gate_state', 'generation', 'owner_fingerprint', 'closed_at', 'completed_at', 'created_at', 'updated_at'])
+      union all
+      select c.name from unnest(array['owner_account_id', 'gate_state', 'generation', 'owner_fingerprint', 'closed_at', 'completed_at', 'created_at', 'updated_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_account_mutation_gates'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_account_mutation_gates already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_account_mutation_gates_gate_state_check' and conrelid = 'public.yorisou_account_mutation_gates'::regclass) then
@@ -82,17 +105,40 @@ end $$;
 
 -- yorisou_account_mutation_leases
 
-create table if not exists public.yorisou_account_mutation_leases (
-  id uuid default gen_random_uuid() not null,
-  owner_account_id text not null,
-  gate_generation integer not null,
-  operation_code text not null,
-  request_nonce_hash text,
-  issued_at timestamp with time zone default now() not null,
-  expires_at timestamp with time zone not null,
-  released_at timestamp with time zone,
-  drained_at timestamp with time zone
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_account_mutation_leases') is null then
+    create table public.yorisou_account_mutation_leases (
+    id uuid default gen_random_uuid() not null,
+    owner_account_id text not null,
+    gate_generation integer not null,
+    operation_code text not null,
+    request_nonce_hash text,
+    issued_at timestamp with time zone default now() not null,
+    expires_at timestamp with time zone not null,
+    released_at timestamp with time zone,
+    drained_at timestamp with time zone
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_account_mutation_leases'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'owner_account_id', 'gate_generation', 'operation_code', 'request_nonce_hash', 'issued_at', 'expires_at', 'released_at', 'drained_at'])
+      union all
+      select c.name from unnest(array['id', 'owner_account_id', 'gate_generation', 'operation_code', 'request_nonce_hash', 'issued_at', 'expires_at', 'released_at', 'drained_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_account_mutation_leases'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_account_mutation_leases already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_account_mutation_leases_operation_code_check' and conrelid = 'public.yorisou_account_mutation_leases'::regclass) then

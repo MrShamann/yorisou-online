@@ -32,31 +32,54 @@
 
 -- yorisou_account_deletion_jobs
 
-create table if not exists public.yorisou_account_deletion_jobs (
-  id uuid default gen_random_uuid() not null,
-  owner_account_id text,
-  owner_fingerprint text not null,
-  state text default 'requested'::text not null,
-  contract_version text default 'por1-v1'::text not null,
-  attempt_count integer default 0 not null,
-  last_error_code text,
-  legal_hold_reason text,
-  requested_at timestamp with time zone default now() not null,
-  verified_at timestamp with time zone,
-  locked_at timestamp with time zone,
-  completed_at timestamp with time zone,
-  cancelled_at timestamp with time zone,
-  updated_at timestamp with time zone default now() not null,
-  execution_cursor text,
-  irreversible_started_at timestamp with time zone,
-  mutation_gate_closed_at timestamp with time zone,
-  executor_token_hash text,
-  executor_generation integer default 0 not null,
-  executor_claimed_at timestamp with time zone,
-  executor_expires_at timestamp with time zone,
-  terminal_deidentified_at timestamp with time zone,
-  terminal_deidentification_reason text
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_account_deletion_jobs') is null then
+    create table public.yorisou_account_deletion_jobs (
+    id uuid default gen_random_uuid() not null,
+    owner_account_id text,
+    owner_fingerprint text not null,
+    state text default 'requested'::text not null,
+    contract_version text default 'por1-v1'::text not null,
+    attempt_count integer default 0 not null,
+    last_error_code text,
+    legal_hold_reason text,
+    requested_at timestamp with time zone default now() not null,
+    verified_at timestamp with time zone,
+    locked_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    cancelled_at timestamp with time zone,
+    updated_at timestamp with time zone default now() not null,
+    execution_cursor text,
+    irreversible_started_at timestamp with time zone,
+    mutation_gate_closed_at timestamp with time zone,
+    executor_token_hash text,
+    executor_generation integer default 0 not null,
+    executor_claimed_at timestamp with time zone,
+    executor_expires_at timestamp with time zone,
+    terminal_deidentified_at timestamp with time zone,
+    terminal_deidentification_reason text
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_account_deletion_jobs'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'owner_account_id', 'owner_fingerprint', 'state', 'contract_version', 'attempt_count', 'last_error_code', 'legal_hold_reason', 'requested_at', 'verified_at', 'locked_at', 'completed_at', 'cancelled_at', 'updated_at', 'execution_cursor', 'irreversible_started_at', 'mutation_gate_closed_at', 'executor_token_hash', 'executor_generation', 'executor_claimed_at', 'executor_expires_at', 'terminal_deidentified_at', 'terminal_deidentification_reason'])
+      union all
+      select c.name from unnest(array['id', 'owner_account_id', 'owner_fingerprint', 'state', 'contract_version', 'attempt_count', 'last_error_code', 'legal_hold_reason', 'requested_at', 'verified_at', 'locked_at', 'completed_at', 'cancelled_at', 'updated_at', 'execution_cursor', 'irreversible_started_at', 'mutation_gate_closed_at', 'executor_token_hash', 'executor_generation', 'executor_claimed_at', 'executor_expires_at', 'terminal_deidentified_at', 'terminal_deidentification_reason']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_account_deletion_jobs'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_account_deletion_jobs already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_account_deletion_jobs_attempt_count_check' and conrelid = 'public.yorisou_account_deletion_jobs'::regclass) then
@@ -147,12 +170,35 @@ end $$;
 
 -- yorisou_account_deletion_manifests
 
-create table if not exists public.yorisou_account_deletion_manifests (
-  job_id uuid not null,
-  contract_version text default 'por1-manifest-v1'::text not null,
-  payload jsonb not null,
-  created_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_account_deletion_manifests') is null then
+    create table public.yorisou_account_deletion_manifests (
+    job_id uuid not null,
+    contract_version text default 'por1-manifest-v1'::text not null,
+    payload jsonb not null,
+    created_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_account_deletion_manifests'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['job_id', 'contract_version', 'payload', 'created_at'])
+      union all
+      select c.name from unnest(array['job_id', 'contract_version', 'payload', 'created_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_account_deletion_manifests'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_account_deletion_manifests already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_account_deletion_manifests_bounded' and conrelid = 'public.yorisou_account_deletion_manifests'::regclass) then
@@ -191,14 +237,37 @@ end $$;
 
 -- yorisou_account_deletion_audit
 
-create table if not exists public.yorisou_account_deletion_audit (
-  id uuid default gen_random_uuid() not null,
-  job_id uuid not null,
-  stage text not null,
-  outcome text not null,
-  detail jsonb default '{}'::jsonb not null,
-  created_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_account_deletion_audit') is null then
+    create table public.yorisou_account_deletion_audit (
+    id uuid default gen_random_uuid() not null,
+    job_id uuid not null,
+    stage text not null,
+    outcome text not null,
+    detail jsonb default '{}'::jsonb not null,
+    created_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_account_deletion_audit'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'job_id', 'stage', 'outcome', 'detail', 'created_at'])
+      union all
+      select c.name from unnest(array['id', 'job_id', 'stage', 'outcome', 'detail', 'created_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_account_deletion_audit'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_account_deletion_audit already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_account_deletion_audit_detail_is_bounded' and conrelid = 'public.yorisou_account_deletion_audit'::regclass) then

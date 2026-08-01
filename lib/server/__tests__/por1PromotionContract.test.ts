@@ -104,7 +104,7 @@ test("every promotion migration file exists and is registered PRODUCTION_LINEAGE
 test("every promoted object is created by exactly one migration", () => {
   for (const table of contract.tables) {
     const creators = contract.migrations.filter((m) =>
-      new RegExp(`create table if not exists public\\.${table.name}\\b`).test(migrationSql.get(m.id)!),
+      new RegExp(`create table public\\.${table.name} \\(`).test(migrationSql.get(m.id)!),
     );
     assert.equal(creators.length, 1, `${table.name} is created once (found ${creators.length})`);
   }
@@ -322,15 +322,33 @@ test("the promotion never drops, alters or rewrites an existing Production objec
   }
 });
 
-test("every table statement is re-runnable after a partial failure", () => {
+test("every table statement is re-runnable, and none of them is a bare create-if-not-exists", () => {
+  // `create table if not exists` is BANNED here, not required. It is silent when the name is
+  // already taken by a differently-shaped table: green ledger, and every function that reads the
+  // table failing at runtime on a missing column. 202607300002 exists because of that exact hazard —
+  // Production holds `yorisou_recommendation_{sets,items,actions}` from the legacy recommendation
+  // graph with real rows, so the CPC-1 family was renamed into the canonical namespace instead of
+  // being promoted on top of them.
+  //
+  // Every promoted table is created inside a guard that raises if the name is taken by a different
+  // shape, which is both re-runnable AND loud.
   for (const [id, sql] of migrationSql) {
-    const creates = sql.match(/^create table [^\n]*/gim) ?? [];
-    for (const statement of creates) {
-      assert.match(statement, /create table if not exists/i, `${id}: ${statement}`);
-    }
+    assert.ok(!/create\s+table\s+if\s+not\s+exists/i.test(sql), `${id}: bare create-if-not-exists on a table`);
     const indexes = sql.match(/^create (unique )?index [^\n]*/gim) ?? [];
     for (const statement of indexes) {
       assert.match(statement, /if not exists/i, `${id}: ${statement}`);
     }
+  }
+  for (const table of contract.tables) {
+    assert.match(
+      allSql,
+      new RegExp(`if to_regclass\\('public\\.${table.name}'\\) is null then`),
+      `${table.name}: guarded creation`,
+    );
+    assert.match(
+      allSql,
+      new RegExp(`POR-1: ${table.name} already exists with a different shape`),
+      `${table.name}: refuses to promote onto a different shape`,
+    );
   }
 });

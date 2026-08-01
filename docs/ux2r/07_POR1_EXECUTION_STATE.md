@@ -2347,6 +2347,32 @@ All eight registered PRODUCTION_LINEAGE. Additive only — no drop, no alter, no
 an existing Production table — so with the capability controls unset the schema is inert and the
 incident response is to disable the capability and roll back the application, not to unwind schema.
 
+### Tables are created under a shape guard, never `create table if not exists`
+
+A pre-existing repository guard (`test:por1-namespace`) rejected the first emitted set, and it was
+right to. `create table if not exists` is SILENT when the name is already held by a differently
+shaped table: green ledger, and every function that reads it failing at runtime on a missing column.
+
+That hazard is not hypothetical here. Production holds `yorisou_recommendation_{sets,items,actions}`
+from the legacy recommendation graph (202607110003) with real rows, and `202607300002` exists
+precisely because promoting the CPC-1 family on top of them would have no-opped. The direction is
+worth stating exactly, because the first reading of it was wrong: the Preview canonical tables are
+NOT Production's legacy tables renamed. They are the CPC-1 tables, created under the legacy NAMES on
+Preview (where Production's legacy family does not exist) and then renamed into the canonical
+namespace to get out of the way. So in Production the canonical names are genuinely absent, the
+promotion genuinely creates, and Production's legacy recommendation graph is never touched.
+
+Every promoted table is now created inside a guard that creates when the name is free and RAISES,
+naming the differing columns, when it is not. Proven by negative control — a squatter table under
+`yorisou_canonical_recommendation_sets` with two columns:
+
+```
+POR-1: yorisou_canonical_recommendation_sets already exists with a different shape
+       (differing column(s): accepted_result_id, content_version, created_at, eligibility_basis,
+        generated_at, lifecycle_state, original_result_id, owner_account_id, project_id,
+        result_row_id, source_surface). Refusing to promote onto it.
+```
+
 ### Verified, not asserted
 
 ```
@@ -2354,6 +2380,8 @@ compiler determinism        recompile → drift 0
 Rehearsal A (PG 17.10)      12 baseline + 8 promotion applied from a DESTROYED database
 Rehearsal B (PG 17.10)      independently destroyed and recreated
 catalogue hash A == B       91b67372b04becc4…  IDENTICAL
+re-apply onto Rehearsal A  catalogue hash unchanged
+shape-guard negative ctrl   refuses to promote onto a wrong-shaped squatter
 contract verification       15 tables · 75 functions · 2 sequences · 2 triggers · 0 failures
 anon-executable DEFINER     0
 RLS enabled AND forced      15 / 15

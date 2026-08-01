@@ -32,30 +32,53 @@
 
 -- yorisou_canonical_line_events
 
-create table if not exists public.yorisou_canonical_line_events (
-  line_event_id text not null,
-  webhook_event_id text,
-  line_subject_hash text not null,
-  line_subject_id text,
-  owner_account_id text,
-  owner_fingerprint text,
-  source_type text,
-  event_type text not null,
-  message_type text,
-  message_text text,
-  postback_data text,
-  delivery_mode text,
-  is_redelivery boolean default false not null,
-  reply_token_present boolean default false not null,
-  reply_status text default 'not_attempted'::text not null,
-  reply_error text,
-  event_timestamp timestamp with time zone,
-  received_at timestamp with time zone default now() not null,
-  retention_state text default 'active'::text not null,
-  erased_at timestamp with time zone,
-  created_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_canonical_line_events') is null then
+    create table public.yorisou_canonical_line_events (
+    line_event_id text not null,
+    webhook_event_id text,
+    line_subject_hash text not null,
+    line_subject_id text,
+    owner_account_id text,
+    owner_fingerprint text,
+    source_type text,
+    event_type text not null,
+    message_type text,
+    message_text text,
+    postback_data text,
+    delivery_mode text,
+    is_redelivery boolean default false not null,
+    reply_token_present boolean default false not null,
+    reply_status text default 'not_attempted'::text not null,
+    reply_error text,
+    event_timestamp timestamp with time zone,
+    received_at timestamp with time zone default now() not null,
+    retention_state text default 'active'::text not null,
+    erased_at timestamp with time zone,
+    created_at timestamp with time zone default now() not null,
+    updated_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_canonical_line_events'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['line_event_id', 'webhook_event_id', 'line_subject_hash', 'line_subject_id', 'owner_account_id', 'owner_fingerprint', 'source_type', 'event_type', 'message_type', 'message_text', 'postback_data', 'delivery_mode', 'is_redelivery', 'reply_token_present', 'reply_status', 'reply_error', 'event_timestamp', 'received_at', 'retention_state', 'erased_at', 'created_at', 'updated_at'])
+      union all
+      select c.name from unnest(array['line_event_id', 'webhook_event_id', 'line_subject_hash', 'line_subject_id', 'owner_account_id', 'owner_fingerprint', 'source_type', 'event_type', 'message_type', 'message_text', 'postback_data', 'delivery_mode', 'is_redelivery', 'reply_token_present', 'reply_status', 'reply_error', 'event_timestamp', 'received_at', 'retention_state', 'erased_at', 'created_at', 'updated_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_canonical_line_events'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_canonical_line_events already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_canonical_line_events_erased_is_empty_check' and conrelid = 'public.yorisou_canonical_line_events'::regclass) then
@@ -120,14 +143,37 @@ end $$;
 
 -- yorisou_canonical_line_subjects
 
-create table if not exists public.yorisou_canonical_line_subjects (
-  line_subject_hash text not null,
-  state text default 'active'::text not null,
-  owner_fingerprint text,
-  erased_at timestamp with time zone,
-  created_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_canonical_line_subjects') is null then
+    create table public.yorisou_canonical_line_subjects (
+    line_subject_hash text not null,
+    state text default 'active'::text not null,
+    owner_fingerprint text,
+    erased_at timestamp with time zone,
+    created_at timestamp with time zone default now() not null,
+    updated_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_canonical_line_subjects'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['line_subject_hash', 'state', 'owner_fingerprint', 'erased_at', 'created_at', 'updated_at'])
+      union all
+      select c.name from unnest(array['line_subject_hash', 'state', 'owner_fingerprint', 'erased_at', 'created_at', 'updated_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_canonical_line_subjects'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_canonical_line_subjects already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_canonical_line_subjects_digest_check' and conrelid = 'public.yorisou_canonical_line_subjects'::regclass) then

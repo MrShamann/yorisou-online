@@ -48,19 +48,42 @@ end $$;
 
 -- yorisou_canonical_recommendation_sets
 
-create table if not exists public.yorisou_canonical_recommendation_sets (
-  id uuid default gen_random_uuid() not null,
-  result_row_id uuid not null,
-  owner_account_id text not null,
-  accepted_result_id text not null,
-  original_result_id text,
-  eligibility_basis text not null,
-  content_version text not null,
-  source_surface text not null,
-  generated_at timestamp with time zone default now() not null,
-  lifecycle_state text default 'active'::text not null,
-  created_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_canonical_recommendation_sets') is null then
+    create table public.yorisou_canonical_recommendation_sets (
+    id uuid default gen_random_uuid() not null,
+    result_row_id uuid not null,
+    owner_account_id text not null,
+    accepted_result_id text not null,
+    original_result_id text,
+    eligibility_basis text not null,
+    content_version text not null,
+    source_surface text not null,
+    generated_at timestamp with time zone default now() not null,
+    lifecycle_state text default 'active'::text not null,
+    created_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_canonical_recommendation_sets'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'result_row_id', 'owner_account_id', 'accepted_result_id', 'original_result_id', 'eligibility_basis', 'content_version', 'source_surface', 'generated_at', 'lifecycle_state', 'created_at'])
+      union all
+      select c.name from unnest(array['id', 'result_row_id', 'owner_account_id', 'accepted_result_id', 'original_result_id', 'eligibility_basis', 'content_version', 'source_surface', 'generated_at', 'lifecycle_state', 'created_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_canonical_recommendation_sets'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_canonical_recommendation_sets already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_canonical_recommendation_sets_eligibility_basis_check' and conrelid = 'public.yorisou_canonical_recommendation_sets'::regclass) then
@@ -113,20 +136,43 @@ end $$;
 
 -- yorisou_canonical_recommendation_items
 
-create table if not exists public.yorisou_canonical_recommendation_items (
-  id uuid default gen_random_uuid() not null,
-  set_id uuid not null,
-  owner_account_id text not null,
-  result_row_id uuid not null,
-  rank integer not null,
-  recommendation_key text not null,
-  object_type text not null,
-  source_class text not null,
-  commercial_status text not null,
-  reason_code text not null,
-  limitations_code text not null,
-  created_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_canonical_recommendation_items') is null then
+    create table public.yorisou_canonical_recommendation_items (
+    id uuid default gen_random_uuid() not null,
+    set_id uuid not null,
+    owner_account_id text not null,
+    result_row_id uuid not null,
+    rank integer not null,
+    recommendation_key text not null,
+    object_type text not null,
+    source_class text not null,
+    commercial_status text not null,
+    reason_code text not null,
+    limitations_code text not null,
+    created_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_canonical_recommendation_items'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'set_id', 'owner_account_id', 'result_row_id', 'rank', 'recommendation_key', 'object_type', 'source_class', 'commercial_status', 'reason_code', 'limitations_code', 'created_at'])
+      union all
+      select c.name from unnest(array['id', 'set_id', 'owner_account_id', 'result_row_id', 'rank', 'recommendation_key', 'object_type', 'source_class', 'commercial_status', 'reason_code', 'limitations_code', 'created_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_canonical_recommendation_items'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_canonical_recommendation_items already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_canonical_recommendation_items_commercial_status_check' and conrelid = 'public.yorisou_canonical_recommendation_items'::regclass) then
@@ -201,18 +247,41 @@ end $$;
 
 -- yorisou_canonical_recommendation_actions
 
-create table if not exists public.yorisou_canonical_recommendation_actions (
-  id uuid default gen_random_uuid() not null,
-  item_id uuid not null,
-  set_id uuid not null,
-  result_row_id uuid not null,
-  owner_account_id text not null,
-  action text not null,
-  source_surface text not null,
-  intent_nonce uuid,
-  created_at timestamp with time zone default now() not null,
-  sequence_no bigint default nextval('yorisou_recommendation_actions_seq'::regclass) not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_canonical_recommendation_actions') is null then
+    create table public.yorisou_canonical_recommendation_actions (
+    id uuid default gen_random_uuid() not null,
+    item_id uuid not null,
+    set_id uuid not null,
+    result_row_id uuid not null,
+    owner_account_id text not null,
+    action text not null,
+    source_surface text not null,
+    intent_nonce uuid,
+    created_at timestamp with time zone default now() not null,
+    sequence_no bigint default nextval('yorisou_recommendation_actions_seq'::regclass) not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_canonical_recommendation_actions'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'item_id', 'set_id', 'result_row_id', 'owner_account_id', 'action', 'source_surface', 'intent_nonce', 'created_at', 'sequence_no'])
+      union all
+      select c.name from unnest(array['id', 'item_id', 'set_id', 'result_row_id', 'owner_account_id', 'action', 'source_surface', 'intent_nonce', 'created_at', 'sequence_no']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_canonical_recommendation_actions'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_canonical_recommendation_actions already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_canonical_recommendation_actions_action_check' and conrelid = 'public.yorisou_canonical_recommendation_actions'::regclass) then

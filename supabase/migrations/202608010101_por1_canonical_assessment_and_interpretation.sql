@@ -71,23 +71,46 @@ end $$;
 
 -- yorisou_assessment_attempts
 
-create table if not exists public.yorisou_assessment_attempts (
-  id uuid default gen_random_uuid() not null,
-  method_id text not null,
-  method_version text not null,
-  owner_account_id text,
-  claim_token_hash text,
-  status text default 'in_progress'::text not null,
-  answers jsonb default '{}'::jsonb not null,
-  answered_count integer default 0 not null,
-  required_count integer not null,
-  entry_source text,
-  started_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null,
-  completed_at timestamp with time zone,
-  claimed_at timestamp with time zone,
-  expires_at timestamp with time zone
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_assessment_attempts') is null then
+    create table public.yorisou_assessment_attempts (
+    id uuid default gen_random_uuid() not null,
+    method_id text not null,
+    method_version text not null,
+    owner_account_id text,
+    claim_token_hash text,
+    status text default 'in_progress'::text not null,
+    answers jsonb default '{}'::jsonb not null,
+    answered_count integer default 0 not null,
+    required_count integer not null,
+    entry_source text,
+    started_at timestamp with time zone default now() not null,
+    updated_at timestamp with time zone default now() not null,
+    completed_at timestamp with time zone,
+    claimed_at timestamp with time zone,
+    expires_at timestamp with time zone
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_assessment_attempts'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'method_id', 'method_version', 'owner_account_id', 'claim_token_hash', 'status', 'answers', 'answered_count', 'required_count', 'entry_source', 'started_at', 'updated_at', 'completed_at', 'claimed_at', 'expires_at'])
+      union all
+      select c.name from unnest(array['id', 'method_id', 'method_version', 'owner_account_id', 'claim_token_hash', 'status', 'answers', 'answered_count', 'required_count', 'entry_source', 'started_at', 'updated_at', 'completed_at', 'claimed_at', 'expires_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_assessment_attempts'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_assessment_attempts already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_assessment_attempts_answered_count_check' and conrelid = 'public.yorisou_assessment_attempts'::regclass) then
@@ -174,22 +197,45 @@ end $$;
 
 -- yorisou_assessment_results
 
-create table if not exists public.yorisou_assessment_results (
-  id uuid default gen_random_uuid() not null,
-  attempt_id uuid not null,
-  owner_account_id text,
-  method_id text not null,
-  method_version text not null,
-  scoring_version text,
-  result_schema_version text,
-  result_id text,
-  overlay_id text,
-  dimension_output jsonb default '{}'::jsonb not null,
-  original_result_id text,
-  visibility text default 'private'::text not null,
-  produced_at timestamp with time zone default now() not null,
-  deleted_at timestamp with time zone
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_assessment_results') is null then
+    create table public.yorisou_assessment_results (
+    id uuid default gen_random_uuid() not null,
+    attempt_id uuid not null,
+    owner_account_id text,
+    method_id text not null,
+    method_version text not null,
+    scoring_version text,
+    result_schema_version text,
+    result_id text,
+    overlay_id text,
+    dimension_output jsonb default '{}'::jsonb not null,
+    original_result_id text,
+    visibility text default 'private'::text not null,
+    produced_at timestamp with time zone default now() not null,
+    deleted_at timestamp with time zone
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_assessment_results'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'attempt_id', 'owner_account_id', 'method_id', 'method_version', 'scoring_version', 'result_schema_version', 'result_id', 'overlay_id', 'dimension_output', 'original_result_id', 'visibility', 'produced_at', 'deleted_at'])
+      union all
+      select c.name from unnest(array['id', 'attempt_id', 'owner_account_id', 'method_id', 'method_version', 'scoring_version', 'result_schema_version', 'result_id', 'overlay_id', 'dimension_output', 'original_result_id', 'visibility', 'produced_at', 'deleted_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_assessment_results'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_assessment_results already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_assessment_results_attempt_id_fkey' and conrelid = 'public.yorisou_assessment_results'::regclass) then
@@ -242,21 +288,44 @@ end $$;
 
 -- yorisou_interpretation_responses
 
-create table if not exists public.yorisou_interpretation_responses (
-  id uuid default gen_random_uuid() not null,
-  result_row_id uuid not null,
-  owner_account_id text not null,
-  response_type text not null,
-  corrected_result_id text,
-  reason_code text,
-  supersedes_response_id uuid,
-  recommendation_use_permitted boolean default true not null,
-  continuity_use_permitted boolean default true not null,
-  source text default 'web'::text not null,
-  created_at timestamp with time zone default now() not null,
-  intent_nonce uuid,
-  sequence_no bigint default nextval('yorisou_interpretation_responses_seq'::regclass) not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_interpretation_responses') is null then
+    create table public.yorisou_interpretation_responses (
+    id uuid default gen_random_uuid() not null,
+    result_row_id uuid not null,
+    owner_account_id text not null,
+    response_type text not null,
+    corrected_result_id text,
+    reason_code text,
+    supersedes_response_id uuid,
+    recommendation_use_permitted boolean default true not null,
+    continuity_use_permitted boolean default true not null,
+    source text default 'web'::text not null,
+    created_at timestamp with time zone default now() not null,
+    intent_nonce uuid,
+    sequence_no bigint default nextval('yorisou_interpretation_responses_seq'::regclass) not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_interpretation_responses'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['id', 'result_row_id', 'owner_account_id', 'response_type', 'corrected_result_id', 'reason_code', 'supersedes_response_id', 'recommendation_use_permitted', 'continuity_use_permitted', 'source', 'created_at', 'intent_nonce', 'sequence_no'])
+      union all
+      select c.name from unnest(array['id', 'result_row_id', 'owner_account_id', 'response_type', 'corrected_result_id', 'reason_code', 'supersedes_response_id', 'recommendation_use_permitted', 'continuity_use_permitted', 'source', 'created_at', 'intent_nonce', 'sequence_no']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_interpretation_responses'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_interpretation_responses already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_interpretation_responses_correction_shape' and conrelid = 'public.yorisou_interpretation_responses'::regclass) then

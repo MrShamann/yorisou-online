@@ -410,42 +410,42 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "name": "por1_canonical_assessment_and_interpretation",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010101_por1_canonical_assessment_and_interpretation.sql",
-    "sha256": "d3563c87c07c85f96a37ed9d7fd7d3dd746e838475ec768ea1fa3b668ba92dff"
+    "sha256": "8e6c6d7e6a840a923f27b38aa80e0c9458cf9bdb9bba40fabb384335dbcd7d40"
   },
   {
     "version": "202608010102",
     "name": "por1_canonical_recommendations",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010102_por1_canonical_recommendations.sql",
-    "sha256": "b8605c1555d038b7d12bfb3c4ad8d9518bf1d1fedb82b889189336c428b644ea"
+    "sha256": "a5389f9a28655df1997bf02e1072d55416756f1b295c2780a1ec7b0ac4d630d5"
   },
   {
     "version": "202608010103",
     "name": "por1_canonical_identity_and_provisioning",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010103_por1_canonical_identity_and_provisioning.sql",
-    "sha256": "dbce52441f4e187cebcb3eba76891f59ff860a53347ce5f29692dbfc78bb8ba8"
+    "sha256": "26d76ddf5f3211411d560cc285907b0a02ba2bb9548b456ffef263a4e1cc3103"
   },
   {
     "version": "202608010104",
     "name": "por1_canonical_line_activity",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010104_por1_canonical_line_activity.sql",
-    "sha256": "bef695d817adc24d4b385888b8448a738942b4d45a9062ca37a840a8b406cf88"
+    "sha256": "aa78e930c06ff49104ca8bb87b81d2c5d16baaa461f8e095781efcc1b5786dfb"
   },
   {
     "version": "202608010105",
     "name": "por1_account_mutation_fence",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010105_por1_account_mutation_fence.sql",
-    "sha256": "3c3c91e184b53714edc84dfcf8b58d68579f5d888a0e7953829eae8c4df5d51f"
+    "sha256": "22ce9b3d6e89b32d152bbd9226de6c90209b38329fd229a8c120989512f4c316"
   },
   {
     "version": "202608010106",
     "name": "por1_account_deletion_lifecycle",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010106_por1_account_deletion_lifecycle.sql",
-    "sha256": "7a4c663ef84515cbdc1998e6365c8e6e4b46a93a021d4de4174402d966285640"
+    "sha256": "32d03b74fd7a66b19ba955255cb981b6bf69b940c4509a2808879d858f647d27"
   },
   {
     "version": "202608010107",

@@ -63,18 +63,41 @@ end $$;
 
 -- yorisou_canonical_identity_links
 
-create table if not exists public.yorisou_canonical_identity_links (
-  link_id uuid default gen_random_uuid() not null,
-  owner_account_id text,
-  owner_fingerprint text not null,
-  link_kind text not null,
-  link_digest text,
-  link_state text default 'active'::text not null,
-  contract_version text default 'por1-v1'::text not null,
-  created_at timestamp with time zone default now() not null,
-  updated_at timestamp with time zone default now() not null,
-  erased_at timestamp with time zone
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_canonical_identity_links') is null then
+    create table public.yorisou_canonical_identity_links (
+    link_id uuid default gen_random_uuid() not null,
+    owner_account_id text,
+    owner_fingerprint text not null,
+    link_kind text not null,
+    link_digest text,
+    link_state text default 'active'::text not null,
+    contract_version text default 'por1-v1'::text not null,
+    created_at timestamp with time zone default now() not null,
+    updated_at timestamp with time zone default now() not null,
+    erased_at timestamp with time zone
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_canonical_identity_links'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['link_id', 'owner_account_id', 'owner_fingerprint', 'link_kind', 'link_digest', 'link_state', 'contract_version', 'created_at', 'updated_at', 'erased_at'])
+      union all
+      select c.name from unnest(array['link_id', 'owner_account_id', 'owner_fingerprint', 'link_kind', 'link_digest', 'link_state', 'contract_version', 'created_at', 'updated_at', 'erased_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_canonical_identity_links'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_canonical_identity_links already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_canonical_identity_links_pkey' and conrelid = 'public.yorisou_canonical_identity_links'::regclass) then
@@ -149,25 +172,48 @@ end $$;
 
 -- yorisou_identity_provisioning_sagas
 
-create table if not exists public.yorisou_identity_provisioning_sagas (
-  provisioning_key text not null,
-  account_id text,
-  owner_fingerprint text,
-  session_fingerprint text,
-  state text default 'requested'::text not null,
-  provisioning_cursor text default 'account_creation'::text not null,
-  contract_version text default 'por1-v1'::text not null,
-  attempt_count integer default 0 not null,
-  failure_class text,
-  last_error_code text,
-  executor_token_hash text,
-  executor_generation integer default 0 not null,
-  executor_claimed_at timestamp with time zone,
-  executor_expires_at timestamp with time zone,
-  requested_at timestamp with time zone default now() not null,
-  completed_at timestamp with time zone,
-  updated_at timestamp with time zone default now() not null
-);
+do $$
+declare
+  v_unexpected text;
+begin
+  if to_regclass('public.yorisou_identity_provisioning_sagas') is null then
+    create table public.yorisou_identity_provisioning_sagas (
+    provisioning_key text not null,
+    account_id text,
+    owner_fingerprint text,
+    session_fingerprint text,
+    state text default 'requested'::text not null,
+    provisioning_cursor text default 'account_creation'::text not null,
+    contract_version text default 'por1-v1'::text not null,
+    attempt_count integer default 0 not null,
+    failure_class text,
+    last_error_code text,
+    executor_token_hash text,
+    executor_generation integer default 0 not null,
+    executor_claimed_at timestamp with time zone,
+    executor_expires_at timestamp with time zone,
+    requested_at timestamp with time zone default now() not null,
+    completed_at timestamp with time zone,
+    updated_at timestamp with time zone default now() not null
+    );
+  else
+    select string_agg(name, ', ' order by name) into v_unexpected from (
+      select a.attname as name from pg_attribute a
+       where a.attrelid = 'public.yorisou_identity_provisioning_sagas'::regclass and a.attnum > 0 and not a.attisdropped
+         and a.attname <> all (array['provisioning_key', 'account_id', 'owner_fingerprint', 'session_fingerprint', 'state', 'provisioning_cursor', 'contract_version', 'attempt_count', 'failure_class', 'last_error_code', 'executor_token_hash', 'executor_generation', 'executor_claimed_at', 'executor_expires_at', 'requested_at', 'completed_at', 'updated_at'])
+      union all
+      select c.name from unnest(array['provisioning_key', 'account_id', 'owner_fingerprint', 'session_fingerprint', 'state', 'provisioning_cursor', 'contract_version', 'attempt_count', 'failure_class', 'last_error_code', 'executor_token_hash', 'executor_generation', 'executor_claimed_at', 'executor_expires_at', 'requested_at', 'completed_at', 'updated_at']) c(name)
+       where not exists (
+         select 1 from pg_attribute a
+          where a.attrelid = 'public.yorisou_identity_provisioning_sagas'::regclass and a.attname = c.name
+            and a.attnum > 0 and not a.attisdropped
+       )
+    ) s;
+    if v_unexpected is not null then
+      raise exception 'POR-1: yorisou_identity_provisioning_sagas already exists with a different shape (differing column(s): %). Refusing to promote onto it.', v_unexpected;
+    end if;
+  end if;
+end $$;
 
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'yorisou_identity_provisioning_sagas_account_id_key' and conrelid = 'public.yorisou_identity_provisioning_sagas'::regclass) then
