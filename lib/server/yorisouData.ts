@@ -556,7 +556,51 @@ async function readLocalJson<T>(file: DataFile<T>) {
 
 async function writeLocalJson<T>(file: DataFile<T>, value: T) {
   await ensureFile(file);
-  await fs.writeFile(file.path, JSON.stringify(value, null, 2) + "\n", "utf8");
+  // ATOMIC. A plain writeFile truncates first, so a concurrent reader can observe an empty or
+  // half-written file and fall back to `[]` — losing every record rather than one.
+  const temp = `${file.path}.tmp-${process.pid}-${(localWriteCounter += 1)}`;
+  await fs.writeFile(temp, JSON.stringify(value, null, 2) + "\n", "utf8");
+  await fs.rename(temp, file.path);
+}
+
+let localWriteCounter = 0;
+
+/**
+ * Serialized read-modify-write over one local JSON file.
+ *
+ * THE DEFECT THIS EXISTS TO CLOSE — YV-C7 `session_binding_failed / session_not_stored`.
+ *
+ * Every local-store mutator was `read the whole array → change it → write the whole array back`,
+ * unguarded. Registration performs three of those in a row on the sessions file (insert the row,
+ * bind it to the account, apply the landing contract), and the app is serving other requests
+ * throughout — each of which may create an anonymous session the same way.
+ *
+ * Interleave any two and the later writer, holding an array it read BEFORE the other's insert,
+ * writes it back afterwards and the newly inserted row is gone. The third step's `touchSession`
+ * then finds nothing, returns null, and the write-proof correctly reports `session_not_stored`.
+ * The proof was right; the row really had been erased.
+ *
+ * That is why it looked intermittent, why it took 189ms rather than timing out, why it appeared
+ * only under the LOCAL file store (YV-1 / DCI-1 harnesses) and never on the shared-store path, and
+ * why a rerun could pass. It was a lost update, not a timing flake — and I classified it as
+ * transient once before, wrongly.
+ *
+ * An in-process chain is the right scope here: this adapter is the single-process local/test store.
+ * It is NOT a substitute for a cross-process lock, and nothing multi-process may rely on it.
+ */
+const localFileLocks = new Map<string, Promise<unknown>>();
+
+async function mutateLocalJson<T>(file: DataFile<T>, mutate: (current: T) => T | Promise<T>): Promise<T> {
+  const previous = localFileLocks.get(file.path) ?? Promise.resolve();
+  const run = previous.then(async () => {
+    const current = await readLocalJson(file);
+    const next = await mutate(current);
+    await writeLocalJson(file, next);
+    return next;
+  });
+  // The chain must advance even when this mutation throws, or one failure deadlocks the file.
+  localFileLocks.set(file.path, run.catch(() => undefined));
+  return run;
 }
 
 function isMissingObjectError(error: unknown) {
@@ -1646,9 +1690,9 @@ export async function createSession(
     return session;
   }
 
-  const sessions = await listSessions();
-  sessions.unshift(session);
-  await writeLocalJson(sessionsFile, sessions);
+  // Serialized with every other sessions-file mutation. `createSession` is the source of the
+  // anonymous sessions that were racing registration's three writes in the first place.
+  await mutateLocalJson(sessionsFile, (sessions) => [session, ...sessions]);
   return session;
 }
 
@@ -1698,10 +1742,18 @@ export async function insertSessionRecordIfAbsent(
     return record;
   }
 
-  const sessions = await listSessions();
-  sessions.unshift(record);
-  await writeLocalJson(sessionsFile, sessions);
-  return record;
+  // Serialized: the existence check and the insert must be one critical section, or two concurrent
+  // registrations each see "absent" and the second write drops the first row.
+  let inserted: SessionRecord = record;
+  await mutateLocalJson(sessionsFile, (sessions) => {
+    const already = sessions.find((entry) => entry.id === record.id);
+    if (already) {
+      inserted = already;
+      return sessions;
+    }
+    return [record, ...sessions];
+  });
+  return inserted;
 }
 
 /**
@@ -1747,18 +1799,18 @@ export async function touchSession(
     return updatedSession;
   }
 
-  const sessions = await listSessions();
-  const updated = sessions.map((session) =>
-    session.id === id
-      ? {
-          ...session,
-          userId: userId === undefined ? session.userId : userId,
-          principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
-          updatedAt: nowIso(),
-        }
-      : session,
+  const updated = await mutateLocalJson(sessionsFile, (sessions) =>
+    sessions.map((session) =>
+      session.id === id
+        ? {
+            ...session,
+            userId: userId === undefined ? session.userId : userId,
+            principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
+            updatedAt: nowIso(),
+          }
+        : session,
+    ),
   );
-  await writeLocalJson(sessionsFile, updated);
   return updated.find((session) => session.id === id) || null;
 }
 
@@ -1769,11 +1821,7 @@ export async function deleteSession(id: string) {
     return;
   }
 
-  const sessions = await listSessions();
-  await writeLocalJson(
-    sessionsFile,
-    sessions.filter((session) => session.id !== id),
-  );
+  await mutateLocalJson(sessionsFile, (sessions) => sessions.filter((session) => session.id !== id));
 }
 
 export async function listConsultations(): Promise<ConsultationRecord[]> {
