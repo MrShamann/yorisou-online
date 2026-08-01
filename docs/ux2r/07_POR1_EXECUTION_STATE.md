@@ -2192,3 +2192,63 @@ then    Production-shape fixtures (4 principals) · fresh rehearsal x2 from dest
         kill switches · observability · release sequence · Production synthetic plan
         PR #126 body · final dossier
 ```
+
+---
+
+## WS-I overlay discovery — the deletion plan was ALREADY written against Production
+
+The controller's concern was that a byte-equivalent Preview catalogue would miss
+`yorisou_private_recommendations`. The audit says the concern is right in principle and the coverage
+already exists — the gap is in the PROOF, not the plan.
+
+### The audit
+
+```
+Production tables carrying an owner-ish column      27
+Production ACCOUNT-owner-linked tables              26
+  (owner_account_id / actor_account_id / reporter_account_id / blocker_account_id)
+covered by the deletion plan in 202607300003        26
+GAPS                                                 0
+```
+
+`202607300003` names the FULL Production family list and guards each with `to_regclass`, which is
+why `yorisou_private_recommendations` is in the plan despite being absent from Preview: the guard
+skips it there. So the plan is Production-complete, and the Preview acceptance run simply never
+exercised those families.
+
+**`yorisou_resource_sources` is classified NOT_OWNER_LINKED**, with its reason recorded: `owner_name`
+sits alongside `domain`, `source_type` and `commercial_status` — a publisher/organisation attribution
+in a resource catalogue, not a link to a user account.
+
+### Families the Preview suite can never have proven
+
+Absent from Preview, therefore skipped by `to_regclass`, therefore erased by nothing that any green
+Preview run has ever demonstrated:
+
+```
+yorisou_private_recommendations · yorisou_private_memory_items · yorisou_private_check_in_plans
+yorisou_ai_reflections · yorisou_ai_runs · yorisou_test_results   (and the experience_* family)
+```
+
+Only the full Production-lineage rehearsal can close this. "The Preview train passed" says nothing
+about them.
+
+### The permanent guard
+
+`supabase/contracts/por1-production-owner-linked-families.json` is a checked-in snapshot of the
+READ-ONLY Production catalogue, so CI needs no database connectivity.
+`test:por1-production-coverage` fails if any listed family stops being named by the deletion plan.
+
+Coverage was already complete when the guard was written — so this is not a repair, it is what keeps
+a NEW Production owner-linked table from being invisible: absent from Preview, skipped by the guard
+clause, and named by no failing test.
+
+## ⛔ REMAINING — M1 authoring onward
+
+```
+author  15 tables + 74 functions + indexes + RLS + FORCE RLS + grants as PRODUCTION_LINEAGE
+        migrations, extracted from the FINAL Preview catalogue (pg_get_functiondef), grouped by
+        dependency / lock / rollback boundary, plus the Production overlay families above
+then    M2 fresh rehearsals A/B + populated-legacy · M3 compatibility/activation/journey
+        M4 erasure/preservation/failure/rollback · M5 dossier + PR body
+```

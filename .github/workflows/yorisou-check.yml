@@ -145,6 +145,7 @@ jobs:
           npm run check:evidence-hygiene:selftest
           npm run test:por1-preview-classifier
           npm run test:por1-job-recovery
+          npm run test:por1-production-coverage
 
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"
