@@ -160,7 +160,25 @@ export type RecentLineWebhookSubjectRecord = {
 type DataFile<T> = {
   path: string;
   fallback: T;
+  /**
+   * May a file that exists but does not parse be treated as the fallback?
+   *
+   * For a cache or an index, yes — rebuilding it is cheap and losing it costs nothing. For an
+   * AUTHORITATIVE store it must not be: falling back to `[]` tells the caller there are no accounts,
+   * and the very next write then persists that emptiness over real identity data. A corrupted
+   * authoritative file is an error to surface, not a state to adopt.
+   */
+  authoritative?: boolean;
 };
+
+/** Thrown instead of silently adopting `[]` for an authoritative store that will not parse. */
+export class LocalStoreCorrupted extends Error {
+  constructor(readonly storePath: string) {
+    // The path is a local test/dev path and carries no user data; the contents never appear here.
+    super(`local_store_corrupted:${storePath.split("/").slice(-1)[0]}`);
+    this.name = "LocalStoreCorrupted";
+  }
+}
 
 type AccountEmailLookup = {
   accountId: string;
@@ -283,10 +301,12 @@ const shouldUseSharedStore = sharedStoreMode !== "disabled";
 const sharedRestBase = sharedStoreEndpoint.replace(/\/$/, ""); // ".../storage/v1"
 
 const accountsFile: DataFile<AccountRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-accounts.json"),
   fallback: [],
 };
 const sessionsFile: DataFile<SessionRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-sessions.json"),
   fallback: [],
 };
@@ -295,10 +315,12 @@ const consultationsFile: DataFile<ConsultationRecord[]> = {
   fallback: [],
 };
 const passwordResetTokensFile: DataFile<PasswordResetTokenRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-password-reset-tokens.json"),
   fallback: [],
 };
 const lineWebhookEventsFile: DataFile<LineWebhookEventRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-line-webhook-events.json"),
   fallback: [],
 };
@@ -550,6 +572,9 @@ async function readLocalJson<T>(file: DataFile<T>) {
   try {
     return JSON.parse(content) as T;
   } catch {
+    // An empty file is a store that has not been written yet — that is first use, not corruption.
+    if (content.trim().length === 0) return file.fallback;
+    if (file.authoritative) throw new LocalStoreCorrupted(file.path);
     return file.fallback;
   }
 }
@@ -589,6 +614,21 @@ let localWriteCounter = 0;
  * It is NOT a substitute for a cross-process lock, and nothing multi-process may rely on it.
  */
 const localFileLocks = new Map<string, Promise<unknown>>();
+
+async function mutateLocalJsonFor<T, R>(
+  file: DataFile<T>,
+  mutate: (current: T) => { value: T; result: R } | Promise<{ value: T; result: R }>,
+): Promise<R> {
+  const previous = localFileLocks.get(file.path) ?? Promise.resolve();
+  const run = previous.then(async () => {
+    const current = await readLocalJson(file);
+    const { value, result } = await mutate(current);
+    await writeLocalJson(file, value);
+    return result;
+  });
+  localFileLocks.set(file.path, run.catch(() => undefined));
+  return run;
+}
 
 async function mutateLocalJson<T>(file: DataFile<T>, mutate: (current: T) => T | Promise<T>): Promise<T> {
   const previous = localFileLocks.get(file.path) ?? Promise.resolve();
@@ -1011,8 +1051,9 @@ async function updateRecentLineWebhookSubjectIndex(record: LineWebhookEventRecor
     return;
   }
 
-  const existing = await readLocalJson(recentLineWebhookSubjectsFile);
-  await writeLocalJson(recentLineWebhookSubjectsFile, mergeRecentLineWebhookSubjectRecords(existing, recentRecord));
+  await mutateLocalJson(recentLineWebhookSubjectsFile, (existing) =>
+    mergeRecentLineWebhookSubjectRecords(existing, recentRecord),
+  );
 }
 
 async function ensureSharedStoreReady() {
@@ -1160,12 +1201,12 @@ export async function pruneRecentLineWebhookSubjects(
         await new Promise((resolve) => setTimeout(resolve, 1200));
       }
     } else {
-      const records = await readLocalJson(recentLineWebhookSubjectsFile);
-      const kept = records.filter((record) => !matches(record));
-      if (kept.length !== records.length) {
-        await writeLocalJson(recentLineWebhookSubjectsFile, kept);
-        legacyRemoved = records.length - kept.length;
-      }
+      // Serialized: a prune that reads, filters and writes the whole file will otherwise erase
+      // every subject recorded while it was deciding.
+      legacyRemoved = await mutateLocalJsonFor(recentLineWebhookSubjectsFile, (records) => {
+        const kept = records.filter((record) => !matches(record));
+        return { value: kept, result: records.length - kept.length };
+      });
     }
 
     return erased + legacyRemoved;
@@ -1203,11 +1244,10 @@ export async function pruneRecentLineWebhookSubjects(
     throw new Error("recent_line_subject_prune_unconfirmed");
   }
 
-  const records = await readLocalJson(recentLineWebhookSubjectsFile);
-  const kept = records.filter((record) => !matches(record));
-  if (kept.length === records.length) return 0;
-  await writeLocalJson(recentLineWebhookSubjectsFile, kept);
-  return records.length - kept.length;
+  return mutateLocalJsonFor(recentLineWebhookSubjectsFile, (records) => {
+    const kept = records.filter((record) => !matches(record));
+    return { value: kept, result: records.length - kept.length };
+  });
 }
 
 /** Existence probe used only to VERIFY erasure before finalization. */
@@ -1410,11 +1450,20 @@ export async function createAccount(input: {
         return { ok: true as const, account };
       }
 
-      const accounts = await listAccounts();
+      // THE UNIQUENESS CHECK AND THE INSERT ARE ONE CRITICAL SECTION.
+      //
+      // Read-then-write with a gap is how two concurrent registrations for the same address both
+      // see "absent" and both insert — and how the second, holding an array read before the first,
+      // erases it. This is the identity-bearing instance of the defect proven on the sessions file
+      // by YV-C7, and a lost or duplicated ACCOUNT is materially worse than a lost session.
+      type CreateAccountResult =
+        | { ok: true; account: AccountRecord }
+        | { ok: false; reason: "email_exists" };
+      return mutateLocalJsonFor<AccountRecord[], CreateAccountResult>(accountsFile, (accounts) => {
       const existing = accounts.find((account) => normalizeEmail(account.email) === normalizedEmail);
 
       if (existing) {
-        return { ok: false as const, reason: "email_exists" as const };
+        return { value: accounts, result: { ok: false as const, reason: "email_exists" as const } };
       }
 
       const account: AccountRecord = {
@@ -1429,9 +1478,8 @@ export async function createAccount(input: {
         supportProfile: defaultSupportProfile(),
       };
 
-      accounts.unshift(account);
-      await writeLocalJson(accountsFile, accounts);
-      return { ok: true as const, account };
+      return { value: [account, ...accounts], result: { ok: true as const, account } };
+      });
     },
   });
 }
@@ -1469,19 +1517,21 @@ export async function upsertAccountRecord(
     return normalizedAccount;
   }
 
-  const accounts = await listAccounts();
-  const nextAccounts = [...accounts];
-  const existingIndex = nextAccounts.findIndex(
-    (entry) => entry.id === normalizedAccount.id || normalizeEmail(entry.email) === normalizedAccount.email,
-  );
+  // Serialized: an upsert that reads the array, edits one entry and writes the whole thing back
+  // will otherwise erase every account another writer added in between.
+  await mutateLocalJson(accountsFile, (accounts) => {
+    const nextAccounts = [...accounts];
+    const existingIndex = nextAccounts.findIndex(
+      (entry) => entry.id === normalizedAccount.id || normalizeEmail(entry.email) === normalizedAccount.email,
+    );
 
-  if (existingIndex >= 0) {
-    nextAccounts[existingIndex] = normalizedAccount;
-  } else {
-    nextAccounts.unshift(normalizedAccount);
-  }
-
-  await writeLocalJson(accountsFile, nextAccounts);
+    if (existingIndex >= 0) {
+      nextAccounts[existingIndex] = normalizedAccount;
+    } else {
+      nextAccounts.unshift(normalizedAccount);
+    }
+    return nextAccounts;
+  });
   return normalizedAccount;
 }
 
@@ -1893,17 +1943,19 @@ async function upsertLineWebhookEvent(record: LineWebhookEventRecord) {
     return record;
   }
 
-  const records = await listLineWebhookEvents();
-  const nextRecords = [...records];
-  const existingIndex = nextRecords.findIndex((entry) => entry.id === record.id);
+  // Serialized: this store IS the LINE redelivery idempotency record. A lost update here does not
+  // just drop an event — it makes a duplicate delivery look new.
+  await mutateLocalJson(lineWebhookEventsFile, (records) => {
+    const nextRecords = [...records];
+    const existingIndex = nextRecords.findIndex((entry) => entry.id === record.id);
 
-  if (existingIndex >= 0) {
-    nextRecords[existingIndex] = record;
-  } else {
-    nextRecords.unshift(record);
-  }
-
-  await writeLocalJson(lineWebhookEventsFile, nextRecords);
+    if (existingIndex >= 0) {
+      nextRecords[existingIndex] = record;
+    } else {
+      nextRecords.unshift(record);
+    }
+    return nextRecords;
+  });
   await updateRecentLineWebhookSubjectIndex(record);
   return record;
 }
@@ -1994,17 +2046,19 @@ async function upsertPasswordResetToken(record: PasswordResetTokenRecord) {
     return record;
   }
 
-  const records = await listPasswordResetTokens();
-  const nextRecords = [...records];
-  const existingIndex = nextRecords.findIndex((entry) => entry.tokenHash === record.tokenHash);
+  // Serialized: single-use consumption depends on this upsert being atomic with the read that
+  // decided the token was still live.
+  await mutateLocalJson(passwordResetTokensFile, (records) => {
+    const nextRecords = [...records];
+    const existingIndex = nextRecords.findIndex((entry) => entry.tokenHash === record.tokenHash);
 
-  if (existingIndex >= 0) {
-    nextRecords[existingIndex] = record;
-  } else {
-    nextRecords.unshift(record);
-  }
-
-  await writeLocalJson(passwordResetTokensFile, nextRecords);
+    if (existingIndex >= 0) {
+      nextRecords[existingIndex] = record;
+    } else {
+      nextRecords.unshift(record);
+    }
+    return nextRecords;
+  });
   return record;
 }
 
@@ -2190,9 +2244,7 @@ export async function createConsultation(input: {
     return consultation;
   }
 
-  const consultations = await listConsultations();
-  consultations.unshift(consultation);
-  await writeLocalJson(consultationsFile, consultations);
+  await mutateLocalJson(consultationsFile, (consultations) => [consultation, ...consultations]);
   return consultation;
 }
 
@@ -2269,30 +2321,32 @@ export async function attachLeadToConsultation(input: {
     return updatedEntry;
   }
 
-  const consultations = await listConsultations();
-  let updatedEntry: ConsultationRecord | null = null;
-  const updated = consultations.map((entry) => {
-    if (entry.id !== input.consultationId) {
-      return entry;
-    }
+  // Serialized: the record-level conflict rule is last-write-wins for THIS consultation, which is
+  // intentional. Without the queue it silently became last-write-wins over the whole FILE.
+  return mutateLocalJsonFor<ConsultationRecord[], ConsultationRecord | null>(consultationsFile, (consultations) => {
+    let updatedEntry: ConsultationRecord | null = null;
+    const updated = consultations.map((entry) => {
+      if (entry.id !== input.consultationId) {
+        return entry;
+      }
 
-    const updatedOwnerTarget = resolveUpdatedOwnerTarget(entry);
+      const updatedOwnerTarget = resolveUpdatedOwnerTarget(entry);
 
-    if (updatedOwnerTarget === null) {
-      updatedEntry = null;
-      return entry;
-    }
+      if (updatedOwnerTarget === null) {
+        updatedEntry = null;
+        return entry;
+      }
 
-    updatedEntry = {
-      ...entry,
-      userId: updatedOwnerTarget,
-      leadSubmitted: true,
-      lead: input.lead,
-    };
-    return updatedEntry;
+      updatedEntry = {
+        ...entry,
+        userId: updatedOwnerTarget,
+        leadSubmitted: true,
+        lead: input.lead,
+      };
+      return updatedEntry;
+    });
+    return { value: updated, result: updatedEntry };
   });
-  await writeLocalJson(consultationsFile, updated);
-  return updatedEntry;
 }
 
 export async function assignSessionConsultationsToUser(
@@ -2318,8 +2372,9 @@ export async function assignSessionConsultationsToUser(
     return;
   }
 
-  const updated = consultations.map((entry) => (entry.sessionId === sessionId ? { ...entry, userId: ownerTargetId } : entry));
-  await writeLocalJson(consultationsFile, updated);
+  await mutateLocalJson(consultationsFile, (entries) =>
+    entries.map((entry) => (entry.sessionId === sessionId ? { ...entry, userId: ownerTargetId } : entry)),
+  );
 }
 
 export async function findConsultationForViewer(input: {

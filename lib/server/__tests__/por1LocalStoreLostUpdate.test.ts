@@ -195,3 +195,146 @@ test("a reader never observes a partially written file", async (t) => {
     assert.ok(rows.length === 0 || rows.length === 2000, `partial read observed: ${rows.length} rows`);
   }
 });
+
+// ── THE SAME DEFECT IN THE OTHER STORES ──────────────────────────────────────
+//
+// YV-C7 proved the mechanism on the sessions file. Every other mutable local store had the same
+// shape, so each invariant below is the one that store exists to hold — modelled on the primitive,
+// because the primitive is what was wrong.
+
+test("ACCOUNTS — the uniqueness check and the insert must be ONE critical section", async (t) => {
+  // Two concurrent registrations for the same address. With a gap between "is it taken?" and the
+  // insert, BOTH see absent and both insert; and the second, holding an array read before the
+  // first, erases it. A duplicated or lost ACCOUNT is materially worse than a lost session.
+  const dir = mkdtempSync(join(tmpdir(), "por1-lostupdate-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const store = makeStore(dir, "accounts.json");
+  const mutate = serializedMutator(store);
+
+  const register = (email: string) =>
+    mutate((rows) => (rows.some((r) => r.id === email) ? rows : [{ id: email }, ...rows]));
+
+  await Promise.all([
+    register("same@example.test"),
+    register("same@example.test"),
+    ...Array.from({ length: 20 }, (_, i) => register(`other-${i}@example.test`)),
+  ]);
+
+  const rows = await store.read();
+  assert.equal(rows.filter((r) => r.id === "same@example.test").length, 1, "exactly one account");
+  assert.equal(rows.length, 21, "no unrelated account was erased");
+});
+
+test("ACCOUNTS — updating one account never erases another", async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "por1-lostupdate-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const store = makeStore(dir, "accounts.json");
+  const mutate = serializedMutator(store);
+
+  await mutate(() => Array.from({ length: 30 }, (_, i) => ({ id: `acct-${i}` })));
+  await Promise.all(
+    Array.from({ length: 30 }, (_, i) =>
+      mutate((rows) => rows.map((r) => (r.id === `acct-${i}` ? { id: `acct-${i}` } : r))),
+    ),
+  );
+  assert.equal((await store.read()).length, 30);
+});
+
+test("RESET TOKENS — two consumers race one token and exactly one wins", async (t) => {
+  // Single use is the entire security property. Read-then-write with a gap lets both consumers see
+  // the token live, and both accept.
+  const dir = mkdtempSync(join(tmpdir(), "por1-lostupdate-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const store = makeStore(dir, "password-reset-tokens.json");
+  const mutate = serializedMutator(store);
+
+  await mutate(() => [{ id: "token-live" }]);
+  const consume = () =>
+    new Promise<boolean>((resolve) => {
+      let won = false;
+      void mutate((rows) => {
+        won = rows.some((r) => r.id === "token-live");
+        return rows.filter((r) => r.id !== "token-live");
+      }).then(() => resolve(won));
+    });
+
+  const outcomes = await Promise.all([consume(), consume(), consume()]);
+  assert.equal(outcomes.filter(Boolean).length, 1, "exactly one consumer may accept the token");
+});
+
+test("RESET TOKENS — expiry cleanup does not erase a token minted while it ran", async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "por1-lostupdate-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const store = makeStore(dir, "password-reset-tokens.json");
+  const mutate = serializedMutator(store);
+
+  await mutate(() => [{ id: "expired-1" }, { id: "expired-2" }]);
+  await Promise.all([
+    mutate((rows) => rows.filter((r) => !r.id.startsWith("expired"))),
+    mutate((rows) => [{ id: "fresh" }, ...rows]),
+  ]);
+
+  const rows = await store.read();
+  assert.ok(rows.some((r) => r.id === "fresh"), "the freshly minted token survived the sweep");
+});
+
+test("LINE EVENTS — a duplicate delivery is stored exactly once, distinct ones all survive", async (t) => {
+  // This store IS the redelivery idempotency record. A lost update does not merely drop an event —
+  // it makes a duplicate delivery look new.
+  const dir = mkdtempSync(join(tmpdir(), "por1-lostupdate-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const store = makeStore(dir, "line-webhook-events.json");
+  const mutate = serializedMutator(store);
+
+  const deliver = (id: string) =>
+    mutate((rows) => (rows.some((r) => r.id === id) ? rows.map((r) => (r.id === id ? { id } : r)) : [{ id }, ...rows]));
+
+  await Promise.all([
+    deliver("evt-dup"),
+    deliver("evt-dup"),
+    deliver("evt-dup"),
+    ...Array.from({ length: 15 }, (_, i) => deliver(`evt-${i}`)),
+  ]);
+
+  const rows = await store.read();
+  assert.equal(rows.filter((r) => r.id === "evt-dup").length, 1);
+  assert.equal(rows.length, 16);
+});
+
+test("RECENT SUBJECTS — pruning one subject does not erase another recorded meanwhile", async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "por1-lostupdate-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const store = makeStore(dir, "recent-subjects.json");
+  const mutate = serializedMutator(store);
+
+  await mutate(() => [{ id: "subject-erased" }]);
+  await Promise.all([
+    mutate((rows) => rows.filter((r) => r.id !== "subject-erased")),
+    mutate((rows) => [{ id: "subject-new" }, ...rows]),
+  ]);
+
+  const rows = await store.read();
+  assert.ok(rows.some((r) => r.id === "subject-new"));
+  assert.ok(!rows.some((r) => r.id === "subject-erased"));
+});
+
+test("CONSULTATIONS — last-write-wins on ONE record, never over the whole file", async (t) => {
+  // The record-level conflict rule is intentional. Unserialized, it silently became last-write-wins
+  // across every consultation in the file, which nobody chose.
+  const dir = mkdtempSync(join(tmpdir(), "por1-lostupdate-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const store = makeStore(dir, "consultations.json");
+  const mutate = serializedMutator(store);
+
+  await mutate(() => Array.from({ length: 10 }, (_, i) => ({ id: `consult-${i}` })));
+  await Promise.all([
+    mutate((rows) => rows.map((r) => (r.id === "consult-3" ? { id: "consult-3" } : r))),
+    mutate((rows) => [{ id: "consult-new" }, ...rows]),
+    mutate((rows) => rows.filter((r) => r.id !== "consult-7")),
+  ]);
+
+  const rows = await store.read();
+  assert.ok(rows.some((r) => r.id === "consult-new"));
+  assert.ok(!rows.some((r) => r.id === "consult-7"));
+  assert.equal(rows.length, 10, "one create, one delete, eight untouched");
+});
