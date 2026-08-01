@@ -1798,3 +1798,116 @@ WS-F6   axe desktop AND mobile across /, /check-in, /tests, /line/mini-app, /res
 2. WS-H Production read-only audit · WS-I full-lineage rehearsal (must prove
    `yorisou_private_recommendations` erasure, which isolated Preview cannot) · WS-J activation and
    rollback rehearsal · WS-K PR replacement body.
+
+---
+
+## WS-G — cleanup gap closed, tool hardened, and the RUN DID NOT PASS
+
+HEAD `c2aa51c` → `33a37ad`. Five workflows SUCCESS at `33a37ad`. Production untouched.
+
+### The classifier — the gap was real, and the obvious fix was the dangerous one
+
+Live Preview inventory was **149 accounts: 40 `cpc1-*@synthetic-preview.invalid` + 109
+`por1*@example.com`**. The tool matched only the first suffix, so a run would have reported success
+while leaving 109 behind.
+
+`email.endsWith("@example.com")` would have destroyed the `shadow-*` and `switch-*` accounts that
+`scripts/verify-session-auth-*.ts` create. Membership is now a CONJUNCTION — reserved domain AND the
+generated local-part shape, both anchored and requiring entropy. Matched **149/149, 0 unclassified**.
+The negative control asserts the naive rule selects the collateral and the governed one refuses it.
+
+Tool hardened: dry-run by DEFAULT, `--execute` required, `--max-candidates=<n>` required and taken
+from the dry run the operator just read, unknowns preserved and reported by id prefix only. A
+share-based ceiling was rejected in code with its reason: an isolated Preview is legitimately ~100%
+synthetic, so "refuse if most of it matches" would block every real cleanup.
+
+Pacing added after MEASURING it: back-to-back over a hundred accounts the failure rate reached
+**84 unresolved in one pass** (`fetch failed` plus executor claims from an interrupted run). The
+operator loop now paces; the next pass ran 0 unresolved. Nothing about a real deletion changed.
+
+### WS-G7 — the Hosted evidence is preserved, and that was verified
+
+```
+diff 0307571 -> 33a37ad
+  docs/ux2r/07_POR1_EXECUTION_STATE.md        DOCS_ONLY
+  .github/workflows/yorisou-check.yml         GOVERNANCE_ONLY (CI config, not deployed)
+  package.json                                GOVERNANCE_ONLY (scripts only; NO dependency change)
+  scripts/por1-preview-synthetic-cleanup.ts   NON_RUNTIME_OPERATOR
+  lib/server/previewSyntheticClassifier.ts    NON_RUNTIME_OPERATOR (0 importers outside scripts/tests)
+  lib/server/__tests__/…Classifier.test.ts    TEST_ONLY
+
+HOSTED_RUNTIME_AFFECTING = 0
+```
+
+So the acceptance at `0307571` (3/3 · 20/20 · 89/0/4 · axe clean · 24/24 downloads) stands without a
+third replay.
+
+### ⛔ WS-G DID NOT PASS — and run 2 "removing nothing" is true for the WRONG REASON
+
+Account erasure itself converged: **149 → 0 account objects, 0 email lookups, 0 password resets,
+sagas 148 → 1**, and the final pass reported `unresolved: 0`.
+
+But an independent authoritative sweep — not the tool's own output — shows orphans:
+
+```
+AS DESIGNED   identity links: 184 `erased` (content-free tombstones)
+              deletion jobs : 173 `completed` (de-identified audit)
+              sessions      : 21 ANONYMOUS (no owner — outside an account-scoped tool by nature)
+
+REAL RESIDUE  identity links: 1 ACTIVE
+              deletion jobs : 12 failed_retryable, 13 still NAMING AN OWNER
+              sessions      : 3 OWNER-LINKED
+              accounts/by-line-user: 2 · foundation user-profiles: 1 · auth-identities: 2
+              line-events   : 5
+```
+
+**THE MODEL IS THE DEFECT.** The tool derives candidates from surviving ACCOUNTS. Every account
+object is gone, so it sees zero candidates and reports "nothing to clean" — while a job still names
+an owner, a link is still active, and three sessions still point at erased accounts. That is exactly
+the wrong-reason pass this gate exists to catch, and it would have been reported as an idempotency
+proof if the verification had trusted the tool.
+
+The orphans were produced by my own interrupted passes: a killed process mid-saga leaves a job at
+`failed_retryable` after `identity_erasure` removed the account object but before finalization, so
+the satellites survive with nothing left to enumerate them from.
+
+### ⛔ EXACT NEXT ACTION
+
+1. **Derive cleanup candidates from the DURABLE JOBS as well as from accounts.** A job that still
+   names an owner is a deletion that has not finished, and resuming it through the governed saga is
+   the only correct way to collect the orphans — the manifest is frozen in the job, which is
+   precisely what an account-derived scan cannot reconstruct.
+2. Re-run run 1 to convergence, then run 2, and re-verify INDEPENDENTLY. The pass condition is the
+   authoritative sweep above reading `0` for every REAL RESIDUE row — not the tool's exit code.
+3. Then record `last_accepted_candidate_sha: 0307571…` and continue to WS-I..WS-K.
+
+## WS-H — Production read-only audit. COMPLETE.
+
+```
+project      krxizslnksorwhepyijs · yorisou-production · ap-northeast-1 · ACTIVE_HEALTHY
+lineage      12 migrations · 42 public tables
+POR-1 objects  NONE (no deletion jobs, identity links, provisioning sagas, mutation gates,
+               canonical line events or canonical recommendation tables)
+legacy       yorisou_account_deletion_requests present — pre-POR-1, unrelated to the saga
+             yorisou_private_recommendations PRESENT — confirms it must be proven in WS-I
+deployment   dpl_9Dg5XMiEXds8gTwNanajYFEGx9G7 · READY · target=production · 2026-07-27, unchanged
+```
+
+Control names resolved FROM CODE (`por1RuntimeControls.ts`, prefix `YORISOU_POR1_`), not assumed:
+
+```
+YORISOU_POR1_CANONICAL_CORE                        production UNSET · preview SET
+YORISOU_POR1_CANONICAL_RECOMMENDATIONS             production UNSET · preview SET
+YORISOU_POR1_LINE_CANONICAL_RETURN                 production UNSET · preview SET
+YORISOU_POR1_ACCOUNT_DELETION_EXECUTOR             production UNSET · preview SET
+YORISOU_POR1_*_SCHEMA_READY  (4 flags)             production UNSET · preview SET
+```
+
+Two Production env vars matched a POR-1-shaped grep and are NOT POR-1 controls:
+`YORISOU_CANONICAL_LINE_WEBHOOK_SHADOW_ENABLED` and `…SELECTIVE_ENABLE_ENABLED` — pre-existing
+CPV1-era LINE webhook flags.
+
+## WS-I1 — promotion archaeology
+
+23 PREVIEW_ONLY migrations, ~6,300 lines. Production's lineage contains NONE of them, so every one
+requires promotion authoring. WS-I2..WS-I6, WS-J and WS-K are untouched.
