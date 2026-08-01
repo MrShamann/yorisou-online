@@ -2099,3 +2099,96 @@ last_accepted_candidate_sha 03075711269e0f31e58d79b25a2ca690f4047589
 ```
 
 WS-I2..WS-I12, WS-J and WS-K remain.
+
+---
+
+## WS-I2 — the Production promotion contract, extracted and classified
+
+Production drift reconciled first, read-only: **12 migrations · 42 public tables · 0 POR-1 objects ·
+`yorisou_private_recommendations` present**. No drift since the WS-H audit.
+
+### The promotion delta, computed rather than assumed
+
+Diffing the live Preview and Production catalogues gives the exact set — not "the 23 Preview
+migrations", which is a history, not a contract:
+
+```
+TABLES  15   in Preview, absent from Production
+  yorisou_assessment_attempts · yorisou_assessment_results · yorisou_interpretation_responses
+  yorisou_canonical_recommendation_sets / _items / _actions
+  yorisou_canonical_identity_links · yorisou_identity_provisioning_sagas
+  yorisou_canonical_line_events · yorisou_canonical_line_subjects
+  yorisou_account_mutation_gates · yorisou_account_mutation_leases
+  yorisou_account_deletion_jobs · yorisou_account_deletion_audit
+  yorisou_account_deletion_manifests
+
+FUNCTIONS  74   (Preview 86 yorisou_* − Production 12)
+  26 account deletion · 12 canonical LINE activity · 11 assessment core
+  11 identity provisioning · 7 mutation fence · 6 canonical identity links
+   4 interpretation · 3 canonical recommendations
+```
+
+Six Preview `yorisou_*` tables are NOT in the delta — the DCI-1 and YV-1 families are already
+Production lineage (`202607200005`, `202607210001`).
+
+### THE KEY EXTRACTION INSIGHT
+
+The 24 Preview migrations are a HISTORY: 9 of them create tables, and the other 15 are almost
+entirely `create or replace function`. A later migration silently supersedes an earlier definition,
+so **the last definition wins and the intermediate ones are dead**. Promoting the sequence would ship
+every superseded version and then overwrite it — 6,300 lines to arrive at a state the live Preview
+catalogue already holds exactly.
+
+So the Production set is derived from the FINAL PREVIEW CATALOGUE, which is the state the accepted
+application (`0307571`) was actually proven against, with the migration history used only for intent
+and for the invariants each correction was written to protect.
+
+### Classification of all 24 PREVIEW_ONLY migrations
+
+```
+CONSOLIDATE_INTO_FINAL_CONTRACT — the 9 table-creating migrations contribute their final table
+  shape; the 15 function-only ones contribute only their FINAL surviving definitions:
+    202607270001 (3 tables, 7 fns) · 202607280004 (3 tables, 4 fns)
+    202607300003 (2 tables, 7 fns) · 202607300004 (2 tables, 7 fns)
+    202607300005 (1 table, 19 fns) · 202607310001 (1 table, 8 fns)
+    202607310002 (1 table, 7 fns) · 202607310003 (1 table, 11 fns)
+    202607310004 (1 table, 5 fns)
+
+SUPERSEDED (intent retained, SQL not promoted — each redefines a function a later migration or the
+  final catalogue replaces):
+    202607270003 · 202607270004 · 202607280001 · 202607280002 · 202607280003
+    202607280005 · 202607280006 · 202607280007 · 202607300001 · 202607300002
+    202607310005 · 202607310006 · 202607310007 · 202607310008
+
+    NOTE: superseded means the SQL text is not copied. Every INVARIANT these introduced is a
+    promotion requirement in its own right, because each was written to close a specific defect:
+    the same-owner identity-link race (005), additive-only link sync (006), the deletion-open race
+    (007) and terminal de-identification (008). The promotion set must carry the FINAL function
+    bodies that contain those repairs, and the permanent proofs must survive promotion.
+
+PREVIEW_FIXTURE_ONLY / DO_NOT_PROMOTE:
+    202607270002 (0 objects — a Preview persistence rollback step, no contract)
+```
+
+### The rehearsal baseline is NOT the Preview schema
+
+`yorisou_private_recommendations` is present in Production and absent from isolated Preview, so the
+disposable rehearsal must be built from the **12 Production migrations + fixtures + the new promotion
+set** — never from the Preview schema, which cannot prove that table's erasure.
+
+## ⛔ REMAINING — honestly scoped
+
+WS-I3 onward is the largest single body of work left in the package, and it is now precisely
+measured rather than estimated:
+
+```
+author  15 tables + 74 functions + indexes + RLS + FORCE RLS + grants as clean
+        PRODUCTION_LINEAGE migrations, grouped by dependency / lock / rollback boundary
+then    Production-shape fixtures (4 principals) · fresh rehearsal x2 from destroyed infrastructure
+        populated-legacy rehearsal · old-app compatibility at main c8d8a8ad in a separate worktree
+        new-app controls-off · readiness matrix · capability dependency matrix · full POR-1 journey
+        all-family erasure · yorisou_private_recommendations proof · terminal-deidentification
+        against the PRODUCTION contract · legacy preservation · failure injection · rollback matrix
+        kill switches · observability · release sequence · Production synthetic plan
+        PR #126 body · final dossier
+```
