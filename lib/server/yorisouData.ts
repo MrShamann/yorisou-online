@@ -1,4 +1,5 @@
 import { promises as fs } from "fs";
+import { acquireLocalStoreRoot } from "./localStoreOwnership";
 import path from "path";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 
@@ -615,12 +616,50 @@ let localWriteCounter = 0;
  */
 const localFileLocks = new Map<string, Promise<unknown>>();
 
+/**
+ * OWNERSHIP OF THE LOCAL STORE ROOT — acquired before the first authoritative mutation.
+ *
+ * The promise chains above serialize read-modify-write inside ONE process. Two application
+ * processes against the same root would each serialize perfectly against themselves and lose each
+ * other's writes exactly as before the lost-update repair — and every test would still pass, because
+ * nothing would detect it. So the boundary is enforced here, at the adapter, rather than left to
+ * callers remembering to ask: a helper no runtime path invokes enforces nothing.
+ *
+ * Acquired lazily on the first MUTATION, not on read. A read-only process (a fixture loader, a
+ * report renderer) has no reason to claim exclusivity, and demanding it would turn the guard into
+ * something people route around.
+ */
+let localStoreAuthority: Promise<void> | null = null;
+
+async function ensureLocalStoreAuthority(): Promise<void> {
+  if (shouldUseSharedStore) return;
+  if (!localStoreAuthority) {
+    localStoreAuthority = acquireLocalStoreRoot(dataDir, { label: "yorisou-local-store" }).then((result) => {
+      if (result.ok) return;
+      // Fail closed. Proceeding here is the specific scenario this exists to prevent.
+      localStoreAuthority = null;
+      throw new LocalStoreNotOwned(result.reason);
+    });
+  }
+  return localStoreAuthority;
+}
+
+/** Thrown instead of writing into a root this process does not exclusively own. */
+export class LocalStoreNotOwned extends Error {
+  constructor(readonly reason: "held_by_live_process" | "ownership_state_corrupt") {
+    super(`local_store_not_owned:${reason}`);
+    this.name = "LocalStoreNotOwned";
+  }
+}
+
+
 async function mutateLocalJsonFor<T, R>(
   file: DataFile<T>,
   mutate: (current: T) => { value: T; result: R } | Promise<{ value: T; result: R }>,
 ): Promise<R> {
   const previous = localFileLocks.get(file.path) ?? Promise.resolve();
   const run = previous.then(async () => {
+    await ensureLocalStoreAuthority();
     const current = await readLocalJson(file);
     const { value, result } = await mutate(current);
     await writeLocalJson(file, value);
@@ -633,6 +672,7 @@ async function mutateLocalJsonFor<T, R>(
 async function mutateLocalJson<T>(file: DataFile<T>, mutate: (current: T) => T | Promise<T>): Promise<T> {
   const previous = localFileLocks.get(file.path) ?? Promise.resolve();
   const run = previous.then(async () => {
+    await ensureLocalStoreAuthority();
     const current = await readLocalJson(file);
     const next = await mutate(current);
     await writeLocalJson(file, next);

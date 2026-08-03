@@ -1,16 +1,20 @@
-// POR-1 — the single-process boundary, made enforceable.
+// POR-1 — the single-process boundary, enforced and PROVEN WITH REAL PROCESSES.
 //
-// The lost-update repair serializes read-modify-write through one in-process promise chain per file.
-// Two application processes against one store root would each serialize perfectly against themselves
-// and lose each other's writes exactly as before the repair — while every existing test still
-// passed. That is the specific reason this boundary cannot be left as documentation: the unsupported
-// configuration is indistinguishable from the supported one until data disappears.
+// The first version of this suite tested the pure classifier and concluded the boundary was closed.
+// It was not. Acquisition was read → classify → write temp → rename, which is check-then-act: two
+// processes both reading "no lock" both rename, and BOTH return success. A classifier test cannot
+// see that, because the race is between two processes, not inside one decision.
+//
+// So the decisive tests here spawn real children behind a barrier and count winners. The rule is
+// simple and unforgiving: exactly one ACQUIRED, never two, never zero.
 
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   acquireLocalStoreRoot,
@@ -19,10 +23,13 @@ import {
   processIsAlive,
   readOwnerMarker,
   releaseLocalStoreRoot,
+  selfMarker,
   type OwnerMarker,
 } from "../localStoreOwnership";
 
-const MARKER = ".local-store-owner.json";
+const LOCK = ".local-store-owner.lock";
+const MODULE = fileURLToPath(new URL("../localStoreOwnership.ts", import.meta.url));
+
 const freshRoot = (t: { after: (fn: () => void) => void }) => {
   const dir = mkdtempSync(join(tmpdir(), "por1-owner-"));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
@@ -30,6 +37,7 @@ const freshRoot = (t: { after: (fn: () => void) => void }) => {
 };
 
 const foreign = (over: Partial<OwnerMarker> = {}): OwnerMarker => ({
+  schema: 1,
   pid: 999_999,
   nonce: "some-other-process-nonce",
   startedAt: "2026-01-01T00:00:00.000Z",
@@ -37,20 +45,101 @@ const foreign = (over: Partial<OwnerMarker> = {}): OwnerMarker => ({
   ...over,
 });
 
-// ── THE DECISION RULE, tested without spawning anything ──────────────────────
+function writeLock(root: string, marker: OwnerMarker | string) {
+  mkdirSync(join(root, LOCK), { recursive: true });
+  writeFileSync(
+    join(root, LOCK, "owner.json"),
+    typeof marker === "string" ? marker : JSON.stringify(marker),
+    "utf8",
+  );
+}
 
-test("classification covers free, self, stale and held", () => {
-  const alwaysAlive = () => true;
-  const neverAlive = () => false;
+/**
+ * Spawn N children that all try the same root at once.
+ *
+ * The barrier is a shared start deadline rather than a handshake: every child sleeps until the same
+ * wall-clock instant, so they hit `mkdir` inside the same millisecond. A staggered launch would
+ * pass against the broken implementation too, which is the whole reason the earlier suite missed it.
+ */
+function raceForRoot(root: string, contenders: number, holdMs = 40): string[] {
+  const script = `
+    const url = ${JSON.stringify(MODULE)};
+    const start = Number(process.env.START_AT);
+    import(url).then(async (m) => {
+      while (Date.now() < start) {}
+      const r = await m.acquireLocalStoreRoot(process.env.ROOT, { label: "race" });
+      process.stdout.write(r.ok ? "ACQUIRED" : r.reason.toUpperCase());
+      if (r.ok) await new Promise((res) => setTimeout(res, ${holdMs}));
+    }).catch((e) => { process.stdout.write("ERROR:" + e.message); });
+  `;
+  const startAt = Date.now() + 250;
+  const outDir = mkdtempSync(join(tmpdir(), "por1-race-out-"));
+  const scriptPath = join(outDir, "child.mjs");
+  writeFileSync(scriptPath, script, "utf8");
+  const cmd = Array.from({ length: contenders }, (_, i) =>
+    `ROOT="${root}" START_AT=${startAt} "${process.execPath}" --import tsx "${scriptPath}" > "${outDir}/out-${i}" 2>/dev/null &`,
+  ).join(" ");
+  execFileSync("/bin/bash", ["-c", `${cmd} wait`], { encoding: "utf8" });
+  const results = readdirSync(outDir)
+    .filter((f) => f.startsWith("out-"))
+    .map((f) => readFileSync(join(outDir, f), "utf8").trim());
+  rmSync(outDir, { recursive: true, force: true });
+  return results;
+}
 
-  assert.equal(classifyExistingOwner(null, alwaysAlive), "free");
-  assert.equal(classifyExistingOwner(foreign(), alwaysAlive), "held");
-  assert.equal(classifyExistingOwner(foreign(), neverAlive), "stale");
+// ── THE DECISIVE TESTS — REAL SIMULTANEOUS PROCESSES ─────────────────────────
+
+test("TWO PROCESSES, ONE EMPTY ROOT — exactly one acquires, over many campaigns", { timeout: 600_000 }, (t) => {
+  // This is the test the previous suite did not have, and the reason it wrongly reported the
+  // boundary closed. Against check-then-rename acquisition it produces two ACQUIRED.
+  let bothWon = 0;
+  let noneWon = 0;
+  const campaigns = 40;
+  for (let i = 0; i < campaigns; i += 1) {
+    const root = freshRoot(t);
+    const results = raceForRoot(root, 2, 10);
+    const won = results.filter((r) => r === "ACQUIRED").length;
+    if (won > 1) bothWon += 1;
+    if (won === 0) noneWon += 1;
+  }
+  assert.equal(bothWon, 0, `two processes acquired the same root in ${bothWon}/${campaigns} campaigns`);
+  assert.equal(noneWon, 0, `no process acquired the root in ${noneWon}/${campaigns} campaigns`);
 });
 
-test("a marker with THIS pid but a different nonce is not self", () => {
-  // PIDs are reused. Treating a same-pid marker as our own would let a store be silently adopted by
-  // an unrelated program that happened to land on the number.
+test("EIGHT CONTENDERS, ONE ROOT — one owner, seven rejected", { timeout: 600_000 }, (t) => {
+  for (let i = 0; i < 5; i += 1) {
+    const root = freshRoot(t);
+    const results = raceForRoot(root, 8, 60);
+    const won = results.filter((r) => r === "ACQUIRED").length;
+    assert.equal(won, 1, `expected exactly one owner, got ${won}: ${results.join(",")}`);
+    assert.equal(
+      results.filter((r) => r === "HELD_BY_LIVE_PROCESS").length,
+      results.length - 1,
+      `the losers must be told the root is held: ${results.join(",")}`,
+    );
+  }
+});
+
+test("two DIFFERENT roots are independent", (t) => {
+  const a = freshRoot(t);
+  const b = freshRoot(t);
+  assert.deepEqual(raceForRoot(a, 1, 5), ["ACQUIRED"]);
+  assert.deepEqual(raceForRoot(b, 1, 5), ["ACQUIRED"]);
+});
+
+// ── THE DECISION RULE ────────────────────────────────────────────────────────
+
+test("classification covers free, self, stale, held and corrupt", () => {
+  assert.equal(classifyExistingOwner(undefined, () => true), "free");
+  assert.equal(classifyExistingOwner(null, () => true), "corrupt");
+  assert.equal(classifyExistingOwner(foreign(), () => true), "held");
+  assert.equal(classifyExistingOwner(foreign(), () => false), "stale");
+  assert.equal(classifyExistingOwner(selfMarker(), () => true), "self");
+});
+
+test("a lock with THIS pid but a different nonce is NOT self", () => {
+  // PIDs are reused. Adopting a same-pid lock would let an unrelated program's leftover become our
+  // own claim.
   const samePidDifferentProcess = foreign({ pid: process.pid });
   assert.equal(isSelf(samePidDifferentProcess), false);
   assert.equal(classifyExistingOwner(samePidDifferentProcess, () => true), "held");
@@ -63,96 +152,63 @@ test("processIsAlive answers for this process and rejects nonsense", () => {
   assert.equal(processIsAlive(Number.NaN), false);
 });
 
-// ── ACQUISITION ──────────────────────────────────────────────────────────────
+// ── STALE, CORRUPT, RELEASE ──────────────────────────────────────────────────
 
-test("a free root is acquired, and re-acquiring from the same process is not a conflict", async (t) => {
+test("a stale lock is reclaimed, and the reclaim is reported not silent", async (t) => {
   const root = freshRoot(t);
-  const first = await acquireLocalStoreRoot(root, { label: "test" });
-  assert.equal(first.ok, true);
-  assert.equal(first.ok && first.reclaimedStale, false);
-
-  const again = await acquireLocalStoreRoot(root);
-  assert.equal(again.ok, true, "the owner may re-assert its own claim");
+  writeLock(root, foreign());
+  const result = await acquireLocalStoreRoot(root, { alive: () => false });
+  assert.equal(result.ok, true);
+  assert.equal(result.ok && result.reclaimedStale, true);
+  assert.deepEqual(
+    readdirSync(root).filter((f) => f.includes("stale-")),
+    [],
+    "the quarantined directory is removed after reclaim",
+  );
 });
 
-test("A SECOND LIVE PROCESS IS REJECTED — the case this exists for", async (t) => {
+test("MALFORMED ownership state FAILS CLOSED — it is never treated as free", async (t) => {
+  // An authoritative data file that will not parse fails closed. Ownership state has no business
+  // being weaker than the data it protects: silently stealing a root whose owner cannot be
+  // determined is exactly how two writers end up live at once.
   const root = freshRoot(t);
-  // A live foreign owner: a real pid that is not us.
-  writeFileSync(
-    join(root, MARKER),
-    JSON.stringify(foreign({ pid: process.ppid || process.pid })),
-    "utf8",
-  );
+  writeLock(root, "{ not json");
+  const result = await acquireLocalStoreRoot(root);
+  assert.equal(result.ok, false);
+  assert.equal(result.ok === false && result.reason, "ownership_state_corrupt");
+});
 
+test("a live foreign owner is refused", async (t) => {
+  const root = freshRoot(t);
+  writeLock(root, foreign({ pid: process.pid, nonce: "not-ours" }));
   const result = await acquireLocalStoreRoot(root, { alive: () => true });
   assert.equal(result.ok, false);
   assert.equal(result.ok === false && result.reason, "held_by_live_process");
-  assert.ok(result.ok === false && typeof result.holder.pid === "number");
 });
 
-test("a stale marker is reclaimed and reported as such", async (t) => {
-  const root = freshRoot(t);
-  writeFileSync(join(root, MARKER), JSON.stringify(foreign()), "utf8");
-
-  const result = await acquireLocalStoreRoot(root, { alive: () => false });
-  assert.equal(result.ok, true);
-  assert.equal(result.ok && result.reclaimedStale, true, "recovery must be visible, not silent");
-});
-
-test("a malformed marker does not wedge the store forever", async (t) => {
-  // A safety net that can permanently lock a developer out of their own store is a worse problem
-  // than the one it prevents.
-  const root = freshRoot(t);
-  writeFileSync(join(root, MARKER), "{ not json", "utf8");
-  assert.equal(await readOwnerMarker(root), null);
-  assert.equal((await acquireLocalStoreRoot(root)).ok, true);
-});
-
-test("the marker is written atomically and leaves no temp file behind", async (t) => {
+test("the owner file carries no secret and no user data", async (t) => {
   const root = freshRoot(t);
   await acquireLocalStoreRoot(root);
-  const parsed = JSON.parse(readFileSync(join(root, MARKER), "utf8")) as OwnerMarker;
-  assert.equal(parsed.pid, process.pid);
-  assert.equal(typeof parsed.nonce, "string");
-  const { readdirSync } = await import("node:fs");
-  assert.deepEqual(
-    readdirSync(root).filter((f) => f.includes(".tmp-")),
-    [],
-    "no temp marker survived the rename",
-  );
+  const marker = await readOwnerMarker(root);
+  assert.deepEqual(Object.keys(marker as object).sort(), ["label", "nonce", "pid", "schema", "startedAt"]);
 });
 
-test("the marker carries no secret and no user data", async (t) => {
-  const root = freshRoot(t);
-  await acquireLocalStoreRoot(root, { label: "yorisou-local-store" });
-  const raw = readFileSync(join(root, MARKER), "utf8");
-  assert.deepEqual(Object.keys(JSON.parse(raw) as object).sort(), ["label", "nonce", "pid", "startedAt"]);
-});
-
-// ── RELEASE ──────────────────────────────────────────────────────────────────
-
-test("release frees the root for the next process", async (t) => {
+test("release frees the root, and NEVER steals a foreign lock", async (t) => {
   const root = freshRoot(t);
   await acquireLocalStoreRoot(root);
   assert.equal(await releaseLocalStoreRoot(root), true);
-  assert.equal(await readOwnerMarker(root), null);
-  assert.equal((await acquireLocalStoreRoot(root, { alive: () => true })).ok, true);
+  assert.equal(await readOwnerMarker(root), undefined);
+  assert.deepEqual(readdirSync(root).filter((f) => f.includes("release-")), []);
+
+  writeLock(root, foreign());
+  assert.equal(await releaseLocalStoreRoot(root), false, "a non-owner must not release");
+  assert.ok(await readOwnerMarker(root), "the foreign lock survives");
 });
 
-test("release NEVER steals a marker written by another process", async (t) => {
+test("re-asserting ownership from the same process is idempotent", async (t) => {
   const root = freshRoot(t);
-  writeFileSync(join(root, MARKER), JSON.stringify(foreign()), "utf8");
-  assert.equal(await releaseLocalStoreRoot(root), false, "a non-owner must not be able to release");
-  assert.ok(await readOwnerMarker(root), "the foreign marker survives");
-});
-
-// ── ISOLATION ────────────────────────────────────────────────────────────────
-
-test("two different roots are independent", async (t) => {
-  const a = freshRoot(t);
-  const b = freshRoot(t);
-  assert.equal((await acquireLocalStoreRoot(a)).ok, true);
-  assert.equal((await acquireLocalStoreRoot(b)).ok, true);
-  // Isolated roots are the supported way to run two harnesses at once.
-  assert.notEqual((await readOwnerMarker(a))?.startedAt === undefined, true);
+  const first = await acquireLocalStoreRoot(root);
+  const again = await acquireLocalStoreRoot(root);
+  assert.equal(first.ok && again.ok, true);
+  assert.equal(again.ok && again.marker.nonce, first.ok && first.marker.nonce);
 });
