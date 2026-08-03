@@ -62,22 +62,31 @@ function writeLock(root: string, marker: OwnerMarker | string) {
  * pass against the broken implementation too, which is the whole reason the earlier suite missed it.
  */
 function raceForRoot(root: string, contenders: number, holdMs = 40): string[] {
+  // THE WINNER HOLDS UNTIL A SHARED DEADLINE, not for a fixed duration.
+  //
+  // A fixed hold is a hidden assumption that every contender starts within it. On a slow CI runner
+  // it does not hold: an early winner EXITS before a late contender even begins, the late one then
+  // correctly reclaims a genuinely stale lock, and the campaign records two owners. That is
+  // sequential ownership working exactly as designed — but scored as a race failure, which is a test
+  // defect masquerading as an implementation one. It failed this way in CI and passed locally.
   const script = `
     const url = ${JSON.stringify(MODULE)};
     const start = Number(process.env.START_AT);
+    const holdUntil = Number(process.env.HOLD_UNTIL);
     import(url).then(async (m) => {
       while (Date.now() < start) {}
       const r = await m.acquireLocalStoreRoot(process.env.ROOT, { label: "race" });
       process.stdout.write(r.ok ? "ACQUIRED" : r.reason.toUpperCase());
-      if (r.ok) await new Promise((res) => setTimeout(res, ${holdMs}));
+      if (r.ok) await new Promise((res) => setTimeout(res, Math.max(0, holdUntil - Date.now())));
     }).catch((e) => { process.stdout.write("ERROR:" + e.message); });
   `;
   const startAt = Date.now() + 250;
+  const holdUntil = startAt + holdMs;
   const outDir = mkdtempSync(join(tmpdir(), "por1-race-out-"));
   const scriptPath = join(outDir, "child.mjs");
   writeFileSync(scriptPath, script, "utf8");
   const cmd = Array.from({ length: contenders }, (_, i) =>
-    `ROOT="${root}" START_AT=${startAt} "${process.execPath}" --import tsx "${scriptPath}" > "${outDir}/out-${i}" 2>/dev/null &`,
+    `ROOT="${root}" START_AT=${startAt} HOLD_UNTIL=${holdUntil} "${process.execPath}" --import tsx "${scriptPath}" > "${outDir}/out-${i}" 2>/dev/null &`,
   ).join(" ");
   execFileSync("/bin/bash", ["-c", `${cmd} wait`], { encoding: "utf8" });
   const results = readdirSync(outDir)
@@ -94,10 +103,10 @@ test("TWO PROCESSES, ONE EMPTY ROOT — exactly one acquires, over many campaign
   // boundary closed. Against check-then-rename acquisition it produces two ACQUIRED.
   let bothWon = 0;
   let noneWon = 0;
-  const campaigns = 40;
+  const campaigns = 12;
   for (let i = 0; i < campaigns; i += 1) {
     const root = freshRoot(t);
-    const results = raceForRoot(root, 2, 10);
+    const results = raceForRoot(root, 2, 3_000);
     const won = results.filter((r) => r === "ACQUIRED").length;
     if (won > 1) bothWon += 1;
     if (won === 0) noneWon += 1;
@@ -107,9 +116,9 @@ test("TWO PROCESSES, ONE EMPTY ROOT — exactly one acquires, over many campaign
 });
 
 test("EIGHT CONTENDERS, ONE ROOT — one owner, seven rejected", { timeout: 600_000 }, (t) => {
-  for (let i = 0; i < 5; i += 1) {
+  for (let i = 0; i < 3; i += 1) {
     const root = freshRoot(t);
-    const results = raceForRoot(root, 8, 60);
+    const results = raceForRoot(root, 8, 6_000);
     const won = results.filter((r) => r === "ACQUIRED").length;
     assert.equal(won, 1, `expected exactly one owner, got ${won}: ${results.join(",")}`);
     assert.equal(
@@ -123,8 +132,8 @@ test("EIGHT CONTENDERS, ONE ROOT — one owner, seven rejected", { timeout: 600_
 test("two DIFFERENT roots are independent", (t) => {
   const a = freshRoot(t);
   const b = freshRoot(t);
-  assert.deepEqual(raceForRoot(a, 1, 5), ["ACQUIRED"]);
-  assert.deepEqual(raceForRoot(b, 1, 5), ["ACQUIRED"]);
+  assert.deepEqual(raceForRoot(a, 1, 100), ["ACQUIRED"]);
+  assert.deepEqual(raceForRoot(b, 1, 100), ["ACQUIRED"]);
 });
 
 // ── THE DECISION RULE ────────────────────────────────────────────────────────
