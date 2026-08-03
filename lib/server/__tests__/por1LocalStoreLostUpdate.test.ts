@@ -338,3 +338,146 @@ test("CONSULTATIONS — last-write-wins on ONE record, never over the whole file
   assert.ok(!rows.some((r) => r.id === "consult-7"));
   assert.equal(rows.length, 10, "one create, one delete, eight untouched");
 });
+
+// ── CROSS-FILE OPERATIONS ────────────────────────────────────────────────────
+//
+// Per-file serialization stops lost updates WITHIN a file. It does not make a two-file operation
+// transactional, and the adapter does not pretend otherwise: no function mutates more than one store
+// file, so every cross-file operation lives in a caller with a declared consistency model.
+// docs/ux2r/08_LOCAL_STORE_CONSISTENCY_MODEL.md records which model each one uses; these tests pin
+// the properties those models actually promise.
+
+test("REGISTRATION — a failed second stage must not look like success", async (t) => {
+  // The account write lands, the session write fails. The operation must REPORT failure. An account
+  // with no bound session is a governed resumable state; a success response with no session is a
+  // credential that does not exist.
+  const dir = mkdtempSync(join(tmpdir(), "por1-crossfile-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const accounts = makeStore(dir, "accounts.json");
+  const sessions = makeStore(dir, "sessions.json");
+  const mutateAccounts = serializedMutator(accounts);
+  const mutateSessions = serializedMutator(sessions);
+
+  const register = async (id: string, sessionWriteFails: boolean) => {
+    await mutateAccounts((rows) => (rows.some((r) => r.id === id) ? rows : [{ id }, ...rows]));
+    try {
+      await mutateSessions(() => {
+        if (sessionWriteFails) throw new Error("session_insert_failed");
+        return [{ id: `sess-${id}` }];
+      });
+    } catch {
+      return { ok: false as const, detail: "session_insert_failed" };
+    }
+    return { ok: true as const };
+  };
+
+  const failed = await register("acct-a", true);
+  assert.equal(failed.ok, false, "the operation must not report success");
+  assert.equal((await accounts.read()).length, 1, "the account write is not rolled back — it is resumable");
+  assert.equal((await sessions.read()).length, 0);
+
+  // And retrying converges rather than duplicating: the account insert is uniqueness-checked.
+  const retried = await register("acct-a", false);
+  assert.equal(retried.ok, true);
+  assert.equal((await accounts.read()).length, 1, "retry did not create a second account");
+  assert.equal((await sessions.read()).length, 1);
+});
+
+test("LINE — the authoritative event survives a failure in the DERIVED index", async (t) => {
+  // Order is the whole design: the idempotency record is durable before anything derived from it.
+  // A failed index write must not cost the redelivery guarantee.
+  const dir = mkdtempSync(join(tmpdir(), "por1-crossfile-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const events = makeStore(dir, "line-events.json");
+  const recent = makeStore(dir, "recent-subjects.json");
+  const mutateEvents = serializedMutator(events);
+  const mutateRecent = serializedMutator(recent);
+
+  const deliver = async (id: string, indexFails: boolean) => {
+    await mutateEvents((rows) => (rows.some((r) => r.id === id) ? rows : [{ id }, ...rows]));
+    try {
+      await mutateRecent(() => {
+        if (indexFails) throw new Error("index_write_failed");
+        return [{ id: `subject-${id}` }];
+      });
+    } catch {
+      /* derived index is repairable; the authoritative record already landed */
+    }
+  };
+
+  await deliver("evt-1", true);
+  assert.deepEqual(await events.read(), [{ id: "evt-1" }], "the event is recorded exactly once");
+  assert.deepEqual(await recent.read(), [], "the derived index is simply stale");
+
+  // Redelivery of the SAME event is still rejected — the guarantee survived the index failure.
+  await deliver("evt-1", false);
+  assert.equal((await events.read()).filter((r) => r.id === "evt-1").length, 1);
+});
+
+test("DELETION — a failed pass leaves nothing that still authorizes the deleted identity", async (t) => {
+  // Deletion works from a frozen manifest, so a partial pass resumes rather than re-deriving. The
+  // property that matters is directional: it must fail toward DENIAL, never toward a surviving
+  // credential.
+  const dir = mkdtempSync(join(tmpdir(), "por1-crossfile-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const accounts = makeStore(dir, "accounts.json");
+  const sessions = makeStore(dir, "sessions.json");
+  const mutateAccounts = serializedMutator(accounts);
+  const mutateSessions = serializedMutator(sessions);
+
+  await mutateAccounts(() => [{ id: "victim" }, { id: "bystander" }]);
+  await mutateSessions(() => [{ id: "victim" }, { id: "bystander" }]);
+
+  // The manifest is captured BEFORE anything is destroyed.
+  const manifest = { owner: "victim", sessions: ["victim"] };
+
+  await mutateAccounts((rows) => rows.filter((r) => r.id !== manifest.owner));
+  const sessionEraseFailed = await mutateSessions(() => {
+    throw new Error("session_erase_failed");
+  }).then(() => false).catch(() => true);
+  assert.equal(sessionEraseFailed, true);
+
+  // A session row survived a failed pass. Authorization must not.
+  const accountStillExists = (await accounts.read()).some((r) => r.id === manifest.owner);
+  assert.equal(accountStillExists, false, "the account is gone, so the session cannot resolve an identity");
+
+  // Resuming from the manifest converges, and never touches the bystander.
+  await mutateSessions((rows) => rows.filter((r) => !manifest.sessions.includes(r.id)));
+  assert.deepEqual(await sessions.read(), [{ id: "bystander" }]);
+  assert.deepEqual(await accounts.read(), [{ id: "bystander" }]);
+});
+
+test("RESET — a token spent before a failed credential change is NOT reusable", async (t) => {
+  // The correct direction to fail. A spent token that changed nothing costs the user a new request;
+  // a reusable token is a standing credential.
+  const dir = mkdtempSync(join(tmpdir(), "por1-crossfile-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const tokens = makeStore(dir, "tokens.json");
+  const accounts = makeStore(dir, "accounts.json");
+  const mutateTokens = serializedMutator(tokens);
+  const mutateAccounts = serializedMutator(accounts);
+
+  await mutateTokens(() => [{ id: "token-live" }]);
+  await mutateAccounts(() => [{ id: "acct" }]);
+
+  let consumed = false;
+  await mutateTokens((rows) => {
+    consumed = rows.some((r) => r.id === "token-live");
+    return rows.filter((r) => r.id !== "token-live");
+  });
+  assert.equal(consumed, true);
+
+  await assert.rejects(
+    mutateAccounts(() => {
+      throw new Error("credential_mutation_failed");
+    }),
+  );
+
+  // A second attempt with the same token finds nothing to consume.
+  let reconsumed = false;
+  await mutateTokens((rows) => {
+    reconsumed = rows.some((r) => r.id === "token-live");
+    return rows;
+  });
+  assert.equal(reconsumed, false, "the token is spent and cannot be replayed");
+});
