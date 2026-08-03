@@ -143,7 +143,17 @@ function initModule(sharedEnv: Record<string, string>): { code: number; output: 
     "import(process.env.__MODPATH).then(()=>{process.stdout.write('LOADED_OK');process.exit(0)})" +
     ".catch(e=>{process.stderr.write('ERR:'+(e&&e.message?e.message:String(e)));process.exit(3)})";
   try {
-    const out = execFileSync(process.execPath, ["--import", "tsx", "-e", script], {
+    // THE CHILD NEEDS THE SAME LOADER CONDITIONS AS THE PARENT.
+    //
+    // `yorisouData` reaches `server-only` through `accountMutationLease`, which throws unless the
+    // `react-server` export condition is set. Spawned without it, the child died on that import and
+    // never reached ANY shared-store validation — so both init-level cases were asserting against an
+    // error from a completely different subsystem.
+    //
+    // This was invisible for a different reason: the npm script itself also lacked the condition, so
+    // the PARENT died at import too and the file never ran at all. Fixing only the parent turned a
+    // test that never executed into a test that executed and failed here.
+    const out = execFileSync(process.execPath, ["--conditions=react-server", "--import", "tsx", "-e", script], {
       env,
       stdio: ["ignore", "pipe", "pipe"],
     });
