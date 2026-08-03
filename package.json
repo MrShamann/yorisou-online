@@ -83,7 +83,8 @@
     "por1:rehearse": "bash scripts/por1/rehearse-promotion.sh",
     "test:por1-promotion-contract": "node --import tsx --test lib/server/__tests__/por1PromotionContract.test.ts",
     "test:por1-sql-normalizer": "node --test scripts/por1/__tests__/normalize-sql.test.mjs",
-    "test:por1-local-store": "node --import tsx --test lib/server/__tests__/por1LocalStoreLostUpdate.test.ts"
+    "test:por1-local-store": "node --import tsx --test lib/server/__tests__/por1LocalStoreLostUpdate.test.ts",
+    "test:por1-store-ownership": "node --import tsx --test lib/server/__tests__/por1LocalStoreOwnership.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
