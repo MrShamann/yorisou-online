@@ -2573,12 +2573,28 @@ transition; the fixture does not.
 ## ⛔ REMAINING — M3 onward
 
 ```
-M2  per-table fixture overrides for cross-column checks (recommendation_items and its two
-    owner-linked children) · Principals C and D · old-app compatibility · new-app controls-off
-M3  old-app compatibility at main c8d8a8ad in a temporary worktree · new-app controls-off
-    readiness matrix · capability dependency matrix
-M4  full POR-1 journey · security matrix · ALL-FAMILY erasure including the Production-only
-    families above · no-recreation · terminal de-identification · legacy preservation
-M5  failure injection · rollback classification · kill switches · observability · release runbook
-M6  PR #126 body replacement · final dossier · governance closeout
+M3  readiness matrix (unset / false / true-with-each-piece-missing / true-complete)
+    capability dependency matrix over the four controls, valid and invalid combinations
+    the full Principal C journey through the REAL product, with concurrent anonymous traffic
+      during registration so the YV-C7 regression stays exercised
+    effective-privilege matrix — has_function_privilege / has_table_privilege, not migration text
+
+M4  populate every applicable C family, prove nonzero-before
+    governed deletion, prove zero-after across all 26 owner-linked families
+    per-table proof for the Production-only families Preview could never exercise:
+      private_recommendations · private_memory_items · private_check_in_plans
+      ai_reflections · ai_runs · test_results · experience_*
+    no-recreation through stale cookie, LINE return, report, provisioning and background retry
+    Principal D terminal de-identification, with its negative controls
+    Principal B preservation
+
+M5  failure injection (including local-store: mutation throw, rename failure, corrupt canonical
+      file, root held by a live process, restart mid-operation)
+    rollback classification · kill-switch rehearsal · non-PII observability
+
+M6  Production release runbook · Production synthetic acceptance plan
+    PR #126 body replacement · final evidence dossier · governance closeout
 ```
+
+**Nothing yet proves ERASURE.** The Production-only families are named by the deletion plan and
+exercised by nothing. That is M4, and no amount of M1–M2 evidence substitutes for it.
