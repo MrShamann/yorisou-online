@@ -474,6 +474,13 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010110_por1_exact_job_erasure_authority.sql",
     "sha256": "b4ed52158a095c97ae27ebf2fb7ed44be6bd3a4cd9b8005bad40ecb3905c5fb3"
+  },
+  {
+    "version": "202608010111",
+    "name": "por1_executor_claim_bound_erasure",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608010111_por1_executor_claim_bound_erasure.sql",
+    "sha256": "cc4abdbbbca2e6593d6714f3223c124209893128ff94330b095e21ca02acb8c6"
   }
 ]
 ```

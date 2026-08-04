@@ -375,12 +375,25 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
         }
 
         case "database_erasure": {
-          // Bound to the claimed job, never rediscovered by owner. The SQL side revalidates the
-          // pair anyway — state, frozen manifest, irreversible crossing, cursor and a live claim —
-          // so a wrong or stale id is refused rather than trusted.
+          // Erasure is bounded but not instant, and a lease that lapses MID-erasure would leave the
+          // account half-destroyed with no claim to resume under. So the lease is extended first,
+          // and a refusal here is a refusal to start: renew fails exactly when this executor is no
+          // longer the claim holder, which is the one situation where erasing would be wrong.
+          //
+          // Renewal keeps the token and the generation and moves only the expiry, so the authority
+          // presented below is the same authority that was validated when the claim was taken.
+          if (!(await renewDeletionExecutor(claim))) {
+            throw new RetryableStageError("executor_claim_lost_before_erasure");
+          }
+
+          // The full authority, never rediscovered: the exact job, its owner, and proof that THIS
+          // executor holds that job's current claim. SQL revalidates all of it under a row lock, so
+          // a wrong id, a wrong token or a superseded generation is refused rather than trusted.
           await rpc("yorisou_account_deletion_erase_database", {
             p_job_id: claim.jobId,
-            p_owner_account_id: accountId,
+            p_owner_account_id: claim.accountId,
+            p_executor_token_hash: claim.tokenHash,
+            p_executor_generation: claim.generation,
           });
           // Partial provisioning state is account-linked and lives outside the declarative plan,
           // which is fixed in an applied migration. Removing it also RELEASES THE EMAIL: the saga is

@@ -53,7 +53,7 @@ for f in supabase/migrations/*.sql; do
 done
 $Q -q -c "grant all on all tables in schema public to service_role; grant all on all sequences in schema public to service_role;" >/dev/null
 for f in supabase/migrations/2026080101*.sql; do $Q -q -f "$f" >/dev/null; done
-echo "[ao] 21 migrations applied on PostgreSQL $("$PGBIN/postgres" --version | awk '{print $3}')"
+echo "[ao] $(ls supabase/migrations/*.sql | wc -l | tr -d ' ') migrations applied on PostgreSQL $("$PGBIN/postgres" --version | awk '{print $3}')"
 
 $Q -q -f tests/por1/fixture-override-registry.sql >/dev/null 2>&1
 for p in por1a por1b por1p; do
@@ -135,41 +135,72 @@ denied "A's valid context, unscoped DELETE" \
   "select count(*) from yorisou_daily_state_history_events where owner_account_id='por1b';" \
   "select set_config('yorisou.account_erasure_job_id','$JOB_A',true); delete from yorisou_daily_state_history_events;"
 
-echo "[ao] 3b/4 EXACT-JOB AUTHORITY — a stale cursor is not permission"
-# Every case below sits at cursor=database_erasure with a frozen manifest and the boundary crossed.
-# Only the job STATE and the executor CLAIM differ, which is exactly what was unvalidated before.
-# The permitted case consumes the rows it deletes, so it runs against a DEDICATED principal. Using B
-# would leave the B-preservation assertion at the end comparing 0 to 0 — vacuously green, which is
-# the exact failure mode this suite exists to avoid.
-setup_job() {  # owner, state, claim: live|expired|none
-  local owner="$1" state="$2" claim="$3"
+echo "[ao] 3b/4 EXECUTOR-BOUND AUTHORITY — a live claim held by someone else is not authority"
+# Every job below sits at cursor=database_erasure, with its own frozen manifest and the irreversible
+# boundary crossed. What differs is the job STATE and the CALLER'S proof of the executor claim. That
+# proof is the whole subject: 110 asked only whether a claim existed, which let a second worker erase
+# under a claim it did not hold, and let a superseded generation land after a reclaim.
+TOK_A=$(printf 'a%.0s' $(seq 1 64))   # the claim actually recorded on the job
+TOK_X=$(printf 'x%.0s' $(seq 1 64))   # a different live executor's token, same length
+setup_job() {  # owner, state, claim(live|expired|none), [token], [generation]
+  local owner="$1" state="$2" claim="$3" tok="${4:-$TOK_A}" gen="${5:-7}"
   $Q -q -c "delete from yorisou_account_deletion_manifests where job_id in (select id from yorisou_account_deletion_jobs where owner_account_id='$owner');
             delete from yorisou_account_deletion_jobs where owner_account_id='$owner';" >/dev/null
   local jid
   jid=$($Q -q -c "insert into yorisou_account_deletion_jobs
      (owner_account_id, owner_fingerprint, state, execution_cursor, irreversible_started_at,
-      executor_token_hash, executor_expires_at)
+      executor_token_hash, executor_generation, executor_expires_at)
    values ('$owner', repeat('b',64), '$state', 'database_erasure', now(),
-      case when '$claim'='none' then null else repeat('c',64) end,
+      case when '$claim'='none' then null else '$tok' end, $gen,
       case when '$claim'='live' then now() + interval '5 minutes'
            when '$claim'='expired' then now() - interval '5 minutes' else null end)
    returning id;")
   $Q -q -c "insert into yorisou_account_deletion_manifests (job_id, payload) values ('$jid','{}'::jsonb);" >/dev/null
   echo "$jid"
 }
+# The three context values the erasure RPC sets after locking and validating. A control forges them
+# directly, which is the strongest position an attacker who already has database access can occupy.
+ctx() { echo "select set_config('yorisou.account_erasure_job_id','$1',true), set_config('yorisou.account_erasure_executor_token_hash','$2',true), set_config('yorisou.account_erasure_executor_generation','$3',true);"; }
 B_PRE="select count(*) from yorisou_daily_state_history_events where owner_account_id='por1b';"
-for case in "completed|live|a COMPLETED job at the erasure cursor"             "cancelled|live|a CANCELLED job at the erasure cursor"             "failed_terminal|live|a FAILED_TERMINAL job at the erasure cursor"             "legal_hold|live|a job under LEGAL HOLD"             "requested|live|a job that never reached erasure"             "database_erasure|expired|an EXPIRED executor claim"             "database_erasure|none|NO executor claim at all"
+DEL_B="delete from yorisou_daily_state_history_events where owner_account_id='por1b';"
+
+# ── job state and lease ──────────────────────────────────────────────────────
+for case in "completed|live|a COMPLETED job at the erasure cursor" \
+            "cancelled|live|a CANCELLED job at the erasure cursor" \
+            "failed_terminal|live|a FAILED_TERMINAL job at the erasure cursor" \
+            "legal_hold|live|a job under LEGAL HOLD" \
+            "requested|live|a job that never reached erasure" \
+            "database_erasure|expired|an EXPIRED executor claim" \
+            "database_erasure|none|NO executor claim at all"
 do
   IFS='|' read -r st cl label <<< "$case"
   # `completed` requires a null owner by constraint, so those states are exercised where legal.
-  JID=$(setup_job "por1b" "$st" "$cl" 2>/dev/null) || { printf '  ok   %s (state not representable with an owner — constraint already forbids it)
-' "$label"; continue; }
-  denied "$label" "$B_PRE"     "select set_config('yorisou.account_erasure_job_id','$JID',true); delete from yorisou_daily_state_history_events where owner_account_id='por1b';"
+  JID=$(setup_job "por1b" "$st" "$cl" 2>/dev/null) || { printf '  ok   %s (state not representable with an owner — constraint already forbids it)\n' "$label"; continue; }
+  denied "$label" "$B_PRE"  "$(ctx "$JID" "$TOK_A" 7) $DEL_B"
 done
 
-JID_OK=$(setup_job "por1b" "database_erasure" "live")
-denied "a valid job, but the manifest belongs to ANOTHER job" "$B_PRE"   "delete from yorisou_account_deletion_manifests where job_id='$JID_OK'; select set_config('yorisou.account_erasure_job_id','$JID_OK',true); delete from yorisou_daily_state_history_events where owner_account_id='por1b';"
-$Q -q -c "insert into yorisou_account_deletion_manifests (job_id, payload) values ('$JID_OK','{}'::jsonb) on conflict do nothing;" >/dev/null
+# ── the executor identity itself ─────────────────────────────────────────────
+JID_B=$(setup_job "por1b" "database_erasure" "live")
+OTHER=$($Q -q -c "insert into yorisou_account_deletion_jobs (owner_account_id, owner_fingerprint, state, execution_cursor, irreversible_started_at, executor_token_hash, executor_generation, executor_expires_at) values ('por1o', repeat('o',64),'database_erasure','database_erasure',now(),'$TOK_X',7,now()+interval '5 minutes') returning id;")
+$Q -q -c "insert into yorisou_account_deletion_manifests (job_id,payload) values ('$OTHER','{}'::jsonb);" >/dev/null
+
+denied "correct job and owner, WRONG executor token"          "$B_PRE"  "$(ctx "$JID_B" "$TOK_X" 7) $DEL_B"
+denied "correct job and owner, STALE generation"              "$B_PRE"  "$(ctx "$JID_B" "$TOK_A" 6) $DEL_B"
+denied "correct job and owner, a FUTURE generation"           "$B_PRE"  "$(ctx "$JID_B" "$TOK_A" 8) $DEL_B"
+denied "a DIFFERENT live executor's token and generation"     "$B_PRE"  "$(ctx "$JID_B" "$TOK_X" 7) $DEL_B"
+denied "a WRONG job id with otherwise correct credentials"    "$B_PRE"  "$(ctx "$OTHER" "$TOK_X" 7) $DEL_B"
+denied "the job id ALONE, as 110 would have accepted"         "$B_PRE"  "select set_config('yorisou.account_erasure_job_id','$JID_B',true); $DEL_B"
+denied "token and generation but NO job id"                   "$B_PRE"  "select set_config('yorisou.account_erasure_executor_token_hash','$TOK_A',true), set_config('yorisou.account_erasure_executor_generation','7',true); $DEL_B"
+denied "a released claim (token cleared on the job)"          "$B_PRE"  "update yorisou_account_deletion_jobs set executor_token_hash=null where id='$JID_B'; $(ctx "$JID_B" "$TOK_A" 7) $DEL_B"
+denied "a valid job, but the manifest belongs to ANOTHER job" "$B_PRE"  "delete from yorisou_account_deletion_manifests where job_id='$JID_B'; $(ctx "$JID_B" "$TOK_A" 7) $DEL_B"
+
+for cur in "mutation_draining|the cursor is BEFORE database_erasure" "verifying|the cursor is PAST database_erasure"; do
+  IFS='|' read -r c label <<< "$cur"
+  $Q -q -c "update yorisou_account_deletion_jobs set execution_cursor='$c' where id='$JID_B';" >/dev/null
+  denied "$label" "$B_PRE" "$(ctx "$JID_B" "$TOK_A" 7) $DEL_B"
+done
+$Q -q -c "update yorisou_account_deletion_jobs set execution_cursor='database_erasure', irreversible_started_at=null where id='$JID_B';" >/dev/null
+denied "the irreversible boundary was never crossed" "$B_PRE" "$(ctx "$JID_B" "$TOK_A" 7) $DEL_B"
 
 # The permitted case CONSUMES the rows it deletes, so it runs against a DEDICATED principal. Every
 # case above is a denial and leaves B intact; this one would not. Pointing it at B would leave the
@@ -177,26 +208,36 @@ $Q -q -c "insert into yorisou_account_deletion_manifests (job_id, payload) value
 # suite exists to refuse.
 JID_P=$(setup_job "por1p" "database_erasure" "live")
 P_PRE="select count(*) from yorisou_daily_state_history_events where owner_account_id='por1p';"
-permitted "a fully valid exact job CAN erase its own owner's rows" "$P_PRE"   "select set_config('yorisou.account_erasure_job_id','$JID_P',true); delete from yorisou_daily_state_history_events where owner_account_id='por1p';"
+permitted "the exact job AND the exact live claim CAN erase" "$P_PRE"  "$(ctx "$JID_P" "$TOK_A" 7) delete from yorisou_daily_state_history_events where owner_account_id='por1p';"
 
-echo "[ao] 3c/4 the owner entry point refuses an unauthorised job"
-JID_C=$(setup_job "por1b" "database_erasure" "live")
-$Q -q -c "update yorisou_account_deletion_jobs set state='cancelled' where owner_account_id='por1b';" >/dev/null
-if $Q -q -c "select public.yorisou_account_deletion_erase_database('por1b');" >/dev/null 2>&1; then
-  fail "erase_database on a cancelled job" "it was ACCEPTED"
-else
-  pass "erase_database refuses a cancelled job"
-fi
-$Q -q -c "delete from yorisou_account_deletion_manifests where job_id in (select id from yorisou_account_deletion_jobs where owner_account_id='por1b'); delete from yorisou_account_deletion_jobs where owner_account_id='por1b';" >/dev/null
+echo "[ao] 3c/4 the weaker entry points are GONE, not merely revoked"
+for sig in "yorisou_account_deletion_erase_database(text)" \
+           "yorisou_account_deletion_erase_database(uuid,text)" \
+           "yorisou_account_erasure_job_valid(uuid,text)"
+do
+  n=$($Q -c "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname||'('||pg_get_function_identity_arguments(p.oid)||')' = replace('$sig',',',', ');")
+  [ "${n:-1}" = "0" ] && pass "$sig no longer exists" || fail "$sig" "still present ($n)"
+done
+# service_role is the role the application connects as. The unchecked body must be unreachable by it.
+for fn in "yorisou_account_deletion_erase_database_unchecked(text)" "yorisou_account_erase_append_only_families(text,uuid)"; do
+  g=$($Q -c "select coalesce(has_function_privilege('service_role','public.$fn','execute')::text,'?');" 2>/dev/null)
+  [ "$g" = "false" ] && pass "service_role cannot execute $fn" || fail "$fn" "service_role EXECUTE = $g"
+done
+g=$($Q -c "select has_function_privilege('service_role','public.yorisou_account_deletion_erase_database(uuid,text,text,integer)','execute')::text;")
+[ "$g" = "true" ] && pass "service_role CAN execute the claim-bound signature" || fail "claim-bound grant" "$g"
+
+$Q -q -c "delete from yorisou_account_deletion_manifests where job_id in (select id from yorisou_account_deletion_jobs where owner_account_id in ('por1b','por1o')); delete from yorisou_account_deletion_jobs where owner_account_id in ('por1b','por1o');" >/dev/null
 
 echo "[ao] 4/4 the governed erasure itself"
+JID_A=$(setup_job "por1a" "database_erasure" "live")
 A_HIST=$($Q -c "select count(*) from yorisou_daily_state_history_events where owner_account_id='por1a';")
 A_YV=$($Q -c "select count(*) from yorisou_values_assessment_events where owner_account_id='por1a';")
 
 [ "$A_HIST" -gt 0 ] && [ "$A_YV" -gt 0 ] || fail "PRECONDITION erasure" "A must have content before it can be proven erased"
-$Q -q -c "select public.yorisou_account_deletion_erase_database('por1a');" >/dev/null 2>&1 \
-  && pass "erase_database completed (it raised append_only before this contract existed)" \
-  || fail "erase_database" "$($Q -c "select public.yorisou_account_deletion_erase_database('por1a');" 2>&1 | grep -oE 'ERROR.*' | head -1)"
+ERASE="select public.yorisou_account_deletion_erase_database('$JID_A','por1a','$TOK_A',7);"
+$Q -q -c "$ERASE" >/dev/null 2>&1 \
+  && pass "the claim-bound erase_database completed" \
+  || fail "erase_database" "$($Q -c "$ERASE" 2>&1 | grep -oE 'ERROR.*' | head -1)"
 
 for check in \
   "A daily-state history content|select count(*) from yorisou_daily_state_history_events where owner_account_id='por1a';|0" \
