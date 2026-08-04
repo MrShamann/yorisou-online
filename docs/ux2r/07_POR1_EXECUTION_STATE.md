@@ -2507,11 +2507,70 @@ PostgreSQL 17 parameterization of tests/yorisou-values/fullstack-local.sh
 Principals C and D
 ```
 
-## ⛔ REMAINING — finish M2, then M3 onward
+## M2 — COMPLETE
 
+```
+ownership: atomic + wired + proven      real-process contention, adapter integration
+shared-store harness                    15/15, in required CI
+per-file lost update                    closed, 16 tests
+cross-file consistency                  declared per operation, 4 failure tests
+authoritative-file integrity            malformed AND vanished both fail closed
+PostgreSQL 17 fullstack harness         parameterized; 7/7 on 16.14 and on 17.10
+26/26 owner-linked families             seeded for Principal A and B
+8 promotion migrations                  fingerprints unchanged across promotion AND runtime
+old-app compatibility                   main c8d8a8ad serves against the promoted schema
+new-app controls-off                    this branch activates nothing
+Principals C and D                      prepared
+```
 
+### Ownership: two defects that five green CI runs had hidden
 
+The first ownership commit shipped a helper **no runtime path invoked** — a repository search for
+`acquireLocalStoreRoot` outside its own module and test returned nothing — and acquired by
+check-then-rename, which is not exclusive at all. Both were caught by review, not by tests, and both
+are now closed with the evidence that would have caught them:
 
+```
+negative control, old acquisition   two processes acquired the same root in 39/40 campaigns
+                                    eight contenders produced 3 simultaneous owners
+negative control, unwired adapter   adapter suite 4/5 FAIL — while the ownership UNIT suite
+                                    still passed 12/12, which is exactly why unit tests could
+                                    never have caught it
+```
+
+Acquisition is now `mkdir` on a lock directory; stale reclaim and release are `rename` of that whole
+directory. Enforcement lives in `mutateLocalJson`, so callers cannot forget.
+
+A follow-on hazard: `data/` is a TRACKED directory and is also the store root, so the lock would have
+been committed. A committed lock names a foreign pid that `processIsAlive` would very likely call
+alive — bricking every fresh clone's first mutation. Now gitignored and asserted by a test.
+
+### A vanished authoritative file was silently reappearing empty
+
+Found by a call-site sweep across 56 entrypoints. `ensureFile` creates the empty fallback when a file
+is ABSENT, on the READ path, before `readLocalJson` inspects it — so a deleted accounts file reported
+"there are no accounts" and the next write persisted that emptiness. `authoritative` covered the
+malformed case and not this one; from the caller's side they are the same event. Now recorded per
+root and refused as `LocalStoreVanished`, while a genuinely fresh root stays silent.
+
+### One harness fidelity defect, named because it read like a product failure
+
+PostgREST answered 403 on a legacy table during old-app compatibility. Hosted Supabase bootstraps
+`service_role` with table privileges across the public schema, and `202607110003` relies on that. A
+locally created bare role does not. Modelled explicitly — after the baseline, before the promotion,
+so it cannot touch the 15 promoted tables, which carry their own deliberately narrower grants.
+
+### Principals C and D
+
+C is asserted ABSENT rather than created: the account, session binding, canonical identity link,
+interpretation consent and claim must all be produced by the real M3 journey, or the journey would be
+measured against its own fixture. The assertion is proven to fire.
+
+D is the one shape terminal de-identification may touch — `failed_terminal`, owner named, no frozen
+manifest, pre-irreversible, no live claim — with every clause verified after insert. M4 performs the
+transition; the fixture does not.
+
+## ⛔ REMAINING — M3 onward
 
 ```
 M2  per-table fixture overrides for cross-column checks (recommendation_items and its two
