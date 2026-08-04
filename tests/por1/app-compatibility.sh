@@ -130,8 +130,13 @@ fingerprint() {
 }
 fingerprint > "$WORK/pre.txt"
 
-echo "[compat] 3/8 the 8 promotion migrations"
-for f in supabase/migrations/2026080101*.sql; do $PSQL -f "$f" >/dev/null; done
+echo "[compat] 3/8 the POR-1 promotion migrations"
+# ON_ERROR_STOP, because a migration that fails silently here would leave the compatibility claim
+# resting on a schema that was never actually promoted. The glob covers all eleven.
+for f in supabase/migrations/2026080101*.sql; do
+  $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null || { echo "[compat] FATAL: $(basename "$f") did not apply" >&2; exit 1; }
+done
+echo "[compat] promoted lineage: $(ls supabase/migrations/2026080101*.sql | wc -l | tr -d ' ') POR-1 migrations"
 note "promotion migrations" "applied"
 fingerprint > "$WORK/post-migration.txt"
 diff -q "$WORK/pre.txt" "$WORK/post-migration.txt" >/dev/null \
