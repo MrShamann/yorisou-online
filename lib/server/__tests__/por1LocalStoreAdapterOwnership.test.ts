@@ -139,3 +139,60 @@ test("the lock can never be committed — data/ is tracked, and this is the stor
   assert.match(ignored, /\.gitignore/, "the lock path must be matched by a .gitignore rule");
   assert.equal(existsSync(join(REPO, "data", LOCK)), false, "no lock may be left behind in the repo store root");
 });
+
+// ── AUTHORITATIVE-FILE INTEGRITY ─────────────────────────────────────────────
+//
+// `authoritative: true` made a MALFORMED store fail closed. It did not cover a VANISHED one, because
+// `ensureFile` recreates an absent file as the empty fallback on the READ path, before
+// `readLocalJson` ever inspects it. So a deleted accounts file reported "there are no accounts", and
+// the next write persisted that emptiness over real identity data — the same outcome the malformed
+// check exists to prevent. From the caller's side a corrupt file and a missing one are one event;
+// treating them differently was an asymmetry, not a decision.
+
+const VANISH = `
+import { rmSync, existsSync } from "node:fs";
+import { createSession, listSessions } from "../lib/server/yorisouData";
+async function main() {
+  const root = process.env.YORISOU_DATA_DIR!;
+  const file = root + "/phase1-sessions.json";
+  await createSession(null, null);
+  rmSync(file);
+  try {
+    const rows = await listSessions();
+    console.log("RECREATED:" + rows.length);
+  } catch (error) {
+    console.log("REFUSED:" + (error as Error).message);
+  }
+  console.log("EXISTS:" + existsSync(file));
+}
+main().catch((e) => console.log("ERR:" + e.message));
+`;
+
+test("a VANISHED authoritative file fails closed instead of reappearing empty", { timeout: 180_000 }, (t) => {
+  const dir = join(REPO, `.por1-vanish-test-${process.pid}-${Math.random().toString(36).slice(2, 8)}`);
+  mkdirSync(dir, { recursive: true });
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const script = join(dir, "vanish.ts");
+  writeFileSync(script, VANISH, "utf8");
+
+  const root = join(scratch(t), "store");
+  const out = execFileSync(process.execPath, ["--conditions=react-server", "--import", "tsx", script], {
+    env: { ...process.env, YORISOU_DATA_DIR: root },
+    encoding: "utf8",
+    cwd: REPO,
+  }).trim();
+
+  assert.match(
+    out,
+    /^REFUSED:local_store_vanished:phase1-sessions\.json$/m,
+    `a deleted authoritative file must refuse, not report an empty store; got: ${out}`,
+  );
+  assert.match(out, /^EXISTS:false$/m, "and it must not be recreated behind the caller's back");
+});
+
+test("a FRESH root is still first use, and stays silent", { timeout: 180_000 }, (t) => {
+  // The protection must not turn an ordinary first run into an error. A wiped root — which is what
+  // every harness creates — has genuinely never held the file.
+  const root = join(scratch(t), "store");
+  assert.match(runMutator(mutatorScript(t), root), /^MUTATED:true$/m);
+});

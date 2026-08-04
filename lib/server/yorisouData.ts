@@ -556,14 +556,85 @@ function hashResetToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/**
+ * Which authoritative files this root has ever held.
+ *
+ * WHY A MARKER IS NEEDED AT ALL.
+ *
+ * `ensureFile` creates the empty fallback when a file is absent, on the READ path. For a cache that
+ * is right. For an authoritative store it means a DELETED file silently becomes `[]` — the caller is
+ * told there are no accounts, and the next write persists that emptiness over what used to be real
+ * identity data.
+ *
+ * That is the same failure a malformed file causes, which already fails closed. Leaving the vanished
+ * case open was an asymmetry, not a decision: from the caller's side a corrupt file and a missing
+ * one are the same event.
+ *
+ * The only thing distinguishing "deleted" from "never existed" is whether this root has held the
+ * file before, so that is what gets recorded. A wiped root is genuinely first use and stays silent;
+ * a file that disappears from a root which had it raises.
+ */
+const INITIALIZED_MARKER = ".local-store-initialized.json";
+
+async function readInitializedFiles(): Promise<Set<string>> {
+  try {
+    const raw = await fs.readFile(path.join(dataDir, INITIALIZED_MARKER), "utf8");
+    const parsed = JSON.parse(raw) as { files?: unknown };
+    return new Set(Array.isArray(parsed.files) ? parsed.files.filter((f): f is string => typeof f === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+async function recordInitializedFile(name: string): Promise<void> {
+  const files = await readInitializedFiles();
+  if (files.has(name)) return;
+  files.add(name);
+  const temp = path.join(dataDir, `${INITIALIZED_MARKER}.tmp-${process.pid}-${(localWriteCounter += 1)}`);
+  await fs.writeFile(temp, `${JSON.stringify({ schema: 1, files: [...files].sort() }, null, 2)}\n`, "utf8");
+  await fs.rename(temp, path.join(dataDir, INITIALIZED_MARKER));
+}
+
+/** Thrown when an authoritative store file this root has held before has vanished. */
+export class LocalStoreVanished extends Error {
+  constructor(readonly storePath: string) {
+    // A local path, never user data.
+    super(`local_store_vanished:${storePath.split("/").slice(-1)[0]}`);
+    this.name = "LocalStoreVanished";
+  }
+}
+
 async function ensureFile<T>(file: DataFile<T>) {
   await fs.mkdir(dataDir, { recursive: true });
 
+  let present = true;
   try {
     await fs.access(file.path);
   } catch {
-    await fs.writeFile(file.path, JSON.stringify(file.fallback, null, 2) + "\n", "utf8");
+    present = false;
   }
+
+  if (!file.authoritative) {
+    if (!present) await fs.writeFile(file.path, JSON.stringify(file.fallback, null, 2) + "\n", "utf8");
+    return;
+  }
+
+  const name = file.path.split("/").slice(-1)[0];
+  const initialized = await readInitializedFiles();
+
+  if (present) {
+    // Adopt an authoritative file that predates the marker, so a store created before this existed
+    // still gains the protection from the first read onward.
+    if (!initialized.has(name)) await recordInitializedFile(name);
+    return;
+  }
+
+  if (initialized.has(name)) {
+    throw new LocalStoreVanished(file.path);
+  }
+
+  await fs.writeFile(file.path, JSON.stringify(file.fallback, null, 2) + "\n", "utf8");
+  await recordInitializedFile(name);
 }
 
 async function readLocalJson<T>(file: DataFile<T>) {

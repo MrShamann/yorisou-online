@@ -45,6 +45,7 @@ data/relationship-intelligence/
 # another machine, and `processIsAlive` would very likely say that pid is alive — classifying the
 # root as held and failing every local mutation closed, on every fresh clone, until someone deleted
 # the directory by hand. The fail-closed behaviour is right; letting it be committed is not.
+data/.local-store-initialized.json
 data/.local-store-owner.lock/
 data/.local-store-owner.stale-*/
 data/.local-store-owner.release-*/
