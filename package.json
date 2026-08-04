@@ -67,6 +67,7 @@
     "guard:por1-raw-writes": "node scripts/por1-raw-write-source-guard.mjs",
     "test:por1-line-scope": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1LineEventListingScope.test.ts",
     "test:por1-erasure-authority": "node --import tsx --test lib/server/__tests__/por1ErasureVerificationAuthority.test.ts",
+    "test:por1-catalogue-baseline": "bash tests/por1/catalogue-baseline.sh",
     "generate:report-registry": "node scripts/generate-self-understanding-report-registry.mjs",
     "check:report-registry": "node scripts/generate-self-understanding-report-registry.mjs --check",
     "test:por1-report-delivery": "node --import tsx --test lib/yorisou/reports/__tests__/reportDelivery.test.ts",
