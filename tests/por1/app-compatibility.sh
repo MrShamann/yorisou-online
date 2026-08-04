@@ -45,6 +45,14 @@ REST_CONTAINER="${POR1_REST_CONTAINER:-por1-oldapp-postgrest}"
 # Same database, same fixtures, same assertions — the only variable is which build serves, which is
 # what makes the two results comparable.
 APP_SOURCE="${POR1_APP_SOURCE:-worktree}"
+# FAIL CLOSED on an unrecognised mode. This defaulted through `else` to the current-branch build, so
+# `POR1_APP_SOURCE=main` silently ran the controls-off half and reported PASS — the old-app question
+# was never asked, and nothing in the output said so. A label the caller supplies is not a mode; the
+# observed commit below is, and the two are now required to agree.
+case "$APP_SOURCE" in
+  worktree|current) ;;
+  *) echo "refusing: POR1_APP_SOURCE='$APP_SOURCE' is not 'worktree' or 'current'" >&2; exit 2 ;;
+esac
 KEEP=0
 [ "${1:-}" = "--keep" ] && KEEP=1
 
@@ -180,7 +188,15 @@ if [ "$APP_SOURCE" = "worktree" ]; then
   APP_DIR="$WORKTREE"
 else
   echo "[compat] 5/8 current branch (controls-off mode)"
-  note "app source" "$(git -C "$REPO" rev-parse --short HEAD) on $(git -C "$REPO" branch --show-current)"
+  ACTUAL_SHA="$(git -C "$REPO" rev-parse HEAD)"
+  note "app source" "$(echo "$ACTUAL_SHA" | cut -c1-8) on $(git -C "$REPO" branch --show-current)"
+  # The mirror of the worktree assertion: current mode must NOT be serving the Production SHA, or the
+  # two directions would be the same run reported twice.
+  if [ "$ACTUAL_SHA" = "$PRODUCTION_SHA" ]; then
+    note "current mode is not the Production SHA" "FAIL (HEAD is $PRODUCTION_SHA)"; FAILURES=$((FAILURES+1))
+  else
+    note "current mode is not the Production SHA" "ok"
+  fi
   APP_DIR="$REPO"
 fi
 # main must not be touched by any of this.
