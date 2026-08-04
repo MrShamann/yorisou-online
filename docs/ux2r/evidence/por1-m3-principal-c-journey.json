@@ -2,8 +2,8 @@
   "contract": "por1-m3-principal-c-journey",
   "note": "Every step is an HTTP request against the running application. Nothing about C is created by SQL.",
   "base": "http://localhost:3240",
-  "principalOwnerDigest": "ed929defef255e77",
-  "principalEmailDigest": "7dc71959c8540f9b",
+  "principalOwnerDigest": "32b9d8eaa593520f",
+  "principalEmailDigest": "fdeaeb40a17e3b8e",
   "steps": 26,
   "failures": 0,
   "aborted": null,
@@ -20,7 +20,7 @@
       "expected": "201",
       "actual": "201",
       "result": "PASS",
-      "detail": "{\"attemptId\":\"<uuid:sha256:0b530cfc6f69>\",\"requiredCount\":120}"
+      "detail": "{\"attemptId\":\"<uuid:sha256:62ea5d23e9df>\",\"requiredCount\":120}"
     },
     {
       "step": "required answer count is the governed 120",
@@ -52,10 +52,10 @@
     },
     {
       "step": "resume returns the same attempt",
-      "expected": "7d9484f3-e0b9-4bd3-b54e-3ae697741bb8",
-      "actual": "7d9484f3-e0b9-4bd3-b54e-3ae697741bb8",
+      "expected": "9dd77e6e-0614-4c0c-a5b8-e80a7c0f40e3",
+      "actual": "9dd77e6e-0614-4c0c-a5b8-e80a7c0f40e3",
       "result": "PASS",
-      "detail": "{\"attempt\":{\"id\":\"<uuid:sha256:0b530cfc6f69>\",\"status\":\"in_progress\",\"answers\":{\"Q001\":\"A\",\"Q002\":\"A\",\"Q003\":\""
+      "detail": "{\"attempt\":{\"id\":\"<uuid:sha256:62ea5d23e9df>\",\"status\":\"in_progress\",\"answers\":{\"Q001\":\"A\",\"Q002\":\"A\",\"Q003\":\""
     },
     {
       "step": "full save (120 answers)",
@@ -76,14 +76,14 @@
       "expected": "201",
       "actual": "201",
       "result": "PASS",
-      "detail": "{\"resultRowId\":\"<uuid:sha256:1cbf9f7bd53b>\",\"resultId\":\"EM-AK\"}"
+      "detail": "{\"resultRowId\":\"<uuid:sha256:d4c5e91e624c>\",\"resultId\":\"EM-AK\"}"
     },
     {
       "step": "completion returned a canonical row identity",
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"resultRowId\":\"<uuid:sha256:1cbf9f7bd53b>\",\"resultId\":\"EM-AK\"}"
+      "detail": "{\"resultRowId\":\"<uuid:sha256:d4c5e91e624c>\",\"resultId\":\"EM-AK\"}"
     },
     {
       "step": "completion returned a public result code",
@@ -118,7 +118,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:ed929defef25>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:7dc71959c854>\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:32b9d8eaa593>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:fdeaeb40a17e>\"}}"
     },
     {
       "step": "registration did not orphan the result",
@@ -132,7 +132,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"claimed\":true,\"resultRowId\":\"<uuid:sha256:1cbf9f7bd53b>\"}"
+      "detail": "{\"claimed\":true,\"resultRowId\":\"<uuid:sha256:d4c5e91e624c>\"}"
     },
     {
       "step": "the result is now privately owned",
@@ -174,7 +174,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:ed929defef25>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:7dc71959c854>\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:32b9d8eaa593>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:fdeaeb40a17e>\"}}"
     },
     {
       "step": "sign-in created no new canonical result",
@@ -188,7 +188,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "acct_1785821…"
+      "detail": "acct_1785822…"
     }
   ]
 }

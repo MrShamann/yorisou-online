@@ -2176,6 +2176,67 @@ PREVIEW_FIXTURE_ONLY / DO_NOT_PROMOTE:
 disposable rehearsal must be built from the **12 Production migrations + fixtures + the new promotion
 set** — never from the Preview schema, which cannot prove that table's erasure.
 
+## 🔴 M4 FOUND A FIRST-ORDER DEFECT: the deletion plan names tables it cannot delete from
+
+With a real shared object store in the stack, the saga finally reached `database_erasure` — and
+failed there. The flattened application error (`assessment_persistence_failed:400`) hides the real
+one, which the RPC gives up directly:
+
+```
+ERROR:  append_only: DELETE on yorisou_daily_state_history_events is not permitted
+CONTEXT: PL/pgSQL function yorisou_dci_block_mutation() line 6 at RAISE
+SQL statement "delete from public.yorisou_daily_state_history_events where owner_account_id = $1"
+PL/pgSQL function yorisou_account_deletion_erase_database(text) line 106 at EXECUTE
+```
+
+**Six tables refuse DELETE through append-only triggers:**
+
+```
+yorisou_daily_state_history_events    ← IN the 26-family deletion contract
+yorisou_values_assessment_events      ← IN the 26-family deletion contract
+yorisou_daily_state_record_versions
+yorisou_values_assessment_versions
+yorisou_candidate_events
+yorisou_interpretation_responses      ← a PROMOTED POR-1 table
+```
+
+The last one matters most: this is not a legacy-only collision. POR-1's own promoted schema contains
+an append-only table that the erasure plan cannot empty.
+
+### Why nothing at all was erased
+
+`yorisou_account_deletion_erase_database` is one function. One trigger raise aborts the whole
+statement, so all 26 families keep their rows — the failure is total, not partial. That is the safe
+direction, and it is still a failure.
+
+### Two governed guarantees in direct conflict
+
+```
+append-only immutability   DCI-1, YV-1, and POR-1's interpretation responses: history is never
+                           rewritten, so a record of what someone reported cannot be silently altered
+erasure obligation         a person who asks to be deleted must actually be erased
+```
+
+Both are deliberate. Neither can simply be dropped, and resolving them is a PRODUCT DECISION rather
+than an implementation choice. The plausible shapes:
+
+```
+de-identify instead of delete   strip the owner column on append-only rows, keeping the event and
+                                losing the person — preserves the audit purpose the trigger protects
+governed erasure bypass         a SECURITY DEFINER path the trigger recognises as authorised erasure,
+                                narrowly scoped to the deletion executor
+contract change                 declare these families out of scope for erasure, with a stated reason
+```
+
+**This is `MUST_FIX_BEFORE_PRODUCTION` and it is a Founder decision.** Recording it rather than
+picking one, because each option changes what the product promises about history.
+
+### What M1's static check could not have caught
+
+M1 verified the plan NAMES every owner-linked family, and it does. Naming was never the question that
+mattered — execution was. This is exactly the gap the phrase "naming is not proof" was written for,
+now demonstrated rather than asserted.
+
 ## ⛔ REMAINING — honestly scoped
 
 WS-I3 onward is the largest single body of work left in the package, and it is now precisely

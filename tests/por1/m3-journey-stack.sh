@@ -23,6 +23,18 @@ STORE="$WORK/store"
 # Mode-0600, outside the repository, destroyed by the cleanup trap below.
 HANDOFF="$WORK/.principal-c-handoff.json"
 REST_CONTAINER="${POR1_REST_CONTAINER:-por1-m3-postgrest}"
+# ── SHARED OBJECT STORE ───────────────────────────────────────────────────────
+#
+# The deletion saga's session_revocation stage writes through the shared store. Without one the
+# executor now refuses BEFORE the irreversible boundary (which is correct), and erasure can never be
+# proven on this stack. MinIO gives the real `s3-compatible` adapter a real networked service, so the
+# erasure path runs through production code rather than a double.
+MINIO_CONTAINER="${POR1_MINIO_CONTAINER:-por1-m3-minio}"
+MINIO_PORT="${POR1_MINIO_PORT:-55531}"
+MINIO_BUCKET="${POR1_MINIO_BUCKET:-por1-m3-identity}"
+# Random per run, passed only through process environment, never written to tracked evidence.
+MINIO_ACCESS_KEY="por1$(head -c 12 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 12)"
+MINIO_SECRET_KEY="$(head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 32)"
 KEEP=0
 [ "${1:-}" = "--keep" ] && KEEP=1
 
@@ -36,6 +48,7 @@ cleanup() {
   [ -n "${APP_PID:-}" ] && kill "$APP_PID" 2>/dev/null
   [ -n "${PROXY_PID:-}" ] && kill "$PROXY_PID" 2>/dev/null
   docker rm -f "$REST_CONTAINER" >/dev/null 2>&1
+  docker rm -f "$MINIO_CONTAINER" >/dev/null 2>&1
   pg_ctl -D "$PGDIR" stop >/dev/null 2>&1
   rm -f "$HANDOFF"
   rm -rf "$WORK"
@@ -110,12 +123,37 @@ http.createServer((req,res)=>{
 PROXY_PID=$!
 sleep 1
 
+echo "[m3] 3b/5 shared object store (MinIO — the real s3-compatible adapter, not a double)"
+docker rm -f "$MINIO_CONTAINER" >/dev/null 2>&1 || true
+docker run -d --name "$MINIO_CONTAINER" -p "$MINIO_PORT:9000" \
+  -e MINIO_ROOT_USER="$MINIO_ACCESS_KEY" -e MINIO_ROOT_PASSWORD="$MINIO_SECRET_KEY" \
+  quay.io/minio/minio:latest server /data >/dev/null
+MINIO_OK=""
+for i in $(seq 1 60); do
+  MINIO_OK=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$MINIO_PORT/minio/health/live" || true)
+  [ "$MINIO_OK" = "200" ] && break
+  sleep 1
+done
+[ "$MINIO_OK" = "200" ] || { echo "[m3] MinIO unhealthy ($MINIO_OK)"; docker logs "$MINIO_CONTAINER" 2>&1 | tail -10; exit 1; }
+# Create the bucket through the same S3 API the application will use.
+docker run --rm --add-host=host.docker.internal:host-gateway --entrypoint sh quay.io/minio/mc:latest -c \
+  "mc alias set por1 http://host.docker.internal:$MINIO_PORT '$MINIO_ACCESS_KEY' '$MINIO_SECRET_KEY' >/dev/null && \
+   mc mb --ignore-existing por1/$MINIO_BUCKET >/dev/null" >/dev/null 2>&1 \
+  || { echo "[m3] could not create bucket $MINIO_BUCKET"; exit 1; }
+echo "           MinIO healthy · bucket $MINIO_BUCKET · endpoint localhost:$MINIO_PORT"
+
 echo "[m3] 4/5 build and start with ALL capabilities and readiness ON"
 npm run build > "$WORK/build.log" 2>&1 || { echo "[m3] build failed"; tail -20 "$WORK/build.log"; exit 1; }
 YORISOU_CI_TEST=1 \
 SUPABASE_URL="http://localhost:$PROXY_PORT" \
 SUPABASE_SERVICE_ROLE_KEY="$SERVICE_KEY" \
 YORISOU_DATA_DIR="$STORE" \
+YORISOU_SHARED_STORE_ENDPOINT="http://localhost:$MINIO_PORT" \
+YORISOU_SHARED_STORE_BUCKET="$MINIO_BUCKET" \
+YORISOU_SHARED_STORE_ACCESS_KEY_ID="$MINIO_ACCESS_KEY" \
+YORISOU_SHARED_STORE_SECRET_ACCESS_KEY="$MINIO_SECRET_KEY" \
+YORISOU_SHARED_STORE_FORCE_PATH_STYLE=true \
+YORISOU_SHARED_STORE_REGION=us-east-1 \
 YORISOU_AUTH_COOKIE_SECRET="por1-m3-cookie-secret-0123456789abcdef0123456789abcdef" \
 YORISOU_POR1_CANONICAL_CORE=on \
 YORISOU_POR1_CANONICAL_RECOMMENDATIONS=on \

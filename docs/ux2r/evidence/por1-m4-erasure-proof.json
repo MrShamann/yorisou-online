@@ -3,7 +3,7 @@
   "note": "A family with zero rows before deletion also has zero after. Only NONZERO-BEFORE families count as proven; the rest are reported as gaps.",
   "owner": "acct_178…",
   "steps": 16,
-  "failures": 3,
+  "failures": 2,
   "aborted": null,
   "matrix": [
     {
@@ -224,7 +224,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:ed929defef25>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:7dc71959c854>\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:32b9d8eaa593>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:fdeaeb40a17e>\"}}"
     },
     {
       "step": "deletion requested",
@@ -252,7 +252,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"state\":\"identity_verified\",\"retryable\":true}"
+      "detail": "{\"state\":\"failed_retryable\",\"retryable\":true}"
     },
     {
       "step": "every populated owner-linked family is empty for C",
@@ -271,9 +271,9 @@
     {
       "step": "the deleted account cannot sign in again",
       "expected": "true",
-      "actual": "false",
-      "result": "FAIL",
-      "detail": "status 200"
+      "actual": "true",
+      "result": "PASS",
+      "detail": "status 403"
     },
     {
       "step": "B's owner-linked fingerprint is unchanged",
