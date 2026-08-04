@@ -2176,66 +2176,45 @@ PREVIEW_FIXTURE_ONLY / DO_NOT_PROMOTE:
 disposable rehearsal must be built from the **12 Production migrations + fixtures + the new promotion
 set** — never from the Preview schema, which cannot prove that table's erasure.
 
-## 🔴 M4 FOUND A FIRST-ORDER DEFECT: the deletion plan names tables it cannot delete from
+## ✅ THE APPEND-ONLY CONFLICT IS RESOLVED — Founder decision implemented
 
-With a real shared object store in the stack, the saga finally reached `database_erasure` — and
-failed there. The flattened application error (`assessment_persistence_failed:400`) hides the real
-one, which the RPC gives up directly:
+M4 found that `yorisou_account_deletion_erase_database` names every owner-linked family but cannot
+delete from six of them: append-only triggers refuse, one raise aborts the whole transaction, and
+NOTHING is erased. Two of the six are in the 26-family contract; one,
+`yorisou_interpretation_responses`, is a promoted POR-1 table.
 
-```
-ERROR:  append_only: DELETE on yorisou_daily_state_history_events is not permitted
-CONTEXT: PL/pgSQL function yorisou_dci_block_mutation() line 6 at RAISE
-SQL statement "delete from public.yorisou_daily_state_history_events where owner_account_id = $1"
-PL/pgSQL function yorisou_account_deletion_erase_database(text) line 106 at EXECUTE
-```
+**Founder decision: `GOVERNED_ERASURE_DELETE + CONTENT_FREE_TOMBSTONE`.** Append-only guarantees the
+ORDINARY path — history is never rewritten — and was never a promise to keep a person's content
+after they asked to be forgotten. Full rationale, per-family decisions and the tombstone contract:
+`docs/ux2r/09_APPEND_ONLY_ERASURE_FOUNDER_DECISION.md`.
 
-**Six tables refuse DELETE through append-only triggers:**
-
-```
-yorisou_daily_state_history_events    ← IN the 26-family deletion contract
-yorisou_values_assessment_events      ← IN the 26-family deletion contract
-yorisou_daily_state_record_versions
-yorisou_values_assessment_versions
-yorisou_candidate_events
-yorisou_interpretation_responses      ← a PROMOTED POR-1 table
-```
-
-The last one matters most: this is not a legacy-only collision. POR-1's own promoted schema contains
-an append-only table that the erasure plan cannot empty.
-
-### Why nothing at all was erased
-
-`yorisou_account_deletion_erase_database` is one function. One trigger raise aborts the whole
-statement, so all 26 families keep their rows — the failure is total, not partial. That is the safe
-direction, and it is still a failure.
-
-### Two governed guarantees in direct conflict
+Implemented by `supabase/migrations/202608010109_por1_append_only_erasure_contract.sql`
+(PRODUCTION_LINEAGE, forward-only, inert while the executor is off).
 
 ```
-append-only immutability   DCI-1, YV-1, and POR-1's interpretation responses: history is never
-                           rewritten, so a record of what someone reported cannot be silently altered
-erasure obligation         a person who asks to be deleted must actually be erased
+ordinary path      direct DELETE, UPDATE and TRUNCATE all still denied
+forged context     random uuid · non-uuid · real job not crossed · crossed but wrong cursor ·
+                   right cursor but no frozen manifest — every one denied
+scope isolation    A's FULLY VALID context cannot delete B's row, nor run an unscoped DELETE
+erasure            A's content and versions reach 0; B untouched
+tombstones         content-free, owner absent, retention bound present
 ```
 
-Both are deliberate. Neither can simply be dropped, and resolving them is a PRODUCT DECISION rather
-than an implementation choice. The plausible shapes:
+Two findings worth carrying:
 
-```
-de-identify instead of delete   strip the owner column on append-only rows, keeping the event and
-                                losing the person — preserves the audit purpose the trigger protects
-governed erasure bypass         a SECURITY DEFINER path the trigger recognises as authorised erasure,
-                                narrowly scoped to the deletion executor
-contract change                 declare these families out of scope for erasure, with a stated reason
-```
+**A transaction-local setting is a signal, not an authorization.** `set_config` is reachable from any
+SQL a role can run, so the trigger consults `yorisou_account_erasure_authorized(owner)`, which
+re-derives from durable state whether a real deletion is in progress *for that row's owner* — job,
+frozen manifest, boundary crossed, cursor exactly `database_erasure`.
 
-**This is `MUST_FIX_BEFORE_PRODUCTION` and it is a Founder decision.** Recording it rather than
-picking one, because each option changes what the product promises about history.
+**Every negative control asserts rows existed first.** A `BEFORE DELETE ... FOR EACH ROW` trigger
+only fires per row, so a control run against an empty table passes without testing anything. That
+produced two false "bypass!" results and one worthless "held" result while this was built.
 
-### What M1's static check could not have caught
-
-M1 verified the plan NAMES every owner-linked family, and it does. Naming was never the question that
-mattered — execution was. This is exactly the gap the phrase "naming is not proof" was written for,
-now demonstrated rather than asserted.
+Two things were already correct and were left alone: `interpretation_responses` already had a
+result-scoped governed exception reached via `yorisou_assessment_result_erase`, and
+`candidate_events` carries no user identity — classified `NOT_APPLICABLE_TO_ACCOUNT_ERASURE` rather
+than given a bypass it does not need.
 
 ## ⛔ REMAINING — honestly scoped
 

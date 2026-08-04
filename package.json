@@ -90,7 +90,8 @@
     "por1:privilege-matrix": "node scripts/por1/effective-privilege-matrix.mjs",
     "por1:m3-journey": "bash tests/por1/m3-journey-stack.sh",
     "guard:por1-evidence-secrets": "node scripts/por1/evidence-secret-guard.mjs",
-    "test:por1-deletion-readiness": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1DeletionBackendReadiness.test.ts"
+    "test:por1-deletion-readiness": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1DeletionBackendReadiness.test.ts",
+    "test:por1-append-only-erasure": "bash tests/por1/append-only-erasure.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
