@@ -221,6 +221,9 @@ function finish(owner = "(none)", aborted = null) {
     note: "Every step is an HTTP request against the running application. Nothing about C is created by SQL.",
     base: BASE,
     principalOwnerId: owner === "(none)" ? null : `${owner.slice(0, 8)}…`,
+    // Written in full ONLY into the local evidence file the next phase reads. A synthetic
+    // reserved-domain identity on a disposable database; it never leaves this machine.
+    handoff: owner === "(none)" ? null : { ownerAccountId: owner, email: PRINCIPAL_EMAIL, password: PASSWORD },
     steps: steps.length,
     failures,
     aborted: aborted ?? null,

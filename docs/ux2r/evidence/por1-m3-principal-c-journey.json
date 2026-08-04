@@ -3,6 +3,11 @@
   "note": "Every step is an HTTP request against the running application. Nothing about C is created by SQL.",
   "base": "http://localhost:3240",
   "principalOwnerId": "acct_178…",
+  "handoff": {
+    "ownerAccountId": "acct_1785812900244_a4085c16cb40",
+    "email": "por1c-1785812899451@synthetic-preview.invalid",
+    "password": "Por1-C-Str0ng-Pass!"
+  },
   "steps": 26,
   "failures": 0,
   "aborted": null,
@@ -19,7 +24,7 @@
       "expected": "201",
       "actual": "201",
       "result": "PASS",
-      "detail": "{\"attemptId\":\"4008e5c3-f0a7-4296-bdb7-a3903b7a62ec\",\"requiredCount\":120}"
+      "detail": "{\"attemptId\":\"c2b6fa9c-406d-4906-a8de-3d32c213a1aa\",\"requiredCount\":120}"
     },
     {
       "step": "required answer count is the governed 120",
@@ -51,10 +56,10 @@
     },
     {
       "step": "resume returns the same attempt",
-      "expected": "4008e5c3-f0a7-4296-bdb7-a3903b7a62ec",
-      "actual": "4008e5c3-f0a7-4296-bdb7-a3903b7a62ec",
+      "expected": "c2b6fa9c-406d-4906-a8de-3d32c213a1aa",
+      "actual": "c2b6fa9c-406d-4906-a8de-3d32c213a1aa",
       "result": "PASS",
-      "detail": "{\"attempt\":{\"id\":\"4008e5c3-f0a7-4296-bdb7-a3903b7a62ec\",\"status\":\"in_progress\",\"answers\":{\"Q001\":\"A\",\"Q002\":\"A\",\"Q003\":\""
+      "detail": "{\"attempt\":{\"id\":\"c2b6fa9c-406d-4906-a8de-3d32c213a1aa\",\"status\":\"in_progress\",\"answers\":{\"Q001\":\"A\",\"Q002\":\"A\",\"Q003\":\""
     },
     {
       "step": "full save (120 answers)",
@@ -75,14 +80,14 @@
       "expected": "201",
       "actual": "201",
       "result": "PASS",
-      "detail": "{\"resultRowId\":\"b8ca679d-c5f4-4142-906a-495563fb945e\",\"resultId\":\"EM-AK\"}"
+      "detail": "{\"resultRowId\":\"beb667fe-96ef-4120-bc07-be20142e9619\",\"resultId\":\"EM-AK\"}"
     },
     {
       "step": "completion returned a canonical row identity",
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"resultRowId\":\"b8ca679d-c5f4-4142-906a-495563fb945e\",\"resultId\":\"EM-AK\"}"
+      "detail": "{\"resultRowId\":\"beb667fe-96ef-4120-bc07-be20142e9619\",\"resultId\":\"EM-AK\"}"
     },
     {
       "step": "completion returned a public result code",
@@ -117,7 +122,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"acct_1785812396493_3b4ff090683e\",\"name\":\"POR1 C\",\"email\":\"por1c-1785812395885@synthetic-preview.invalid\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"acct_1785812900244_a4085c16cb40\",\"name\":\"POR1 C\",\"email\":\"por1c-1785812899451@synthetic-preview.invalid\"}}"
     },
     {
       "step": "registration did not orphan the result",
@@ -131,7 +136,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"claimed\":true,\"resultRowId\":\"b8ca679d-c5f4-4142-906a-495563fb945e\"}"
+      "detail": "{\"claimed\":true,\"resultRowId\":\"beb667fe-96ef-4120-bc07-be20142e9619\"}"
     },
     {
       "step": "the result is now privately owned",
@@ -173,7 +178,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"acct_1785812396493_3b4ff090683e\",\"name\":\"POR1 C\",\"email\":\"por1c-1785812395885@synthetic-preview.invalid\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"acct_1785812900244_a4085c16cb40\",\"name\":\"POR1 C\",\"email\":\"por1c-1785812899451@synthetic-preview.invalid\"}}"
     },
     {
       "step": "sign-in created no new canonical result",

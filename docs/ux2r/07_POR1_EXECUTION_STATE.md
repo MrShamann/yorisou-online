@@ -2570,15 +2570,77 @@ D is the one shape terminal de-identification may touch — `failed_terminal`, o
 manifest, pre-irreversible, no live claim — with every clause verified after insert. M4 performs the
 transition; the fixture does not.
 
-## ⛔ REMAINING — M3 onward
+## M3 — COMPLETE
 
 ```
-M3  readiness matrix (unset / false / true-with-each-piece-missing / true-complete)
-    capability dependency matrix over the four controls, valid and invalid combinations
-    the full Principal C journey through the REAL product, with concurrent anonymous traffic
-      during registration so the YV-C7 regression stays exercised
-    effective-privilege matrix — has_function_privilege / has_table_privilege, not migration text
+readiness matrix              125 rows against the REAL resolvers · 0 failures
+capability matrix             all 16 combinations · no implicit activation
+effective privilege matrix    510 rows from has_*_privilege · 0 findings
+Principal C journey           26 steps through the real product over HTTP · 0 failures
+```
 
+Every value a deployment could hold is tested, not just true/false — including the affirmative-
+looking ones (`true`, `1`, `yes`, `enabled`) that must NOT enable. Only the exact trimmed
+case-insensitive `on` does.
+
+**The dependency graph is derived, not invented.** The four capabilities are independent; exactly one
+real interlock exists, in `resolveFenceMode`: fence schema NOT ready AND deletion executor enabled →
+`fail_closed`. Deletion can run while the fence protecting concurrent account writes cannot, so
+writes are refused rather than raced.
+
+The privilege matrix is measured, never read off migrations — this package has been wrong twice in
+ways the SQL text did not reveal. Negative control reintroducing the exact Preview hole flags anon,
+authenticated AND public, plus a dropped FORCE RLS.
+
+The C journey includes **registration under 12 concurrent anonymous attempt creations** — the exact
+shape that produced YV-C7 — so that regression now lives in the real journey.
+
+## ⛔ M4 — BLOCKED BY A HARNESS GAP, and the gap is precise
+
+The erasure proof RAN and correctly reported **FAIL**. It is worth being exact about what it showed,
+because "26 families still populated" could be read as the deletion plan not working, and that is
+not what happened.
+
+```
+26 / 26 contract families NONZERO before deletion   ← the precondition that makes zero-after mean something
+deletion requested and confirmed through the real API, with reauthentication proven:
+    wrong confirmation phrase → 400
+    wrong password            → 401
+job state after execution:
+    state             failed_retryable
+    execution_cursor  session_revocation
+    irreversible      crossed
+    last_error_code   shared_store_not_configured
+```
+
+Stage ranks: `session_revocation` = 3, irreversible boundary = 2, `database_erasure` = **4**. The job
+crossed the irreversible boundary and then failed at stage 3 — **before the database erasure stage
+ever ran**. That is why all 26 families still hold their rows.
+
+**Root cause.** `session_revocation` writes through `sharedWriteJson` / `sharedDeleteJson`
+(`lib/server/yorisouData.ts:806, 826`), which throw `shared_store_not_configured` whenever the local
+file adapter is in use. The M3/M4 harness runs the application with no shared object store, so the
+erasure path is **not exercisable on it at all**.
+
+```
+consequence: this harness can never prove erasure, and any claim of "erasure proven" from it
+             would be false regardless of what the family counts showed
+required:    an M4 harness backed by a real shared object store (Supabase Storage REST, or an
+             S3-compatible service such as MinIO) before the erasure claim can be made
+```
+
+What the run DID establish: the fixture populates 26/26 before deletion; the governed deletion API
+enforces both the confirmation phrase and reauthentication; the job records its failure honestly with
+a typed code rather than reporting success; and the harness reports FAIL rather than a table of
+zeroes.
+
+## ⛔ REMAINING
+
+```
+M3  DONE, except: interpretation consent, report download, recommendation materialization and
+    LINE canonical return are not yet exercised in the C journey
+
+M4  FIRST: give the harness a real shared object store, or the erasure path cannot run at all
 M4  populate every applicable C family, prove nonzero-before
     governed deletion, prove zero-after across all 26 owner-linked families
     per-table proof for the Production-only families Preview could never exercise:

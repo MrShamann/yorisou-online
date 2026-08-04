@@ -130,3 +130,15 @@ echo "           app serving on $APP_PORT (pid $APP_PID, build $(git rev-parse -
 
 echo "[m3] 5/5 Principal C journey"
 node tests/por1/principal-c-journey.mjs --base "http://localhost:$APP_PORT" --dsn "$DATABASE_URL"
+
+if [ "${POR1_RUN_M4:-}" = "1" ]; then
+  echo
+  echo "[m4] erasure proof against the SAME populated stack"
+  # M4 must run against the state M3 actually produced. Rebuilding it would mean proving erasure of
+  # a fixture rather than of the person the journey created.
+  OWNER=$(node -e "console.log(require('./docs/ux2r/evidence/por1-m3-principal-c-journey.json').handoff.ownerAccountId)")
+  EMAIL=$(node -e "console.log(require('./docs/ux2r/evidence/por1-m3-principal-c-journey.json').handoff.email)")
+  PW=$(node -e "console.log(require('./docs/ux2r/evidence/por1-m3-principal-c-journey.json').handoff.password)")
+  node tests/por1/m4-erasure-proof.mjs --base "http://localhost:$APP_PORT" --dsn "$DATABASE_URL" \
+    --owner "$OWNER" --email "$EMAIL" --password "$PW"
+fi
