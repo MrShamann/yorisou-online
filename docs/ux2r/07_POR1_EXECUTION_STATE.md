@@ -2700,3 +2700,52 @@ M6  Production release runbook · Production synthetic acceptance plan
 
 **Nothing yet proves ERASURE.** The Production-only families are named by the deletion plan and
 exercised by nothing. That is M4, and no amount of M1–M2 evidence substitutes for it.
+
+---
+
+## ELEVEN-MIGRATION CATALOGUE MEASUREMENT — 2026-08-04, at `36a5395`
+
+Measured from two live PostgreSQL 17 catalogues, not from migration text and not by
+adding "new functions" to a previous figure. `base` is the repository's migration
+lineage with every `2026080101*` file withheld; `target` is that same lineage plus
+POR-1 `101`–`111` applied in order under `ON_ERROR_STOP=1`. All eleven applied cleanly.
+
+| | base | target | delta |
+|---|---|---|---|
+| tables | 42 | 57 | **15** |
+| functions (by name) | 58 | 139 | **81** |
+| functions (by identity signature) | 72 | 154 | **82** |
+| sequences | 0 | 2 | **2** |
+| triggers | 16 | 18 | **2** |
+
+Target name digests (sha256, first 16): tables `9b1e90157301b214`, functions
+`c3b548ed31832d6e`, sequences `5667a5d65b342cd8`, triggers `ee2fe8c3b2c23f22`.
+Target function-signature digest: `7bc053e4593c1b66`.
+
+**`15 / 80 / 2 / 2` is superseded and must not be quoted.** It was measured at ten
+migrations. Migration 111 adds `yorisou_ct_eq` and the four-argument authority and
+erasure signatures, and drops three signatures that 110 had introduced — so the
+drops cancel within the POR-1 set and are invisible against base (`dropped = 0`).
+
+**Two denominators, both correct, neither interchangeable.** By name, 81; by identity
+signature, 82. They differ because overloading is exactly what migration 111 changes,
+and a name-keyed count cannot see an overload being replaced. The promotion contract
+must state which convention it uses. The stale contract's `75` is a third denominator
+again — the compiler's own emitted-function count over eight migrations.
+
+**NOT YET VERIFIED AGAINST LIVE PRODUCTION.** `base` is a local reconstruction of the
+Production lineage, not a read of it. Until the read-only extraction below is
+performed, `42 / 58 / 0 / 16` is an expectation, not a baseline.
+
+### Blocked: read-only Production catalogue extraction
+
+`scripts/por1/extract-catalogue.mjs --ref krxizslnksorwhepyijs` requires
+`SUPABASE_ACCESS_TOKEN`. No token is present in this environment: the variable is
+unset and `~/.supabase/access-token` does not exist. The permitted read-only path
+cannot run without a Founder-supplied token.
+
+The reference `krxizslnksorwhepyijs` could not be confirmed against
+`PROJECT_MANIFEST.yaml`, which does not record project references. It is corroborated
+by a prior live read recorded in this document
+(`krxizslnksorwhepyijs · yorisou-production · ap-northeast-1 · ACTIVE_HEALTHY`), which
+is evidence of a past observation, not verification against a canonical manifest.
