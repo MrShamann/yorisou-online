@@ -63,6 +63,14 @@ export function isAtOrPastIrreversible(stage: DeletionStage | null): boolean {
  */
 export type ExecutorClaim = {
   readonly accountId: string;
+  /**
+   * The EXACT job this executor claimed.
+   *
+   * Erasure is bound to this id, not re-derived from the owner. Rediscovering "the job for this
+   * account" at erasure time would let a different job — a later one, a cancelled one, one whose
+   * claim has lapsed — be the thing that actually runs, which is authority by coincidence.
+   */
+  readonly jobId: string;
   readonly tokenHash: string;
   readonly generation: number;
   cursor: DeletionStage;
@@ -97,6 +105,7 @@ export async function claimDeletionExecutor(
     await rpc<{
       claimed: boolean;
       reason?: string;
+      job_id?: string;
       generation: number;
       cursor: DeletionStage | null;
       irreversible: boolean;
@@ -114,6 +123,12 @@ export async function claimDeletionExecutor(
       cursor: row?.cursor ?? null,
     };
   }
+  if (!row.job_id) {
+    // The claim is the only place the executor learns which job it is driving. Without it there is
+    // nothing to bind erasure to, and falling back to the owner would reintroduce the rediscovery
+    // this contract exists to remove — so this is a contract violation, not a default.
+    throw new Error("account_deletion_claim_without_job_id");
+  }
   if (!row.cursor) {
     // A claimed job with no cursor cannot happen — the claim initialises it — so treat it as a
     // contract violation rather than defaulting to a stage and guessing.
@@ -124,6 +139,7 @@ export async function claimDeletionExecutor(
     claimed: true,
     claim: {
       accountId,
+      jobId: row.job_id,
       tokenHash,
       generation: row.generation,
       cursor: row.cursor,

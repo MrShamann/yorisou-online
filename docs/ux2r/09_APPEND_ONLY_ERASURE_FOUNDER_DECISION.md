@@ -4,7 +4,7 @@
 YORISOU_POR1_APPEND_ONLY_ERASURE_DECISION_GOVERNED_DELETE_WITH_CONTENT_FREE_TOMBSTONE
 ```
 
-Decided 2026-08-05 by the Founder, after M4 executed the real governed deletion and it failed.
+Decided 2026-08-04 by the Founder, after M4 executed the real governed deletion and it failed.
 
 ## The conflict
 

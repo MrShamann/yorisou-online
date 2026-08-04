@@ -375,7 +375,13 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
         }
 
         case "database_erasure": {
-          await rpc("yorisou_account_deletion_erase_database", { p_owner_account_id: accountId });
+          // Bound to the claimed job, never rediscovered by owner. The SQL side revalidates the
+          // pair anyway — state, frozen manifest, irreversible crossing, cursor and a live claim —
+          // so a wrong or stale id is refused rather than trusted.
+          await rpc("yorisou_account_deletion_erase_database", {
+            p_job_id: claim.jobId,
+            p_owner_account_id: accountId,
+          });
           // Partial provisioning state is account-linked and lives outside the declarative plan,
           // which is fixed in an applied migration. Removing it also RELEASES THE EMAIL: the saga is
           // keyed by a digest of the address, so one left behind would make that address permanently
