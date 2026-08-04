@@ -2,12 +2,6 @@
   "contract": "por1-m3-principal-c-journey",
   "note": "Every step is an HTTP request against the running application. Nothing about C is created by SQL.",
   "base": "http://localhost:3240",
-  "principalOwnerId": "acct_178…",
-  "handoff": {
-    "ownerAccountId": "acct_1785812900244_a4085c16cb40",
-    "email": "por1c-1785812899451@synthetic-preview.invalid",
-    "password": "Por1-C-Str0ng-Pass!"
-  },
   "steps": 26,
   "failures": 0,
   "aborted": null,
@@ -24,7 +18,7 @@
       "expected": "201",
       "actual": "201",
       "result": "PASS",
-      "detail": "{\"attemptId\":\"c2b6fa9c-406d-4906-a8de-3d32c213a1aa\",\"requiredCount\":120}"
+      "detail": "{\"attemptId\":\"<uuid:sha256:3d3393f30c9b>\",\"requiredCount\":120}"
     },
     {
       "step": "required answer count is the governed 120",
@@ -59,7 +53,7 @@
       "expected": "c2b6fa9c-406d-4906-a8de-3d32c213a1aa",
       "actual": "c2b6fa9c-406d-4906-a8de-3d32c213a1aa",
       "result": "PASS",
-      "detail": "{\"attempt\":{\"id\":\"c2b6fa9c-406d-4906-a8de-3d32c213a1aa\",\"status\":\"in_progress\",\"answers\":{\"Q001\":\"A\",\"Q002\":\"A\",\"Q003\":\""
+      "detail": "{\"attempt\":{\"id\":\"<uuid:sha256:3d3393f30c9b>\",\"status\":\"in_progress\",\"answers\":{\"Q001\":\"A\",\"Q002\":\"A\",\"Q003\":\""
     },
     {
       "step": "full save (120 answers)",
@@ -80,14 +74,14 @@
       "expected": "201",
       "actual": "201",
       "result": "PASS",
-      "detail": "{\"resultRowId\":\"beb667fe-96ef-4120-bc07-be20142e9619\",\"resultId\":\"EM-AK\"}"
+      "detail": "{\"resultRowId\":\"<uuid:sha256:b21625bab0a0>\",\"resultId\":\"EM-AK\"}"
     },
     {
       "step": "completion returned a canonical row identity",
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"resultRowId\":\"beb667fe-96ef-4120-bc07-be20142e9619\",\"resultId\":\"EM-AK\"}"
+      "detail": "{\"resultRowId\":\"<uuid:sha256:b21625bab0a0>\",\"resultId\":\"EM-AK\"}"
     },
     {
       "step": "completion returned a public result code",
@@ -122,7 +116,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"acct_1785812900244_a4085c16cb40\",\"name\":\"POR1 C\",\"email\":\"por1c-1785812899451@synthetic-preview.invalid\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:3f6fac6aa9c9>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:2d8714ad5238>\"}}"
     },
     {
       "step": "registration did not orphan the result",
@@ -136,7 +130,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"claimed\":true,\"resultRowId\":\"beb667fe-96ef-4120-bc07-be20142e9619\"}"
+      "detail": "{\"claimed\":true,\"resultRowId\":\"<uuid:sha256:b21625bab0a0>\"}"
     },
     {
       "step": "the result is now privately owned",
@@ -178,7 +172,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"acct_1785812900244_a4085c16cb40\",\"name\":\"POR1 C\",\"email\":\"por1c-1785812899451@synthetic-preview.invalid\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:3f6fac6aa9c9>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:2d8714ad5238>\"}}"
     },
     {
       "step": "sign-in created no new canonical result",
@@ -194,5 +188,8 @@
       "result": "PASS",
       "detail": "acct_1785812…"
     }
-  ]
+  ],
+  "principalOwnerDigest": "3f6fac6aa9c92082",
+  "principalEmailDigest": "2d8714ad523827dc",
+  "remediation": "The original file carried a plaintext synthetic password, a full synthetic email and a full account id. Replaced with one-way digests. Classification: NON_LIVE_SYNTHETIC_CREDENTIAL — the account existed only in a destroyed disposable local PostgreSQL database, the domain is RFC 2606 reserved (.invalid, non-resolvable), and the journey targets localhost only. No Preview or Production exposure."
 }

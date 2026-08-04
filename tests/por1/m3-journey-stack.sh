@@ -20,6 +20,8 @@ DB="${POR1_DATABASE_NAME:-por1_m3_journey}"
 WORK="${POR1_WORK:-/tmp/por1-m3}"
 PGDIR="$WORK/pg"
 STORE="$WORK/store"
+# Mode-0600, outside the repository, destroyed by the cleanup trap below.
+HANDOFF="$WORK/.principal-c-handoff.json"
 REST_CONTAINER="${POR1_REST_CONTAINER:-por1-m3-postgrest}"
 KEEP=0
 [ "${1:-}" = "--keep" ] && KEEP=1
@@ -35,8 +37,9 @@ cleanup() {
   [ -n "${PROXY_PID:-}" ] && kill "$PROXY_PID" 2>/dev/null
   docker rm -f "$REST_CONTAINER" >/dev/null 2>&1
   pg_ctl -D "$PGDIR" stop >/dev/null 2>&1
+  rm -f "$HANDOFF"
   rm -rf "$WORK"
-  echo "[m3] stack destroyed"
+  echo "[m3] stack destroyed (credential handoff removed)"
 }
 trap cleanup EXIT
 
@@ -129,16 +132,16 @@ curl -s -o /dev/null "http://localhost:$APP_PORT/" || { echo "[m3] app did not s
 echo "           app serving on $APP_PORT (pid $APP_PID, build $(git rev-parse --short HEAD))"
 
 echo "[m3] 5/5 Principal C journey"
-node tests/por1/principal-c-journey.mjs --base "http://localhost:$APP_PORT" --dsn "$DATABASE_URL"
+POR1_HANDOFF_FILE="$HANDOFF" node tests/por1/principal-c-journey.mjs --base "http://localhost:$APP_PORT" --dsn "$DATABASE_URL"
 
 if [ "${POR1_RUN_M4:-}" = "1" ]; then
   echo
   echo "[m4] erasure proof against the SAME populated stack"
   # M4 must run against the state M3 actually produced. Rebuilding it would mean proving erasure of
   # a fixture rather than of the person the journey created.
-  OWNER=$(node -e "console.log(require('./docs/ux2r/evidence/por1-m3-principal-c-journey.json').handoff.ownerAccountId)")
-  EMAIL=$(node -e "console.log(require('./docs/ux2r/evidence/por1-m3-principal-c-journey.json').handoff.email)")
-  PW=$(node -e "console.log(require('./docs/ux2r/evidence/por1-m3-principal-c-journey.json').handoff.password)")
+  OWNER=$(node -e "console.log(require('$HANDOFF').ownerAccountId)")
+  EMAIL=$(node -e "console.log(require('$HANDOFF').email)")
+  PW=$(node -e "console.log(require('$HANDOFF').password)")
   node tests/por1/m4-erasure-proof.mjs --base "http://localhost:$APP_PORT" --dsn "$DATABASE_URL" \
     --owner "$OWNER" --email "$EMAIL" --password "$PW"
 fi

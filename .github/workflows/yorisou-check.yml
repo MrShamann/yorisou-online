@@ -153,6 +153,7 @@ jobs:
           npm run test:por1-store-ownership
           npm run test:por1-adapter-ownership
           npm run test:por1-readiness-matrix
+          npm run guard:por1-evidence-secrets
 
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"

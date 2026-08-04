@@ -19,6 +19,9 @@
 //   node tests/por1/principal-c-journey.mjs --base http://localhost:3240 --dsn postgres://...
 
 import { execFileSync } from "node:child_process";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+
+import { redact } from "./redact.mjs";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -27,15 +30,24 @@ const arg = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : un
 const BASE = arg("--base") ?? "http://localhost:3240";
 const DSN = arg("--dsn");
 const OUT = arg("--out") ?? "docs/ux2r/evidence/por1-m3-principal-c-journey.json";
-const PRINCIPAL_EMAIL = `por1c-${Date.now()}@synthetic-preview.invalid`;
-const PASSWORD = "Por1-C-Str0ng-Pass!";
+// RANDOM PER RUN, and never written into the repository.
+//
+// A fixed password is a credential that outlives the run that used it. This one was committed into
+// tracked evidence, which is how a synthetic value becomes a real hygiene problem: the account was
+// local-only and the domain is RFC 2606 reserved, so nothing was reachable — but the pattern would
+// have been identical had the target not been localhost.
+const PRINCIPAL_EMAIL = `por1c-${randomUUID().slice(0, 12)}@synthetic-preview.invalid`;
+const PASSWORD = `Por1-C-${randomBytes(18).toString("base64url")}!aA1`;
+
+/** One-way, so evidence can correlate rows without carrying identity. */
+const digest = (value) => createHash("sha256").update(String(value)).digest("hex").slice(0, 16);
 
 const steps = [];
 let failures = 0;
 function record(step, expected, actual, detail = "") {
   const pass = expected === actual;
   if (!pass) failures += 1;
-  steps.push({ step, expected: String(expected), actual: String(actual), result: pass ? "PASS" : "FAIL", detail });
+  steps.push({ step, expected: String(expected), actual: String(actual), result: pass ? "PASS" : "FAIL", detail: redact(detail) });
   const mark = pass ? "ok  " : "FAIL";
   console.log(`  ${mark} ${step}${pass ? "" : `  (expected ${expected}, got ${actual}) ${detail}`}`);
   return pass;
@@ -220,10 +232,9 @@ function finish(owner = "(none)", aborted = null) {
     contract: "por1-m3-principal-c-journey",
     note: "Every step is an HTTP request against the running application. Nothing about C is created by SQL.",
     base: BASE,
-    principalOwnerId: owner === "(none)" ? null : `${owner.slice(0, 8)}…`,
-    // Written in full ONLY into the local evidence file the next phase reads. A synthetic
-    // reserved-domain identity on a disposable database; it never leaves this machine.
-    handoff: owner === "(none)" ? null : { ownerAccountId: owner, email: PRINCIPAL_EMAIL, password: PASSWORD },
+    // DIGESTS ONLY. No password, no full email, no full account id ever reaches tracked evidence.
+    principalOwnerDigest: owner === "(none)" ? null : digest(owner),
+    principalEmailDigest: digest(PRINCIPAL_EMAIL),
     steps: steps.length,
     failures,
     aborted: aborted ?? null,
@@ -231,6 +242,14 @@ function finish(owner = "(none)", aborted = null) {
   };
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, `${JSON.stringify(summary, null, 2)}\n`);
+
+  // The credential handoff, for the phase that runs next in the same stack. Mode 0600, OUTSIDE the
+  // repository, and destroyed by the stack's cleanup trap. It is never a tracked artifact.
+  const handoffPath = process.env.POR1_HANDOFF_FILE;
+  if (handoffPath && owner !== "(none)") {
+    mkdirSync(dirname(handoffPath), { recursive: true });
+    writeFileSync(handoffPath, `${JSON.stringify({ ownerAccountId: owner, email: PRINCIPAL_EMAIL, password: PASSWORD })}\n`, { mode: 0o600 });
+  }
   console.log(`\n[C] ${failures === 0 ? "PASS" : "FAIL"} — ${steps.length} steps, ${failures} failure(s) → ${OUT}`);
   process.exit(failures === 0 ? 0 : 1);
 }

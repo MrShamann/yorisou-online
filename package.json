@@ -88,7 +88,8 @@
     "test:por1-adapter-ownership": "node --import tsx --test lib/server/__tests__/por1LocalStoreAdapterOwnership.test.ts",
     "test:por1-readiness-matrix": "node --import tsx --test lib/server/__tests__/por1ReadinessCapabilityMatrix.test.ts",
     "por1:privilege-matrix": "node scripts/por1/effective-privilege-matrix.mjs",
-    "por1:m3-journey": "bash tests/por1/m3-journey-stack.sh"
+    "por1:m3-journey": "bash tests/por1/m3-journey-stack.sh",
+    "guard:por1-evidence-secrets": "node scripts/por1/evidence-secret-guard.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",

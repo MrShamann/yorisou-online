@@ -19,6 +19,8 @@ import { execFileSync } from "node:child_process";
 import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 
+import { redact } from "./redact.mjs";
+
 const args = process.argv.slice(2);
 const arg = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
 const BASE = arg("--base");
@@ -39,7 +41,7 @@ let failures = 0;
 function record(step, expected, actual, detail = "") {
   const pass = String(expected) === String(actual);
   if (!pass) failures += 1;
-  steps.push({ step, expected: String(expected), actual: String(actual), result: pass ? "PASS" : "FAIL", detail });
+  steps.push({ step, expected: String(expected), actual: String(actual), result: pass ? "PASS" : "FAIL", detail: redact(detail) });
   console.log(`  ${pass ? "ok  " : "FAIL"} ${step}${pass ? "" : `  (expected ${expected}, got ${actual}) ${detail}`}`);
   return pass;
 }

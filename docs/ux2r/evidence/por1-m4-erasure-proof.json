@@ -224,7 +224,7 @@
       "expected": "true",
       "actual": "true",
       "result": "PASS",
-      "detail": "{\"success\":true,\"account\":{\"id\":\"acct_1785812900244_a4085c16cb40\",\"name\":\"POR1 C\",\"email\":\"por1c-1785812899451@synthetic-preview.invalid\"}}"
+      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:3f6fac6aa9c9>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:2d8714ad5238>\"}}"
     },
     {
       "step": "deletion requested",
