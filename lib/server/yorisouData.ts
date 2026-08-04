@@ -1252,6 +1252,55 @@ async function migrateLegacyFilesToSharedStore() {
 // deletion problem it would solve. The guard below refuses anything outside the identity prefixes
 // so a future caller cannot widen this by accident.
 
+/**
+ * POR-1 — one disposable round trip through the REAL shared-store adapter.
+ *
+ * The deletion executor must know whether its session-revocation backend works BEFORE it crosses the
+ * irreversible boundary. Reading environment variables cannot answer that: a configured-but-
+ * unreachable endpoint, a missing bucket and a credential that cannot write all look identical to a
+ * correct configuration when you only check that strings are non-empty.
+ *
+ * Deliberately shaped as ONE function with NO caller-supplied key. Exporting a general write/read/
+ * delete trio for probing would hand the application exactly the generic object-deletion capability
+ * that `deleteSharedIdentityObject` exists to withhold. The key lives under a fixed probe prefix,
+ * carries no identity, and is removed again.
+ */
+export type SharedStoreProbe =
+  | { ok: true }
+  | { ok: false; stage: "write" | "read" | "delete"; code: string };
+
+export async function probeSharedStoreRoundTrip(): Promise<SharedStoreProbe> {
+  const key = `phase1/_probe/deletion-readiness-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.json`;
+  const payload = { probe: "deletion-backend-readiness", at: nowIso() };
+
+  try {
+    await sharedWriteJson(key, payload);
+  } catch (error) {
+    return { ok: false, stage: "write", code: error instanceof Error ? error.message : "unknown" };
+  }
+
+  try {
+    const read = await sharedReadJson<typeof payload>(key);
+    if (!read) {
+      await sharedDeleteJson(key).catch(() => undefined);
+      return { ok: false, stage: "read", code: "probe_object_absent_after_write" };
+    }
+  } catch (error) {
+    await sharedDeleteJson(key).catch(() => undefined);
+    return { ok: false, stage: "read", code: error instanceof Error ? error.message : "unknown" };
+  }
+
+  try {
+    // A store that cannot DELETE cannot revoke a session. Discovering that at `session_revocation`
+    // is precisely the failure this probe exists to prevent, so it is part of the round trip.
+    await sharedDeleteJson(key);
+  } catch (error) {
+    return { ok: false, stage: "delete", code: error instanceof Error ? error.message : "unknown" };
+  }
+
+  return { ok: true };
+}
+
 /** Delete one identity object. Missing is success — deletion is idempotent by contract. */
 export async function deleteSharedIdentityObject(key: string): Promise<void> {
   assertIdentityKey(key);

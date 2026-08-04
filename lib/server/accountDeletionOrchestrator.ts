@@ -47,6 +47,8 @@ import {
 } from "./identityProvisioningRollout";
 import { pruneRecentLineWebhookSubjects, setAccountDeletionLock } from "./yorisouData";
 import { finalizeAccountMutationGate, withAccountDeletionContext } from "./accountMutationLease";
+import { checkDeletionBackendReadiness } from "./deletionBackendReadiness";
+import { shouldGateOnBackendReadiness } from "./deletionBackendReadinessDecision";
 import {
   claimDeletionExecutor,
   completeDeletionStep,
@@ -224,6 +226,29 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
   if (resume.state === "completed") return { outcome: "completed" };
   if (resume.state === "cancelled" || resume.state === "legal_hold" || resume.state === "failed_terminal") {
     return { outcome: "terminal", errorCode: `account_deletion_${resume.state}` };
+  }
+
+  // ── ASK BEFORE CROSSING ─────────────────────────────────────────────────────
+  //
+  // `session_revocation` writes through the shared object store. When that store is absent, the saga
+  // used to freeze the manifest, place the lock marker, CROSS THE IRREVERSIBLE BOUNDARY, and only
+  // then discover the dependency was never there — leaving the account past the point of no return
+  // over a requirement that was statically knowable before the first stage ran.
+  //
+  // The gate applies ONLY to a job that has not crossed. A store that fails mid-operation is a
+  // different situation with a different correct answer — resume from the exact cursor — and
+  // refusing there would strand a half-erased account. The two look identical in a log and must not
+  // be treated the same.
+  if (shouldGateOnBackendReadiness({
+        irreversible: resume.irreversible,
+        pastIrreversibleCursor: isAtOrPastIrreversible(resume.cursor),
+      })) {
+    const backend = await checkDeletionBackendReadiness();
+    if (!backend.ready) {
+      // Retryable, not terminal: the deployment can be fixed and the same job resumed. Nothing has
+      // been destroyed, and `irreversible_started_at` stays null.
+      return { outcome: "retryable", errorCode: backend.reason };
+    }
   }
 
   const claimResult = await claimDeletionExecutor(accountId);
