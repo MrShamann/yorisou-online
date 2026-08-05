@@ -18,8 +18,10 @@
 
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -89,17 +91,78 @@ test("it is registered in the migration scope manifest as PREVIEW_ONLY with the 
   assert.equal(entry.sha256, digest, "the manifest digest must be the file's actual sha256");
 });
 
-// ── negative control: the gate must be able to fail ──────────────────────────
+// ── negative control: the gate must be able to FAIL, proved by running it ────
+//
+// An earlier version of this control asserted only that the contract does not itself list
+// anon/authenticated grants. That is a statement about a checked-in file, not about the gate: it
+// would have passed even if verify-promoted-contract.mjs had no sequence check at all. So this now
+// runs the SHIPPED CLI as a subprocess over two synthetic catalogues and asserts both directions.
+// The verifier's logic is never reimplemented or mocked here — if it stops failing closed, so does
+// this test.
 
-test("stale sequence grants make promotion verification fail", () => {
-  // The verifier compares a catalogue's sequence usage_grants against the contract. Prove that a
-  // catalogue still carrying anon/authenticated is rejected, so a green run means something.
-  const contract = JSON.parse(
-    readFileSync(join(ROOT, "supabase/contracts/por1-promotion-contract.json"), "utf8"),
-  );
-  const seq = contract.sequences.find((s) => s.name.includes("interpretation_responses_seq"));
-  assert.ok(seq, "the contract must describe the sequence");
-  const contracted = JSON.stringify(seq);
-  assert.doesNotMatch(contracted, /"anon:/, "the contract must not itself bless anon");
-  assert.doesNotMatch(contracted, /"authenticated:/, "nor authenticated");
+const CONTRACT_PATH = "supabase/contracts/por1-promotion-contract.json";
+const VERIFIER = join(ROOT, "scripts", "por1", "verify-promoted-contract.mjs");
+
+// The extractor serializes sequence privileges as a comma-joined `role:PRIVILEGE` string
+// (information_schema.role_usage_grants), and the verifier rejects any entry matching
+// /(^|,)(anon|authenticated):/. These are those two shapes.
+const DIRTY_GRANTS = "anon:USAGE,authenticated:USAGE,service_role:SELECT,service_role:USAGE";
+const CLEAN_GRANTS = "postgres:USAGE,service_role:SELECT,service_role:USAGE";
+
+/**
+ * A catalogue in the extractor's shape whose objects are exactly the contract's, so every check
+ * except the sequence privileges is satisfied by construction and the only variable is the grants.
+ * (The compiler strips `usage_grants` from contract sequences, which is why the live side supplies it.)
+ */
+function catalogueFrom(contract, usageGrants) {
+  return {
+    schema: "public",
+    extracted_by: "sequence-privileges.test.mjs fixture",
+    counts: {},
+    extensions: [],
+    tables: contract.tables,
+    functions: contract.functions,
+    sequences: contract.sequences.map((s) => ({ ...s, usage_grants: usageGrants })),
+    triggers: contract.triggers,
+    fk_edges: [],
+    catalogue_hash: "fixture",
+  };
+}
+
+function runVerifier(usageGrants) {
+  const dir = mkdtempSync(join(tmpdir(), "por1-seq-verify-"));
+  try {
+    const contract = JSON.parse(readFileSync(join(ROOT, CONTRACT_PATH), "utf8"));
+    const cataloguePath = join(dir, "catalogue.json");
+    writeFileSync(cataloguePath, JSON.stringify(catalogueFrom(contract, usageGrants)));
+    const result = spawnSync(
+      process.execPath,
+      [VERIFIER, "--catalogue", cataloguePath, "--contract", join(ROOT, CONTRACT_PATH)],
+      { cwd: ROOT, encoding: "utf8" },
+    );
+    return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test("clean control: a catalogue with only permitted sequence grants passes the real verifier", () => {
+  const { status, stderr } = runVerifier(CLEAN_GRANTS);
+  assert.equal(status, 0, `the verifier must accept a clean catalogue; stderr:\n${stderr}`);
+});
+
+test("stale sequence grants make the real verifier fail closed", () => {
+  const { status, stderr } = runVerifier(DIRTY_GRANTS);
+
+  assert.notEqual(status, 0, "the verifier must exit non-zero when a sequence is usable by anon/authenticated");
+  assert.match(stderr, /sequence usable by/, "and say so");
+  assert.match(stderr, /anon:USAGE/, "naming anon");
+  assert.match(stderr, /authenticated:USAGE/, "and authenticated");
+
+  // BOTH promoted sequences must be reported — a check that catches only the first one would let
+  // the second stay exposed.
+  for (const seq of SEQUENCES) {
+    const bare = seq.replace(/^public\./, "");
+    assert.match(stderr, new RegExp(bare.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${bare} must be reported`);
+  }
 });

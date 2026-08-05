@@ -22,10 +22,19 @@
 #
 # HOW IT IS DERIVED (never hand-written).
 #
-# Two disposable PostgreSQL 17 clusters carrying the Supabase platform roles AND Supabase's default
-# privileges are built from repository SQL alone: one with the Production baseline only, one with the
-# baseline plus 101…111. The delta between their catalogues is the promoted object set in its final
-# form. Rebuilding must be byte-reproducible; `--check` fails on any drift.
+# Two disposable PostgreSQL 17 clusters are built from repository SQL alone — one with the Production
+# baseline only, one with the baseline plus 101…111 — and the delta between their catalogues is the
+# promoted object set in its final form. Rebuilding must be byte-reproducible; `--check` fails on any
+# drift.
+#
+# The clusters carry the Supabase-equivalent PLATFORM ROLES (`anon`, `authenticated`, `service_role`),
+# because the promotion's grant blocks are role-conditional and would otherwise be skipped entirely.
+#
+# They deliberately do NOT install Supabase's default privileges. This contract records the end state
+# established by the REPOSITORY MIGRATIONS, not by the platform: see the note in prepare() for what
+# happens if you add them. Environment-level default-privilege behaviour is asserted where it belongs
+# — by the assertions inside the migrations themselves (202608010108) and by Supabase-shaped
+# rehearsals that install those defaults on purpose.
 #
 #   scripts/por1/build-final-contract.sh [--check]
 #
