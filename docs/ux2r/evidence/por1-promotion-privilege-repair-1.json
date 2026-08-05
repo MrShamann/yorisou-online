@@ -239,5 +239,56 @@
       }
     ],
     "disposition": "recorded, deliberately NOT fixed in this package; POR-1 hosted promotion readiness is BLOCKED until they are resolved separately"
+  },
+  "localLauncherResync": {
+    "requirement": "after the final commit, rebuild the 3210 runtime through the installed launcher contract and prove runtime SHA == repository HEAD",
+    "stopThroughStopApp": "ok \u2014 pid 37991 exited gracefully, port 3210 closed",
+    "staleDetectedCorrectly": "the launcher's identity contract flagged the running 58c6bdd build as NOT PROVEN against HEAD 1986fda before any rebuild \u2014 the ownership remediation working on a real HEAD advance",
+    "rebuildStatus": "COMPLETED \u2014 the network condition cleared and the build succeeded on the next attempt",
+    "blocker": {
+      "symptom": "next build fails with Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'",
+      "notRepositoryOwned": "the identical command exited 0 at 11:16 on the same tree; git diff 58c6bdd..1986fda touches only two .md files and one .json, none in the Next build graph (0 files under app/, lib/, package.json, next.config, tsconfig, postcss, tailwind)",
+      "notACacheOrToolchainIssue": "reproduced after rm -rf .next; node_modules unchanged since 10:11 and contains only @next/swc-darwin-arm64; node v23.4.0 arm64, translated=0",
+      "measuredMechanism": "next/font/google resolves each font file through fonts.gstatic.com. The Noto Sans JP CSS yields 124 unicode-range subset URLs. A sampled fetch of 12 of them from node returned 9x200 and 3 AbortError at an 8s bound \u2014 a ~25% stall rate. A build needing all 124 therefore fails almost every attempt, while fonts.googleapis.com (the CSS host) answers 200 in under a second throughout.",
+      "classification": "LOCAL_ENVIRONMENT_TRANSIENT \u2014 intermittent stalls reaching fonts.gstatic.com from this machine; fluctuates (builds succeeded at 07:54, 10:23 and 11:16 today)",
+      "resolution": "transient; a bounded retry loop succeeded on its first attempt at 11:57 once gstatic stopped stalling. No code, config or launcher change was made to work around it."
+    },
+    "launcherPreflightGapFound": {
+      "finding": "the launcher's build network preflight probes fonts.googleapis.com only, which answered 200 on every failed attempt. The build actually depends on fonts.gstatic.com, so the preflight cannot predict this failure.",
+      "disposition": "recorded only \u2014 scripts/local-app/** is explicitly out of scope for this package and was NOT modified. Belongs to a future launcher-scope change."
+    },
+    "finalRuntimeSha": "1986fda16d09358587a1f0eeec14191290e9546c",
+    "identityVerdict": "PROVEN (owned + current) \u2014 runtime build identity == repository HEAD; verifier exit 0",
+    "apiBuildIdentity": "commitSha=1986fda16d09358587a1f0eeec14191290e9546c, commitRef=feat/ux2-integrated-core-experience, environment=development",
+    "routeMatrix": {
+      "/": 200,
+      "/tests": 200,
+      "/check-in": 200,
+      "/login": 200,
+      "/line/mini-app": 200,
+      "/result": 200
+    },
+    "unrelatedPorts": "3220:200, 3230:200 \u2014 untouched",
+    "localMigrationsReplayed": false
+  },
+  "remoteCiAtFinalHead": {
+    "head": "1986fda16d09358587a1f0eeec14191290e9546c",
+    "MigrationScopeGuard": "success",
+    "otherRequired": {
+      "Lint, Build & Env Check": "success",
+      "YV-1": "success",
+      "DCI-1": "success",
+      "CPV1-CM0": "success",
+      "Vercel": "success",
+      "Vercel Preview Comments": "success",
+      "Agent Runtime PostgreSQL Integration": "success",
+      "POR-1 Deletion Resume Engine + Mutation Fence": "success",
+      "Build (clean main + CPV1 foundation)": "success"
+    },
+    "skippedByDesign": [
+      "Hermes Webhook Smoke",
+      "OpenClaw Webhook Smoke"
+    ],
+    "pendingOrFailed": "none"
   }
 }
