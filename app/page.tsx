@@ -198,7 +198,7 @@ export default function HomePage() {
       <section className="container pb-14 md:pb-16">
         <div className="grid gap-4 rounded-[var(--yorisou-radius-hero)] border border-[var(--yorisou-color-neutral-100)] bg-white p-6 shadow-[var(--yorisou-shadow-card)] md:grid-cols-[1fr_auto] md:items-center md:p-8">
           <div className="space-y-2">
-            <p className="text-[12px] font-bold tracking-[0.12em] text-[#06C755]">LINEで続ける</p>
+            <p className="text-[12px] font-bold tracking-[0.12em] text-[#067A34]">LINEで続ける</p>
             <h2 className="text-[1.3rem] font-bold leading-[1.4] text-[var(--yorisou-color-neutral-800)] md:text-[1.5rem]">
               いつものLINEから、そっと自分を整える。
             </h2>
@@ -208,9 +208,9 @@ export default function HomePage() {
           </div>
           <Link
             href="/line/mini-app"
-            className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-[var(--yorisou-radius-pill)] bg-[#06C755] px-6 text-[14px] font-bold text-white no-underline transition hover:bg-[#05B34C]"
+            className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-[var(--yorisou-radius-pill)] bg-[#067A34] px-6 text-[14px] font-bold text-white no-underline transition hover:bg-[#05622A]"
           >
-            <span className="inline-flex h-[16px] w-[16px] items-center justify-center rounded-full bg-white text-[9.5px] font-black text-[#06C755]" aria-hidden="true">L</span>
+            <span className="inline-flex h-[16px] w-[16px] items-center justify-center rounded-full bg-white text-[9.5px] font-black text-[#067A34]" aria-hidden="true">L</span>
             LINEでYORISOUを開く
           </Link>
         </div>

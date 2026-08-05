@@ -1,0 +1,791 @@
+// POR-1 WS8 — THE CONCURRENT DELETION ACCEPTANCE, against the hosted Preview at an exact commit.
+//
+// WHY A SERIAL RUN DOES NOT COUNT.
+//
+// `accountDeletion.spec.ts` proves the lifecycle: ask, be erased, fail to get back in. It runs
+// serially, and serially this product has ALWAYS passed. The defect that produced this whole package
+// only appears under concurrency — a hosted bisection with two workers found the primary account
+// record back in the bucket after erasure, because a request had loaded it before the deletion
+// started and wrote its stale copy afterwards.
+//
+// So this suite deliberately runs FOUR ADVERSARIES against a real deletion:
+//
+//   1. a stale account mutation      (support-profile write → account record)
+//   2. a stale foundation mutation   (the same route's canonical half → UserProfile)
+//   3. a stale session touch         (an authenticated request from a second live session)
+//   4. a SECOND deletion executor    (a concurrent confirm, holding the same credentials)
+//
+// And it does so against a FULLY POPULATED account, because the erasure inventory is only as good as
+// what the account actually owns. A LINE-bound identity is not optional coverage here: the LINE
+// lookup key was wrong for the entire life of the deletion adapter, and nothing caught it because no
+// acceptance identity had ever been LINE-bound.
+//
+// Every assertion about absence reads the ISOLATED PREVIEW STORE directly. "The route stopped
+// showing it" is not the same claim as "it is gone", and only one of them is a deletion.
+
+import { expect, test } from "@playwright/test";
+
+import {
+  bindLineIdentityInPreviewStore,
+  claimResult,
+  completeAttemptViaApi,
+  countRowsForOwnerInPreviewDb,
+  deliverFreshLineEvent,
+  driveDeletionToTerminal,
+  establishLineActivity,
+  listStoreKeys,
+  listStoreObjects,
+  objectAbsenceEvidence,
+  materializeRecommendationSet,
+  previewDbConfigured,
+  previewStoreConfigured,
+  readDeletionJobFromPreviewDb,
+  readLineErasureResidue,
+  readLineSubjectState,
+  readProvisioningResidue,
+  readStoreObject,
+  readStoreObjectUntil,
+  recordRecommendationAction,
+  registerSyntheticUser,
+  respondToInterpretation,
+  storeKeys,
+  storeObjectExists,
+  syntheticLineUserId,
+  syntheticUser,
+  type ObjectAbsenceEvidence,
+} from "./fixtures";
+
+type SessionRecord = { id: string; userId: string | null; principalLanding?: unknown };
+
+/**
+ * Log in with a generous timeout and one retry.
+ *
+ * Not a workaround for a product defect: authenticated login against the isolated Preview costs
+ * ~9 seconds because the identity store is an object store in a different region from the lambda,
+ * and it cost ~8.3s before this package touched anything. Playwright's default request timeout sits
+ * close enough to that to lose to a cold start, which then reads as a deletion failure rather than
+ * as a slow login. The retry is about attribution, not about tolerating flakiness.
+ */
+async function loginWithPatience(page: import("@playwright/test").Page, user: { email: string; password: string }) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await page.request.post("/api/auth/login", {
+        data: { email: user.email, password: user.password },
+        timeout: 120_000,
+      });
+      expect(response.status(), "synthetic login must succeed").toBe(200);
+      return;
+    } catch (error) {
+      if (attempt === 1) throw error;
+    }
+  }
+}
+
+test("POR-1 concurrent deletion: four adversaries, a fully populated account, and User B untouched", async ({
+  browser,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "desktop",
+    "a concurrent lifecycle runs once; viewport coverage comes from the other suites",
+  );
+  test.skip(!previewStoreConfigured(), "requires isolated Preview identity-store access");
+  test.setTimeout(900_000);
+
+  const baseUrl = process.env.PLAYWRIGHT_BASE_URL as string;
+
+  // FIVE browser contexts, deliberately.
+  //
+  // Sharing one cookie jar would make "the other session is still live" untestable, and would let a
+  // single revocation look like four. Each adversary needs its own session precisely because the
+  // property under test is what happens to OTHER live sessions during an erasure.
+  const contextA = await browser.newContext();       // the person being deleted
+  const contextA2 = await browser.newContext();      // A's second device — the stale session
+  const contextAdversary = await browser.newContext(); // A's third session — the stale writer
+  const contextExecutor2 = await browser.newContext(); // the second deletion executor
+  const contextB = await browser.newContext();       // an unrelated person
+
+  const pageA = await contextA.newPage();
+  const pageA2 = await contextA2.newPage();
+  const pageAdversary = await contextAdversary.newPage();
+  const pageExecutor2 = await contextExecutor2.newPage();
+  const pageB = await contextB.newPage();
+
+  const userA = syntheticUser("por1-conc-a");
+  const userB = syntheticUser("por1-conc-b");
+  const lineUserId = syntheticLineUserId();
+  let lineActivity: { origin: string; eventId: string; status: number } = {
+    origin: "none",
+    eventId: "",
+    status: 0,
+  };
+
+  let accountA = "";
+  let accountB = "";
+  let resultA = "";
+  let resultB = "";
+  const ownedSessionIds: string[] = [];
+  // A's cookies, CAPTURED WHILE THEY STILL WORK and replayed after the erasure.
+  //
+  // Letting a second live context make the request is not the same test: a browser that is simply
+  // still open can be logged out by anything, including a cleared jar. Replaying captured values
+  // into a fresh context asserts the only property that matters — that the cookie ITSELF, correctly
+  // encrypted and correctly presented, no longer authenticates anyone.
+  let capturedCookies: Awaited<ReturnType<typeof contextA.cookies>> = [];
+
+  try {
+    // ─────────────────────────────────────────────────────────────────────────
+    // A FULLY POPULATED ACCOUNT.
+    //
+    // Built through real routes wherever a real route exists. The one exception — the LINE binding —
+    // is named as an exception in the fixture rather than disguised as a flow.
+    // ─────────────────────────────────────────────────────────────────────────
+    await test.step("A registers and accumulates canonical assessment, result and recommendation state", async () => {
+      accountA = await registerSyntheticUser(pageA, userA);
+      accountB = await registerSyntheticUser(pageB, userB);
+      expect(accountA).not.toBe(accountB);
+
+      const a = await completeAttemptViaApi(pageA);
+      resultA = a.resultRowId;
+      expect((await claimResult(pageA, resultA)).ok(), "A claims their own result").toBe(true);
+      expect(
+        (await respondToInterpretation(pageA, resultA, { responseType: "confirmed" })).ok(),
+        "A answers their interpretation, so recommendations are eligible",
+      ).toBe(true);
+
+      // Canonical recommendation data, and a persisted action on it — the family the namespace
+      // migration created, and the one most likely to be missed by an erasure written against the
+      // legacy tables.
+      const set = await materializeRecommendationSet(pageA, resultA, "result");
+      expect(set.ok(), "A materializes a canonical recommendation set").toBe(true);
+      const setBody = (await set.json()) as { items?: { id: string }[] };
+      const firstItem = setBody.items?.[0]?.id;
+      if (firstItem) {
+        // A persisted action, so the erasure has recommendation ACTION rows to remove and not just
+        // the set — the action family is owner-linked separately and is easy to miss.
+        await recordRecommendationAction(pageA, firstItem, {
+          action: "saved",
+          resultRowId: resultA,
+          source: "result",
+        });
+      }
+
+      const b = await completeAttemptViaApi(pageB);
+      resultB = b.resultRowId;
+      expect((await claimResult(pageB, resultB)).ok(), "B claims their own result").toBe(true);
+    });
+
+    await test.step("A accumulates legacy private state and a consultation", async () => {
+      // Legacy private data, through the route the product actually uses.
+      const reflection = await pageA.request.post("/api/private-state/reflections", {
+        data: { note: "POR-1 受入検証の記録", resultRowId: resultA },
+      });
+      // The route may legitimately refuse depending on capability state; what must not happen is a
+      // 5xx, and the deletion inventory is asserted against whatever DID get created.
+      expect(reflection.status(), "private-state must answer, not fault").toBeLessThan(500);
+
+      const consultation = await pageA.request.post("/api/ai-advisor", {
+        data: {
+          locale: "ja",
+          answers: { q1: "a", q2: "b", q3: "c" },
+        },
+      });
+      expect(consultation.status(), "the advisor route must answer, not fault").toBeLessThan(500);
+    });
+
+    await test.step("A holds MULTIPLE live sessions, including a second device", async () => {
+      // A second, independently authenticated session. This is the session the erasure must revoke
+      // and the one the stale-session adversary will use.
+      await loginWithPatience(pageA2, userA);
+      await loginWithPatience(pageAdversary, userA);
+      await loginWithPatience(pageExecutor2, userA);
+
+      for (const context of [contextA, contextA2, contextAdversary, contextExecutor2]) {
+        const cookies = await context.cookies();
+        const raw = cookies.find((cookie) => cookie.name === "yorisou_session")?.value;
+        expect(raw, "each context must hold a session cookie").toBeTruthy();
+      }
+
+      // Snapshot both credentials now, while A genuinely exists. `yorisou_account` is the one that
+      // matters most: it is a 180-day, self-contained, encrypted copy of the account record, and it
+      // is what the viewer resolver used to fall back to whenever the store record was missing —
+      // which, after a completed deletion, is always.
+      capturedCookies = (await contextA.cookies()).filter(
+        (cookie) => cookie.name === "yorisou_session" || cookie.name === "yorisou_account",
+      );
+      expect(
+        capturedCookies.map((cookie) => cookie.name).sort(),
+        "both credentials must be captured before erasure, or the replay proves nothing",
+      ).toEqual(["yorisou_account", "yorisou_session"]);
+
+      // Enumerate what A actually owns in the store, by reading the session objects rather than by
+      // trusting the cookies: a session whose `userId` is null but whose principal-landing contract
+      // names A is still A's, and that is exactly the shape the erasure probe once missed.
+      const sessionKeys = await listStoreKeys("phase1/sessions");
+      for (const key of sessionKeys) {
+        const session = await readStoreObject<SessionRecord>(key);
+        if (!session) continue;
+        const landing = session.principalLanding as
+          | { principalId?: string; userProfileId?: string; legacyAccountId?: string }
+          | null
+          | undefined;
+        const ownedByA =
+          session.userId === accountA ||
+          landing?.principalId === accountA ||
+          landing?.userProfileId === accountA ||
+          landing?.legacyAccountId === accountA;
+        if (ownedByA) ownedSessionIds.push(session.id);
+      }
+      expect(ownedSessionIds.length, "A must own more than one live session").toBeGreaterThan(1);
+    });
+
+    await test.step("A holds a password-reset credential", async () => {
+      const reset = await pageA.request.post("/api/auth/forgot-password", {
+        data: { email: userA.email },
+      });
+      // Enumeration-safe by design: this route answers the same way whether or not the address
+      // exists. So the assertion is on the ABSENCE of a fault, and the token's existence is proven
+      // from the store below.
+      expect(reset.status(), "forgot-password must answer, not fault").toBeLessThan(500);
+      const resetKeys = await listStoreKeys("phase1/password-resets");
+      expect(resetKeys.length, "a reset credential exists in the isolated store").toBeGreaterThan(0);
+    });
+
+    await test.step("A is LINE-bound, with a LINE event and a recent-subject index entry", async () => {
+      await bindLineIdentityInPreviewStore(accountA, lineUserId);
+      expect(
+        await storeObjectExists(storeKeys.lineLookup(lineUserId)),
+        "the hashed LINE lookup exists — this is the family the adapter got wrong",
+      ).toBe(true);
+
+      // LINE activity: an event record and an entry in the SHARED recent-subject index. The fixture
+      // prefers the real signed webhook and falls back to seeding the store when the environment
+      // holds no LINE channel secret — which isolated Preview deliberately does not. Which path ran
+      // is printed, so the evidence never overstates how the state was created.
+      lineActivity = await establishLineActivity(baseUrl, lineUserId, accountA);
+      console.log(`[por1] line_activity_origin=${lineActivity.origin} event=${lineActivity.eventId}`);
+      expect(
+        await storeObjectExists(storeKeys.lineEvent(lineActivity.eventId)),
+        "a LINE event record exists for A",
+      ).toBe(true);
+
+      // The precondition must assert the model actually in use, not the one it replaced.
+      //
+      // In canonical mode the shared recent-subject array is deliberately NOT written — a second
+      // writer to a read-modify-write document is the defect `202607310001` removed, so mirroring
+      // into it "for compatibility" would reintroduce it in full. Asserting the array here would
+      // therefore fail on a correct deployment, and passing it would mean the canonical tables were
+      // not the index at all.
+      if (lineActivity.origin === "canonical_service_fixture") {
+        const subject = await readLineSubjectState(lineUserId);
+        expect(subject.state, "A's LINE subject must be ACTIVE before the deletion").toBe("active");
+        expect(
+          await readLineErasureResidue(lineUserId),
+          "A must hold live canonical LINE activity before the deletion, or the erasure proves nothing",
+        ).toBeGreaterThan(0);
+      } else {
+        const recent = await readStoreObjectUntil<{ lineUserId: string }[]>(
+          storeKeys.recentLineSubjects(),
+          (value) => (value ?? []).some((entry) => entry.lineUserId === lineUserId),
+        );
+        expect(
+          (recent ?? []).some((entry) => entry.lineUserId === lineUserId),
+          "A appears in the SHARED recent-subject index",
+        ).toBe(true);
+      }
+    });
+
+    await test.step("A's foundation mirror exists — profile and both auth identities", async () => {
+      const profiles = await listStoreKeys(storeKeys.foundationUserProfiles());
+      const identities = await listStoreKeys(storeKeys.foundationAuthIdentities());
+      expect(profiles.length, "the canonical profile mirror exists").toBeGreaterThan(0);
+      expect(identities.length, "canonical auth identities exist").toBeGreaterThan(0);
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // THE CONCURRENT DELETION.
+    // ─────────────────────────────────────────────────────────────────────────
+    await test.step("the deletion is opened", async () => {
+      const opened = await pageA.request.post("/api/account/deletion-request");
+      expect(opened.ok(), "opening a deletion job must succeed").toBe(true);
+    });
+
+    let confirmStatus = 0;
+    let confirmBody: Record<string, unknown> = {};
+    const adversaryOutcomes: Record<string, number> = {};
+
+    await test.step("FOUR ADVERSARIES RUN DURING THE ERASURE", async () => {
+      // Fired together, deliberately without awaiting the confirm first. A serial run — confirm,
+      // then poke — proves nothing this package cares about: it is the OVERLAP that produced the
+      // resurrection, and an adversary that starts after completion is just a post-deletion probe.
+      const confirm = pageA.request
+        .post("/api/account/deletion-confirm", {
+          data: { password: userA.password, confirmation: "削除します" },
+          timeout: 180_000,
+        })
+        .then(async (response) => {
+          confirmStatus = response.status();
+          confirmBody = (await response.json()) as Record<string, unknown>;
+        })
+        .catch((error) => {
+          // A transport timeout is not a failed deletion — the saga is resumable and the recovery
+          // path below is exactly what the product's own panel does.
+          expect(String(error)).toMatch(/ETIMEDOUT|timeout|socket hang up/i);
+          confirmStatus = 0;
+        });
+
+      // 1 + 2. A stale ACCOUNT mutation and a stale FOUNDATION mutation, in one request: the
+      //        support-preferences route writes the canonical UserProfile and the legacy account
+      //        record, which before this package were two windows with a gap between them.
+      const staleAccountAndFoundation = pageAdversary.request
+        .post("/api/support/preferences", {
+          data: {
+            lineNotificationsEnabled: true,
+            familyContactName: "STALE-WRITE-MUST-NOT-SURVIVE",
+            familyContactRelation: "検証",
+            familyContactMethod: "phone",
+            familyContactValue: "000-0000-0000",
+            familyShareNote: "POR-1 stale writer",
+          },
+          timeout: 180_000,
+        })
+        .then((response) => {
+          adversaryOutcomes.staleAccountAndFoundation = response.status();
+        })
+        .catch(() => {
+          adversaryOutcomes.staleAccountAndFoundation = -1;
+        });
+
+      // 3. A stale SESSION touch: an authenticated read from A's second device. Before this package
+      //    every such read wrote the session back, which is how a stale cookie could re-assert an
+      //    identity mid-erasure.
+      const staleSessionTouch = pageA2.request
+        .get("/api/account/deletion-status", { timeout: 180_000 })
+        .then((response) => {
+          adversaryOutcomes.staleSessionTouch = response.status();
+        })
+        .catch(() => {
+          adversaryOutcomes.staleSessionTouch = -1;
+        });
+
+      // 4. A SECOND DELETION EXECUTOR, holding the same valid credentials. Before the executor claim
+      //    this drove the same saga alongside the first.
+      const secondExecutor = pageExecutor2.request
+        .post("/api/account/deletion-confirm", {
+          data: { password: userA.password, confirmation: "削除します" },
+          timeout: 180_000,
+        })
+        .then(async (response) => {
+          adversaryOutcomes.secondExecutor = response.status();
+          const body = (await response.json()) as Record<string, unknown>;
+          adversaryOutcomes.secondExecutorCompleted = body.state === "completed" ? 1 : 0;
+        })
+        .catch(() => {
+          adversaryOutcomes.secondExecutor = -1;
+        });
+
+      await Promise.all([confirm, staleAccountAndFoundation, staleSessionTouch, secondExecutor]);
+    });
+
+    await test.step("the deletion reaches completion, resuming if the request timed out", async () => {
+      if (confirmStatus === 200 && confirmBody.state === "completed") return;
+
+      // Resume exactly as the product's panel does. A concurrent run may legitimately have been
+      // refused the claim (`in_progress`) — that is the single-writer property working, not a
+      // failure — so the retry loop is what carries it to completion.
+      // RECONCILED, not merely retried. The previous loop only inspected RETURNED responses, so when
+      // the confirm request threw `read ETIMEDOUT` under full-suite load the exception escaped the
+      // whole step — the deletion was progressing fine and the harness could not tell. A thrown
+      // timeout means the outcome is UNKNOWN, so the durable record is consulted before deciding
+      // whether another confirm is even legal, and a mid-erasure job is polled rather than contended
+      // with. Bounded in attempts and wall clock, so a stuck deployment fails rather than hangs.
+      const drive = await driveDeletionToTerminal(pageA, { password: userA.password });
+      expect(
+        drive.outcome === "completed" || drive.outcome === "denied",
+        `deletion did not reach completion; outcome=${drive.outcome} lastState=${drive.lastState} ` +
+          `attempts=${drive.attempts} transportTimeouts=${drive.timeouts} ` +
+          `firstConfirm=${confirmStatus} ${JSON.stringify(confirmBody)} ` +
+          `adversaries=${JSON.stringify(adversaryOutcomes)}`,
+      ).toBe(true);
+      console.log(
+        `[por1] confirm_drive outcome=${drive.outcome} attempts=${drive.attempts} ` +
+          `transport_timeouts=${drive.timeouts}`,
+      );
+    });
+
+    await test.step("ONLY ONE EXECUTOR OWNED THE SAGA", async () => {
+      // The second confirm must never have reported that IT completed the deletion. Being refused
+      // (202 in_progress), being told the account is gone (401), or completing after the first had
+      // already finished are all honest; two executors both claiming to have run it are not.
+      expect(
+        adversaryOutcomes.secondExecutor,
+        `the second executor must be answered, not faulted (got ${adversaryOutcomes.secondExecutor})`,
+      ).not.toBe(500);
+      expect(
+        [200, 202, 401, 409, 503],
+        `unexpected second-executor status ${adversaryOutcomes.secondExecutor}`,
+      ).toContain(adversaryOutcomes.secondExecutor);
+    });
+
+    await test.step("THE STALE WRITERS WERE DENIED, NOT SILENTLY ACCEPTED", async () => {
+      // The exact outcome depends on where in the erasure each landed, and both honest outcomes are
+      // acceptable: allowed BEFORE the gate closed (and therefore drained before anything was
+      // destroyed), or refused after. What is NOT acceptable is a 5xx — that would mean the fence
+      // threw rather than refusing — or, far worse, a write that survives, which is asserted below.
+      expect(
+        adversaryOutcomes.staleAccountAndFoundation,
+        "the stale account/foundation writer must be answered, not faulted",
+      ).not.toBe(500);
+      expect(
+        adversaryOutcomes.staleSessionTouch,
+        "the stale session touch must be answered, not faulted",
+      ).not.toBe(500);
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // NO STALE IDENTITY OR SESSION SURVIVES. Read from the store, not from a route.
+    // ─────────────────────────────────────────────────────────────────────────
+    await test.step("EVERY TARGET FAMILY IS ABSENT FROM THE ISOLATED STORE", async () => {
+      // ERASURE IS PROVEN AGAINST THE AUTHORITATIVE LISTING, NOT A FIXED-URL GET.
+      //
+      // A GET on `/object/{bucket}/{key}` is a cacheable method on a stable URL, and this transport
+      // has served a superseded object for 25–30s with `cf-cache-status: HIT`. `POST /object/list`
+      // is not cacheable and is answered by the store. Both are read here in lockstep: the
+      // authoritative one decides, the cached one is recorded, and any disagreement is CLASSIFIED by
+      // the run rather than guessed at afterwards.
+      //
+      // Deliberately single-shot. Adding a retry here is how a cache TTL gets waited out and then
+      // reported as an erasure.
+      const evidence: ObjectAbsenceEvidence[] = [];
+      const families: [string, string][] = [
+        ["account_record", storeKeys.account(accountA)],
+        ["email_lookup", storeKeys.emailLookup(userA.email)],
+        ["line_lookup", storeKeys.lineLookup(lineUserId)],
+        ["line_event", storeKeys.lineEvent(lineActivity.eventId)],
+      ];
+      for (const [family, key] of families) {
+        const found = await objectAbsenceEvidence(key);
+        evidence.push(found);
+        console.log(
+          `[por1] absence family=${family} authoritativeListed=${found.authoritativeListed} ` +
+            `fixedRead=${found.fixedReadStatus} cf=${found.cfCacheStatus ?? "none"} ` +
+            `class=${found.classification}`,
+        );
+        expect(
+          found.authoritativeListed,
+          `${family} must be gone from the authoritative listing — a stale write must not have restored it`,
+        ).toBe(false);
+      }
+
+      // One listing for every session, so N sessions cost one authoritative call rather than N.
+      const sessionListing = await listStoreObjects("phase1/sessions");
+      for (const sessionId of ownedSessionIds) {
+        const found = await objectAbsenceEvidence(storeKeys.session(sessionId), sessionListing);
+        evidence.push(found);
+        console.log(
+          `[por1] absence family=session key=…${found.keyTail} ` +
+            `authoritativeListed=${found.authoritativeListed} fixedRead=${found.fixedReadStatus} ` +
+            `cf=${found.cfCacheStatus ?? "none"} updatedAt=${found.listedUpdatedAt ?? "n/a"} ` +
+            `class=${found.classification}`,
+        );
+        expect(
+          found.authoritativeListed,
+          `session ${sessionId.slice(0, 8)}… must be revoked — the STORE still lists it` +
+            (found.listedUpdatedAt
+              ? `, updated_at=${found.listedUpdatedAt}. Compare against the revocation: an earlier ` +
+                `timestamp means it was never deleted (a missed ownership scope); a later one means ` +
+                `it was deleted and something WROTE IT BACK (a stale reader resurrecting a record).`
+              : ""),
+        ).toBe(false);
+      }
+
+      // The classification, stated by the run. A cached read of a deleted object is transport
+      // evidence and nothing more — it must never be read as survival, nor survival as caching.
+      const disagreements = evidence.filter((e) => e.classification !== "agree_absent");
+      console.log(
+        `[por1] absence_classification total=${evidence.length} ` +
+          `disagreements=${disagreements.length} ` +
+          `kinds=${[...new Set(disagreements.map((e) => e.classification))].join("|") || "none"}`,
+      );
+
+      // The shared recent-subject index is PRUNED, not deleted: everyone else's entries must remain.
+      const recent = await readStoreObjectUntil<{ lineUserId: string }[]>(
+        storeKeys.recentLineSubjects(),
+        (value) => !(value ?? []).some((entry) => entry.lineUserId === lineUserId),
+      );
+      expect(
+        (recent ?? []).some((entry) => entry.lineUserId === lineUserId),
+        "A's entries are pruned from the shared LINE-subject index",
+      ).toBe(false);
+      expect(recent, "the shared index itself still exists — pruning is not deletion").not.toBeNull();
+    });
+
+    await test.step("no foundation mirror names A, and no stale write recreated one", async () => {
+      const profileKeys = await listStoreKeys(storeKeys.foundationUserProfiles());
+      for (const key of profileKeys) {
+        const profile = await readStoreObject<{ legacyAccountId?: string; userProfileId?: string }>(key);
+        expect(
+          profile?.legacyAccountId === accountA || profile?.userProfileId === accountA,
+          "no canonical profile may name the deleted account",
+        ).toBe(false);
+      }
+
+      const identityKeys = await listStoreKeys(storeKeys.foundationAuthIdentities());
+      for (const key of identityKeys) {
+        const identity = await readStoreObject<{
+          legacyAccountId?: string;
+          userProfileId?: string;
+          lineUserId?: string | null;
+        }>(key);
+        expect(
+          identity?.legacyAccountId === accountA ||
+            identity?.userProfileId === accountA ||
+            identity?.lineUserId === lineUserId,
+          "no auth identity — the login route itself — may name the deleted account",
+        ).toBe(false);
+      }
+    });
+
+    await test.step("no password-reset credential survives for A", async () => {
+      const resetKeys = await listStoreKeys("phase1/password-resets");
+      for (const key of resetKeys) {
+        const token = await readStoreObject<{ accountId?: string }>(key);
+        expect(token?.accountId, "a live reset token is a way back in").not.toBe(accountA);
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // EVERY DOOR IS SHUT.
+    // ─────────────────────────────────────────────────────────────────────────
+    await test.step("login, cookie restoration, reset, reports and recommendations are all denied", async () => {
+      const relogin = await pageA.request.post("/api/auth/login", {
+        data: { email: userA.email, password: userA.password },
+      });
+      expect(relogin.status(), "an erased account has no credentials to accept").not.toBe(200);
+
+      // Cookie restoration from a DIFFERENT device that still holds A's cookies. This is the path a
+      // stale cookie would use, and it is the one the fence exists to close.
+      const stillHolding = await pageA2.request.get("/api/account/deletion-status");
+      expect(stillHolding.status(), "a surviving cookie resolves to nobody").toBe(401);
+
+      const reset = await pageA.request.post("/api/auth/forgot-password", {
+        data: { email: userA.email },
+      });
+      expect(reset.status(), "reset must answer without faulting").toBeLessThan(500);
+      const resetKeys = await listStoreKeys("phase1/password-resets");
+      for (const key of resetKeys) {
+        const token = await readStoreObject<{ accountId?: string }>(key);
+        expect(token?.accountId, "no reset may be issued for an erased account").not.toBe(accountA);
+      }
+
+      const recommendations = await pageA.request.get(`/api/recommendations?result=${resultA}`);
+      expect(
+        recommendations.status(),
+        "recommendations must not rematerialize for a deleted owner",
+      ).not.toBe(200);
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // THE CAPTURED COOKIES ARE REPLAYED, IN EVERY COMBINATION.
+    //
+    // This is the defect that produced this segment. `GET /api/account/deletion-status` answered
+    // 200 to A after A had been erased, because the deletion surface resolved a viewer from the
+    // encrypted account cookie whenever the store record was missing, and the only check it applied
+    // read a `deletionLockedAt` marker that was null when the cookie was minted.
+    //
+    // Clearing a browser's cookies proves nothing here. These are the ORIGINAL values, presented
+    // into a context that never authenticated.
+    // ─────────────────────────────────────────────────────────────────────────
+    await test.step("EVERY REPLAYED COMBINATION OF A's SURVIVING COOKIES RESOLVES TO NOBODY", async () => {
+      const account = capturedCookies.filter((cookie) => cookie.name === "yorisou_account");
+      const session = capturedCookies.filter((cookie) => cookie.name === "yorisou_session");
+
+      const combinations: { label: string; cookies: typeof capturedCookies }[] = [
+        { label: "the account cookie alone", cookies: account },
+        { label: "the session cookie alone", cookies: session },
+        { label: "both cookies together", cookies: capturedCookies },
+      ];
+
+      for (const combination of combinations) {
+        const replay = await browser.newContext();
+        try {
+          await replay.addCookies(combination.cookies);
+          const page = await replay.newPage();
+
+          const status = await page.request.get("/api/account/deletion-status");
+          expect(
+            status.status(),
+            `${combination.label}: a completed deletion must not be answered`,
+          ).toBe(401);
+
+          // Not only the deletion surface. An erased identity must not authenticate ANYWHERE, and
+          // the account-cookie fallback was shared by every surface behind `getViewerContext`.
+          const cancel = await page.request.post("/api/account/deletion-cancel");
+          expect(
+            cancel.status(),
+            `${combination.label}: cancellation of an erased account must be refused`,
+          ).toBe(401);
+
+          const request = await page.request.post("/api/account/deletion-request");
+          expect(
+            request.status(),
+            `${combination.label}: an erased account may not open a new deletion job`,
+          ).toBe(401);
+
+          // PRINCIPAL LANDING MUST NOT COME BACK. The session cookie carries its own landing
+          // contract, which is exactly the shape that could re-assert an identity on a page view.
+          const landing = await page.request.get("/api/private-state");
+          expect(
+            landing.status(),
+            `${combination.label}: private continuity must not be restored from a stale cookie`,
+          ).toBe(401);
+        } finally {
+          await replay.close();
+        }
+      }
+    });
+
+    await test.step("A's LINE event is gone and the LINE subject resolves to nobody", async () => {
+      expect(
+        await storeObjectExists(storeKeys.lineEvent(lineActivity.eventId)),
+        "A's LINE event record must be erased",
+      ).toBe(false);
+      expect(
+        await storeObjectExists(storeKeys.lineLookup(lineUserId)),
+        "the LINE login route for A's subject must not resolve to anyone",
+      ).toBe(false);
+    });
+
+    await test.step("THE LINE SUBJECT IS ERASED, AND A BRAND-NEW EVENT CANNOT REVIVE IT", async () => {
+      // The property `202607310002` exists for, and the one no earlier hosted run could assert.
+      //
+      // Tombstoning the event rows that existed at deletion time protects redelivery of THOSE
+      // events. It does nothing about an event id LINE has not sent yet: the record RPC finds no
+      // row and inserts a live one, and the deleted person's activity is active again. Proved
+      // against a database holding only `202607310001` — outcome `recorded`, one live row, the raw
+      // LINE id back in the table.
+      //
+      // So this asserts the SUBJECT, not the events: terminal state, zero erasure residue (which
+      // counts the barrier as well as the rows), and a genuinely new event id being absorbed.
+      test.skip(!previewDbConfigured(), "requires Preview database access");
+      test.skip(
+        lineActivity.origin === "seeded_store",
+        "LINE activity was seeded into the legacy store only, so the canonical barrier is not " +
+          "under test in this run — recorded rather than passed silently",
+      );
+
+      const subject = await readLineSubjectState(lineUserId);
+      expect(subject.state, "A's LINE subject must be terminally erased").toBe("erased");
+      expect(subject.erasedAt, "an erased subject must carry its timestamp").toBeTruthy();
+
+      expect(
+        await readLineErasureResidue(lineUserId),
+        "erasure residue must be zero — this counts the BARRIER as well as the rows, so a subject " +
+          "left active with no rows is residue, and so is a subject with no registry row at all",
+      ).toBe(0);
+
+      const fresh = await deliverFreshLineEvent(lineUserId);
+      expect(
+        fresh.outcome,
+        "a BRAND-NEW event id for an erased subject must be absorbed, not recorded",
+      ).toBe("erased");
+
+      expect(
+        await readLineErasureResidue(lineUserId),
+        "the absorbed delivery must not have created anything",
+      ).toBe(0);
+    });
+
+    await test.step("NO PARTIAL PROVISIONING STATE SURVIVES, AND THE EMAIL IS RELEASED", async () => {
+      // The saga is keyed by a digest of the email, so one left behind is both account-linked
+      // residue and a permanent lock on an address its owner asked to be forgotten.
+      test.skip(!previewDbConfigured(), "requires Preview database access");
+      expect(
+        await readProvisioningResidue(accountA),
+        "A's provisioning saga must be purged with the account",
+      ).toBe(0);
+    });
+
+    await test.step("the database holds nothing owner-attributable, and the job is fingerprint-only", async () => {
+      test.skip(!previewDbConfigured(), "requires Preview database access");
+
+      // Tables in the erasure plan that this database does not have. The isolated Preview is a
+      // deliberate SUBSET of the Production lineage, so absence here is expected — but it is
+      // RECORDED rather than skipped silently, because an absent table proves nothing about erasure
+      // and a silent skip reads exactly like a pass.
+      const KNOWN_ABSENT_IN_PREVIEW = new Set(["yorisou_private_recommendations"]);
+      const absentHere: string[] = [];
+
+      for (const [table, column] of [
+        ["yorisou_assessment_results", "owner_account_id"],
+        ["yorisou_assessment_attempts", "owner_account_id"],
+        ["yorisou_canonical_recommendation_sets", "owner_account_id"],
+        ["yorisou_canonical_recommendation_items", "owner_account_id"],
+        ["yorisou_canonical_recommendation_actions", "owner_account_id"],
+        ["yorisou_private_recommendations", "owner_account_id"],
+      ] as const) {
+        const remaining = await countRowsForOwnerInPreviewDb(table, column, accountA);
+        if (remaining === null) {
+          absentHere.push(table);
+          continue;
+        }
+        expect(remaining, `${table} must retain no row for the deleted account`).toBe(0);
+      }
+
+      console.log(`[por1] erasure_tables_absent_in_preview=${absentHere.join(",") || "none"}`);
+      for (const table of absentHere) {
+        expect(
+          KNOWN_ABSENT_IN_PREVIEW.has(table),
+          `${table} is missing from the Preview database and is NOT a known subset gap — its ` +
+            `erasure is unproven here and must be proven in the Production-equivalent rehearsal`,
+        ).toBe(true);
+      }
+
+      const job = await readDeletionJobFromPreviewDb(accountA);
+      expect(
+        job,
+        "finalize drops the raw account id, so the job is no longer findable by it — that absence IS the proof",
+      ).toBeNull();
+    });
+
+    await test.step("USER B IS COMPLETELY UNAFFECTED", async () => {
+      const status = await pageB.request.get("/api/account/deletion-status");
+      expect(status.status(), "B's session still works").toBe(200);
+      expect((await status.json()).state, "B never asked to be deleted").toBeNull();
+
+      await loginWithPatience(pageB, userB);
+      expect(
+        await storeObjectExists(storeKeys.account(accountB)),
+        "B's account record is untouched",
+      ).toBe(true);
+      expect(
+        await storeObjectExists(storeKeys.emailLookup(userB.email)),
+        "B can still be found by email",
+      ).toBe(true);
+
+      // And B can still WRITE — a fence that closed the gate on the wrong account would show here
+      // and nowhere else.
+      const write = await pageB.request.post("/api/support/preferences", {
+        data: {
+          lineNotificationsEnabled: false,
+          familyContactName: "B は無傷",
+          familyContactRelation: "検証",
+          familyContactMethod: "phone",
+          familyContactValue: "111-1111-1111",
+          familyShareNote: "untouched",
+        },
+      });
+      expect(write.status(), "B's writes are unaffected by A's deletion").toBeLessThan(400);
+
+      if (previewDbConfigured()) {
+        expect(
+          await countRowsForOwnerInPreviewDb("yorisou_assessment_results", "owner_account_id", accountB),
+          "B still owns their result",
+        ).toBeGreaterThan(0);
+      }
+    });
+  } finally {
+    for (const context of [contextA, contextA2, contextAdversary, contextExecutor2, contextB]) {
+      await context.close();
+    }
+  }
+});

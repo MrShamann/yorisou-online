@@ -36,7 +36,7 @@ export default function ResultFeedbackPrompt() {
           );
         })}
       </div>
-      <p className="mt-3 text-[11px] leading-6 text-[#9A9088]">
+      <p className="mt-3 text-[11px] leading-6 text-[#6F6760]">
         この反応はこの端末だけの表示で、まだ送信や集計はしていません。
       </p>
     </div>

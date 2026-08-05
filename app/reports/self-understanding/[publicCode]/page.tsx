@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireContinuityContext } from "@/lib/server/canonicalResultContext";
+import PersistedResultUnavailable from "@/app/result/PersistedResultUnavailable";
+import ReportContinuityWithheld from "./ReportContinuityWithheld";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 
@@ -14,6 +17,7 @@ import {
   buildSelfUnderstandingReportDownloadHref,
   loadSelfUnderstandingPublicReportByCode,
 } from "@/lib/yorisou/reports/loader";
+import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 export async function generateStaticParams() {
   return PUBLIC_ARCHETYPE_TAXONOMY.map((item) => ({ publicCode: item.publicCode }));
@@ -77,10 +81,47 @@ function sanitizeReportMarkdownForDisplay(markdown: string, publicCode: string, 
 
 export default async function SelfUnderstandingReportPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ publicCode: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { publicCode } = await params;
+  const query = (await searchParams) || {};
+  const rawRowId = canonicalRowIdWhenEnabled(
+    typeof query.result === "string" ? query.result : null,
+    "CANONICAL_CORE",
+  );
+
+  // CPC-1 §2 — PRIVATE CANONICAL REPORT MODE.
+  //
+  // Wave A attached `?result=<row-id>` here and this page ignored it completely: no canonical load,
+  // no ownership check, no continuity permission, and its "back to result" link rebuilt a legacy
+  // `/result?resultId=...` URL, dropping the stable identity on the way home. Reading the report
+  // therefore required nothing but knowing a public archetype code.
+  //
+  // With `?result` present the server now decides, and the path code must match what the person is
+  // actually permitted to read — otherwise a permitted row id could be paired with any other code
+  // to read a report that person never accepted.
+  let canonicalRowId: string | null = null;
+  if (rawRowId) {
+    const loaded = await requireContinuityContext(rawRowId);
+    if (loaded.outcome === "unavailable") return <PersistedResultUnavailable />;
+    if (loaded.outcome === "withheld") {
+      return (
+        <ReportContinuityWithheld
+          status={loaded.context.status}
+          resultHref={`/result?result=${encodeURIComponent(loaded.context.resultRowId)}`}
+        />
+      );
+    }
+    // Path/context agreement: the code in the URL must be the EFFECTIVE (accepted) result. After a
+    // correction that is the person's own answer, never the machine's original.
+    if (loaded.context.effectiveResultId !== publicCode) {
+      return <PersistedResultUnavailable />;
+    }
+    canonicalRowId = loaded.context.resultRowId;
+  }
 
   let report: ReturnType<typeof loadSelfUnderstandingPublicReportByCode>;
 
@@ -94,10 +135,16 @@ export default async function SelfUnderstandingReportPage({
 
   const taxonomy = PUBLIC_ARCHETYPE_TAXONOMY.find((item) => item.publicCode === report.metadata.publicCode) ?? null;
   const publicContent = findPublicArchetypeContentByCode(report.metadata.publicCode);
-  const resultHref = buildPublicResultHref("/result", {
-    resultId: report.metadata.publicCode,
-  });
-  const downloadHref = buildSelfUnderstandingReportDownloadHref(report.metadata.publicCode);
+  // The way home keeps the stable identity in canonical mode; only a genuinely public visit falls
+  // back to the legacy code-only URL.
+  const resultHref = canonicalRowId
+    ? `/result?result=${encodeURIComponent(canonicalRowId)}`
+    : buildPublicResultHref("/result", { resultId: report.metadata.publicCode });
+  const baseDownloadHref = buildSelfUnderstandingReportDownloadHref(report.metadata.publicCode);
+  // Download is private continuity too: it must not silently drop back to code-only identity.
+  const downloadHref = canonicalRowId
+    ? `${baseDownloadHref}${baseDownloadHref.includes("?") ? "&" : "?"}result=${encodeURIComponent(canonicalRowId)}`
+    : baseDownloadHref;
   const publicTypeLabel = `${report.metadata.clanJapanese ?? taxonomy?.clanJapanese ?? ""}のタイプ`;
   const sectionEntries = [
     { key: "free-preview", label: "公開プレビュー", markdown: report.sections.freePreview },

@@ -38,6 +38,35 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/yorisou_agent_runtime_test
       - run: npx tsc --noEmit
 
+  por1-deletion-resume-postgres:
+    name: POR-1 Deletion Resume Engine + Mutation Fence (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: yorisou_por1_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d yorisou_por1_test"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      # The eleven required concurrency scenarios, driven by explicit latches rather than by timing,
+      # against a disposable database. The grace-period cases use the injected clock, so the whole
+      # suite runs in seconds instead of waiting out three real minutes.
+      - name: POR-1 barrier proofs (cursor, single-writer executor, fence, grace)
+        run: npm run test:por1-resume:db
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/yorisou_por1_test
+
   check:
     name: Lint, Build & Env Check
     runs-on: ubuntu-latest
@@ -83,6 +112,78 @@ jobs:
 
       - name: Candidate intake contracts (CIF-1 foundation)
         run: npm run test:candidate-intake
+
+      # ── POR-1 ────────────────────────────────────────────────────────────────
+      - name: POR-1 runtime controls and flag-off baseline equivalence
+        run: |
+          npm run test:por1-controls
+          npm run gate:por1-flag-off-baseline
+
+      - name: POR-1 mutation-fence rollout rule and write contexts
+        run: |
+          npm run test:por1-fence
+          npm run test:por1-context
+          npm run test:por1-transport
+
+      # Hard gates, deliberately not report-only. The 108c939 hosted acceptance failed a real
+      # deletion because the database lacked the erasure interface the code calls, and nothing in CI
+      # could have caught it: the readiness rule, the runtime wiring and the Preview runtime contract
+      # all existed only as local commands. A regression in any of these must fail Yorisou Check.
+      # Release-blocking. The frozen source is what makes 101-108 verifiable without a database:
+      # live Preview stopped being a valid compiler source when it received the 202608050002 runtime
+      # overlay, and the Preview lineage is not linearly replayable, so the committed source and this
+      # gate are the only thing standing between a promotion set and an unverifiable one.
+      - name: POR-1 frozen promotion source — regenerates 101-108 byte for byte (no database)
+        run: |
+          npm run por1:promotion-source-check
+          npm run test:por1-promotion-source
+
+      # Three different questions, deliberately named apart:
+      #   readiness rule     — the pure decision table
+      #   structural guard   — the policy is wired where it belongs (reads source)
+      #   RUNTIME EXECUTION  — executeDeletion is actually invoked and asserted on
+      #   live-contract      — the deployed application's database interfaces exist
+      - name: POR-1 erasure authority — readiness rule and structural wiring guard
+        run: |
+          npm run test:por1-erasure-authority-readiness
+          npm run test:por1-erasure-runtime-path
+
+      - name: POR-1 erasure authority — ACTUAL runtime execution of executeDeletion
+        run: npm run test:por1-erasure-runtime-execution
+
+      - name: POR-1 Preview live-contract shape guard
+        run: npm run test:por1-preview-runtime-contract
+
+      - name: POR-1 identity scope, deletion lock and store boundary
+        run: |
+          npm run test:por1-deletion
+          npm run test:por1-boundary
+          npm run test:por1-namespace
+          npm run test:por1-line-scope
+          npm run test:por1-erasure-authority
+
+      # The fence is enforced at runtime by write contexts; this guards the half a runtime check
+      # cannot see — a new caller reaching past the fenced API, or the minting function leaking.
+      - name: POR-1 raw-write source guard
+        run: npm run guard:por1-raw-writes
+
+      - name: Report library is bundled and in sync with its markdown source
+        run: |
+          npm run check:report-registry
+          npm run test:por1-report-delivery
+          npm run check:evidence-hygiene:selftest
+          npm run test:por1-preview-classifier
+          npm run test:por1-job-recovery
+          npm run test:por1-production-coverage
+          npm run test:por1-sql-normalizer
+          npm run test:por1-promotion-contract
+          npm run test:por1-local-store
+          npm run test:shared-store
+          npm run test:por1-store-ownership
+          npm run test:por1-adapter-ownership
+          npm run test:por1-readiness-matrix
+          npm run guard:por1-evidence-secrets
+          npm run test:por1-deletion-readiness
 
       - name: Secret-pattern check
         run: "! git grep -nE '(sk-[A-Za-z0-9]{20,}|eyJ[a-zA-Z0-9_-]{20,}|sbp_[A-Za-z0-9_-]{20,})'"

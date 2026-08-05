@@ -11,6 +11,7 @@ import {
   sendLineReplyMessage,
   verifyLineWebhookSignature,
 } from "@/lib/server/yorisouLine";
+import { buildGovernedChannelUrl } from "@/lib/server/governedOrigin";
 
 export const runtime = "nodejs";
 
@@ -53,8 +54,12 @@ function eventTimestampToIso(timestamp: number | undefined) {
   return new Date(timestamp).toISOString();
 }
 
-const PUBLIC_CHECK_IN_URL = "https://yorisou.online/check-in";
-const PUBLIC_LINE_MINI_APP_URL = "https://yorisou.online/line/mini-app";
+// Resolved from trusted deployment configuration, never hardcoded and never from a request
+// header: a Preview webhook must hand out Preview links, or channel parity cannot be proven.
+// These are PUBLIC entry points only — no private result identity is ever appended here, because
+// a webhook reply is not proof of who is reading it.
+const PUBLIC_CHECK_IN_URL = buildGovernedChannelUrl("/check-in");
+const PUBLIC_LINE_MINI_APP_URL = buildGovernedChannelUrl("/line/mini-app");
 
 function buildReplyText(input: { eventType: string; accountMatched: boolean }) {
   if (input.eventType === "follow") {

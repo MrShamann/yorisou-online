@@ -11,6 +11,7 @@ import {
   type ViewerContext,
 } from "@/lib/server/yorisouAuth";
 import { updateSupportProfile } from "@/lib/server/yorisouData";
+import { accountMutationDeniedResponse } from "@/lib/server/accountMutationDeniedResponse";
 
 type SupportPreferencesPayload = {
   lineNotificationsEnabled?: boolean;
@@ -210,6 +211,10 @@ export async function POST(request: Request) {
     }
     return response;
   } catch (error) {
+    // POR-1 — the fence refusing a write is an ANSWER, not a fault. Mapped to a bounded 409/503
+    // before this catch-all can flatten it into an unclassified 500.
+    const denied = accountMutationDeniedResponse(error);
+    if (denied) return denied;
     console.error("support preferences route error:", error);
     return NextResponse.json({ success: false, error: "unexpected_error" }, { status: 500 });
   }

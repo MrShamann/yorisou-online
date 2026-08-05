@@ -12,6 +12,11 @@ import {
 import type { AuthIdentity, BindingState, Source, UserProfile } from "@/lib/server/foundation/schema";
 import { privacyAuditService } from "@/lib/server/foundation/privacyService";
 import {
+  withAccountMutationLease,
+  withAccountProvisioningLease,
+} from "@/lib/server/accountMutationLease";
+import type { AccountWriteContext } from "@/lib/server/accountWriteContext";
+import {
   defaultSupportProfile,
   findAccountById,
   findAccountByLineUserId,
@@ -292,16 +297,47 @@ export class IdentityFoundationService {
     } as const;
   }
 
-  async ensureCanonicalUserForAccount(account: AccountRecord, source: Source = "email_password") {
+  /**
+   * POR-1 — the canonical identity mirror, written as ONE fenced window.
+   *
+   * This writes the UserProfile and BOTH AuthIdentities, which together are the email and LINE login
+   * routes. Previously it took no lease at all, so a request that had read an account before a
+   * deletion started could re-create the person's entire canonical identity after erasure — the
+   * account record would be gone and they could still log in.
+   *
+   * `context` is optional so a caller already inside a window (LINE primary provisioning, the support
+   * profile update) extends its own lease across this rather than opening a second one. Two nested
+   * leases would both be drained correctly, but the window would be two windows, and the gap between
+   * them is exactly what the fence is for.
+   */
+  async ensureCanonicalUserForAccount(
+    account: AccountRecord,
+    source: Source = "email_password",
+    context?: AccountWriteContext,
+  ) {
+    const run = (ctx: AccountWriteContext) => this.ensureCanonicalUserUnderContext(ctx, account, source);
+    if (context) return run(context);
+    return withAccountMutationLease({
+      accountId: account.id,
+      operation: "foundation_identity_binding",
+      execute: run,
+    });
+  }
+
+  private async ensureCanonicalUserUnderContext(
+    context: AccountWriteContext,
+    account: AccountRecord,
+    source: Source,
+  ) {
     const profile = buildUserProfileFromAccount(account, source);
-    await foundationUserProfileRepository.save(profile);
+    await foundationUserProfileRepository.save(context, profile);
 
     if (account.email) {
       const emailIdentity = buildEmailIdentity(account, source);
       if (isPlaceholderEmail(account.email)) {
         await foundationAuthIdentityRepository.delete(emailIdentity.authIdentityId);
       } else {
-        await foundationAuthIdentityRepository.save(emailIdentity);
+        await foundationAuthIdentityRepository.save(context, emailIdentity);
       }
     }
 
@@ -328,17 +364,52 @@ export class IdentityFoundationService {
             createdAt: account.lineConnectedAt || account.createdAt,
           });
 
-      await foundationAuthIdentityRepository.save(lineIdentity);
+      await foundationAuthIdentityRepository.save(context, lineIdentity);
     }
 
     return profile;
   }
 
+  /**
+   * POR-1 — the support-profile update, as ONE window.
+   *
+   * This was the clearest example of a lease that did not span its own write: the foundation save
+   * happened first, unfenced, and only the legacy compatibility update took a lease. So a deletion
+   * could land between them and the foundation half would be written back afterwards — one lease,
+   * two windows, and the gap is where the stale write goes.
+   *
+   * The lease is now taken BEFORE the read and held across both writes.
+   */
   async updateCanonicalSupportProfile(input: {
     userProfileId: string;
     patch: Partial<SupportProfile>;
     fallbackAccount?: AccountRecord | null;
   }) {
+    // Resolve the account the window belongs to before opening it: a lease is taken on an account id,
+    // and for a canonical profile that is the legacy account it mirrors.
+    const preview = await this.getUserProfileById(input.userProfileId);
+    if (!preview) {
+      return { ok: false as const, reason: "profile_not_found" as const };
+    }
+    const leaseAccountId = preview.legacyAccountId || input.userProfileId;
+
+    return withAccountMutationLease({
+      accountId: leaseAccountId,
+      operation: "foundation_profile_update",
+      execute: (context) => this.updateCanonicalSupportProfileUnderContext(context, input),
+    });
+  }
+
+  private async updateCanonicalSupportProfileUnderContext(
+    context: AccountWriteContext,
+    input: {
+      userProfileId: string;
+      patch: Partial<SupportProfile>;
+      fallbackAccount?: AccountRecord | null;
+    },
+  ) {
+    // Re-read INSIDE the window. The preview read above happened before the lease existed, so acting
+    // on it would reintroduce the very read-before-fence this window exists to eliminate.
     const profile = await this.getUserProfileById(input.userProfileId);
 
     if (!profile) {
@@ -378,10 +449,14 @@ export class IdentityFoundationService {
       updatedAt: nowIso(),
     };
 
-    await foundationUserProfileRepository.save(updatedProfile);
+    await foundationUserProfileRepository.save(context, updatedProfile);
 
     const compatibilityAccount = updatedProfile.legacyAccountId
-      ? await updateSupportProfile(updatedProfile.legacyAccountId, buildSupportProfileFromCanonicalProfile(updatedProfile, input.fallbackAccount || null))
+      ? await updateSupportProfile(
+          updatedProfile.legacyAccountId,
+          buildSupportProfileFromCanonicalProfile(updatedProfile, input.fallbackAccount || null),
+          context,
+        )
       : null;
 
     return {
@@ -409,7 +484,8 @@ export class IdentityFoundationService {
         lastSeenAt: nowIso(),
         updatedAt: nowIso(),
       } satisfies AuthIdentity;
-      await foundationAuthIdentityRepository.save(updated);
+      // Unbound: this identity names no account, so there is no account for a deletion to race with.
+      await foundationAuthIdentityRepository.save(null, updated);
       return updated;
     }
 
@@ -424,19 +500,55 @@ export class IdentityFoundationService {
       bindingState: "unbound",
     });
 
-    await foundationAuthIdentityRepository.save(identity);
+    await foundationAuthIdentityRepository.save(null, identity);
     return identity;
   }
 
-  async bindLineIdentityToUserProfile(input: {
-    userProfileId: string;
-    lineUserId: string;
-    lineDisplayName: string;
-    linePictureUrl?: string;
-    lineIdTokenSubject?: string;
-    source: Source;
-    actorUserProfileId: string | null;
-  }) {
+  /**
+   * POR-1 — LINE binding, as one fenced window.
+   *
+   * The window has to cover the ACTIVITY REBIND as well as the identity save. A rebind that landed
+   * after an erasure would re-point conversations and events at a profile that no longer exists, and
+   * an account-linked activity rebind is an account-linked write however far down the call it sits.
+   */
+  async bindLineIdentityToUserProfile(
+    input: {
+      userProfileId: string;
+      lineUserId: string;
+      lineDisplayName: string;
+      linePictureUrl?: string;
+      lineIdTokenSubject?: string;
+      source: Source;
+      actorUserProfileId: string | null;
+    },
+    context?: AccountWriteContext,
+  ) {
+    const preview = await this.getUserProfileById(input.userProfileId);
+    if (!preview) {
+      return { ok: false as const, reason: "missing_user_profile" as const };
+    }
+    const run = (ctx: AccountWriteContext) => this.bindLineIdentityUnderContext(ctx, input);
+    if (context) return run(context);
+    return withAccountMutationLease({
+      accountId: preview.legacyAccountId || input.userProfileId,
+      operation: "foundation_identity_binding",
+      execute: run,
+    });
+  }
+
+  private async bindLineIdentityUnderContext(
+    context: AccountWriteContext,
+    input: {
+      userProfileId: string;
+      lineUserId: string;
+      lineDisplayName: string;
+      linePictureUrl?: string;
+      lineIdTokenSubject?: string;
+      source: Source;
+      actorUserProfileId: string | null;
+    },
+  ) {
+    // Re-read inside the window; the resolution read above predates the lease.
     const userProfile = await this.getUserProfileById(input.userProfileId);
 
     if (!userProfile) {
@@ -478,7 +590,7 @@ export class IdentityFoundationService {
           bindingState: "bound",
     });
 
-    await foundationAuthIdentityRepository.save(identity);
+    await foundationAuthIdentityRepository.save(context, identity);
     await this.rebindUnboundActivity({
       authIdentityId: identity.authIdentityId,
       userProfileId: input.userProfileId,
@@ -519,6 +631,15 @@ export class IdentityFoundationService {
     return { ok: true as const, identity };
   }
 
+  /**
+   * POR-1 — LINE primary provisioning, as one fenced window per branch.
+   *
+   * Three outcomes, and all three write. Two of them RESOLVE an existing account and re-assert its
+   * canonical mirror, so they are ordinary mutations on that account. The third CREATES one, so it is
+   * provisioning. Each branch opens its own window on the id it is actually writing — a single
+   * up-front lease is impossible here, because in the creating branch the id does not exist until the
+   * account is built.
+   */
   async resolveOrCreateLinePrimaryUser(input: {
     lineUserId: string;
     lineDisplayName: string;
@@ -529,7 +650,12 @@ export class IdentityFoundationService {
     const existingLegacyAccount = await findAccountByLineUserId(input.lineUserId);
 
     if (existingLegacyAccount) {
-      await this.ensureCanonicalUserForAccount(existingLegacyAccount, "line_login");
+      await withAccountMutationLease({
+        accountId: existingLegacyAccount.id,
+        operation: "line_primary_provisioning",
+        execute: (context) =>
+          this.ensureCanonicalUserForAccount(existingLegacyAccount, "line_login", context),
+      });
       return { account: existingLegacyAccount, created: false as const };
     }
 
@@ -539,7 +665,12 @@ export class IdentityFoundationService {
       const existingAccount = await findAccountById(existingIdentity.userProfileId);
 
       if (existingAccount) {
-        await this.ensureCanonicalUserForAccount(existingAccount, "line_login");
+        await withAccountMutationLease({
+          accountId: existingAccount.id,
+          operation: "line_primary_provisioning",
+          execute: (context) =>
+            this.ensureCanonicalUserForAccount(existingAccount, "line_login", context),
+        });
         return { account: existingAccount, created: false as const };
       }
     }
@@ -550,16 +681,27 @@ export class IdentityFoundationService {
       pictureUrl: input.linePictureUrl,
       lineIdTokenSubject: input.lineIdTokenSubject,
     });
-    await upsertAccountRecord(newAccount);
-    await this.ensureCanonicalUserForAccount(newAccount, "line_login");
-    const bindResult = await this.bindLineIdentityToUserProfile({
-      userProfileId: newAccount.id,
-      lineUserId: input.lineUserId,
-      lineDisplayName: input.lineDisplayName,
-      linePictureUrl: input.linePictureUrl,
-      lineIdTokenSubject: input.lineIdTokenSubject,
-      source: "line_login",
-      actorUserProfileId: newAccount.id,
+    const bindResult = await withAccountProvisioningLease({
+      accountId: newAccount.id,
+      operation: "line_primary_provisioning",
+      execute: async (context) => {
+        // One window: the account record, the canonical mirror and the LINE binding. Split across
+        // three, a deletion landing between them would leave a half-built identity that can log in.
+        await upsertAccountRecord(context, newAccount);
+        await this.ensureCanonicalUserForAccount(newAccount, "line_login", context);
+        return this.bindLineIdentityToUserProfile(
+          {
+            userProfileId: newAccount.id,
+            lineUserId: input.lineUserId,
+            lineDisplayName: input.lineDisplayName,
+            linePictureUrl: input.linePictureUrl,
+            lineIdTokenSubject: input.lineIdTokenSubject,
+            source: "line_login",
+            actorUserProfileId: newAccount.id,
+          },
+          context,
+        );
+      },
     });
 
     assert(bindResult.ok, "line primary user bind should succeed");
@@ -660,7 +802,11 @@ export class IdentityFoundationService {
         lastSeenAt: nowIso(),
         updatedAt: nowIso(),
       } satisfies AuthIdentity;
-      await foundationAuthIdentityRepository.save(updatedIdentity);
+      await withAccountMutationLease({
+        accountId: updatedIdentity.legacyAccountId || updatedIdentity.userProfileId || input.userProfileId,
+        operation: "foundation_identity_binding",
+        execute: (context) => foundationAuthIdentityRepository.save(context, updatedIdentity),
+      });
       return { ok: true as const, identity: updatedIdentity };
     }
 
@@ -690,17 +836,27 @@ export class IdentityFoundationService {
       updatedAt: nowIso(),
     };
 
-    await foundationAuthIdentityRepository.save(identity);
-    await this.rebindUnboundActivity({
-      authIdentityId: identity.authIdentityId,
-      userProfileId: input.userProfileId,
-      actorUserProfileId: input.actorUserProfileId,
-      actorAuthIdentityId: identity.authIdentityId,
-      source: input.source,
-      channel: "email",
-      preserveExternalIdentityKey: true,
-      summary: "Attached email identity and reattached prior unbound activity",
+    // The email identity IS the email login route, and the rebind re-points prior activity at this
+    // profile. Both belong inside one window for the same reason the LINE bind does.
+    await withAccountMutationLease({
+      accountId: identity.legacyAccountId || input.userProfileId,
+      operation: "foundation_identity_binding",
+      execute: async (context) => {
+        await foundationAuthIdentityRepository.save(context, identity);
+        await this.rebindUnboundActivity({
+          authIdentityId: identity.authIdentityId,
+          userProfileId: input.userProfileId,
+          actorUserProfileId: input.actorUserProfileId,
+          actorAuthIdentityId: identity.authIdentityId,
+          source: input.source,
+          channel: "email",
+          preserveExternalIdentityKey: true,
+          summary: "Attached email identity and reattached prior unbound activity",
+        });
+      },
     });
+    // Consent and audit records are append-only and name no login route, so they sit outside the
+    // window: holding a lease across them would widen it for no protection.
     await privacyAuditService.recordConsent({
       userProfileId: input.userProfileId,
       authIdentityId: identity.authIdentityId,

@@ -1,0 +1,335 @@
+{
+  "contract": "por1-m4-erasure-proof",
+  "note": "A family with zero rows before deletion also has zero after. Only NONZERO-BEFORE families count as proven; the rest are reported as gaps.",
+  "owner": "acct_178…",
+  "steps": 16,
+  "failures": 2,
+  "aborted": null,
+  "matrix": [
+    {
+      "family": "yorisou_account_deletion_requests",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_ai_reflections",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_ai_runs",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_daily_state_history_events",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_daily_state_records",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_experience_blocks",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_cards",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_consents",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_events",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_interactions",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_invites",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_moderation_events",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_reports",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_revisions",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_experience_visibility_events",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_private_check_in_plans",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_private_memory_items",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_private_recommendations",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_recommendation_actions",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_recommendation_events",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_recommendation_reports",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_recommendation_returns",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_recommendation_sets",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_test_results",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": true
+    },
+    {
+      "family": "yorisou_values_assessment_events",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    },
+    {
+      "family": "yorisou_values_assessments",
+      "before": "1",
+      "after": "1",
+      "result": "FAIL",
+      "note": "",
+      "productionOnly": false
+    }
+  ],
+  "populated": 26,
+  "unpopulated": [],
+  "productionOnlyProven": 0,
+  "steps_detail": [
+    {
+      "step": "C signs in before requesting deletion",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS",
+      "detail": "{\"success\":true,\"account\":{\"id\":\"<acct:sha256:32b9d8eaa593>\",\"name\":\"POR1 C\",\"email\":\"<email:sha256:fdeaeb40a17e>\"}}"
+    },
+    {
+      "step": "deletion requested",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS",
+      "detail": "{\"state\":\"requested\",\"cancellable\":true}"
+    },
+    {
+      "step": "a wrong confirmation phrase is refused",
+      "expected": "400",
+      "actual": "400",
+      "result": "PASS",
+      "detail": "{\"error\":\"confirmation_required\"}"
+    },
+    {
+      "step": "a wrong password is refused",
+      "expected": "401",
+      "actual": "401",
+      "result": "PASS",
+      "detail": "{\"error\":\"reauthentication_failed\"}"
+    },
+    {
+      "step": "deletion confirmed and executed",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS",
+      "detail": "{\"state\":\"failed_retryable\",\"retryable\":true}"
+    },
+    {
+      "step": "every populated owner-linked family is empty for C",
+      "expected": "0",
+      "actual": "26",
+      "result": "FAIL",
+      "detail": "0 proven, 0 not applicable"
+    },
+    {
+      "step": "a stale session cannot read deletion status",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS",
+      "detail": "status 200"
+    },
+    {
+      "step": "the deleted account cannot sign in again",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS",
+      "detail": "status 403"
+    },
+    {
+      "step": "B's owner-linked fingerprint is unchanged",
+      "expected": "0df7c680584824813d0934b819dc55c3",
+      "actual": "0df7c680584824813d0934b819dc55c3",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "step": "D still names its owner before the transition",
+      "expected": "t",
+      "actual": "t",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "step": "D's terminal de-identification succeeded",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS",
+      "detail": "{\"outcome\": \"terminal_deidentified\", \"deidentified\": true}"
+    },
+    {
+      "step": "D no longer names its owner",
+      "expected": "0",
+      "actual": "0",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "step": "D is still failed_terminal — never falsely 'completed'",
+      "expected": "failed_terminal",
+      "actual": "failed_terminal",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "step": "D retains its one-way fingerprint",
+      "expected": "t",
+      "actual": "t",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "step": "terminal de-identification refuses a completed job",
+      "expected": "true",
+      "actual": "false",
+      "result": "FAIL",
+      "detail": ""
+    },
+    {
+      "step": "terminal de-identification refuses a retryable job",
+      "expected": "true",
+      "actual": "true",
+      "result": "PASS",
+      "detail": ""
+    }
+  ]
+}

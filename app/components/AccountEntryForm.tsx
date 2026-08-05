@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { getPasswordPolicyMessage, PASSWORD_RULES } from "@/lib/passwordPolicy";
 import type { AccountRecord } from "@/lib/server/yorisouData";
@@ -28,6 +28,9 @@ export default function AccountEntryForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const passwordFieldId = useId();
+  const passwordInputId = `${passwordFieldId}-password`;
+  const passwordRequirementsId = `${passwordFieldId}-password-requirements`;
   const [city, setCity] = useState("");
   const [error, setError] = useState(initialError || "");
   const [notice, setNotice] = useState(initialNotice || "");
@@ -232,9 +235,18 @@ export default function AccountEntryForm({
                   />
                 </Field>
 
-                <Field label={locale === "ja" ? "パスワード" : "Password"}>
-                  <div className="relative">
+                {/* NOT wrapped in <Field>: its wrapping <label> folds every descendant's text —
+                    the toggle button and the whole requirements list — into the input's
+                    accessible NAME, so assistive tech announced the entire blob as the field
+                    name. Explicit htmlFor keeps the name at 「パスワード」; the requirements are
+                    a DESCRIPTION via aria-describedby. */}
+                <div className="block text-sm font-medium text-[#5F514A]">
+                  <label htmlFor={passwordInputId}>
+                    {locale === "ja" ? "パスワード" : "Password"}
+                  </label>
+                  <div className="relative mt-3">
                     <input
+                      id={passwordInputId}
                       name="password"
                       type={showPassword ? "text" : "password"}
                       value={password}
@@ -244,6 +256,7 @@ export default function AccountEntryForm({
                       }}
                       className={`${inputClassName} pr-24`}
                       autoComplete={mode === "register" ? "new-password" : "current-password"}
+                      aria-describedby={mode === "register" ? passwordRequirementsId : undefined}
                     />
                     <button
                       type="button"
@@ -256,7 +269,10 @@ export default function AccountEntryForm({
                     </button>
                   </div>
                   {mode === "register" && (
-                    <div className="mt-3 rounded-[1.25rem] border border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-4 py-4 text-sm text-[var(--muted)]">
+                    <div
+                      id={passwordRequirementsId}
+                      className="mt-3 rounded-[1.25rem] border border-[color:var(--line-soft)] bg-[var(--surface-soft)] px-4 py-4 text-sm text-[var(--muted)]"
+                    >
                       <p className="font-medium text-[var(--muted)]">
                         {locale === "ja" ? "パスワードの条件" : "Password requirements"}
                       </p>
@@ -274,7 +290,7 @@ export default function AccountEntryForm({
                       </ul>
                     </div>
                   )}
-                </Field>
+                </div>
 
                 {mode === "register" && (
                   <>

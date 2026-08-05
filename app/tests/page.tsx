@@ -100,7 +100,7 @@ export default function TestsPage() {
                   >
                     {test.status === "available" ? "公開中" : "準備中"}
                   </span>
-                  <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.08)] bg-white px-3 py-1 text-[11px] font-semibold text-[#8A7764]">
+                  <span className="inline-flex rounded-full border border-[rgba(23,59,53,0.08)] bg-white px-3 py-1 text-[11px] font-semibold text-[#7A664F]">
                     {test.estimatedTime}
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export default function TestsPage() {
                   </Link>
                 </div>
                 {test.blockedReason ? (
-                  <p className="mt-3 text-[12px] leading-6 text-[#8A7764]">この入口は元データ確認後に公開します。</p>
+                  <p className="mt-3 text-[12px] leading-6 text-[#7A664F]">この入口は元データ確認後に公開します。</p>
                 ) : null}
               </div>
             ))}
@@ -163,7 +163,7 @@ export default function TestsPage() {
 
       <div className="container pb-8">
         <div className="mx-auto max-w-[52rem]">
-          <p className="text-[12px] leading-7 text-[#8A7764]">
+          <p className="text-[12px] leading-7 text-[#7A664F]">
             いずれも医療・心理診断ではありません。占いの断定、恋愛や仕事の結論、退職や収入の助言ではなく、今の状態や関心を見直すための入口です。
           </p>
           <div className="mt-4 flex flex-wrap gap-3">

@@ -49,7 +49,7 @@ export function TraitConstellation({
           </g>
         ))}
       </svg>
-      <figcaption className="mt-1 text-[11px] leading-5 text-[#8A7F78]">
+      <figcaption className="mt-1 text-[11px] leading-5 text-[#6F625C]">
         星の位置や近さは、読みやすさのための表現です。距離やスコアを測ったものではありません。
       </figcaption>
     </figure>

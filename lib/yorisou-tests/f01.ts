@@ -4,12 +4,12 @@ import type { RuleBasedRuntime, TestCatalogEntry } from "./types";
 export const f01CatalogEntry: TestCatalogEntry = {
   slug: "f01",
   testId: "F01",
-  title: "向いている働き方診断",
+  title: "向いている働き方チェック",
   description: "力を出しやすい進め方、集中の仕方、安心して働ける条件を見つめる入口です。",
   estimatedTime: "約12〜18分",
   category: "働き方",
   boundaryNote: "転職・退職・職業選択を決めるものではありません。",
-  ctaLabel: "診断を始める",
+  ctaLabel: "チェックを始める",
   route: "/tests/f01",
   status: "available",
 };
@@ -17,7 +17,7 @@ export const f01CatalogEntry: TestCatalogEntry = {
 export const f01Runtime: RuleBasedRuntime = {
   slug: "f01",
   testId: "F01",
-  title: "向いている働き方診断",
+  title: "向いている働き方チェック",
   introTitle: "進みやすい働き方を、\n今のリズムから見る。",
   introDescription:
     "エネルギーの出どころ、集中の仕方、人との働き方、戻り方を順番に見ることで、無理なく力を出しやすい条件を整理します。",

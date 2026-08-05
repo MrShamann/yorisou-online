@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAssessmentAttempt } from "./useAssessmentAttempt";
 
 import { MvpActionLink, MvpCard } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { trackOpenTestingEvent } from "../components/OpenTestingTracker";
-import { buildAbsolutePublicResultUrl, buildPublicResultHref } from "./resultCompatibility";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import {
   buildCurrentStateResultPayload,
@@ -23,9 +23,6 @@ const AUTO_ADVANCE_DELAY_MS = 320;
 const RESULT_NAVIGATION_FALLBACK_DELAY_MS = 320;
 
 type PreparedResultNavigationTarget = {
-  absoluteHref: string;
-  relativeHref: string;
-  loadingHref: string;
   payload: ReturnType<typeof buildCurrentStateResultPayload>;
 };
 
@@ -34,6 +31,8 @@ function getIntroFacts(totalQuestions: number) {
 }
 
 export default function MiniTestFlow() {
+  // UX-2: server-authoritative attempt persistence (resume across refresh; real persisted result).
+  const attempt = useAssessmentAttempt();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>("intro");
@@ -43,6 +42,28 @@ export default function MiniTestFlow() {
   const autoAdvanceTimerRef = useRef<number | null>(null);
   const navigationFallbackTimerRef = useRef<number | null>(null);
   const resultNavigationStartedRef = useRef(false);
+  const [completing, setCompleting] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
+  const [restartConfirming, setRestartConfirming] = useState(false);
+  const [restartError, setRestartError] = useState<string | null>(null);
+  const [restarting, setRestarting] = useState(false);
+
+  // UX-2: a persisted in-progress attempt is offered EXPLICITLY rather than silently restored —
+  // the user is never teleported into the middle of a quiz they did not just ask to resume.
+  const resumableAttempt =
+    attempt.restored && attempt.restored.answeredCount > 0 ? attempt.restored : null;
+
+  function resumeSavedAttempt() {
+    if (!resumableAttempt) return;
+    clearAutoAdvanceTimer();
+    clearNavigationFallbackTimer();
+    resultNavigationStartedRef.current = false;
+    setNavigationFallbackHref(null);
+    attempt.adoptRestoredAttempt(resumableAttempt);
+    setAnswers(resumableAttempt.answers as CurrentStateAnswerMap);
+    setCurrentIndex(Math.min(resumableAttempt.answeredCount, currentStateQuestions.length - 1));
+    setPhase("quiz");
+  }
 
   const totalQuestions = currentStateQuestions.length;
   const currentQuestion = currentStateQuestions[currentIndex];
@@ -58,18 +79,9 @@ export default function MiniTestFlow() {
     searchParams.get("source") === "line" ||
     searchParams.get("source") === "mini_app" ||
     searchParams.get("nav") === "hard";
-  const lineMiniAppFinalResultHref = useMemo(() => {
-    if (!(phase === "quiz" && isMiniAppEntry && isFinalQuestion && currentAnswer)) {
-      return null;
-    }
-
-    const scoring = scoreCurrentStateCheck(answers);
-    return buildAbsolutePublicResultUrl("/result", {
-      resultId: scoring.resultId,
-      overlayId: scoring.overlayId,
-      confidenceBand: scoring.confidenceBand,
-    });
-  }, [answers, currentAnswer, isFinalQuestion, isMiniAppEntry, phase]);
+  // UX-2: the client-side LINE result-URL builder was REMOVED. A client-constructed result
+  // URL is exactly the unpersisted bypass this package eliminates — every completion path
+  // now goes through the awaited server completion and navigates by persisted identity.
   const lineMiniAppReleaseMarker = `line handoff v${LINE_MINI_APP_NAV_VERSION}`;
 
   useEffect(() => {
@@ -97,24 +109,7 @@ export default function MiniTestFlow() {
   function buildPreparedResultTarget(nextAnswers: CurrentStateAnswerMap): PreparedResultNavigationTarget {
     const scoring = scoreCurrentStateCheck(nextAnswers);
     const payload = buildCurrentStateResultPayload(scoring, nextAnswers);
-    const publicRouteContext = {
-      resultId: scoring.resultId,
-      overlayId: scoring.overlayId,
-      confidenceBand: scoring.confidenceBand,
-    } as const;
-    const loadingRouteContext = {
-      resultId: scoring.resultId,
-      overlayId: scoring.overlayId,
-      payloadKey: scoring.payloadKey,
-      confidenceBand: scoring.confidenceBand,
-    } as const;
-
-    return {
-      absoluteHref: buildAbsolutePublicResultUrl("/result", publicRouteContext),
-      relativeHref: buildPublicResultHref("/result", publicRouteContext),
-      loadingHref: buildPublicResultHref("/report-loading", loadingRouteContext),
-      payload,
-    };
+    return { payload };
   }
 
   function routeToResult(nextAnswers: CurrentStateAnswerMap, preparedTarget?: PreparedResultNavigationTarget) {
@@ -124,7 +119,35 @@ export default function MiniTestFlow() {
 
     resultNavigationStartedRef.current = true;
     const target = preparedTarget ?? buildPreparedResultTarget(nextAnswers);
-    saveCurrentStateResult(target.payload);
+    // NOTE: the legacy local store is written ONLY after the server persists (see below). Writing
+    // it here would leave a convincing "saved" artefact behind a failed completion.
+    // UX-2: completion is AWAITED and authoritative. We navigate only after the server has
+    // persisted an immutable result, carrying that stable identity. On failure we stay put with
+    // every answer intact, emit no success analytics, and offer retry.
+    setCompletionError(null);
+    setCompleting(true);
+    void attempt.completeAttempt(nextAnswers as Record<string, string>).then((outcome) => {
+      setCompleting(false);
+      if (!outcome.ok) {
+        resultNavigationStartedRef.current = false;
+        setCompletionError(outcome.error);
+        return;
+      }
+      // Compatibility cache only — the server record is the source of truth. Written after
+      // success so a failed completion can never leave a false local "saved result".
+      saveCurrentStateResult(target.payload);
+      finishNavigation(target, outcome.resultRowId);
+    });
+  }
+
+  // Navigation carries the PERSISTED result identity so /result can resolve the real record.
+  // No raw answers ever enter the URL.
+  function finishNavigation(target: PreparedResultNavigationTarget, resultRowId: string) {
+    // Completion always has a persisted identity, and the canonical link travels ALONE — legacy
+    // parameters riding along would let /result be addressed two ways at once and leak scoring
+    // context into history/referrers. The legacy payload already went to the compatibility cache.
+    const canonical = (pathname: string) =>
+      `${pathname}?result=${encodeURIComponent(resultRowId)}`;
     void trackOpenTestingEvent({
       eventName: "test_completed",
       route: "/check-in",
@@ -149,20 +172,24 @@ export default function MiniTestFlow() {
     setNavigationFallbackHref(null);
     clearNavigationFallbackTimer();
 
+    // Same-origin RELATIVE navigation, always. The absolute production-origin URL sent a person
+    // who completed on a Preview deployment to yorisou.online — a different environment — with
+    // their canonical private row id in the query string. The person is already on the correct
+    // origin; a relative href keeps them there in every environment, including the LINE webview.
     if (typeof window !== "undefined" && isMiniAppEntry) {
-      window.location.assign(target.absoluteHref);
+      window.location.assign(canonical("/result"));
       return;
     }
 
-    router.push(target.loadingHref);
+    router.push(canonical("/report-loading"));
 
     if (typeof window !== "undefined") {
       navigationFallbackTimerRef.current = window.setTimeout(() => {
         navigationFallbackTimerRef.current = null;
         const { pathname } = window.location;
         if (pathname !== "/report-loading" && pathname !== "/result") {
-          setNavigationFallbackHref(target.absoluteHref);
-          window.location.assign(target.absoluteHref);
+          setNavigationFallbackHref(canonical("/result"));
+          window.location.assign(canonical("/result"));
         }
       }, RESULT_NAVIGATION_FALLBACK_DELAY_MS);
     }
@@ -182,14 +209,45 @@ export default function MiniTestFlow() {
     }, AUTO_ADVANCE_DELAY_MS);
   }
 
-  function begin() {
+  // Entry point for the primary CTA. When saved answers exist, restarting is a destructive act,
+  // so it must be confirmed and the old attempt explicitly abandoned before a new one is created.
+  async function beginOrConfirmRestart() {
+    if (resumableAttempt && !restartConfirming) {
+      setRestartConfirming(true);
+      return;
+    }
+    await begin();
+  }
+
+  async function confirmRestart() {
+    if (restarting || !resumableAttempt) return;
+    setRestarting(true);
+    setRestartError(null);
+    const abandoned = await attempt.abandonAttempt(resumableAttempt.id);
+    if (!abandoned) {
+      // The previous attempt is preserved and NO new attempt is created.
+      setRestarting(false);
+      setRestartError("restart_failed");
+      return;
+    }
+    setRestartConfirming(false);
+    await begin();
+    setRestarting(false);
+  }
+
+  async function begin() {
     clearAutoAdvanceTimer();
     clearNavigationFallbackTimer();
     resultNavigationStartedRef.current = false;
     setNavigationFallbackHref(null);
-    setPhase("quiz");
     setCurrentIndex(0);
     setAnswers({});
+    setCompletionError(null);
+    // UX-2: the attempt must EXIST before question 1 is answerable, otherwise the first progress
+    // saves silently no-op. Creation is awaited; the quiz opens only on success.
+    const createdId = await attempt.startAttempt(isMiniAppEntry ? "line-mini-app" : "open-testing");
+    if (!createdId) return;
+    setPhase("quiz");
     void trackOpenTestingEvent({
       eventName: "test_started",
       route: "/check-in",
@@ -210,6 +268,8 @@ export default function MiniTestFlow() {
     };
 
     setAnswers(nextAnswers);
+    // UX-2: persist progress server-side (debounced) so a refresh does not destroy the journey.
+    attempt.saveProgress(nextAnswers as Record<string, string>);
     void trackOpenTestingEvent({
       eventName: "question_answered",
       route: "/check-in",
@@ -279,22 +339,106 @@ export default function MiniTestFlow() {
                   <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.6rem]">
                     今のあなたの“いま色”を見てみる
                   </h1>
-                  <p className="text-[11px] tracking-[0.06em] text-[#9A9088]">{getIntroFacts(totalQuestions)}</p>
+                  <p className="text-[11px] tracking-[0.06em] text-[#6F6760]">{getIntroFacts(totalQuestions)}</p>
                   <p className="max-w-[35rem] text-[14px] leading-7 text-[#6F6760]">
                     結果は固定タイプではなく、120Qから見た今の動き方です。
                   </p>
                 </div>
 
+                {attempt.startState === "error" ? (
+                  <MvpCard className="space-y-2 rounded-[1.2rem] border-[rgba(138,46,46,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#8A2E2E]">はじめられませんでした</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      通信が不安定なようです。もう一度「いま色テストをはじめる」を選んでください。
+                    </p>
+                  </MvpCard>
+                ) : null}
+
+                {completionError ? (
+                  <MvpCard className="space-y-2 rounded-[1.2rem] border-[rgba(138,46,46,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#8A2E2E]">結果を保存できませんでした</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      {completionError === "attempt_expired"
+                        ? "保存できる期間が過ぎました。お手数ですが、はじめからやり直してください。"
+                        : "回答は残っています。通信状況を確かめて、もう一度お試しください。"}
+                    </p>
+                  </MvpCard>
+                ) : null}
+
+                {attempt.expired ? (
+                  <MvpCard className="space-y-2 rounded-[1.2rem] border-[rgba(138,46,46,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#8A2E2E]">保存期間が過ぎました</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      途中の回答は保存できる期間を過ぎました。はじめからやり直してください。
+                    </p>
+                  </MvpCard>
+                ) : null}
+
+                {restartConfirming && resumableAttempt ? (
+                  <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.28)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#22201D]">保存した回答を消して、はじめからやり直しますか？</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      {resumableAttempt.answeredCount} / {totalQuestions} 問の回答は削除され、元に戻せません。
+                    </p>
+                    {restartError ? (
+                      <p role="alert" className="text-[13px] leading-6 text-[#8A2E2E]">
+                        やり直しの処理ができませんでした。前回の回答はそのまま残っています。もう一度お試しください。
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { void confirmRestart(); }}
+                        disabled={restarting}
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full px-5 text-[14px] disabled:opacity-60"
+                        style={{ background: "#173B35", color: "#fff", fontWeight: 700 }}
+                      >
+                        {restarting ? "処理しています…" : "削除してやり直す"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setRestartConfirming(false); setRestartError(null); }}
+                        disabled={restarting}
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-full border px-5 text-[14px] disabled:opacity-60"
+                        style={{ borderColor: "rgba(23,59,53,0.2)", color: "#315F50", fontWeight: 700 }}
+                      >
+                        やめる
+                      </button>
+                    </div>
+                  </MvpCard>
+                ) : null}
+
+                {resumableAttempt ? (
+                  <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.16)] bg-white p-4">
+                    <p className="text-[13px] font-semibold text-[#22201D]">前回の途中から続けられます</p>
+                    <p className="text-[13px] leading-6 text-[#6F6760]">
+                      {resumableAttempt.answeredCount} / {totalQuestions} 問まで保存されています。
+                    </p>
+                    <button
+                      type="button"
+                      onClick={resumeSavedAttempt}
+                      className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full px-5 py-3 text-[15px] transition hover:opacity-95 active:scale-[0.975]"
+                      style={{ background: "#173B35", color: "#fff", fontWeight: 700 }}
+                    >
+                      続きからはじめる
+                    </button>
+                    <p className="text-[11px] leading-5 text-[#6F6760]">
+                      はじめからやり直す場合は、下のボタンを選んでください。
+                    </p>
+                  </MvpCard>
+                ) : null}
+
                 <div>
                   <button
                     type="button"
-                    onClick={begin}
+                    onClick={() => { void beginOrConfirmRestart(); }}
+                    disabled={attempt.startState === "starting" || completing || restarting}
                     className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] transition hover:opacity-95 active:scale-[0.975]"
                     style={{ background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
                   >
-                    いま色テストをはじめる
+                    {attempt.startState === "starting" ? "準備しています…" : resumableAttempt ? "はじめからやり直す" : "いま色テストをはじめる"}
                   </button>
-                  <p className="mt-2.5 text-[11px] leading-6 text-[#9A9088]">
+                  <p className="mt-2.5 text-[11px] leading-6 text-[#6F6760]">
                     診断ではありません · <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
                   </p>
                 </div>
@@ -333,7 +477,7 @@ export default function MiniTestFlow() {
             {phase === "quiz" && currentQuestion ? (
               <div className="grid gap-4">
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[12px] text-[#9A9088]">
+                  <div className="flex items-center justify-between text-[12px] text-[#6F6760]">
                     <span>{stepLabel}</span>
                     <span>残り{remainingQuestions}問</span>
                   </div>
@@ -416,28 +560,35 @@ export default function MiniTestFlow() {
                     >
                       戻る
                     </button>
-                    {isMiniAppEntry && isFinalQuestion && lineMiniAppFinalResultHref ? (
+                    {isMiniAppEntry && isFinalQuestion ? (
                       <div className="flex-1 space-y-2">
-                        <a
-                          href={lineMiniAppFinalResultHref}
-                          onClick={() => saveCurrentStateResult(buildPreparedResultTarget(answers).payload)}
-                          className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full px-4 py-3 text-[16px] font-extrabold text-white transition hover:opacity-95"
+                        {/* UX-2: the LINE Mini App no longer has its own client-authoritative
+                            completion. It calls the SAME awaited server completion as the Web
+                            path; the hard WebView navigation happens only after persistence. */}
+                        <button
+                          type="button"
+                          onClick={() => routeToResult(answers)}
+                          disabled={completing}
+                          className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full px-4 py-3 text-[16px] font-extrabold text-white transition hover:opacity-95 disabled:opacity-70"
                           style={{ background: "#173B35", boxShadow: "0 14px 28px rgba(23,59,53,0.26)" }}
                         >
-                          結果へ進む
-                        </a>
+                          {completing ? "保存しています…" : "結果へ進む"}
+                        </button>
                         <div className="rounded-[0.95rem] border border-[rgba(23,59,53,0.08)] bg-white/92 px-4 py-3">
                           <p className="text-[12px] leading-6 text-[#6F6760]">
-                            進まない場合は、下のリンクから結果ページを開いてください。
+                            {completionError
+                              ? "結果を保存できませんでした。回答は残っています。もう一度お試しください。"
+                              : "進まない場合は、もう一度「結果へ進む」を選んでください。"}
                           </p>
-                          <a
-                            href={lineMiniAppFinalResultHref}
-                            onClick={() => saveCurrentStateResult(buildPreparedResultTarget(answers).payload)}
-                            className="mt-2 inline-flex min-h-[44px] items-center justify-center text-[13px] font-semibold text-[#315F50] underline underline-offset-4"
-                          >
-                            結果ページを開く
-                          </a>
-                          <p className="mt-2 text-[10px] leading-5 text-[#9A9088]">
+                          {navigationFallbackHref ? (
+                            <a
+                              href={navigationFallbackHref}
+                              className="mt-2 inline-flex min-h-[44px] items-center justify-center text-[13px] font-semibold text-[#315F50] underline underline-offset-4"
+                            >
+                              結果ページを開く
+                            </a>
+                          ) : null}
+                          <p className="mt-2 text-[10px] leading-5 text-[#6F6760]">
                             {lineMiniAppReleaseMarker}
                           </p>
                         </div>

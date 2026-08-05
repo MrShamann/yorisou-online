@@ -10,6 +10,8 @@ import {
   type ViewerContext,
 } from "@/lib/server/yorisouAuth";
 import { bindLineIdentity, createAccount, findAccountById, findAccountByLineUserId } from "@/lib/server/yorisouData";
+import { sessionMayActAsAccount } from "@/lib/server/accountDeletionLock";
+import { evaluateProvisioningAccessGate } from "@/lib/server/identityProvisioning";
 import { activateRelationship } from "@/lib/server/relationship-intelligence/service";
 import {
   LINE_AUTH_COOKIE,
@@ -181,6 +183,25 @@ export async function GET(request: Request) {
     if (!account) {
       const errorCode = lineCookie.intent === "login" ? "line_not_registered" : "bind_failed";
       return failResponse(request, withStatus(failurePath, { line_error: errorCode }), remainingEntries);
+    }
+
+    // POR-1 WS5 — LINE is a second door to the same account, so it obeys the same hold. The
+    // record was just read from the store, so the marker on it is the whole answer here; an
+    // already-erased account has no `by-line` index left and never reaches this point.
+    if (!sessionMayActAsAccount(account.deletionLockedAt)) {
+      return failResponse(request, withStatus(failurePath, { line_error: "account_deletion_in_progress" }), remainingEntries);
+    }
+
+    // POR-1 WS-C — and the same door is closed to an INCOMPLETE registration. Binding LINE to an
+    // account with no canonical UserProfile would attach a second identity to a principal the
+    // identity graph cannot resolve, and would then have to be unpicked when the registration
+    // resumes and creates the canonical identity properly.
+    const provisioningGate = await evaluateProvisioningAccessGate({
+      email: account.email,
+      accountId: account.id,
+    });
+    if (!provisioningGate.allowed) {
+      return failResponse(request, withStatus(failurePath, { line_error: provisioningGate.reason }), remainingEntries);
     }
 
     const session = viewer.session || (await ensureViewerSession());

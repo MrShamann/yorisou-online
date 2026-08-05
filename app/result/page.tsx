@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
+import PersistedResultUnavailable from "./PersistedResultUnavailable";
+import { resolveResultMode } from "./resultMode";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
-import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import { getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import {
+  buildPrivateContinuityHref,
+  buildPublicShareHref,
+  legacyIdentity,
+  persistedIdentity,
+} from "./resultIdentityRoutes";
 import ResultShareActions from "../components/ResultShareActions";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import RevealExperience from "./reveal/RevealExperience";
 import { EvidencePanel, ConstellationPanel, LimitsPanel, PrivacyPanel, GentleActions } from "./reveal/RevealSections";
 import PrivateResultSave from "./PrivateResultSave";
+import InterpretationResponse from "./InterpretationResponse";
+import { PUBLIC_ARCHETYPE_TAXONOMY } from "@/lib/yorisou/public-result";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
@@ -18,11 +28,6 @@ export const metadata: Metadata = {
 };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-function readParam(params: Record<string, string | string[] | undefined>, key: string) {
-  const value = params[key];
-  return typeof value === "string" ? value : null;
-}
 
 function buildHighlightSummary(highlights: { text: string }[]) {
   if (highlights.length === 0) {
@@ -42,17 +47,51 @@ export default async function ResultPage({
   searchParams?: SearchParams;
 }) {
   const params = (await searchParams) || {};
-  const resultId = readParam(params, "resultId");
-  const overlayId = readParam(params, "overlayId");
-  const confidenceBand = readParam(params, "confidence") === "medium" ? "medium" : "low";
-  const payloadKey = readParam(params, "payloadKey");
+
+  // UX-2R Wave A: mode resolution lives in ./resultMode, and the two modes are DISTINCT TYPES.
+  // Nothing below re-derives which mode it is in from nullable fields.
+  const mode = await resolveResultMode(params);
+  if (mode.kind === "unavailable") {
+    return <PersistedResultUnavailable />;
+  }
+
+  const { resultId, overlayId, confidenceBand, payloadKey } = mode;
   const routeContext = { resultId, overlayId, confidenceBand, payloadKey } as const;
   const compatibility = getTemporary120QResultCompatibility(routeContext);
-  const resultShareHref = buildPublicResultHref("/result/share", routeContext);
-  const recommendationHref = buildPublicResultHref("/recommendations", routeContext);
-  const fullReportHref = compatibility.assignment
-    ? buildSelfUnderstandingReportHref(compatibility.assignment.publicCode)
-    : null;
+
+  // Wave A: outbound links are split by INTENT, not built by one shared helper.
+  //   • private continuity keeps the stable identity so the destination reads the record;
+  //   • the share surface is a public derivative and can never receive the private row id.
+  const identity =
+    mode.kind === "persisted"
+      ? persistedIdentity(mode.resultRowId, routeContext)
+      : legacyIdentity(routeContext);
+  const recommendationPermitted =
+    mode.kind !== "persisted" || mode.understanding.recommendationUsePermitted;
+  // The frozen contract keeps the two permissions SEPARATE. Gating the report on the recommendation
+  // flag would quietly grant one on the strength of the other.
+  const continuityPermitted =
+    mode.kind !== "persisted" || mode.understanding.continuityUsePermitted;
+  const resultShareHref = buildPublicShareHref("/result/share", identity);
+  const recommendationHref = buildPrivateContinuityHref("/recommendations", identity);
+  // The report is built from the ACCEPTED understanding: the machine's original assignment is
+  // kept on the page for honesty, but the person's confirmed/corrected code decides what the
+  // report is ABOUT. In persisted mode nothing accepted ⇒ no report entry (continuity is
+  // withheld anyway); legacy mode has no interpretation and keeps the assignment code.
+  const reportCode =
+    mode.kind === "persisted"
+      ? mode.understanding.acceptedResultId
+      : compatibility.assignment?.publicCode ?? null;
+  const reportEntryHref = reportCode ? buildSelfUnderstandingReportHref(reportCode) : null;
+  // The report entry is private continuity: it must carry the stable identity so a return trip
+  // resolves the same persisted record rather than re-deriving one from the public code.
+  const fullReportHref = !continuityPermitted
+    ? null
+    : reportEntryHref && identity.mode === "persisted"
+      ? buildPrivateContinuityHref(reportEntryHref, identity)
+      : reportEntryHref;
+  // Legacy mode has no stored answer and no owner, so it keeps its existing behaviour; only
+  // persisted mode can withhold on the basis of a recorded response.
   const highlightSummary = buildHighlightSummary(compatibility.highlights);
   const publicTypeLabel = compatibility.assignment
     ? `${compatibility.assignment.clanJapanese}のタイプ`
@@ -176,12 +215,21 @@ export default async function ResultPage({
                       今の詳しいレポートを読む
                     </OpenTestingTrackingLink>
                   ) : null}
-                  <MvpActionLink
-                    href={recommendationHref}
-                    label="今のヒントを見る"
-                    tone="secondary"
-                    className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none"
-                  />
+                  {/* Wave B: "deferred is not consent" is enforced in the PRODUCT, not only in the
+                      database. Without an accepting answer the recommendation entry is not offered,
+                      and the reason is stated instead of the control being silently missing. */}
+                  {recommendationPermitted ? (
+                    <MvpActionLink
+                      href={recommendationHref}
+                      label="今のヒントを見る"
+                      tone="secondary"
+                      className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none"
+                    />
+                  ) : (
+                    <p className="text-[13px] leading-6 text-[#7A7068]">
+                      この結果が合っているかを答えると、それに合わせたヒントを出せます。答えるまでは、この結果をもとに何かをすすめることはありません。
+                    </p>
+                  )}
                 </div>
               </div>
               </GentleActions>,
@@ -208,12 +256,39 @@ export default async function ResultPage({
                 body="現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。"
                 primaryHref="/contact?topic=open-testing"
                 primaryLabel="感想や不具合を送る"
-                secondaryHref={fullReportHref ?? recommendationHref}
-                secondaryLabel={fullReportHref ? "詳しいレポートへ進む" : "今のヒントを見る"}
+                // The consent gate must hold on EVERY route to recommendations, including this
+                // secondary link — otherwise the withheld entry is reachable one card lower.
+                secondaryHref={fullReportHref ?? (recommendationPermitted ? recommendationHref : "/tests")}
+                secondaryLabel={
+                  fullReportHref
+                    ? "詳しいレポートへ進む"
+                    : recommendationPermitted
+                      ? "今のヒントを見る"
+                      : "ほかのチェックを見る"
+                }
               />
               </div>,
               ]} />
             </MvpCard>
+
+            {mode.kind === "persisted" ? (
+              <InterpretationResponse
+                resultRowId={mode.resultRowId}
+                isOwner={mode.isOwner}
+                initial={{
+                  status: mode.understanding.status,
+                  resolved: mode.understanding.resolved,
+                  recommendationUsePermitted: mode.understanding.recommendationUsePermitted,
+                  continuityUsePermitted: mode.understanding.continuityUsePermitted,
+                }}
+                archetypes={PUBLIC_ARCHETYPE_TAXONOMY.map((a) => ({
+                  publicCode: a.publicCode,
+                  nickname: a.nickname,
+                  clanJapanese: a.clanJapanese,
+                }))}
+                originalResultId={resultId}
+              />
+            ) : null}
 
             {compatibility.assignment ? (
               <PrivateResultSave
@@ -223,6 +298,7 @@ export default async function ResultPage({
                   confidence: confidenceBand,
                   payloadKey,
                 }}
+                resultRowId={identity.mode === "persisted" ? identity.persisted.resultRowId : null}
               />
             ) : null}
           </div>
