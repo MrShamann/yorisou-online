@@ -431,7 +431,7 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "name": "por1_canonical_line_activity",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608010104_por1_canonical_line_activity.sql",
-    "sha256": "aa78e930c06ff49104ca8bb87b81d2c5d16baaa461f8e095781efcc1b5786dfb"
+    "sha256": "12d293ee33aeec09275da8ac8707f93df9cbfda3fb42e9f6b6e8b5e8c20d15ba"
   },
   {
     "version": "202608010105",

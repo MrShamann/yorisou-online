@@ -180,3 +180,28 @@ version and has no `yorisou_line_subject_lock`, so P4 was still an unpromoted Dr
 regenerating it in place was safe. Preview has no `supabase_migrations` ledger; its objects come
 from the Preview lineage, not from P4. No hosted migration was applied, no environment variable
 changed, no deployment triggered.
+
+## Same-package correction: the manifest is authoritative, and it was not updated (2026-08-05)
+
+The first repair head (`58c6bdd`) failed the remote **Migration Scope Guard**:
+
+```
+sha256 drift for supabase/migrations/202608010104_por1_canonical_line_activity.sql
+  manifest=aa78e930c06f…  actual=12d293ee33ae…
+```
+
+Regenerating P4 changed its bytes; `supabase/MIGRATION_SCOPE_MANIFEST.md` still carried the old
+digest. This is a **same-package consistency defect**, not a pre-existing condition — and it was
+avoidable: `node scripts/validate-migration-scope.mjs` reproduces the failure exactly and was simply
+never run locally before the push. It is now part of this package's gate list.
+
+Only the `sha256` value of the `202608010104` entry was updated. Scope, version, name, path, the
+remote-history classification and the repair cohort are untouched, as is every other checksum. The
+guard was then proved still effective on a disposable copy: substituting the stale checksum back
+fails it, and tampering with the migration while keeping the new checksum also fails it. The
+manifest was synchronized, not weakened.
+
+**Promotion readiness remains BLOCKED** by the two residuals recorded above
+(`BLOCKING_PROMOTION_RESIDUAL`): the populated-lineage rehearsal's weak-erasure-signature and
+executor-claim body mismatches, and the two live-Preview sequence grants. Neither was introduced or
+fixed by this repair.

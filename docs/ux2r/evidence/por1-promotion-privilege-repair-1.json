@@ -2,16 +2,14 @@
   "package": "YORISOU_POR1_PROMOTION_PRIVILEGE_REPAIR_1",
   "recordedAt": "2026-08-05T10:30:00+08:00",
   "objective": "Repair the canonical promotion compiler so a NO_SERVICE_ROLE_EXECUTE function receives an explicit conditional REVOKE from service_role, not merely an omitted grant; regenerate P4; prove P4->P8..P11 on a Supabase-like clean database. 202608010108 deliberately NOT weakened.",
-
   "identity": {
     "repository": "/Users/yangjin/Projects/yorisou-online",
     "branch": "feat/ux2-integrated-core-experience",
     "startingSha": "a1cf81c991a55776044da676d4d7d5f721b01640",
     "mainBaseline": "c8d8a8ad6a72949c248adb098a626d1ab9d6a579",
     "pr126": "OPEN / DRAFT / UNMERGED / base main / auto-merge off",
-    "pr127": "OPEN / DRAFT / base feat/ux2-integrated-core-experience @ 0990f04 — untouched by this package"
+    "pr127": "OPEN / DRAFT / base feat/ux2-integrated-core-experience @ 0990f04 \u2014 untouched by this package"
   },
-
   "hostedLedgerSafetyCheck": {
     "method": "read-only Supabase Management API query endpoint; pg_catalog only; no rows, no secrets printed",
     "production": {
@@ -20,7 +18,7 @@
       "recordedVersionsMatching2026080101": [],
       "yorisou_line_subject_lock_present": false,
       "publicTables": 42,
-      "verdict": "202608010104 NOT applied to Production — still an unpromoted Draft migration, safe to regenerate in place"
+      "verdict": "202608010104 NOT applied to Production \u2014 still an unpromoted Draft migration, safe to regenerate in place"
     },
     "preview": {
       "ref": "nbltsbonsnbpfptihomc",
@@ -30,17 +28,15 @@
       "service_role_execute_on_lock_helper": false,
       "verdict": "Preview's end-state already matches the corrected contract; no conflict with regeneration"
     },
-    "mutationsPerformed": "none — both environments read-only"
+    "mutationsPerformed": "none \u2014 both environments read-only"
   },
-
   "rootCause": {
     "file": "scripts/por1/compile-promotion.mjs",
     "defect": "For functions in NO_SERVICE_ROLE_EXECUTE the generator emitted only the comment '-- deliberately NOT granted to service_role: an internal lock helper, not an entry point.' and no revoke.",
-    "mechanism": "Supabase carries `alter default privileges in schema public grant execute on functions to service_role`, so CREATE FUNCTION grants service_role EXECUTE DIRECTLY. The generated `revoke ... from public` cannot remove a directly-held privilege. Bare PostgreSQL has no such default, so service_role only ever held EXECUTE via PUBLIC — which is why scripts/por1/rehearse-promotion.sh and tests/por1/catalogue-baseline.sh passed while the first real Supabase apply failed.",
-    "provenanceOfCorrectBehaviour": "The Preview lineage 202607310002 revokes the helper from public, anon, authenticated AND service_role by hand. The compiler re-derives grants rather than copying them (deliberate — the Preview grants had a real hole, see 202608010001) and lost that fourth revoke in translation.",
+    "mechanism": "Supabase carries `alter default privileges in schema public grant execute on functions to service_role`, so CREATE FUNCTION grants service_role EXECUTE DIRECTLY. The generated `revoke ... from public` cannot remove a directly-held privilege. Bare PostgreSQL has no such default, so service_role only ever held EXECUTE via PUBLIC \u2014 which is why scripts/por1/rehearse-promotion.sh and tests/por1/catalogue-baseline.sh passed while the first real Supabase apply failed.",
+    "provenanceOfCorrectBehaviour": "The Preview lineage 202607310002 revokes the helper from public, anon, authenticated AND service_role by hand. The compiler re-derives grants rather than copying them (deliberate \u2014 the Preview grants had a real hole, see 202608010001) and lost that fourth revoke in translation.",
     "assertionWasCorrect": "202608010108 was right to refuse; the fix is upstream of it and the assertion is unchanged."
   },
-
   "compilerChange": {
     "location": "functionSql(), the NO_SERVICE_ROLE_EXECUTE branch",
     "emitsNow": "role-conditional `if exists (select 1 from pg_roles where rolname = 'service_role') then execute 'revoke all on function <sig> from service_role'; end if;` plus the preserved explanatory comment",
@@ -48,50 +44,75 @@
     "noBlanketRevoke": true,
     "exceptionSetUnchanged": "NO_SERVICE_ROLE_EXECUTE still contains exactly yorisou_line_subject_lock"
   },
-
   "regeneration": {
     "command": "node scripts/por1/compile-promotion.mjs --preview <preview-catalogue.json> --production <production-catalogue.json> --out-dir supabase/migrations",
-    "inputs": "catalogues extracted read-only via scripts/por1/extract-catalogue.mjs --ref (Preview nbltsbonsnbpfptihomc, Production krxizslnksorwhepyijs) — the same canonical inputs the original generation used",
+    "inputs": "catalogues extracted read-only via scripts/por1/extract-catalogue.mjs --ref (Preview nbltsbonsnbpfptihomc, Production krxizslnksorwhepyijs) \u2014 the same canonical inputs the original generation used",
     "inputFidelityProof": "--check BEFORE the compiler edit reported drift: 0, proving the extracted catalogues reproduce the checked-in migration set byte-for-byte; therefore the post-edit diff is attributable solely to the compiler change",
     "driftAfterEdit": 1,
     "generatedDiff": "supabase/migrations/202608010104_por1_canonical_line_activity.sql, +4 lines, confined to the yorisou_line_subject_lock privilege block",
-    "unrelatedGeneratedDrift": "none — no other migration and no contract-file change; supabase/contracts/por1-promotion-contract.json regenerated byte-identically (its P4 entry carries object counts, which did not move)",
+    "unrelatedGeneratedDrift": "none \u2014 no other migration and no contract-file change; supabase/contracts/por1-promotion-contract.json regenerated byte-identically (its P4 entry carries object counts, which did not move)",
     "p8Unchanged": true
   },
-
   "baselineFailureReproduction": {
-    "environment": "disposable PostgreSQL 17.10 cluster, roles anon/authenticated/service_role, WITH `alter default privileges in schema public grant execute on functions to anon, authenticated, service_role` — the Supabase behaviour the repository rehearsal lacks",
+    "environment": "disposable PostgreSQL 17.10 cluster, roles anon/authenticated/service_role, WITH `alter default privileges in schema public grant execute on functions to anon, authenticated, service_role` \u2014 the Supabase behaviour the repository rehearsal lacks",
     "p4Applied": "original emission (pre-repair)",
     "service_role_execute_after_p4": true,
-    "effectivePrivilegeMatrixOnHelper": { "PUBLIC": false, "anon": false, "authenticated": false, "service_role": true },
+    "effectivePrivilegeMatrixOnHelper": {
+      "PUBLIC": false,
+      "anon": false,
+      "authenticated": false,
+      "service_role": true
+    },
     "p8Result": "FAILED",
     "exactError": "POR-1: yorisou_line_subject_lock is a lock building block, not an entry point",
     "sqlstate": "P0001",
-    "classification": "REPRODUCED — not hypothetical",
+    "classification": "REPRODUCED \u2014 not hypothetical",
     "databaseDestroyed": true
   },
-
   "fixedRehearsal": {
     "environment": "second, independent disposable PostgreSQL 17.10 cluster with the same Supabase default privileges; ON_ERROR_STOP throughout",
-    "applied": ["202608010101", "202608010102", "202608010103", "202608010104", "202608010105", "202608010106", "202608010107", "202608010108", "202608010109", "202608010110", "202608010111"],
+    "applied": [
+      "202608010101",
+      "202608010102",
+      "202608010103",
+      "202608010104",
+      "202608010105",
+      "202608010106",
+      "202608010107",
+      "202608010108",
+      "202608010109",
+      "202608010110",
+      "202608010111"
+    ],
     "allApplied": true,
     "service_role_execute_after_p4": false,
-    "effectivePrivilegeMatrixOnHelper": { "PUBLIC": false, "anon": false, "authenticated": false, "service_role": false },
-    "promotedFunctionCounts": { "service_role_executable": 91, "not_executable": 3, "anon_executable_definer": 0 },
-    "notExecutableByName": ["yorisou_line_subject_lock", "yorisou_account_deletion_erase_database_unchecked", "yorisou_account_erase_append_only_families"],
+    "effectivePrivilegeMatrixOnHelper": {
+      "PUBLIC": false,
+      "anon": false,
+      "authenticated": false,
+      "service_role": false
+    },
+    "promotedFunctionCounts": {
+      "service_role_executable": 91,
+      "not_executable": 3,
+      "anon_executable_definer": 0
+    },
+    "notExecutableByName": [
+      "yorisou_line_subject_lock",
+      "yorisou_account_deletion_erase_database_unchecked",
+      "yorisou_account_erase_append_only_families"
+    ],
     "note": "the two erasure internals are withheld correctly by 109-111 already; only the compiler-generated helper had lost its revoke",
     "intendedEntryPointStillExecutable": "yorisou_account_deletion_erase_database = true",
     "satisfiedHonestly": "no role removed, no default privilege disabled, P8 not skipped, assertion not changed",
     "databaseDestroyed": true
   },
-
   "idempotency": {
     "method": "apply P4 -> verify -> re-apply P4 -> verify -> re-assert P8, in a bounded disposable rehearsal (no migration-ledger duplicate created)",
     "reapplyResult": "ok",
     "privilegeStateAfterReapply": "service_role EXECUTE on lock helper = false",
     "p8AfterReapply": "passes"
   },
-
   "regressionTests": {
     "file": "scripts/por1/__tests__/promotion-privileges.test.mjs",
     "npmScript": "test:por1-promotion-privileges",
@@ -99,51 +120,54 @@
     "method": "drives the real compiler binary over fixture catalogues, so it checks the artifact that ships",
     "cases": 6,
     "result": "6/6 pass",
-    "provenAbleToFail": "with the compiler and P4 reverted to a1cf81c content, 3 of 6 fail (internal-helper revoke, role-conditional guard, shipped-migration check) — the test can detect the exact regression",
-    "covers": ["internal-only helper revoked from public/anon/authenticated/service_role with no grant", "the revoke is role-conditional so bare PostgreSQL still applies", "ordinary function keeps grant execute to service_role and gets no blanket revoke", "the shipped 202608010104 carries the revoke", "202608010108 still asserts the property"],
+    "provenAbleToFail": "with the compiler and P4 reverted to a1cf81c content, 3 of 6 fail (internal-helper revoke, role-conditional guard, shipped-migration check) \u2014 the test can detect the exact regression",
+    "covers": [
+      "internal-only helper revoked from public/anon/authenticated/service_role with no grant",
+      "the revoke is role-conditional so bare PostgreSQL still applies",
+      "ordinary function keeps grant execute to service_role and gets no blanket revoke",
+      "the shipped 202608010104 carries the revoke",
+      "202608010108 still asserts the property"
+    ],
     "isolationDefectFoundAndFixed": "the compiler writes its contract to a path relative to process.cwd(); the first version of this test ran it with cwd=repo root and overwrote the real supabase/contracts/por1-promotion-contract.json with fixture output. The file was restored from git and the test now runs the compiler with cwd set to its temp directory."
   },
-
   "gates": {
     "npmCi": "exit 0",
     "por1PromotionCompileCheck": "drift 0 after regeneration",
-    "por1UnitTests": "node --test scripts/por1/__tests__/*.test.mjs — 19/19 pass",
+    "por1UnitTests": "node --test scripts/por1/__tests__/*.test.mjs \u2014 19/19 pass",
     "testPor1PromotionContract": "16/16 pass",
     "testPor1PromotionPrivileges": "6/6 pass",
     "typescript": "npx tsc --noEmit exit 0",
     "lint": "exit 0 (11 pre-existing warnings, 0 errors)",
     "productionBuild": "exit 0",
-    "por1Rehearse": "scripts/por1/rehearse-promotion.sh — 11 promotion migrations applied, anon_executable_definer 0, rls_forced 15, tables 57, yorisou_functions 94, exit 0",
-    "testPor1CatalogueBaseline": "PASS — identity-signature delta 15/82/2/2 unchanged; docs/ux2r/evidence/por1-catalogue-baseline.json regenerated byte-identically",
-    "por1PostgresIntegration": "tests/por1/postgres-integration.sh — ALL ASSERTIONS PASSED, exit 0",
-    "secretScan": "gitleaks protect --staged --redact — no leaks found",
+    "por1Rehearse": "scripts/por1/rehearse-promotion.sh \u2014 11 promotion migrations applied, anon_executable_definer 0, rls_forced 15, tables 57, yorisou_functions 94, exit 0",
+    "testPor1CatalogueBaseline": "PASS \u2014 identity-signature delta 15/82/2/2 unchanged; docs/ux2r/evidence/por1-catalogue-baseline.json regenerated byte-identically",
+    "por1PostgresIntegration": "tests/por1/postgres-integration.sh \u2014 ALL ASSERTIONS PASSED, exit 0",
+    "secretScan": "gitleaks protect --staged --redact \u2014 no leaks found",
     "thresholdsLowered": "none"
   },
-
-  "preExistingFailuresNotCausedHere": [
-    {
-      "gate": "tests/por1/populated-lineage-rehearsal.sh",
-      "failures": ["function missing: yorisou_account_deletion_erase_database(p_owner_account_id text)", "yorisou_account_deletion_executor_claim(...): BODY DIFFERS from the promoted contract"],
-      "proof": "identical two failures reproduce at a1cf81c with this package's changes stashed",
-      "cause": "the promoted contract is derived from Preview, while 110 and 111 change which signatures exist and replace bodies",
-      "disposition": "recorded, out of scope for this package"
-    },
-    {
-      "gate": "npm run por1:promotion-verify --catalogue <live Preview>",
-      "failures": ["yorisou_interpretation_responses_seq usable by anon/authenticated", "yorisou_recommendation_actions_seq usable by anon/authenticated"],
-      "cause": "live Preview's own pre-promotion sequence grants; this package changed no sequence emission and the contract file is byte-unchanged",
-      "disposition": "recorded, out of scope"
-    }
-  ],
-
   "nonRegression": {
     "applicationRuntimeCodeChanged": false,
-    "filesChanged": ["scripts/por1/compile-promotion.mjs", "scripts/por1/__tests__/promotion-privileges.test.mjs", "supabase/migrations/202608010104_por1_canonical_line_activity.sql", "package.json (one test script entry)", "docs/ux2r/06_POR1_MIGRATION_PROMOTION_ARCHAEOLOGY.md", "docs/ux2r/evidence/por1-promotion-privilege-repair-1.json"],
-    "untouched": ["app/**", "lib/** runtime", "scripts/local-app/**", "docs/local-app/**", "dependencies", "Vercel configuration", "Preview environment variables", "Production environment variables"],
+    "filesChanged": [
+      "scripts/por1/compile-promotion.mjs",
+      "scripts/por1/__tests__/promotion-privileges.test.mjs",
+      "supabase/migrations/202608010104_por1_canonical_line_activity.sql",
+      "package.json (one test script entry)",
+      "docs/ux2r/06_POR1_MIGRATION_PROMOTION_ARCHAEOLOGY.md",
+      "docs/ux2r/evidence/por1-promotion-privilege-repair-1.json"
+    ],
+    "untouched": [
+      "app/**",
+      "lib/** runtime",
+      "scripts/local-app/**",
+      "docs/local-app/**",
+      "dependencies",
+      "Vercel configuration",
+      "Preview environment variables",
+      "Production environment variables"
+    ],
     "localDatabaseReplayed": false,
     "localDatabaseNote": "the local database already holds the corrected contract end-state from the LOCAL-LAUNCHER-REFRESH-1 incident workaround; it was verified, not destructively replayed"
   },
-
   "boundaries": {
     "productionMigrationLedgerChanged": false,
     "previewMigrationLedgerChanged": false,
@@ -153,5 +177,67 @@
     "pr126MarkedReady": false,
     "pr127Modified": false,
     "assertion202608010108Weakened": false
+  },
+  "migrationScopeManifestRemediation": {
+    "recordedAt": "2026-08-05T11:00:00+08:00",
+    "initialRemoteMigrationScopeGuard": "FAILED",
+    "failingHead": "58c6bdd79007f54baf997ac83da98ba8412ff9d6",
+    "failure": "P4 migration SHA changed but supabase/MIGRATION_SCOPE_MANIFEST.md retained the old digest",
+    "exactError": "sha256 drift for supabase/migrations/202608010104_por1_canonical_line_activity.sql: manifest=aa78e930c06f\u2026 actual=12d293ee33ae\u2026",
+    "classification": "same-package repository consistency defect \u2014 NOT pre-existing",
+    "howItEscaped": "the regeneration step updated the migration but node scripts/validate-migration-scope.mjs was never run locally before the push; it reproduces the remote failure exactly and would have caught it",
+    "remediation": "updated ONLY the authoritative sha256 entry for version 202608010104; scope, version, name, path, remote_history classification, repair cohort and every other migration checksum untouched",
+    "manifestP4OldChecksum": "aa78e930c06ff49104ca8bb87b81d2c5d16baaa461f8e095781efcc1b5786dfb",
+    "manifestP4NewChecksum": "12d293ee33aeec09275da8ac8707f93df9cbfda3fb42e9f6b6e8b5e8c20d15ba",
+    "diffSize": "1 insertion, 1 deletion",
+    "p4ContentChangedInThisSegment": false,
+    "p8ChangedInThisSegment": false,
+    "promotionCompileDriftAfterRemediation": 0,
+    "guardStillEffective": {
+      "method": "disposable copy of HEAD outside the repository, destroyed after the proof",
+      "control_correctManifest": "exit 0",
+      "caseA_staleChecksumSubstituted": "exit 1 \u2014 sha256 drift reported",
+      "caseB_migrationTamperedInstead": "exit 1 \u2014 sha256 drift reported (manifest=12d293ee33ae\u2026 actual=bfac599db024\u2026)",
+      "conclusion": "the checksum guard fails in both directions; it was synchronized, not weakened"
+    },
+    "localMigrationScopeValidationFinal": "pass (52 migrations, 23 PRODUCTION_LINEAGE / 4 LOCAL_ONLY / 25 PREVIEW_ONLY)",
+    "gatesRerun": {
+      "por1PromotionCompileCheck": "drift 0",
+      "por1UnitTests": "19/19",
+      "testPor1PromotionContract": "16/16",
+      "testPor1PromotionPrivileges": "6/6",
+      "validateMigrationScope": "exit 0",
+      "typescript": "exit 0",
+      "lint": "exit 0 (11 pre-existing warnings)",
+      "productionBuild": "exit 0"
+    }
+  },
+  "promotionReadinessResiduals": {
+    "status": "BLOCKING_PROMOTION_RESIDUAL",
+    "notIntroducedByThePrivilegeRepair": true,
+    "notFixedByThePrivilegeRepair": true,
+    "stillBlockPor1HostedPromotionReadiness": true,
+    "items": [
+      {
+        "id": "RESIDUAL-1",
+        "gate": "tests/por1/populated-lineage-rehearsal.sh",
+        "failures": [
+          "function missing: yorisou_account_deletion_erase_database(p_owner_account_id text) \u2014 the weak erasure signature",
+          "yorisou_account_deletion_executor_claim(p_owner_account_id text, p_token_hash text, p_ttl_seconds integer): BODY DIFFERS from the promoted contract"
+        ],
+        "proofOfPreExistence": "identical two failures reproduce at a1cf81c with this package's changes stashed",
+        "cause": "the promoted contract is derived from the live Preview catalogue, while migrations 110 and 111 drop weak signatures and replace bodies"
+      },
+      {
+        "id": "RESIDUAL-2",
+        "gate": "npm run por1:promotion-verify --catalogue <live Preview catalogue>",
+        "failures": [
+          "yorisou_interpretation_responses_seq: sequence usable by anon:USAGE,authenticated:USAGE",
+          "yorisou_recommendation_actions_seq: sequence usable by anon:USAGE,authenticated:USAGE"
+        ],
+        "cause": "live Preview's own pre-promotion sequence grants; this package changed no sequence emission and the promotion contract file is byte-unchanged"
+      }
+    ],
+    "disposition": "recorded, deliberately NOT fixed in this package; POR-1 hosted promotion readiness is BLOCKED until they are resolved separately"
   }
 }
