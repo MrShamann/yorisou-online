@@ -88,6 +88,8 @@
     "test:por1-promotion-privileges": "node --test scripts/por1/__tests__/promotion-privileges.test.mjs",
     "test:por1-final-contract": "node --test scripts/por1/__tests__/final-promoted-contract.test.mjs",
     "test:por1-sequence-privileges": "node --test scripts/por1/__tests__/sequence-privileges.test.mjs",
+    "test:por1-preview-runtime-contract": "node --test scripts/por1/__tests__/preview-runtime-contract.test.mjs",
+    "por1:preview-runtime-verify": "node scripts/por1/verify-preview-runtime-contract.mjs",
     "por1:final-contract": "bash scripts/por1/build-final-contract.sh",
     "test:por1-local-store": "node --import tsx --test lib/server/__tests__/por1LocalStoreLostUpdate.test.ts",
     "test:por1-store-ownership": "node --import tsx --test lib/server/__tests__/por1LocalStoreOwnership.test.ts",
