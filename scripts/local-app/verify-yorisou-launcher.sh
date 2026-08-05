@@ -48,13 +48,38 @@ for f in launcher.log server.log migration.log stop.log; do
   [ -f "$LOGS/$f" ] && ok "log present: $f" || bad "log missing: $LOGS/$f"
 done
 
-# Optional live probe
+# Optional live probe. --health reports each identity fact separately and fails
+# when HTTP answers but the service is not the launcher's own current YORISOU —
+# "some HTTP server answered" is a transport fact, never an identity result.
 if [ "${1:-}" = "--health" ]; then
   # shellcheck disable=SC1091
-  [ -f "$ENVF" ] && . "$ENVF"
-  host="${YORISOU_LOCAL_HOST:-127.0.0.1}"; port="${YORISOU_LOCAL_PORT:-3210}"
-  code=$(/usr/bin/curl -s -o /dev/null -w '%{http_code}' --max-time 12 "http://$host:$port/" 2>/dev/null || echo 000)
-  case "$code" in 2*|3*) ok "health: http://$host:$port/ answered $code" ;; *) bad "health: http://$host:$port/ answered $code" ;; esac
+  . "$APPSUP/bin/yorisou-launcher-lib.sh"
+  code=$(/usr/bin/curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$YR_URL/" 2>/dev/null || echo 000)
+  case "$code" in
+    2*|3*) ok "http reachability: $YR_URL/ answered $code" ;;
+    *)     bad "http reachability: $YR_URL/ answered $code" ;;
+  esac
+  OWNER=$(yr_port_owner | head -1)
+  if [ -n "$OWNER" ]; then
+    ok "port owner pid: $OWNER ($(yr_proc_cmd "$OWNER" | cut -c1-80))"
+    yr_pid_is_next_shape "$OWNER"        && ok "process shape: Node/Next server"        || bad "process shape: not a Node/Next server"
+    yr_pid_cwd_matches_repo "$OWNER"     && ok "repository cwd: matches $YORISOU_REPO"  || bad "repository cwd: does NOT match $YORISOU_REPO (got: $(yr_proc_cwd "$OWNER"))"
+    yr_pid_lineage_matches_recorded "$OWNER" && ok "pid lineage: consistent with recorded launcher PID" || bad "pid lineage: NOT consistent with recorded launcher PID ($(cat "$YR_PID_FILE" 2>/dev/null || echo none))"
+  else
+    bad "port owner pid: none (nothing listening on $YORISOU_LOCAL_PORT)"
+  fi
+  RECORDED_SHA=$(yr_recorded_build_sha)
+  [ -n "$RECORDED_SHA" ] && ok "recorded build identity: $RECORDED_SHA" || bad "recorded build identity: absent"
+  RUNTIME_ID=$(yr_runtime_identity | tr '\t' ' ')
+  [ -n "$RUNTIME_ID" ] && ok "runtime build identity: $RUNTIME_ID" || bad "runtime build identity: unavailable/unparseable"
+  HEAD_SHA=$(git -C "$YORISOU_REPO" rev-parse HEAD 2>/dev/null)
+  HEAD_BR=$(git -C "$YORISOU_REPO" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  [ -n "$HEAD_SHA" ] && ok "repository HEAD: $HEAD_SHA ($HEAD_BR)" || bad "repository HEAD: unresolvable"
+  if [ -n "$OWNER" ] && yr_runtime_is_current "$OWNER" "$HEAD_SHA" "$HEAD_BR"; then
+    ok "overall YORISOU identity: PROVEN (owned + current)"
+  else
+    bad "overall YORISOU identity: NOT PROVEN (failed:${YR_OWNERSHIP_FAIL:- no-owner})"
+  fi
 fi
 
 exit $FAIL

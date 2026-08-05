@@ -88,6 +88,7 @@
       "notes": "no relation-does-not-exist, no missing POR-1 function, no 5xx, no Production redirect; /result probed in concealed unavailable state with no private data"
     },
     "browserSmoke": "/ and /result loaded in browser; zero console errors, no hydration failure; server.log has zero schema/relation errors",
+    "stopCorrectionNote": "SUPERSEDED BY THE OWNERSHIP REMEDIATION BELOW: the first-pass acceptance treated HTTP readiness plus a next-server name owning the port as ownership proof. That was insufficient — see ownershipRemediation.",
     "stop": "Stop YORISOU.app → PID-ownership proven, SIGTERM graceful exit in 1s, port 3210 closed",
     "restart": "relaunch → HTTP 200, pid 48894 → 54600 (new PID), /api/build-identity reports commitSha=a1cf81c…, commitRef=feat/ux2-integrated-core-experience, environment=development",
     "staleStateRecovery": {
@@ -98,6 +99,78 @@
     },
     "unrelatedProcesses": "3220 (por1-oldapp compat) and 3230 (current-branch test server) answered 200 before, during, and after; all 4 local Supabase containers up; Colima untouched",
     "pidOwnershipProof": "stop/start refuse to signal any process not proven to be a node next-start bound to port 3210 / this repo"
+  },
+
+  "ownershipRemediation": {
+    "recordedAt": "2026-08-05T08:50:00+08:00",
+    "reason": "The first-pass launcher accepted any 2xx/3xx on port 3210 as a healthy YORISOU application, and accepted a generic next-server as its own purely because that process owned the port. HTTP success is transport, not application identity.",
+    "correctedClaims": [
+      "'HTTP 200 on 3210' no longer means 'YORISOU is healthy' anywhere in start, stop, or verify.",
+      "Process name alone is no longer sufficient for ownership; the legacy yr_pid_is_ours port+name rule was removed entirely."
+    ],
+    "contract": {
+      "facts": [
+        "exactly one process owns 127.0.0.1:3210",
+        "the owner is a Node/Next production server (yr_pid_is_next_shape)",
+        "its working directory resolves to YORISOU_REPO (yr_pid_cwd_matches_repo)",
+        "it is the recorded launcher PID or its child (yr_pid_lineage_matches_recorded)",
+        "GET /api/build-identity succeeds and parses (yr_runtime_identity)",
+        "runtime commitSha equals the recorded built SHA (yr_runtime_identity_matches_build)",
+        "current grade only: recorded built SHA equals repository HEAD",
+        "current grade only: runtime commitRef is consistent with the current branch"
+      ],
+      "grades": {
+        "yr_runtime_is_ours": "stop grade — may signal the process",
+        "yr_runtime_is_current": "current grade — may open the browser window or take the already-healthy fast path"
+      },
+      "identitySource": "run/build-identity.json written at build time; a caller-supplied environment label is never accepted as proof"
+    },
+    "adversarialAcceptance": {
+      "testA_foreignHttpServer": {
+        "fixture": "python3 -m http.server 3210 (pid 41668), answered HTTP 200",
+        "start": "FAILED CLOSED — 'cannot prove it owns (failed: not_next_server_shape cwd_not_repo lineage_not_recorded_pid runtime_identity_ne_recorded_build)'",
+        "browserWindowOpened": false,
+        "stop": "REFUSED to signal; exit 1; state files preserved for diagnosis",
+        "verifier": "exit 1",
+        "foreignProcessSurvived": true,
+        "cleanup": "temporary fixture killed by this remediation only"
+      },
+      "testB_foreignNextServer": {
+        "fixture": "real next-server v16.2.10 (pid 42536) started from /Users/yangjin/Projects/yorisou-local-launcher-refresh — a DIFFERENT repository — with VERCEL_GIT_COMMIT_SHA/REF deliberately faked to MATCH the recorded build identity; answered HTTP 200 and served a matching /api/build-identity",
+        "start": "FAILED CLOSED — 'failed: cwd_not_repo lineage_not_recorded_pid'",
+        "browserWindowOpened": false,
+        "stop": "REFUSED to signal; exit 1",
+        "verifier": "exit 1 (cwd and lineage reported FAIL individually)",
+        "foreignProcessSurvived": true,
+        "note": "the strongest available fixture — genuine Next.js process, correct name, correct port, matching identity body; rejected on repository cwd and PID lineage alone"
+      },
+      "testC_staleIdentity": {
+        "fixture": "recorded build-identity SHA rewritten to deadbeef… while the genuine server (pid 54600) kept answering HTTP 200 with the true SHA",
+        "start": "FAILED CLOSED — 'failed: runtime_identity_ne_recorded_build'",
+        "browserWindowOpened": false,
+        "stop": "REFUSED to signal the mismatched server; live PID record preserved",
+        "verifier": "exit 1 while http reachability still PASSed — proving the two are reported separately",
+        "restored": "original build-identity.json restored from backup after the test"
+      },
+      "testD_genuine": {
+        "start": "open ~/Applications/YORISOU.app → 'identity PROVEN (pid 43572 sha/ref: a1cf81c991a55776044da676d4d7d5f721b01640 feat/ux2-integrated-core-experience)', window opened only after the identity gate",
+        "verifier": "exit 0 — all facts PASS incl. 'overall YORISOU identity: PROVEN (owned + current)'",
+        "stop": "pid 43572 SIGTERM, exited in 1s, port 3210 closed, exit 0",
+        "restart": "relaunch → pid 45084 (new), identity PROVEN again, HTTP 200",
+        "pidTransition": "43572 → 45084"
+      }
+    },
+    "contractTest": "scripts/local-app/test-launcher-contract.sh — 22/22 PASS, hermetic (probes stubbed; no process started or signalled). Covers: HTTP-200-as-ownership, generic next-server by port, verifier without build identity, stop signalling a foreign owner, window before identity verification, plus lineage, singleton-owner and stale-SHA cases.",
+    "gatesAfterRemediation": {
+      "bashSyntax": "bash -n scripts/local-app/*.sh exit 0",
+      "launcherContract": "exit 0",
+      "npmCi": "exit 0",
+      "typescript": "exit 0",
+      "lint": "exit 0 (11 pre-existing warnings)",
+      "productionBuild": "exit 0"
+    },
+    "unrelatedPortsPreserved": "3220 and 3230 answered 200 before, during, and after every adversarial test; 4 Supabase containers and Colima untouched throughout",
+    "por1MigrationRiskUnchanged": "the 202608010104/202608010108 service_role promotion risk recorded above is preserved and deliberately NOT fixed in this remediation"
   },
 
   "boundaries": {

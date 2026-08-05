@@ -28,14 +28,22 @@ open_window() {
   fi
 }
 
+# Quick current-grade identity probe usable before full repository validation.
+# HTTP alone NEVER takes a fast path — the port owner must pass the full
+# ownership contract against the repository's current HEAD.
+yr_quick_current() {
+  q_sha=$(git -C "$YORISOU_REPO" rev-parse HEAD 2>/dev/null); [ -n "$q_sha" ] || return 1
+  q_br=$(git -C "$YORISOU_REPO" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  q_owner=$(yr_port_owner | head -1); [ -n "$q_owner" ] || return 1
+  yr_runtime_is_current "$q_owner" "$q_sha" "$q_br"
+}
+
 # ── 1. Launcher lock (atomic mkdir; self-repairs a stale lock) ───────────────
 LOCKD="$YR_RUN/start.lock.d"
 if ! mkdir "$LOCKD" 2>/dev/null; then
-  # Either a launch is in flight or a previous launch died mid-way. If the app
-  # is already healthy, just (re)open the window. If the lock is stale (no
-  # healthy app and no live start process can be proven), remove it and retry
-  # once. Otherwise wait briefly for the in-flight start.
-  if yr_http_ok; then yr_log "$LOG" "start: already healthy — opening window"; open_window; exit 0; fi
+  # Either a launch is in flight or a previous launch died mid-way. The fast
+  # path requires PROVEN current identity, never mere HTTP reachability.
+  if yr_quick_current; then yr_log "$LOG" "start: already healthy (ownership + current identity proven) — opening window"; open_window; exit 0; fi
   lock_age=$(( $(date +%s) - $(stat -f%m "$LOCKD" 2>/dev/null || date +%s) ))
   if [ "$lock_age" -gt 1800 ]; then
     yr_log "$LOG" "start: removing stale launch lock (age ${lock_age}s)"
@@ -43,8 +51,8 @@ if ! mkdir "$LOCKD" 2>/dev/null; then
     mkdir "$LOCKD" 2>/dev/null || { yr_log "$LOG" "start: lock re-acquire failed"; exit 1; }
   else
     yr_log "$LOG" "start: another launch appears in progress — waiting (bounded 60s)"
-    i=0; while [ $i -lt 60 ]; do sleep 1; yr_http_ok && { open_window; exit 0; }; i=$((i+1)); done
-    yr_fail "$LOG" "Another launch is in progress but the app never became healthy. See $LOG"
+    i=0; while [ $i -lt 60 ]; do sleep 1; yr_quick_current && { open_window; exit 0; }; i=$((i+1)); done
+    yr_fail "$LOG" "Another launch is in progress but no owned, current YORISOU service appeared (last ownership failure:${YR_OWNERSHIP_FAIL:- none}). See $LOG"
   fi
 fi
 trap 'rmdir "$LOCKD" 2>/dev/null' EXIT
@@ -125,12 +133,36 @@ if [ -n "$SB_ENV" ]; then
 fi
 yr_log "$LOG" "supabase URL: ${SUPABASE_URL:-unset}"
 
+# ── 8a. Evaluate any existing port owner BEFORE the build step ───────────────
+# Ordering matters: rebuilding first would overwrite the recorded build identity
+# and make a stale-but-ours server indistinguishable from a foreign one.
+EXISTING_CURRENT=0
+OWNERS="$(yr_port_owner)"
+if [ -n "$OWNERS" ]; then
+  OWNER_ONE="$(printf '%s\n' "$OWNERS" | head -1)"
+  if yr_runtime_is_current "$OWNER_ONE" "$CUR_SHA" "$CUR_BRANCH"; then
+    yr_log "$LOG" "server: already running with proven ownership + current identity (pid $OWNER_ONE)"
+    EXISTING_CURRENT=1
+  elif yr_runtime_is_ours "$OWNER_ONE"; then
+    # Ours, but stale (built from a different commit than HEAD). Ownership is
+    # independently proven, so a graceful replace is safe.
+    yr_log "$LOG" "server: OURS but stale (pid $OWNER_ONE; $YR_OWNERSHIP_FAIL) — stopping it before rebuild"
+    kill -TERM "$OWNER_ONE" 2>/dev/null
+    i=0; while [ $i -lt 20 ] && kill -0 "$OWNER_ONE" 2>/dev/null; do sleep 1; i=$((i+1)); done
+    kill -0 "$OWNER_ONE" 2>/dev/null && yr_fail "$LOG" "Stale owned server (pid $OWNER_ONE) did not exit within 20s. Not proceeding."
+    rm -f "$YR_PID_FILE"
+  else
+    yr_fail "$LOG" "Port $YORISOU_LOCAL_PORT is served by a process this launcher cannot prove it owns (pid $OWNER_ONE: $(yr_proc_cmd "$OWNER_ONE" | cut -c1-120); failed:$YR_OWNERSHIP_FAIL). Refusing to open a window, overwrite PID state, or signal it."
+  fi
+fi
+
 # ── 8. Build when build identity is stale ────────────────────────────────────
 BUILT_SHA="$(yr_recorded_build_sha)"
 NEED_BUILD=0
 [ -f "$YORISOU_REPO/.next/BUILD_ID" ] || NEED_BUILD=1
 [ -n "$BUILT_SHA" ] || NEED_BUILD=1
 [ "$BUILT_SHA" = "$CUR_SHA" ] || NEED_BUILD=1
+[ "$EXISTING_CURRENT" = "1" ] && NEED_BUILD=0
 if [ "$NEED_BUILD" = "1" ]; then
   # next/font/google fetches fonts at build time. Record whether this launch
   # context can reach it — an unsigned .app's network can be filtered (Avast /
@@ -159,18 +191,14 @@ VERCEL_GIT_COMMIT_REF="$CUR_BRANCH"
 export VERCEL_GIT_COMMIT_SHA VERCEL_GIT_COMMIT_REF
 [ -n "$YORISOU_DATA_DIR" ] && mkdir -p "$YORISOU_DATA_DIR" >/dev/null 2>&1
 
-if yr_http_ok; then
-  OWNER="$(yr_port_owner | head -1)"
-  yr_log "$LOG" "server: already healthy on $YR_URL (pid ${OWNER:-unknown})"
+if [ "$EXISTING_CURRENT" = "1" ]; then
+  yr_log "$LOG" "server: reusing owned current server (pid $(yr_port_owner | head -1))"
 else
+  # Step 8a either found the port free or freed our own stale server; anything
+  # appearing since is a race with an unrelated process — fail closed.
   OWNERS="$(yr_port_owner)"
   if [ -n "$OWNERS" ]; then
-    RECORDED="$(cat "$YR_PID_FILE" 2>/dev/null)"
-    for p in $OWNERS; do
-      if [ "$p" != "$RECORDED" ] || ! yr_pid_is_ours "$p"; then
-        yr_fail "$LOG" "Port $YORISOU_LOCAL_PORT is occupied by a process this launcher does not own (pid $p: $(ps -p "$p" -o command= 2>/dev/null | cut -c1-120)). Refusing to touch it."
-      fi
-    done
+    yr_fail "$LOG" "Port $YORISOU_LOCAL_PORT became occupied during startup by a process this launcher does not own (pid $(printf '%s' "$OWNERS" | head -1)). Refusing to touch it."
   fi
   # Self-repair: a recorded PID whose process is dead is stale — remove it.
   RECORDED="$(cat "$YR_PID_FILE" 2>/dev/null)"
@@ -200,10 +228,19 @@ while [ $i -lt 90 ]; do
   sleep 1; i=$((i+1))
 done
 [ "$OK" = "1" ] || yr_fail "$LOG" "The app did not become healthy on $YR_URL within 90s. See $YR_SERVER_LOG"
-IDENTITY="$(/usr/bin/curl -s --max-time 8 "$YR_URL/api/build-identity" 2>/dev/null | cut -c1-400)"
-yr_log "$LOG" "health: OK after ${i}s; build-identity: ${IDENTITY:-unavailable}"
 
-# ── 11. Open the standalone app window (ONLY after readiness) ────────────────
+# ── 10b. Final identity gate — HTTP readiness is transport, not identity ─────
+# The window opens ONLY for a service that passes the full ownership contract
+# at current grade (singleton port owner, next shape, repo cwd, recorded-PID
+# lineage, runtime commitSha == recorded built SHA == repository HEAD).
+FINAL_OWNER="$(yr_port_owner | head -1)"
+if ! yr_runtime_is_current "$FINAL_OWNER" "$CUR_SHA" "$CUR_BRANCH"; then
+  yr_fail "$LOG" "Service on $YR_URL answered HTTP but FAILED the identity contract (pid ${FINAL_OWNER:-none}; failed:$YR_OWNERSHIP_FAIL). The window was NOT opened."
+fi
+IDENTITY="$(yr_runtime_identity | tr '\t' ' ')"
+yr_log "$LOG" "health: OK after ${i}s; identity PROVEN (pid $FINAL_OWNER sha/ref: $IDENTITY)"
+
+# ── 11. Open the standalone app window (ONLY after readiness + identity) ─────
 open_window
 yr_log "$LOG" "──────── YORISOU ready ($YR_URL) branch=$CUR_BRANCH sha=$CUR_SHA pid=$(cat "$YR_PID_FILE" 2>/dev/null || yr_port_owner | head -1) ────────"
 exit 0

@@ -49,15 +49,63 @@ secrets); on first run after this refresh the installer comments out the retired
 7. build when the **build identity** is stale (recorded built-SHA ≠ current HEAD,
    or no build exists). The built SHA is recorded in `run/build-identity.json`
    at build time — a label supplied at start is never proof of what was built.
-8. port safety: refuse to start if 3210 is owned by a process the launcher
-   cannot prove is its own (it never signals a foreign process); self-repair a
-   dead recorded PID
+8. port safety under the **ownership contract** below: refuse to start if 3210
+   is owned by a process the launcher cannot prove is its own (it never signals
+   a foreign process); gracefully replace a server that is provably ours but
+   stale; self-repair a dead recorded PID
 9. start `next start -H 127.0.0.1 -p 3210` (`NODE_ENV=production`); the runtime
    reports the *built* SHA through `/api/build-identity` via
    `VERCEL_GIT_COMMIT_SHA`
 10. poll `GET /` for up to 90 s, failing fast if the server process dies
-11. **only after HTTP readiness**, open the standalone Chrome app window
+11. **only after readiness AND a passing identity check**, open the standalone
+    Chrome app window — HTTP readiness is a transport fact and never, on its
+    own, authorizes opening the window
 12. persist PID + build identity, release the lock
+
+## Ownership contract
+
+**HTTP success is not application identity.** `yr_http_ok` proves only that
+something answered on the port. A service is accepted as the launcher's own only
+when every one of these facts holds, each a separate testable helper:
+
+| Fact | Helper |
+| --- | --- |
+| exactly one process owns 127.0.0.1:3210 | `yr_port_owner` (singleton check) |
+| that process is a Node/Next production server | `yr_pid_is_next_shape` |
+| its working directory resolves to `$YORISOU_REPO` | `yr_pid_cwd_matches_repo` |
+| it is the recorded launcher PID or its child | `yr_pid_lineage_matches_recorded` |
+| `/api/build-identity` answers and parses | `yr_runtime_identity` |
+| runtime `commitSha` == the **recorded built SHA** | `yr_runtime_identity_matches_build` |
+| all of the above together (stop grade) | `yr_runtime_is_ours` |
+| plus recorded SHA == repository HEAD and consistent `commitRef` (current grade) | `yr_runtime_is_current` |
+
+The recorded built SHA is written at build time into `run/build-identity.json`;
+a caller-supplied environment label is never accepted as proof. Process **name
+alone proves nothing** — a `next-server` that owns the port but runs from
+another repository fails on cwd and lineage.
+
+Consequences, by case:
+
+- **Foreign service answering 200** — no window, no "healthy" claim, no PID-file
+  overwrite, no signal; the launcher fails closed naming every failed check.
+- **Provably ours but stale** (runtime or recorded SHA ≠ HEAD) — never silently
+  reused and never reported as current; replaced only because ownership was
+  independently proven, then rebuilt.
+- **Genuine current service** — only this case takes the
+  `already healthy — opening window` fast path.
+
+`Stop YORISOU.app` signals a PID only under the full stop-grade contract. When
+ownership fails it records the exact failed checks, leaves the process alone,
+exits non-zero, and **preserves** the live PID record and lock as diagnostic
+evidence (a dead PID file is still cleaned up).
+
+`verify-yorisou-launcher.sh --health` reports HTTP reachability, port-owner PID,
+process shape, repository cwd, PID lineage, recorded build identity, runtime
+build identity, repository HEAD, and an overall identity verdict — and exits
+non-zero when HTTP works but identity does not.
+
+The contract is regression-tested by `scripts/local-app/test-launcher-contract.sh`
+(hermetic; stubs the process/HTTP probes, starts and signals nothing).
 
 Every launch logs: timestamp, launcher version, repo path, branch, commit SHA,
 node/npm versions, PostgreSQL version, migration readiness, build result,
