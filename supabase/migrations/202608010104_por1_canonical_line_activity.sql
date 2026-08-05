@@ -308,6 +308,10 @@ do $$ begin
     execute 'revoke all on function public.yorisou_line_subject_lock(p_line_subject_hash text, p_owner_fingerprint text) from authenticated';
   end if;
   -- deliberately NOT granted to service_role: an internal lock helper, not an entry point.
+  -- Revoked explicitly: Supabase default privileges may have granted EXECUTE directly.
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    execute 'revoke all on function public.yorisou_line_subject_lock(p_line_subject_hash text, p_owner_fingerprint text) from service_role';
+  end if;
 end $$;
 
 CREATE OR REPLACE FUNCTION public.yorisou_line_subject_erasure_residue(p_line_subject_hash text)

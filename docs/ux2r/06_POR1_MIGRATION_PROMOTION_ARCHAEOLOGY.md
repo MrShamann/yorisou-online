@@ -89,3 +89,94 @@ implement → feature flag default OFF → apply the additive Production migrati
 Production **untouched**: 12 migrations, 42 tables, CPC-1 tables and RPCs absent, `main` still
 `c8d8a8ad6a72949c248adb098a626d1ab9d6a579`, no deployment triggered, no write of any kind issued.
 PR #126 remains DRAFT / OPEN / UNMERGED at `de40edd`.
+
+---
+
+# Addendum — the promotion compiler withheld a grant it never revoked (2026-08-05)
+
+**Package:** POR-1-PROMOTION-PRIVILEGE-REPAIR-1. **Found by:** LOCAL-LAUNCHER-REFRESH-1, applying
+the promotion lineage to a real Supabase-shaped database for the first time.
+
+## The failure
+
+`202608010108` refused the promotion:
+
+```
+POR-1: yorisou_line_subject_lock is a lock building block, not an entry point   (SQLSTATE P0001)
+```
+
+The assertion was right. `service_role` really did hold `EXECUTE` on the helper.
+
+## Why every previous rehearsal passed
+
+`NO_SERVICE_ROLE_EXECUTE` is honoured in `scripts/por1/compile-promotion.mjs` by **not emitting a
+grant**, with a comment recording the intent. That is sufficient only where the sole route to the
+privilege is `PUBLIC` — which is true of bare PostgreSQL, and therefore true of
+`scripts/por1/rehearse-promotion.sh` and `tests/por1/catalogue-baseline.sh`, which create the three
+platform roles but no default privileges.
+
+A Supabase project carries:
+
+```sql
+alter default privileges in schema public grant execute on functions to service_role;
+```
+
+so `create function` in `public` grants `service_role` EXECUTE **directly**. The generated
+`revoke ... from public` cannot remove a directly-held privilege, and the intent in the comment was
+never enforced. **Not granting is not the same as not granted.**
+
+The Preview lineage had this right by hand: `202607310002` revokes the helper from `public`, `anon`,
+`authenticated` **and** `service_role`. Live Preview still reads `service_role EXECUTE = false`. The
+compiler — which deliberately re-derives grants rather than copying them, because the Preview grants
+had a real hole (`202608010001`) — lost that fourth revoke in translation.
+
+## The repair
+
+The exception is now **asserted, not merely skipped**. For every function in
+`NO_SERVICE_ROLE_EXECUTE` the generator emits a role-conditional explicit revoke; ordinary entry
+points keep their grant, and no blanket service-role revoke was introduced. `202608010108` was **not
+weakened** — the fix is upstream of the assertion that caught it.
+
+Regenerated from the same catalogue inputs, the change is four lines in
+`202608010104_por1_canonical_line_activity.sql` and nothing else (`--check` reported `drift: 0`
+before the compiler edit, proving the inputs reproduce the checked-in set byte-for-byte, and
+`drift: 1` after — that single file).
+
+## Proof
+
+Both rehearsals ran on disposable PostgreSQL 17 clusters carrying the Supabase default privilege:
+
+| | original P4 | regenerated P4 |
+| --- | --- | --- |
+| P4 applies | yes | yes |
+| `service_role` EXECUTE on helper after P4 | **true** | **false** |
+| P8 | **fails P0001** | passes |
+| P9 · P10 · P11 | not reached | pass |
+
+Effective privilege on the helper after the fixed run: `PUBLIC`, `anon`, `authenticated`,
+`service_role` all false. Across the promoted set, 91 `yorisou_*` functions remain
+service-role-executable and exactly three do not — the lock helper plus
+`yorisou_account_deletion_erase_database_unchecked` and `yorisou_account_erase_append_only_families`,
+which 109–111 already withhold correctly. `anon_executable_definer` is 0. Re-applying P4 leaves the
+privilege state unchanged and P8 still passes, so the block is idempotent as the migration claims.
+
+## Recorded, not fixed here
+
+- The manual `revoke ... from service_role` issued against the local database during
+  LOCAL-LAUNCHER-REFRESH-1 was an **incident workaround**. This compiler change is the durable fix;
+  the local database already holds the corrected end-state, so nothing was replayed to reach it.
+- `tests/por1/populated-lineage-rehearsal.sh` fails two assertions —
+  `yorisou_account_deletion_erase_database(p_owner_account_id text)` missing, and an
+  `executor_claim` body differing from the promoted contract. **Both reproduce identically at
+  `a1cf81c` with this package's changes stashed**, so they are pre-existing: the contract is derived
+  from Preview, while 110 and 111 change which signatures exist. Out of scope here.
+- `npm run por1:promotion-verify` against the live Preview catalogue reports two sequences usable by
+  `anon`/`authenticated`. Also pre-existing Preview state, untouched by this package.
+
+## Environments
+
+Production and governed Preview were **read only**. Production's ledger records no `2026080101*`
+version and has no `yorisou_line_subject_lock`, so P4 was still an unpromoted Draft migration and
+regenerating it in place was safe. Preview has no `supabase_migrations` ledger; its objects come
+from the Preview lineage, not from P4. No hosted migration was applied, no environment variable
+changed, no deployment triggered.

@@ -414,8 +414,27 @@ function functionSql(fn) {
       `  end if;`,
     );
   } else {
+    // NOT GRANTING IS NOT THE SAME AS NOT GRANTED.
+    //
+    // Supabase projects carry `alter default privileges ... grant execute on functions to
+    // service_role`, so `create function` in the public schema hands service_role EXECUTE
+    // DIRECTLY — not through PUBLIC. Omitting the grant here therefore left the privilege in
+    // place, and the revoke-from-public above does not touch it because it was never held
+    // through PUBLIC.
+    //
+    // The Preview lineage got this right by hand: 202607310002 revokes the helper from public,
+    // anon, authenticated AND service_role. This generator dropped that last revoke in
+    // translation, which is why a bare-PostgreSQL rehearsal passed (no default privilege exists
+    // there, so service_role only ever held EXECUTE via PUBLIC) while the first real Supabase
+    // apply failed the 202608010108 assertion.
+    //
+    // So the exception must be ASSERTED, not merely skipped.
     grants.push(
       `  -- deliberately NOT granted to service_role: an internal lock helper, not an entry point.`,
+      `  -- Revoked explicitly: Supabase default privileges may have granted EXECUTE directly.`,
+      `  if exists (select 1 from pg_roles where rolname = 'service_role') then`,
+      `    execute 'revoke all on function ${sig} from service_role';`,
+      `  end if;`,
     );
   }
   grants.push(`end $$;`);
