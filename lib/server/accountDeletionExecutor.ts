@@ -23,6 +23,7 @@ import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
 
+import { accountErasureAuthoritySchemaReady } from "./accountErasureAuthorityRollout";
 import { rpc } from "./assessmentAttemptStore";
 
 /** The nine stages, in the only order they may occur. */
@@ -100,6 +101,24 @@ export async function claimDeletionExecutor(
   accountId: string,
   ttlSeconds = 90,
 ): Promise<ClaimResult> {
+  // FAIL CLOSED BEFORE THE CLAIM, not at the erasure call.
+  //
+  // The 108c939 hosted acceptance discovered a database without the four-argument erasure entry
+  // point by CALLING it, mid-deletion, and answering 500. By then the job had already crossed into
+  // irreversible work. Refusing here — before a new job is claimed — is the difference between a
+  // truthful "this deployment cannot erase yet" and a half-executed deletion.
+  //
+  // There is deliberately no fallback to the owner-only RPC: it erases from an owner id alone,
+  // without the exact job, executor token and generation that make erasure authorized, so falling
+  // back would trade an honest refusal for an authority bypass.
+  if (!accountErasureAuthoritySchemaReady()) {
+    return {
+      claimed: false,
+      reason: "account_erasure_authority_schema_unready",
+      cursor: null,
+    };
+  }
+
   const tokenHash = hashToken(randomBytes(32).toString("hex"));
   const row = unwrap(
     await rpc<{

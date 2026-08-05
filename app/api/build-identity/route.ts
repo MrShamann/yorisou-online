@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { accountErasureAuthoritySchemaReady } from "@/lib/server/accountErasureAuthorityRollout";
 import { accountMutationFenceSchemaReady } from "@/lib/server/accountMutationLease";
 import { isCanonicalLineActivitySchemaReady } from "@/lib/server/canonicalLineActivityRollout";
 import { isCanonicalIdentityLinksSchemaReady } from "@/lib/server/canonicalIdentityLinksRollout";
@@ -57,6 +58,11 @@ export async function GET() {
         CANONICAL_LINE_ACTIVITY: isCanonicalLineActivitySchemaReady(),
         IDENTITY_PROVISIONING: isIdentityProvisioningSchemaReady(),
         CANONICAL_IDENTITY_LINKS: isCanonicalIdentityLinksSchemaReady(),
+        // Added after the 108c939 hosted acceptance failed mid-deletion: all four flags above read
+        // `true` while the ONE RPC the irreversible stage depends on did not exist in that database,
+        // because 202608010110/111 are Production lineage and Preview had never received them. A
+        // readiness set that cannot express "the erasure authority is absent" cannot stop that.
+        ACCOUNT_ERASURE_AUTHORITY: accountErasureAuthoritySchemaReady(),
       },
 
       // The four product controls. Exactly four, always all four, so "absent from the response" can
