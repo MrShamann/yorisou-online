@@ -50,6 +50,11 @@ import { finalizeAccountMutationGate, withAccountDeletionContext } from "./accou
 import { checkDeletionBackendReadiness } from "./deletionBackendReadiness";
 import { shouldGateOnBackendReadiness } from "./deletionBackendReadinessDecision";
 import {
+  accountErasureAuthoritySchemaReady,
+  decideErasureAuthority,
+} from "./accountErasureAuthorityRollout";
+import { isPor1CapabilityEnabled } from "./por1RuntimeControls";
+import {
   claimDeletionExecutor,
   completeDeletionStep,
   drainMutationGate,
@@ -249,6 +254,33 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
       // been destroyed, and `irreversible_started_at` stays null.
       return { outcome: "retryable", errorCode: backend.reason };
     }
+  }
+
+  // ── THE ERASURE AUTHORITY MUST EXIST BEFORE A NEW DELETION STARTS ──────────
+  //
+  // Same shape as the gate above, for the same reason, learned the same way. At 108c939 a hosted
+  // deletion reached `database_erasure` and answered 500, because the database did not have the
+  // four-argument erasure entry point the code calls — a deployment fact that was knowable before
+  // the first stage ran.
+  //
+  // And, exactly like the backend gate: this applies ONLY to a job that has not crossed. A job that
+  // is already irreversible must still be resumable, because refusing it would strand a half-erased
+  // account over the same deployment fact. If the strong contract really is absent, that resume
+  // fails its step as a RETRYABLE error, preserving the cursor, the manifest and
+  // `irreversible_started_at` — which is recoverable, where refusing the claim is not.
+  //
+  // There is no fallback to the owner-only RPC in either branch: it erases from an owner id alone,
+  // without the exact job, token and generation that make erasure authorized.
+  const erasureAuthority = decideErasureAuthority({
+    executorEnabled: isPor1CapabilityEnabled("ACCOUNT_DELETION_EXECUTOR"),
+    schemaReady: accountErasureAuthoritySchemaReady(),
+    alreadyIrreversible: resume.irreversible || isAtOrPastIrreversible(resume.cursor),
+  });
+  if (erasureAuthority.mode === "refuse_infrastructure_unready") {
+    // Retryable and bounded: nothing has been claimed, nothing destroyed, the flag can be set and
+    // the same job resumed. Deliberately NOT a generic 500 — that is what shipped and what this
+    // replaces.
+    return { outcome: "retryable", errorCode: erasureAuthority.reason };
   }
 
   const claimResult = await claimDeletionExecutor(accountId);

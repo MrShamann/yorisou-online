@@ -23,7 +23,6 @@ import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
 
-import { accountErasureAuthoritySchemaReady } from "./accountErasureAuthorityRollout";
 import { rpc } from "./assessmentAttemptStore";
 
 /** The nine stages, in the only order they may occur. */
@@ -101,24 +100,17 @@ export async function claimDeletionExecutor(
   accountId: string,
   ttlSeconds = 90,
 ): Promise<ClaimResult> {
-  // FAIL CLOSED BEFORE THE CLAIM, not at the erasure call.
+  // NO READINESS POLICY HERE — deliberately.
   //
-  // The 108c939 hosted acceptance discovered a database without the four-argument erasure entry
-  // point by CALLING it, mid-deletion, and answering 500. By then the job had already crossed into
-  // irreversible work. Refusing here — before a new job is claimed — is the difference between a
-  // truthful "this deployment cannot erase yet" and a half-executed deletion.
+  // An earlier version refused every claim whenever the erasure-authority schema flag was unset.
+  // That was wrong in the one case that matters most: a job that has ALREADY crossed the
+  // irreversible boundary must still be resumable, and refusing its claim would strand a
+  // half-erased account over a deployment fact. This layer cannot tell the two apart, because it
+  // does not know the resume state — it learns the cursor from the claim it is about to make.
   //
-  // There is deliberately no fallback to the owner-only RPC: it erases from an owner id alone,
-  // without the exact job, executor token and generation that make erasure authorized, so falling
-  // back would trade an honest refusal for an authority bypass.
-  if (!accountErasureAuthoritySchemaReady()) {
-    return {
-      claimed: false,
-      reason: "account_erasure_authority_schema_unready",
-      cursor: null,
-    };
-  }
-
+  // So the policy lives in `executeDeletion`, which has already read the resume state, next to the
+  // backend-readiness gate that solved the identical problem the identical way. This function only
+  // performs the governed claim.
   const tokenHash = hashToken(randomBytes(32).toString("hex"));
   const row = unwrap(
     await rpc<{

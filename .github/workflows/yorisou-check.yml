@@ -125,6 +125,16 @@ jobs:
           npm run test:por1-context
           npm run test:por1-transport
 
+      # Hard gates, deliberately not report-only. The 108c939 hosted acceptance failed a real
+      # deletion because the database lacked the erasure interface the code calls, and nothing in CI
+      # could have caught it: the readiness rule, the runtime wiring and the Preview runtime contract
+      # all existed only as local commands. A regression in any of these must fail Yorisou Check.
+      - name: POR-1 erasure authority — readiness rule, real runtime wiring, Preview runtime contract
+        run: |
+          npm run test:por1-erasure-authority-readiness
+          npm run test:por1-erasure-runtime-path
+          npm run test:por1-preview-runtime-contract
+
       - name: POR-1 identity scope, deletion lock and store boundary
         run: |
           npm run test:por1-deletion

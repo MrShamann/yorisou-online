@@ -200,5 +200,71 @@
     "main": "c8d8a8ad6a72949c248adb098a626d1ab9d6a579",
     "publicSmoke": 200
   },
-  "fullHostedAcceptance": "NOT RUN \u2014 must be rerun as the next separately governed package (POR1-FINAL-HOSTED-ACCEPTANCE-2)"
+  "fullHostedAcceptance": "NOT RUN \u2014 must be rerun as the next separately governed package (POR1-FINAL-HOSTED-ACCEPTANCE-2)",
+  "terminalClosureReopened": {
+    "recordedAt": "2026-08-05T22:10:00+08:00",
+    "defectsRaised": [
+      {
+        "id": "TC-1",
+        "defect": "the already-irreversible resume rule existed only in a pure decision function; the real executor path did not use it",
+        "assessment": "CORRECT and serious \u2014 claimDeletionExecutor refused EVERY claim when the flag was unset, which would have stranded a half-erased account. A decision-table test passed throughout because it never touched the code that runs.",
+        "status": "FIXED"
+      },
+      {
+        "id": "TC-2",
+        "defect": "mutable live Preview is no longer a valid promotion compiler source",
+        "assessment": "CORRECT",
+        "status": "BLOCKED \u2014 see promotionSourceFinding"
+      },
+      {
+        "id": "TC-3",
+        "defect": "the targeted hosted proof ran at 46dd5ed, not the final repository SHA",
+        "assessment": "CORRECT",
+        "status": "NOT DONE in this segment"
+      },
+      {
+        "id": "TC-4",
+        "defect": "the new critical tests were not executed by remote CI",
+        "assessment": "CORRECT",
+        "status": "FIXED"
+      }
+    ],
+    "tc1Remediation": {
+      "claimLayer": "claimDeletionExecutor no longer carries any readiness policy \u2014 it cannot, because it does not know the resume state; it learns the cursor from the claim it is about to make",
+      "policyLocation": "executeDeletion, immediately beside shouldGateOnBackendReadiness, which solved the identical pre-irreversible-only problem the identical way",
+      "inputs": "executorEnabled from isPor1CapabilityEnabled('ACCOUNT_DELETION_EXECUTOR'); schemaReady from accountErasureAuthoritySchemaReady(); alreadyIrreversible = resume.irreversible || isAtOrPastIrreversible(resume.cursor)",
+      "newJobUnready": "refused BEFORE the claim, outcome retryable, bounded reason account_erasure_authority_schema_unready \u2014 no claim RPC, no erasure RPC",
+      "alreadyIrreversibleUnready": "permitted to resume; if the strong contract is genuinely absent the step fails RETRYABLE, preserving cursor, manifest and irreversible_started_at",
+      "weakFallback": "impossible \u2014 the only erasure call site passes p_job_id, p_owner_account_id, p_executor_token_hash and p_executor_generation",
+      "test": "lib/server/__tests__/por1ErasureAuthorityRuntimePath.test.ts \u2014 8/8, asserted against the shipped module graph",
+      "provenAbleToFail": "reintroducing the unconditional refusal into claimDeletionExecutor makes case 5 fail; restoring it passes 8/8"
+    },
+    "tc4Remediation": {
+      "workflow": ".github/workflows/yorisou-check.yml",
+      "step": "POR-1 erasure authority \u2014 readiness rule, real runtime wiring, Preview runtime contract",
+      "commands": [
+        "npm run test:por1-erasure-authority-readiness",
+        "npm run test:por1-erasure-runtime-path",
+        "npm run test:por1-preview-runtime-contract"
+      ],
+      "hardGated": "no continue-on-error, no || true \u2014 a regression fails Yorisou Check"
+    },
+    "promotionSourceFinding": {
+      "status": "GENUINE BLOCKER \u2014 the instruction's premise is falsified",
+      "instruction": "\u00a75 required building the promotion source from repository SQL in disposable PostgreSQL 17, without fetching live Preview",
+      "finding": "THE PREVIEW DATABASE CANNOT BE RECONSTRUCTED FROM REPOSITORY SQL. Replaying the checked-in Preview lineage fails, twice and for different reasons.",
+      "proof": [
+        "202607270002_ux2_assessment_persistence_rollback.sql is a COMPENSATING ROLLBACK that drops yorisou_assessment_attempts / _results / yorisou_interpretation_responses. 202607270003 then ALTERs those same tables and no re-create migration sits between them, so a linear replay dies at `relation public.yorisou_assessment_attempts does not exist` \u2014 while live Preview holds all three.",
+        "Excluding that rollback as superseded gets further and then dies at 202607280004_ux2_recommendation_persistence.sql: `yorisou_recommendation_sets` already exists from the BASELINE migration 202607110003_recommendation_graph.sql in a different shape, so the create-if-not-exists skips and a later column reference fails with `column result_row_id does not exist`."
+      ],
+      "meaning": "live Preview's state is the product of a history the repository does not fully capture \u2014 selective application through the Management API, compensating rollbacks, and ordering that differs from filename order. A replay-based source artifact would be a fiction.",
+      "notDone": "no promotion-source artifact was committed. A half-working builder was written and then REMOVED rather than checked in.",
+      "optionsForTheFounder": [
+        "FREEZE AN EXTRACTION: check in the pre-parity live Preview catalogue already extracted before 202608050002, labelled explicitly as a frozen extraction rather than a replay, with a byte-identity --check gate. Achieves the actual goal (decouple the compiler from a mutable database) without claiming reproducibility that does not exist.",
+        "REPAIR THE LINEAGE: make the Preview lineage genuinely replayable (reconcile the rollback and the recommendation_sets shape conflict), then build the source by replay as \u00a75 intended. Larger, and it changes checked-in Preview history.",
+        "REBASE THE SOURCE ON PRODUCTION + THE PROMOTED SET: derive the source from the Production baseline plus 101-108 rather than from Preview at all."
+      ],
+      "recommendation": "the frozen extraction \u2014 it is honest about what it is, is immediately verifiable, and removes the mutable-Preview dependency today; the lineage repair is worth doing but is its own package"
+    }
+  }
 }
