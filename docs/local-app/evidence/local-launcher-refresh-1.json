@@ -1,0 +1,120 @@
+{
+  "package": "YORISOU_LOCAL_LAUNCHER_REFRESH_1",
+  "recordedAt": "2026-08-05T08:02:00+08:00",
+  "scope": "local Founder/developer launcher only — not Production deployment, not APP-SHELL-1, not App Store packaging",
+
+  "source": {
+    "repository": "/Users/yangjin/Projects/yorisou-online",
+    "sourceBranch": "feat/ux2-integrated-core-experience",
+    "sourceSha": "a1cf81c991a55776044da676d4d7d5f721b01640",
+    "mainBaseline": "c8d8a8ad6a72949c248adb098a626d1ab9d6a579",
+    "launcherBranch": "feat/local-launcher-refresh-1",
+    "worktree": "/Users/yangjin/Projects/yorisou-local-launcher-refresh"
+  },
+
+  "application": {
+    "bundlePath": "~/Applications/YORISOU.app",
+    "stopBundlePath": "~/Applications/Stop YORISOU.app",
+    "bundleIdentifier": "jp.yorisou.local.app",
+    "stopBundleIdentifier": "jp.yorisou.local.stop",
+    "displayName": "YORISOU",
+    "bundleVersion": "2.1.0",
+    "configuredOrigin": "http://127.0.0.1:3210",
+    "iconPreserved": true,
+    "signing": "intentionally unsigned local script bundle; no launch block reproduced, no ad-hoc signing added"
+  },
+
+  "backups": {
+    "directory": "~/Backups/yorisou-local-launcher-refresh-1-20260804T192034",
+    "launcherBundles": "ditto exit 0 (YORISOU.app, Stop YORISOU.app)",
+    "applicationSupport": "ditto exit 0",
+    "database": {
+      "pgDumpall": "roles + schema + data, exit 0, 5921 lines, 39 CREATE TABLE",
+      "pgDumpCustomFormat": "exit 0",
+      "postgresVersion": "PostgreSQL 17.6 (supabase_db_yorisou-online, local port 55342)"
+    },
+    "storedOutsideRepository": true,
+    "restorationRequired": false
+  },
+
+  "migrationTruth": {
+    "initialState": "no supabase_migrations.schema_migrations schema; 13 remnant tables (APP-2/CPV-1/guest-migration/review-queue/local identity marker); zero of the 23 repository migrations recorded",
+    "failure": {
+      "file": "202608010108_por1_promotion_contract_assertion.sql",
+      "sqlError": "POR-1: yorisou_line_subject_lock is a lock building block, not an entry point (SQLSTATE P0001)",
+      "transactional": true,
+      "partialChange": "none — assertion-only migration, rolled back whole-file; migrations 202607100001..202608010107 (19 files) remained applied and recorded, 202608010108 was NOT recorded",
+      "backupRestorationRequired": false,
+      "rootCause": "202608010104 revokes the lock helper from public/anon/authenticated but not service_role, while Supabase ALTER DEFAULT PRIVILEGES grants service_role EXECUTE directly on every new public function; plain-Postgres harnesses skip the assertion branch because the service_role role does not exist there",
+      "correction": "documented local-environment statement (no POR-1 migration file modified): revoke all on function public.yorisou_line_subject_lock(p_line_subject_hash text, p_owner_fingerprint text) from service_role;",
+      "succeedingCommand": "supabase migration up --local (applied 202608010108..202608010111, exit 0)",
+      "por1PromotionRisk": "the same assertion will trip on hosted Supabase (Preview/Production) unless 202608010104 revokes service_role or the promotion run applies the same revoke — recorded for POR-1"
+    },
+    "finalState": {
+      "recordedVersions": 23,
+      "lineage": ["202607100001","202607100002","202607100003","202607100004","202607110001","202607110002","202607110003","202607120001","202607160001","202607160002","202607200005","202607210001","202608010101","202608010102","202608010103","202608010104","202608010105","202608010106","202608010107","202608010108","202608010109","202608010110","202608010111"],
+      "publicTables": 70,
+      "por1CanonicalTablesVerified": ["yorisou_assessment_attempts","yorisou_assessment_results","yorisou_interpretation_responses","yorisou_canonical_line_subjects","yorisou_canonical_identity_links","yorisou_identity_provisioning_sagas","yorisou_account_deletion_jobs","yorisou_account_mutation_gates","yorisou_canonical_line_events","yorisou_canonical_recommendation_sets","yorisou_account_deletion_manifests"],
+      "rls": "69 of 70 public tables RLS-enabled; sole exception is yorisou_local_project_identity (deliberate local singleton marker from PR #122)",
+      "erasureSignatures": "strong 4-arg signatures present (job id + owner + executor token hash + generation) for erase_database and job_valid; weak (text) and (uuid,text) variants absent",
+      "lockHelperGrants": "service_role EXECUTE on yorisou_line_subject_lock = false (contract end-state)",
+      "appendOnlyProbe": "with probe rows proven present first, ordinary DELETE and UPDATE on yorisou_values_assessment_events both refused by append_only trigger; probe transaction rolled back",
+      "app2MarkerNote": "yorisou_admin_access_logs existence was NOT used as readiness proof; readiness = full migration-version comparison + canonical table catalogue"
+    }
+  },
+
+  "runtime": {
+    "machine": "arm64 (Apple Silicon)",
+    "finderLaunchContext": "runs under Rosetta translation (machine=x86_64 translated=1)",
+    "node": "/usr/local/bin/node v23.4.0 (native arm64), forced native via /usr/bin/arch -arm64 on hw.optional.arm64 machines",
+    "npm": "10.9.2",
+    "rosettaDisclosure": "the .app shell script executes translated; every node/npm invocation is wrapped to arm64 and the launcher fails closed if node cannot run natively",
+    "firstFailureUnderTranslation": "translated node downloaded @next/swc-darwin-x64 and required lightningcss.darwin-x64.node against an arm64-installed node_modules — Turbopack build failed; fixed by the arch wrapper",
+    "buildNetworkNote": "next/font/google requires fonts.googleapis.com at build time; the .app launch context's fetch failed (network filters: Cisco AnyConnect socket filter + Avast are active) while shell context returned 200. The launcher now records a network preflight when a build is needed and fails closed with an actionable message; the accepted build was produced by the same launcher script from a shell context, after which desktop launches take the no-rebuild path"
+  },
+
+  "gates": {
+    "npmCi": "exit 0",
+    "typescript": "npx tsc --noEmit exit 0 (re-verified on final tree)",
+    "lint": "exit 0 — 0 errors, 11 pre-existing warnings (re-verified on final tree)",
+    "productionBuild": "npm run build exit 0 (worktree); launcher build of main repo exit 0, BUILD_ID qkL5gxQJ0lQWaj9s77rs1 at a1cf81c",
+    "shellSyntax": "bash -n exit 0 for all five scripts"
+  },
+
+  "acceptance": {
+    "firstDesktopLaunch": "open ~/Applications/YORISOU.app → HTTP 200 on 127.0.0.1:3210, pid 48894, branch and full SHA recorded in launcher.log, Chrome app window opened only after readiness",
+    "routeMatrix": {
+      "/": 200, "/tests": 200, "/check-in": 200, "/login": 200, "/line/mini-app": 200, "/result": 200,
+      "notes": "no relation-does-not-exist, no missing POR-1 function, no 5xx, no Production redirect; /result probed in concealed unavailable state with no private data"
+    },
+    "browserSmoke": "/ and /result loaded in browser; zero console errors, no hydration failure; server.log has zero schema/relation errors",
+    "stop": "Stop YORISOU.app → PID-ownership proven, SIGTERM graceful exit in 1s, port 3210 closed",
+    "restart": "relaunch → HTTP 200, pid 48894 → 54600 (new PID), /api/build-identity reports commitSha=a1cf81c…, commitRef=feat/ux2-integrated-core-experience, environment=development",
+    "staleStateRecovery": {
+      "deadPidFile": "self-repaired (removed dead pid 23376, logged)",
+      "staleLauncherLock": "planted lock aged >19h removed on launch (logged: age 71773s)",
+      "missingLogDirectory": "~/Library/Logs/YORISOU recreated by installer/launcher after being absent",
+      "staleBuildIdentity": "absent identity triggered rebuild; identity recorded at build time and reused on restart"
+    },
+    "unrelatedProcesses": "3220 (por1-oldapp compat) and 3230 (current-branch test server) answered 200 before, during, and after; all 4 local Supabase containers up; Colima untouched",
+    "pidOwnershipProof": "stop/start refuse to signal any process not proven to be a node next-start bound to port 3210 / this repo"
+  },
+
+  "boundaries": {
+    "productionTouched": false,
+    "previewTouched": false,
+    "pr126Modified": false,
+    "por1MigrationFilesModified": false,
+    "por1ApplicationBehaviorModified": false,
+    "localDatabaseOnly": true
+  },
+
+  "logs": {
+    "launcher": "~/Library/Logs/YORISOU/launcher.log",
+    "server": "~/Library/Logs/YORISOU/server.log",
+    "migration": "~/Library/Logs/YORISOU/migration.log",
+    "stop": "~/Library/Logs/YORISOU/stop.log",
+    "rotation": "2 MB per file, one rotated generation",
+    "secrets": "no secret, token, cookie value, or personal data is logged"
+  }
+}
