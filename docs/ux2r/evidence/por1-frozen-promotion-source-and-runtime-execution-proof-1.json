@@ -1,0 +1,142 @@
+{
+  "package": "YORISOU_POR1_FROZEN_PROMOTION_SOURCE_AND_RUNTIME_EXECUTION_PROOF_1",
+  "objective": "Replace mutable live Preview as the POR-1 promotion compiler source with a committed, immutable, provenance-bound frozen catalogue; prove it deterministically regenerates 101-108; add an execution-path test that INVOKES executeDeletion; hard-gate all of it in CI.",
+  "startingIdentity": {
+    "repository": "/Users/yangjin/Projects/yorisou-online",
+    "branch": "feat/ux2-integrated-core-experience",
+    "startingSha": "4ed33abee352d9b9d7112d5eb936f2125eee061b",
+    "pr126": "OPEN / DRAFT / UNMERGED",
+    "productionMain": "c8d8a8ad6a72949c248adb098a626d1ab9d6a579",
+    "pr127": "0990f04a3890117a844cf2ecfbb89647502897c1"
+  },
+  "finalSha": "POST_COMMIT_EXTERNAL_PROOF",
+  "sourceRecovery": {
+    "method": "RECOVERED \u2014 not derived",
+    "detail": "The pre-parity Preview catalogue was recovered from this executor's own read-only extraction earlier in the same governed session, captured BEFORE 202608050002 was applied to Preview. Two independent surviving copies were found and proved byte-identical to each other.",
+    "acceptanceCriteria": {
+      "parsesAsExtractorOutput": true,
+      "sanitisedCatalogueNotDump": true,
+      "regenerates101to108ByteForByte": true,
+      "regeneratesPromotionContractByteForByte": true,
+      "representsPreOverlayState": "weak owner-only erase present; strong 4-arg absent; erasure_authorized / job_valid / unchecked / ct_eq all absent",
+      "internallyConsistent": true
+    },
+    "notAcceptedOnFilenameOrTimestamp": "acceptance rests on mechanical regeneration; a wrong file cannot reproduce eight migrations and a contract byte-for-byte",
+    "fallbackUsed": false
+  },
+  "provenanceLimitations": "The wall-clock time of the ORIGINAL first-ever compile is not recorded and is not claimed. The captured file is dated 2026-08-05T18:02 local, before the 19:34 parity apply. Provenance is not the proof; regeneration is.",
+  "committedSources": {
+    "preview": {
+      "path": "supabase/contracts/sources/por1-preview-pre-parity-catalogue.json",
+      "sha256": "4d2e8f379f9c9c56017c4aeda8e105bf8fe8ef194ccbb2f1c4407cade5c8e55a",
+      "objectCounts": {
+        "functions": 86,
+        "sequences": 2,
+        "tables": 21,
+        "triggers": 12
+      }
+    },
+    "production": {
+      "path": "supabase/contracts/sources/por1-production-baseline-catalogue.json",
+      "sha256": "4e0cd8ddba27f3f9ac4dd84d007d11749368e146d738aeb81abdb3fe664ba85b",
+      "objectCounts": {
+        "functions": 26,
+        "sequences": 0,
+        "tables": 42,
+        "triggers": 16
+      },
+      "verifiedAtCapture": "42 public tables, 0 POR-1 objects, 0 recorded 2026080101* versions; read-only, no write issued"
+    },
+    "manifest": {
+      "path": "supabase/contracts/sources/por1-promotion-source-manifest.json",
+      "sha256": "14d1c6a8ee231d92167e516279d8b4109ff42897cf4728b2127237348eaa4819"
+    }
+  },
+  "expected101to108Digests": {
+    "202608010101": "8e6c6d7e6a840a923f27b38aa80e0c9458cf9bdb9bba40fabb384335dbcd7d40",
+    "202608010102": "a5389f9a28655df1997bf02e1072d55416756f1b295c2780a1ec7b0ac4d630d5",
+    "202608010103": "26d76ddf5f3211411d560cc285907b0a02ba2bb9548b456ffef263a4e1cc3103",
+    "202608010104": "12d293ee33aeec09275da8ac8707f93df9cbfda3fb42e9f6b6e8b5e8c20d15ba",
+    "202608010105": "22ce9b3d6e89b32d152bbd9226de6c90209b38329fd229a8c120989512f4c316",
+    "202608010106": "32d03b74fd7a66b19ba955255cb981b6bf69b940c4509a2808879d858f647d27",
+    "202608010107": "63ec403a7b7ed0bc167c57fa97f720f05ece5282870ec43678b9ac6bb012973d",
+    "202608010108": "03c0f287bcbbbc807ef379330250027fdfe4f9b9d3d1f8a42a6fac9abdc4174a"
+  },
+  "expectedPromotionContractSha256": "9e609c9dcc7ec96bd560db25d04b9c4f781afddc571b081ac043250d867711b9",
+  "canonicalFormDecision": "The frozen catalogues are stored in the EXTRACTOR'S OWN 2-space JSON, in its explicitly-ordered query order \u2014 deliberately NOT key-sorted. Deep-sorting was tried first and broke contract byte-identity, because the compiler copies these objects into the promotion contract and reordering their keys changes its bytes. Observed, then corrected.",
+  "compileIsolationDecision": "The gate compiles with the DEFAULT relative --out-dir inside a temp cwd. Passing an absolute --out-dir writes that absolute path into the contract's migrations[].path and produces a difference that is not drift. Observed, then corrected.",
+  "localValidation": {
+    "por1:promotion-source-check": "exit 0 \u2014 failures 0, 8 migrations",
+    "test:por1-promotion-source": "7/7",
+    "test:por1-erasure-authority-readiness": "9/9",
+    "test:por1-erasure-runtime-path": "8/8 (structural guard, relabelled: it reads source and does NOT execute the runtime)",
+    "test:por1-erasure-runtime-execution": "8/8 (invokes the real executeDeletion)",
+    "test:por1-preview-runtime-contract": "9/9",
+    "scripts/por1/__tests__ (all)": "49/49",
+    "test:por1-promotion-contract": "exit 0",
+    "test:por1-promotion-privileges": "exit 0",
+    "test:por1-final-contract": "exit 0",
+    "test:por1-sequence-privileges": "exit 0",
+    "por1:final-contract --check": "drift 0",
+    "por1:rehearse": "exit 0",
+    "test:por1-resume:db": "ALL ASSERTIONS PASSED",
+    "test:por1-catalogue-baseline": "PASS",
+    "validate-migration-scope": "exit 0",
+    "tsc": "exit 0",
+    "lint": "exit 0 (12 pre-existing warnings, 0 errors)",
+    "check:evidence-hygiene": "exit 0"
+  },
+  "negativeControls": {
+    "A_byteCorruption": "a changed function hash in a copied frozen catalogue \u2192 gate exits non-zero",
+    "B_manifestDigestCorruption": "a wrong recorded digest \u2192 gate exits non-zero",
+    "C_mutablePreviewOverlay": "a catalogue carrying the post-202608050002 shape is NOT accepted as the frozen source, and the committed source still regenerates the set",
+    "D_missingPromotedObject": "removing yorisou_line_activity* with the digest and counts RE-RECORDED TRUTHFULLY (so tampering detection cannot fire first) \u2192 gate still exits non-zero",
+    "allDriveShippedCode": true
+  },
+  "runtimeExecutionTest": {
+    "file": "lib/server/__tests__/por1ErasureAuthorityRuntimeExecution.test.ts",
+    "method": "imports and invokes the real exported executeDeletion; no readFileSync, no source regexes, no duplicated decision function. A dependency parameter whose DEFAULT is the production set substitutes collaborators; every production caller keeps its one-argument form and there is no test-only environment branch.",
+    "cases": {
+      "1_newJobSchemaUnready": "outcome retryable / account_erasure_authority_schema_unready; claim calls 0, erasure calls 0, release calls 0",
+      "2_alreadyIrreversibleSchemaUnready": "NOT refused; claim attempted; stages run",
+      "2b_pastBoundaryByCursorAlone": "treated as irreversible; claim attempted",
+      "3_irreversibleResumeStrongRpcUnavailable": "outcome retryable; claim taken; release called in finally; the exact cursor database_erasure preserved into the stage",
+      "4_newJobSchemaReady": "claim attempted; stages run; completed",
+      "4b_executorDisabled": "dormant behaviour preserved",
+      "5_strongAuthorityOnly": "the stages receive job id, generation and token hash from the claim \u2014 the exact job, not one rediscovered from the owner",
+      "5b_readinessIsADeploymentFact": "read once from the flag, never inferred from an RPC error"
+    },
+    "result": "8/8"
+  },
+  "liveNegativeControl": {
+    "method": "read-only extraction of live Preview; target proved to be Preview before access; credential copies destroyed after use",
+    "liveDiffersFromFrozen": true,
+    "overlayDelta": "live has 90 functions vs frozen 86: ADDED the strong 4-arg erase, erase_database_unchecked, yorisou_account_erasure_authorized, yorisou_account_erasure_job_valid and yorisou_ct_eq; REMOVED the weak owner-only erase \u2014 exactly the 202608050002 effect",
+    "gateIndependenceProof": "scripts/por1/check-promotion-source.mjs contains zero references to live extraction, --ref or any network call; it needs no network, database or secret",
+    "liveCatalogueCommitted": false,
+    "previewWritten": false
+  },
+  "ciHardGates": {
+    "workflow": ".github/workflows/yorisou-check.yml",
+    "steps": [
+      "POR-1 frozen promotion source \u2014 regenerates 101-108 byte for byte (no database)",
+      "POR-1 erasure authority \u2014 readiness rule and structural wiring guard",
+      "POR-1 erasure authority \u2014 ACTUAL runtime execution of executeDeletion",
+      "POR-1 Preview live-contract shape guard"
+    ],
+    "softening": "none \u2014 no continue-on-error, no || true, no credential-based skip"
+  },
+  "boundaries": {
+    "immutableFilesUnchanged": "13/13 byte-identical (101-111, promotion contract, final contract)",
+    "migrationsAdded": 0,
+    "migrationSqlModified": 0,
+    "previewSchemaChanged": false,
+    "productionDatabaseChanged": false,
+    "productionLedgerChanged": false,
+    "productionDeploymentChanged": false,
+    "pr127Modified": false,
+    "scriptsLocalAppModified": false,
+    "fullHostedAcceptanceRun": false
+  },
+  "externalProofNote": "Exact-final-SHA deployment identity, targeted smoke counts, cleanup counts and CI run/job ids are recorded OUTSIDE this file \u2014 in the PR #126 durable comment \u2014 because a pre-commit evidence file cannot contain the SHA of the commit that creates it."
+}

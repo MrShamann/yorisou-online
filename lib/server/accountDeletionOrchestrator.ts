@@ -225,8 +225,52 @@ class RetryableStageError extends Error {}
  * Safe to call repeatedly. A second concurrent call does not run: it is refused the claim and
  * reports `in_progress`, which is the honest answer to a double-clicked confirm button.
  */
-export async function executeDeletion(accountId: string): Promise<DeletionOutcome> {
-  const resume = await readResumeState(accountId);
+/**
+ * The collaborators `executeDeletion` reaches for, named so a test can substitute them.
+ *
+ * This exists because the readiness policy was once wired into the wrong layer and a decision-table
+ * test could not see it — the only way to prove the RUNTIME honours a rule is to run the runtime.
+ * The default is the real implementation set, every production caller keeps its one-argument form,
+ * and there is deliberately no test-only environment branch: the body under test is the body that
+ * ships.
+ */
+export type DeletionExecutionDependencies = {
+  readResumeState: typeof readResumeState;
+  checkDeletionBackendReadiness: typeof checkDeletionBackendReadiness;
+  claimDeletionExecutor: typeof claimDeletionExecutor;
+  releaseDeletionExecutor: typeof releaseDeletionExecutor;
+  recordRetryableError: typeof recordRetryableError;
+  isPor1CapabilityEnabled: typeof isPor1CapabilityEnabled;
+  accountErasureAuthoritySchemaReady: typeof accountErasureAuthoritySchemaReady;
+  runStages: (claim: ExecutorClaim) => Promise<DeletionOutcome>;
+};
+
+export const productionDeletionDependencies: DeletionExecutionDependencies = {
+  readResumeState,
+  checkDeletionBackendReadiness,
+  claimDeletionExecutor,
+  releaseDeletionExecutor,
+  recordRetryableError,
+  isPor1CapabilityEnabled,
+  accountErasureAuthoritySchemaReady,
+  runStages: (claim) => runStages(claim),
+};
+
+export async function executeDeletion(
+  accountId: string,
+  dependencies: DeletionExecutionDependencies = productionDeletionDependencies,
+): Promise<DeletionOutcome> {
+  const {
+    readResumeState: readResume,
+    checkDeletionBackendReadiness: checkBackend,
+    claimDeletionExecutor: claimExecutor,
+    releaseDeletionExecutor: releaseExecutor,
+    recordRetryableError: recordRetryable,
+    isPor1CapabilityEnabled: capabilityEnabled,
+    accountErasureAuthoritySchemaReady: erasureSchemaReady,
+    runStages: runStagesFn,
+  } = dependencies;
+  const resume = await readResume(accountId);
   if (!resume) return { outcome: "terminal", errorCode: "account_deletion_job_not_found" };
   if (resume.state === "completed") return { outcome: "completed" };
   if (resume.state === "cancelled" || resume.state === "legal_hold" || resume.state === "failed_terminal") {
@@ -248,7 +292,7 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
         irreversible: resume.irreversible,
         pastIrreversibleCursor: isAtOrPastIrreversible(resume.cursor),
       })) {
-    const backend = await checkDeletionBackendReadiness();
+    const backend = await checkBackend();
     if (!backend.ready) {
       // Retryable, not terminal: the deployment can be fixed and the same job resumed. Nothing has
       // been destroyed, and `irreversible_started_at` stays null.
@@ -272,8 +316,8 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
   // There is no fallback to the owner-only RPC in either branch: it erases from an owner id alone,
   // without the exact job, token and generation that make erasure authorized.
   const erasureAuthority = decideErasureAuthority({
-    executorEnabled: isPor1CapabilityEnabled("ACCOUNT_DELETION_EXECUTOR"),
-    schemaReady: accountErasureAuthoritySchemaReady(),
+    executorEnabled: capabilityEnabled("ACCOUNT_DELETION_EXECUTOR"),
+    schemaReady: erasureSchemaReady(),
     alreadyIrreversible: resume.irreversible || isAtOrPastIrreversible(resume.cursor),
   });
   if (erasureAuthority.mode === "refuse_infrastructure_unready") {
@@ -283,7 +327,7 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
     return { outcome: "retryable", errorCode: erasureAuthority.reason };
   }
 
-  const claimResult = await claimDeletionExecutor(accountId);
+  const claimResult = await claimExecutor(accountId);
   if (!claimResult.claimed) {
     // Another executor holds this job. Reporting a failure here would invite the person to retry into
     // the same refusal; reporting progress is both true and actionable.
@@ -292,7 +336,7 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
 
   const claim = claimResult.claim;
   try {
-    return await runStages(claim);
+    return await runStagesFn(claim);
   } catch (error) {
     const code = error instanceof Error ? error.message : "unknown";
 
@@ -315,10 +359,10 @@ export async function executeDeletion(accountId: string): Promise<DeletionOutcom
       return { outcome: "in_progress", errorCode: code };
     }
 
-    await recordRetryableError(claim, code);
+    await recordRetryable(claim, code);
     return { outcome: "retryable", errorCode: code };
   } finally {
-    await releaseDeletionExecutor(claim);
+    await releaseExecutor(claim);
   }
 }
 

@@ -129,11 +129,30 @@ jobs:
       # deletion because the database lacked the erasure interface the code calls, and nothing in CI
       # could have caught it: the readiness rule, the runtime wiring and the Preview runtime contract
       # all existed only as local commands. A regression in any of these must fail Yorisou Check.
-      - name: POR-1 erasure authority — readiness rule, real runtime wiring, Preview runtime contract
+      # Release-blocking. The frozen source is what makes 101-108 verifiable without a database:
+      # live Preview stopped being a valid compiler source when it received the 202608050002 runtime
+      # overlay, and the Preview lineage is not linearly replayable, so the committed source and this
+      # gate are the only thing standing between a promotion set and an unverifiable one.
+      - name: POR-1 frozen promotion source — regenerates 101-108 byte for byte (no database)
+        run: |
+          npm run por1:promotion-source-check
+          npm run test:por1-promotion-source
+
+      # Three different questions, deliberately named apart:
+      #   readiness rule     — the pure decision table
+      #   structural guard   — the policy is wired where it belongs (reads source)
+      #   RUNTIME EXECUTION  — executeDeletion is actually invoked and asserted on
+      #   live-contract      — the deployed application's database interfaces exist
+      - name: POR-1 erasure authority — readiness rule and structural wiring guard
         run: |
           npm run test:por1-erasure-authority-readiness
           npm run test:por1-erasure-runtime-path
-          npm run test:por1-preview-runtime-contract
+
+      - name: POR-1 erasure authority — ACTUAL runtime execution of executeDeletion
+        run: npm run test:por1-erasure-runtime-execution
+
+      - name: POR-1 Preview live-contract shape guard
+        run: npm run test:por1-preview-runtime-contract
 
       - name: POR-1 identity scope, deletion lock and store boundary
         run: |

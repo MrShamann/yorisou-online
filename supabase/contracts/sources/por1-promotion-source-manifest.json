@@ -1,0 +1,78 @@
+{
+  "compiler": {
+    "expectedContractPath": "supabase/contracts/por1-promotion-contract.json",
+    "expectedContractSha256": "9e609c9dcc7ec96bd560db25d04b9c4f781afddc571b081ac043250d867711b9",
+    "expectedMigrationDigests": {
+      "202608010101": "8e6c6d7e6a840a923f27b38aa80e0c9458cf9bdb9bba40fabb384335dbcd7d40",
+      "202608010102": "a5389f9a28655df1997bf02e1072d55416756f1b295c2780a1ec7b0ac4d630d5",
+      "202608010103": "26d76ddf5f3211411d560cc285907b0a02ba2bb9548b456ffef263a4e1cc3103",
+      "202608010104": "12d293ee33aeec09275da8ac8707f93df9cbfda3fb42e9f6b6e8b5e8c20d15ba",
+      "202608010105": "22ce9b3d6e89b32d152bbd9226de6c90209b38329fd229a8c120989512f4c316",
+      "202608010106": "32d03b74fd7a66b19ba955255cb981b6bf69b940c4509a2808879d858f647d27",
+      "202608010107": "63ec403a7b7ed0bc167c57fa97f720f05ece5282870ec43678b9ac6bb012973d",
+      "202608010108": "03c0f287bcbbbc807ef379330250027fdfe4f9b9d3d1f8a42a6fac9abdc4174a"
+    },
+    "expectedMigrationRange": "202608010101\u2026202608010108",
+    "path": "scripts/por1/compile-promotion.mjs",
+    "versionBase": "2026080101"
+  },
+  "createdFrom": {
+    "method": "recovered_pre_parity_extraction",
+    "notDerived": true,
+    "package": "YORISOU_POR1_FROZEN_PROMOTION_SOURCE_AND_RUNTIME_EXECUTION_PROOF_1"
+  },
+  "normalizer": {
+    "canonicalForm": "the extractor's own 2-space JSON in its explicitly-ordered query order; deliberately NOT key-sorted, because the compiler copies these objects into the promotion contract and reordering keys changes its bytes",
+    "path": "scripts/por1/normalize-sql.mjs"
+  },
+  "outsideThisSource": {
+    "contract": "supabase/contracts/por1-final-promoted-contract.json",
+    "migrations": [
+      "202608010109",
+      "202608010110",
+      "202608010111"
+    ],
+    "reason": "109-111 are hand-written overlays applied AFTER the generated set, and the final contract describes the state they produce. Neither is an output of this compiler source, so neither is verified by the source gate; the final contract has its own reproducibility gate."
+  },
+  "preview": {
+    "captureBoundary": "PRE-PARITY \u2014 captured before 202608050002_por1_erasure_authority_parity.sql was applied to Preview",
+    "captureMethod": "scripts/por1/extract-catalogue.mjs --ref (read-only Supabase Management API; pg_catalog and information_schema only)",
+    "environment": "preview",
+    "limitations": "The exact original extraction wall-clock time of the FIRST ever compile is not recorded and is not claimed. The captured file is dated 2026-08-05T18:02 local, before the 19:34 parity apply. Provenance is not the proof \u2014 the proof is mechanical: this catalogue regenerates 101-108 and the promotion contract byte-for-byte, which a wrong file cannot do.",
+    "objectCounts": {
+      "functions": 86,
+      "sequences": 2,
+      "tables": 21,
+      "triggers": 12
+    },
+    "path": "supabase/contracts/sources/por1-preview-pre-parity-catalogue.json",
+    "preParityMarkers": {
+      "erasure_authority_helpers_absent": true,
+      "strong_four_argument_erase_absent": true,
+      "weak_owner_only_erase_present": true
+    },
+    "projectRef": "nbltsbonsnbpfptihomc",
+    "provenance": "Recovered from this executor's own read-only extraction earlier in the same governed session, before the parity migration was applied. RECOVERED, not derived: no overlay was reversed and nothing was reconstructed by hand.",
+    "sha256": "4d2e8f379f9c9c56017c4aeda8e105bf8fe8ef194ccbb2f1c4407cade5c8e55a"
+  },
+  "production": {
+    "captureMethod": "scripts/por1/extract-catalogue.mjs --ref (read-only; no write of any kind was issued)",
+    "environment": "production",
+    "mainSha": "c8d8a8ad6a72949c248adb098a626d1ab9d6a579",
+    "objectCounts": {
+      "functions": 26,
+      "sequences": 0,
+      "tables": 42,
+      "triggers": 16
+    },
+    "path": "supabase/contracts/sources/por1-production-baseline-catalogue.json",
+    "projectRef": "krxizslnksorwhepyijs",
+    "sha256": "4e0cd8ddba27f3f9ac4dd84d007d11749368e146d738aeb81abdb3fe664ba85b",
+    "verifiedAtCapture": "42 public tables, 0 POR-1 canonical or erasure objects, 0 recorded 2026080101* migration versions"
+  },
+  "repositoryStartingSha": "4ed33abee352d9b9d7112d5eb936f2125eee061b",
+  "schemaVersion": 1,
+  "sourceKind": "frozen_catalogue_source",
+  "truth": "This is a frozen catalogue source. It is not represented as a replay of the complete Preview migration history.",
+  "why": "The promotion set was compiled from a LIVE Preview catalogue. That stopped being defensible when Preview received 202608050002, a runtime-only overlay that gives it the post-P111 erasure authority: live Preview became a RUNTIME TARGET, not a compiler source. The compiler noticed on its own and began refusing a live-Preview catalogue. Replay is not an option either \u2014 the checked-in Preview lineage is not linearly replayable (202607270002 is a compensating rollback whose tables 202607270003 then alters, and 202607280004 collides with the baseline recommendation_graph shape). So the source is FROZEN, and its authority rests on mechanical regeneration rather than on provenance narrative."
+}

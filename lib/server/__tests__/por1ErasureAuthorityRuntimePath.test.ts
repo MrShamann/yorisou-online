@@ -1,4 +1,9 @@
-// POR-1 — the readiness policy must be wired into the REAL executor path.
+// POR-1 — STRUCTURAL GUARD: the readiness policy must stay wired where it belongs.
+//
+// THIS FILE DOES NOT EXECUTE THE RUNTIME. It reads the shipped source and asserts the wiring. The
+// executed proof lives in por1ErasureAuthorityRuntimeExecution.test.ts, which invokes the real
+// executeDeletion and asserts on call counts and arguments. Both are kept: this one catches a
+// re-introduction at the source level with a precise message, the other proves behaviour.
 //
 // WHY THIS EXISTS.
 //
@@ -38,14 +43,17 @@ function executeDeletionSource(): string {
 test("executeDeletion consults the shared decision, not a local re-implementation", () => {
   const body = executeDeletionSource();
   assert.match(body, /decideErasureAuthority\(/, "the real path must call the shared policy");
+  // The collaborators are destructured from the dependency parameter (default: the production set),
+  // so the guard tracks the destructuring rather than the bare identifiers.
   assert.match(
     body,
-    /accountErasureAuthoritySchemaReady\(\)/,
+    /accountErasureAuthoritySchemaReady:\s*erasureSchemaReady/,
     "readiness must come from the deployment fact, never inferred from an RPC error",
   );
+  assert.match(body, /schemaReady:\s*erasureSchemaReady\(\)/, "and it must feed the decision");
   assert.match(
     body,
-    /isPor1CapabilityEnabled\(\s*"ACCOUNT_DELETION_EXECUTOR"\s*\)/,
+    /executorEnabled:\s*capabilityEnabled\(\s*"ACCOUNT_DELETION_EXECUTOR"\s*\)/,
     "the executor capability must come from the existing POR-1 runtime control",
   );
 });
@@ -63,7 +71,7 @@ test("the refusal happens BEFORE the claim, so no RPC is issued for an unready n
   const body = executeDeletionSource();
   const decisionAt = body.indexOf("decideErasureAuthority(");
   const refusalAt = body.indexOf('refuse_infrastructure_unready');
-  const claimAt = body.indexOf("claimDeletionExecutor(");
+  const claimAt = body.indexOf("await claimExecutor(");
   assert.ok(decisionAt > -1 && refusalAt > -1 && claimAt > -1);
   assert.ok(decisionAt < claimAt, "the decision must be taken before the claim");
   assert.ok(refusalAt < claimAt, "and the refusal must return before the claim RPC is reached");
