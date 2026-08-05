@@ -2,19 +2,17 @@
   "package": "YORISOU_POR1_PREVIEW_ERASURE_AUTHORITY_PARITY_1",
   "recordedAt": "2026-08-05T20:30:00+08:00",
   "startingSha": "108c939d047682f168826f0e95573b39e6220315",
-
   "failedHostedAcceptanceIdentity": {
     "testedSha": "108c939d047682f168826f0e95573b39e6220315",
     "deployment": "dpl_F2G3MfbYYnJFTwYbhzNGCfMBW1uo",
     "result": "87 passed / 1 failed / 5 skipped",
-    "failure": "accountDeletion.spec.ts:35 — deletion must complete; stopped at {\"error\":\"deletion_failed\"}, expected 200 received 500"
+    "failure": "accountDeletion.spec.ts:35 \u2014 deletion must complete; stopped at {\"error\":\"deletion_failed\"}, expected 200 received 500"
   },
-
   "rootCause": {
-    "classification": "Preview database lineage parity gap — NOT an application defect",
+    "classification": "Preview database lineage parity gap \u2014 NOT an application defect",
     "detail": "The deployed code calls yorisou_account_deletion_erase_database(uuid, text, text, integer), created by 202608010110/111. Those are PRODUCTION_LINEAGE and were never applied to Preview, which only received the PREVIEW lineage. The RPC could not resolve.",
     "previewBeforeState": {
-      "erase_database": "ONLY yorisou_account_deletion_erase_database(p_owner_account_id text) — the weak, owner-only signature",
+      "erase_database": "ONLY yorisou_account_deletion_erase_database(p_owner_account_id text) \u2014 the weak, owner-only signature",
       "yorisou_account_erasure_authorized": "absent",
       "yorisou_account_erasure_job_valid": "absent",
       "yorisou_account_deletion_erase_database_unchecked": "absent",
@@ -22,52 +20,75 @@
       "executor_claim": "present at the pre-110 body"
     }
   },
-
   "localReproduction": {
     "environment": "disposable PostgreSQL 17 with Supabase platform roles and default privileges, built from repository SQL (baseline + PREVIEW lineage)",
-    "baselineBodyFidelity": "the reconstructed weak erase_database body md5 is 4ece4f3e670ef13b673d73fba0a9876c — BYTE-IDENTICAL to live Preview, so the guarded rename was validated against the real baseline",
-    "baselineFailureShape": "ERROR: function public.yorisou_account_deletion_erase_database(uuid, unknown, unknown, integer) does not exist — the same missing-RPC shape that produced the hosted 500",
+    "baselineBodyFidelity": "the reconstructed weak erase_database body md5 is 4ece4f3e670ef13b673d73fba0a9876c \u2014 BYTE-IDENTICAL to live Preview, so the guarded rename was validated against the real baseline",
+    "baselineFailureShape": "ERROR: function public.yorisou_account_deletion_erase_database(uuid, unknown, unknown, integer) does not exist \u2014 the same missing-RPC shape that produced the hosted 500",
     "classification": "REPRODUCED, not inferred"
   },
-
   "appendOnlyFamilyClassification": {
-    "path": "B — the families are PRESENT in Preview",
-    "present": ["yorisou_daily_state_records", "yorisou_daily_state_record_versions", "yorisou_daily_state_history_events", "yorisou_values_assessments", "yorisou_values_assessment_versions", "yorisou_values_assessment_events", "yorisou_interpretation_responses"],
-    "absent": ["yorisou_candidate_events — carries no user identity; NOT_APPLICABLE_TO_ACCOUNT_ERASURE; not referenced by this migration"],
+    "path": "B \u2014 the families are PRESENT in Preview",
+    "present": [
+      "yorisou_daily_state_records",
+      "yorisou_daily_state_record_versions",
+      "yorisou_daily_state_history_events",
+      "yorisou_values_assessments",
+      "yorisou_values_assessment_versions",
+      "yorisou_values_assessment_events",
+      "yorisou_interpretation_responses"
+    ],
+    "absent": [
+      "yorisou_candidate_events \u2014 carries no user identity; NOT_APPLICABLE_TO_ACCOUNT_ERASURE; not referenced by this migration"
+    ],
     "blockingTriggers": "no_mutate/no_truncate on daily_state_record_versions, daily_state_history_events, values_assessment_versions, values_assessment_events, via yorisou_dci_block_mutation and yorisou_values_block_mutation",
-    "consequence": "without the governed exception those triggers refuse the erasure — the M4 defect 202608010109 was written to resolve. The applicable 109 behaviour is therefore ported here under existence checks."
+    "consequence": "without the governed exception those triggers refuse the erasure \u2014 the M4 defect 202608010109 was written to resolve. The applicable 109 behaviour is therefore ported here under existence checks."
   },
-
   "migrationDesign": {
     "version": "202608050002",
     "path": "supabase/preview-only-migrations/202608050002_por1_erasure_authority_parity.sql",
     "scope": "PREVIEW_ONLY",
-    "productionMigrationsApplied": "NONE — 109/110/111 were neither executed nor registered in Preview, and their files were not copied",
+    "productionMigrationsApplied": "NONE \u2014 109/110/111 were neither executed nor registered in Preview, and their files were not copied",
     "preservedPreviewBody": "the live owner-only function is RENAMED to yorisou_account_deletion_erase_database_unchecked(text), not rewritten: its subset-aware plan is what makes erasure correct in an environment lacking some Production families. The rename is guarded by an md5 precondition and fails closed if the live body is not the reviewed baseline.",
-    "establishes": ["yorisou_ct_eq(text,text)", "yorisou_account_erasure_job_valid(uuid,text,text,integer)", "yorisou_account_erasure_authorized(text)", "yorisou_account_deletion_erase_database(uuid,text,text,integer) — the only external entry point", "yorisou_account_deletion_executor_claim brought to the final post-P111 body so the claim returns job_id"],
-    "removes": ["yorisou_account_deletion_erase_database(text)", "yorisou_account_deletion_erase_database(uuid,text)"],
+    "establishes": [
+      "yorisou_ct_eq(text,text)",
+      "yorisou_account_erasure_job_valid(uuid,text,text,integer)",
+      "yorisou_account_erasure_authorized(text)",
+      "yorisou_account_deletion_erase_database(uuid,text,text,integer) \u2014 the only external entry point",
+      "yorisou_account_deletion_executor_claim brought to the final post-P111 body so the claim returns job_id"
+    ],
+    "removes": [
+      "yorisou_account_deletion_erase_database(text)",
+      "yorisou_account_deletion_erase_database(uuid,text)"
+    ],
     "governedException": "yorisou_dci_block_mutation and yorisou_values_block_mutation now return OLD for a DELETE only when yorisou_account_erasure_authorized(<the row's owner>) is true, re-derived from durable state; every other mutation is refused exactly as before. No general trigger bypass.",
     "idempotent": "applied twice locally and twice against live Preview; second application is a no-op",
     "selfAsserting": "the migration raises if the strong signature is absent, either weak signature survives, the unchecked implementation is missing, service_role cannot execute the wrapper, service_role CAN execute the unchecked implementation, or any erasure function is reachable by PUBLIC/anon/authenticated"
   },
-
   "localProofs": {
     "negativeControls": {
-      "denied": ["wrong job id", "wrong owner", "wrong executor token", "stale generation", "expired claim", "missing manifest", "pre-irreversible (no irreversible_started_at)", "wrong cursor"],
+      "denied": [
+        "wrong job id",
+        "wrong owner",
+        "wrong executor token",
+        "stale generation",
+        "expired claim",
+        "missing manifest",
+        "pre-irreversible (no irreversible_started_at)",
+        "wrong cursor"
+      ],
       "count": "8 of 8 refused with the single bounded code account_deletion_erase_not_authorized"
     },
     "positiveControl": {
-      "method": "fixtures for two principals seeded and PROVEN PRESENT before the erasure ran — an earlier attempt silently proved nothing because a rolled-back transaction left the tables empty and a DELETE matching zero rows fires no row trigger",
+      "method": "fixtures for two principals seeded and PROVEN PRESENT before the erasure ran \u2014 an earlier attempt silently proved nothing because a rolled-back transaction left the tables empty and a DELETE matching zero rows fires no row trigger",
       "afterErasureOwnerA": "daily_state history 0, values events 0, records 0, assessments 0",
-      "afterErasureOwnerB": "1 / 1 / 1 / 1 — completely untouched",
-      "crossOwnerDeleteDuringAuthority": "REFUSED — append_only: DELETE on yorisou_daily_state_history_events, proving the exception is scoped to the row's owner and is not a blanket bypass",
+      "afterErasureOwnerB": "1 / 1 / 1 / 1 \u2014 completely untouched",
+      "crossOwnerDeleteDuringAuthority": "REFUSED \u2014 append_only: DELETE on yorisou_daily_state_history_events, proving the exception is scoped to the row's owner and is not a blanket bypass",
       "ordinaryDeleteStillRefused": true
     }
   },
-
   "previewApplication": {
     "targetGuard": "nbltsbonsnbpfptihomc proved != production krxizslnksorwhepyijs before any write",
-    "fixturesBefore": "0 attempts, 0 results — the previous acceptance cleanup held",
+    "fixturesBefore": "0 attempts, 0 results \u2014 the previous acceptance cleanup held",
     "postState": {
       "strongSignaturePresent": true,
       "weakSignaturesAbsent": true,
@@ -81,25 +102,25 @@
       "publicAnonAuthenticatedExecute": false
     },
     "previewRuntimeContractVerifier": "failures 0",
-    "verifierProvenAbleToFail": "against the PRE-parity Preview catalogue the same verifier reported 6 failures — missing strong signature, missing job_valid, missing unchecked, missing ct_eq, stale executor_claim body, and the weak signature still present"
+    "verifierProvenAbleToFail": "against the PRE-parity Preview catalogue the same verifier reported 6 failures \u2014 missing strong signature, missing job_valid, missing unchecked, missing ct_eq, stale executor_claim body, and the weak signature still present"
   },
-
   "runtimeReadiness": {
     "flag": "YORISOU_POR1_ACCOUNT_ERASURE_AUTHORITY_SCHEMA_READY",
     "fact": "por1SchemaReadiness.ACCOUNT_ERASURE_AUTHORITY, always present as a boolean in /api/build-identity",
     "whyItWasMissing": "the four existing readiness flags all read true during the failed acceptance; none covered the erasure family, so the application called an RPC its database could not satisfy and reported a generic 500 mid-deletion",
-    "failClosed": "claimDeletionExecutor refuses BEFORE claiming a new job when the flag is not exactly 'on', returning account_erasure_authority_schema_unready. There is deliberately no fallback to the weak owner-only RPC — that would trade an honest refusal for an authority bypass.",
+    "failClosed": "claimDeletionExecutor refuses BEFORE claiming a new job when the flag is not exactly 'on', returning account_erasure_authority_schema_unready. There is deliberately no fallback to the weak owner-only RPC \u2014 that would trade an honest refusal for an authority bypass.",
     "alreadyIrreversibleJobs": "keep governed resume semantics; refusing there would abandon a partially executed deletion",
-    "unitTests": "9/9 — including the enumeration proving no fallback mode is expressible"
+    "unitTests": "9/9 \u2014 including the enumeration proving no fallback mode is expressible"
   },
-
   "consequenceRecordedNotFixed": {
     "finding": "after the parity migration, `compile-promotion.mjs --check` REFUSES to compile from a post-parity Preview catalogue",
-    "reasons": ["yorisou_dci_block_mutation() and yorisou_values_block_mutation() now differ in body from Production, and the compiler refuses to promote a function that exists in Production with a different body", "yorisou_account_erasure_authorized, yorisou_account_erasure_job_valid and yorisou_ct_eq are not placed in any promotion group, because they are created by the hand-written 109/110/111 rather than by the generated set"],
+    "reasons": [
+      "yorisou_dci_block_mutation() and yorisou_values_block_mutation() now differ in body from Production, and the compiler refuses to promote a function that exists in Production with a different body",
+      "yorisou_account_erasure_authorized, yorisou_account_erasure_job_valid and yorisou_ct_eq are not placed in any promotion group, because they are created by the hand-written 109/110/111 rather than by the generated set"
+    ],
     "assessment": "this is the compiler behaving correctly. It is reporting a true fact: Preview is no longer a clean generation source for the 101-108 promotion set. The already-generated and checked-in promotion migrations are unaffected, and the drift gate against the ORIGINAL pre-parity Preview catalogue still reports 0.",
     "disposition": "RECORDED for the Founder. Regenerating the promotion set from Preview now requires a decision about how the compiler should model the overlay families; not attempted here."
   },
-
   "boundaries": {
     "productionDatabaseChanged": false,
     "productionMigrationLedgerChanged": false,
@@ -109,5 +130,75 @@
     "pr126Merged": false,
     "pr127Modified": false,
     "fullHostedAcceptanceRun": false
-  }
+  },
+  "previewRuntimeContractTests": {
+    "file": "scripts/por1/__tests__/preview-runtime-contract.test.mjs",
+    "cases": 9,
+    "result": "9/9",
+    "negativeControls": [
+      "weak signature restored \u2192 fails",
+      "strong signature missing (the 108c939 state) \u2192 fails",
+      "wrong strong body \u2192 fails",
+      "service_role granted the unchecked helper \u2192 fails",
+      "stale executor_claim body \u2192 fails",
+      "anon/authenticated reaching an erasure function \u2192 fails",
+      "service_role unable to reach the entry point \u2192 fails",
+      "SECURITY DEFINER without fixed search_path \u2192 fails"
+    ],
+    "method": "subprocess against the shipped CLI; logic never mocked or duplicated"
+  },
+  "previewDeployment": {
+    "finalHead": "46dd5ed71af00d686dffb3004e489fe484fa963a",
+    "url": "https://yorisou-online-iumh1qxm3-shigeru-naganos-projects.vercel.app",
+    "gitTriggeredBuildAttested": "ACCOUNT_ERASURE_AUTHORITY false \u2014 it was built before the branch-scoped variable existed",
+    "redeployRequired": true,
+    "afterRedeploy": {
+      "commitSha": "46dd5ed71af00d686dffb3004e489fe484fa963a",
+      "environment": "preview",
+      "sharedStoreBoundary": "isolated-preview",
+      "sharedStoreProjectMatch": true,
+      "ACCOUNT_ERASURE_AUTHORITY": true
+    },
+    "envVarScope": "target preview, gitBranch feat/ux2-integrated-core-experience \u2014 never Production, never project-wide"
+  },
+  "targetedHostedSmoke": {
+    "spec": "tests/cpc1-acceptance/accountDeletion.spec.ts",
+    "result": "10 passed, 0 failed, 1 skipped",
+    "decisive": "'POR-1 account deletion lifecycle, and User B is untouched' \u2014 the exact test that failed at 108c939 \u2014 PASSES on desktop in 2.2m",
+    "skipDetail": "the single skip is the documented mobile viewport-dedup twin of the desktop lifecycle",
+    "credentialGatedSkips": 0,
+    "credentialsAvailable": [
+      "Preview DB url+service key",
+      "shared-store endpoint/bucket/key",
+      "Vercel automation bypass"
+    ],
+    "identityGate": "deployed_sha == expected_sha == 46dd5ed, environment preview, isolated-preview store, all five readiness flags true, four capabilities true"
+  },
+  "cleanup": {
+    "runs": 2,
+    "idempotent": true,
+    "counts": {
+      "attempts_remaining": 0,
+      "live_results": 0,
+      "erased_tombstones": 0,
+      "responses": 0,
+      "recommendation_sets": 0,
+      "recommendation_items": 0,
+      "recommendation_actions": 0,
+      "unsafe_tombstones": 0
+    }
+  },
+  "remoteCi": {
+    "head": "46dd5ed71af00d686dffb3004e489fe484fa963a",
+    "required": "10 pass",
+    "skipped": "2 webhook smokes, by design",
+    "pendingOrFailed": "none"
+  },
+  "productionNonRegression": {
+    "tables": 42,
+    "por1MigrationVersions": 0,
+    "main": "c8d8a8ad6a72949c248adb098a626d1ab9d6a579",
+    "publicSmoke": 200
+  },
+  "fullHostedAcceptance": "NOT RUN \u2014 must be rerun as the next separately governed package (POR1-FINAL-HOSTED-ACCEPTANCE-2)"
 }
