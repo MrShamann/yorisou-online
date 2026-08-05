@@ -189,8 +189,15 @@ fi
 echo "           pre-existing tables unchanged: $([ "$CHANGED" = "0" ] && echo YES || echo "NO ($CHANGED difference(s))")"
 
 echo "[rehearsal] 7/8 promoted contract and effective privileges"
+# Verified against the FINAL contract, because this database has had all ELEVEN migrations applied.
+# The compiler's own contract describes 101…108; 110 replaces the executor_claim body and 111 drops
+# the weak owner-only erase signature on purpose. Checking a post-111 database against a pre-109
+# contract reports a missing function and a differing body — both correct about the comparison and
+# both wrong about reality. See scripts/por1/build-final-contract.sh.
 node scripts/por1/extract-catalogue.mjs --dsn "$DATABASE_URL" --out "$WORK/catalogue.json" >/dev/null
-node scripts/por1/verify-promoted-contract.mjs --catalogue "$WORK/catalogue.json" | tail -2 | sed 's/^/           /'
+node scripts/por1/verify-promoted-contract.mjs \
+  --catalogue "$WORK/catalogue.json" \
+  --contract supabase/contracts/por1-final-promoted-contract.json | tail -2 | sed 's/^/           /'
 
 $PSQL -t -A -F' ' -c "
   select 'anon_executable_definer', count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace

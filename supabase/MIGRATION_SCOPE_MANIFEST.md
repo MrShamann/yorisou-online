@@ -406,6 +406,15 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "sha256": "70c0b198d553093cbafbc132c26224863497b7da766cec9ba1531b6e3b13813d"
   },
   {
+    "version": "202608050001",
+    "name": "por1_sequence_privilege_repair",
+    "scope": "PREVIEW_ONLY",
+    "path": "supabase/preview-only-migrations/202608050001_por1_sequence_privilege_repair.sql",
+    "sha256": "bd0c9394c2c65c3ba476bc4285a5928e0780b7035441b31098850a1b12a3d0d2",
+    "remote_history": "preview_only",
+    "repair_cohort": false
+  },
+  {
     "version": "202608010101",
     "name": "por1_canonical_assessment_and_interpretation",
     "scope": "PRODUCTION_LINEAGE",

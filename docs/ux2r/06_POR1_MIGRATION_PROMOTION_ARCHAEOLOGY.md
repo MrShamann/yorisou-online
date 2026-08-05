@@ -205,3 +205,62 @@ manifest was synchronized, not weakened.
 (`BLOCKING_PROMOTION_RESIDUAL`): the populated-lineage rehearsal's weak-erasure-signature and
 executor-claim body mismatches, and the two live-Preview sequence grants. Neither was introduced or
 fixed by this repair.
+
+---
+
+# Addendum — closing the two promotion-readiness blockers (2026-08-05)
+
+**Package:** POR1-PROMOTION-READINESS-CLOSURE-1.
+
+## Blocker A — a contract that stopped three migrations early
+
+The populated-lineage rehearsal reported a missing `erase_database(text)` and a differing
+`executor_claim` body. Both reports were true about the comparison and false about reality.
+
+The promotion set is **generated** for 101…108 and then **overlaid** by three hand-written
+migrations. 110 replaces the `executor_claim` body; 111 drops `erase_database(text)` and
+`erase_database(uuid, text)` on purpose, leaving only the job- and claim-bound four-argument form.
+Verifying a database that has had all eleven applied against a contract derived from the Preview
+catalogue therefore had to fail.
+
+**The weak signature was not restored.** It takes an owner id and erases, with none of the exact-job,
+executor-token or generation authority 110 and 111 exist to enforce — a convenience overload would be
+an authority bypass. The runtime already calls only the strong signature
+(`accountDeletionOrchestrator.ts`), and `catalogue-baseline.sh` already asserts the weak one is
+absent, so restoring it would have contradicted a passing gate.
+
+The fix is structural, not a patched hash: `scripts/por1/build-final-contract.sh` derives
+`supabase/contracts/por1-final-promoted-contract.json` by diffing two disposable PostgreSQL 17
+clusters built from repository SQL — baseline-only against baseline plus 101…111 — and the
+post-eleven rehearsal now verifies against that. The compiler's own contract is untouched and its
+drift gate still reports 0. Delta: **15 / 82 / 2 / 2**, matching what `catalogue-baseline.sh`
+independently asserts.
+
+One correction worth recording: the final contract is derived **without** Supabase's default
+privileges. Deriving it with them baked five environment-granted helpers into the contract as
+`service_role`-executable, which neither `rehearse-promotion.sh` nor the populated-lineage rehearsal
+could ever reproduce — they create the platform roles bare. A contract its own gates cannot satisfy
+is not a contract. Default-privilege behaviour is asserted where it belongs: inside `202608010108`.
+
+## Blocker B — the sequence-shaped twin of the function-privilege defect
+
+Live Preview held `anon=rwU` and `authenticated=rwU` on
+`yorisou_interpretation_responses_seq` and `yorisou_recommendation_actions_seq` — USAGE, SELECT and
+UPDATE, **directly in the ACL**, not through PUBLIC. USAGE is `nextval`; UPDATE is `setval`, which
+can move a sequence backwards onto values a later insert will collide with.
+
+No migration granted it. Supabase carries
+`alter default privileges in schema public grant all on sequences to anon, authenticated, service_role`,
+and the Preview lineage that created the sequences carried no privilege block. Same mechanism as the
+function defect, a different object class — and the same lesson: **a migration that omits a grant
+block is not neutral, because the platform has already decided.**
+
+`supabase/preview-only-migrations/202608050001_por1_sequence_privilege_repair.sql` establishes exactly
+the end state 202608010101/202608010102 define for Production — nothing for PUBLIC/anon/authenticated,
+`usage, select` for `service_role`, no `setval`. It revokes PUBLIC first, normalizes `service_role` by
+revoke-then-grant so the inherited UPDATE cannot survive, asserts its own end state, and moves no
+sequence value (75 → 75, 77 → 77). Applied to Preview only, after proving the target ref was not
+Production. Live `por1:promotion-verify` now reports **failures: 0**.
+
+**Promotion readiness is now READY_FOR_FOUNDER_PRODUCTION_DECISION** — a decision, not a deployment.
+Nothing was merged, migrated to Production, flagged on, or deployed.

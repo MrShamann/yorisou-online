@@ -1,0 +1,134 @@
+{
+  "package": "YORISOU_POR1_PROMOTION_READINESS_CLOSURE_1",
+  "recordedAt": "2026-08-05T13:40:00+08:00",
+  "objective": "Close the two blockers preventing POR-1 hosted promotion readiness: the final 101-111 contract reconciliation (Blocker A) and the live Preview sequence-grant exposure (Blocker B). No Production mutation, no deployment, no merge.",
+
+  "identity": {
+    "repository": "/Users/yangjin/Projects/yorisou-online",
+    "branch": "feat/ux2-integrated-core-experience",
+    "startingSha": "619fa2edd466b2463dfae51e132fa6c4105e6cae",
+    "mainBaseline": "c8d8a8ad6a72949c248adb098a626d1ab9d6a579",
+    "pr126": "OPEN / DRAFT / UNMERGED / base main / auto-merge off",
+    "pr127": "OPEN / DRAFT @ 0990f04 — out of scope, untouched"
+  },
+
+  "blockerA": {
+    "symptom": "tests/por1/populated-lineage-rehearsal.sh reported `function missing: yorisou_account_deletion_erase_database(p_owner_account_id text)` and `yorisou_account_deletion_executor_claim(...): BODY DIFFERS from the promoted contract`",
+    "classification": "B + C + E — stale checked-in contract (B), because P109-P111 intentionally replaced an earlier weak interface (C), and because the contract-generation model stops at P108 and does not represent the post-overlay end state (E). NOT F: no runtime caller needs the weak signature.",
+    "evidence": {
+      "migrationTimeline": {
+        "afterP106": "yorisou_account_deletion_erase_database(text) exists; executor_claim(owner, token_hash, ttl) exists",
+        "P110": "creates erase_database_unchecked(text); creates the strong erase_database(job_id, owner, token_hash, generation); recreates the transitional erase_database(text); REPLACES the executor_claim body",
+        "P111": "creates the final 4-argument erase_database and DROPS erase_database(text) and erase_database(uuid, text)",
+        "finalEffective": "only the job- and claim-bound 4-argument signature survives"
+      },
+      "runtimeCallers": {
+        "lib/server/accountDeletionOrchestrator.ts:392": "calls erase_database with p_job_id, p_owner_account_id, p_executor_token_hash, p_executor_generation — the STRONG signature",
+        "lib/server/accountDeletionExecutor.ts:112": "calls executor_claim with exactly (p_owner_account_id, p_token_hash, p_ttl_seconds) — signature correct, only the BODY had changed",
+        "weakSignatureCallers": "none"
+      },
+      "corroboration": "tests/por1/catalogue-baseline.sh already asserts `absent: yorisou_account_deletion_erase_database(p_owner_account_id text)` and passes. Restoring the weak signature would have contradicted a green gate."
+    },
+    "weakErasureSignatureDisposition": "NOT RESTORED. It is obsolete by design: it takes an owner id and erases, with none of the exact-job, executor-token or generation authority that 110 and 111 exist to enforce. Reintroducing it as a convenience overload would be an authority bypass.",
+    "executorClaimDisposition": "signature unchanged and still called by the runtime; its body is the one 110 replaced. Now represented by the final contract at its real hash.",
+    "durableFix": {
+      "type": "contract-generation model repaired — no SQL changed, no JSON body hash hand-patched",
+      "added": "scripts/por1/build-final-contract.sh — derives supabase/contracts/por1-final-promoted-contract.json by diffing two disposable PostgreSQL 17 clusters built from repository SQL alone (baseline-only vs baseline+101..111). Supports --check for drift.",
+      "rehearsalChange": "tests/por1/populated-lineage-rehearsal.sh now verifies against the FINAL contract, because that rehearsal applies all eleven migrations",
+      "generatedContractUntouched": "supabase/contracts/por1-promotion-contract.json is the compiler's output for 101-108 and remains byte-unchanged; its --check drift gate still reports 0",
+      "environmentDecision": "the final contract is derived WITHOUT Supabase default privileges, matching the environment both repository gates create (bare platform roles). Deriving it with default privileges on baked five environment-granted helpers (yorisou_ct_eq, the two erasure predicates, the two version-mutation triggers) into the contract as service_role-executable, which no repository gate could reproduce — observed, then corrected. Default-privilege behaviour is asserted where it belongs, inside 202608010108."
+    },
+    "finalPostP111Canonical": {
+      "counts": { "tables": 15, "functions": 82, "sequences": 2, "triggers": 2 },
+      "corroboratedBy": "tests/por1/catalogue-baseline.sh independently asserts the identity-signature delta 15 / 82 / 2 / 2",
+      "erasureSignatures": [
+        "yorisou_account_deletion_erase_database(p_job_id uuid, p_owner_account_id text, p_executor_token_hash text, p_executor_generation integer)",
+        "yorisou_account_deletion_erase_database_unchecked(p_owner_account_id text)",
+        "yorisou_account_deletion_executor_claim(p_owner_account_id text, p_token_hash text, p_ttl_seconds integer)"
+      ],
+      "weakSignaturesAbsent": ["yorisou_account_deletion_erase_database(p_owner_account_id text)", "yorisou_account_deletion_erase_database(uuid, text)"],
+      "reproducibility": "build-final-contract.sh --check → drift 0"
+    },
+    "populatedLineageRehearsalResult": "exit 0 — PASS, 26/26 owner-linked contract families populated for both principals, every pre-existing row untouched, 0 negative-control failures"
+  },
+
+  "blockerB": {
+    "sequences": ["public.yorisou_interpretation_responses_seq", "public.yorisou_recommendation_actions_seq"],
+    "sourceOfTheGrant": "Supabase default privileges. Both ACLs read anon=rwU/postgres and authenticated=rwU/postgres — held DIRECTLY, not through PUBLIC (has_sequence_privilege('public', …) was false). No migration granted them: the Preview lineage that created the sequences carried no privilege block, and Supabase projects carry `alter default privileges in schema public grant all on sequences to anon, authenticated, service_role`. This is the sequence-shaped twin of the function-privilege defect repaired in 202608010001/202608010104.",
+    "previewOnlyMigration": {
+      "version": "202608050001",
+      "path": "supabase/preview-only-migrations/202608050001_por1_sequence_privilege_repair.sql",
+      "scope": "PREVIEW_ONLY",
+      "sha256": "bd0c9394c2c65c3ba476bc4285a5928e0780b7035441b31098850a1b12a3d0d2",
+      "properties": "forward-only; idempotent (applied twice locally, second run a no-op); role-conditional; PUBLIC revoked FIRST; service_role normalized by revoke-then-grant so the inherited UPDATE cannot survive; asserts its own end state and raises if any check fails; no sequence value moved, no restart, no ownership change, no row touched",
+      "intendedEndState": "matches what 202608010101 and 202608010102 establish for Production: nothing for PUBLIC/anon/authenticated, `usage, select` for service_role, and no UPDATE (setval appears only in one-time backfill migrations 202607280005/202607280007, which run as owner, never in application code)"
+    },
+    "beforeAfterMatrix": {
+      "before": {
+        "acl": "{postgres=rwU/postgres, anon=rwU/postgres, authenticated=rwU/postgres, service_role=rwU/postgres}",
+        "anon": { "usage": true, "select": true, "update": true },
+        "authenticated": { "usage": true, "select": true, "update": true },
+        "PUBLIC": { "usage": false, "select": false, "update": false },
+        "service_role": { "usage": true, "select": true, "update": true }
+      },
+      "after": {
+        "acl": "{postgres=rwU/postgres, service_role=rU/postgres}",
+        "anon": { "usage": false, "select": false, "update": false },
+        "authenticated": { "usage": false, "select": false, "update": false },
+        "PUBLIC": { "usage": false, "select": false, "update": false },
+        "service_role": { "usage": true, "select": true, "update": false }
+      },
+      "sequenceValues": "interpretation 75 → 75, actions 77 → 77 — unchanged"
+    },
+    "targetSafety": "target ref nbltsbonsnbpfptihomc proved != Production ref krxizslnksorwhepyijs before any write; Preview fingerprint (21 public tables, 2 sequences) recorded before and after",
+    "livePreviewPromotionVerify": "npm run por1:promotion-verify --catalogue <re-extracted live Preview catalogue> → failures: 0, 'the promoted contract is present and correctly privileged', exit 0"
+  },
+
+  "regressionTests": {
+    "scripts/por1/__tests__/final-promoted-contract.test.mjs": "6/6 — strong signature present; weak signatures absent; executor_claim present with a body hash, SECURITY DEFINER and a fixed search_path; the two contracts differ ONLY where the overlays changed things; the final contract is self-describing and self-consistent; the rehearsal verifies against it",
+    "scripts/por1/__tests__/sequence-privileges.test.mjs": "7/7 — both sequences covered; PUBLIC revoked before anon; service_role normalized to usage+select with no setval; the migration asserts its own end state; privileges only (no values/ownership/rows); registered in the manifest as PREVIEW_ONLY with the real digest; negative control that the contract does not itself bless anon/authenticated",
+    "negativeControlsPresent": true
+  },
+
+  "gates": {
+    "npmCi": "exit 0",
+    "por1PromotionCompileCheck": "drift 0",
+    "por1PromotionVerifyLivePreview": "failures 0, exit 0",
+    "por1UnitTests": "node --test scripts/por1/__tests__/*.test.mjs — 32/32",
+    "testPor1PromotionContract": "16/16",
+    "testPor1PromotionPrivileges": "6/6",
+    "testPor1FinalContract": "6/6",
+    "testPor1SequencePrivileges": "7/7",
+    "por1Rehearse": "exit 0 — 11 promotion migrations applied, anon_executable_definer 0",
+    "populatedLineageRehearsal": "exit 0",
+    "por1PostgresIntegration": "exit 0 — ALL ASSERTIONS PASSED",
+    "testPor1CatalogueBaseline": "PASS",
+    "buildFinalContractCheck": "drift 0",
+    "validateMigrationScope": "exit 0 — 53 migrations, 23 PRODUCTION_LINEAGE / 4 LOCAL_ONLY / 26 PREVIEW_ONLY",
+    "typescript": "exit 0",
+    "lint": "exit 0 (11 pre-existing warnings, 0 errors)",
+    "productionBuild": "exit 0",
+    "secretScan": "gitleaks — no leaks found",
+    "thresholdsLoweredOrSkipped": "none"
+  },
+
+  "boundaries": {
+    "productionMigrationLedgerChanged": false,
+    "productionDatabaseChanged": false,
+    "productionDeploymentChanged": false,
+    "previewChange": "ONLY the authorized sequence privilege migration 202608050001",
+    "previewSchemaOrDataChanged": false,
+    "pr126Merged": false,
+    "pr126MarkedReady": false,
+    "pr127Modified": false,
+    "scriptsLocalAppModified": false,
+    "assertion202608010108Weakened": false,
+    "por1PromotionMigrationsModified": false
+  },
+
+  "carriedForwardNotFixedHere": {
+    "launcherFontHostInstability": "fonts.gstatic.com intermittently stalls from this machine; next/font resolves 124 subset URLs, so a stall surfaces as `Can't resolve '@vercel/turbopack-next/internal/font/google/font'` — a network condition that reads like a code error. The launcher's build preflight probes fonts.googleapis.com only and therefore cannot predict it. Recorded for a later launcher-specific package; scripts/local-app was not modified."
+  },
+
+  "promotionReadiness": "READY_FOR_FOUNDER_PRODUCTION_DECISION — both recorded blockers are closed. This is readiness for a Founder decision, not a deployment: no Production migration was applied, no flag enabled, nothing merged or deployed."
+}
