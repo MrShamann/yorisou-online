@@ -525,11 +525,21 @@ test("CPC-1 principal lifecycle", async ({ browser }, testInfo) => {
     });
 
     await test.step("hiding removes an item from the active list, not from history", async () => {
+      // Count ITEMS, not hide buttons. A clicked hide button relabels itself to 「記録しています」
+      // while its request is in flight, so a hide-BUTTON count reaches before-1 the instant the
+      // click lands — before the server has confirmed anything. Waiting on that let the next step
+      // navigate away mid-write, cancelling it, and the item then legitimately carried no 「hidden」
+      // action in わたしの今. The failure was intermittent because it was a race with the network.
+      //
+      // The per-item action group disappears only when the component drops a hidden item from the
+      // list, and that is driven by `applied`, which is set ONLY after the server confirms. So this
+      // waits for the committed state the step is actually about, rather than for a pending label.
+      const items = page.getByRole("group", { name: "この候補への行動" });
       const hideButtons = page.getByRole("button", { name: "この候補を表示しない" });
-      const before = await hideButtons.count();
+      const before = await items.count();
       expect(before, "the governed set must offer items to hide").toBeGreaterThan(1);
       await hideButtons.last().click();
-      await expect(hideButtons).toHaveCount(before - 1, { timeout: 20_000 });
+      await expect(items).toHaveCount(before - 1, { timeout: 20_000 });
     });
 
     await test.step("the complete action history is visible in わたしの今", async () => {
