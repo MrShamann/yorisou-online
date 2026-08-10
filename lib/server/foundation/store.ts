@@ -1,8 +1,22 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, NoSuchKey, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+// POR-1 — the transport is SHARED with the identity store rather than re-implemented here.
+//
+// This module used to build its own `new S3Client({ region })`: no endpoint, no Supabase-REST mode.
+// In the isolated Preview that pointed at AWS S3 with the Preview bucket's name and no credentials,
+// so every foundation write threw — and the auth routes log and swallow those, so Preview looked
+// healthy while the canonical identity mirror silently did not exist. A deletion cannot be proven
+// against records that were never written.
+import {
+  deleteSharedObject,
+  getSharedObject,
+  listSharedObjectKeys,
+  putSharedObject,
+  sharedObjectTransportMode,
+} from "@/lib/server/sharedObjectTransport";
 
+import type { IdentityObjectAbsenceState } from "@/lib/server/yorisouData";
 import type { AuditLog, AuthIdentity, ConsentLog, Conversation, MessageEvent, SupportCase, UserProfile } from "@/lib/server/foundation/schema";
 
 export type FoundationCollection =
@@ -29,22 +43,8 @@ const sharedStoreBucket = process.env.YORISOU_SHARED_STORE_BUCKET?.trim() || "";
 const sharedStoreRegion = process.env.YORISOU_SHARED_STORE_REGION || DEFAULT_SHARED_REGION;
 const shouldUseSharedStore = Boolean(sharedStoreBucket);
 
-let sharedStoreClient: S3Client | null = null;
-
 function hasStringField(value: unknown, key: string) {
   return typeof value === "object" && value !== null && typeof (value as Record<string, unknown>)[key] === "string";
-}
-
-function getSharedStoreClient() {
-  if (!shouldUseSharedStore) {
-    return null;
-  }
-
-  if (!sharedStoreClient) {
-    sharedStoreClient = new S3Client({ region: sharedStoreRegion });
-  }
-
-  return sharedStoreClient;
 }
 
 function getFoundationReadPrefixes() {
@@ -84,7 +84,6 @@ function isMissingObjectError(error: unknown) {
       : "";
 
   return (
-    error instanceof NoSuchKey ||
     (typeof error === "object" &&
       error !== null &&
       "name" in error &&
@@ -130,22 +129,16 @@ async function writeLocalRecord<T>(collection: FoundationCollection, recordId: s
 }
 
 async function readSharedRecord<T>(collection: FoundationCollection, recordId: string) {
-  const client = getSharedStoreClient();
-
-  if (!client || !sharedStoreBucket) {
+  if (!sharedStoreBucket) {
     return null;
   }
 
+  // Both prefixes are tried: the primary one and the legacy root that predates it. A record found
+  // under only the legacy prefix is still the person's record.
   for (const prefix of getFoundationReadPrefixes()) {
     try {
-      const response = await client.send(
-        new GetObjectCommand({
-          Bucket: sharedStoreBucket,
-          Key: foundationKey(prefix, collection, recordId),
-        }),
-      );
-      const content = await response.Body?.transformToString();
-      return content ? (JSON.parse(content) as T) : null;
+      const record = await getSharedObject<T>(foundationKey(prefix, collection, recordId));
+      if (record) return record;
     } catch (error) {
       if (isMissingObjectError(error)) {
         continue;
@@ -158,22 +151,14 @@ async function readSharedRecord<T>(collection: FoundationCollection, recordId: s
 }
 
 async function readSharedIndexRecord<T>(namespace: FoundationIndexNamespace, recordId: string) {
-  const client = getSharedStoreClient();
-
-  if (!client || !sharedStoreBucket) {
+  if (!sharedStoreBucket) {
     return null;
   }
 
   for (const prefix of getFoundationReadPrefixes()) {
     try {
-      const response = await client.send(
-        new GetObjectCommand({
-          Bucket: sharedStoreBucket,
-          Key: foundationIndexKey(prefix, namespace, recordId),
-        }),
-      );
-      const content = await response.Body?.transformToString();
-      return content ? (JSON.parse(content) as T) : null;
+      const record = await getSharedObject<T>(foundationIndexKey(prefix, namespace, recordId));
+      if (record) return record;
     } catch (error) {
       if (isMissingObjectError(error)) {
         continue;
@@ -186,43 +171,28 @@ async function readSharedIndexRecord<T>(namespace: FoundationIndexNamespace, rec
 }
 
 async function listSharedRecords<T>(collection: FoundationCollection) {
-  const client = getSharedStoreClient();
-
-  if (!client || !sharedStoreBucket) {
+  if (!sharedStoreBucket) {
     return [];
   }
 
   const keys = new Set<string>();
 
   for (const prefixRoot of getFoundationReadPrefixes()) {
-    const prefix = `${prefixRoot}/${collection}/`;
-    let continuationToken: string | undefined;
-
-    do {
-      const response = await client.send(
-        new ListObjectsV2Command({
-          Bucket: sharedStoreBucket,
-          Prefix: prefix,
-          ContinuationToken: continuationToken,
-        }),
-      );
-
-      for (const entry of response.Contents || []) {
-        if (entry.Key) {
-          keys.add(entry.Key);
-        }
+    try {
+      for (const key of await listSharedObjectKeys(`${prefixRoot}/${collection}/`)) {
+        keys.add(key);
       }
-
-      continuationToken = response.IsTruncated ? response.NextContinuationToken : undefined;
-    } while (continuationToken);
+    } catch (error) {
+      // A prefix that does not exist is not an error — the legacy root is absent in most
+      // deployments, and refusing to list the primary one because of it would empty the result.
+      if (!isMissingObjectError(error)) throw error;
+    }
   }
 
   const records = await Promise.all(
     [...keys].map(async (key) => {
       try {
-        const response = await client.send(new GetObjectCommand({ Bucket: sharedStoreBucket, Key: key }));
-        const content = await response.Body?.transformToString();
-        return content ? (JSON.parse(content) as T) : null;
+        return await getSharedObject<T>(key);
       } catch (error) {
         console.error(`foundation shared record parse error: ${key}`, error);
         return null;
@@ -242,37 +212,17 @@ async function listSharedRecords<T>(collection: FoundationCollection) {
 }
 
 async function writeSharedRecord<T>(collection: FoundationCollection, recordId: string, value: T) {
-  const client = getSharedStoreClient();
-
-  if (!client || !sharedStoreBucket) {
+  if (!sharedStoreBucket) {
     throw new Error("shared_store_not_configured");
   }
-
-  await client.send(
-    new PutObjectCommand({
-      Bucket: sharedStoreBucket,
-      Key: foundationKey(PRIMARY_FOUNDATION_PREFIX, collection, recordId),
-      Body: JSON.stringify(value, null, 2) + "\n",
-      ContentType: "application/json",
-    }),
-  );
+  await putSharedObject(foundationKey(PRIMARY_FOUNDATION_PREFIX, collection, recordId), value);
 }
 
 async function writeSharedIndexRecord<T>(namespace: FoundationIndexNamespace, recordId: string, value: T) {
-  const client = getSharedStoreClient();
-
-  if (!client || !sharedStoreBucket) {
+  if (!sharedStoreBucket) {
     throw new Error("shared_store_not_configured");
   }
-
-  await client.send(
-    new PutObjectCommand({
-      Bucket: sharedStoreBucket,
-      Key: foundationIndexKey(PRIMARY_FOUNDATION_PREFIX, namespace, recordId),
-      Body: JSON.stringify(value, null, 2) + "\n",
-      ContentType: "application/json",
-    }),
-  );
+  await putSharedObject(foundationIndexKey(PRIMARY_FOUNDATION_PREFIX, namespace, recordId), value);
 }
 
 export async function getFoundationRecord<T>(collection: FoundationCollection, recordId: string) {
@@ -328,20 +278,62 @@ export async function putFoundationIndexRecord<T>(namespace: FoundationIndexName
   return value;
 }
 
+/**
+ * POR-1 — does this foundation record still PHYSICALLY exist?
+ *
+ * `readSharedRecord` answers with a GET on a stable URL — a cacheable method — so a body can be
+ * returned after the record behind it is gone. Erasure verification read that as survival, and a
+ * COMPLETED deletion was recorded `failed_retryable` with `foundation_auth_identity` and
+ * `foundation_user_profile` named as residue.
+ *
+ * The listing is a POST, is not cacheable, and is answered from the storage metadata the object API
+ * resolves a key through. So it is consulted only when the read says "still here" — the case in
+ * doubt — and both prefixes are checked, for the same reason `readSharedRecord` checks both: a
+ * record living only under the legacy root is still the person's record.
+ *
+ * Fails CLOSED. An undetermined answer is never absence.
+ */
+export async function foundationRecordAbsence(
+  collection: FoundationCollection,
+  recordId: string,
+): Promise<IdentityObjectAbsenceState> {
+  let visible: unknown = null;
+  try {
+    visible = await readSharedRecord<unknown>(collection, recordId);
+  } catch {
+    return "AUTHORITY_UNAVAILABLE";
+  }
+  if (!visible) return "AUTHORITATIVELY_ABSENT";
+
+  const wanted = getFoundationReadPrefixes().map((prefix) => foundationKey(prefix, collection, recordId));
+  let listedAnywhere = false;
+  for (const prefixRoot of getFoundationReadPrefixes()) {
+    try {
+      const keys = await listSharedObjectKeys(`${prefixRoot}/${collection}/`);
+      if (keys.some((key) => wanted.includes(key))) {
+        listedAnywhere = true;
+        break;
+      }
+    } catch (error) {
+      // A prefix that does not exist is not an error — the legacy root is absent in most
+      // deployments. Anything else leaves the question open, and open is not absent.
+      if (!isMissingObjectError(error)) return "AUTHORITY_UNAVAILABLE";
+    }
+  }
+
+  return listedAnywhere ? "PHYSICAL_RESIDUE_CONFIRMED" : "STALE_BODY_VISIBLE_BUT_UNLISTED";
+}
+
 export async function deleteFoundationRecord(collection: FoundationCollection, recordId: string) {
   if (shouldUseSharedStore) {
-    const client = getSharedStoreClient();
-
-    if (!client || !sharedStoreBucket) {
+    if (!sharedStoreBucket) {
       throw new Error("shared_store_not_configured");
     }
-
-    await client.send(
-      new DeleteObjectCommand({
-        Bucket: sharedStoreBucket,
-        Key: foundationKey(PRIMARY_FOUNDATION_PREFIX, collection, recordId),
-      }),
-    );
+    // BOTH prefixes. A record written under the legacy root and deleted only under the primary one
+    // would still resolve on read — an erasure that leaves the login route intact.
+    for (const prefix of getFoundationReadPrefixes()) {
+      await deleteSharedObject(foundationKey(prefix, collection, recordId));
+    }
     return;
   }
 
@@ -354,7 +346,7 @@ export async function deleteFoundationRecord(collection: FoundationCollection, r
 
 export function getFoundationStoreStatus() {
   return {
-    mode: shouldUseSharedStore ? "shared_s3" : "local_file",
+    mode: shouldUseSharedStore ? sharedObjectTransportMode() : "local_file",
     sharedStoreBucketConfigured: shouldUseSharedStore,
     sharedStoreRegion,
     foundationPrefix: PRIMARY_FOUNDATION_PREFIX,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getPasswordPolicyMessage, isStrongPassword } from "@/lib/passwordPolicy";
 import { consumePasswordResetToken } from "@/lib/server/yorisouData";
+import { accountMutationDeniedResponse } from "@/lib/server/accountMutationDeniedResponse";
 
 type ResetPasswordPayload = {
   token?: string;
@@ -100,6 +101,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    // POR-1 — the fence refusing a write is an ANSWER, not a fault. Mapped to a bounded 409/503
+    // before this catch-all can flatten it into an unclassified 500.
+    const denied = accountMutationDeniedResponse(error);
+    if (denied) return denied;
     console.error("reset password route error:", error);
     if ((request.headers.get("content-type") || "").includes("application/x-www-form-urlencoded")) {
       return NextResponse.redirect(buildRedirectUrl(request, `${returnPath}?error=unexpected_error`), { status: 303 });

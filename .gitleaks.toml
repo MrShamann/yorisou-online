@@ -20,3 +20,12 @@ paths = [
   '''resources/governance/(current|archive)/.*/?SHA256SUMS\.txt''',
   '''resources/governance/(current|archive)/.*SHA256SUMS\.txt''',
 ]
+# Named browser-storage keys and a fixed test UUID, not credentials. The
+# `generic-api-key` rule matches `*_KEY = "..."` assignments; these values are
+# PUBLIC identifiers (sessionStorage key names shipped to every browser, and a
+# documentation UUID in a unit test). Matched by exact value — no rule removed,
+# no path excluded, nothing else in the tree is exempted.
+regexes = [
+  '''yorisou\.result\.pending-(claim|intent)\.v1''',
+  '''11111111-2222-4333-8444-555555555555''',
+]

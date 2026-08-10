@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isPlaceholderEmail } from "@/lib/server/foundation/ids";
+import { evaluateProvisioningAccessGate } from "@/lib/server/identityProvisioning";
 import { createPasswordResetToken, findAccountByEmail } from "@/lib/server/yorisouData";
 import { sendPasswordResetEmail } from "@/lib/server/yorisouMail";
 
@@ -94,7 +95,21 @@ export async function POST(request: Request) {
     const account = await findAccountByEmail(normalizedEmail);
     trace(`account_lookup found=${Boolean(account)} email=${maskedEmail}`);
 
-    if (account && !isPlaceholderEmail(account.email)) {
+    // POR-1 WS-C — an incomplete registration gets no reset material. Issuing one would hand a
+    // credential to a principal the identity graph cannot resolve, and a reset that succeeded would
+    // then leave that partial account with a password the person believes is current.
+    //
+    // The response shape below is unchanged and unconditional, so suppressing issuance here adds NO
+    // account-existence oracle: a caller cannot tell this apart from an address that was never
+    // registered, which is exactly the property the uniform `{ success: true }` already provides.
+    const provisioningGate = account
+      ? await evaluateProvisioningAccessGate({ email: account.email, accountId: account.id })
+      : { allowed: true as const };
+    if (!provisioningGate.allowed) {
+      trace("reset_suppressed reason=identity_provisioning_incomplete");
+    }
+
+    if (account && provisioningGate.allowed && !isPlaceholderEmail(account.email)) {
       trace(`token_create_start accountId=${account.id}`);
       let token: string;
 
@@ -138,6 +153,15 @@ export async function POST(request: Request) {
     trace(`redirect status=json_success documentRequest=false`);
     return NextResponse.json({ success: true });
   } catch (error) {
+    // POR-1 — DELIBERATELY NOT mapped to a bounded fence code, unlike every other leased-write route.
+    //
+    // This endpoint answers `{ success: true }` unconditionally so that "that address is registered"
+    // and "that address is not" are indistinguishable. Answering 409 when the fence refuses because
+    // the account is being deleted would hand back exactly the oracle the uniform response exists to
+    // deny — and it would leak it about someone who is mid-deletion, which is worse than average.
+    //
+    // The refusal is still recorded in the trace below, where an operator can see it and a caller
+    // cannot.
     const details = error instanceof Error ? `name=${error.name} message=${error.message}` : "name=Unknown message=unknown";
     trace(`route_error ${details}`);
     console.error("forgot password route error:", error);

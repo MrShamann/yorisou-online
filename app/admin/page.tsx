@@ -179,7 +179,11 @@ function composeOperationsReadiness(input: {
   };
   latestAuditAt: string | null;
   recentAuditActions: string[];
-  storeMode: "shared_s3" | "local_file";
+  // POR-1 — the foundation store now reports the SAME transport mode the identity store does
+  // ("aws" | "s3-compatible" | "supabase-rest" | "disabled") instead of the flat "shared_s3". That
+  // distinction is the whole point: an isolated Preview and Production are both "shared", and
+  // conflating them is what let a Preview deployment quietly write nothing at all.
+  storeMode: "aws" | "s3-compatible" | "supabase-rest" | "disabled" | "local_file";
   sharedStoreBucketConfigured: boolean;
   activeUserCount: number;
 }) {
@@ -254,11 +258,11 @@ function composeOperationsReadiness(input: {
         };
 
   const dataStoreBaseline: { label: string; status: ReadinessStatus; note: string } =
-    input.storeMode === "shared_s3" && input.sharedStoreBucketConfigured
+    input.storeMode !== "local_file" && input.storeMode !== "disabled" && input.sharedStoreBucketConfigured
       ? {
           label: "Data/store baseline",
           status: "Ready",
-          note: `Foundation data is running on shared store with ${input.activeUserCount} active user record(s).`,
+          note: `Foundation data is running on the ${input.storeMode} shared store with ${input.activeUserCount} active user record(s).`,
         }
       : input.storeMode === "local_file"
         ? {

@@ -14,6 +14,10 @@ import {
   putFoundationIndexRecord,
   putFoundationRecord,
 } from "@/lib/server/foundation/store";
+import {
+  assertAccountWriteContext,
+  type AccountWriteContext,
+} from "@/lib/server/accountWriteContext";
 
 type ConversationExternalIdentityIndex = {
   externalIdentityKey: string;
@@ -110,6 +114,16 @@ function validateAuditLog(record: AuditLog) {
   requireNonEmptyString(record.summary, "summary");
 }
 
+// POR-1 — the foundation mirror is account identity too.
+//
+// A UserProfile and a bound AuthIdentity are the canonical LINE and email login routes. Writing one
+// after an erasure re-creates exactly the login the object-store deletion just closed, so these saves
+// are governed like every other account-linked write: they require a live context, and the context
+// must name the account being written.
+//
+// An UNBOUND AuthIdentity names nobody — it is a LINE subject the product has seen but not yet
+// attached to anyone — so it needs no context. Requiring one there would mean taking a lease against
+// an account that does not exist.
 export const foundationUserProfileRepository = {
   async getById(userProfileId: string) {
     return getFoundationRecord<UserProfile>("user-profiles", userProfileId);
@@ -126,7 +140,8 @@ export const foundationUserProfileRepository = {
     const entries = await listUserProfiles();
     return entries.filter((entry) => wanted.has(entry.userProfileId));
   },
-  async save(record: UserProfile) {
+  async save(context: AccountWriteContext, record: UserProfile) {
+    assertAccountWriteContext(context, record.legacyAccountId || record.userProfileId);
     validateUserProfile(record);
     await putFoundationRecord("user-profiles", record.userProfileId, record);
     return record;
@@ -167,7 +182,9 @@ export const foundationAuthIdentityRepository = {
     const entries = await listAuthIdentities();
     return entries.filter((entry) => entry.bindingState === "unbound" || !entry.userProfileId);
   },
-  async save(record: AuthIdentity) {
+  async save(context: AccountWriteContext | null, record: AuthIdentity) {
+    const linkedAccountId = record.legacyAccountId || record.userProfileId || null;
+    if (linkedAccountId) assertAccountWriteContext(context, linkedAccountId);
     validateAuthIdentity(record);
     await putFoundationRecord("auth-identities", record.authIdentityId, record);
     return record;

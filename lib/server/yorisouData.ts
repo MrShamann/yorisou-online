@@ -1,6 +1,38 @@
 import { promises as fs } from "fs";
+import { acquireLocalStoreRoot } from "./localStoreOwnership";
 import path from "path";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+
+import { assertIdentityKey, SHARED_STORE_PREFIX } from "./identityKeyScope";
+import { assertSharedStoreEnvironmentBoundary } from "./sharedStoreBoundary";
+import { classifySharedStoreDelete } from "./sharedStoreDeleteClassification";
+import {
+  withAccountMutationLease,
+  withAccountProvisioningLease,
+  withLegacyBootstrapContext,
+} from "./accountMutationLease";
+import {
+  assertAccountWriteContext,
+  type AccountDeletionContext,
+  type AccountWriteContext,
+} from "./accountWriteContext";
+import {
+  eraseCanonicalLineSubjects,
+  findCanonicalLineEventById,
+  listCanonicalLineEvents,
+  listCanonicalRecentLineSubjects,
+  recordCanonicalLineEvent,
+} from "./canonicalLineActivity";
+import {
+  isCanonicalLineActivitySchemaReady,
+  resolveLineActivityMode,
+} from "./canonicalLineActivityRollout";
+import {
+  identityLinksForAccount,
+  lineIdentityDigest,
+  retireCanonicalIdentityLink,
+  syncCanonicalIdentityLinks,
+} from "./canonicalIdentityLinks";
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -41,6 +73,13 @@ export type AccountRecord = {
   lineConnectedAt?: string;
   linePictureUrl?: string;
   lineIdTokenSubject?: string;
+  /**
+   * POR-1 WS5 — set when the deletion saga reaches `locked`, cleared on cancellation. Its presence
+   * means this account may not authenticate and no session may act as it. The durable job in the
+   * database remains the source of truth for the saga; this is the enforcement marker that rides
+   * along with the record every authenticated request already loads.
+   */
+  deletionLockedAt?: string;
   supportProfile: SupportProfile;
 };
 
@@ -122,7 +161,25 @@ export type RecentLineWebhookSubjectRecord = {
 type DataFile<T> = {
   path: string;
   fallback: T;
+  /**
+   * May a file that exists but does not parse be treated as the fallback?
+   *
+   * For a cache or an index, yes — rebuilding it is cheap and losing it costs nothing. For an
+   * AUTHORITATIVE store it must not be: falling back to `[]` tells the caller there are no accounts,
+   * and the very next write then persists that emptiness over real identity data. A corrupted
+   * authoritative file is an error to surface, not a state to adopt.
+   */
+  authoritative?: boolean;
 };
+
+/** Thrown instead of silently adopting `[]` for an authoritative store that will not parse. */
+export class LocalStoreCorrupted extends Error {
+  constructor(readonly storePath: string) {
+    // The path is a local test/dev path and carries no user data; the contents never appear here.
+    super(`local_store_corrupted:${storePath.split("/").slice(-1)[0]}`);
+    this.name = "LocalStoreCorrupted";
+  }
+}
 
 type AccountEmailLookup = {
   accountId: string;
@@ -146,7 +203,8 @@ type MigrationState = {
 };
 
 const DEFAULT_SHARED_REGION = "us-east-2";
-const SHARED_PREFIX = "phase1";
+// Single definition, shared with the identity-deletion scope rule so the two cannot drift apart.
+const SHARED_PREFIX = SHARED_STORE_PREFIX;
 const MIGRATION_VERSION = 2;
 
 const dataDir =
@@ -168,6 +226,11 @@ const sharedStoreEndpoint = process.env.YORISOU_SHARED_STORE_ENDPOINT?.trim() ||
 const sharedStoreForcePathStyle = (process.env.YORISOU_SHARED_STORE_FORCE_PATH_STYLE || "").trim() === "true";
 const sharedStoreAccessKeyId = process.env.YORISOU_SHARED_STORE_ACCESS_KEY_ID?.trim() || "";
 const sharedStoreSecretAccessKey = process.env.YORISOU_SHARED_STORE_SECRET_ACCESS_KEY?.trim() || "";
+
+/** Exposed so the non-secret runtime attestation reports the same value the store actually uses. */
+export function currentSharedStoreMode(): SharedStoreMode {
+  return sharedStoreMode;
+}
 
 export type SharedStoreMode = "disabled" | "aws" | "s3-compatible" | "supabase-rest";
 
@@ -220,14 +283,31 @@ export function resolveSharedStoreMode(env: {
 // throws HERE (fail at startup) rather than silently selecting local storage. There is
 // no separate `shouldUseSharedStore` bypass — the resolver alone decides disabled/valid.
 const sharedStoreMode: SharedStoreMode = resolveSharedStoreMode();
+
+// POR-1 — the environment boundary, checked at initialization alongside the mode.
+//
+// Resolving a VALID configuration is not the same as resolving the RIGHT one. A Preview deployment
+// pointed at the Production identity bucket resolves perfectly well; that is how it went unnoticed.
+// This asserts which side of the boundary the resolved configuration actually lands on, and throws
+// before any identity object can be written.
+export const sharedStoreBoundary = assertSharedStoreEnvironmentBoundary({
+  deploymentEnvironment: process.env.VERCEL_ENV || "development",
+  sharedStoreMode,
+  bucket: sharedStoreBucket,
+  endpoint: sharedStoreEndpoint,
+  supabaseUrl: process.env.SUPABASE_URL,
+});
+
 const shouldUseSharedStore = sharedStoreMode !== "disabled";
 const sharedRestBase = sharedStoreEndpoint.replace(/\/$/, ""); // ".../storage/v1"
 
 const accountsFile: DataFile<AccountRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-accounts.json"),
   fallback: [],
 };
 const sessionsFile: DataFile<SessionRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-sessions.json"),
   fallback: [],
 };
@@ -236,10 +316,12 @@ const consultationsFile: DataFile<ConsultationRecord[]> = {
   fallback: [],
 };
 const passwordResetTokensFile: DataFile<PasswordResetTokenRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-password-reset-tokens.json"),
   fallback: [],
 };
 const lineWebhookEventsFile: DataFile<LineWebhookEventRecord[]> = {
+  authoritative: true,
   path: path.join(dataDir, "phase1-line-webhook-events.json"),
   fallback: [],
 };
@@ -320,7 +402,15 @@ async function sharedRestDeleteJson(key: string): Promise<void> {
     method: "DELETE",
     headers: sharedRestHeaders(),
   });
-  if (!res.ok && res.status !== 404) throw new Error(`shared_store_rest_delete_failed:${res.status}`);
+  if (res.ok) return;
+
+  // Supabase Storage answers 400 — not 404 — when the object is already gone, and deleting something
+  // twice is the normal shape of a resumable erasure. The classification is a pure function so the
+  // rule can be exercised exhaustively; see the comment there for why the status alone is not the
+  // evidence and a blanket "400 means gone" would be the fail-open version of the same bug.
+  const body = await res.text().catch(() => "");
+  if (classifySharedStoreDelete({ status: res.status, body }) === "already_absent") return;
+  throw new Error(`shared_store_rest_delete_failed:${res.status}`);
 }
 
 async function sharedRestListKeys(prefix: string): Promise<string[]> {
@@ -356,12 +446,37 @@ function createId(prefix: string) {
   return `${prefix}_${Date.now()}_${randomBytes(6).toString("hex")}`;
 }
 
-function normalizeEmail(email: string) {
+/**
+ * The authority on what "the same email" means for an account.
+ *
+ * Exported because the provisioning saga is keyed by a digest of the normalized address, and that
+ * key has to agree with the `accounts/by-email` lookup exactly. A fourth private copy of this
+ * two-line function is how the key silently stops matching the account it is supposed to name.
+ */
+export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+/**
+ * POR-1 — newest first, TOTALLY.
+ *
+ * `T extends { createdAt: string }` is a claim about a type, not about the bytes in the store. These
+ * lists are built by parsing arbitrary JSON out of an object store, so the compiler's guarantee ends
+ * exactly where the data begins — and `b.createdAt.localeCompare(...)` dereferences the right-hand
+ * operand, so one record without the field turns an entire listing into a TypeError.
+ *
+ * It does so INTERMITTENTLY, which is what makes it worth guarding rather than tolerating: the bad
+ * record is harmless while the sort holds it in `a` and fatal the moment it lands in `b`, so whether
+ * a listing works depends on how many siblings it has. All four callers — accounts, sessions,
+ * consultations, password-resets — are families `buildDeletionManifest` enumerates, so a single
+ * malformed object anywhere in them makes erasure unreachable rather than merely slower.
+ *
+ * A missing timestamp sorts LAST and is still returned. Dropping the record would hide a real defect
+ * behind a listing that looks healthy, and the deletion manifest in particular must keep enumerating
+ * an object it cannot date — that object still belongs to someone.
+ */
 function sortByCreatedAtDesc<T extends { createdAt: string }>(entries: T[]) {
-  return [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return [...entries].sort((a, b) => (b?.createdAt ?? "").localeCompare(a?.createdAt ?? ""));
 }
 
 export function defaultSupportProfile(): SupportProfile {
@@ -441,14 +556,85 @@ function hashResetToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/**
+ * Which authoritative files this root has ever held.
+ *
+ * WHY A MARKER IS NEEDED AT ALL.
+ *
+ * `ensureFile` creates the empty fallback when a file is absent, on the READ path. For a cache that
+ * is right. For an authoritative store it means a DELETED file silently becomes `[]` — the caller is
+ * told there are no accounts, and the next write persists that emptiness over what used to be real
+ * identity data.
+ *
+ * That is the same failure a malformed file causes, which already fails closed. Leaving the vanished
+ * case open was an asymmetry, not a decision: from the caller's side a corrupt file and a missing
+ * one are the same event.
+ *
+ * The only thing distinguishing "deleted" from "never existed" is whether this root has held the
+ * file before, so that is what gets recorded. A wiped root is genuinely first use and stays silent;
+ * a file that disappears from a root which had it raises.
+ */
+const INITIALIZED_MARKER = ".local-store-initialized.json";
+
+async function readInitializedFiles(): Promise<Set<string>> {
+  try {
+    const raw = await fs.readFile(path.join(dataDir, INITIALIZED_MARKER), "utf8");
+    const parsed = JSON.parse(raw) as { files?: unknown };
+    return new Set(Array.isArray(parsed.files) ? parsed.files.filter((f): f is string => typeof f === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+async function recordInitializedFile(name: string): Promise<void> {
+  const files = await readInitializedFiles();
+  if (files.has(name)) return;
+  files.add(name);
+  const temp = path.join(dataDir, `${INITIALIZED_MARKER}.tmp-${process.pid}-${(localWriteCounter += 1)}`);
+  await fs.writeFile(temp, `${JSON.stringify({ schema: 1, files: [...files].sort() }, null, 2)}\n`, "utf8");
+  await fs.rename(temp, path.join(dataDir, INITIALIZED_MARKER));
+}
+
+/** Thrown when an authoritative store file this root has held before has vanished. */
+export class LocalStoreVanished extends Error {
+  constructor(readonly storePath: string) {
+    // A local path, never user data.
+    super(`local_store_vanished:${storePath.split("/").slice(-1)[0]}`);
+    this.name = "LocalStoreVanished";
+  }
+}
+
 async function ensureFile<T>(file: DataFile<T>) {
   await fs.mkdir(dataDir, { recursive: true });
 
+  let present = true;
   try {
     await fs.access(file.path);
   } catch {
-    await fs.writeFile(file.path, JSON.stringify(file.fallback, null, 2) + "\n", "utf8");
+    present = false;
   }
+
+  if (!file.authoritative) {
+    if (!present) await fs.writeFile(file.path, JSON.stringify(file.fallback, null, 2) + "\n", "utf8");
+    return;
+  }
+
+  const name = file.path.split("/").slice(-1)[0];
+  const initialized = await readInitializedFiles();
+
+  if (present) {
+    // Adopt an authoritative file that predates the marker, so a store created before this existed
+    // still gains the protection from the first read onward.
+    if (!initialized.has(name)) await recordInitializedFile(name);
+    return;
+  }
+
+  if (initialized.has(name)) {
+    throw new LocalStoreVanished(file.path);
+  }
+
+  await fs.writeFile(file.path, JSON.stringify(file.fallback, null, 2) + "\n", "utf8");
+  await recordInitializedFile(name);
 }
 
 async function readLocalJson<T>(file: DataFile<T>) {
@@ -458,13 +644,114 @@ async function readLocalJson<T>(file: DataFile<T>) {
   try {
     return JSON.parse(content) as T;
   } catch {
+    // An empty file is a store that has not been written yet — that is first use, not corruption.
+    if (content.trim().length === 0) return file.fallback;
+    if (file.authoritative) throw new LocalStoreCorrupted(file.path);
     return file.fallback;
   }
 }
 
 async function writeLocalJson<T>(file: DataFile<T>, value: T) {
   await ensureFile(file);
-  await fs.writeFile(file.path, JSON.stringify(value, null, 2) + "\n", "utf8");
+  // ATOMIC. A plain writeFile truncates first, so a concurrent reader can observe an empty or
+  // half-written file and fall back to `[]` — losing every record rather than one.
+  const temp = `${file.path}.tmp-${process.pid}-${(localWriteCounter += 1)}`;
+  await fs.writeFile(temp, JSON.stringify(value, null, 2) + "\n", "utf8");
+  await fs.rename(temp, file.path);
+}
+
+let localWriteCounter = 0;
+
+/**
+ * Serialized read-modify-write over one local JSON file.
+ *
+ * THE DEFECT THIS EXISTS TO CLOSE — YV-C7 `session_binding_failed / session_not_stored`.
+ *
+ * Every local-store mutator was `read the whole array → change it → write the whole array back`,
+ * unguarded. Registration performs three of those in a row on the sessions file (insert the row,
+ * bind it to the account, apply the landing contract), and the app is serving other requests
+ * throughout — each of which may create an anonymous session the same way.
+ *
+ * Interleave any two and the later writer, holding an array it read BEFORE the other's insert,
+ * writes it back afterwards and the newly inserted row is gone. The third step's `touchSession`
+ * then finds nothing, returns null, and the write-proof correctly reports `session_not_stored`.
+ * The proof was right; the row really had been erased.
+ *
+ * That is why it looked intermittent, why it took 189ms rather than timing out, why it appeared
+ * only under the LOCAL file store (YV-1 / DCI-1 harnesses) and never on the shared-store path, and
+ * why a rerun could pass. It was a lost update, not a timing flake — and I classified it as
+ * transient once before, wrongly.
+ *
+ * An in-process chain is the right scope here: this adapter is the single-process local/test store.
+ * It is NOT a substitute for a cross-process lock, and nothing multi-process may rely on it.
+ */
+const localFileLocks = new Map<string, Promise<unknown>>();
+
+/**
+ * OWNERSHIP OF THE LOCAL STORE ROOT — acquired before the first authoritative mutation.
+ *
+ * The promise chains above serialize read-modify-write inside ONE process. Two application
+ * processes against the same root would each serialize perfectly against themselves and lose each
+ * other's writes exactly as before the lost-update repair — and every test would still pass, because
+ * nothing would detect it. So the boundary is enforced here, at the adapter, rather than left to
+ * callers remembering to ask: a helper no runtime path invokes enforces nothing.
+ *
+ * Acquired lazily on the first MUTATION, not on read. A read-only process (a fixture loader, a
+ * report renderer) has no reason to claim exclusivity, and demanding it would turn the guard into
+ * something people route around.
+ */
+let localStoreAuthority: Promise<void> | null = null;
+
+async function ensureLocalStoreAuthority(): Promise<void> {
+  if (shouldUseSharedStore) return;
+  if (!localStoreAuthority) {
+    localStoreAuthority = acquireLocalStoreRoot(dataDir, { label: "yorisou-local-store" }).then((result) => {
+      if (result.ok) return;
+      // Fail closed. Proceeding here is the specific scenario this exists to prevent.
+      localStoreAuthority = null;
+      throw new LocalStoreNotOwned(result.reason);
+    });
+  }
+  return localStoreAuthority;
+}
+
+/** Thrown instead of writing into a root this process does not exclusively own. */
+export class LocalStoreNotOwned extends Error {
+  constructor(readonly reason: "held_by_live_process" | "ownership_state_corrupt") {
+    super(`local_store_not_owned:${reason}`);
+    this.name = "LocalStoreNotOwned";
+  }
+}
+
+
+async function mutateLocalJsonFor<T, R>(
+  file: DataFile<T>,
+  mutate: (current: T) => { value: T; result: R } | Promise<{ value: T; result: R }>,
+): Promise<R> {
+  const previous = localFileLocks.get(file.path) ?? Promise.resolve();
+  const run = previous.then(async () => {
+    await ensureLocalStoreAuthority();
+    const current = await readLocalJson(file);
+    const { value, result } = await mutate(current);
+    await writeLocalJson(file, value);
+    return result;
+  });
+  localFileLocks.set(file.path, run.catch(() => undefined));
+  return run;
+}
+
+async function mutateLocalJson<T>(file: DataFile<T>, mutate: (current: T) => T | Promise<T>): Promise<T> {
+  const previous = localFileLocks.get(file.path) ?? Promise.resolve();
+  const run = previous.then(async () => {
+    await ensureLocalStoreAuthority();
+    const current = await readLocalJson(file);
+    const next = await mutate(current);
+    await writeLocalJson(file, next);
+    return next;
+  });
+  // The chain must advance even when this mutation throws, or one failure deadlocks the file.
+  localFileLocks.set(file.path, run.catch(() => undefined));
+  return run;
 }
 
 function isMissingObjectError(error: unknown) {
@@ -630,13 +917,41 @@ async function getSharedAccountByLineUserId(lineUserId: string) {
   return account;
 }
 
-async function putSharedAccountRecord(account: AccountRecord) {
+// The lowest-level account writer there is: the primary record plus every index that resolves to it.
+// It takes a context so that no path — not even one inside this module — can reach the store without
+// naming the authority it is writing under.
+async function putSharedAccountRecord(context: AccountWriteContext, account: AccountRecord) {
+  assertAccountWriteContext(context, account.id);
   const normalizedEmail = normalizeEmail(account.email);
   const normalizedAccount = {
     ...account,
     email: normalizedEmail,
   };
   const existingAccount = await getSharedAccountById(normalizedAccount.id);
+
+  // POR-1 — THE SERIALIZATION POINT, and it runs BEFORE the mirror objects, not after.
+  //
+  // This function is the one funnel through which every identity key family is written: the account
+  // record, the email lookup, the retirement of a superseded LINE lookup and the current one. So it
+  // is where the strongly consistent statement of what this account owns belongs.
+  //
+  // The ORDER is the safety property. Commit the link first and a failed object write leaves a link
+  // with no object, which makes a deletion manifest WIDER than it needs to be — harmless, because
+  // deleting an absent key is success. Write the object first and a failed link commit leaves an
+  // object with no link, which makes the manifest NARROWER — and a manifest that never names a key
+  // is a key that is never erased and never missed. That is the defect this whole migration exists
+  // to close, so the order is not an implementation detail.
+  //
+  // It also throws rather than warning. A LINE binding that answers "connected" while the registry
+  // does not record the connection is the false-success shape this package has already had to remove
+  // from registration twice; contract §9 requires the response to wait for the commit.
+  await syncCanonicalIdentityLinks({
+    accountId: normalizedAccount.id,
+    links: identityLinksForAccount({
+      email: normalizedEmail,
+      lineUserId: normalizedAccount.lineUserId,
+    }),
+  });
 
   await sharedWriteJson(accountRecordKey(normalizedAccount.id), normalizedAccount);
   await sharedWriteJson(accountEmailLookupKey(normalizedEmail), {
@@ -646,6 +961,18 @@ async function putSharedAccountRecord(account: AccountRecord) {
   } satisfies AccountEmailLookup);
 
   if (existingAccount?.lineUserId && existingAccount.lineUserId !== normalizedAccount.lineUserId) {
+    // A rebind or an unbind — and the ONLY place either is genuinely observable, because it is a
+    // comparison of two known LINE subjects rather than an inference from one being absent.
+    //
+    // The canonical link is retired here for exactly that reason. The sync above is additive and
+    // will never retire on absence: it derives its set from an account read that can be served
+    // stale, and letting a stale read retire a link is how a true LINE binding got erased from the
+    // registry between the binding and the deletion that needed it.
+    await retireCanonicalIdentityLink({
+      accountId: normalizedAccount.id,
+      kind: "line_subject",
+      digest: lineIdentityDigest(existingAccount.lineUserId),
+    });
     await sharedDeleteJson(lineUserLookupKey(existingAccount.lineUserId));
   }
 
@@ -660,7 +987,11 @@ async function putSharedAccountRecord(account: AccountRecord) {
   return normalizedAccount;
 }
 
-async function putSharedSessionRecord(session: SessionRecord) {
+// A session record naming an account IS a credential for that account, so writing one is governed
+// exactly like writing the account. An anonymous session names nobody and needs no context.
+async function putSharedSessionRecord(context: AccountWriteContext | null, session: SessionRecord) {
+  const linkedAccountId = session.userId || session.principalLanding?.legacyAccountId || null;
+  if (linkedAccountId) assertAccountWriteContext(context, linkedAccountId);
   await sharedWriteJson(sessionRecordKey(session.id), session);
   return session;
 }
@@ -707,10 +1038,43 @@ async function putSharedPasswordResetToken(record: PasswordResetTokenRecord) {
   return record;
 }
 
+/**
+ * POR-1 — which keys under `line-events/` are actually events.
+ *
+ * THE RECENT-SUBJECT INDEX IS A SIBLING OF THE EVENTS IT INDEXES. `admin-recent-subjects.json` sits
+ * inside `line-events/` by an accident of key layout, so listing that prefix returns it alongside
+ * the events — and it is an ARRAY, not a `LineWebhookEventRecord`.
+ *
+ * Selected by KEY rather than by shape. Inferring "this is not an event" from a missing field would
+ * also silently discard a genuinely malformed event, which is the opposite of what this codebase
+ * wants: a real defect must stay visible.
+ *
+ * Pure and exported so the permanent test exercises this decision rather than a restatement of it.
+ */
+export function selectLineWebhookEventKeys(keys: string[]): string[] {
+  const indexKey = recentLineWebhookSubjectsKey();
+  return keys.filter((key) => key !== indexKey);
+}
+
+/**
+ * Every stored LINE webhook event, newest first.
+ *
+ * The sort used to be `b.receivedAt.localeCompare(a.receivedAt)` over everything the prefix
+ * returned, and it threw `Cannot read properties of undefined (reading 'localeCompare')` — but only
+ * SOMETIMES, which is the worst way for it to fail. That expression dereferences the right-hand
+ * operand only, so the index object was harmless while the sort happened to hold it in `a` and fatal
+ * the moment it landed in `b`. Whether it threw depended on listing order, so the same code erased
+ * four accounts cleanly and then failed 41 consecutive attempts on the fifth — inside
+ * `buildDeletionManifest`, which is the one step a deletion cannot start without.
+ *
+ * The comparator is total as well as the selection being explicit: an unexpected shape must never
+ * again turn a listing into a crash on the deletion path.
+ */
 async function listSharedLineWebhookEvents() {
-  return (await sharedListJsonObjects<LineWebhookEventRecord>(`${SHARED_PREFIX}/line-events/`)).sort((a, b) =>
-    b.receivedAt.localeCompare(a.receivedAt),
-  );
+  const keys = selectLineWebhookEventKeys(await sharedListKeys(`${SHARED_PREFIX}/line-events/`));
+  const entries = await Promise.all(keys.map((key) => sharedReadJson<LineWebhookEventRecord>(key)));
+  const records = entries.filter((entry): entry is LineWebhookEventRecord => Boolean(entry));
+  return records.sort((a, b) => (b.receivedAt ?? "").localeCompare(a.receivedAt ?? ""));
 }
 
 async function putSharedLineWebhookEvent(record: LineWebhookEventRecord) {
@@ -757,11 +1121,33 @@ function mergeRecentLineWebhookSubjectRecords(
   limit = 20,
 ) {
   const next = [incoming, ...records.filter((entry) => entry.eventId !== incoming.eventId)];
+  // Total, for the same reason as `sortByCreatedAtDesc`: `records` is parsed from a stored array and
+  // one entry without `receivedAt` would throw here rather than sort late — on the webhook write
+  // path, where the failure would be a dropped LINE event.
   return next
-    .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
+    .sort((a, b) => (b?.receivedAt ?? "").localeCompare(a?.receivedAt ?? ""))
     .slice(0, Math.max(1, limit));
 }
 
+/**
+ * POR-1 — is the canonical LINE activity schema deployed here?
+ *
+ * Readiness, not a capability. A deployment predating `202607310001` keeps its exact previous
+ * behaviour and attempts no RPC that cannot succeed; one that has the tables uses them for BOTH the
+ * read and the write, and stops writing the shared array entirely.
+ */
+function canonicalLineActivityEnabled() {
+  return resolveLineActivityMode({ schemaReady: isCanonicalLineActivitySchemaReady() }) === "canonical";
+}
+
+/**
+ * LEGACY — the shared recent-LINE-subject array.
+ *
+ * Retained for deployments that predate the canonical tables, and for an application rollback onto
+ * one. In canonical mode this is never called: a second writer to a read-modify-write document is
+ * the defect, so mirroring into it "for compatibility" would reintroduce exactly what the canonical
+ * model removes.
+ */
 async function updateRecentLineWebhookSubjectIndex(record: LineWebhookEventRecord) {
   const recentRecord = toRecentLineWebhookSubjectRecord(record);
 
@@ -776,8 +1162,9 @@ async function updateRecentLineWebhookSubjectIndex(record: LineWebhookEventRecor
     return;
   }
 
-  const existing = await readLocalJson(recentLineWebhookSubjectsFile);
-  await writeLocalJson(recentLineWebhookSubjectsFile, mergeRecentLineWebhookSubjectRecords(existing, recentRecord));
+  await mutateLocalJson(recentLineWebhookSubjectsFile, (existing) =>
+    mergeRecentLineWebhookSubjectRecords(existing, recentRecord),
+  );
 }
 
 async function ensureSharedStoreReady() {
@@ -829,11 +1216,18 @@ async function migrateLegacyFilesToSharedStore() {
   ]);
 
   for (const account of legacyAccounts) {
-    await putSharedAccountRecord(account);
+    await withLegacyBootstrapContext(account.id, (context) => putSharedAccountRecord(context, account));
   }
 
   for (const session of legacySessions) {
-    await putSharedSessionRecord(session);
+    const linkedAccountId = session.userId || session.principalLanding?.legacyAccountId || null;
+    if (linkedAccountId) {
+      await withLegacyBootstrapContext(linkedAccountId, (context) =>
+        putSharedSessionRecord(context, session),
+      );
+    } else {
+      await putSharedSessionRecord(null, session);
+    }
   }
 
   for (const consultation of legacyConsultations) {
@@ -848,6 +1242,289 @@ async function migrateLegacyFilesToSharedStore() {
     sessionCount: legacySessions.length,
     consultationCount: legacyConsultations.length,
   } satisfies MigrationState);
+}
+
+// ── POR-1: narrow identity-lifecycle primitives ─────────────────────────────
+//
+// Exported ONLY for the account-deletion adapter, which derives every key from stored account
+// data. There is deliberately no exported list-and-delete pair and no caller-supplied key path:
+// a generic object-deletion capability reachable from the app is a much larger risk than the
+// deletion problem it would solve. The guard below refuses anything outside the identity prefixes
+// so a future caller cannot widen this by accident.
+
+/**
+ * POR-1 — one disposable round trip through the REAL shared-store adapter.
+ *
+ * The deletion executor must know whether its session-revocation backend works BEFORE it crosses the
+ * irreversible boundary. Reading environment variables cannot answer that: a configured-but-
+ * unreachable endpoint, a missing bucket and a credential that cannot write all look identical to a
+ * correct configuration when you only check that strings are non-empty.
+ *
+ * Deliberately shaped as ONE function with NO caller-supplied key. Exporting a general write/read/
+ * delete trio for probing would hand the application exactly the generic object-deletion capability
+ * that `deleteSharedIdentityObject` exists to withhold. The key lives under a fixed probe prefix,
+ * carries no identity, and is removed again.
+ */
+export type SharedStoreProbe =
+  | { ok: true }
+  | { ok: false; stage: "write" | "read" | "delete"; code: string };
+
+export async function probeSharedStoreRoundTrip(): Promise<SharedStoreProbe> {
+  const key = `phase1/_probe/deletion-readiness-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.json`;
+  const payload = { probe: "deletion-backend-readiness", at: nowIso() };
+
+  try {
+    await sharedWriteJson(key, payload);
+  } catch (error) {
+    return { ok: false, stage: "write", code: error instanceof Error ? error.message : "unknown" };
+  }
+
+  try {
+    const read = await sharedReadJson<typeof payload>(key);
+    if (!read) {
+      await sharedDeleteJson(key).catch(() => undefined);
+      return { ok: false, stage: "read", code: "probe_object_absent_after_write" };
+    }
+  } catch (error) {
+    await sharedDeleteJson(key).catch(() => undefined);
+    return { ok: false, stage: "read", code: error instanceof Error ? error.message : "unknown" };
+  }
+
+  try {
+    // A store that cannot DELETE cannot revoke a session. Discovering that at `session_revocation`
+    // is precisely the failure this probe exists to prevent, so it is part of the round trip.
+    await sharedDeleteJson(key);
+  } catch (error) {
+    return { ok: false, stage: "delete", code: error instanceof Error ? error.message : "unknown" };
+  }
+
+  return { ok: true };
+}
+
+/** Delete one identity object. Missing is success — deletion is idempotent by contract. */
+export async function deleteSharedIdentityObject(key: string): Promise<void> {
+  assertIdentityKey(key);
+  try {
+    await sharedDeleteJson(key);
+  } catch (error) {
+    // A missing object is the desired end state, not a failure to retry.
+    const code = error instanceof Error ? error.message : "";
+    if (/not.?found|NoSuchKey|404/i.test(code)) return;
+    throw error;
+  }
+}
+
+/**
+ * POR-1 — prune one person's entries from the SHARED recent-LINE-subject index.
+ *
+ * This index is a single array covering every LINE subject, so it is the one account-linked object
+ * that must be rewritten rather than deleted: deleting it to erase one person would erase everyone.
+ *
+ * Matched by FINGERPRINT — sha256 of the LINE user id — so the caller never needs the raw id it is
+ * erasing, and the deletion manifest never has to keep one.
+ *
+ * Requires a deletion context like every other account-linked write.
+ */
+export async function pruneRecentLineWebhookSubjects(
+  context: AccountDeletionContext,
+  lineUserIdFingerprints: string[],
+): Promise<number> {
+  assertAccountWriteContext(context);
+  if (lineUserIdFingerprints.length === 0) return 0;
+  const wanted = new Set(lineUserIdFingerprints);
+  const matches = (record: RecentLineWebhookSubjectRecord) =>
+    wanted.has(createHash("sha256").update(record.lineUserId).digest("hex"));
+
+  if (canonicalLineActivityEnabled()) {
+    // The authoritative erasure: SUBJECT-scoped by digest, so it cannot touch anyone else, and its
+    // result is a committed row count rather than an inference from a re-read.
+    //
+    // Subject-scoped, not event-scoped, because tombstoning the rows that exist right now protects
+    // only redelivery of THOSE events. LINE decides when the next event id exists, and a brand-new
+    // one would have been inserted as live activity for a person who no longer exists. The subject
+    // state is terminal, so the barrier holds for deliveries this erasure never saw.
+    const erased = await eraseCanonicalLineSubjects({ lineSubjectHashes: [...wanted] });
+
+    // The frozen legacy array may still hold this person's historical entries from before the
+    // cutover. Residue is residue, so it is still cleared — but the lost-update hazard is gone,
+    // because in canonical mode nothing writes this object any more.
+    let legacyRemoved = 0;
+    if (shouldUseSharedStore) {
+      await ensureSharedStoreReady();
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const records = await getSharedRecentLineWebhookSubjects();
+        const stillPresent = records.filter(matches);
+        if (stillPresent.length === 0) break;
+        await putSharedRecentLineWebhookSubjects(records.filter((record) => !matches(record)));
+        legacyRemoved += stillPresent.length;
+        if (attempt === 9) throw new Error("recent_line_subject_prune_unconfirmed");
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
+    } else {
+      // Serialized: a prune that reads, filters and writes the whole file will otherwise erase
+      // every subject recorded while it was deciding.
+      legacyRemoved = await mutateLocalJsonFor(recentLineWebhookSubjectsFile, (records) => {
+        const kept = records.filter((record) => !matches(record));
+        return { value: kept, result: records.length - kept.length };
+      });
+    }
+
+    return erased + legacyRemoved;
+  }
+
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+
+    // THE STORE IS NOT READ-AFTER-WRITE CONSISTENT, AND THIS IS A READ-MODIFY-WRITE.
+    //
+    // A single pass is not enough. A read that returns a slightly stale copy of this shared array
+    // can miss the very entry being erased — and then the write puts back a document that still
+    // contains it, while the prune reports success. Measured on the isolated Preview transport: a
+    // GET issued a minute after a successful overwrite still returned the previous version.
+    //
+    // So the prune re-reads and repeats until the entries are provably absent. The window is sized
+    // from the MEASURED lag on this transport — an overwrite took 5.4 seconds to become visible on
+    // this very key — with room to spare, rather than from a number that felt about right. Still
+    // bounded: an erasure that cannot be proven in a few seconds deserves the retryable state the
+    // caller gives it, and a loop that never gives up would hold a deletion open forever.
+    let removed = 0;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const records = await getSharedRecentLineWebhookSubjects();
+      const stillPresent = records.filter(matches);
+      if (stillPresent.length === 0) return removed;
+
+      await putSharedRecentLineWebhookSubjects(records.filter((record) => !matches(record)));
+      removed += stillPresent.length;
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
+
+    // Refuse to report a clean prune we could not confirm. The caller records a retryable failure and
+    // the cursor stays put, which is exactly right: nothing later depends on this having succeeded,
+    // and claiming it did would be the one lie a deletion must never tell.
+    throw new Error("recent_line_subject_prune_unconfirmed");
+  }
+
+  return mutateLocalJsonFor(recentLineWebhookSubjectsFile, (records) => {
+    const kept = records.filter((record) => !matches(record));
+    return { value: kept, result: records.length - kept.length };
+  });
+}
+
+/** Existence probe used only to VERIFY erasure before finalization. */
+/**
+ * Existence probe used ONLY to verify erasure — and therefore strict.
+ *
+ * It used to catch every error and answer `false`. A timeout, a 403, a 429, a 5xx or a malformed
+ * response all became "the object is gone", which is the one wrong answer that lets a deletion
+ * finalize over data it never removed. `false` now means PROVEN ABSENT and nothing else; anything
+ * undetermined throws, and the saga moves to `failed_retryable` rather than declaring success.
+ *
+ * It also does NOT go through `sharedReadJson`, which folds HTTP 400 into `null` — convenient for
+ * an ordinary read, fatal for a proof.
+ */
+export async function sharedIdentityObjectExists(key: string): Promise<boolean> {
+  assertIdentityKey(key);
+
+  if (sharedStoreMode === "supabase-rest") {
+    const response = await fetch(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`, {
+      method: "GET",
+      headers: sharedRestHeaders(),
+      cache: "no-store",
+    });
+    if (response.status === 404) return false;
+    if (response.ok) return true;
+    if (response.status === 400) {
+      // Supabase answers 400 for some missing-object shapes. Accept ONLY an explicit not-found
+      // classification — a malformed request also returns 400 and must not read as absence.
+      const body = await response.text().catch(() => "");
+      if (/not[_ -]?found|NoSuchKey|Object not found/i.test(body)) return false;
+      throw new Error("shared_store_existence_undetermined:400");
+    }
+    throw new Error(`shared_store_existence_undetermined:${response.status}`);
+  }
+
+  try {
+    return (await sharedReadJson<unknown>(key)) !== null;
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "";
+    // Only a provider not-found is absence; everything else is undetermined.
+    if (/NoSuchKey|NotFound|404/i.test(code)) return false;
+    throw new Error("shared_store_existence_undetermined");
+  }
+}
+
+/**
+ * POR-1 — how an object's absence was established, and how much that answer is worth.
+ *
+ * `sharedIdentityObjectExists` asks one question — GET this key — on a stable URL with a cacheable
+ * method. That answer is authoritative when it says ABSENT and merely suggestive when it says
+ * present: a body can be served from a cache after the object behind it is gone.
+ *
+ * These states exist so a caller can tell those apart instead of collapsing every non-null response
+ * into "this survived".
+ */
+export type IdentityObjectAbsenceState =
+  | "AUTHORITATIVELY_ABSENT"
+  | "STALE_BODY_VISIBLE_BUT_UNLISTED"
+  | "PHYSICAL_RESIDUE_CONFIRMED"
+  | "AUTHORITY_UNAVAILABLE";
+
+/**
+ * Establish whether an identity object still physically exists, using both available reads.
+ *
+ * WHY TWO SOURCES.
+ *
+ * The per-key GET and the listing are answered by different machinery. The GET is a cacheable
+ * method on a fixed URL; the listing is a POST, which is not cacheable, and Supabase answers it from
+ * the storage metadata database — the same rows the object API resolves a key through.
+ *
+ * The order is chosen so the common case costs nothing extra: an object that is genuinely gone
+ * answers the GET with not-found and returns immediately. The listing is consulted ONLY when the
+ * GET says "still here", which after a successful erasure is exactly the case in doubt.
+ *
+ * WHY THIS CANNOT FALSELY PASS.
+ *
+ * A surviving, owner-linked object appears in BOTH reads, so it is still `PHYSICAL_RESIDUE_CONFIRMED`
+ * and still blocks finalization. The only path to a false pass would be a listing that omits an
+ * object that really exists — and it cannot, in the direction that matters: the storage API resolves
+ * a key THROUGH the metadata the listing reads, so an object missing from the listing is an object
+ * no lookup can reach. Unreachable is the property an erasure has to deliver.
+ *
+ * This is also deliberately robust to the open question about which read lags. If the LISTING is the
+ * stale one and reports a deleted object as still present, the result is `PHYSICAL_RESIDUE_CONFIRMED`
+ * — the behaviour that exists today, retried by the saga. No regression either way.
+ *
+ * WHAT IS NOT DONE HERE. No sleep, no retry-until-absent, no cache-busting query string. A retry
+ * against an absence check waits out a TTL and then calls it an erasure.
+ */
+export async function resolveIdentityObjectAbsence(
+  key: string,
+): Promise<IdentityObjectAbsenceState> {
+  let visible: boolean;
+  try {
+    visible = await sharedIdentityObjectExists(key);
+  } catch {
+    // Undetermined is not absence. Fail closed.
+    return "AUTHORITY_UNAVAILABLE";
+  }
+  if (!visible) return "AUTHORITATIVELY_ABSENT";
+
+  const folder = key.slice(0, key.lastIndexOf("/"));
+  let listed: string[];
+  try {
+    listed = await sharedListKeys(`${folder}/`);
+  } catch {
+    // The body says present and the authority cannot be reached. Refusing to finalize is the only
+    // honest answer: this is precisely the state where guessing would erase the guarantee.
+    return "AUTHORITY_UNAVAILABLE";
+  }
+
+  return listed.includes(key) ? "PHYSICAL_RESIDUE_CONFIRMED" : "STALE_BODY_VISIBLE_BUT_UNLISTED";
+}
+
+/** The same normalization the email index is built from, so deletion targets the right digest. */
+export function normalizeAccountEmail(email: string): string {
+  return normalizeEmail(email);
 }
 
 export async function listAccounts(): Promise<AccountRecord[]> {
@@ -899,60 +1576,96 @@ export async function createAccount(input: {
   role: AccountRole;
 }) {
   const normalizedEmail = normalizeEmail(input.email);
+  // The id is minted BEFORE the lease, because a lease is taken on an account id and there is no
+  // other way to name an account that does not exist yet. A brand-new id has an open gate, so this
+  // is not a formality: it is what stops a registration racing a deletion of the SAME id, and what
+  // makes the existence check and the write one window rather than two.
+  const accountId = createId("acct");
 
-  if (shouldUseSharedStore) {
-    await ensureSharedStoreReady();
-    const existing = await getSharedAccountByEmail(normalizedEmail);
+  return withAccountProvisioningLease({
+    accountId,
+    operation: "account_registration",
+    execute: async (context) => {
+      if (shouldUseSharedStore) {
+        await ensureSharedStoreReady();
+        const existing = await getSharedAccountByEmail(normalizedEmail);
 
-    if (existing) {
-      return { ok: false as const, reason: "email_exists" as const };
-    }
+        if (existing) {
+          return { ok: false as const, reason: "email_exists" as const };
+        }
 
-    const account: AccountRecord = {
-      id: createId("acct"),
-      name: input.name,
-      email: normalizedEmail,
-      passwordHash: hashPassword(input.password),
-      city: input.city,
-      role: input.role,
-      createdAt: nowIso(),
-      updatedAt: nowIso(),
-      supportProfile: defaultSupportProfile(),
-    };
+        const account: AccountRecord = {
+          id: accountId,
+          name: input.name,
+          email: normalizedEmail,
+          passwordHash: hashPassword(input.password),
+          city: input.city,
+          role: input.role,
+          createdAt: nowIso(),
+          updatedAt: nowIso(),
+          supportProfile: defaultSupportProfile(),
+        };
 
-    await putSharedAccountRecord(account);
-    return { ok: true as const, account };
-  }
+        await putSharedAccountRecord(context, account);
+        return { ok: true as const, account };
+      }
 
-  const accounts = await listAccounts();
-  const existing = accounts.find((account) => normalizeEmail(account.email) === normalizedEmail);
+      // THE UNIQUENESS CHECK AND THE INSERT ARE ONE CRITICAL SECTION.
+      //
+      // Read-then-write with a gap is how two concurrent registrations for the same address both
+      // see "absent" and both insert — and how the second, holding an array read before the first,
+      // erases it. This is the identity-bearing instance of the defect proven on the sessions file
+      // by YV-C7, and a lost or duplicated ACCOUNT is materially worse than a lost session.
+      type CreateAccountResult =
+        | { ok: true; account: AccountRecord }
+        | { ok: false; reason: "email_exists" };
+      return mutateLocalJsonFor<AccountRecord[], CreateAccountResult>(accountsFile, (accounts) => {
+      const existing = accounts.find((account) => normalizeEmail(account.email) === normalizedEmail);
 
-  if (existing) {
-    return { ok: false as const, reason: "email_exists" as const };
-  }
+      if (existing) {
+        return { value: accounts, result: { ok: false as const, reason: "email_exists" as const } };
+      }
 
-  const account: AccountRecord = {
-    id: createId("acct"),
-    name: input.name,
-    email: normalizedEmail,
-    passwordHash: hashPassword(input.password),
-    city: input.city,
-    role: input.role,
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-    supportProfile: defaultSupportProfile(),
-  };
+      const account: AccountRecord = {
+        id: accountId,
+        name: input.name,
+        email: normalizedEmail,
+        passwordHash: hashPassword(input.password),
+        city: input.city,
+        role: input.role,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+        supportProfile: defaultSupportProfile(),
+      };
 
-  accounts.unshift(account);
-  await writeLocalJson(accountsFile, accounts);
-  return { ok: true as const, account };
+      return { value: [account, ...accounts], result: { ok: true as const, account } };
+      });
+    },
+  });
 }
 
 function hashPasswordForStorage(password: string) {
   return hashPassword(password);
 }
 
-export async function upsertAccountRecord(account: AccountRecord): Promise<AccountRecord> {
+/**
+ * Write the primary account record.
+ *
+ * POR-1 — this is THE resurrection primitive. It is a read-modify-upsert of the identity itself, and
+ * every account-deleting failure this package has seen ended here: a request that had read the
+ * account before a deletion started, writing its stale copy afterwards.
+ *
+ * So it now requires a live write context, which only `accountMutationLease` can mint and which only
+ * exists inside a held lease. A caller that has not taken the lease cannot call this at all, and a
+ * caller that took one and then let it lapse holds a REVOKED context — which fails the same check a
+ * forged one does. The lease is what makes the ordering decidable; the context is what makes the
+ * lease unavoidable.
+ */
+export async function upsertAccountRecord(
+  context: AccountWriteContext,
+  account: AccountRecord,
+): Promise<AccountRecord> {
+  assertAccountWriteContext(context, account.id);
   const normalizedAccount = {
     ...account,
     email: normalizeEmail(account.email),
@@ -960,27 +1673,52 @@ export async function upsertAccountRecord(account: AccountRecord): Promise<Accou
 
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
-    await putSharedAccountRecord(normalizedAccount);
+    await putSharedAccountRecord(context, normalizedAccount);
     return normalizedAccount;
   }
 
-  const accounts = await listAccounts();
-  const nextAccounts = [...accounts];
-  const existingIndex = nextAccounts.findIndex(
-    (entry) => entry.id === normalizedAccount.id || normalizeEmail(entry.email) === normalizedAccount.email,
-  );
+  // Serialized: an upsert that reads the array, edits one entry and writes the whole thing back
+  // will otherwise erase every account another writer added in between.
+  await mutateLocalJson(accountsFile, (accounts) => {
+    const nextAccounts = [...accounts];
+    const existingIndex = nextAccounts.findIndex(
+      (entry) => entry.id === normalizedAccount.id || normalizeEmail(entry.email) === normalizedAccount.email,
+    );
 
-  if (existingIndex >= 0) {
-    nextAccounts[existingIndex] = normalizedAccount;
-  } else {
-    nextAccounts.unshift(normalizedAccount);
-  }
-
-  await writeLocalJson(accountsFile, nextAccounts);
+    if (existingIndex >= 0) {
+      nextAccounts[existingIndex] = normalizedAccount;
+    } else {
+      nextAccounts.unshift(normalizedAccount);
+    }
+    return nextAccounts;
+  });
   return normalizedAccount;
 }
 
-export async function updateAccountPassword(userId: string, password: string): Promise<AccountRecord | null> {
+// POR-1 — every read-modify-write of an account runs under a mutation lease.
+//
+// The lease is taken BEFORE the read, deliberately. Taking it just before the write would leave the
+// exact window this exists to close: read the account, a deletion runs, write the stale copy back.
+export async function updateAccountPassword(
+  userId: string,
+  password: string,
+  context?: AccountWriteContext,
+): Promise<AccountRecord | null> {
+  // `context` lets account recovery hold ONE window across validate → password → token retirement,
+  // instead of a lease that covers only the middle step.
+  if (context) return updateAccountPasswordUnderLease(context, userId, password);
+  return withAccountMutationLease({
+    accountId: userId,
+    operation: "password_update",
+    execute: (ctx) => updateAccountPasswordUnderLease(ctx, userId, password),
+  });
+}
+
+async function updateAccountPasswordUnderLease(
+  context: AccountWriteContext,
+  userId: string,
+  password: string,
+): Promise<AccountRecord | null> {
   const account = await findAccountById(userId);
 
   if (!account) {
@@ -993,11 +1731,60 @@ export async function updateAccountPassword(userId: string, password: string): P
     updatedAt: nowIso(),
   };
 
-  await upsertAccountRecord(updatedAccount);
+  await upsertAccountRecord(context, updatedAccount);
   return updatedAccount;
 }
 
-export async function updateSupportProfile(userId: string, patch: Partial<SupportProfile>): Promise<AccountRecord | null> {
+/**
+ * POR-1 WS5 — hold or release the account.
+ *
+ * Returns false when the record is already gone: an erased account needs no marker, and the
+ * caller must not read that as a failure to lock.
+ */
+export async function setAccountDeletionLock(
+  context: AccountWriteContext,
+  userId: string,
+  locked: boolean,
+): Promise<boolean> {
+  assertAccountWriteContext(context, userId);
+  const account = await findAccountById(userId);
+  if (!account) return false;
+
+  const next: AccountRecord = { ...account, updatedAt: nowIso() };
+  if (locked) {
+    next.deletionLockedAt = nowIso();
+  } else {
+    delete next.deletionLockedAt;
+  }
+
+  await upsertAccountRecord(context, next);
+  return true;
+}
+
+/**
+ * `context` is optional so a caller already inside a window extends it rather than opening a second
+ * one. The canonical support-profile update is exactly that case: it saves the foundation profile and
+ * then this legacy mirror, and those two writes have to be ONE window — the previous split is what
+ * left the foundation half outside the fence.
+ */
+export async function updateSupportProfile(
+  userId: string,
+  patch: Partial<SupportProfile>,
+  context?: AccountWriteContext,
+): Promise<AccountRecord | null> {
+  if (context) return updateSupportProfileUnderLease(context, userId, patch);
+  return withAccountMutationLease({
+    accountId: userId,
+    operation: "support_profile_update",
+    execute: (ctx) => updateSupportProfileUnderLease(ctx, userId, patch),
+  });
+}
+
+async function updateSupportProfileUnderLease(
+  context: AccountWriteContext,
+  userId: string,
+  patch: Partial<SupportProfile>,
+): Promise<AccountRecord | null> {
   const account = await findAccountById(userId);
 
   if (!account) {
@@ -1013,11 +1800,25 @@ export async function updateSupportProfile(userId: string, patch: Partial<Suppor
     },
   };
 
-  await upsertAccountRecord(updatedAccount);
+  await upsertAccountRecord(context, updatedAccount);
   return updatedAccount;
 }
 
 export async function bindLineIdentity(input: {
+  userId: string;
+  lineUserId: string;
+  lineDisplayName: string;
+  linePictureUrl?: string;
+  lineIdTokenSubject?: string;
+}): Promise<AccountRecord | null> {
+  return withAccountMutationLease({
+    accountId: input.userId,
+    operation: "line_binding",
+    execute: (context) => bindLineIdentityUnderLease(context, input),
+  });
+}
+
+async function bindLineIdentityUnderLease(context: AccountWriteContext, input: {
   userId: string;
   lineUserId: string;
   lineDisplayName: string;
@@ -1049,7 +1850,7 @@ export async function bindLineIdentity(input: {
     },
   };
 
-  await upsertAccountRecord(updatedAccount);
+  await upsertAccountRecord(context, updatedAccount);
   return updatedAccount;
 }
 
@@ -1072,7 +1873,20 @@ export async function findSessionById(id: string): Promise<SessionRecord | null>
   return sessions.find((session) => session.id === id) || null;
 }
 
-export async function createSession(userId: string | null): Promise<SessionRecord> {
+/**
+ * POR-1 — mint a session.
+ *
+ * An account-linked session IS a credential for that account, so creating one is governed exactly
+ * like writing the account: without this, a stale request could mint a fresh live session for a
+ * person whose deletion had already closed the gate.
+ *
+ * An anonymous session (`userId === null`) is not a credential for anyone and needs no context.
+ */
+export async function createSession(
+  context: AccountWriteContext | null,
+  userId: string | null,
+): Promise<SessionRecord> {
+  if (userId) assertAccountWriteContext(context, userId);
   const session: SessionRecord = {
     id: createId("sess"),
     userId,
@@ -1082,21 +1896,101 @@ export async function createSession(userId: string | null): Promise<SessionRecor
 
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
-    await putSharedSessionRecord(session);
+    await putSharedSessionRecord(context, session);
     return session;
   }
 
-  const sessions = await listSessions();
-  sessions.unshift(session);
-  await writeLocalJson(sessionsFile, sessions);
+  // Serialized with every other sessions-file mutation. `createSession` is the source of the
+  // anonymous sessions that were racing registration's three writes in the first place.
+  await mutateLocalJson(sessionsFile, (sessions) => [session, ...sessions]);
   return session;
 }
 
+/**
+ * POR-1 — INSERT a session row that does not exist yet, keeping its id.
+ *
+ * WHY THIS EXISTS. The session cookie is SELF-CONTAINED, and `getViewerContext` fabricates a
+ * synthetic session from it when the store has no matching row. That is deliberate and it is what
+ * keeps an anonymous visitor working across a store blip — but it means `ensureViewerSession()` can
+ * hand back a session id the store has never seen, and `touchSession` (which updates in place) then
+ * finds nothing and returns null.
+ *
+ * Registration used to paper over exactly that with `|| { ...session, userId: account.id }`: an
+ * in-memory object shaped like a bound session, from which a cookie was then minted. The browser
+ * ended up authenticated with no server-side session record at all.
+ *
+ * So the row is created, keeping the ID — a new id would break anonymous→register continuity, which
+ * is the whole point of registering from a session that already has activity.
+ *
+ * DELIBERATELY NOT AN UPSERT, and `touchSession` deliberately stays update-only. An upsert on this
+ * table is a resurrection primitive: session revocation deletes rows, and a stale cookie replaying
+ * against an upsert would recreate the session it just lost. This inserts ONLY when absent, requires
+ * a write context exactly as every other account-linked write does, and returns the existing row
+ * untouched when there is one.
+ */
+export async function insertSessionRecordIfAbsent(
+  context: AccountWriteContext | null,
+  session: SessionRecord,
+): Promise<SessionRecord | null> {
+  const attachesAccount =
+    Boolean(session.userId) ||
+    Boolean(session.principalLanding && (session.principalLanding.legacyAccountId || session.principalLanding.principalId));
+  if (attachesAccount) {
+    assertAccountWriteContext(
+      context,
+      session.userId || session.principalLanding?.legacyAccountId || undefined,
+    );
+  }
+
+  const existing = await findSessionById(session.id);
+  if (existing) return existing;
+
+  const record: SessionRecord = { ...session, updatedAt: nowIso() };
+  if (shouldUseSharedStore) {
+    await ensureSharedStoreReady();
+    await putSharedSessionRecord(context, record);
+    return record;
+  }
+
+  // Serialized: the existence check and the insert must be one critical section, or two concurrent
+  // registrations each see "absent" and the second write drops the first row.
+  let inserted: SessionRecord = record;
+  await mutateLocalJson(sessionsFile, (sessions) => {
+    const already = sessions.find((entry) => entry.id === record.id);
+    if (already) {
+      inserted = already;
+      return sessions;
+    }
+    return [record, ...sessions];
+  });
+  return inserted;
+}
+
+/**
+ * POR-1 — update a session record.
+ *
+ * A session is account-linked state, and `touchSession` is how an account gets BOUND to one. So an
+ * account-linked touch requires a live write context, exactly like an account write: a stale cookie
+ * arriving after a deletion must not be able to re-create the session that names the erased person.
+ *
+ * An ANONYMOUS touch (no account on the session, and none being attached) needs no context. It
+ * carries no identity, so there is nothing for a deletion to race with — and requiring a lease for it
+ * would mean taking one on every anonymous page view.
+ */
 export async function touchSession(
+  context: AccountWriteContext | null,
   id: string,
   userId?: string | null,
   principalLanding?: SessionPrincipalLanding | null,
 ): Promise<SessionRecord | null> {
+  const attachesAccount =
+    (typeof userId === "string" && userId.length > 0) ||
+    Boolean(principalLanding && (principalLanding.legacyAccountId || principalLanding.principalId));
+  if (attachesAccount) {
+    // Account-linked: the context is mandatory, and it must name the account being attached.
+    assertAccountWriteContext(context, userId || principalLanding?.legacyAccountId || undefined);
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     const session = await getSharedSessionById(id);
@@ -1111,22 +2005,22 @@ export async function touchSession(
       principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
       updatedAt: nowIso(),
     };
-    await putSharedSessionRecord(updatedSession);
+    await putSharedSessionRecord(context, updatedSession);
     return updatedSession;
   }
 
-  const sessions = await listSessions();
-  const updated = sessions.map((session) =>
-    session.id === id
-      ? {
-          ...session,
-          userId: userId === undefined ? session.userId : userId,
-          principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
-          updatedAt: nowIso(),
-        }
-      : session,
+  const updated = await mutateLocalJson(sessionsFile, (sessions) =>
+    sessions.map((session) =>
+      session.id === id
+        ? {
+            ...session,
+            userId: userId === undefined ? session.userId : userId,
+            principalLanding: principalLanding === undefined ? session.principalLanding || null : principalLanding,
+            updatedAt: nowIso(),
+          }
+        : session,
+    ),
   );
-  await writeLocalJson(sessionsFile, updated);
   return updated.find((session) => session.id === id) || null;
 }
 
@@ -1137,11 +2031,7 @@ export async function deleteSession(id: string) {
     return;
   }
 
-  const sessions = await listSessions();
-  await writeLocalJson(
-    sessionsFile,
-    sessions.filter((session) => session.id !== id),
-  );
+  await mutateLocalJson(sessionsFile, (sessions) => sessions.filter((session) => session.id !== id));
 }
 
 export async function listConsultations(): Promise<ConsultationRecord[]> {
@@ -1163,6 +2053,10 @@ export async function listPasswordResetTokens(): Promise<PasswordResetTokenRecor
 }
 
 export async function listLineWebhookEvents(): Promise<LineWebhookEventRecord[]> {
+  if (canonicalLineActivityEnabled()) {
+    return listCanonicalLineEvents();
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     return listSharedLineWebhookEvents();
@@ -1172,6 +2066,10 @@ export async function listLineWebhookEvents(): Promise<LineWebhookEventRecord[]>
 }
 
 export async function findLineWebhookEventById(id: string): Promise<LineWebhookEventRecord | null> {
+  if (canonicalLineActivityEnabled()) {
+    return findCanonicalLineEventById(id);
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     return getSharedLineWebhookEventById(id);
@@ -1184,22 +2082,40 @@ export async function findLineWebhookEventById(id: string): Promise<LineWebhookE
 async function upsertLineWebhookEvent(record: LineWebhookEventRecord) {
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
+
+    // The per-event object is written in BOTH modes. It is already row-addressable — one key per
+    // event, no shared document, no lost update — so it never had the defect, and keeping it is
+    // what makes an application rollback safe: a rolled-back deployment still finds every event
+    // where it expects it.
     await putSharedLineWebhookEvent(record);
+
+    if (canonicalLineActivityEnabled()) {
+      await recordCanonicalLineEvent(record);
+      return record;
+    }
+
     await updateRecentLineWebhookSubjectIndex(record);
     return record;
   }
 
-  const records = await listLineWebhookEvents();
-  const nextRecords = [...records];
-  const existingIndex = nextRecords.findIndex((entry) => entry.id === record.id);
-
-  if (existingIndex >= 0) {
-    nextRecords[existingIndex] = record;
-  } else {
-    nextRecords.unshift(record);
+  if (canonicalLineActivityEnabled()) {
+    await recordCanonicalLineEvent(record);
+    return record;
   }
 
-  await writeLocalJson(lineWebhookEventsFile, nextRecords);
+  // Serialized: this store IS the LINE redelivery idempotency record. A lost update here does not
+  // just drop an event — it makes a duplicate delivery look new.
+  await mutateLocalJson(lineWebhookEventsFile, (records) => {
+    const nextRecords = [...records];
+    const existingIndex = nextRecords.findIndex((entry) => entry.id === record.id);
+
+    if (existingIndex >= 0) {
+      nextRecords[existingIndex] = record;
+    } else {
+      nextRecords.unshift(record);
+    }
+    return nextRecords;
+  });
   await updateRecentLineWebhookSubjectIndex(record);
   return record;
 }
@@ -1263,6 +2179,13 @@ export async function listLineWebhookEventsForAccount(accountId: string) {
 export async function listRecentLineWebhookSubjects(limit = 10): Promise<RecentLineWebhookSubjectRecord[]> {
   const effectiveLimit = Math.max(1, limit);
 
+  if (canonicalLineActivityEnabled()) {
+    // Derived from the events themselves, so it cannot drift from them — and it is read from the
+    // same row-locked table the write committed to, so a fresh entry is visible immediately. That
+    // is the property the object-store array could not provide at any retry count.
+    return listCanonicalRecentLineSubjects(effectiveLimit);
+  }
+
   if (shouldUseSharedStore) {
     await ensureSharedStoreReady();
     return (await getSharedRecentLineWebhookSubjects()).slice(0, effectiveLimit);
@@ -1283,20 +2206,29 @@ async function upsertPasswordResetToken(record: PasswordResetTokenRecord) {
     return record;
   }
 
-  const records = await listPasswordResetTokens();
-  const nextRecords = [...records];
-  const existingIndex = nextRecords.findIndex((entry) => entry.tokenHash === record.tokenHash);
+  // Serialized: single-use consumption depends on this upsert being atomic with the read that
+  // decided the token was still live.
+  await mutateLocalJson(passwordResetTokensFile, (records) => {
+    const nextRecords = [...records];
+    const existingIndex = nextRecords.findIndex((entry) => entry.tokenHash === record.tokenHash);
 
-  if (existingIndex >= 0) {
-    nextRecords[existingIndex] = record;
-  } else {
-    nextRecords.unshift(record);
-  }
-
-  await writeLocalJson(passwordResetTokensFile, nextRecords);
+    if (existingIndex >= 0) {
+      nextRecords[existingIndex] = record;
+    } else {
+      nextRecords.unshift(record);
+    }
+    return nextRecords;
+  });
   return record;
 }
 
+/**
+ * POR-1 — issuing a password-reset token is an account-linked write.
+ *
+ * A live reset token is a credential: minting one for an account whose deletion has begun would hand
+ * out a way back into an identity that is being erased, and the token object would then have to be
+ * chased down by the erasure that had already enumerated its targets. Fenced like any other.
+ */
 export async function createPasswordResetToken(input: {
   accountId: string;
   email: string;
@@ -1306,6 +2238,18 @@ export async function createPasswordResetToken(input: {
     throw new Error("placeholder_email_not_resettable");
   }
 
+  return withAccountMutationLease({
+    accountId: input.accountId,
+    operation: "password_reset_issue",
+    execute: () => createPasswordResetTokenUnderLease(input),
+  });
+}
+
+async function createPasswordResetTokenUnderLease(input: {
+  accountId: string;
+  email: string;
+  expiresInMinutes?: number;
+}) {
   const token = randomBytes(32).toString("base64url");
   const createdAt = nowIso();
   const expiresAt = new Date(Date.now() + (input.expiresInMinutes || 60) * 60 * 1000).toISOString();
@@ -1379,6 +2323,14 @@ export async function validatePasswordResetToken(token: string) {
   };
 }
 
+/**
+ * POR-1 — account recovery: validate the token, rewrite the password, retire the tokens.
+ *
+ * The whole sequence is one window. `updateAccountPassword` takes its own lease, and that lease
+ * covers only the password write — so a recovery whose token was validated before a deletion started
+ * could still retire tokens against an account mid-erasure. The outer window closes that, and the
+ * inner call reuses this context rather than opening a second one.
+ */
 export async function consumePasswordResetToken(token: string, password: string) {
   const validation = await validatePasswordResetToken(token);
 
@@ -1386,7 +2338,19 @@ export async function consumePasswordResetToken(token: string, password: string)
     return validation;
   }
 
-  const updatedAccount = await updateAccountPassword(validation.account.id, password);
+  return withAccountMutationLease({
+    accountId: validation.account.id,
+    operation: "account_recovery",
+    execute: (context) => consumePasswordResetTokenUnderLease(context, validation.account.id, password),
+  });
+}
+
+async function consumePasswordResetTokenUnderLease(
+  context: AccountWriteContext,
+  accountId: string,
+  password: string,
+) {
+  const updatedAccount = await updateAccountPassword(accountId, password, context);
 
   if (!updatedAccount) {
     return { ok: false as const, reason: "invalid_token" as const };
@@ -1394,7 +2358,7 @@ export async function consumePasswordResetToken(token: string, password: string)
 
   const allTokens = await listPasswordResetTokens();
   const relatedActiveTokens = allTokens.filter(
-    (entry) => entry.accountId === validation.account.id && entry.usedAt === null,
+    (entry) => entry.accountId === accountId && entry.usedAt === null,
   );
   const usedAt = nowIso();
 
@@ -1440,9 +2404,7 @@ export async function createConsultation(input: {
     return consultation;
   }
 
-  const consultations = await listConsultations();
-  consultations.unshift(consultation);
-  await writeLocalJson(consultationsFile, consultations);
+  await mutateLocalJson(consultationsFile, (consultations) => [consultation, ...consultations]);
   return consultation;
 }
 
@@ -1519,30 +2481,32 @@ export async function attachLeadToConsultation(input: {
     return updatedEntry;
   }
 
-  const consultations = await listConsultations();
-  let updatedEntry: ConsultationRecord | null = null;
-  const updated = consultations.map((entry) => {
-    if (entry.id !== input.consultationId) {
-      return entry;
-    }
+  // Serialized: the record-level conflict rule is last-write-wins for THIS consultation, which is
+  // intentional. Without the queue it silently became last-write-wins over the whole FILE.
+  return mutateLocalJsonFor<ConsultationRecord[], ConsultationRecord | null>(consultationsFile, (consultations) => {
+    let updatedEntry: ConsultationRecord | null = null;
+    const updated = consultations.map((entry) => {
+      if (entry.id !== input.consultationId) {
+        return entry;
+      }
 
-    const updatedOwnerTarget = resolveUpdatedOwnerTarget(entry);
+      const updatedOwnerTarget = resolveUpdatedOwnerTarget(entry);
 
-    if (updatedOwnerTarget === null) {
-      updatedEntry = null;
-      return entry;
-    }
+      if (updatedOwnerTarget === null) {
+        updatedEntry = null;
+        return entry;
+      }
 
-    updatedEntry = {
-      ...entry,
-      userId: updatedOwnerTarget,
-      leadSubmitted: true,
-      lead: input.lead,
-    };
-    return updatedEntry;
+      updatedEntry = {
+        ...entry,
+        userId: updatedOwnerTarget,
+        leadSubmitted: true,
+        lead: input.lead,
+      };
+      return updatedEntry;
+    });
+    return { value: updated, result: updatedEntry };
   });
-  await writeLocalJson(consultationsFile, updated);
-  return updatedEntry;
 }
 
 export async function assignSessionConsultationsToUser(
@@ -1568,8 +2532,9 @@ export async function assignSessionConsultationsToUser(
     return;
   }
 
-  const updated = consultations.map((entry) => (entry.sessionId === sessionId ? { ...entry, userId: ownerTargetId } : entry));
-  await writeLocalJson(consultationsFile, updated);
+  await mutateLocalJson(consultationsFile, (entries) =>
+    entries.map((entry) => (entry.sessionId === sessionId ? { ...entry, userId: ownerTargetId } : entry)),
+  );
 }
 
 export async function findConsultationForViewer(input: {

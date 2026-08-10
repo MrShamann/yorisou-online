@@ -1,0 +1,37 @@
+{
+  "contract": "por1-production-owner-linked-families",
+  "version": 1,
+  "source": "yorisou-production (krxizslnksorwhepyijs), read-only catalogue, 2026-08-01",
+  "definition": "public BASE TABLEs carrying an account-owner column (owner_account_id / actor_account_id / reporter_account_id / blocker_account_id)",
+  "families": [
+    "yorisou_account_deletion_requests",
+    "yorisou_ai_reflections",
+    "yorisou_ai_runs",
+    "yorisou_daily_state_history_events",
+    "yorisou_daily_state_records",
+    "yorisou_experience_blocks",
+    "yorisou_experience_cards",
+    "yorisou_experience_consents",
+    "yorisou_experience_events",
+    "yorisou_experience_interactions",
+    "yorisou_experience_invites",
+    "yorisou_experience_moderation_events",
+    "yorisou_experience_reports",
+    "yorisou_experience_revisions",
+    "yorisou_experience_visibility_events",
+    "yorisou_private_check_in_plans",
+    "yorisou_private_memory_items",
+    "yorisou_private_recommendations",
+    "yorisou_recommendation_actions",
+    "yorisou_recommendation_events",
+    "yorisou_recommendation_reports",
+    "yorisou_recommendation_returns",
+    "yorisou_recommendation_sets",
+    "yorisou_test_results",
+    "yorisou_values_assessment_events",
+    "yorisou_values_assessments"
+  ],
+  "classified_not_owner_linked": {
+    "yorisou_resource_sources": "owner_name is a resource-catalogue attribution (publisher/org, alongside domain, source_type, commercial_status), not a link to a user account"
+  }
+}

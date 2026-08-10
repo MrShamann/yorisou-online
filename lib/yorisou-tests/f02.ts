@@ -4,12 +4,12 @@ import type { RuleBasedRuntime, TestCatalogEntry } from "./types";
 export const f02CatalogEntry: TestCatalogEntry = {
   slug: "f02",
   testId: "F02",
-  title: "職場環境フィット診断",
+  title: "職場環境フィットチェック",
   description: "音、距離感、裁量、回復のしやすさから、合いやすい環境の方向を見つめる入口です。",
   estimatedTime: "約12〜18分",
   category: "職場環境",
   boundaryNote: "職業判断ではなく、働く環境を比較するための自己理解メモです。",
-  ctaLabel: "診断を始める",
+  ctaLabel: "チェックを始める",
   route: "/tests/f02",
   status: "available",
 };
@@ -17,7 +17,7 @@ export const f02CatalogEntry: TestCatalogEntry = {
 export const f02Runtime: RuleBasedRuntime = {
   slug: "f02",
   testId: "F02",
-  title: "職場環境フィット診断",
+  title: "職場環境フィットチェック",
   introTitle: "合いやすい職場環境を、\n感覚の相性から見る。",
   introDescription:
     "集中しやすい音や空間、チームとの距離、裁量の幅、回復のしやすさを比べながら、今の自分に合いやすい環境の方向を整理します。",

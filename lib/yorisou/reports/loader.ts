@@ -1,7 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { findPublicArchetypeByCode } from "@/lib/yorisou/public-result";
+
+import { SELF_UNDERSTANDING_REPORT_SOURCES } from "./generated/reportSources";
 
 import { CURRENT_SELF_UNDERSTANDING_REPORT_ACCESS_MODE, buildPublicSelfUnderstandingReportDocument } from "./access";
 import { parseSelfUnderstandingReportDocument } from "./parser";
@@ -13,11 +12,18 @@ import {
   type SelfUnderstandingReportSurface,
 } from "./types";
 
-const SELF_UNDERSTANDING_REPORT_CONTENT_DIR = path.join(
-  process.cwd(),
-  "content/yorisou/reports/self-understanding",
-  SELF_UNDERSTANDING_REPORT_LIBRARY_VERSION,
-);
+/**
+ * Where a report CAME FROM, for diagnostics and parser messages.
+ *
+ * Deliberately no longer a filesystem path that anything reads. The markdown is embedded at build
+ * time (see `generated/reportSources.ts`), because this module used to resolve
+ * `process.cwd() + content/…` and `fs.readFileSync` it AT REQUEST TIME. The report page is
+ * prerendered so its files existed; the dynamic download route runs in a serverless function where
+ * they do not, so every download threw — and the route reported that as "no such report".
+ */
+function reportSourceLabel(publicCode: string) {
+  return `content/yorisou/reports/self-understanding/${SELF_UNDERSTANDING_REPORT_LIBRARY_VERSION}/${publicCode}.md`;
+}
 
 function escapeFrontmatterString(value: string) {
   return JSON.stringify(value);
@@ -37,21 +43,25 @@ export function assertValidSelfUnderstandingReportCode(publicCode: string) {
   }
 }
 
+/** The canonical source location for this report. A LABEL, not something that is opened. */
 export function getSelfUnderstandingReportFilePath(publicCode: string) {
   assertValidSelfUnderstandingReportCode(publicCode);
-  return path.join(SELF_UNDERSTANDING_REPORT_CONTENT_DIR, `${publicCode}.md`);
+  return reportSourceLabel(publicCode);
 }
 
 export function loadParsedSelfUnderstandingReportByCode(
   publicCode: string,
 ): ParsedSelfUnderstandingReportDocument {
   const filePath = getSelfUnderstandingReportFilePath(publicCode);
+  const source = SELF_UNDERSTANDING_REPORT_SOURCES[publicCode];
 
-  if (!fs.existsSync(filePath)) {
+  // Still an explicit absence check, and it still throws — but it now fails at BUILD time instead,
+  // because the generator refuses to emit a registry that omits a governed code. A report that is
+  // missing here means the registry is stale, which CI also refuses.
+  if (typeof source !== "string" || source.length === 0) {
     throw new Error(`Missing report file for publicCode: ${publicCode}`);
   }
 
-  const source = fs.readFileSync(filePath, "utf8");
   const parsed = parseSelfUnderstandingReportDocument(source, filePath);
 
   if (parsed.frontmatter.publicCode !== publicCode) {

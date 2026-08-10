@@ -12,16 +12,44 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-PG_PORT=55446
-REST_PORT=55448
-PROXY_PORT=55449   # strips the Supabase-style /rest/v1 prefix for raw PostgREST
-APP_PORT=3200
+# ── PARAMETERS ───────────────────────────────────────────────────────────────
+#
+# Every default below is the YV-1 contract, unchanged. POR-1 needs the same stack on PostgreSQL 17
+# — Production and Preview both run 17.6 — so the knobs are exposed rather than the file forked.
+# A fork would drift: the next fix to the PostgREST wait loop or the proxy would land in one copy.
+#
+#   POR1_POSTGRES_MAJOR   required major. YV-1 leaves it unset and keeps 16; POR-1 sets 17 and the
+#                         harness REFUSES anything else rather than testing a different database
+#                         than the one being shipped.
+#   POR1_POSTGRES_BIN     absolute bin directory, resolved once
+#   POR1_DATABASE_NAME    isolated database
+#   POR1_POSTGRES_PORT / POR1_REST_PORT / POR1_PROXY_PORT / POR1_APP_PORT
+#   POR1_LOCAL_STORE_ROOT isolated local-store root, owned by the one app process
+PG_PORT="${POR1_POSTGRES_PORT:-55446}"
+REST_PORT="${POR1_REST_PORT:-55448}"
+PROXY_PORT="${POR1_PROXY_PORT:-55449}"   # strips the Supabase-style /rest/v1 prefix for raw PostgREST
+APP_PORT="${POR1_APP_PORT:-3200}"
 WORK="${YV_FULLSTACK_WORK:-/tmp/yv1-fullstack}"
 PGDIR="$WORK/pg"
-DATADIR="$WORK/auth-store"
-PGBIN=/opt/homebrew/opt/postgresql@16/bin
-DB=yorisou_values_test
-REST_CONTAINER=yv1-postgrest
+DATADIR="${POR1_LOCAL_STORE_ROOT:-$WORK/auth-store}"
+PGBIN="${POR1_POSTGRES_BIN:-/opt/homebrew/opt/postgresql@16/bin}"
+DB="${POR1_DATABASE_NAME:-yorisou_values_test}"
+REST_CONTAINER="${POR1_REST_CONTAINER:-yv1-postgrest}"
+REQUIRED_MAJOR="${POR1_POSTGRES_MAJOR:-}"
+
+if [[ ! -x "$PGBIN/postgres" ]]; then
+  echo "[fullstack] no PostgreSQL at $PGBIN — set POR1_POSTGRES_BIN" >&2
+  exit 1
+fi
+PG_VERSION="$("$PGBIN/postgres" --version | awk '{print $3}')"
+PG_MAJOR="${PG_VERSION%%.*}"
+if [[ -n "$REQUIRED_MAJOR" && "$PG_MAJOR" != "$REQUIRED_MAJOR" ]]; then
+  # Rehearsing on a different major than Production is not the rehearsal. It already produced one
+  # false contract mismatch in this package, and the differences that DON'T announce themselves are
+  # the reason this refuses rather than warns.
+  echo "[fullstack] refusing: POR1_POSTGRES_MAJOR=$REQUIRED_MAJOR but $PGBIN is PostgreSQL $PG_VERSION" >&2
+  exit 1
+fi
 
 cleanup() {
   set +e
@@ -35,8 +63,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "[fullstack] 1/6 disposable PostgreSQL"
-rm -rf "$WORK"; mkdir -p "$PGDIR" "$DATADIR"
+echo "[fullstack] 1/6 disposable PostgreSQL $PG_VERSION"
+# A store root left behind by a previous run would be silently adopted, and its ownership lock would
+# name a process that no longer exists. Removing it is what makes "isolated" true rather than
+# assumed.
+rm -rf "$WORK"; mkdir -p "$PGDIR"
+if [[ -n "${POR1_LOCAL_STORE_ROOT:-}" ]]; then rm -rf "$DATADIR"; fi
+mkdir -p "$DATADIR"
 LC_ALL=C "$PGBIN/initdb" -D "$PGDIR" -U postgres -A trust --no-locale -E UTF8 >/dev/null 2>&1
 # Disposable + local-only: listen on all interfaces so the PostgREST container
 # (colima VM) can reach it; trust auth is acceptable for an ephemeral test DB.
@@ -100,6 +133,22 @@ for i in $(seq 1 60); do
   if curl -s -o /dev/null "http://localhost:$APP_PORT/"; then break; fi
   sleep 1
 done
+
+# ── PROCESS IDENTITY ─────────────────────────────────────────────────────────
+#
+# Printed so a failure can never be explained away as "it must have hit a stale stack". Every id
+# below is a pid, a version or a digest — no secret, no user data.
+echo "[fullstack] identity"
+echo "           postgres      pid=$(head -1 "$PGDIR/postmaster.pid" 2>/dev/null || echo '?') version=$PG_VERSION major=$PG_MAJOR"
+echo "           database      $DB @ localhost:$PG_PORT"
+echo "           postgrest     container=$(docker inspect -f '{{.State.Pid}}' "$REST_CONTAINER" 2>/dev/null || echo '?') image-digest=$(docker inspect -f '{{index .Image}}' "$REST_CONTAINER" 2>/dev/null | cut -c8-19)"
+echo "           next          pid=${APP_PID:-?} build=$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
+OWNER_JSON="$DATADIR/.local-store-owner.lock/owner.json"
+if [[ -f "$OWNER_JSON" ]]; then
+  echo "           local-store   owner-pid=$(node -e "console.log(require('$OWNER_JSON').pid)" 2>/dev/null || echo '?') root-digest=$(printf '%s' "$DATADIR" | shasum | cut -c1-12)"
+else
+  echo "           local-store   root-digest=$(printf '%s' "$DATADIR" | shasum | cut -c1-12) (unclaimed — no mutation yet)"
+fi
 
 echo "[fullstack] 5/6 authenticated browser acceptance"
 YV_FULLSTACK=1 \

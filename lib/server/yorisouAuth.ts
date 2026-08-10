@@ -17,6 +17,9 @@ import {
   type SessionPrincipalLanding,
   type SessionRecord,
 } from "@/lib/server/yorisouData";
+import { sessionMayActAsAccount, type ViewerSurface } from "@/lib/server/accountDeletionLock";
+import { decideCookieRestoredAccount } from "@/lib/server/accountDeletionAuthority";
+import { withAccountMutationLease } from "@/lib/server/accountMutationLease";
 
 export const SESSION_COOKIE = "yorisou_session";
 export const ACCOUNT_COOKIE = "yorisou_account";
@@ -379,6 +382,57 @@ export function parseSessionPrincipalLanding(value: unknown): SessionPrincipalLa
   };
 }
 
+/**
+ * POR-1 WS5 — a held account is resolved as absent.
+ *
+ * The session cookie is self-contained, so revoking stored session objects does not by itself end a
+ * session. This is where a revoked session actually stops being able to act: the account record it
+ * resolves to carries the hold, and a held record yields no account and no principal.
+ */
+function accountUnlessDeletionLocked(
+  account: AccountRecord | null,
+  includeHeldAccount: boolean,
+): AccountRecord | null {
+  if (includeHeldAccount) return account;
+  if (account && !sessionMayActAsAccount(account.deletionLockedAt)) return null;
+  return account;
+}
+
+/**
+ * POR-1 — resolve the account a request is acting as, with the cookie demoted to a lookup hint.
+ *
+ * The order is the whole point. The STORE decides whenever it can: a found record carries the real
+ * `deletionLockedAt` and needs no help. Only when the record is missing does the cookie get a say,
+ * and then only if the durable deletion record agrees the name still means something.
+ *
+ * That ordering is also why this costs nothing. The extra reads happen exclusively on the store-miss
+ * path — never on the hot path, and never for an anonymous viewer.
+ */
+async function resolveAccountForViewer(input: {
+  accountId: string | null;
+  /** The decrypted `yorisou_account` cookie, or null on paths that deliberately have no fallback. */
+  accountCookie: AccountRecord | null;
+  surface: ViewerSurface;
+  includeHeldAccount: boolean;
+}): Promise<AccountRecord | null> {
+  if (!input.accountId) return null;
+
+  const stored = await findAccountById(input.accountId);
+  if (stored) return accountUnlessDeletionLocked(stored, input.includeHeldAccount);
+
+  const candidate = input.accountCookie?.id === input.accountId ? input.accountCookie : null;
+  if (!candidate) return null;
+
+  const decision = await decideCookieRestoredAccount({
+    accountId: input.accountId,
+    deletionLockedAt: candidate.deletionLockedAt,
+    surface: input.surface,
+  });
+  if (!decision.resolves) return null;
+
+  return accountUnlessDeletionLocked(candidate, input.includeHeldAccount);
+}
+
 function toViewerPrincipal(account: AccountRecord | null): ViewerPrincipal | null {
   if (!account) {
     return null;
@@ -475,7 +529,73 @@ export async function ensureSessionPrincipalLandingShadowWrite(
     return session;
   }
 
-  return (await touchSession(session.id, session.userId, sessionWithShadow.principalLanding || null)) || sessionWithShadow;
+  // POR-1 — this binds an account to a session, so it is an account-linked write and holds a lease
+  // across the whole window. An anonymous session has nothing to fence and takes the plain path.
+  const accountId = session.userId || input.legacyAccount?.id || null;
+  if (!accountId) {
+    return (await touchSession(null, session.id, session.userId, sessionWithShadow.principalLanding || null)) || sessionWithShadow;
+  }
+  return (
+    (await withAccountMutationLease({
+      accountId,
+      operation: "session_identity_upgrade",
+      execute: (context) =>
+        touchSession(context, session.id, session.userId, sessionWithShadow.principalLanding || null),
+    })) || sessionWithShadow
+  );
+}
+
+/**
+ * POR-1 R2b — the same switch, but it SAYS whether the write landed.
+ *
+ * `switchSessionToPrincipalLandingTruth` returns `touchSession(...) || fallback`, and the fallback is
+ * shaped exactly like a successful result. So a caller that needs to know whether the contract was
+ * actually persisted could not ask — it had to re-read the object and look.
+ *
+ * That re-read is a cacheable GET on the key that was just written, and this transport serves
+ * superseded versions of a key it has recently seen. Registration's `bindAndProve` therefore read
+ * back the copy written moments earlier by `insertSessionRecordIfAbsent` — the one WITHOUT the
+ * landing — and refused the registration with `session_landing_missing`. Truthfully, by its own
+ * contract: it could not prove the identity, so it would not return 200. But the write had
+ * succeeded, and the person was told to try again for nothing.
+ *
+ * `persisted` comes from the write itself. `touchSession` is update-only and returns the record it
+ * wrote, or null when there was no row to update — which is precisely the in-memory-fallback case
+ * the read-back was invented to catch.
+ */
+export async function switchSessionToPrincipalLandingTruthWithProof(
+  session: SessionRecord,
+  input: {
+    legacyAccount: AccountRecord | null;
+    source: SessionPrincipalLanding["source"];
+  },
+): Promise<{ session: SessionRecord; persisted: boolean; contractApplied: boolean }> {
+  const sessionWithShadow = await withSessionPrincipalLandingShadow(session, input);
+  const contract = parseSessionPrincipalLanding(sessionWithShadow.principalLanding);
+
+  if (!contract) {
+    return { session, persisted: false, contractApplied: false };
+  }
+
+  // The contract still names the account even though `userId` becomes null, so this is account-linked
+  // and leased. Fencing only the `userId` form would leave the migration path — the one that produced
+  // the session the erasure probe found still live — outside the fence.
+  const accountId = contract.legacyAccountId || session.userId || input.legacyAccount?.id || null;
+  const fallback = { ...sessionWithShadow, userId: null };
+
+  const written = accountId
+    ? await withAccountMutationLease({
+        accountId,
+        operation: "session_identity_upgrade",
+        execute: (context) => touchSession(context, session.id, null, contract),
+      })
+    : await touchSession(null, session.id, null, contract);
+
+  return {
+    session: written || fallback,
+    persisted: Boolean(written),
+    contractApplied: true,
+  };
 }
 
 export async function switchSessionToPrincipalLandingTruth(
@@ -485,17 +605,8 @@ export async function switchSessionToPrincipalLandingTruth(
     source: SessionPrincipalLanding["source"];
   },
 ): Promise<SessionRecord> {
-  const sessionWithShadow = await withSessionPrincipalLandingShadow(session, input);
-  const contract = parseSessionPrincipalLanding(sessionWithShadow.principalLanding);
-
-  if (!contract) {
-    return session;
-  }
-
-  return (await touchSession(session.id, null, contract)) || {
-    ...sessionWithShadow,
-    userId: null,
-  };
+  const result = await switchSessionToPrincipalLandingTruthWithProof(session, input);
+  return result.session;
 }
 
 export async function inspectSessionPrincipalLandingCoverage(input: {
@@ -609,7 +720,19 @@ export function setViewerAccountCookie(response: NextResponse, account: AccountR
   });
 }
 
-export async function getViewerContext(): Promise<ViewerContext> {
+export async function getViewerContext(
+  /**
+   * POR-1 WS5 — escape hatch for the deletion surfaces ONLY; use
+   * `getDeletionSurfaceViewerContext()` rather than passing this by hand. A held account must still
+   * be able to read the status of, and cancel, the deletion it asked for. Blinding someone to their
+   * own in-flight deletion is not a safety property.
+   */
+  options?: { includeHeldAccount?: boolean },
+): Promise<ViewerContext> {
+  const includeHeldAccount = options?.includeHeldAccount === true;
+  // `includeHeldAccount` is only ever true for the deletion surfaces, so the two travel together
+  // rather than being passed independently and drifting apart.
+  const surface: ViewerSurface = includeHeldAccount ? "deletion_surface" : "ordinary";
   try {
     const cookieStore = await cookies();
     const rawSessionValue = cookieStore.get(SESSION_COOKIE)?.value;
@@ -617,15 +740,29 @@ export async function getViewerContext(): Promise<ViewerContext> {
     const accountCookie = decodeAccountCookie(cookieStore.get(ACCOUNT_COOKIE)?.value);
 
     if (sessionCookie) {
+      // POR-1 — READING A SESSION NO LONGER WRITES ONE.
+      //
+      // This used to `touchSession` on every authenticated request, folding the COOKIE's `userId`
+      // and principal-landing contract back into the stored record. That is a write-on-read, and it
+      // is the cleanest resurrection path in the product: a browser holding a stale cookie would
+      // re-assert the identity of a person whose session had just been revoked, on nothing more than
+      // a page view — and it would do so on a path far too hot to take a lease on.
+      //
+      // The merge still happens, in memory, so a viewer whose cookie carries a contract the record
+      // has not caught up with is unaffected. What no longer happens is persisting it. Every path
+      // that genuinely needs the record updated — login, binding, the principal-landing switch —
+      // does so deliberately, under a lease, and is unchanged.
       const storedSession = await findSessionById(sessionCookie.id);
-      const session =
-        storedSession
-          ? ((await touchSession(
-              sessionCookie.id,
-              sessionCookie.userId,
-              sessionCookie.principalLanding === undefined ? undefined : sessionCookie.principalLanding || null,
-            )) || storedSession)
-          : createSyntheticSession(sessionCookie);
+      const session = storedSession
+        ? {
+            ...storedSession,
+            userId: sessionCookie.userId === undefined ? storedSession.userId : sessionCookie.userId,
+            principalLanding:
+              sessionCookie.principalLanding === undefined
+                ? storedSession.principalLanding || null
+                : sessionCookie.principalLanding || null,
+          }
+        : createSyntheticSession(sessionCookie);
       const principalLanding = resolveSessionPrincipalLandingContext({
         sessionUserId: session.userId,
         contractValue: session.principalLanding || sessionCookie.principalLanding || null,
@@ -634,7 +771,12 @@ export async function getViewerContext(): Promise<ViewerContext> {
         session.userId ||
         sessionCookie.userId ||
         (principalLanding.restoreSource === "contract_legacy_account" ? principalLanding.contract?.legacyAccountId || null : null);
-      const account = accountId ? (await findAccountById(accountId)) || (accountCookie?.id === accountId ? accountCookie : null) : null;
+      const account = await resolveAccountForViewer({
+        accountId,
+        accountCookie: accountCookie || null,
+        surface,
+        includeHeldAccount,
+      });
       return {
         session,
         account,
@@ -647,8 +789,16 @@ export async function getViewerContext(): Promise<ViewerContext> {
     if (rawSessionValue) {
       const session = await findSessionById(rawSessionValue);
       if (session) {
-        const touchedSession = (await touchSession(session.id, session.userId)) || session;
-        const account = touchedSession.userId ? await findAccountById(touchedSession.userId) : null;
+        // Same rule on the legacy raw-cookie path: reading a session must not rewrite it.
+        const touchedSession = session;
+        // `accountCookie: null` on purpose — this legacy path has never had a cookie fallback, and
+        // adding one here would widen the very surface the rest of this change narrows.
+        const account = await resolveAccountForViewer({
+          accountId: touchedSession.userId,
+          accountCookie: null,
+          surface,
+          includeHeldAccount,
+        });
         return {
           session: touchedSession,
           account,
@@ -662,11 +812,20 @@ export async function getViewerContext(): Promise<ViewerContext> {
       }
     }
 
+    // NO SESSION AT ALL — the account cookie alone. This path used to return the decrypted cookie
+    // as the viewer's account without ever asking the store whether that account still existed, so
+    // an erased identity kept authenticating here for as long as the 180-day cookie lived.
+    const unlockedAccountCookie = await resolveAccountForViewer({
+      accountId: accountCookie?.id || null,
+      accountCookie: accountCookie || null,
+      surface,
+      includeHeldAccount,
+    });
     return {
       session: null,
-      account: accountCookie || null,
-      legacyAccount: accountCookie || null,
-      principal: toViewerPrincipal(accountCookie || null),
+      account: unlockedAccountCookie,
+      legacyAccount: unlockedAccountCookie,
+      principal: toViewerPrincipal(unlockedAccountCookie),
       principalLanding: {
         contract: null,
         contractStatus: "absent",
@@ -690,12 +849,37 @@ export async function getViewerContext(): Promise<ViewerContext> {
   }
 }
 
+/**
+ * POR-1 WS5 — viewer resolution for the account-deletion surfaces.
+ *
+ * Differs from `getViewerContext()` in exactly two ways, both narrow and both deliberate:
+ *
+ *   • a HELD account still resolves, so a person can inspect and cancel the deletion they asked for;
+ *   • while the job is genuinely in flight, the cookie may name an account whose record has ALREADY
+ *     been erased — the `identity_erasure`/`verifying` window, where the durable job is the only
+ *     thing left that can speak for the person.
+ *
+ * Neither concession outlives the job. The moment it completes, the durable record says so — by
+ * fingerprint, about an account it no longer names — and this resolver returns nothing, on this
+ * surface and every other. Nothing but the deletion request, confirm, status and cancel paths may
+ * use it: everywhere else, a hold means the session cannot act.
+ */
+export async function getDeletionSurfaceViewerContext(): Promise<ViewerContext> {
+  return getViewerContext({ includeHeldAccount: true });
+}
+
 export async function ensureViewerSession() {
   const viewer = await getViewerContext();
   if (viewer.session) {
     return viewer.session;
   }
-  return createSession(viewer.account?.id || null);
+  const accountId = viewer.account?.id || null;
+  if (!accountId) return createSession(null, null);
+  return withAccountMutationLease({
+    accountId,
+    operation: "session_account_binding",
+    execute: (context) => createSession(context, accountId),
+  });
 }
 
 export async function bindSessionToUser(
@@ -710,8 +894,17 @@ export async function bindSessionToUser(
     legacyAccount: options?.legacyAccount || (await findAccountById(userId)),
     source: options?.source || "session_upgrade",
   });
-  const session = await touchSession(sessionId, userId, contract || undefined);
-  await assignSessionConsultationsToUser(sessionId, userId);
+  // The whole read-transform-write window, including the consultation rebind: an account-linked
+  // activity rebind that landed after an erasure would re-point erased rows at a deleted person.
+  const session = await withAccountMutationLease({
+    accountId: userId,
+    operation: "session_account_binding",
+    execute: async (context) => {
+      const bound = await touchSession(context, sessionId, userId, contract || undefined);
+      await assignSessionConsultationsToUser(sessionId, userId);
+      return bound;
+    },
+  });
   return session;
 }
 
@@ -730,7 +923,14 @@ export async function restoreAccountFromCookie(account: AccountRecord | null) {
     return null;
   }
 
-  await upsertAccountRecord(account);
+  // POR-1 — the cookie-restore path writes the account record, so it takes a lease like any other
+  // ordinary mutation. Without one it is a ready-made resurrection: a browser holding a stale
+  // account cookie could write it back after an erasure.
+  await withAccountMutationLease({
+    accountId: account.id,
+    operation: "identity_mirror_sync",
+    execute: (context) => upsertAccountRecord(context, account),
+  });
   return account;
 }
 

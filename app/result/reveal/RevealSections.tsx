@@ -42,7 +42,7 @@ export function EvidencePanel({ highlights }: { highlights: { label: string; tex
           </li>
         ))}
       </ul>
-      <p className="text-[11.5px] leading-5 text-[#8A7F78]">{AI_UNAVAILABLE_COPY}</p>
+      <p className="text-[11.5px] leading-5 text-[#6F625C]">{AI_UNAVAILABLE_COPY}</p>
     </section>
   );
 }
@@ -74,7 +74,7 @@ export function LimitsPanel({ band }: { band: "low" | "medium" }): ReactElement 
       </div>
       <p className="text-[13px] font-semibold leading-6 text-[#6F625C]">{c.label}</p>
       <p className="text-[13px] leading-6 text-[#7A7068]">{c.note}</p>
-      <ul className="m-0 grid list-none gap-1 p-0 text-[12.5px] leading-6 text-[#8A7F78]">
+      <ul className="m-0 grid list-none gap-1 p-0 text-[12.5px] leading-6 text-[#6F625C]">
         {LIMITATION_COPY.map((line) => <li key={line}>・{line}</li>)}
       </ul>
     </section>
@@ -100,7 +100,7 @@ export function GentleActions({ children }: { children: ReactNode }): ReactEleme
         <SourceChip type="OPTIONAL_NEXT_ACTION" />
       </div>
       {children}
-      <p className="text-[12.5px] leading-6 text-[#8A7F78]">{DECLINE_ALL_COPY}</p>
+      <p className="text-[12.5px] leading-6 text-[#6F625C]">{DECLINE_ALL_COPY}</p>
     </section>
   );
 }
