@@ -164,6 +164,8 @@ jobs:
           npm run test:por1-authority-diagnostic
           npm run test:por1-incident-recovery
           npm run test:por1-deletion-request-guard
+          npm run test:por1-store-read-authority
+          npm run test:por1-stale-store-viewer
 
       - name: POR-1 identity scope, deletion lock and store boundary
         run: |

@@ -375,8 +375,42 @@ function sharedRestHeaders(extra: Record<string, string> = {}) {
   };
 }
 
+/**
+ * The URL for an AUTHORITATIVE object read — one whose answer decides authorization.
+ *
+ * WHY A NONCE, AND WHY `cache: "no-store"` WAS NOT ENOUGH.
+ *
+ * `cache: "no-store"` governs the *application's* fetch cache. It says nothing to Supabase Storage's
+ * CDN, which serves object bodies from an edge cache keyed by URL. A fixed object URL can therefore
+ * return a body that no longer exists, or an older version of one that does — and the application
+ * had no way to tell that apart from a current read.
+ *
+ * That is not a theoretical concern; it is the defect. The POR-1 deletion acceptance replayed an
+ * erased account's surviving cookie, `findAccountById` got a CACHED PRE-DELETION account body back,
+ * `resolveAccountForViewer` treated that store hit as authoritative, and the durable deletion
+ * fallback — which only runs when the object is ABSENT — never executed. A stale cache entry became
+ * application authority. Fixing that at each route in turn is whack-a-mole: `/api/private-state` was
+ * simply the next surface to resolve a viewer it should not have.
+ *
+ * Supabase supports `cacheNonce` on Storage downloads precisely to force retrieval of the current
+ * object rather than a cached response. A UNIQUE nonce per logical read makes every authoritative
+ * read a cache miss by construction.
+ *
+ * RULES THIS MUST KEEP. The nonce is generated server-side from `randomBytes`; it carries no
+ * credential, account id, email or any personal data; it is unique per logical read, never persisted
+ * and never logged. There is deliberately NO memoisation of a "fresh" answer — reusing a nonce, or
+ * caching a body keyed by one, would reintroduce exactly the staleness this removes.
+ *
+ * Built with the URL API so the parameter can never land inside the object key.
+ */
+function authoritativeRestObjectUrl(key: string): string {
+  const url = new URL(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`);
+  url.searchParams.set("cacheNonce", randomBytes(16).toString("hex"));
+  return url.toString();
+}
+
 async function sharedRestReadJson<T>(key: string): Promise<T | null> {
-  const res = await fetch(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`, {
+  const res = await fetch(authoritativeRestObjectUrl(key), {
     method: "GET",
     headers: sharedRestHeaders(),
     cache: "no-store",
@@ -1426,7 +1460,10 @@ export async function sharedIdentityObjectExists(key: string): Promise<boolean> 
   assertIdentityKey(key);
 
   if (sharedStoreMode === "supabase-rest") {
-    const response = await fetch(`${sharedRestBase}/object/${sharedStoreBucket}/${key}`, {
+    // Authoritative, and in the MOST dangerous direction: a cached 404 here would report an object
+    // as absent while it still exists, letting a deletion finalize over data it never removed. Same
+    // per-read nonce as every other authoritative read.
+    const response = await fetch(authoritativeRestObjectUrl(key), {
       method: "GET",
       headers: sharedRestHeaders(),
       cache: "no-store",

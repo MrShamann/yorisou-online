@@ -62,6 +62,8 @@
     "test:por1-authority-diagnostic": "node --import tsx --test lib/server/__tests__/por1ErasureAuthorityDiagnostic.test.ts",
     "test:por1-incident-recovery": "node --import tsx --test lib/server/__tests__/por1ProductionIncidentRecovery.test.ts",
     "test:por1-deletion-request-guard": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1DeletionRequestDurableGuard.test.ts",
+    "test:por1-store-read-authority": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1SharedStoreReadAuthority.test.ts",
+    "test:por1-stale-store-viewer": "node --conditions=react-server --import tsx --test lib/server/__tests__/por1StaleStoreViewerAuthority.test.ts",
     "test:por1-boundary": "node --import tsx --test lib/server/__tests__/por1SharedStoreBoundary.test.ts",
     "test:por1-deletion": "node --import tsx --test lib/server/__tests__/por1AccountDeletionLock.test.ts lib/server/__tests__/por1IdentityKeyScope.test.ts lib/server/__tests__/por1DeletionSurfaceAuthorization.test.ts",
     "test:por1-context": "node --import tsx --test lib/server/__tests__/por1AccountWriteContext.test.ts",
