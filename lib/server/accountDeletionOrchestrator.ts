@@ -242,6 +242,57 @@ class RetryableStageError extends Error {}
  * and there is deliberately no test-only environment branch: the body under test is the body that
  * ships.
  */
+/**
+ * The transport probe, measured at most once per short window per server instance.
+ *
+ * WHY MEMOISED, AND WHY THAT IS NOT A WEAKENING.
+ *
+ * What the probe detects — an unresolvable signature, a schema cache that has not caught up, a lost
+ * EXECUTE grant, an unreachable database — are all DEPLOYMENT-SCOPED facts. They do not vary between
+ * two requests a second apart, so asking once per request buys no additional safety.
+ *
+ * It does cost something, and the cost was measured rather than assumed: probing per attempt put an
+ * extra PostgREST round trip in front of EVERY pre-irreversible `executeDeletion`, and the POR-1
+ * concurrency acceptance drives four adversaries at one account simultaneously. Against the same
+ * Preview deployment the accepted baseline passed that test 2/2 while the per-attempt version failed
+ * it 2/2, so the added traffic on that exact path was not free.
+ *
+ * A short TTL keeps the guarantee that matters: a deployment that becomes unable to erase is noticed
+ * within seconds, still strictly before any new job may cross the irreversible boundary. A failed
+ * probe is deliberately NOT cached — only a healthy answer is — so an unready deployment is
+ * re-measured on every attempt and can never be latched into a stale "ready".
+ */
+const TRANSPORT_PROBE_TTL_MS = 30_000;
+let transportProbeCache: { at: number; result: ErasureTransportReadiness } | null = null;
+let transportProbeInFlight: Promise<ErasureTransportReadiness> | null = null;
+
+async function memoizedTransportProbe(): Promise<ErasureTransportReadiness> {
+  const now = Date.now();
+  if (transportProbeCache && now - transportProbeCache.at < TRANSPORT_PROBE_TTL_MS) {
+    return transportProbeCache.result;
+  }
+  // Concurrent callers share ONE in-flight probe. Four adversaries racing the same account must not
+  // become four probes.
+  if (transportProbeInFlight) return transportProbeInFlight;
+
+  transportProbeInFlight = probeErasureTransport({
+    callRpc: async (fn, args) => {
+      const response = await request(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
+      return { status: response.status, bodyText: await response.text().catch(() => "") };
+    },
+  })
+    .then((result) => {
+      // Only a HEALTHY answer is cached. An unready deployment is re-measured every time.
+      transportProbeCache = result.ready ? { at: Date.now(), result } : null;
+      return result;
+    })
+    .finally(() => {
+      transportProbeInFlight = null;
+    });
+
+  return transportProbeInFlight;
+}
+
 export type DeletionExecutionDependencies = {
   readResumeState: typeof readResumeState;
   checkDeletionBackendReadiness: typeof checkDeletionBackendReadiness;
@@ -263,13 +314,7 @@ export const productionDeletionDependencies: DeletionExecutionDependencies = {
   recordRetryableError,
   isPor1CapabilityEnabled,
   accountErasureAuthoritySchemaReady,
-  probeTransport: () =>
-    probeErasureTransport({
-      callRpc: async (fn, args) => {
-        const response = await request(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
-        return { status: response.status, bodyText: await response.text().catch(() => "") };
-      },
-    }),
+  probeTransport: () => memoizedTransportProbe(),
   runStages: (claim) => runStages(claim),
 };
 
