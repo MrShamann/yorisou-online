@@ -99,8 +99,9 @@ export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise
     // because that regex silently lost the reason for a Production deletion failure. Its deletion
     // family was `\bdeletion_[a-z_]+`, and `\b` cannot match inside `account_deletion_...` since
     // `_` is a word character — so two stranded Production jobs recorded
-    // `assessment_persistence_failed:400` for an account-deletion erasure that had actually raised
-    // a real, bounded token. One shared, tested module now owns this, with explicit boundaries
+    // `assessment_persistence_failed:400`, which preserved the status and destroyed everything else.
+    // What the database actually answered on those requests is UNRECOVERABLE; that is the point.
+    // One shared, tested module now owns this, with explicit boundaries
     // instead of `\b`, and with transport failures classified as themselves rather than blamed on
     // assessment persistence.
     throw new Error(boundedRpcErrorCode({ status: response.status, bodyText: text }));

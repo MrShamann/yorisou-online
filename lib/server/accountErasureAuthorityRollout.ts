@@ -43,12 +43,7 @@ export function accountErasureAuthoritySchemaReady(): boolean {
 
 export type ErasureAuthorityUnreadyReason =
   /** The operator has not attested that the post-P111 contract is deployed. */
-  | "account_erasure_authority_schema_unready"
-  /**
-   * The operator HAS attested it, but the deployment cannot actually invoke the strong entry point
-   * right now. A flag is a belief; this is a measurement. See por1ErasureTransportReadiness.
-   */
-  | "account_erasure_transport_unready";
+  "account_erasure_authority_schema_unready";
 
 export type ErasureAuthorityDecision =
   /**
@@ -79,12 +74,6 @@ export function decideErasureAuthority(input: {
   executorEnabled: boolean;
   schemaReady: boolean;
   alreadyIrreversible?: boolean;
-  /**
-   * The measured transport answer. `undefined` means "not probed" — the caller may legitimately skip
-   * the probe for a job that has already crossed, where the answer could not change the decision.
-   * Only an explicit `false` refuses.
-   */
-  transportReady?: boolean;
 }): ErasureAuthorityDecision {
   // ── ALREADY IRREVERSIBLE COMES FIRST, AND OUTRANKS EVERYTHING ───────────────
   //
@@ -111,11 +100,9 @@ export function decideErasureAuthority(input: {
     return { mode: "refuse_infrastructure_unready", reason: "account_erasure_authority_schema_unready" };
   }
 
-  // The flag says the contract is deployed; the probe says whether we can reach it. Only an explicit
-  // negative refuses, so a caller that did not probe is not punished for it.
-  if (input.transportReady === false) {
-    return { mode: "refuse_infrastructure_unready", reason: "account_erasure_transport_unready" };
-  }
-
+  // The LIVE transport measurement is deliberately NOT an input here. It belongs after the claim, so
+  // that only the executor which is actually going to erase pays for it, and so that no answer can
+  // be reused for a later deletion. Accepting it here as well would give the same decision two
+  // homes — which is precisely how `executor_disabled` once ended up handled in neither.
   return { mode: "strong_erasure" };
 }

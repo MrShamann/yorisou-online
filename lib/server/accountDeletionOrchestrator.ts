@@ -243,54 +243,28 @@ class RetryableStageError extends Error {}
  * ships.
  */
 /**
- * The transport probe, measured at most once per short window per server instance.
+ * The transport probe. ALWAYS LIVE — there is deliberately no positive cache.
  *
- * WHY MEMOISED, AND WHY THAT IS NOT A WEAKENING.
+ * An earlier revision of this file memoised a healthy answer for 30 seconds, on the reasoning that
+ * what the probe detects is "deployment-scoped" and cannot change between two nearby requests. That
+ * reasoning was wrong, and the comment that carried it has been deleted rather than softened. A
+ * database can become unreachable, a grant can be revoked and a schema cache can be invalidated at
+ * any instant; "it was reachable 29 seconds ago" is not evidence that this deletion may proceed. The
+ * whole point of measuring instead of trusting a flag is lost the moment the measurement is allowed
+ * to go stale, so nothing here may reintroduce a positive TTL — there is a source guard asserting it.
  *
- * What the probe detects — an unresolvable signature, a schema cache that has not caught up, a lost
- * EXECUTE grant, an unreachable database — are all DEPLOYMENT-SCOPED facts. They do not vary between
- * two requests a second apart, so asking once per request buys no additional safety.
- *
- * It does cost something, and the cost was measured rather than assumed: probing per attempt put an
- * extra PostgREST round trip in front of EVERY pre-irreversible `executeDeletion`, and the POR-1
- * concurrency acceptance drives four adversaries at one account simultaneously. Against the same
- * Preview deployment the accepted baseline passed that test 2/2 while the per-attempt version failed
- * it 2/2, so the added traffic on that exact path was not free.
- *
- * A short TTL keeps the guarantee that matters: a deployment that becomes unable to erase is noticed
- * within seconds, still strictly before any new job may cross the irreversible boundary. A failed
- * probe is deliberately NOT cached — only a healthy answer is — so an unready deployment is
- * re-measured on every attempt and can never be latched into a stale "ready".
+ * The cost that motivated the cache is solved by PLACEMENT instead, in `executeDeletion`: the probe
+ * now runs only for the request that WON the claim. Four concurrent confirms for one job produce one
+ * winner and three claim refusals, and therefore exactly one probe — without any answer being reused
+ * for a later, independent deletion.
  */
-const TRANSPORT_PROBE_TTL_MS = 30_000;
-let transportProbeCache: { at: number; result: ErasureTransportReadiness } | null = null;
-let transportProbeInFlight: Promise<ErasureTransportReadiness> | null = null;
-
-async function memoizedTransportProbe(): Promise<ErasureTransportReadiness> {
-  const now = Date.now();
-  if (transportProbeCache && now - transportProbeCache.at < TRANSPORT_PROBE_TTL_MS) {
-    return transportProbeCache.result;
-  }
-  // Concurrent callers share ONE in-flight probe. Four adversaries racing the same account must not
-  // become four probes.
-  if (transportProbeInFlight) return transportProbeInFlight;
-
-  transportProbeInFlight = probeErasureTransport({
+async function liveTransportProbe(): Promise<ErasureTransportReadiness> {
+  return probeErasureTransport({
     callRpc: async (fn, args) => {
       const response = await request(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
       return { status: response.status, bodyText: await response.text().catch(() => "") };
     },
-  })
-    .then((result) => {
-      // Only a HEALTHY answer is cached. An unready deployment is re-measured every time.
-      transportProbeCache = result.ready ? { at: Date.now(), result } : null;
-      return result;
-    })
-    .finally(() => {
-      transportProbeInFlight = null;
-    });
-
-  return transportProbeInFlight;
+  });
 }
 
 export type DeletionExecutionDependencies = {
@@ -314,7 +288,7 @@ export const productionDeletionDependencies: DeletionExecutionDependencies = {
   recordRetryableError,
   isPor1CapabilityEnabled,
   accountErasureAuthoritySchemaReady,
-  probeTransport: () => memoizedTransportProbe(),
+  probeTransport: () => liveTransportProbe(),
   runStages: (claim) => runStages(claim),
 };
 
@@ -380,19 +354,19 @@ export async function executeDeletion(
   // without the exact job, token and generation that make erasure authorized.
   const alreadyIrreversible = resume.irreversible || isAtOrPastIrreversible(resume.cursor);
 
-  // The flag is a belief about the schema; this is a measurement of whether the strong entry point
-  // can actually be invoked right now. It is skipped for a job that has already crossed, because the
-  // answer cannot change that decision and probing would only add a way to fail.
-  const transportReady = alreadyIrreversible ? undefined : (await probeTransport()).ready;
-
+  // ── THE STATIC POLICY, BEFORE THE CLAIM ────────────────────────────────────
+  //
+  // Capability and schema readiness are answerable without touching the database, so they are
+  // answered first and refuse without opening anything. `transportReady` is deliberately NOT passed
+  // here: it is a live measurement, and taking it before the claim would make every concurrent
+  // attempt pay for it. See the probe below.
   const erasureAuthority = decideErasureAuthority({
     executorEnabled: capabilityEnabled("ACCOUNT_DELETION_EXECUTOR"),
     schemaReady: erasureSchemaReady(),
     alreadyIrreversible,
-    transportReady,
   });
 
-  // EVERY mode is handled here on purpose. The previous version handled only the unready refusal, so
+  // EVERY mode is handled here on purpose. An earlier version handled only the unready refusal, so
   // the disabled-executor mode fell through and claimed the job anyway — an unwritten behaviour that
   // nothing tested and nobody had decided. A switch makes forgetting one a type error.
   //
@@ -411,10 +385,39 @@ export async function executeDeletion(
   if (!claimResult.claimed) {
     // Another executor holds this job. Reporting a failure here would invite the person to retry into
     // the same refusal; reporting progress is both true and actionable.
+    //
+    // A loser also runs NO transport probe. It is not going to erase anything, so measuring whether
+    // it could would be pure load — which is exactly what made four concurrent confirms expensive.
     return { outcome: "in_progress", errorCode: claimResult.reason };
   }
 
   const claim = claimResult.claim;
+
+  // ── THE LIVE TRANSPORT PROOF, TAKEN ONLY BY THE WINNER ─────────────────────
+  //
+  // This is the last gate before any stage runs, and it is a MEASUREMENT taken now, not a cached
+  // belief: can this deployment actually invoke the strong four-argument erasure entry point?
+  //
+  // It is taken here, after the claim, for two reasons. It is the single point through which every
+  // erasure must pass, so one probe per erasure is both necessary and sufficient. And only the
+  // winner reaches it, so concurrency costs one probe rather than one per attempt.
+  //
+  // ALREADY-IRREVERSIBLE JOBS ARE NOT GATED. A job past the boundary is resumed on its governed
+  // strong path regardless: refusing it here would strand a half-erased account over a condition
+  // that its own erasure step will report as retryable anyway, preserving cursor, manifest and
+  // `irreversible_started_at`. Stranding is the worse outcome, and this package exists because two
+  // accounts were stranded.
+  if (!alreadyIrreversible) {
+    const transport = await probeTransport();
+    if (!transport.ready) {
+      // Nothing has been destroyed. The claim is handed back so a retry is not blocked by a lease
+      // this request will never use, and the job keeps its cursor, its manifest and its
+      // pre-irreversible status. There is no weak fallback.
+      await releaseExecutor(claim);
+      return { outcome: "retryable", errorCode: transport.reason };
+    }
+  }
+
   try {
     return await runStagesFn(claim);
   } catch (error) {

@@ -3,15 +3,33 @@
 // WHY THIS EXISTS, WRITTEN DOWN SO IT IS NOT UNDONE.
 //
 // The Production deletion incident of 2026-08-10 stored `assessment_persistence_failed:400` for two
-// stranded jobs, and that code was a LIE OF OMISSION: the database had raised a real, bounded token
-// and the caller threw it away. The recogniser was an inline regex whose deletion family was written
-// `\bdeletion_[a-z_]+`. JavaScript's `\b` sits between a word character and a non-word character —
-// and `_` IS a word character. So inside `account_deletion_erase_not_authorized` there is no
-// boundary before `deletion_`, the alternative could never match, and the real reason degraded to a
-// generic fallback naming the wrong subsystem entirely.
+// stranded jobs. That string preserved the HTTP status and NOTHING else — not the provider code, not
+// the provider message, not any governed token — and it named a subsystem that was not involved.
 //
-// The cost was not cosmetic. It cost the incident its root cause: by the time anyone looked, the
-// only surviving evidence said "assessment persistence" about an account-deletion erasure.
+// BE PRECISE ABOUT WHAT IS AND IS NOT KNOWN. It is NOT established that the database raised a
+// bounded token on that request. A PostgREST 400 can be a PostgreSQL `RAISE`, but it can equally be
+// a malformed request or a type-coercion failure, and the old code discarded exactly the evidence
+// that would tell them apart. So for the historical request:
+//
+//   HISTORICAL_HTTP_STATUS         = 400
+//   HISTORICAL_EXACT_PROVIDER_CODE = UNRECOVERABLE
+//   HISTORICAL_EXACT_ERROR_TOKEN   = UNRECOVERABLE
+//
+// A later fake-job probe against Production did return 400 / P0001 /
+// `account_deletion_erase_not_authorized`, but that is CURRENT-STATE evidence about the deployment
+// as probed. It says nothing retroactive about the 03:49 request, and this module must not be read
+// as claiming otherwise.
+//
+// The defect being fixed is therefore the DESTRUCTION OF EVIDENCE, which is provable from the code
+// alone: the recogniser was an inline regex whose deletion family was written `\bdeletion_[a-z_]+`.
+// JavaScript's `\b` sits between a word character and a non-word character — and `_` IS a word
+// character. So inside `account_deletion_erase_not_authorized` there is no boundary before
+// `deletion_`, that alternative could never match, and ANY governed token in that family would have
+// degraded to the generic fallback.
+//
+// The cost was not cosmetic. It cost the incident its root cause, permanently: by the time anyone
+// looked, the only surviving evidence said "assessment persistence" about an account-deletion
+// erasure, and the real reason — whatever it was — was already gone.
 //
 // So: no `\b` anywhere in this module. Boundaries are stated explicitly as "start of string, or a
 // character that cannot be part of a token".
