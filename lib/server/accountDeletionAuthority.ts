@@ -123,11 +123,24 @@ export async function decideCookieRestoredAccount(input: {
  * resolved — which the stale-read transport makes possible, and which would otherwise be a 200
  * describing a person who no longer exists.
  */
-export async function deletionHasCompleted(accountId: string): Promise<boolean> {
+export async function deletionHasCompleted(
+  accountId: string,
+  /**
+   * The durable read. Injectable ONLY so the node suite can exercise this exact function — the
+   * production default is the real one, and the same dependency-parameter pattern is used by
+   * `executeDeletion`. There is no test-only environment bypass.
+   */
+  readDurableState: (accountId: string) => Promise<string | null> = readDeletionStateForAuthority,
+): Promise<boolean> {
   try {
-    return (await readDeletionStateForAuthority(accountId)) === "completed";
+    return (await readDurableState(accountId)) === "completed";
   } catch {
     // Unknown is not "no". The caller treats this as a refusal.
+    //
+    // This is the property that makes it safe to put in front of deletion INTAKE: if the durable
+    // state cannot be read we refuse to open a job, rather than opening one for an account that may
+    // already be erased. A person who hits this pays one retry; the alternative resurrects an
+    // erased identity for whoever still holds the cookie.
     return true;
   }
 }

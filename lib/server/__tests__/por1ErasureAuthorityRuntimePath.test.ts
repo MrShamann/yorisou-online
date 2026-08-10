@@ -60,10 +60,20 @@ test("executeDeletion consults the shared decision, not a local re-implementatio
 
 test("the decision is computed from the resume state, including the irreversible cursor", () => {
   const body = executeDeletionSource();
+  // The expression is now bound to a name because the transport probe is skipped for the same
+  // condition, and one source of truth beats two copies. So the guard checks BOTH halves: that the
+  // value is derived from exactly `resume.irreversible || isAtOrPastIrreversible(resume.cursor)`,
+  // and that this exact value is what reaches the policy. That is strictly more than the previous
+  // single check — a refactor cannot satisfy one half and quietly drop the other.
   assert.match(
     body,
-    /alreadyIrreversible:\s*resume\.irreversible\s*\|\|\s*isAtOrPastIrreversible\(resume\.cursor\)/,
+    /const\s+alreadyIrreversible\s*=\s*resume\.irreversible\s*\|\|\s*isAtOrPastIrreversible\(resume\.cursor\)/,
     "a job past the boundary by cursor is irreversible even if the flag has not been written yet",
+  );
+  assert.match(
+    body,
+    /decideErasureAuthority\(\{[\s\S]*?\balreadyIrreversible\b[\s\S]*?\}\)/,
+    "and that exact derived value must be the one the policy sees",
   );
 });
 

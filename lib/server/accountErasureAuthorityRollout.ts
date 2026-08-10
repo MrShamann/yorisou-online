@@ -41,14 +41,22 @@ export function accountErasureAuthoritySchemaReady(): boolean {
   return process.env[SCHEMA_READY_ENV] === "on";
 }
 
+export type ErasureAuthorityUnreadyReason =
+  /** The operator has not attested that the post-P111 contract is deployed. */
+  "account_erasure_authority_schema_unready";
+
 export type ErasureAuthorityDecision =
-  /** The executor capability is off. Nothing changes; the legacy path stays dormant as before. */
+  /**
+   * The executor capability is off AND the job has not crossed the irreversible boundary. Refuse
+   * BEFORE claiming: opening a job nothing will advance is how an account gets locked out with its
+   * data intact, which is exactly what the 2026-08-10 incident did to two people.
+   */
   | { mode: "executor_disabled" }
   /**
-   * The executor is on but the database cannot satisfy the only authorized erasure interface.
+   * The executor is on but the deployment cannot satisfy the only authorized erasure interface.
    * Refuse BEFORE beginning a new irreversible deletion, and say why in bounded terms.
    */
-  | { mode: "refuse_infrastructure_unready"; reason: "account_erasure_authority_schema_unready" }
+  | { mode: "refuse_infrastructure_unready"; reason: ErasureAuthorityUnreadyReason }
   /** Proceed — and only ever through the four-argument, claim-bound entry point. */
   | { mode: "strong_erasure" };
 
@@ -67,9 +75,34 @@ export function decideErasureAuthority(input: {
   schemaReady: boolean;
   alreadyIrreversible?: boolean;
 }): ErasureAuthorityDecision {
+  // ── ALREADY IRREVERSIBLE COMES FIRST, AND OUTRANKS EVERYTHING ───────────────
+  //
+  // A job past the point of no return has had its sessions revoked and its mutation gate closed. Its
+  // owner is already locked out. Refusing it does not protect anyone — it strands them, with their
+  // data still present and no way to finish. That is precisely the state the 2026-08-10 incident
+  // left two accounts in.
+  //
+  // So resume outranks BOTH the capability switch and every readiness fact. This is what lets the
+  // operator recovery tool finish those jobs while public deletion intake stays disabled, and it is
+  // stated here rather than emerging from a fall-through — the previous version returned
+  // `executor_disabled` for this case and `executeDeletion` did not handle that mode at all, so an
+  // executor-off resume fell through and claimed anyway. Nothing about that was written down.
+  //
+  // It is not a bypass: the resume still presents the exact job, token and generation, and the SQL
+  // revalidates all of it. An unready deployment simply fails that job's step as retryable and
+  // leaves the cursor, manifest and `irreversible_started_at` intact.
+  if (input.alreadyIrreversible) return { mode: "strong_erasure" };
+
+  // ── EVERYTHING BELOW IS A JOB THAT HAS NOT CROSSED ─────────────────────────
   if (!input.executorEnabled) return { mode: "executor_disabled" };
-  if (!input.schemaReady && !input.alreadyIrreversible) {
+
+  if (!input.schemaReady) {
     return { mode: "refuse_infrastructure_unready", reason: "account_erasure_authority_schema_unready" };
   }
+
+  // The LIVE transport measurement is deliberately NOT an input here. It belongs after the claim, so
+  // that only the executor which is actually going to erase pays for it, and so that no answer can
+  // be reused for a later deletion. Accepting it here as well would give the same decision two
+  // homes — which is precisely how `executor_disabled` once ended up handled in neither.
   return { mode: "strong_erasure" };
 }
