@@ -41,14 +41,27 @@ export function accountErasureAuthoritySchemaReady(): boolean {
   return process.env[SCHEMA_READY_ENV] === "on";
 }
 
+export type ErasureAuthorityUnreadyReason =
+  /** The operator has not attested that the post-P111 contract is deployed. */
+  | "account_erasure_authority_schema_unready"
+  /**
+   * The operator HAS attested it, but the deployment cannot actually invoke the strong entry point
+   * right now. A flag is a belief; this is a measurement. See por1ErasureTransportReadiness.
+   */
+  | "account_erasure_transport_unready";
+
 export type ErasureAuthorityDecision =
-  /** The executor capability is off. Nothing changes; the legacy path stays dormant as before. */
+  /**
+   * The executor capability is off AND the job has not crossed the irreversible boundary. Refuse
+   * BEFORE claiming: opening a job nothing will advance is how an account gets locked out with its
+   * data intact, which is exactly what the 2026-08-10 incident did to two people.
+   */
   | { mode: "executor_disabled" }
   /**
-   * The executor is on but the database cannot satisfy the only authorized erasure interface.
+   * The executor is on but the deployment cannot satisfy the only authorized erasure interface.
    * Refuse BEFORE beginning a new irreversible deletion, and say why in bounded terms.
    */
-  | { mode: "refuse_infrastructure_unready"; reason: "account_erasure_authority_schema_unready" }
+  | { mode: "refuse_infrastructure_unready"; reason: ErasureAuthorityUnreadyReason }
   /** Proceed — and only ever through the four-argument, claim-bound entry point. */
   | { mode: "strong_erasure" };
 
@@ -66,10 +79,43 @@ export function decideErasureAuthority(input: {
   executorEnabled: boolean;
   schemaReady: boolean;
   alreadyIrreversible?: boolean;
+  /**
+   * The measured transport answer. `undefined` means "not probed" — the caller may legitimately skip
+   * the probe for a job that has already crossed, where the answer could not change the decision.
+   * Only an explicit `false` refuses.
+   */
+  transportReady?: boolean;
 }): ErasureAuthorityDecision {
+  // ── ALREADY IRREVERSIBLE COMES FIRST, AND OUTRANKS EVERYTHING ───────────────
+  //
+  // A job past the point of no return has had its sessions revoked and its mutation gate closed. Its
+  // owner is already locked out. Refusing it does not protect anyone — it strands them, with their
+  // data still present and no way to finish. That is precisely the state the 2026-08-10 incident
+  // left two accounts in.
+  //
+  // So resume outranks BOTH the capability switch and every readiness fact. This is what lets the
+  // operator recovery tool finish those jobs while public deletion intake stays disabled, and it is
+  // stated here rather than emerging from a fall-through — the previous version returned
+  // `executor_disabled` for this case and `executeDeletion` did not handle that mode at all, so an
+  // executor-off resume fell through and claimed anyway. Nothing about that was written down.
+  //
+  // It is not a bypass: the resume still presents the exact job, token and generation, and the SQL
+  // revalidates all of it. An unready deployment simply fails that job's step as retryable and
+  // leaves the cursor, manifest and `irreversible_started_at` intact.
+  if (input.alreadyIrreversible) return { mode: "strong_erasure" };
+
+  // ── EVERYTHING BELOW IS A JOB THAT HAS NOT CROSSED ─────────────────────────
   if (!input.executorEnabled) return { mode: "executor_disabled" };
-  if (!input.schemaReady && !input.alreadyIrreversible) {
+
+  if (!input.schemaReady) {
     return { mode: "refuse_infrastructure_unready", reason: "account_erasure_authority_schema_unready" };
   }
+
+  // The flag says the contract is deployed; the probe says whether we can reach it. Only an explicit
+  // negative refuses, so a caller that did not probe is not punished for it.
+  if (input.transportReady === false) {
+    return { mode: "refuse_infrastructure_unready", reason: "account_erasure_transport_unready" };
+  }
+
   return { mode: "strong_erasure" };
 }

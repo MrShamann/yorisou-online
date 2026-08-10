@@ -39,7 +39,7 @@ import {
 } from "./accountIdentityDeletion";
 import { createHash } from "node:crypto";
 
-import { rpc } from "./assessmentAttemptStore";
+import { rpc, request } from "./assessmentAttemptStore";
 import { purgeProvisioningForOwner } from "./identityProvisioning";
 import {
   isIdentityProvisioningSchemaReady,
@@ -53,6 +53,14 @@ import {
   accountErasureAuthoritySchemaReady,
   decideErasureAuthority,
 } from "./accountErasureAuthorityRollout";
+import {
+  probeErasureTransport,
+  type ErasureTransportReadiness,
+} from "./por1ErasureTransportReadiness";
+import {
+  deriveErasureAuthorityFacts,
+  toBoundedLogRecord,
+} from "./por1ErasureAuthorityDiagnostic";
 import { isPor1CapabilityEnabled } from "./por1RuntimeControls";
 import {
   claimDeletionExecutor,
@@ -242,6 +250,8 @@ export type DeletionExecutionDependencies = {
   recordRetryableError: typeof recordRetryableError;
   isPor1CapabilityEnabled: typeof isPor1CapabilityEnabled;
   accountErasureAuthoritySchemaReady: typeof accountErasureAuthoritySchemaReady;
+  /** Measures whether the strong erasure RPC can be invoked right now. Non-destructive. */
+  probeTransport: () => Promise<ErasureTransportReadiness>;
   runStages: (claim: ExecutorClaim) => Promise<DeletionOutcome>;
 };
 
@@ -253,6 +263,13 @@ export const productionDeletionDependencies: DeletionExecutionDependencies = {
   recordRetryableError,
   isPor1CapabilityEnabled,
   accountErasureAuthoritySchemaReady,
+  probeTransport: () =>
+    probeErasureTransport({
+      callRpc: async (fn, args) => {
+        const response = await request(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
+        return { status: response.status, bodyText: await response.text().catch(() => "") };
+      },
+    }),
   runStages: (claim) => runStages(claim),
 };
 
@@ -268,6 +285,7 @@ export async function executeDeletion(
     recordRetryableError: recordRetryable,
     isPor1CapabilityEnabled: capabilityEnabled,
     accountErasureAuthoritySchemaReady: erasureSchemaReady,
+    probeTransport,
     runStages: runStagesFn,
   } = dependencies;
   const resume = await readResume(accountId);
@@ -315,16 +333,33 @@ export async function executeDeletion(
   //
   // There is no fallback to the owner-only RPC in either branch: it erases from an owner id alone,
   // without the exact job, token and generation that make erasure authorized.
+  const alreadyIrreversible = resume.irreversible || isAtOrPastIrreversible(resume.cursor);
+
+  // The flag is a belief about the schema; this is a measurement of whether the strong entry point
+  // can actually be invoked right now. It is skipped for a job that has already crossed, because the
+  // answer cannot change that decision and probing would only add a way to fail.
+  const transportReady = alreadyIrreversible ? undefined : (await probeTransport()).ready;
+
   const erasureAuthority = decideErasureAuthority({
     executorEnabled: capabilityEnabled("ACCOUNT_DELETION_EXECUTOR"),
     schemaReady: erasureSchemaReady(),
-    alreadyIrreversible: resume.irreversible || isAtOrPastIrreversible(resume.cursor),
+    alreadyIrreversible,
+    transportReady,
   });
-  if (erasureAuthority.mode === "refuse_infrastructure_unready") {
-    // Retryable and bounded: nothing has been claimed, nothing destroyed, the flag can be set and
-    // the same job resumed. Deliberately NOT a generic 500 — that is what shipped and what this
-    // replaces.
-    return { outcome: "retryable", errorCode: erasureAuthority.reason };
+
+  // EVERY mode is handled here on purpose. The previous version handled only the unready refusal, so
+  // the disabled-executor mode fell through and claimed the job anyway — an unwritten behaviour that
+  // nothing tested and nobody had decided. A switch makes forgetting one a type error.
+  //
+  // Both refusals are RETRYABLE and happen BEFORE the claim: nothing is opened, nothing is
+  // destroyed, and the account is not locked out. Deliberately not a generic 500.
+  switch (erasureAuthority.mode) {
+    case "executor_disabled":
+      return { outcome: "retryable", errorCode: "account_deletion_executor_disabled" };
+    case "refuse_infrastructure_unready":
+      return { outcome: "retryable", errorCode: erasureAuthority.reason };
+    case "strong_erasure":
+      break;
   }
 
   const claimResult = await claimExecutor(accountId);
@@ -363,6 +398,67 @@ export async function executeDeletion(
     return { outcome: "retryable", errorCode: code };
   } finally {
     await releaseExecutor(claim);
+  }
+}
+
+/**
+ * Re-derive the erasure authority invariants after the database refused, and log them as booleans.
+ *
+ * Best-effort by design: this runs on a path that is ALREADY failing, so it must never turn a
+ * bounded refusal into a second, different failure. Every error here is swallowed.
+ *
+ * Nothing identifying is read into the log. The row's values are used only for comparison inside
+ * `deriveErasureAuthorityFacts`, and `toBoundedLogRecord` re-coerces every field to a boolean.
+ */
+async function logErasureAuthorityRefusal(claim: ExecutorClaim): Promise<void> {
+  try {
+    const columns =
+      "owner_account_id,state,execution_cursor,irreversible_started_at," +
+      "executor_token_hash,executor_generation,executor_expires_at";
+    const jobResponse = await request(
+      `yorisou_account_deletion_jobs?id=eq.${encodeURIComponent(claim.jobId)}&select=${columns}`,
+      { method: "GET" },
+    );
+    const rows = jobResponse.ok ? ((await jobResponse.json()) as Array<Record<string, unknown>>) : [];
+    const row = rows[0];
+
+    let manifestPresent = false;
+    if (row) {
+      const manifestResponse = await request(
+        `yorisou_account_deletion_manifests?job_id=eq.${encodeURIComponent(claim.jobId)}&select=job_id`,
+        { method: "GET" },
+      );
+      manifestPresent =
+        manifestResponse.ok && ((await manifestResponse.json()) as unknown[]).length > 0;
+    }
+
+    const facts = deriveErasureAuthorityFacts(
+      row
+        ? {
+            ownerAccountId: (row.owner_account_id as string) ?? null,
+            state: (row.state as string) ?? null,
+            executionCursor: (row.execution_cursor as string) ?? null,
+            irreversibleStartedAt: (row.irreversible_started_at as string) ?? null,
+            executorTokenHash: (row.executor_token_hash as string) ?? null,
+            executorGeneration:
+              typeof row.executor_generation === "number" ? row.executor_generation : null,
+            executorExpiresAt: (row.executor_expires_at as string) ?? null,
+            manifestPresent,
+          }
+        : null,
+      {
+        ownerAccountId: claim.accountId,
+        executorTokenHash: claim.tokenHash,
+        executorGeneration: claim.generation,
+      },
+      new Date(),
+    );
+
+    // One bounded structured record. Booleans and one invariant NAME — never an id, token,
+    // generation number, email, session or object key.
+    console.error("account deletion erasure authority refused", toBoundedLogRecord(facts));
+  } catch {
+    // A diagnostic that breaks the path it is diagnosing is worse than no diagnostic.
   }
 }
 
@@ -465,12 +561,25 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
           // The full authority, never rediscovered: the exact job, its owner, and proof that THIS
           // executor holds that job's current claim. SQL revalidates all of it under a row lock, so
           // a wrong id, a wrong token or a superseded generation is refused rather than trusted.
-          await rpc("yorisou_account_deletion_erase_database", {
-            p_job_id: claim.jobId,
-            p_owner_account_id: claim.accountId,
-            p_executor_token_hash: claim.tokenHash,
-            p_executor_generation: claim.generation,
-          });
+          try {
+            await rpc("yorisou_account_deletion_erase_database", {
+              p_job_id: claim.jobId,
+              p_owner_account_id: claim.accountId,
+              p_executor_token_hash: claim.tokenHash,
+              p_executor_generation: claim.generation,
+            });
+          } catch (error) {
+            // The SQL answers every failing clause with ONE opaque code, correctly — telling an
+            // unauthorised caller which invariant to forge next would be a real weakness. But that
+            // left the 2026-08-10 incident with no way to learn WHY. So we re-derive the invariants
+            // ourselves and log BOOLEANS. The external refusal is unchanged and the error is
+            // rethrown untouched.
+            const code = error instanceof Error ? error.message : "";
+            if (code === "account_deletion_erase_not_authorized") {
+              await logErasureAuthorityRefusal(claim);
+            }
+            throw error;
+          }
           // Partial provisioning state is account-linked and lives outside the declarative plan,
           // which is fixed in an applied migration. Removing it also RELEASES THE EMAIL: the saga is
           // keyed by a digest of the address, so one left behind would make that address permanently
