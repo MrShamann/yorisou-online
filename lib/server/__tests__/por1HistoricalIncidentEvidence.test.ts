@@ -123,16 +123,16 @@ test("a pinned instant with NO zone is invalid — the window must not depend on
   }
 });
 
-test("the pinned incident size is validated, not merely stored", () => {
+test("the population safety ceiling is validated, not merely stored", () => {
   for (const count of [0, -1, 1.5, 11, Number.NaN]) {
     assert.ok(
-      validateIncidentEvidence(withField({ expectedStrandedJobCount: count })).includes(
-        "expected_stranded_job_count_implausible",
+      validateIncidentEvidence(withField({ populationSafetyCeiling: count })).includes(
+        "population_safety_ceiling_implausible",
       ),
       String(count),
     );
   }
-  assert.deepEqual(validateIncidentEvidence(withField({ expectedStrandedJobCount: 2 })), []);
+  assert.deepEqual(validateIncidentEvidence(withField({ populationSafetyCeiling: 2 })), []);
 });
 
 test("a declared window in another zone still confirms the same instant", () => {

@@ -56,14 +56,24 @@ export type HistoricalIncidentEvidence = {
   productionProjectRef: string;
 
   /**
-   * How many stranded jobs this incident actually left behind.
+   * POPULATION SAFETY CEILING. Not identity, and not provenance.
    *
-   * PINNED, not counted at runtime and not retyped by an operator. The window bounds forty-eight
-   * minutes of LIVE Production, so "inside the window" is necessary but not sufficient: if anything
-   * else in there ever qualifies, the population stops being this number and the whole run refuses
-   * rather than quietly growing by one.
+   * How many stranded jobs this incident is believed to have left behind, pinned so that a run
+   * cannot quietly grow. It is a blast-radius control and nothing more.
+   *
+   * WHAT IT CANNOT DO, stated because an earlier revision leaned on it as though it could. A count
+   * answers "how many objects satisfy the rule right now". It cannot answer "which objects, and were
+   * they the historical ones". These two populations are indistinguishable to it:
+   *
+   *     historical residue A  +  historical residue B      -> 2
+   *     historical residue A  +  unrelated candidate C     -> 2
+   *
+   * It is also not third-party provenance: unlike every other field here, this number is not
+   * transcribed from a GitHub or Vercel record, and `verify-incident-evidence` cannot re-derive it.
+   * It is a local, reviewed judgement about blast radius. `por1IncidentPopulationSemantics.test.ts`
+   * pins that boundary so it cannot drift back into an identity claim.
    */
-  expectedStrandedJobCount: number;
+  populationSafetyCeiling: number;
 };
 
 /**
@@ -92,7 +102,7 @@ export const POR1_PRODUCTION_DELETION_INCIDENT: HistoricalIncidentEvidence = {
   nextDeploymentId: "dpl_86EeJHhnDmiUMk16xAvwtBJgYAaG",
   nextDeploymentAt: "2026-08-10T04:20:39.905Z",
   productionProjectRef: "krxizslnksorwhepyijs",
-  expectedStrandedJobCount: 2,
+  populationSafetyCeiling: 2,
 };
 
 /**
@@ -119,7 +129,7 @@ export type IncidentEvidenceDefect =
   | "next_deployment_not_after_activation"
   | "window_span_above_bound"
   | "production_project_ref_malformed"
-  | "expected_stranded_job_count_implausible";
+  | "population_safety_ceiling_implausible";
 
 const FULL_SHA = /^[0-9a-f]{40}$/;
 const DEPLOYMENT_ID = /^dpl_[A-Za-z0-9]{16,}$/;
@@ -175,11 +185,11 @@ export function validateIncidentEvidence(
   // upper bound is deliberately tight: this incident is small, and a contract edit that made it
   // large should have to justify itself against a test.
   if (
-    !Number.isInteger(evidence.expectedStrandedJobCount) ||
-    evidence.expectedStrandedJobCount < 1 ||
-    evidence.expectedStrandedJobCount > 10
+    !Number.isInteger(evidence.populationSafetyCeiling) ||
+    evidence.populationSafetyCeiling < 1 ||
+    evidence.populationSafetyCeiling > 10
   ) {
-    defects.push("expected_stranded_job_count_implausible");
+    defects.push("population_safety_ceiling_implausible");
   }
 
   const merged = instant(evidence.promotionMergedAt);

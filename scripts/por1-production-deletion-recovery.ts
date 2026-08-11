@@ -53,13 +53,16 @@
 // It is deliberately NOT run against Production by the package that introduced it.
 
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 import { buildDeletionManifest } from "../lib/server/accountIdentityDeletion";
 import { executeDeletion } from "../lib/server/accountDeletionOrchestrator";
 import { emailIdentityDigest, identityOwnerFingerprint } from "../lib/server/canonicalIdentityLinks";
+import { parseFounderAuthority } from "../lib/server/por1FounderIncidentAuthority";
 import {
   classifyIncidentCandidate,
   isUnroutableReservedAddress,
+  resolveDestructiveAuthority,
   selectIncidentCandidates,
   type IncidentCandidateRow,
 } from "../lib/server/por1ProductionIncidentRecovery";
@@ -73,7 +76,7 @@ import {
   countManifestDomainArtifacts,
   POR1_INCIDENT_EVIDENCE_VERSION,
   readManifestCanonicalIdentityLinkCount,
-} from "../lib/server/por1SyntheticMembershipEvidence";
+} from "../lib/server/por1HistoricalIncidentCorrelation";
 import { findAccountById, normalizeEmail } from "../lib/server/yorisouData";
 
 /** The governed Production project — taken from the pinned contract, not restated here. */
@@ -153,6 +156,24 @@ function assertProductionOnly(): string {
 }
 
 const fingerprint = (value: string) => createHash("sha256").update(value).digest("hex").slice(0, 12);
+
+/**
+ * Load the operator-supplied Founder authority artifact.
+ *
+ * READ ONLY, and deliberately incapable of producing one: there is no `--issue`, no key material and
+ * no fallback. Absent, unreadable or malformed all resolve to null, and null is refused by name —
+ * `no_authority_artifact_supplied` — so "nobody has decided this" never looks like "the check
+ * passed". No artifact ships with this repository.
+ */
+function loadFounderAuthority() {
+  const path = flagValue("--founder-authority");
+  if (!path) return null;
+  try {
+    return parseFounderAuthority(JSON.parse(readFileSync(path, "utf8")));
+  } catch {
+    return null;
+  }
+}
 
 async function rest(path: string): Promise<unknown[]> {
   const url = process.env.SUPABASE_URL ?? "";
@@ -345,7 +366,7 @@ async function readCandidates(window: { startedAt: string; endedAt: string }): P
       activeIdentityLinkCount,
       registrationLeaseCount,
       accountCreatedWithinIncidentWindow,
-      membership: {
+      correlation: {
         incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
         provisioningSagaRequestedAt,
         registrationLeaseAt,
@@ -380,6 +401,17 @@ async function main() {
 
   const selection = selectIncidentCandidates(rows, { maxCandidates: ceiling ?? -1 });
 
+  // LAYER B. Read only — there is no `--issue`, no signing key and no default. Absent means NONE.
+  const authority = resolveDestructiveAuthority(selection, loadFounderAuthority(), {
+    currentSourceCommitSha: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").trim(),
+    currentIncidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
+    populationSafetyCeiling: POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling,
+    currentExecutorState:
+      (process.env.YORISOU_POR1_ACCOUNT_DELETION_EXECUTOR ?? "").trim() === "on" ? "on" : "off",
+    spentNonces: new Set<string>(),
+    now: Date.now(),
+  });
+
   console.log(
     JSON.stringify({
       mode: EXECUTE ? "execute" : "dry-run",
@@ -387,17 +419,21 @@ async function main() {
       incidentEvidence: POR1_PRODUCTION_DELETION_INCIDENT.version,
       incidentWindow: window,
       candidatesScanned: rows.length,
-      resumable: selection.resumable.length,
+      qualified: selection.qualified.length,
       revisit: selection.revisit.length,
       refused: selection.refused.length,
       ceiling,
-      safeToExecute: selection.safeToExecute,
+      reviewReady: selection.reviewReady,
       blockReason: selection.blockReason,
+      // Stated on every run so no reader can mistake a clean scan for permission.
+      incidentCorrelation: selection.reviewReady ? "QUALIFIED" : "NOT_QUALIFIED",
+      syntheticMembership: "NOT_MACHINE_PROVABLE",
+      destructiveAuthority: authority.permitted ? "GRANTED" : `NONE (${authority.reason})`,
     }),
   );
 
-  for (const row of selection.resumable) {
-    console.log(`  RESUMABLE  ${row.jobFingerprint}  ${classifyIncidentCandidate(row).action}`);
+  for (const row of selection.qualified) {
+    console.log(`  QUALIFIED  ${row.jobFingerprint}  ${classifyIncidentCandidate(row).action} — REVIEW REQUIRED`);
   }
   for (const item of selection.revisit) {
     console.log(`  REVISIT    ${item.row.jobFingerprint}  ${item.reason}`);
@@ -407,17 +443,27 @@ async function main() {
   }
 
   if (!EXECUTE) {
-    console.log(`(dry-run: no destructive operation — pass --execute --max-candidates=<n> to resume)`);
+    console.log(
+      "(dry-run: no destructive operation. A QUALIFIED candidate is eligible for HUMAN REVIEW, " +
+        "not for erasure — see --founder-authority)",
+    );
     // A refusal is still a finding even in a dry run.
     process.exit(selection.refused.length > 0 ? 1 : 0);
   }
 
   if (ceiling === null) fail("--execute requires an explicit --max-candidates=<n> from the dry run");
-  if (!selection.safeToExecute) fail(`population changed since review: ${selection.blockReason}`);
+  if (!authority.permitted) {
+    fail(
+      `destructive authority is ${authority.reason}. Machine evidence can only QUALIFY a candidate ` +
+        "for review; erasing one additionally requires a single-use Founder-reviewed incident " +
+        "authority artifact passed with --founder-authority=<path>. None is shipped with this " +
+        "repository, and this tool cannot mint one.",
+    );
+  }
 
   let completed = 0;
   const unresolved: string[] = [];
-  for (const row of selection.resumable) {
+  for (const row of selection.qualified) {
     const ownerAccountId = (row as IncidentCandidateRow & { __ownerAccountId?: string })
       .__ownerAccountId;
     if (!ownerAccountId) {
@@ -435,7 +481,7 @@ async function main() {
     }
   }
 
-  console.log(JSON.stringify({ completed, unresolved: unresolved.length }));
+  console.log(JSON.stringify({ completed, unresolved: unresolved.length, spentNonce: authority.nonce }));
   if (unresolved.length > 0 || selection.refused.length > 0) process.exit(1);
 }
 

@@ -165,7 +165,9 @@ jobs:
           npm run test:por1-erasure-transport
           npm run test:por1-authority-diagnostic
           npm run test:por1-incident-recovery
-          npm run test:por1-synthetic-membership
+          npm run test:por1-incident-correlation
+          npm run test:por1-founder-authority
+          npm run test:por1-population-semantics
           npm run test:por1-incident-evidence
           npm run por1:verify-incident-evidence -- --offline
           npm run test:por1-deletion-request-guard

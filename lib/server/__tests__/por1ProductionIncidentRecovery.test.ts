@@ -6,7 +6,9 @@
 // the historical release-check execution, using only what the database wrote at the time.
 // CONCORDANCE asks whether the records in front of us describe the same account. Neither substitutes
 // for the other, and the tests below exist mostly to prove that: a candidate with flawless identity
-// agreement and no membership evidence is refused, and so is the reverse.
+// agreement and no correlation evidence is refused, and so is the reverse. Note the ceiling of what
+// this file can assert: the best verdict here is QUALIFY. Whether anything may actually be erased is
+// decided in por1FounderIncidentAuthority.test.ts, and without a Founder artifact the answer is no.
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -23,11 +25,11 @@ import {
   POR1_INCIDENT_EVIDENCE_VERSION,
   POR1_PRODUCTION_DELETION_INCIDENT,
 } from "../por1HistoricalIncidentEvidence";
-import type { SyntheticMembershipEvidence } from "../por1SyntheticMembershipEvidence";
+import type { IncidentCorrelationEvidence } from "../por1HistoricalIncidentCorrelation";
 
-const provenMembership = (
-  over: Partial<SyntheticMembershipEvidence> = {},
-): SyntheticMembershipEvidence => ({
+const qualifyingCorrelation = (
+  over: Partial<IncidentCorrelationEvidence> = {},
+): IncidentCorrelationEvidence => ({
   incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
   provisioningSagaRequestedAt: "2026-08-10T03:48:53.261Z",
   registrationLeaseAt: "2026-08-10T03:48:53.990Z",
@@ -47,7 +49,7 @@ const incident = (over: Partial<IncidentCandidateRow> = {}): IncidentCandidateRo
   manifestPresent: true,
   ownerNamed: true,
   executorLeaseLive: false,
-  membership: provenMembership(),
+  correlation: qualifyingCorrelation(),
   activeEmailLinkCount: 1,
   activeIdentityLinkCount: 1,
   registrationLeaseCount: 1,
@@ -60,9 +62,9 @@ const incident = (over: Partial<IncidentCandidateRow> = {}): IncidentCandidateRo
   ...over,
 });
 
-test("only a FAILED_RETRYABLE post-irreversible incident job is resumable", () => {
+test("only a FAILED_RETRYABLE post-irreversible incident job can qualify", () => {
   assert.deepEqual(classifyIncidentCandidate(incident()), {
-    action: "resume",
+    action: "qualify",
     family: "failed_retryable_post_irreversible",
   });
 });
@@ -91,7 +93,7 @@ test("a job with a live executor claim is revisit, never raced", () => {
 test("a conflicting live lease outranks even a fully proven candidate", () => {
   const row = incident({ executorLeaseLive: true });
   assert.equal(classifyIncidentCandidate(row).action, "revisit");
-  assert.equal(selectIncidentCandidates([row], { maxCandidates: 0 }).resumable.length, 0);
+  assert.equal(selectIncidentCandidates([row], { maxCandidates: 0 }).qualified.length, 0);
 });
 
 test("a job parked at another cursor is refused", () => {
@@ -114,19 +116,19 @@ test("an owner-free (already de-identified) job is refused", () => {
   });
 });
 
-// ── membership must be PROVEN from persisted execution truth ────────────────
+// ── correlation must be QUALIFIED from persisted execution truth ───────────
 
 test("missing independent synthetic evidence is refused, whatever the identity records say", () => {
-  const row = incident({ membership: provenMembership({ registrationLeaseAt: null }) });
+  const row = incident({ correlation: qualifyingCorrelation({ registrationLeaseAt: null }) });
   assert.deepEqual(classifyIncidentCandidate(row), {
     action: "refuse",
-    reason: "synthetic_membership_unproven:registration_lease_absent",
+    reason: "incident_correlation_unqualified:registration_lease_absent",
   });
 });
 
 test("an account that lived a real life is refused even with perfect concordance", () => {
   const row = incident({
-    membership: provenMembership({
+    correlation: qualifyingCorrelation({
       provisioningSagaRequestedAt: "2026-07-01T09:00:00.000Z",
       registrationLeaseAt: "2026-07-01T09:00:00.000Z",
       deletionRequestedAt: "2026-08-10T03:49:19.271Z",
@@ -135,15 +137,15 @@ test("an account that lived a real life is refused even with perfect concordance
   assert.equal(classifyIncidentCandidate(row).action, "refuse");
   assert.match(
     String((classifyIncidentCandidate(row) as { reason: string }).reason),
-    /^synthetic_membership_unproven:/,
+    /^incident_correlation_unqualified:/,
   );
 });
 
 test("a candidate with product activity is refused", () => {
-  const row = incident({ membership: provenMembership({ liveDomainArtifactCount: 4 }) });
+  const row = incident({ correlation: qualifyingCorrelation({ liveDomainArtifactCount: 4 }) });
   assert.deepEqual(classifyIncidentCandidate(row), {
     action: "refuse",
-    reason: "synthetic_membership_unproven:live_domain_artifacts_present",
+    reason: "incident_correlation_unqualified:live_domain_artifacts_present",
   });
 });
 
@@ -155,7 +157,7 @@ test("a LOOK-ALIKE candidate outside the pinned incident is refused and blocks t
   const shift = (at: string) => new Date(Date.parse(at) + threeWeeks).toISOString();
   const lookalike = incident({
     jobFingerprint: "lookalike",
-    membership: provenMembership({
+    correlation: qualifyingCorrelation({
       provisioningSagaRequestedAt: shift("2026-08-10T03:48:53.261Z"),
       registrationLeaseAt: shift("2026-08-10T03:48:53.990Z"),
       deletionRequestedAt: shift("2026-08-10T03:49:19.271Z"),
@@ -164,12 +166,12 @@ test("a LOOK-ALIKE candidate outside the pinned incident is refused and blocks t
 
   assert.deepEqual(classifyIncidentCandidate(lookalike), {
     action: "refuse",
-    reason: "synthetic_membership_unproven:provisioning_outside_incident_window",
+    reason: "incident_correlation_unqualified:provisioning_outside_incident_window",
   });
 
   // And it is an UNRECOGNISED refusal, so it stops the whole reviewed run rather than being skipped.
   const selection = selectIncidentCandidates([incident(), lookalike], { maxCandidates: 2 });
-  assert.equal(selection.safeToExecute, false);
+  assert.equal(selection.reviewReady, false);
   assert.equal(selection.blockReason, "unknown_or_non_synthetic_candidate_present");
 });
 
@@ -230,30 +232,30 @@ test("ambiguity is decided BEFORE concordance, so a matching first row cannot re
   );
 });
 
-test("the reserved .invalid TLD ALONE does not make a candidate resumable", () => {
-  // Everything an address can tell us is true here, and membership is absent. The old rule would
+test("the reserved .invalid TLD ALONE does not make a candidate qualify", () => {
+  // Everything an address can tell us is true here, and correlation is absent. The old rule would
   // have resumed this. That is the whole reason the rule was rewritten.
   const row = incident({
     ownerAddressUnroutable: true,
-    membership: provenMembership({ registrationLeaseAt: null, liveDomainArtifactCount: null }),
+    correlation: qualifyingCorrelation({ registrationLeaseAt: null, liveDomainArtifactCount: null }),
   });
   assert.equal(classifyIncidentCandidate(row).action, "refuse");
 });
 
-test("the reviewed ceiling ALONE does not make a candidate resumable", () => {
+test("the reviewed ceiling ALONE does not make a candidate qualify", () => {
   // The population is exactly the reviewed number, and the rule still refuses. The ceiling is a
   // safety guard; it was never identity proof and cannot promote anything.
   const rows = [
-    incident({ jobFingerprint: "a", membership: provenMembership({ manifestDomainArtifactCount: 2 }) }),
-    incident({ jobFingerprint: "b", membership: provenMembership({ manifestDomainArtifactCount: 2 }) }),
+    incident({ jobFingerprint: "a", correlation: qualifyingCorrelation({ manifestDomainArtifactCount: 2 }) }),
+    incident({ jobFingerprint: "b", correlation: qualifyingCorrelation({ manifestDomainArtifactCount: 2 }) }),
   ];
   const selection = selectIncidentCandidates(rows, { maxCandidates: 2 });
-  assert.equal(selection.resumable.length, 0);
-  assert.equal(selection.safeToExecute, false);
+  assert.equal(selection.qualified.length, 0);
+  assert.equal(selection.reviewReady, false);
   assert.equal(selection.blockReason, "unknown_or_non_synthetic_candidate_present");
 });
 
-// ── concordance must hold too — membership is not permission ────────────────
+// ── concordance must hold too — and qualifying is still not permission ─────
 
 test("a missing authoritative account is refused", () => {
   assert.deepEqual(classifyIncidentCandidate(incident({ authoritativeAccountPresent: false })), {
@@ -304,33 +306,33 @@ test("the unroutable check reads the domain only, and is supporting evidence at 
 
 // ── population-level fail-closed ────────────────────────────────────────────
 
-test("the reviewed set and the executed set must be the same set", () => {
+test("a coherent population at the safety ceiling is REVIEW-ready (not execute-ready)", () => {
   const two = [incident({ jobFingerprint: "a" }), incident({ jobFingerprint: "b" })];
-  assert.equal(selectIncidentCandidates(two, { maxCandidates: 2 }).safeToExecute, true);
+  assert.equal(selectIncidentCandidates(two, { maxCandidates: 2 }).reviewReady, true);
 });
 
 // ── the incident's size is pinned, not retyped ──────────────────────────────
 
-test("a THIRD qualifying candidate refuses the run instead of enlarging it", () => {
+test("a THIRD qualifying candidate refuses the run instead of enlarging it (blast radius, not identity)", () => {
   // The window bounds forty-eight minutes of live Production. If anything else in there ever
   // qualifies, this is what stops it: the population no longer equals the pinned incident, so
   // nothing executes — including the two accounts that WERE part of it.
   const three = ["a", "b", "c"].map((jobFingerprint) => incident({ jobFingerprint }));
   const selection = selectIncidentCandidates(three, { maxCandidates: 3 });
-  assert.equal(selection.resumable.length, 3);
-  assert.equal(selection.safeToExecute, false);
-  assert.equal(selection.blockReason, "candidate_population_differs_from_pinned_incident");
+  assert.equal(selection.qualified.length, 3);
+  assert.equal(selection.reviewReady, false);
+  assert.equal(selection.blockReason, "candidate_population_differs_from_safety_ceiling");
 });
 
-test("an operator cannot retype a ceiling that disagrees with the pinned incident", () => {
+test("an operator cannot retype a ceiling that disagrees with the pinned safety ceiling", () => {
   const one = [incident({ jobFingerprint: "a" })];
   const selection = selectIncidentCandidates(one, { maxCandidates: 1 });
-  assert.equal(selection.safeToExecute, false);
-  assert.equal(selection.blockReason, "candidate_population_differs_from_pinned_incident");
+  assert.equal(selection.reviewReady, false);
+  assert.equal(selection.blockReason, "candidate_population_differs_from_safety_ceiling");
 });
 
-test("the pinned incident size is what the historical incident actually left behind", () => {
-  assert.equal(POR1_PRODUCTION_DELETION_INCIDENT.expectedStrandedJobCount, 2);
+test("the population safety ceiling is what the incident is believed to have left behind", () => {
+  assert.equal(POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling, 2);
 });
 
 // ── registration-lease ambiguity ────────────────────────────────────────────
@@ -366,17 +368,17 @@ test("an account whose OWN createdAt is outside the window is refused", () => {
   }
 });
 
-test("a population above the reviewed ceiling refuses to execute", () => {
+test("a population above the reviewed ceiling refuses", () => {
   const three = [incident({ jobFingerprint: "a" }), incident({ jobFingerprint: "b" }), incident({ jobFingerprint: "c" })];
   const selection = selectIncidentCandidates(three, { maxCandidates: 2 });
-  assert.equal(selection.safeToExecute, false);
+  assert.equal(selection.reviewReady, false);
   assert.equal(selection.blockReason, "candidate_population_above_ceiling");
 });
 
 test("a population BELOW the reviewed ceiling also refuses — the set changed since review", () => {
   const one = [incident()];
   const selection = selectIncidentCandidates(one, { maxCandidates: 2 });
-  assert.equal(selection.safeToExecute, false);
+  assert.equal(selection.reviewReady, false);
   assert.equal(selection.blockReason, "candidate_population_below_ceiling");
 });
 
@@ -392,17 +394,17 @@ test("a live executor claim with no readable expiry is treated as LIVE, not as f
 test("an unexpected extra eligible candidate blocks the whole run", () => {
   const rows = [incident({ jobFingerprint: "a" }), incident({ jobFingerprint: "b" })];
   const selection = selectIncidentCandidates(rows, { maxCandidates: 1 });
-  assert.equal(selection.safeToExecute, false);
+  assert.equal(selection.reviewReady, false);
   assert.equal(selection.blockReason, "candidate_population_above_ceiling");
 });
 
 test("one unrecognised candidate blocks the whole run, and it is reported not touched", () => {
   const rows = [
     incident(),
-    incident({ jobFingerprint: "x", membership: provenMembership({ liveDomainArtifactCount: 9 }) }),
+    incident({ jobFingerprint: "x", correlation: qualifyingCorrelation({ liveDomainArtifactCount: 9 }) }),
   ];
   const selection = selectIncidentCandidates(rows, { maxCandidates: 2 });
-  assert.equal(selection.safeToExecute, false);
+  assert.equal(selection.reviewReady, false);
   assert.equal(selection.blockReason, "unknown_or_non_synthetic_candidate_present");
   assert.equal(selection.refused.length, 1);
   assert.equal(selection.refused[0].row.jobFingerprint, "x");
@@ -433,12 +435,12 @@ test("a structurally out-of-scope row is refused but does NOT block a clean run"
   ];
   const selection = selectIncidentCandidates(rows, { maxCandidates: 2 });
   assert.equal(selection.blockReason, null);
-  assert.equal(selection.safeToExecute, true);
+  assert.equal(selection.reviewReady, true);
   assert.equal(selection.refused.length, 1);
 });
 
 test("a missing ceiling refuses", () => {
-  assert.equal(selectIncidentCandidates([incident()], { maxCandidates: -1 }).safeToExecute, false);
+  assert.equal(selectIncidentCandidates([incident()], { maxCandidates: -1 }).reviewReady, false);
 });
 
 // ── the script's own guarantees, asserted against its source ────────────────
@@ -464,11 +466,14 @@ test("the executable path does not depend on the nonexistent link_subject column
   );
 });
 
-test("membership is derived, and the address is never asked to prove it", () => {
+test("correlation is derived, and the address is never asked to establish it", () => {
   assert.match(SCRIPT_CODE, /operation_code=eq\.\$\{REGISTRATION_OPERATION_CODE\}/);
   assert.match(SCRIPT_CODE, /buildDeletionManifest\(/, "the live re-inventory is taken");
   assert.match(SCRIPT_CODE, /countManifestDomainArtifacts\(/);
   assert.ok(!SCRIPT_CODE.includes("isIncidentSyntheticEmail"), "the address rule is gone");
+  // And the tool must say what it is and is not concluding, on every run.
+  assert.match(SCRIPT_CODE, /syntheticMembership: "NOT_MACHINE_PROVABLE"/);
+  assert.match(SCRIPT_CODE, /destructiveAuthority/);
 });
 
 test("concordance uses the canonical helpers and the authoritative read path", () => {
@@ -543,6 +548,22 @@ test("the Production guard comes from the pinned contract, not a second copy of 
 test("the provisioning saga is read as a third independent witness", () => {
   assert.match(SCRIPT_CODE, /yorisou_identity_provisioning_sagas\?account_id=eq\./);
   assert.match(SCRIPT_CODE, /provisioningSagaRequestedAt/);
+});
+
+test("execution requires a Founder authority artifact the repository cannot mint", () => {
+  assert.match(SCRIPT_CODE, /--founder-authority/);
+  assert.match(SCRIPT_CODE, /resolveDestructiveAuthority\(/);
+  assert.match(SCRIPT_CODE, /parseFounderAuthority\(/);
+  // No minting: reading an artifact is the only thing this tool may do with one.
+  for (const forbidden of ["issueFounderAuthority", "--issue", "privateKey", "sign("]) {
+    assert.ok(!SCRIPT_CODE.includes(forbidden), `must not mint authority: ${forbidden}`);
+  }
+  // reviewReady alone must never reach the destructive branch.
+  assert.ok(
+    !/if \(!selection\.reviewReady\) fail/.test(SCRIPT_CODE),
+    "a review-ready population is not the execution gate",
+  );
+  assert.match(SCRIPT_CODE, /if \(!authority\.permitted\)/);
 });
 
 test("execution delegates to executeDeletion and to no direct erasure adapter", () => {

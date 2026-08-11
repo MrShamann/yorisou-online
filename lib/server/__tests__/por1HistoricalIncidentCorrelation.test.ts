@@ -1,16 +1,19 @@
-// POR-1 — historical synthetic MEMBERSHIP, proven or refused.
+// POR-1 — historical incident CORRELATION, qualified or refused.
 //
-// The rule this file pins has been refused twice, and each refusal is encoded here as a test.
+// The rule this file pins has been refused three times, and each refusal is encoded here as a test.
 //
-// The first version matched an address pattern whose only surviving copy was a fixture in this very
-// directory. Evidence that lives in the test asserting it is not evidence.
+// The first matched an address pattern whose only surviving copy was a fixture in this very
+// directory. The second bounded membership with a window the OPERATOR typed. The third pinned that
+// window to immutable GitHub and Vercel records — and still called the result PROOF that an account
+// was synthetic. An independent re-audit refused the claim while accepting the engineering, because
+// the pinned window contains forty-eight minutes of live Production and nothing Production kept says
+// which run created an account.
 //
-// The second derived membership from persisted execution truth — right — but bounded it with a window
-// the OPERATOR typed, and leaned on "no real person deletes an account within five minutes". An
-// independent audit refused that: a supplied window is not provenance, and a behavioural bound cannot
-// be the fact that identifies ONE historical execution. The decisive test below is
-// `THE CRITICAL ADVERSARIAL PROPERTY` — a look-alike account satisfying every other clause must still
-// be refused.
+// So the verdict is now QUALIFIED, meaning "eligible for human review", and the decisive test is no
+// longer the look-alike three weeks away — that one is trivial. It is
+// `por1FounderIncidentAuthority.test.ts`'s SAME-WINDOW adversary, which this module qualifies and
+// which is still refused erasure, because qualification is not authority.
+
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -20,12 +23,12 @@ import {
   POR1_PRODUCTION_DELETION_INCIDENT,
 } from "../por1HistoricalIncidentEvidence";
 import {
-  classifyHistoricalSyntheticMembership,
+  classifyHistoricalIncidentCorrelation,
   countManifestDomainArtifacts,
   INCIDENT_ANOMALY_MAX_ACCOUNT_LIFETIME_MS,
   readManifestCanonicalIdentityLinkCount,
-  type SyntheticMembershipEvidence,
-} from "../por1SyntheticMembershipEvidence";
+  type IncidentCorrelationEvidence,
+} from "../por1HistoricalIncidentCorrelation";
 
 /**
  * The historical incident, stated as evidence rather than as identity.
@@ -34,7 +37,7 @@ import {
  * provisioning saga, the registration lease, the deletion job. No address, no digest, no fingerprint
  * appears anywhere in this fixture, which is the entire point.
  */
-const evidence = (over: Partial<SyntheticMembershipEvidence> = {}): SyntheticMembershipEvidence => ({
+const evidence = (over: Partial<IncidentCorrelationEvidence> = {}): IncidentCorrelationEvidence => ({
   incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
   provisioningSagaRequestedAt: "2026-08-10T03:48:53.261Z",
   registrationLeaseAt: "2026-08-10T03:48:53.990Z",
@@ -47,7 +50,7 @@ const evidence = (over: Partial<SyntheticMembershipEvidence> = {}): SyntheticMem
 });
 
 /** Shift a whole candidate in time, preserving its shape exactly. */
-function shiftedBy(ms: number, over: Partial<SyntheticMembershipEvidence> = {}) {
+function shiftedBy(ms: number, over: Partial<IncidentCorrelationEvidence> = {}) {
   const base = evidence();
   const move = (at: string | null) =>
     at === null ? null : new Date(Date.parse(at) + ms).toISOString();
@@ -60,44 +63,47 @@ function shiftedBy(ms: number, over: Partial<SyntheticMembershipEvidence> = {}) 
   };
 }
 
-test("the historical incident shape is PROVEN membership", () => {
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence()), { proven: true });
+test("the historical incident shape is QUALIFIED for review", () => {
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence()), { qualified: true });
 });
 
-test("the second historical owner is PROVEN too", () => {
+test("the second historical owner qualifies too", () => {
   assert.deepEqual(
-    classifyHistoricalSyntheticMembership(
+    classifyHistoricalIncidentCorrelation(
       evidence({
         provisioningSagaRequestedAt: "2026-08-10T03:49:03.547Z",
         registrationLeaseAt: "2026-08-10T03:49:04.170Z",
         deletionRequestedAt: "2026-08-10T03:49:42.277Z",
       }),
     ),
-    { proven: true },
+    { qualified: true },
   );
 });
 
-// ══ THE CRITICAL ADVERSARIAL PROPERTY ═══════════════════════════════════════
+// ══ window clause wiring ════════════════════════════════════════════════════
 //
-// This is the test the audit asked for, and the reason the operator-declared window had to go.
+// Necessary, and knowingly not sufficient. The clause that made the operator-declared window
+// unacceptable is here; the clause that admits its LIMIT lives in the authority tests.
 
-test("a LOOK-ALIKE account satisfying every other clause is REFUSED on provenance alone", () => {
-  // Registered and deleted inside five minutes. Zero domain artifacts in both inventories. Exactly
-  // one canonical identity. It would carry a `.invalid` address and would sit inside whatever
-  // candidate ceiling an operator reviewed. Every clause the previous rule had, it satisfies.
+test("a look-alike OUTSIDE the pinned window is refused — the easy half of the problem", () => {
+  // Registered and deleted inside five minutes, zero domain artifacts, one canonical identity — but
+  // outside the window, so refused.
   //
-  // It differs in one respect: it did not happen during the pinned incident. That must be enough.
+  // THIS TEST IS NOT THE HARD CASE, and an earlier revision wrongly presented it as one. Moving a
+  // look-alike three weeks away and watching it fail proves only that the window clause is wired up.
+  // The adversary that matters sits INSIDE the window and is qualified by this module; see
+  // por1FounderIncidentAuthority.test.ts for what stops it.
   const threeWeeksLater = 21 * 24 * 60 * 60 * 1000;
   const lookalike = shiftedBy(threeWeeksLater);
 
-  assert.deepEqual(classifyHistoricalSyntheticMembership(lookalike), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(lookalike), {
+    qualified: false,
     reason: "provisioning_outside_incident_window",
   });
 
   // And the same account before the incident, so this is not an artefact of pointing at the future.
   assert.equal(
-    classifyHistoricalSyntheticMembership(shiftedBy(-threeWeeksLater)).proven,
+    classifyHistoricalIncidentCorrelation(shiftedBy(-threeWeeksLater)).qualified,
     false,
   );
   // And one second past the window's close.
@@ -105,18 +111,18 @@ test("a LOOK-ALIKE account satisfying every other clause is REFUSED on provenanc
     Date.parse(POR1_PRODUCTION_DELETION_INCIDENT.nextDeploymentAt) -
     Date.parse(evidence().provisioningSagaRequestedAt as string) +
     1000;
-  assert.equal(classifyHistoricalSyntheticMembership(shiftedBy(justAfter)).proven, false);
+  assert.equal(classifyHistoricalIncidentCorrelation(shiftedBy(justAfter)).qualified, false);
 });
 
-test("the five-minute lifetime CANNOT qualify a candidate — provenance is checked first", () => {
+test("the five-minute lifetime CANNOT qualify a candidate — the window clause is checked first", () => {
   // A zero-lifetime account, the most "synthetic-looking" possible, still refused when it is outside
   // the pinned window. If the lifetime bound were load-bearing this would pass.
   const instantaneous = shiftedBy(60 * 24 * 60 * 60 * 1000, {
     registrationLeaseAt: "2026-10-09T03:48:53.990Z",
     deletionRequestedAt: "2026-10-09T03:48:53.990Z",
   });
-  const verdict = classifyHistoricalSyntheticMembership(instantaneous);
-  assert.equal(verdict.proven, false);
+  const verdict = classifyHistoricalIncidentCorrelation(instantaneous);
+  assert.equal(verdict.qualified, false);
   assert.match(String((verdict as { reason: string }).reason), /outside_incident_window$/);
 });
 
@@ -131,14 +137,14 @@ test("the five-minute lifetime CAN still subtract, inside the window", () => {
     "the fixture must stay inside the window, or it would prove the wrong clause",
   );
   assert.deepEqual(
-    classifyHistoricalSyntheticMembership(
+    classifyHistoricalIncidentCorrelation(
       evidence({
         provisioningSagaRequestedAt: registeredAt,
         registrationLeaseAt: registeredAt,
         deletionRequestedAt: tooLate,
       }),
     ),
-    { proven: false, reason: "account_lifetime_above_anomaly_guard" },
+    { qualified: false, reason: "account_lifetime_above_anomaly_guard" },
   );
 });
 
@@ -146,29 +152,29 @@ test("the five-minute lifetime CAN still subtract, inside the window", () => {
 
 test("a candidate gathered under a different contract version is refused", () => {
   assert.deepEqual(
-    classifyHistoricalSyntheticMembership(evidence({ incidentEvidenceVersion: "por1-incident-evidence-v0" })),
-    { proven: false, reason: "incident_evidence_version_mismatch" },
+    classifyHistoricalIncidentCorrelation(evidence({ incidentEvidenceVersion: "por1-incident-evidence-v0" })),
+    { qualified: false, reason: "incident_evidence_version_mismatch" },
   );
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ incidentEvidenceVersion: null })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ incidentEvidenceVersion: null })), {
+    qualified: false,
     reason: "incident_evidence_version_mismatch",
   });
 });
 
 test("an invalid contract refuses everything, before any candidate is considered", () => {
   const broken = { ...POR1_PRODUCTION_DELETION_INCIDENT, deployedCommitSha: "0".repeat(40) };
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence(), broken), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence(), broken), {
+    qualified: false,
     reason: "incident_evidence_contract_invalid",
   });
 });
 
-test("membership takes NO window input — it can only be derived", () => {
+test("correlation takes NO window input — it can only be derived", () => {
   const inputs = Object.keys(evidence());
   for (const forbidden of ["window", "startedat", "endedat", "releasewindow"]) {
     assert.ok(
       !inputs.some((key) => key.toLowerCase().includes(forbidden)),
-      `membership must not accept ${forbidden}; the window is derived from the pinned contract`,
+      `correlation must not accept ${forbidden}; the window is derived from the pinned contract`,
     );
   }
 });
@@ -176,16 +182,16 @@ test("membership takes NO window input — it can only be derived", () => {
 // ══ every witness is required, and each must sit inside the window ══════════
 
 test("each of the three witnesses is required", () => {
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ provisioningSagaRequestedAt: null })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ provisioningSagaRequestedAt: null })), {
+    qualified: false,
     reason: "provisioning_saga_absent",
   });
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ registrationLeaseAt: null })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ registrationLeaseAt: null })), {
+    qualified: false,
     reason: "registration_lease_absent",
   });
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ deletionRequestedAt: null })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ deletionRequestedAt: null })), {
+    qualified: false,
     reason: "deletion_request_absent",
   });
 });
@@ -193,22 +199,22 @@ test("each of the three witnesses is required", () => {
 test("each witness is independently checked against the window", () => {
   const outside = "2026-09-01T00:00:00.000Z";
   assert.equal(
-    (classifyHistoricalSyntheticMembership(evidence({ provisioningSagaRequestedAt: outside })) as { reason: string }).reason,
+    (classifyHistoricalIncidentCorrelation(evidence({ provisioningSagaRequestedAt: outside })) as { reason: string }).reason,
     "provisioning_outside_incident_window",
   );
   assert.equal(
-    (classifyHistoricalSyntheticMembership(evidence({ registrationLeaseAt: outside, deletionRequestedAt: outside })) as { reason: string }).reason,
+    (classifyHistoricalIncidentCorrelation(evidence({ registrationLeaseAt: outside, deletionRequestedAt: outside })) as { reason: string }).reason,
     "registration_outside_incident_window",
   );
   assert.equal(
-    (classifyHistoricalSyntheticMembership(evidence({ deletionRequestedAt: outside })) as { reason: string }).reason,
+    (classifyHistoricalIncidentCorrelation(evidence({ deletionRequestedAt: outside })) as { reason: string }).reason,
     "deletion_request_outside_incident_window",
   );
 });
 
 test("unparseable instants are refused rather than coerced", () => {
   for (const bad of ["not-a-date", "2026-13-45T99:99:99Z", "  "]) {
-    assert.equal(classifyHistoricalSyntheticMembership(evidence({ registrationLeaseAt: bad })).proven, false, bad);
+    assert.equal(classifyHistoricalIncidentCorrelation(evidence({ registrationLeaseAt: bad })).qualified, false, bad);
   }
 });
 
@@ -222,48 +228,48 @@ test("a timestamp with NO zone is refused, not read as the operator's local time
     "2026-08-10T03:48:53",
   ]) {
     assert.equal(
-      classifyHistoricalSyntheticMembership(evidence({ registrationLeaseAt: naive })).proven,
+      classifyHistoricalIncidentCorrelation(evidence({ registrationLeaseAt: naive })).qualified,
       false,
       naive,
     );
   }
   // The same instant WITH a zone is accepted, so the clause is about the zone and nothing else.
   assert.equal(
-    classifyHistoricalSyntheticMembership(evidence({ registrationLeaseAt: "2026-08-10T03:48:53.990+00:00" })).proven,
+    classifyHistoricalIncidentCorrelation(evidence({ registrationLeaseAt: "2026-08-10T03:48:53.990+00:00" })).qualified,
     true,
   );
   assert.equal(
-    classifyHistoricalSyntheticMembership(evidence({ registrationLeaseAt: "2026-08-10T12:48:53.990+09:00" })).proven,
+    classifyHistoricalIncidentCorrelation(evidence({ registrationLeaseAt: "2026-08-10T12:48:53.990+09:00" })).qualified,
     true,
   );
 });
 
 test("a deletion that precedes registration is incoherent and refused", () => {
   assert.deepEqual(
-    classifyHistoricalSyntheticMembership(evidence({ deletionRequestedAt: "2026-08-10T03:40:00.000Z" })),
-    { proven: false, reason: "deletion_precedes_registration" },
+    classifyHistoricalIncidentCorrelation(evidence({ deletionRequestedAt: "2026-08-10T03:40:00.000Z" })),
+    { qualified: false, reason: "deletion_precedes_registration" },
   );
 });
 
 // ══ product engagement disproves membership, from BOTH inventories ══════════
 
 test("a manifest that records any domain artifact is refused", () => {
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ manifestDomainArtifactCount: 1 })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ manifestDomainArtifactCount: 1 })), {
+    qualified: false,
     reason: "manifest_records_domain_artifacts",
   });
 });
 
-test("an unreadable manifest inventory is unproven, not zero", () => {
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ manifestDomainArtifactCount: null })), {
-    proven: false,
+test("an unreadable manifest inventory is unknown, not zero", () => {
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ manifestDomainArtifactCount: null })), {
+    qualified: false,
     reason: "manifest_domain_artifacts_unknown",
   });
 });
 
 test("a missing manifest is refused", () => {
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ manifestPresent: false })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ manifestPresent: false })), {
+    qualified: false,
     reason: "manifest_absent",
   });
 });
@@ -271,7 +277,7 @@ test("a missing manifest is refused", () => {
 test("a canonical link count other than exactly one is refused", () => {
   for (const count of [0, 2, 3, null]) {
     assert.equal(
-      classifyHistoricalSyntheticMembership(evidence({ manifestCanonicalIdentityLinkCount: count })).proven,
+      classifyHistoricalIncidentCorrelation(evidence({ manifestCanonicalIdentityLinkCount: count })).qualified,
       false,
       String(count),
     );
@@ -279,12 +285,12 @@ test("a canonical link count other than exactly one is refused", () => {
 });
 
 test("the LIVE inventory is asked independently — a clean manifest cannot carry it alone", () => {
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ liveDomainArtifactCount: 3 })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ liveDomainArtifactCount: 3 })), {
+    qualified: false,
     reason: "live_domain_artifacts_present",
   });
-  assert.deepEqual(classifyHistoricalSyntheticMembership(evidence({ liveDomainArtifactCount: null })), {
-    proven: false,
+  assert.deepEqual(classifyHistoricalIncidentCorrelation(evidence({ liveDomainArtifactCount: null })), {
+    qualified: false,
     reason: "live_domain_artifacts_unknown",
   });
 });
@@ -384,7 +390,7 @@ test("no clause reads an address, a digest or a fingerprint", () => {
   for (const forbidden of ["email", "digest", "fingerprint", "address", "subject"]) {
     assert.ok(
       !inputs.some((key) => key.toLowerCase().includes(forbidden)),
-      `membership must not take ${forbidden} as an input — that is concordance, not membership`,
+      `correlation must not take ${forbidden} as an input — that is concordance, not correlation`,
     );
   }
 });

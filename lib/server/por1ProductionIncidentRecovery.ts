@@ -20,11 +20,17 @@
 // matched was never independently preserved: its only surviving occurrence is a unit fixture from
 // the same commit that introduced the rule, so the rule's evidence was its own test data.
 //
-// Membership now comes from `por1SyntheticMembershipEvidence`, derived from what the database
-// actually wrote while the release check ran and bounded by provenance pinned in
-// `por1HistoricalIncidentEvidence`. Identity agreement is still required — but it has been demoted to
-// what it always was. Concordance proves these records describe the SAME account. It cannot prove
-// that account was never a person. Those are separate questions and they now have separate answers.
+// Correlation now comes from `por1HistoricalIncidentCorrelation`, derived from what the database
+// actually wrote and bounded by the window pinned in `por1HistoricalIncidentEvidence`. Identity
+// agreement is still required — but demoted to what it always was. Concordance shows these records
+// describe the SAME account; it cannot show that account was never a person.
+//
+// AND NEITHER CAN ANYTHING ELSE HERE. An independent re-audit accepted the engineering and refused
+// the CLAIM: the pinned window contains forty-eight minutes of live Production, so a real person who
+// registered inside it and left immediately satisfies every clause. Nothing Production kept records
+// which run created an account. So the best verdict this module can reach is QUALIFY — "a human
+// should look at this" — and `resolveDestructiveAuthority` at the bottom of the file is the only
+// place a destructive answer can come from, and it requires a separate Founder artifact to say yes.
 //
 // AND CONCORDANCE MUST NOT BE ASKED AN AMBIGUOUS QUESTION.
 // An independent audit found the executable path taking the FIRST active email link it happened to
@@ -39,15 +45,21 @@ import {
   type HistoricalIncidentEvidence,
 } from "./por1HistoricalIncidentEvidence";
 import {
-  classifyHistoricalSyntheticMembership,
-  type SyntheticMembershipEvidence,
-} from "./por1SyntheticMembershipEvidence";
+  evaluateFounderAuthority,
+  type AuthorityDecision,
+  type AuthorityEvaluationContext,
+  type FounderIncidentAuthority,
+} from "./por1FounderIncidentAuthority";
+import {
+  classifyHistoricalIncidentCorrelation,
+  type IncidentCorrelationEvidence,
+} from "./por1HistoricalIncidentCorrelation";
 
 /**
  * The reserved incident domain. `.invalid` can never be routed, so it can never reach a person.
  *
  * SUPPORTING EVIDENCE ONLY. This narrows the rule and can never widen it, but it is not the
- * membership proof and must never be asked to be — a `.invalid` address is trivially creatable and
+ * the qualifying condition and must never be asked to be — a `.invalid` address is trivially creatable and
  * says nothing about which execution an account belonged to. The address-pattern marker that used to
  * sit beside it has been deleted rather than repaired: it was fitted to a fixture, not to any
  * preserved record of Production truth, and a conjunct nobody can verify is a conjunct that will
@@ -66,8 +78,8 @@ export type IncidentCandidateRow = {
   /** A live executor lease means another writer holds it; we must not race. */
   executorLeaseLive: boolean;
 
-  /** Class B — persisted release-check provenance, independent of any identity value. */
-  membership: SyntheticMembershipEvidence;
+  /** Class B — persisted incident correlation, independent of any identity value. */
+  correlation: IncidentCorrelationEvidence;
 
   /**
    * How many ACTIVE canonical email links this owner has. Exactly one is the only answer that lets
@@ -89,7 +101,7 @@ export type IncidentCandidateRow = {
   /**
    * Did the authoritative account object's OWN `createdAt` fall inside the pinned incident window?
    *
-   * The three membership witnesses are auxiliary rows. This is the account saying when it began, and
+   * The three correlation witnesses are auxiliary rows. This is the account saying when it began, and
    * it closes the gap where those rows could describe a moment the person does not share. Null means
    * it could not be determined, which is refused like any other unproven input.
    */
@@ -113,7 +125,7 @@ export type IncidentCandidateRow = {
 };
 
 export type IncidentCandidateVerdict =
-  | { action: "resume"; family: "failed_retryable_post_irreversible" }
+  | { action: "qualify"; family: "failed_retryable_post_irreversible" }
   | { action: "revisit"; reason: "executor_lease_live" }
   | {
       action: "refuse";
@@ -123,7 +135,7 @@ export type IncidentCandidateVerdict =
         | "cursor_not_database_erasure"
         | "manifest_missing"
         | "owner_not_named"
-        | `synthetic_membership_unproven:${string}`
+        | `incident_correlation_unqualified:${string}`
         | "canonical_email_link_absent"
         | "canonical_email_link_ambiguous"
         | "registration_lease_absent"
@@ -152,7 +164,7 @@ export function isUnroutableReservedAddress(email: string | null): boolean {
  *
  * Order is deliberate. Structural facts first, so an unrelated real job is refused on its own shape
  * and no identity of any kind is consulted. Then the lease, so we never race a live executor. Then
- * membership — the question concordance cannot answer — and only then the concordance classes that
+ * correlation — the question concordance cannot answer — and only then the concordance classes that
  * bind the evidence to the account the recovery would actually act on.
  */
 export function classifyIncidentCandidate(row: IncidentCandidateRow): IncidentCandidateVerdict {
@@ -168,10 +180,10 @@ export function classifyIncidentCandidate(row: IncidentCandidateRow): IncidentCa
   // come back when it lapses — but absolutely not something to race.
   if (row.executorLeaseLive) return { action: "revisit", reason: "executor_lease_live" };
 
-  // Class B. Proven from persisted execution truth, or not proven at all.
-  const membership = classifyHistoricalSyntheticMembership(row.membership);
-  if (!membership.proven) {
-    return { action: "refuse", reason: `synthetic_membership_unproven:${membership.reason}` };
+  // Class B. Correlated with the pinned incident, or not — never "proven synthetic".
+  const correlation = classifyHistoricalIncidentCorrelation(row.correlation);
+  if (!correlation.qualified) {
+    return { action: "refuse", reason: `incident_correlation_unqualified:${correlation.reason}` };
   }
 
   // Identity must be UNAMBIGUOUS before any comparison against it is worth making. Taking the first
@@ -196,7 +208,7 @@ export function classifyIncidentCandidate(row: IncidentCandidateRow): IncidentCa
   // The frozen manifest counted the identities this account had at the boundary. If the live registry
   // now holds a different number, something changed about who this account is, and a recovery must
   // not proceed on a stale picture of that.
-  if (row.activeIdentityLinkCount !== row.membership.manifestCanonicalIdentityLinkCount) {
+  if (row.activeIdentityLinkCount !== row.correlation.manifestCanonicalIdentityLinkCount) {
     return { action: "refuse", reason: "identity_link_inventory_conflicts_manifest" };
   }
 
@@ -212,7 +224,7 @@ export function classifyIncidentCandidate(row: IncidentCandidateRow): IncidentCa
   if (!row.ownerFingerprintConcordant) {
     return { action: "refuse", reason: "owner_fingerprint_discordant" };
   }
-  // The account's own beginning, checked against the same pinned window the membership witnesses
+  // The account's own beginning, checked against the same pinned window the correlation witnesses
   // were checked against.
   if (row.accountCreatedWithinIncidentWindow !== true) {
     return { action: "refuse", reason: "account_created_outside_incident_window" };
@@ -223,15 +235,25 @@ export function classifyIncidentCandidate(row: IncidentCandidateRow): IncidentCa
     return { action: "refuse", reason: "owner_address_routable_or_unknown" };
   }
 
-  return { action: "resume", family: "failed_retryable_post_irreversible" };
+  // QUALIFIED, which means "a human should look at this" and nothing more. Authority to destroy is
+  // decided by `resolveDestructiveAuthority`, and it is never decided here.
+  return { action: "qualify", family: "failed_retryable_post_irreversible" };
 }
 
 export type IncidentSelection = {
-  resumable: IncidentCandidateRow[];
+  /** Machine-qualified incident residue: eligible for HUMAN REVIEW. Not eligible for erasure. */
+  qualified: IncidentCandidateRow[];
   revisit: Array<{ row: IncidentCandidateRow; reason: string }>;
   refused: Array<{ row: IncidentCandidateRow; reason: string }>;
-  /** True only when the population is exactly the reviewed set and nothing unknown appeared. */
-  safeToExecute: boolean;
+  /**
+   * The population is coherent, bounded and free of anything unrecognised, so it can be put in front
+   * of a reviewer.
+   *
+   * Deliberately NOT called `safeToExecute`. The previous name invited exactly the reading the
+   * re-audit refused — that passing the machine checks is permission to erase. It is not, and there
+   * is no field on this type that grants that.
+   */
+  reviewReady: boolean;
   blockReason: string | null;
 };
 
@@ -242,7 +264,7 @@ export type IncidentSelection = {
  */
 function isUnrecognisedCandidateReason(reason: string): boolean {
   return (
-    reason.startsWith("synthetic_membership_unproven:") ||
+    reason.startsWith("incident_correlation_unqualified:") ||
     reason === "canonical_email_link_absent" ||
     reason === "canonical_email_link_ambiguous" ||
     reason === "registration_lease_absent" ||
@@ -262,7 +284,7 @@ function isUnrecognisedCandidateReason(reason: string): boolean {
  * Select across the whole candidate population.
  *
  * FAIL CLOSED ON POPULATION DRIFT. The operator states a ceiling from a dry run they have just read.
- * If the resumable population is not exactly that number, or ANY candidate was refused for a reason
+ * If the qualified population is not exactly that number, or ANY candidate was refused for a reason
  * that means "I do not recognise this", nothing executes. The reviewed set and the executed set must
  * be the same set — otherwise the review meant nothing.
  *
@@ -274,13 +296,13 @@ export function selectIncidentCandidates(
   options: { maxCandidates: number },
   contract: HistoricalIncidentEvidence = POR1_PRODUCTION_DELETION_INCIDENT,
 ): IncidentSelection {
-  const resumable: IncidentCandidateRow[] = [];
+  const qualified: IncidentCandidateRow[] = [];
   const revisit: Array<{ row: IncidentCandidateRow; reason: string }> = [];
   const refused: Array<{ row: IncidentCandidateRow; reason: string }> = [];
 
   for (const row of rows) {
     const verdict = classifyIncidentCandidate(row);
-    if (verdict.action === "resume") resumable.push(row);
+    if (verdict.action === "qualify") qualified.push(row);
     else if (verdict.action === "revisit") revisit.push({ row, reason: verdict.reason });
     else refused.push({ row, reason: verdict.reason });
   }
@@ -291,17 +313,44 @@ export function selectIncidentCandidates(
   if (unknown.length > 0) blockReason = "unknown_or_non_synthetic_candidate_present";
   else if (!Number.isInteger(options.maxCandidates) || options.maxCandidates < 0) {
     blockReason = "candidate_ceiling_required";
-  } else if (resumable.length > options.maxCandidates) blockReason = "candidate_population_above_ceiling";
-  else if (resumable.length !== options.maxCandidates) blockReason = "candidate_population_below_ceiling";
-  // The ceiling is a number a human retypes from a dry run, so on its own it can only confirm what
-  // the run just told them. The incident's real size is PINNED, and both the population and the
-  // retyped ceiling must equal it — so a third qualifying account refuses the run instead of
-  // enlarging it.
-  else if (resumable.length !== contract.expectedStrandedJobCount) {
-    blockReason = "candidate_population_differs_from_pinned_incident";
-  } else if (options.maxCandidates !== contract.expectedStrandedJobCount) {
-    blockReason = "candidate_ceiling_differs_from_pinned_incident";
+  } else if (qualified.length > options.maxCandidates) blockReason = "candidate_population_above_ceiling";
+  else if (qualified.length !== options.maxCandidates) blockReason = "candidate_population_below_ceiling";
+  // A BLAST-RADIUS CONTROL, not an identity check. Both the population and the retyped ceiling must
+  // equal the pinned safety ceiling, so a run cannot quietly grow. This says nothing about WHICH
+  // objects qualified: `population 2` is the same number whether it is two pieces of historical
+  // residue or one piece plus an unrelated account. Deciding which is a human's job, and the
+  // fingerprint set — not the count — is what an authority artifact binds to.
+  else if (qualified.length !== contract.populationSafetyCeiling) {
+    blockReason = "candidate_population_differs_from_safety_ceiling";
+  } else if (options.maxCandidates !== contract.populationSafetyCeiling) {
+    blockReason = "candidate_ceiling_differs_from_safety_ceiling";
   }
 
-  return { resumable, revisit, refused, safeToExecute: blockReason === null, blockReason };
+  return { qualified, revisit, refused, reviewReady: blockReason === null, blockReason };
+}
+
+
+/**
+ * The ONLY function in this codebase that can answer "may something be destroyed".
+ *
+ * It takes the machine verdict AND an authority artifact, and it needs both. A review-ready
+ * population is a precondition, never a permission: with no artifact the answer is
+ * `no_authority_artifact_supplied`, which is the shipped state and is expected to stay that way
+ * until a human decides otherwise.
+ *
+ * The candidate FINGERPRINTS are what the artifact binds to, so an authority reviewed for one set
+ * cannot be spent on another that merely happens to be the same size.
+ */
+export function resolveDestructiveAuthority(
+  selection: IncidentSelection,
+  artifact: FounderIncidentAuthority | null,
+  context: Omit<AuthorityEvaluationContext, "qualifiedCandidateFingerprints">,
+): AuthorityDecision {
+  if (!selection.reviewReady) {
+    return { permitted: false, reason: "candidate_set_differs_from_reviewed" };
+  }
+  return evaluateFounderAuthority(artifact, {
+    ...context,
+    qualifiedCandidateFingerprints: selection.qualified.map((row) => row.jobFingerprint),
+  });
 }

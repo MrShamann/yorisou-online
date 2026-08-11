@@ -1,35 +1,44 @@
-// POR-1 — historical synthetic MEMBERSHIP, proven from persisted truth and pinned provenance.
+// POR-1 — historical incident CORRELATION. Not membership, and deliberately not called proof.
 //
-// WHY THIS MODULE EXISTS, AND WHAT AN AUDIT CHANGED ABOUT IT.
+// WHAT THIS MODULE IS ALLOWED TO CONCLUDE, AND WHY THE NAME CHANGED.
 //
-// The first recovery classifier asked one question — "does the owner's email look like one of ours?"
-// — and answered it from a plaintext address. The column it read (`link_subject`) does not exist, and
-// the address pattern it matched survived only in a unit fixture written by the same commit. A rule
-// whose evidence is its own test data proves nothing.
+// Three revisions of this rule were refused, and the third was refused for the most important
+// reason. The first matched an email pattern that survived only in a unit fixture. The second let an
+// operator type the window at the command line. The third pinned that window to immutable GitHub and
+// Vercel records — a real improvement — and then still claimed it had PROVEN which accounts were
+// synthetic. An independent re-audit rejected the claim, not the engineering, and it was right:
 //
-// The replacement derived membership from what the database wrote while the release check ran, which
-// was right, and then bounded it with a window the OPERATOR typed at the command line, which was not.
-// An independent audit refused that, correctly. A window somebody supplies is not provenance: it
-// narrows nothing that the same person cannot widen. Combined with a behavioural "no real person
-// registers and deletes inside five minutes", it would have accepted any look-alike account, which is
-// exactly the inference a deletion classifier must not be able to make.
+//     The pinned window bounds forty-eight minutes of LIVE Production. A real person who registered
+//     inside it, did nothing, and asked to be deleted a minute later satisfies every clause here.
+//     Nothing in the surviving data records "this account was created by release-check run X".
 //
-// So the load-bearing clause is now PINNED PROVENANCE. The execution window is derived in
-// `por1HistoricalIncidentEvidence` from records that predate this question and that this repository
-// cannot edit — GitHub's merge of PR 126, and the two Vercel Production deployments (by immutable id)
-// that opened and closed the interval in which the capability was live. Three independent
-// database-written witnesses of the account's own existence must all fall inside it.
+// No further clause fixes that. More timestamps, shorter lifetimes, more zero-artifact checks and
+// bigger counts move the probability toward certainty without ever turning correlation into
+// provenance, and a deletion tool that mistakes one for the other is the exact failure this whole
+// effort exists to prevent.
 //
-// The five-minute lifetime survives ONLY as an anomaly guard. It is applied last, it can only ever
-// subtract, and it is not the fact that proves anything was synthetic. That distinction is asserted
-// by test, not just described here.
+// So this module now answers a smaller, honest question:
 //
-// NON-CIRCULARITY IS STILL THE POINT. Nothing here reads the account object, the email, the digest or
-// the fingerprint. Those matter — they are how the recovery proves it is holding the SAME account
-// this evidence describes — but they are concordance, and concordance cannot establish that an
-// account was never a person.
+//     QUALIFIED  — every fail-closed condition the surviving evidence can express holds, so this
+//                  candidate is eligible for human incident review.
+//     not qualified — some condition does not hold, and it is refused outright.
 //
-// THE RULE IS A CONJUNCTION. A missing input is UNPROVEN, never "probably fine".
+// It NEVER concludes that an account was synthetic, and nothing downstream may treat a qualified
+// verdict as authority to destroy anything. Execution requires a separate, single-use,
+// Founder-reviewed authority artifact (`por1FounderIncidentAuthority`), whose stated basis is a human
+// decision and not a historical fact.
+//
+// WHAT THE EVIDENCE STILL BUYS. Every clause below is fail-closed and every one narrows the
+// population a reviewer must consider — from "any account" down to "accounts the database recorded
+// as provisioned, registered and deleted inside a pinned forty-eight-minute deployment interval,
+// carrying no product artifact in either of two separately-taken inventories, holding exactly one
+// canonical identity". That is a genuinely small, genuinely reviewable set. It is not an identity.
+//
+// NON-CIRCULARITY. Nothing here reads the account object, the email, the digest or the fingerprint.
+// Those are concordance, checked elsewhere; concordance shows records describe the same account and
+// says nothing about which execution created it.
+//
+// THE RULE IS A CONJUNCTION. A missing input is UNQUALIFIED, never "probably fine".
 
 import {
   incidentExecutionWindow,
@@ -46,7 +55,7 @@ import {
  * lived materially longer than that is not the thing being recovered even if every other clause
  * holds. It narrows; it never qualifies. On its own it says nothing at all about which execution an
  * account belonged to — which is precisely why the audit refused it as the load-bearing clause and
- * why `classifyHistoricalSyntheticMembership` applies it after provenance has already been proven.
+ * why `classifyHistoricalIncidentCorrelation` applies it after provenance has already been proven.
  */
 export const INCIDENT_ANOMALY_MAX_ACCOUNT_LIFETIME_MS = 5 * 60 * 1000;
 
@@ -57,7 +66,7 @@ export const INCIDENT_ANOMALY_MAX_ACCOUNT_LIFETIME_MS = 5 * 60 * 1000;
  * VERSION of the pinned contract the candidate was gathered under. There is deliberately no window
  * field: a window cannot be passed in, only derived.
  */
-export type SyntheticMembershipEvidence = {
+export type IncidentCorrelationEvidence = {
   /** Which pinned contract this candidate was gathered under. Must match the compiled-in version. */
   incidentEvidenceVersion: string | null;
 
@@ -84,10 +93,10 @@ export type SyntheticMembershipEvidence = {
   liveDomainArtifactCount: number | null;
 };
 
-export type SyntheticMembershipVerdict =
-  | { proven: true }
+export type IncidentCorrelationVerdict =
+  | { qualified: true }
   | {
-      proven: false;
+      qualified: false;
       reason:
         | "incident_evidence_contract_invalid"
         | "incident_evidence_version_mismatch"
@@ -127,7 +136,9 @@ function instant(value: string | null): number | null {
 }
 
 /**
- * Decide whether this candidate belonged to the historical release-check execution.
+ * Decide whether this candidate is CORRELATED with the historical incident well enough to be put in
+ * front of a human. This is not a decision that it belonged to the release-check execution — that
+ * fact is not recoverable from what Production kept.
  *
  * Clause order is deliberate and load-bearing.
  *
@@ -140,39 +151,43 @@ function instant(value: string | null): number | null {
  * @param evidence  what Production persisted about this candidate
  * @param contract  the pinned incident. Injectable so tests can pin a different incident; there is no
  *                  path by which an operator supplies one at runtime.
+ * @returns qualified — eligible for review. NEVER "proven synthetic", and never authority to erase.
  */
-export function classifyHistoricalSyntheticMembership(
-  evidence: SyntheticMembershipEvidence,
+export function classifyHistoricalIncidentCorrelation(
+  evidence: IncidentCorrelationEvidence,
   contract: HistoricalIncidentEvidence = POR1_PRODUCTION_DELETION_INCIDENT,
-): SyntheticMembershipVerdict {
+): IncidentCorrelationVerdict {
   if (validateIncidentEvidence(contract).length > 0) {
-    return { proven: false, reason: "incident_evidence_contract_invalid" };
+    return { qualified: false, reason: "incident_evidence_contract_invalid" };
   }
   if (evidence.incidentEvidenceVersion !== contract.version) {
-    return { proven: false, reason: "incident_evidence_version_mismatch" };
+    return { qualified: false, reason: "incident_evidence_version_mismatch" };
   }
 
   if (evidence.provisioningSagaRequestedAt === null) {
-    return { proven: false, reason: "provisioning_saga_absent" };
+    return { qualified: false, reason: "provisioning_saga_absent" };
   }
   if (evidence.registrationLeaseAt === null) {
-    return { proven: false, reason: "registration_lease_absent" };
+    return { qualified: false, reason: "registration_lease_absent" };
   }
   if (evidence.deletionRequestedAt === null) {
-    return { proven: false, reason: "deletion_request_absent" };
+    return { qualified: false, reason: "deletion_request_absent" };
   }
 
   const provisionedAt = instant(evidence.provisioningSagaRequestedAt);
   const registeredAt = instant(evidence.registrationLeaseAt);
   const requestedAt = instant(evidence.deletionRequestedAt);
   if (provisionedAt === null || registeredAt === null || requestedAt === null) {
-    return { proven: false, reason: "timestamps_unparseable" };
+    return { qualified: false, reason: "timestamps_unparseable" };
   }
   if (requestedAt < registeredAt) {
-    return { proven: false, reason: "deletion_precedes_registration" };
+    return { qualified: false, reason: "deletion_precedes_registration" };
   }
 
-  // ── PROVENANCE. The clause an operator cannot influence. ──────────────────
+  // ── The clause an operator cannot influence. ──────────────────────────────
+  //
+  // Necessary, and knowingly not sufficient: the interval contains live Production traffic, so being
+  // inside it does not distinguish release-check residue from a real person who happened to be there.
   //
   // Three independent database-written witnesses of this account's own existence — the provisioning
   // saga, the registration lease, the deletion job — must all fall inside the interval bounded by the
@@ -183,44 +198,44 @@ export function classifyHistoricalSyntheticMembership(
   const closesAt = Date.parse(window.endedAt);
 
   if (provisionedAt < opensAt || provisionedAt > closesAt) {
-    return { proven: false, reason: "provisioning_outside_incident_window" };
+    return { qualified: false, reason: "provisioning_outside_incident_window" };
   }
   if (registeredAt < opensAt || registeredAt > closesAt) {
-    return { proven: false, reason: "registration_outside_incident_window" };
+    return { qualified: false, reason: "registration_outside_incident_window" };
   }
   if (requestedAt < opensAt || requestedAt > closesAt) {
-    return { proven: false, reason: "deletion_request_outside_incident_window" };
+    return { qualified: false, reason: "deletion_request_outside_incident_window" };
   }
 
   // ── The account did nothing, according to two separately taken inventories. ──
-  if (!evidence.manifestPresent) return { proven: false, reason: "manifest_absent" };
+  if (!evidence.manifestPresent) return { qualified: false, reason: "manifest_absent" };
   if (evidence.manifestDomainArtifactCount === null) {
-    return { proven: false, reason: "manifest_domain_artifacts_unknown" };
+    return { qualified: false, reason: "manifest_domain_artifacts_unknown" };
   }
   if (evidence.manifestDomainArtifactCount !== 0) {
-    return { proven: false, reason: "manifest_records_domain_artifacts" };
+    return { qualified: false, reason: "manifest_records_domain_artifacts" };
   }
   // A release-check account is provisioned by email and never links a second identity.
   if (evidence.manifestCanonicalIdentityLinkCount !== 1) {
-    return { proven: false, reason: "manifest_identity_link_count_unexpected" };
+    return { qualified: false, reason: "manifest_identity_link_count_unexpected" };
   }
 
   // The manifest is a snapshot taken at the boundary. This is the same question asked again of the
   // live database, so a manifest that was wrong — or written before an artifact appeared — cannot
   // carry the verdict on its own.
   if (evidence.liveDomainArtifactCount === null) {
-    return { proven: false, reason: "live_domain_artifacts_unknown" };
+    return { qualified: false, reason: "live_domain_artifacts_unknown" };
   }
   if (evidence.liveDomainArtifactCount !== 0) {
-    return { proven: false, reason: "live_domain_artifacts_present" };
+    return { qualified: false, reason: "live_domain_artifacts_present" };
   }
 
   // ── ANOMALY GUARD, last, subtractive only. ────────────────────────────────
   if (requestedAt - registeredAt > INCIDENT_ANOMALY_MAX_ACCOUNT_LIFETIME_MS) {
-    return { proven: false, reason: "account_lifetime_above_anomaly_guard" };
+    return { qualified: false, reason: "account_lifetime_above_anomaly_guard" };
   }
 
-  return { proven: true };
+  return { qualified: true };
 }
 
 /** Re-exported so callers state the version they gathered under without importing two modules. */
