@@ -23,13 +23,31 @@ const source = readFileSync(
 );
 
 /**
- * Resolve `const <name> = "<literal>";` so a `${name}` interpolation inside a query can be inlined.
- * Only single-line string literals are resolved; anything else stays interpolated and is reported.
+ * Resolve `const <name> = "<literal>";` and `const <name> = \`…\`;` so a `${name}` interpolation
+ * inside a query can be inlined.
+ *
+ * Template constants matter because the read path builds a path once and then reuses it for both the
+ * row read and its exact-count companion. A resolver that only understood double quotes would leave
+ * that interpolation unresolved — and the parser below refuses to guess, so the whole extraction
+ * would fail closed rather than silently check fewer columns.
  */
 function stringConstants(text) {
   const constants = new Map();
-  const pattern = /(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=]+)?=\s*"([^"\n]*)"\s*;/g;
-  for (const match of text.matchAll(pattern)) constants.set(match[1], match[2]);
+  // One literal, or several concatenated across lines for readability. Both forms appear in the read
+  // path, and a resolver that only understood the first would leave the second interpolated — which
+  // the parser below then refuses, failing the whole extraction closed rather than checking less.
+  for (const match of text.matchAll(
+    /(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=]+)?=\s*((?:"[^"\n]*"\s*\+\s*)*"[^"\n]*")\s*;/g,
+  )) {
+    const joined = [...match[2].matchAll(/"([^"\n]*)"/g)].map((piece) => piece[1]).join("");
+    constants.set(match[1], joined);
+  }
+  for (const match of text.matchAll(
+    /(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=]+)?=\s*((?:`[^`]*`\s*\+\s*)*`[^`]*`)\s*;/g,
+  )) {
+    // Flatten the concatenated backtick fragments the source splits across lines for readability.
+    constants.set(match[1], match[2].replace(/`\s*\+\s*`/g, "").replace(/\n\s*/g, "").replace(/`/g, ""));
+  }
   return constants;
 }
 
@@ -41,8 +59,13 @@ function stringConstants(text) {
  */
 function flatten(text, constants) {
   let flat = text;
-  for (const [name, value] of constants) {
-    flat = flat.split("${" + name + "}").join(value);
+  // Repeat to a fixpoint: a resolved constant can itself contain a reference to another one.
+  for (let pass = 0; pass < 5; pass += 1) {
+    const before = flat;
+    for (const [name, value] of constants) {
+      flat = flat.split("${" + name + "}").join(value);
+    }
+    if (flat === before) break;
   }
   flat = flat.replace(/`\s*\+\s*`/g, "").replace(/\n\s*/g, "");
   // Whatever interpolation is left is a bound VALUE — a job id, an owner id. Values are irrelevant
@@ -59,6 +82,7 @@ const flat = flatten(source, constants);
 
 const found = new Map();
 let unresolved = 0;
+const unresolvedDetail = [];
 
 // A PostgREST path: a table, then a query string of `column=operator.value` filters and `select=`.
 for (const match of flat.matchAll(/(yorisou_[a-z_]+)\?([^`"'\s]*)/g)) {
@@ -76,12 +100,14 @@ for (const match of flat.matchAll(/(yorisou_[a-z_]+)\?([^`"'\s]*)/g)) {
     // unresolvable name slip through as "nothing to check".
     if (key.includes(VALUE_SENTINEL)) {
       unresolved += 1;
+      unresolvedDetail.push(`${table}: key ${JSON.stringify(part.slice(0, 60))}`);
       continue;
     }
 
     if (key === "select") {
       if (value.includes(VALUE_SENTINEL)) {
         unresolved += 1;
+        unresolvedDetail.push(`${table}: select ${JSON.stringify(value.slice(0, 60))}`);
         continue;
       }
       for (const column of value.split(",")) {
@@ -93,6 +119,7 @@ for (const match of flat.matchAll(/(yorisou_[a-z_]+)\?([^`"'\s]*)/g)) {
     if (key === "order") {
       if (value.includes(VALUE_SENTINEL)) {
         unresolved += 1;
+        unresolvedDetail.push(`${table}: select ${JSON.stringify(value.slice(0, 60))}`);
         continue;
       }
       const name = value.split(".")[0];
@@ -114,6 +141,7 @@ if (unresolved > 0) {
   console.error(
     `extract: ${unresolved} column name(s) are interpolated and cannot be checked against a schema`,
   );
+  for (const detail of unresolvedDetail) console.error(`  ${detail}`);
   process.exit(1);
 }
 

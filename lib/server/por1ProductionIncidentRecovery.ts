@@ -21,11 +21,23 @@
 // the same commit that introduced the rule, so the rule's evidence was its own test data.
 //
 // Membership now comes from `por1SyntheticMembershipEvidence`, derived from what the database
-// actually wrote while the release check ran. Identity agreement is still required — but it has been
-// demoted to what it always was. Concordance proves these records describe the SAME account. It
-// cannot prove that account was never a person. Those are separate questions and they now have
-// separate answers.
+// actually wrote while the release check ran and bounded by provenance pinned in
+// `por1HistoricalIncidentEvidence`. Identity agreement is still required — but it has been demoted to
+// what it always was. Concordance proves these records describe the SAME account. It cannot prove
+// that account was never a person. Those are separate questions and they now have separate answers.
+//
+// AND CONCORDANCE MUST NOT BE ASKED AN AMBIGUOUS QUESTION.
+// An independent audit found the executable path taking the FIRST active email link it happened to
+// read. The schema does not stop an owner having more than one: `yorisou_canonical_identity_links`
+// constrains `link_id` and the digest SHAPE, and nothing constrains
+// `(owner_account_id, link_kind)`. So a second, conflicting active identity could be silently
+// ignored while the first one agreed and the candidate passed. Ambiguity is now a refusal in its own
+// right, checked BEFORE any link-derived comparison is trusted.
 
+import {
+  POR1_PRODUCTION_DELETION_INCIDENT,
+  type HistoricalIncidentEvidence,
+} from "./por1HistoricalIncidentEvidence";
 import {
   classifyHistoricalSyntheticMembership,
   type SyntheticMembershipEvidence,
@@ -57,6 +69,32 @@ export type IncidentCandidateRow = {
   /** Class B — persisted release-check provenance, independent of any identity value. */
   membership: SyntheticMembershipEvidence;
 
+  /**
+   * How many ACTIVE canonical email links this owner has. Exactly one is the only answer that lets
+   * concordance mean anything; null is "the inventory could not be taken", which is also a refusal.
+   */
+  activeEmailLinkCount: number | null;
+  /**
+   * How many ACTIVE canonical identity links of ANY kind this owner has, counted live. Compared with
+   * the manifest's own count so a second identity acquired since the boundary cannot pass unseen.
+   */
+  activeIdentityLinkCount: number | null;
+  /**
+   * How many `account_registration` mutation leases this owner has. Nothing in the schema constrains
+   * `(owner_account_id, operation_code)`, so more than one is legal — and picking the earliest would
+   * be choosing which provisioning story to believe.
+   */
+  registrationLeaseCount: number | null;
+
+  /**
+   * Did the authoritative account object's OWN `createdAt` fall inside the pinned incident window?
+   *
+   * The three membership witnesses are auxiliary rows. This is the account saying when it began, and
+   * it closes the gap where those rows could describe a moment the person does not share. Null means
+   * it could not be determined, which is refused like any other unproven input.
+   */
+  accountCreatedWithinIncidentWindow: boolean | null;
+
   /** Class C — the authoritative account object was read and it is this job's owner. */
   authoritativeAccountPresent: boolean;
   accountIdMatchesOwner: boolean;
@@ -86,10 +124,17 @@ export type IncidentCandidateVerdict =
         | "manifest_missing"
         | "owner_not_named"
         | `synthetic_membership_unproven:${string}`
+        | "canonical_email_link_absent"
+        | "canonical_email_link_ambiguous"
+        | "registration_lease_absent"
+        | "registration_lease_ambiguous"
+        | "identity_link_inventory_unknown"
+        | "identity_link_inventory_conflicts_manifest"
         | "authoritative_account_absent"
         | "authoritative_account_owner_mismatch"
         | "email_digest_discordant"
         | "owner_fingerprint_discordant"
+        | "account_created_outside_incident_window"
         | "owner_address_routable_or_unknown";
     };
 
@@ -129,6 +174,32 @@ export function classifyIncidentCandidate(row: IncidentCandidateRow): IncidentCa
     return { action: "refuse", reason: `synthetic_membership_unproven:${membership.reason}` };
   }
 
+  // Identity must be UNAMBIGUOUS before any comparison against it is worth making. Taking the first
+  // of several active email links would let a conflicting identity be ignored precisely when it
+  // matters most, so more than one is refused as firmly as none.
+  if (row.activeEmailLinkCount === null || row.activeEmailLinkCount === 0) {
+    return { action: "refuse", reason: "canonical_email_link_absent" };
+  }
+  if (row.activeEmailLinkCount > 1) {
+    return { action: "refuse", reason: "canonical_email_link_ambiguous" };
+  }
+  // Same reasoning, applied to the lease that dates the account's provisioning.
+  if (row.registrationLeaseCount === null || row.registrationLeaseCount === 0) {
+    return { action: "refuse", reason: "registration_lease_absent" };
+  }
+  if (row.registrationLeaseCount > 1) {
+    return { action: "refuse", reason: "registration_lease_ambiguous" };
+  }
+  if (row.activeIdentityLinkCount === null) {
+    return { action: "refuse", reason: "identity_link_inventory_unknown" };
+  }
+  // The frozen manifest counted the identities this account had at the boundary. If the live registry
+  // now holds a different number, something changed about who this account is, and a recovery must
+  // not proceed on a stale picture of that.
+  if (row.activeIdentityLinkCount !== row.membership.manifestCanonicalIdentityLinkCount) {
+    return { action: "refuse", reason: "identity_link_inventory_conflicts_manifest" };
+  }
+
   // Classes C, D, E. Membership says an account of this shape belonged to the release check;
   // concordance says THIS is that account and every identity record agrees.
   if (!row.authoritativeAccountPresent) {
@@ -140,6 +211,11 @@ export function classifyIncidentCandidate(row: IncidentCandidateRow): IncidentCa
   if (!row.emailDigestConcordant) return { action: "refuse", reason: "email_digest_discordant" };
   if (!row.ownerFingerprintConcordant) {
     return { action: "refuse", reason: "owner_fingerprint_discordant" };
+  }
+  // The account's own beginning, checked against the same pinned window the membership witnesses
+  // were checked against.
+  if (row.accountCreatedWithinIncidentWindow !== true) {
+    return { action: "refuse", reason: "account_created_outside_incident_window" };
   }
 
   // Supporting narrowing, applied last so it can only ever subtract.
@@ -167,6 +243,13 @@ export type IncidentSelection = {
 function isUnrecognisedCandidateReason(reason: string): boolean {
   return (
     reason.startsWith("synthetic_membership_unproven:") ||
+    reason === "canonical_email_link_absent" ||
+    reason === "canonical_email_link_ambiguous" ||
+    reason === "registration_lease_absent" ||
+    reason === "registration_lease_ambiguous" ||
+    reason === "account_created_outside_incident_window" ||
+    reason === "identity_link_inventory_unknown" ||
+    reason === "identity_link_inventory_conflicts_manifest" ||
     reason === "authoritative_account_absent" ||
     reason === "authoritative_account_owner_mismatch" ||
     reason === "email_digest_discordant" ||
@@ -189,6 +272,7 @@ function isUnrecognisedCandidateReason(reason: string): boolean {
 export function selectIncidentCandidates(
   rows: IncidentCandidateRow[],
   options: { maxCandidates: number },
+  contract: HistoricalIncidentEvidence = POR1_PRODUCTION_DELETION_INCIDENT,
 ): IncidentSelection {
   const resumable: IncidentCandidateRow[] = [];
   const revisit: Array<{ row: IncidentCandidateRow; reason: string }> = [];
@@ -209,6 +293,15 @@ export function selectIncidentCandidates(
     blockReason = "candidate_ceiling_required";
   } else if (resumable.length > options.maxCandidates) blockReason = "candidate_population_above_ceiling";
   else if (resumable.length !== options.maxCandidates) blockReason = "candidate_population_below_ceiling";
+  // The ceiling is a number a human retypes from a dry run, so on its own it can only confirm what
+  // the run just told them. The incident's real size is PINNED, and both the population and the
+  // retyped ceiling must equal it — so a third qualifying account refuses the run instead of
+  // enlarging it.
+  else if (resumable.length !== contract.expectedStrandedJobCount) {
+    blockReason = "candidate_population_differs_from_pinned_incident";
+  } else if (options.maxCandidates !== contract.expectedStrandedJobCount) {
+    blockReason = "candidate_ceiling_differs_from_pinned_incident";
+  }
 
   return { resumable, revisit, refused, safeToExecute: blockReason === null, blockReason };
 }

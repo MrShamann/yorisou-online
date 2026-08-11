@@ -135,7 +135,7 @@ fi
 # ── 3. NEGATIVE CONTROL — the old query must be caught by this same check ───
 
 mkdir -p "$WORK/control"
-sed 's/select=link_digest,owner_fingerprint/select=link_subject/' \
+sed 's/select=link_kind,link_digest,owner_fingerprint/select=link_subject/' \
   scripts/por1-production-deletion-recovery.ts > "$WORK/control/old.ts"
 if cmp -s scripts/por1-production-deletion-recovery.ts "$WORK/control/old.ts"; then
   bad "negative control did not change anything — it is not reconstructing the old query"
@@ -206,7 +206,46 @@ want "t" "$($Q -c "select owner_fingerprint = encode(digest('$OWNER','sha256'),'
                      from public.yorisou_canonical_identity_links where owner_account_id='$OWNER';")" \
      "owner_fingerprint is sha256(account id), which is what identityOwnerFingerprint computes"
 
-# The proof that the OLD read could not have worked, run as SQL rather than asserted in prose.
+# ── 5. the ambiguity the classifier now refuses is REAL, not hypothetical ───
+#
+# An independent audit observed that the executable path took the FIRST active email link. The claim
+# under test is that the schema permits an owner to have more than one, so "there can only be one" was
+# never a fact the code was entitled to assume. Asserted twice: no constraint exists, AND the database
+# actually accepts the second row.
+
+want "0" "$($Q -c "select count(*) from pg_constraint c
+                     join pg_class t on t.oid = c.conrelid
+                    where t.relname = 'yorisou_canonical_identity_links'
+                      and c.contype in ('u','p')
+                      and pg_get_constraintdef(c.oid) ilike '%owner_account_id%'
+                      and pg_get_constraintdef(c.oid) ilike '%link_kind%';")" \
+     "no UNIQUE/PRIMARY constraint pins (owner_account_id, link_kind)"
+
+want "0" "$($Q -c "select count(*) from pg_indexes
+                    where tablename = 'yorisou_canonical_identity_links'
+                      and indexdef ilike '%unique%'
+                      and indexdef ilike '%owner_account_id%'
+                      and indexdef ilike '%link_kind%';")" \
+     "no UNIQUE INDEX pins (owner_account_id, link_kind) either"
+
+if $Q -q -c "
+  insert into public.yorisou_canonical_identity_links
+    (owner_account_id, owner_fingerprint, link_kind, link_digest, link_state)
+  values ('$OWNER', encode(digest('$OWNER','sha256'),'hex'), 'email',
+          encode(digest('second-address@example.invalid','sha256'),'hex'), 'active');" >/dev/null 2>&1; then
+  ok "the real schema ACCEPTS a second active email link for the same owner"
+  want "2" "$($Q -c "select count(*) from public.yorisou_canonical_identity_links
+                      where owner_account_id='$OWNER' and link_kind='email' and link_state='active';")" \
+       "the owner now genuinely holds two active email links"
+  # Two DIFFERENT digests, so picking either would have been an arbitrary choice between identities.
+  want "2" "$($Q -c "select count(distinct link_digest) from public.yorisou_canonical_identity_links
+                      where owner_account_id='$OWNER' and link_kind='email' and link_state='active';")" \
+       "and they carry different digests, so first-row selection was a coin toss"
+else
+  bad "the schema refused a second active email link — the ambiguity guard would be untestable"
+fi
+
+# ── 6. the old read could not have worked, run as SQL rather than asserted in prose ──
 if $Q -c "select link_subject from public.yorisou_canonical_identity_links limit 1;" >/dev/null 2>&1; then
   bad "selecting link_subject unexpectedly succeeded"
 else
