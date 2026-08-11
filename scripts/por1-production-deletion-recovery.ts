@@ -3,10 +3,10 @@
 // NOT A PRODUCT PATH. Not importable from any Next.js route, no HTTP surface, no endpoint, no cron,
 // no schedule, no worker, no autonomous trigger. It runs when a human runs it, and only then.
 //
-// WHY IT EXISTS. The 2026-08-10 Production promotion left two synthetic `.invalid` accounts stranded
-// past the irreversible boundary: sessions revoked, mutation gate closed, data NOT erased, and no
-// product path to finish because the only retry is a re-POST of `deletion-confirm` from a session
-// those accounts can no longer obtain. Public deletion intake is disabled
+// WHY IT EXISTS. The 2026-08-10 Production promotion left two release-check accounts stranded past
+// the irreversible boundary: sessions revoked, mutation gate closed, data NOT erased, and no product
+// path to finish because the only retry is a re-POST of `deletion-confirm` from a session those
+// accounts can no longer obtain. Public deletion intake is disabled
 // (`YORISOU_POR1_ACCOUNT_DELETION_EXECUTOR=off`) and must stay that way while they are cleaned up.
 //
 // HOW IT IS SAFE.
@@ -20,16 +20,42 @@
 //     lets it work while the public capability is off (see accountErasureAuthorityRollout).
 //   • Unknown or non-synthetic candidates are reported, untouched, and exit non-zero.
 //
+// WHAT THE EXECUTABLE PATH USED TO GET WRONG.
+// It resolved the owner's address from `yorisou_canonical_identity_links.link_subject` and matched
+// it against an address pattern. That column does not exist — the registry stores `link_digest`, a
+// sha256, and never the plaintext subject — so the read returned nothing and every candidate was
+// refused as unproven. The column name was only the visible half of the defect. The rule underneath
+// it asked an address whether an account was synthetic, and an address cannot answer that: the
+// pattern it matched was preserved nowhere in Production, only in a unit fixture written by the
+// commit that introduced the rule.
+//
+// So the address is no longer resolved at all. Membership is proven from what the database wrote
+// while the release check ran — the account's own `account_registration` mutation lease, the job's
+// `requested_at`, the contract-versioned manifest, a live re-inventory, and the declared release
+// window (see por1SyntheticMembershipEvidence). The identity registry is still read, and still has
+// to agree, but it is read for `link_digest` and `owner_fingerprint` and used for CONCORDANCE: it
+// proves this is the same account the evidence describes. It is never asked to prove the account was
+// not a person.
+//
 // It is deliberately NOT run against Production by the package that introduced it.
 
 import { createHash } from "node:crypto";
 
+import { buildDeletionManifest } from "../lib/server/accountIdentityDeletion";
 import { executeDeletion } from "../lib/server/accountDeletionOrchestrator";
+import { emailIdentityDigest, identityOwnerFingerprint } from "../lib/server/canonicalIdentityLinks";
 import {
   classifyIncidentCandidate,
+  isUnroutableReservedAddress,
   selectIncidentCandidates,
   type IncidentCandidateRow,
 } from "../lib/server/por1ProductionIncidentRecovery";
+import {
+  countManifestDomainArtifacts,
+  readManifestCanonicalIdentityLinkCount,
+  type ReleaseCheckWindow,
+} from "../lib/server/por1SyntheticMembershipEvidence";
+import { findAccountById, normalizeEmail } from "../lib/server/yorisouData";
 
 /** The governed Production project. Anything else is refused. */
 const PRODUCTION_PROJECT_REF = "krxizslnksorwhepyijs";
@@ -37,6 +63,9 @@ const PRODUCTION_PROJECT_REF = "krxizslnksorwhepyijs";
 const PREVIEW_PROJECT_REF = "nbltsbonsnbpfptihomc";
 
 const FORBIDDEN_FLAGS = ["--table", "--object-key", "--email", "--account-id", "--job-id", "--owner"];
+
+/** The lease operation that records an account being provisioned. */
+const REGISTRATION_OPERATION_CODE = "account_registration";
 
 const argv = process.argv.slice(2);
 const EXECUTE = argv.includes("--execute");
@@ -46,12 +75,39 @@ function fail(message: string): never {
   process.exit(1);
 }
 
+function flagValue(name: string): string | null {
+  const flag = argv.find((a) => a.startsWith(`${name}=`));
+  return flag ? flag.slice(name.length + 1) : null;
+}
+
 function maxCandidates(): number | null {
-  const flag = argv.find((a) => a.startsWith("--max-candidates="));
-  if (!flag) return null;
-  const value = Number(flag.split("=")[1]);
+  const raw = flagValue("--max-candidates");
+  if (raw === null) return null;
+  const value = Number(raw);
   if (!Number.isInteger(value) || value < 0) fail("--max-candidates must be a non-negative integer");
   return value;
+}
+
+/**
+ * The release-check window, stated by the operator from the deployment record.
+ *
+ * Required in DRY RUN TOO. A dry run whose rule differs from the executed rule is not a review of
+ * anything. Both bounds must parse; the module bounds how wide the window may be, so declaring one
+ * can only ever narrow the population.
+ */
+function releaseWindow(): ReleaseCheckWindow {
+  const startedAt = flagValue("--release-window-start");
+  const endedAt = flagValue("--release-window-end");
+  if (!startedAt || !endedAt) {
+    fail(
+      "--release-window-start=<iso8601> and --release-window-end=<iso8601> are required — " +
+        "membership is proven against the release-check window, not assumed",
+    );
+  }
+  if (!Number.isFinite(Date.parse(startedAt)) || !Number.isFinite(Date.parse(endedAt))) {
+    fail("--release-window-start and --release-window-end must be parseable ISO-8601 instants");
+  }
+  return { startedAt, endedAt };
 }
 
 function assertProductionOnly(): string {
@@ -84,15 +140,26 @@ async function rest(path: string): Promise<unknown[]> {
   return (await response.json()) as unknown[];
 }
 
+/** A single row, or null when the read returned nothing. Never throws on an empty result. */
+function firstRow(rows: unknown[]): Record<string, unknown> | null {
+  const row = rows[0];
+  return row && typeof row === "object" ? (row as Record<string, unknown>) : null;
+}
+
+function textOrNull(value: unknown): string | null {
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
 /**
  * Derive the candidate population.
  *
  * Bounded by the incident SHAPE, not by an identifier anyone typed: a job that is failed_retryable,
- * parked at database_erasure, past the boundary, and still naming its owner.
+ * parked at database_erasure, past the boundary, and still naming its owner. Everything else about a
+ * candidate is then read, never supplied.
  */
-async function readCandidates(): Promise<IncidentCandidateRow[]> {
+async function readCandidates(window: ReleaseCheckWindow): Promise<IncidentCandidateRow[]> {
   const columns =
-    "id,owner_account_id,state,execution_cursor,irreversible_started_at,executor_expires_at";
+    "id,owner_account_id,state,execution_cursor,irreversible_started_at,executor_expires_at,requested_at";
   const jobs = (await rest(
     `yorisou_account_deletion_jobs?state=eq.failed_retryable` +
       `&execution_cursor=eq.database_erasure` +
@@ -105,20 +172,65 @@ async function readCandidates(): Promise<IncidentCandidateRow[]> {
     const jobId = String(job.id);
     const ownerAccountId = job.owner_account_id === null ? null : String(job.owner_account_id);
 
-    const manifests = await rest(
-      `yorisou_account_deletion_manifests?job_id=eq.${encodeURIComponent(jobId)}&select=job_id`,
-    );
+    const manifests = (await rest(
+      `yorisou_account_deletion_manifests?job_id=eq.${encodeURIComponent(jobId)}&select=job_id,payload`,
+    )) as Array<Record<string, unknown>>;
+    const manifestRow = firstRow(manifests);
+    const manifestPresent = manifestRow !== null;
 
-    // The address is resolved from the identity link registry, never from a CLI argument. If it
-    // cannot be resolved the candidate stays UNPROVEN and will be refused.
-    let ownerEmail: string | null = null;
+    // ── Class B inputs. Persisted execution truth, no identity value involved. ──────────────────
+    let registrationLeaseAt: string | null = null;
+    let liveDomainArtifactCount: number | null = null;
+
+    // ── Classes C, D, E inputs. Concordance, read only after the shape already matched. ─────────
+    let authoritativeAccountPresent = false;
+    let accountIdMatchesOwner = false;
+    let emailDigestConcordant = false;
+    let ownerFingerprintConcordant = false;
+    let ownerAddressUnroutable: boolean | null = null;
+
     if (ownerAccountId) {
-      const links = (await rest(
-        `yorisou_canonical_identity_links?owner_account_id=eq.${encodeURIComponent(ownerAccountId)}` +
-          `&link_kind=eq.email&select=link_subject`,
-      )) as Array<Record<string, unknown>>;
-      const subject = links[0]?.link_subject;
-      ownerEmail = typeof subject === "string" ? subject : null;
+      const owner = encodeURIComponent(ownerAccountId);
+
+      const leases = await rest(
+        `yorisou_account_mutation_leases?owner_account_id=eq.${owner}` +
+          `&operation_code=eq.${REGISTRATION_OPERATION_CODE}` +
+          `&select=issued_at&order=issued_at.asc&limit=1`,
+      );
+      registrationLeaseAt = textOrNull(firstRow(leases)?.issued_at);
+
+      // The canonical email link. `link_digest` and `owner_fingerprint` — the columns that exist.
+      // The plaintext subject is not stored, is not read, and is not needed.
+      const links = await rest(
+        `yorisou_canonical_identity_links?owner_account_id=eq.${owner}` +
+          `&link_kind=eq.email&link_state=eq.active&select=link_digest,owner_fingerprint`,
+      );
+      const link = firstRow(links);
+      const linkDigest = textOrNull(link?.link_digest);
+      const linkOwnerFingerprint = textOrNull(link?.owner_fingerprint);
+
+      // The authoritative account read — the established path, which carries its own per-read
+      // cache-defeating nonce so this is the current object and not a cached predecessor.
+      const account = await findAccountById(ownerAccountId);
+      authoritativeAccountPresent = account !== null;
+      if (account) {
+        accountIdMatchesOwner = account.id === ownerAccountId;
+        ownerAddressUnroutable = isUnroutableReservedAddress(account.email ?? null);
+        if (linkDigest && account.email) {
+          emailDigestConcordant = emailIdentityDigest(normalizeEmail(account.email)) === linkDigest;
+        }
+        if (linkOwnerFingerprint) {
+          ownerFingerprintConcordant =
+            identityOwnerFingerprint(ownerAccountId) === linkOwnerFingerprint;
+        }
+
+        // Re-inventory the account NOW with the product's own manifest builder, rather than trusting
+        // the frozen payload alone. Read-only, and it uses the same shape, so one counter answers
+        // both. A manifest that was right at the boundary is not evidence about the present.
+        liveDomainArtifactCount = countManifestDomainArtifacts(
+          await buildDeletionManifest(ownerAccountId),
+        );
+      }
     }
 
     const expires = job.executor_expires_at ? Date.parse(String(job.executor_expires_at)) : NaN;
@@ -128,10 +240,27 @@ async function readCandidates(): Promise<IncidentCandidateRow[]> {
       state: job.state === null ? null : String(job.state),
       executionCursor: job.execution_cursor === null ? null : String(job.execution_cursor),
       irreversible: job.irreversible_started_at !== null,
-      manifestPresent: manifests.length > 0,
+      manifestPresent,
       ownerNamed: ownerAccountId !== null,
       executorLeaseLive: Number.isFinite(expires) && expires > Date.now(),
-      ownerEmail,
+      membership: {
+        registrationLeaseAt,
+        deletionRequestedAt: textOrNull(job.requested_at),
+        manifestPresent,
+        manifestDomainArtifactCount: manifestRow
+          ? countManifestDomainArtifacts(manifestRow.payload)
+          : null,
+        manifestCanonicalIdentityLinkCount: manifestRow
+          ? readManifestCanonicalIdentityLinkCount(manifestRow.payload)
+          : null,
+        liveDomainArtifactCount,
+        releaseWindow: window,
+      },
+      authoritativeAccountPresent,
+      accountIdMatchesOwner,
+      emailDigestConcordant,
+      ownerFingerprintConcordant,
+      ownerAddressUnroutable,
     });
     // The account id is kept out of the reported row on purpose; it is carried separately.
     (rows[rows.length - 1] as IncidentCandidateRow & { __ownerAccountId?: string }).__ownerAccountId =
@@ -142,8 +271,9 @@ async function readCandidates(): Promise<IncidentCandidateRow[]> {
 
 async function main() {
   const project = assertProductionOnly();
+  const window = releaseWindow();
   const ceiling = maxCandidates();
-  const rows = await readCandidates();
+  const rows = await readCandidates(window);
 
   const selection = selectIncidentCandidates(rows, { maxCandidates: ceiling ?? -1 });
 
@@ -151,6 +281,7 @@ async function main() {
     JSON.stringify({
       mode: EXECUTE ? "execute" : "dry-run",
       project,
+      releaseWindow: window,
       candidatesScanned: rows.length,
       resumable: selection.resumable.length,
       revisit: selection.revisit.length,

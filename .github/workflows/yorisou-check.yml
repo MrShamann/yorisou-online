@@ -63,7 +63,9 @@ jobs:
       # against a disposable database. The grace-period cases use the injected clock, so the whole
       # suite runs in seconds instead of waiting out three real minutes.
       - name: POR-1 barrier proofs (cursor, single-writer executor, fence, grace)
-        run: npm run test:por1-resume:db
+        run: |
+          npm run test:por1-resume:db
+          npm run test:por1-incident-executable-path
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/yorisou_por1_test
 
@@ -163,6 +165,7 @@ jobs:
           npm run test:por1-erasure-transport
           npm run test:por1-authority-diagnostic
           npm run test:por1-incident-recovery
+          npm run test:por1-synthetic-membership
           npm run test:por1-deletion-request-guard
           npm run test:por1-store-read-authority
           npm run test:por1-stale-store-viewer
