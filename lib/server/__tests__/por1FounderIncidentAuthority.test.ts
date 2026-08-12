@@ -1,17 +1,15 @@
 // POR-1 — the boundary between what the data can show and who may decide.
 //
-// The centrepiece of this file is `THE SAME-WINDOW ADVERSARY`. Three revisions of the recovery rule
-// claimed to prove which accounts were synthetic; the third pinned its window to immutable GitHub and
-// Vercel records and was still refused, because the pinned window contains forty-eight minutes of
-// live Production and nothing Production kept records which run created an account.
+// Three authority models were rejected before this one: unsigned JSON asserting `reviewedBy`, then
+// the same document with a signature but `spentNonces: new Set()` as its replay boundary — a
+// process-local empty set that forgets everything at startup. v3 binds authority to ONE EXECUTION via
+// a challenge that execution generates in memory.
 //
-// An earlier test claimed to cover this and did not: it moved a look-alike three weeks into the
-// future and watched the window clause reject it. That is the easy half. The adversary below sits
-// INSIDE the window and satisfies every machine condition — and the architecture is only honest if
-// it says so out loud and still refuses to erase anything.
+// The centrepiece remains THE SAME-WINDOW ADVERSARY: a candidate the machine layer legitimately
+// qualifies, which still cannot be erased. The architecture is only honest if it says so out loud.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createHash, generateKeyPairSync, sign as signPayload } from "node:crypto";
+import { createHash, generateKeyPairSync, randomBytes, sign as signPayload } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,8 +22,10 @@ import {
   POR1_AUTHORITY_MAX_TTL_MS,
   POR1_FOUNDER_AUTHORITY_KEY_ROSTER,
   POR1_INCIDENT_AUTHORITY_VERSION,
+  revalidateSignedContext,
   verifyFounderSignature,
   type AuthorityEvaluationContext,
+  type FounderAuthorityPayload,
   type FounderIncidentAuthority,
   type PinnedFounderKey,
 } from "../por1FounderIncidentAuthority";
@@ -41,543 +41,408 @@ import {
   type IncidentCandidateRow,
 } from "../por1ProductionIncidentRecovery";
 
-const SOURCE_SHA = "ecc10fbe13e5cb3306376beec6b328c80edb8701";
-
 /**
- * A TEST signing key.
- *
- * Software-generated on purpose: these tests verify the VERIFIER, and a test that needed a Secure
- * Enclave key and a fingerprint could not run. The Production path is protected by something this
- * fixture cannot reach — `POR1_FOUNDER_AUTHORITY_KEY_ROSTER` is empty, and a test at the bottom of
- * this file asserts that no key of any kind is pinned there.
+ * A TEST signing key. Software-generated on purpose: these tests exercise the VERIFIER, and a test
+ * needing a Secure Enclave key and a fingerprint could not run. The Production path is protected by
+ * something this fixture cannot reach — the shipped roster is empty, asserted below.
  */
 const testKeyPair = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
-/** X9.63 uncompressed point, exactly as the Secure Enclave helper prints it. */
-const TEST_PUBLIC_X963 = testKeyPair.publicKey
-  .export({ format: "der", type: "spki" })
-  .subarray(26)
-  .toString("base64");
-const TEST_ROSTER: readonly PinnedFounderKey[] = [
-  { keyId: "test-key", publicKeyX963Base64: TEST_PUBLIC_X963 },
-];
+const TEST_ROSTER: readonly PinnedFounderKey[] = [{
+  keyId: "test-key",
+  publicKeyX963Base64: testKeyPair.publicKey.export({ format: "der", type: "spki" }).subarray(26).toString("base64"),
+}];
 
-/** Full sha256 authority fingerprints, as the signed payload requires. */
-const fp = (value: string) => createHash("sha256").update(value).digest("hex");
-const FP_A = fp("job-a");
-const FP_B = fp("job-b");
-const FP_C = fp("job-c");
+const fp = (v: string) => createHash("sha256").update(v).digest("hex");
+const FP_A = fp("job-a"), FP_B = fp("job-b"), FP_C = fp("job-c");
+const SOURCE_SHA = "a".repeat(40);
+const PROD_SHA = "b".repeat(40);
+const CHALLENGE = randomBytes(32).toString("hex");
+const ISSUED = "2026-08-12T00:00:00.000Z";
+const EXPIRES = "2026-08-12T00:15:00.000Z";
+const NOW = Date.parse("2026-08-12T00:05:00.000Z");
 
-/** Sign an artifact the way the Secure Enclave helper would: DER ECDSA-P256 over the canonical bytes. */
-function signed(artifact: FounderIncidentAuthority): FounderIncidentAuthority {
-  const signature = signPayload(
-    "sha256",
-    Buffer.from(canonicalAuthorityPayload(artifact), "utf8"),
-    testKeyPair.privateKey,
-  ).toString("base64");
-  return { ...artifact, signature };
-}
+const payload = (over: Partial<FounderAuthorityPayload> = {}): FounderAuthorityPayload => ({
+  authorityVersion: POR1_INCIDENT_AUTHORITY_VERSION,
+  authorityBasis: FOUNDER_REVIEWED_INCIDENT_OVERRIDE,
+  incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
+  productionProjectRef: POR1_PRODUCTION_DELETION_INCIDENT.productionProjectRef,
+  recoveryToolSourceCommitSha: SOURCE_SHA,
+  productionDeploymentCommitSha: PROD_SHA,
+  productionEnvironment: "production",
+  productionAccountDeletionExecutor: false,
+  productionErasureAuthoritySchemaReady: true,
+  populationSafetyCeiling: POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling,
+  qualifiedCandidateCount: 2,
+  qualifiedCandidateAuthorityFingerprints: [FP_A, FP_B],
+  issuedAt: ISSUED,
+  expiresAt: EXPIRES,
+  executionChallengeNonce: CHALLENGE,
+  reviewedBy: "founder",
+  ...over,
+});
+
+/** Sign like the Secure Enclave helper would: DER ECDSA-P256 over the canonical bytes. */
+const signed = (p: FounderAuthorityPayload): FounderIncidentAuthority => ({
+  payload: p,
+  signingKeyId: "test-key",
+  signature: signPayload("sha256", Buffer.from(canonicalAuthorityPayload(p), "utf8"), testKeyPair.privateKey).toString("base64"),
+});
+
+const context = (over: Partial<AuthorityEvaluationContext> = {}): AuthorityEvaluationContext => ({
+  incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
+  productionProjectRef: POR1_PRODUCTION_DELETION_INCIDENT.productionProjectRef,
+  recoveryToolSourceCommitSha: SOURCE_SHA,
+  productionDeploymentCommitSha: PROD_SHA,
+  productionEnvironment: "production",
+  productionAccountDeletionExecutor: false,
+  productionErasureAuthoritySchemaReady: true,
+  populationSafetyCeiling: POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling,
+  qualifiedCandidateAuthorityFingerprints: [FP_A, FP_B],
+  executionChallengeNonce: CHALLENGE,
+  founderKeyRoster: TEST_ROSTER,
+  now: NOW,
+  ...over,
+});
+
+const evaluate = (po: Partial<FounderAuthorityPayload> = {}, co: Partial<AuthorityEvaluationContext> = {}) =>
+  evaluateFounderAuthority(signed(payload(po)), context(co));
+const refusal = (d: ReturnType<typeof evaluate>) => (d as { reason: string }).reason;
+
+test("a fully bound, signed authority for THIS execution is permitted", () => {
+  assert.deepEqual(evaluate(), { permitted: true });
+});
+
+// ══ the shipped state ═══════════════════════════════════════════════════════
+
+test("the shipped roster is empty, so destructive authority is NONE as delivered", () => {
+  assert.equal(POR1_FOUNDER_AUTHORITY_KEY_ROSTER.length, 0);
+  assert.deepEqual(
+    evaluateFounderAuthority(signed(payload()), context({ founderKeyRoster: POR1_FOUNDER_AUTHORITY_KEY_ROSTER })),
+    { permitted: false, reason: "no_founder_key_enrolled" },
+  );
+});
+
+test("no artifact is refused by name, so absence never reads as a passing check", () => {
+  assert.deepEqual(evaluateFounderAuthority(null, context()), {
+    permitted: false, reason: "no_authority_artifact_supplied",
+  });
+});
+
+// ══ authentication ══════════════════════════════════════════════════════════
+
+test("an unsigned artifact cannot authorize, however perfect its contents", () => {
+  assert.equal(refusal(evaluateFounderAuthority({ ...signed(payload()), signature: "" }, context())), "signature_absent");
+});
+
+test('reviewedBy "founder" carries no weight without a signature', () => {
+  for (const who of ["founder", "Founder", "edward", "controller"]) {
+    const a = { ...signed(payload({ reviewedBy: who })), signature: "" };
+    assert.equal(evaluateFounderAuthority(a, context()).permitted, false, who);
+  }
+});
+
+test("a signature from the wrong key is refused", () => {
+  const impostor = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  const p = payload();
+  const forged: FounderIncidentAuthority = {
+    payload: p, signingKeyId: "test-key",
+    signature: signPayload("sha256", Buffer.from(canonicalAuthorityPayload(p), "utf8"), impostor.privateKey).toString("base64"),
+  };
+  assert.equal(refusal(evaluateFounderAuthority(forged, context())), "signature_invalid");
+});
+
+test("an unpinned signing key id is refused before verification", () => {
+  const a = { ...signed(payload()), signingKeyId: "other" };
+  assert.equal(refusal(evaluateFounderAuthority(a, context())), "signing_key_unknown");
+});
+
+test("tampering with ANY canonical field breaks the signature", () => {
+  const genuine = signed(payload());
+  const mutations: Array<Partial<FounderAuthorityPayload>> = [
+    { reviewedBy: "someone-else" }, { recoveryToolSourceCommitSha: "c".repeat(40) },
+    { productionDeploymentCommitSha: "d".repeat(40) }, { productionEnvironment: "preview" },
+    { productionAccountDeletionExecutor: true }, { productionErasureAuthoritySchemaReady: false },
+    { populationSafetyCeiling: 3 }, { qualifiedCandidateCount: 1 },
+    { qualifiedCandidateAuthorityFingerprints: [FP_A, FP_C] }, { issuedAt: "2026-08-12T00:00:01.000Z" },
+    { expiresAt: "2026-08-12T00:14:59.000Z" }, { executionChallengeNonce: randomBytes(32).toString("hex") },
+    { incidentEvidenceVersion: "x" }, { productionProjectRef: "y" },
+    { authorityVersion: "por1-incident-authority-v2" },
+  ];
+  for (const m of mutations) {
+    const tampered = { ...genuine, payload: { ...genuine.payload, ...m } };
+    assert.equal(refusal(evaluateFounderAuthority(tampered, context())), "signature_invalid", JSON.stringify(m));
+  }
+});
+
+// ══ THE PROCESS BINDING — what replaced spentNonces ═════════════════════════
+
+test("a signature naming a DIFFERENT execution is refused", () => {
+  // Signed correctly, for another invocation's challenge. This is the replay case.
+  assert.equal(refusal(evaluate({}, { executionChallengeNonce: randomBytes(32).toString("hex") })),
+    "execution_challenge_mismatch");
+});
+
+test("each invocation needs its own signature — process A's cannot be spent in process B", () => {
+  const a = signed(payload({ executionChallengeNonce: randomBytes(32).toString("hex") }));
+  const b = signed(payload({ executionChallengeNonce: randomBytes(32).toString("hex") }));
+  assert.notEqual(a.payload.executionChallengeNonce, b.payload.executionChallengeNonce);
+  assert.equal(evaluateFounderAuthority(a, context({ executionChallengeNonce: b.payload.executionChallengeNonce })).permitted, false);
+  assert.equal(evaluateFounderAuthority(b, context({ executionChallengeNonce: b.payload.executionChallengeNonce })).permitted, true);
+});
+
+test("a weak or malformed challenge is refused — 256 bits or nothing", () => {
+  for (const weak of ["", "deadbeef", "z".repeat(64), randomBytes(16).toString("hex")]) {
+    assert.equal(refusal(evaluate({ executionChallengeNonce: weak }, { executionChallengeNonce: weak })),
+      "execution_challenge_too_weak", weak.slice(0, 12));
+  }
+});
+
+test("the authority module holds no replay store to consult or forget", () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const src = readFileSync(join(here, "..", "por1FounderIncidentAuthority.ts"), "utf8");
+  const code = src.replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
+  assert.ok(!code.includes("spentNonces"), "the empty-set replay boundary is gone");
+  assert.ok(!code.includes("singleUseNonce"), "the static artifact nonce is gone");
+  for (const forbidden of ["generateKeyPairSync", "createPrivateKey", "privateKey", "process.env"]) {
+    assert.ok(!code.includes(forbidden), `the verifier must never touch ${forbidden}`);
+  }
+});
+
+// ══ bound world facts ═══════════════════════════════════════════════════════
+
+test("every bound fact must match what the runtime observes", () => {
+  const cases: Array<[Partial<AuthorityEvaluationContext>, string]> = [
+    [{ recoveryToolSourceCommitSha: "c".repeat(40) }, "recovery_tool_source_mismatch"],
+    [{ productionDeploymentCommitSha: "d".repeat(40) }, "production_deployment_mismatch"],
+    [{ productionEnvironment: "preview" }, "production_environment_mismatch"],
+    [{ productionAccountDeletionExecutor: true }, "production_executor_state_mismatch"],
+    [{ productionErasureAuthoritySchemaReady: false }, "production_erasure_readiness_mismatch"],
+    [{ populationSafetyCeiling: 3 }, "population_safety_ceiling_mismatch"],
+    [{ incidentEvidenceVersion: "por1-incident-evidence-v0" }, "incident_evidence_version_mismatch"],
+    [{ productionProjectRef: "elsewhere" }, "production_project_ref_mismatch"],
+  ];
+  for (const [over, expected] of cases) assert.equal(refusal(evaluate({}, over)), expected, expected);
+});
+
+test("an executor that is ON is refused even when signed and observed consistently", () => {
+  assert.equal(
+    refusal(evaluate({ productionAccountDeletionExecutor: true }, { productionAccountDeletionExecutor: true })),
+    "production_executor_state_mismatch",
+  );
+});
+
+test("erasure readiness that is false is refused even when signed and observed consistently", () => {
+  assert.equal(
+    refusal(evaluate({ productionErasureAuthoritySchemaReady: false }, { productionErasureAuthoritySchemaReady: false })),
+    "production_erasure_readiness_mismatch",
+  );
+});
+
+// ══ candidate identity ══════════════════════════════════════════════════════
+
+test("a 48-bit display fingerprint cannot serve as authority identity", () => {
+  const short = ["5990ad0e0715", "aa11bb22cc33"];
+  assert.equal(
+    refusal(evaluate({ qualifiedCandidateAuthorityFingerprints: short }, { qualifiedCandidateAuthorityFingerprints: short })),
+    "authority_fingerprint_not_full_sha256",
+  );
+});
+
+test("a same-size different candidate set is refused", () => {
+  assert.equal(refusal(evaluate({}, { qualifiedCandidateAuthorityFingerprints: [FP_A, FP_C] })),
+    "candidate_set_differs_from_reviewed");
+});
+
+test("the exact reviewed set is permitted in any order", () => {
+  assert.equal(evaluate({}, { qualifiedCandidateAuthorityFingerprints: [FP_B, FP_A] }).permitted, true);
+});
+
+test("a restated count that disagrees with the set is refused", () => {
+  assert.equal(refusal(evaluate({ qualifiedCandidateCount: 3 })), "reviewed_count_inconsistent");
+});
+
+test("it can never authorise more than the population safety ceiling", () => {
+  const three = [FP_A, FP_B, FP_C];
+  assert.equal(
+    refusal(evaluate(
+      { qualifiedCandidateAuthorityFingerprints: three, qualifiedCandidateCount: 3 },
+      { qualifiedCandidateAuthorityFingerprints: three },
+    )),
+    "reviewed_count_exceeds_population_ceiling",
+  );
+});
+
+// ══ TTL ═════════════════════════════════════════════════════════════════════
+
+test("TTL above fifteen minutes is refused; the edge is accepted", () => {
+  const tooLong = new Date(Date.parse(ISSUED) + POR1_AUTHORITY_MAX_TTL_MS + 1).toISOString();
+  assert.equal(refusal(evaluate({ expiresAt: tooLong })), "authority_ttl_above_maximum");
+  const exact = new Date(Date.parse(ISSUED) + POR1_AUTHORITY_MAX_TTL_MS).toISOString();
+  assert.equal(evaluate({ expiresAt: exact }).permitted, true);
+});
+
+test("expired and not-yet-valid are refused, and naive timestamps cannot bound authority", () => {
+  assert.equal(refusal(evaluate({}, { now: Date.parse(EXPIRES) + 1 })), "authority_expired");
+  assert.equal(refusal(evaluate({}, { now: Date.parse(ISSUED) - 1 })), "authority_not_yet_valid");
+  assert.equal(refusal(evaluate({ expiresAt: "2026-08-12T00:15:00" })), "authority_window_unparseable");
+});
+
+// ══ post-sign TOCTOU ════════════════════════════════════════════════════════
+
+const observed = (over: Partial<AuthorityEvaluationContext> = {}) => {
+  const { founderKeyRoster: _r, now: _n, ...rest } = context(over);
+  return rest;
+};
+
+test("an unchanged world revalidates", () => {
+  assert.deepEqual(revalidateSignedContext(payload(), observed()), { unchanged: true });
+});
+
+test("ANY post-sign drift refuses, and names the field that moved", () => {
+  const drifts: Array<[Partial<AuthorityEvaluationContext>, string]> = [
+    [{ recoveryToolSourceCommitSha: "c".repeat(40) }, "recoveryToolSourceCommitSha"],
+    [{ productionDeploymentCommitSha: "d".repeat(40) }, "productionDeploymentCommitSha"],
+    [{ productionEnvironment: "preview" }, "productionEnvironment"],
+    [{ productionAccountDeletionExecutor: true }, "productionAccountDeletionExecutor"],
+    [{ productionErasureAuthoritySchemaReady: false }, "productionErasureAuthoritySchemaReady"],
+    [{ populationSafetyCeiling: 3 }, "populationSafetyCeiling"],
+    [{ executionChallengeNonce: randomBytes(32).toString("hex") }, "executionChallengeNonce"],
+    [{ qualifiedCandidateAuthorityFingerprints: [FP_A, FP_C] }, "qualifiedCandidateAuthorityFingerprints"],
+    [{ qualifiedCandidateAuthorityFingerprints: [FP_A] }, "qualifiedCandidateAuthorityFingerprints"],
+    [{ qualifiedCandidateAuthorityFingerprints: [FP_A, FP_B, FP_C] }, "qualifiedCandidateAuthorityFingerprints"],
+  ];
+  for (const [over, field] of drifts) {
+    const result = revalidateSignedContext(payload(), observed(over));
+    assert.equal(result.unchanged, false, field);
+    assert.equal((result as { reason: string }).reason, "FOUNDER_AUTHORITY_CONTEXT_CHANGED");
+    assert.equal((result as { field: string }).field, field);
+  }
+});
+
+// ══ parsing ═════════════════════════════════════════════════════════════════
+
+test("a malformed artifact parses to null, which is refused by name", () => {
+  for (const bad of [null, "{}", [], 42, {}, { payload: {} }, { payload: payload() }]) {
+    assert.equal(parseFounderAuthority(bad), null, JSON.stringify(bad)?.slice(0, 30));
+  }
+});
+
+test("an artifact carrying identity is refused outright", () => {
+  const withEmail = { ...signed(payload({ qualifiedCandidateAuthorityFingerprints: ["a@b.invalid"] })) };
+  assert.equal(parseFounderAuthority(JSON.parse(JSON.stringify(withEmail))), null);
+  const withAccount = { ...signed(payload({ qualifiedCandidateAuthorityFingerprints: ["acct_1786_x"] })) };
+  assert.equal(parseFounderAuthority(JSON.parse(JSON.stringify(withAccount))), null);
+});
+
+test("a well-formed artifact round-trips and still verifies", () => {
+  const parsed = parseFounderAuthority(JSON.parse(JSON.stringify(signed(payload()))));
+  assert.ok(parsed);
+  assert.equal(verifyFounderSignature(parsed, TEST_ROSTER), true);
+});
+
+test("the verifier rejects malformed key material and malformed signatures", () => {
+  const a = signed(payload());
+  const notAKey = Buffer.from("not-a-key", "utf8").toString("base64");
+  assert.equal(verifyFounderSignature(a, [{ keyId: "test-key", publicKeyX963Base64: "" }]), false);
+  assert.equal(verifyFounderSignature(a, [{ keyId: "test-key", publicKeyX963Base64: notAKey }]), false);
+  assert.equal(verifyFounderSignature({ ...a, signature: "!!!" }, TEST_ROSTER), false);
+  assert.equal(verifyFounderSignature(a, []), false);
+});
+
+// ══ THE SAME-WINDOW ADVERSARY ═══════════════════════════════════════════════
 
 const correlation = (over = {}) => ({
   incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
   provisioningSagaRequestedAt: "2026-08-10T03:48:53.261Z",
   registrationLeaseAt: "2026-08-10T03:48:53.990Z",
   deletionRequestedAt: "2026-08-10T03:49:19.271Z",
-  manifestPresent: true,
-  manifestDomainArtifactCount: 0,
-  manifestCanonicalIdentityLinkCount: 1,
-  liveDomainArtifactCount: 0,
-  ...over,
+  manifestPresent: true, manifestDomainArtifactCount: 0,
+  manifestCanonicalIdentityLinkCount: 1, liveDomainArtifactCount: 0, ...over,
 });
 
 const candidate = (over: Partial<IncidentCandidateRow> = {}): IncidentCandidateRow => ({
-  jobFingerprint: "5990ad0e0715",
-  authorityFingerprint: FP_A,
-  state: "failed_retryable",
-  executionCursor: "database_erasure",
-  irreversible: true,
-  manifestPresent: true,
-  ownerNamed: true,
-  executorLeaseLive: false,
-  correlation: correlation(),
-  activeEmailLinkCount: 1,
-  activeIdentityLinkCount: 1,
-  registrationLeaseCount: 1,
-  accountCreatedWithinIncidentWindow: true,
-  authoritativeAccountPresent: true,
-  accountIdMatchesOwner: true,
-  emailDigestConcordant: true,
-  ownerFingerprintConcordant: true,
-  ownerAddressUnroutable: true,
+  jobFingerprint: "5990ad0e0715", authorityFingerprint: FP_A,
+  state: "failed_retryable", executionCursor: "database_erasure", irreversible: true,
+  manifestPresent: true, ownerNamed: true, executorLeaseLive: false,
+  correlation: correlation(), activeEmailLinkCount: 1, activeIdentityLinkCount: 1,
+  registrationLeaseCount: 1, accountCreatedWithinIncidentWindow: true,
+  authoritativeAccountPresent: true, accountIdMatchesOwner: true,
+  emailDigestConcordant: true, ownerFingerprintConcordant: true, ownerAddressUnroutable: true,
   ...over,
 });
 
-const context = (
-  over: Partial<Omit<AuthorityEvaluationContext, "qualifiedCandidateFingerprints">> = {},
-) => ({
-  currentSourceCommitSha: SOURCE_SHA,
-  currentIncidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
-  populationSafetyCeiling: POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling,
-  currentExecutorState: "off" as const,
-  spentNonces: new Set<string>(),
-  founderKeyRoster: TEST_ROSTER,
-  now: Date.parse("2026-08-12T00:05:00.000Z"),
-  ...over,
-});
-
-const authority = (over: Partial<FounderIncidentAuthority> = {}): FounderIncidentAuthority => ({
-  version: POR1_INCIDENT_AUTHORITY_VERSION,
-  authorityBasis: FOUNDER_REVIEWED_INCIDENT_OVERRIDE,
-  incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
-  sourceCommitSha: SOURCE_SHA,
-  reviewedCandidateFingerprints: [FP_A, FP_B],
-  reviewedCandidateCount: 2,
-  reviewedBy: "founder",
-  issuedAt: "2026-08-12T00:00:00.000Z",
-  expiresAt: "2026-08-12T00:15:00.000Z",
-  singleUseNonce: "nonce-1",
-  observedExecutorState: "off",
-  signingKeyId: "test-key",
-  signature: "",
-  ...over,
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
-// THE SAME-WINDOW ADVERSARY
-// ══════════════════════════════════════════════════════════════════════════════
-
-test("a REAL-USER LOOKALIKE inside the pinned window satisfies every machine condition", () => {
-  // Candidate C. Registered, did nothing, asked to be deleted a minute later — inside the same
-  // forty-eight minutes as the historical incident. Provisioning saga, registration lease and
-  // deletion request all present and all in-window. Zero domain artifacts in BOTH inventories.
-  // Exactly one canonical identity. Authoritative account matches, digest matches, fingerprint
-  // matches, address on the reserved TLD, no live executor claim.
-  //
-  // There is no field in the surviving data that separates this from release-check residue, and this
-  // test asserts that honestly rather than inventing a discriminator to make it fail.
+test("a real-user lookalike INSIDE the pinned window satisfies every machine condition", () => {
   const adversary = candidate({
-    jobFingerprint: "cccccccccccc",
-    authorityFingerprint: FP_C,
+    jobFingerprint: "cccccccccccc", authorityFingerprint: FP_C,
     correlation: correlation({
       provisioningSagaRequestedAt: "2026-08-10T04:05:00.000Z",
       registrationLeaseAt: "2026-08-10T04:05:00.500Z",
       deletionRequestedAt: "2026-08-10T04:06:10.000Z",
     }),
   });
-
   assert.deepEqual(classifyHistoricalIncidentCorrelation(adversary.correlation), { qualified: true });
   assert.deepEqual(classifyIncidentCandidate(adversary), {
-    action: "qualify",
-    family: "failed_retryable_post_irreversible",
+    action: "qualify", family: "failed_retryable_post_irreversible",
   });
 });
 
-test("...and it is STILL refused erasure, because qualification is not authority", () => {
+test("...and it still cannot be erased without authentic Founder user presence", () => {
   const adversary = candidate({
-    jobFingerprint: "cccccccccccc",
-    authorityFingerprint: FP_C,
+    jobFingerprint: "cccccccccccc", authorityFingerprint: FP_C,
     correlation: correlation({
       provisioningSagaRequestedAt: "2026-08-10T04:05:00.000Z",
       registrationLeaseAt: "2026-08-10T04:05:00.500Z",
       deletionRequestedAt: "2026-08-10T04:06:10.000Z",
     }),
   });
-  const historical = candidate({ jobFingerprint: "aaaaaaaaaaaa", authorityFingerprint: FP_A });
-
-  // The population is coherent and exactly at the safety ceiling. Under the previous architecture
-  // this was the state that permitted execution.
-  const selection = selectIncidentCandidates([historical, adversary], { maxCandidates: 2 });
+  const selection = selectIncidentCandidates([candidate(), adversary], { maxCandidates: 2 });
   assert.equal(selection.qualified.length, 2);
   assert.equal(selection.reviewReady, true, "the machine layer is content — that is the point");
 
-  // And nothing may be destroyed, because no human has decided anything.
-  const decision = resolveDestructiveAuthority(selection, null, context());
-  assert.deepEqual(decision, { permitted: false, reason: "no_authority_artifact_supplied" });
+  const { qualifiedCandidateAuthorityFingerprints: _f, ...ctx } = context();
+  assert.deepEqual(resolveDestructiveAuthority(selection, null, ctx), {
+    permitted: false, reason: "no_authority_artifact_supplied",
+  });
 });
 
-test("the shipped state is: correlation can qualify, destructive authority is NONE", () => {
-  const selection = selectIncidentCandidates(
-    [
-      candidate({ jobFingerprint: "aaaaaaaaaaaa", authorityFingerprint: FP_A }),
-      candidate({ jobFingerprint: "bbbbbbbbbbbb", authorityFingerprint: FP_B }),
-    ],
-    { maxCandidates: 2 },
-  );
-  assert.equal(selection.reviewReady, true);
-  assert.equal(resolveDestructiveAuthority(selection, null, context()).permitted, false);
-});
-
-test("a review-ready population is a PRECONDITION, never a permission", () => {
-  // Not review-ready => refused before the artifact is even consulted.
+test("a review-ready population is a precondition, never a permission", () => {
   const one = selectIncidentCandidates([candidate()], { maxCandidates: 1 });
   assert.equal(one.reviewReady, false);
-  assert.equal(resolveDestructiveAuthority(one, signed(authority()), context()).permitted, false);
+  const { qualifiedCandidateAuthorityFingerprints: _f, ...ctx } = context();
+  assert.equal(resolveDestructiveAuthority(one, signed(payload()), ctx).permitted, false);
 });
 
-// ══ the artifact binds to a SET, not a size ═════════════════════════════════
-
-test("an authority reviewed for one candidate set cannot be spent on another of equal size", () => {
-  const selection = selectIncidentCandidates(
-    [
-      candidate({ jobFingerprint: "aaaaaaaaaaaa", authorityFingerprint: FP_A }),
-      candidate({ jobFingerprint: "cccccccccccc", authorityFingerprint: FP_C }),
-    ],
-    { maxCandidates: 2 },
-  );
-  // Same count, one different member.
-  assert.deepEqual(resolveDestructiveAuthority(selection, signed(authority()), context()), {
-    permitted: false,
-    reason: "candidate_set_differs_from_reviewed",
-  });
-});
-
-test("the exact reviewed set is permitted, in any order", () => {
-  const selection = selectIncidentCandidates(
-    [
-      candidate({ jobFingerprint: "bbbbbbbbbbbb", authorityFingerprint: FP_B }),
-      candidate({ jobFingerprint: "aaaaaaaaaaaa", authorityFingerprint: FP_A }),
-    ],
-    { maxCandidates: 2 },
-  );
-  assert.deepEqual(resolveDestructiveAuthority(selection, signed(authority()), context()), {
-    permitted: true,
-    nonce: "nonce-1",
-  });
-});
-
-// ══ every binding rule ══════════════════════════════════════════════════════
-
-const qualifiedTwo = [FP_A, FP_B];
-/** Signs LAST, so a field override is always covered by the signature it is tested against. */
-const evaluate = (
-  artifactOver: Partial<FounderIncidentAuthority> = {},
-  contextOver: Partial<Omit<AuthorityEvaluationContext, "qualifiedCandidateFingerprints">> = {},
-) =>
-  evaluateFounderAuthority(signed(authority(artifactOver)), {
-    ...context(contextOver),
-    qualifiedCandidateFingerprints: qualifiedTwo,
-  });
-
-test("no artifact is refused BY NAME, so absence never reads as a passing check", () => {
-  assert.deepEqual(
-    evaluateFounderAuthority(null, { ...context(), qualifiedCandidateFingerprints: qualifiedTwo }),
-    { permitted: false, reason: "no_authority_artifact_supplied" },
-  );
-});
-
-// ══ AN UNSIGNED DOCUMENT IS NOT A WEAK AUTHORIZATION — IT IS NOT ONE ════════
-
-test("an UNSIGNED artifact cannot authorize, however perfect its contents", () => {
-  // Exactly the document the previous model accepted: correct basis, correct bindings, and
-  // `reviewedBy: "founder"` — which is a string an execution agent can type.
-  const unsigned = authority({ signature: "" });
-  assert.deepEqual(
-    evaluateFounderAuthority(unsigned, {
-      ...context(),
-      qualifiedCandidateFingerprints: qualifiedTwo,
-    }),
-    { permitted: false, reason: "signature_absent" },
-  );
-});
-
-test('reviewedBy "founder" carries no weight without a signature', () => {
-  for (const claimed of ["founder", "Founder", "FOUNDER", "edward", "controller"]) {
-    const decision = evaluateFounderAuthority(authority({ reviewedBy: claimed, signature: "" }), {
-      ...context(),
-      qualifiedCandidateFingerprints: qualifiedTwo,
-    });
-    assert.equal(decision.permitted, false, claimed);
-  }
-});
-
-test("a signature from the WRONG key is refused", () => {
-  const impostor = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
-  const artifact = authority();
-  const forged = {
-    ...artifact,
-    signature: signPayload(
-      "sha256",
-      Buffer.from(canonicalAuthorityPayload(artifact), "utf8"),
-      impostor.privateKey,
-    ).toString("base64"),
-  };
-  assert.deepEqual(
-    evaluateFounderAuthority(forged, { ...context(), qualifiedCandidateFingerprints: qualifiedTwo }),
-    { permitted: false, reason: "signature_invalid" },
-  );
-});
-
-test("a signature naming an unpinned key id is refused before verification", () => {
-  assert.deepEqual(evaluate({ signingKeyId: "some-other-key" }), {
-    permitted: false,
-    reason: "signing_key_unknown",
-  });
-});
-
-test("with NO key enrolled, nothing can authorize — the shipped state", () => {
-  assert.deepEqual(
-    evaluateFounderAuthority(signed(authority()), {
-      ...context({ founderKeyRoster: [] }),
-      qualifiedCandidateFingerprints: qualifiedTwo,
-    }),
-    { permitted: false, reason: "no_founder_key_enrolled" },
-  );
-});
-
-test("tampering with ANY signed field invalidates the signature", () => {
-  const genuine = signed(authority());
-  const mutations: Array<Partial<FounderIncidentAuthority>> = [
-    { reviewedBy: "someone-else" },
-    { singleUseNonce: "nonce-2" },
-    { sourceCommitSha: "f".repeat(40) },
-    { incidentEvidenceVersion: "por1-incident-evidence-v9" },
-    { reviewedCandidateCount: 1 },
-    { reviewedCandidateFingerprints: [FP_A, FP_C] },
-    { observedExecutorState: "on" },
-    { expiresAt: "2026-08-12T23:00:01.000Z" },
-    { authorityBasis: "SOMETHING_ELSE" as never },
-  ];
-  for (const mutation of mutations) {
-    const tampered = { ...genuine, ...mutation };
-    const decision = evaluateFounderAuthority(tampered, {
-      ...context(),
-      qualifiedCandidateFingerprints: qualifiedTwo,
-    });
-    assert.equal(decision.permitted, false, JSON.stringify(mutation));
-    // The signature must be what catches it, not a later field comparison.
-    assert.equal(
-      (decision as { reason: string }).reason,
-      "signature_invalid",
-      `tampering ${JSON.stringify(mutation)} must break the signature`,
-    );
-  }
-});
-
-test("the canonical payload is order- and duplicate-stable", () => {
-  const a = authority({ reviewedCandidateFingerprints: [FP_A, FP_B] });
-  const b = authority({ reviewedCandidateFingerprints: [FP_B, FP_A, FP_A] });
-  assert.equal(canonicalAuthorityPayload(a), canonicalAuthorityPayload(b));
-  // ...and genuinely sensitive to a real change.
-  assert.notEqual(
-    canonicalAuthorityPayload(a),
-    canonicalAuthorityPayload(authority({ reviewedCandidateFingerprints: [FP_A, FP_C] })),
-  );
-});
-
-test("the verifier rejects malformed key material and malformed signatures", () => {
-  const artifact = signed(authority());
-  assert.equal(verifyFounderSignature(artifact, [{ keyId: "test-key", publicKeyX963Base64: "" }]), false);
-  // Built at runtime rather than embedded. The literal base64 of "not-a-key" is twelve distinct
-  // characters next to the word `Key`, which is exactly the shape gitleaks' generic-api-key rule
-  // looks for — a false positive on obviously-fake material is still a red hard gate.
-  const notAKey = Buffer.from("not-a-key", "utf8").toString("base64");
-  assert.equal(
-    verifyFounderSignature(artifact, [{ keyId: "test-key", publicKeyX963Base64: notAKey }]),
-    false,
-  );
-  assert.equal(verifyFounderSignature({ ...artifact, signature: "!!!" }, TEST_ROSTER), false);
-  assert.equal(verifyFounderSignature(artifact, []), false);
-});
-
-// ══ candidate identity must be a full digest ════════════════════════════════
-
-test("a 48-bit DISPLAY fingerprint cannot serve as authority identity", () => {
-  const short = ["5990ad0e0715", "aa11bb22cc33"];
-  const decision = evaluateFounderAuthority(
-    signed(authority({ reviewedCandidateFingerprints: short, reviewedCandidateCount: 2 })),
-    { ...context(), qualifiedCandidateFingerprints: short },
-  );
-  assert.deepEqual(decision, {
-    permitted: false,
-    reason: "authority_fingerprint_not_full_sha256",
-  });
-});
-
-test("full 64-hex sha256 authority fingerprints are required on both sides", () => {
-  assert.match(FP_A, /^[0-9a-f]{64}$/);
-  const decision = evaluateFounderAuthority(signed(authority()), {
-    ...context(),
-    qualifiedCandidateFingerprints: ["5990ad0e0715", "aa11bb22cc33"],
-  });
-  assert.equal((decision as { reason: string }).reason, "authority_fingerprint_not_full_sha256");
-});
-
-// ══ TTL ═════════════════════════════════════════════════════════════════════
-
-test("an authority valid for longer than fifteen minutes is refused", () => {
-  const issuedAt = "2026-08-12T00:00:00.000Z";
-  const tooLong = new Date(Date.parse(issuedAt) + POR1_AUTHORITY_MAX_TTL_MS + 1).toISOString();
-  assert.deepEqual(
-    evaluate({ issuedAt, expiresAt: tooLong }, { now: Date.parse(issuedAt) + 1000 }),
-    { permitted: false, reason: "authority_ttl_above_maximum" },
-  );
-});
-
-test("a fifteen-minute authority is accepted at its edge", () => {
-  const issuedAt = "2026-08-12T00:00:00.000Z";
-  const exactly = new Date(Date.parse(issuedAt) + POR1_AUTHORITY_MAX_TTL_MS).toISOString();
-  assert.equal(
-    evaluate({ issuedAt, expiresAt: exactly }, { now: Date.parse(issuedAt) + 1000 }).permitted,
-    true,
-  );
-});
-
-test("a human decision may not be relabelled as a historical finding", () => {
-  assert.deepEqual(
-    evaluate({ authorityBasis: "HISTORICAL_SYNTHETIC_MEMBERSHIP_PROVEN" as never }),
-    { permitted: false, reason: "authority_basis_invalid" },
-  );
-});
-
-test("it is bound to the exact source revision", () => {
-  assert.equal(evaluate({ sourceCommitSha: "a".repeat(40) }).permitted, false);
-  assert.equal(evaluate({}, { currentSourceCommitSha: "b".repeat(40) }).permitted, false);
-  assert.equal(evaluate({ sourceCommitSha: "not-a-sha" }).permitted, false);
-});
-
-test("it is bound to the incident contract version", () => {
-  assert.deepEqual(evaluate({ incidentEvidenceVersion: "por1-incident-evidence-v0" }), {
-    permitted: false,
-    reason: "incident_evidence_version_mismatch",
-  });
-});
-
-test("it is bound to the artifact schema version", () => {
-  assert.deepEqual(evaluate({ version: "por1-incident-authority-v0" }), {
-    permitted: false,
-    reason: "authority_version_mismatch",
-  });
-});
-
-test("an executor capability that changed since review invalidates it", () => {
-  assert.deepEqual(evaluate({ observedExecutorState: "on" }), {
-    permitted: false,
-    reason: "executor_state_changed_since_review",
-  });
-});
-
-test("it is single use — a replayed nonce is not a second decision", () => {
-  assert.deepEqual(evaluate({}, { spentNonces: new Set(["nonce-1"]) }), {
-    permitted: false,
-    reason: "authority_already_spent",
-  });
-  assert.equal(evaluate({ singleUseNonce: "" }).permitted, false);
-});
-
-test("it expires, and is not valid before it was issued", () => {
-  assert.deepEqual(evaluate({}, { now: Date.parse("2026-08-12T00:15:00.001Z") }), {
-    permitted: false,
-    reason: "authority_expired",
-  });
-  assert.deepEqual(evaluate({}, { now: Date.parse("2026-08-11T23:59:59.000Z") }), {
-    permitted: false,
-    reason: "authority_not_yet_valid",
-  });
-  assert.equal(evaluate({ expiresAt: "2026-08-11T22:00:00.000Z" }).permitted, false);
-  // A naive timestamp has no single meaning, so it cannot bound an authority.
-  assert.equal(evaluate({ expiresAt: "2026-08-12T00:15:00" }).permitted, false);
-});
-
-test("an unattributed review is refused", () => {
-  assert.deepEqual(evaluate({ reviewedBy: "   " }), {
-    permitted: false,
-    reason: "reviewer_unattributed",
-  });
-});
-
-test("a restated count that disagrees with the reviewed set is refused", () => {
-  assert.deepEqual(evaluate({ reviewedCandidateCount: 3 }), {
-    permitted: false,
-    reason: "reviewed_count_inconsistent",
-  });
-});
-
-test("it can never authorise more than the population safety ceiling", () => {
-  const three = [FP_A, FP_B, FP_C];
-  const decision = evaluateFounderAuthority(
-    signed(authority({ reviewedCandidateFingerprints: three, reviewedCandidateCount: 3 })),
-    { ...context(), qualifiedCandidateFingerprints: three },
-  );
-  assert.deepEqual(decision, {
-    permitted: false,
-    reason: "reviewed_count_exceeds_population_ceiling",
-  });
-});
-
-// ══ parsing ═════════════════════════════════════════════════════════════════
-
-test("a malformed artifact parses to null, which is refused by name", () => {
-  for (const bad of [null, "{}", [], 42, {}, { version: 1 }]) {
-    assert.equal(parseFounderAuthority(bad), null, JSON.stringify(bad));
-  }
-});
-
-test("an artifact carrying identity is refused outright, not trimmed", () => {
-  const withEmail = { ...authority(), reviewedCandidateFingerprints: ["someone@example.invalid"] };
-  assert.equal(parseFounderAuthority(withEmail), null);
-  const withAccountId = { ...authority(), reviewedCandidateFingerprints: ["acct_1786333733479_x"] };
-  assert.equal(parseFounderAuthority(withAccountId), null);
-});
-
-test("a well-formed artifact round-trips", () => {
-  const parsed = parseFounderAuthority(JSON.parse(JSON.stringify(authority())));
-  assert.deepEqual(parsed, authority());
-});
-
-test("the SHIPPED roster is empty, so destructive authority is NONE as delivered", () => {
-  assert.equal(
-    POR1_FOUNDER_AUTHORITY_KEY_ROSTER.length,
-    0,
-    "a pinned Founder key is a Founder action; enrolling one here would defeat the boundary",
-  );
-  // And with it empty, even a correctly-signed artifact cannot authorize.
-  assert.deepEqual(
-    evaluateFounderAuthority(signed(authority()), {
-      ...context({ founderKeyRoster: POR1_FOUNDER_AUTHORITY_KEY_ROSTER }),
-      qualifiedCandidateFingerprints: qualifiedTwo,
-    }),
-    { permitted: false, reason: "no_founder_key_enrolled" },
-  );
-});
-
-test("no Production software-key fallback exists anywhere in the authority path", () => {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const verifierSource = readFileSync(join(here, "..", "por1FounderIncidentAuthority.ts"), "utf8");
-  const code = verifierSource.replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
-  for (const forbidden of [
-    "generateKeyPairSync",
-    "createPrivateKey",
-    "privateKey",
-    "PRIVATE KEY",
-    "process.env",
-  ]) {
-    assert.ok(!code.includes(forbidden), `the verifier must never touch ${forbidden}`);
-  }
-  // It verifies and nothing else: no signing primitive is imported.
-  assert.ok(!/\bsign\s*\(/.test(code), "the verifier must not be able to sign");
-});
+// ══ the signer cannot be replaced by software ═══════════════════════════════
 
 test("the Secure Enclave helper demands biometry and never exports the private key", () => {
   const here = dirname(fileURLToPath(import.meta.url));
-  const swift = readFileSync(
-    join(here, "..", "..", "..", "tools", "por1-founder-signer", "main.swift"),
-    "utf8",
-  );
-  assert.match(swift, /kSecAttrTokenIDSecureEnclave/);
-  assert.match(swift, /\.biometryCurrentSet/, "presence must be bound to the CURRENT fingerprints");
-  assert.match(swift, /kSecAttrIsPermanent/);
-  // The private half is never exported — only SecKeyCopyPublicKey is ever exported.
-  assert.ok(
-    !/SecKeyCopyExternalRepresentation\(\s*privateKey/.test(swift),
-    "the private key must never be exported",
-  );
+  const swift = readFileSync(join(here, "..", "..", "..", "tools", "por1-founder-signer", "main.swift"), "utf8");
+  // Judge the CODE. The header explains at length which APIs are deliberately NOT used, and a raw
+  // substring search would fail on that explanation while passing a file that actually used them.
+  const swiftCode = swift.replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
+  assert.match(swift, /SecureEnclave\.P256\.Signing\.PrivateKey/);
+  assert.match(swift, /\.biometryCurrentSet/, "presence bound to the CURRENT fingerprints");
+  assert.match(swift, /kSecAttrAccessibleWhenUnlockedThisDeviceOnly/);
   assert.match(swift, /refusing to sign an empty payload/);
-});
+  // No keychain persistence.
+  assert.ok(!swiftCode.includes("kSecAttrIsPermanent"), "no persistent keychain item");
 
-test("no artifact ships with this repository, and nothing here can mint one", () => {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const text = readFileSync(join(here, "..", "por1FounderIncidentAuthority.ts"), "utf8");
-  const code = text.replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
-  for (const forbidden of ["function issueFounderAuthority", "sign(", "privateKey", "randomUUID"]) {
-    assert.ok(!code.includes(forbidden), `must not be able to mint authority: ${forbidden}`);
+  // A software P-256 key may appear ONLY in the negative check that proves the opaque representation
+  // cannot be used as one. It must never be generated, and never signed with.
+  assert.ok(
+    !/P256\.Signing\.PrivateKey\(\s*\)/.test(swiftCode),
+    "the signer must never generate a software key",
+  );
+  for (const match of swiftCode.matchAll(/P256\.Signing\.PrivateKey\(([^)]*)\)/g)) {
+    const args = match[1];
+    const secureEnclave = match[0].includes("SecureEnclave") ||
+      swiftCode.slice(Math.max(0, match.index! - 14), match.index!).includes("SecureEnclave");
+    assert.ok(
+      secureEnclave || args.includes("rawRepresentation:"),
+      `software P-256 construction outside the negative check: ${match[0].slice(0, 60)}`,
+    );
   }
+  // Every signature this tool produces comes from the Secure Enclave key it loaded.
+  assert.match(swiftCode, /try key\.signature\(for: payload\)/);
+  assert.ok(!/softwareKey\.signature\(/.test(swiftCode));
 });

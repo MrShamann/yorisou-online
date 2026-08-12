@@ -2,223 +2,196 @@
 //
 // WHY THIS EXISTS.
 //
-// Three attempts were made to prove, from what Production kept, that two particular accounts were
-// created by the historical release-check run. The third came closest and was still refused, for the
-// right reason: the surviving data cannot express "this account was created by run X". A pinned
-// forty-eight minute deployment window, a short lifetime, no product artifacts, a reserved address
-// and matching digests are extremely strong CORRELATION. They are not provenance, and no further
-// clause converts one into the other.
+// Machine evidence (`por1HistoricalIncidentCorrelation`, `por1ProductionIncidentRecovery`) can only
+// ever reach QUALIFIED: "a human should look at this". It cannot establish that an account was
+// synthetic, because nothing Production kept records which run created an account. This module is
+// the other half — a human decision, authenticated well enough that no process can forge it.
 //
-// So the architecture stopped pretending. Evidence and authority are now two layers, and this is the
-// second one:
+// THREE MODELS WERE REJECTED BEFORE THIS ONE.
 //
-//   LAYER A — `por1HistoricalIncidentCorrelation` + `por1ProductionIncidentRecovery`. Fail-closed
-//             machine evidence. Its best possible answer is QUALIFIED: "every condition the data can
-//             express holds, so a human should look at this." It can refuse. It cannot authorise.
+//   v1  ordinary JSON carrying `reviewedBy: "founder"`. An execution agent with filesystem access
+//       writes that file. An assertion, not authority.
+//   v2  the same document with a signature requirement bolted on, but replay-protected by
+//       `singleUseNonce` checked against `spentNonces: new Set()` — a process-local empty set, which
+//       forgets everything the moment the process starts. Not replay protection at all.
+//   v3  this one. Authority is bound to ONE EXECUTION, by a challenge that execution generates.
 //
-//   LAYER B — this module. A single-use artifact recording that a named human reviewed a specific
-//             candidate set, at a specific source revision, under a specific incident contract, and
-//             decided to permit one destructive run anyway.
+// HOW v3 BINDS.
 //
-// The distinction is the whole point. Layer A states a fact about data. Layer B states a decision by
-// a person, and says so in its own basis field. An artifact that claimed the first while doing the
-// second would be the same error in a new costume, so `authorityBasis` is a literal that can only
-// hold one value and `validateFounderAuthority` refuses anything else.
+// When a destructive run begins it generates a fresh 256-bit `executionChallengeNonce` in memory. The
+// canonical payload includes it, so the Founder's signature covers it, so the signature is meaningful
+// only inside the process that produced it. A second invocation generates a different challenge and
+// therefore needs a new signature. There is no store to consult and nothing to replay: the challenge
+// cannot arrive from a CLI flag, an environment variable, a file, or a previous run, and no code path
+// accepts one from outside.
 //
-// WHAT THIS MODULE DELIBERATELY DOES NOT DO. It does not mint artifacts. There is no signing key, no
-// generator, no `--issue` flag, and no default. It only ever evaluates one that already exists, and
-// in the absence of one the answer is NONE. That absence is the current shipped state.
+// The payload also binds the world the Founder reviewed — the tool's git HEAD, the Production
+// deployment's own account of itself, the capability states, the exact candidate set. Every one of
+// those is re-read after the signature and before the first destructive call; any difference is
+// `FOUNDER_AUTHORITY_CONTEXT_CHANGED` and nothing runs.
 //
-// WHAT AN AUDIT REJECTED, AND WHAT REPLACED IT.
+// WHAT SIGNS. A Secure Enclave P-256 key enrolled with `.biometryCurrentSet` (see
+// `tools/por1-founder-signer`). The private half is generated in the SEP, never exportable, and
+// requires a fingerprint at the moment of signing. This module only ever VERIFIES: it imports no
+// signing primitive, holds no key material and reads no environment.
 //
-// The first version of this module accepted an ordinary JSON file carrying `reviewedBy: "founder"`
-// and `authorityBasis: FOUNDER_REVIEWED_INCIDENT_OVERRIDE`. An independent audit pointed out the
-// obvious: an execution agent with filesystem access can write that file. Schema validation on a
-// self-asserted document validates nothing about who asserted it.
-//
-// Authority now requires a CRYPTOGRAPHIC SIGNATURE over a canonical serialisation of the payload,
-// verified against a public key pinned in `POR1_FOUNDER_AUTHORITY_KEY_ROSTER`. The corresponding
-// private key is a Secure Enclave P-256 key that requires a fingerprint to use (see
-// `tools/por1-founder-signer`). No agent can produce that signature, because no agent can read the
-// key or press the sensor.
-//
-// THE ROSTER IS CURRENTLY EMPTY, AND THAT IS THE SHIPPED STATE.
-// Enrolling is a FOUNDER action, not an engineering one: they run `enroll` on their own machine and
-// the printed public key is pinned here in a reviewed change. The primitive itself is available —
-// `SecureEnclave.P256.Signing.PrivateKey` needs no entitlement and no signing identity, verified on
-// this host across two processes (see the helper's README). With an empty roster no signature can
-// verify and `evaluateFounderAuthority` refuses everything by name, which is the correct state until
-// a human decides otherwise.
-//
-// NO IDENTITY LIVES HERE. Candidates are named by opaque full sha256 authority fingerprints — never
-// by account id, job id or address.
+// THE ROSTER IS EMPTY, BY DESIGN. Enrolling is a Founder action taken after review, not part of
+// building this. With an empty roster nothing verifies and destructive authority is NONE.
 
-/** Bumped whenever the artifact's shape or binding rules change. */
-export const POR1_INCIDENT_AUTHORITY_VERSION = "por1-incident-authority-v2";
+import { createPublicKey, verify as verifySignature } from "node:crypto";
+
+export const POR1_INCIDENT_AUTHORITY_VERSION = "por1-incident-authority-v3";
 
 /**
  * An interactive authorization may not outlive the review that produced it.
  *
- * Fifteen minutes is short enough that the Production state a Founder read on screen is still the
- * Production state at execution, and long enough to read a candidate list carefully.
+ * Short enough that the Production state a Founder read on screen is still the Production state at
+ * execution; long enough to read a candidate list properly.
  */
 export const POR1_AUTHORITY_MAX_TTL_MS = 15 * 60 * 1000;
 
-/** A Founder verification key, pinned in reviewed source. Public halves only, obviously. */
-export type PinnedFounderKey = {
-  /** Names the enrolled Secure Enclave key this public half belongs to. */
-  keyId: string;
-  /** Base64 X9.63 uncompressed P-256 point (0x04 || X || Y), as the helper prints it. */
-  publicKeyX963Base64: string;
-};
+/** The ONLY basis a valid artifact may declare — never a claim about history. */
+export const FOUNDER_REVIEWED_INCIDENT_OVERRIDE = "FOUNDER_REVIEWED_INCIDENT_OVERRIDE" as const;
+
+export type PinnedFounderKey = { keyId: string; publicKeyX963Base64: string };
 
 /**
  * The pinned Founder verification keys.
  *
- * EMPTY BY DESIGN AND BY CIRCUMSTANCE. Empty means no signature can verify, which means destructive
- * authority is NONE — the correct and intended state until a Founder enrolls a Secure Enclave key on
- * a host that can persist one and pins its public half here in a reviewed change.
- *
- * A software-generated key must never be added. The whole boundary rests on the private half being
- * unreachable to any process, and a software key is a file. Only a public key printed by
- * `por1-founder-signer enroll` — whose private half is sealed in the Secure Enclave and gated on a
- * fingerprint — belongs here.
+ * EMPTY BY DESIGN. A software-generated key must never be added: the boundary rests on the private
+ * half being unreachable to any process, and a software key is a file. Only a public key printed by
+ * `por1-founder-signer enroll` belongs here, pinned in a reviewed change after a Founder decision.
  */
 export const POR1_FOUNDER_AUTHORITY_KEY_ROSTER: readonly PinnedFounderKey[] = [];
 
-/**
- * The ONLY basis a valid artifact may declare.
- *
- * Written as a literal so the type system refuses the sentence nobody is entitled to write —
- * that a human decision established a historical fact.
- */
-export const FOUNDER_REVIEWED_INCIDENT_OVERRIDE = "FOUNDER_REVIEWED_INCIDENT_OVERRIDE" as const;
-
-export type FounderIncidentAuthority = {
-  version: string;
-  /** Must be `FOUNDER_REVIEWED_INCIDENT_OVERRIDE`. Never a claim about history. */
+/** Exactly the bytes a Founder signs. No field here may be absent at signing time. */
+export type FounderAuthorityPayload = {
+  authorityVersion: string;
   authorityBasis: typeof FOUNDER_REVIEWED_INCIDENT_OVERRIDE;
-
-  /** The incident contract the review was conducted against. */
   incidentEvidenceVersion: string;
-  /** The exact source revision reviewed. A different build is a different tool. */
-  sourceCommitSha: string;
-
-  /**
-   * The reviewed candidate set, as opaque fingerprints. Sorted, deduplicated, and matched EXACTLY —
-   * a set that gained or lost a member is not the set that was reviewed.
-   */
-  reviewedCandidateFingerprints: string[];
-  /** Restated so a truncated or padded list cannot pass as the reviewed one. */
-  reviewedCandidateCount: number;
-
-  /** Who reviewed it, as a role rather than a person's contact details. */
-  reviewedBy: string;
+  productionProjectRef: string;
+  recoveryToolSourceCommitSha: string;
+  productionDeploymentCommitSha: string;
+  productionEnvironment: string;
+  productionAccountDeletionExecutor: boolean;
+  productionErasureAuthoritySchemaReady: boolean;
+  populationSafetyCeiling: number;
+  qualifiedCandidateCount: number;
+  /** Full lowercase sha256 of each job id. Sorted, unique. */
+  qualifiedCandidateAuthorityFingerprints: readonly string[];
   issuedAt: string;
   expiresAt: string;
-
-  /** Single-use. Replaying a spent artifact is not a second decision. */
-  singleUseNonce: string;
-
-  /** Which pinned key signed this. */
-  signingKeyId: string;
-  /** Base64 DER ECDSA-P256-SHA256 over `canonicalAuthorityPayload(artifact)`. */
-  signature: string;
-
-  /** The executor state the reviewer saw. A capability that changed invalidates the review. */
-  observedExecutorState: "off" | "on";
+  /** Generated inside the executing process. Never supplied from outside. */
+  executionChallengeNonce: string;
+  reviewedBy: string;
 };
 
-/** Everything the runtime must show to be allowed to spend an artifact. */
+export type FounderIncidentAuthority = {
+  payload: FounderAuthorityPayload;
+  signingKeyId: string;
+  /** Base64 DER ECDSA-P256-SHA256 over `canonicalAuthorityPayload(payload)`. */
+  signature: string;
+};
+
+/** What the runtime observes right now. Every field is compared against the signed payload. */
 export type AuthorityEvaluationContext = {
-  /** The build actually running. */
-  currentSourceCommitSha: string;
-  /** The contract the candidates were gathered under. */
-  currentIncidentEvidenceVersion: string;
-  /** Fingerprints of the candidates Layer A qualified, right now. */
-  qualifiedCandidateFingerprints: string[];
-  /** The pinned blast-radius control from the incident contract. */
+  incidentEvidenceVersion: string;
+  productionProjectRef: string;
+  recoveryToolSourceCommitSha: string;
+  productionDeploymentCommitSha: string;
+  productionEnvironment: string;
+  productionAccountDeletionExecutor: boolean;
+  productionErasureAuthoritySchemaReady: boolean;
   populationSafetyCeiling: number;
-  /** The executor capability as the runtime currently sees it. */
-  currentExecutorState: "off" | "on";
-  /** Nonces already spent, so a replay is refused. */
-  spentNonces: ReadonlySet<string>;
-  /** The pinned Founder verification keys. Injectable so tests can pin a test key. */
+  qualifiedCandidateAuthorityFingerprints: readonly string[];
+  /** The challenge THIS process generated. */
+  executionChallengeNonce: string;
   founderKeyRoster: readonly PinnedFounderKey[];
-  /** Now, injected so expiry is testable without a clock. */
   now: number;
 };
 
 export type AuthorityDecision =
-  | { permitted: true; nonce: string }
-  | {
-      permitted: false;
-      reason:
-        | "no_authority_artifact_supplied"
-        | "authority_version_mismatch"
-        | "authority_basis_invalid"
-        | "incident_evidence_version_mismatch"
-        | "source_commit_mismatch"
-        | "candidate_set_differs_from_reviewed"
-        | "reviewed_count_inconsistent"
-        | "reviewed_count_exceeds_population_ceiling"
-        | "executor_state_changed_since_review"
-        | "authority_window_unparseable"
-        | "authority_not_yet_valid"
-        | "authority_expired"
-        | "authority_already_spent"
-        | "reviewer_unattributed"
-        | "no_founder_key_enrolled"
-        | "signature_absent"
-        | "signing_key_unknown"
-        | "signature_invalid"
-        | "authority_fingerprint_not_full_sha256"
-        | "authority_ttl_above_maximum";
-    };
+  | { permitted: true }
+  | { permitted: false; reason: AuthorityRefusal };
 
-import { createPublicKey, verify as verifySignature } from "node:crypto";
+export type AuthorityRefusal =
+  | "no_authority_artifact_supplied"
+  | "no_founder_key_enrolled"
+  | "signature_absent"
+  | "signing_key_unknown"
+  | "signature_invalid"
+  | "authority_version_mismatch"
+  | "authority_basis_invalid"
+  | "reviewer_unattributed"
+  | "execution_challenge_mismatch"
+  | "execution_challenge_too_weak"
+  | "incident_evidence_version_mismatch"
+  | "production_project_ref_mismatch"
+  | "recovery_tool_source_mismatch"
+  | "production_deployment_mismatch"
+  | "production_environment_mismatch"
+  | "production_executor_state_mismatch"
+  | "production_erasure_readiness_mismatch"
+  | "population_safety_ceiling_mismatch"
+  | "authority_fingerprint_not_full_sha256"
+  | "candidate_set_differs_from_reviewed"
+  | "reviewed_count_inconsistent"
+  | "reviewed_count_exceeds_population_ceiling"
+  | "authority_window_unparseable"
+  | "authority_ttl_above_maximum"
+  | "authority_not_yet_valid"
+  | "authority_expired";
 
 const ZONED = /(?:Z|[+-]\d{2}:?\d{2})$/;
-const FULL_SHA = /^[0-9a-f]{40}$/;
-/** Candidate identity in a SIGNED payload is a full sha256 — 48 display bits is not an identity. */
 const AUTHORITY_FINGERPRINT = /^[0-9a-f]{64}$/;
-
-/** The fixed SPKI prefix for an uncompressed P-256 point, so node can import the helper's X9.63. */
+/** 256 bits, hex. Anything shorter is not a challenge. */
+const CHALLENGE = /^[0-9a-f]{64}$/;
 const P256_SPKI_PREFIX = Buffer.from(
   "3059301306072a8648ce3d020106082a8648ce3d030107034200",
   "hex",
 );
 
+function instant(value: string): number | null {
+  if (typeof value !== "string" || !ZONED.test(value.trim())) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function sameSet(a: readonly string[], b: readonly string[]): boolean {
+  const left = [...new Set(a)].sort();
+  const right = [...new Set(b)].sort();
+  return left.length === right.length && left.every((v, i) => v === right[i]);
+}
+
 /**
  * Serialise the payload deterministically.
  *
  * Field order is fixed here rather than taken from object iteration, and the candidate set is sorted
- * and deduplicated, so the same decision always produces the same bytes and any byte-significant
- * change produces a different signature. `signature` and `signingKeyId` are excluded — they wrap the
- * payload rather than belonging to it.
+ * and deduplicated, so the same decision always yields the same bytes and any byte-significant change
+ * yields a different signature.
  */
-export function canonicalAuthorityPayload(artifact: FounderIncidentAuthority): string {
+export function canonicalAuthorityPayload(payload: FounderAuthorityPayload): string {
   return JSON.stringify([
-    artifact.version,
-    artifact.authorityBasis,
-    artifact.incidentEvidenceVersion,
-    artifact.sourceCommitSha,
-    [...new Set(artifact.reviewedCandidateFingerprints)].sort(),
-    artifact.reviewedCandidateCount,
-    artifact.reviewedBy,
-    artifact.issuedAt,
-    artifact.expiresAt,
-    artifact.singleUseNonce,
-    artifact.observedExecutorState,
+    payload.authorityVersion,
+    payload.authorityBasis,
+    payload.incidentEvidenceVersion,
+    payload.productionProjectRef,
+    payload.recoveryToolSourceCommitSha,
+    payload.productionDeploymentCommitSha,
+    payload.productionEnvironment,
+    payload.productionAccountDeletionExecutor,
+    payload.productionErasureAuthoritySchemaReady,
+    payload.populationSafetyCeiling,
+    payload.qualifiedCandidateCount,
+    [...new Set(payload.qualifiedCandidateAuthorityFingerprints)].sort(),
+    payload.issuedAt,
+    payload.expiresAt,
+    payload.executionChallengeNonce,
+    payload.reviewedBy,
   ]);
 }
 
-/**
- * Verify the artifact's signature against a pinned key.
- *
- * Returns false for every failure — unknown key id, malformed key material, malformed signature,
- * wrong signer. There is no path that treats a verification error as success.
- */
+/** Verify against a pinned key. Every failure — unknown id, bad key, bad signature — returns false. */
 export function verifyFounderSignature(
   artifact: FounderIncidentAuthority,
   roster: readonly PinnedFounderKey[] = POR1_FOUNDER_AUTHORITY_KEY_ROSTER,
@@ -227,7 +200,6 @@ export function verifyFounderSignature(
   if (!pinned) return false;
   try {
     const point = Buffer.from(pinned.publicKeyX963Base64, "base64");
-    // 0x04 || X(32) || Y(32). Anything else is not a P-256 public point.
     if (point.length !== 65 || point[0] !== 0x04) return false;
     const publicKey = createPublicKey({
       key: Buffer.concat([P256_SPKI_PREFIX, point]),
@@ -236,7 +208,7 @@ export function verifyFounderSignature(
     });
     return verifySignature(
       "sha256",
-      Buffer.from(canonicalAuthorityPayload(artifact), "utf8"),
+      Buffer.from(canonicalAuthorityPayload(artifact.payload), "utf8"),
       publicKey,
       Buffer.from(artifact.signature, "base64"),
     );
@@ -245,25 +217,13 @@ export function verifyFounderSignature(
   }
 }
 
-function instant(value: string): number | null {
-  if (typeof value !== "string" || !ZONED.test(value.trim())) return null;
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-/** Order-insensitive, duplicate-insensitive set comparison over opaque fingerprints. */
-function sameSet(a: readonly string[], b: readonly string[]): boolean {
-  const left = [...new Set(a)].sort();
-  const right = [...new Set(b)].sort();
-  return left.length === right.length && left.every((value, index) => value === right[index]);
-}
-
 /**
  * Decide whether a destructive run is permitted.
  *
- * Every branch returns `permitted: false` except one, and that one requires an artifact somebody
- * deliberately produced. `null` — the shipped state — is refused first and by name, so "there is no
- * authority" reads differently in a log from "the authority did not check out".
+ * Authentication first, so a forged artifact is refused as unauthenticated rather than on whichever
+ * field happened to disagree. Then the challenge, because a signature that does not name THIS
+ * execution is someone else's decision. Then every bound fact, compared against what the runtime
+ * observes right now.
  */
 export function evaluateFounderAuthority(
   artifact: FounderIncidentAuthority | null,
@@ -271,76 +231,87 @@ export function evaluateFounderAuthority(
 ): AuthorityDecision {
   if (!artifact) return { permitted: false, reason: "no_authority_artifact_supplied" };
 
-  // ── AUTHENTICATION, before anything else is even read as meaningful. ──────
-  //
-  // An unsigned document is not a weak authorization; it is not an authorization. Checking this
-  // first means a forged artifact is refused as unauthenticated rather than for whichever incidental
-  // field happened to disagree.
   if (context.founderKeyRoster.length === 0) {
     return { permitted: false, reason: "no_founder_key_enrolled" };
   }
   if (typeof artifact.signature !== "string" || artifact.signature.trim() === "") {
     return { permitted: false, reason: "signature_absent" };
   }
-  if (!context.founderKeyRoster.some((key) => key.keyId === artifact.signingKeyId)) {
+  if (!context.founderKeyRoster.some((k) => k.keyId === artifact.signingKeyId)) {
     return { permitted: false, reason: "signing_key_unknown" };
   }
   if (!verifyFounderSignature(artifact, context.founderKeyRoster)) {
     return { permitted: false, reason: "signature_invalid" };
   }
 
-  if (artifact.version !== POR1_INCIDENT_AUTHORITY_VERSION) {
+  const p = artifact.payload;
+  if (p.authorityVersion !== POR1_INCIDENT_AUTHORITY_VERSION) {
     return { permitted: false, reason: "authority_version_mismatch" };
   }
-  // A human decision may not be relabelled as a historical finding.
-  if (artifact.authorityBasis !== FOUNDER_REVIEWED_INCIDENT_OVERRIDE) {
+  if (p.authorityBasis !== FOUNDER_REVIEWED_INCIDENT_OVERRIDE) {
     return { permitted: false, reason: "authority_basis_invalid" };
   }
-  if (typeof artifact.reviewedBy !== "string" || artifact.reviewedBy.trim() === "") {
+  if (typeof p.reviewedBy !== "string" || p.reviewedBy.trim() === "") {
     return { permitted: false, reason: "reviewer_unattributed" };
   }
-  if (artifact.incidentEvidenceVersion !== context.currentIncidentEvidenceVersion) {
-    return { permitted: false, reason: "incident_evidence_version_mismatch" };
+
+  // ── THE PROCESS BINDING. A signature from another invocation dies here. ───
+  if (!CHALLENGE.test(context.executionChallengeNonce)) {
+    return { permitted: false, reason: "execution_challenge_too_weak" };
   }
-  if (
-    !FULL_SHA.test(artifact.sourceCommitSha) ||
-    artifact.sourceCommitSha !== context.currentSourceCommitSha
-  ) {
-    return { permitted: false, reason: "source_commit_mismatch" };
+  if (p.executionChallengeNonce !== context.executionChallengeNonce) {
+    return { permitted: false, reason: "execution_challenge_mismatch" };
   }
 
-  // The reviewed set and the executed set must be the SAME SET, not merely the same size. A count
-  // cannot tell "the two historical objects" from "one historical object and something else".
-  // Full sha256 only. A 48-bit display prefix is for humans reading logs; it is far too short to
-  // name what may be destroyed.
-  if (
-    artifact.reviewedCandidateFingerprints.length === 0 ||
-    !artifact.reviewedCandidateFingerprints.every((value) => AUTHORITY_FINGERPRINT.test(value))
-  ) {
+  if (p.incidentEvidenceVersion !== context.incidentEvidenceVersion) {
+    return { permitted: false, reason: "incident_evidence_version_mismatch" };
+  }
+  if (p.productionProjectRef !== context.productionProjectRef) {
+    return { permitted: false, reason: "production_project_ref_mismatch" };
+  }
+  if (p.recoveryToolSourceCommitSha !== context.recoveryToolSourceCommitSha) {
+    return { permitted: false, reason: "recovery_tool_source_mismatch" };
+  }
+  if (p.productionDeploymentCommitSha !== context.productionDeploymentCommitSha) {
+    return { permitted: false, reason: "production_deployment_mismatch" };
+  }
+  if (p.productionEnvironment !== context.productionEnvironment || p.productionEnvironment !== "production") {
+    return { permitted: false, reason: "production_environment_mismatch" };
+  }
+  // Signed as false AND observed as false. A capability that came on since review invalidates it.
+  if (p.productionAccountDeletionExecutor !== context.productionAccountDeletionExecutor ||
+      p.productionAccountDeletionExecutor !== false) {
+    return { permitted: false, reason: "production_executor_state_mismatch" };
+  }
+  if (p.productionErasureAuthoritySchemaReady !== context.productionErasureAuthoritySchemaReady ||
+      p.productionErasureAuthoritySchemaReady !== true) {
+    return { permitted: false, reason: "production_erasure_readiness_mismatch" };
+  }
+  if (p.populationSafetyCeiling !== context.populationSafetyCeiling) {
+    return { permitted: false, reason: "population_safety_ceiling_mismatch" };
+  }
+
+  // Full sha256 only. A 48-bit display prefix is for humans reading logs.
+  const fingerprints = p.qualifiedCandidateAuthorityFingerprints;
+  if (fingerprints.length === 0 || !fingerprints.every((v) => AUTHORITY_FINGERPRINT.test(v))) {
     return { permitted: false, reason: "authority_fingerprint_not_full_sha256" };
   }
-  if (!context.qualifiedCandidateFingerprints.every((value) => AUTHORITY_FINGERPRINT.test(value))) {
+  if (!context.qualifiedCandidateAuthorityFingerprints.every((v) => AUTHORITY_FINGERPRINT.test(v))) {
     return { permitted: false, reason: "authority_fingerprint_not_full_sha256" };
   }
-  if (!sameSet(artifact.reviewedCandidateFingerprints, context.qualifiedCandidateFingerprints)) {
+  if (!sameSet(fingerprints, context.qualifiedCandidateAuthorityFingerprints)) {
     return { permitted: false, reason: "candidate_set_differs_from_reviewed" };
   }
-  if (
-    !Number.isInteger(artifact.reviewedCandidateCount) ||
-    artifact.reviewedCandidateCount !== new Set(artifact.reviewedCandidateFingerprints).size
-  ) {
+  if (!Number.isInteger(p.qualifiedCandidateCount) ||
+      p.qualifiedCandidateCount !== new Set(fingerprints).size) {
     return { permitted: false, reason: "reviewed_count_inconsistent" };
   }
-  if (artifact.reviewedCandidateCount > context.populationSafetyCeiling) {
+  if (p.qualifiedCandidateCount > context.populationSafetyCeiling) {
     return { permitted: false, reason: "reviewed_count_exceeds_population_ceiling" };
   }
 
-  if (artifact.observedExecutorState !== context.currentExecutorState) {
-    return { permitted: false, reason: "executor_state_changed_since_review" };
-  }
-
-  const issuedAt = instant(artifact.issuedAt);
-  const expiresAt = instant(artifact.expiresAt);
+  const issuedAt = instant(p.issuedAt);
+  const expiresAt = instant(p.expiresAt);
   if (issuedAt === null || expiresAt === null || expiresAt <= issuedAt) {
     return { permitted: false, reason: "authority_window_unparseable" };
   }
@@ -350,69 +321,80 @@ export function evaluateFounderAuthority(
   if (context.now < issuedAt) return { permitted: false, reason: "authority_not_yet_valid" };
   if (context.now > expiresAt) return { permitted: false, reason: "authority_expired" };
 
-  if (
-    typeof artifact.singleUseNonce !== "string" ||
-    artifact.singleUseNonce.trim() === "" ||
-    context.spentNonces.has(artifact.singleUseNonce)
-  ) {
-    return { permitted: false, reason: "authority_already_spent" };
-  }
-
-  return { permitted: true, nonce: artifact.singleUseNonce };
+  return { permitted: true };
 }
 
 /**
- * Parse an artifact from operator-supplied JSON.
+ * The TOCTOU gate. Run after the signature verifies and before the first destructive call.
  *
- * Structural only — every binding rule is `evaluateFounderAuthority`'s job. Returns null on anything
- * unexpected, and null is refused by name, so a malformed artifact can never read as a valid one.
+ * A signature attests to a world. If that world moved while the Founder was reading, the attestation
+ * describes something that no longer exists — so the comparison is over the whole bound context, not
+ * a chosen subset, and any difference stops everything.
+ */
+export function revalidateSignedContext(
+  signed: FounderAuthorityPayload,
+  observed: Omit<AuthorityEvaluationContext, "founderKeyRoster" | "now">,
+): { unchanged: true } | { unchanged: false; reason: "FOUNDER_AUTHORITY_CONTEXT_CHANGED"; field: string } {
+  const comparisons: Array<[string, unknown, unknown]> = [
+    ["incidentEvidenceVersion", signed.incidentEvidenceVersion, observed.incidentEvidenceVersion],
+    ["productionProjectRef", signed.productionProjectRef, observed.productionProjectRef],
+    ["recoveryToolSourceCommitSha", signed.recoveryToolSourceCommitSha, observed.recoveryToolSourceCommitSha],
+    ["productionDeploymentCommitSha", signed.productionDeploymentCommitSha, observed.productionDeploymentCommitSha],
+    ["productionEnvironment", signed.productionEnvironment, observed.productionEnvironment],
+    ["productionAccountDeletionExecutor", signed.productionAccountDeletionExecutor, observed.productionAccountDeletionExecutor],
+    ["productionErasureAuthoritySchemaReady", signed.productionErasureAuthoritySchemaReady, observed.productionErasureAuthoritySchemaReady],
+    ["populationSafetyCeiling", signed.populationSafetyCeiling, observed.populationSafetyCeiling],
+    ["executionChallengeNonce", signed.executionChallengeNonce, observed.executionChallengeNonce],
+  ];
+  for (const [field, a, b] of comparisons) {
+    if (a !== b) return { unchanged: false, reason: "FOUNDER_AUTHORITY_CONTEXT_CHANGED", field };
+  }
+  if (!sameSet(signed.qualifiedCandidateAuthorityFingerprints, observed.qualifiedCandidateAuthorityFingerprints)) {
+    return {
+      unchanged: false,
+      reason: "FOUNDER_AUTHORITY_CONTEXT_CHANGED",
+      field: "qualifiedCandidateAuthorityFingerprints",
+    };
+  }
+  return { unchanged: true };
+}
+
+/**
+ * Parse an operator-supplied artifact. Structural only; every binding rule belongs to
+ * `evaluateFounderAuthority`. Returns null on anything unexpected, and null is refused by name.
  */
 export function parseFounderAuthority(raw: unknown): FounderIncidentAuthority | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
+  const payload = record.payload;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const p = payload as Record<string, unknown>;
 
-  const text = (key: string) => (typeof record[key] === "string" ? (record[key] as string) : null);
-  const fingerprints = record.reviewedCandidateFingerprints;
-  if (!Array.isArray(fingerprints) || !fingerprints.every((value) => typeof value === "string")) {
-    return null;
-  }
-  const executorState = record.observedExecutorState;
-  if (executorState !== "off" && executorState !== "on") return null;
-  if (typeof record.reviewedCandidateCount !== "number") return null;
-
-  const required = [
-    "version",
-    "authorityBasis",
-    "signingKeyId",
-    "signature",
-    "incidentEvidenceVersion",
-    "sourceCommitSha",
-    "reviewedBy",
-    "issuedAt",
-    "expiresAt",
-    "singleUseNonce",
-  ] as const;
-  for (const key of required) if (text(key) === null) return null;
-
-  // An artifact carrying identity would be a new place for identity to leak, so it is refused
-  // outright rather than trimmed.
-  for (const value of fingerprints) {
+  const fingerprints = p.qualifiedCandidateAuthorityFingerprints;
+  if (!Array.isArray(fingerprints) || !fingerprints.every((v) => typeof v === "string")) return null;
+  // Identity must never travel in an authority artifact.
+  for (const value of fingerprints as string[]) {
     if (value.includes("@") || value.startsWith("acct_")) return null;
   }
+  for (const key of [
+    "authorityVersion", "authorityBasis", "incidentEvidenceVersion", "productionProjectRef",
+    "recoveryToolSourceCommitSha", "productionDeploymentCommitSha", "productionEnvironment",
+    "issuedAt", "expiresAt", "executionChallengeNonce", "reviewedBy",
+  ]) if (typeof p[key] !== "string") return null;
+  for (const key of ["productionAccountDeletionExecutor", "productionErasureAuthoritySchemaReady"]) {
+    if (typeof p[key] !== "boolean") return null;
+  }
+  for (const key of ["populationSafetyCeiling", "qualifiedCandidateCount"]) {
+    if (typeof p[key] !== "number") return null;
+  }
+  if (typeof record.signingKeyId !== "string" || typeof record.signature !== "string") return null;
 
   return {
-    version: text("version") as string,
-    authorityBasis: text("authorityBasis") as typeof FOUNDER_REVIEWED_INCIDENT_OVERRIDE,
-    incidentEvidenceVersion: text("incidentEvidenceVersion") as string,
-    sourceCommitSha: text("sourceCommitSha") as string,
-    reviewedCandidateFingerprints: fingerprints as string[],
-    reviewedCandidateCount: record.reviewedCandidateCount as number,
-    reviewedBy: text("reviewedBy") as string,
-    issuedAt: text("issuedAt") as string,
-    expiresAt: text("expiresAt") as string,
-    singleUseNonce: text("singleUseNonce") as string,
-    observedExecutorState: executorState,
-    signingKeyId: text("signingKeyId") as string,
-    signature: text("signature") as string,
+    payload: {
+      ...(p as unknown as FounderAuthorityPayload),
+      qualifiedCandidateAuthorityFingerprints: fingerprints as string[],
+    },
+    signingKeyId: record.signingKeyId,
+    signature: record.signature,
   };
 }

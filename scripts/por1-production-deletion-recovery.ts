@@ -52,7 +52,8 @@
 //
 // It is deliberately NOT run against Production by the package that introduced it.
 
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 import { buildDeletionManifest } from "../lib/server/accountIdentityDeletion";
@@ -61,7 +62,14 @@ import { emailIdentityDigest, identityOwnerFingerprint } from "../lib/server/can
 import {
   parseFounderAuthority,
   POR1_FOUNDER_AUTHORITY_KEY_ROSTER,
+  POR1_INCIDENT_AUTHORITY_VERSION,
 } from "../lib/server/por1FounderIncidentAuthority";
+import {
+  parseProductionBuildIdentity,
+  readLocalSourceIdentity,
+  validateLocalSourceIdentity,
+  validateProductionBuildIdentity,
+} from "../lib/server/por1RecoveryExecutionContext";
 import {
   classifyIncidentCandidate,
   isUnroutableReservedAddress,
@@ -171,6 +179,23 @@ const fingerprint = (value: string) => authorityFingerprint(value).slice(0, 12);
  * `no_authority_artifact_supplied` — so "nobody has decided this" never looks like "the check
  * passed". No artifact ships with this repository.
  */
+/**
+ * Ask the deployed Production application what it is, rather than trusting a local copy of a flag.
+ *
+ * Any failure — unreachable, non-200, malformed — is reported as unreachable/malformed and refused
+ * upstream. There is no default.
+ */
+async function readProductionBuildIdentity() {
+  const base = (process.env.YORISOU_PRODUCTION_BASE_URL ?? "https://yorisou.online").replace(/\/$/, "");
+  try {
+    const response = await fetch(`${base}/api/build-identity`, { cache: "no-store" });
+    if (!response.ok) return { reachable: false, identity: null };
+    return { reachable: true, identity: parseProductionBuildIdentity(await response.json()) };
+  } catch {
+    return { reachable: false, identity: null };
+  }
+}
+
 function loadFounderAuthority() {
   const path = flagValue("--founder-authority");
   if (!path) return null;
@@ -408,19 +433,48 @@ async function main() {
 
   const selection = selectIncidentCandidates(rows, { maxCandidates: ceiling ?? -1 });
 
-  // LAYER B. Read only — there is no `--issue`, no signing key and no default. Absent means NONE.
-  const authority = resolveDestructiveAuthority(selection, loadFounderAuthority(), {
-    currentSourceCommitSha: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").trim(),
-    currentIncidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
+  // ── LAYER B. Authority, bound to THIS execution. ────────────────────────
+  //
+  // The challenge is generated here, in memory, and nowhere else. It is not a flag, not an
+  // environment variable and not a file, so a signature produced for a previous invocation names a
+  // different execution and cannot be replayed into this one.
+  const executionChallengeNonce = randomBytes(32).toString("hex");
+
+  // Source identity from git, not from a build-time environment variable that says nothing about
+  // which code is actually running.
+  const source = readLocalSourceIdentity((command, args) => {
+    try {
+      return { status: 0, stdout: execFileSync(command, [...args], { encoding: "utf8" }) };
+    } catch {
+      return { status: 1, stdout: "" };
+    }
+  });
+  const sourceDefects = validateLocalSourceIdentity(source, "yorisou-online");
+  if (sourceDefects.length > 0) {
+    fail(`RECOVERY_SOURCE_CONTEXT_CHANGED: ${sourceDefects.join(", ")}`);
+  }
+
+  // Production's own account of itself, asked of Production.
+  const production = await readProductionBuildIdentity();
+  const productionDefects = validateProductionBuildIdentity(production.identity, production.reachable);
+  if (productionDefects.length > 0) {
+    fail(`production build identity refused: ${productionDefects.join(", ")}`);
+  }
+
+  const authorityContext = {
+    incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
+    productionProjectRef: POR1_PRODUCTION_DELETION_INCIDENT.productionProjectRef,
+    recoveryToolSourceCommitSha: source!.headCommitSha,
+    productionDeploymentCommitSha: production.identity!.commitSha,
+    productionEnvironment: production.identity!.environment,
+    productionAccountDeletionExecutor: production.identity!.accountDeletionExecutor,
+    productionErasureAuthoritySchemaReady: production.identity!.erasureAuthoritySchemaReady,
     populationSafetyCeiling: POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling,
-    currentExecutorState:
-      (process.env.YORISOU_POR1_ACCOUNT_DELETION_EXECUTOR ?? "").trim() === "on" ? "on" : "off",
-    spentNonces: new Set<string>(),
-    // The pinned Founder verification keys. Empty on this revision, so nothing can verify and the
-    // decision below is NONE regardless of what any file on disk claims.
+    executionChallengeNonce,
     founderKeyRoster: POR1_FOUNDER_AUTHORITY_KEY_ROSTER,
     now: Date.now(),
-  });
+  };
+  const authority = resolveDestructiveAuthority(selection, loadFounderAuthority(), authorityContext);
 
   console.log(
     JSON.stringify({
@@ -439,6 +493,8 @@ async function main() {
       incidentCorrelation: selection.reviewReady ? "QUALIFIED" : "NOT_QUALIFIED",
       syntheticMembership: "NOT_MACHINE_PROVABLE",
       destructiveAuthority: authority.permitted ? "GRANTED" : `NONE (${authority.reason})`,
+      // Printed so a dry run shows WHICH execution any signature would have to name.
+      executionChallengeDigest: createHash("sha256").update(executionChallengeNonce).digest("hex").slice(0, 12),
     }),
   );
 

@@ -77,12 +77,18 @@ test("the ceiling cannot distinguish {A,B} from {A,C} — both are a population 
 });
 
 test("so neither population may be destroyed on the strength of the count", () => {
+  // The v3 authority context. Every bound fact is present and consistent, so the ONLY thing missing
+  // is a Founder decision — which is exactly what this test is about.
   const context = {
-    currentSourceCommitSha: "e".repeat(40),
-    currentIncidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
+    incidentEvidenceVersion: POR1_INCIDENT_EVIDENCE_VERSION,
+    productionProjectRef: POR1_PRODUCTION_DELETION_INCIDENT.productionProjectRef,
+    recoveryToolSourceCommitSha: "e".repeat(40),
+    productionDeploymentCommitSha: "f".repeat(40),
+    productionEnvironment: "production",
+    productionAccountDeletionExecutor: false,
+    productionErasureAuthoritySchemaReady: true,
     populationSafetyCeiling: POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling,
-    currentExecutorState: "off" as const,
-    spentNonces: new Set<string>(),
+    executionChallengeNonce: "a".repeat(64),
     founderKeyRoster: [],
     now: Date.parse("2026-08-12T00:00:00.000Z"),
   };

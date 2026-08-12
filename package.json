@@ -63,6 +63,7 @@
     "test:por1-incident-recovery": "node --import tsx --test lib/server/__tests__/por1ProductionIncidentRecovery.test.ts",
   "test:por1-incident-correlation": "node --import tsx --test lib/server/__tests__/por1HistoricalIncidentCorrelation.test.ts",
   "test:por1-founder-authority": "node --import tsx --test lib/server/__tests__/por1FounderIncidentAuthority.test.ts",
+  "test:por1-secure-enclave": "bash tests/por1/secure-enclave-two-process.sh",
   "test:por1-population-semantics": "node --import tsx --test lib/server/__tests__/por1IncidentPopulationSemantics.test.ts",
   "test:por1-incident-evidence": "node --import tsx --test lib/server/__tests__/por1HistoricalIncidentEvidence.test.ts",
   "por1:verify-incident-evidence": "node scripts/por1/verify-incident-evidence.mjs",

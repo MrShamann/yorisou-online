@@ -341,25 +341,24 @@ export function selectIncidentCandidates(
 /**
  * The ONLY function in this codebase that can answer "may something be destroyed".
  *
- * It takes the machine verdict AND an authority artifact, and it needs both. A review-ready
- * population is a precondition, never a permission: with no artifact the answer is
- * `no_authority_artifact_supplied`, which is the shipped state and is expected to stay that way
- * until a human decides otherwise.
+ * It needs the machine verdict AND a Founder artifact, and a review-ready population is a
+ * precondition rather than a permission. With no artifact the answer is
+ * `no_authority_artifact_supplied` — the shipped state, and expected to stay that way until a human
+ * decides otherwise.
  *
- * The full-sha256 AUTHORITY FINGERPRINTS are what the artifact binds to, so an authority reviewed for
- * one set cannot be spent on another that merely happens to be the same size — and cannot be aimed at
- * a different job that shares a short display prefix.
+ * The artifact binds to the full-sha256 AUTHORITY FINGERPRINTS, so an authority reviewed for one set
+ * cannot be spent on another of the same size, nor aimed at a job sharing a short display prefix.
  */
 export function resolveDestructiveAuthority(
   selection: IncidentSelection,
   artifact: FounderIncidentAuthority | null,
-  context: Omit<AuthorityEvaluationContext, "qualifiedCandidateFingerprints">,
+  context: Omit<AuthorityEvaluationContext, "qualifiedCandidateAuthorityFingerprints">,
 ): AuthorityDecision {
   if (!selection.reviewReady) {
     return { permitted: false, reason: "candidate_set_differs_from_reviewed" };
   }
   return evaluateFounderAuthority(artifact, {
     ...context,
-    qualifiedCandidateFingerprints: selection.qualified.map((row) => row.authorityFingerprint),
+    qualifiedCandidateAuthorityFingerprints: selection.qualified.map((row) => row.authorityFingerprint),
   });
 }
