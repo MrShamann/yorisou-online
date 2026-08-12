@@ -327,6 +327,49 @@ becomes 保存済み; the item then appears under わたし → 保存したも�
 「今は表示しません」 row carrying もどす; and なぜこれ？ opens the frozen disclosure. Today was re-checked
 WITH a check-in record present, which is how the crash in §2g was found.
 
+## 2j. Delivery state — PR #130
+
+Branch `feat/pxr-1-product-experience-refoundation` at `484250b`, based on `main` `a05a6256`.
+**PR #130 is OPEN and UNMERGED. Nothing was deployed to Production. The merge decision is the
+Founder's.** PR #129 (`b65a947`), PR #127 and `main` are untouched — verified against the remote refs
+before and after the push.
+
+### Gate results at `484250b`
+
+| Gate | Result |
+|---|---|
+| `tsc --noEmit` | 0 errors |
+| `eslint` | 0 errors (13 pre-existing warnings, none in PXR-1 files) |
+| `next build`, cold, clean `.next` | `✓ Compiled successfully in 25.2s`, 0 font-fetch errors |
+| local suites | 64 / 64 |
+| axe, 7 surfaces × 2 widths | 14 / 14, serious + critical = 0 |
+| CI: Lint, Build & Env Check | pass |
+| CI: Build (clean main + CPV1 foundation) | pass |
+| CI: DCI / YV-1 contracts + build + full-stack | pass |
+| CI: CPV1-CM0, POR-1 fence, Agent Runtime PostgreSQL | pass |
+
+### Two honest exceptions
+
+**1. The Vercel Preview deployment for this commit FAILED, so the hosted Preview audit did not run.**
+Deployment `dpl_8Tb2ZTTy3qzKug9yEdmzxRqZrQmZ`, GitHub deployment `5870738998`. Its logs need Vercel
+credentials that are not available in this environment, so the cause is **not established**.
+
+What is established: every clean-environment build of this exact SHA succeeds — four independent CI
+build jobs and a local cold build. That does not prove the deployment failure is unrelated to this
+branch, and it is not claimed to. It means the failure was not reproduced by any build available here.
+
+Local build attempts before the guarded run reported `⨯ Another next build process is already running`
+and `Error while requesting https://fonts.gstatic.com/...`. Both were local artefacts — a concurrent
+build started by the execution bridge, and a brief network outage that also timed out `api.github.com`.
+Neither is evidence about Vercel. They are recorded so nobody re-derives them as findings.
+
+**2. Three POR-1 shared-database suites are ordering-sensitive.** `test:por1-catalogue-baseline`,
+`test:por1-store-ownership` and `test:por1-append-only-erasure` operate on one local Postgres and can
+fail a precondition when run back to back; each was observed passing in isolation, and each prints its
+own PASS verdict. They are excluded from the 64/64 figure above rather than counted as passes. Nothing
+in this branch touches `supabase/migrations`. `test:cpc1-acceptance` requires a hosted Preview URL and
+is excluded for the same reason.
+
 ## 3. Deferred / not yet implemented
 
 Recorded honestly so the next session does not have to re-derive it:
