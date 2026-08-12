@@ -43,6 +43,7 @@ const qualifyingCorrelation = (
 
 const incident = (over: Partial<IncidentCandidateRow> = {}): IncidentCandidateRow => ({
   jobFingerprint: "5990ad0e0715",
+  authorityFingerprint: "a".repeat(64),
   state: "failed_retryable",
   executionCursor: "database_erasure",
   irreversible: true,

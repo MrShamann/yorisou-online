@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Persisting a Secure Enclave key requires a keychain access group, and the entitlement is only
+       honoured when the code signature chains to a real Team ID. An ad-hoc signature carrying this
+       key is invalid, and the kernel terminates the process at launch rather than ignoring it. -->
+  <key>keychain-access-groups</key>
+  <array><string>$(AppIdentifierPrefix)com.yorisou.por1.founder-authority</string></array>
+  <key>com.apple.security.app-sandbox</key>
+  <false/>
+</dict>
+</plist>

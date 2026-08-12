@@ -12,6 +12,7 @@
 // The field is now `populationSafetyCeiling`, and this file exists so that meaning cannot quietly
 // drift back into an identity claim during a later refactor.
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -29,6 +30,7 @@ import {
 
 const candidate = (jobFingerprint: string, at: string): IncidentCandidateRow => ({
   jobFingerprint,
+  authorityFingerprint: createHash("sha256").update(jobFingerprint).digest("hex"),
   state: "failed_retryable",
   executionCursor: "database_erasure",
   irreversible: true,
@@ -81,6 +83,7 @@ test("so neither population may be destroyed on the strength of the count", () =
     populationSafetyCeiling: POR1_PRODUCTION_DELETION_INCIDENT.populationSafetyCeiling,
     currentExecutorState: "off" as const,
     spentNonces: new Set<string>(),
+    founderKeyRoster: [],
     now: Date.parse("2026-08-12T00:00:00.000Z"),
   };
   for (const rows of [[historicalA, historicalB], [historicalA, unrelatedC]]) {

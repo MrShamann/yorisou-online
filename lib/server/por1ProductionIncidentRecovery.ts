@@ -68,8 +68,16 @@ import {
 const RESERVED_UNROUTABLE_DOMAIN_SUFFIX = ".invalid";
 
 export type IncidentCandidateRow = {
-  /** Opaque to this module; used only for reporting. */
+  /**
+   * A 48-bit prefix, for HUMANS reading a dry run. Far too short to name what may be destroyed, so it
+   * never reaches a signed payload — `authorityFingerprint` does.
+   */
   jobFingerprint: string;
+  /**
+   * The full sha256 of the job id. This is what a Founder authority binds to, because a 12-hex
+   * prefix is a display convenience and collisions in it are cheap to arrange.
+   */
+  authorityFingerprint: string;
   state: string | null;
   executionCursor: string | null;
   irreversible: boolean;
@@ -338,8 +346,9 @@ export function selectIncidentCandidates(
  * `no_authority_artifact_supplied`, which is the shipped state and is expected to stay that way
  * until a human decides otherwise.
  *
- * The candidate FINGERPRINTS are what the artifact binds to, so an authority reviewed for one set
- * cannot be spent on another that merely happens to be the same size.
+ * The full-sha256 AUTHORITY FINGERPRINTS are what the artifact binds to, so an authority reviewed for
+ * one set cannot be spent on another that merely happens to be the same size — and cannot be aimed at
+ * a different job that shares a short display prefix.
  */
 export function resolveDestructiveAuthority(
   selection: IncidentSelection,
@@ -351,6 +360,6 @@ export function resolveDestructiveAuthority(
   }
   return evaluateFounderAuthority(artifact, {
     ...context,
-    qualifiedCandidateFingerprints: selection.qualified.map((row) => row.jobFingerprint),
+    qualifiedCandidateFingerprints: selection.qualified.map((row) => row.authorityFingerprint),
   });
 }

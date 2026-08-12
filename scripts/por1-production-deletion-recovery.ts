@@ -58,7 +58,10 @@ import { readFileSync } from "node:fs";
 import { buildDeletionManifest } from "../lib/server/accountIdentityDeletion";
 import { executeDeletion } from "../lib/server/accountDeletionOrchestrator";
 import { emailIdentityDigest, identityOwnerFingerprint } from "../lib/server/canonicalIdentityLinks";
-import { parseFounderAuthority } from "../lib/server/por1FounderIncidentAuthority";
+import {
+  parseFounderAuthority,
+  POR1_FOUNDER_AUTHORITY_KEY_ROSTER,
+} from "../lib/server/por1FounderIncidentAuthority";
 import {
   classifyIncidentCandidate,
   isUnroutableReservedAddress,
@@ -155,7 +158,10 @@ function assertProductionOnly(): string {
   return PRODUCTION_PROJECT_REF;
 }
 
-const fingerprint = (value: string) => createHash("sha256").update(value).digest("hex").slice(0, 12);
+/** The full digest. What a Founder authority binds to. */
+const authorityFingerprint = (value: string) => createHash("sha256").update(value).digest("hex");
+/** A 48-bit prefix of the same digest, for humans reading a dry run. Never signed over. */
+const fingerprint = (value: string) => authorityFingerprint(value).slice(0, 12);
 
 /**
  * Load the operator-supplied Founder authority artifact.
@@ -356,6 +362,7 @@ async function readCandidates(window: { startedAt: string; endedAt: string }): P
 
     rows.push({
       jobFingerprint: fingerprint(jobId),
+      authorityFingerprint: authorityFingerprint(jobId),
       state: job.state === null ? null : String(job.state),
       executionCursor: job.execution_cursor === null ? null : String(job.execution_cursor),
       irreversible: job.irreversible_started_at !== null,
@@ -409,6 +416,9 @@ async function main() {
     currentExecutorState:
       (process.env.YORISOU_POR1_ACCOUNT_DELETION_EXECUTOR ?? "").trim() === "on" ? "on" : "off",
     spentNonces: new Set<string>(),
+    // The pinned Founder verification keys. Empty on this revision, so nothing can verify and the
+    // decision below is NONE regardless of what any file on disk claims.
+    founderKeyRoster: POR1_FOUNDER_AUTHORITY_KEY_ROSTER,
     now: Date.now(),
   });
 

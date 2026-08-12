@@ -77,7 +77,7 @@ for (const [key, value] of Object.entries(pinned)) {
 if (failures > 0) process.exit(1);
 
 if (OFFLINE) {
-  ok("offline: contract parsed; upstream comparison skipped by request");
+  console.log("[ok]   offline: contract parsed; upstream comparison skipped by request");
   process.exit(0);
 }
 
@@ -102,6 +102,23 @@ try {
 }
 
 // ── Vercel ──────────────────────────────────────────────────────────────────
+//
+// TWO PATHS, AND THE DIFFERENCE BETWEEN THEM MATTERS.
+//
+// The REST API can confirm everything, including which commit each deployment served. The CLI can
+// confirm the deployment exists, targets production and was created when the contract says — but not
+// the commit. So a CLI-only run reports UNVERIFIED for that one clause rather than passing it.
+//
+// UNVERIFIED IS NOT MISMATCH. A rotated local token is an environment condition; reporting it as
+// "the pinned contract is wrong" would be the same mistake this project has made before — an
+// environment failure wearing the costume of a product finding. They exit with different codes.
+
+let unverified = 0;
+const unknown = (label) => {
+  console.warn(`[??]   ${label}`);
+  unverified += 1;
+};
+
 function vercelToken() {
   if (process.env.VERCEL_TOKEN) return process.env.VERCEL_TOKEN;
   const authPath = join(homedir(), "Library", "Application Support", "com.vercel.cli", "auth.json");
@@ -112,41 +129,78 @@ function vercelToken() {
   }
 }
 
+/** Full check, when a REST token is actually authorised. */
+function inspectViaApi(token, teamId, id) {
+  const result = spawnSync(
+    "curl",
+    ["-sS", `https://api.vercel.com/v13/deployments/${id}?teamId=${teamId}`, "-H", `Authorization: Bearer ${token}`],
+    { encoding: "utf8" },
+  );
+  try {
+    const body = JSON.parse(result.stdout);
+    if (body.error) return null;
+    return {
+      createdAt: new Date(body.createdAt ?? body.created).toISOString(),
+      target: body.target,
+      commitSha: body.meta?.githubCommitSha ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Fallback. Confirms existence, target and creation instant; cannot see the commit. */
+function inspectViaCli(id) {
+  const result = spawnSync("vercel", ["inspect", id], { encoding: "utf8" });
+  const text = `${result.stdout}\n${result.stderr}`;
+  if (result.status !== 0) return null;
+  const field = (name) => {
+    const match = text.match(new RegExp(`^\\s*${name}\\s+(.+)$`, "m"));
+    return match ? match[1].trim() : null;
+  };
+  const created = field("created");
+  if (!created) return null;
+  // "Mon Aug 10 2026 11:32:53 GMT+0800 (中国标准时间) [2d ago]" -> a parseable instant.
+  const cleaned = created.replace(/\s*\(.*?\)/g, "").replace(/\s*\[.*?\]/g, "").trim();
+  const parsed = Date.parse(cleaned);
+  if (!Number.isFinite(parsed)) return null;
+  return {
+    createdAt: new Date(parsed).toISOString(),
+    target: field("target"),
+    commitSha: undefined, // not exposed by the CLI
+  };
+}
+
 const token = vercelToken();
-if (!token) {
-  bad("no Vercel token (set VERCEL_TOKEN or run `vercel login`); deployment pins unverified");
-} else {
-  const { orgId } = JSON.parse(readFileSync(".vercel/project.json", "utf8"));
-  for (const [label, id, at] of [
-    ["activation", pinned.activationDeploymentId, pinned.activationDeploymentAt],
-    ["next", pinned.nextDeploymentId, pinned.nextDeploymentAt],
-  ]) {
-    const result = spawnSync(
-      "curl",
-      ["-sS", `https://api.vercel.com/v13/deployments/${id}?teamId=${orgId}`, "-H", `Authorization: Bearer ${token}`],
-      { encoding: "utf8" },
-    );
-    let deployment;
-    try {
-      deployment = JSON.parse(result.stdout);
-    } catch {
-      bad(`${label} deployment ${id}: response was not JSON`);
-      continue;
-    }
-    if (deployment.error) {
-      bad(`${label} deployment ${id}: ${deployment.error.code}`);
-      continue;
-    }
-    const createdAt = new Date(deployment.createdAt ?? deployment.created).toISOString();
-    if (sameInstant(createdAt, at)) ok(`${label} deployment ${id} created_at matches`);
-    else bad(`${label} deployment ${id} created_at differs: upstream ${createdAt}, pinned ${at}`);
+const { orgId } = JSON.parse(readFileSync(".vercel/project.json", "utf8"));
 
-    if (deployment.target !== "production") bad(`${label} deployment is target=${deployment.target}`);
-    else ok(`${label} deployment targets production`);
+for (const [label, id, at] of [
+  ["activation", pinned.activationDeploymentId, pinned.activationDeploymentAt],
+  ["next", pinned.nextDeploymentId, pinned.nextDeploymentAt],
+]) {
+  const viaApi = token ? inspectViaApi(token, orgId, id) : null;
+  const deployment = viaApi ?? inspectViaCli(id);
 
-    const sha = deployment.meta?.githubCommitSha;
-    if (sha === pinned.deployedCommitSha) ok(`${label} deployment served the promotion commit`);
-    else bad(`${label} deployment served ${sha}, not the pinned ${pinned.deployedCommitSha}`);
+  if (!deployment) {
+    unknown(`${label} deployment ${id}: neither the REST API nor the CLI could read it`);
+    continue;
+  }
+  if (!viaApi) {
+    unknown(`${label} deployment ${id}: REST token unusable, falling back to the CLI`);
+  }
+
+  if (sameInstant(deployment.createdAt, at)) ok(`${label} deployment ${id} created_at matches`);
+  else bad(`${label} deployment ${id} created_at differs: upstream ${deployment.createdAt}, pinned ${at}`);
+
+  if (deployment.target !== "production") bad(`${label} deployment is target=${deployment.target}`);
+  else ok(`${label} deployment targets production`);
+
+  if (deployment.commitSha === undefined) {
+    unknown(`${label} deployment commit binding: not exposed by the CLI — needs a REST token`);
+  } else if (deployment.commitSha === pinned.deployedCommitSha) {
+    ok(`${label} deployment served the promotion commit`);
+  } else {
+    bad(`${label} deployment served ${deployment.commitSha}, not the pinned ${pinned.deployedCommitSha}`);
   }
 }
 
@@ -157,5 +211,14 @@ if (Date.parse(pinned.nextDeploymentAt) > Date.parse(pinned.activationDeployment
   bad("the pinned window is inverted or empty");
 }
 
-console.log(failures === 0 ? "[ie] PASS" : `[ie] ${failures} MISMATCH(ES)`);
-process.exit(failures === 0 ? 0 : 1);
+if (failures > 0) {
+  console.error(`[ie] ${failures} MISMATCH(ES) — the pinned contract disagrees with upstream`);
+  process.exit(1);
+}
+if (unverified > 0) {
+  // Deliberately not exit 0: a clause nobody could check has not passed. Deliberately not exit 1
+  // either: nothing said the contract was wrong.
+  console.warn(`[ie] PASS with ${unverified} UNVERIFIED clause(s) — no mismatch found`);
+  process.exit(2);
+}
+console.log("[ie] PASS");
