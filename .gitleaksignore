@@ -1,0 +1,18 @@
+# POR-1 — narrow, exact allowances for the changed-content secret scan.
+#
+# Each entry is a gitleaks FINGERPRINT (commit:file:rule:line) and therefore allows exactly one
+# finding in exactly one historical commit. Nothing here disables a rule, widens a path, or relaxes
+# the hard gate for anything else.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# generic-api-key, por1FounderIncidentAuthority.test.ts, commit ddf0894
+#
+# The matched value is the base64 of the ASCII string "not-a-key" — deliberately malformed key
+# material, passed to verifyFounderSignature to prove it REJECTS a bad key. It is twelve distinct
+# characters sitting next to the word `Key`, which puts it at entropy 3.5849626, just over the rule's
+# 3.5 threshold.
+#
+# The source has already been fixed: the value is now constructed at runtime, so no such literal
+# exists going forward. This entry only covers the copy frozen in the published commit's history,
+# which a range scan will always re-read and which cannot be edited without rewriting an audited SHA.
+ddf0894152335ce9433c0fb025ae2fa84011accb:lib/server/__tests__/por1FounderIncidentAuthority.test.ts:generic-api-key:370
