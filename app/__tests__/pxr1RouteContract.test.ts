@@ -82,6 +82,30 @@ test("desktop and mobile navigation agree on the SAME information architecture",
   }
 });
 
+test("nothing offers a light re-look by sending the person into the 120Q", () => {
+  // The locked semantics make "/check-in" a redirect to the 120Q. Any surface that offers a SHORT
+  // interaction must therefore name "/today/check-in" explicitly — otherwise the wording promises
+  // two minutes and the route delivers 120 questions.
+  const governed = readFileSync(
+    join(APP, "..", "lib/yorisou/recommendations/governed.ts"),
+    "utf8",
+  ).replace(/\/\/[^\n]*/g, " ");
+  assert.ok(!/internalRoute:\s*"\/check-in"/.test(governed), "no catalogue entry may point at the legacy path");
+  assert.match(governed, /internalRoute:\s*"\/today\/check-in"/, "the light re-look points at the light interaction");
+});
+
+test("product chrome is suppressed INSIDE a flow and present on the outcome", () => {
+  // Two defects this pins, both found by walking the surfaces rather than reading the diff:
+  //   • the Result suppressed the whole shell, so 保存 and 発見 were offered on a screen with no way
+  //     back into the product except in-page links;
+  //   • moving the 120Q from /check-in to its own route silently handed a 120-question assessment a
+  //     bottom tab bar, because suppression was keyed to the old path.
+  const shell = code("components/AppShell.tsx");
+  assert.ok(shell.includes('"/tests/ima-iro"'), "a running assessment must not render the tab bar");
+  assert.ok(shell.includes('"/report-loading"'), "loading steps stay chrome-free");
+  assert.ok(!shell.includes('"/result"'), "the Result is an outcome and keeps the product navigation");
+});
+
 test("気づく orders depth shortest-first, so the 120Q is not the entry", () => {
   const notice = read("notice/page.tsx");
   const light = notice.indexOf("/today/check-in");

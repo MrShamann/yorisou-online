@@ -93,12 +93,9 @@ export function nextStepFor(intent: IntentOptionId) {
   return NEXT_STEP_BY_INTENT[intent];
 }
 
-/** Reads only a record this version wrote. An older or unknown shape is ignored, never guessed at. */
-export function readCurrentStateCheckIn(): CurrentStateCheckInRecord | null {
-  if (typeof window === "undefined") return null;
+function parseCurrentStateCheckIn(raw: string | null): CurrentStateCheckInRecord | null {
+  if (!raw) return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<CurrentStateCheckInRecord>;
     if (parsed.version !== CURRENT_STATE_CHECK_IN_VERSION) return null;
     if (!parsed.state || !parsed.intent || !parsed.completedAt) return null;
@@ -108,6 +105,34 @@ export function readCurrentStateCheckIn(): CurrentStateCheckInRecord | null {
   } catch {
     return null;
   }
+}
+
+// The snapshot is cached against the raw string, and this is NOT an optimisation.
+//
+// `useSyncExternalStore` calls the reader during render and compares the result by identity. A
+// reader that returns a freshly parsed object every call is never equal to itself, so React
+// re-renders, reads again, and the component loops until it throws "Maximum update depth exceeded".
+//
+// That is exactly what happened: Today crashed for anyone who had completed a check-in, while the
+// empty state — the only state without a record to re-parse — stayed fine, so it survived review.
+// The cache lives here rather than at the call site so no future caller can reintroduce it.
+// `app/result/saveState.ts` caches the same way, for the same reason.
+let cachedRaw: string | null = null;
+let cachedRecord: CurrentStateCheckInRecord | null = null;
+
+/** Reads only a record this version wrote. An older or unknown shape is ignored, never guessed at. */
+export function readCurrentStateCheckIn(): CurrentStateCheckInRecord | null {
+  if (typeof window === "undefined") return null;
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+  if (raw === cachedRaw) return cachedRecord;
+  cachedRaw = raw;
+  cachedRecord = parseCurrentStateCheckIn(raw);
+  return cachedRecord;
 }
 
 export function writeCurrentStateCheckIn(state: StateOptionId, intent: IntentOptionId): void {
@@ -120,7 +145,10 @@ export function writeCurrentStateCheckIn(state: StateOptionId, intent: IntentOpt
     source: "local-browser",
   };
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    const raw = JSON.stringify(record);
+    window.localStorage.setItem(STORAGE_KEY, raw);
+    cachedRaw = raw;
+    cachedRecord = record;
     window.dispatchEvent(new Event(CURRENT_STATE_EVENT));
   } catch {
     // A full or blocked store must not break the interaction; continuity is a bonus, not the product.

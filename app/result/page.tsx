@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PersistedResultUnavailable from "./PersistedResultUnavailable";
 import { resolveResultMode } from "./resultMode";
 
-import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { getTemporary120QResultCompatibility } from "../tests/ima-iro/resultCompatibility";
 import {
@@ -98,7 +98,11 @@ export default async function ResultPage({
     : "いま色テストの結果";
 
   return (
-    <main className="frontstage-page-soft">
+    // PXR-1 — the Result is a product surface, so it uses the product's page frame: the same
+    // content width, canvas and rhythm as 今日. It previously had its own gradient background, its
+    // own 42rem measure, and wrapped everything in one large white card, which is why it read as a
+    // microsite that happened to be reachable from the app.
+    <main className="mx-auto flex w-full max-w-[var(--pxr-content-width)] flex-col px-5 pb-24 pt-8 md:pt-14">
       <OpenTestingPageTracker
         eventName="result_viewed"
         route="/result"
@@ -108,215 +112,213 @@ export default async function ResultPage({
         overlayId={overlayId}
         confidence={confidenceBand}
       />
-      <section className="border-b border-[rgba(23,59,53,0.1)]">
-        <div className="container py-6 md:py-12">
-          <div className="mx-auto grid max-w-[42rem] gap-4">
-            <div className="flex flex-wrap gap-1.5">
-              <MvpPill>{compatibility.brandedTestName}</MvpPill>
-              <MvpPill>{compatibility.currentStateNote}</MvpPill>
-            </div>
-
-            <MvpCard className="space-y-5 border-[rgba(23,59,53,0.12)] bg-white/95 p-4 shadow-[0_24px_52px_rgba(23,59,53,0.1)] sm:p-7">
-              <p className="sr-only">
-                結果のまとめ: {compatibility.assignment ? `あなたのいま色は「${compatibility.assignment.nickname}」(${publicTypeLabel})。` : compatibility.displayLine}
-                {highlightSummary} この結果は診断ではなく、いまの傾向のやわらかい整理です。以下の内容はアニメーションなしでもすべて読めます。
-              </p>
-              <RevealExperience stages={[
-              <div key="hero" className="grid gap-6">
-              {/* 今のあなた — PXR-1 recomposition.
-                *
-                * FIVE AUDITED DEFECTS ARE FIXED HERE, and canonical data/methodology is untouched:
-                * every value below is the same `compatibility.*` field the page already resolved.
-                *
-                * 1. `recognitionLine` used to render twice — once here and again in a 今の見え方 box
-                *    directly beneath. The same sentence twice in one viewport reads as a bug and ate
-                *    the space the primary action needed. It now appears ONCE, as the recognition.
-                * 2. Four badge treatments (two pills, a chip row, a secondary badge) preceded any
-                *    meaning. Persona metadata is now one quiet line, not a collection to parse.
-                * 3. There was no dominant next action above the fold; `gentleNextStep` sat several
-                *    stages down. ONE action is now here, and only one.
-                * 4. The dark-green/serif system made this a microsite. It now inherits the Yorisou
-                *    canvas, spacing, type and button grammar, with persona expression as a LAYER —
-                *    the display face is kept for the identity line only, where it carries meaning.
-                * 5. A card wrapped a gradient block which wrapped a chip row. The nesting is gone;
-                *    hierarchy is carried by type and space.
-                */}
-              <div className="space-y-4">
-                <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
-                  今のあなた
-                </p>
-                {compatibility.assignment ? (
-                  <>
-                    <h1 className="display-serif text-[2.3rem] leading-[1.12] text-[var(--pxr-text-primary)] md:text-[2.9rem]">
-                      {compatibility.assignment.nickname}。
-                    </h1>
-                    {/* One quiet metadata line replaces the badge cluster. */}
-                    <p className="text-[13px] leading-6 text-[var(--pxr-text-muted)]">
-                      {publicTypeLabel}・{compatibility.brandedTestName}
-                    </p>
-                  </>
-                ) : (
-                  <h1 className="display-serif text-[2.12rem] leading-[1.14] text-[var(--pxr-text-primary)] md:text-[2.9rem]">
-                    {compatibility.displayLine}
-                  </h1>
-                )}
-                {/* The recognition, once. */}
-                <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-                  {compatibility.recognitionLine}
-                </p>
-              </div>
-
-              {/* 今できること — ONE action, above the fold. Paid conversion stays further down; it
-                * is offered after the person has been recognised, not before. */}
-              <div className="space-y-3">
-                <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
-                  今できること
-                </p>
-                <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-                  {compatibility.gentleNextStep}
-                </p>
-              </div>
-              </div>,
-
-              <div key="evidence" className="grid gap-3">
-                <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
-                  気づいたこと
-                </p>
-                {/* The canonical summary keeps its place in the hierarchy — moved, not deleted. */}
-                <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-                  {highlightSummary}
-                </p>
-                <EvidencePanel highlights={compatibility.highlights} />
-              </div>,
-
-              <ConstellationPanel
-                key="constellation"
-                centerLabel={compatibility.assignment ? compatibility.assignment.nickname : "いまのあなた"}
-                highlights={compatibility.highlights}
-              />,
-
-              <LimitsPanel key="limits" band={confidenceBand} />,
-
-              <GentleActions key="actions">
-              <div className="space-y-3">
-                <p className="text-[14px] leading-7 text-[#6F625C]">{compatibility.gentleNextStep}</p>
-              </div>
-
-              <div className="space-y-3 rounded-[1.08rem] !bg-[rgba(255,253,249,0.74)] px-1 py-1">
-                <p className="surface-meta">このあと読めるもの</p>
-                <p className="text-[13px] leading-6 text-[#7A7068]">
-                  まずは詳しいレポートを開き、必要なら今日のヒントをあとから見返せます。
-                </p>
-                <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-                  {fullReportHref ? (
-                    <OpenTestingTrackingLink
-                      href={fullReportHref}
-                      tracking={{
-                        reportEvent: {
-                          eventType: "intent_clicked",
-                          reportType: "self-understanding-v0.2.1",
-                          route: "/result",
-                          source: "result_page",
-                          entrySource: payloadKey ? "payload" : "public-result",
-                          resultId,
-                          overlayId,
-                          confidence: confidenceBand,
-                        },
-                      }}
-                      className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[#173B35] bg-[#173B35] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5"
-                    >
-                      今の詳しいレポートを読む
-                    </OpenTestingTrackingLink>
-                  ) : null}
-                  {/* Wave B: "deferred is not consent" is enforced in the PRODUCT, not only in the
-                      database. Without an accepting answer the recommendation entry is not offered,
-                      and the reason is stated instead of the control being silently missing. */}
-                  {recommendationPermitted ? (
-                    <MvpActionLink
-                      href={recommendationHref}
-                      label="今のヒントを見る"
-                      tone="secondary"
-                      className="rounded-full border-[rgba(105,151,130,0.18)] bg-[#F4FAF7] !text-[#315F50] shadow-none"
-                    />
-                  ) : (
-                    <p className="text-[13px] leading-6 text-[#7A7068]">
-                      この結果が合っているかを答えると、それに合わせたヒントを出せます。答えるまでは、この結果をもとに何かをすすめることはありません。
-                    </p>
-                  )}
-                </div>
-              </div>
-              </GentleActions>,
-
-              <div key="privacy-share" className="grid gap-4">
-              <PrivacyPanel />
-              <div className="surface-panel-soft space-y-3 !bg-[rgba(255,255,255,0.78)]">
-                <p className="surface-meta">シェア</p>
-                <p className="text-[13px] leading-6 text-[#7A7068]">
-                  今の印象を短い言葉のまま残したいときだけ、ここからシェアできます。
-                </p>
-                <ResultShareActions
-                  shareUrl={resultShareHref}
-                  shareTitle={compatibility.brandedTestName}
-                  shareText={`${compatibility.shareLine}\n${compatibility.currentStateNote}`}
-                  shareCardUrl={resultShareHref}
-                  personaId={resultId ?? "imairo-placeholder"}
-                  shareSurface="result-page"
-                  showCopyLink={false}
-                />
-              </div>
-
-              <OpenTestingNotice
-                body="現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。"
-                primaryHref="/contact?topic=open-testing"
-                primaryLabel="感想や不具合を送る"
-                // The consent gate must hold on EVERY route to recommendations, including this
-                // secondary link — otherwise the withheld entry is reachable one card lower.
-                secondaryHref={fullReportHref ?? (recommendationPermitted ? recommendationHref : "/tests")}
-                secondaryLabel={
-                  fullReportHref
-                    ? "詳しいレポートへ進む"
-                    : recommendationPermitted
-                      ? "今のヒントを見る"
-                      : "ほかのチェックを見る"
-                }
-              />
-              </div>,
-              ]} />
-            </MvpCard>
-
-            {mode.kind === "persisted" ? (
-              <InterpretationResponse
-                resultRowId={mode.resultRowId}
-                isOwner={mode.isOwner}
-                initial={{
-                  status: mode.understanding.status,
-                  resolved: mode.understanding.resolved,
-                  recommendationUsePermitted: mode.understanding.recommendationUsePermitted,
-                  continuityUsePermitted: mode.understanding.continuityUsePermitted,
-                }}
-                archetypes={PUBLIC_ARCHETYPE_TAXONOMY.map((a) => ({
-                  publicCode: a.publicCode,
-                  nickname: a.nickname,
-                  clanJapanese: a.clanJapanese,
-                }))}
-                originalResultId={resultId}
-              />
-            ) : null}
-
+      <p className="sr-only">
+        結果のまとめ: {compatibility.assignment ? `あなたのいま色は「${compatibility.assignment.nickname}」(${publicTypeLabel})。` : compatibility.displayLine}
+        {highlightSummary} この結果は診断ではなく、いまの傾向のやわらかい整理です。以下の内容はアニメーションなしでもすべて読めます。
+      </p>
+      <RevealExperience stages={[
+        /* The first viewport — PXR-1 recomposition.
+         *
+         * Canonical data and methodology are untouched: every value below is the same
+         * `compatibility.*` field the page already resolved. What was fixed:
+         *
+         * 1. `recognitionLine` rendered twice — here and again in a 今の見え方 box directly
+         *    beneath. The same sentence twice in one viewport reads as a bug, and it ate the
+         *    space the primary action needed.
+         * 2. Four badge treatments (two pills, a chip row, a secondary badge) preceded any
+         *    meaning. Test name, type and framing are now one kicker and one quiet line, each
+         *    fact appearing exactly once on the whole screen.
+         * 3. There was no dominant next action above the fold; `gentleNextStep` sat several
+         *    stages down inside つぎの一歩. It is here now, and ONLY here.
+         * 4. The dark-green/serif system made this a microsite. It inherits the product frame,
+         *    with persona expression as a LAYER — the display face is kept for the identity
+         *    line alone, where it carries meaning rather than decorating.
+         * 5. A card wrapped a gradient block which wrapped a chip row. Hierarchy is now carried
+         *    by type and space.
+         */
+        <div key="hero" className="grid gap-6">
+          <div className="grid gap-3">
+            <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+              {compatibility.brandedTestName}
+            </p>
             {compatibility.assignment ? (
-              <PrivateResultSave
-                context={{
-                  resultId: compatibility.assignment.publicCode,
-                  overlayId,
-                  confidence: confidenceBand,
-                  payloadKey,
-                }}
-                resultRowId={identity.mode === "persisted" ? identity.persisted.resultRowId : null}
-              />
-            ) : null}
+              <>
+                <h1 className="display-serif text-[2.3rem] leading-[1.12] text-[var(--pxr-text-primary)] md:text-[2.9rem]">
+                  {compatibility.assignment.nickname}。
+                </h1>
+                {/* One quiet line carries what the badge cluster used to: which type this is,
+                    and what kind of reading it is. Both are approved copy; neither repeats the
+                    kicker above. */}
+                <p className="text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                  {publicTypeLabel}・{compatibility.currentStateNote}
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="display-serif text-[2.12rem] leading-[1.14] text-[var(--pxr-text-primary)] md:text-[2.9rem]">
+                  {compatibility.displayLine}
+                </h1>
+                <p className="text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                  {compatibility.currentStateNote}
+                </p>
+              </>
+            )}
+            {/* The recognition, once. */}
+            <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+              {compatibility.recognitionLine}
+            </p>
           </div>
+
+          {/* ONE action, above the fold. Paid conversion stays further down: it is offered after
+              the person has been recognised, not before. */}
+          <div className="grid gap-2">
+            <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+              今できること
+            </p>
+            <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+              {compatibility.gentleNextStep}
+            </p>
+          </div>
+        </div>,
+
+        /* `highlightSummary` is the highlights joined into one sentence. Placing it above the
+           panel that then lists those same highlights individually says the same thing twice,
+           adjacently. It stays where a joined sentence is actually useful — the screen-reader
+           summary at the top of the document. */
+        <EvidencePanel key="evidence" highlights={compatibility.highlights} />,
+
+        <ConstellationPanel
+          key="constellation"
+          centerLabel={compatibility.assignment ? compatibility.assignment.nickname : "いまのあなた"}
+          highlights={compatibility.highlights}
+        />,
+
+        <LimitsPanel key="limits" band={confidenceBand} />,
+
+        /* つぎの一歩 is the OFFER: what there is to read next. It used to open by restating
+           `gentleNextStep` verbatim — the same sentence the first viewport now leads with — which
+           made the section look like it was starting over. The action lives above the fold; this
+           section is the offer and nothing else. */
+        <GentleActions key="actions">
+          <div className="grid gap-3">
+            <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+              このあと読めるもの
+            </p>
+            <p className="text-[14px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+              まずは詳しいレポートを開き、必要なら今日のヒントをあとから見返せます。
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {fullReportHref ? (
+                <OpenTestingTrackingLink
+                  href={fullReportHref}
+                  tracking={{
+                    reportEvent: {
+                      eventType: "intent_clicked",
+                      reportType: "self-understanding-v0.2.1",
+                      route: "/result",
+                      source: "result_page",
+                      entrySource: payloadKey ? "payload" : "public-result",
+                      resultId,
+                      overlayId,
+                      confidence: confidenceBand,
+                    },
+                  }}
+                  className="inline-flex min-h-[var(--pxr-touch-target)] items-center justify-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 text-[15px] font-semibold text-white"
+                >
+                  今の詳しいレポートを読む
+                </OpenTestingTrackingLink>
+              ) : null}
+              {/* Wave B: "deferred is not consent" is enforced in the PRODUCT, not only in the
+                  database. Without an accepting answer the recommendation entry is not offered,
+                  and the reason is stated instead of the control being silently missing. */}
+              {recommendationPermitted ? (
+                <Link
+                  href={recommendationHref}
+                  className="inline-flex min-h-[var(--pxr-touch-target)] items-center justify-center text-[15px] font-medium text-[var(--pxr-accent)]"
+                >
+                  今のヒントを見る
+                </Link>
+              ) : (
+                <p className="text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                  この結果が合っているかを答えると、それに合わせたヒントを出せます。答えるまでは、この結果をもとに何かをすすめることはありません。
+                </p>
+              )}
+            </div>
+          </div>
+        </GentleActions>,
+
+        <div key="privacy-share" className="grid gap-4">
+          <PrivacyPanel />
+          <div className="grid gap-3 rounded-[var(--pxr-radius-lg)] border border-[var(--pxr-border-subtle)] bg-[var(--pxr-surface)] p-5">
+            <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+              シェア
+            </p>
+            <p className="text-[14px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+              今の印象を短い言葉のまま残したいときだけ、ここからシェアできます。
+            </p>
+            <ResultShareActions
+              shareUrl={resultShareHref}
+              shareTitle={compatibility.brandedTestName}
+              shareText={`${compatibility.shareLine}\n${compatibility.currentStateNote}`}
+              shareCardUrl={resultShareHref}
+              personaId={resultId ?? "imairo-placeholder"}
+              shareSurface="result-page"
+              showCopyLink={false}
+            />
+          </div>
+
+          <OpenTestingNotice
+            body="現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。"
+            primaryHref="/contact?topic=open-testing"
+            primaryLabel="感想や不具合を送る"
+            // The consent gate must hold on EVERY route to recommendations, including this
+            // secondary link — otherwise the withheld entry is reachable one card lower.
+            secondaryHref={fullReportHref ?? (recommendationPermitted ? recommendationHref : "/tests")}
+            secondaryLabel={
+              fullReportHref
+                ? "詳しいレポートへ進む"
+                : recommendationPermitted
+                  ? "今のヒントを見る"
+                  : "ほかのチェックを見る"
+            }
+          />
+        </div>,
+      ]} />
+
+      {mode.kind === "persisted" ? (
+        <div className="mt-5">
+          <InterpretationResponse
+            resultRowId={mode.resultRowId}
+            isOwner={mode.isOwner}
+            initial={{
+              status: mode.understanding.status,
+              resolved: mode.understanding.resolved,
+              recommendationUsePermitted: mode.understanding.recommendationUsePermitted,
+              continuityUsePermitted: mode.understanding.continuityUsePermitted,
+            }}
+            archetypes={PUBLIC_ARCHETYPE_TAXONOMY.map((a) => ({
+              publicCode: a.publicCode,
+              nickname: a.nickname,
+              clanJapanese: a.clanJapanese,
+            }))}
+            originalResultId={resultId}
+          />
         </div>
-      </section>
+      ) : null}
+
+      {compatibility.assignment ? (
+        <div className="mt-5">
+          <PrivateResultSave
+            context={{
+              resultId: compatibility.assignment.publicCode,
+              overlayId,
+              confidence: confidenceBand,
+              payloadKey,
+            }}
+            resultRowId={identity.mode === "persisted" ? identity.persisted.resultRowId : null}
+          />
+        </div>
+      ) : null}
     </main>
   );
 }

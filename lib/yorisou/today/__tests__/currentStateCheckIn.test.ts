@@ -17,6 +17,7 @@ import {
   labelForIntent,
   labelForState,
   nextStepFor,
+  readCurrentStateCheckIn,
   reflectionFor,
 } from "../currentStateCheckIn";
 
@@ -76,6 +77,55 @@ test("persistence is device-local, versioned, and free of identity", () => {
   assert.ok(code.includes("localStorage"), "device-local only");
   for (const forbidden of ["fetch(", "accountId", "email", "supabase", "/api/"]) {
     assert.ok(!code.includes(forbidden), `no server sync or identity: ${forbidden}`);
+  }
+});
+
+test("the snapshot is referentially stable, so useSyncExternalStore cannot loop", () => {
+  // REGRESSION. Today read this record through `useSyncExternalStore`, which calls the reader
+  // during render and compares by identity. The reader parsed fresh JSON every call, so the result
+  // was never equal to itself: React re-rendered, re-read, and Today threw "Maximum update depth
+  // exceeded" for every person who had actually completed a check-in. The empty state returns a
+  // stable null, which is why the crash did not show up in review — the only users who could hit it
+  // were the ones the feature exists for.
+  const store = new Map<string, string>();
+  const g = globalThis as unknown as { window?: unknown };
+  const previousWindow = g.window;
+  g.window = {
+    localStorage: {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+    },
+  };
+  try {
+    const record = {
+      version: CURRENT_STATE_CHECK_IN_VERSION,
+      state: STATE_OPTIONS[0].id,
+      intent: INTENT_OPTIONS[0].id,
+      completedAt: "2026-08-12T00:00:00.000Z",
+      source: "local-browser",
+    };
+    store.set("yorisou.pxr1.currentStateCheckIn.v1", JSON.stringify(record));
+
+    const first = readCurrentStateCheckIn();
+    assert.ok(first, "a valid record must be readable");
+    assert.equal(readCurrentStateCheckIn(), first, "repeated reads must return the SAME object");
+
+    // A genuine change must still be observed — the cache is keyed to the stored string, not frozen.
+    store.set(
+      "yorisou.pxr1.currentStateCheckIn.v1",
+      JSON.stringify({ ...record, intent: INTENT_OPTIONS[1].id }),
+    );
+    const second = readCurrentStateCheckIn();
+    assert.notEqual(second, first, "a new stored value must produce a new snapshot");
+    assert.equal(second?.intent, INTENT_OPTIONS[1].id);
+
+    // Absence is stable too, and stays null rather than becoming a new empty object each call.
+    store.delete("yorisou.pxr1.currentStateCheckIn.v1");
+    assert.equal(readCurrentStateCheckIn(), null);
+    assert.equal(readCurrentStateCheckIn(), null);
+  } finally {
+    if (previousWindow === undefined) delete g.window;
+    else g.window = previousWindow;
   }
 });
 

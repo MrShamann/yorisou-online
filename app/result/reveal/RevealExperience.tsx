@@ -44,7 +44,7 @@ export default function RevealExperience({ stages }: { stages: ReactNode[] }) {
           <button
             type="button"
             onClick={() => setSkipped(true)}
-            className="min-h-[44px] rounded-full border border-[rgba(23,59,53,0.2)] bg-white/80 px-4 text-[12.5px] font-semibold text-[#49615B]"
+            className="min-h-[var(--pxr-touch-target)] rounded-[var(--pxr-radius-pill)] border border-[var(--pxr-border-subtle)] bg-[var(--pxr-surface)] px-4 text-[13px] font-medium text-[var(--pxr-text-secondary)]"
           >
             すべて表示
           </button>
