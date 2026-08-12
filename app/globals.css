@@ -907,7 +907,12 @@ main {
   /* Text — ink, not black. Three steps is enough hierarchy for one screen. */
   --pxr-text-primary: #1c1b19;
   --pxr-text-secondary: #55514b;
-  --pxr-text-muted: #8a847c;
+  /* WCAG AA. The first value here was #8a847c, which measured 3.28-3.70:1 against the four
+     backgrounds it actually appears on — every eyebrow, timing hint and provenance line in the
+     product was below the 4.5:1 threshold for body-size text. axe found it on all seven refounded
+     surfaces at both widths. #6b655d measures 5.11-5.76:1 and is still clearly the quiet tone,
+     well below --pxr-text-secondary at 6.99-7.88:1. */
+  --pxr-text-muted: #6b655d;
 
   --pxr-border-subtle: #e8e3da;
 

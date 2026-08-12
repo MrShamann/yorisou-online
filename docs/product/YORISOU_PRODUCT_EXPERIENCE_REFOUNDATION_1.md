@@ -278,6 +278,55 @@ Recorded because each was invisible in review and each was found by using the su
    「よりそうが用意した内容今の気配を見る…はじめる」. The reason is context for the card, not a
    destination, so it sits outside the link.
 
+## 2h. Accessibility gate — and the defect it caught in the design foundation
+
+`tests/smoke/pxr1-a11y.spec.ts` runs axe over all seven refounded surfaces at 390 and 1440, against
+`wcag2a / wcag2aa / wcag21a / wcag21aa`. Serious and critical fail the gate; moderate and minor are
+printed. Failing on the advisory tiers would make the gate noisy enough to be ignored, which is worse
+than not having it.
+
+**First run: 28 of 28 failed, all on `color-contrast [serious]`.**
+
+The cause was a single token this package introduced. `--pxr-text-muted` was `#8a847c`, which measures:
+
+| Background | Contrast | AA (4.5:1 for body text) |
+|---|---|---|
+| `--pxr-surface` `#ffffff` | 3.70:1 | fail |
+| `--pxr-canvas` `#faf8f4` | 3.49:1 | fail |
+| body background `#f8f4ec` | 3.37:1 | fail |
+| `--pxr-surface-emphasis` `#f4f1ea` | 3.28:1 | fail |
+
+That token carries every eyebrow, every timing hint, every provenance label and every quiet
+supporting line in the product — so the foundation shipped a systemic contrast failure on every
+surface at once, and the surfaces it hit hardest were the ones the reduction passes had made
+type-and-space rather than cards. This is the argument for running the gate on a real page rather
+than eyeballing a palette: nothing about `#8a847c` looks wrong next to `#faf8f4`.
+
+Corrected to `#6b655d` — 5.11:1 to 5.76:1 across the same four backgrounds, still unmistakably the
+quiet tone (`--pxr-text-secondary` sits at 6.99:1 to 7.88:1). `--pxr-text-primary` (15.3:1 to 17.2:1)
+and `--pxr-accent` (6.3:1 to 7.1:1) already passed. **Second run: 14 of 14 pass.**
+
+The bottom navigation's inactive label uses `--yorisou-color-neutral-500` (`#635c73`) from the older
+token set and was not implicated.
+
+## 2i. Visual QA matrix — final pass
+
+| Surface | 390×844 | 430×932 | 1440×900 |
+|---|---|---|---|
+| 今日 | PASS | PASS | PASS (after the 1440 IA and CTA-width fixes in §2c) |
+| 気づく | PASS — three depth rungs, shortest first | PASS | PASS |
+| 探す | PASS | PASS | PASS — cards hold the 560px measure, ▸なぜこれ？ marker present |
+| わたし | PASS — real history, not a hard-coded empty state | PASS | PASS |
+| 今の気配 (light) | PASS — one question, five large targets | PASS | PASS |
+| いま色テスト entry | PASS — product frame and accent | PASS | PASS |
+| Result (Pass A) | defects found and fixed — see §2g | — | PASS |
+| Result (Pass B) | PASS — each fact once, one action above the fold | PASS | PASS |
+
+Interaction verified in the browser rather than inferred from the code: 保存する writes and the label
+becomes 保存済み; the item then appears under わたし → 保存したもの; 今は違う replaces the card with a
+「今は表示しません」 row carrying もどす; and なぜこれ？ opens the frozen disclosure. Today was re-checked
+WITH a check-in record present, which is how the crash in §2g was found.
+
 ## 3. Deferred / not yet implemented
 
 Recorded honestly so the next session does not have to re-derive it:
