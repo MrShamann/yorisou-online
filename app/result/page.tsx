@@ -122,59 +122,72 @@ export default async function ResultPage({
                 {highlightSummary} この結果は診断ではなく、いまの傾向のやわらかい整理です。以下の内容はアニメーションなしでもすべて読めます。
               </p>
               <RevealExperience stages={[
-              <div key="hero" className="grid gap-5">
-              <div
-                className="space-y-3 rounded-[1.18rem] px-4 py-4 sm:px-5 sm:py-5"
-                style={{
-                  background: "linear-gradient(135deg, #F4FAF7 0%, #fff 100%)",
-                  border: "1px solid rgba(23,59,53,0.1)",
-                }}
-              >
-                <div className="flex flex-wrap gap-2">
-                  {compatibility.heroChips.map((bullet) => (
-                    <span
-                      key={bullet}
-                      className="rounded-full border border-[rgba(105,151,130,0.16)] bg-white/72 px-3 py-1 text-[11px] font-semibold leading-5 text-[#315F50]"
-                    >
-                      {bullet}
-                    </span>
-                  ))}
-                </div>
+              <div key="hero" className="grid gap-6">
+              {/* 今のあなた — PXR-1 recomposition.
+                *
+                * FIVE AUDITED DEFECTS ARE FIXED HERE, and canonical data/methodology is untouched:
+                * every value below is the same `compatibility.*` field the page already resolved.
+                *
+                * 1. `recognitionLine` used to render twice — once here and again in a 今の見え方 box
+                *    directly beneath. The same sentence twice in one viewport reads as a bug and ate
+                *    the space the primary action needed. It now appears ONCE, as the recognition.
+                * 2. Four badge treatments (two pills, a chip row, a secondary badge) preceded any
+                *    meaning. Persona metadata is now one quiet line, not a collection to parse.
+                * 3. There was no dominant next action above the fold; `gentleNextStep` sat several
+                *    stages down. ONE action is now here, and only one.
+                * 4. The dark-green/serif system made this a microsite. It now inherits the Yorisou
+                *    canvas, spacing, type and button grammar, with persona expression as a LAYER —
+                *    the display face is kept for the identity line only, where it carries meaning.
+                * 5. A card wrapped a gradient block which wrapped a chip row. The nesting is gone;
+                *    hierarchy is carried by type and space.
+                */}
+              <div className="space-y-4">
+                <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+                  今のあなた
+                </p>
                 {compatibility.assignment ? (
                   <>
-                    <p className="text-[12px] font-semibold tracking-[0.08em] text-[#49615B]">あなたのいま色は、</p>
-                    <h1 className="display-serif text-[2.3rem] leading-[1.02] text-[#2F2A28] md:text-[3rem]">
+                    <h1 className="display-serif text-[2.3rem] leading-[1.12] text-[var(--pxr-text-primary)] md:text-[2.9rem]">
                       {compatibility.assignment.nickname}。
                     </h1>
-                    <p className="text-[14px] font-semibold leading-6 text-[#4D7A69]">{publicTypeLabel}</p>
+                    {/* One quiet metadata line replaces the badge cluster. */}
+                    <p className="text-[13px] leading-6 text-[var(--pxr-text-muted)]">
+                      {publicTypeLabel}・{compatibility.brandedTestName}
+                    </p>
                   </>
                 ) : (
-                  <h1 className="display-serif text-[2.12rem] leading-[1.06] text-[#2F2A28] md:text-[3rem]">
+                  <h1 className="display-serif text-[2.12rem] leading-[1.14] text-[var(--pxr-text-primary)] md:text-[2.9rem]">
                     {compatibility.displayLine}
                   </h1>
                 )}
-                <p className="text-[14px] leading-7 text-[#6F625C]">
+                {/* The recognition, once. */}
+                <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
                   {compatibility.recognitionLine}
                 </p>
               </div>
 
-              <div
-                className="rounded-[1.08rem] px-4 py-4"
-                style={{
-                  background: "#F4FAF7",
-                  border: "1px solid rgba(23,59,53,0.1)",
-                }}
-              >
-                <div className="service-kicker">今の見え方</div>
-                <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{compatibility.recognitionLine}</p>
-                <p className="mt-2 text-[14px] leading-7 text-[#6F625C]">{highlightSummary}</p>
-                <p className="mt-2 text-[12px] font-semibold leading-6 text-[#4D7A69]">
-                  {compatibility.assignment ? compatibility.assignment.secondaryBadge : compatibility.placeholderText}
+              {/* 今できること — ONE action, above the fold. Paid conversion stays further down; it
+                * is offered after the person has been recognised, not before. */}
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+                  今できること
+                </p>
+                <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+                  {compatibility.gentleNextStep}
                 </p>
               </div>
               </div>,
 
-              <EvidencePanel key="evidence" highlights={compatibility.highlights} />,
+              <div key="evidence" className="grid gap-3">
+                <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+                  気づいたこと
+                </p>
+                {/* The canonical summary keeps its place in the hierarchy — moved, not deleted. */}
+                <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+                  {highlightSummary}
+                </p>
+                <EvidencePanel highlights={compatibility.highlights} />
+              </div>,
 
               <ConstellationPanel
                 key="constellation"
