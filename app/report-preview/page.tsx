@@ -4,7 +4,7 @@ import Link from "next/link";
 import DteEventTracker from "../components/DteEventTracker";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { OpenTestingReportTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
-import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../tests/ima-iro/resultCompatibility";
 import ReportIntentAction from "./ReportIntentAction";
 import { buildSelfUnderstandingPreviewByCode, buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 

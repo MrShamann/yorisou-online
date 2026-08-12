@@ -4,7 +4,7 @@ import { resolveResultMode } from "./resultMode";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
 import OpenTestingNotice from "../components/OpenTestingNotice";
-import { getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import { getTemporary120QResultCompatibility } from "../tests/ima-iro/resultCompatibility";
 import {
   buildPrivateContinuityHref,
   buildPublicShareHref,

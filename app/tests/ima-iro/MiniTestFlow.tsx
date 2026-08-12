@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAssessmentAttempt } from "./useAssessmentAttempt";
 
-import { MvpActionLink, MvpCard } from "../components/MvpSurface";
-import OpenTestingNotice from "../components/OpenTestingNotice";
-import { trackOpenTestingEvent } from "../components/OpenTestingTracker";
+import { MvpActionLink, MvpCard } from "../../components/MvpSurface";
+import OpenTestingNotice from "../../components/OpenTestingNotice";
+import { trackOpenTestingEvent } from "../../components/OpenTestingTracker";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import {
   buildCurrentStateResultPayload,

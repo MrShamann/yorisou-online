@@ -2,7 +2,7 @@
 // The point of using the real runtime is that this test FAILS if completion output and the
 // persistence contract ever drift apart — the earlier synthetic test structurally could not.
 import assert from "node:assert/strict";
-import { currentStateQuestions, scoreCurrentStateCheck } from "@/app/check-in/currentStateCheckV1";
+import { currentStateQuestions, scoreCurrentStateCheck } from "@/app/tests/ima-iro/currentStateCheckV1";
 import {
   buildPersistedResultEnvelope, readPersistedResultEnvelope,
   containsForbiddenKey, PERSISTED_RESULT_ENVELOPE_VERSION,

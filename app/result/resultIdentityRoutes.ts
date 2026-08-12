@@ -23,7 +23,7 @@
 import {
   buildPublicResultHref,
   type PublicResultRouteContext,
-} from "../check-in/resultCompatibility";
+} from "../tests/ima-iro/resultCompatibility";
 
 /** The stable, private identity of one persisted assessment result. */
 export type PersistedResultIdentity = {

@@ -9,8 +9,8 @@ import {
   readCurrentStateResult,
   scoreCurrentStateCheck,
   type CurrentStateAnswerMap,
-} from "@/app/check-in/currentStateCheckV1";
-import { buildAbsolutePublicResultUrl } from "@/app/check-in/resultCompatibility";
+} from "@/app/tests/ima-iro/currentStateCheckV1";
+import { buildAbsolutePublicResultUrl } from "@/app/tests/ima-iro/resultCompatibility";
 import { buildMiniAppCheckInHandoffHref, LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
 import { PUBLIC_RESULT_MAPPING_VERSION, PUBLIC_RESULT_PLACEHOLDER_CODE } from "@/lib/yorisou/public-result";
 
@@ -64,11 +64,11 @@ export function runCheckInRuntimeValidationTest() {
   assert.equal(absoluteResultUrl.includes("payloadKey="), false);
 
   const checkInSource = fs.readFileSync(
-    path.join(process.cwd(), "app/check-in/currentStateCheckV1.ts"),
+    path.join(process.cwd(), "app/tests/ima-iro/currentStateCheckV1.ts"),
     "utf8",
   );
   const miniFlowSource = fs.readFileSync(
-    path.join(process.cwd(), "app/check-in/MiniTestFlow.tsx"),
+    path.join(process.cwd(), "app/tests/ima-iro/MiniTestFlow.tsx"),
     "utf8",
   );
   const loadingSource = fs.readFileSync(

@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 import { MvpActionLink, MvpCard, MvpPill, MvpSection } from "../components/MvpSurface";
-import { buildPublicResultHref } from "../check-in/resultCompatibility";
+import { buildPublicResultHref } from "../tests/ima-iro/resultCompatibility";
 import { readSavedResultRecord, subscribeSavedResult, type SavedResultRecord } from "../result/saveState";
 
 function formatSavedAt(isoString: string) {

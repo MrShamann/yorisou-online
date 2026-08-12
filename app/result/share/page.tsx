@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../../components/MvpSurface";
-import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../../check-in/resultCompatibility";
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../../tests/ima-iro/resultCompatibility";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
