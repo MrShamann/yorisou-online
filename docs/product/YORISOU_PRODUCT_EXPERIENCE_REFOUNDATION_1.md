@@ -138,6 +138,28 @@ does not import the gated pilot.
 **COPY_REFINEMENT_REQUIRED** — its reflection lines are minimal neutral Japanese placeholders for
 Yorisou Agent refinement, not approved canonical copy.
 
+## 2c. Visual QA findings
+
+Per-breakpoint, during development rather than at the end.
+
+**Today @ 390×844 — PASS.** One dominant action, no competing CTAs, rows on hairline dividers rather
+than cards, real negative space, renders correctly with zero history.
+
+**Today @ 1440 — TWO DEFECTS FOUND AND FIXED.**
+
+1. The desktop header still carried the pre-PXR-1 IA (`今を知る / おすすめ / 体験を見つける / わたしの今`)
+   while the bottom navigation already used the new one. Two navigations disagreeing about what the
+   product contains is worse than either being wrong alone: the same person gets a different mental
+   model depending on window width. Now identical across breakpoints, guarded by a test in both
+   directions.
+2. The primary action spanned the full 560px editorial column, which reads as an unfinished layout.
+   Full-width where a thumb needs it, intrinsic width once there is room.
+
+The mobile view was correct and revealed neither. That is the argument for per-breakpoint QA.
+
+**`/today/check-in` @ 390×844 — PASS.** One question per screen, five large targets, 気づく correctly
+active, back control on step 2.
+
 ## 3. Deferred / not yet implemented
 
 Recorded honestly so the next session does not have to re-derive it:
