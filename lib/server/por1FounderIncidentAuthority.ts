@@ -43,11 +43,12 @@
 // key or press the sensor.
 //
 // THE ROSTER IS CURRENTLY EMPTY, AND THAT IS THE SHIPPED STATE.
-// Enrolling the key is blocked on this host — persisting a Secure Enclave key needs a
-// `keychain-access-groups` entitlement, which is only honoured under a real Team ID, and no
-// code-signing identity exists here (measurements in the helper's README). With an empty roster no
-// signature can verify and `evaluateFounderAuthority` refuses everything by name. Unblocking is a
-// Founder action: enroll on their own machine, then pin the public key in a reviewed change.
+// Enrolling is a FOUNDER action, not an engineering one: they run `enroll` on their own machine and
+// the printed public key is pinned here in a reviewed change. The primitive itself is available —
+// `SecureEnclave.P256.Signing.PrivateKey` needs no entitlement and no signing identity, verified on
+// this host across two processes (see the helper's README). With an empty roster no signature can
+// verify and `evaluateFounderAuthority` refuses everything by name, which is the correct state until
+// a human decides otherwise.
 //
 // NO IDENTITY LIVES HERE. Candidates are named by opaque full sha256 authority fingerprints — never
 // by account id, job id or address.
@@ -79,7 +80,9 @@ export type PinnedFounderKey = {
  * a host that can persist one and pins its public half here in a reviewed change.
  *
  * A software-generated key must never be added. The whole boundary rests on the private half being
- * unreachable to any process, and a software key is a file.
+ * unreachable to any process, and a software key is a file. Only a public key printed by
+ * `por1-founder-signer enroll` — whose private half is sealed in the Secure Enclave and gated on a
+ * fingerprint — belongs here.
  */
 export const POR1_FOUNDER_AUTHORITY_KEY_ROSTER: readonly PinnedFounderKey[] = [];
 

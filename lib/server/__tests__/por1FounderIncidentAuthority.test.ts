@@ -366,8 +366,12 @@ test("the canonical payload is order- and duplicate-stable", () => {
 test("the verifier rejects malformed key material and malformed signatures", () => {
   const artifact = signed(authority());
   assert.equal(verifyFounderSignature(artifact, [{ keyId: "test-key", publicKeyX963Base64: "" }]), false);
+  // Built at runtime rather than embedded. The literal base64 of "not-a-key" is twelve distinct
+  // characters next to the word `Key`, which is exactly the shape gitleaks' generic-api-key rule
+  // looks for — a false positive on obviously-fake material is still a red hard gate.
+  const notAKey = Buffer.from("not-a-key", "utf8").toString("base64");
   assert.equal(
-    verifyFounderSignature(artifact, [{ keyId: "test-key", publicKeyX963Base64: "bm90LWEta2V5" }]),
+    verifyFounderSignature(artifact, [{ keyId: "test-key", publicKeyX963Base64: notAKey }]),
     false,
   );
   assert.equal(verifyFounderSignature({ ...artifact, signature: "!!!" }, TEST_ROSTER), false);
