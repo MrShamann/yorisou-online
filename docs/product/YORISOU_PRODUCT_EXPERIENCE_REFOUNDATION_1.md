@@ -160,6 +160,43 @@ The mobile view was correct and revealed neither. That is the argument for per-b
 **`/today/check-in` @ 390×844 — PASS.** One question per screen, five large targets, 気づく correctly
 active, back control on step 2.
 
+## 2d. Canonical Result — audit of the real implementation
+
+Read from `app/result/page.tsx` (309 lines) and its real data path, not a mock. The canonical data is
+already well-shaped and must be preserved exactly:
+
+`compatibility.assignment.nickname` · `publicTypeLabel` · `recognitionLine` · `heroChips` ·
+`highlights` · `gentleNextStep` · `secondaryBadge` · `brandedTestName` · `currentStateNote`
+
+Rendering runs through `RevealExperience` with stages hero → evidence → constellation → limits →
+actions. **That progression is already close to the target hierarchy** (今のあなた → 気づいたこと →
+今できること), which means this is a re-composition rather than a rewrite. Methodology and copy stay
+untouched.
+
+### Defects found above the fold at 390
+
+1. **`recognitionLine` renders twice.** Once inside the hero gradient block and again immediately
+   below in the 今の見え方 box. The same sentence appearing twice in the first viewport reads as a
+   rendering bug and costs the space the primary action needs.
+2. **Badge saturation.** Two `MvpPill`s, then `heroChips` (a chip row), then `secondaryBadge` — four
+   distinct badge treatments before any action. §2 lists "multiple badges" as an explicit
+   above-the-fold violation.
+3. **No dominant next action in the first viewport.** `gentleNextStep` and the report links sit in the
+   `GentleActions` stage, far below. The first screen currently ends on description.
+4. **It is the second visual system.** Dark green (`#315F50`, `#4D7A69`), `display-serif`, and its own
+   gradients and shadows — the same microsite identity the audit flagged on the 120Q landing. It must
+   inherit canvas, spacing, button grammar and base typography from the foundation, keeping persona
+   expression as a LAYER (motif, accent, editorial scale).
+5. **Cards inside cards.** `MvpCard` wraps a gradient block which wraps a chip row. A card-reduction
+   pass applies here more than anywhere else in the product.
+
+### Constraint carried into implementation
+
+Light-outcome and canonical-result semantics stay separate. They may share visual primitives —
+section rhythm, recommendation patterns, save controls — but must never collapse into one universal
+Result object: one reflects explicit selections and claims nothing, the other carries approved
+persona truth. A shared presentation layer is the correct seam, not a shared storage or claim model.
+
 ## 3. Deferred / not yet implemented
 
 Recorded honestly so the next session does not have to re-derive it:
