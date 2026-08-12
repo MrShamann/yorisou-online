@@ -114,6 +114,30 @@ It surfaces contextually, when relevant, in the recommendation system.
 
 ---
 
+## 2b. Historical lightweight-flow recovery (REUSE / ADAPT / REJECT)
+
+Required before inventing anything. Git history and the current tree were both searched.
+
+| Candidate | Found | Decision | Why |
+|---|---|---|---|
+| Legacy 24Q runtime (`a77df84`, `104a296`) | replaced by the 120Q foundation | **REJECT** | It is a shorter DIAGNOSTIC with its own scoring and persona assignment. Reviving it would conflict with current canonical methodology and re-introduce a second assessment system. |
+| `feat: add Yorisou check-in mini flow` (`07498c3`) | superseded | **REJECT** | Its product logic is the 24Q lineage above. |
+| **DCI-1 `lib/yorisou/methods/daily-check-in`** | present and governed | **ADAPT (pattern only)** | Exactly the right contract — its acknowledgement cascade "picks COPY — it computes nothing about the person. No scoring, no AI generation, no prediction, no prescription." Finite authored copy, deterministic first-match, bounded options. |
+
+**Why DCI-1's code is NOT imported.** It is a gated pilot that is **default CLOSED in Production**:
+`dailyCheckInAccess` returns `denied_production`, the route calls `notFound()`, and the page is
+`robots: noindex`. Wiring Today's primary action to it would dead-end for every real visitor, and
+promoting another package's deliberately-closed pilot is not a decision PXR-1 gets to make.
+
+So §5 applies: `lib/yorisou/today/currentStateCheckIn.ts` implements a NON-DIAGNOSTIC state capture
+that follows DCI-1's pattern — bounded predefined choices, authored lookup copy, zero computation
+about the person — with its own small versioned device-local contract. Eight tests pin that boundary,
+including that it references no score, dimension, persona or archetype, performs no server sync, and
+does not import the gated pilot.
+
+**COPY_REFINEMENT_REQUIRED** — its reflection lines are minimal neutral Japanese placeholders for
+Yorisou Agent refinement, not approved canonical copy.
+
 ## 3. Deferred / not yet implemented
 
 Recorded honestly so the next session does not have to re-derive it:
