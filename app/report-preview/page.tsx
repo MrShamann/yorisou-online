@@ -258,7 +258,7 @@ export default async function ReportPreviewPage({
                 今のヒントを見る
               </Link>
               <span className="text-[#D4CCC6]">·</span>
-              <Link href="/check-in" className="hover:underline">
+              <Link href="/today/check-in" className="hover:underline">
                 もう一度チェックする
               </Link>
             </div>

@@ -102,7 +102,7 @@ export default function SavedResultView() {
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <MvpActionLink href={buildSavedResultHref(savedRecord, "result")} label="結果を見返す" />
               <MvpActionLink href={buildSavedResultHref(savedRecord, "continue")} label="自分だけのヒントを見る" tone="secondary" />
-              <MvpActionLink href="/check-in" label="またチェックインする" tone="ghost" />
+              <MvpActionLink href="/today/check-in" label="またチェックインする" tone="ghost" />
             </div>
             <p className="text-[12px] leading-7 text-[var(--muted)]">
               {contextCopy.note}
@@ -115,7 +115,7 @@ export default function SavedResultView() {
               まずは結果ページで保存すると、この端末からあとで見返せるようになります。
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <MvpActionLink href="/check-in" label="チェックインをはじめる" />
+              <MvpActionLink href="/today/check-in" label="チェックインをはじめる" />
               <MvpActionLink href="/methodology" label="方法を見る" tone="secondary" />
             </div>
           </MvpCard>

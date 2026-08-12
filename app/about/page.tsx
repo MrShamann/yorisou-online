@@ -22,8 +22,8 @@ export default function AboutPage() {
           </>
         }
         subtitle="Yorisouは、いまの気分・考え方・行動のリズムをふり返り、公開しても安心な結果と、自分だけで読めるヒントを分けて届けるサービスです。"
-        primaryHref="/check-in"
-        primaryLabel="24問チェックをはじめる"
+        primaryHref="/tests/ima-iro"
+        primaryLabel="いま色テストをはじめる"
         secondaryHref="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
         secondaryLabel="レポートの見本を見る"
       />
@@ -132,8 +132,8 @@ export default function AboutPage() {
                   まずは24問チェックから。LINEやWebであとから戻りやすくする導線も、順次整えています。
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link href="/check-in" className="btn btn-primary">
-                    24問チェックをはじめる
+                  <Link href="/tests/ima-iro" className="btn btn-primary">
+                    いま色テストをはじめる
                   </Link>
                   <Link href="/services" className="soft-link">
                     サービスの流れを見る

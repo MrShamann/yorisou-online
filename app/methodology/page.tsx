@@ -78,7 +78,7 @@ export default function MethodologyPage() {
         lead="まずはチェックインから始めて、結果のあとで必要な読みだけを選べます。"
         actions={
           <>
-            <MvpActionLink href="/check-in" label="チェックインをはじめる" />
+            <MvpActionLink href="/tests/ima-iro" label="いま色テストをはじめる" />
             <MvpActionLink href="/" label="ホームへ戻る" tone="secondary" />
           </>
         }

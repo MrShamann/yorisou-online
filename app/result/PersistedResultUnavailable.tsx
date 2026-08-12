@@ -20,7 +20,7 @@ export default function PersistedResultUnavailable() {
         </p>
         <div className="flex flex-wrap gap-3 pt-2">
           <Link
-            href="/check-in"
+            href="/tests/ima-iro"
             className="inline-flex min-h-[48px] items-center justify-center rounded-full px-5 text-[15px] no-underline"
             style={{ background: "#173B35", color: "#fff", fontWeight: 700 }}
           >

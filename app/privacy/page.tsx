@@ -62,7 +62,7 @@ export default function PrivacyPage() {
         lead="保存はこの端末内だけの簡易保存です。診断や医療・心理評価ではない形で、今の状態を受け取れます。"
         actions={
           <>
-            <MvpActionLink href="/check-in" label="チェックインをはじめる" />
+            <MvpActionLink href="/today/check-in" label="チェックインをはじめる" />
             <MvpActionLink href="/" label="ホームへ戻る" tone="secondary" />
           </>
         }

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAssessmentAttempt } from "./useAssessmentAttempt";
 
-import { MvpActionLink, MvpCard } from "../../components/MvpSurface";
+import { MvpCard } from "../../components/MvpSurface";
 import OpenTestingNotice from "../../components/OpenTestingNotice";
 import { trackOpenTestingEvent } from "../../components/OpenTestingTracker";
 import { LINE_MINI_APP_NAV_VERSION } from "@/lib/server/miniAppEntryRouting";
@@ -150,7 +151,7 @@ export default function MiniTestFlow() {
       `${pathname}?result=${encodeURIComponent(resultRowId)}`;
     void trackOpenTestingEvent({
       eventName: "test_completed",
-      route: "/check-in",
+      route: "/tests/ima-iro",
       source: "mini_test_flow",
       entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
       resultId: target.payload.resultId,
@@ -160,7 +161,7 @@ export default function MiniTestFlow() {
     });
     void trackOpenTestingEvent({
       eventName: "result_generated",
-      route: "/check-in",
+      route: "/tests/ima-iro",
       source: "mini_test_flow",
       entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
       resultId: target.payload.resultId,
@@ -250,7 +251,7 @@ export default function MiniTestFlow() {
     setPhase("quiz");
     void trackOpenTestingEvent({
       eventName: "test_started",
-      route: "/check-in",
+      route: "/tests/ima-iro",
       source: "mini_test_flow",
       entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
       testVersion: "120q-current-state-v1",
@@ -272,7 +273,7 @@ export default function MiniTestFlow() {
     attempt.saveProgress(nextAnswers as Record<string, string>);
     void trackOpenTestingEvent({
       eventName: "question_answered",
-      route: "/check-in",
+      route: "/tests/ima-iro",
       source: "mini_test_flow",
       entrySource: isMiniAppEntry ? "line-mini-app" : "open-testing",
       testVersion: "120q-current-state-v1",
@@ -315,32 +316,34 @@ export default function MiniTestFlow() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FBFAF6] text-[#22201D]">
-      {/* Minimal top bar — orientation anchor in shell-suppressed context */}
-      <div className="sticky top-0 z-30 border-b border-[rgba(23,59,53,0.06)] bg-[rgba(251,250,246,0.96)] backdrop-blur-sm">
-        <div className="container flex items-center justify-between py-3">
-          <span className="display-serif text-[1.1rem] font-semibold tracking-[0.09em] text-[#22201D]">YORISOU</span>
-          {phase === "quiz" ? (
-            <span className="rounded-full bg-[rgba(23,59,53,0.08)] px-3 py-1 text-[12px] font-semibold text-[#315F50]">
-              {stepLabel}
-            </span>
-          ) : (
-            <span className="rounded-full bg-[rgba(23,59,53,0.08)] px-3 py-1 text-[11px] font-semibold text-[#315F50]">いま色テスト</span>
-          )}
+    // PXR-1 — the 120Q keeps its own minimal chrome, because the product tab bar has no business
+    // sitting under a running assessment. What it stops having is its own COLOUR SYSTEM: the page
+    // frame, measure and type now match every other surface, so arriving here from 探す does not
+    // feel like leaving Yorisou for a microsite that happens to share the logo.
+    <main className="min-h-screen text-[var(--pxr-text-primary)]">
+      {/* Minimal top bar — the orientation anchor in a shell-suppressed context. */}
+      <div className="sticky top-0 z-30 border-b border-[var(--pxr-border-subtle)] bg-[var(--pxr-canvas)]">
+        <div className="mx-auto flex w-full max-w-[var(--pxr-content-width)] items-center justify-between px-5 py-3">
+          <span className="text-[15px] font-semibold tracking-[0.08em] text-[var(--pxr-text-primary)]">YORISOU</span>
+          <span className="text-[13px] text-[var(--pxr-text-muted)]">
+            {phase === "quiz" ? stepLabel : "いま色テスト"}
+          </span>
         </div>
       </div>
-      <section className="border-b border-[rgba(23,59,53,0.1)]">
-        <div className="container py-5 md:py-8">
-          <div className="mx-auto max-w-[40rem]">
+      <section>
+        <div className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 py-6 md:py-10">
+          <div>
             {phase === "intro" ? (
               <div className="grid gap-5">
-                <div className="space-y-3">
-                  <p className="service-kicker" style={{ color: "#4D7A69" }}>いま色テスト by よりそう</p>
-                  <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.2] text-[#22201D] md:text-[2.6rem]">
+                <div className="grid gap-3">
+                  <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+                    いま色テスト by よりそう
+                  </p>
+                  <h1 className="display-serif max-w-[12em] text-[2rem] leading-[1.2] text-[var(--pxr-text-primary)] md:text-[2.6rem]">
                     今のあなたの“いま色”を見てみる
                   </h1>
-                  <p className="text-[11px] tracking-[0.06em] text-[#6F6760]">{getIntroFacts(totalQuestions)}</p>
-                  <p className="max-w-[35rem] text-[14px] leading-7 text-[#6F6760]">
+                  <p className="text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">{getIntroFacts(totalQuestions)}</p>
+                  <p className="text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
                     結果は固定タイプではなく、120Qから見た今の動き方です。
                   </p>
                 </div>
@@ -417,8 +420,7 @@ export default function MiniTestFlow() {
                     <button
                       type="button"
                       onClick={resumeSavedAttempt}
-                      className="inline-flex min-h-[48px] w-full items-center justify-center rounded-full px-5 py-3 text-[15px] transition hover:opacity-95 active:scale-[0.975]"
-                      style={{ background: "#173B35", color: "#fff", fontWeight: 700 }}
+                      className="inline-flex min-h-[var(--pxr-touch-target)] w-full items-center justify-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 py-3 text-[15px] font-semibold text-white transition hover:opacity-95 active:scale-[0.975]"
                     >
                       続きからはじめる
                     </button>
@@ -433,36 +435,33 @@ export default function MiniTestFlow() {
                     type="button"
                     onClick={() => { void beginOrConfirmRestart(); }}
                     disabled={attempt.startState === "starting" || completing || restarting}
-                    className="inline-flex min-h-[54px] w-full items-center justify-center rounded-full px-5 py-3 text-[16px] transition hover:opacity-95 active:scale-[0.975]"
-                    style={{ background: "#173B35", color: "#fff", fontWeight: 800, boxShadow: "0 14px 30px rgba(23,59,53,0.28)" }}
+                    className="inline-flex min-h-[54px] w-full items-center justify-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 py-3 text-[16px] font-semibold text-white transition hover:opacity-95 active:scale-[0.975] disabled:opacity-60"
                   >
                     {attempt.startState === "starting" ? "準備しています…" : resumableAttempt ? "はじめからやり直す" : "いま色テストをはじめる"}
                   </button>
-                  <p className="mt-2.5 text-[11px] leading-6 text-[#6F6760]">
-                    診断ではありません · <MvpActionLink href="/privacy" label="プライバシー" tone="ghost" />
+                  {/* The privacy link was a ghost MvpActionLink: bold, dark green, and visually
+                      heavier than the reassurance it sits inside. */}
+                  <p className="mt-3 text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                    診断ではありません ·{" "}
+                    <Link href="/privacy" className="font-medium text-[var(--pxr-accent)]">
+                      プライバシー
+                    </Link>
                   </p>
                 </div>
 
-                <MvpCard className="space-y-3 rounded-[1.2rem] border-[rgba(23,59,53,0.08)] bg-white/92 p-4 shadow-[0_12px_26px_rgba(23,59,53,0.06)]">
-                  <p className="text-[11px] font-semibold tracking-[0.13em] text-[#49615B]">このあと受け取れるもの</p>
-                  <div className="grid gap-2 text-[13px] leading-6 text-[#6F6760] sm:grid-cols-2">
+                {/* Information, not a card. This was a shadowed white panel and, directly beneath it,
+                    a second decorative strip whose entire content restated 「24の色と名前」 — a card
+                    that existed to say again what the hero had just said. The strip is gone; the four
+                    facts stay, because they are what someone weighing 120 questions needs to know. */}
+                <div className="grid gap-2 border-t border-[var(--pxr-border-subtle)] pt-4">
+                  <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+                    このあと受け取れるもの
+                  </p>
+                  <div className="grid gap-1 text-[14px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
                     <p>・24の結果から今の動き方を表示します。</p>
                     <p>・公開テスト中の詳しいレポートまで続けて読めます。</p>
                     <p>・レポートはこの端末に保存できます。</p>
                     <p>・感想や不具合はあとで送れます。</p>
-                  </div>
-                </MvpCard>
-
-                {/* Transition cue — lightweight signal strip */}
-                <div
-                  className="rounded-[1rem] px-4 py-3"
-                  style={{ background: "rgba(23,59,53,0.04)", border: "1px solid rgba(23,59,53,0.07)" }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="signal-orb" aria-hidden="true" />
-                    <p className="text-[12px] leading-6 text-[#6F6760]">
-                      今の動き方を、24の色と名前で見ていきます。
-                    </p>
                   </div>
                 </div>
 
@@ -481,9 +480,9 @@ export default function MiniTestFlow() {
                     <span>{stepLabel}</span>
                     <span>残り{remainingQuestions}問</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-[rgba(23,59,53,0.1)]">
+                  <div className="h-1.5 rounded-full bg-[var(--pxr-surface-emphasis)]">
                     <div
-                      className="h-full rounded-full bg-[#173B35] transition-all"
+                      className="h-full rounded-full bg-[var(--pxr-accent)] transition-all"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
