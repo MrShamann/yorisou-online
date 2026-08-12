@@ -45,7 +45,7 @@ const SHORT_ACTIONS = [
 
 export default function TodayPage() {
   return (
-    <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-8">
+    <main className="mx-auto flex w-full max-w-[var(--pxr-content-width)] flex-col px-5 pb-28 pt-8 md:pt-14">
       <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">今日</p>
 
       {/* The entry hero. One motif's worth of weight, carried by type and space rather than an
@@ -62,7 +62,9 @@ export default function TodayPage() {
       {/* ONE primary action. */}
       <Link
         href="/today/check-in"
-        className="mt-6 flex min-h-[var(--pxr-touch-target)] w-full items-center justify-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 py-4 text-[16px] font-semibold text-white"
+        // Full width where the thumb needs it; intrinsic width once there is room, because a 560px
+        // button on desktop reads as an unfinished layout rather than a confident one.
+        className="mt-6 flex min-h-[var(--pxr-touch-target)] w-full items-center justify-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-8 py-4 text-[16px] font-semibold text-white sm:w-auto sm:self-start"
       >
         今の気配を見る
       </Link>

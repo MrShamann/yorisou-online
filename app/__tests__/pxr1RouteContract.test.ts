@@ -63,6 +63,25 @@ test("the four consumer tabs are the locked IA, each pointing at a real route", 
   assert.ok(!nav.includes('href: "/tests"'), "気づく owns the depth ladder, /tests is not a tab");
 });
 
+test("desktop and mobile navigation agree on the SAME information architecture", () => {
+  // Caught by 1440 QA: the header still carried the pre-PXR-1 labels while the bottom nav had the
+  // new ones. Two navigations disagreeing is worse than either being wrong alone — the same person
+  // gets a different mental model depending on their window width.
+  const header = read("components/AppHeader.tsx");
+  const nav = read("components/MobileBottomNav.tsx");
+  for (const label of ["気づく", "探す", "わたし"]) {
+    assert.ok(header.includes(`"${label}"`), `desktop header missing: ${label}`);
+    assert.ok(nav.includes(`"${label}"`), `bottom nav missing: ${label}`);
+  }
+  for (const stale of ["今を知る", "おすすめ", "わたしの今", "体験を見つける"]) {
+    assert.ok(!header.includes(`"${stale}"`), `stale desktop label: ${stale}`);
+  }
+  for (const href of ['"/notice"', '"/explore"', '"/me"']) {
+    assert.ok(header.includes(href), `desktop header missing destination: ${href}`);
+    assert.ok(nav.includes(href), `bottom nav missing destination: ${href}`);
+  }
+});
+
 test("気づく orders depth shortest-first, so the 120Q is not the entry", () => {
   const notice = read("notice/page.tsx");
   const light = notice.indexOf("/today/check-in");
