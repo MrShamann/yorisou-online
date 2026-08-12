@@ -354,9 +354,22 @@ before and after the push.
 Deployment `dpl_8Tb2ZTTy3qzKug9yEdmzxRqZrQmZ`, GitHub deployment `5870738998`. Its logs need Vercel
 credentials that are not available in this environment, so the cause is **not established**.
 
-What is established: every clean-environment build of this exact SHA succeeds — four independent CI
-build jobs and a local cold build. That does not prove the deployment failure is unrelated to this
-branch, and it is not claimed to. It means the failure was not reproduced by any build available here.
+What is established:
+
+* every clean-environment build of this SHA succeeds — four independent CI build jobs plus a local
+  cold build (`✓ Compiled successfully in 25.2s`, `.next` removed first, no dev server running);
+* the failure is **reproducible and specific to this branch**: a second deployment of `b47cfe8` also
+  failed, while the Vercel checks on PR #129, #125 and #113 are all green, and `main` deploys to
+  Production normally;
+* it could not be narrowed further here. A probe branch pushed at the pre-session PXR-1 head produced
+  no deployment at all — this project deploys branches that have a pull request, so bisecting would
+  mean opening throwaway PRs against the Founder's repository, which this package does not authorise.
+  The probe branch was deleted.
+
+So: the code builds everywhere it can be built from this environment, and the deployment fails
+consistently on Vercel for a reason that requires the Vercel build log to read. **This is not claimed
+to be unrelated to the branch.** It is an open question that needs either Vercel log access or a
+Founder-authorised bisect, and the hosted Preview audit stays UNRUN until it is answered.
 
 Local build attempts before the guarded run reported `⨯ Another next build process is already running`
 and `Error while requesting https://fonts.gstatic.com/...`. Both were local artefacts — a concurrent
