@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { buildPublicResultHref } from "../../check-in/resultCompatibility";
+import { buildPublicResultHref } from "../../tests/ima-iro/resultCompatibility";
 import {
   takePendingImairoSave,
   peekPendingResultClaim,

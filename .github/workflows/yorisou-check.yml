@@ -107,6 +107,16 @@ jobs:
       - name: Result-reveal contracts (incl. YRR-1 aria-hidden/inert gate)
         run: npm run test:result-reveal
 
+      # PXR-1. The 120Q moved to its own canonical route and `/check-in` became a compatibility
+      # redirect. These guard the thing that break is easiest to miss: the redirect must carry the
+      # LINE entry context, because the runtime reads it to decide how completion navigates, so a
+      # regression still returns 200 and still shows the right product.
+      - name: PXR-1 route semantics and LINE mini-app entry compatibility
+        run: |
+          npm run test:pxr1-routes
+          npm run test:pxr1-line-compat
+          npm run test:checkin-runtime
+
       - name: Imairo snapshot contracts (RTR-1 private save)
         run: npm run test:imairo-snapshot
 

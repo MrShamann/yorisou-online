@@ -7,10 +7,16 @@ import { useState } from "react";
 import YorisouLogo from "./YorisouLogo";
 
 const PRIMARY_NAV = [
-  { href: "/tests", label: "今を知る" },
-  { href: "/recommendations/graph", label: "おすすめ" },
-  { href: "/experiences", label: "体験を見つける" },
-  { href: "/saved", label: "わたしの今" },
+  // PXR-1 — the SAME information architecture the mobile shell uses.
+  //
+  // Desktop QA at 1440 caught this carrying the pre-PXR-1 labels while the bottom navigation already
+  // used the new ones. Two navigations disagreeing about what the product contains is worse than
+  // either being wrong on its own: the same person gets a different mental model depending on the
+  // width of their window. Labels and destinations are identical across breakpoints; only the
+  // presentation differs.
+  { href: "/notice", label: "気づく" },
+  { href: "/explore", label: "探す" },
+  { href: "/me", label: "わたし" },
 ] as const;
 
 function isActive(pathname: string, href: string) {

@@ -99,7 +99,11 @@ const CATALOGUE: GovernedRecommendation[] = [
     sourceClass: "yorisou_internal",
     commercialStatus: "none",
     limitations: "変化を必ず捉えられるわけではありません。気が向いたときで十分です。",
-    internalRoute: "/check-in",
+    // PXR-1 route-semantics fix. This pointed at "/check-in", which is now a compatibility redirect
+    // to the 120-question いま色テスト. The entry offers a light re-look at how things are now, so
+    // under the locked semantics it belongs to the 1–2 minute interaction. Left unchanged, an offer
+    // worded "もう一度いまの状態をみる" would have opened a 120Q.
+    internalRoute: "/today/check-in",
   },
   {
     recommendationKey: "rest_first",

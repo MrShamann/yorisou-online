@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpPill } from "../components/MvpSurface";
-import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../tests/ima-iro/resultCompatibility";
 import RecommendationSignalForm from "./RecommendationSignalForm";
 import Link from "next/link";
 import { requireRecommendationContext } from "@/lib/server/canonicalResultContext";
@@ -219,7 +219,7 @@ function renderRecommendations({
                   日を変えて見ると、今の傾向が少し読みやすくなることがあります。
                 </p>
                 <MvpActionLink
-                  href="/check-in"
+                  href="/tests/ima-iro"
                   label="120問をもう一度見る"
                   tone="secondary"
                   className="rounded-full border-[rgba(105,151,130,0.22)] bg-[#EAF7F1] !text-[#315F50] shadow-none"

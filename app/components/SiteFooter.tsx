@@ -13,7 +13,10 @@ export default function SiteFooter() {
   const privacyHref = "/privacy";
   const contactHref = isEn ? "/en/contact" : "/contact";
   const aboutHref = isEn ? "/en/about" : "/about";
-  const checkInHref = isEn ? "/en/check-in" : "/check-in";
+  // PXR-1: 「クイックチェック」 must open the 1-2 minute interaction, not the 120Q that
+  // "/check-in" now redirects to. The /en tree has no light interaction yet, so it keeps its
+  // existing route rather than being pointed at a Japanese-only screen.
+  const checkInHref = isEn ? "/en/check-in" : "/today/check-in";
   const testsHref = "/tests";
 
   return (

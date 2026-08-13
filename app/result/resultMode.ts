@@ -13,7 +13,7 @@ import "server-only";
 // has no row id to give. A field that does not exist in a mode is absent, not null.
 
 import { loadPersistedAssessmentResult } from "@/lib/server/persistedResultView";
-import type { PublicResultConfidenceBand } from "../check-in/resultCompatibility";
+import type { PublicResultConfidenceBand } from "../tests/ima-iro/resultCompatibility";
 import { canonicalRowIdWhenEnabled } from "@/lib/server/por1RuntimeControls";
 
 export type ResultRouteParams = Record<string, string | string[] | undefined>;

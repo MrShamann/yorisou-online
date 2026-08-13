@@ -399,7 +399,7 @@ function ResultView({ result, answers, onRetake }: { result: RFResult; answers: 
           {/* Actions */}
           <div className="space-y-3 pt-2">
             <Link
-              href="/check-in"
+              href="/today/check-in"
               className="inline-flex min-h-[52px] w-full items-center justify-center rounded-[var(--yorisou-radius-pill)] border border-[var(--yorisou-color-neutral-200)] bg-white px-6 text-[15px] font-semibold text-[var(--yorisou-color-primary-700)] transition hover:bg-[var(--yorisou-color-primary-50)] sm:w-auto"
             >
               「今の自分」チェックも見る

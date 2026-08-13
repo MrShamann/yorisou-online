@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { SOURCE_LABEL, CONFIDENCE_COPY, LIMITATION_COPY, PRIVACY_COPY } from "../../../app/result/reveal/revealContent";
-import { getTemporary120QResultCompatibility } from "../../../app/check-in/resultCompatibility";
+import { getTemporary120QResultCompatibility } from "../../../app/tests/ima-iro/resultCompatibility";
 
 const root = process.cwd();
 const read = (p: string) => readFileSync(join(root, p), "utf8");

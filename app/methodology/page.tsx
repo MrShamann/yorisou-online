@@ -5,7 +5,7 @@ import { MvpActionLink, MvpCard, MvpSection } from "../components/MvpSurface";
 export const metadata: Metadata = {
   title: "Life-State Archetype の見方 | Yorisou",
   description:
-    "Yorisou の Life-State Archetype が、24問の現在地チェックをどう扱うかを短く伝えるページです。",
+    "Yorisou の Life-State Archetype が、いま色テストの回答をどう扱うかを短く伝えるページです。",
 };
 
 const principles = [
@@ -15,7 +15,7 @@ const principles = [
   },
   {
     title: "リズム・距離・決め方・戻り方を見る",
-    body: "24問では、進むテンポ、人との距離感、決めるときの手触り、乱れたあとの戻り方などを小さく見ます。",
+    body: "いま色テストでは、進むテンポ、人との距離感、決めるときの手触り、乱れたあとの戻り方などを小さく見ます。",
   },
   {
     title: "公開結果は軽く、安全な範囲にする",
@@ -28,8 +28,11 @@ const principles = [
 ];
 
 const modelLayers = [
-  "24問の回答から、今の傾向を6つの公開結果に寄せて整理します。",
-  "負荷や広がり方は、4つの状態ラベルで補助的に添えます。",
+  "いま色テストの回答から、今の傾向を24の公開結果に寄せて整理します。",
+  // The count was dropped rather than corrected: no four-value state-label set exists in the code,
+  // so any number here would be invented. The overlay is a single value and the confidence band has
+  // two, neither of which is what this sentence describes.
+  "負荷や広がり方は、状態ラベルで補助的に添えます。",
   "自分だけで見返す保存や意向記録は、ブラウザ内だけに残します。",
 ] as const;
 
@@ -45,7 +48,7 @@ export default function MethodologyPage() {
               <span className="block text-[var(--accent-sage-text)]">固定せずに受け取る方法です。</span>
             </h1>
             <p className="max-w-[38rem] text-[15px] leading-8 text-[var(--muted)]">
-              Yorisou は、診断でも占いでもありません。24問のチェックでは、今の暮らしのリズムや距離感、決め方、戻り方を見て、公開結果と自分だけの記録を分けて扱います。
+              Yorisou は、診断でも占いでもありません。いま色テストでは、今の暮らしのリズムや距離感、決め方、戻り方を見て、公開結果と自分だけの記録を分けて扱います。
             </p>
           </div>
         </div>
@@ -62,7 +65,9 @@ export default function MethodologyPage() {
         </div>
       </MvpSection>
 
-      <MvpSection eyebrow="24問MVPの範囲" title="いま動いている範囲は、軽い現在地チェックです。">
+      {/* 「軽い現在地チェック」 is now the name of a different product — the 1-2 minute
+          /today/check-in. This section is about the 120-question いま色テスト. */}
+      <MvpSection eyebrow="いま色テストの範囲" title="いま動いている範囲は、120問のいま色テストです。">
         <MvpCard className="space-y-3">
           {modelLayers.map((item) => (
             <p key={item} className="rounded-[1rem] border border-[color:var(--line-soft)] bg-white/80 px-4 py-3 text-[14px] leading-7 text-[var(--text)]">
@@ -72,13 +77,15 @@ export default function MethodologyPage() {
         </MvpCard>
       </MvpSection>
 
+      {/* The title promised 「軽く」 and the lead named 「チェックイン」 above a button that opens 120
+          questions — the same broken promise removed from /about, one file over, in this same pass. */}
       <MvpSection
         eyebrow="次の一歩"
-        title="方法を見たら、軽く試してみるだけで十分です。"
-        lead="まずはチェックインから始めて、結果のあとで必要な読みだけを選べます。"
+        title="方法を見たら、あとは試してみるだけで十分です。"
+        lead="いま色テストを受けると、結果のあとで必要な読みだけを選べます。"
         actions={
           <>
-            <MvpActionLink href="/check-in" label="チェックインをはじめる" />
+            <MvpActionLink href="/tests/ima-iro" label="いま色テストをはじめる" />
             <MvpActionLink href="/" label="ホームへ戻る" tone="secondary" />
           </>
         }

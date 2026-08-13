@@ -10,7 +10,7 @@ import type { Components } from "react-markdown";
 import { MvpActionLink, MvpCard, MvpPill } from "@/app/components/MvpSurface";
 import OpenTestingNotice from "@/app/components/OpenTestingNotice";
 import { OpenTestingReportTracker } from "@/app/components/OpenTestingTracker";
-import { buildPublicResultHref } from "@/app/check-in/resultCompatibility";
+import { buildPublicResultHref } from "@/app/tests/ima-iro/resultCompatibility";
 import { findPublicArchetypeContentByCode } from "@/lib/yorisou/public-result";
 import { PUBLIC_ARCHETYPE_TAXONOMY } from "@/lib/yorisou/public-result/taxonomy";
 import {

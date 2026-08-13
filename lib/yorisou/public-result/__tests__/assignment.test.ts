@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 
-import { getTemporary120QResultCompatibility } from "@/app/check-in/resultCompatibility";
+import { getTemporary120QResultCompatibility } from "@/app/tests/ima-iro/resultCompatibility";
 import {
   assignPublicArchetype,
   findPublicArchetypeContentByCode,

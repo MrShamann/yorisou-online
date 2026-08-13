@@ -4,7 +4,7 @@ import Link from "next/link";
 import DteEventTracker from "../components/DteEventTracker";
 import OpenTestingNotice from "../components/OpenTestingNotice";
 import { OpenTestingReportTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
-import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../check-in/resultCompatibility";
+import { buildPublicResultHref, getTemporary120QResultCompatibility } from "../tests/ima-iro/resultCompatibility";
 import ReportIntentAction from "./ReportIntentAction";
 import { buildSelfUnderstandingPreviewByCode, buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 
@@ -258,7 +258,7 @@ export default async function ReportPreviewPage({
                 今のヒントを見る
               </Link>
               <span className="text-[#D4CCC6]">·</span>
-              <Link href="/check-in" className="hover:underline">
+              <Link href="/today/check-in" className="hover:underline">
                 もう一度チェックする
               </Link>
             </div>

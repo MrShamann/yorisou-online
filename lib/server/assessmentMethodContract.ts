@@ -2,7 +2,7 @@ import "server-only";
 // UX-2 / ICP-1 — the server-side contract for the governed public 120Q method.
 // Values are READ from the existing governed artifacts; nothing here redefines protected truth.
 
-import { currentStateQuestions } from "@/app/check-in/currentStateCheckV1";
+import { currentStateQuestions } from "@/app/tests/ima-iro/currentStateCheckV1";
 
 export const CURRENT_STATE_METHOD_ID = "imairo-120q";
 export const CURRENT_STATE_METHOD_VERSION = "compat-v0.2";

@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
 // the request body.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { scoreCurrentStateCheck } from "@/app/check-in/currentStateCheckV1";
+import { scoreCurrentStateCheck } from "@/app/tests/ima-iro/currentStateCheckV1";
 import { buildPersistedResultEnvelope } from "@/lib/server/persistedDimensionSummary";
 import { completeAttempt, hashClaimToken } from "@/lib/server/assessmentAttemptStore";
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";

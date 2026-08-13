@@ -888,3 +888,71 @@ main {
     opacity: 0.55;
   }
 }
+
+/* ── PXR-1 product foundation ────────────────────────────────────────────────
+ *
+ * A deliberately small set. The live product had two visual systems — a violet sans-serif home and a
+ * dark-green serif test microsite — so the problem was never too few tokens, it was two unrelated
+ * languages. Every value below corresponds to something visible on a screen; there is no speculative
+ * scale here, because an unused token is just a decision nobody made.
+ *
+ * Direction: warm paper canvas, ink text, one restrained accent. No gradients, no glass, no glow.
+ */
+:root {
+  /* Surfaces — warm paper rather than clinical white. */
+  --pxr-canvas: #faf8f4;
+  --pxr-surface: #ffffff;
+  --pxr-surface-emphasis: #f4f1ea;
+
+  /* Text — ink, not black. Three steps is enough hierarchy for one screen. */
+  --pxr-text-primary: #1c1b19;
+  --pxr-text-secondary: #55514b;
+  /* WCAG AA. The first value here was #8a847c, which measured 3.28-3.70:1 against the four
+     backgrounds it actually appears on — every eyebrow, timing hint and provenance line in the
+     product was below the 4.5:1 threshold for body-size text. axe found it on all seven refounded
+     surfaces at both widths. #6b655d measures 5.11-5.76:1 and is still clearly the quiet tone,
+     well below --pxr-text-secondary at 6.99-7.88:1. */
+  --pxr-text-muted: #6b655d;
+
+  --pxr-border-subtle: #e8e3da;
+
+  /* One accent. State/persona expression is layered per surface, never a second brand. */
+  --pxr-accent: #4b3fd4;
+  --pxr-accent-quiet: #ece9fb;
+
+  /* Spacing — a 4px rhythm, only the steps actually used. */
+  --pxr-space-1: 4px;
+  --pxr-space-2: 8px;
+  --pxr-space-3: 12px;
+  --pxr-space-4: 16px;
+  --pxr-space-5: 20px;
+  --pxr-space-6: 24px;
+  --pxr-space-8: 32px;
+  --pxr-space-12: 48px;
+
+  --pxr-radius-sm: 10px;
+  --pxr-radius-lg: 18px;
+  --pxr-radius-pill: 999px;
+
+  /* One shadow. Depth is carried by surface and space, not by stacking shadows. */
+  --pxr-shadow-soft: 0 1px 2px rgba(28, 27, 25, 0.04), 0 8px 24px rgba(28, 27, 25, 0.04);
+
+  /* Japanese mobile reading needs generous leading; these are the two that matter. */
+  --pxr-leading-body: 1.85;
+  --pxr-leading-heading: 1.5;
+
+  /* Comfortably above the 44px floor, for one-handed use. */
+  --pxr-touch-target: 48px;
+
+  /* Bounded measure so desktop is composed, not stretched. */
+  --pxr-content-width: 560px;
+
+  --pxr-motion-quick: 140ms;
+  --pxr-motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --pxr-motion-quick: 0ms;
+  }
+}

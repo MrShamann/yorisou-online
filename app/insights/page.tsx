@@ -13,7 +13,8 @@ const THEMES = [
   {
     label: "今の気持ちを整理する",
     body: "今の状態をひとことで表すとしたら何ですか。答えを決めずに、少しだけ言葉にしてみるための入口です。",
-    href: "/check-in",
+    // PXR-1: this description IS the light interaction. "/check-in" now redirects to the 120Q.
+    href: "/today/check-in",
   },
   {
     label: "人間関係の疲れ",

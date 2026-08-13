@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { getTemporary120QResultCompatibility } from "../../check-in/resultCompatibility";
+import { getTemporary120QResultCompatibility } from "../../tests/ima-iro/resultCompatibility";
 
 export const runtime = "edge";
 export const size = {

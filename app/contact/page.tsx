@@ -50,7 +50,7 @@ export default async function ContactPage({
           </>
         }
         subtitle="ご相談内容がまだまとまっていなくても大丈夫です。公開テストの感想、不具合、使い方への質問まで、必要なことから順番にお送りいただけます。"
-        primaryHref="/check-in"
+        primaryHref="/today/check-in"
         primaryLabel="クイックチェックを始める"
         secondaryHref="/tests"
         secondaryLabel="テスト一覧を見る"
@@ -93,7 +93,7 @@ export default async function ContactPage({
                 公開テスト中の感想や不具合報告は、組織ではなく個人ユーザーとしてそのまま送っていただけます。
               </div>
               <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-                <Link href="/check-in" className="soft-link">
+                <Link href="/today/check-in" className="soft-link">
                   クイックチェックを始める
                 </Link>
               </div>

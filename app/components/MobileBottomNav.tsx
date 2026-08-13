@@ -3,31 +3,36 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// PXR-1 — the consumer information architecture.
+//
+// This shell already existed; PXR-1 changes what it MEANS rather than adding a second navigation.
+// `ホーム` became `今日` because the destination stopped being a description of Yorisou and became
+// what is useful to this person now — the label had to move with the product model, not decorate it.
 const TABS = [
   {
     href: "/",
-    label: "ホーム",
+    label: "今日",
     icon: (
       <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1v-7.5Z" />
     ),
   },
   {
-    href: "/tests",
-    label: "今を知る",
+    href: "/notice",
+    label: "気づく",
     icon: (
       <path d="M5 13.5 9 9l3.5 3.5L19 6M15.5 6H19v3.5" />
     ),
   },
   {
-    href: "/recommendations/graph",
-    label: "おすすめ",
+    href: "/explore",
+    label: "探す",
     icon: (
       <path d="M12 4.5 13.8 9.7 19 11.5 13.8 13.3 12 18.5 10.2 13.3 5 11.5 10.2 9.7 12 4.5Z" />
     ),
   },
   {
-    href: "/saved",
-    label: "わたしの今",
+    href: "/me",
+    label: "わたし",
     icon: (
       <>
         <circle cx="12" cy="8.5" r="3.5" />
@@ -40,7 +45,18 @@ const TABS = [
 function isActive(pathname: string, href: string) {
   const normalized = pathname.replace(/\/$/, "") || "/";
   if (href === "/") return normalized === "/";
-  if (href === "/recommendations/graph") return normalized.startsWith("/recommendations");
+  // 探す owns discovery, including the existing recommendation surfaces it absorbs.
+  if (href === "/explore") {
+    return normalized.startsWith("/explore") || normalized.startsWith("/recommendations");
+  }
+  // 気づく owns the depth ladder: the light interaction, the test library and the Deep Dive.
+  if (href === "/notice") {
+    return normalized.startsWith("/notice") ||
+      normalized.startsWith("/today/check-in") ||
+      normalized.startsWith("/tests");
+  }
+  // わたし absorbs the existing saved surface.
+  if (href === "/me") return normalized.startsWith("/me") || normalized.startsWith("/saved");
   return normalized === href || normalized.startsWith(`${href}/`);
 }
 

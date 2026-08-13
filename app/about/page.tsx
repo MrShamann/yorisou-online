@@ -22,8 +22,8 @@ export default function AboutPage() {
           </>
         }
         subtitle="Yorisouは、いまの気分・考え方・行動のリズムをふり返り、公開しても安心な結果と、自分だけで読めるヒントを分けて届けるサービスです。"
-        primaryHref="/check-in"
-        primaryLabel="24問チェックをはじめる"
+        primaryHref="/tests/ima-iro"
+        primaryLabel="いま色テストをはじめる"
         secondaryHref="/report-preview?resultId=EM-AK&overlayId=balancing&confidence=low"
         secondaryLabel="レポートの見本を見る"
       />
@@ -68,7 +68,7 @@ export default function AboutPage() {
               <div className="motion-card panel-sage rounded-[1.7rem] px-6 py-6">
                 <div className="service-kicker text-[var(--accent-sage-text)]">最初にすること</div>
                 <h2 className="section-title" style={{ marginTop: 12 }}>
-                  最初の入口は、24問チェックです
+                  入口のひとつが、いま色テストです
                 </h2>
                 <p className="page-copy" style={{ marginTop: 12, color: "var(--accent-sage-text)" }}>
                   質問は、医学的な診断や専門的な評価ではなく、今の生活リズムや感じ方をふり返るためのものです。深く考え込みすぎず、「今の自分に近い」と感じる選択肢を選んでください。
@@ -127,13 +127,15 @@ export default function AboutPage() {
                 シェアできる内容には、弱さ・家庭事情・個別の悩み・推薦履歴・レポート内容などを含めません。自分を説明しやすくすることと、必要以上にさらけ出さないこと。その両方を大切にします。
               </p>
               <div className="mt-6">
-                <p className="section-label">今の状態を、短くふり返ってみる</p>
+                {/* Both the count and the "short" promise were stale: the button below opens the
+                    120-question いま色テスト. 短く now belongs to /today/check-in, a different product. */}
+                <p className="section-label">今の状態を、ふり返ってみる</p>
                 <p className="page-copy" style={{ marginTop: 8 }}>
-                  まずは24問チェックから。LINEやWebであとから戻りやすくする導線も、順次整えています。
+                  じっくり見たいときは、いま色テストから。LINEやWebであとから戻りやすくする導線も、順次整えています。
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link href="/check-in" className="btn btn-primary">
-                    24問チェックをはじめる
+                  <Link href="/tests/ima-iro" className="btn btn-primary">
+                    いま色テストをはじめる
                   </Link>
                   <Link href="/services" className="soft-link">
                     サービスの流れを見る

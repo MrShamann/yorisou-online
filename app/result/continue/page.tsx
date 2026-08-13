@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { buildPublicResultSearchParams } from "../../check-in/resultCompatibility";
+import { buildPublicResultSearchParams } from "../../tests/ima-iro/resultCompatibility";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
