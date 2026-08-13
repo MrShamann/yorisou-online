@@ -73,3 +73,7 @@ tmp/
 # Supabase CLI local artifacts (machine-specific, never committed)
 supabase/.branches/
 supabase/.temp/
+
+# LOCAL APP — runtime lives on the SSD, never in the repo.
+scripts/local-app/native/build/
+*.icns.tmp

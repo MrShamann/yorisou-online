@@ -117,7 +117,14 @@
     "test:pxr1-history": "node --import tsx --test lib/yorisou/history/__tests__/readModel.test.ts",
     "test:pxr1-a11y": "playwright test tests/smoke/pxr1-a11y.spec.ts --project=desktop",
     "test:pxr1-line-compat": "node --import tsx --test lib/server/__tests__/miniAppEntryRouting.test.ts",
-    "test:checkin-runtime": "node --import tsx --test lib/yorisou/scoring/__tests__/checkin-runtime.test.ts"
+    "test:checkin-runtime": "node --import tsx --test lib/yorisou/scoring/__tests__/checkin-runtime.test.ts",
+    "local-app:install": "bash scripts/local-app/install.sh",
+    "local-app:start": "bash scripts/local-app/start.sh",
+    "local-app:stop": "bash scripts/local-app/stop.sh",
+    "local-app:restart": "bash scripts/local-app/restart.sh",
+    "local-app:doctor": "bash scripts/local-app/doctor.sh",
+    "local-app:snapshot": "bash scripts/local-app/snapshot.sh",
+    "local-app:test": "bash scripts/local-app/test-contract.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",

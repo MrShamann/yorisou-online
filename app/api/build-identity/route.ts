@@ -32,6 +32,24 @@ export async function GET() {
       commitRef: process.env.VERCEL_GIT_COMMIT_REF ?? null,
       // "production" | "preview" | "development". Acceptance must never run against production.
       environment: process.env.VERCEL_ENV ?? "development",
+
+      // LOCAL APP — identity of the SSD-backed local release, when this process is one.
+      //
+      // Hosted deployments get their identity from `VERCEL_GIT_COMMIT_SHA`, which Vercel injects.
+      // A local release has no such injection, so without this the local app could prove only that
+      // "something answered on 3210" — the exact gap the reachability lesson above is about, and the
+      // gap a foreign process on the port would slip through.
+      //
+      // These are LOCAL variables on purpose. Setting `VERCEL_*` on a laptop to make the response
+      // look hosted would be a masquerade: it would forge the one field acceptance uses to refuse
+      // running against production. `environment` therefore stays "development" here, truthfully,
+      // and the launcher's ownership contract binds against `localRelease.sha`.
+      //
+      // Null on every hosted deployment, so nothing about hosted identity changes.
+      localRelease: {
+        sha: process.env.YORISOU_LOCAL_RELEASE_SHA ?? null,
+        path: process.env.YORISOU_LOCAL_RELEASE_PATH ?? null,
+      },
       // POR-1 — which identity store this deployment is bound to. Bounded and non-secret: a mode
       // name, a boundary classification, and whether the object store and the database are the same
       // project. No bucket credentials, no token, no endpoint, no object key, no account.
