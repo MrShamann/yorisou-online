@@ -36,6 +36,7 @@ export const PRODUCT_CARDS: readonly ProductCard[] = [
     category: "relationship",
     title_ja: "人間関係の疲れ",
     subtitle_ja: "会う・返す・合わせる。今どこに負担が出ているかを小さく整理します。",
+    // relationship-fatigue really is 24 questions, unlike the いま色テスト card above.
     badges: ["24問", "約4〜6分", "無料結果"],
     status: "primary",
     primary_cta: "チェックを始める",

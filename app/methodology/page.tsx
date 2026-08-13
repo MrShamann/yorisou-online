@@ -29,7 +29,10 @@ const principles = [
 
 const modelLayers = [
   "いま色テストの回答から、今の傾向を24の公開結果に寄せて整理します。",
-  "負荷や広がり方は、4つの状態ラベルで補助的に添えます。",
+  // The count was dropped rather than corrected: no four-value state-label set exists in the code,
+  // so any number here would be invented. The overlay is a single value and the confidence band has
+  // two, neither of which is what this sentence describes.
+  "負荷や広がり方は、状態ラベルで補助的に添えます。",
   "自分だけで見返す保存や意向記録は、ブラウザ内だけに残します。",
 ] as const;
 
@@ -74,10 +77,12 @@ export default function MethodologyPage() {
         </MvpCard>
       </MvpSection>
 
+      {/* The title promised 「軽く」 and the lead named 「チェックイン」 above a button that opens 120
+          questions — the same broken promise removed from /about, one file over, in this same pass. */}
       <MvpSection
         eyebrow="次の一歩"
-        title="方法を見たら、軽く試してみるだけで十分です。"
-        lead="まずはチェックインから始めて、結果のあとで必要な読みだけを選べます。"
+        title="方法を見たら、あとは試してみるだけで十分です。"
+        lead="いま色テストを受けると、結果のあとで必要な読みだけを選べます。"
         actions={
           <>
             <MvpActionLink href="/tests/ima-iro" label="いま色テストをはじめる" />

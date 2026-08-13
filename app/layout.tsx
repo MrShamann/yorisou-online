@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   // metadata inherits — so the single most-rendered claim in the product was that the test is 24
   // questions. It is 120. The replacement is the approved copy already used on 今日 rather than a
   // corrected number, because the site-level title should name the product, not one assessment.
-  title: "Yorisou | AIと整える、わたしの毎日。",
+  title: "YORISOU | AIと整える、わたしの毎日。",
   description:
     "Yorisouは、今の状態を短い言葉にして、次の小さな一歩を見つけるためのLINE/Web-firstセルフリフレクションサービスです。診断や占いではありません。",
 };

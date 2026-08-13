@@ -15,6 +15,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const APP = join(dirname(fileURLToPath(import.meta.url)), "..");
+const LIB = join(APP, "..", "lib");
 const read = (p: string) => readFileSync(join(APP, p), "utf8");
 const code = (p: string) => read(p).replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
 
@@ -102,26 +103,46 @@ test("no surface claims the いま色テスト is 24 questions", () => {
   //
   // 24問 remains CORRECT for the relationship-fatigue check, which really is 24 questions, so the
   // rule is scoped rather than absolute: a file may say 24問 only if it is about that test.
+  // The exemption is scoped to the LINE, not the file. A file-wide exemption looked reasonable and
+  // was worthless: app/data/productCards.ts holds cards for BOTH tests, so matching
+  // "relationship-fatigue" anywhere in it exempted the whole file — including the exact badge this
+  // package had just corrected. Sixteen files under app/ were unconditionally exempt that way.
+  const RELATIONSHIP_FATIGUE = "relationship-fatigue";
   const offenders: string[] = [];
-  const walk = (dir: string) => {
+  const walk = (root: string, dir: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
         if (entry.name === "node_modules" || entry.name === "__tests__") continue;
-        walk(full);
+        walk(root, full);
         continue;
       }
       if (!/\.tsx?$/.test(entry.name)) continue;
       const src = readFileSync(full, "utf8");
       if (!src.includes("24問")) continue;
-      const relative = full.slice(APP.length + 1);
-      // Exempt by path as well as by content: the relationship-fatigue route's own page names the
-      // count without naming the test, because the directory already does.
-      if (relative.includes("relationship-fatigue") || src.includes("relationship-fatigue")) continue;
-      offenders.push(relative);
+      const relative = full.slice(root.length + 1);
+      // The route's own page names the count without naming the test, because its directory does.
+      const pathIsAboutThatTest = relative.includes(RELATIONSHIP_FATIGUE);
+      const lines = src.split("\n");
+      lines.forEach((line, index) => {
+        if (!line.includes("24問")) return;
+        if (pathIsAboutThatTest) return;
+        // Otherwise the claim must NAME the test it belongs to, on its own line or on the line
+        // directly above it. Proximity is not enough and was tried: the two product cards sit
+        // adjacent in one file, so any context window wide enough to cover a card was wide enough
+        // to cover its neighbour, and the exact badge this package corrected slipped through.
+        // An explicit marker cannot be satisfied by accident.
+        const declaresTest =
+          line.includes(RELATIONSHIP_FATIGUE) || (lines[index - 1] ?? "").includes(RELATIONSHIP_FATIGUE);
+        if (declaresTest) return;
+        offenders.push(`${relative}:${index + 1}`);
+      });
     }
   };
-  walk(APP);
+  walk(APP, APP);
+  // lib/ carries live いま色テスト count copy too, and the sweep that produced this guard had to
+  // cover it, so the guard does as well.
+  walk(LIB, LIB);
   assert.deepEqual(offenders, [], "these claim a 24-question いま色テスト; it has 120");
 });
 

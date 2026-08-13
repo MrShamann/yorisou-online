@@ -16,7 +16,9 @@ take either as current. Every section is now labelled:
 | **FINAL IMPLEMENTED STATE** | What is in the branch now, with evidence. |
 | **DEFERRED** | Genuinely not done, with the reason. |
 
-§1 and §2d are INITIAL AUDIT FINDING throughout. §2e–§2j are FINAL IMPLEMENTED STATE. §3 is DEFERRED.
+§1, §2d and the "current:" line of §2 are INITIAL AUDIT FINDING throughout. §2b (the REUSE / ADAPT
+/ REJECT table) and §2c (per-breakpoint QA during development) are DECISION records. §2e–§2j are
+FINAL IMPLEMENTED STATE. §3 is DEFERRED. §2's target model is the DECISION the whole package serves.
 Where a decision reversed the plan recorded in §1, the reversal is stated in place rather than by
 editing the original away — the reasoning is worth keeping, the stale conclusion is not.
 
@@ -88,7 +90,7 @@ What is wrong with it, and was not in the brief:
   chrome is correct INSIDE a running assessment and wrong on an outcome. What actually shipped:
   `/tests/ima-iro` keeps a minimal top bar and no tab bar, and `/result` — which previously suppressed
   the shell — now carries it. See §2e (Headspace row) and §2f.
-* **It presents 120 questions as the entry experience**, which §8 of the brief explicitly forbids as
+* **It presents 120 questions as the entry experience**, which the brief explicitly forbids (the brief itself is not in this repository) as
   the default first meaningful interaction.
 
 So `/check-in` is not the model for the daily loop. It is a good *test landing page* whose restraint
@@ -173,7 +175,7 @@ promoting another package's deliberately-closed pilot is not a decision PXR-1 ge
 
 So the non-diagnostic rule applies: `lib/yorisou/today/currentStateCheckIn.ts` implements a NON-DIAGNOSTIC state capture
 that follows DCI-1's pattern — bounded predefined choices, authored lookup copy, zero computation
-about the person — with its own small versioned device-local contract. Eight tests pin that boundary,
+about the person — with its own small versioned device-local contract. Nine tests pin that boundary,
 including that it references no score, dimension, persona or archetype, performs no server sync, and
 does not import the gated pilot.
 
@@ -284,7 +286,8 @@ primary was `#173B35` with its own shadow before this.
 
 **The Result is deliberately different, and an earlier revision of this paragraph described it
 wrongly.** Its accent pill — 「今の詳しいレポートを読む」, previously `#173B35` — exists, but it is in the
-つぎの一歩 stage, NOT in the first viewport. The first viewport ends on a sentence:
+つぎの一歩 stage — the source name for the section a reader sees titled 「このあと読めるもの」 — NOT in
+the first viewport. The first viewport ends on a sentence:
 
 > 今できること — 今日は、気になったことをひとつだけ言葉にしてみてください。
 
@@ -294,8 +297,11 @@ anchor, button or handler, and that is the design — the first thing a person m
 recognised should not be a button, and reading the paid report must not become the first-screen CTA
 merely to make a sentence about CTA hierarchy true.
 
-So the accurate statement is: **one suggested step above the fold, and one call-to-action further
-down.** §3 records the Result surfaces where a second colour and weight still survive.
+So the accurate statement is: **one suggested step above the fold, and the report CTA below it.**
+"One call-to-action further down" would also be wrong: below the hero the Result carries the accent
+pill, an accent text link to 今のヒントを見る, `OpenTestingNotice`'s filled `--cta-main` primary, and a
+second link to the SAME report destination. §3 lists those; the accurate scope of the PASS in §2i is
+the hero, not the page. §3 records the Result surfaces where a second colour and weight still survive.
 
 **Cross-surface link truth.** Fourteen internal links promised one product and opened another, because
 `/check-in` is now a compatibility redirect to the 120Q. Labels wording a short interaction
@@ -305,7 +311,7 @@ about the assessment go to `/tests/ima-iro`. The 120Q's own analytics still repo
 
 **The stale 24-question claim, corrected properly the second time.** An earlier revision said two
 `/about` labels were "corrected rather than merely re-pointed". Only the two LABELS had been changed;
-the number survived in the prose beside them and in seven other places, including the site-wide
+the number survived in the prose beside them and in eight other places, including the site-wide
 fallback metadata rendered on every page that sets none of its own. All of it is now corrected against
 the canonical counts (`currentStateQuestions.length` = 120, `PUBLIC_ARCHETYPE_TAXONOMY.length` = 24):
 
@@ -319,8 +325,16 @@ the canonical counts (`currentStateQuestions.length` = 120, `PUBLIC_ARCHETYPE_TA
 | `app/data/productCards.ts` | `24問` badge, `/check-in` placeholder | `120問`, `/tests/ima-iro` |
 
 24問 correctly remains in the relationship-fatigue surfaces, which really are 24 questions. A scoped
-assertion in `app/__tests__/pxr1RouteContract.test.ts` walks every file under `app/` and fails on
-24問 unless the file is about that test.
+assertion in `app/__tests__/pxr1RouteContract.test.ts` walks the `.ts`/`.tsx` files under `app/` and
+`lib/`, skipping test directories, and fails on any 24問 line unless its path or the line itself names
+relationship-fatigue.
+
+That exemption is per LINE, and the first version of it was per FILE — which made the guard useless
+for the defect it was written after. `app/data/productCards.ts` holds cards for both tests, so
+matching the name anywhere in it exempted the whole file, including the badge this package had just
+corrected; sixteen files under `app/` were exempt the same way. Proven empirically: with the
+file-wide rule, re-introducing the exact corrected badge passed. With the per-line rule, that
+regression, one in an unrelated `app/` surface, and one in `lib/` are all caught.
 
 ## 2g. Defects found by walking the product, not by reading the diff
 
@@ -416,10 +430,13 @@ Branch `feat/pxr-1-product-experience-refoundation`, based on `main` `a05a6256`.
 Founder's.** PR #129 (`b65a947`), PR #127 and `main` are untouched — verified against the remote refs
 before and after every push.
 
-**No branch head is pinned in this document, deliberately.** Any commit that edits this file changes
-the head, so a "final head SHA" written here is stale the moment it is written. The exact head lives
-in the PR, in CI, and in the governed handoff. SHAs appear below only in the form
-*validation evidence at `<sha>`*, which stays true permanently.
+**No head of THIS branch is pinned in this document, deliberately.** Any commit that edits this file
+changes it, so a "final head SHA" written here is stale the moment it is written. The exact head lives
+in the PR, in CI, and in the governed handoff.
+
+`b65a947` above is the tip of another branch, cited to say what was observed as untouched. It is a
+live tip too, so treat it as *observed at the time of writing*, not as a fixed point. Every other SHA
+below appears in the form *validation evidence at `<sha>`*, which stays true permanently.
 
 ### Gate results — validation evidence at the merge-readiness remediation head
 
@@ -533,6 +550,40 @@ own PASS verdict. They are excluded from the local suite count rather than count
 in this branch touches `supabase/migrations`. `test:cpc1-acceptance` requires a hosted Preview URL and
 is excluded for the same reason.
 
+## 2k. What the merge-readiness pass found in its OWN work
+
+An independent audit passed the architecture and named four blockers. Fixing them and then verifying
+the fixes adversarially found five more, four of them created or missed by the fix itself. Recorded
+because "the remediation introduced a defect" is the finding most likely to be quietly dropped.
+
+1. **A CI gate that asserted nothing.** `test:checkin-runtime` was added to Yorisou Check to prove the
+   LINE contract. The file only EXPORTS `runCheckInRuntimeValidationTest()`; nothing invoked it, and
+   `node --import tsx <file>` merely imports. It exited 0 having executed zero assertions — and when
+   actually invoked it FAILED, because four of its assertions still demanded a client-built absolute
+   result URL that UX-2 had deliberately removed. So a permanently-green no-op was wired in and
+   described as a gate. It is now registered with `node:test`, the four stale assertions were restored
+   to the contract the code actually implements, and the whole ~40-assertion contract runs.
+
+2. **A repeated parameter demoted a real LINE visitor.** The first fix dropped EVERY array value and a
+   test justified it as refusing ambiguity. `?nav=hard&nav=hard` is not ambiguous, and LIFF produces
+   exactly that shape by appending a launch query onto an endpoint URL that already carries it. The
+   guard against the defect reintroduced the defect. Repeats that agree now resolve; only genuine
+   disagreement is refused.
+
+3. **The two sides agreed on keys and disagreed on values.** The builder copied the four optional LINE
+   context fields verbatim from arbitrary upstream input while the legacy route validated them, so a
+   value the builder happily minted could be silently dropped one redirect later. Both sides now run
+   the same check, so anything emitted survives by construction.
+
+4. **The stale-truth guard exempted the file it was written for.** Covered in §2f.
+
+5. **A half-edited page.** `app/methodology` had its CTA re-pointed at the 120Q while its lead still
+   said 「まずはチェックインから始めて」 and its title still promised 「軽く試してみる」 — byte-for-byte the
+   defect removed from `/about` in the same pass, one file over. Also corrected there: a
+   「4つの状態ラベル」 claim with no four-value set anywhere in the code, sitting one line below the
+   count that had just been fixed. The number was dropped rather than replaced, because any
+   replacement would have been invented.
+
 ## 3. DEFERRED — what is genuinely not done
 
 This section previously carried the package's ORIGINAL to-do list, written before any code existed,
@@ -557,11 +608,31 @@ actually outstanding.
 * **The `/en` tree** still routes 「Quick Check」 to `/en/check-in`. There is no English light
   interaction, and inventing one would mean writing unapproved English copy. `/en/check-in` reaches
   the 120Q through `/check-in`, which now preserves the entry context instead of discarding it.
+  `app/en/about/page.tsx` and `app/en/page.tsx` additionally promise "a short check-in" above links
+  that resolve to the 120 questions — the same broken promise corrected on the Japanese `/about`, left
+  because correcting English copy is a content decision. No number is involved, so the 24問 guard
+  cannot catch it either.
+* **LIFF `liff.state`** entries are not carried. LINE can deliver the launch query nested inside
+  `?liff.state=…`; the allowlist does not unwrap it, so that shape reaches the 120Q without its entry
+  context. This is NOT a regression — before this package `/check-in` rendered the flow directly and
+  the parameters were equally absent from the top-level query — but it is a real LINE URL shape that
+  lands on the web completion path.
+* **`/line/mini-app/result` and `/en/line/mini-app/result`** call the CHECK-IN handoff builder, so a
+  "result entry" opens the assessment. `buildMiniAppResultHandoffHref`, the builder that targets
+  `/result`, has no callers at all. Pre-existing and unchanged in outcome by this package; naming the
+  right destination is a product decision.
 
 **Visual system — where the second palette survives**
 
 §1.5 marked the dark-green/serif system DEPRECATE. That is done for the 120Q entry's frame, type and
-primary action, and for the Result's hero and reveal panels. It is NOT done in:
+primary action, and for the Result's hero and reveal panels. It is NOT done in the following — a
+list that omitted its own largest entry until an independent pass caught it:
+
+* `app/tests/ima-iro/MiniTestFlow.tsx` — the ENTRY frame, type and primary action were converted, but
+  the quiz phase behind it was not: `#4D7A69` kickers, a `display-serif` question heading, `#173B35`
+  option and advance buttons with their own shadows, and `#315F50` text. The restart-confirm dialog on
+  the entry screen is also still `#173B35`. This is the surface §1.5 points at, so the pointer dangled
+  at the one file that most needed naming.
 
 * `app/result/reveal/TraitConstellation.tsx` — hard-codes `#4D7A69`, `#315F50`, `#F4FAF7`, `#E9B7C9`,
   `#49615B`, `#6F625C`, no tokens. It is stage 2 of the recomposed Result, so the old palette is
@@ -578,11 +649,14 @@ primary action, and for the Result's hero and reveal panels. It is NOT done in:
 **Result — known, unfixed, and not claimed as fixed**
 
 * When `fullReportHref` exists, `/result` offers the SAME destination twice: 「今の詳しいレポートを読む」
-  (the accent pill, つぎの一歩) and 「詳しいレポートへ進む」 (`OpenTestingNotice`, the stage below). That
+  (the accent pill, in the section titled 「このあと読めるもの」) and 「詳しいレポートへ進む」
+  (`OpenTestingNotice`, the stage below). That
   is in tension with "each fact once"; §2i's PASS is scoped to the hero, not to the whole page.
-* `heroChips` and `secondaryBadge` were dropped from the Result render but still appear on
-  `app/result/opengraph-image.tsx` and `app/result/share/page.tsx`. Removed from one surface rather
-  than deduplicated across the Result's surfaces.
+* `heroChips` was dropped from the Result render but still appears on three Result-owned surfaces:
+  `app/result/opengraph-image.tsx`, `app/result/share/page.tsx` and
+  `app/result/share/opengraph-image.tsx`. Removed from one surface rather than deduplicated across
+  them. `secondaryBadge` is no longer rendered as a distinct element anywhere — it survives only as
+  `heroChips[1]`.
 * No automated test asserts the presence, position, colour or count of any call-to-action. The CTA
   claims in §2f rest on manual QA and cannot regress-detect.
 
@@ -594,7 +668,9 @@ primary action, and for the Result's hero and reveal panels. It is NOT done in:
 * **Performance validation** was in the original plan and was never run. Not attempted, not claimed.
 * **`por1SharedStoreBoundary.test.ts`** has no case for `preview` + `supabaseUrl` undefined — the one
   path that has now failed three Preview deployments in the wild. Adding it would touch a POR-1 test
-  file, which this package may not do.
+  file. The scope boundary this package actually followed is about POR-1 BEHAVIOUR, so the honest
+  reason is narrower: writing that case means deciding what the boundary should do when a Preview
+  build has no database URL, which is the same decision the hosting fix in §2j turns on.
 
 **Release**
 

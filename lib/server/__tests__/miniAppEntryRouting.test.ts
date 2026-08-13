@@ -149,21 +149,66 @@ test("an allowlisted key with a malformed value is dropped, not carried", () => 
   assert.equal(query.get("nav"), null, "an over-long value is dropped");
 });
 
-test("a repeated parameter is dropped rather than guessed at", () => {
-  // `?entry_source=line-mini-app&entry_source=spoofed` is ambiguous, and picking one is picking a
-  // winner on the attacker's behalf. The shared reader treats a repeated value as absent, so the
-  // visitor lands on the 120Q by the ordinary web path instead of on a value someone else chose.
-  const target = resolveLegacyCheckInRedirect({ entry_source: ["line-mini-app", "spoofed"] });
-  const query = new URLSearchParams(target.split("?")[1] ?? "");
-  assert.equal(query.getAll("entry_source").length, 0, "an ambiguous value must not be resolved");
-  assert.ok(target.startsWith("/tests/ima-iro"), "the destination is still the 120Q");
+test("repeats that agree are carried; only genuine disagreement is refused", () => {
+  // LIFF appends the launch query onto an endpoint URL that may already carry the same parameters,
+  // so `?nav=hard&nav=hard` is a real shape a real LINE link produces. An earlier version of this
+  // module discarded EVERY array and a test here called that "refusing an ambiguous value" — which
+  // demoted a genuine LINE visitor to the web completion path, i.e. reintroduced the exact defect
+  // the module exists to prevent, inside the guard against it.
+  const agreeing = new URLSearchParams(
+    resolveLegacyCheckInRedirect({
+      source: ["line", "line"],
+      entry_source: ["line-mini-app", "line-mini-app"],
+      nav: ["hard", "hard"],
+    }).split("?")[1] ?? "",
+  );
+  assert.equal(agreeing.get("source"), "line", "identical repeats are not ambiguous");
+  assert.equal(agreeing.get("entry_source"), "line-mini-app");
+  assert.equal(agreeing.get("nav"), "hard");
 
-  // The unambiguous parameters alongside it are unaffected.
+  // Disagreement is still refused: picking a winner would be picking one on someone else's behalf.
+  const conflicting = resolveLegacyCheckInRedirect({ entry_source: ["line-mini-app", "spoofed"] });
+  const query = new URLSearchParams(conflicting.split("?")[1] ?? "");
+  assert.equal(query.getAll("entry_source").length, 0, "a contradicted value must not be resolved");
+  assert.ok(conflicting.startsWith("/tests/ima-iro"), "the destination is still the 120Q");
+
+  // Unambiguous parameters alongside a contradicted one are unaffected.
   const mixed = new URLSearchParams(
     resolveLegacyCheckInRedirect({ entry_source: ["a", "b"], nav: "hard" }).split("?")[1] ?? "",
   );
   assert.equal(mixed.get("nav"), "hard");
   assert.equal(mixed.get("entry_source"), null);
+});
+
+test("the builder and the legacy route agree on VALUES, not just on keys", () => {
+  // They used to agree on which KEYS existed and disagree about which VALUES survived: the builder
+  // copied the four optional context fields verbatim from arbitrary upstream input while the legacy
+  // route validated them, so a value the builder happily minted onto a LINE link could be silently
+  // dropped one redirect later. Both sides now run the same check, so anything the builder emits
+  // survives the redirect by construction.
+  const hostile = {
+    session_context_flags: "returning consented",       // space
+    line_status: "a|b",                                  // pipe
+    line_error: "x".repeat(400),                         // over-long
+    line_friendship: "友だち",                            // non-ASCII
+  };
+
+  const href = buildMiniAppCheckInHandoffHref({ locale: "ja", searchParams: hostile });
+  const emitted = new URLSearchParams(href.split("?")[1] ?? "");
+  const carried = preserveGovernedHandoffParams(hostile);
+
+  for (const key of GOVERNED_MINI_APP_HANDOFF_PARAMS) {
+    assert.equal(
+      emitted.get(key),
+      key === "source" || key === "entry_source" || key === "nav" || key === "v"
+        ? emitted.get(key) // the four constants the builder always sets
+        : carried.get(key),
+      `builder and legacy route disagree about ${key}`,
+    );
+  }
+  for (const key of ["session_context_flags", "line_status", "line_error", "line_friendship"]) {
+    assert.equal(emitted.get(key), null, `${key} must not be minted if it cannot cross a redirect`);
+  }
 });
 
 test("a bare /check-in still redirects cleanly, with no query and no loop", () => {

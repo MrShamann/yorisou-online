@@ -68,7 +68,7 @@ export default function AboutPage() {
               <div className="motion-card panel-sage rounded-[1.7rem] px-6 py-6">
                 <div className="service-kicker text-[var(--accent-sage-text)]">最初にすること</div>
                 <h2 className="section-title" style={{ marginTop: 12 }}>
-                  最初の入口は、いま色テストです
+                  入口のひとつが、いま色テストです
                 </h2>
                 <p className="page-copy" style={{ marginTop: 12, color: "var(--accent-sage-text)" }}>
                   質問は、医学的な診断や専門的な評価ではなく、今の生活リズムや感じ方をふり返るためのものです。深く考え込みすぎず、「今の自分に近い」と感じる選択肢を選んでください。
@@ -131,7 +131,7 @@ export default function AboutPage() {
                     120-question いま色テスト. 短く now belongs to /today/check-in, a different product. */}
                 <p className="section-label">今の状態を、ふり返ってみる</p>
                 <p className="page-copy" style={{ marginTop: 8 }}>
-                  まずはいま色テストから。LINEやWebであとから戻りやすくする導線も、順次整えています。
+                  じっくり見たいときは、いま色テストから。LINEやWebであとから戻りやすくする導線も、順次整えています。
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Link href="/tests/ima-iro" className="btn btn-primary">

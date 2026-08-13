@@ -62,12 +62,37 @@ function safeRedirectPath(value: string | null | undefined, fallback: string) {
   return value;
 }
 
+/**
+ * Read a single value, refusing only GENUINE ambiguity.
+ *
+ * An earlier version discarded every array outright and a test called that "refusing to resolve an
+ * ambiguous value". `?nav=hard&nav=hard` is not ambiguous, and LIFF really does produce repeats: it
+ * appends the launch query onto an endpoint URL that may already carry the same parameters. Dropping
+ * those demoted a genuine LINE visitor to the web completion path — the exact defect this module
+ * exists to prevent, reintroduced by the guard against it.
+ *
+ * So: repeats that AGREE resolve to their shared value; repeats that DISAGREE are still refused,
+ * because picking a winner there is picking one on the caller's behalf.
+ */
 function readFirstString(value: string | string[] | undefined) {
   if (typeof value === "string") {
     return value;
   }
 
+  if (Array.isArray(value)) {
+    const distinct = new Set(value.filter((v): v is string => typeof v === "string"));
+    if (distinct.size === 1) {
+      const [only] = distinct;
+      return only;
+    }
+  }
+
   return "";
+}
+
+/** True when a value is one the legacy redirect is willing to carry for this parameter. */
+function isCarriableHandoffValue(key: GovernedMiniAppHandoffParam, value: string) {
+  return HANDOFF_PARAM_PATTERN[key].test(value);
 }
 
 /**
@@ -83,12 +108,40 @@ export function preserveGovernedHandoffParams(searchParams: MiniAppSearchParams)
   for (const key of GOVERNED_MINI_APP_HANDOFF_PARAMS) {
     const value = readFirstString(searchParams[key]);
     if (!value) continue;
-    if (!HANDOFF_PARAM_PATTERN[key].test(value)) continue;
+    if (!isCarriableHandoffValue(key, value)) continue;
     preserved.set(key, value);
   }
 
   return preserved;
 }
+
+/**
+ * Copy an optional upstream context field onto an outbound handoff.
+ *
+ * Both sides of the contract go through the SAME check. The builder used to copy these four fields
+ * verbatim from arbitrary upstream input while the legacy route validated them, so the two agreed on
+ * which KEYS existed and disagreed about which VALUES survived: a value the builder was happy to
+ * emit could be silently dropped one redirect later. A field that cannot cross the redirect must not
+ * be minted onto the link in the first place.
+ */
+function setOptionalHandoffParam(
+  params: URLSearchParams,
+  searchParams: MiniAppSearchParams,
+  key: GovernedMiniAppHandoffParam,
+) {
+  const value = readFirstString(searchParams[key]);
+  if (!value) return;
+  if (!isCarriableHandoffValue(key, value)) return;
+  params.set(key, value);
+}
+
+/** The optional session/LINE context fields, shared by both handoff builders. */
+const OPTIONAL_CONTEXT_PARAMS = [
+  "session_context_flags",
+  "line_status",
+  "line_error",
+  "line_friendship",
+] as const satisfies readonly GovernedMiniAppHandoffParam[];
 
 /**
  * Where legacy `/check-in` sends a visitor.
@@ -121,24 +174,8 @@ export function buildMiniAppResultHandoffHref(input: {
   );
   params.set("returnTo", returnTo);
 
-  const sessionContextFlags = readFirstString(input.searchParams.session_context_flags);
-  if (sessionContextFlags) {
-    params.set("session_context_flags", sessionContextFlags);
-  }
-
-  const lineStatus = readFirstString(input.searchParams.line_status);
-  if (lineStatus) {
-    params.set("line_status", lineStatus);
-  }
-
-  const lineError = readFirstString(input.searchParams.line_error);
-  if (lineError) {
-    params.set("line_error", lineError);
-  }
-
-  const lineFriendship = readFirstString(input.searchParams.line_friendship);
-  if (lineFriendship) {
-    params.set("line_friendship", lineFriendship);
+  for (const key of OPTIONAL_CONTEXT_PARAMS) {
+    setOptionalHandoffParam(params, input.searchParams, key);
   }
 
   const query = params.toString();
@@ -166,24 +203,8 @@ export function buildMiniAppCheckInHandoffHref(input: {
   params.set("nav", "hard");
   params.set("v", LINE_MINI_APP_NAV_VERSION);
 
-  const sessionContextFlags = readFirstString(input.searchParams.session_context_flags);
-  if (sessionContextFlags) {
-    params.set("session_context_flags", sessionContextFlags);
-  }
-
-  const lineStatus = readFirstString(input.searchParams.line_status);
-  if (lineStatus) {
-    params.set("line_status", lineStatus);
-  }
-
-  const lineError = readFirstString(input.searchParams.line_error);
-  if (lineError) {
-    params.set("line_error", lineError);
-  }
-
-  const lineFriendship = readFirstString(input.searchParams.line_friendship);
-  if (lineFriendship) {
-    params.set("line_friendship", lineFriendship);
+  for (const key of OPTIONAL_CONTEXT_PARAMS) {
+    setOptionalHandoffParam(params, input.searchParams, key);
   }
 
   const query = params.toString();
