@@ -27,8 +27,20 @@ The Yorisou product is unchanged. This is a container for it.
     snapshots/                       bounded operational snapshots (latest 5)
         │  serves
         ▼
-127.0.0.1:3210                       loopback only
+127.0.0.1:3211                       loopback only
 ```
+
+### Why the port is 3211, not 3210
+
+The package named 3210. **Kakari already owns it on this machine** — its `RELEASE_MANIFEST.json`
+declares `"local_url": "http://127.0.0.1:3210"`, it ships its own `Kakari.app` with START/STOP
+commands, and its server was running during this install.
+
+The launcher found it and refused, correctly, without killing it — unplanned proof the ownership
+contract works outside a test. But taking 3210 would leave two of the Founder's products fighting
+over one port forever: whichever launched second would hit that refusal and simply not open. A
+launcher that is correct and unusable is not a launcher. Yorisou is the newcomer, so Yorisou moves.
+Nothing else on this machine claims 3211.
 
 ### Why the runtime is at `Runtimes/yorisou`
 
@@ -61,7 +73,8 @@ prevent, and the reason a second long-lived clone was not created.
 | `npm run local-app:restart` | owned stop, then owned start |
 | `npm run local-app:doctor` | one diagnostic, safe metadata only |
 | `npm run local-app:snapshot` | one bounded operational snapshot |
-| `npm run local-app:test` | 42 contract tests that execute the real scripts |
+| `npm run local-app:test` | 48 contract tests that execute the real scripts |
+| `npm run local-app:accept` | interaction acceptance against a RUNNING local app |
 
 Normal use needs none of these: the Founder opens `YORISOU.app`.
 
@@ -164,13 +177,13 @@ Updates are explicit. The app never pulls from GitHub on launch.
 
 ## 8. What the tests actually do
 
-`npm run local-app:test` — 42 checks that **execute** the scripts. A foreign server is started on the
+`npm run local-app:test` — 48 checks that **execute** the scripts. A foreign server is started on the
 port and the launcher must refuse it and leave it alive; a fake `/api/build-identity` responder must
 still fail the contract; a stale PID must be cleared rather than killed; a broken `current` symlink
 must refuse rather than guess.
 
-Two defects the suite caught in this package's own work, recorded because they are the kind that get
-quietly dropped:
+Three defects the suite caught in this package's own work, recorded because they are the kind that
+get quietly dropped:
 
 1. **The source-audit checks matched their own comments.** `start.sh`'s comment says "no npm ci";
    `stop.sh`'s says "there is no `pkill node` here"; the test file names every pattern it searches
@@ -180,6 +193,13 @@ quietly dropped:
    logging did `mkdir -p "$YR_LOGS"` — so at the exact moment the guard refused to use the internal
    disk, it created a directory tree there. Logging no longer creates anything; only the installer
    does.
+3. **Activation silently no-opped.** `mv -f tmp current`, where `current` is a symlink to a
+   *directory*, moves the temp link INSIDE that directory instead of replacing it. The installer
+   reported success, the recorded SHA advanced, and the app kept serving the previous release's
+   scripts — which is how it ended up refusing to start against a port only the old code expected.
+   Found by an installed app running old code, then reproduced directly. Now a real `rename(2)` via
+   `os.replace`, plus a post-condition check: the installer verifies `current` actually moved and
+   writes the recorded SHA only afterwards, so state and symlink cannot disagree.
 
 ---
 
