@@ -128,8 +128,12 @@ export default async function ResultPage({
          * 2. Four badge treatments (two pills, a chip row, a secondary badge) preceded any
          *    meaning. Test name, type and framing are now one kicker and one quiet line, each
          *    fact appearing exactly once on the whole screen.
-         * 3. There was no dominant next action above the fold; `gentleNextStep` sat several
-         *    stages down inside つぎの一歩. It is here now, and ONLY here.
+         * 3. `gentleNextStep` sat several stages down inside つぎの一歩. It is here now, and ONLY
+         *    here. NOTE ON WHAT IT IS: a BEHAVIOURAL next step — an invitation to do something
+         *    away from the screen ("…してみてください", as all 24 approved variants end) — not a
+         *    control. Nothing in this stage is clickable, and that is the design: the first thing
+         *    a person meets after being recognised should not be a button. Reading the report is
+         *    a real call-to-action and it stays further down, after the recognition.
          * 4. The dark-green/serif system made this a microsite. It inherits the product frame,
          *    with persona expression as a LAYER — the display face is kept for the identity
          *    line alone, where it carries meaning rather than decorating.
@@ -169,8 +173,9 @@ export default async function ResultPage({
             </p>
           </div>
 
-          {/* ONE action, above the fold. Paid conversion stays further down: it is offered after
-              the person has been recognised, not before. */}
+          {/* One suggested step, above the fold — a sentence, deliberately not a control. Paid
+              conversion stays further down: it is offered after the person has been recognised,
+              not before. */}
           <div className="grid gap-2">
             <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
               今できること

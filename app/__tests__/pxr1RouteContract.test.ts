@@ -10,7 +10,7 @@
 // with the 120Q in mind, so `/check-in` must keep delivering the 120Q.
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,13 +18,25 @@ const APP = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p: string) => readFileSync(join(APP, p), "utf8");
 const code = (p: string) => read(p).replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
 
-test("legacy /check-in redirects to the 120Q, preserving the semantic contract", () => {
+test("legacy /check-in redirects to the 120Q, preserving the semantic contract", async () => {
   const legacy = code("check-in/page.tsx");
   assert.match(legacy, /redirect\(/, "it must redirect, not render something else");
-  assert.match(legacy, /\/tests\/ima-iro/, "it must land on the 120Q, not the new light interaction");
   assert.ok(
     !legacy.includes("/today/check-in"),
     "the legacy route must NEVER silently become the new lightweight product",
+  );
+
+  // The destination is asserted by RESOLVING it, not by grepping for the literal path. The route
+  // delegates to the shared resolver so the preserved-parameter allowlist lives next to the builder
+  // that emits those parameters; a string match here would have to be relaxed to accommodate that
+  // and would stop proving anything. Full compatibility coverage:
+  // lib/server/__tests__/miniAppEntryRouting.test.ts
+  const { resolveLegacyCheckInRedirect } = await import("../../lib/server/miniAppEntryRouting");
+  assert.equal(resolveLegacyCheckInRedirect({}), "/tests/ima-iro");
+  assert.match(
+    resolveLegacyCheckInRedirect({ entry_source: "line-mini-app" }),
+    /^\/tests\/ima-iro\?/,
+    "LINE entry context must survive the redirect, not be discarded",
   );
 });
 
@@ -80,6 +92,49 @@ test("desktop and mobile navigation agree on the SAME information architecture",
     assert.ok(header.includes(href), `desktop header missing destination: ${href}`);
     assert.ok(nav.includes(href), `bottom nav missing destination: ${href}`);
   }
+});
+
+test("no surface claims the いま色テスト is 24 questions", () => {
+  // The CTA on /about was re-pointed at the 120Q while the paragraph beside it still said
+  // 「まずは24問チェックから」, and the site-wide fallback title in app/layout.tsx said the same thing
+  // on every page that does not set its own metadata. A number that survives its own correction is
+  // exactly what a grep-shaped assertion is for.
+  //
+  // 24問 remains CORRECT for the relationship-fatigue check, which really is 24 questions, so the
+  // rule is scoped rather than absolute: a file may say 24問 only if it is about that test.
+  const offenders: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === "__tests__") continue;
+        walk(full);
+        continue;
+      }
+      if (!/\.tsx?$/.test(entry.name)) continue;
+      const src = readFileSync(full, "utf8");
+      if (!src.includes("24問")) continue;
+      const relative = full.slice(APP.length + 1);
+      // Exempt by path as well as by content: the relationship-fatigue route's own page names the
+      // count without naming the test, because the directory already does.
+      if (relative.includes("relationship-fatigue") || src.includes("relationship-fatigue")) continue;
+      offenders.push(relative);
+    }
+  };
+  walk(APP);
+  assert.deepEqual(offenders, [], "these claim a 24-question いま色テスト; it has 120");
+});
+
+test("/about's action and its prose describe the same product", () => {
+  const about = read("about/page.tsx");
+  assert.ok(!about.includes("24問"), "the body must not contradict the CTA it sits beside");
+  assert.match(about, /href="\/tests\/ima-iro"/, "the CTA opens the canonical 120Q");
+  // 「短く」 belongs to /today/check-in. Promising it above a button that opens 120 questions is the
+  // same broken promise in words rather than in routing.
+  assert.ok(
+    !/短くふり返ってみる/.test(about),
+    "a short-look-back promise must not introduce the 120Q",
+  );
 });
 
 test("nothing offers a light re-look by sending the person into the 120Q", () => {

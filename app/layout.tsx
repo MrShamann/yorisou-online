@@ -21,9 +21,13 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
-  title: "Yorisou | 今の自分を知る24問チェック",
+  // The count lived here, in the fallback title and description every page without its own
+  // metadata inherits — so the single most-rendered claim in the product was that the test is 24
+  // questions. It is 120. The replacement is the approved copy already used on 今日 rather than a
+  // corrected number, because the site-level title should name the product, not one assessment.
+  title: "Yorisou | AIと整える、わたしの毎日。",
   description:
-    "Yorisouは、今の気持ちや生活リズムを24問でふり返り、自分の状態と次の一歩を見つけるためのLINE/Web-firstセルフリフレクションサービスです。診断や占いではありません。",
+    "Yorisouは、今の状態を短い言葉にして、次の小さな一歩を見つけるためのLINE/Web-firstセルフリフレクションサービスです。診断や占いではありません。",
 };
 
 export default async function RootLayout({

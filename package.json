@@ -115,7 +115,9 @@
     "test:por1-append-only-erasure": "bash tests/por1/append-only-erasure.sh",
     "test:pxr1-recommendation": "node --import tsx --test lib/yorisou/recommendations/__tests__/recommendationObject.test.ts lib/yorisou/recommendations/__tests__/recommendationFeedback.test.ts",
     "test:pxr1-history": "node --import tsx --test lib/yorisou/history/__tests__/readModel.test.ts",
-    "test:pxr1-a11y": "playwright test tests/smoke/pxr1-a11y.spec.ts --project=desktop"
+    "test:pxr1-a11y": "playwright test tests/smoke/pxr1-a11y.spec.ts --project=desktop",
+    "test:pxr1-line-compat": "node --import tsx --test lib/server/__tests__/miniAppEntryRouting.test.ts",
+    "test:checkin-runtime": "node --import tsx lib/yorisou/scoring/__tests__/checkin-runtime.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
