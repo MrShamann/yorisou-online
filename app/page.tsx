@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import TodayContinuity from "./TodayContinuity";
+import TodaySavedState from "./TodaySavedState";
 
 export const metadata: Metadata = {
   title: "YORISOU | AIと整える、わたしの毎日。",
@@ -74,6 +75,9 @@ export default function TodayPage() {
 
       {/* Real history only. Renders nothing for a new visitor. */}
       <TodayContinuity />
+      {/* OSF-1: the same discipline for the account-backed record — nothing for a signed-out or
+          empty visitor, and nothing if the database is unreachable. */}
+      <TodaySavedState />
 
       <section className="mt-10">
         <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">

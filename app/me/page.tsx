@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import MyContinuity from "./MyContinuity";
 
@@ -27,6 +28,26 @@ export default function MyYorisouPage() {
       </p>
 
       <MyContinuity />
+
+      {/* OSF-1 — the way through to the account-backed records.
+          A link, not an embedded section: this page stays static and device-local (reading the
+          account here would make わたし dynamic for every visitor, including the signed-out ones it
+          was rebuilt for). The destination says plainly what it is, and says so to signed-out
+          visitors too rather than hiding. */}
+      <section className="mt-12">
+        <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+          アカウントに残す
+        </h2>
+        <p className="mt-2 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+          振り返りや、向かいたい方向は、サインインすると端末を越えて残せます。
+        </p>
+        <Link
+          href="/life"
+          className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+        >
+          わたしの記録を見る
+        </Link>
+      </section>
     </main>
   );
 }

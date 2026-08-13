@@ -117,6 +117,16 @@ jobs:
           npm run test:pxr1-line-compat
           npm run test:checkin-runtime
 
+      # OSF-1. The erasure-coverage guard is the one that matters most here: POR-1's erasure plan is
+      # a hardcoded array, so a future migration adding an owner-linked table would silently leave
+      # that table behind at account deletion while the job still reports success. This step is what
+      # turns that from "someone has to remember" into a red build.
+      - name: OSF-1 Life OS contracts, AI boundary and erasure coverage
+        run: |
+          npm run test:osf1-contract
+          npm run test:osf1-ai-boundary
+          npm run test:osf1-erasure-coverage
+
       - name: Imairo snapshot contracts (RTR-1 private save)
         run: npm run test:imairo-snapshot
 
