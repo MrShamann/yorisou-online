@@ -47,7 +47,7 @@ echo
 echo "runtime location"
 DEFAULT_ROOT=$(env -u YORISOU_RUNTIME_ROOT -u YORISOU_VOLUME bash -c \
   '. '"$DIR"'/runtime-lib.sh >/dev/null 2>&1; printf "%s" "$YR_ROOT"')
-[ "$DEFAULT_ROOT" = "/Volumes/AI-Work/Yorisou/runtime" ]
+[ "$DEFAULT_ROOT" = "/Volumes/AI-Work/Runtimes/yorisou" ]
 check $? "default runtime root is the AI-Work SSD ($DEFAULT_ROOT)"
 
 # ── 2. missing SSD fails closed and creates NO fallback ─────────────────────────

@@ -14,7 +14,7 @@ import WebKit
 
 // Must match runtime-lib.sh. The scripts themselves live inside the active release, so updating the
 // release updates the lifecycle logic too — the bundle only needs to know where to look.
-let runtimeRoot = "/Volumes/AI-Work/Yorisou/runtime"
+let runtimeRoot = "/Volumes/AI-Work/Runtimes/yorisou"
 let volumePath = "/Volumes/AI-Work"
 let localURL = URL(string: "http://127.0.0.1:3210/")!
 let trustedHost = "127.0.0.1"

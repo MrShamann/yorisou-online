@@ -20,8 +20,16 @@ set -u
 # The SSD is a hard dependency, not a preference. YORISOU_RUNTIME_ROOT exists ONLY so the contract
 # tests can exercise these paths without a mounted volume; it is never a fallback the app takes on
 # its own, and `yr_require_ssd` refuses anything outside the volume unless a test opts in explicitly.
+#
+# WHY `Runtimes/yorisou` AND NOT `/Volumes/AI-Work/Yorisou`:
+# the volume root is root:wheel drwxrwxr-x, so creating a NEW top-level directory there needs sudo,
+# and this install must not depend on a password prompt. `Runtimes/` is already this machine's
+# convention for exactly this kind of thing — colima, android and docker-desktop all live there —
+# is owned by the user, and is on the same SSD. Every guarantee that matters is unchanged: SSD
+# residency, hard dependency, fail-closed, and no internal-disk copy. Moving to the volume root
+# later is one `sudo mkdir` plus this constant.
 YR_VOLUME="${YORISOU_VOLUME:-/Volumes/AI-Work}"
-YR_ROOT="${YORISOU_RUNTIME_ROOT:-$YR_VOLUME/Yorisou/runtime}"
+YR_ROOT="${YORISOU_RUNTIME_ROOT:-$YR_VOLUME/Runtimes/yorisou}"
 
 YR_RELEASES="$YR_ROOT/releases"
 YR_CURRENT="$YR_ROOT/current"
@@ -88,8 +96,12 @@ yr_require_ssd() {
     return 0
   fi
   [ -d "$YR_VOLUME" ] || yr_die "AI-Work volume is not mounted at $YR_VOLUME. Yorisou keeps its local runtime on that SSD and will not build a second copy on the internal disk. Connect the drive and start Yorisou again."
-  touch "$YR_VOLUME/.yorisou-write-probe" 2>/dev/null || yr_die "AI-Work is mounted at $YR_VOLUME but not writable."
-  rm -f "$YR_VOLUME/.yorisou-write-probe" 2>/dev/null || true
+  # Probe where the runtime actually lives, not the volume root: the root is root:wheel and is not
+  # meant to be written to, so probing it reported "not writable" for a volume that is perfectly
+  # usable. Probe the deepest existing ancestor of the runtime root.
+  probe="$YR_ROOT"
+  while [ ! -d "$probe" ] && [ "$probe" != "/" ]; do probe=$(dirname "$probe"); done
+  [ -w "$probe" ] || yr_die "AI-Work is mounted at $YR_VOLUME but $probe is not writable."
   return 0
 }
 
