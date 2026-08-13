@@ -124,10 +124,23 @@ printf 'APPL????' > "$BUNDLE/Contents/PkgInfo"
 
 # ── 4. activate the release (atomic) ────────────────────────────────────────────
 # Everything above succeeded, so it is now safe to point `current` at the new release.
-printf '%s\n' "$SHA" > "$YR_RELEASE_FILE"
+# `mv -f tmp current` LOOKS atomic and is not: when `current` is a symlink to a DIRECTORY, mv
+# follows it and moves the temp link INSIDE that directory. The activation then silently does not
+# happen while reporting success — and because the recorded SHA had already been written, state and
+# symlink disagreed, so the app kept serving the previous release's scripts while everything claimed
+# the new one was live. Verified by reproducing it, and by an installed app that ran the old code.
+#
+# `os.replace` is a real rename(2): it replaces the symlink itself, atomically, without following it.
 ln -sfn "$RELEASE" "$YR_ROOT/.current.tmp"
-mv -f "$YR_ROOT/.current.tmp" "$YR_CURRENT"
-yr_log "install: current -> $RELEASE"
+python3 -c 'import os,sys; os.replace(sys.argv[1], sys.argv[2])' "$YR_ROOT/.current.tmp" "$YR_CURRENT" \
+  || yr_die "could not activate the release symlink"
+
+# Verify the post-condition rather than trusting the command. The whole rollback guarantee rests on
+# `current` and the recorded SHA agreeing; an activation that quietly no-ops must not pass as done.
+ACTIVE=$(yr_active_release_path) || yr_die "activation left current unreadable"
+[ "$ACTIVE" = "$RELEASE" ] || yr_die "activation did not take: current -> $ACTIVE, expected $RELEASE"
+printf '%s\n' "$SHA" > "$YR_RELEASE_FILE"
+yr_log "install: current -> $RELEASE (verified)"
 
 # ── 5. install the app bundle (atomic swap, old one kept until the new one is in) ─
 mkdir -p "$(dirname "$YR_APP_BUNDLE")"

@@ -181,7 +181,7 @@ code_of "$DIR/install.sh" | grep -q 'npm ci'; check $? "install.sh is where depe
 grep -q 'ln -sfn "\$RELEASE" "\$YR_ROOT/.current.tmp"' "$DIR/install.sh"
 check $? "current is switched atomically, and only after the build validates"
 BUILD_LINE=$(grep -n 'npm run build' "$DIR/install.sh" | head -1 | cut -d: -f1)
-SWITCH_LINE=$(grep -n 'mv -f "\$YR_ROOT/.current.tmp"' "$DIR/install.sh" | head -1 | cut -d: -f1)
+SWITCH_LINE=$(code_of "$DIR/install.sh" | grep -n 'os.replace' | head -1 | cut -d: -f1)
 [ -n "$BUILD_LINE" ] && [ -n "$SWITCH_LINE" ] && [ "$BUILD_LINE" -lt "$SWITCH_LINE" ]
 check $? "build precedes activation, so a failed install cannot strand the app (rollback)"
 echo
@@ -193,6 +193,38 @@ check $? "no script echoes or logs an environment value"
 grep -q 'contents never printed' "$DIR/doctor.sh"; check $? "doctor reports local.env presence, not contents"
 grep -q 'sha256=' "$DIR/snapshot.sh"; check $? "snapshot fingerprints local.env instead of copying it"
 ! grep -q 'cp .*local.env' "$DIR/snapshot.sh"; check $? "snapshot never copies the env file"
+echo
+
+# ── 11. release activation actually replaces the symlink ───────────────────────
+echo "release activation"
+# This is a REAL defect this suite was written after, not a hypothetical. `mv -f tmp current`, where
+# `current` is a symlink to a directory, moves the temp link INSIDE that directory instead of
+# replacing it — so activation silently no-ops while the installer reports success, the recorded SHA
+# advances, and the app keeps serving the previous release. It was found by an installed app running
+# old code, and reproduced directly.
+ACT="$TMP/activation"; mkdir -p "$ACT/relA" "$ACT/relB"
+ln -sfn "$ACT/relA" "$ACT/current"
+
+ln -sfn "$ACT/relB" "$ACT/.tmp"; mv -f "$ACT/.tmp" "$ACT/current" 2>/dev/null
+[ "$(readlink "$ACT/current")" = "$ACT/relA" ]
+check $? "mv onto a symlink-to-directory does NOT replace it (the defect, reproduced)"
+rm -f "$ACT/relA/.tmp"
+
+ln -sfn "$ACT/relB" "$ACT/.tmp"
+python3 -c 'import os,sys; os.replace(sys.argv[1], sys.argv[2])' "$ACT/.tmp" "$ACT/current"
+[ "$(readlink "$ACT/current")" = "$ACT/relB" ]
+check $? "os.replace DOES replace the symlink itself (the fix)"
+
+code_of "$DIR/install.sh" | grep -q 'os.replace'
+check $? "the installer activates with a real rename, not mv"
+! code_of "$DIR/install.sh" | grep -q 'mv -f "\$YR_ROOT/.current.tmp"'
+check $? "and no longer uses the mv form"
+code_of "$DIR/install.sh" | grep -q 'activation did not take'
+check $? "the installer VERIFIES the symlink moved instead of trusting the command"
+ACT_LINE=$(code_of "$DIR/install.sh" | grep -n 'activation did not take' | head -1 | cut -d: -f1)
+SHA_LINE=$(code_of "$DIR/install.sh" | grep -n 'YR_RELEASE_FILE"$' | head -1 | cut -d: -f1)
+[ -n "$ACT_LINE" ] && [ -n "$SHA_LINE" ] && [ "$ACT_LINE" -lt "$SHA_LINE" ]
+check $? "the recorded SHA is written only AFTER activation is verified (no disagreeing state)"
 echo
 
 echo "─────────────────────────────────────────"
