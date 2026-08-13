@@ -47,7 +47,15 @@ YR_APP_LOG="$YR_LOGS/app.log"
 YR_SERVER_LOG="$YR_LOGS/server.log"
 
 YR_HOST="127.0.0.1"
-YR_PORT="${YORISOU_LOCAL_PORT:-3210}"
+# 3211, NOT 3210. The package named 3210, but Kakari already owns it on this machine — its
+# RELEASE_MANIFEST.json declares "local_url": "http://127.0.0.1:3210", it ships Kakari.app with its
+# own start/stop commands, and its server was running when this was installed.
+#
+# Taking 3210 would have made two of the Founder's products fight over one port forever: whichever
+# launched second would hit the foreign-process refusal and simply not open. The refusal is correct
+# behaviour, but a launcher that is correct and unusable is not a launcher. Yorisou is the newcomer,
+# so Yorisou moves. Nothing else on this machine claims 3211.
+YR_PORT="${YORISOU_LOCAL_PORT:-3211}"
 YR_URL="http://$YR_HOST:$YR_PORT"
 
 YR_APP_BUNDLE="${YORISOU_APP_BUNDLE:-$HOME/Applications/YORISOU.app}"

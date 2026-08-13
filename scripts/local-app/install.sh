@@ -48,8 +48,21 @@ else
 fi
 
 if [ ! -d .next ] || [ "${YORISOU_FORCE_BUILD:-0}" = "1" ]; then
-  yr_log "install: building release"
-  npm run build >>"$YR_LOGS/install.log" 2>&1 || yr_die "build failed; see $YR_LOGS/install.log"
+  # Bounded retry, because one specific failure here is external and transient: `next/font/google`
+  # downloads Noto Sans JP at build time, and on a slow link those requests time out. Turbopack then
+  # reports `Can't resolve '@vercel/turbopack-next/internal/font/google/font'` — a module-resolution
+  # error that reads like a code defect and is not one. Observed first-attempt failure and
+  # second-attempt success on the same commit and the same machine.
+  #
+  # This retries the FETCH, never a real failure: a genuine build error fails identically twice and
+  # still stops the install, and `current` has not moved yet either way.
+  BUILT=0
+  for attempt in 1 2; do
+    yr_log "install: building release (attempt $attempt)"
+    if npm run build >>"$YR_LOGS/install.log" 2>&1; then BUILT=1; break; fi
+    yr_log "install: build attempt $attempt failed"
+  done
+  [ "$BUILT" = "1" ] || yr_die "build failed twice; see $YR_LOGS/install.log"
 else
   yr_log "install: .next present, skipping build"
 fi

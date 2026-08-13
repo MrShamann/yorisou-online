@@ -16,9 +16,10 @@ import WebKit
 // release updates the lifecycle logic too — the bundle only needs to know where to look.
 let runtimeRoot = "/Volumes/AI-Work/Runtimes/yorisou"
 let volumePath = "/Volumes/AI-Work"
-let localURL = URL(string: "http://127.0.0.1:3210/")!
+let localURL = URL(string: "http://127.0.0.1:3211/")!
 let trustedHost = "127.0.0.1"
-let trustedPort = 3210
+// 3211: Kakari owns 3210 on this machine. See runtime-lib.sh.
+let trustedPort = 3211
 
 func scriptPath(_ name: String) -> String {
     "\(runtimeRoot)/current/scripts/local-app/\(name)"
