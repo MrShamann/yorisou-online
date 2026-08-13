@@ -90,13 +90,13 @@ change what the Founder is looking at without them asking for it.
 
 ### Port occupancy is not identity
 
-"Something is listening on 3210" is not "Yorisou is running". A different Next app, a second
+"Something is listening on 3211" is not "Yorisou is running". A different Next app, a second
 checkout, or a script returning plausible JSON all satisfy it. Treating the port as identity is how a
 launcher ends up killing someone else's work.
 
 Six facts must **all** hold before anything is reused or stopped:
 
-1. exactly one process owns `127.0.0.1:3210`
+1. exactly one process owns `127.0.0.1:3211`
 2. the candidate PID is alive
 3. it is that port owner
 4. its command line is a Node/Next server
@@ -156,7 +156,7 @@ runtime config, logs, cache, runtime-owned data and snapshots.
   `local.env` exists, never its contents, and `snapshot` fingerprints it rather than copying it
 - no web page can instruct the native shell to run a command — the shell executes exactly two fixed
   scripts and passes no arguments
-- navigation outside `127.0.0.1:3210` is cancelled and handed to the real browser. Embedding
+- navigation outside `127.0.0.1:3211` is cancelled and handed to the real browser. Embedding
   arbitrary external sites in app chrome the user cannot inspect is how a webview shell becomes a
   phishing surface, and provider flows such as LINE OAuth stay browser-mediated on purpose
 - `local.env` lives outside the repository at `config/local.env` (0600, parent 0700) and is never
