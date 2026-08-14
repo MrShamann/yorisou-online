@@ -1,7 +1,7 @@
 export type SupportAssistantLocale = "ja" | "en";
 
-// Legacy-compatible request hints. These are accepted at the API boundary only;
-// they no longer define Hinata's product identity or runtime ontology.
+// Legacy-compatible request hints. Accepted at the API boundary only; they do not
+// define Hinata's active product ontology.
 export type SupportIdentity = "self" | "family" | "institution";
 export type SupportIssueType =
   | "mobility_anxiety"
@@ -20,7 +20,7 @@ export type SupportNextActionType =
   | "reflect_now"
   | "no_action";
 
-export type SupportScenario =
+export type ActiveSupportScenario =
   | "be_heard"
   | "understand_my_state"
   | "reflect_on_relationship"
@@ -31,22 +31,21 @@ export type SupportScenario =
   | "remember_something"
   | "continue_previous_conversation";
 
-export type SupportEmotionalState =
-  | "calm"
-  | "uncertain"
-  | "overwhelmed"
-  | "lonely"
-  | "conflicted"
-  | "tired"
-  | "unclear";
+// Deprecated literals remain readable so historical memory/reflection records and
+// compatibility branches can compile. classifySupportScenario never emits them.
+export type LegacySupportScenario =
+  | "elder_mobility_anxiety"
+  | "family_mobility_support"
+  | "product_guidance"
+  | "consultation_booking"
+  | "institutional_inquiry";
 
+export type SupportScenario = ActiveSupportScenario | LegacySupportScenario;
+
+export type SupportEmotionalState = "calm" | "uncertain" | "overwhelmed" | "lonely" | "conflicted" | "tired" | "unclear";
 export type SupportDomainContext = "self" | "relationship" | "work" | "family" | "daily_life" | "health_context_nonclinical" | "other";
 
-export type SupportConversationMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
+export type SupportConversationMessage = { role: "user" | "assistant"; content: string };
 export type SupportScenarioInput = {
   locale: SupportAssistantLocale;
   identity: SupportIdentity;
@@ -65,11 +64,7 @@ export type SupportScenarioResult = {
   nextActions: SupportNextActionType[];
   serviceTrigger: SupportNextActionType;
   shouldAskClarifyingQuestion: boolean;
-  labels: {
-    persona: string;
-    scenario: string;
-    risk: string;
-  };
+  labels: { persona: string; scenario: string; risk: string };
 };
 
 const relationshipHints = ["友達", "友人", "恋人", "彼氏", "彼女", "夫", "妻", "パートナー", "関係", "距離", "返信", "既読", "friend", "partner", "relationship", "reply", "message"];
@@ -98,8 +93,7 @@ function inferDomain(text: string): SupportDomainContext {
   if (includesAny(text, familyHints)) return "family";
   if (includesAny(text, dailyLifeHints)) return "daily_life";
   if (includesAny(text, healthContextHints)) return "health_context_nonclinical";
-  if (text.trim()) return "self";
-  return "other";
+  return text.trim() ? "self" : "other";
 }
 
 function inferEmotionalState(text: string): SupportEmotionalState {
@@ -112,7 +106,7 @@ function inferEmotionalState(text: string): SupportEmotionalState {
   return "unclear";
 }
 
-function inferScenario(text: string, history: SupportConversationMessage[], domain: SupportDomainContext): SupportScenario {
+function inferScenario(text: string, history: SupportConversationMessage[], domain: SupportDomainContext): ActiveSupportScenario {
   if (includesAny(text, rememberHints)) return "remember_something";
   if (includesAny(text, revisitHints)) return history.length > 0 ? "continue_previous_conversation" : "revisit_previous_state";
   if (includesAny(text, nextStepHints)) return "decide_next_small_step";
@@ -125,7 +119,7 @@ function inferScenario(text: string, history: SupportConversationMessage[], doma
 }
 
 function inferRiskLevel(text: string): SupportRiskLevel {
-  // This is conversational intensity, not a diagnosis or crisis classifier.
+  // Conversational intensity only; not a diagnosis or crisis classifier.
   if (includesAny(text, ["限界", "何もできない", "動けない", "overwhelmed", "can't function"])) return "high";
   if (includesAny(text, [...uncertainHints, ...overwhelmedHints, ...lonelyHints])) return "medium";
   return "low";
@@ -137,7 +131,7 @@ function inferToneMode(state: SupportEmotionalState): SupportToneMode {
   return "quiet_companion";
 }
 
-function inferActions(scenario: SupportScenario, history: SupportConversationMessage[]): SupportNextActionType[] {
+function inferActions(scenario: ActiveSupportScenario, history: SupportConversationMessage[]): SupportNextActionType[] {
   if (scenario === "remember_something") return ["save_with_consent"];
   if (scenario === "revisit_previous_state") return ["revisit_later"];
   if (scenario === "decide_next_small_step") return ["reflect_now"];
@@ -145,8 +139,8 @@ function inferActions(scenario: SupportScenario, history: SupportConversationMes
   return ["no_action"];
 }
 
-function getLabels(locale: SupportAssistantLocale, identity: SupportIdentity, scenario: SupportScenario, risk: SupportRiskLevel) {
-  const jaScenario: Record<SupportScenario, string> = {
+function getLabels(locale: SupportAssistantLocale, identity: SupportIdentity, scenario: ActiveSupportScenario, risk: SupportRiskLevel) {
+  const jaScenario: Record<ActiveSupportScenario, string> = {
     be_heard: "まず話したい",
     understand_my_state: "いまの自分を整理したい",
     reflect_on_relationship: "人との距離や関係を見つめたい",
@@ -157,7 +151,7 @@ function getLabels(locale: SupportAssistantLocale, identity: SupportIdentity, sc
     remember_something: "このことを残しておきたい",
     continue_previous_conversation: "前の話の続きをしたい",
   };
-  const enScenario: Record<SupportScenario, string> = {
+  const enScenario: Record<ActiveSupportScenario, string> = {
     be_heard: "Be heard",
     understand_my_state: "Understand how I am",
     reflect_on_relationship: "Reflect on a relationship",
@@ -169,19 +163,13 @@ function getLabels(locale: SupportAssistantLocale, identity: SupportIdentity, sc
     continue_previous_conversation: "Continue an earlier conversation",
   };
 
-  if (locale === "en") {
-    return {
-      persona: identity === "family" ? "Family context" : identity === "institution" ? "External context" : "Self",
-      scenario: enScenario[scenario],
-      risk,
-    };
-  }
-
-  return {
-    persona: identity === "family" ? "家族の文脈" : identity === "institution" ? "外部の文脈" : "本人",
-    scenario: jaScenario[scenario],
-    risk: risk === "high" ? "負荷が強そう" : risk === "medium" ? "少し揺れている" : "落ち着いて話せる",
-  };
+  return locale === "en"
+    ? { persona: identity === "family" ? "Family context" : identity === "institution" ? "External context" : "Self", scenario: enScenario[scenario], risk }
+    : {
+        persona: identity === "family" ? "家族の文脈" : identity === "institution" ? "外部の文脈" : "本人",
+        scenario: jaScenario[scenario],
+        risk: risk === "high" ? "負荷が強そう" : risk === "medium" ? "少し揺れている" : "落ち着いて話せる",
+      };
 }
 
 export function classifySupportScenario(input: SupportScenarioInput): SupportScenarioResult {
@@ -192,7 +180,6 @@ export function classifySupportScenario(input: SupportScenarioInput): SupportSce
   const emotionalState = inferEmotionalState(text);
   const scenario = inferScenario(input.message, input.messages, domainContext);
   const riskLevel = inferRiskLevel(text);
-  const toneMode = inferToneMode(emotionalState);
   const nextActions = inferActions(scenario, input.messages);
 
   return {
@@ -201,7 +188,7 @@ export function classifySupportScenario(input: SupportScenarioInput): SupportSce
     emotionalState,
     domainContext,
     riskLevel,
-    toneMode,
+    toneMode: inferToneMode(emotionalState),
     nextActions,
     serviceTrigger: nextActions[0] || "no_action",
     shouldAskClarifyingQuestion: scenario !== "be_heard" && scenario !== "remember_something",
