@@ -6,6 +6,7 @@ import { latestCurrentStateRecord, listGoals, listMemories, listReflections } fr
 import { GOAL_STATUS_LABELS, type CurrentStateRecord, type Goal } from "@/lib/life-os/contract";
 import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId } from "@/lib/yorisou/today/currentStateCheckIn";
 import SignInRequired from "./SignInRequired";
+import { INTERNAL_HANDLING } from "@/lib/life-os/privacyCopy";
 
 export const metadata: Metadata = {
   title: "わたしの記録 | Yorisou",
@@ -66,8 +67,10 @@ export default async function LifePage() {
       <h1 className="mt-3 text-[26px] font-semibold leading-[1.5] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
         ここに残したものは、
         <br />
-        あなただけが見られます。
+        ほかの利用者に表示されません。
       </h1>
+      {/* The separate sentence, not a qualifier tucked into the heading. */}
+      <p className="mt-3 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">{INTERNAL_HANDLING}</p>
 
       <section className="mt-9">
         <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">いまの状態</h2>

@@ -9,6 +9,10 @@ export type ExperienceVisibility = typeof ACTIVE_VISIBILITIES[number];
 // OSF-1 added `title` and `lesson` (columns added by 202608140001) and made the sharing-only fields
 // optional for PRIVATE cards — see payload() for why.
 export type ExperienceInput = { stateContext?: string; situation: string; actionTried: string; perceivedOutcome: string; limitations?: string; mayFit?: string; mayNotFit?: string; title?: string | null; lesson?: string | null; visibility: ExperienceVisibility; sourceSavedResultId?: string | null; previewConfirmed?: boolean; aiAssistanceStatus?: "none" | "accepted" | "rejected" };
+// A PATCH body: every content field optional, plus an explicit list of fields to null. A distinct
+// type from ExperienceInput on purpose — the compiler now stops a caller handing update a
+// create-shaped object and getting replace semantics by accident.
+export type ExperienceUpdateInput = Partial<Omit<ExperienceInput, "visibility">> & { visibility?: ExperienceVisibility; clearFields?: ClearableExperienceField[] };
 type CardRow = Record<string, unknown> & { id: string; owner_account_id: string; visibility: ExperienceVisibility; visibility_version: number };
 
 function config() { const url=process.env.SUPABASE_URL?.trim(),key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(); if(!url||!key) throw new Error("experience_store_not_configured"); return {url:url.replace(/\/$/,""),key}; }
@@ -31,7 +35,76 @@ async function revision(owner:string,row:CardRow,number:number) { await request(
 export async function createExperience(owner:string,input:ExperienceInput) { await validateSource(owner,input.sourceSavedResultId);const body=payload(input),flags=trustFlags(input);if(flags.includes("clinical_or_absolute_claim")){body.moderation_status="limited";body.searchable=false;} const row=((await (await request("yorisou_experience_cards",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({project_id:PROJECT_ID,owner_account_id:owner,...body})})).json()) as CardRow[])[0]; if(!row)throw new Error("experience_create_failed"); await revision(owner,row,1); if(input.visibility!=="PRIVATE")await Promise.all([request("yorisou_experience_consents",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:row.id,owner_account_id:owner,visibility:input.visibility})}),request("yorisou_experience_visibility_events",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:row.id,owner_account_id:owner,to_visibility:input.visibility})})]); await event(owner,input.visibility==="PRIVATE"?"draft_created":"published",row.id,{visibility:input.visibility,trust_flags:flags}); return row; }
 export async function ownerCard(owner:string,id:string) { return ((await (await request(`yorisou_experience_cards?select=*&id=eq.${encodeURIComponent(id)}&owner_account_id=eq.${encodeURIComponent(owner)}&deleted_at=is.null&limit=1`)).json()) as CardRow[])[0]||null; }
 export async function listOwnerCards(owner:string) { return await (await request(`yorisou_experience_cards?select=*&owner_account_id=eq.${encodeURIComponent(owner)}&deleted_at=is.null&order=updated_at.desc&limit=50`)).json() as CardRow[]; }
-export async function updateExperience(owner:string,id:string,input:ExperienceInput) { const current=await ownerCard(owner,id); if(!current)throw new Error("experience_not_found");await validateSource(owner,input.sourceSavedResultId); const body=payload(input),version=Number(current.visibility_version)+1;if(["limited","removed"].includes(String(current.moderation_status))){body.moderation_status=current.moderation_status as "limited";body.searchable=false;} const row=((await (await request(`yorisou_experience_cards?id=eq.${id}&owner_account_id=eq.${encodeURIComponent(owner)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({...body,visibility_version:version,last_visibility_change_at:new Date().toISOString(),updated_at:new Date().toISOString()})})).json()) as CardRow[])[0]; if(!row)throw new Error("experience_update_failed"); await revision(owner,row,version); if(current.visibility!==input.visibility){await Promise.all([request("yorisou_experience_consents",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:id,owner_account_id:owner,visibility:input.visibility})}),request("yorisou_experience_visibility_events",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:id,owner_account_id:owner,from_visibility:current.visibility,to_visibility:input.visibility})})]);} await event(owner,"draft_updated",id,{visibility:input.visibility}); return row; }
+// UPDATE IS A PATCH, AND A PATCH IS NOT A REPLACE (OSF-1 hardening).
+//
+// payload() always returns all nine content keys, each clean()-ed to null when absent, because that
+// is right for CREATE — a create supplies everything or it is invalid. updateExperience reused it,
+// so `{situation, actionTried, perceivedOutcome, visibility}` returned 200 and wrote title, lesson,
+// state_context, limitations, may_fit and may_not_fit to NULL. The caller never asked to erase them;
+// it just did not mention them. Before OSF-1 made those columns nullable that same request was
+// rejected outright, so the relaxation is what turned "invalid" into "silently destroys the owner's
+// own text".
+//
+// The rule now: an ABSENT field means leave it alone; only an explicit `clearFields` entry nulls
+// anything. There is no way to clear a column by omission.
+const CLEARABLE_FIELDS = ["title","lesson","state_context","limitations","may_fit","may_not_fit"] as const;
+export type ClearableExperienceField = typeof CLEARABLE_FIELDS[number];
+/** situation / action_tried / perceived_outcome are NOT NULL in the schema and are never clearable. */
+function updateBody(input:ExperienceUpdateInput,visibility:ExperienceVisibility) {
+  const provided:Record<string,unknown>={};
+  const map:Array<[keyof ExperienceUpdateInput,string,number]>=[["stateContext","state_context",1200],["situation","situation",3000],["actionTried","action_tried",3000],["perceivedOutcome","perceived_outcome",3000],["limitations","limitations",2000],["mayFit","may_fit",1200],["mayNotFit","may_not_fit",1200],["title","title",120],["lesson","lesson",1000]];
+  for(const [key,column,max] of map){
+    const value=input[key];
+    if(value===undefined)continue;                       // absent = untouched
+    const cleaned=clean(value,max);
+    if(!cleaned)throw new Error(`experience_field_empty:${column}`); // "" is not "clear it"
+    provided[column]=cleaned;
+  }
+  for(const field of input.clearFields??[]){
+    if(!CLEARABLE_FIELDS.includes(field))throw new Error(`experience_field_not_clearable:${field}`);
+    if(field in provided)throw new Error(`experience_field_set_and_cleared:${field}`);
+    // The four sharing-context fields are required whenever the card is visible to anyone else —
+    // both here and by yorisou_experience_cards_shared_context_chk. Refusing in the application too
+    // so the caller gets a named error instead of a constraint violation.
+    if(visibility!=="PRIVATE"&&field!=="title"&&field!=="lesson")throw new Error(`experience_field_required_when_shared:${field}`);
+    provided[field]=null;
+  }
+  return provided;
+}
+export async function updateExperience(owner:string,id:string,input:ExperienceUpdateInput) {
+  const current=await ownerCard(owner,id); if(!current)throw new Error("experience_not_found");
+  await validateSource(owner,input.sourceSavedResultId);
+  // Visibility is optional on a patch too: omitting it keeps whatever the card already has.
+  const visibility=input.visibility??(current.visibility as ExperienceVisibility);
+  if(!ACTIVE_VISIBILITIES.includes(visibility))throw new Error("invalid_experience_card");
+  const content=updateBody(input,visibility);
+  const version=Number(current.visibility_version)+1;
+  // Turning a PRIVATE card into a shared one still has to satisfy the full sharing contract — and it
+  // is the MERGED row, not the patch, that must satisfy it.
+  const shared=visibility!=="PRIVATE";
+  if(shared){
+    const merged=(column:string)=>column in content?content[column]:(current as Record<string,unknown>)[column];
+    if(SHARED_ONLY_FIELDS.some(column=>!merged(column))||!merged("situation")||!merged("action_tried")||!merged("perceived_outcome"))throw new Error("invalid_experience_card");
+    if(current.visibility==="PRIVATE"&&!input.previewConfirmed)throw new Error("preview_confirmation_required");
+    const flags=trustFlags(input as ExperienceInput);
+    if(flags.some(f=>f!=="clinical_or_absolute_claim"))throw new Error("identifying_detail_detected");
+  }
+  const body:Record<string,unknown>={...content,visibility};
+  if(current.visibility!==visibility){
+    const now=new Date().toISOString();
+    body.consented_at=shared?now:null;
+    body.searchable=shared&&visibility!=="INVITE_ONLY";
+    body.audience_rule=visibility==="INVITE_ONLY"?"invite_token":visibility==="SIMILAR_STATE_ONLY"?"similar_state_only":shared?"anonymous_shared":"owner_only";
+    body.published_at=shared?now:null;
+    if(input.previewConfirmed)body.preview_confirmed_at=now;
+  }
+  if(["limited","removed"].includes(String(current.moderation_status))){body.moderation_status=current.moderation_status;body.searchable=false;}
+  const row=((await (await request(`yorisou_experience_cards?id=eq.${id}&owner_account_id=eq.${encodeURIComponent(owner)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({...body,visibility_version:version,last_visibility_change_at:new Date().toISOString(),updated_at:new Date().toISOString()})})).json()) as CardRow[])[0];
+  if(!row)throw new Error("experience_update_failed");
+  await revision(owner,row,version);
+  if(current.visibility!==visibility){await Promise.all([request("yorisou_experience_consents",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:id,owner_account_id:owner,visibility})}),request("yorisou_experience_visibility_events",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:id,owner_account_id:owner,from_visibility:current.visibility,to_visibility:visibility})})]);}
+  await event(owner,"draft_updated",id,{visibility,cleared:input.clearFields??[]});
+  return row; }
 export async function withdrawExperience(owner:string,id:string,deleted=false) { if(!await ownerCard(owner,id))throw new Error("experience_not_found"); const now=new Date().toISOString(); await request(`yorisou_experience_cards?id=eq.${id}&owner_account_id=eq.${encodeURIComponent(owner)}`,{method:"PATCH",body:JSON.stringify(deleted?{deleted_at:now,withdrawn_at:now,searchable:false}:{withdrawn_at:now,searchable:false})}); await event(owner,deleted?"deleted":"withdrawn",id); }
 export async function createInvite(owner:string,id:string) { const card=await ownerCard(owner,id); if(!card||card.visibility!=="INVITE_ONLY")throw new Error("invite_not_available"); const token=randomBytes(24).toString("base64url"),tokenHash=createHash("sha256").update(token).digest("hex"),expires=new Date(Date.now()+7*86400000).toISOString(); await request("yorisou_experience_invites",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:id,owner_account_id:owner,token_hash:tokenHash,expires_at:expires})}); return {token,expiresAt:expires}; }
 export async function invitedCard(token:string) { const hash=createHash("sha256").update(token).digest("hex"); const invite=((await (await request(`yorisou_experience_invites?select=experience_id&token_hash=eq.${hash}&revoked_at=is.null&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&limit=1`)).json()) as Array<{experience_id:string}>)[0]; if(!invite)return null; const row=((await (await request(`yorisou_experience_cards?select=id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit,visibility,provenance,ai_assistance_status,published_at&id=eq.${invite.experience_id}&visibility=eq.INVITE_ONLY&moderation_status=eq.published&withdrawn_at=is.null&deleted_at=is.null&limit=1`)).json()) as CardRow[])[0]; return row||null; }

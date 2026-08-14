@@ -333,6 +333,69 @@ rather than 404/422; `yorisou_identity_provisioning_sagas` is in no erasure path
 sentence says so; memories beyond the 50 most recent are unreachable; the PostgreSQL harness is still
 not wired into CI.
 
+## 10b. Final hardening (2026-08-14)
+
+Five Founder-specified items, after the audit.
+
+**1. The CurrentStateRecord ↔ Imairo Result boundary is now a named artefact.**
+`lib/life-os/boundaries.ts` states both definitions and the three prohibitions — *never auto-convert,
+never overwrite, never replace* — with the concrete reason each matters: two taps and 120 answered
+questions are not the same evidence, so a check-in appearing where a result belongs claims a method
+found something when nothing was measured, and a result appearing where a check-in belongs presents a
+weeks-old conclusion as today. `lib/server/__tests__/osf1Boundaries.test.ts` enforces it in both
+directions: no Life OS module may reference an assessment module or table, and
+`yorisou_current_state_records` may not declare `result_id`, `method_id`, `method_version`,
+`scoring_version`, `archetype`, `persona` or `score`. A fourth test asserts the boundary is still
+documented in the four files a maintainer is standing in when they would break it.
+
+**2. The private-visibility wording is now true.**
+Five surfaces said 「あなただけが見られます」. That is false for a real and ordinary case:
+`trustFlags()` flags text containing 診断 / 治療 / 必ず治る / 絶対に効く, `createExperience()` then sets
+`moderation_status='limited'` **including for a PRIVATE card**, and `moderationQueue()` serves limited
+cards to operators with `select=*`. So someone writing 「うつ病と診断されて休職した」 as a private note
+had it in the Founder moderation queue, in full, on a screen that had just promised otherwise.
+
+The wording now separates the claim that is provable from the one that is not.
+`lib/life-os/privacyCopy.ts` holds three constants: 「ほかの利用者に表示されることはありません」 (a
+statement about other users, which `discoverExperiences` / `sharedCard` / `invitedCard` and the
+anon/authenticated grants all enforce), a separate sentence about internal handling, and — for
+experience cards only — the named trigger, so someone hesitating over whether to mention a diagnosis
+knows before they type. `/experiences` also had 「非公開（自分だけ）」 in its visibility selector;
+corrected. A test fails if any surface reintroduces one of six absolute phrasings.
+
+**3. Experience PATCH is a patch.**
+`updateExperience` shared `payload()` with create, which always returns all nine content keys
+`clean()`-ed to null. A patch naming three fields therefore wrote the other six to NULL — the caller
+never asked to erase them, it just did not mention them. Before OSF-1 made those columns nullable the
+same request was rejected outright, so the nullability relaxation is what turned "invalid" into
+"silently destroys the owner's own text".
+
+Now: **absent means untouched**, and only an explicit `clearFields` entry nulls anything. Clearing is
+refused for `situation` / `action_tried` / `perceived_outcome` (NOT NULL in the schema), refused for a
+field also being set in the same request, and refused for the four sharing-context fields unless the
+card is PRIVATE. An empty string is an error, not a clear. Visibility is optional on a patch, and when
+a card becomes shared the **merged** row — not the patch — must satisfy the full sharing contract.
+`ExperienceUpdateInput` is a distinct type, so the compiler now stops a caller handing update a
+create-shaped object. `/experiences` also rendered `String(null)` as the literal text `null` in its
+editor, which `clean()` would have accepted as real content on save; coalesced at the boundary.
+
+**4. The PostgreSQL acceptance runs in CI.**
+New job `OSF-1 Life OS PostgreSQL Acceptance` on a `postgres:17` service container. It covers all four
+requested properties in one harness because they are one setup: migration execution in lineage order
+first (so a migration that fails to apply fails before any assertion), then RLS and the privilege
+matrix, account erasure executed for real, and the memory-confirmation constraint. The harness takes
+`OSF1_DATABASE_URL` for CI and still self-builds a throwaway cluster locally; the supplied DSN is
+guarded with the same three clauses the repository's four other harnesses use (not Supabase, is
+localhost, names `osf1_acceptance`), so it cannot be repointed at a real database by editing the URL.
+
+**5. Documentation** — this section, plus the boundary and Goal statements from §10a.
+
+Unchanged, as instructed: Life Graph architecture (still absent), the Experience model (same table,
+same nine companion tables, no new entity), Memory governance (same single confirmed-only table and
+constraint), and every protected methodology asset — scoring, taxonomy, result assets, LINE
+boundaries. The `title`/`lesson` columns and the visibility-conditional constraint from the original
+package are unchanged by this pass.
+
 ## 11. Rollback
 
 **Before merge:** close the PR. Nothing is applied anywhere.

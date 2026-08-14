@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { LIFE_OS_PRIVACY } from "@/lib/life-os/privacyCopy";
+
 // OSF-1 — what a signed-out visitor sees on a Life OS surface.
 //
 // Not a wall and not a pitch. These records are kept against an account, so there is nothing to show
@@ -14,7 +16,7 @@ export default function SignInRequired({ next, purpose }: { next: string; purpos
         {purpose}
       </h1>
       <p className="mt-4 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-        ここに残したものは、あなただけが見られます。続けるにはサインインしてください。
+        ここに残したものが{LIFE_OS_PRIVACY}続けるにはサインインしてください。
       </p>
       <Link
         href={`/login?next=${encodeURIComponent(next)}`}

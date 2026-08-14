@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { EXPERIENCE_PRIVACY } from "@/lib/life-os/privacyCopy";
 
 // OSF-1 — 経験を書く.
 //
@@ -84,7 +85,7 @@ export default function ExperienceForm() {
           書きとめました。
         </h1>
         <p className="mt-4 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-          この経験はあなただけが見られます。共有するかどうかは、あとから決められます。
+          この経験が{EXPERIENCE_PRIVACY}共有するかどうかは、あとから決められます。
         </p>
         <Link
           href={`/life/reflect?experience=${encodeURIComponent(savedId ?? "")}`}
@@ -157,7 +158,7 @@ export default function ExperienceForm() {
       )}
 
       <p className="mt-8 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">
-        書いたものは、あなただけが見られます。
+        {EXPERIENCE_PRIVACY}
       </p>
     </div>
   );

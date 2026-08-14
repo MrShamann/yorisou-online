@@ -30,19 +30,55 @@ trap cleanup EXIT
 pass() { printf '  ok   %s\n' "$1"; }
 fail() { printf '  FAIL %s  %s\n' "$1" "${2:-}"; FAILURES=$((FAILURES+1)); }
 
-MAJOR="$("$PGBIN/postgres" --version | awk '{print $3}' | cut -d. -f1)"
-case "$MAJOR" in
-  16|17) : ;;
-  *) echo "refusing: need PostgreSQL 16 or 17 (Production runs 17); found $MAJOR" >&2; exit 1 ;;
-esac
-
-rm -rf "$WORK"; mkdir -p "$WORK/pg"
-initdb -D "$WORK/pg" -U postgres -A trust --no-locale -E UTF8 >/dev/null 2>&1
-pg_ctl -D "$WORK/pg" -o "-p $PORT -c unix_socket_directories=''" -l "$WORK/pg/log" start >/dev/null
-sleep 1
-
-DSN="postgres://postgres@localhost:$PORT/osf1"
-createdb -h localhost -p "$PORT" -U postgres osf1
+# TWO WAYS TO GET A DATABASE, AND THE REASON FOR BOTH.
+#
+# LOCAL (default): build a throwaway cluster with initdb. Zero setup, which is what makes this
+# runnable as evidence rather than as an aspiration.
+#
+# CI (OSF1_DATABASE_URL set): use the runner's PostgreSQL service container. GitHub's runners have
+# no Homebrew PostgreSQL and initdb'ing one per job would be slow and brittle, so the harness takes
+# a DSN instead — the same shape as the repository's four postgres-integration.sh harnesses.
+#
+# The guard on the supplied DSN is deliberately the same three-clause shape those four use: it must
+# not be a Supabase host, it must be localhost, and it must name this harness's own database. A
+# harness that can be pointed at a real database by setting one variable is a harness that will
+# eventually be pointed at one.
+if [ -n "${OSF1_DATABASE_URL:-}" ]; then
+  case "$OSF1_DATABASE_URL" in
+    *supabase.co*) echo "refusing: OSF1_DATABASE_URL points at a Supabase host" >&2; exit 1 ;;
+  esac
+  case "$OSF1_DATABASE_URL" in
+    *@localhost:*|*@127.0.0.1:*) : ;;
+    *) echo "refusing: OSF1_DATABASE_URL is not a local database" >&2; exit 1 ;;
+  esac
+  case "$OSF1_DATABASE_URL" in
+    *osf1_acceptance*) : ;;
+    *) echo "refusing: OSF1_DATABASE_URL must name the disposable database osf1_acceptance" >&2; exit 1 ;;
+  esac
+  DSN="$OSF1_DATABASE_URL"
+  cleanup() { :; }   # the runner disposes of its own service container
+  trap - EXIT
+  MAJOR="$(psql "$DSN" -t -A -X -c 'show server_version;' | cut -d. -f1)"
+  case "$MAJOR" in
+    16|17) : ;;
+    *) echo "refusing: need PostgreSQL 16 or 17 (Production runs 17); found $MAJOR" >&2; exit 1 ;;
+  esac
+  echo "[osf1] using the supplied disposable database (PostgreSQL $MAJOR)"
+else
+  MAJOR="$("$PGBIN/postgres" --version | awk '{print $3}' | cut -d. -f1)"
+  case "$MAJOR" in
+    16|17) : ;;
+    *) echo "refusing: need PostgreSQL 16 or 17 (Production runs 17); found $MAJOR" >&2; exit 1 ;;
+  esac
+  rm -rf "$WORK"; mkdir -p "$WORK/pg"
+  initdb -D "$WORK/pg" -U postgres -A trust --no-locale -E UTF8 >/dev/null 2>&1
+  pg_ctl -D "$WORK/pg" -o "-p $PORT -c unix_socket_directories=''" -l "$WORK/pg/log" start >/dev/null
+  sleep 1
+  DSN="postgres://postgres@localhost:$PORT/osf1"
+  createdb -h localhost -p "$PORT" -U postgres osf1
+  echo "[osf1] built a throwaway cluster (PostgreSQL $MAJOR)"
+fi
+mkdir -p "$WORK"
 Q() { psql "$DSN" -t -A -X -q "$@"; }
 
 Q -c "
@@ -141,6 +177,38 @@ if Q -c "insert into public.yorisou_experience_cards
   fail "shared card null context" "a SHARED card was accepted without state_context"
 else
   pass "a SHARED card still requires the four sharing-context fields"
+fi
+
+# ── 3c. PATCH semantics: absent means untouched, clearing is explicit ────────
+#
+# updateExperience used to share payload() with create, so a patch that mentioned three fields wrote
+# the other six to NULL — the caller never asked to erase them, it just did not name them. These
+# assert the DATABASE shape the new updateBody() depends on: the three NOT NULL columns cannot be
+# cleared at all, and the four sharing-context columns can only be null while the card is PRIVATE.
+echo "[osf1] experience patch semantics"
+for column in situation action_tried perceived_outcome; do
+  NULLABLE=$(Q -c "select is_nullable from information_schema.columns
+                    where table_schema='public' and table_name='yorisou_experience_cards'
+                      and column_name='$column';")
+  [ "$NULLABLE" = "NO" ] && pass "$column is NOT NULL — never clearable by any patch" \
+    || fail "$column nullability" "expected NO, got $NULLABLE"
+done
+for column in state_context limitations may_fit may_not_fit title lesson; do
+  NULLABLE=$(Q -c "select is_nullable from information_schema.columns
+                    where table_schema='public' and table_name='yorisou_experience_cards'
+                      and column_name='$column';")
+  [ "$NULLABLE" = "YES" ] || fail "$column nullability" "expected YES, got $NULLABLE"
+done
+pass "the six clearable columns are nullable"
+# Clearing a sharing-context field on a SHARED card must be impossible in the database too, not only
+# in updateBody() — the application check is a better error message, not the guarantee.
+if Q -c "update public.yorisou_experience_cards set state_context=null
+          where id='$XID' and visibility='PRIVATE';" >/dev/null 2>&1 \
+   && Q -c "update public.yorisou_experience_cards set visibility='ANONYMOUS_SHARED'
+             where id='$XID';" >/dev/null 2>&1; then
+  fail "shared context constraint" "a card with a null state_context was made shared"
+else
+  pass "a card cannot become shared while a sharing-context field is null"
 fi
 
 # ── 4. Reflection ────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { REFLECTION_QUESTIONS, type MemoryCandidate, type ReflectionField } from "@/lib/life-os/contract";
 import { lifeOsPost } from "@/lib/life-os/client";
 import MemoryConfirmation from "../MemoryConfirmation";
+import { LIFE_OS_PRIVACY } from "@/lib/life-os/privacyCopy";
 
 // OSF-1 — the guided reflection, seven questions.
 //
@@ -74,7 +75,7 @@ export default function ReflectionFlow({ experienceId }: Props) {
           書き終わりました。
         </h1>
         <p className="mt-4 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-          この振り返りは、あなただけが見られます。
+          この振り返りが{LIFE_OS_PRIVACY}
         </p>
 
         <MemoryConfirmation candidates={candidates} />
