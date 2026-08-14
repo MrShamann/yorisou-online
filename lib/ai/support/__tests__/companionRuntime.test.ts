@@ -24,10 +24,11 @@ test("relationship fatigue stays in companion ontology", () => {
   assert.deepEqual(result.nextActions, ["no_action"]);
 });
 
-test("work pressure is not converted into product or consultation guidance", () => {
+test("work pressure stays reflective and is not converted into product or consultation guidance", () => {
   const result = classify("仕事のことを考えるだけで疲れる。何から整理したらいいかわからない");
-  assert.equal(result.scenario, "decide_next_small_step");
+  assert.equal(result.scenario, "reflect_on_work");
   assert.equal(result.domainContext, "work");
+  assert.deepEqual(result.nextActions, ["no_action"]);
   const actions = routeSupportActions(result, "ja");
   assert.equal(actions.some((action) => /製品|導入|予約/.test(`${action.title}${action.description}`)), false);
 });
