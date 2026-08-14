@@ -5,6 +5,11 @@
 **Authorization:** Founder package "YORISOU OS Foundation v0.7.0 — Phase 1 Life OS Foundation MVP"
 **Implementation agent:** Claude Code, per `resources/governance/current/annex/AGENT_EXECUTION_AUTHORITY_MATRIX.md`
 
+**Companion records:**
+`docs/yorisou/osf1/OSF1_FOUNDER_DECISIONS.md` — the PRIVATE-card visibility decision and the
+`clearFields` contract · `docs/yorisou/osf1/OSF1_TRUST_RISK_REVIEW.md` — the non-blocking risk
+register · `lib/life-os/boundaries.ts` — the CurrentStateRecord ↔ Imairo Result boundary.
+
 ---
 
 ## 1. What this is, in one paragraph
@@ -395,6 +400,34 @@ same nine companion tables, no new entity), Memory governance (same single confi
 constraint), and every protected methodology asset — scoring, taxonomy, result assets, LINE
 boundaries. The `title`/`lesson` columns and the visibility-conditional constraint from the original
 package are unchanged by this pass.
+
+## 10c. Governance closeout (2026-08-14)
+
+Documentation and governance closure only — no code behaviour changed in this pass.
+
+**Decisions recorded** in `docs/yorisou/osf1/OSF1_FOUNDER_DECISIONS.md`, following the DCI-1/YV-1
+house convention (`docs/yorisou/<package>/`):
+
+- **§1 PRIVATE Experience Cards.** Not visible to other users, with the four read paths and the
+  clauses that enforce it. Platform safety processing may occur under a named trigger — `trustFlags()`
+  on 診断 / 治療 / 必ず治る / 絶対に効く promotes even a PRIVATE card to `moderation_status='limited'`,
+  which `moderationQueue()` serves to allowlisted operators at full content. UI wording must not imply
+  absolute personal-only storage; the approved and prohibited sentences are constants in
+  `lib/life-os/privacyCopy.ts` and a test fails the build on six absolute phrasings. §1.4 records what
+  the decision deliberately does **not** do: it discloses the trigger rather than narrowing it.
+- **§2 `clearFields`.** A bounded PATCH capability, not a user-facing feature, with the eight-rule
+  contract and the reason it exists — the nullability relaxation this package introduced is what
+  turned an invalid request into one that silently destroyed the owner's own text. No UI sends it; a
+  user-facing clear control is explicitly out of scope and would need its own package.
+
+**Risks registered** in `docs/yorisou/osf1/OSF1_TRUST_RISK_REVIEW.md`, in the house risk-table format
+with severity, present state, mitigation and a stop condition each: provisioning-saga erasure coverage
+(medium, pre-existing), the 50-item memory cap (medium, unreachable today), non-UUID id → 500 (low,
+unreachable from any product path), and the missing axe audit on `/life/*` (medium, **blocking for any
+exposure beyond the Founder**). §2 records four risks accepted with reasons; §3 lists what was
+verified rather than assumed, so the settled parts are not re-litigated.
+
+The prose list in §10 above remains the reading summary; the register is the governed record.
 
 ## 11. Rollback
 
