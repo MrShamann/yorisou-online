@@ -106,43 +106,38 @@ export type Goal = {
 // ── Reflection (user-authored, seven questions) ───────────────────────────────
 
 /**
- * The guided reflection: seven questions, on seven screens.
+ * The guided reflection — FIVE questions, one per screen.
  *
- * Only the first is required. A reflection someone stopped halfway through is still theirs to keep,
- * and requiring all seven would make a quiet flow into a form — the thing the UX principles call
- * "no dashboard feeling".
+ * CHANGED FROM SEVEN (activation package Phase C). The shipped flow asked seven; the package
+ * specifies these five, and two of them had no column until 202608150002 added `felt` and `tried`.
  *
- * Question 4 carries two inputs — the decision and the reason for it — because splitting them into
- * an eighth screen would make the flow longer than the package specifies, and asking "why" without
- * the decision still on the page loses the thing it refers to.
+ * The three prompts that were dropped — 「そのとき、どうなってほしいと思っていましたか」,
+ * 「そのとき、何がわかっていましたか」 and the 「なぜ」 half of the decision screen — asked a person to
+ * reconstruct their own state of mind at a past moment, which is the hardest kind of question to
+ * answer honestly and the easiest to answer with a story. Their columns are kept nullable rather
+ * than dropped, so reinstating a fuller flow later costs a migration on an empty column instead of
+ * a re-add to a live table.
+ *
+ * Only the first is required. A reflection someone stopped halfway through is still theirs to keep.
  */
 export const REFLECTION_QUESTIONS = [
   {
-    prompt: "何が起きましたか。",
+    prompt: "何がありましたか。",
     help: "起きたことを、覚えている範囲で。",
     required: true,
-    fields: [{ field: "what_happened", label: "何が起きましたか", required: true }],
+    fields: [{ field: "what_happened", label: "あったこと", required: true }],
   },
   {
-    prompt: "そのとき、どうなってほしいと思っていましたか。",
-    help: "うまく言えなくても大丈夫です。",
+    prompt: "その時、どう感じましたか。",
+    help: "うまく言葉にならなくても、そのままで。",
     required: false,
-    fields: [{ field: "goal_at_the_time", label: "望んでいたこと", required: false }],
+    fields: [{ field: "felt", label: "感じたこと", required: false }],
   },
   {
-    prompt: "そのとき、何がわかっていましたか。",
-    help: "あとから知ったことは含めなくて構いません。",
+    prompt: "何を試しましたか。",
+    help: "してみたこと、してみなかったこと、どちらでも。",
     required: false,
-    fields: [{ field: "information_at_hand", label: "わかっていたこと", required: false }],
-  },
-  {
-    prompt: "どうすることにしましたか。",
-    help: "選ばなかったことがあれば、それも。理由は、はっきりしないこともあります。",
-    required: false,
-    fields: [
-      { field: "decision_made", label: "決めたこと", required: false },
-      { field: "why", label: "なぜ、そうしたのだと思いますか（任意）", required: false },
-    ],
+    fields: [{ field: "tried", label: "試したこと", required: false }],
   },
   {
     prompt: "そのあと、何が起きましたか。",
@@ -151,16 +146,10 @@ export const REFLECTION_QUESTIONS = [
     fields: [{ field: "what_followed", label: "そのあと起きたこと", required: false }],
   },
   {
-    prompt: "そこから、何か気づいたことはありますか。",
+    prompt: "次に活かせそうなことはありますか。",
     help: "なければ空のままで。",
     required: false,
-    fields: [{ field: "what_learned", label: "気づいたこと", required: false }],
-  },
-  {
-    prompt: "次に同じことがあったら、どうしたいですか。",
-    help: "",
-    required: false,
-    fields: [{ field: "next_time", label: "次にしたいこと", required: false }],
+    fields: [{ field: "next_time", label: "次に活かせそうなこと", required: false }],
   },
 ] as const;
 
@@ -176,6 +165,8 @@ export type LifeReflection = {
   id: string;
   experience_id: string | null;
   what_happened: string;
+  felt: string | null;
+  tried: string | null;
   goal_at_the_time: string | null;
   information_at_hand: string | null;
   decision_made: string | null;
@@ -186,10 +177,19 @@ export type LifeReflection = {
   created_at: string;
 };
 
-export type LifeReflectionInput = Partial<Record<ReflectionField, string | null>> & {
-  what_happened: string;
-  experienceId?: string | null;
-};
+/**
+ * What a caller may write. The five asked fields, plus the columns the five-question flow no longer
+ * asks — retained so the RPC keeps a complete signature and a later fuller flow needs no schema
+ * change. Nothing in the shipped UI sets the retained ones.
+ */
+export type RetainedReflectionField =
+  | "goal_at_the_time" | "information_at_hand" | "decision_made" | "why" | "what_learned";
+
+export type LifeReflectionInput = Partial<Record<ReflectionField, string | null>> &
+  Partial<Record<RetainedReflectionField, string | null>> & {
+    what_happened: string;
+    experienceId?: string | null;
+  };
 
 // ── Memory (explicit, confirmed) ─────────────────────────────────────────────
 

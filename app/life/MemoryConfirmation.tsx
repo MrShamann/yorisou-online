@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { MEMORY_TYPE_LABELS, type MemoryCandidate } from "@/lib/life-os/contract";
-import { lifeOsPost } from "@/lib/life-os/client";
+import { lifePost } from "@/lib/life-os/client";
 
 // OSF-1 — 「これを覚えておきますか」.
 //
@@ -29,8 +29,7 @@ export default function MemoryConfirmation({ candidates }: Props) {
 
   async function confirm(index: number, candidate: MemoryCandidate) {
     setDecisions((current) => ({ ...current, [index]: "saving" }));
-    const result = await lifeOsPost({
-      action: "confirm_memory",
+    const result = await lifePost("memories", {
       // Sent as a separate top-level field, not folded into the candidate object. The endpoint reads
       // THIS and rejects anything that is not exactly `true`, so a client that forgot to collect a
       // decision cannot satisfy it by echoing back the candidate it was given.

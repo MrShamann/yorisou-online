@@ -202,20 +202,23 @@ export async function getGoal(ownerAccountId: string, goalId: string): Promise<G
 // ── Reflection ───────────────────────────────────────────────────────────────
 
 const REFLECTION_COLUMNS =
-  "id,experience_id,what_happened,goal_at_the_time,information_at_hand,decision_made,why,what_followed,what_learned,next_time,created_at";
+  "id,experience_id,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,decision_made,why,what_learned,created_at";
 
 export async function createReflection(ownerAccountId: string, input: LifeReflectionInput): Promise<string> {
   return rpc<string>("yorisou_osf1_reflection_create", {
     p_owner_account_id: ownerAccountId,
     p_experience_id: input.experienceId ?? null,
     p_what_happened: input.what_happened,
+    p_felt: input.felt ?? null,
+    p_tried: input.tried ?? null,
+    p_what_followed: input.what_followed ?? null,
+    p_next_time: input.next_time ?? null,
+    // Kept nullable and unwritten by the five-question flow; see contract.ts REFLECTION_QUESTIONS.
     p_goal_at_the_time: input.goal_at_the_time ?? null,
     p_information_at_hand: input.information_at_hand ?? null,
     p_decision_made: input.decision_made ?? null,
     p_why: input.why ?? null,
-    p_what_followed: input.what_followed ?? null,
     p_what_learned: input.what_learned ?? null,
-    p_next_time: input.next_time ?? null,
   });
 }
 

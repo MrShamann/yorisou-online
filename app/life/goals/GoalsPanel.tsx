@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { GOAL_STATUSES, GOAL_STATUS_LABELS, type Goal, type GoalStatus, type MemoryCandidate } from "@/lib/life-os/contract";
-import { lifeOsPost } from "@/lib/life-os/client";
+import { lifePost, lifePatch } from "@/lib/life-os/client";
 import MemoryConfirmation from "../MemoryConfirmation";
 
 // OSF-1 — 向かいたい方向.
@@ -28,10 +28,7 @@ export default function GoalsPanel({ initialGoals }: Props) {
   async function create() {
     if (title.trim().length === 0) return;
     setPhase("saving");
-    const result = await lifeOsPost<{ id: string; memoryCandidates: MemoryCandidate[] }>({
-      action: "create_goal",
-      goal: { title, description },
-    });
+    const result = await lifePost<{ id: string; memoryCandidates: MemoryCandidate[] }>("goals", { title, description });
     if (!result.ok) {
       setPhase("failed");
       return;
@@ -57,7 +54,7 @@ export default function GoalsPanel({ initialGoals }: Props) {
   async function changeStatus(goal: Goal, status: GoalStatus) {
     const previous = goals;
     setGoals((current) => current.map((item) => (item.id === goal.id ? { ...item, status } : item)));
-    const result = await lifeOsPost({ action: "set_goal_status", id: goal.id, status });
+    const result = await lifePatch("goals", { id: goal.id, status });
     // Put it back if the server disagreed. Leaving the optimistic value would show someone a state
     // their record does not have.
     if (!result.ok) setGoals(previous);

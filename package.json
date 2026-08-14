@@ -15,6 +15,7 @@
     "test:private-ai-providers": "node --import tsx lib/server/__tests__/privateAiProviderResolver.test.ts",
     "test:osf1-regression-repair": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1RegressionRepair.test.ts",
     "test:osf1-boundaries": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1Boundaries.test.ts",
+    "test:osf1-activation": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1Activation.test.ts",
     "test:osf1-contract": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1Contract.test.ts",
     "test:osf1-ai-boundary": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1AiBoundary.test.ts",
     "test:osf1-erasure-coverage": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1ErasureCoverage.test.ts",

@@ -9,6 +9,7 @@ import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId 
 import SignInRequired from "./SignInRequired";
 import { INTERNAL_HANDLING } from "@/lib/life-os/privacyCopy";
 import { lifeOsAccess } from "@/lib/life-os/access";
+import ReturnSection from "./ReturnSection";
 
 export const metadata: Metadata = {
   title: "わたしの記録 | Yorisou",
@@ -74,6 +75,9 @@ export default async function LifePage() {
         <br />
         ほかの利用者に表示されません。
       </h1>
+      {/* PHASE F — what they left, shown before anything asks them to do something new. */}
+      <ReturnSection accountId={accountId} />
+
       {/* The separate sentence, not a qualifier tucked into the heading. */}
       <p className="mt-3 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">{INTERNAL_HANDLING}</p>
 

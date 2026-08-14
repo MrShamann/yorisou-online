@@ -134,19 +134,22 @@ test("a goal needs a title and nothing else", () => {
   assert.throws(() => parseGoalInput({ title: "あ".repeat(121) }), LifeOsInputError);
 });
 
-test("the reflection asks seven questions, only the first required", () => {
-  assert.equal(REFLECTION_QUESTIONS.length, 7, "the package specifies seven questions");
+test("the reflection asks five questions, only the first required", () => {
+  // Changed from seven by the activation package. One field per screen now.
+  assert.equal(REFLECTION_QUESTIONS.length, 5, "the activation package specifies five questions");
   assert.equal(REFLECTION_QUESTIONS.filter((question) => question.required).length, 1);
   assert.equal(REFLECTION_QUESTIONS[0].fields[0].field, "what_happened");
-  // Eight stored answers across seven screens: question 4 holds the decision and its reason.
-  assert.equal(REFLECTION_FIELDS.length, 8);
+  assert.deepEqual(REFLECTION_FIELDS.map((e) => e.field), [
+    "what_happened", "felt", "tried", "what_followed", "next_time",
+  ]);
   assert.equal(REFLECTION_FIELDS.filter((entry) => entry.required).length, 1);
 });
 
 test("a reflection saves with only the first answer", () => {
   const parsed = parseReflectionInput({ what_happened: "  説明がうまくいかなかった  " });
   assert.equal(parsed.what_happened, "説明がうまくいかなかった");
-  assert.equal(parsed.what_learned, null);
+  assert.equal(parsed.felt, null);
+  assert.equal(parsed.tried, null);
   assert.equal(parsed.next_time, null);
   assert.equal(parsed.experienceId, null);
 });
@@ -156,11 +159,15 @@ test("a reflection without the first answer is refused", () => {
   assert.throws(() => parseReflectionInput({ what_happened: "  " }), LifeOsInputError);
 });
 
-test("every reflection column named in the contract exists in the migration", () => {
+test("every reflection column named in the contract exists in the migrations", () => {
+  // `felt` and `tried` were added by 202608150002 for the five-question flow, so the columns are
+  // spread across two migrations and both must be searched.
+  const FIVE_Q = readFileSync("supabase/migrations/202608150002_osf1_reflection_five_question_flow.sql", "utf8");
+  const all = `${MIGRATION}\n${FIVE_Q}`;
   for (const entry of REFLECTION_FIELDS) {
-    assert.match(
-      MIGRATION,
-      new RegExp(`\\n  ${entry.field} text`),
+    assert.ok(
+      new RegExp(`\\n  ${entry.field} text`).test(all) ||
+        new RegExp(`add column if not exists ${entry.field} text`).test(all),
       `yorisou_life_reflections has no column ${entry.field}`,
     );
   }

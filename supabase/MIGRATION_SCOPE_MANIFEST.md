@@ -513,6 +513,20 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608140002_osf1_erasure_plan_registration.sql",
     "sha256": "436ea2c7560e56df6951249ffbea5307a49a6340179d813caca5621a75a96c3c"
+  },
+  {
+    "version": "202608150001",
+    "name": "osf1_life_os_audit_events",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608150001_osf1_life_os_audit_events.sql",
+    "sha256": "e08835c289f2ba2a5eb1637de4ba49af6dee385e5b82678fe8a2e57c45eab868"
+  },
+  {
+    "version": "202608150002",
+    "name": "osf1_reflection_five_question_flow",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608150002_osf1_reflection_five_question_flow.sql",
+    "sha256": "2c536b49bedcfbc6410cdcf5728c5df6c768f25273a8ad68f04a20370caa236a"
   }
 ]
 ```

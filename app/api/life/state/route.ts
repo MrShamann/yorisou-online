@@ -1,0 +1,61 @@
+import { NextResponse } from "next/server";
+import { createCurrentStateRecord, listCurrentStateRecords, setCurrentStateReflection } from "@/lib/server/lifeOs/store";
+import { auditLifeOs } from "@/lib/server/lifeOs/audit";
+import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
+import { LifeOsInputError, parseCurrentStateInput } from "@/lib/life-os/contract";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const gate = await requireLifeViewer({ mutation: false });
+  if ("refusal" in gate) return gate.refusal;
+  try {
+    return NextResponse.json({ records: await listCurrentStateRecords(gate.viewer.accountId) });
+  } catch (error) {
+    return lifeApiError(error);
+  }
+}
+
+export async function POST(request: Request) {
+  const gate = await requireLifeViewer({ mutation: true });
+  if ("refusal" in gate) return gate.refusal;
+  let body: Record<string, unknown>;
+  try {
+    body = (await request.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+  }
+  try {
+    // Adding the optional note to an existing check-in, rather than creating one.
+    if (typeof body.id === "string") {
+      if (typeof body.reflection !== "string" || body.reflection.trim().length === 0) {
+        return NextResponse.json({ error: "reflection_text_required" }, { status: 422 });
+      }
+      if (body.reflection.trim().length > 1000) return NextResponse.json({ error: "reflection_invalid" }, { status: 422 });
+      const saved = await setCurrentStateReflection(gate.viewer.accountId, body.id, body.reflection.trim());
+      if (!saved) return NextResponse.json({ error: "state_record_not_open_for_note" }, { status: 409 });
+      await auditLifeOs({
+        ownerAccountId: gate.viewer.accountId,
+        action: "yorisou.life.state.annotated",
+        entityKind: "current_state",
+        entityRef: body.id,
+        reason: "user_note",
+      });
+      return NextResponse.json({ ok: true });
+    }
+    const input = parseCurrentStateInput(body.record ?? body);
+    const id = await createCurrentStateRecord(gate.viewer.accountId, input);
+    await auditLifeOs({
+      ownerAccountId: gate.viewer.accountId,
+      action: "yorisou.life.state.created",
+      entityKind: "current_state",
+      entityRef: id,
+      reason: input.source,
+      detail: { tags: input.stateTags.length },
+    });
+    return NextResponse.json({ id }, { status: 201 });
+  } catch (error) {
+    if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
+    return lifeApiError(error);
+  }
+}

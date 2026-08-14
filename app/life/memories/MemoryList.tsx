@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { MEMORY_TYPE_LABELS, type ExplicitMemory } from "@/lib/life-os/contract";
-import { lifeOsPost } from "@/lib/life-os/client";
+import { lifeDelete } from "@/lib/life-os/client";
 
 // OSF-1 — 覚えていること.
 //
@@ -22,7 +22,7 @@ export default function MemoryList({ initialMemories }: { initialMemories: Expli
   async function remove(memory: ExplicitMemory) {
     setPending(memory.id);
     setFailed(null);
-    const result = await lifeOsPost({ action: "delete_memory", id: memory.id });
+    const result = await lifeDelete(`memories?id=${encodeURIComponent(memory.id)}`);
     setPending(null);
     if (!result.ok) {
       setFailed(memory.id);

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 import { lifeOsAccess, lifeOsMutationAccess, LIFE_OS_PREVIEW_FLAG, LIFE_OS_SCHEMA_READY_ENV } from "@/lib/life-os/access";
 import { isVisibilityExpansion } from "@/lib/server/experienceCards";
@@ -14,7 +14,9 @@ import { isVisibilityExpansion } from "@/lib/server/experienceCards";
 // themselves was fine.
 
 const CARDS = readFileSync("lib/server/experienceCards.ts", "utf8");
-const ROUTE = readFileSync("app/api/life-os/route.ts", "utf8");
+// The single action-switch route was replaced by the /api/life/* domain routes and the shared
+// guard; the gate properties this file pins now live in the guard, which every route uses.
+const GUARD = readFileSync("lib/server/lifeOs/guard.ts", "utf8");
 
 // ── 1. Migration-ordering safety ─────────────────────────────────────────────
 
@@ -183,11 +185,15 @@ test("every Life OS page and the API enforce the gate", () => {
     const source = readFileSync(page, "utf8");
     assert.match(source, /if \(!lifeOsAccess\(\)\.allowed\) notFound\(\);/, `${page} does not enforce the gate`);
   }
-  // The API guards reads and writes separately, and the read guard runs BEFORE the session lookup so
-  // a closed route answers identically whoever is asking.
-  assert.match(ROUTE, /export async function GET[\s\S]{0,400}?if \(!lifeOsAccess\(\)\.allowed\)[\s\S]{0,200}?const accountId = await owner\(\);/);
-  assert.match(ROUTE, /const mutation = lifeOsMutationAccess\(\);/);
-  assert.match(ROUTE, /life_os_not_accepting_entries/);
+  // The shared guard enforces reads and writes separately, with the feature gate before the session
+  // lookup so a closed route answers identically whoever is asking.
+  assert.ok(GUARD.indexOf("lifeOsAccess()") < GUARD.indexOf("getViewerContext()"));
+  assert.match(GUARD, /const mutation = lifeOsMutationAccess\(\);/);
+  assert.match(GUARD, /life_os_not_accepting_entries/);
+  // And every domain route goes through it.
+  for (const dir of readdirSync("app/api/life")) {
+    assert.match(readFileSync(`app/api/life/${dir}/route.ts`, "utf8"), /requireLifeViewer/, `${dir} bypasses the guard`);
+  }
   // 今日 and わたし must not query or link to a closed Life OS.
   assert.match(readFileSync("app/TodaySavedState.tsx", "utf8"), /if \(!lifeOsAccess\(\)\.allowed\) return null;/);
   assert.match(readFileSync("app/me/page.tsx", "utf8"), /const lifeOsOpen = lifeOsAccess\(\)\.allowed;/);

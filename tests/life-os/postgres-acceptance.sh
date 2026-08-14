@@ -440,5 +440,61 @@ AFFECTED=$(Q -c "select count(*) from public.yorisou_experience_cards where id='
 [ "$AFFECTED" = "1" ] && pass "the card is still PRIVATE after the refused widening" \
   || fail "shared-context constraint" "the row is not where it should be ($AFFECTED)"
 
+# ── 12. ACTIVATION PACKAGE: audit trail, five-question reflection, cross-user isolation ─────
+echo "[osf1] audit trail"
+AUD=$(Q -c "select public.yorisou_osf1_audit_write('$A','yorisou.life.goal.created','goal',null,'user_created','{}'::jsonb);")
+[ -n "$AUD" ] && pass "an audit event is written" || fail "audit" "no id returned"
+FP=$(Q -c "select actor_fingerprint from public.yorisou_life_os_audit_events where id='$AUD';")
+EXPECT=$(Q -c "select encode(sha256(convert_to('$A','utf8')),'hex');")
+[ "$FP" = "$EXPECT" ] && pass "the actor is stored as a fingerprint, not an account id" || fail "audit fingerprint" "mismatch"
+RAW=$(Q -c "select count(*) from public.yorisou_life_os_audit_events where actor_fingerprint = '$A';")
+[ "$RAW" = "0" ] && pass "the raw account id appears nowhere in the audit table" || fail "audit" "raw id stored"
+# Append-only: the trigger must refuse both.
+if Q -c "update public.yorisou_life_os_audit_events set reason='changed' where id='$AUD';" >/dev/null 2>&1; then
+  fail "audit append-only" "an audit row was UPDATEd"; else pass "an audit row cannot be updated"; fi
+if Q -c "delete from public.yorisou_life_os_audit_events where id='$AUD';" >/dev/null 2>&1; then
+  fail "audit append-only" "an audit row was DELETEd"; else pass "an audit row cannot be deleted"; fi
+# The action namespace is constrained by the database, not only by TypeScript.
+if Q -c "select public.yorisou_osf1_audit_write('$A','yorisou.exp.landing_viewed','goal',null,'x','{}'::jsonb);" >/dev/null 2>&1; then
+  fail "audit namespace" "a canonical yorisou.exp.* event was accepted"; else pass "the canonical yorisou.exp.* namespace is refused"; fi
+# Privilege matrix, same shape as the rest.
+RLS=$(Q -c "select relrowsecurity from pg_class where relname='yorisou_life_os_audit_events' and relnamespace='public'::regnamespace;")
+[ "$RLS" = "t" ] && pass "yorisou_life_os_audit_events: RLS enabled" || fail "audit RLS" "got $RLS"
+for r in anon authenticated; do
+  H=$(Q -c "select has_table_privilege('$r','public.yorisou_life_os_audit_events','select');")
+  [ "$H" = "f" ] || fail "audit privileges" "$r can select"
+done
+pass "anon/authenticated cannot read the audit table"
+
+echo "[osf1] five-question reflection"
+R5=$(Q -c "select public.yorisou_osf1_reflection_create('$B',null,'あったこと','感じたこと','試したこと','そのあと','次に活かせること');")
+[ -n "$R5" ] && pass "a five-answer reflection is created" || fail "reflection" "no id"
+FELT=$(Q -c "select felt from public.yorisou_life_reflections where id='$R5';")
+TRIED=$(Q -c "select tried from public.yorisou_life_reflections where id='$R5';")
+[ "$FELT" = "感じたこと" ] && pass "felt is stored" || fail "felt" "got '$FELT'"
+[ "$TRIED" = "試したこと" ] && pass "tried is stored" || fail "tried" "got '$TRIED'"
+ORPHAN=$(Q -c "select coalesce(goal_at_the_time,'')||coalesce(information_at_hand,'')||coalesce(why,'') from public.yorisou_life_reflections where id='$R5';")
+[ -z "$ORPHAN" ] && pass "the retained columns stay null and are not written by the five-question flow" || fail "retained columns" "got '$ORPHAN'"
+
+echo "[osf1] cross-user isolation — user A must not reach user B"
+C='osf1-owner-c-iso'
+CS=$(Q -c "select public.yorisou_osf1_current_state_create('$C', array['steady'], null,null,null,null,'manual');")
+CG=$(Q -c "select public.yorisou_osf1_goal_create('$C','Cの方向',null);")
+CR=$(Q -c "select public.yorisou_osf1_reflection_create('$C',null,'Cの記録',null,null,null,null);")
+CD=$(Q -c "select encode(sha256(convert_to('Cの記憶','utf8')),'hex');")
+CM=$(Q -c "select public.yorisou_osf1_memory_confirm('$C','preference','Cの記憶','user_statement','$CD',true,null,null,null);")
+# Every owner-scoped mutation must refuse when the owner is someone else.
+X=$(Q -c "select public.yorisou_osf1_goal_set_status('$B','$CG','paused');")
+[ "$X" = "f" ] && pass "B cannot change C's goal status" || fail "isolation goal" "got $X"
+X=$(Q -c "select public.yorisou_osf1_memory_delete('$B','$CM');")
+[ "$X" = "f" ] && pass "B cannot delete C's memory" || fail "isolation memory" "got $X"
+X=$(Q -c "select public.yorisou_osf1_current_state_set_reflection('$B','$CS','のぞき見');")
+[ "$X" = "f" ] && pass "B cannot annotate C's state record" || fail "isolation state" "got $X"
+if Q -c "select public.yorisou_osf1_memory_confirm('$B','reflection','x','user_statement','$(Q -c "select encode(sha256(convert_to('x','utf8')),'hex');")',true,null,null,'$CR');" >/dev/null 2>&1; then
+  fail "isolation reflection subject" "B attached a memory to C's reflection"; else pass "B cannot reference C's reflection as a memory subject"; fi
+# And C's rows are all still there.
+LEFT=$(Q -c "select (select count(*) from yorisou_current_state_records where owner_account_id='$C')+(select count(*) from yorisou_goals where owner_account_id='$C')+(select count(*) from yorisou_life_reflections where owner_account_id='$C')+(select count(*) from yorisou_explicit_memories where owner_account_id='$C');")
+[ "$LEFT" = "4" ] && pass "C's four records are untouched by every attempt" || fail "isolation" "C has $LEFT of 4"
+
 echo
 [ "$FAILURES" = "0" ] && echo "[osf1] PASS" || { echo "[osf1] FAIL — $FAILURES"; exit 1; }
