@@ -1,0 +1,27 @@
+name: Hinata Companion Runtime
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "lib/ai/support/**"
+      - "lib/server/hinataKnowledge.ts"
+      - "lib/server/openclawCapabilities.ts"
+      - ".github/workflows/hinata-companion-runtime.yml"
+  workflow_dispatch:
+
+jobs:
+  companion-runtime:
+    name: Companion ontology regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Companion runtime regression
+        run: node --import tsx --test lib/ai/support/__tests__/companionRuntime.test.ts
