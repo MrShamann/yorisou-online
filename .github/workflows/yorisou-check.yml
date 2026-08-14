@@ -8,6 +8,46 @@ on:
   workflow_dispatch:
 
 jobs:
+  # OSF-1 — the Life OS acceptance, against a real PostgreSQL 17.
+  #
+  # This is the only test in the repository that EXECUTES account erasure against the five Life OS
+  # tables rather than reasoning about the migration text, and until now it ran only on a developer's
+  # machine. Every property it covers is one where "we checked once" is not good enough: whether the
+  # migrations apply in lineage order, whether RLS and the grants survive an edit, whether an
+  # unconfirmed memory can be written, and whether a deleted account really loses its rows.
+  #
+  # PostgreSQL 17 because Production runs 17 and the harness refuses anything else. The database name
+  # is the one the harness's own DSN guard requires, so this job cannot be repointed at a real
+  # database by editing the URL alone.
+  life-os-postgres:
+    name: OSF-1 Life OS PostgreSQL Acceptance
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: osf1_acceptance
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d osf1_acceptance"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      # Migration execution, RLS, account erasure and the memory-confirmation constraint are all
+      # inside this one harness — it applies every migration in lineage order first, so a migration
+      # that fails to apply fails here before any assertion runs.
+      - name: Life OS acceptance (migrations, RLS, erasure, memory confirmation)
+        run: npm run test:osf1-postgres
+        env:
+          OSF1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/osf1_acceptance
+
   agent-runtime-postgres:
     name: Agent Runtime PostgreSQL Integration
     runs-on: ubuntu-latest
@@ -116,6 +156,18 @@ jobs:
           npm run test:pxr1-routes
           npm run test:pxr1-line-compat
           npm run test:checkin-runtime
+
+      # OSF-1. The erasure-coverage guard is the one that matters most here: POR-1's erasure plan is
+      # a hardcoded array, so a future migration adding an owner-linked table would silently leave
+      # that table behind at account deletion while the job still reports success. This step is what
+      # turns that from "someone has to remember" into a red build.
+      - name: OSF-1 Life OS contracts, AI boundary and erasure coverage
+        run: |
+          npm run test:osf1-contract
+          npm run test:osf1-ai-boundary
+          npm run test:osf1-erasure-coverage
+          npm run test:osf1-boundaries
+          npm run test:osf1-regression-repair
 
       - name: Imairo snapshot contracts (RTR-1 private save)
         run: npm run test:imairo-snapshot
