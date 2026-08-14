@@ -13,6 +13,14 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+// 向かいたい方向 — LIFE DIRECTION / INTENTION, not task management.
+//
+// This surface deliberately offers no due date, no reminder, no progress indicator, no sort control
+// and no completion celebration. A person writes what they want to hold in view, and can later say
+// they are still with it, have set it down, reached it, or let it go — four equal answers. The
+// approved writing rules prohibit goal-setting language that pressures commitment, and every one of
+// the affordances left out above is that pressure wearing a UI.
+
 export default async function GoalsPage() {
   const viewer = await getViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;

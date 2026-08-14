@@ -172,11 +172,23 @@ export function assertAiOutputWithinBoundary(text: string): void {
  * sha256 hex of the confirmed sentence. Must equal `encode(sha256(convert_to(v_content, 'utf8')),
  * 'hex')` in yorisou_osf1_memory_confirm.
  *
+ * WHAT THIS DIGEST DOES AND DOES NOT PROVE. It is an INTEGRITY check, not an authenticity one. It is
+ * unkeyed, and the same untrusted caller supplies both the content and the digest, so a hostile
+ * client can trivially compute a matching pair for any sentence it likes. What it actually rules out
+ * is a MISTAKE: a candidate mutated in flight, a stale candidate replayed against edited content, or
+ * a caller that assembles the save payload from a different field than the one it rendered. It does
+ * NOT prove a human read the sentence — nothing sent from a client can prove that. The guarantee that
+ * an unconfirmed memory cannot exist comes from `check (user_confirmed = true)` in the schema, not
+ * from here.
+ *
  * The digest is taken over the TRIMMED string, and callers must send that same trimmed string. SQL's
  * `btrim` strips ASCII spaces only, while JavaScript's `.trim()` also strips tabs, newlines and
  * U+3000 — so `btrim(jsTrimmed)` is always `jsTrimmed` and the two agree, whereas digesting the raw
  * input here would produce a spurious `osf1_memory_confirmation_mismatch` for any content that ended
- * in a newline. lib/server/__tests__/osf1MemoryConfirmation.test.ts pins this.
+ * in a newline. The digest tests in lib/server/__tests__/osf1AiBoundary.test.ts pin this. Note that
+ * nothing normalizes Unicode: NFC and NFD of the same text hash differently. That is unreachable
+ * today because the content is echoed back byte-for-byte from the response the server produced, and
+ * that echo is the invariant to preserve if this ever gains a second caller.
  */
 export function memoryDigest(content: string): string {
   return createHash("sha256").update(content.trim(), "utf8").digest("hex");

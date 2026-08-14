@@ -98,8 +98,8 @@ cross-cutting hard rule structurally rather than by policy.
 ### New — tests
 - `lib/server/__tests__/osf1Contract.test.ts` (13)
 - `lib/server/__tests__/osf1AiBoundary.test.ts` (9)
-- `lib/server/__tests__/osf1ErasureCoverage.test.ts` (3)
-- `tests/life-os/postgres-acceptance.sh` (34 assertions against a real PostgreSQL)
+- `lib/server/__tests__/osf1ErasureCoverage.test.ts` (5)
+- `tests/life-os/postgres-acceptance.sh` (37 assertions against a real PostgreSQL)
 
 ### Modified
 - `app/page.tsx` — renders `TodaySavedState`
@@ -275,6 +275,63 @@ node scripts/validate-migration-scope.mjs
 8. **No axe run on `/life/*`.** The surfaces reuse existing tokens and components, and the a11y suite
    (`tests/smoke/pxr1-a11y.spec.ts`) enumerates its surfaces explicitly rather than crawling; adding
    the new routes to it needs a running server and is worth doing before exposure.
+
+## 10a. Pre-merge governance and architecture audit (2026-08-14)
+
+Founder-requested audit of this PR across six focus areas, run as twelve independent agents — six
+auditors, then a refuter per area instructed to default to "refuted" without independent
+confirmation. Four claims were withdrawn on refutation. What survived:
+
+**One BLOCKING defect, found and fixed.** Making `state_context` nullable for PRIVATE cards meant a
+card written on `/life/experience` stores NULL there. `discoverExperiences` read every own card's
+`state_context` with no null filter, typed it `string`, and called `.replace` on it — so
+`GET /api/experiences?mode=discover` threw a TypeError for anyone who had used the new form. The GET
+handler has no try/catch, so it 500'd, and `app/experiences/view.tsx` swallows a failed response, so
+`/experiences` silently rendered an empty 今読める体験 section instead of showing an error. Fixed with
+a `state_context=not.is.null` filter, a null-tolerant tokeniser and an honest type; three assertions
+added to the acceptance harness.
+
+**The erasure guard was weaker than its own header claimed.** Its scanner anchored the owner-column
+match to a line start and required `public.` qualification, so it saw 28 of the repository's 42
+owner-linked tables — every densely-formatted CREATE TABLE in `202607110002_experience_cards.sql` and
+`202607110003_recommendation_graph.sql` was invisible. All fourteen were already in the erasure plan,
+so no data was ever at risk, but the guard's coverage claim was false for a third of the schema and
+the next table added to either file would have escaped it. Rewritten: formatting-agnostic scanner,
+`ALTER TABLE ADD COLUMN` owner columns detected, `account_id`/`user_id` added to the recognised
+names, identifiers lowercased, plan file selected by definition rather than mention. Two properties
+the guard never asserted are now tested — that the scanner can see nine SQL formatting shapes, and
+that every registered plan entry names a **column the table actually has** (the runtime skips a
+wrong column in silence). Coverage: 42 of 42.
+
+**Comment-accuracy defects, corrected.** Three comments cited two test files that do not exist. The
+confirmation digest was described in three places as making it impossible for "a caller to show one
+sentence and save another" — it is unkeyed and the same caller supplies both halves, so it rules out
+an accident, not an adversary; the load-bearing guarantee is the check constraint. The RPC-permission
+section implied every function is service-role-only; `yorisou_osf1_state_vocabulary()` keeps PUBLIC
+EXECUTE and now says so.
+
+**Requested documentation added.** The CurrentStateRecord ↔ Imairo Result boundary is now stated in
+the migration, the SQL table comment, the domain type and the store (temporal daily user state vs
+methodology assessment output, never converted in either direction), together with the three-way
+`reflection` naming collision. The Goal-is-Life-Direction-not-task-management statement is now in the
+store, the API route and the goals page alongside the existing ones.
+
+**Verified clean, no change needed.** RLS on all five tables; anon/authenticated hold nothing;
+service_role SELECT only; all eight mutation RPC signature strings match their functions exactly;
+no client `user_id` trust anywhere; owner scope enforced in the database WHERE clause on every
+id-taking operation; no existence oracle; no PostgREST injection; `check (user_confirmed = true)`
+unbypassable and the RPC the only INSERT path; JS/SQL digest provably identical (btrim's strip set is
+a strict subset of JS trim's); no deadline, streak, ranking, progress or completion mechanic anywhere
+in Goal; 202608140002 byte-identical to the erasure body it replaces apart from the five plan entries.
+
+**Referred, not fixed here** (out of the audit's permitted scope, each with a written finding):
+private cards enter the admin moderation queue with `moderation_status='draft'` while the page
+promises 「あなただけが見られます」 — pre-existing behaviour, operator-only, no public leak; `payload()`
+is shared with `updateExperience`, so a partial PATCH can null fields; a non-UUID row id returns 500
+rather than 404/422; `yorisou_identity_provisioning_sagas` is in no erasure path (POR-1, pre-existing
+— now visible to the guard and recorded as UNRESOLVED); the check-in writes to the account before any
+sentence says so; memories beyond the 50 most recent are unreachable; the PostgreSQL harness is still
+not wired into CI.
 
 ## 11. Rollback
 

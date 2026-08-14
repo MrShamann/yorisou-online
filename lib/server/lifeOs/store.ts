@@ -84,6 +84,12 @@ export async function upsertUserContext(ownerAccountId: string, input: UserConte
 }
 
 // ── CurrentStateRecord ───────────────────────────────────────────────────────
+//
+// TEMPORAL DAILY USER STATE, not a methodology result. Nothing in this section may ever read or
+// write yorisou_assessment_results / yorisou_test_results, and nothing there may read these rows:
+// a two-tap answer must not be presentable as a 120-question finding, and a 120-question finding
+// must not be silently rewritable by a tap. The boundary is stated in full at
+// supabase/migrations/202608140001 §2.
 
 const CURRENT_STATE_COLUMNS = "id,state_tags,mood,energy,situation,reflection,source,created_at";
 
@@ -136,6 +142,19 @@ export async function latestCurrentStateRecord(ownerAccountId: string): Promise<
 }
 
 // ── Goal ─────────────────────────────────────────────────────────────────────
+//
+// A Goal here is LIFE DIRECTION / INTENTION — something a person chose to hold in view. It is NOT
+// task management, and this repository is where that stops being a slogan:
+//
+//   there is no due date, no reminder, no notification, no progress value, no completion
+//   percentage, no streak, no counter, no priority, and no ordering that implies rank;
+//   listGoals sorts by created_at only, because sorting by anything else is a ranking;
+//   the status vocabulary has no `failed` and no `overdue`, and `released` (手放した) is an equal
+//   outcome to `achieved` (届いた).
+//
+// Adding any of those would turn this into the pressure device the approved writing rules prohibit
+// ("goal-setting language that pressures commitment"). If a future package needs reminders, that is
+// a product decision with its own authorization — not a field added here in passing.
 
 const GOAL_COLUMNS = "id,title,description,status,created_at,updated_at";
 

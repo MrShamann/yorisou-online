@@ -106,6 +106,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
 
+      // Goal = LIFE DIRECTION / INTENTION, not a task. There is deliberately no due date, no
+      // reminder, no progress and no completion action on this endpoint — see lib/life-os/contract.ts
+      // GOAL_STATUSES and lib/server/lifeOs/store.ts for why each absence is load-bearing.
       case "create_goal": {
         const id = await createGoal(accountId, parseGoalInput(body.goal));
         // The goal a person just wrote is offered as a memory. Offered — the response carries a

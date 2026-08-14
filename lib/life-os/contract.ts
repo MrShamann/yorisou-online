@@ -4,7 +4,7 @@
 // answer to "what values are allowed". The SQL RPCs validate the same vocabularies independently
 // (supabase/migrations/202608140001_osf1_life_os_foundation.sql §8) — deliberately duplicated,
 // because a check that lives only in the application is a check the next caller can skip. When the
-// two disagree, lib/server/__tests__/osf1StateVocabulary.test.ts fails.
+// two disagree, the SQL-vs-TypeScript drift tests in lib/server/__tests__/osf1Contract.test.ts fail.
 //
 // This file is NOT under lib/yorisou/ on purpose: that path is a trigger filter for the DCI-1 and
 // YV-1 CI workflows (.github/workflows/dci-1-ci.yml, yv-1-ci.yml), and Phase 1 has nothing to do
@@ -36,6 +36,18 @@ export type Mood = (typeof MOOD_VALUES)[number];
 export type Energy = (typeof ENERGY_VALUES)[number];
 export type CurrentStateSource = (typeof CURRENT_STATE_SOURCES)[number];
 
+/**
+ * A TEMPORAL DAILY USER STATE — what someone said about right now, at one moment.
+ *
+ * NOT an Imairo Result. An Imairo Result is a METHODOLOGY ASSESSMENT OUTPUT from the 120-question
+ * pipeline, carrying method identity, a scoring version and a named result, and it lives in
+ * yorisou_assessment_results behind its own governed acceptance and erasure contract. This carries
+ * none of that and never becomes one: nothing here is scored, and no code converts between the two.
+ * See supabase/migrations/202608140001 §2 for the full boundary statement.
+ *
+ * `reflection` here is an optional note on ONE check-in — not the seven-question LifeReflection
+ * below, and not the AI commentary in yorisou_ai_reflections. Three different things, one word.
+ */
 export type CurrentStateRecord = {
   id: string;
   state_tags: string[];
@@ -94,16 +106,15 @@ export type Goal = {
 // ── Reflection (user-authored, seven questions) ───────────────────────────────
 
 /**
- * The guided reflection.
+ * The guided reflection: seven questions, on seven screens.
  *
- * Only the first question is required. A reflection someone stopped halfway through is still theirs
- * to keep, and requiring all seven would make a quiet flow into a form — which is the thing the UX
- * principles call "no dashboard feeling".
- */
-/**
- * Seven questions, on seven screens. Question 4 carries two inputs — the decision and the reason for
- * it — because splitting them into an eighth screen would have made the flow longer than the package
- * specifies, and asking "why" without the decision still on the page loses the thing it refers to.
+ * Only the first is required. A reflection someone stopped halfway through is still theirs to keep,
+ * and requiring all seven would make a quiet flow into a form — the thing the UX principles call
+ * "no dashboard feeling".
+ *
+ * Question 4 carries two inputs — the decision and the reason for it — because splitting them into
+ * an eighth screen would make the flow longer than the package specifies, and asking "why" without
+ * the decision still on the page loses the thing it refers to.
  */
 export const REFLECTION_QUESTIONS = [
   {
@@ -209,8 +220,11 @@ export type ExplicitMemory = {
  * it. It exists in one HTTP response and in the confirmation dialog the person is looking at, and it
  * is gone when they navigate away without confirming.
  *
- * `digest` is the sha256 of `content`. The confirm endpoint recomputes it and refuses a mismatch, so
- * the sentence that gets stored is the sentence that was on screen.
+ * `digest` is the sha256 of `content`. The confirm endpoint recomputes it and refuses a mismatch.
+ * That is an integrity check against a candidate mutated in flight or a payload assembled from the
+ * wrong field — NOT proof that a person read the sentence. It is unkeyed and the same caller supplies
+ * both halves, so a hostile client can always produce a matching pair. The guarantee that nothing is
+ * stored unconfirmed lives in the schema (`check (user_confirmed = true)`), not in this digest.
  */
 export type MemoryCandidate = {
   memoryType: MemoryType;

@@ -117,6 +117,32 @@ DUP=$(Q -c "select count(*) from information_schema.tables
                ('yorisou_experiences','yorisou_life_experiences','yorisou_osf1_experiences');")
 [ "$DUP" = "0" ] && pass "no second experience table was created" || fail "duplicate experience table" "found $DUP"
 
+# ── 3b. Regression: a PRIVATE card written by /life/experience has a NULL state_context ──────
+#
+# Making state_context nullable is what let the audit's one BLOCKING defect exist:
+# discoverExperiences read every own card's state_context with no null filter and called
+# .replace on it, so /experiences 500'd for anyone who had used the new form. The fix is a
+# `state_context=not.is.null` filter plus a null-tolerant tokeniser; this asserts the shape the
+# filter depends on, so a future migration that re-forbids or re-permits nulls is noticed here.
+echo "[osf1] private-card null state_context"
+NULLC=$(Q -c "select count(*) from public.yorisou_experience_cards
+               where owner_account_id='$A' and visibility='PRIVATE' and state_context is null;")
+[ "$NULLC" = "1" ] && pass "a PRIVATE card legitimately holds a null state_context" \
+  || fail "null state_context" "expected 1, got $NULLC — the discover null-filter assumption changed"
+# The same query discoverExperiences issues, with the fix's filter applied: it must exclude that row.
+FILTERED=$(Q -c "select count(*) from public.yorisou_experience_cards
+                  where owner_account_id='$A' and deleted_at is null and state_context is not null;")
+[ "$FILTERED" = "0" ] && pass "the discover own-state query excludes it, so nothing null reaches the tokeniser" \
+  || fail "discover filter" "expected 0 rows, got $FILTERED"
+# And a SHARED card still cannot be null — the constraint that keeps the community contract intact.
+if Q -c "insert into public.yorisou_experience_cards
+           (project_id, owner_account_id, situation, action_tried, perceived_outcome, visibility)
+         values ('yorisou','$A','x','y','z','ANONYMOUS_SHARED');" >/dev/null 2>&1; then
+  fail "shared card null context" "a SHARED card was accepted without state_context"
+else
+  pass "a SHARED card still requires the four sharing-context fields"
+fi
+
 # ── 4. Reflection ────────────────────────────────────────────────────────────
 echo "[osf1] reflection"
 RID=$(Q -c "select public.yorisou_osf1_reflection_create('$A', '$XID', '説明がうまくいかなかった',

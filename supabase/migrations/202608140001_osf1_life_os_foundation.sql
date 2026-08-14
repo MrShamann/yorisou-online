@@ -99,6 +99,35 @@ create table if not exists public.yorisou_user_contexts (
 --
 -- Unlike DCI-1 this is NOT one-row-per-day: a person may check in more than once, and an earlier
 -- entry is never overwritten or re-bucketed by a later one.
+--
+-- ─── THE BOUNDARY THAT MATTERS MOST: THIS IS NOT AN IMAIRO RESULT ───
+--
+--   CurrentStateRecord = TEMPORAL DAILY USER STATE.
+--     What the person said about right now, in their own bounded words, at one moment. Nothing
+--     computed it. It carries no method id, no method version, no scoring version, no dimension, no
+--     archetype and no persona. It expires from relevance on its own — tomorrow's answer does not
+--     correct today's, it is simply a different day.
+--
+--   Imairo Result = METHODOLOGY ASSESSMENT OUTPUT.
+--     Produced by the 120-question pipeline (app/tests/ima-iro/currentStateCheckV1.ts), carrying
+--     method identity, a scoring version and a named result, stored in
+--     public.yorisou_assessment_results / public.yorisou_test_results under its own governed
+--     acceptance, correction and tombstoned-erasure contract (lib/server/canonicalPrivateState.ts,
+--     lib/server/assessmentAttemptStore.ts).
+--
+-- THE TWO ARE NEVER CONVERTED IN EITHER DIRECTION. No column here holds a result id. No scoring code
+-- reads this table. Nothing in this migration writes to, reads from, or backfills either assessment
+-- table. A future change that lets one become the other — "show the person's state on the result
+-- page", "seed a check-in from their last result" — is a methodology change and needs its own
+-- Founder authorization, because it would let a two-tap answer be read as a 120-question finding, or
+-- a 120-question finding be silently rewritten by a tap.
+--
+-- NAMING COLLISION, ON PURPOSE AND WORTH KNOWING. The `reflection` column below is the THIRD distinct
+-- thing this schema calls a reflection, and it is the smallest of them:
+--   * THIS column          — an optional free-text note the person adds to one check-in.
+--   * yorisou_life_reflections — the seven-question guided reflection they write about an event.
+--   * yorisou_ai_reflections   — AI-generated commentary on a saved TEST RESULT (202607110001).
+-- They share a word and nothing else. None reads another.
 create table if not exists public.yorisou_current_state_records (
   id uuid primary key default gen_random_uuid(),
   owner_account_id text not null,
@@ -212,9 +241,15 @@ create index if not exists yorisou_life_reflections_owner_recent
 -- page. That satisfies "no automatic persistence" at the storage layer, where it cannot be
 -- forgotten by a later caller.
 --
--- confirmation_digest is the sha256 of the exact content string the person was shown when they
--- pressed confirm. The RPC recomputes it from the content being stored and rejects a mismatch, so a
--- caller cannot show one sentence and save another.
+-- confirmation_digest is the sha256 of the content string the client rendered in the confirmation
+-- dialog. The RPC recomputes it from the content being stored and rejects a mismatch.
+--
+-- BE PRECISE ABOUT WHAT THAT BUYS. The digest is unkeyed and the same caller supplies both the
+-- content and the digest, so it does NOT prove a person saw the sentence — no value a client sends
+-- can prove that. It rules out the accident: a candidate mutated between render and save, a stale
+-- candidate replayed against edited text, a caller that saves a different field from the one it
+-- displayed. The load-bearing guarantee is the check constraint above, which makes an unconfirmed
+-- row impossible regardless of what any caller claims.
 create table if not exists public.yorisou_explicit_memories (
   id uuid primary key default gen_random_uuid(),
   owner_account_id text not null,
@@ -333,7 +368,7 @@ end $$;
 --    forgetting a check.
 
 -- The bounded state vocabulary, kept in one place. Mirrors the option ids in
--- lib/yorisou/today/currentStateCheckIn.ts; lib/server/__tests__/osf1StateVocabulary.test.ts fails
+-- lib/yorisou/today/currentStateCheckIn.ts; lib/server/__tests__/osf1Contract.test.ts fails
 -- if the two drift apart.
 create or replace function public.yorisou_osf1_state_vocabulary()
 returns text[]
@@ -665,7 +700,13 @@ end;
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 9. RPC permissions: service-role execute only.
+-- 9. RPC permissions: service-role execute only for every MUTATION rpc.
+--
+-- yorisou_osf1_state_vocabulary() is deliberately absent from the list below and keeps the default
+-- PUBLIC EXECUTE. It is `immutable`, takes no argument, touches no table and returns a constant
+-- array of ten option ids that are already shipped to every browser in lib/life-os/contract.ts.
+-- Naming the exception here rather than letting the section header imply a stricter rule than the
+-- code enforces.
 do $$
 declare
   v_signatures text[] := array[
@@ -697,7 +738,7 @@ end $$;
 comment on table public.yorisou_user_contexts is
   'OSF-1: user-chosen context (language, region, timezone, display preferences). Never inferred; no derived or learned field. DIRECT_USER_DENY + RPC_ONLY_DATABASE_MUTATION.';
 comment on table public.yorisou_current_state_records is
-  'OSF-1: current-state check-in. Bounded state vocabulary; no score, streak or counter. Distinct from the DCI-1 private-pilot domain, which it never reads or converts.';
+  'OSF-1: TEMPORAL DAILY USER STATE — what the person said about right now. NOT an Imairo/methodology assessment output: no method id, no scoring version, no archetype; yorisou_assessment_results holds those and the two are never converted in either direction. Bounded state vocabulary; no score, streak or counter. Distinct also from the DCI-1 private-pilot domain, which it never reads or converts.';
 comment on table public.yorisou_goals is
   'OSF-1: a direction the person chose to hold. No progress, deadline or reminder field, per the approved writing rules on goal-setting pressure.';
 comment on table public.yorisou_life_reflections is
