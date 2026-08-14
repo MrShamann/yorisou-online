@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import ReflectionFlow from "./ReflectionFlow";
 import SignInRequired from "../SignInRequired";
+import { lifeOsAccess } from "@/lib/life-os/access";
 
 export const metadata: Metadata = {
   title: "振り返りを書く | Yorisou",
@@ -17,6 +19,9 @@ export default async function ReflectPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
+  // session lookup or database read. Route-concealing, following pilotRouteAccess.
+  if (!lifeOsAccess().allowed) notFound();
   const viewer = await getViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
   const params = await searchParams;

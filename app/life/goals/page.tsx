@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { listGoals } from "@/lib/server/lifeOs/store";
 import GoalsPanel from "./GoalsPanel";
 import SignInRequired from "../SignInRequired";
+import { lifeOsAccess } from "@/lib/life-os/access";
 
 export const metadata: Metadata = {
   title: "向かいたい方向 | Yorisou",
@@ -22,6 +24,9 @@ export const dynamic = "force-dynamic";
 // the affordances left out above is that pressure wearing a UI.
 
 export default async function GoalsPage() {
+  // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
+  // session lookup or database read. Route-concealing, following pilotRouteAccess.
+  if (!lifeOsAccess().allowed) notFound();
   const viewer = await getViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
   if (!accountId) {

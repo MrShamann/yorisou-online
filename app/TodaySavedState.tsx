@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { latestCurrentStateRecord } from "@/lib/server/lifeOs/store";
 import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId } from "@/lib/yorisou/today/currentStateCheckIn";
+import { lifeOsAccess } from "@/lib/life-os/access";
 
 // OSF-1 — the account-backed current state, on 今日.
 //
@@ -26,6 +27,9 @@ function summary(tags: string[]): string {
 }
 
 export default async function TodaySavedState() {
+  // The gate reaches 今日 as well: with the Life OS closed this section does not exist, so the home
+  // page neither queries the Life OS tables nor links to a 404.
+  if (!lifeOsAccess().allowed) return null;
   const viewer = await getViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
   if (!accountId) return null;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
@@ -7,6 +8,7 @@ import { GOAL_STATUS_LABELS, type CurrentStateRecord, type Goal } from "@/lib/li
 import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId } from "@/lib/yorisou/today/currentStateCheckIn";
 import SignInRequired from "./SignInRequired";
 import { INTERNAL_HANDLING } from "@/lib/life-os/privacyCopy";
+import { lifeOsAccess } from "@/lib/life-os/access";
 
 export const metadata: Metadata = {
   title: "わたしの記録 | Yorisou",
@@ -42,6 +44,9 @@ function goalLine(goal: Goal): string {
 }
 
 export default async function LifePage() {
+  // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
+  // session lookup or database read. Route-concealing, following pilotRouteAccess.
+  if (!lifeOsAccess().allowed) notFound();
   const viewer = await getViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
   if (!accountId) {

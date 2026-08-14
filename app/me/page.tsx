@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import MyContinuity from "./MyContinuity";
+import { lifeOsAccess } from "@/lib/life-os/access";
 
 export const metadata: Metadata = {
   title: "わたし | Yorisou",
@@ -18,6 +19,9 @@ export const metadata: Metadata = {
 // including the ones who had a record. An empty state shown to someone who is not empty is not a
 // cosmetic problem; it is the product losing their history in front of them.
 export default function MyYorisouPage() {
+  // The entry point exists only while the Life OS does. Linking to a route that 404s would be a
+  // worse experience than not offering it.
+  const lifeOsOpen = lifeOsAccess().allowed;
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-8 md:pt-14">
       <h1 className="text-[26px] font-semibold leading-[1.45] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
@@ -34,6 +38,7 @@ export default function MyYorisouPage() {
           account here would make わたし dynamic for every visitor, including the signed-out ones it
           was rebuilt for). The destination says plainly what it is, and says so to signed-out
           visitors too rather than hiding. */}
+      {lifeOsOpen && (
       <section className="mt-12">
         <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
           アカウントに残す
@@ -48,6 +53,7 @@ export default function MyYorisouPage() {
           わたしの記録を見る
         </Link>
       </section>
+      )}
     </main>
   );
 }

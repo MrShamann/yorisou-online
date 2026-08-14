@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { listMemories } from "@/lib/server/lifeOs/store";
 import MemoryList from "./MemoryList";
 import SignInRequired from "../SignInRequired";
+import { lifeOsAccess } from "@/lib/life-os/access";
 
 export const metadata: Metadata = {
   title: "覚えていること | Yorisou",
@@ -14,6 +16,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function MemoriesPage() {
+  // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
+  // session lookup or database read. Route-concealing, following pilotRouteAccess.
+  if (!lifeOsAccess().allowed) notFound();
   const viewer = await getViewerContext();
   const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
   if (!accountId) {

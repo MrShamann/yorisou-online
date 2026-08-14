@@ -27,7 +27,45 @@ export function trustFlags(input:ExperienceInput) { const combined=Object.values
 // annotate their own memory for an audience that does not exist. Shared cards still require all
 // seven, unchanged — nothing about the community contract is relaxed here.
 const SHARED_ONLY_FIELDS = ["state_context", "limitations", "may_fit", "may_not_fit"] as const;
-function payload(input:ExperienceInput) { const values={state_context:clean(input.stateContext,1200),situation:clean(input.situation,3000),action_tried:clean(input.actionTried,3000),perceived_outcome:clean(input.perceivedOutcome,3000),limitations:clean(input.limitations,2000),may_fit:clean(input.mayFit,1200),may_not_fit:clean(input.mayNotFit,1200),title:clean(input.title,120),lesson:clean(input.lesson,1000)}; if(!ACTIVE_VISIBILITIES.includes(input.visibility))throw new Error("invalid_experience_card"); const required=input.visibility==="PRIVATE"?(Object.keys(values) as Array<keyof typeof values>).filter(k=>!SHARED_ONLY_FIELDS.includes(k as typeof SHARED_ONLY_FIELDS[number])&&k!=="title"&&k!=="lesson"):(Object.keys(values) as Array<keyof typeof values>).filter(k=>k!=="title"&&k!=="lesson"); if(required.some(k=>!values[k]))throw new Error("invalid_experience_card"); const flags=trustFlags(input),shared=input.visibility!=="PRIVATE"; if(shared&&!input.previewConfirmed)throw new Error("preview_confirmation_required"); if(shared&&flags.some(f=>f!=="clinical_or_absolute_claim"))throw new Error("identifying_detail_detected"); const now=new Date().toISOString(); return {...values,source_saved_result_id:input.sourceSavedResultId||null,visibility:input.visibility,consented_at:shared?now:null,searchable:shared&&input.visibility!=="INVITE_ONLY",audience_rule:input.visibility==="INVITE_ONLY"?"invite_token":input.visibility==="SIMILAR_STATE_ONLY"?"similar_state_only":shared?"anonymous_shared":"owner_only",moderation_status:shared?"published":"draft",provenance:input.aiAssistanceStatus==="accepted"?"ai_organized":"user_authored",ai_assistance_status:input.aiAssistanceStatus||"none",preview_confirmed_at:input.previewConfirmed?now:null,published_at:shared?now:null}; }
+
+// VISIBILITY EXPANSION IS A RANKED COMPARISON, NOT A BOOLEAN (OSF-1 regression repair).
+//
+// The original create-path rule was `if (shared && !previewConfirmed) throw`. The rewritten update
+// path narrowed it to `current.visibility === "PRIVATE"`, which let INVITE_ONLY → ANONYMOUS_SHARED —
+// a link shared with named people becoming visible to the whole community — happen with no
+// confirmation step at all. That is the single most consequential transition in the product and it
+// was the one that lost its gate.
+//
+// Ranked, so every widening is caught including ones nobody has thought of yet. PUBLIC_SAFE and
+// PSEUDONYMOUS_SHARED are ranked too even though the database constraint currently disables them:
+// if they are ever enabled, they arrive already inside this rule rather than needing to be
+// remembered.
+const VISIBILITY_RANK: Record<string, number> = {
+  PRIVATE: 0,
+  INVITE_ONLY: 1,
+  SIMILAR_STATE_ONLY: 2,
+  ANONYMOUS_SHARED: 3,
+  PSEUDONYMOUS_SHARED: 4,
+  PUBLIC_SAFE: 5,
+  PUBLIC: 5,
+};
+/** True when `to` reaches a wider audience than `from`. Unknown values rank highest: fail closed. */
+export function isVisibilityExpansion(from: string, to: string) {
+  const rank = (v: string) => VISIBILITY_RANK[v] ?? Number.MAX_SAFE_INTEGER;
+  return rank(to) > rank(from);
+}
+
+function payload(input:ExperienceInput) { const values={state_context:clean(input.stateContext,1200),situation:clean(input.situation,3000),action_tried:clean(input.actionTried,3000),perceived_outcome:clean(input.perceivedOutcome,3000),limitations:clean(input.limitations,2000),may_fit:clean(input.mayFit,1200),may_not_fit:clean(input.mayNotFit,1200)};
+  // MIGRATION-ORDERING SAFETY. `title` and `lesson` exist only after 202608140001, so naming them
+  // unconditionally made this insert fail with PostgREST's "column does not exist" against any
+  // database where that migration has not run — which is every environment today, and which broke
+  // the pre-existing /experiences surface as collateral, not just the Life OS one. Verified against a
+  // real un-migrated schema: the same insert with these keys errors, without them it succeeds.
+  // Emitting them only when the caller actually supplied one makes this code deployable against
+  // either schema, so code and migration no longer have to land in the same instant.
+  const optional:Record<string,string>={};
+  const titleValue=clean(input.title,120); if(titleValue)optional.title=titleValue;
+  const lessonValue=clean(input.lesson,1000); if(lessonValue)optional.lesson=lessonValue; if(!ACTIVE_VISIBILITIES.includes(input.visibility))throw new Error("invalid_experience_card"); const required=input.visibility==="PRIVATE"?(Object.keys(values) as Array<keyof typeof values>).filter(k=>!SHARED_ONLY_FIELDS.includes(k as typeof SHARED_ONLY_FIELDS[number])):(Object.keys(values) as Array<keyof typeof values>); if(required.some(k=>!values[k]))throw new Error("invalid_experience_card"); const flags=trustFlags(input),shared=input.visibility!=="PRIVATE"; if(shared&&!input.previewConfirmed)throw new Error("preview_confirmation_required"); if(shared&&flags.some(f=>f!=="clinical_or_absolute_claim"))throw new Error("identifying_detail_detected"); const now=new Date().toISOString(); return {...values,...optional,source_saved_result_id:input.sourceSavedResultId||null,visibility:input.visibility,consented_at:shared?now:null,searchable:shared&&input.visibility!=="INVITE_ONLY",audience_rule:input.visibility==="INVITE_ONLY"?"invite_token":input.visibility==="SIMILAR_STATE_ONLY"?"similar_state_only":shared?"anonymous_shared":"owner_only",moderation_status:shared?"published":"draft",provenance:input.aiAssistanceStatus==="accepted"?"ai_organized":"user_authored",ai_assistance_status:input.aiAssistanceStatus||"none",preview_confirmed_at:input.previewConfirmed?now:null,published_at:shared?now:null}; }
 async function validateSource(owner:string,id?:string|null){if(!id)return;const rows=await (await request(`yorisou_test_results?select=id&id=eq.${encodeURIComponent(id)}&owner_account_id=eq.${encodeURIComponent(owner)}&deleted_at=is.null&limit=1`)).json() as Array<{id:string}>;if(!rows[0])throw new Error("invalid_saved_result_source");}
 async function sharedCard(owner:string,id:string){return ((await (await request(`yorisou_experience_cards?select=id,owner_account_id,visibility,moderation_status&id=eq.${encodeURIComponent(id)}&owner_account_id=neq.${encodeURIComponent(owner)}&visibility=in.(ANONYMOUS_SHARED,SIMILAR_STATE_ONLY)&moderation_status=eq.published&searchable=eq.true&withdrawn_at=is.null&deleted_at=is.null&limit=1`)).json()) as CardRow[])[0]||null;}
 async function event(owner:string,type:string,id?:string,metadata:Record<string,unknown>={}) { await request("yorisou_experience_events",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:id||null,actor_account_id:owner,event_type:type,metadata})}); }
@@ -55,9 +93,21 @@ function updateBody(input:ExperienceUpdateInput,visibility:ExperienceVisibility)
   const map:Array<[keyof ExperienceUpdateInput,string,number]>=[["stateContext","state_context",1200],["situation","situation",3000],["actionTried","action_tried",3000],["perceivedOutcome","perceived_outcome",3000],["limitations","limitations",2000],["mayFit","may_fit",1200],["mayNotFit","may_not_fit",1200],["title","title",120],["lesson","lesson",1000]];
   for(const [key,column,max] of map){
     const value=input[key];
-    if(value===undefined)continue;                       // absent = untouched
+    if(value===undefined||value===null)continue;         // absent = untouched
     const cleaned=clean(value,max);
-    if(!cleaned)throw new Error(`experience_field_empty:${column}`); // "" is not "clear it"
+    // AN EMPTY STRING IS "UNCHANGED", NOT AN ERROR AND NOT A CLEAR.
+    //
+    // /experiences renders every column into a textarea and posts all of them back. OSF-1 made four
+    // columns nullable, so a card written on /life/experience arrives there with nulls, which the
+    // editor coalesces to "" — and throwing on "" made every such card permanently uneditable (422
+    // on save). Silently nulling it instead would be the destructive-overwrite bug this whole
+    // contract exists to prevent. So "" is the third thing: no instruction. Clearing a field remains
+    // possible only through clearFields, which is explicit and cannot be produced by a form that
+    // simply had nothing to put in the box.
+    if(!cleaned){
+      if(typeof value==="string"&&value.trim().length===0)continue;
+      throw new Error(`experience_field_too_long:${column}`);  // over the limit, not empty
+    }
     provided[column]=cleaned;
   }
   for(const field of input.clearFields??[]){
@@ -82,14 +132,34 @@ export async function updateExperience(owner:string,id:string,input:ExperienceUp
   // Turning a PRIVATE card into a shared one still has to satisfy the full sharing contract — and it
   // is the MERGED row, not the patch, that must satisfy it.
   const shared=visibility!=="PRIVATE";
+  const merged=(column:string)=>column in content?content[column]:(current as Record<string,unknown>)[column];
   if(shared){
-    const merged=(column:string)=>column in content?content[column]:(current as Record<string,unknown>)[column];
     if(SHARED_ONLY_FIELDS.some(column=>!merged(column))||!merged("situation")||!merged("action_tried")||!merged("perceived_outcome"))throw new Error("invalid_experience_card");
-    if(current.visibility==="PRIVATE"&&!input.previewConfirmed)throw new Error("preview_confirmation_required");
-    const flags=trustFlags(input as ExperienceInput);
+    // EVERY WIDENING NEEDS CONFIRMATION — not only PRIVATE -> shared. See isVisibilityExpansion.
+    if(isVisibilityExpansion(String(current.visibility),visibility)&&!input.previewConfirmed)throw new Error("preview_confirmation_required");
+    // The de-identification scan reads the MERGED row, not the patch. Scanning only the patch meant a
+    // request that widened visibility while naming no content fields was scanned against almost
+    // nothing — the check passed because there was nothing in it to find.
+    const scanned:ExperienceInput={
+      stateContext:String(merged("state_context")??""),situation:String(merged("situation")??""),
+      actionTried:String(merged("action_tried")??""),perceivedOutcome:String(merged("perceived_outcome")??""),
+      limitations:String(merged("limitations")??""),mayFit:String(merged("may_fit")??""),
+      mayNotFit:String(merged("may_not_fit")??""),title:merged("title")==null?null:String(merged("title")),
+      lesson:merged("lesson")==null?null:String(merged("lesson")),visibility,
+    };
+    const flags=trustFlags(scanned);
     if(flags.some(f=>f!=="clinical_or_absolute_claim"))throw new Error("identifying_detail_detected");
   }
   const body:Record<string,unknown>={...content,visibility};
+  // METADATA THE UPDATE PATH MUST KEEP WRITING (OSF-1 regression repair).
+  //
+  // The original shared payload() set moderation_status, provenance and ai_assistance_status on every
+  // update. Splitting update onto its own body dropped all three. The worst of the three is silent:
+  // a card promoted from PRIVATE keeps moderation_status 'draft', and discoverExperiences requires
+  // 'published' — so the person shares their experience, the save succeeds, and nobody ever sees it.
+  body.moderation_status=shared?"published":"draft";
+  body.provenance=(input.aiAssistanceStatus??current.ai_assistance_status)==="accepted"?"ai_organized":String(current.provenance??"user_authored");
+  if(input.aiAssistanceStatus!==undefined)body.ai_assistance_status=input.aiAssistanceStatus;
   if(current.visibility!==visibility){
     const now=new Date().toISOString();
     body.consented_at=shared?now:null;
@@ -98,6 +168,8 @@ export async function updateExperience(owner:string,id:string,input:ExperienceUp
     body.published_at=shared?now:null;
     if(input.previewConfirmed)body.preview_confirmed_at=now;
   }
+  // A moderator's decision outranks everything above — restored last so it cannot be overwritten by
+  // the moderation_status line this repair reinstated.
   if(["limited","removed"].includes(String(current.moderation_status))){body.moderation_status=current.moderation_status;body.searchable=false;}
   const row=((await (await request(`yorisou_experience_cards?id=eq.${id}&owner_account_id=eq.${encodeURIComponent(owner)}`,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({...body,visibility_version:version,last_visibility_change_at:new Date().toISOString(),updated_at:new Date().toISOString()})})).json()) as CardRow[])[0];
   if(!row)throw new Error("experience_update_failed");

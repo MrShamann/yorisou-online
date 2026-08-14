@@ -363,5 +363,82 @@ AFTER_B=$(Q -c "select
 [ "$AFTER_B" = "5" ] && pass "B's five rows are untouched" || fail "erasure blast radius" "B has $AFTER_B of 5"
 : "$BSID $BGID $BRID"
 
+# ── 10. REGRESSION REPAIR: the insert shape must work on an UN-MIGRATED schema ───────────────
+#
+# The activation audit's one blocking defect: payload() named `title` and `lesson` on every insert,
+# and those columns only exist after 202608140001. Against any database where it has not run —
+# every environment at the time of writing — PostgREST rejected the whole statement, which broke the
+# pre-existing /experiences surface as collateral. This builds a SECOND, deliberately un-migrated
+# cluster and asserts the two insert shapes behave the way the repair requires.
+echo "[osf1] migration-ordering safety (second, un-migrated database)"
+PRE="${WORK}/pre"
+mkdir -p "$PRE"
+if [ -n "${OSF1_DATABASE_URL:-}" ]; then
+  # CI: make a sibling database on the same server rather than a second cluster.
+  psql "$DSN" -q -X -c "select 1" >/dev/null 2>&1
+  PREDB="${DSN%/*}/osf1_acceptance_premigration"
+  psql "$DSN" -q -X -c "drop database if exists osf1_acceptance_premigration;" >/dev/null 2>&1 || true
+  psql "$DSN" -q -X -c "create database osf1_acceptance_premigration;" >/dev/null 2>&1 || true
+else
+  createdb -h localhost -p "$PORT" -U postgres osf1_pre >/dev/null 2>&1
+  PREDB="postgres://postgres@localhost:$PORT/osf1_pre"
+fi
+psql "$PREDB" -q -X -c "
+  create extension if not exists pgcrypto;
+  do \$\$ begin create role service_role login bypassrls; exception when duplicate_object then null; end \$\$;
+  do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$;
+  do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;
+  grant usage on schema public to anon, authenticated, service_role;" >/dev/null 2>&1
+for f in supabase/migrations/*.sql; do
+  case "$(basename "$f")" in 20260814000*) continue ;; esac      # the OSF-1 pair, deliberately withheld
+  psql "$PREDB" -q -X -f "$f" >/dev/null 2>&1
+done
+PRECOLS=$(psql "$PREDB" -t -A -X -c "select count(*) from information_schema.columns where table_name='yorisou_experience_cards' and column_name in ('title','lesson');")
+[ "$PRECOLS" = "0" ] && pass "the second database genuinely lacks title/lesson (precondition)" \
+  || fail "precondition" "expected 0 columns, got $PRECOLS — the un-migrated case is not being tested"
+
+# The shape payload() builds when NO title/lesson was supplied: must succeed here.
+if psql "$PREDB" -q -X -c "insert into public.yorisou_experience_cards
+     (project_id,owner_account_id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit,visibility)
+   values ('yorisou','pre','s','sit','act','out','lim','fit','nofit','PRIVATE');" >/dev/null 2>&1; then
+  pass "an experience card still saves on a database without the OSF-1 migration"
+else
+  fail "migration ordering" "the repaired insert shape STILL fails on an un-migrated schema"
+fi
+# And the shape that caused the outage must still be rejected there — proving the test has force.
+if psql "$PREDB" -q -X -c "insert into public.yorisou_experience_cards
+     (project_id,owner_account_id,state_context,situation,action_tried,perceived_outcome,limitations,may_fit,may_not_fit,title,lesson,visibility)
+   values ('yorisou','pre','s','sit','act','out','lim','fit','nofit',null,null,'PRIVATE');" >/dev/null 2>&1; then
+  fail "control" "naming title/lesson SUCCEEDED on an un-migrated schema — the control is broken"
+else
+  pass "naming title/lesson on an un-migrated schema still fails (control holds)"
+fi
+
+# ── 11. REGRESSION REPAIR: metadata and visibility-expansion invariants at the schema ─────────
+echo "[osf1] update-path invariants"
+# discoverExperiences requires moderation_status='published'; a shared card that keeps 'draft' is
+# invisible to everyone. This asserts the value the repaired update path must write.
+DRAFTED=$(Q -c "select count(*) from public.yorisou_experience_cards
+                 where owner_account_id='$A' and visibility='PRIVATE' and moderation_status<>'draft';")
+[ "$DRAFTED" = "0" ] && pass "PRIVATE cards carry moderation_status 'draft'" || fail "moderation_status" "got $DRAFTED unexpected"
+# The check constraint still refuses a shared card missing its sharing-context fields, whatever the
+# application does — the backstop behind the merged-row check in updateExperience.
+#
+# On a FRESH row: section 8 erased owner A's cards, so reusing $XID here would UPDATE zero rows and
+# report success without testing anything. (It did exactly that on the first run of this block.)
+CID=$(Q -c "insert into public.yorisou_experience_cards
+              (project_id, owner_account_id, situation, action_tried, perceived_outcome, visibility)
+            values ('yorisou','osf1-owner-c','sit','act','out','PRIVATE') returning id;")
+[ -n "$CID" ] && pass "fresh PRIVATE card with null sharing context created (precondition)" \
+  || fail "precondition" "could not create the fresh card"
+if Q -c "update public.yorisou_experience_cards set visibility='ANONYMOUS_SHARED' where id='$CID';" >/dev/null 2>&1; then
+  fail "shared-context constraint" "a PRIVATE card with null sharing context was widened to ANONYMOUS_SHARED"
+else
+  pass "the database refuses to widen a card that lacks its sharing-context fields"
+fi
+AFFECTED=$(Q -c "select count(*) from public.yorisou_experience_cards where id='$CID' and visibility='PRIVATE';")
+[ "$AFFECTED" = "1" ] && pass "the card is still PRIVATE after the refused widening" \
+  || fail "shared-context constraint" "the row is not where it should be ($AFFECTED)"
+
 echo
 [ "$FAILURES" = "0" ] && echo "[osf1] PASS" || { echo "[osf1] FAIL — $FAILURES"; exit 1; }

@@ -167,6 +167,7 @@ jobs:
           npm run test:osf1-ai-boundary
           npm run test:osf1-erasure-coverage
           npm run test:osf1-boundaries
+          npm run test:osf1-regression-repair
 
       - name: Imairo snapshot contracts (RTR-1 private save)
         run: npm run test:imairo-snapshot

@@ -31,6 +31,7 @@ import {
   setGoalStatus,
   upsertUserContext,
 } from "@/lib/server/lifeOs/store";
+import { lifeOsAccess, lifeOsMutationAccess } from "@/lib/life-os/access";
 
 // OSF-1 — the Phase 1 Life OS endpoint.
 //
@@ -55,6 +56,9 @@ function badRequest(code: string, status = 422) {
 }
 
 export async function GET(request: Request) {
+  // OSF-1 READ GUARD. Checked before the session lookup so a closed route answers identically for
+  // signed-in and signed-out callers — it says nothing about who is asking.
+  if (!lifeOsAccess().allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const accountId = await owner();
   if (!accountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   const view = new URL(request.url).searchParams.get("view") ?? "today";
@@ -78,6 +82,17 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!lifeOsAccess().allowed) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // OSF-1 MUTATION GUARD, separate from and narrower than the read guard.
+  //
+  // Reads degrade to an empty state when the Life OS tables do not exist. Writes cannot degrade —
+  // they fail, and someone who has just typed a seven-question reflection loses it. So a write is
+  // refused up front, with a named 503, unless an operator has declared the migration applied. This
+  // is what makes deploying this code ahead of 202608140001 safe rather than merely survivable.
+  const mutation = lifeOsMutationAccess();
+  if (!mutation.allowed) {
+    return NextResponse.json({ error: `life_os_not_accepting_entries:${mutation.reason}` }, { status: 503 });
+  }
   const accountId = await owner();
   if (!accountId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
 
