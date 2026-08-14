@@ -134,15 +134,21 @@ test("a goal needs a title and nothing else", () => {
   assert.throws(() => parseGoalInput({ title: "あ".repeat(121) }), LifeOsInputError);
 });
 
-test("the reflection asks five questions, only the first required", () => {
-  // Changed from seven by the activation package. One field per screen now.
-  assert.equal(REFLECTION_QUESTIONS.length, 5, "the activation package specifies five questions");
+test("the light reflection asks five questions, only the first required", () => {
+  // The default flow is the light one. The seven-question postmortem still exists as a second mode
+  // (see osf1Activation.test.ts) — REFLECTION_QUESTIONS is the light set, not the only set.
+  assert.equal(REFLECTION_QUESTIONS.length, 5, "the light reflection is five questions");
   assert.equal(REFLECTION_QUESTIONS.filter((question) => question.required).length, 1);
   assert.equal(REFLECTION_QUESTIONS[0].fields[0].field, "what_happened");
-  assert.deepEqual(REFLECTION_FIELDS.map((e) => e.field), [
+  assert.deepEqual(REFLECTION_QUESTIONS.flatMap((q) => q.fields.map((f) => f.field)), [
     "what_happened", "felt", "tried", "what_followed", "next_time",
   ]);
+  // REFLECTION_FIELDS is the storage contract — the union of both modes, deduped, one column each.
+  assert.equal(REFLECTION_FIELDS.length, new Set(REFLECTION_FIELDS.map((e) => e.field)).size);
   assert.equal(REFLECTION_FIELDS.filter((entry) => entry.required).length, 1);
+  for (const field of ["what_happened", "felt", "tried", "goal_at_the_time", "what_learned"]) {
+    assert.ok(REFLECTION_FIELDS.some((e) => e.field === field), `${field} must be storable`);
+  }
 });
 
 test("a reflection saves with only the first answer", () => {

@@ -213,7 +213,7 @@ export async function createReflection(ownerAccountId: string, input: LifeReflec
     p_tried: input.tried ?? null,
     p_what_followed: input.what_followed ?? null,
     p_next_time: input.next_time ?? null,
-    // Kept nullable and unwritten by the five-question flow; see contract.ts REFLECTION_QUESTIONS.
+    // Written by the deep postmortem mode; left null by the light flow. See contract.ts.
     p_goal_at_the_time: input.goal_at_the_time ?? null,
     p_information_at_hand: input.information_at_hand ?? null,
     p_decision_made: input.decision_made ?? null,

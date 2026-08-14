@@ -49,10 +49,17 @@
 -- analytics, not funnel events, not the canonical dictionary. Promoting any of them into
 -- `yorisou.exp.*` requires Change Management v1.0 and is explicitly out of scope here.
 --
--- RETENTION IS NOT SET HERE. The annex proposes 24 months for audit_event and says plainly that
--- "Retention values are proposals pending Edward's retention approval", and retention schedules are
--- among Edward's sole non-delegable rights. This table therefore carries NO retention column and no
--- purge function: nothing in this migration decides how long a row lives.
+-- RETENTION_POLICY_TBD.
+--
+-- No retention period is set or assumed. The annex proposes 24 months for audit_event and says
+-- plainly that "Retention values are proposals pending Edward's retention approval"; retention
+-- schedules are among Edward's sole non-delegable rights. 24 months is therefore NOT the policy of
+-- this table — it is a proposal that has not been decided.
+--
+-- Consequence, stated so nobody has to infer it: rows here currently have NO expiry. Until a Founder
+-- decision exists, this table grows without bound and nothing removes a row. That is deliberate —
+-- inventing a purge would be deciding the policy — and it is the reason RETENTION_POLICY_TBD is
+-- written into the table comment, where an operator reading the schema will meet it.
 --
 -- ROLLBACK:
 --   drop function if exists public.yorisou_osf1_audit_write(text, text, text, uuid, text, jsonb);
@@ -173,4 +180,4 @@ begin
 end $$;
 
 comment on table public.yorisou_life_os_audit_events is
-  'OSF-1: append-only Life OS operational audit. Stores actor_fingerprint (sha256 of the account id), NEVER the id — so account deletion leaves no personal data here and no erasure-plan entry is required. Event names are yorisou.life.*, NOT the canonical yorisou.exp.* dictionary. No retention policy is set: that is Edward''s sole decision.';
+  'OSF-1: append-only Life OS operational audit. Stores actor_fingerprint (sha256 of the account id), NEVER the id — so account deletion leaves no personal data here and no erasure-plan entry is required. Event names are yorisou.life.*, NOT the canonical yorisou.exp.* dictionary. RETENTION_POLICY_TBD — no retention period is set or assumed (24mo is an unapproved proposal); rows have no expiry until a Founder decision exists.';

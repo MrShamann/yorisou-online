@@ -476,6 +476,20 @@ TRIED=$(Q -c "select tried from public.yorisou_life_reflections where id='$R5';"
 ORPHAN=$(Q -c "select coalesce(goal_at_the_time,'')||coalesce(information_at_hand,'')||coalesce(why,'') from public.yorisou_life_reflections where id='$R5';")
 [ -z "$ORPHAN" ] && pass "the retained columns stay null and are not written by the five-question flow" || fail "retained columns" "got '$ORPHAN'"
 
+# The deep postmortem is the SECOND mode, not a removed one: same table, same RPC, the four
+# decision columns written and felt/tried left null. If a future change drops the postmortem
+# parameters from the RPC, this call fails and the mode is provably gone.
+RP=$(Q -c "select public.yorisou_osf1_reflection_create('$B',null,'あったこと',null,null,'そのあと',null,'そのときの目標','手元にあった情報','決めたこと','その理由','学んだこと');")
+[ -n "$RP" ] && pass "a seven-answer postmortem reflection is created" || fail "postmortem" "no id"
+DEEP=$(Q -c "select coalesce(goal_at_the_time,'')||'|'||coalesce(information_at_hand,'')||'|'||coalesce(decision_made,'')||'|'||coalesce(why,'')||'|'||coalesce(what_learned,'') from public.yorisou_life_reflections where id='$RP';")
+[ "$DEEP" = "そのときの目標|手元にあった情報|決めたこと|その理由|学んだこと" ] \
+  && pass "the postmortem stores what was known and what was decided, separately from the outcome" \
+  || fail "postmortem columns" "got '$DEEP'"
+LIGHTONLY=$(Q -c "select coalesce(felt,'')||coalesce(tried,'') from public.yorisou_life_reflections where id='$RP';")
+[ -z "$LIGHTONLY" ] && pass "the postmortem leaves the light-only columns null" || fail "postmortem" "got '$LIGHTONLY'"
+BOTH=$(Q -c "select count(*) from public.yorisou_life_reflections where id in ('$R5','$RP');")
+[ "$BOTH" = "2" ] && pass "both modes persist to the one table — no second reflection table exists" || fail "reflection storage" "got $BOTH"
+
 echo "[osf1] cross-user isolation — user A must not reach user B"
 C='osf1-owner-c-iso'
 CS=$(Q -c "select public.yorisou_osf1_current_state_create('$C', array['steady'], null,null,null,null,'manual');")

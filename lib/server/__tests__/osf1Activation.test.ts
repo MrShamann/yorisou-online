@@ -11,7 +11,15 @@ import {
   LIFE_OS_SCHEMA_READY_ENV,
 } from "@/lib/life-os/access";
 import { LIFE_OS_AUDIT_ACTIONS, actorFingerprint } from "@/lib/server/lifeOs/audit";
-import { REFLECTION_FIELDS, REFLECTION_QUESTIONS } from "@/lib/life-os/contract";
+import {
+  LIGHT_REFLECTION_QUESTIONS,
+  POSTMORTEM_REFLECTION_QUESTIONS,
+  REFLECTION_FIELDS,
+  REFLECTION_MODES,
+  REFLECTION_QUESTIONS,
+  reflectionQuestionsFor,
+} from "@/lib/life-os/contract";
+import { AUDIT_DELIVERY_CLASS } from "@/lib/server/lifeOs/audit";
 
 // OSF-1 ACTIVATION PACKAGE — the properties this package must hold, pinned.
 
@@ -141,17 +149,88 @@ test("the TypeScript fingerprint matches what the database computes", () => {
 
 // ── Reflection: five questions ───────────────────────────────────────────────
 
-test("the reflection asks the package's five questions, in order", () => {
+test("BOTH reflection modes exist — the 7-step postmortem was not removed", () => {
+  assert.deepEqual([...REFLECTION_MODES], ["light", "postmortem"]);
+  assert.equal(LIGHT_REFLECTION_QUESTIONS.length, 5, "light reflection is five questions");
+  assert.equal(POSTMORTEM_REFLECTION_QUESTIONS.length, 7, "the deep postmortem is seven questions");
+  assert.equal(reflectionQuestionsFor("light").length, 5);
+  assert.equal(reflectionQuestionsFor("postmortem").length, 7);
+  // Light is the default so existing callers are unchanged.
   assert.equal(REFLECTION_QUESTIONS.length, 5);
-  assert.deepEqual(REFLECTION_FIELDS.map((f) => f.field), ["what_happened", "felt", "tried", "what_followed", "next_time"]);
-  assert.deepEqual(REFLECTION_QUESTIONS.map((q) => q.prompt), [
-    "何がありましたか。",
-    "その時、どう感じましたか。",
-    "何を試しましたか。",
-    "そのあと、何が起きましたか。",
-    "次に活かせそうなことはありますか。",
+});
+
+test("only the postmortem separates the decision from the outcome", () => {
+  // This is the whole reason both exist: the light flow never asks what you KNEW at the time, so it
+  // cannot tell a bad call from bad luck. If these fields ever appear in the light set, the two
+  // modes have collapsed back into one.
+  // Widened to string[]: each mode's fields narrow to its own literal union, and the whole point of
+  // this test is to compare one mode's set against the other's.
+  const light: string[] = LIGHT_REFLECTION_QUESTIONS.flatMap((q) => q.fields.map((f) => f.field));
+  const deep: string[] = POSTMORTEM_REFLECTION_QUESTIONS.flatMap((q) => q.fields.map((f) => f.field));
+  for (const decisionField of ["goal_at_the_time", "information_at_hand", "decision_made", "why"]) {
+    assert.ok(deep.includes(decisionField), `the postmortem must ask ${decisionField}`);
+    assert.ok(!light.includes(decisionField), `${decisionField} belongs to the postmortem, not the light flow`);
+  }
+  // And the light flow keeps the two questions the postmortem does not ask.
+  assert.ok(light.includes("felt") && light.includes("tried"));
+});
+
+test("both modes write the same table, and every field they ask has a column", () => {
+  const all = new Set(REFLECTION_FIELDS.map((f) => f.field));
+  for (const set of [LIGHT_REFLECTION_QUESTIONS, POSTMORTEM_REFLECTION_QUESTIONS]) {
+    for (const q of set) for (const f of q.fields) assert.ok(all.has(f.field), `${f.field} is not a stored field`);
+  }
+  // Exactly one required question in each mode — the first.
+  assert.equal(LIGHT_REFLECTION_QUESTIONS.filter((q) => q.required).length, 1);
+  assert.equal(POSTMORTEM_REFLECTION_QUESTIONS.filter((q) => q.required).length, 1);
+});
+
+test("the postmortem entry point survives the sign-in round trip and is not miscounted", () => {
+  const page = readFileSync("app/life/reflect/page.tsx", "utf8");
+  // Static metadata cannot vary by mode, so it must not name a number of questions at all.
+  const description = /description:\s*"([^"]*)"/.exec(page)?.[1] ?? "";
+  assert.ok(description.length > 0, "the page must still describe itself");
+  assert.ok(!/七つ|7つ|五つ|5つ/.test(description), `metadata must not name a question count: ${description}`);
+  // Signing in from the deep link must come back to the deep flow.
+  assert.match(page, /next=\{mode === "postmortem" \? "\/life\/reflect\?mode=postmortem"/);
+  // And the hub must offer both, each labelled with its own count.
+  const hub = readFileSync("app/life/page.tsx", "utf8");
+  assert.match(hub, /href="\/life\/reflect"/);
+  assert.match(hub, /href="\/life\/reflect\?mode=postmortem"/);
+  assert.match(hub, /5つの問い/);
+  assert.match(hub, /7つの問い/);
+});
+
+test("the four events that require transactional audit are declared", () => {
+  // Declared as REQUIRED, not as delivered — every event is asynchronous today. The point is that
+  // the gap is enumerable from the source. See docs/yorisou/osf1/OSF1_AUDIT_DELIVERY_CLASSES.md.
+  const transactional = Object.entries(AUDIT_DELIVERY_CLASS)
+    .filter(([, cls]) => cls === "transactional")
+    .map(([action]) => action)
+    .sort();
+  assert.deepEqual(transactional, [
+    "yorisou.life.memory.confirmed",
+    "yorisou.life.memory.deleted",
+    "yorisou.life.reflection.created",
   ]);
-  assert.equal(REFLECTION_QUESTIONS.filter((q) => q.required).length, 1);
+  // Every declared action has a class — a new event cannot be added without deciding.
+  for (const action of Object.keys(AUDIT_DELIVERY_CLASS)) {
+    assert.match(AUDIT_DELIVERY_CLASS[action as keyof typeof AUDIT_DELIVERY_CLASS], /^(transactional|asynchronous)$/);
+  }
+});
+
+test("retention is recorded as TBD, with no purge and no expiry column", () => {
+  const migration = readFileSync("supabase/migrations/202608150001_osf1_life_os_audit_events.sql", "utf8");
+  assert.match(migration, /RETENTION_POLICY_TBD/);
+  // In the TABLE COMMENT too, where an operator reading the schema will meet it.
+  const comment = /comment on table public\.yorisou_life_os_audit_events is\s+'([\s\S]*?)';/.exec(migration);
+  assert.ok(comment, "the table comment is not where expected");
+  assert.match(comment[1], /RETENTION_POLICY_TBD/);
+  // Assert the positive statement rather than hunting for a negative phrasing: the migration must
+  // say outright that 24 months is NOT the policy, and must set no expiry mechanism.
+  assert.match(migration, /24 months is therefore NOT the policy/);
+  const sqlOnly = migration.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  assert.ok(!/retention_expires_at|interval '\d+ months?'/.test(sqlOnly), "no expiry mechanism may exist");
 });
 
 test("the two new answer columns exist in the migration and in the RPC", () => {

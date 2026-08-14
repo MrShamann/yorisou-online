@@ -106,21 +106,36 @@ export type Goal = {
 // ── Reflection (user-authored, seven questions) ───────────────────────────────
 
 /**
- * The guided reflection — FIVE questions, one per screen.
+ * TWO REFLECTION MODES, AND WHY BOTH EXIST.
  *
- * CHANGED FROM SEVEN (activation package Phase C). The shipped flow asked seven; the package
- * specifies these five, and two of them had no column until 202608150002 added `felt` and `tried`.
+ * A previous pass replaced the seven-question flow with a five-question one. That was wrong: it
+ * treated them as versions of the same thing, when they are two different acts.
  *
- * The three prompts that were dropped — 「そのとき、どうなってほしいと思っていましたか」,
- * 「そのとき、何がわかっていましたか」 and the 「なぜ」 half of the decision screen — asked a person to
- * reconstruct their own state of mind at a past moment, which is the hardest kind of question to
- * answer honestly and the easiest to answer with a story. Their columns are kept nullable rather
- * than dropped, so reinstating a fuller flow later costs a migration on an empty column instead of
- * a re-add to a live table.
+ *   LIGHT REFLECTION (5)  — what happened, how it felt, what you tried, what followed, what you take
+ *                           forward. Short enough to finish on the day it happened, and it asks
+ *                           nothing you need distance to answer.
  *
- * Only the first is required. A reflection someone stopped halfway through is still theirs to keep.
+ *   DEEP POSTMORTEM (7)   — the decision-quality model: what you WANTED, what you KNEW at the time,
+ *                           what you DECIDED and why, what followed, what you learned. It separates
+ *                           the decision from the outcome, which is the only way to tell a bad call
+ *                           from bad luck. It asks you to reconstruct a past state of mind, which is
+ *                           real work and needs distance — so it is a deliberate choice, never the
+ *                           default.
+ *
+ * The distinction matters because collapsing them loses the postmortem entirely: the light flow
+ * cannot separate decision from outcome, and a person asked the deep questions on a hard day will
+ * either abandon the flow or invent a tidy story. Same table, same columns, two entry points.
  */
-export const REFLECTION_QUESTIONS = [
+export const REFLECTION_MODES = ["light", "postmortem"] as const;
+export type ReflectionMode = (typeof REFLECTION_MODES)[number];
+
+export const REFLECTION_MODE_LABELS: Record<ReflectionMode, { title: string; blurb: string }> = {
+  light: { title: "かるく振り返る", blurb: "5つの問い。今日のことを、そのまま書きとめます。" },
+  postmortem: { title: "じっくり振り返る", blurb: "7つの問い。決めたことと、その結果を分けて考えます。" },
+};
+
+/** LIGHT — five questions, one field per screen. The default. */
+export const LIGHT_REFLECTION_QUESTIONS = [
   {
     prompt: "何がありましたか。",
     help: "起きたことを、覚えている範囲で。",
@@ -153,13 +168,86 @@ export const REFLECTION_QUESTIONS = [
   },
 ] as const;
 
-export type ReflectionField = (typeof REFLECTION_QUESTIONS)[number]["fields"][number]["field"];
+/**
+ * DEEP POSTMORTEM — seven questions. Restored, not reinvented: this is the model that shipped in
+ * 202608140001, whose 1:1 column mapping is fixed in that migration's §4 header.
+ *
+ * Question 4 carries two inputs because the decision and its reason belong on one screen — asking
+ * "why" after the decision has scrolled away loses what it refers to.
+ */
+export const POSTMORTEM_REFLECTION_QUESTIONS = [
+  {
+    prompt: "何が起きましたか。",
+    help: "起きたことを、覚えている範囲で。",
+    required: true,
+    fields: [{ field: "what_happened", label: "起きたこと", required: true }],
+  },
+  {
+    prompt: "そのとき、どうなってほしいと思っていましたか。",
+    help: "うまく言えなくても大丈夫です。",
+    required: false,
+    fields: [{ field: "goal_at_the_time", label: "望んでいたこと", required: false }],
+  },
+  {
+    prompt: "そのとき、何がわかっていましたか。",
+    help: "あとから知ったことは含めなくて構いません。ここが判断の良し悪しを分けます。",
+    required: false,
+    fields: [{ field: "information_at_hand", label: "わかっていたこと", required: false }],
+  },
+  {
+    prompt: "どうすることにしましたか。",
+    help: "選ばなかったことがあれば、それも。理由は、はっきりしないこともあります。",
+    required: false,
+    fields: [
+      { field: "decision_made", label: "決めたこと", required: false },
+      { field: "why", label: "なぜ、そうしたのだと思いますか（任意）", required: false },
+    ],
+  },
+  {
+    prompt: "そのあと、何が起きましたか。",
+    help: "",
+    required: false,
+    fields: [{ field: "what_followed", label: "そのあと起きたこと", required: false }],
+  },
+  {
+    prompt: "そこから、何か気づいたことはありますか。",
+    help: "なければ空のままで。",
+    required: false,
+    fields: [{ field: "what_learned", label: "気づいたこと", required: false }],
+  },
+  {
+    prompt: "次に同じことがあったら、どうしたいですか。",
+    help: "",
+    required: false,
+    fields: [{ field: "next_time", label: "次にしたいこと", required: false }],
+  },
+] as const;
 
-/** Every stored answer field, in question order. */
-export const REFLECTION_FIELDS: readonly { field: ReflectionField; required: boolean }[] =
-  REFLECTION_QUESTIONS.flatMap((question) =>
-    question.fields.map((entry) => ({ field: entry.field as ReflectionField, required: entry.required })),
-  );
+/** The default flow. `REFLECTION_QUESTIONS` stays the light set so existing callers are unchanged. */
+export const REFLECTION_QUESTIONS = LIGHT_REFLECTION_QUESTIONS;
+
+export function reflectionQuestionsFor(mode: ReflectionMode) {
+  return mode === "postmortem" ? POSTMORTEM_REFLECTION_QUESTIONS : LIGHT_REFLECTION_QUESTIONS;
+}
+
+export type ReflectionField =
+  | (typeof LIGHT_REFLECTION_QUESTIONS)[number]["fields"][number]["field"]
+  | (typeof POSTMORTEM_REFLECTION_QUESTIONS)[number]["fields"][number]["field"];
+
+/** Every stored answer field across BOTH modes, deduped, in a stable order. */
+export const REFLECTION_FIELDS: readonly { field: ReflectionField; required: boolean }[] = (() => {
+  const seen = new Map<string, { field: ReflectionField; required: boolean }>();
+  for (const set of [LIGHT_REFLECTION_QUESTIONS, POSTMORTEM_REFLECTION_QUESTIONS]) {
+    for (const question of set) {
+      for (const entry of question.fields) {
+        if (!seen.has(entry.field)) {
+          seen.set(entry.field, { field: entry.field as ReflectionField, required: entry.required });
+        }
+      }
+    }
+  }
+  return [...seen.values()];
+})();
 
 export type LifeReflection = {
   id: string;
@@ -177,19 +265,12 @@ export type LifeReflection = {
   created_at: string;
 };
 
-/**
- * What a caller may write. The five asked fields, plus the columns the five-question flow no longer
- * asks — retained so the RPC keeps a complete signature and a later fuller flow needs no schema
- * change. Nothing in the shipped UI sets the retained ones.
- */
-export type RetainedReflectionField =
-  | "goal_at_the_time" | "information_at_hand" | "decision_made" | "why" | "what_learned";
-
-export type LifeReflectionInput = Partial<Record<ReflectionField, string | null>> &
-  Partial<Record<RetainedReflectionField, string | null>> & {
-    what_happened: string;
-    experienceId?: string | null;
-  };
+/** What a caller may write — every field either mode asks, plus the mode itself. */
+export type LifeReflectionInput = Partial<Record<ReflectionField, string | null>> & {
+  what_happened: string;
+  experienceId?: string | null;
+  mode?: ReflectionMode;
+};
 
 // ── Memory (explicit, confirmed) ─────────────────────────────────────────────
 

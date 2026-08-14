@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { REFLECTION_QUESTIONS, type MemoryCandidate, type ReflectionField } from "@/lib/life-os/contract";
+import { reflectionQuestionsFor, type MemoryCandidate, type ReflectionField, type ReflectionMode } from "@/lib/life-os/contract";
 import { lifePost, lifeFailureMessage } from "@/lib/life-os/client";
 import MemoryConfirmation from "../MemoryConfirmation";
 import { LIFE_OS_PRIVACY } from "@/lib/life-os/privacyCopy";
 
-// OSF-1 — the guided reflection, seven questions.
+// OSF-1 — the guided reflection, in two modes: light (5 questions) and deep postmortem (7).
 //
 // One question per screen, the same rhythm as the Today check-in. The difference is that these
 // answers are the person's own words rather than bounded choices, because "what happened" cannot be
@@ -17,11 +17,14 @@ import { LIFE_OS_PRIVACY } from "@/lib/life-os/privacyCopy";
 //
 // ONLY THE FIRST QUESTION IS REQUIRED. Every other screen can be skipped with 「とばす」 and the
 // reflection still saves. Someone who wanted to write one line about a hard day should not have to
-// answer six more to keep it, and a flow that refuses to save until every box is full is a form.
+// answer the rest to keep it, and a flow that refuses to save until every box is full is a form.
 
-type Props = { experienceId?: string };
+type Props = { experienceId?: string; mode?: ReflectionMode };
 
-export default function ReflectionFlow({ experienceId }: Props) {
+export default function ReflectionFlow({ experienceId, mode = "light" }: Props) {
+  // Light (5) or deep postmortem (7). Same table, same columns — see contract.ts for why they are
+  // two acts rather than two versions of one.
+  const REFLECTION_QUESTIONS = reflectionQuestionsFor(mode);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Partial<Record<ReflectionField, string>>>({});
   const [phase, setPhase] = useState<"asking" | "saving" | "done" | "failed">("asking");
@@ -63,6 +66,7 @@ export default function ReflectionFlow({ experienceId }: Props) {
     const result = await lifePost<{ id: string; memoryCandidates: MemoryCandidate[] }>("reflections", {
       ...finalAnswers,
       experienceId: experienceId ?? null,
+      mode,
     });
     if (result.ok) {
       setCandidates(result.data.memoryCandidates ?? []);
@@ -217,7 +221,7 @@ export default function ReflectionFlow({ experienceId }: Props) {
             とばす
           </button>
         )}
-        {/* Finishing early is always available once the first answer exists — the remaining six
+        {/* Finishing early is always available once the first answer exists — the remaining
             questions are an offer, not a queue to clear. */}
         {!isLast && index > 0 && (answers.what_happened ?? "").trim().length > 0 && (
           <button

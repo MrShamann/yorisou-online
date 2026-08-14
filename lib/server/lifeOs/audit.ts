@@ -14,11 +14,23 @@ import "server-only";
 // migration header for why that resolves the annex's "pseudonymized, not deleted" rule without an
 // exception.
 //
-// It NEVER FAILS A MUTATION. An audit write that throws would mean a person loses the reflection
-// they just typed because the ops trace was unavailable — trading the thing that matters for the
-// record of it. So every write here is best-effort and swallows its own errors. That is a real
-// trade-off, stated rather than hidden: a dropped audit row is invisible. It is the right way round
-// because the audit exists to explain what happened to someone's data, not to gate it.
+// DELIVERY CLASS: ASYNCHRONOUS (best-effort), for every event this module writes today.
+//
+// An audit write that throws would mean a person loses the reflection they just typed because the
+// ops trace was unavailable — trading the thing that matters for the record of it. So every write
+// here swallows its own errors. A dropped audit row is invisible; that is a real trade-off, stated
+// rather than hidden.
+//
+// THIS IS NOT THE RIGHT CLASS FOR EVERY EVENT, AND THAT GAP IS OPEN. Four events carry a
+// user-facing promise that only a transactional record can keep — memory creation, memory deletion,
+// reflection persistence, and any future Life Graph mutation. For those, "the row exists but the
+// audit does not" is a state the product cannot explain to the person it happened to. The decision,
+// the reasoning and the required mechanism are recorded in
+// docs/yorisou/osf1/OSF1_AUDIT_DELIVERY_CLASSES.md. Implementing the transactional class is a
+// schema change (the write must join the RPC's transaction) and is NOT done here.
+//
+// Until then: every event below is asynchronous, including the four that should not be. Do not read
+// the presence of an audit row as proof, or its absence as proof of absence.
 
 import { createHash } from "crypto";
 
@@ -36,6 +48,25 @@ export const LIFE_OS_AUDIT_ACTIONS = [
   "yorisou.life.assistant.refused",
 ] as const;
 export type LifeOsAuditAction = (typeof LIFE_OS_AUDIT_ACTIONS)[number];
+
+/**
+ * The delivery class each action REQUIRES — not what it currently gets.
+ *
+ * Every action is delivered asynchronously today. The four marked "transactional" are the ones where
+ * that is wrong, and this constant is what makes the gap enumerable rather than remembered.
+ */
+export const AUDIT_DELIVERY_CLASS: Record<LifeOsAuditAction, "transactional" | "asynchronous"> = {
+  "yorisou.life.context.updated": "asynchronous",
+  "yorisou.life.state.created": "asynchronous",
+  "yorisou.life.state.annotated": "asynchronous",
+  "yorisou.life.goal.created": "asynchronous",
+  "yorisou.life.goal.status_changed": "asynchronous",
+  "yorisou.life.reflection.created": "transactional",
+  "yorisou.life.memory.confirmed": "transactional",
+  "yorisou.life.memory.deleted": "transactional",
+  "yorisou.life.assistant.drafted": "asynchronous",
+  "yorisou.life.assistant.refused": "asynchronous",
+};
 
 export type LifeOsEntityKind =
   | "user_context" | "current_state" | "goal" | "reflection" | "memory" | "experience" | "assistant";

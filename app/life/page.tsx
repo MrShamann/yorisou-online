@@ -149,11 +149,19 @@ export default async function LifePage() {
             まだありません。
           </p>
         )}
+        {/* Two entry points, named by what they ask of you rather than by depth ranking — a
+            postmortem is not a "better" reflection, it is a different one that needs distance. */}
         <Link
           href="/life/reflect"
-          className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+          className="mt-3 flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
         >
-          振り返りを書く
+          かるく振り返る（5つの問い）
+        </Link>
+        <Link
+          href="/life/reflect?mode=postmortem"
+          className="flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+        >
+          じっくり振り返る（7つの問い）
         </Link>
       </section>
 

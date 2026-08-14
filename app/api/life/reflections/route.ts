@@ -34,9 +34,9 @@ export async function POST(request: Request) {
       action: "yorisou.life.reflection.created",
       entityKind: "reflection",
       entityRef: id,
-      reason: input.experienceId ? "about_experience" : "standalone",
+      reason: input.mode === "postmortem" ? "postmortem" : "light",
       // A count of answered questions — never the answers.
-      detail: { answered: REFLECTION_FIELDS.filter((f) => (input[f.field] ?? "") !== "").length },
+      detail: { answered: REFLECTION_FIELDS.filter((f) => (input[f.field] ?? "") !== "").length, about_experience: Boolean(input.experienceId) },
     });
     const reflection = await getReflection(gate.viewer.accountId, id);
     return NextResponse.json(
