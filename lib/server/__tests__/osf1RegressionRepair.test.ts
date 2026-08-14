@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 
 import { lifeOsAccess, lifeOsMutationAccess, LIFE_OS_PREVIEW_FLAG, LIFE_OS_SCHEMA_READY_ENV } from "@/lib/life-os/access";
 import { isVisibilityExpansion } from "@/lib/server/experienceCards";
@@ -190,9 +190,22 @@ test("every Life OS page and the API enforce the gate", () => {
   assert.ok(GUARD.indexOf("lifeOsAccess()") < GUARD.indexOf("getViewerContext()"));
   assert.match(GUARD, /const mutation = lifeOsMutationAccess\(\);/);
   assert.match(GUARD, /life_os_not_accepting_entries/);
-  // And every domain route goes through it.
-  for (const dir of readdirSync("app/api/life")) {
-    assert.match(readFileSync(`app/api/life/${dir}/route.ts`, "utf8"), /requireLifeViewer/, `${dir} bypasses the guard`);
+  // And every domain route goes through it — AT ANY DEPTH. Listing only the top level exempted the
+  // dynamic child routes, which are the ones that take an id from the caller and so are exactly the
+  // ones an unguarded path would hurt most.
+  const lifeRoutes: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir)) {
+      const path = `${dir}/${entry}`;
+      if (statSync(path).isDirectory()) walk(path);
+      else if (entry === "route.ts") lifeRoutes.push(path);
+    }
+  };
+  walk("app/api/life");
+  assert.ok(lifeRoutes.length >= 8, `expected the full route set, found ${lifeRoutes.length}`);
+  assert.ok(lifeRoutes.some((r) => r.includes("[id]")), "the dynamic routes must be in scope");
+  for (const route of lifeRoutes) {
+    assert.match(readFileSync(route, "utf8"), /requireLifeViewer/, `${route} bypasses the guard`);
   }
   // 今日 and わたし must not query or link to a closed Life OS.
   assert.match(readFileSync("app/TodaySavedState.tsx", "utf8"), /if \(!lifeOsAccess\(\)\.allowed\) return null;/);

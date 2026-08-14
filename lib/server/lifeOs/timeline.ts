@@ -34,7 +34,14 @@ import {
   listMemories,
   listReflections,
 } from "@/lib/server/lifeOs/store";
-import type { CurrentStateRecord, ExplicitMemory, Goal, LifeReflection } from "@/lib/life-os/contract";
+import { reflectionQuestionsFor } from "@/lib/life-os/contract";
+import type {
+  CurrentStateRecord,
+  ExplicitMemory,
+  Goal,
+  LifeReflection,
+  ReflectionField,
+} from "@/lib/life-os/contract";
 
 export type TimelineEntry =
   | { kind: "current_state"; at: string; id: string; record: CurrentStateRecord }
@@ -117,11 +124,35 @@ export async function lifeTimeline(ownerAccountId: string, limit = DEFAULT_LIMIT
 
 export type ReturnView = {
   lastReflection: LifeReflection | null;
-  /** An answer they started and left empty — offered, never nagged about. */
+  /**
+   * An answer they started and left empty — offered, never nagged about. Field names, not labels:
+   * the caller decides how to say them, and the two modes name the same field differently.
+   */
   unfinished: { reflectionId: string; missing: string[] } | null;
   activeDirection: Goal | null;
   recentExperience: { id: string; title: string | null } | null;
 };
+
+/**
+ * The optional answers a reflection left empty, according to the questions IT was asked.
+ *
+ * The row's own mode decides the set, and the set comes from the contract rather than a second list
+ * restated here. A fixed light-flow list was previously measured against every row, so a completed
+ * deep reflection always reported unfinished answers: that flow is never asked 感じたこと or
+ * 試したこと, and the questions it does ask — options_considered, goal_at_the_time,
+ * information_at_hand, decision_made — could never appear however long they were left empty.
+ *
+ * A row written before the mode column existed reads as `light`, which is what it was.
+ */
+function unansweredIn(reflection: LifeReflection): ReflectionField[] {
+  const missing: ReflectionField[] = [];
+  for (const question of reflectionQuestionsFor(reflection.mode)) {
+    for (const entry of question.fields) {
+      if (!entry.required && !reflection[entry.field]) missing.push(entry.field);
+    }
+  }
+  return missing;
+}
 
 export async function lifeReturnView(ownerAccountId: string): Promise<ReturnView> {
   const [reflections, goals, experiences] = await Promise.all([
@@ -133,12 +164,10 @@ export async function lifeReturnView(ownerAccountId: string): Promise<ReturnView
   const lastReflection = reflections[0] ?? null;
   // "Unfinished" is a fact about the record — which optional answers are empty — not a judgement
   // about the person and not a task to complete.
-  const missing = lastReflection
-    ? (["felt", "tried", "what_followed", "next_time"] as const).filter((field) => !lastReflection[field])
-    : [];
+  const missing = lastReflection ? unansweredIn(lastReflection) : [];
   return {
     lastReflection,
-    unfinished: lastReflection && missing.length > 0 ? { reflectionId: lastReflection.id, missing: [...missing] } : null,
+    unfinished: lastReflection && missing.length > 0 ? { reflectionId: lastReflection.id, missing } : null,
     activeDirection: goals.find((goal) => goal.status === "active") ?? null,
     recentExperience: experiences[0] ? { id: experiences[0].id, title: experiences[0].title } : null,
   };

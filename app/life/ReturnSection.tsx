@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { lifeReturnView } from "@/lib/server/lifeOs/timeline";
+import { reflectionQuestionsFor, type ReflectionMode } from "@/lib/life-os/contract";
 
 // PHASE F — 前にいたところ.
 //
@@ -16,12 +17,22 @@ import { lifeReturnView } from "@/lib/server/lifeOs/timeline";
 // experience. Each is a link back to their own words. If there is nothing, it renders nothing rather
 // than inventing an encouragement.
 
-const MISSING_LABEL: Record<string, string> = {
-  felt: "感じたこと",
-  tried: "試したこと",
-  what_followed: "そのあと起きたこと",
-  next_time: "次に活かせそうなこと",
-};
+/**
+ * The names the flow itself used for those answers, in the order it asked them.
+ *
+ * A fixed map here could hold only one mode's words: the two ask different questions, and even the
+ * shared one is named differently（次に活かせそうなこと / 次にしたいこと）. Taking each label from the
+ * question that was actually put to the person keeps the offer in the words they read.
+ */
+function labelsFor(mode: ReflectionMode, fields: string[]): string[] {
+  const labels: string[] = [];
+  for (const question of reflectionQuestionsFor(mode)) {
+    for (const entry of question.fields) {
+      if (fields.includes(entry.field)) labels.push(entry.label);
+    }
+  }
+  return labels;
+}
 
 export default async function ReturnSection({ accountId }: { accountId: string }) {
   const view = await lifeReturnView(accountId).catch(() => null);
@@ -29,6 +40,8 @@ export default async function ReturnSection({ accountId }: { accountId: string }
   const hasAnything =
     view.lastReflection || view.unfinished || view.activeDirection || view.recentExperience;
   if (!hasAnything) return null;
+  const unfinishedLabels =
+    view.lastReflection && view.unfinished ? labelsFor(view.lastReflection.mode, view.unfinished.missing) : [];
 
   return (
     <section className="mt-9 rounded-[var(--pxr-radius-lg)] border border-[var(--pxr-border-subtle)] bg-[var(--pxr-surface-emphasis)] px-5 py-5">
@@ -42,10 +55,10 @@ export default async function ReturnSection({ accountId }: { accountId: string }
         </p>
       )}
 
-      {view.unfinished && (
+      {unfinishedLabels.length > 0 && (
         // Named as an offer, never as an outstanding task. 「書きかけ」 not 「未完了」.
         <p className="mt-2 text-[14px] leading-[1.9] text-[var(--pxr-text-secondary)]">
-          書きかけのままのところがあります（{view.unfinished.missing.map((f) => MISSING_LABEL[f] ?? f).join("・")}）。
+          書きかけのままのところがあります（{unfinishedLabels.join("・")}）。
           そのままにしておいても構いません。
         </p>
       )}

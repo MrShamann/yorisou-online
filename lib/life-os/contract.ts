@@ -169,11 +169,26 @@ export const LIGHT_REFLECTION_QUESTIONS = [
 ] as const;
 
 /**
- * DEEP POSTMORTEM — seven questions. Restored, not reinvented: this is the model that shipped in
- * 202608140001, whose 1:1 column mapping is fixed in that migration's §4 header.
+ * DEEP POSTMORTEM — seven questions, fixed by the completion package.
  *
- * Question 4 carries two inputs because the decision and its reason belong on one screen — asking
- * "why" after the decision has scrolled away loses what it refers to.
+ *   1 何が起きましたか            -> what_happened
+ *   2 どうなってほしかったですか   -> goal_at_the_time
+ *   3 そのとき何がわかっていましたか -> information_at_hand
+ *   4 どんな選択肢がありましたか   -> options_considered   (added by 202608160001)
+ *   5 どうすることにしましたか     -> decision_made
+ *   6 そのあと何が起きましたか     -> what_followed
+ *   7 次はどうしたいですか        -> next_time
+ *
+ * Question 4 is what makes this a postmortem rather than a longer diary. A decision can only be
+ * judged against the alternatives that existed at the time — without them, every outcome reads as a
+ * verdict on the choice, which is exactly the error the format exists to prevent.
+ *
+ * `why` and `what_learned` are no longer asked by either flow. Their columns are kept and still read
+ * back, because rows written by the earlier flow hold them.
+ *
+ * This is NOT personality analysis, NOT a blame system, and NOT a judgement of failure. Nothing here
+ * scores, ranks or characterises the person; every question asks what happened and what was known,
+ * and every one but the first can be skipped.
  */
 export const POSTMORTEM_REFLECTION_QUESTIONS = [
   {
@@ -190,34 +205,31 @@ export const POSTMORTEM_REFLECTION_QUESTIONS = [
   },
   {
     prompt: "そのとき、何がわかっていましたか。",
-    help: "あとから知ったことは含めなくて構いません。ここが判断の良し悪しを分けます。",
+    help: "あとから知ったことは含めなくて構いません。",
     required: false,
     fields: [{ field: "information_at_hand", label: "わかっていたこと", required: false }],
   },
   {
-    prompt: "どうすることにしましたか。",
-    help: "選ばなかったことがあれば、それも。理由は、はっきりしないこともあります。",
+    prompt: "どんな選択肢がありましたか。",
+    help: "選ばなかったものも含めて。あとから思いついたものではなく、そのとき見えていたもので。",
     required: false,
-    fields: [
-      { field: "decision_made", label: "決めたこと", required: false },
-      { field: "why", label: "なぜ、そうしたのだと思いますか（任意）", required: false },
-    ],
+    fields: [{ field: "options_considered", label: "あった選択肢", required: false }],
+  },
+  {
+    prompt: "どうすることにしましたか。",
+    help: "",
+    required: false,
+    fields: [{ field: "decision_made", label: "決めたこと", required: false }],
   },
   {
     prompt: "そのあと、何が起きましたか。",
-    help: "",
+    help: "決めたことと、そのあと起きたことは、切り離して見ます。",
     required: false,
     fields: [{ field: "what_followed", label: "そのあと起きたこと", required: false }],
   },
   {
-    prompt: "そこから、何か気づいたことはありますか。",
-    help: "なければ空のままで。",
-    required: false,
-    fields: [{ field: "what_learned", label: "気づいたこと", required: false }],
-  },
-  {
     prompt: "次に同じことがあったら、どうしたいですか。",
-    help: "",
+    help: "なければ空のままで。",
     required: false,
     fields: [{ field: "next_time", label: "次にしたいこと", required: false }],
   },
@@ -252,11 +264,14 @@ export const REFLECTION_FIELDS: readonly { field: ReflectionField; required: boo
 export type LifeReflection = {
   id: string;
   experience_id: string | null;
+  /** Which flow wrote the row. Stored since 202608160001 — see that migration's §2. */
+  mode: ReflectionMode;
   what_happened: string;
   felt: string | null;
   tried: string | null;
   goal_at_the_time: string | null;
   information_at_hand: string | null;
+  options_considered: string | null;
   decision_made: string | null;
   why: string | null;
   what_followed: string | null;
@@ -274,7 +289,9 @@ export type LifeReflectionInput = Partial<Record<ReflectionField, string | null>
 
 // ── Memory (explicit, confirmed) ─────────────────────────────────────────────
 
-export const MEMORY_TYPES = ["preference", "goal", "experience", "reflection"] as const;
+// `lesson` completes the vocabulary: what someone concluded is not a preference, a goal, an
+// experience or a reflection, and it is the kind of memory a reflection most often produces.
+export const MEMORY_TYPES = ["preference", "goal", "experience", "reflection", "lesson"] as const;
 export const MEMORY_SOURCES = ["user_statement", "user_confirmed_ai_suggestion"] as const;
 
 export type MemoryType = (typeof MEMORY_TYPES)[number];
@@ -285,6 +302,7 @@ export const MEMORY_TYPE_LABELS: Record<MemoryType, string> = {
   goal: "向かいたい方向",
   experience: "経験",
   reflection: "振り返り",
+  lesson: "学んだこと",
 };
 
 export type ExplicitMemory = {
@@ -294,6 +312,8 @@ export type ExplicitMemory = {
   source: MemorySource;
   user_confirmed: true;
   created_at: string;
+  /** Moves when the sentence is edited; equal to created_at until then. */
+  updated_at: string;
 };
 
 /**
@@ -447,9 +467,63 @@ export function parseReflectionInput(body: unknown): LifeReflectionInput {
   if (experienceId !== undefined && experienceId !== null && typeof experienceId !== "string") {
     throw new LifeOsInputError("experience_id_invalid");
   }
+  // The mode has to survive parsing. It previously did not: this function returned only the answer
+  // fields, so `input.mode` was always undefined downstream and every postmortem was recorded as a
+  // light reflection. It is now stored on the row, not just carried in an audit reason.
+  const rawMode = value.mode;
+  if (rawMode !== undefined && rawMode !== null && !REFLECTION_MODES.includes(rawMode as ReflectionMode)) {
+    throw new LifeOsInputError("reflection_mode_invalid");
+  }
   return {
     ...(parsed as Omit<LifeReflectionInput, "what_happened" | "experienceId">),
     what_happened: parsed.what_happened as string,
     experienceId: (experienceId as string | undefined) ?? null,
+    mode: (rawMode as ReflectionMode | undefined) ?? "light",
+  };
+}
+
+/**
+ * The assistant's input contract.
+ *
+ * The assistant route is the one endpoint that spends a provider call, and it previously took the
+ * request body as-is: any key, any length, interpolated straight into the prompt. That is an open
+ * door on the most expensive surface in the product, so the body is now bounded here — the same
+ * fields the flow can actually collect, each capped at the same 2000 characters the columns allow,
+ * and nothing else carried through.
+ *
+ * Unknown keys are DROPPED rather than rejected: a client that sends an extra field should get a
+ * draft of what it did send, not a 422 in the middle of someone writing.
+ */
+export function parseAssistantInput(body: unknown): Partial<Record<ReflectionField, string>> {
+  const value = ((body ?? {}) as Record<string, unknown>).answers;
+  if (value === undefined || value === null) return {};
+  if (typeof value !== "object" || Array.isArray(value)) throw new LifeOsInputError("assistant_answers_invalid");
+  const source = value as Record<string, unknown>;
+  const answers: Partial<Record<ReflectionField, string>> = {};
+  for (const entry of REFLECTION_FIELDS) {
+    const text = boundedText(source[entry.field], 2000, "assistant_answers_invalid", false);
+    if (text) answers[entry.field] = text;
+  }
+  if (Object.keys(answers).length === 0) throw new LifeOsInputError("assistant_answers_required");
+  return answers;
+}
+
+/**
+ * What a caller may change about a stored memory: the sentence, and nothing else.
+ *
+ * `memory_type`, `source` and every subject link are deliberately not editable — they are what the
+ * memory IS, and changing them under a stable id would turn one memory into a different one. The
+ * database enforces the same restriction; this type is the statement of it on the way in.
+ */
+export type MemoryUpdateInput = { content: string; confirmed: true };
+
+export function parseMemoryUpdateInput(body: unknown): MemoryUpdateInput {
+  const value = (body ?? {}) as Record<string, unknown>;
+  // An edit replaces the sentence the person agreed to, so it needs the same act of agreement the
+  // original required. No confirmation, no write — the same rule as creation.
+  if (value.confirmed !== true) throw new LifeOsInputError("memory_requires_confirmation");
+  return {
+    content: boundedText(value.content, 2000, "memory_content_required", true) as string,
+    confirmed: true,
   };
 }

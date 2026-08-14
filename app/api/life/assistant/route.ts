@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { draftReflection } from "@/lib/server/lifeOs/reflectionAssistant";
 import { auditLifeOs } from "@/lib/server/lifeOs/audit";
 import { requireLifeViewer } from "@/lib/server/lifeOs/guard";
-import type { ReflectionField } from "@/lib/life-os/contract";
+import { LifeOsInputError, parseAssistantInput } from "@/lib/life-os/contract";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,16 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
-  const answers = (body.answers ?? {}) as Partial<Record<ReflectionField, string>>;
+  // Bounded before it reaches a provider. Everything here is text the person typed moments ago, but
+  // "the person typed it" is a property of the flow, not of the request — an unbounded body would
+  // reach the model just as readily.
+  let answers;
+  try {
+    answers = parseAssistantInput(body);
+  } catch (error) {
+    if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
+    throw error;
+  }
   const outcome = await draftReflection(answers);
   if (!outcome.ok) {
     // A refusal is recorded too — a boundary violation is the single most important thing this

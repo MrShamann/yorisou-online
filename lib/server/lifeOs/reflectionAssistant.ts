@@ -35,7 +35,13 @@ import "server-only";
 
 import { resolvePrivateReflectionProviders } from "@/lib/server/privateAiProviderResolver";
 import { assertAiOutputWithinBoundary, inspectAiOutput } from "@/lib/server/lifeOs/aiBoundary";
-import { REFLECTION_QUESTIONS, type ReflectionField } from "@/lib/life-os/contract";
+import {
+  LIGHT_REFLECTION_QUESTIONS,
+  POSTMORTEM_REFLECTION_QUESTIONS,
+  reflectionQuestionsFor,
+  type ReflectionField,
+  type ReflectionMode,
+} from "@/lib/life-os/contract";
 
 export type ReflectionAnswers = Partial<Record<ReflectionField, string>>;
 
@@ -55,12 +61,58 @@ export type ReflectionDraftOutcome =
 const SYSTEM = "Return only valid JSON.";
 
 /**
+ * The questions only the deep postmortem asks — what was wanted, what was known, what options
+ * existed, what was decided. Derived by diffing the two sets rather than listed again here, because a
+ * hand-kept copy drifts the first time a question moves between them.
+ */
+const LIGHT_FIELDS = new Set<string>(
+  LIGHT_REFLECTION_QUESTIONS.flatMap((question) => question.fields.map((entry) => entry.field)),
+);
+const POSTMORTEM_ONLY_FIELDS = POSTMORTEM_REFLECTION_QUESTIONS.flatMap((question) =>
+  question.fields.map((entry) => entry.field),
+).filter((field) => !LIGHT_FIELDS.has(field));
+
+/**
+ * Which flow these answers came from.
+ *
+ * The mode does not arrive with the request: parseAssistantInput() returns answer fields only, so the
+ * route has no mode to pass. It is recoverable without guessing, because the four postmortem
+ * questions are asked nowhere else — any of them holding text means the person is in the deep flow.
+ * A postmortem answered with only the three shared questions is indistinguishable from a light one
+ * and is read as light, which costs nothing: the answers the light set has no question for are
+ * exactly the ones that were left empty.
+ */
+function modeOf(answers: ReflectionAnswers): ReflectionMode {
+  const deep = POSTMORTEM_ONLY_FIELDS.some((field) => (answers[field] ?? "").trim().length > 0);
+  return deep ? "postmortem" : "light";
+}
+
+/**
+ * One organising instruction per mode. The deep flow separates the decision from what followed, and
+ * that separation is the reason the format exists — a draft that folds them back together reads the
+ * outcome as a verdict on the choice, which is the error the postmortem is built to prevent.
+ */
+const ORGANISING_BY_MODE: Record<ReflectionMode, string> = {
+  light: "書かれたことを、起きた順にそのまま整理してください。",
+  postmortem: "決めたことと、そのあと起きたことは、切り離して整理してください。",
+};
+
+/**
  * The prompt. Written to make the prohibited outputs hard to produce rather than merely disallowed:
  * it states the person's words are the subject, forbids adding facts, and asks for a question rather
  * than a conclusion.
+ *
+ * Organised by the questions of the mode the person is actually in. Walking the light set for every
+ * request dropped four of a postmortem's seven answers before the call was made: what was wanted,
+ * what was known at the time, the options that existed and the decision taken have no light question
+ * to hang on, so the deepest thing the person wrote never reached the provider and the draft came
+ * back built from the three shared answers.
  */
-function prompt(answers: ReflectionAnswers): string {
-  const written = REFLECTION_QUESTIONS.flatMap((q) =>
+function prompt(answers: ReflectionAnswers, mode: ReflectionMode): string {
+  // Widened from the two readonly question sets: only the prompt and the field names are read here.
+  const questions: readonly { prompt: string; fields: readonly { field: string }[] }[] =
+    reflectionQuestionsFor(mode);
+  const written = questions.flatMap((q) =>
     q.fields.map((f) => ({ q: q.prompt, a: (answers[f.field as ReflectionField] ?? "").trim() })),
   ).filter((entry) => entry.a.length > 0);
   return [
@@ -68,6 +120,8 @@ function prompt(answers: ReflectionAnswers): string {
     "",
     "してよいこと: 書かれた内容をそのままの意味で整理する / 読みやすく言い換える / 続きを考えるための問いを一つ添える。",
     "してはいけないこと: 診断する / 性格を判断する / 「あなたは〜な人です」と断定する / 心理的な結論を出す / 書かれていない事実を足す / 助言や指示をする。",
+    "",
+    ORGANISING_BY_MODE[mode],
     "",
     "利用者が書いたこと:",
     ...written.map((entry) => `- ${entry.q} → ${entry.a}`),
@@ -98,7 +152,7 @@ export async function draftReflection(answers: ReflectionAnswers): Promise<Refle
   const routes = resolvePrivateReflectionProviders();
   if (routes.length === 0) return { ok: false, reason: "assistant_unavailable" };
 
-  const body = prompt(answers);
+  const body = prompt(answers, modeOf(answers));
   for (const route of routes) {
     try {
       const response = await fetch(route.endpoint, {

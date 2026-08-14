@@ -5,7 +5,8 @@ import Link from "next/link";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { lifeOsAccess } from "@/lib/life-os/access";
 import { lifeTimeline, type TimelineEntry } from "@/lib/server/lifeOs/timeline";
-import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId } from "@/lib/yorisou/today/currentStateCheckIn";
+import { REFLECTION_MODE_LABELS } from "@/lib/life-os/contract";
+import { stateDetailLine, stateTagLine } from "../StateHistory";
 import SignInRequired from "../SignInRequired";
 
 export const metadata: Metadata = {
@@ -30,17 +31,42 @@ const KIND_LABEL: Record<TimelineEntry["kind"], string> = {
   experience: "経験",
 };
 
-function line(entry: TimelineEntry): string {
-  if (entry.kind === "current_state") {
-    return entry.record.state_tags
-      .map((tag) => labelForState(tag as StateOptionId) || labelForIntent(tag as IntentOptionId) || "")
-      .filter(Boolean)
-      .join(" / ");
+/**
+ * What kind of record this is — and for a reflection, which of the two flows wrote it.
+ *
+ * The mode is stored on the row since 202608160001, so the list can stop calling both the same
+ * thing. It says which questions were asked, not which entry is worth more: a postmortem is a
+ * different act from a light reflection, never a better one.
+ *
+ * A mode this build has no label for falls back to the plain kind rather than throwing — a migration
+ * can reach the database before the code that knows what it added reaches the browser.
+ */
+function kindLabel(entry: TimelineEntry): string {
+  if (entry.kind === "reflection") {
+    return REFLECTION_MODE_LABELS[entry.record.mode]?.title ?? KIND_LABEL.reflection;
   }
+  return KIND_LABEL[entry.kind];
+}
+
+function line(entry: TimelineEntry): string {
+  if (entry.kind === "current_state") return stateTagLine(entry.record);
   if (entry.kind === "goal") return entry.record.title;
   if (entry.kind === "reflection") return entry.record.what_happened;
   if (entry.kind === "memory") return entry.record.content;
   return entry.record.title ?? entry.record.situation ?? "";
+}
+
+/**
+ * The rest of what a state record holds: mood and energy, then anything written alongside them.
+ *
+ * The tags alone were all this list showed, which left a moment someone had described in their own
+ * words looking identical to a two-tap check-in. Same detail わたしの記録 shows, same wording.
+ */
+function stateLines(entry: TimelineEntry): string[] {
+  if (entry.kind !== "current_state") return [];
+  return [stateDetailLine(entry.record), entry.record.situation, entry.record.reflection].filter(
+    (part): part is string => Boolean(part && part.trim()),
+  );
 }
 
 function day(at: string): string {
@@ -74,16 +100,29 @@ export default async function LifeTimelinePage() {
         </p>
       ) : (
         <ol className="mt-7 divide-y divide-[var(--pxr-border-subtle)] border-y border-[var(--pxr-border-subtle)]">
-          {entries.map((entry) => (
-            <li key={`${entry.kind}:${entry.id}`} className="py-4">
-              <p className="text-[12px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
-                {day(entry.at)} · {KIND_LABEL[entry.kind]}
-              </p>
-              <p className="mt-1 line-clamp-2 text-[16px] leading-[1.7] text-[var(--pxr-text-primary)]">
-                {line(entry)}
-              </p>
-            </li>
-          ))}
+          {entries.map((entry) => {
+            const headline = line(entry);
+            return (
+              <li key={`${entry.kind}:${entry.id}`} className="py-4">
+                <p className="text-[12px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+                  {day(entry.at)} · {kindLabel(entry)}
+                </p>
+                {headline && (
+                  <p className="mt-1 line-clamp-2 text-[16px] leading-[1.7] text-[var(--pxr-text-primary)]">
+                    {headline}
+                  </p>
+                )}
+                {stateLines(entry).map((text, index) => (
+                  <p
+                    key={index}
+                    className="mt-1 line-clamp-2 text-[14px] leading-[1.9] text-[var(--pxr-text-secondary)]"
+                  >
+                    {text}
+                  </p>
+                ))}
+              </li>
+            );
+          })}
         </ol>
       )}
 

@@ -14,23 +14,22 @@ import "server-only";
 // migration header for why that resolves the annex's "pseudonymized, not deleted" rule without an
 // exception.
 //
-// DELIVERY CLASS: ASYNCHRONOUS (best-effort), for every event this module writes today.
+// TWO DELIVERY CLASSES NOW EXIST, AND THIS MODULE IMPLEMENTS ONLY ONE OF THEM.
 //
-// An audit write that throws would mean a person loses the reflection they just typed because the
-// ops trace was unavailable — trading the thing that matters for the record of it. So every write
-// here swallows its own errors. A dropped audit row is invisible; that is a real trade-off, stated
-// rather than hidden.
+// ASYNCHRONOUS (this file): the write is attempted after the mutation and its failure is swallowed.
+// A dropped row is invisible. Correct when the mutation is self-evidencing — the row itself is the
+// record, and nothing was destroyed.
 //
-// THIS IS NOT THE RIGHT CLASS FOR EVERY EVENT, AND THAT GAP IS OPEN. Four events carry a
-// user-facing promise that only a transactional record can keep — memory creation, memory deletion,
-// reflection persistence, and any future Life Graph mutation. For those, "the row exists but the
-// audit does not" is a state the product cannot explain to the person it happened to. The decision,
-// the reasoning and the required mechanism are recorded in
-// docs/yorisou/osf1/OSF1_AUDIT_DELIVERY_CLASSES.md. Implementing the transactional class is a
-// schema change (the write must join the RPC's transaction) and is NOT done here.
+// TRANSACTIONAL (NOT this file): the audit insert happens inside the mutation's own SECURITY DEFINER
+// RPC, so either both land or neither does — see 202608160001. Four actions are delivered that way:
+// reflection.created, memory.confirmed, memory.deleted and memory.updated. They are marked in
+// AUDIT_DELIVERY_CLASS below and they must NEVER be passed to auditLifeOs(): the database has
+// already written them, and a second best-effort insert would duplicate a row in an append-only
+// table that has no way to remove it. `assertAsynchronousAction` enforces that at the call site.
 //
-// Until then: every event below is asynchronous, including the four that should not be. Do not read
-// the presence of an audit row as proof, or its absence as proof of absence.
+// The trade-off the transactional class carries is real and deliberate: if the audit table is
+// unavailable, the mutation fails. A person can lose a reflection because its record could not be
+// written. See docs/yorisou/osf1/OSF1_AUDIT_DELIVERY_CLASSES.md.
 
 import { createHash } from "crypto";
 
@@ -44,16 +43,18 @@ export const LIFE_OS_AUDIT_ACTIONS = [
   "yorisou.life.reflection.created",
   "yorisou.life.memory.confirmed",
   "yorisou.life.memory.deleted",
+  "yorisou.life.memory.updated",
+  "yorisou.life.experience.created",
+  "yorisou.life.experience.updated",
   "yorisou.life.assistant.drafted",
   "yorisou.life.assistant.refused",
 ] as const;
 export type LifeOsAuditAction = (typeof LIFE_OS_AUDIT_ACTIONS)[number];
 
 /**
- * The delivery class each action REQUIRES — not what it currently gets.
- *
- * Every action is delivered asynchronously today. The four marked "transactional" are the ones where
- * that is wrong, and this constant is what makes the gap enumerable rather than remembered.
+ * The delivery class each action is delivered with. This is now a statement of fact, not of intent:
+ * every "transactional" entry is written inside its mutation's RPC by 202608160001, and every
+ * "asynchronous" entry is written by auditLifeOs() below.
  */
 export const AUDIT_DELIVERY_CLASS: Record<LifeOsAuditAction, "transactional" | "asynchronous"> = {
   "yorisou.life.context.updated": "asynchronous",
@@ -64,6 +65,10 @@ export const AUDIT_DELIVERY_CLASS: Record<LifeOsAuditAction, "transactional" | "
   "yorisou.life.reflection.created": "transactional",
   "yorisou.life.memory.confirmed": "transactional",
   "yorisou.life.memory.deleted": "transactional",
+  "yorisou.life.memory.updated": "transactional",
+  // Self-evidencing: the card is the record, and neither action destroys anything.
+  "yorisou.life.experience.created": "asynchronous",
+  "yorisou.life.experience.updated": "asynchronous",
   "yorisou.life.assistant.drafted": "asynchronous",
   "yorisou.life.assistant.refused": "asynchronous",
 };
@@ -83,8 +88,17 @@ function config() {
   return { url: url.replace(/\/$/, ""), key };
 }
 
+/** The transactional actions, derived so the two constants cannot drift apart. */
+export const TRANSACTIONAL_AUDIT_ACTIONS = LIFE_OS_AUDIT_ACTIONS.filter(
+  (action) => AUDIT_DELIVERY_CLASS[action] === "transactional",
+);
+
 /**
  * Record one Life OS mutation. Best-effort by design — see the header.
+ *
+ * Refuses a transactional action outright. That is not defensiveness: the database has already
+ * written that row inside the mutation's transaction, and the audit table is append-only, so a
+ * duplicate here could never be cleaned up.
  *
  * `detail` must carry counts, enum values and outcome codes only. Never user text: the database caps
  * its size but cannot tell prose from a status code, so that discipline lives here and in the
@@ -98,6 +112,9 @@ export async function auditLifeOs(input: {
   reason: string;
   detail?: Record<string, string | number | boolean>;
 }): Promise<void> {
+  if (AUDIT_DELIVERY_CLASS[input.action] === "transactional") {
+    throw new Error(`life_os_audit_transactional_action_not_writable_here:${input.action}`);
+  }
   const cfg = config();
   if (!cfg) return; // no store configured (local dev): nothing to write to, and not an error
   try {

@@ -92,7 +92,9 @@ test("memory candidates quote the person, and never invent", () => {
   const candidates = buildMemoryCandidates({
     reflection: {
       id: "r1",
-      what_learned: "先に書き出すと落ち着く",
+      mode: "light",
+      tried: "先に書き出すと落ち着く",
+      decision_made: null,
       next_time: "まず紙に書く",
     },
     goal: { id: "g1", title: "ひとりの時間をつくる" },
@@ -112,9 +114,49 @@ test("memory candidates quote the person, and never invent", () => {
   }
 });
 
+// Both flows must reach the offer. A candidate keyed to a column no flow writes is the same as no
+// candidate at all — `what_learned` was exactly that, and the deep postmortem was left offering
+// nothing built from the decision it exists to record.
+test("each mode offers candidates from the fields its own flow writes", () => {
+  const light = buildMemoryCandidates({
+    reflection: { id: "r1", mode: "light", tried: "先に書き出した", decision_made: null, next_time: "まず紙に書く" },
+  });
+  assert.deepEqual(
+    light.map((candidate) => [candidate.memoryType, candidate.content]),
+    [["experience", "先に書き出した"], ["lesson", "まず紙に書く"]],
+  );
+
+  const postmortem = buildMemoryCandidates({
+    reflection: { id: "r2", mode: "postmortem", tried: null, decision_made: "その場で話すことにした", next_time: "先に時間を確かめる" },
+  });
+  assert.deepEqual(
+    postmortem.map((candidate) => [candidate.memoryType, candidate.content]),
+    [["reflection", "その場で話すことにした"], ["preference", "先に時間を確かめる"]],
+  );
+
+  for (const [candidates, reflectionId] of [[light, "r1"], [postmortem, "r2"]] as const) {
+    for (const candidate of candidates) {
+      // A reason explains the offer. It is never a claim about the person, and it is held to the
+      // same boundary as anything a provider produces.
+      assert.ok(!candidate.reason.includes("あなた"), `reason speaks about the person: ${candidate.reason}`);
+      assert.deepEqual(inspectAiOutput(candidate.reason), [], `reason breaks the boundary: ${candidate.reason}`);
+      assert.equal(candidate.subject?.reflectionId, reflectionId);
+      assert.equal(candidate.digest, memoryDigest(candidate.content));
+      assert.ok(!("id" in candidate));
+    }
+  }
+});
+
 test("empty and absent answers produce no candidate", () => {
   assert.deepEqual(buildMemoryCandidates({}), []);
-  assert.deepEqual(buildMemoryCandidates({ reflection: { id: "r", what_learned: "   ", next_time: null } }), []);
+  assert.deepEqual(
+    buildMemoryCandidates({ reflection: { id: "r", mode: "light", tried: "   ", decision_made: null, next_time: null } }),
+    [],
+  );
+  assert.deepEqual(
+    buildMemoryCandidates({ reflection: { id: "r", mode: "postmortem", tried: null, decision_made: "", next_time: null } }),
+    [],
+  );
   assert.deepEqual(buildMemoryCandidates({ goal: null, reflection: null }), []);
 });
 

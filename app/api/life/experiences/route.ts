@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     });
     await auditLifeOs({
       ownerAccountId: gate.viewer.accountId,
-      action: "yorisou.life.reflection.created",
+      action: "yorisou.life.experience.created",
       entityKind: "experience",
       entityRef: String(row.id),
       reason: "private_draft",

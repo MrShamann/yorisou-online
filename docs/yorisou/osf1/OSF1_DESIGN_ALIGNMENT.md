@@ -15,7 +15,7 @@ That was a mistake of category: it treated them as versions of the same thing.
 | | LIGHT REFLECTION | DEEP POSTMORTEM |
 |---|---|---|
 | Questions | 5 | 7 |
-| Asks | what happened · how it felt · what you tried · what followed · what you take forward | what happened · what you **wanted** · what you **knew** · what you **decided** and why · what followed · what you learned · what you would do next time |
+| Asks | what happened · how it felt · what you tried · what followed · what you take forward | what happened · what you **wanted** · what you **knew** · what **options** you had · what you **decided** · what followed · what you would do next time |
 | Purpose | keep the day before it blurs | separate the **decision** from the **outcome** |
 | When | same day, no distance needed | deliberately, with distance |
 | Entry | `/life/reflect` (default) | `/life/reflect?mode=postmortem` |
@@ -27,10 +27,14 @@ requires knowing what information was available *before* the result arrived. Con
 deep questions on a hard day gets one of two things: an abandoned flow, or a tidy story invented
 after the fact, because reconstructing a past state of mind is real work.
 
-**Storage.** Same table, same columns, no migration. `202608140001` created all eight answer columns
-and `202608150002` added `felt` and `tried`; the light mode writes five, the postmortem writes seven.
-The mode is not stored as a column — the audit event records which flow ran (`reason: light |
-postmortem`), because an all-null postmortem and a light reflection are otherwise indistinguishable.
+**Storage.** Same table, one row per reflection. `202608140001` created the original answer columns,
+`202608150002` added `felt` and `tried`, and `202608160001` added `options_considered` and `mode`;
+the light mode writes five answers, the postmortem seven.
+**Superseded 2026-08-15:** the mode is now a COLUMN (`202608160001`). Carrying it only as an audit
+reason did not survive contact with the code — `parseReflectionInput` returned just the answer
+fields, so `input.mode` was always undefined and every postmortem was recorded as a light
+reflection. The completion package also adds `options_considered`, the postmortem's fourth question,
+which this table did not yet include.
 
 Defined in `lib/life-os/contract.ts` as `LIGHT_REFLECTION_QUESTIONS` and
 `POSTMORTEM_REFLECTION_QUESTIONS`, selected by `reflectionQuestionsFor(mode)`.
@@ -42,7 +46,7 @@ Two consequences of the split were caught while verifying it, and both are fixed
 - signing in from the postmortem link dropped the mode and returned the person to the light flow
   without saying so. `next` now carries `?mode=postmortem` through the round trip.
 
-## 2. Audit event reliability — classes decided, transactional NOT implemented
+## 2. Audit event reliability — classes decided, and now implemented
 
 Full reasoning in **`OSF1_AUDIT_DELIVERY_CLASSES.md`**. In short:
 
@@ -54,11 +58,11 @@ Graph mutation is listed for completeness — **no Life Graph exists**, so there
 **ASYNCHRONOUS is correct** for context, state, goal and assistant events: each is self-evidencing
 and none destroys anything.
 
-**All ten are asynchronous today.** Making the four transactional means moving the audit insert
-inside the mutation RPC — a signature change, a migration, its own Gate 3, and a product decision the
-Founder must make: whether a person should lose a reflection because the audit table was
-unavailable. Recorded, specified, not built. Until then the presence of an audit row is not proof,
-and its absence is not proof of absence.
+**Superseded 2026-08-15 — they are no longer all asynchronous.** The completion package made the
+Founder decision this paragraph was waiting for, in the direction it described: the audit insert now
+happens inside the mutation RPC, and if the audit table is unavailable the mutation fails. Four
+actions are transactional (reflection.created, memory.confirmed, memory.deleted and the new
+memory.updated); the rest remain best-effort. See `OSF1_AUDIT_DELIVERY_CLASSES.md` v1.1.
 
 ## 3. Audit retention — RETENTION_POLICY_TBD
 
@@ -123,3 +127,5 @@ violation discards the whole draft rather than editing it, and is audited as
 ## Version history
 
 - **v1.0 (2026-08-14)** — design alignment review of PR #134.
+- **v1.1 (2026-08-15)** — §1 and §2 marked superseded by the Phase 1 completion package: the mode is
+  a stored column, `options_considered` was added, and the transactional audit class is implemented.

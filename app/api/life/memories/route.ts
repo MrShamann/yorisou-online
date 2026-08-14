@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { confirmMemory, deleteMemory, listMemories } from "@/lib/server/lifeOs/store";
-import { auditLifeOs } from "@/lib/server/lifeOs/audit";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
 import { MEMORY_SOURCES, MEMORY_TYPES, type MemorySource, type MemoryType } from "@/lib/life-os/contract";
 
@@ -55,14 +54,8 @@ export async function POST(request: Request) {
         reflectionId: subject.reflectionId ?? null,
       },
     });
-    await auditLifeOs({
-      ownerAccountId: gate.viewer.accountId,
-      action: "yorisou.life.memory.confirmed",
-      entityKind: "memory",
-      entityRef: id,
-      reason: source,
-      detail: { memory_type: memoryType },
-    });
+    // Audited inside the RPC transaction (202608160001 §4) — confirming a memory is a consent act,
+    // and the record of the agreement must not be able to go missing separately from the agreement.
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
     return lifeApiError(error);
@@ -75,17 +68,12 @@ export async function DELETE(request: Request) {
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "memory_id_required" }, { status: 422 });
   try {
+    // Audited inside the RPC transaction, and only when a row was actually removed — after a hard
+    // delete that audit row is the only remaining evidence the memory existed. A 404 here means
+    // nothing was deleted and nothing was recorded, which is why an id that is not yours cannot be
+    // used to manufacture a deletion record.
     const deleted = await deleteMemory(gate.viewer.accountId, id);
     if (!deleted) return NextResponse.json({ error: "memory_not_found" }, { status: 404 });
-    // Recorded because deletion is the action a person is most entitled to see evidence of. The
-    // audit row holds the id and no content — the content is gone, which is the point.
-    await auditLifeOs({
-      ownerAccountId: gate.viewer.accountId,
-      action: "yorisou.life.memory.deleted",
-      entityKind: "memory",
-      entityRef: id,
-      reason: "user_forgot",
-    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     return lifeApiError(error);

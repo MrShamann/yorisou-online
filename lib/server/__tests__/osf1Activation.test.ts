@@ -10,7 +10,7 @@ import {
   LIFE_OS_PREVIEW_FLAG,
   LIFE_OS_SCHEMA_READY_ENV,
 } from "@/lib/life-os/access";
-import { LIFE_OS_AUDIT_ACTIONS, actorFingerprint } from "@/lib/server/lifeOs/audit";
+import { LIFE_OS_AUDIT_ACTIONS, TRANSACTIONAL_AUDIT_ACTIONS, actorFingerprint, auditLifeOs } from "@/lib/server/lifeOs/audit";
 import {
   LIGHT_REFLECTION_QUESTIONS,
   POSTMORTEM_REFLECTION_QUESTIONS,
@@ -18,13 +18,32 @@ import {
   REFLECTION_MODES,
   REFLECTION_QUESTIONS,
   reflectionQuestionsFor,
+  parseReflectionInput,
 } from "@/lib/life-os/contract";
 import { AUDIT_DELIVERY_CLASS } from "@/lib/server/lifeOs/audit";
 
 // OSF-1 ACTIVATION PACKAGE — the properties this package must hold, pinned.
 
 const API_DIR = "app/api/life";
-const routeFiles = readdirSync(API_DIR).map((d) => join(API_DIR, d, "route.ts")).filter((f) => statSync(f).isFile());
+
+/**
+ * EVERY route under app/api/life, at any depth.
+ *
+ * The previous version listed only the top level, so a dynamic child like
+ * app/api/life/memories/[id]/route.ts was silently exempt from every assertion below — the routes
+ * that most need checking are exactly the ones that take an id from the caller. It also called
+ * statSync on a path that need not exist, which throws at module load rather than reporting.
+ */
+function routesUnder(dir: string): string[] {
+  const found: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) found.push(...routesUnder(path));
+    else if (entry === "route.ts") found.push(path);
+  }
+  return found;
+}
+const routeFiles = routesUnder(API_DIR);
 
 // ── Feature flag: four states, default OFF ───────────────────────────────────
 
@@ -104,12 +123,59 @@ test("the old action-switch route is gone — one write path only", () => {
 
 // ── Audit ────────────────────────────────────────────────────────────────────
 
-test("every mutating route emits an audit event", () => {
+test("every mutating route is audited — by the route, or by the RPC it calls", () => {
+  // The rule is "every mutation is audited", NOT "every route calls auditLifeOs". Since 202608160001
+  // the three transactional actions are written inside the mutation RPC, so the routes that perform
+  // them must NOT call auditLifeOs — a second best-effort write would duplicate a row in an
+  // append-only table. This test allows either mechanism and demands one of them.
+  const TRANSACTIONAL_ROUTES = ["/reflections/", "/memories/"];
   for (const file of routeFiles) {
     const source = readFileSync(file, "utf8");
     if (!/mutation: true/.test(source)) continue;
     if (file.includes("/timeline/")) continue; // read-only
+    if (TRANSACTIONAL_ROUTES.some((fragment) => file.includes(fragment))) {
+      assert.ok(
+        !/await auditLifeOs\(/.test(source),
+        `${file} performs a transactional mutation and must not also write the audit row`,
+      );
+      continue;
+    }
     assert.match(source, /auditLifeOs\(/, `${file} mutates without an audit event`);
+  }
+});
+
+test("a transactional action cannot be written by the asynchronous writer", async () => {
+  // The guarantee is enforced, not documented: passing a transactional action to auditLifeOs throws,
+  // because the database has already written that row and the table cannot have one removed.
+  await assert.rejects(
+    () => auditLifeOs({
+      ownerAccountId: "acct_1",
+      action: "yorisou.life.memory.deleted",
+      entityKind: "memory",
+      reason: "x",
+    }),
+    /transactional_action_not_writable_here/,
+  );
+  // And an asynchronous one is accepted (no store configured in tests, so it is a no-op).
+  await auditLifeOs({
+    ownerAccountId: "acct_1",
+    action: "yorisou.life.goal.created",
+    entityKind: "goal",
+    reason: "user_created",
+  });
+});
+
+test("the four transactional actions are exactly the ones the completion package names", () => {
+  assert.deepEqual([...TRANSACTIONAL_AUDIT_ACTIONS].sort(), [
+    "yorisou.life.memory.confirmed",
+    "yorisou.life.memory.deleted",
+    "yorisou.life.memory.updated",
+    "yorisou.life.reflection.created",
+  ]);
+  // Every one of them must actually be written inside the migration that claims to do it.
+  const migration = readFileSync("supabase/migrations/202608160001_osf1_phase1_completion.sql", "utf8");
+  for (const action of TRANSACTIONAL_AUDIT_ACTIONS) {
+    assert.ok(migration.includes(action), `${action} is declared transactional but no RPC writes it`);
   }
 });
 
@@ -167,12 +233,23 @@ test("only the postmortem separates the decision from the outcome", () => {
   // this test is to compare one mode's set against the other's.
   const light: string[] = LIGHT_REFLECTION_QUESTIONS.flatMap((q) => q.fields.map((f) => f.field));
   const deep: string[] = POSTMORTEM_REFLECTION_QUESTIONS.flatMap((q) => q.fields.map((f) => f.field));
-  for (const decisionField of ["goal_at_the_time", "information_at_hand", "decision_made", "why"]) {
+  for (const decisionField of ["goal_at_the_time", "information_at_hand", "options_considered", "decision_made"]) {
     assert.ok(deep.includes(decisionField), `the postmortem must ask ${decisionField}`);
     assert.ok(!light.includes(decisionField), `${decisionField} belongs to the postmortem, not the light flow`);
   }
+  // options_considered is the one that makes it a postmortem rather than a longer diary: a decision
+  // can only be judged against the alternatives that existed at the time.
+  assert.ok(deep.includes("options_considered"));
   // And the light flow keeps the two questions the postmortem does not ask.
   assert.ok(light.includes("felt") && light.includes("tried"));
+  // The completion package fixes the deep flow at exactly seven questions, one field per screen.
+  assert.equal(POSTMORTEM_REFLECTION_QUESTIONS.length, 7);
+  assert.deepEqual(deep, [
+    "what_happened", "goal_at_the_time", "information_at_hand", "options_considered",
+    "decision_made", "what_followed", "next_time",
+  ]);
+  // `why` and `what_learned` are retained columns that no flow asks any more. Storable, never asked.
+  assert.ok(!deep.includes("why") && !deep.includes("what_learned"));
 });
 
 test("both modes write the same table, and every field they ask has a column", () => {
@@ -201,9 +278,9 @@ test("the postmortem entry point survives the sign-in round trip and is not misc
   assert.match(hub, /7つの問い/);
 });
 
-test("the four events that require transactional audit are declared", () => {
-  // Declared as REQUIRED, not as delivered — every event is asynchronous today. The point is that
-  // the gap is enumerable from the source. See docs/yorisou/osf1/OSF1_AUDIT_DELIVERY_CLASSES.md.
+test("the transactional class is declared, and it is now delivered rather than pending", () => {
+  // These are no longer a statement of intent. 202608160001 moved the audit insert inside each
+  // mutation RPC, so the class below is what actually happens.
   const transactional = Object.entries(AUDIT_DELIVERY_CLASS)
     .filter(([, cls]) => cls === "transactional")
     .map(([action]) => action)
@@ -211,6 +288,7 @@ test("the four events that require transactional audit are declared", () => {
   assert.deepEqual(transactional, [
     "yorisou.life.memory.confirmed",
     "yorisou.life.memory.deleted",
+    "yorisou.life.memory.updated",
     "yorisou.life.reflection.created",
   ]);
   // Every declared action has a class — a new event cannot be added without deciding.
@@ -303,4 +381,61 @@ test("the assistant's prompt forbids the four prohibited outputs by name", () =>
   for (const forbidden of ["診断", "性格を判断", "断定", "心理的な結論"]) {
     assert.ok(source.includes(forbidden), `the prompt must name ${forbidden} as prohibited`);
   }
+});
+
+// ── The mode passthrough, pinned end to end ─────────────────────────────────
+//
+// This is the regression 202608160001 exists to fix, and nothing pinned it. The mode used to be
+// dropped by parseReflectionInput, so `input.mode` was always undefined and every postmortem was
+// recorded as a light reflection. A test on the parser alone would not have caught it either — the
+// break was in the glue between the parser and the RPC payload. So this drives the real store
+// function and inspects the body that would go over the wire.
+
+test("a postmortem reaches the database AS a postmortem", async () => {
+  const previous = { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_SERVICE_ROLE_KEY };
+  const realFetch = globalThis.fetch;
+  process.env.SUPABASE_URL = "http://life-os.test";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "test-key";
+  const sent: Record<string, unknown>[] = [];
+  globalThis.fetch = (async (_url: string, init: { body: string }) => {
+    sent.push(JSON.parse(init.body));
+    return { ok: true, json: async () => "00000000-0000-0000-0000-000000000001" };
+  }) as unknown as typeof fetch;
+  try {
+    const { createReflection } = await import("@/lib/server/lifeOs/store");
+    const parsed = parseReflectionInput({
+      mode: "postmortem",
+      what_happened: "説明がうまく伝わらなかった",
+      goal_at_the_time: "納得してもらいたかった",
+      information_at_hand: "相手が急いでいることは知っていた",
+      options_considered: "後日にする / その場で短く話す",
+      decision_made: "その場で話した",
+    });
+    // The parser must carry it...
+    assert.equal(parsed.mode, "postmortem");
+    await createReflection("acct_test", parsed);
+    // ...and the payload that reaches the RPC must too. This is the link that was broken.
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].p_mode, "postmortem", "the RPC was told the wrong flow wrote this row");
+    assert.equal(sent[0].p_options_considered, "後日にする / その場で短く話す");
+    // Retained columns are never invented by the write path.
+    assert.equal(sent[0].p_why, null);
+    assert.equal(sent[0].p_what_learned, null);
+    // The audit detail counts ANSWERS, not the mode and not the experience link.
+    assert.deepEqual(sent[0].p_audit_detail, { answered: 5 });
+
+    // And the default is light, for a body that names no mode at all.
+    sent.length = 0;
+    await createReflection("acct_test", parseReflectionInput({ what_happened: "書いた" }));
+    assert.equal(sent[0].p_mode, "light");
+    assert.deepEqual(sent[0].p_audit_detail, { answered: 1 });
+  } finally {
+    globalThis.fetch = realFetch;
+    process.env.SUPABASE_URL = previous.url;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = previous.key;
+  }
+});
+
+test("an unknown reflection mode is refused rather than quietly treated as light", () => {
+  assert.throws(() => parseReflectionInput({ what_happened: "書いた", mode: "deep" }), /reflection_mode_invalid/);
 });

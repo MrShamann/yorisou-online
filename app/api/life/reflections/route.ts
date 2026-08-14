@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { createReflection, getReflection, listReflections } from "@/lib/server/lifeOs/store";
 import { buildMemoryCandidates } from "@/lib/server/lifeOs/aiBoundary";
-import { auditLifeOs } from "@/lib/server/lifeOs/audit";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
-import { LifeOsInputError, parseReflectionInput, REFLECTION_FIELDS } from "@/lib/life-os/contract";
+import { LifeOsInputError, parseReflectionInput } from "@/lib/life-os/contract";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +27,10 @@ export async function POST(request: Request) {
   }
   try {
     const input = parseReflectionInput(body);
+    // NO auditLifeOs HERE. `yorisou.life.reflection.created` is TRANSACTIONAL as of 202608160001:
+    // the audit row is written inside the RPC's own transaction, with the mode as its reason. A
+    // best-effort write on top would duplicate a row in an append-only table.
     const id = await createReflection(gate.viewer.accountId, input);
-    await auditLifeOs({
-      ownerAccountId: gate.viewer.accountId,
-      action: "yorisou.life.reflection.created",
-      entityKind: "reflection",
-      entityRef: id,
-      reason: input.mode === "postmortem" ? "postmortem" : "light",
-      // A count of answered questions — never the answers.
-      detail: { answered: REFLECTION_FIELDS.filter((f) => (input[f.field] ?? "") !== "").length, about_experience: Boolean(input.experienceId) },
-    });
     const reflection = await getReflection(gate.viewer.accountId, id);
     return NextResponse.json(
       { id, memoryCandidates: reflection ? buildMemoryCandidates({ reflection }) : [] },
