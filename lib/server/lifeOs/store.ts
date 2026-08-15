@@ -13,6 +13,7 @@ import "server-only";
 import {
   memoryDigest,
 } from "@/lib/server/lifeOs/aiBoundary";
+import { REFLECTION_FIELDS } from "@/lib/life-os/contract";
 import type {
   CurrentStateInput,
   CurrentStateRecord,
@@ -202,20 +203,36 @@ export async function getGoal(ownerAccountId: string, goalId: string): Promise<G
 // ── Reflection ───────────────────────────────────────────────────────────────
 
 const REFLECTION_COLUMNS =
-  "id,experience_id,what_happened,goal_at_the_time,information_at_hand,decision_made,why,what_followed,what_learned,next_time,created_at";
+  "id,experience_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at";
 
+/**
+ * Create a reflection. The RPC writes the audit row INSIDE this transaction (202608160001 §3), so
+ * there is no second call here and no `auditLifeOs` on the route — a best-effort write on top would
+ * double-enter an append-only table that has no way to remove the duplicate.
+ */
 export async function createReflection(ownerAccountId: string, input: LifeReflectionInput): Promise<string> {
   return rpc<string>("yorisou_osf1_reflection_create", {
     p_owner_account_id: ownerAccountId,
     p_experience_id: input.experienceId ?? null,
+    p_mode: input.mode ?? "light",
     p_what_happened: input.what_happened,
+    p_felt: input.felt ?? null,
+    p_tried: input.tried ?? null,
+    p_what_followed: input.what_followed ?? null,
+    p_next_time: input.next_time ?? null,
+    // Written by the deep postmortem mode; left null by the light flow. See contract.ts.
     p_goal_at_the_time: input.goal_at_the_time ?? null,
     p_information_at_hand: input.information_at_hand ?? null,
+    p_options_considered: input.options_considered ?? null,
     p_decision_made: input.decision_made ?? null,
-    p_why: input.why ?? null,
-    p_what_followed: input.what_followed ?? null,
-    p_what_learned: input.what_learned ?? null,
-    p_next_time: input.next_time ?? null,
+    // Retained columns: no flow asks them any more, and nothing may silently invent a value.
+    p_why: null,
+    p_what_learned: null,
+    p_audit_detail: {
+      // Answered QUESTIONS only. Counting Object.values(input) swept in `mode` and `experienceId`,
+      // which are not answers — every reflection reported at least one more than it had.
+      answered: REFLECTION_FIELDS.filter((f) => ((input[f.field] ?? "") as string).trim().length > 0).length,
+    },
   });
 }
 
@@ -246,7 +263,7 @@ export async function getReflection(ownerAccountId: string, reflectionId: string
 
 // ── Memory ───────────────────────────────────────────────────────────────────
 
-const MEMORY_COLUMNS = "id,memory_type,content,source,user_confirmed,created_at";
+const MEMORY_COLUMNS = "id,memory_type,content,source,user_confirmed,created_at,updated_at";
 
 /**
  * The only write path for a memory, and it is a CONFIRM, not a create.
@@ -272,6 +289,7 @@ export async function confirmMemory(
   const content = input.content.trim();
   if (input.digest !== memoryDigest(content)) throw new Error("osf1_memory_confirmation_mismatch");
   return rpc<string>("yorisou_osf1_memory_confirm", {
+    // The audit row is written inside this RPC's transaction — see createReflection's note.
     p_owner_account_id: ownerAccountId,
     p_memory_type: input.memoryType,
     p_content: content,
@@ -288,6 +306,27 @@ export async function deleteMemory(ownerAccountId: string, memoryId: string): Pr
   return rpc<boolean>("yorisou_osf1_memory_delete", {
     p_owner_account_id: ownerAccountId,
     p_memory_id: memoryId,
+  });
+}
+
+/**
+ * Edit the sentence of a memory that already exists. Returns false when the id is not this person's,
+ * which is the same answer as "no such memory" — a caller must not be able to tell the difference.
+ *
+ * Only the content changes. The type, the source and every subject link are fixed for the life of
+ * the row; the RPC does not accept them and the database would not apply them if it did.
+ *
+ * The digest is recomputed here from the text that will be stored, and the RPC recomputes it again
+ * before writing. It is an integrity check on the write path — NOT proof that a person read the
+ * sentence. The consent guarantee is `confirmed: true`, checked at the route before this is reached.
+ */
+export async function updateMemory(ownerAccountId: string, memoryId: string, content: string): Promise<boolean> {
+  const next = content.trim();
+  return rpc<boolean>("yorisou_osf1_memory_update", {
+    p_owner_account_id: ownerAccountId,
+    p_memory_id: memoryId,
+    p_content: next,
+    p_confirmation_digest: memoryDigest(next),
   });
 }
 

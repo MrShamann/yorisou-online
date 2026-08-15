@@ -15,7 +15,7 @@ import {
   type StateOptionId,
 } from "@/lib/yorisou/today/currentStateCheckIn";
 import { currentStateTagsFromCheckIn } from "@/lib/life-os/contract";
-import { lifeOsPost } from "@/lib/life-os/client";
+import { lifePost } from "@/lib/life-os/client";
 
 // 今の気配を見る — two bounded questions, then a reflection of exactly what was chosen.
 //
@@ -62,8 +62,7 @@ export default function CurrentStateCheckIn() {
     writeCurrentStateCheckIn(state as StateOptionId, id);
     setStep("done");
 
-    const result = await lifeOsPost<{ id: string }>({
-      action: "create_current_state",
+    const result = await lifePost<{ id: string }>("state", {
       record: {
         stateTags: currentStateTagsFromCheckIn(state as StateOptionId, id),
         source: "today_check_in",
@@ -82,7 +81,7 @@ export default function CurrentStateCheckIn() {
   async function saveNote() {
     if (!recordId || note.trim().length === 0) return;
     setNoteState("saving");
-    const result = await lifeOsPost({ action: "save_state_reflection", id: recordId, reflection: note });
+    const result = await lifePost("state", { id: recordId, reflection: note });
     setNoteState(result.ok ? "saved" : "failed");
   }
 

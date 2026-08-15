@@ -204,9 +204,20 @@ export function memoryDigest(content: string): string {
  *
  * Nothing here writes to the database. A candidate has no id because it has no row: it exists in the
  * response body and in the dialog, and disappears if the person does not confirm.
+ *
+ * ONLY COLUMNS A FLOW ACTUALLY WRITES. The reflection candidate used to be keyed to `what_learned`,
+ * which no flow asks any more — createReflection sends null for it — so it could never appear, and
+ * the deep postmortem's own material was offered nowhere. The fields below are the ones the two
+ * flows write, and each mode is read through the question it was actually asked: the same column
+ * means different things depending on which flow filled it.
+ *
+ * WHAT IS DELIBERATELY NOT OFFERED. `goal_at_the_time` is what the person wanted BACK THEN; storing
+ * it as a `goal` would turn a past want into a standing direction the person never stated.
+ * `information_at_hand` and `options_considered` only mean anything beside the decision they
+ * explain, and `felt` is a moment, not something to carry forward as a fact about oneself.
  */
 export function buildMemoryCandidates(input: {
-  reflection?: Pick<LifeReflection, "id" | "what_learned" | "next_time"> | null;
+  reflection?: Pick<LifeReflection, "id" | "mode" | "tried" | "decision_made" | "next_time"> | null;
   goal?: Pick<Goal, "id" | "title"> | null;
 }): MemoryCandidate[] {
   const candidates: MemoryCandidate[] = [];
@@ -230,18 +241,30 @@ export function buildMemoryCandidates(input: {
   };
 
   if (input.reflection) {
-    push(
-      "reflection",
-      input.reflection.what_learned,
-      `${MEMORY_TYPE_LABELS.reflection}で書いた「気づいたこと」をそのまま残せます。`,
-      { reflectionId: input.reflection.id },
-    );
-    push(
-      "preference",
-      input.reflection.next_time,
-      "次にどうしたいか書いたことを、やり方として残せます。",
-      { reflectionId: input.reflection.id },
-    );
+    const reflection = input.reflection;
+    const subject = { reflectionId: reflection.id };
+    if (reflection.mode === "postmortem") {
+      // The decision is what the deep flow exists to keep — the sentence that says what was chosen,
+      // readable later without the outcome attached to it.
+      push(
+        "reflection",
+        reflection.decision_made,
+        `${MEMORY_TYPE_LABELS.reflection}で書いた「決めたこと」をそのまま残せます。`,
+        subject,
+      );
+      // Question 7 asks what you would DO next time: a way of doing, not a conclusion.
+      push("preference", reflection.next_time, "次にどうしたいか書いたことを、やり方として残せます。", subject);
+    } else {
+      push("experience", reflection.tried, `試したことを、${MEMORY_TYPE_LABELS.experience}として残せます。`, subject);
+      // Question 5 asks what you can carry FORWARD, which is a conclusion — what `lesson` is for, and
+      // the one kind of memory a reflection most often produces.
+      push(
+        "lesson",
+        reflection.next_time,
+        `次に活かせそうだと書いたことを、${MEMORY_TYPE_LABELS.lesson}として残せます。`,
+        subject,
+      );
+    }
   }
 
   if (input.goal) {

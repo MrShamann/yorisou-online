@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { listMemories } from "@/lib/server/lifeOs/store";
@@ -39,6 +40,13 @@ export default async function MemoriesPage() {
         あなたが「覚えておく」と決めたものだけが、ここにあります。忘れると、消えます。
       </p>
       <MemoryList initialMemories={memories} />
+
+      <Link
+        href="/life"
+        className="mt-9 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+      >
+        わたしの記録へ
+      </Link>
     </main>
   );
 }

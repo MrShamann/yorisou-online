@@ -4,11 +4,12 @@ import Link from "next/link";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { latestCurrentStateRecord, listGoals, listMemories, listReflections } from "@/lib/server/lifeOs/store";
-import { GOAL_STATUS_LABELS, type CurrentStateRecord, type Goal } from "@/lib/life-os/contract";
-import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId } from "@/lib/yorisou/today/currentStateCheckIn";
+import { GOAL_STATUS_LABELS, type Goal } from "@/lib/life-os/contract";
 import SignInRequired from "./SignInRequired";
 import { INTERNAL_HANDLING } from "@/lib/life-os/privacyCopy";
 import { lifeOsAccess } from "@/lib/life-os/access";
+import ReturnSection from "./ReturnSection";
+import StateHistory, { stateDetailLine, stateTagLine } from "./StateHistory";
 
 export const metadata: Metadata = {
   title: "わたしの記録 | Yorisou",
@@ -30,14 +31,9 @@ export const dynamic = "force-dynamic";
 // Everything here renders only what actually exists. A section with nothing in it says so in one
 // line and offers the action, rather than displaying an empty frame.
 
-function stateSummary(record: CurrentStateRecord): string {
-  // The tags are the Today check-in's own option ids; render them with the labels that flow already
-  // uses so the same choice never appears under two different names.
-  return record.state_tags
-    .map((tag) => labelForState(tag as StateOptionId) || labelForIntent(tag as IntentOptionId) || tag)
-    .filter(Boolean)
-    .join(" / ");
-}
+// The state lines come from StateHistory so the record shown here and the same record shown in the
+// list below it are worded identically — the tags carry the Today check-in's own labels, so one
+// choice never appears under two different names.
 
 function goalLine(goal: Goal): string {
   return `${goal.title}（${GOAL_STATUS_LABELS[goal.status]}）`;
@@ -65,6 +61,8 @@ export default async function LifePage() {
     listReflections(accountId, 3).catch(() => []),
     listMemories(accountId, 3).catch(() => []),
   ]);
+  const stateTags = currentState ? stateTagLine(currentState) : "";
+  const stateDetail = currentState ? stateDetailLine(currentState) : null;
 
   return (
     <main className="mx-auto flex w-full max-w-[var(--pxr-content-width)] flex-col px-5 pb-28 pt-10">
@@ -74,6 +72,9 @@ export default async function LifePage() {
         <br />
         ほかの利用者に表示されません。
       </h1>
+      {/* PHASE F — what they left, shown before anything asks them to do something new. */}
+      <ReturnSection accountId={accountId} />
+
       {/* The separate sentence, not a qualifier tucked into the heading. */}
       <p className="mt-3 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">{INTERNAL_HANDLING}</p>
 
@@ -81,9 +82,12 @@ export default async function LifePage() {
         <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">いまの状態</h2>
         {currentState ? (
           <>
-            <p className="mt-2 text-[17px] leading-[1.7] text-[var(--pxr-text-primary)]">
-              {stateSummary(currentState)}
-            </p>
+            {stateTags && (
+              <p className="mt-2 text-[17px] leading-[1.7] text-[var(--pxr-text-primary)]">{stateTags}</p>
+            )}
+            {stateDetail && (
+              <p className="mt-1 text-[14px] leading-[1.9] text-[var(--pxr-text-secondary)]">{stateDetail}</p>
+            )}
             {currentState.reflection && (
               <p className="mt-2 whitespace-pre-wrap text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
                 {currentState.reflection}
@@ -95,6 +99,9 @@ export default async function LifePage() {
             まだ記録はありません。
           </p>
         )}
+        {/* The moments before this one — a record of what was said, never a shape to read a direction
+            into. Renders nothing when the latest record is the only one. */}
+        <StateHistory accountId={accountId} excludeId={currentState?.id ?? null} />
         <Link
           href="/today/check-in"
           className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
@@ -145,11 +152,19 @@ export default async function LifePage() {
             まだありません。
           </p>
         )}
+        {/* Two entry points, named by what they ask of you rather than by depth ranking — a
+            postmortem is not a "better" reflection, it is a different one that needs distance. */}
         <Link
           href="/life/reflect"
-          className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+          className="mt-3 flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
         >
-          振り返りを書く
+          かるく振り返る（5つの問い）
+        </Link>
+        <Link
+          href="/life/reflect?mode=postmortem"
+          className="flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+        >
+          じっくり振り返る（7つの問い）
         </Link>
       </section>
 
@@ -192,6 +207,16 @@ export default async function LifePage() {
           覚えていることを見る
         </Link>
       </section>
+
+      {/* The way into これまで that is always there. 前にいたところ carries one too, but it renders
+          nothing until there is something to come back to — so without this, the person with the
+          least to go on is the one who cannot reach it. */}
+      <Link
+        href="/life/timeline"
+        className="mt-10 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+      >
+        これまでを見る
+      </Link>
     </main>
   );
 }

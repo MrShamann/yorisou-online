@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { listGoals } from "@/lib/server/lifeOs/store";
@@ -42,6 +43,14 @@ export default async function GoalsPage() {
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
       <GoalsPanel initialGoals={goals} />
+      {/* The way back, in the same words これまで uses — this screen was reached from わたしの記録 and
+          had no link returning to it. */}
+      <Link
+        href="/life"
+        className="mt-9 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+      >
+        わたしの記録へ
+      </Link>
     </main>
   );
 }

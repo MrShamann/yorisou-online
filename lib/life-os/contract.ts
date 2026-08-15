@@ -106,22 +106,96 @@ export type Goal = {
 // ── Reflection (user-authored, seven questions) ───────────────────────────────
 
 /**
- * The guided reflection: seven questions, on seven screens.
+ * TWO REFLECTION MODES, AND WHY BOTH EXIST.
  *
- * Only the first is required. A reflection someone stopped halfway through is still theirs to keep,
- * and requiring all seven would make a quiet flow into a form — the thing the UX principles call
- * "no dashboard feeling".
+ * A previous pass replaced the seven-question flow with a five-question one. That was wrong: it
+ * treated them as versions of the same thing, when they are two different acts.
  *
- * Question 4 carries two inputs — the decision and the reason for it — because splitting them into
- * an eighth screen would make the flow longer than the package specifies, and asking "why" without
- * the decision still on the page loses the thing it refers to.
+ *   LIGHT REFLECTION (5)  — what happened, how it felt, what you tried, what followed, what you take
+ *                           forward. Short enough to finish on the day it happened, and it asks
+ *                           nothing you need distance to answer.
+ *
+ *   DEEP POSTMORTEM (7)   — the decision-quality model: what you WANTED, what you KNEW at the time,
+ *                           what you DECIDED and why, what followed, what you learned. It separates
+ *                           the decision from the outcome, which is the only way to tell a bad call
+ *                           from bad luck. It asks you to reconstruct a past state of mind, which is
+ *                           real work and needs distance — so it is a deliberate choice, never the
+ *                           default.
+ *
+ * The distinction matters because collapsing them loses the postmortem entirely: the light flow
+ * cannot separate decision from outcome, and a person asked the deep questions on a hard day will
+ * either abandon the flow or invent a tidy story. Same table, same columns, two entry points.
  */
-export const REFLECTION_QUESTIONS = [
+export const REFLECTION_MODES = ["light", "postmortem"] as const;
+export type ReflectionMode = (typeof REFLECTION_MODES)[number];
+
+export const REFLECTION_MODE_LABELS: Record<ReflectionMode, { title: string; blurb: string }> = {
+  light: { title: "かるく振り返る", blurb: "5つの問い。今日のことを、そのまま書きとめます。" },
+  postmortem: { title: "じっくり振り返る", blurb: "7つの問い。決めたことと、その結果を分けて考えます。" },
+};
+
+/** LIGHT — five questions, one field per screen. The default. */
+export const LIGHT_REFLECTION_QUESTIONS = [
+  {
+    prompt: "何がありましたか。",
+    help: "起きたことを、覚えている範囲で。",
+    required: true,
+    fields: [{ field: "what_happened", label: "あったこと", required: true }],
+  },
+  {
+    prompt: "その時、どう感じましたか。",
+    help: "うまく言葉にならなくても、そのままで。",
+    required: false,
+    fields: [{ field: "felt", label: "感じたこと", required: false }],
+  },
+  {
+    prompt: "何を試しましたか。",
+    help: "してみたこと、してみなかったこと、どちらでも。",
+    required: false,
+    fields: [{ field: "tried", label: "試したこと", required: false }],
+  },
+  {
+    prompt: "そのあと、何が起きましたか。",
+    help: "",
+    required: false,
+    fields: [{ field: "what_followed", label: "そのあと起きたこと", required: false }],
+  },
+  {
+    prompt: "次に活かせそうなことはありますか。",
+    help: "なければ空のままで。",
+    required: false,
+    fields: [{ field: "next_time", label: "次に活かせそうなこと", required: false }],
+  },
+] as const;
+
+/**
+ * DEEP POSTMORTEM — seven questions, fixed by the completion package.
+ *
+ *   1 何が起きましたか            -> what_happened
+ *   2 どうなってほしかったですか   -> goal_at_the_time
+ *   3 そのとき何がわかっていましたか -> information_at_hand
+ *   4 どんな選択肢がありましたか   -> options_considered   (added by 202608160001)
+ *   5 どうすることにしましたか     -> decision_made
+ *   6 そのあと何が起きましたか     -> what_followed
+ *   7 次はどうしたいですか        -> next_time
+ *
+ * Question 4 is what makes this a postmortem rather than a longer diary. A decision can only be
+ * judged against the alternatives that existed at the time — without them, every outcome reads as a
+ * verdict on the choice, which is exactly the error the format exists to prevent.
+ *
+ * `why` and `what_learned` are no longer asked by either flow. Their columns are kept and still read
+ * back, because rows written by the earlier flow hold them.
+ *
+ * This is NOT personality analysis, NOT a blame system, and NOT a judgement of failure. Nothing here
+ * scores, ranks or characterises the person; every question asks what happened and what was known,
+ * and every one but the first can be skipped.
+ */
+export const POSTMORTEM_REFLECTION_QUESTIONS = [
   {
     prompt: "何が起きましたか。",
     help: "起きたことを、覚えている範囲で。",
     required: true,
-    fields: [{ field: "what_happened", label: "何が起きましたか", required: true }],
+    fields: [{ field: "what_happened", label: "起きたこと", required: true }],
   },
   {
     prompt: "そのとき、どうなってほしいと思っていましたか。",
@@ -136,48 +210,68 @@ export const REFLECTION_QUESTIONS = [
     fields: [{ field: "information_at_hand", label: "わかっていたこと", required: false }],
   },
   {
-    prompt: "どうすることにしましたか。",
-    help: "選ばなかったことがあれば、それも。理由は、はっきりしないこともあります。",
+    prompt: "どんな選択肢がありましたか。",
+    help: "選ばなかったものも含めて。あとから思いついたものではなく、そのとき見えていたもので。",
     required: false,
-    fields: [
-      { field: "decision_made", label: "決めたこと", required: false },
-      { field: "why", label: "なぜ、そうしたのだと思いますか（任意）", required: false },
-    ],
+    fields: [{ field: "options_considered", label: "あった選択肢", required: false }],
+  },
+  {
+    prompt: "どうすることにしましたか。",
+    help: "",
+    required: false,
+    fields: [{ field: "decision_made", label: "決めたこと", required: false }],
   },
   {
     prompt: "そのあと、何が起きましたか。",
-    help: "",
+    help: "決めたことと、そのあと起きたことは、切り離して見ます。",
     required: false,
     fields: [{ field: "what_followed", label: "そのあと起きたこと", required: false }],
   },
   {
-    prompt: "そこから、何か気づいたことはありますか。",
-    help: "なければ空のままで。",
-    required: false,
-    fields: [{ field: "what_learned", label: "気づいたこと", required: false }],
-  },
-  {
     prompt: "次に同じことがあったら、どうしたいですか。",
-    help: "",
+    help: "なければ空のままで。",
     required: false,
     fields: [{ field: "next_time", label: "次にしたいこと", required: false }],
   },
 ] as const;
 
-export type ReflectionField = (typeof REFLECTION_QUESTIONS)[number]["fields"][number]["field"];
+/** The default flow. `REFLECTION_QUESTIONS` stays the light set so existing callers are unchanged. */
+export const REFLECTION_QUESTIONS = LIGHT_REFLECTION_QUESTIONS;
 
-/** Every stored answer field, in question order. */
-export const REFLECTION_FIELDS: readonly { field: ReflectionField; required: boolean }[] =
-  REFLECTION_QUESTIONS.flatMap((question) =>
-    question.fields.map((entry) => ({ field: entry.field as ReflectionField, required: entry.required })),
-  );
+export function reflectionQuestionsFor(mode: ReflectionMode) {
+  return mode === "postmortem" ? POSTMORTEM_REFLECTION_QUESTIONS : LIGHT_REFLECTION_QUESTIONS;
+}
+
+export type ReflectionField =
+  | (typeof LIGHT_REFLECTION_QUESTIONS)[number]["fields"][number]["field"]
+  | (typeof POSTMORTEM_REFLECTION_QUESTIONS)[number]["fields"][number]["field"];
+
+/** Every stored answer field across BOTH modes, deduped, in a stable order. */
+export const REFLECTION_FIELDS: readonly { field: ReflectionField; required: boolean }[] = (() => {
+  const seen = new Map<string, { field: ReflectionField; required: boolean }>();
+  for (const set of [LIGHT_REFLECTION_QUESTIONS, POSTMORTEM_REFLECTION_QUESTIONS]) {
+    for (const question of set) {
+      for (const entry of question.fields) {
+        if (!seen.has(entry.field)) {
+          seen.set(entry.field, { field: entry.field as ReflectionField, required: entry.required });
+        }
+      }
+    }
+  }
+  return [...seen.values()];
+})();
 
 export type LifeReflection = {
   id: string;
   experience_id: string | null;
+  /** Which flow wrote the row. Stored since 202608160001 — see that migration's §2. */
+  mode: ReflectionMode;
   what_happened: string;
+  felt: string | null;
+  tried: string | null;
   goal_at_the_time: string | null;
   information_at_hand: string | null;
+  options_considered: string | null;
   decision_made: string | null;
   why: string | null;
   what_followed: string | null;
@@ -186,14 +280,18 @@ export type LifeReflection = {
   created_at: string;
 };
 
+/** What a caller may write — every field either mode asks, plus the mode itself. */
 export type LifeReflectionInput = Partial<Record<ReflectionField, string | null>> & {
   what_happened: string;
   experienceId?: string | null;
+  mode?: ReflectionMode;
 };
 
 // ── Memory (explicit, confirmed) ─────────────────────────────────────────────
 
-export const MEMORY_TYPES = ["preference", "goal", "experience", "reflection"] as const;
+// `lesson` completes the vocabulary: what someone concluded is not a preference, a goal, an
+// experience or a reflection, and it is the kind of memory a reflection most often produces.
+export const MEMORY_TYPES = ["preference", "goal", "experience", "reflection", "lesson"] as const;
 export const MEMORY_SOURCES = ["user_statement", "user_confirmed_ai_suggestion"] as const;
 
 export type MemoryType = (typeof MEMORY_TYPES)[number];
@@ -204,6 +302,7 @@ export const MEMORY_TYPE_LABELS: Record<MemoryType, string> = {
   goal: "向かいたい方向",
   experience: "経験",
   reflection: "振り返り",
+  lesson: "学んだこと",
 };
 
 export type ExplicitMemory = {
@@ -213,6 +312,8 @@ export type ExplicitMemory = {
   source: MemorySource;
   user_confirmed: true;
   created_at: string;
+  /** Moves when the sentence is edited; equal to created_at until then. */
+  updated_at: string;
 };
 
 /**
@@ -366,9 +467,63 @@ export function parseReflectionInput(body: unknown): LifeReflectionInput {
   if (experienceId !== undefined && experienceId !== null && typeof experienceId !== "string") {
     throw new LifeOsInputError("experience_id_invalid");
   }
+  // The mode has to survive parsing. It previously did not: this function returned only the answer
+  // fields, so `input.mode` was always undefined downstream and every postmortem was recorded as a
+  // light reflection. It is now stored on the row, not just carried in an audit reason.
+  const rawMode = value.mode;
+  if (rawMode !== undefined && rawMode !== null && !REFLECTION_MODES.includes(rawMode as ReflectionMode)) {
+    throw new LifeOsInputError("reflection_mode_invalid");
+  }
   return {
     ...(parsed as Omit<LifeReflectionInput, "what_happened" | "experienceId">),
     what_happened: parsed.what_happened as string,
     experienceId: (experienceId as string | undefined) ?? null,
+    mode: (rawMode as ReflectionMode | undefined) ?? "light",
+  };
+}
+
+/**
+ * The assistant's input contract.
+ *
+ * The assistant route is the one endpoint that spends a provider call, and it previously took the
+ * request body as-is: any key, any length, interpolated straight into the prompt. That is an open
+ * door on the most expensive surface in the product, so the body is now bounded here — the same
+ * fields the flow can actually collect, each capped at the same 2000 characters the columns allow,
+ * and nothing else carried through.
+ *
+ * Unknown keys are DROPPED rather than rejected: a client that sends an extra field should get a
+ * draft of what it did send, not a 422 in the middle of someone writing.
+ */
+export function parseAssistantInput(body: unknown): Partial<Record<ReflectionField, string>> {
+  const value = ((body ?? {}) as Record<string, unknown>).answers;
+  if (value === undefined || value === null) return {};
+  if (typeof value !== "object" || Array.isArray(value)) throw new LifeOsInputError("assistant_answers_invalid");
+  const source = value as Record<string, unknown>;
+  const answers: Partial<Record<ReflectionField, string>> = {};
+  for (const entry of REFLECTION_FIELDS) {
+    const text = boundedText(source[entry.field], 2000, "assistant_answers_invalid", false);
+    if (text) answers[entry.field] = text;
+  }
+  if (Object.keys(answers).length === 0) throw new LifeOsInputError("assistant_answers_required");
+  return answers;
+}
+
+/**
+ * What a caller may change about a stored memory: the sentence, and nothing else.
+ *
+ * `memory_type`, `source` and every subject link are deliberately not editable — they are what the
+ * memory IS, and changing them under a stable id would turn one memory into a different one. The
+ * database enforces the same restriction; this type is the statement of it on the way in.
+ */
+export type MemoryUpdateInput = { content: string; confirmed: true };
+
+export function parseMemoryUpdateInput(body: unknown): MemoryUpdateInput {
+  const value = (body ?? {}) as Record<string, unknown>;
+  // An edit replaces the sentence the person agreed to, so it needs the same act of agreement the
+  // original required. No confirmation, no write — the same rule as creation.
+  if (value.confirmed !== true) throw new LifeOsInputError("memory_requires_confirmation");
+  return {
+    content: boundedText(value.content, 2000, "memory_content_required", true) as string,
+    confirmed: true,
   };
 }

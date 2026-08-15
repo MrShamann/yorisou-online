@@ -8,7 +8,9 @@ import { lifeOsAccess } from "@/lib/life-os/access";
 
 export const metadata: Metadata = {
   title: "振り返りを書く | Yorisou",
-  description: "起きたことを、七つの問いにそって書き残します。",
+  // Mode-neutral on purpose: metadata is static, and the number of questions depends on which mode
+  // was opened (light = 5, postmortem = 7).
+  description: "起きたことを、問いにそって書き残します。",
   robots: { index: false },
 };
 
@@ -29,14 +31,21 @@ export default async function ReflectPage({
   // server-side by the RPC (osf1_experience_not_owned), never here — a check in the page would only
   // move the decision away from the place that enforces it.
   const raw = params.experience;
+  // Two entry points, one flow. Light is the default; the postmortem is reached deliberately.
+  const mode = params.mode === "postmortem" ? ("postmortem" as const) : ("light" as const);
   const experienceId = typeof raw === "string" && raw.length > 0 ? raw : undefined;
 
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
       {accountId ? (
-        <ReflectionFlow experienceId={experienceId} />
+        <ReflectionFlow experienceId={experienceId} mode={mode} />
       ) : (
-        <SignInRequired next="/life/reflect" purpose="起きたことを、書き残しておく。" />
+        // The mode has to survive the sign-in round trip, or someone who chose the postmortem comes
+        // back to the light flow without being told it changed.
+        <SignInRequired
+          next={mode === "postmortem" ? "/life/reflect?mode=postmortem" : "/life/reflect"}
+          purpose="起きたことを、書き残しておく。"
+        />
       )}
     </main>
   );

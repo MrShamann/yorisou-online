@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { REFLECTION_QUESTIONS, type MemoryCandidate, type ReflectionField } from "@/lib/life-os/contract";
-import { lifeOsPost } from "@/lib/life-os/client";
+import { reflectionQuestionsFor, type MemoryCandidate, type ReflectionField, type ReflectionMode } from "@/lib/life-os/contract";
+import { lifePost, lifeFailureMessage } from "@/lib/life-os/client";
 import MemoryConfirmation from "../MemoryConfirmation";
 import { LIFE_OS_PRIVACY } from "@/lib/life-os/privacyCopy";
 
-// OSF-1 — the guided reflection, seven questions.
+// OSF-1 — the guided reflection, in two modes: light (5 questions) and deep postmortem (7).
 //
 // One question per screen, the same rhythm as the Today check-in. The difference is that these
 // answers are the person's own words rather than bounded choices, because "what happened" cannot be
@@ -17,16 +17,23 @@ import { LIFE_OS_PRIVACY } from "@/lib/life-os/privacyCopy";
 //
 // ONLY THE FIRST QUESTION IS REQUIRED. Every other screen can be skipped with 「とばす」 and the
 // reflection still saves. Someone who wanted to write one line about a hard day should not have to
-// answer six more to keep it, and a flow that refuses to save until every box is full is a form.
+// answer the rest to keep it, and a flow that refuses to save until every box is full is a form.
 
-type Props = { experienceId?: string };
+type Props = { experienceId?: string; mode?: ReflectionMode };
 
-export default function ReflectionFlow({ experienceId }: Props) {
+export default function ReflectionFlow({ experienceId, mode = "light" }: Props) {
+  // Light (5) or deep postmortem (7). Same table, same columns — see contract.ts for why they are
+  // two acts rather than two versions of one.
+  const REFLECTION_QUESTIONS = reflectionQuestionsFor(mode);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Partial<Record<ReflectionField, string>>>({});
   const [phase, setPhase] = useState<"asking" | "saving" | "done" | "failed">("asking");
   const [candidates, setCandidates] = useState<MemoryCandidate[]>([]);
   const [failure, setFailure] = useState<string>("");
+  // PHASE D — the assistant. `draft` is never auto-applied: it sits beside the person's own text
+  // until they choose it. `unavailable` is the ordinary case, because providers are off by default.
+  const [draft, setDraft] = useState<{ draft: string; question: string | null } | null>(null);
+  const [assistant, setAssistant] = useState<"idle" | "working" | "unavailable">("idle");
 
   const question = REFLECTION_QUESTIONS[index];
   const isLast = index === REFLECTION_QUESTIONS.length - 1;
@@ -38,22 +45,35 @@ export default function ReflectionFlow({ experienceId }: Props) {
     setAnswers((current) => ({ ...current, [field]: next }));
   }
 
+  async function askAssistant() {
+    setAssistant("working");
+    const result = await lifePost<{ ok: boolean; draft?: { draft: string; question: string | null } }>(
+      "assistant",
+      { answers },
+    );
+    if (result.ok && result.data.ok && result.data.draft) {
+      setDraft(result.data.draft);
+      setAssistant("idle");
+      return;
+    }
+    // Every failure path lands here, including a refused boundary violation. The person is told the
+    // assistant is unavailable and continues; nothing they wrote is affected.
+    setAssistant("unavailable");
+  }
+
   async function submit(finalAnswers: Partial<Record<ReflectionField, string>>) {
     setPhase("saving");
-    const result = await lifeOsPost<{ id: string; memoryCandidates: MemoryCandidate[] }>({
-      action: "create_reflection",
-      reflection: { ...finalAnswers, experienceId: experienceId ?? null },
+    const result = await lifePost<{ id: string; memoryCandidates: MemoryCandidate[] }>("reflections", {
+      ...finalAnswers,
+      experienceId: experienceId ?? null,
+      mode,
     });
     if (result.ok) {
       setCandidates(result.data.memoryCandidates ?? []);
       setPhase("done");
       return;
     }
-    setFailure(
-      result.reason === "unauthenticated"
-        ? "サインインすると保存できます。"
-        : "保存できませんでした。書いた内容はこの画面に残っています。",
-    );
+    setFailure(lifeFailureMessage(result));
     setPhase("failed");
   }
 
@@ -128,6 +148,60 @@ export default function ReflectionFlow({ experienceId }: Props) {
         </div>
       ))}
 
+      {/* The assistant is offered only on the last screen, and only once there is something to work
+          with. It never runs on its own and never replaces what was typed. */}
+      {isLast && Object.values(answers).some((v) => (v ?? "").trim().length > 0) && (
+        <section className="mt-7 rounded-[var(--pxr-radius-lg)] border border-[var(--pxr-border-subtle)] bg-[var(--pxr-surface)] px-5 py-4">
+          <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+            書いたことを整理する（任意）
+          </h2>
+          {draft ? (
+            <>
+              <p className="mt-3 whitespace-pre-wrap text-[15px] leading-[1.9] text-[var(--pxr-text-primary)]">
+                {draft.draft}
+              </p>
+              {draft.question && (
+                <p className="mt-3 text-[14px] leading-[1.9] text-[var(--pxr-text-secondary)]">{draft.question}</p>
+              )}
+              <p className="mt-3 text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                これは案です。使うかどうかはあなたが決めます。
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  // Applying is explicit and only ever touches the last answer, appending — it does
+                  // not overwrite anything the person wrote earlier.
+                  setValue("next_time", `${answers.next_time ?? ""}${answers.next_time ? "\n" : ""}${draft.draft}`.trim());
+                  setDraft(null);
+                }}
+                className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+              >
+                この案を使う
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="mt-2 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">
+                書いた内容だけをもとに、読みやすく整理します。診断や決めつけはしません。
+              </p>
+              <button
+                type="button"
+                onClick={() => void askAssistant()}
+                disabled={assistant === "working"}
+                className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] border border-[var(--pxr-border-subtle)] px-5 text-[15px] text-[var(--pxr-text-primary)] disabled:text-[var(--pxr-text-muted)]"
+              >
+                {assistant === "working" ? "整理しています" : "整理してもらう"}
+              </button>
+              {assistant === "unavailable" && (
+                <p className="mt-2 text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                  いまは整理を利用できません。このまま書き終えられます。
+                </p>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -147,7 +221,7 @@ export default function ReflectionFlow({ experienceId }: Props) {
             とばす
           </button>
         )}
-        {/* Finishing early is always available once the first answer exists — the remaining six
+        {/* Finishing early is always available once the first answer exists — the remaining
             questions are an offer, not a queue to clear. */}
         {!isLast && index > 0 && (answers.what_happened ?? "").trim().length > 0 && (
           <button

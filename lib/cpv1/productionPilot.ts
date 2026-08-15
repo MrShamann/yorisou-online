@@ -30,6 +30,7 @@ type EnvLike = Record<string, string | undefined>;
 export const PRODUCTION_PILOT_FLAGS = [
   "dci_daily_check_in_private_pilot", // DCI private Production pilot (Founder/Admin only)
   "yorisou_values_private_pilot", // YV private Production pilot (Founder/Admin only)
+  "osf1_life_os_internal", // OSF-1 Life OS INTERNAL state (Founder/Admin only, true production)
 ] as const;
 export type ProductionPilotFlag = (typeof PRODUCTION_PILOT_FLAGS)[number];
 
