@@ -16,6 +16,8 @@ import {
 import { REFLECTION_FIELDS } from "@/lib/life-os/contract";
 import type {
   CurrentStateInput,
+  MemoryDeletionReceipt,
+  MemoryLifecycleState,
   CurrentStateRecord,
   ExplicitMemory,
   Goal,
@@ -203,7 +205,7 @@ export async function getGoal(ownerAccountId: string, goalId: string): Promise<G
 // ── Reflection ───────────────────────────────────────────────────────────────
 
 const REFLECTION_COLUMNS =
-  "id,experience_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at";
+  "id,experience_id,current_state_record_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at";
 
 /**
  * Create a reflection. The RPC writes the audit row INSIDE this transaction (202608160001 §3), so
@@ -214,6 +216,7 @@ export async function createReflection(ownerAccountId: string, input: LifeReflec
   return rpc<string>("yorisou_osf1_reflection_create", {
     p_owner_account_id: ownerAccountId,
     p_experience_id: input.experienceId ?? null,
+    p_current_state_record_id: input.currentStateRecordId ?? null,
     p_mode: input.mode ?? "light",
     p_what_happened: input.what_happened,
     p_felt: input.felt ?? null,
@@ -263,7 +266,8 @@ export async function getReflection(ownerAccountId: string, reflectionId: string
 
 // ── Memory ───────────────────────────────────────────────────────────────────
 
-const MEMORY_COLUMNS = "id,memory_type,content,source,user_confirmed,created_at,updated_at";
+const MEMORY_COLUMNS =
+  "id,memory_type,content,source,user_confirmed,created_at,updated_at,lifecycle_state,lifecycle_changed_at";
 
 /**
  * The only write path for a memory, and it is a CONFIRM, not a create.
@@ -396,6 +400,42 @@ export async function listMemoryPage(
     memories,
     nextCursor: hasMore && memories.length > 0 ? encodeCursor(memories[memories.length - 1]) : null,
   };
+}
+
+/**
+ * Change a memory's lifecycle state. Returns false when the id is not this person's — the same
+ * answer as "no such memory", so a caller cannot use it to discover someone else's id is real.
+ *
+ * The RPC refuses to bring a REVOKED memory back: withdrawing authorization is a decision, not a
+ * toggle. Deleting it remains available, which is the only onward move a person needs.
+ */
+export async function setMemoryLifecycle(
+  ownerAccountId: string,
+  memoryId: string,
+  next: MemoryLifecycleState,
+): Promise<boolean> {
+  return rpc<boolean>("yorisou_osf1_memory_set_lifecycle", {
+    p_owner_account_id: ownerAccountId,
+    p_memory_id: memoryId,
+    p_next_state: next,
+  });
+}
+
+/**
+ * What a person's hard-deleted memories left behind.
+ *
+ * Read from the append-only audit trail, which already records every deletion inside the deletion's
+ * own transaction. A separate receipt table would be a second source of truth for one fact — and a
+ * receipt stored on the row would die with the row, which is the whole problem it exists to solve.
+ */
+export async function memoryDeletionReceipts(
+  ownerAccountId: string,
+  limit = 50,
+): Promise<MemoryDeletionReceipt[]> {
+  return rpc<MemoryDeletionReceipt[]>("yorisou_osf1_memory_receipts", {
+    p_owner_account_id: ownerAccountId,
+    p_limit: limit,
+  });
 }
 
 export async function listMemories(ownerAccountId: string, limit = 50): Promise<ExplicitMemory[]> {

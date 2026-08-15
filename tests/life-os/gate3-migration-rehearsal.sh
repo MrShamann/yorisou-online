@@ -218,8 +218,14 @@ Q -c "create or replace function public.gate3_break_audit() returns trigger lang
       for each row execute function public.gate3_break_audit();" >/dev/null
 
 BEFORE=$(Q -c "select count(*) from public.yorisou_life_reflections where owner_account_id='acct_tx';")
-if Q -c "select public.yorisou_osf1_reflection_create('acct_tx',null,'light','あったこと',null,null,null,null);" >/dev/null 2>&1; then
+# The error is CAPTURED and matched, not merely detected. "The call failed and no row exists" is the
+# same evidence a signature mismatch produces, so without this the assertion passes vacuously
+# whenever the RPC's parameter list changes — which is exactly what happened when this file was
+# written against the previous signature.
+if Q -c "select public.yorisou_osf1_reflection_create('acct_tx',null,null,'light','あったこと',null,null,null,null);" >"$WORK/tx.txt" 2>&1; then
   fail "transactional audit" "the reflection was created even though the audit insert failed"
+elif ! grep -q "gate3_forced_audit_failure" "$WORK/tx.txt"; then
+  fail "transactional audit" "the call failed for the WRONG reason: $(head -1 "$WORK/tx.txt")"
 else
   AFTER=$(Q -c "select count(*) from public.yorisou_life_reflections where owner_account_id='acct_tx';")
   [ "$BEFORE" = "$AFTER" ] && pass "a failed audit insert ROLLS BACK the reflection ($AFTER rows)" \
@@ -227,8 +233,10 @@ else
 fi
 
 DIGEST=$(Q -c "select encode(sha256(convert_to('覚えておきたいこと','utf8')),'hex');")
-if Q -c "select public.yorisou_osf1_memory_confirm('acct_tx','lesson','覚えておきたいこと','user_statement','$DIGEST',true,null,null,null);" >/dev/null 2>&1; then
+if Q -c "select public.yorisou_osf1_memory_confirm('acct_tx','lesson','覚えておきたいこと','user_statement','$DIGEST',true,null,null,null);" >"$WORK/tx2.txt" 2>&1; then
   fail "transactional audit" "the memory was created even though the audit insert failed"
+elif ! grep -q "gate3_forced_audit_failure" "$WORK/tx2.txt"; then
+  fail "transactional audit" "the call failed for the WRONG reason: $(head -1 "$WORK/tx2.txt")"
 else
   M=$(Q -c "select count(*) from public.yorisou_explicit_memories where owner_account_id='acct_tx';")
   [ "$M" = "0" ] && pass "a failed audit insert ROLLS BACK the memory" || fail "transactional audit" "$M rows"
@@ -237,17 +245,27 @@ fi
 Q -c "drop trigger gate3_break on public.yorisou_life_os_audit_events; drop function public.gate3_break_audit();" >/dev/null
 # And with the audit healthy again, the same call must succeed — otherwise the test above proved
 # only that the function is broken.
-OK_ID=$(Q -c "select public.yorisou_osf1_reflection_create('acct_tx',null,'postmortem','あったこと',null,null,null,null);" 2>/dev/null)
+OK_ID=$(Q -c "select public.yorisou_osf1_reflection_create('acct_tx',null,null,'postmortem','あったこと',null,null,null,null);" 2>/dev/null)
 [ -n "$OK_ID" ] && pass "with the audit healthy, the same mutation succeeds" || fail "control" "still failing"
 AUD=$(Q -c "select count(*) from public.yorisou_life_os_audit_events where entity_ref='$OK_ID' and action='yorisou.life.reflection.created';")
 [ "$AUD" = "1" ] && pass "exactly one audit row accompanies the successful mutation" || fail "audit count" "$AUD"
 
-# ── STAGE 5: the documented ROLLBACK of 202608160001 ─────────────────────────
+# ── STAGE 5: the documented ROLLBACK of the lineage TIP ──────────────────────
 #
-# Executed verbatim from that migration's own ROLLBACK block, minus the two LOSSY column drops which
-# it explicitly marks as the unsafe option. If this fails, the documented procedure is wrong.
-echo "[gate3] stage 5 — execute the documented rollback of 202608160001"
+# Executed verbatim from the ROLLBACK blocks of the two migrations that create functions, minus the
+# LOSSY column drops they both mark as the unsafe option.
+#
+# IT MUST COVER THE TIP, NOT ONE FILE. Rolling back only 202608160001 while 202608170001's
+# re-created reflection RPC survives leaves TWO live overloads of the same name the moment 160001 is
+# re-applied — precisely the state both migration headers argue must never exist. An earlier version
+# of this stage did exactly that, and the "no orphan left behind" assertion below is what caught it.
+echo "[gate3] stage 5 — execute the documented rollback of the lineage tip"
 Q -c "begin;
+  -- 202608170001
+  drop function if exists public.yorisou_osf1_reflection_create(text, uuid, uuid, text, text, text, text, text, text, text, text, text, text, text, text, jsonb);
+  drop function if exists public.yorisou_osf1_memory_set_lifecycle(text, uuid, text, jsonb);
+  drop function if exists public.yorisou_osf1_memory_receipts(text, integer);
+  -- 202608160001
   drop function if exists public.yorisou_osf1_reflection_create(text, uuid, text, text, text, text, text, text, text, text, text, text, text, text, jsonb);
   drop function if exists public.yorisou_osf1_memory_confirm(text, text, text, text, text, boolean, uuid, uuid, uuid, jsonb);
   drop function if exists public.yorisou_osf1_memory_delete(text, uuid, jsonb);
@@ -259,33 +277,32 @@ Q -c "begin;
 GONE=$(Q -c "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
              and n.nspname='public' where p.proname in
              ('yorisou_osf1_reflection_create','yorisou_osf1_memory_confirm',
-              'yorisou_osf1_memory_delete','yorisou_osf1_memory_update');")
-[ "$GONE" = "0" ] && pass "rollback removed every function it created — no orphan left behind" \
+              'yorisou_osf1_memory_delete','yorisou_osf1_memory_update',
+              'yorisou_osf1_memory_set_lifecycle','yorisou_osf1_memory_receipts');")
+[ "$GONE" = "0" ] && pass "rollback removed every function the tip created — no orphan overload" \
                   || fail "rollback" "$GONE function(s) survived"
 
-# The rolled-back state must still serve the pre-OSF-1 product. This is what a real rollback is for.
 LEG=$(Q -c "select situation from public.yorisou_experience_cards where id='$LEGACY_ID';")
 [ "$LEG" = "古い状況" ] && pass "after rollback the pre-OSF-1 experience card is still intact" \
                        || fail "rollback" "legacy card damaged"
-# And the data written before the rollback survives it — a rollback of FUNCTIONS must not lose ROWS.
 KEPT=$(Q -c "select count(*) from public.yorisou_life_reflections where id='$OK_ID';")
 [ "$KEPT" = "1" ] && pass "rows written before the rollback survive it" || fail "rollback" "data lost"
 MODE=$(Q -c "select mode from public.yorisou_life_reflections where id='$OK_ID';")
 [ "$MODE" = "postmortem" ] && pass "the stored mode survives the rollback" || fail "rollback" "mode='$MODE'"
 
-# ── STAGE 6: RE-APPLY ────────────────────────────────────────────────────────
-#
-# The step that catches what a one-way test cannot: a re-apply onto a partially-reversed schema.
-echo "[gate3] stage 6 — re-apply 202608160001 onto the rolled-back schema"
-APPLY supabase/migrations/202608160001_osf1_phase1_completion.sql \
-  && pass "202608160001 re-applies onto the rolled-back schema" \
-  || fail "re-apply" "$(head -3 "$WORK/err.txt" | tr '\n' ' ')"
+# ── STAGE 6: RE-APPLY the tip, in order ──────────────────────────────────────
+echo "[gate3] stage 6 — re-apply the tip onto the rolled-back schema"
+for f in supabase/migrations/202608160001_osf1_phase1_completion.sql \
+         supabase/migrations/202608170001_osf1_phase1_finalization.sql; do
+  APPLY "$f" && pass "re-applied $(basename "$f")" \
+    || fail "re-apply" "$(basename "$f"): $(head -3 "$WORK/err.txt" | tr '\n' ' ')"
+done
 
 echo "[gate3] stage 7 — validate the re-applied lineage (identical checks)"
 validate "re-applied"
 
 # The re-applied schema must actually work, not merely exist.
-RE_ID=$(Q -c "select public.yorisou_osf1_reflection_create('acct_tx2',null,'postmortem','再適用後',null,null,null,null,null,null,'選択肢');" 2>/dev/null)
+RE_ID=$(Q -c "select public.yorisou_osf1_reflection_create('acct_tx2',null,null,'postmortem','再適用後',null,null,null,null,null,null,'選択肢');" 2>/dev/null)
 [ -n "$RE_ID" ] && pass "the re-applied RPC creates a reflection" || fail "re-apply" "RPC unusable"
 OPT=$(Q -c "select options_considered from public.yorisou_life_reflections where id='$RE_ID';")
 [ "$OPT" = "選択肢" ] && pass "options_considered round-trips after re-apply" || fail "re-apply" "got '$OPT'"

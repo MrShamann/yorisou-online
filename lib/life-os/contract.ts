@@ -266,6 +266,11 @@ export type LifeReflection = {
   experience_id: string | null;
   /** Which flow wrote the row. Stored since 202608160001 — see that migration's §2. */
   mode: ReflectionMode;
+  /**
+   * OPTIONAL and USER-CHOSEN. Records that this reflection was written in relation to that state.
+   * NOT a causal claim, never inferred, never back-filled. See 202608170001 §1.
+   */
+  current_state_record_id: string | null;
   what_happened: string;
   felt: string | null;
   tried: string | null;
@@ -284,7 +289,25 @@ export type LifeReflection = {
 export type LifeReflectionInput = Partial<Record<ReflectionField, string | null>> & {
   what_happened: string;
   experienceId?: string | null;
+  /** The state the person chose to relate this reflection to, if any. Never set automatically. */
+  currentStateRecordId?: string | null;
   mode?: ReflectionMode;
+};
+
+/**
+ * The memory lifecycle, named by Memory Governance v1.0 §3.2 rather than invented here.
+ *
+ * `suppressed` is reversible — "not right now". `revoked` is a withdrawal of authorization and is
+ * TERMINAL: the governance lists suppress, revoke and delete as three separate rights, so revoke
+ * may not be an alias for either of the others. Deleting a revoked memory stays available.
+ */
+export const MEMORY_LIFECYCLE_STATES = ["active", "suppressed", "revoked"] as const;
+export type MemoryLifecycleState = (typeof MEMORY_LIFECYCLE_STATES)[number];
+
+export const MEMORY_LIFECYCLE_LABELS: Record<MemoryLifecycleState, string> = {
+  active: "使っています",
+  suppressed: "いまは使いません",
+  revoked: "使わないことにしました",
 };
 
 // ── Memory (explicit, confirmed) ─────────────────────────────────────────────
@@ -314,6 +337,15 @@ export type ExplicitMemory = {
   created_at: string;
   /** Moves when the sentence is edited; equal to created_at until then. */
   updated_at: string;
+  lifecycle_state: MemoryLifecycleState;
+  lifecycle_changed_at: string | null;
+};
+
+/** What a hard-deleted memory leaves behind: the fact of the deletion, never its content. */
+export type MemoryDeletionReceipt = {
+  memory_id: string;
+  memory_type: string;
+  deleted_at: string;
 };
 
 /**
@@ -488,6 +520,8 @@ export function parseReflectionInput(body: unknown): LifeReflectionInput {
     );
   }
   const experienceId = parseOptionalUuid(value.experienceId, "experience_id_invalid");
+  // Only ever set because the person chose it on the surface that offers it.
+  const currentStateRecordId = parseOptionalUuid(value.currentStateRecordId, "state_record_id_invalid");
   // The mode has to survive parsing. It previously did not: this function returned only the answer
   // fields, so `input.mode` was always undefined downstream and every postmortem was recorded as a
   // light reflection. It is now stored on the row, not just carried in an audit reason.
@@ -499,6 +533,7 @@ export function parseReflectionInput(body: unknown): LifeReflectionInput {
     ...(parsed as Omit<LifeReflectionInput, "what_happened" | "experienceId">),
     what_happened: parsed.what_happened as string,
     experienceId,
+    currentStateRecordId,
     mode: (rawMode as ReflectionMode | undefined) ?? "light",
   };
 }

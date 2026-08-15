@@ -213,20 +213,20 @@ fi
 
 # ── 4. Reflection ────────────────────────────────────────────────────────────
 echo "[osf1] reflection"
-RID=$(Q -c "select public.yorisou_osf1_reflection_create('$A', '$XID', 'postmortem', '説明がうまくいかなかった',
+RID=$(Q -c "select public.yorisou_osf1_reflection_create('$A', '$XID', null, 'postmortem', '説明がうまくいかなかった',
               null, null, '翌日に話せた', 'まず書き出す', 'ちゃんと伝えたかった', '相手の状況は知らなかった',
               '黙るか、その場で聞き返すか', 'その場では黙った', '空気を壊したくなかった', '先に書くと落ち着く');")
 [ -n "$RID" ] && pass "created a reflection with all seven answers" || fail "reflection" "no id"
-ONLY=$(Q -c "select public.yorisou_osf1_reflection_create('$A', null, 'light', '書いておきたいことがあった', null, null, null, null);")
+ONLY=$(Q -c "select public.yorisou_osf1_reflection_create('$A', null, null, 'light', '書いておきたいことがあった', null, null, null, null);")
 [ -n "$ONLY" ] && pass "a reflection with only the first answer is accepted" || fail "partial reflection" "refused"
-if Q -c "select public.yorisou_osf1_reflection_create('$A', null, 'light', '   ', null, null, null, null);" >/dev/null 2>&1; then
+if Q -c "select public.yorisou_osf1_reflection_create('$A', null, null, 'light', '   ', null, null, null, null);" >/dev/null 2>&1; then
   fail "reflection" "an empty first answer was accepted"
 else
   pass "an empty first answer is refused"
 fi
 
 # PERMISSION BOUNDARY: B may not attach a reflection to A's experience.
-if Q -c "select public.yorisou_osf1_reflection_create('$B', '$XID', 'light', 'のぞき見', null, null, null, null);" >/dev/null 2>&1; then
+if Q -c "select public.yorisou_osf1_reflection_create('$B', '$XID', null, 'light', 'のぞき見', null, null, null, null);" >/dev/null 2>&1; then
   fail "cross-owner reflection" "B attached a reflection to A's experience"
 else
   pass "a reflection cannot reference another person's experience"
@@ -324,7 +324,7 @@ echo "[osf1] account erasure"
 # Give B a full set too, so "erased" can be distinguished from "was never there".
 BSID=$(Q -c "select public.yorisou_osf1_current_state_create('$B', array['steady'], null, null, null, null, 'manual');")
 BGID=$(Q -c "select public.yorisou_osf1_goal_create('$B','べつの人の方向',null);")
-BRID=$(Q -c "select public.yorisou_osf1_reflection_create('$B', null, 'light', 'べつの人の記録', null, null, null, null);")
+BRID=$(Q -c "select public.yorisou_osf1_reflection_create('$B', null, null, 'light', 'べつの人の記録', null, null, null, null);")
 BMD=$(Q -c "select encode(sha256(convert_to('べつの人の記憶','utf8')),'hex');")
 Q -c "select public.yorisou_osf1_memory_confirm('$B','preference','べつの人の記憶','user_statement','$BMD',true,null,null,null);" >/dev/null
 Q -c "select public.yorisou_osf1_user_context_upsert('$B','ja',null,null,'{}'::jsonb);" >/dev/null
@@ -467,7 +467,7 @@ done
 pass "anon/authenticated cannot read the audit table"
 
 echo "[osf1] five-question reflection"
-R5=$(Q -c "select public.yorisou_osf1_reflection_create('$B',null,'light','あったこと','感じたこと','試したこと','そのあと','次に活かせること');")
+R5=$(Q -c "select public.yorisou_osf1_reflection_create('$B',null,null,'light','あったこと','感じたこと','試したこと','そのあと','次に活かせること');")
 [ -n "$R5" ] && pass "a five-answer reflection is created" || fail "reflection" "no id"
 FELT=$(Q -c "select felt from public.yorisou_life_reflections where id='$R5';")
 TRIED=$(Q -c "select tried from public.yorisou_life_reflections where id='$R5';")
@@ -479,7 +479,7 @@ ORPHAN=$(Q -c "select coalesce(goal_at_the_time,'')||coalesce(information_at_han
 # The deep postmortem is the SECOND mode, not a removed one: same table, same RPC, the four
 # decision columns written and felt/tried left null. If a future change drops the postmortem
 # parameters from the RPC, this call fails and the mode is provably gone.
-RP=$(Q -c "select public.yorisou_osf1_reflection_create('$B',null,'postmortem','あったこと',null,null,'そのあと',null,'そのときの目標','手元にあった情報',null,'決めたこと','その理由','学んだこと');")
+RP=$(Q -c "select public.yorisou_osf1_reflection_create('$B',null,null,'postmortem','あったこと',null,null,'そのあと',null,'そのときの目標','手元にあった情報',null,'決めたこと','その理由','学んだこと');")
 [ -n "$RP" ] && pass "a seven-answer postmortem reflection is created" || fail "postmortem" "no id"
 DEEP=$(Q -c "select coalesce(goal_at_the_time,'')||'|'||coalesce(information_at_hand,'')||'|'||coalesce(decision_made,'')||'|'||coalesce(why,'')||'|'||coalesce(what_learned,'') from public.yorisou_life_reflections where id='$RP';")
 [ "$DEEP" = "そのときの目標|手元にあった情報|決めたこと|その理由|学んだこと" ] \
@@ -494,7 +494,7 @@ echo "[osf1] cross-user isolation — user A must not reach user B"
 C='osf1-owner-c-iso'
 CS=$(Q -c "select public.yorisou_osf1_current_state_create('$C', array['steady'], null,null,null,null,'manual');")
 CG=$(Q -c "select public.yorisou_osf1_goal_create('$C','Cの方向',null);")
-CR=$(Q -c "select public.yorisou_osf1_reflection_create('$C',null,'light','Cの記録',null,null,null,null);")
+CR=$(Q -c "select public.yorisou_osf1_reflection_create('$C',null,null,'light','Cの記録',null,null,null,null);")
 CD=$(Q -c "select encode(sha256(convert_to('Cの記憶','utf8')),'hex');")
 CM=$(Q -c "select public.yorisou_osf1_memory_confirm('$C','preference','Cの記憶','user_statement','$CD',true,null,null,null);")
 # Every owner-scoped mutation must refuse when the owner is someone else.
@@ -517,21 +517,21 @@ LEFT=$(Q -c "select (select count(*) from yorisou_current_state_records where ow
 # light reflection are byte-identical across the answer columns, so nothing else can tell them apart.
 echo "[osf1] reflection mode"
 D='osf1-owner-d'
-DLIGHT=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, 'light', 'かるく書いた', 'すこし疲れた', '早めに休んだ', 'よく眠れた', '次も早めに休む');")
+DLIGHT=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, null, 'light', 'かるく書いた', 'すこし疲れた', '早めに休んだ', 'よく眠れた', '次も早めに休む');")
 MODE=$(Q -c "select mode from public.yorisou_life_reflections where id='$DLIGHT';")
 [ "$MODE" = "light" ] && pass "a light reflection is stored as light" || fail "mode" "got '$MODE'"
-DPOST=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, 'postmortem', 'ふりかえった', null, null,
+DPOST=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, null, 'postmortem', 'ふりかえった', null, null,
                 'そのあと落ち着いた', '次は先に伝える', 'そのときの目標', '手元にあった情報',
                 '待つか、先に伝えるか', '待つことにした', null, null);")
 MODE=$(Q -c "select mode from public.yorisou_life_reflections where id='$DPOST';")
 [ "$MODE" = "postmortem" ] && pass "a postmortem reflection is stored as postmortem" || fail "mode" "got '$MODE'"
-ERR=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, 'deep', 'ありえないモード', null, null, null, null);" 2>&1 >/dev/null || true)
+ERR=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, null, 'deep', 'ありえないモード', null, null, null, null);" 2>&1 >/dev/null || true)
 case "$ERR" in
   *osf1_reflection_mode_invalid*) pass "an unknown mode raises osf1_reflection_mode_invalid" ;;
   *) fail "reflection mode" "expected osf1_reflection_mode_invalid, got: $(printf '%s' "$ERR" | head -1)" ;;
 esac
 # A caller that says nothing gets the light flow — the mode must never come out null or empty.
-DNULL=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, null, 'モードを言わなかった', null, null, null, null);")
+DNULL=$(Q -c "select public.yorisou_osf1_reflection_create('$D', null, null, null, 'モードを言わなかった', null, null, null, null);")
 MODE=$(Q -c "select mode from public.yorisou_life_reflections where id='$DNULL';")
 [ "$MODE" = "light" ] && pass "a null mode defaults to light" || fail "mode default" "got '$MODE'"
 # The check constraint, reached directly — the vocabulary does not depend on the RPC.
@@ -580,7 +580,7 @@ fi
 echo "[osf1] transactional audit"
 E='osf1-owner-e'
 EFP=$(Q -c "select encode(sha256(convert_to('$E','utf8')),'hex');")
-ERID=$(Q -c "select public.yorisou_osf1_reflection_create('$E', null, 'light', 'Eの記録', null, null, null, null);")
+ERID=$(Q -c "select public.yorisou_osf1_reflection_create('$E', null, null, 'light', 'Eの記録', null, null, null, null);")
 N=$(Q -c "select count(*) from public.yorisou_life_os_audit_events
            where actor_fingerprint='$EFP' and action='yorisou.life.reflection.created'
              and entity_kind='reflection' and entity_ref='$ERID';")
@@ -588,7 +588,7 @@ N=$(Q -c "select count(*) from public.yorisou_life_os_audit_events
   || fail "reflection audit" "got $N"
 # The reason code is the mode — the one fact the audit row exists to carry, and the one it used to
 # get wrong for every postmortem ever written.
-EPID=$(Q -c "select public.yorisou_osf1_reflection_create('$E', null, 'postmortem', 'Eのふりかえり', null, null, null, null);")
+EPID=$(Q -c "select public.yorisou_osf1_reflection_create('$E', null, null, 'postmortem', 'Eのふりかえり', null, null, null, null);")
 REASON=$(Q -c "select reason from public.yorisou_life_os_audit_events where entity_ref='$EPID';")
 [ "$REASON" = "postmortem" ] && pass "a postmortem is audited as a postmortem, not as light" || fail "audit reason" "got '$REASON'"
 
@@ -653,7 +653,7 @@ with_broken_audit() {
   esac
 }
 CANARY='ロールバックされるはずの記録'
-with_broken_audit "reflection create" "select public.yorisou_osf1_reflection_create('$F', null, 'light', '$CANARY', null, null, null, null);"
+with_broken_audit "reflection create" "select public.yorisou_osf1_reflection_create('$F', null, null, 'light', '$CANARY', null, null, null, null);"
 LEFT=$(Q -c "select count(*) from public.yorisou_life_reflections where what_happened='$CANARY';")
 [ "$LEFT" = "0" ] && pass "no reflection survived — it is not written when its audit row cannot be" \
   || fail "reflection rollback" "$LEFT rows survived a failed audit"
@@ -661,7 +661,7 @@ TRG=$(Q -c "select count(*) from pg_trigger where tgname='osf1_audit_break';")
 [ "$TRG" = "0" ] && pass "the break trigger rolled back too, so nothing leaks into later checks" \
   || fail "rollback" "the break trigger survived"
 # CONTROL: the identical call must succeed with the audit table working, or the check above is empty.
-Q -c "select public.yorisou_osf1_reflection_create('$F', null, 'light', '$CANARY', null, null, null, null);" >/dev/null
+Q -c "select public.yorisou_osf1_reflection_create('$F', null, null, 'light', '$CANARY', null, null, null, null);" >/dev/null
 LEFT=$(Q -c "select count(*) from public.yorisou_life_reflections where what_happened='$CANARY';")
 [ "$LEFT" = "1" ] && pass "the same call persists once the audit table works (control holds)" || fail "control" "got $LEFT"
 
