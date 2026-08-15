@@ -118,6 +118,14 @@ export default function ReflectionFlow({ experienceId, mode = "light" }: Props) 
       <h1 className="mt-3 text-[22px] font-semibold leading-[1.6] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
         {question.prompt}
       </h1>
+      {/* BEFORE the first input, not after the last one. The disclosure used to appear only on the
+          finished screen, which told people where their words had gone after they had already
+          written them — the one moment it cannot inform a decision. */}
+      {index === 0 && (
+        <p className="mt-3 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">
+          ここに書いたものが{LIFE_OS_PRIVACY}
+        </p>
+      )}
       {question.help && (
         <p className="mt-2 text-[14px] leading-[1.9] text-[var(--pxr-text-muted)]">{question.help}</p>
       )}

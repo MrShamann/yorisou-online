@@ -79,7 +79,9 @@ const JUSTIFIED_EXEMPTIONS: Record<string, string> = {
   // omitted `account_id`, which meant this guard could not even ask the question. It can now, and
   // this entry is the honest answer: nobody has decided yet.
   yorisou_identity_provisioning_sagas:
-    "UNRESOLVED — pre-existing POR-1 provisioning state, in no erasure path; referred to POR-1, not PR #132",
+    "OPEN FOUNDER DECISION — proven to survive erasure with account_id intact (disposable-cluster " +
+    "evidence in docs/yorisou/osf1/OSF1_FOUNDER_DECISIONS.md §3). POR-1 owns the table, so the fix " +
+    "needs POR-1's own gate; recommended resolution is to null account_id at erasure.",
 };
 
 /**

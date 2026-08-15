@@ -124,6 +124,65 @@ a card, and a decision about whether a cleared field is recoverable from
 
 ---
 
+## 3. OPEN — `yorisou_identity_provisioning_sagas` survives account deletion
+
+**Status: AWAITING EDWARD. This is a live privacy gap, not a bookkeeping one.**
+
+### What was proven, not inferred
+
+Against a disposable PostgreSQL 17 cluster with the full migration lineage applied, a provisioning
+saga row was created for `acct_saga`, a POR-1 deletion job was opened, and
+`yorisou_account_deletion_erase_database_unchecked` was run to completion:
+
+```
+sagas rows before deletion: 1
+erasure ran
+sagas rows AFTER deletion:  1
+account_id still readable:  acct_saga
+```
+
+The row survives, and `account_id` — a **direct account identifier**, not a fingerprint — remains
+fully readable after the person's account has been erased.
+
+### Why it happens
+
+The table is not in the erasure plan. `202608140002`'s `v_plan` names five OSF-1 tables and the
+pre-existing POR-1 families; `yorisou_identity_provisioning_sagas` appears in none of them. The
+erasure-coverage guard has carried it as a literal `"UNRESOLVED"` exemption since PR #132 — an honest
+placeholder that has now outlived its usefulness.
+
+### The technical facts Edward needs
+
+| Question | Answer |
+|---|---|
+| Does it hold durable user-personal data? | **Yes.** `account_id text` is a direct identifier. `owner_fingerprint` and `session_fingerprint` are pseudonymous; `executor_token_hash` is security material, not personal data. |
+| Is it required for security or account lifecycle? | It is POR-1 provisioning **saga state** — the record of how an account was created, used for resume and for incident reconciliation. Its *pseudonymous* columns carry that value; `account_id` is the convenience link. |
+| What happens after deletion today? | Nothing. The row persists indefinitely with the identifier intact. |
+| Delete, pseudonymize, retain or exempt? | **A policy decision, which is why this is here.** |
+
+### The options, with consequences
+
+1. **Pseudonymize** *(recommended)* — null `account_id` at erasure, keep the row and its fingerprints.
+   Preserves lifecycle and incident value; removes the identifier. Matches how the OSF-1 audit table
+   already resolves the same tension.
+2. **Delete** — register the table in the erasure plan. Cleanest privacy answer; loses the record
+   that the account existed, which POR-1 incident review has previously depended on.
+3. **Retain as-is** — only defensible with a stated, Edward-approved basis. **No legal retention
+   obligation is claimed here**, and none should be invented to justify this option.
+
+### Why this package did not simply fix it
+
+The table belongs to POR-1, not OSF-1. Changing another subsystem's erasure semantics from inside a
+Life OS package would be exactly the scope creep the governance forbids, and it needs POR-1's own
+Gate 3. The guard's exemption text has been updated from `UNRESOLVED` to a classification that points
+here, so the question is recorded rather than carried as a shrug.
+
+**Privacy governance bearing on it:** Data & Privacy v1.0 §3.2 requires retention schedules to be
+explicit per entity and approved by Edward, and §6 requires deletion reconciliation. An identifier
+that survives deletion with no schedule satisfies neither.
+
+---
+
 ## 3. Decisions carried from earlier passes
 
 | Decision | Where recorded |

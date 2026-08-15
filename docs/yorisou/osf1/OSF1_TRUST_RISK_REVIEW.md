@@ -78,3 +78,43 @@ Recorded so a future reader does not re-litigate the settled parts.
 ## Version history
 
 - **v1.0 (2026-08-14)** — initial register, written at Founder request during PR #132 final closeout.
+
+---
+
+## Risks added or reclassified by the Internal Beta Readiness package (2026-08-15)
+
+**RESOLVED — the reflection flow disclosed after the fact.** The privacy sentence appeared only on the
+finished screen, telling people where their words had gone after they had written them. Now on the
+first question, before any input. Pinned by `osf1PrivacyCopy.test.ts`.
+
+**RESOLVED — `/experiences` disclosed nothing.** The older hub wrote to the same table through the same
+`trustFlags` path with no disclosure at all. It now carries the same promise, above the input fields.
+
+**RESOLVED — memories past the fiftieth were unreachable.** A fixed cap with no cursor meant the
+product had quietly stopped showing people their own records. Keyset pagination, verified against a
+real PostgREST by walking every page of a 30-row set with deliberate timestamp ties.
+
+**RESOLVED — a caller typo returned 500.** No id was validated; a non-UUID reached PostgREST and came
+back as an unclassifiable error. Validated at the edge, 422.
+
+**NEW, ACCEPTED — a person can lose a reflection if the audit table is unavailable.** This is the
+direct consequence of the transactional audit the package required, and it is the reversal that
+`OSF1_AUDIT_DELIVERY_CLASSES.md` flagged as needing a Founder decision. The decision was made; the
+consequence is now live and is stated here so it is not rediscovered during an incident.
+
+**NEW, OPEN — `yorisou_identity_provisioning_sagas` survives account deletion with `account_id`
+readable.** Proven against a disposable cluster. Personal data outliving erasure is a real privacy
+defect. POR-1 owns the table, so the fix needs POR-1's own gate. Evidence and options in
+`OSF1_FOUNDER_DECISIONS.md` §3.
+
+**NEW, OPEN — Memory governance §3.2 is not fully met.** Users can view, correct and delete. They
+cannot *suppress* or *revoke*, and deletion produces no *receipt*, all three of which the governance
+requires. Pre-existing and larger than this package's brief.
+
+**CARRIED — the Life OS has never run against hosted Supabase.** Every rehearsal is a disposable
+cluster. Role sets and extension schemas differ; that is why the audit RPC uses built-in `sha256`
+rather than pgcrypto's `digest`. The first hosted apply remains a first.
+
+**CARRIED — `GET /api/life/assistant` returns 405 where every sibling returns 404**, disclosing that
+the path exists. No data or capability is exposed. Not fixed here: it predates this package and was
+outside its brief.
