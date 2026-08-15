@@ -118,3 +118,38 @@ rather than pgcrypto's `digest`. The first hosted apply remains a first.
 **CARRIED — `GET /api/life/assistant` returns 405 where every sibling returns 404**, disclosing that
 the path exists. No data or capability is exposed. Not fixed here: it predates this package and was
 outside its brief.
+
+---
+
+# RISK REGISTER — closed statuses, 2026-08-15
+
+Every risk carries exactly one status. **No vague OPEN.** `ACCEPTED_FOR_INTERNAL` means the risk is
+real, understood, and tolerable for a Founder-only internal beta — not that it is acceptable publicly.
+
+| # | Risk | Status | Basis |
+|---|---|---|---|
+| 1 | Audit retention undefined | `FOUNDER_DECISION_REQUIRED` | `OSF1_AUDIT_RETENTION_DECISION.md` — storage is not the constraint (30 GB at 100k MAU / 12 months); tiered recommended; code stays TBD |
+| 2 | `yorisou_identity_provisioning_sagas` survives erasure with `account_id` readable | `FOUNDER_DECISION_REQUIRED` | `OSF1_IDENTITY_SAGA_ERASURE_DECISION.md` — proven; no FK, no runtime reader; pseudonymize recommended; POR-1 owns the fix |
+| 3 | PRIVATE flagged content may reach moderation | `FOUNDER_DECISION_REQUIRED` | Policy unchanged. Disclosure now names the trigger **before** typing, on both surfaces |
+| 4 | Transactional audit means a person can lose a reflection if the audit table is unavailable | `ACCEPTED_FOR_INTERNAL` | The deliberate reversal this package's predecessor asked for. Failure UX is `DEFERRED` — see #12 |
+| 5 | Assistant provider readiness | `ACCEPTED_FOR_INTERNAL` | Bounded input and output, no stored-record access, no writes, refused-not-truncated. No fake-provider E2E — `DEFERRED` |
+| 6 | Authenticated a11y not in CI | `ACCEPTED_FOR_INTERNAL` | Runs locally, 14/14, 0 serious / 0 critical. Blocker is a PostgREST supply-chain decision; mandatory local gate recorded in the runbook |
+| 7 | Malformed IDs returned 500 | `CLOSED` | Validated at the edge on all five id-taking routes plus the reflection link; 422 |
+| 8 | Memory pagination unreachable past 50 | `CLOSED` | Keyset cursor, walked against real PostgREST: 5 pages, 30/30 distinct, ties exercised |
+| 9 | Timeline fixed limit of 20 | `DEFERRED` | Reachable today at Phase 1 volumes; keyset work not done |
+| 10 | Return loop boundedness implicit | `DEFERRED` | Bounded and mode-aware, but the selection policy is not explicit or separately tested |
+| 11 | Deep reflection has no browser E2E | `DEFERRED` | Proven at contract, store, database and audit levels; **not** through a browser |
+| 12 | Transactional audit failure UX | `DEFERRED` | Behaviour is correct (no false success); the message and content-preservation work is not done |
+| 13 | State ↔ Reflection link | `CLOSED` | 8 acceptance assertions: ownership, no auto-link, null-on-delete, audit records presence not content |
+| 14 | Kill switch never fired | `DEFERRED` | Mechanism exists and is env-driven; **no live rehearsal has been performed** |
+| 15 | Audit redaction | `CLOSED` | Redaction is a property of the ops record type — there is no field a reflection could occupy |
+| 16 | Moderation queue may include deleted/withdrawn cards | `DEFERRED` | Not audited in this package |
+| 17 | Memory governance §3.2 suppress/revoke/receipt missing | `CLOSED` | All three implemented and verified; revocation terminal by design |
+| 18 | Life OS has never run against hosted Supabase | `ACCEPTED_FOR_INTERNAL` | Every rehearsal is a disposable cluster. The first hosted apply is still a first — which is why the runbook stages it |
+| 19 | `GET /api/life/assistant` returns 405 where siblings return 404 | `ACCEPTED_FOR_INTERNAL` | Discloses that a path exists; no data or capability exposed |
+| 20 | Governance names services (`memoryLifecycleService`, `permissionCheckService`) that do not exist | `ACCEPTED_FOR_INTERNAL` | Substance achieved under different names — single RPC write path, owner-scoped reads. A naming divergence, recorded not hidden |
+
+**Nothing is `BLOCKING`.** Two items would become blocking before any exposure beyond a single
+Founder: #14 (the kill switch must be fired before a second person is admitted — Release Gates v1.0
+§3.4) and #3 (the moderation policy must be settled before anyone who is not Edward writes about a
+diagnosis).
