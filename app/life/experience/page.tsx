@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { ACTIVE_VISIBILITIES, listOwnerCards } from "@/lib/server/experienceCards";
 import ExperienceForm, { type ExperienceSummary } from "./ExperienceForm";
 import SignInRequired from "../SignInRequired";
-import { lifeOsAccess } from "@/lib/life-os/access";
+import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 
 export const metadata: Metadata = {
   title: "経験を書く | Yorisou",
@@ -32,9 +31,11 @@ const activeVisibility = (value: unknown): ExperienceSummary["visibility"] =>
 export default async function ExperiencePage() {
   // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
   // session lookup or database read. Route-concealing, following pilotRouteAccess.
-  if (!lifeOsAccess().allowed) notFound();
-  const viewer = await getViewerContext();
-  const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
+  // ONE authority for the gate AND the viewer: resolving them separately is how a page ends
+  // up scoping data to a different identity than the one that passed the gate.
+  const access = await resolveLifeOsRouteAccess();
+  if (!access.allowed) notFound();
+  const accountId = access.accountId;
   if (!accountId) {
     return (
       <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">

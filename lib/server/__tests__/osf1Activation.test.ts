@@ -105,14 +105,44 @@ test("every /api/life route goes through the shared guard and never reads an own
   }
 });
 
-test("the guard checks the feature gate BEFORE the session, and the mutation gate before the body", () => {
-  const guard = readFileSync("lib/server/lifeOs/guard.ts", "utf8");
-  const gateAt = guard.indexOf("lifeOsAccess()");
-  const mutationAt = guard.indexOf("lifeOsMutationAccess()");
-  const sessionAt = guard.indexOf("getViewerContext()");
-  assert.ok(gateAt >= 0 && mutationAt >= 0 && sessionAt >= 0);
-  assert.ok(gateAt < sessionAt, "a closed route must answer identically for signed-in and signed-out callers");
-  assert.ok(mutationAt < sessionAt, "a write that cannot succeed must be refused before anything is accepted");
+test("the activation state is resolved BEFORE the session, and the mutation gate before the body", () => {
+  // The ordering property moved into the resolver when the four-state model was wired up, because
+  // INTERNAL cannot be decided without the viewer. It is asserted where it now lives.
+  const resolver = readFileSync("lib/server/lifeOs/routeAccess.ts", "utf8");
+  const stateAt = resolver.indexOf("lifeOsActivationState()");
+  const sessionAt = resolver.indexOf("getViewerContext()");
+  assert.ok(stateAt >= 0 && sessionAt >= 0, "the resolver must read both the state and the session");
+  assert.ok(stateAt < sessionAt, "a closed deployment must answer without ever resolving a viewer");
+  // OFF returns before any session lookup at all — not merely "after the state was read".
+  assert.match(resolver, /if \(state !== "INTERNAL"\) return DENY\(state, "off"\);/);
+
+  // The guard still refuses a write before the body, and now does it without leaking why.
+  // Measured inside requireLifeViewer, not over the whole file: the import block names the same
+  // symbols and would make any index comparison meaningless.
+  const guardFile = readFileSync("lib/server/lifeOs/guard.ts", "utf8");
+  const guard = guardFile.slice(guardFile.indexOf("export async function requireLifeViewer"));
+  const gateAt = guard.indexOf("resolveLifeOsRouteAccess()");
+  const mutationAt = guard.indexOf("LIFE_OS_SCHEMA_READY_ENV");
+  const returnAt = guard.indexOf("return { viewer:");
+  assert.ok(gateAt >= 0 && mutationAt >= 0 && returnAt >= 0);
+  assert.ok(gateAt < mutationAt, "the route gate precedes the schema declaration");
+  assert.ok(mutationAt < returnAt, "a write that cannot succeed is refused before the caller proceeds");
+  // The guard must never resolve a viewer of its own — that would be a second identity path.
+  assert.ok(!/getViewerContext/.test(guardFile), "the guard must take its identity from the resolver");
+});
+
+test("INTERNAL is a real state: it opens production for a founder admin and nobody else", () => {
+  // The four-state model was previously declared but inert — lifeOsAccess denies production
+  // unconditionally, so INTERNAL behaved exactly like OFF and lifeOsInternalAccess had no callers.
+  const resolver = readFileSync("lib/server/lifeOs/routeAccess.ts", "utf8");
+  assert.match(resolver, /lifeOsInternalAccess\(/, "INTERNAL must be decided by the internal-access function");
+  assert.match(resolver, /viewerHasAdminAccess\(viewer\)/, "founder/admin must come from the validated session");
+  // No client-supplied role claim may exist anywhere in the path.
+  for (const claim of ["req.headers", "searchParams", "body.role", "body.isAdmin", "x-admin"]) {
+    assert.ok(!resolver.includes(claim), `${claim} must not influence the internal decision`);
+  }
+  // PUBLIC is unreachable: the resolver allows only the states it names, and nothing returns PUBLIC.
+  assert.ok(!/=== "PUBLIC"/.test(resolver), "PUBLIC must not be an allowed branch");
 });
 
 test("the old action-switch route is gone — one write path only", () => {

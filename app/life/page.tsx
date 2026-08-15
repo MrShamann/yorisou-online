@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { latestCurrentStateRecord, listGoals, listMemories, listReflections } from "@/lib/server/lifeOs/store";
 import { GOAL_STATUS_LABELS, type Goal } from "@/lib/life-os/contract";
 import SignInRequired from "./SignInRequired";
 import { INTERNAL_HANDLING } from "@/lib/life-os/privacyCopy";
-import { lifeOsAccess } from "@/lib/life-os/access";
+import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 import ReturnSection from "./ReturnSection";
 import StateHistory, { stateDetailLine, stateTagLine } from "./StateHistory";
 
@@ -42,9 +41,11 @@ function goalLine(goal: Goal): string {
 export default async function LifePage() {
   // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
   // session lookup or database read. Route-concealing, following pilotRouteAccess.
-  if (!lifeOsAccess().allowed) notFound();
-  const viewer = await getViewerContext();
-  const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
+  // ONE authority for the gate AND the viewer: resolving them separately is how a page ends
+  // up scoping data to a different identity than the one that passed the gate.
+  const access = await resolveLifeOsRouteAccess();
+  if (!access.allowed) notFound();
+  const accountId = access.accountId;
   if (!accountId) {
     return (
       <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">

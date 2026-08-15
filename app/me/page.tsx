@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import MyContinuity from "./MyContinuity";
-import { lifeOsAccess } from "@/lib/life-os/access";
+import { lifeOsVisibleInNavigation } from "@/lib/server/lifeOs/routeAccess";
 
 export const metadata: Metadata = {
   title: "わたし | Yorisou",
@@ -18,10 +18,11 @@ export const metadata: Metadata = {
 // version of this page was a static shell that told EVERY visitor 「まだ記録はありません」 —
 // including the ones who had a record. An empty state shown to someone who is not empty is not a
 // cosmetic problem; it is the product losing their history in front of them.
-export default function MyYorisouPage() {
-  // The entry point exists only while the Life OS does. Linking to a route that 404s would be a
-  // worse experience than not offering it.
-  const lifeOsOpen = lifeOsAccess().allowed;
+export default async function MyYorisouPage() {
+  // The entry point exists only while the Life OS does, and it asks the SAME question the route
+  // answers. A navigation check with its own logic is how a link appears for someone the route will
+  // then refuse — which both leaks that the feature exists and hands them a dead end.
+  const lifeOsOpen = await lifeOsVisibleInNavigation();
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-8 md:pt-14">
       <h1 className="text-[26px] font-semibold leading-[1.45] tracking-[-0.01em] text-[var(--pxr-text-primary)]">

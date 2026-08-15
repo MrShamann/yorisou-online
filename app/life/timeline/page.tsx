@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { lifeOsAccess } from "@/lib/life-os/access";
+import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 import { lifeTimeline, type TimelineEntry } from "@/lib/server/lifeOs/timeline";
 import { REFLECTION_MODE_LABELS } from "@/lib/life-os/contract";
 import { stateDetailLine, stateTagLine } from "../StateHistory";
@@ -75,9 +74,11 @@ function day(at: string): string {
 }
 
 export default async function LifeTimelinePage() {
-  if (!lifeOsAccess().allowed) notFound();
-  const viewer = await getViewerContext();
-  const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
+  // ONE authority for the gate AND the viewer: resolving them separately is how a page ends
+  // up scoping data to a different identity than the one that passed the gate.
+  const access = await resolveLifeOsRouteAccess();
+  if (!access.allowed) notFound();
+  const accountId = access.accountId;
   if (!accountId) {
     return (
       <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">

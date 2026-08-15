@@ -183,12 +183,24 @@ test("every Life OS page and the API enforce the gate", () => {
     "app/life/memories/page.tsx",
   ]) {
     const source = readFileSync(page, "utf8");
-    assert.match(source, /if \(!lifeOsAccess\(\)\.allowed\) notFound\(\);/, `${page} does not enforce the gate`);
+    // Every page goes through the ONE authority and 404s on denial. The resolver — not the page —
+    // is where the ordering property lives, which is asserted directly below.
+    assert.match(source, /const access = await resolveLifeOsRouteAccess\(\);/, `${page} does not use the authority`);
+    assert.match(source, /if \(!access\.allowed\) notFound\(\);/, `${page} does not enforce the gate`);
+    assert.ok(!/lifeOsAccess\(\)/.test(source), `${page} still holds its own copy of the gate`);
   }
-  // The shared guard enforces reads and writes separately, with the feature gate before the session
-  // lookup so a closed route answers identically whoever is asking.
-  assert.ok(GUARD.indexOf("lifeOsAccess()") < GUARD.indexOf("getViewerContext()"));
-  assert.match(GUARD, /const mutation = lifeOsMutationAccess\(\);/);
+  // THE ORDERING PROPERTY, asserted where it now lives: the activation state is read before any
+  // session lookup, so a closed deployment answers identically for signed-in and signed-out callers.
+  const RESOLVER = readFileSync("lib/server/lifeOs/routeAccess.ts", "utf8");
+  assert.ok(
+    RESOLVER.indexOf("lifeOsActivationState()") < RESOLVER.indexOf("getViewerContext()"),
+    "the activation state must be resolved before the session",
+  );
+  // Every denial collapses to one response. If the guard ever branched on the reason, the response
+  // would become an oracle for who is on the internal allowlist.
+  assert.match(GUARD, /const route = await resolveLifeOsRouteAccess\(\);/);
+  assert.match(GUARD, /if \(!route\.allowed\)/);
+  assert.ok(!/route\.reason/.test(GUARD), "the guard must not branch on the denial reason");
   assert.match(GUARD, /life_os_not_accepting_entries/);
   // And every domain route goes through it — AT ANY DEPTH. Listing only the top level exempted the
   // dynamic child routes, which are the ones that take an id from the caller and so are exactly the
@@ -208,6 +220,8 @@ test("every Life OS page and the API enforce the gate", () => {
     assert.match(readFileSync(route, "utf8"), /requireLifeViewer/, `${route} bypasses the guard`);
   }
   // 今日 and わたし must not query or link to a closed Life OS.
-  assert.match(readFileSync("app/TodaySavedState.tsx", "utf8"), /if \(!lifeOsAccess\(\)\.allowed\) return null;/);
-  assert.match(readFileSync("app/me/page.tsx", "utf8"), /const lifeOsOpen = lifeOsAccess\(\)\.allowed;/);
+  // 今日 and わたし must not query or link to a closed Life OS — and must ask the SAME question the
+  // route answers, so a link never appears for someone the route will refuse.
+  assert.match(readFileSync("app/TodaySavedState.tsx", "utf8"), /const access = await resolveLifeOsRouteAccess\(\);/);
+  assert.match(readFileSync("app/me/page.tsx", "utf8"), /const lifeOsOpen = await lifeOsVisibleInNavigation\(\);/);
 });
