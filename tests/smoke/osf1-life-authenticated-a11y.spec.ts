@@ -102,7 +102,10 @@ const SURFACES: readonly Surface[] = [
   // 前に残した状態 and the note on one of the earlier records, because the heading alone would still
   // be there if every row inside it had stopped rendering.
   { name: "/life hub", path: "/life", marker: "ほかの利用者に表示されません", present: [GOAL_TITLE, LIGHT_HAPPENED, MEMORY_SENTENCE, STATE_NOTE, STATE_HISTORY_HEADING, EARLIER_STATE_NOTE] },
-  { name: "/life/timeline", path: "/life/timeline", marker: "これまで。", present: [GOAL_TITLE, MEMORY_SENTENCE] },
+  // MEMORY is no longer a timeline kind — a memory is a standing note with its own surface and
+  // lifecycle, not something that happened at a moment. The timeline shows what occurred, so the
+  // seeded content asserted here is the direction and the light reflection.
+  { name: "/life/timeline", path: "/life/timeline", marker: "これまで。", present: [GOAL_TITLE, LIGHT_HAPPENED] },
   { name: "/life/reflect light", path: "/life/reflect", marker: "何がありましたか。", present: [] },
   { name: "/life/reflect postmortem", path: "/life/reflect?mode=postmortem", marker: "何が起きましたか。", present: [] },
   { name: "/life/goals", path: "/life/goals", marker: "向かいたい方向。", present: [GOAL_TITLE] },
