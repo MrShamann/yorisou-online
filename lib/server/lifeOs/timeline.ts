@@ -31,7 +31,7 @@ import "server-only";
 import {
   listCurrentStateRecords,
   listGoals,
-  listMemories,
+  listEligibleMemories,
   listReflections,
 } from "@/lib/server/lifeOs/store";
 import { reflectionQuestionsFor } from "@/lib/life-os/contract";
@@ -86,7 +86,7 @@ export async function lifeTimeline(ownerAccountId: string, limit = DEFAULT_LIMIT
     listCurrentStateRecords(ownerAccountId, limit).catch(() => []),
     listGoals(ownerAccountId, limit).catch(() => []),
     listReflections(ownerAccountId, limit).catch(() => []),
-    listMemories(ownerAccountId, limit).catch(() => []),
+    listEligibleMemories(ownerAccountId, limit).catch(() => []),
     ownExperiences(ownerAccountId, limit).catch(() => []),
   ]);
 

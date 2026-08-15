@@ -45,6 +45,9 @@ export const LIFE_OS_AUDIT_ACTIONS = [
   "yorisou.life.memory.confirmed",
   "yorisou.life.memory.deleted",
   "yorisou.life.memory.updated",
+  "yorisou.life.memory.suppressed",
+  "yorisou.life.memory.restored",
+  "yorisou.life.memory.revoked",
   "yorisou.life.experience.created",
   "yorisou.life.experience.updated",
   "yorisou.life.assistant.drafted",
@@ -67,6 +70,11 @@ export const AUDIT_DELIVERY_CLASS: Record<LifeOsAuditAction, "transactional" | "
   "yorisou.life.memory.confirmed": "transactional",
   "yorisou.life.memory.deleted": "transactional",
   "yorisou.life.memory.updated": "transactional",
+  // Each of these changes what the product is PERMITTED to do with something the person told it.
+  // The record of a permission change must not be able to go missing separately from the change.
+  "yorisou.life.memory.suppressed": "transactional",
+  "yorisou.life.memory.restored": "transactional",
+  "yorisou.life.memory.revoked": "transactional",
   // Self-evidencing: the card is the record, and neither action destroys anything.
   "yorisou.life.experience.created": "asynchronous",
   "yorisou.life.experience.updated": "asynchronous",

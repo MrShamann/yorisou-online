@@ -490,6 +490,111 @@ LIGHTONLY=$(Q -c "select coalesce(felt,'')||coalesce(tried,'') from public.yoris
 BOTH=$(Q -c "select count(*) from public.yorisou_life_reflections where id in ('$R5','$RP');")
 [ "$BOTH" = "2" ] && pass "both modes persist to the one table — no second reflection table exists" || fail "reflection storage" "got $BOTH"
 
+# ── MEMORY LIFECYCLE (202608170001) ─────────────────────────────────────────
+echo "[osf1] memory lifecycle — suppress / restore / revoke, and the transitions that must fail"
+# A third owner of this block's own. $C is declared further down the file, and borrowing a variable
+# from a later section is how a harness starts depending on the order its sections happen to run in.
+OTHER='osf1-owner-lifecycle-other'
+LC=$(Q -c "select encode(sha256(convert_to('ライフサイクル','utf8')),'hex');")
+LID=$(Q -c "select public.yorisou_osf1_memory_confirm('$B','lesson','ライフサイクル','user_statement','$LC',true,null,null,null);")
+[ -n "$LID" ] && pass "a memory starts life confirmed" || fail "lifecycle" "no id"
+ST=$(Q -c "select lifecycle_state from public.yorisou_explicit_memories where id='$LID';")
+[ "$ST" = "active" ] && pass "a confirmed memory is active by default" || fail "lifecycle" "got '$ST'"
+
+Q -c "select public.yorisou_osf1_memory_set_lifecycle('$B','$LID','suppressed');" >/dev/null
+ST=$(Q -c "select lifecycle_state from public.yorisou_explicit_memories where id='$LID';")
+[ "$ST" = "suppressed" ] && pass "suppress moves the row without deleting it" || fail "lifecycle" "got '$ST'"
+KEPT=$(Q -c "select content from public.yorisou_explicit_memories where id='$LID';")
+[ "$KEPT" = "ライフサイクル" ] && pass "a suppressed memory keeps its content — suppression is not deletion" || fail "lifecycle" "content lost"
+CH=$(Q -c "select lifecycle_changed_at is not null from public.yorisou_explicit_memories where id='$LID';")
+[ "$CH" = "t" ] && pass "the lifecycle change is timestamped" || fail "lifecycle" "no timestamp"
+AUD=$(Q -c "select count(*) from public.yorisou_life_os_audit_events where entity_ref='$LID' and action='yorisou.life.memory.suppressed';")
+[ "$AUD" = "1" ] && pass "suppression writes exactly one transactional audit row" || fail "lifecycle audit" "$AUD"
+
+Q -c "select public.yorisou_osf1_memory_set_lifecycle('$B','$LID','active');" >/dev/null
+ST=$(Q -c "select lifecycle_state from public.yorisou_explicit_memories where id='$LID';")
+[ "$ST" = "active" ] && pass "restore returns a suppressed memory to use" || fail "lifecycle" "got '$ST'"
+AUD=$(Q -c "select count(*) from public.yorisou_life_os_audit_events where entity_ref='$LID' and action='yorisou.life.memory.restored';")
+[ "$AUD" = "1" ] && pass "restore is audited" || fail "lifecycle audit" "$AUD"
+
+Q -c "select public.yorisou_osf1_memory_set_lifecycle('$B','$LID','revoked');" >/dev/null
+ST=$(Q -c "select lifecycle_state from public.yorisou_explicit_memories where id='$LID';")
+[ "$ST" = "revoked" ] && pass "revoke withdraws authorization" || fail "lifecycle" "got '$ST'"
+# THE TRANSITION THAT MUST FAIL. Revocation is terminal; if it could be undone it would be a
+# setting rather than a decision, and "withdrawn" would mean nothing.
+ERR=$(Q -c "select public.yorisou_osf1_memory_set_lifecycle('$B','$LID','active');" 2>&1 >/dev/null || true)
+case "$ERR" in
+  *osf1_memory_revoked_is_final*) pass "a REVOKED memory cannot be restored — revocation is terminal" ;;
+  *) fail "lifecycle" "restore-from-revoked was allowed: $ERR" ;;
+esac
+ERR=$(Q -c "select public.yorisou_osf1_memory_set_lifecycle('$B','$LID','suppressed');" 2>&1 >/dev/null || true)
+case "$ERR" in
+  *osf1_memory_revoked_is_final*) pass "a REVOKED memory cannot be suppressed either" ;;
+  *) fail "lifecycle" "revoked -> suppressed was allowed" ;;
+esac
+# But deleting a revoked memory stays available — it is the only onward move a person needs.
+DEL=$(Q -c "select public.yorisou_osf1_memory_set_lifecycle('$B','$LID','revoked');")
+[ "$DEL" = "t" ] && pass "asking for the state it is already in is idempotent, not an error" || fail "lifecycle" "got '$DEL'"
+GONE=$(Q -c "select public.yorisou_osf1_memory_delete('$B','$LID');")
+[ "$GONE" = "t" ] && pass "a revoked memory can still be deleted" || fail "lifecycle" "delete refused"
+
+# An unknown state is refused rather than stored.
+ERR=$(Q -c "select public.yorisou_osf1_memory_set_lifecycle('$B','$LID','archived');" 2>&1 >/dev/null || true)
+case "$ERR" in
+  *osf1_memory_lifecycle_invalid*) pass "an unknown lifecycle state is refused" ;;
+  *) fail "lifecycle" "unknown state accepted" ;;
+esac
+
+# Cross-user: C must not be able to move B's memory, and must not learn it exists.
+LC2=$(Q -c "select encode(sha256(convert_to('Bのもの','utf8')),'hex');")
+BID=$(Q -c "select public.yorisou_osf1_memory_confirm('$B','lesson','Bのもの','user_statement','$LC2',true,null,null,null);")
+MOVED=$(Q -c "select public.yorisou_osf1_memory_set_lifecycle('$OTHER','$BID','suppressed');")
+[ "$MOVED" = "f" ] && pass "another person cannot change the lifecycle of B's memory, and gets the not-found answer" \
+                   || fail "lifecycle isolation" "got '$MOVED'"
+ST=$(Q -c "select lifecycle_state from public.yorisou_explicit_memories where id='$BID';")
+[ "$ST" = "active" ] && pass "B's memory is untouched by C's attempt" || fail "lifecycle isolation" "got '$ST'"
+
+# DELETION RECEIPTS — the fact survives the row, and only for the owner.
+RCPT=$(Q -c "select count(*) from public.yorisou_osf1_memory_receipts('$B', 50) where memory_id='$LID';")
+[ "$RCPT" = "1" ] && pass "a deleted memory leaves a receipt its owner can read" || fail "receipts" "got $RCPT"
+RTYPE=$(Q -c "select memory_type from public.yorisou_osf1_memory_receipts('$B', 50) where memory_id='$LID';")
+[ "$RTYPE" = "lesson" ] && pass "the receipt records what kind of memory it was" || fail "receipts" "got '$RTYPE'"
+OTHERR=$(Q -c "select count(*) from public.yorisou_osf1_memory_receipts('$OTHER', 50) where memory_id='$LID';")
+[ "$OTHERR" = "0" ] && pass "another person cannot read that receipt" || fail "receipts" "receipt leaked"
+LEAK=$(Q -c "select count(*) from public.yorisou_osf1_memory_receipts('$B', 50) r
+             join public.yorisou_life_os_audit_events e on e.entity_ref = r.memory_id
+             where e.detail::text like '%ライフサイクル%';")
+[ "$LEAK" = "0" ] && pass "the receipt carries no content — the deleted words are gone" || fail "receipts" "content leaked"
+
+# ── STATE <-> REFLECTION (202608170001 §1) ──────────────────────────────────
+echo "[osf1] state <-> reflection reference"
+SREC=$(Q -c "select public.yorisou_osf1_current_state_create('$B', array['steady'], null, null, null, null, 'manual');")
+LINKED=$(Q -c "select public.yorisou_osf1_reflection_create('$B', null, '$SREC', 'light', 'そのときのこと', null, null, null, null);")
+GOT=$(Q -c "select current_state_record_id from public.yorisou_life_reflections where id='$LINKED';")
+[ "$GOT" = "$SREC" ] && pass "a person can relate a reflection to their own state record" || fail "state link" "got '$GOT'"
+# Another person's state cannot be referenced, and the error does not distinguish it from absent.
+ERR=$(Q -c "select public.yorisou_osf1_reflection_create('$OTHER', null, '$SREC', 'light', 'のぞき見', null, null, null, null);" 2>&1 >/dev/null || true)
+case "$ERR" in
+  *osf1_state_record_not_owned*) pass "another person's state record cannot be linked" ;;
+  *) fail "state link" "cross-owner link was allowed: $ERR" ;;
+esac
+NOLINK=$(Q -c "select public.yorisou_osf1_reflection_create('$B', null, null, 'light', 'ひもづけなし', null, null, null, null);")
+NULLED=$(Q -c "select current_state_record_id is null from public.yorisou_life_reflections where id='$NOLINK';")
+[ "$NULLED" = "t" ] && pass "omitting the link is valid — nothing is linked automatically" || fail "state link" "auto-linked"
+# The audit records only THAT a link exists, never what the state said.
+ABOUT=$(Q -c "select detail->>'about_state' from public.yorisou_life_os_audit_events where entity_ref='$LINKED';")
+[ "$ABOUT" = "true" ] && pass "the audit records the presence of a link" || fail "state link audit" "got '$ABOUT'"
+# The needle must be the tag actually seeded, or this passes without testing anything. It greps for
+# 'steady' because that is what the state record above holds.
+DLEAK=$(Q -c "select count(*) from public.yorisou_life_os_audit_events where entity_ref='$LINKED' and detail::text like '%steady%';")
+[ "$DLEAK" = "0" ] && pass "the audit does not record what the state said" || fail "state link audit" "content leaked"
+# Deleting the state must not delete the reflection written near it.
+Q -c "delete from public.yorisou_current_state_records where id='$SREC';" >/dev/null
+SURV=$(Q -c "select count(*) from public.yorisou_life_reflections where id='$LINKED';")
+[ "$SURV" = "1" ] && pass "deleting the state leaves the reflection standing" || fail "state link" "reflection lost"
+ORPH=$(Q -c "select current_state_record_id is null from public.yorisou_life_reflections where id='$LINKED';")
+[ "$ORPH" = "t" ] && pass "the dangling reference is nulled rather than left pointing at nothing" || fail "state link" "dangling"
+
 echo "[osf1] cross-user isolation — user A must not reach user B"
 C='osf1-owner-c-iso'
 CS=$(Q -c "select public.yorisou_osf1_current_state_create('$C', array['steady'], null,null,null,null,'manual');")

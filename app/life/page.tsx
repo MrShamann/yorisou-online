@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { latestCurrentStateRecord, listGoals, listMemories, listReflections } from "@/lib/server/lifeOs/store";
+import { latestCurrentStateRecord, listGoals, listEligibleMemories, listReflections } from "@/lib/server/lifeOs/store";
 import { GOAL_STATUS_LABELS, type Goal } from "@/lib/life-os/contract";
 import SignInRequired from "./SignInRequired";
 import { INTERNAL_HANDLING } from "@/lib/life-os/privacyCopy";
@@ -60,7 +60,7 @@ export default async function LifePage() {
     latestCurrentStateRecord(accountId).catch(() => null),
     listGoals(accountId, 3).catch(() => []),
     listReflections(accountId, 3).catch(() => []),
-    listMemories(accountId, 3).catch(() => []),
+    listEligibleMemories(accountId, 3).catch(() => []),
   ]);
   const stateTags = currentState ? stateTagLine(currentState) : "";
   const stateDetail = currentState ? stateDetailLine(currentState) : null;

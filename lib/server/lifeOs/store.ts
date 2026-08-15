@@ -374,7 +374,7 @@ function decodeCursor(cursor: string): { createdAt: string; id: string } | null 
 
 export async function listMemoryPage(
   ownerAccountId: string,
-  options: { cursor?: string | null; limit?: number } = {},
+  options: { cursor?: string | null; limit?: number; eligibleOnly?: boolean } = {},
 ): Promise<MemoryPage> {
   const limit = Math.min(Math.max(options.limit ?? MEMORY_PAGE_SIZE, 1), 100);
   const params = new URLSearchParams({
@@ -385,6 +385,12 @@ export async function listMemoryPage(
     // round trip and without a count query over the whole table.
     limit: String(limit + 1),
   });
+  // ELIGIBILITY, and the distinction that makes suppression mean anything.
+  //
+  // RETRIEVAL paths ask for eligible rows only: a suppressed memory must not reach anything that
+  // surfaces or personalises. MANAGEMENT asks for all of them, because a person who cannot see a
+  // suppressed memory cannot restore it — the reversibility would be theoretical.
+  if (options.eligibleOnly) params.set("lifecycle_state", "eq.active");
   if (options.cursor) {
     const decoded = decodeCursor(options.cursor);
     if (!decoded) throw new Error("osf1_memory_cursor_invalid");
@@ -438,6 +444,27 @@ export async function memoryDeletionReceipts(
   });
 }
 
+/**
+ * ELIGIBLE memories only — active, never suppressed or revoked.
+ *
+ * This is the retrieval path. Every surface that shows a memory as something the product is
+ * currently holding on the person's behalf uses it, which is what makes suppression and revocation
+ * real rather than a label on a row.
+ */
+export async function listEligibleMemories(ownerAccountId: string, limit = 50): Promise<ExplicitMemory[]> {
+  return select<ExplicitMemory>(
+    "yorisou_explicit_memories",
+    new URLSearchParams({
+      select: MEMORY_COLUMNS,
+      owner_account_id: `eq.${ownerAccountId}`,
+      lifecycle_state: "eq.active",
+      order: "created_at.desc",
+      limit: String(limit),
+    }),
+  );
+}
+
+/** Every memory regardless of lifecycle state. Management surfaces only — see listEligibleMemories. */
 export async function listMemories(ownerAccountId: string, limit = 50): Promise<ExplicitMemory[]> {
   return select<ExplicitMemory>(
     "yorisou_explicit_memories",

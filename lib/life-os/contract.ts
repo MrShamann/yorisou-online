@@ -584,6 +584,25 @@ export function parseAssistantInput(
  */
 export type MemoryUpdateInput = { content: string; confirmed: true };
 
+/**
+ * A lifecycle transition. Separate from the content edit because they are different acts: one
+ * changes what the memory SAYS, the other changes what the product may DO with it.
+ *
+ * `confirmed` is required for both, for the same reason — each is a decision about the person's own
+ * record, and the product should never make one on their behalf.
+ */
+export type MemoryLifecycleInput = { lifecycle: MemoryLifecycleState; confirmed: true };
+
+export function parseMemoryLifecycleInput(body: unknown): MemoryLifecycleInput {
+  const value = (body ?? {}) as Record<string, unknown>;
+  if (value.confirmed !== true) throw new LifeOsInputError("memory_requires_confirmation");
+  const next = value.lifecycle;
+  if (typeof next !== "string" || !MEMORY_LIFECYCLE_STATES.includes(next as MemoryLifecycleState)) {
+    throw new LifeOsInputError("memory_lifecycle_invalid");
+  }
+  return { lifecycle: next as MemoryLifecycleState, confirmed: true };
+}
+
 export function parseMemoryUpdateInput(body: unknown): MemoryUpdateInput {
   const value = (body ?? {}) as Record<string, unknown>;
   // An edit replaces the sentence the person agreed to, so it needs the same act of agreement the

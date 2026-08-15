@@ -195,17 +195,28 @@ test("a transactional action cannot be written by the asynchronous writer", asyn
   });
 });
 
-test("the four transactional actions are exactly the ones the completion package names", () => {
+test("the transactional actions are exactly the mutations that destroy or re-permit", () => {
+  // Grown from four to seven by the finalization package's memory lifecycle. The rule is unchanged
+  // and is what decides membership: an action is transactional when the surviving data cannot answer
+  // the question the audit row answers — what used to be here, or what the product may now do.
   assert.deepEqual([...TRANSACTIONAL_AUDIT_ACTIONS].sort(), [
     "yorisou.life.memory.confirmed",
     "yorisou.life.memory.deleted",
+    "yorisou.life.memory.restored",
+    "yorisou.life.memory.revoked",
+    "yorisou.life.memory.suppressed",
     "yorisou.life.memory.updated",
     "yorisou.life.reflection.created",
   ]);
-  // Every one of them must actually be written inside the migration that claims to do it.
-  const migration = readFileSync("supabase/migrations/202608160001_osf1_phase1_completion.sql", "utf8");
+  // Every one of them must actually be written inside a migration that claims to do it. The list is
+  // every OSF-1 migration rather than one file, so a later migration adding an action is covered
+  // without this assertion needing to be remembered.
+  const migrations = readdirSync("supabase/migrations")
+    .filter((f) => f.includes("osf1") && f.endsWith(".sql"))
+    .map((f) => readFileSync(join("supabase/migrations", f), "utf8"))
+    .join("\n");
   for (const action of TRANSACTIONAL_AUDIT_ACTIONS) {
-    assert.ok(migration.includes(action), `${action} is declared transactional but no RPC writes it`);
+    assert.ok(migrations.includes(action), `${action} is declared transactional but no RPC writes it`);
   }
 });
 
@@ -315,12 +326,18 @@ test("the transactional class is declared, and it is now delivered rather than p
     .filter(([, cls]) => cls === "transactional")
     .map(([action]) => action)
     .sort();
-  assert.deepEqual(transactional, [
-    "yorisou.life.memory.confirmed",
-    "yorisou.life.memory.deleted",
-    "yorisou.life.memory.updated",
-    "yorisou.life.reflection.created",
-  ]);
+  // Derived from the same constant TRANSACTIONAL_AUDIT_ACTIONS exposes, so the two cannot drift
+  // apart and this test cannot pass while the exported list says something else.
+  assert.deepEqual(transactional, [...TRANSACTIONAL_AUDIT_ACTIONS].sort());
+  // And each one must actually be written by a migration that claims to — a declaration with no
+  // implementation is precisely the gap this class was introduced to close.
+  const migrations = [
+    readFileSync("supabase/migrations/202608160001_osf1_phase1_completion.sql", "utf8"),
+    readFileSync("supabase/migrations/202608170001_osf1_phase1_finalization.sql", "utf8"),
+  ].join("\n");
+  for (const action of transactional) {
+    assert.ok(migrations.includes(action), `${action} is declared transactional but no RPC writes it`);
+  }
   // Every declared action has a class — a new event cannot be added without deciding.
   for (const action of Object.keys(AUDIT_DELIVERY_CLASS)) {
     assert.match(AUDIT_DELIVERY_CLASS[action as keyof typeof AUDIT_DELIVERY_CLASS], /^(transactional|asynchronous)$/);
