@@ -110,6 +110,157 @@ export async function lifeTimeline(ownerAccountId: string, limit = DEFAULT_LIMIT
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// KEYSET PAGINATION over the merged timeline
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// WHY THIS IS NOT JUST A BIGGER LIMIT. A fixed cap hides everything past it, exactly the way the
+// memory list hid a person's fifty-first memory. The timeline is worse, because it merges five
+// sources: a naive cap silently favours whichever kind happens to be newest.
+//
+// HOW A MERGED KEYSET WORKS HERE. Each source is asked for at most `limit + 1` rows that fall after
+// the cursor. Merging those gives at least `limit` correct rows whenever `limit` exist, because no
+// source can contribute more than `limit + 1` before the merge cuts it. Bounded work: five queries
+// of `limit + 1`, never the whole history, and never a client-side slice of everything.
+//
+// The sort key is (occurred_at DESC, id DESC). The id is the tie-break and it is not decoration —
+// five sources produce ties routinely, and a cursor into an undefined order is not stable.
+//
+// SUPPORTED KINDS. Current State, Experience, Reflection (light), Deep Reflection, Direction. Memory
+// is deliberately NOT a timeline kind: a memory is a standing note with its own surface and its own
+// lifecycle controls, not something that happened at a moment. It was previously merged in; removing
+// it is the intended Phase 1 shape, not an omission.
+
+export const TIMELINE_FILTERS = ["ALL", "STATE", "EXPERIENCE", "REFLECTION", "POSTMORTEM", "DIRECTION"] as const;
+export type TimelineFilter = (typeof TIMELINE_FILTERS)[number];
+
+/** Natural Japanese for the consumer control. Internal ids stay English. */
+export const TIMELINE_FILTER_LABELS: Record<TimelineFilter, string> = {
+  ALL: "すべて",
+  STATE: "状態",
+  EXPERIENCE: "体験",
+  REFLECTION: "振り返り",
+  POSTMORTEM: "じっくり振り返る",
+  DIRECTION: "方向",
+};
+
+export function parseTimelineFilter(value: unknown): TimelineFilter {
+  if (value === undefined || value === null || value === "") return "ALL";
+  if (typeof value !== "string" || !TIMELINE_FILTERS.includes(value as TimelineFilter)) {
+    throw new Error("osf1_timeline_filter_invalid");
+  }
+  return value as TimelineFilter;
+}
+
+export type TimelinePage = { entries: TimelineEntry[]; nextCursor: string | null; filter: TimelineFilter };
+
+function encodeTimelineCursor(entry: TimelineEntry, filter: TimelineFilter): string {
+  // The filter travels INSIDE the cursor. A cursor minted under one filter cannot be replayed under
+  // another: the position it describes is meaningless in a differently-composed list, and silently
+  // accepting it would skip or repeat rows with no error anywhere.
+  return Buffer.from(`${filter}|${entry.at}|${entry.id}`, "utf8").toString("base64url");
+}
+
+function decodeTimelineCursor(cursor: string, filter: TimelineFilter): { at: string; id: string } | null {
+  try {
+    const [encodedFilter, at, id] = Buffer.from(cursor, "base64url").toString("utf8").split("|");
+    if (encodedFilter !== filter) return null;
+    if (!at || !id || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+    if (Number.isNaN(Date.parse(at))) return null;
+    return { at, id };
+  } catch {
+    return null;
+  }
+}
+
+/** The keyset predicate every source shares, expressed as PostgREST's `or=` form. */
+function afterCursor(params: URLSearchParams, at: string, id: string): void {
+  params.set("or", `(created_at.lt.${at},and(created_at.eq.${at},id.lt.${id}))`);
+}
+
+async function pageOf<T>(table: string, select: string, owner: string, limit: number,
+                         cursor: { at: string; id: string } | null,
+                         extra: Record<string, string> = {}): Promise<T[]> {
+  const url = process.env.SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) return [];
+  const params = new URLSearchParams({
+    select,
+    owner_account_id: `eq.${owner}`,
+    order: "created_at.desc,id.desc",
+    limit: String(limit + 1),
+    ...extra,
+  });
+  if (cursor) afterCursor(params, cursor.at, cursor.id);
+  const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/${table}?${params}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return [];
+  return (await response.json()) as T[];
+}
+
+export async function lifeTimelinePage(
+  ownerAccountId: string,
+  options: { cursor?: string | null; limit?: number; filter?: TimelineFilter } = {},
+): Promise<TimelinePage> {
+  const filter = options.filter ?? "ALL";
+  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), 50);
+  let cursor: { at: string; id: string } | null = null;
+  if (options.cursor) {
+    cursor = decodeTimelineCursor(options.cursor, filter);
+    // Refused rather than treated as "start again" — silently restarting is how a person scrolls
+    // forever without noticing they are re-reading page one.
+    if (!cursor) throw new Error("osf1_timeline_cursor_invalid");
+  }
+
+  const wants = (kind: TimelineFilter) => filter === "ALL" || filter === kind;
+  const [states, goals, reflections, experiences] = await Promise.all([
+    wants("STATE")
+      ? pageOf<CurrentStateRecord>("yorisou_current_state_records",
+          "id,state_tags,mood,energy,situation,reflection,source,created_at", ownerAccountId, limit, cursor).catch(() => [])
+      : Promise.resolve([]),
+    wants("DIRECTION")
+      ? pageOf<Goal>("yorisou_goals", "id,title,description,status,created_at,updated_at",
+          ownerAccountId, limit, cursor).catch(() => [])
+      : Promise.resolve([]),
+    wants("REFLECTION") || wants("POSTMORTEM")
+      ? pageOf<LifeReflection>("yorisou_life_reflections",
+          "id,experience_id,current_state_record_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at",
+          ownerAccountId, limit, cursor,
+          // The two reflection filters read the same table and differ only by mode, which is the
+          // whole reason the mode is a column rather than an audit reason.
+          filter === "REFLECTION" ? { mode: "eq.light" } : filter === "POSTMORTEM" ? { mode: "eq.postmortem" } : {},
+        ).catch(() => [])
+      : Promise.resolve([]),
+    wants("EXPERIENCE")
+      ? pageOf<ExperienceRow>("yorisou_experience_cards", "id,title,situation,created_at",
+          ownerAccountId, limit, cursor, { deleted_at: "is.null", withdrawn_at: "is.null" }).catch(() => [])
+      : Promise.resolve([]),
+  ]);
+
+  const merged: TimelineEntry[] = [
+    ...states.map((record) => ({ kind: "current_state" as const, at: record.created_at, id: record.id, record })),
+    ...goals.map((record) => ({ kind: "goal" as const, at: record.created_at, id: record.id, record })),
+    ...reflections.map((record) => ({ kind: "reflection" as const, at: record.created_at, id: record.id, record })),
+    ...experiences.map((row) => ({
+      kind: "experience" as const, at: row.created_at, id: row.id,
+      record: { id: row.id, title: row.title, situation: row.situation },
+    })),
+  ];
+
+  const sorted = merged
+    .filter((entry) => typeof entry.at === "string")
+    .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
+  const entries = sorted.slice(0, limit);
+  const more = sorted.length > entries.length;
+  return {
+    entries,
+    nextCursor: more && entries.length > 0 ? encodeTimelineCursor(entries[entries.length - 1], filter) : null,
+    filter,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PHASE F — the return view
 // ─────────────────────────────────────────────────────────────────────────────
 //

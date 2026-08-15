@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
-import { lifeTimeline, type TimelineEntry } from "@/lib/server/lifeOs/timeline";
+import { lifeTimelinePage, parseTimelineFilter, TIMELINE_FILTERS, TIMELINE_FILTER_LABELS, type TimelineEntry } from "@/lib/server/lifeOs/timeline";
 import { REFLECTION_MODE_LABELS } from "@/lib/life-os/contract";
 import { stateDetailLine, stateTagLine } from "../StateHistory";
 import SignInRequired from "../SignInRequired";
@@ -73,7 +73,11 @@ function day(at: string): string {
   return new Date(at).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
 }
 
-export default async function LifeTimelinePage() {
+export default async function LifeTimelinePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   // ONE authority for the gate AND the viewer: resolving them separately is how a page ends
   // up scoping data to a different identity than the one that passed the gate.
   const access = await resolveLifeOsRouteAccess();
@@ -86,7 +90,26 @@ export default async function LifeTimelinePage() {
       </main>
     );
   }
-  const entries = await lifeTimeline(accountId).catch(() => []);
+  // FILTER AND CURSOR IN THE URL, so the list is server-rendered and works without JavaScript. A
+  // load-more that needs a script is a load-more that fails for the person on a bad connection, and
+  // the "もっと見る" link below is a real link for exactly that reason.
+  const params = await searchParams;
+  let filter;
+  try {
+    filter = parseTimelineFilter(typeof params.filter === "string" ? params.filter : undefined);
+  } catch {
+    // A filter nobody offered is not an error worth a page for — fall back to everything.
+    filter = "ALL" as const;
+  }
+  const cursor = typeof params.cursor === "string" ? params.cursor : null;
+  const page = await lifeTimelinePage(accountId, { cursor, filter }).catch(() =>
+    // A stale or malformed cursor restarts the list rather than showing a failure. It is the one
+    // place restarting is right: the person clicked a link, they did not type a cursor.
+    lifeTimelinePage(accountId, { filter }).catch(() => ({ entries: [], nextCursor: null, filter })),
+  );
+  const entries = page.entries;
+  const href = (next: string, withCursor?: string | null) =>
+    `/life/timeline?filter=${next}${withCursor ? `&cursor=${encodeURIComponent(withCursor)}` : ""}`;
 
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
@@ -94,6 +117,24 @@ export default async function LifeTimelinePage() {
       <h1 className="mt-3 text-[24px] font-semibold leading-[1.55] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
         これまで。
       </h1>
+
+      {/* Bounded consumer filters. Natural Japanese; the internal ids stay English. */}
+      <nav aria-label="表示するもの" className="mt-5 flex flex-wrap gap-2">
+        {TIMELINE_FILTERS.map((option) => (
+          <a
+            key={option}
+            href={href(option)}
+            aria-current={option === filter ? "true" : undefined}
+            className={
+              option === filter
+                ? "inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-4 text-[14px] font-medium text-white"
+                : "inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] border border-[var(--pxr-border-subtle)] px-4 text-[14px] text-[var(--pxr-text-secondary)]"
+            }
+          >
+            {TIMELINE_FILTER_LABELS[option]}
+          </a>
+        ))}
+      </nav>
 
       {entries.length === 0 ? (
         <p className="mt-6 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
@@ -125,6 +166,17 @@ export default async function LifeTimelinePage() {
             );
           })}
         </ol>
+      )}
+
+      {/* A real link, not a script. Someone on a bad connection still reaches page two, and it has a
+          natural stopping point rather than loading forever. */}
+      {page.nextCursor && (
+        <a
+          href={href(filter, page.nextCursor)}
+          className="mt-7 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] text-[var(--pxr-text-muted)]"
+        >
+          もっと見る
+        </a>
       )}
 
       <Link

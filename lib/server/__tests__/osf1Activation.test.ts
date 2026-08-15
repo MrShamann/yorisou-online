@@ -372,7 +372,21 @@ test("the two new answer columns exist in the migration and in the RPC", () => {
 
 test("the timeline stores nothing and asserts no relationship", () => {
   const timeline = readFileSync("lib/server/lifeOs/timeline.ts", "utf8");
-  assert.ok(!/insert|rpc\/|POST/.test(timeline.replace(/\/\/.*$/gm, "")), "a timeline that writes is asserting relationships");
+  // WRITE MECHANISMS, not bare substrings. The previous form matched the word POSTMORTEM — which is
+  // a reflection mode, not an HTTP verb — and would have forced a rename to satisfy a false
+  // positive. This is stricter, not looser: it adds upsert, patch and delete, which the substring
+  // form missed entirely, and it still catches every real write.
+  const body = timeline.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  for (const write of [
+    /method:\s*["'`](POST|PUT|PATCH|DELETE)["'`]/,
+    /\brpc\//,
+    /\.insert\(/,
+    /\.upsert\(/,
+    /\.update\(/,
+    /\bauditLifeOs\(/,
+  ]) {
+    assert.ok(!write.test(body), `a timeline that writes is asserting relationships: ${write}`);
+  }
   // And it must not reach the assessment side.
   for (const forbidden of ["yorisou_assessment_results", "yorisou_test_results", "canonicalPrivateState", "assessmentAttemptStore"]) {
     assert.ok(!timeline.includes(forbidden), `the timeline must not include ${forbidden} — that is the methodology boundary`);
