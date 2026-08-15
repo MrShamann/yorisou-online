@@ -28,14 +28,14 @@ export async function POST(request: Request) {
   // Bounded before it reaches a provider. Everything here is text the person typed moments ago, but
   // "the person typed it" is a property of the flow, not of the request — an unbounded body would
   // reach the model just as readily.
-  let answers;
+  let parsed;
   try {
-    answers = parseAssistantInput(body);
+    parsed = parseAssistantInput(body);
   } catch (error) {
     if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
     throw error;
   }
-  const outcome = await draftReflection(answers);
+  const outcome = await draftReflection(parsed.answers, parsed.mode);
   if (!outcome.ok) {
     // A refusal is recorded too — a boundary violation is the single most important thing this
     // capability can produce, and it must not be invisible just because nothing was shown.

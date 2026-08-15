@@ -330,6 +330,74 @@ export async function updateMemory(ownerAccountId: string, memoryId: string, con
   });
 }
 
+/**
+ * KEYSET PAGINATION over memories.
+ *
+ * `listMemories` caps at 50 and takes no offset, so a person who confirmed a fifty-first memory
+ * simply could not reach it — the product had quietly stopped showing them their own records. The
+ * fix is not a larger number: Memory governance §4 prohibits bulk memory reads, so raising the cap
+ * moves in the wrong direction. It is a cursor.
+ *
+ * Keyset rather than OFFSET, because offset pagination over a list that can be deleted from skips
+ * rows: remove one memory on page 1 and the first row of page 2 shifts up past the window and is
+ * never shown. That is the same defect as the 50-cap, just harder to notice.
+ *
+ * The sort is (created_at desc, id desc). The id is not decoration — two memories confirmed in the
+ * same millisecond would otherwise have no defined order, and a cursor into an undefined order is
+ * not stable. The cursor encodes both halves for exactly that reason.
+ */
+export const MEMORY_PAGE_SIZE = 25;
+
+export type MemoryPage = { memories: ExplicitMemory[]; nextCursor: string | null };
+
+/** Opaque to the caller by construction: it is the sort key, not an index into anything. */
+function encodeCursor(row: ExplicitMemory): string {
+  return Buffer.from(`${row.created_at}|${row.id}`, "utf8").toString("base64url");
+}
+
+function decodeCursor(cursor: string): { createdAt: string; id: string } | null {
+  try {
+    const [createdAt, id] = Buffer.from(cursor, "base64url").toString("utf8").split("|");
+    // A malformed cursor is refused, never coerced into "start from the beginning" — silently
+    // restarting a list is how a person scrolls forever without noticing they are seeing page 1.
+    if (!createdAt || !id || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+    if (Number.isNaN(Date.parse(createdAt))) return null;
+    return { createdAt, id };
+  } catch {
+    return null;
+  }
+}
+
+export async function listMemoryPage(
+  ownerAccountId: string,
+  options: { cursor?: string | null; limit?: number } = {},
+): Promise<MemoryPage> {
+  const limit = Math.min(Math.max(options.limit ?? MEMORY_PAGE_SIZE, 1), 100);
+  const params = new URLSearchParams({
+    select: MEMORY_COLUMNS,
+    owner_account_id: `eq.${ownerAccountId}`,
+    order: "created_at.desc,id.desc",
+    // One more than asked for. Its presence is what tells us another page exists, without a second
+    // round trip and without a count query over the whole table.
+    limit: String(limit + 1),
+  });
+  if (options.cursor) {
+    const decoded = decodeCursor(options.cursor);
+    if (!decoded) throw new Error("osf1_memory_cursor_invalid");
+    params.set(
+      "or",
+      `(created_at.lt.${decoded.createdAt},and(created_at.eq.${decoded.createdAt},id.lt.${decoded.id}))`,
+    );
+  }
+  const rows = await select<ExplicitMemory>("yorisou_explicit_memories", params);
+  const hasMore = rows.length > limit;
+  const memories = hasMore ? rows.slice(0, limit) : rows;
+  return {
+    memories,
+    nextCursor: hasMore && memories.length > 0 ? encodeCursor(memories[memories.length - 1]) : null,
+  };
+}
+
 export async function listMemories(ownerAccountId: string, limit = 50): Promise<ExplicitMemory[]> {
   return select<ExplicitMemory>(
     "yorisou_explicit_memories",

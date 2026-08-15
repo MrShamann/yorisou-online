@@ -130,13 +130,26 @@ function prompt(answers: ReflectionAnswers, mode: ReflectionMode): string {
   ].join("\n");
 }
 
+/**
+ * The output bound is the COLUMN's bound, not a round number.
+ *
+ * A draft is applied by appending it to the person's `next_time` answer, and that column accepts
+ * 2000 characters. The previous ceiling of 4000 therefore allowed a perfectly valid draft that the
+ * person could accept and then fail to save — the assistant handing them something the product would
+ * refuse. Bounding the two at the same number is what makes "use this draft" always work.
+ */
+const MAX_DRAFT_LENGTH = 2000;
+const MAX_QUESTION_LENGTH = 300;
+
 function validate(value: unknown): { draft: string; question: string | null } | null {
   if (!value || typeof value !== "object") return null;
   const data = value as Record<string, unknown>;
   const draft = typeof data.draft === "string" ? data.draft.trim() : "";
-  if (draft.length === 0 || draft.length > 4000) return null;
+  // Over-length is REFUSED, never truncated. Cutting a provider's output mid-sentence and showing it
+  // as a finished draft would be the product putting words in someone's mouth badly.
+  if (draft.length === 0 || draft.length > MAX_DRAFT_LENGTH) return null;
   const raw = typeof data.question === "string" ? data.question.trim() : "";
-  return { draft, question: raw.length > 0 && raw.length <= 300 ? raw : null };
+  return { draft, question: raw.length > 0 && raw.length <= MAX_QUESTION_LENGTH ? raw : null };
 }
 
 /**
@@ -145,14 +158,20 @@ function validate(value: unknown): { draft: string; question: string | null } | 
  * Returns a reason rather than throwing, because every failure here is one the flow must survive
  * gracefully: the person is mid-reflection and must be able to finish without the assistant.
  */
-export async function draftReflection(answers: ReflectionAnswers): Promise<ReflectionDraftOutcome> {
+export async function draftReflection(
+  answers: ReflectionAnswers,
+  requestedMode: ReflectionMode | null = null,
+): Promise<ReflectionDraftOutcome> {
   const hasText = Object.values(answers).some((value) => (value ?? "").trim().length > 0);
   if (!hasText) return { ok: false, reason: "nothing_written" };
 
   const routes = resolvePrivateReflectionProviders();
   if (routes.length === 0) return { ok: false, reason: "assistant_unavailable" };
 
-  const body = prompt(answers, modeOf(answers));
+  // An explicit, already-validated mode wins; inference is the fallback for callers that do not
+  // send one. Inference stays because it is still correct — the four postmortem questions are asked
+  // nowhere else — but a stated mode should never be second-guessed.
+  const body = prompt(answers, requestedMode ?? modeOf(answers));
   for (const route of routes) {
     try {
       const response = await fetch(route.endpoint, {

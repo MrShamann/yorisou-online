@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { listMemories } from "@/lib/server/lifeOs/store";
+import { listMemoryPage } from "@/lib/server/lifeOs/store";
 import MemoryList from "./MemoryList";
 import SignInRequired from "../SignInRequired";
 import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
@@ -30,7 +30,9 @@ export default async function MemoriesPage() {
       </main>
     );
   }
-  const memories = await listMemories(accountId).catch(() => []);
+  // The first page only. Everything after it is reachable through the cursor rather than through a
+  // larger number — see listMemoryPage for why a bigger cap is the wrong fix.
+  const page = await listMemoryPage(accountId).catch(() => ({ memories: [], nextCursor: null }));
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
       <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">わたしの記録</p>
@@ -40,7 +42,7 @@ export default async function MemoriesPage() {
       <p className="mt-3 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
         あなたが「覚えておく」と決めたものだけが、ここにあります。忘れると、消えます。
       </p>
-      <MemoryList initialMemories={memories} />
+      <MemoryList initialMemories={page.memories} initialCursor={page.nextCursor} />
 
       <Link
         href="/life"

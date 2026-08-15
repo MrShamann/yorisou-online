@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { MEMORY_TYPE_LABELS, type ExplicitMemory } from "@/lib/life-os/contract";
-import { lifeDelete, lifeFailureMessage, lifePatch } from "@/lib/life-os/client";
+import { lifeDelete, lifeFailureMessage, lifeGet, lifePatch } from "@/lib/life-os/client";
 
 // OSF-1 — 覚えていること.
 //
@@ -20,8 +20,17 @@ import { lifeDelete, lifeFailureMessage, lifePatch } from "@/lib/life-os/client"
 
 type Edit = { id: string; draft: string; stage: "writing" | "confirming" };
 
-export default function MemoryList({ initialMemories }: { initialMemories: ExplicitMemory[] }) {
+export default function MemoryList({
+  initialMemories,
+  initialCursor = null,
+}: {
+  initialMemories: ExplicitMemory[];
+  initialCursor?: string | null;
+}) {
   const [memories, setMemories] = useState(initialMemories);
+  // Paged, not capped. `cursor` is null exactly when there is nothing further to load.
+  const [cursor, setCursor] = useState<string | null>(initialCursor);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   // One row at a time. Two open editors would let someone lose a sentence they meant to keep.
@@ -29,6 +38,19 @@ export default function MemoryList({ initialMemories }: { initialMemories: Expli
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const [editFailure, setEditFailure] = useState<{ id: string; message: string } | null>(null);
+
+  async function loadMore() {
+    if (!cursor || loadingMore) return;
+    setLoadingMore(true);
+    const result = await lifeGet<{ memories: ExplicitMemory[]; nextCursor: string | null }>(
+      `memories?cursor=${encodeURIComponent(cursor)}`,
+    );
+    setLoadingMore(false);
+    if (!result.ok) return;
+    // Appended, never replaced: the rows already on screen are the ones the person is reading.
+    setMemories((current) => [...current, ...result.data.memories]);
+    setCursor(result.data.nextCursor);
+  }
 
   async function remove(memory: ExplicitMemory) {
     setPending(memory.id);
@@ -208,6 +230,18 @@ export default function MemoryList({ initialMemories }: { initialMemories: Expli
           </li>
         );
       })}
+      {cursor && (
+        <li className="mt-2 list-none">
+          <button
+            type="button"
+            onClick={() => void loadMore()}
+            disabled={loadingMore}
+            className="inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] text-[var(--pxr-text-muted)]"
+          >
+            {loadingMore ? "読み込んでいます" : "もっと見る"}
+          </button>
+        </li>
+      )}
     </ul>
   );
 }

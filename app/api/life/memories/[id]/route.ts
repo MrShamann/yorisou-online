@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateMemory } from "@/lib/server/lifeOs/store";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
-import { LifeOsInputError, parseMemoryUpdateInput } from "@/lib/life-os/contract";
+import { LifeOsInputError, parseMemoryUpdateInput, parseUuid } from "@/lib/life-os/contract";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,17 @@ export const dynamic = "force-dynamic";
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const gate = await requireLifeViewer({ mutation: true });
   if ("refusal" in gate) return gate.refusal;
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  // A path segment is caller-supplied like any other input. Validating it here keeps an unparseable
+  // id from reaching PostgREST, where it becomes a 400 the store cannot classify and the API would
+  // return as a 500.
+  let id: string;
+  try {
+    id = parseUuid(rawId, "memory_id_required");
+  } catch (error) {
+    if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
+    throw error;
+  }
   let body: unknown;
   try {
     body = await request.json();

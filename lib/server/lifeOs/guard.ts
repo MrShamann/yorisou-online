@@ -6,6 +6,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { LIFE_OS_SCHEMA_READY_ENV } from "@/lib/life-os/access";
 import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
+import { newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
 
 export type LifeApiViewer = { accountId: string };
 
@@ -32,12 +33,24 @@ export async function requireLifeViewer(
   if (!route.allowed) {
     // Route-concealing. Every denial reason collapses to the same 404 — "off", "you are not an
     // admin" and "you are not signed in" must be indistinguishable from outside, or the response
-    // itself becomes an oracle for who is on the internal allowlist.
+    // itself becomes an oracle for who is on the internal allowlist. The reason is recorded where
+    // only an operator sees it, because "the feature is off" and "someone is probing" need telling
+    // apart from the inside even though they must not be from the outside.
+    recordLifeOsOps({
+      event: "life_os.access.denied",
+      correlationId: newCorrelationId(),
+      errorClass: route.reason,
+    });
     return { refusal: NextResponse.json({ error: "not_found" }, { status: 404 }) };
   }
   if (options.mutation) {
     const declared = (process.env[LIFE_OS_SCHEMA_READY_ENV] ?? "").trim().toLowerCase();
     if (declared !== "true") {
+      recordLifeOsOps({
+        event: "life_os.schema.not_ready",
+        correlationId: newCorrelationId(),
+        ownerAccountId: route.accountId,
+      });
       return {
         refusal: NextResponse.json(
           { error: "life_os_not_accepting_entries:denied_schema_not_ready" },
@@ -65,5 +78,12 @@ export function lifeApiError(error: unknown): NextResponse {
     return NextResponse.json({ error: message }, { status: 409 });
   }
   if (message.startsWith("osf1_")) return NextResponse.json({ error: message }, { status: 422 });
+  // Anything unrecognised is a real failure and the one case an operator must be able to see: the
+  // caller gets no detail, so without this the event would exist nowhere.
+  recordLifeOsOps({
+    event: "life_os.mutation.failed",
+    correlationId: newCorrelationId(),
+    errorClass: /^[a-z0-9_.:-]{1,64}$/i.test(message) ? message : "unclassified",
+  });
   return NextResponse.json({ error: "life_os_failed" }, { status: 500 });
 }

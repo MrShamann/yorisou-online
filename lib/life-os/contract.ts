@@ -419,6 +419,30 @@ function boundedText(value: unknown, max: number, code: string, required: boolea
   return trimmed;
 }
 
+/**
+ * Every id this product hands out is a PostgreSQL uuid, so every id it accepts must be one too.
+ *
+ * Without this, a non-UUID reaches PostgREST, which rejects it with a 400 that the store surfaces as
+ * `life_os_persistence_failed:400`, which `lifeApiError` — correctly refusing to leak an unrecognised
+ * error — turns into a **500**. A caller typo therefore looked like a server fault: noise in the
+ * logs, a misleading signal to anyone watching error rates, and a needless round trip to the
+ * database for input that could never have matched anything.
+ *
+ * Validated at the edge and returned as the house convention for bad input: LifeOsInputError, which
+ * every route maps to 422.
+ */
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function parseUuid(value: unknown, code: string): string {
+  if (typeof value !== "string" || !UUID_PATTERN.test(value.trim())) throw new LifeOsInputError(code);
+  return value.trim();
+}
+
+export function parseOptionalUuid(value: unknown, code: string): string | null {
+  if (value === undefined || value === null || value === "") return null;
+  return parseUuid(value, code);
+}
+
 export function parseCurrentStateInput(body: unknown): CurrentStateInput {
   const value = (body ?? {}) as Record<string, unknown>;
   const tags = value.stateTags;
@@ -463,10 +487,7 @@ export function parseReflectionInput(body: unknown): LifeReflectionInput {
       entry.required,
     );
   }
-  const experienceId = value.experienceId;
-  if (experienceId !== undefined && experienceId !== null && typeof experienceId !== "string") {
-    throw new LifeOsInputError("experience_id_invalid");
-  }
+  const experienceId = parseOptionalUuid(value.experienceId, "experience_id_invalid");
   // The mode has to survive parsing. It previously did not: this function returned only the answer
   // fields, so `input.mode` was always undefined downstream and every postmortem was recorded as a
   // light reflection. It is now stored on the row, not just carried in an audit reason.
@@ -477,7 +498,7 @@ export function parseReflectionInput(body: unknown): LifeReflectionInput {
   return {
     ...(parsed as Omit<LifeReflectionInput, "what_happened" | "experienceId">),
     what_happened: parsed.what_happened as string,
-    experienceId: (experienceId as string | undefined) ?? null,
+    experienceId,
     mode: (rawMode as ReflectionMode | undefined) ?? "light",
   };
 }
@@ -494,9 +515,20 @@ export function parseReflectionInput(body: unknown): LifeReflectionInput {
  * Unknown keys are DROPPED rather than rejected: a client that sends an extra field should get a
  * draft of what it did send, not a 422 in the middle of someone writing.
  */
-export function parseAssistantInput(body: unknown): Partial<Record<ReflectionField, string>> {
-  const value = ((body ?? {}) as Record<string, unknown>).answers;
-  if (value === undefined || value === null) return {};
+export function parseAssistantInput(
+  body: unknown,
+): { answers: Partial<Record<ReflectionField, string>>; mode: ReflectionMode | null } {
+  const root = (body ?? {}) as Record<string, unknown>;
+  // An explicit mode is accepted and CHECKED against the closed vocabulary. Unsupported values are
+  // refused rather than quietly treated as light: silently downgrading a mode is how a postmortem
+  // gets organised by the wrong instruction.
+  const rawMode = root.mode;
+  if (rawMode !== undefined && rawMode !== null && !REFLECTION_MODES.includes(rawMode as ReflectionMode)) {
+    throw new LifeOsInputError("assistant_mode_unsupported");
+  }
+  const mode = (rawMode as ReflectionMode | undefined) ?? null;
+  const value = root.answers;
+  if (value === undefined || value === null) throw new LifeOsInputError("assistant_answers_required");
   if (typeof value !== "object" || Array.isArray(value)) throw new LifeOsInputError("assistant_answers_invalid");
   const source = value as Record<string, unknown>;
   const answers: Partial<Record<ReflectionField, string>> = {};
@@ -505,7 +537,7 @@ export function parseAssistantInput(body: unknown): Partial<Record<ReflectionFie
     if (text) answers[entry.field] = text;
   }
   if (Object.keys(answers).length === 0) throw new LifeOsInputError("assistant_answers_required");
-  return answers;
+  return { answers, mode };
 }
 
 /**

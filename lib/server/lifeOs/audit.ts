@@ -32,6 +32,7 @@ import "server-only";
 // written. See docs/yorisou/osf1/OSF1_AUDIT_DELIVERY_CLASSES.md.
 
 import { createHash } from "crypto";
+import { newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
 
 /** `yorisou.life.<domain>.<verb>` — its own namespace, NOT the canonical `yorisou.exp.*` dictionary. */
 export const LIFE_OS_AUDIT_ACTIONS = [
@@ -118,7 +119,7 @@ export async function auditLifeOs(input: {
   const cfg = config();
   if (!cfg) return; // no store configured (local dev): nothing to write to, and not an error
   try {
-    await fetch(`${cfg.url}/rest/v1/rpc/yorisou_osf1_audit_write`, {
+    const response = await fetch(`${cfg.url}/rest/v1/rpc/yorisou_osf1_audit_write`, {
       method: "POST",
       headers: {
         apikey: cfg.key,
@@ -136,8 +137,27 @@ export async function auditLifeOs(input: {
         p_detail: input.detail ?? {},
       }),
     });
+    // A dropped asynchronous audit row is invisible by design — so it is at least COUNTED. Without
+    // this, "the audit is best-effort" and "the audit never fails" look identical from outside.
+    if (!response.ok) {
+      recordLifeOsOps({
+        event: "life_os.audit.write_failed",
+        correlationId: newCorrelationId(),
+        objectId: input.entityRef ?? null,
+        ownerAccountId: input.ownerAccountId,
+        errorClass: `http_${response.status}`,
+      });
+    }
   } catch {
     // Swallowed on purpose. The mutation the caller just performed must not be undone by the
-    // failure of its own audit record.
+    // failure of its own audit record — but it is recorded as an operational event, because an
+    // audit gap nobody can see is the failure mode this whole module exists to avoid.
+    recordLifeOsOps({
+      event: "life_os.audit.write_failed",
+      correlationId: newCorrelationId(),
+      objectId: input.entityRef ?? null,
+      ownerAccountId: input.ownerAccountId,
+      errorClass: "transport_failed",
+    });
   }
 }

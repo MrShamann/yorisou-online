@@ -200,7 +200,13 @@ test("every Life OS page and the API enforce the gate", () => {
   // would become an oracle for who is on the internal allowlist.
   assert.match(GUARD, /const route = await resolveLifeOsRouteAccess\(\);/);
   assert.match(GUARD, /if \(!route\.allowed\)/);
-  assert.ok(!/route\.reason/.test(GUARD), "the guard must not branch on the denial reason");
+  // The precise property is that the RESPONSE never varies by reason — not that the reason is
+  // unused. It is deliberately passed to the operational log, where only an operator sees it.
+  const denialBlock = GUARD.slice(GUARD.indexOf("if (!route.allowed)"), GUARD.indexOf("if (options.mutation)"));
+  assert.match(denialBlock, /recordLifeOsOps\(/, "the denial reason must reach the operator");
+  const responses = denialBlock.match(/NextResponse\.json\([^;]*\)/g) ?? [];
+  assert.equal(responses.length, 1, "a denial must have exactly one possible response");
+  assert.ok(!/route\.reason/.test(responses[0]), "the denial reason must never reach the caller");
   assert.match(GUARD, /life_os_not_accepting_entries/);
   // And every domain route goes through it — AT ANY DEPTH. Listing only the top level exempted the
   // dynamic child routes, which are the ones that take an id from the caller and so are exactly the
