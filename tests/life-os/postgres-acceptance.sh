@@ -595,6 +595,43 @@ SURV=$(Q -c "select count(*) from public.yorisou_life_reflections where id='$LIN
 ORPH=$(Q -c "select current_state_record_id is null from public.yorisou_life_reflections where id='$LINKED';")
 [ "$ORPH" = "t" ] && pass "the dangling reference is nulled rather than left pointing at nothing" || fail "state link" "dangling"
 
+# ── §9 EXPERIENCE PRIVACY: queue hygiene and PRIVATE undiscoverability ──────
+echo "[osf1] experience privacy — moderation queue hygiene, PRIVATE undiscoverable"
+PO='osf1-owner-priv'
+PV='osf1-owner-viewer'
+# Four flagged cards: one live, one deleted, one withdrawn, one both. The queue must show only the
+# live one. Before the fix all four appeared, so an operator was reading content two people had
+# explicitly taken back.
+Q -c "insert into public.yorisou_experience_cards
+        (owner_account_id, situation, action_tried, perceived_outcome, visibility, moderation_status,
+         state_context, limitations, may_fit, may_not_fit, deleted_at, withdrawn_at)
+      values
+        ('$PO','生きているカード','行動','結果','PRIVATE','limited','s','l','f','n', null, null),
+        ('$PO','消したカード','行動','結果','PRIVATE','limited','s','l','f','n', now(), null),
+        ('$PO','取り下げたカード','行動','結果','PRIVATE','limited','s','l','f','n', null, now()),
+        ('$PO','両方のカード','行動','結果','PRIVATE','limited','s','l','f','n', now(), now());" >/dev/null
+QLIVE=$(Q -c "select count(*) from public.yorisou_experience_cards
+              where owner_account_id='$PO' and moderation_status in ('limited','published')
+                and deleted_at is null and withdrawn_at is null;")
+[ "$QLIVE" = "1" ] && pass "the moderation queue predicate matches exactly the one live flagged card" \
+                   || fail "queue hygiene" "matched $QLIVE"
+QALL=$(Q -c "select count(*) from public.yorisou_experience_cards
+             where owner_account_id='$PO' and moderation_status in ('limited','published');")
+[ "$QALL" = "4" ] && pass "the three excluded cards still EXIST — they are hidden from review, not deleted" \
+                  || fail "queue hygiene" "expected 4 rows, found $QALL"
+
+# A PRIVATE card must be undiscoverable by anyone else. The discovery predicate requires a shared
+# visibility AND published AND searchable; a PRIVATE card satisfies none of them.
+DISC=$(Q -c "select count(*) from public.yorisou_experience_cards
+             where owner_account_id <> '$PV'
+               and visibility in ('ANONYMOUS_SHARED','SIMILAR_STATE_ONLY')
+               and moderation_status='published' and searchable = true
+               and situation='生きているカード';")
+[ "$DISC" = "0" ] && pass "a PRIVATE card cannot satisfy the discovery predicate" || fail "privacy" "discoverable"
+OWN=$(Q -c "select count(*) from public.yorisou_experience_cards
+            where owner_account_id='$PO' and situation='生きているカード';")
+[ "$OWN" = "1" ] && pass "the owner still has their own PRIVATE card" || fail "privacy" "owner lost the card"
+
 echo "[osf1] cross-user isolation — user A must not reach user B"
 C='osf1-owner-c-iso'
 CS=$(Q -c "select public.yorisou_osf1_current_state_create('$C', array['steady'], null,null,null,null,'manual');")

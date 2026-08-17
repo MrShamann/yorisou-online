@@ -138,7 +138,7 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 8 | Memory pagination unreachable past 50 | `CLOSED` | Keyset cursor, walked against real PostgREST: 5 pages, 30/30 distinct, ties exercised |
 | 9 | Timeline fixed limit of 20 | `DEFERRED` | Reachable today at Phase 1 volumes; keyset work not done |
 | 10 | Return loop boundedness implicit | `DEFERRED` | Bounded and mode-aware, but the selection policy is not explicit or separately tested |
-| 11 | Neither reflection mode has a browser E2E | `DEFERRED` | Proven at contract, store, database and audit levels, and both modes render and save in the authenticated a11y stack; **no dedicated browser E2E** |
+| 11 | Neither reflection mode has a browser E2E | `CLOSED` | Both modes now driven through a real browser against a real PostgreSQL, verifying THE ROW. Non-vacuity proven: forcing p_mode to light fails the deep test on exactly the intended assertion |
 | 12 | Transactional audit failure UX | `DEFERRED` | Behaviour is correct (no false success); the message and content-preservation work is not done |
 | 13 | State ↔ Reflection link | `CLOSED` | 8 acceptance assertions: ownership, no auto-link, null-on-delete, audit records presence not content |
 | 14 | Kill switch never fired | **`BLOCKING`** | The harness exists and ABORTS: a production-context rehearsal needs an S3-compatible identity store the auth layer can write to. Recovery class remains unmeasured. Release Gates v1.0 §3.4 requires a live test before exposure. See `OSF1_INTERNAL_ACCESS_BLOCKER.md` |
@@ -147,7 +147,7 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 23 | Return loop boundedness | `CLOSED` | Fixed priority, hard cap of three, deduped by record id, reads no memory at all |
 | 24 | Memory lifecycle transitions | `CLOSED` | Every illegal transition refused and proven: restore-from-revoked, suppress-from-revoked, unknown state, cross-owner |
 | 15 | Audit redaction | `CLOSED` | Redaction is a property of the ops record type — there is no field a reflection could occupy |
-| 16 | Moderation queue may include deleted/withdrawn cards | `DEFERRED` | Not audited in this package |
+| 16 | Moderation queue included deleted and withdrawn cards | `CLOSED` | **Real defect, found and fixed.** The query filtered only on moderation_status, so cards a person deleted or withdrew were queued for human review anyway — the two acts that most clearly mean "stop looking at this". Now excluded at the query, with acceptance assertions proving the excluded rows still exist rather than being destroyed |
 | 17 | Memory governance §3.2 suppress/revoke/receipt missing | `CLOSED` | All three implemented and verified; revocation terminal by design |
 | 18 | Life OS has never run against hosted Supabase | `ACCEPTED_FOR_INTERNAL` | Every rehearsal is a disposable cluster. The first hosted apply is still a first — which is why the runbook stages it |
 | 19 | `GET /api/life/assistant` returns 405 where siblings return 404 | `ACCEPTED_FOR_INTERNAL` | Discloses that a path exists; no data or capability exposed |

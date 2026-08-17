@@ -33,6 +33,8 @@
 | Light Reflection — 5 questions | `VERIFIED` | contract suite; acceptance harness stores `mode='light'` |
 | Deep Reflection (じっくり振り返る) — 7 questions | `VERIFIED` | contract suite; acceptance harness stores `mode='postmortem'`, `options_considered` round-trips |
 | Reflection mode persisted on the row | `VERIFIED` | `mode` column; acceptance asserts light, postmortem, invalid-refused, null-defaults |
+| Both reflection modes end-to-end through a browser | `VERIFIED` | real browser + real PostgreSQL; row, audit reason and timeline classification all checked; non-vacuity proven by sabotage |
+| PRIVATE experience undiscoverable; queue excludes deleted/withdrawn | `VERIFIED` | acceptance assertions; a real defect in the queue predicate was found and fixed |
 | State ↔ Reflection reference (optional, user-chosen) | `VERIFIED` | 8 acceptance assertions: ownership, no auto-link, null-on-state-delete, audit records presence not content |
 | Explicit Memory — candidate → confirm → active | `VERIFIED` | `check (user_confirmed = true)`; unconfirmed insert refused at schema level |
 | Memory edit with re-confirmation | `VERIFIED` | acceptance harness |
@@ -60,7 +62,6 @@
 | PREVIEW cohort | `NOT_ENABLED` | dev flag absent |
 | PUBLIC | `NOT_AUTHORIZED` | **unreachable in code** — nothing returns the state; reaching it is a Gate 5 act |
 | INTERNAL in production | `NOT_ENABLED` | implemented; requires migration + schema-ready + pilot flag + a founder-admin account |
-| Browser E2E for either reflection mode | `DEFERRED` | proven at contract, store, database and audit levels; **not** through a browser |
 | INTERNAL access E2E (founder vs normal user) | **`BLOCKING`** | harness written and ABORTS at a verified blocker — see `OSF1_INTERNAL_ACCESS_BLOCKER.md` |
 | Kill-switch live rehearsal | **`BLOCKING`** | **never fired**; recovery class unmeasured. Release Gates v1.0 §3.4 requires it before exposure |
 | Authenticated a11y in CI | `DEFERRED` | mandatory local gate instead; blocker is PostgREST on the runner |
@@ -84,6 +85,5 @@
 3. "An agent maintains the user's memory." — Nothing writes a memory without an explicit confirmation;
    the database refuses an unconfirmed row.
 4. "The assistant knows the user." — It reads no stored record. Every call is complete in itself.
-5. "Phase 1 is fully tested end to end." — There is no browser E2E for either reflection mode, the
-   INTERNAL access rehearsal is blocked, and **the kill switch has never been fired**. Two of those
-   are `BLOCKING`.
+5. "Phase 1 is fully tested end to end." — Both reflection modes now are, but **the INTERNAL access
+   rehearsal is blocked and the kill switch has never been fired**. Both are `BLOCKING`.
