@@ -265,10 +265,22 @@ done
   exit 1
 }
 
-# ── 7. The accessibility run ─────────────────────────────────────────────────
-echo "[osf1-a11y] 7/7 authenticated accessibility run (390x844 and 1440x900)"
+# ── 7. The run ───────────────────────────────────────────────────────────────
+#
+# The spec is selectable because the stack is the expensive part and it is identical for every
+# authenticated Life OS test. A third near-copy of two hundred lines of PostgreSQL + PostgREST +
+# proxy + build + server would be three places to fix the next time one of them changes.
+#
+#   OSF1_STACK_SPEC=tests/smoke/osf1-life-reflection-e2e.spec.ts bash tests/life-os/fullstack-a11y.sh
+#
+# The database credentials are handed to the spec so an end-to-end test can verify what actually
+# landed in PostgreSQL, rather than trusting the screen it just drove.
+SPEC="${OSF1_STACK_SPEC:-tests/smoke/osf1-life-authenticated-a11y.spec.ts}"
+echo "[osf1-a11y] 7/7 authenticated run — $SPEC"
 OSF1_FULLSTACK_A11Y=1 \
 PLAYWRIGHT_BASE_URL="http://127.0.0.1:$APP_PORT" \
-npx playwright test tests/smoke/osf1-life-authenticated-a11y.spec.ts --project=desktop
+OSF1_REST_URL="http://127.0.0.1:$PROXY_PORT" \
+OSF1_SERVICE_KEY="$SERVICE_KEY" \
+npx playwright test "$SPEC" --project=desktop
 
-echo "[osf1-a11y] PASS — 0 serious, 0 critical on the authenticated surfaces; teardown follows"
+echo "[osf1-a11y] PASS — $SPEC; teardown follows"
