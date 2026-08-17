@@ -141,8 +141,9 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 11 | Neither reflection mode has a browser E2E | `CLOSED` | Both modes now driven through a real browser against a real PostgreSQL, verifying THE ROW. Non-vacuity proven: forcing p_mode to light fails the deep test on exactly the intended assertion |
 | 12 | Transactional audit failure UX | `DEFERRED` | Behaviour is correct (no false success); the message and content-preservation work is not done |
 | 13 | State ↔ Reflection link | `CLOSED` | 8 acceptance assertions: ownership, no auto-link, null-on-delete, audit records presence not content |
-| 14 | Kill switch never fired | **`BLOCKING`** | The harness exists and ABORTS: a production-context rehearsal needs an S3-compatible identity store the auth layer can write to. Recovery class remains unmeasured. Release Gates v1.0 §3.4 requires a live test before exposure. See `OSF1_INTERNAL_ACCESS_BLOCKER.md` |
-| 21 | INTERNAL access unproven end to end in a production context | **`BLOCKING`** | Same blocker. The decision is unit-tested and every bypass is refused in the test context, but the production path — where `lifeOsInternalAccess` actually decides — has never run |
+| 14 | Kill switch never fired | `CLOSED` | **Fired, in a production deployment context.** ON -> KILL -> RESTORE, with data intact and no duplicated mutation. Recovery class MEASURED as `restart_required`: changing the variable does not affect the running process, so on Vercel the switch is redeploy-class, not instant. Recorded in the runbook |
+| 21 | INTERNAL access unproven end to end in a production context | `CLOSED` | Founder/Admin reaches all seven routes, the API and a write; an ordinary account gets 404 everywhere with no navigation leak; six bypass attempts (role query param, body claim, admin headers, forged cookie, unauthenticated call, copied URL) all refused. 42 assertions |
+| 25 | Kill switch is redeploy-class, not instant | `ACCEPTED_FOR_INTERNAL` | Measured, not assumed. Acceptable for a single-Founder beta; the runbook names the faster levers (edge block, or roll back to the previous deployment) for anything wider |
 | 22 | Timeline pagination | `CLOSED` | Merged keyset verified against real PostgREST: 27/27 across 4 pages, cross-kind ties exercised, filter bound to the cursor |
 | 23 | Return loop boundedness | `CLOSED` | Fixed priority, hard cap of three, deduped by record id, reads no memory at all |
 | 24 | Memory lifecycle transitions | `CLOSED` | Every illegal transition refused and proven: restore-from-revoked, suppress-from-revoked, unknown state, cross-owner |
@@ -153,10 +154,14 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 19 | `GET /api/life/assistant` returns 405 where siblings return 404 | `ACCEPTED_FOR_INTERNAL` | Discloses that a path exists; no data or capability exposed |
 | 20 | Governance names services (`memoryLifecycleService`, `permissionCheckService`) that do not exist | `ACCEPTED_FOR_INTERNAL` | Substance achieved under different names — single RPC write path, owner-scoped reads. A naming divergence, recorded not hidden |
 
-**TWO ITEMS ARE `BLOCKING` (#14, #21)**, and they share one cause: a production-context rehearsal
-cannot run without an S3-compatible identity store. Neither is a code defect — the harness is written
-and the code paths are unit-tested — but until the rehearsal runs, nobody has watched the kill switch
-close the feature, and Release Gates v1.0 §3.4 requires exactly that before exposure.
+**NOTHING IS `BLOCKING`.** #14 and #21 were the two blockers and both are now CLOSED: the
+production-context rehearsal runs, and the kill switch has been watched closing the feature and
+reopening it. Release Gates v1.0 §3.4 is satisfied by an executed test rather than by an argument.
+
+The blocker was diagnosed rather than declared impossible. It was never really "we need MinIO": the
+identity store turned out to be object-store backed, a disposable S3-compatible server covers it, and
+the last mile was that an empty `ListObjectsV2` made every lookup-by-enumeration return nothing —
+which surfaced as `missing_user_profile` and a 503 that looked like a missing service.
 
 #3 (the PRIVATE moderation policy) remains `FOUNDER_DECISION_REQUIRED` and must be settled before
 anyone who is not Edward writes about a diagnosis.

@@ -53,6 +53,8 @@
 | Observability — 7 ops events, redaction by type | `VERIFIED` | redaction asserted against the type, not caller discipline |
 | Authenticated accessibility, 7 routes × 2 viewports | `VERIFIED` | 14/14, 0 serious, 0 critical, on a real stack with seeded data |
 | Migration lineage applies, reverses and re-applies | `VERIFIED` | Gate 3, 42 assertions, in CI |
+| INTERNAL access, founder vs ordinary account | `INTERNAL_READY` | production deployment context, two real sessions: founder reaches all seven routes + API + a write; ordinary account 404 everywhere, no nav leak; six bypass attempts refused |
+| Kill switch | `VERIFIED` | fired live: ON -> KILL -> RESTORE, data intact, no duplicate mutation, still signed in. Recovery class MEASURED as `restart_required` (redeploy-class on Vercel) |
 
 ## What is off, deferred, or forbidden
 
@@ -62,8 +64,7 @@
 | PREVIEW cohort | `NOT_ENABLED` | dev flag absent |
 | PUBLIC | `NOT_AUTHORIZED` | **unreachable in code** — nothing returns the state; reaching it is a Gate 5 act |
 | INTERNAL in production | `NOT_ENABLED` | implemented; requires migration + schema-ready + pilot flag + a founder-admin account |
-| INTERNAL access E2E (founder vs normal user) | **`BLOCKING`** | harness written and ABORTS at a verified blocker — see `OSF1_INTERNAL_ACCESS_BLOCKER.md` |
-| Kill-switch live rehearsal | **`BLOCKING`** | **never fired**; recovery class unmeasured. Release Gates v1.0 §3.4 requires it before exposure |
+
 | Authenticated a11y in CI | `DEFERRED` | mandatory local gate instead; blocker is PostgREST on the runner |
 | Performance smoke at ~450 rows | `DEFERRED` | never run |
 | Audit retention | `FOUNDER_DECISION_REQUIRED` | `RETENTION_POLICY_TBD`; brief with estimates and a tiered recommendation |
@@ -85,5 +86,7 @@
 3. "An agent maintains the user's memory." — Nothing writes a memory without an explicit confirmation;
    the database refuses an unconfirmed row.
 4. "The assistant knows the user." — It reads no stored record. Every call is complete in itself.
-5. "Phase 1 is fully tested end to end." — Both reflection modes now are, but **the INTERNAL access
-   rehearsal is blocked and the kill switch has never been fired**. Both are `BLOCKING`.
+5. "Phase 1 is fully finalized." — INTERNAL access and the kill switch are now proven, so the product
+   is **INTERNAL_BETA_READY**. It is not PHASE1_FULLY_FINALIZED: the audit-failure UX, the assistant
+   provider hardening, the a11y CI decision, the copy audit, the UX coherence pass and the
+   performance smoke are all still outstanding.

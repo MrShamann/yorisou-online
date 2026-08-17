@@ -214,18 +214,45 @@ else
   npm run build > "$WORK/build.log" 2>&1 || { echo "[osf1-internal] build failed" >&2; tail -30 "$WORK/build.log" >&2; exit 1; }
 fi
 
-# A PRODUCTION-SHAPED SHARED STORE. lib/server/sharedStoreBoundary.ts refuses to load in a
-# production context with no store configured — a real safety guard, so the rehearsal satisfies it
-# rather than bypassing it. The endpoint is a local S3-shaped stub: it must not be a Preview bucket
-# and must not be the Supabase REST transport, which are the two things the boundary actually checks.
+# THE POR-1 SCHEMA-READY FLAGS, and why they belong here.
+#
+# In a production context registration goes through POR-1 canonical identity provisioning, which is
+# gated on schema-readiness declarations — the same shape as the Life OS flag. Without them
+# `ensureDeterministicEmailPrincipalForAccount` returns ok:false and registration answers 503 with
+# `canonical_identity_failed`, which is what the previous attempt hit and mis-attributed to the object
+# store. The declarations are TRUE here: stage 2 applied every migration in the lineage. This mirrors
+# tests/por1/m3-journey-stack.sh, which established the contract.
+#
+# A REAL DISPOSABLE S3-COMPATIBLE STORE.
+#
+# `s3-compatible` is production architecture, not a test affordance — Supabase Storage's S3 gateway is
+# the real user of that mode. A production deployment context is the only way to exercise INTERNAL,
+# and in that context sharedStoreBoundary.ts correctly refuses to run with no store. So the rehearsal
+# needs a store the auth layer can genuinely write to and read back.
+#
+# An earlier attempt used a stub that answered every request with static XML: the app booted and
+# registration then returned 503, because a store that accepts writes and returns nothing is not a
+# store. tests/life-os/disposable-s3.mjs is the real four-verb implementation, on loopback, in one
+# disposable directory, killed with the rest of the stack. No production code is weakened and no
+# test-only branch is added to any route.
 STORE_PORT="${OSF1_INT_STORE_PORT:-55634}"
-node -e "
-const http=require('http');
-http.createServer((req,res)=>{ res.writeHead(200,{'Content-Type':'application/xml'}); res.end('<?xml version=\"1.0\"?><Result/>'); })
-  .listen($STORE_PORT,'127.0.0.1');
-" > "$WORK/store.log" 2>&1 &
+STORE_BUCKET="osf1-internal-rehearsal"
+node tests/life-os/disposable-s3.mjs "$STORE_PORT" "$WORK/s3" > "$WORK/store.log" 2>&1 &
 STORE_PID=$!
 disown "$STORE_PID" 2>/dev/null || true
+STORE_READY=""
+for _ in $(seq 1 30); do
+  STORE_READY=$(curl -s -o /dev/null -w '%{http_code}' -X PUT --data 'ok' \
+    "http://127.0.0.1:$STORE_PORT/$STORE_BUCKET/healthcheck" || true)
+  [ "$STORE_READY" = "200" ] && break
+  sleep 1
+done
+[ "$STORE_READY" = "200" ] || { echo "[osf1-internal] disposable S3 not healthy (got $STORE_READY)" >&2; tail -5 "$WORK/store.log" >&2; exit 1; }
+# Round-trip verified, not assumed: a store that accepts a write and cannot return it is the exact
+# failure that produced the 503 last time.
+BACK=$(curl -s "http://127.0.0.1:$STORE_PORT/$STORE_BUCKET/healthcheck")
+[ "$BACK" = "ok" ] || { echo "[osf1-internal] disposable S3 did not return what it stored" >&2; exit 1; }
+echo "[osf1-internal] disposable S3-compatible store healthy (write + read round-trip)"
 
 FOUNDER_EMAIL="founder+osf1@yorisou.online"
 NORMAL_EMAIL="normal+osf1@yorisou.online"
@@ -243,11 +270,21 @@ fail() { printf '  FAIL %s  %s\n' "$1" "${2:-}"; FAILURES=$((FAILURES+1)); }
 # start_app <pilot-flags>  — the ONLY thing that varies between the two runs is the flag string.
 start_app() {
   VERCEL_ENV=production \
-  YORISOU_SHARED_STORE_BUCKET=osf1-internal-rehearsal \
+  YORISOU_SHARED_STORE_BUCKET="$STORE_BUCKET" \
   YORISOU_SHARED_STORE_ENDPOINT=http://127.0.0.1:$STORE_PORT \
   YORISOU_SHARED_STORE_ACCESS_KEY_ID="$STORE_ACCESS_KEY" \
   YORISOU_SHARED_STORE_SECRET_ACCESS_KEY="$STORE_ACCESS_TOKEN" \
-  YORISOU_SHARED_STORE_FORCE_PATH_STYLE=1 \
+  YORISOU_SHARED_STORE_FORCE_PATH_STYLE=true \
+  YORISOU_SHARED_STORE_REGION=us-east-1 \
+  YORISOU_POR1_CANONICAL_CORE=on \
+  YORISOU_POR1_CANONICAL_RECOMMENDATIONS=on \
+  YORISOU_POR1_LINE_CANONICAL_RETURN=on \
+  YORISOU_POR1_ACCOUNT_DELETION_EXECUTOR=on \
+  YORISOU_POR1_ACCOUNT_MUTATION_FENCE_SCHEMA_READY=on \
+  YORISOU_POR1_CANONICAL_IDENTITY_LINKS_SCHEMA_READY=on \
+  YORISOU_POR1_CANONICAL_LINE_ACTIVITY_SCHEMA_READY=on \
+  YORISOU_POR1_IDENTITY_PROVISIONING_SCHEMA_READY=on \
+  YORISOU_POR1_ACCOUNT_ERASURE_AUTHORITY_SCHEMA_READY=on \
   YORISOU_PRIVATE_PILOT_FLAGS="$1" \
   YORISOU_ADMIN_EMAILS="$FOUNDER_EMAIL" \
   YORISOU_OSF1_LIFE_OS_SCHEMA_READY=true \
@@ -292,6 +329,13 @@ case "$R" in
     echo "  Every assertion below would be vacuous without one. See the blocker note in" >&2
     echo "  docs/yorisou/osf1/PHASE1_INTERNAL_BETA_READINESS.md." >&2
     tail -12 "$WORK/app.log" >&2
+    # DIAGNOSTIC, so the blocker is described precisely rather than by its symptom. Which foundation
+    # rows the provisioning managed to create tells us where in the canonical-identity chain it stops.
+    echo "  --- foundation state after the failed attempt ---" >&2
+    for t in yorisou_accounts user_profiles auth_identities yorisou_identity_provisioning_sagas; do
+      C=$(psql "$DSN" -t -A -X -c "select count(*) from public.$t;" 2>/dev/null || echo "n/a")
+      echo "    $t: $C" >&2
+    done
     exit 2
     ;;
 esac
@@ -350,7 +394,7 @@ C=$(code "/api/life/timeline" "/dev/null")
 [ "$C" = "404" ] && pass "an unauthenticated direct API call is refused" || fail "bypass anon" "got $C"
 
 # ── 8. KILL SWITCH, measured ─────────────────────────────────────────────────
-echo "[osf1-internal] 8/8 kill-switch rehearsal"
+echo "[osf1-internal] 8/9 kill-switch rehearsal"
 # FIRST: change the environment WITHOUT touching the process, and see whether the running server
 # notices. This is the measurement the runbook depends on, and guessing it would be worse than not
 # testing it at all.
@@ -386,6 +430,34 @@ C=$(code "/me" "$WORK/founder.jar")
 [ "$C" = "200" ] && pass "the kill switch closes the feature without signing anyone out" || fail "kill session" "got $C"
 
 echo
+# ── 9. RESTORE, and prove recovery is clean ──────────────────────────────────
+#
+# A kill switch nobody can undo is an outage, not a switch. This also proves the cycle destroyed
+# nothing: the goal written while INTERNAL was on must still be there afterwards.
+echo "[osf1-internal] 9/9 restore INTERNAL and verify recovery"
+GOALS_BEFORE=$(psql "$DSN" -t -A -X -c "select count(*) from public.yorisou_goals;")
+stop_app
+start_app "osf1_life_os_internal"
+for path in /life /life/timeline /life/memories; do
+  C=$(code "$path" "$WORK/founder.jar")
+  [ "$C" = "200" ] && pass "after restore: founder reaches $path again" || fail "restore $path" "got $C"
+done
+C=$(code "/api/life/timeline" "$WORK/founder.jar")
+[ "$C" = "200" ] && pass "after restore: the read API answers again" || fail "restore api" "got $C"
+body "/me" "$WORK/founder.jar" | grep -q 'href="/life"' \
+  && pass "after restore: the navigation entry returns" || fail "restore nav" "no /life link"
+# The ordinary account must STILL be refused — restoring the feature must not widen it.
+C=$(code "/life" "$WORK/normal.jar")
+[ "$C" = "404" ] && pass "after restore: the ordinary account is still refused" || fail "restore leak" "got $C"
+
+GOALS_AFTER=$(psql "$DSN" -t -A -X -c "select count(*) from public.yorisou_goals;")
+[ "$GOALS_BEFORE" = "$GOALS_AFTER" ] \
+  && pass "the switch cycle destroyed no data ($GOALS_AFTER rows before and after)" \
+  || fail "data loss" "$GOALS_BEFORE -> $GOALS_AFTER"
+# And cycling the switch must not have duplicated the write that happened while it was on.
+DUPES=$(psql "$DSN" -t -A -X -c "select count(*) from public.yorisou_goals where title='内部ベータの方向';")
+[ "$DUPES" = "1" ] && pass "cycling the switch created no duplicate mutation" || fail "duplicate" "$DUPES copies"
+
 if [ "$FAILURES" -gt 0 ]; then echo "--- app log (last 25) ---"; tail -25 "$WORK/app.log"; fi
 echo "[osf1-internal] kill-switch recovery class: $KILL_CLASS"
 if [ "$FAILURES" -eq 0 ]; then echo "[osf1-internal] PASS"; else echo "[osf1-internal] FAIL ($FAILURES)"; exit 1; fi

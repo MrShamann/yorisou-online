@@ -1,8 +1,31 @@
 # OSF-1 — INTERNAL access E2E and kill-switch rehearsal: verified blocker
 
-**Status: BLOCKING for internal-beta exposure.** Established 2026-08-15 by running the harness, not
-by reasoning about it. `tests/life-os/internal-access.sh` exists, is complete, and **aborts with
-exit 2** rather than reporting anything it did not prove.
+**Status: RESOLVED 2026-08-17.** `tests/life-os/internal-access.sh` now passes with **42 assertions**,
+including the live kill-switch cycle. This document is kept as the diagnosis record, because the way
+the blocker dissolved is more instructive than the blocker was.
+
+**What it actually took — and what it did NOT take.** The earlier conclusion, "this needs MinIO or an
+equivalent S3 service, which is a supply-chain decision for Edward", was wrong in an interesting way.
+Three things were needed, and none of them was a new dependency:
+
+1. **A real four-verb S3 server.** `tests/life-os/disposable-s3.mjs`, ~60 lines of node. The identity
+   store is object-store backed (`phase1/foundation-v1/…`), not PostgreSQL — which is why the
+   diagnostic showed `user_profiles` and `auth_identities` as `n/a`: those tables never existed.
+2. **The POR-1 schema-ready flags.** In a production context registration goes through canonical
+   identity provisioning, which is gated the same way the Life OS is. Without them the failure class
+   was `canonical_identity_failed`, which the first attempt mis-attributed to the object store.
+3. **A REAL `ListObjectsV2`.** This was the last mile and the most instructive. The first version of
+   the S3 server answered listings with `KeyCount 0` as a "harmless simplification". The foundation
+   store finds records by enumerating a prefix, so an empty listing made every lookup return
+   nothing — surfacing as `missing_user_profile` and a 503 that looked exactly like a missing service.
+
+The general lesson, recorded because it will recur: **a stub that is wrong in a plausible direction
+costs more than no stub at all.** Two of the three dead ends here were caused by a fake that answered
+confidently instead of failing loudly.
+
+---
+
+## Historical record — the blocker as it stood on 2026-08-15
 
 ---
 
