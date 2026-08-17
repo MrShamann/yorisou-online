@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, randomBytes, randomUUID } from "crypto";
 import { resolvePrivateReflectionProviders } from "@/lib/server/privateAiProviderResolver";
 import { assertAiOutputWithinBoundary } from "@/lib/server/lifeOs/aiBoundary";
+import { newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
 
 const PROJECT_ID = "yorisou";
 export const ACTIVE_VISIBILITIES = ["PRIVATE", "INVITE_ONLY", "ANONYMOUS_SHARED", "SIMILAR_STATE_ONLY"] as const;
@@ -206,6 +207,32 @@ export async function structureExperience(owner:string,input:ExperienceInput) { 
 // operator: someone who removed what they wrote, or pulled it back from sharing, had it queued for
 // human review anyway. Those are precisely the two acts that mean "stop looking at this", so the
 // queue now excludes them at the query rather than relying on an operator to notice.
-export async function moderationQueue() { return await (await request("yorisou_experience_cards?select=*&or=(moderation_status.eq.limited,moderation_status.eq.published)&deleted_at=is.null&withdrawn_at=is.null&order=updated_at.desc&limit=100")).json() as CardRow[]; }
+//
+// AND THE ANOMALY SIGNAL. A PRIVATE card in this queue is the open Founder decision recorded in
+// OSF1_TRUST_RISK_REVIEW: createExperience sets moderation_status='limited' when a trust flag fires,
+// including on a card the person marked PRIVATE, so private writing can reach an operator's screen.
+// The policy is unchanged here — changing it is Edward's call, not this function's — but the case is
+// now COUNTABLE instead of theoretical. `life_os.moderation.anomaly` was declared in the ops
+// vocabulary and emitted by nothing, so nobody could have said whether this had ever happened.
+//
+// The event carries a card id and a count. It cannot carry any of the writing: recordLifeOsOps has
+// no parameter that would take it.
+export async function moderationQueue() {
+  const rows = await (await request("yorisou_experience_cards?select=*&or=(moderation_status.eq.limited,moderation_status.eq.published)&deleted_at=is.null&withdrawn_at=is.null&order=updated_at.desc&limit=100")).json() as CardRow[];
+  const privateCards = rows.filter((row) => row.visibility === "PRIVATE");
+  if (privateCards.length > 0) {
+    // ONE EVENT PER REQUEST, not one per card. The first version emitted per card, and the operator
+    // moderation page reloads: a fixed set of, say, three PRIVATE cards became three more log lines
+    // every time somebody opened the screen, turning a standing condition into a growing volume that
+    // says nothing new. The oldest card's id identifies the condition; the count sizes it.
+    recordLifeOsOps({
+      event: "life_os.moderation.anomaly",
+      correlationId: newCorrelationId(),
+      objectId: privateCards[privateCards.length - 1].id,
+      errorClass: `private_cards_in_queue.${privateCards.length}`,
+    });
+  }
+  return rows;
+}
 export async function moderateExperience(admin:string,id:string,action:"limit"|"remove"|"restore",reason:string) { if(!clean(reason,1000))throw new Error("invalid_moderation");const row=((await (await request(`yorisou_experience_cards?select=visibility&id=eq.${id}&limit=1`)).json()) as Array<{visibility:string}>)[0];if(!row)throw new Error("experience_not_found"); const status=action==="limit"?"limited":action==="remove"?"removed":"published",searchable=action==="restore"&&["ANONYMOUS_SHARED","SIMILAR_STATE_ONLY"].includes(row.visibility); await request(`yorisou_experience_cards?id=eq.${id}`,{method:"PATCH",body:JSON.stringify({moderation_status:status,searchable})}); await request("yorisou_experience_moderation_events",{method:"POST",body:JSON.stringify({project_id:PROJECT_ID,experience_id:id,actor_account_id:admin,action,reason})}); await event(admin,"moderated",id,{action}); }
 export const newIdempotencyKey=()=>randomUUID();

@@ -140,7 +140,15 @@ test("the assistant's output ceiling matches the column it can be applied into",
   // assistant produce a draft the person could accept and then fail to save.
   const source = readFileSync("lib/server/lifeOs/reflectionAssistant.ts", "utf8");
   assert.match(source, /const MAX_DRAFT_LENGTH = 2000;/);
-  assert.match(source, /draft\.length > MAX_DRAFT_LENGTH\) return null/);
+  // The BOUND is checked here; the BEHAVIOUR is checked in osf1AssistantProvider.test.ts, which drives
+  // draftReflection with an over-length response and asserts the normalized `provider_oversized`.
+  //
+  // This line used to be `assert.match(source, /draft\.length > MAX_DRAFT_LENGTH\) return null/)` — a
+  // regular expression over an implementation detail. It broke the moment the failure reasons were
+  // normalized, and it broke on a change that made the product strictly better at exactly the thing
+  // this test is about. A source regex that pins HOW instead of WHAT is a test that punishes
+  // improvement, so what survives here is the constant and the no-truncation rule.
+  assert.match(source, /draft\.length > MAX_DRAFT_LENGTH/);
   // Refused, never truncated — a provider's output cut mid-sentence and shown as finished would be
   // the product putting words in someone's mouth badly.
   assert.ok(!/draft\.slice\(/.test(source), "the draft must never be truncated to fit");

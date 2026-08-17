@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import { draftReflection } from "@/lib/server/lifeOs/reflectionAssistant";
 import { auditLifeOs } from "@/lib/server/lifeOs/audit";
 import { requireLifeViewer } from "@/lib/server/lifeOs/guard";
+import { newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
 import { LifeOsInputError, parseAssistantInput } from "@/lib/life-os/contract";
 
 export const dynamic = "force-dynamic";
+// THE PLATFORM MUST OUTLIVE THE BUDGET. draftReflection allows itself 25 seconds in total (two provider
+// attempts inside one deadline). If the host's default function timeout is shorter, the platform kills
+// the request first: the person gets a platform error mid-reflection instead of the designed
+// `200 {ok:false}` they can continue from, AND no `life_os.assistant.provider_failed` is emitted — the
+// signal is missing in exactly the failure mode it was added for. 30 > 25, stated rather than assumed.
+export const maxDuration = 30;
 
 // PHASE D — the Reflection Assistant endpoint.
 //
@@ -45,6 +52,22 @@ export async function POST(request: Request) {
         action: "yorisou.life.assistant.refused",
         entityKind: "assistant",
         reason: outcome.reason,
+      });
+    }
+    // THE PROVIDER FAILURE SIGNAL. `life_os.assistant.provider_failed` was declared in the ops
+    // vocabulary and emitted by nothing, so a provider that had started answering with malformed
+    // JSON for every request would have looked, from outside, exactly like a product where the
+    // assistant is switched off. The normalized reason is the error class, which is why
+    // draftReflection distinguishes empty from malformed from oversized from timeout.
+    //
+    // `assistant_unavailable` and `nothing_written` are NOT logged: no provider configured is this
+    // product's ordinary state, and an empty request is a person changing their mind.
+    if (outcome.reason !== "assistant_unavailable" && outcome.reason !== "nothing_written") {
+      recordLifeOsOps({
+        event: "life_os.assistant.provider_failed",
+        correlationId: newCorrelationId(),
+        ownerAccountId: gate.viewer.accountId,
+        errorClass: outcome.reason,
       });
     }
     // 200 with a reason, not an error status: for the person this is "the assistant isn't available",

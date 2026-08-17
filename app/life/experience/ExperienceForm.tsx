@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { EXPERIENCE_PRIVACY } from "@/lib/life-os/privacyCopy";
-import { lifeFailureMessage, lifePatch, lifePost, type LifeResult } from "@/lib/life-os/client";
+import { lifeFailureMessage, lifePatch, lifePost, type LifeFailureKind, type LifeResult } from "@/lib/life-os/client";
 
 // OSF-1 — 経験を書く.
 //
@@ -77,16 +77,23 @@ const rank = (visibility: Visibility | null) => VISIBILITIES.findIndex((option) 
 const labelOf = (visibility: Visibility) =>
   VISIBILITIES.find((option) => option.value === visibility)?.label ?? "";
 
-/** The bounded refusals this surface can explain. Everything else keeps the shared wording. */
-function failureMessage(result: Extract<LifeResult<unknown>, { ok: false }>) {
-  if (result.reason !== "failed") return lifeFailureMessage(result);
+/**
+ * The bounded refusals this surface can explain. Everything else keeps the shared wording.
+ *
+ * `kind` is required rather than defaulted, because defaulting it is how this function came to tell
+ * someone changing a card's VISIBILITY that 「入力した内容はこの画面に残っています」 — on a press where
+ * nothing had been typed, and without saying the one thing a consent surface must say: whether the
+ * card is still shared.
+ */
+function failureMessage(result: Extract<LifeResult<unknown>, { ok: false }>, kind: LifeFailureKind) {
+  if (result.reason !== "failed") return lifeFailureMessage(result, kind);
   if (result.code === "identifying_detail_detected") {
-    return "個人が分かる情報が残っているようです。名前や連絡先をはずしてから、もう一度おためしください。";
+    return "個人が分かる情報が残っているようです。名前や連絡先をはずしてから、もう一度お試しください。";
   }
   if (result.code === "invalid_experience_card") {
     return "共有するには、背景・条件や限界・合う場面・合わない場面がそろっている必要があります。";
   }
-  return lifeFailureMessage(result);
+  return lifeFailureMessage(result, kind);
 }
 
 export default function ExperienceForm({ initialExperiences }: { initialExperiences: ExperienceSummary[] }) {
@@ -107,6 +114,8 @@ export default function ExperienceForm({ initialExperiences }: { initialExperien
     FIELDS.filter((field) => field.required).every((field) => values[field.id].trim().length > 0);
 
   async function save() {
+    // The re-entry guard the removed `disabled` used to provide.
+    if (phase === "saving") return;
     setPhase("saving");
     // The Life OS route, not /api/experiences: that one is outside the feature gate and writes no
     // Life OS audit event, so a card created there existed with no record of its creation.
@@ -118,7 +127,7 @@ export default function ExperienceForm({ initialExperiences }: { initialExperien
       lesson: values.lesson.trim() || null,
     });
     if (!result.ok) {
-      setFailure(failureMessage(result));
+      setFailure(failureMessage(result, "save"));
       setPhase("failed");
       return;
     }
@@ -218,8 +227,11 @@ export default function ExperienceForm({ initialExperiences }: { initialExperien
       <button
         type="button"
         onClick={() => void save()}
-        disabled={!complete || phase === "saving"}
-        className="mt-7 inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-7 text-[16px] font-semibold text-white disabled:opacity-60"
+        // `disabled` only for an incomplete card; in flight is aria-busy so the pressed button keeps
+        // focus. save() holds the re-entry guard. Same reasoning as ReflectionFlow.
+        disabled={!complete}
+        aria-busy={phase === "saving"}
+        className="mt-7 inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-7 text-[16px] font-semibold text-white disabled:opacity-60 aria-[busy=true]:opacity-70"
       >
         {phase === "saving" ? "保存しています" : "書きとめる"}
       </button>
@@ -305,6 +317,12 @@ function VisibilitySection({
   }
 
   async function apply(card: ExperienceSummary, next: Visibility, sharing: boolean) {
+    // Same guard, PER CARD. `if (pending) return` was wrong in the same way MemoryList's was: the
+    // `disabled` it replaced read `pending === card.id`, so a global guard turned every other card's
+    // visibility control into a silent no-op while one was in flight. Someone locking down two shared
+    // cards would press the second, get no request and no message, and the card would stay shared.
+    // On a sharing control that is the worst possible shape for a mistake.
+    if (pending === card.id) return;
     setPending(card.id);
     setFailure(null);
     const body: Record<string, unknown> = { visibility: next };
@@ -315,7 +333,7 @@ function VisibilitySection({
     const result = await lifePatch(`experiences/${encodeURIComponent(card.id)}`, body);
     setPending(null);
     if (!result.ok) {
-      setFailure({ id: card.id, message: failureMessage(result) });
+      setFailure({ id: card.id, message: failureMessage(result, "change") });
       return;
     }
     onUpdated(
@@ -414,8 +432,8 @@ function VisibilitySection({
                 <button
                   type="button"
                   onClick={() => (widening ? openPreview(card) : void apply(card, next, false))}
-                  disabled={pending === card.id}
-                  className="mt-4 inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 text-[15px] font-semibold text-white disabled:opacity-60"
+                  aria-busy={pending === card.id}
+                  className="mt-4 inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 text-[15px] font-semibold text-white aria-[busy=true]:opacity-60"
                 >
                   {pending === card.id ? "変更しています" : widening ? "共有前の表示を確認" : "この範囲に変更する"}
                 </button>
@@ -503,8 +521,10 @@ function VisibilitySection({
                     <button
                       type="button"
                       onClick={() => void apply(card, next, true)}
-                      disabled={!agreed || !ready || pending === card.id}
-                      className="inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 text-[15px] font-semibold text-white disabled:opacity-60"
+                      // Consent and completeness are "not allowed yet"; the request is aria-busy.
+                      disabled={!agreed || !ready}
+                      aria-busy={pending === card.id}
+                      className="inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 text-[15px] font-semibold text-white disabled:opacity-60 aria-[busy=true]:opacity-60"
                     >
                       {pending === card.id ? "変更しています" : "この範囲で共有"}
                     </button>

@@ -25,14 +25,19 @@ Read the **FAILURE SIGNAL** column as "stop and write it down", not "the product
 | 10 | Suppress a memory (「いまは使わない」) | Disappears from `/life` and the timeline; still listed here | Still shown on the hub | Suppression must be real, not cosmetic. |
 | 11 | Restore it (「また使う」) | Returns to normal use | Cannot be restored | |
 | 12 | Deep reflection (`/life/reflect?mode=postmortem`) | 7 questions incl. 「どんな選択肢がありましたか」 | 5 questions, or the options question missing | Does it help you separate the decision from the result? |
-| 13 | Use the assistant (「整理してもらう」) | A draft appears beside your words; nothing replaces them | Text replaced automatically, or a claim about you | Does it feel like help, or like being analysed? |
-| 14 | Open `/life/timeline` | Chronological list; reflections labelled by kind | Anything claiming causes or connections | Does it read as a record or as admin history? |
+| 13 | Use the assistant (「下書きを見る」, last screen only) | A draft appears in its own box **beside** your words; nothing replaces them | Text replaced automatically, or a claim about you | Does it feel like help, or like being analysed? |
+| 13a | Press 「使わない」 | The draft disappears, your words are untouched, and the offer comes back | The draft stays, or your text changed | Declining must be as easy as accepting. |
+| 13b | Press 「下書きを見る」 again, then 「この内容を使う」 | The draft is **appended** to your last answer, not substituted for it | Your own sentence is gone | You must be able to edit it afterwards. |
+| 13c | If providers are off (the normal state) | 「いまは整理を利用できません。このまま書き終えられます。」 and you can still finish | The flow blocks, or your text is lost | The assistant is optional by design. |
+| 14 | Open `/life/timeline` | Chronological list; the filters read すべて / 状態 / 経験 / かるく振り返る / じっくり振り返る / 方向 | 「体験」 and 「経験」 both on screen, or anything claiming causes and connections | Does it read as a record or as admin history? |
+| 14a | Press 「かるく振り返る」, then 「じっくり振り返る」 | Each shows only its own kind; the current filter is marked | A filter that shows everything, or nothing marked as current | Two names for one thing is the bug to watch for. |
 | 15 | Return to `/life` | A small continuity card, or nothing | A feed, a streak, or 「昨日は書けませんでした」 | Return must never scold. |
 | 16 | Revoke a memory (「もう使わないことにする」) | Asks twice, says it cannot be undone, then stops using it | One tap, or silently reversible | |
 | 17 | Try to restore the revoked memory | Not offered | Restore appears | Revocation is terminal by design. |
 | 18 | Delete a memory (「忘れる」) | Gone from the list | Still present | The copy says it is deleted; it must be. |
 | 19 | Sign in as an ordinary account and open `/life` | 404, and no Life link anywhere on `/me` | Page loads, or a link is visible | Nothing may hint the feature exists. |
-| 20 | Remove `osf1_life_os_internal` from the pilot flags, then reload | `/life` 404s for you too | Still accessible | **The kill switch.** See the runbook for whether a redeploy is needed. |
+| 20 | Remove `osf1_life_os_internal` from the pilot flags, **then redeploy** | `/life` 404s for you too; you are still signed in | Still accessible after the redeploy, or you were signed out | **The kill switch.** Recovery class is MEASURED as `restart_required`: changing the variable alone does NOT close the feature on a running process. On Vercel that means a redeploy. See `PHASE1_FOUNDER_INTERNAL_BETA_RUNBOOK.md`. |
+| 20a | Restore the flag and redeploy | Access returns and every record is exactly as it was | A record is missing or duplicated | Turning it off and on again must cost nothing. |
 
 ---
 

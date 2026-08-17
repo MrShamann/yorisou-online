@@ -85,6 +85,7 @@ import {
   type AccountAuthenticationDecision,
 } from "./accountDeletionLock";
 import { decideCookieRestoredAccount } from "./accountDeletionAuthority";
+import { newCorrelationId, recordLifeOsOps } from "./lifeOs/observability";
 
 export type DeletionState =
   | "requested"
@@ -626,6 +627,22 @@ async function runStages(claim: ExecutorClaim): Promise<DeletionOutcome> {
             if (code === "account_deletion_erase_not_authorized") {
               await logErasureAuthorityRefusal(claim);
             }
+            // OSF-1 §20. The Life OS tables are erased by THIS rpc — 202608140002 registers them in
+            // the declarative plan — so a failure here is a failure to erase someone's reflections
+            // and memories, and that is the one operational event nobody should have to reconstruct
+            // from a stack trace. `life_os.erasure.failed` was declared in the ops vocabulary and
+            // emitted by nothing until now.
+            //
+            // recordLifeOsOps replaces any error class it does not recognise with `unclassified`, so
+            // a driver that decided to quote a row into its message cannot reach the log through
+            // this call. The external refusal and the rethrow below are unchanged.
+            recordLifeOsOps({
+              event: "life_os.erasure.failed",
+              correlationId: newCorrelationId(),
+              objectId: claim.jobId,
+              ownerAccountId: claim.accountId,
+              errorClass: code || "erase_database_failed",
+            });
             throw error;
           }
           // Partial provisioning state is account-linked and lives outside the declarative plan,

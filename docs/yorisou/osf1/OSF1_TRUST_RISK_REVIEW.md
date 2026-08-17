@@ -131,15 +131,15 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 1 | Audit retention undefined | `FOUNDER_DECISION_REQUIRED` | `OSF1_AUDIT_RETENTION_DECISION.md` — storage is not the constraint (30 GB at 100k MAU / 12 months); tiered recommended; code stays TBD |
 | 2 | `yorisou_identity_provisioning_sagas` survives erasure with `account_id` readable | `FOUNDER_DECISION_REQUIRED` | `OSF1_IDENTITY_SAGA_ERASURE_DECISION.md` — proven; no FK, no runtime reader; pseudonymize recommended; POR-1 owns the fix |
 | 3 | PRIVATE flagged content may reach moderation | `FOUNDER_DECISION_REQUIRED` | Policy unchanged. Disclosure now names the trigger **before** typing, on both surfaces |
-| 4 | Transactional audit means a person can lose a reflection if the audit table is unavailable | `ACCEPTED_FOR_INTERNAL` | The deliberate reversal this package's predecessor asked for. Failure UX is `DEFERRED` — see #12 |
-| 5 | Assistant provider readiness | `ACCEPTED_FOR_INTERNAL` | Bounded input and output, no stored-record access, no writes, refused-not-truncated. No fake-provider E2E — `DEFERRED` |
-| 6 | Authenticated a11y not in CI | `ACCEPTED_FOR_INTERNAL` | Runs locally, 14/14, 0 serious / 0 critical. Blocker is a PostgREST supply-chain decision; mandatory local gate recorded in the runbook |
+| 4 | Transactional audit means a person can lose a reflection if the audit table is unavailable | `ACCEPTED_FOR_INTERNAL` | The deliberate reversal, and now a SURVIVABLE one: 52 assertions prove all seven actions roll back and retry cleanly, and the failure screen is proven in a browser with PostgreSQL inspected after it. The trade-off stands; the cost to the person is bounded to one retry. See #12 |
+| 5 | Assistant provider readiness | `CLOSED` | 24 assertions against a deterministic fake supplied as a PARAMETER (no env var can select one): the nine Japanese boundary prompts, every failure mode normalized and distinct, fallback bounded to two attempts inside a 25s budget, no tools in the request, nothing persisted, nothing retrieved. Plus a browser E2E of the draft and the provider-failure screen through a disposable provider reached the way every provider is reached |
+| 6 | Authenticated a11y not in CI | `CLOSED` | **The stated blocker was not real.** PostgREST has run in this repository's CI since `dci-1-ci.yml` — v12.2.3, pinned, in Docker. The blocker was Docker on the ACCEPTANCE MACHINE, never a property of CI. `osf1-life-ci.yml` now runs the same harness against PostgreSQL 17 and the pinned image; 32/32, 0 serious / 0 critical, including six dynamic states. No new supply-chain decision was needed |
 | 7 | Malformed IDs returned 500 | `CLOSED` | Validated at the edge on all five id-taking routes plus the reflection link; 422 |
 | 8 | Memory pagination unreachable past 50 | `CLOSED` | Keyset cursor, walked against real PostgREST: 5 pages, 30/30 distinct, ties exercised |
-| 9 | Timeline fixed limit of 20 | `DEFERRED` | Reachable today at Phase 1 volumes; keyset work not done |
-| 10 | Return loop boundedness implicit | `DEFERRED` | Bounded and mode-aware, but the selection policy is not explicit or separately tested |
+| 9 | Timeline fixed limit of 20 | `CLOSED` | Superseded by #22: merged keyset pagination, walked against real PostgREST, and page two proven to cost what page one costs at 450 rows |
+| 10 | Return loop boundedness implicit | `CLOSED` | Superseded by #23: fixed priority, hard cap of three, deduped by record id, reads no memory at all |
 | 11 | Neither reflection mode has a browser E2E | `CLOSED` | Both modes now driven through a real browser against a real PostgreSQL, verifying THE ROW. Non-vacuity proven: forcing p_mode to light fails the deep test on exactly the intended assertion |
-| 12 | Transactional audit failure UX | `DEFERRED` | Behaviour is correct (no false success); the message and content-preservation work is not done |
+| 12 | Transactional audit failure UX | `CLOSED` | Forced audit failure in a real browser, then PostgreSQL read: no row, no audit event, every answer still on screen, the message carries no digits so no status code can leak into it, nothing retries on its own, and the retry produces exactly one reflection and exactly one audit event. The retry is reachable by keyboard from the failure screen |
 | 13 | State ↔ Reflection link | `CLOSED` | 8 acceptance assertions: ownership, no auto-link, null-on-delete, audit records presence not content |
 | 14 | Kill switch never fired | `CLOSED` | **Fired, in a production deployment context.** ON -> KILL -> RESTORE, with data intact and no duplicated mutation. Recovery class MEASURED as `restart_required`: changing the variable does not affect the running process, so on Vercel the switch is redeploy-class, not instant. Recorded in the runbook |
 | 21 | INTERNAL access unproven end to end in a production context | `CLOSED` | Founder/Admin reaches all seven routes, the API and a write; an ordinary account gets 404 everywhere with no navigation leak; six bypass attempts (role query param, body claim, admin headers, forged cookie, unauthenticated call, copied URL) all refused. 42 assertions |
@@ -147,12 +147,26 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 22 | Timeline pagination | `CLOSED` | Merged keyset verified against real PostgREST: 27/27 across 4 pages, cross-kind ties exercised, filter bound to the cursor |
 | 23 | Return loop boundedness | `CLOSED` | Fixed priority, hard cap of three, deduped by record id, reads no memory at all |
 | 24 | Memory lifecycle transitions | `CLOSED` | Every illegal transition refused and proven: restore-from-revoked, suppress-from-revoked, unknown state, cross-owner |
-| 15 | Audit redaction | `CLOSED` | Redaction is a property of the ops record type — there is no field a reflection could occupy |
+| 15 | Audit redaction | `CLOSED` | Redaction is a property of the ops record type — there is no field a reflection could occupy. **And a real leak was found in the field that DOES take a string:** the error-class pattern was `/^[a-z0-9_.:-]{1,64}$/i`, which a JWT satisfies, so a service-role key inside an `error.message` would have been logged in full. Narrowed to lowercase with no opaque run over 24 characters, which also closes the hex-secret case. Eight redaction assertions |
 | 16 | Moderation queue included deleted and withdrawn cards | `CLOSED` | **Real defect, found and fixed.** The query filtered only on moderation_status, so cards a person deleted or withdrew were queued for human review anyway — the two acts that most clearly mean "stop looking at this". Now excluded at the query, with acceptance assertions proving the excluded rows still exist rather than being destroyed |
 | 17 | Memory governance §3.2 suppress/revoke/receipt missing | `CLOSED` | All three implemented and verified; revocation terminal by design |
 | 18 | Life OS has never run against hosted Supabase | `ACCEPTED_FOR_INTERNAL` | Every rehearsal is a disposable cluster. The first hosted apply is still a first — which is why the runbook stages it |
 | 19 | `GET /api/life/assistant` returns 405 where siblings return 404 | `ACCEPTED_FOR_INTERNAL` | Discloses that a path exists; no data or capability exposed |
-| 20 | Governance names services (`memoryLifecycleService`, `permissionCheckService`) that do not exist | `ACCEPTED_FOR_INTERNAL` | Substance achieved under different names — single RPC write path, owner-scoped reads. A naming divergence, recorded not hidden |
+| 26 | Keyboard accessibility never tested | `CLOSED` | 12/12 on the real stack. **It found a real defect:** a control disabled while its request was in flight is blurred by the browser, so pressing 「下書きを見る」 threw focus to the document body and a keyboard user met the failure at the top of the page. Fixed across five surfaces — in-flight is `aria-busy` and the re-entry guard moved into the handler |
+| 27 | Japanese copy never audited as a whole | `CLOSED` | 247 strings enumerated from source; eight of ten criteria at zero violations. Two terminology collisions fixed — the timeline showed 体験 and 経験 for one thing at once, and 「振り返り」 was the NARROWER of the two reflection filters despite the broader name |
+| 28 | Performance never measured at volume | `CLOSED` | 12 checks at 450 rows from PostgreSQL's own statement log: no N+1, every read carries a LIMIT, page two costs what page one costs, hub 40 KB. The first run reported an N+1 that was not there — PostgREST's per-request BEGIN/SET LOCAL/COMMIT inflated the count fivefold |
+| 29 | Three declared ops events had no producer | `CLOSED` | `assistant.provider_failed`, `erasure.failed` and `moderation.anomaly` were in the vocabulary, asserted by a test that only checked the list, and emitted by nothing. Each has a producer, and a test now requires one per declared event |
+| 30 | Reaching pagination by keyboard in a long memory list takes ~130 Tab presses | `ACCEPTED_FOR_INTERNAL` | Measured, not assumed: every row carries four or five controls. The control IS reachable and the keyboard gate proves it. The fix is a skip affordance, which is a design addition rather than a bounded repair — and irrelevant at one Founder's data volume |
+| 31 | The Life hub issues 21 database reads to render one page | `ACCEPTED_FOR_INTERNAL` | Measured at 450 rows: five or six each for reflections, directions and states. Bounded by the number of SECTIONS, not by the amount of data, so it does not degrade — the performance smoke asserts that. Consolidation is a worthwhile refactor, not a Phase 1 defect |
+| 32 | Attach-mode `drop schema public cascade` was guarded by a two-token denylist | `CLOSED` | **A blocking defect in this package's own test harness, found by adversarial review.** `case "$DSN" in *supabase*|*amazonaws*)` let through every other hosted provider, a developer's own local database, any loopback tunnel, and — decisively — `PGHOST`, `service=` and keyword-form DSNs, which libpq reinterprets and a string match never sees. Replaced with an allowlist that asks the SERVER what it reached: loopback, the exact disposable database name, no foreign tables, version 16/17 |
+| 33 | The ops error-class pattern admitted credential shapes | `CLOSED` | Two rounds. The first found a JWT satisfies `/^[a-z0-9_.:-]{1,64}$/i`; the second, after lowercase and a 24-char segment bound were added, found a UUID (122 bits) and three dot-joined 20-char hex runs (240 bits) still pass. Now also rejects any 16+ hex run and the UUID shape. `guard.ts` had its own copy of the original pattern and uses the shared check |
+| 34 | A multi-line answer escaped the assistant's prompt bullet block | `CLOSED` | **The claim of "no instruction channel" was structurally false.** `boundedText` trims only the ends, so interior newlines survived and one answer forged a second 「利用者が書いたこと:」 label, a second JSON instruction and three lines at column zero. Impact was self-directed — no other person's data, no tools, no retrieval — which bounds the severity without making the claim true. Each answer is now JSON-serialized onto one line, verbatim, and a regression test asserts the property by LINES rather than substrings |
+| 35 | Global guards where the removed `disabled` was per-row | `CLOSED` | **A regression this package introduced.** Moving the in-flight guard from `disabled` into the handler widened it: `if (pending) return` made every OTHER row's controls a silent no-op — including a hard delete and a card's visibility control, where a refused press with no message is the worst shape a mistake can take. Per-row and per-card now |
+| 36 | 「入力した内容はこの画面に残っています」 was shown where nothing had been typed | `CLOSED` | `ExperienceForm`'s local message helper defaulted to the save wording, and its other caller is a VISIBILITY CHANGE — a consent surface told someone their input was preserved when there was none, and never said whether the card was still shared. `kind` is now a required parameter there |
+| 37 | A successful retry left a message asserting the record had not changed | `CLOSED` | `changeLifecycle` cleared one failure slot and not the other, and the success path cleared neither — so 「記録はそのままです」 sat beside a row that had just changed. Enabled by making the pressed button the retry, which is what makes retry-after-failure the ordinary path |
+| 38 | 「何も残っていません」 was asserted where the client cannot know | `CLOSED` | A rejected `fetch` includes a request that reached the server and committed with the response lost. The transactional class makes "nothing was written" a fact about a SERVER-side failure only. `network_unavailable` now stops asserting and asks the person to reload — which matters because `yorisou_explicit_memories` has no unique constraint on (owner, digest), so a blind retry would store it twice |
+| 39 | `ExperienceForm` destroys a sharing draft when another card's preview is opened | `FOUNDER_DECISION_REQUIRED` | **Pre-existing, not introduced here, and real data loss:** one `draft` is held for the whole section and re-seeded whenever `draftId !== card.id`, so writing four paragraphs in card A's preview and then opening card B's discards them with no warning. Fixing it properly means a per-card draft map, which is beyond a bounded copy-and-coherence pass. Recorded rather than quietly left: it wants its own change |
+| 40 | Governance names services (`memoryLifecycleService`, `permissionCheckService`) that do not exist | `ACCEPTED_FOR_INTERNAL` | Substance achieved under different names — single RPC write path, owner-scoped reads. A naming divergence, recorded not hidden |
 
 **NOTHING IS `BLOCKING`.** #14 and #21 were the two blockers and both are now CLOSED: the
 production-context rehearsal runs, and the kill switch has been watched closing the feature and
@@ -165,3 +179,54 @@ which surfaced as `missing_user_profile` and a 503 that looked like a missing se
 
 #3 (the PRIVATE moderation policy) remains `FOUNDER_DECISION_REQUIRED` and must be settled before
 anyone who is not Edward writes about a diagnosis.
+
+---
+
+## Finalization, 2026-08-17
+
+**Every risk now carries exactly one of four statuses. `DEFERRED` no longer appears anywhere in this
+register** — each of the four risks that held it has either been closed by executed work (#9, #10, #12,
+plus #5 and #6 which had been accepted rather than deferred) or restated as an accepted, measured
+condition with the measurement attached.
+
+| | Count |
+|---|---|
+| `CLOSED` | 29 |
+| `ACCEPTED_FOR_INTERNAL` | 9 |
+| `FOUNDER_DECISION_REQUIRED` | 6 |
+| `BLOCKING` | **0** |
+
+Nine of those rows — #32 to #39, plus #6 — were opened AND closed by §26's adversarial review, in the
+same pass. Four independent reviewers were run against this package's own work with instructions to
+refute rather than confirm, and they found:
+
+- **one blocking defect in the harness itself** (#32): the guard on the most destructive line in the
+  repository was a two-token denylist, when a correct allowlist already existed twelve directories away
+  in `postgres-acceptance.sh` — which even states the threat model in words;
+- **three regressions this package introduced** (#35, #36, #37): widening an in-flight guard from
+  per-row to global, a message that told someone their input was preserved on a surface with no input,
+  and a stale failure message left beside a row that had just changed;
+- **two claims of structural impossibility that were false** (#33, #34): the redaction pattern admitted
+  credential shapes, and a multi-line answer escaped the assistant's prompt block;
+- **one piece of copy asserting more than the client can know** (#38);
+- **one pre-existing data-loss path** worth its own change rather than a bounded fix (#39).
+
+Every one of those was found by reading work that had already passed its own tests. That is the
+argument for the section: a review that only confirms is not a review, and the three regressions in
+particular were introduced BY a fix and were invisible to every gate that fix was written against.
+
+**Four of the closures came from a test finding a real defect rather than confirming an intention.**
+Worth naming, because a gate that only ever agrees with you is not a gate:
+
+1. The keyboard smoke found that disabling a control mid-request throws focus to the document body — so
+   every failure screen started at the top of the page for a keyboard user.
+2. The redaction suite found that the ops error-class pattern accepts a JWT, in the one module whose
+   whole purpose is that a credential cannot reach a log.
+3. The copy audit found the timeline naming one concept two ways at once, and a filter whose broader
+   name showed the narrower set.
+4. The a11y CI attempt found that the recorded blocker — "PostgREST on the runner" — had never been
+   true of CI. It had been carried forward through two packages unexamined.
+
+**The lesson worth keeping from #6:** a blocker recorded once gets cited rather than re-tested. This one
+cost nothing to disprove — a grep of the repository's own workflows — and it had been holding an
+accessibility gate out of CI for two packages.

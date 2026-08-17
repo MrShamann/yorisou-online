@@ -1,0 +1,193 @@
+name: OSF-1 Life OS CI
+
+# The Life OS gates that need a database, and the one that needs a browser signed in.
+#
+# §14 OF THE FINALIZATION PACKAGE, AND THE CLAIM IT CORRECTS.
+#
+# Authenticated accessibility was recorded as DEFERRED with the reason "blocker is PostgREST on the
+# runner". That reason was wrong, and it stood unexamined for two packages. PostgREST has been running
+# in this repository's CI since dci-1-ci.yml: `postgrest/postgrest:v12.2.3`, pinned, in Docker, green.
+# The blocker was real on the ACCEPTANCE MACHINE — Docker is not running there, which is why
+# tests/life-os/fullstack-a11y.sh uses a local binary — and it was never a property of CI.
+#
+# So the authenticated accessibility gate runs here, against a real PostgreSQL 17, real PostgREST, a
+# real production build and a real signed-in session. Not against a sign-in wall.
+#
+# ONE HARNESS, TWO WAYS IN. This workflow does not orchestrate its own stack. It starts the two things
+# a runner provides differently — a PostgreSQL service container and PostgREST in Docker — and then
+# hands both to the SAME script the acceptance machine runs, through OSF1_A11Y_ATTACH_DSN and
+# OSF1_POSTGREST_BIN. The alternative, a workflow with its own copy of the orchestration, is what the
+# two older full-stack jobs do, and it means the local gate and the CI gate have to be kept in step by
+# hand. The day they disagree, the green one is the one nobody re-reads.
+#
+# NO PRODUCTION SECRETS. Every credential here is generated in the job: the JWT secret is a literal
+# for a database that exists for four minutes, and the cookie secret likewise. Nothing in this file
+# reaches a hosted environment, and no `secrets.` reference appears in it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/life/**"
+      - "app/api/life/**"
+      - "lib/life-os/**"
+      - "lib/server/lifeOs/**"
+      - "supabase/migrations/**osf1**"
+      - "tests/life-os/**"
+      - "tests/smoke/osf1-*"
+      - ".github/workflows/osf1-life-ci.yml"
+  pull_request:
+    paths:
+      - "app/life/**"
+      - "app/api/life/**"
+      - "lib/life-os/**"
+      - "lib/server/lifeOs/**"
+      - "supabase/migrations/**osf1**"
+      - "tests/life-os/**"
+      - "tests/smoke/osf1-*"
+      - ".github/workflows/osf1-life-ci.yml"
+
+jobs:
+  authenticated-a11y:
+    name: Authenticated accessibility (real stack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      # 17, matching Production, rather than the 16 the older jobs use. The harness accepts either and
+      # asks the SERVER for its version, so this is the one place the choice is made.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: osf1_life_a11y
+        ports:
+          - 55591:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      # NOTE: the Supabase-shaped roles, the extensions and the default privileges are NOT set up here.
+      # The harness does all of it, in both modes, immediately after it resets the schema — and doing
+      # it in this file as well would mean two places to keep in step, one of which the acceptance
+      # machine never executes. See the long comment in the harness for why a blanket grant afterwards
+      # would be actively wrong.
+
+      # THE GATE. The harness applies the migrations, starts PostgREST through the pinned image, builds
+      # the app, registers a real account, seeds through the real endpoints, and runs axe over every
+      # authenticated surface at both widths — including the dynamic states: load-more, filters,
+      # suppressed, revoked, the assistant's draft, a provider refusal, and the audit-failure screen.
+      #
+      # Both switches are on, so the failure screens are genuinely in the run rather than skipped. The
+      # spec reports a skip when they are absent, which is what stops an omission looking like a pass.
+      - name: Authenticated axe over the Life OS surfaces
+        env:
+          OSF1_A11Y_ATTACH_DSN: postgres://postgres:postgres@127.0.0.1:55591/osf1_life_a11y
+          # EVERY STEP GETS ITS OWN PORTS AND ITS OWN WORK DIRECTORY.
+          #
+          # `npx next start` forks, so killing the recorded PID can leave the server holding the port.
+          # That stranded a listener between two steps, and the next step's spec then talked to the
+          # PREVIOUS step's app — pointed at a schema this run had already dropped and recreated, which
+          # surfaced as `500 life_os_failed` on a session check and looked like an application defect.
+          #
+          # The harness's pre-flight now detects that (it was using `lsof`, which a runner does not
+          # have, and a missing command read as "the port is free"), and its teardown now pkills by
+          # command line. Distinct ports remove the coupling rather than racing it.
+          OSF1_A11Y_APP_PORT: "3220"
+          OSF1_A11Y_REST_PORT: "55610"
+          OSF1_A11Y_PROXY_PORT: "55611"
+          OSF1_A11Y_PROVIDER_PORT: "55612"
+          OSF1_A11Y_WORK: /tmp/osf1-a11y-0
+          OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
+          OSF1_STACK_FAKE_PROVIDER: "1"
+          OSF1_STACK_FAULT_INJECTION: "1"
+        run: |
+          chmod +x tests/life-os/ci/postgrest-docker
+          bash tests/life-os/fullstack-a11y.sh
+
+      - name: Keyboard-only operation
+        env:
+          OSF1_A11Y_ATTACH_DSN: postgres://postgres:postgres@127.0.0.1:55591/osf1_life_a11y
+          OSF1_A11Y_APP_PORT: "3221"
+          OSF1_A11Y_REST_PORT: "55620"
+          OSF1_A11Y_PROXY_PORT: "55621"
+          OSF1_A11Y_PROVIDER_PORT: "55622"
+          OSF1_A11Y_WORK: /tmp/osf1-a11y-1
+          OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
+          OSF1_STACK_SPEC: tests/smoke/osf1-life-keyboard.spec.ts
+          OSF1_STACK_FAKE_PROVIDER: "1"
+          # The build from the step above is still on disk and the working tree has not changed, so
+          # rebuilding would spend four minutes to produce the same output.
+          OSF1_A11Y_REUSE_BUILD: "1"
+        run: bash tests/life-os/fullstack-a11y.sh
+
+      - name: Transactional audit failure, end to end
+        env:
+          OSF1_A11Y_ATTACH_DSN: postgres://postgres:postgres@127.0.0.1:55591/osf1_life_a11y
+          OSF1_A11Y_APP_PORT: "3222"
+          OSF1_A11Y_REST_PORT: "55630"
+          OSF1_A11Y_PROXY_PORT: "55631"
+          OSF1_A11Y_PROVIDER_PORT: "55632"
+          OSF1_A11Y_WORK: /tmp/osf1-a11y-2
+          OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
+          OSF1_STACK_SPEC: tests/smoke/osf1-audit-failure-e2e.spec.ts
+          OSF1_STACK_FAULT_INJECTION: "1"
+          OSF1_A11Y_REUSE_BUILD: "1"
+        run: bash tests/life-os/fullstack-a11y.sh
+
+      - name: Both reflection modes, end to end
+        env:
+          OSF1_A11Y_ATTACH_DSN: postgres://postgres:postgres@127.0.0.1:55591/osf1_life_a11y
+          OSF1_A11Y_APP_PORT: "3223"
+          OSF1_A11Y_REST_PORT: "55640"
+          OSF1_A11Y_PROXY_PORT: "55641"
+          OSF1_A11Y_PROVIDER_PORT: "55642"
+          OSF1_A11Y_WORK: /tmp/osf1-a11y-3
+          OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
+          OSF1_STACK_SPEC: tests/smoke/osf1-life-reflection-e2e.spec.ts
+          OSF1_A11Y_REUSE_BUILD: "1"
+        run: bash tests/life-os/fullstack-a11y.sh
+
+      - name: Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: osf1-life-playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  audit-failure-rollback:
+    name: Transactional audit rollback (all seven actions)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      # Pure SQL: initdb from the runner's own PostgreSQL, no service container and no Docker. The
+      # harness accepts 16, and ubuntu-latest ships 16 — so this one needs nothing installed.
+      - name: Forced audit failure over the whole transactional set
+        env:
+          OSF1_POSTGRES_BIN: /usr/lib/postgresql/16/bin
+        run: bash tests/life-os/audit-failure.sh

@@ -62,7 +62,8 @@ TIES=$(Q -c "select count(*) from public.yorisou_explicit_memories where owner_a
              and created_at=(select max(created_at) from public.yorisou_explicit_memories where owner_account_id='acct_p');")
 echo "[page] seeded 30 memories, $TIES of them sharing the newest timestamp"
 
-SECRET="osf1-page-probe-0123456789abcdef0123456789abcdef"
+# Generated rather than literal: gitleaks reads a fixed 32-hex tail as a secret, and it is right to.
+SECRET="osf1-page-probe-$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")"
 KEY=$(S="$SECRET" node -e "const c=require('crypto');const b=o=>Buffer.from(JSON.stringify(o)).toString('base64url');const h=b({alg:'HS256',typ:'JWT'});const p=b({role:'service_role',exp:Math.floor(Date.now()/1000)+3600});console.log(h+'.'+p+'.'+c.createHmac('sha256',process.env.S).update(h+'.'+p).digest('base64url'))")
 cat > "$WORK/pgrst.conf" <<EOF
 db-uri = "$DSN"

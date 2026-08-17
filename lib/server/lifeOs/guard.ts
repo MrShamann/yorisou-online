@@ -6,7 +6,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { LIFE_OS_SCHEMA_READY_ENV } from "@/lib/life-os/access";
 import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
-import { newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
+import { isErrorClass, newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
 
 export type LifeApiViewer = { accountId: string };
 
@@ -83,7 +83,11 @@ export function lifeApiError(error: unknown): NextResponse {
   recordLifeOsOps({
     event: "life_os.mutation.failed",
     correlationId: newCorrelationId(),
-    errorClass: /^[a-z0-9_.:-]{1,64}$/i.test(message) ? message : "unclassified",
+    // THE SHARED CHECK, not a local copy of the pattern. This line held the original
+    // case-insensitive, segment-unbounded regex, which a JWT satisfies — it was harmless only because
+    // recordLifeOsOps re-validates, and relying on a sink to fix a caller is how the next caller
+    // reintroduces the bug.
+    errorClass: isErrorClass(message) ? message : "unclassified",
   });
   return NextResponse.json({ error: "life_os_failed" }, { status: 500 });
 }

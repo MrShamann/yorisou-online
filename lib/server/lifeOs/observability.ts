@@ -57,7 +57,60 @@ export type LifeOsOpsRecord = {
   release: string | null;
 };
 
-const CLASS_PATTERN = /^[a-z0-9_.:-]{1,64}$/i;
+/**
+ * What an error CLASS may look like — and this is deliberately much narrower than it was.
+ *
+ * The previous pattern was `/^[a-z0-9_.:-]{1,64}$/i`, which was wrong in a way a redaction test found:
+ * **a JWT matches it.** A base64url header, a dot, a payload, a dot, a signature is nothing but
+ * letters, digits and dots, and a short one fits inside 64 characters — so a service-role key or a
+ * session token appearing in an `error.message` (a fetch failure quoting its URL, a driver quoting a
+ * header) would have been written to the log verbatim, by the one module whose entire purpose is that
+ * this cannot happen. The example is built rather than quoted in
+ * `lib/server/__tests__/osf1Observability.test.ts`, because the repository's own secret-pattern gate
+ * greps for that prefix and should not be taught exceptions.
+ *
+ * Two changes close it, and both are properties of real class names rather than of secrets:
+ *
+ *   - **Lowercase only.** Every class in this codebase is snake_case (`osf1_memory_confirmation_
+ *     mismatch`, `http_503`, `provider_malformed`). base64url is mixed-case by construction.
+ *   - **No opaque run longer than 24 characters.** A class is words joined by separators; a token,
+ *     a hex digest and a base64 segment are one long run. This is what catches an all-lowercase
+ *     secret, which the case rule alone would not.
+ *   - **No hexadecimal run of 16 or more, and no UUID.** The two rules above still admit a UUID and
+ *     three dot-joined 20-char hex segments — 122 and 240 bits respectively, which is exactly the
+ *     shape of a session token, an API key and a reset token. A second review found them. No real
+ *     class name in this codebase contains sixteen consecutive hex characters, so this costs nothing.
+ *
+ * EXPORTED, because lib/server/lifeOs/guard.ts had its own copy of the ORIGINAL pattern — the
+ * case-insensitive, segment-unbounded one this docstring describes as JWT-admitting. It was saved only
+ * because its value is re-validated at this sink, which is not a property to rely on: the next caller
+ * to route that value anywhere else reintroduces the bug. One check, one place.
+ */
+const MAX_CLASS_LENGTH = 64;
+const MAX_SEGMENT_LENGTH = 24;
+const CLASS_PATTERN = /^[a-z0-9]+(?:[_.:-][a-z0-9]+)*$/;
+
+export function isErrorClass(value: string): boolean {
+  if (value.length === 0 || value.length > MAX_CLASS_LENGTH) return false;
+  if (!CLASS_PATTERN.test(value)) return false;
+  if (/[0-9a-f]{16,}/.test(value)) return false;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)) return false;
+  return value.split(/[_.:-]/).every((segment) => segment.length <= MAX_SEGMENT_LENGTH);
+}
+
+/**
+ * A row id, or nothing.
+ *
+ * `objectId` is a string, and the module header claims a caller "cannot log a reflection, a memory, or
+ * a prompt, because there is no parameter that would take one". That was not quite true: this one would
+ * have taken any string handed to it. Every current caller passes a server-generated uuid, so there was
+ * no leak — but the guarantee was a property of the callers rather than of the module, which is the
+ * arrangement the header says it rejects. Bounded here, so the claim is the module's again.
+ */
+function boundedObjectId(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return /^[A-Za-z0-9_-]{1,64}$/.test(value) ? value : "unloggable";
+}
 
 export function opsActorFingerprint(ownerAccountId: string): string {
   return createHash("sha256").update(ownerAccountId, "utf8").digest("hex");
@@ -87,11 +140,11 @@ export function recordLifeOsOps(input: {
     // exception message could reach, and an exception message is exactly where a row's content
     // would appear if a driver decided to quote it.
     const raw = input.errorClass ?? null;
-    const errorClass = raw === null ? null : CLASS_PATTERN.test(raw) ? raw : "unclassified";
+    const errorClass = raw === null ? null : isErrorClass(raw) ? raw : "unclassified";
     const record: LifeOsOpsRecord = {
       event: input.event,
       correlationId: input.correlationId,
-      objectId: input.objectId ?? null,
+      objectId: boundedObjectId(input.objectId),
       actorFingerprint: input.ownerAccountId ? opsActorFingerprint(input.ownerAccountId) : null,
       errorClass,
       environment: deploymentContext(),

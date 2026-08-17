@@ -137,8 +137,22 @@ export type TimelineFilter = (typeof TIMELINE_FILTERS)[number];
 export const TIMELINE_FILTER_LABELS: Record<TimelineFilter, string> = {
   ALL: "すべて",
   STATE: "状態",
-  EXPERIENCE: "体験",
-  REFLECTION: "振り返り",
+  // 経験, not 体験. The two words were used for one thing ON THE SAME PAGE: this chip said 体験 while
+  // every entry it filtered was labelled 経験, and the hub, the page title, the memory type and the
+  // Return section all say 経験 too. 体験 belongs to the older /experiences vertical (体験カード) and is
+  // still correct there; inside the Life OS this is the outlier, so it moves.
+  EXPERIENCE: "経験",
+  // かるく振り返る, not 振り返り — and this one is a COMPREHENSION fix, not a tidying one.
+  //
+  // The two chips read 「振り返り」 and 「じっくり振り返る」, which says: reflections, and deep reflections.
+  // That is not what they do. REFLECTION shows ONLY light reflections and deliberately excludes
+  // postmortems (the reflection end-to-end test asserts exactly that), so the broader-sounding name
+  // was the narrower filter, and someone pressing it to see everything they had written would find
+  // half of it missing with no way to tell why.
+  //
+  // Named as its own act, the pair is symmetric and each chip means what its entries are labelled:
+  // かるく振り返る / じっくり振り返る, the same two words the hub offers.
+  REFLECTION: "かるく振り返る",
   POSTMORTEM: "じっくり振り返る",
   DIRECTION: "方向",
 };

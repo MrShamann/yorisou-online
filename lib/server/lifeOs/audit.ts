@@ -21,9 +21,12 @@ import "server-only";
 // record, and nothing was destroyed.
 //
 // TRANSACTIONAL (NOT this file): the audit insert happens inside the mutation's own SECURITY DEFINER
-// RPC, so either both land or neither does — see 202608160001. Four actions are delivered that way:
-// reflection.created, memory.confirmed, memory.deleted and memory.updated. They are marked in
-// AUDIT_DELIVERY_CLASS below and they must NEVER be passed to auditLifeOs(): the database has
+// RPC, so either both land or neither does — see 202608160001 and 202608170001. SEVEN actions are
+// delivered that way: reflection.created, memory.confirmed, memory.updated, memory.deleted, and the
+// three permission changes memory.suppressed / .restored / .revoked. (This comment said "four" for two
+// packages after the three permission changes joined the set — the constant below is the authority, and
+// tests/life-os/audit-failure.sh reads it rather than a list in prose, for exactly this reason.) They
+// are marked in AUDIT_DELIVERY_CLASS below and they must NEVER be passed to auditLifeOs(): the database has
 // already written them, and a second best-effort insert would duplicate a row in an append-only
 // table that has no way to remove it. `assertAsynchronousAction` enforces that at the call site.
 //

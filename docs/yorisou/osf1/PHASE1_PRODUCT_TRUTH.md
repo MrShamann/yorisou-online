@@ -1,6 +1,6 @@
 # YORISOU Phase 1 — Product Truth
 
-**Written 2026-08-15.** Branch `feat/osf1-internal-beta-readiness`, PR #135, base `main` `f6bb81f`.
+**Written 2026-08-15, finalized 2026-08-17.** Branch `feat/osf1-internal-beta-readiness`, PR #135, base `main` `f6bb81f`.
 
 > **This file exists to stop future claims that outrun the code.** If a report, a prompt or an agent
 > says YORISOU has a Life Graph, an autonomous agent, a public beta, Legacy, a marketplace, or
@@ -44,14 +44,20 @@
 | Memory keyset pagination | `VERIFIED` | walked against real PostgREST: 5 pages, 30/30 distinct, ties exercised, malformed cursor refused |
 | Timeline — chronological view of existing records | `VERIFIED` | keyset pagination and filters walked against real PostgREST: 27/27 across 4 pages, cross-kind ties, cursor bound to its filter |
 | Return loop — bounded continuity selection | `VERIFIED` | fixed priority, hard cap of three, deduped by record id, reads no memory at all |
-| Reflection Assistant — bounded draft capability | `VERIFIED` | AI-boundary suite (10 assertions); reads nothing stored, writes nothing, output refused not truncated |
-| Transactional audit for the seven destructive/permission mutations | `VERIFIED` | forced audit failure proves rollback, with a control proving the function still works |
+| Reflection Assistant — bounded draft capability | `VERIFIED` | AI-boundary suite (10) + provider suite (24): the nine Japanese boundary prompts, every failure mode normalized, fallback bounded to two attempts inside a 25s budget, no tools in the request, request-scoped with no state |
+| Reflection Assistant UX — optional, a draft, nothing auto-saved | `VERIFIED` | driven by keyboard end to end: ask, decline, re-offer, accept-by-append; 「使わない」 exists and the draft is refused rather than truncated when it would not fit |
+| Transactional audit for all seven mutations that claim the class | `VERIFIED` | 52 assertions of forced audit failure: each rolls back, retries cleanly and audits exactly once; the transactional set is read from the source so an eighth action cannot go unproven |
+| Audit-failure UX — nothing lost, calm message, explicit retry | `VERIFIED` | forced failure in a real browser, then PostgreSQL inspected: no row, no audit event, the text still on screen, no digits in the message, no automatic retry, and exactly one of everything after the retry |
 | Append-only audit trail | `VERIFIED` | triggers refuse UPDATE/DELETE/TRUNCATE |
 | Account erasure covers Life OS tables | `VERIFIED` | executed against a real cluster after apply/rollback/re-apply |
 | One authoritative access resolver | `VERIFIED` | used by 6 pages, the API guard, both navigation surfaces |
 | Four activation states OFF/INTERNAL/PREVIEW/PUBLIC | `IMPLEMENTED` | INTERNAL wired to founder-admin resolution |
-| Observability — 7 ops events, redaction by type | `VERIFIED` | redaction asserted against the type, not caller discipline |
-| Authenticated accessibility, 7 routes × 2 viewports | `VERIFIED` | 14/14, 0 serious, 0 critical, on a real stack with seeded data |
+| Observability — 7 ops events, all with producers, redaction by type | `VERIFIED` | three of the seven had NO producer and were undeliverable; a test now requires one per event. The error-class pattern accepted a JWT and was narrowed |
+| Authenticated accessibility, 7 routes + 6 dynamic states × 2 viewports | `VERIFIED` | 32/32, 0 serious, 0 critical — including load-more, filters, suppressed, revoked, the assistant draft, a provider refusal and the audit-failure screen |
+| Authenticated accessibility in CI | `IMPLEMENTED` | `.github/workflows/osf1-life-ci.yml`, against PostgreSQL 17 and pinned PostgREST v12.2.3, driving the same harness the acceptance machine runs. The attach path is verified locally (32/32); the CI job itself is verified by CI |
+| Keyboard-only operation of every Phase 1 action | `VERIFIED` | 12/12 on the real stack: visible focus on every stop, no trap, DOM order, both reflection modes, the assistant, memory suppress/restore/revoke/delete, pagination by Enter and by Space, and revoke proven to need two presses |
+| Performance at ~450 rows | `VERIFIED` | 12 checks: no N+1, every read carries a LIMIT, page two costs what page one costs, hub 40 KB / 21 reads — measured from PostgreSQL's own statement log |
+| Japanese copy — 247 strings audited from source | `VERIFIED` | eight of ten criteria at zero violations; two terminology collisions and one private failure sentence found and fixed |
 | Migration lineage applies, reverses and re-applies | `VERIFIED` | Gate 3, 42 assertions, in CI |
 | INTERNAL access, founder vs ordinary account | `INTERNAL_READY` | production deployment context, two real sessions: founder reaches all seven routes + API + a write; ordinary account 404 everywhere, no nav leak; six bypass attempts refused |
 | Kill switch | `VERIFIED` | fired live: ON -> KILL -> RESTORE, data intact, no duplicate mutation, still signed in. Recovery class MEASURED as `restart_required` (redeploy-class on Vercel) |
@@ -65,8 +71,6 @@
 | PUBLIC | `NOT_AUTHORIZED` | **unreachable in code** — nothing returns the state; reaching it is a Gate 5 act |
 | INTERNAL in production | `NOT_ENABLED` | implemented; requires migration + schema-ready + pilot flag + a founder-admin account |
 
-| Authenticated a11y in CI | `DEFERRED` | mandatory local gate instead; blocker is PostgREST on the runner |
-| Performance smoke at ~450 rows | `DEFERRED` | never run |
 | Audit retention | `FOUNDER_DECISION_REQUIRED` | `RETENTION_POLICY_TBD`; brief with estimates and a tiered recommendation |
 | `yorisou_identity_provisioning_sagas` erasure | `FOUNDER_DECISION_REQUIRED` | proven to survive deletion; three options, pseudonymize recommended |
 | PRIVATE-flagged content reaching moderation | `FOUNDER_DECISION_REQUIRED` | policy unchanged; disclosure names the trigger before typing |
@@ -86,7 +90,29 @@
 3. "An agent maintains the user's memory." — Nothing writes a memory without an explicit confirmation;
    the database refuses an unconfirmed row.
 4. "The assistant knows the user." — It reads no stored record. Every call is complete in itself.
-5. "Phase 1 is fully finalized." — INTERNAL access and the kill switch are now proven, so the product
-   is **INTERNAL_BETA_READY**. It is not PHASE1_FULLY_FINALIZED: the audit-failure UX, the assistant
-   provider hardening, the a11y CI decision, the copy audit, the UX coherence pass and the
-   performance smoke are all still outstanding.
+5. "The assistant can be pointed at a fake in production." — The deterministic fake is a PARAMETER of
+   `draftReflection`, passed by no shipped caller. There is no environment variable and no provider
+   alias that selects it.
+
+---
+
+## Phase 1 status, as of 2026-08-17
+
+| | |
+|---|---|
+| **CODE** | `PHASE1_FINALIZED` — every finalization section of the closeout package is executed, not argued |
+| **INTERNAL** | `READY` — proven in a production deployment context, founder versus ordinary account, six bypass attempts refused |
+| **PREVIEW** | `NOT_ENABLED` — the dev flag is absent |
+| **PUBLIC** | `NOT_AUTHORIZED` — unreachable in code; nothing returns the state |
+| **PRODUCTION Life OS** | `OFF` — every `/life` route 404s, verified against the live domain |
+| **MIGRATIONS** | `READY_FOR_FOUNDER_AUTHORIZED_APPLY` — the lineage applies, reverses and re-applies (Gate 3, 42 assertions). **Not applied.** |
+
+**What `PHASE1_FINALIZED` does and does not mean.** It means the work in this package's scope is done
+and evidenced: the audit-failure path, the assistant's provider contract and safety boundary, the
+authenticated accessibility gate in CI, the keyboard gate, the copy audit, the UX coherence pass, the
+performance smoke, the observability producers. It does **not** mean Phase 1 is live, that any
+migration has run, or that anything is enabled. Those are Founder acts and none of them has been taken.
+
+**Three Founder decisions remain open** and none of them blocks internal exposure: audit retention
+(`RETENTION_POLICY_TBD`), identity-saga erasure, and whether PRIVATE-flagged content may reach
+moderation. Each has a brief with evidence and a recommendation; none has been pre-empted in code.
