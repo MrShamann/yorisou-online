@@ -35,6 +35,8 @@ on:
       - "supabase/migrations/**osf1**"
       - "tests/life-os/**"
       - "tests/smoke/osf1-*"
+      - "tests/governance/**"
+      - "docs/yorisou/osf1/**"
       - ".github/workflows/osf1-life-ci.yml"
   pull_request:
     paths:
@@ -45,6 +47,8 @@ on:
       - "supabase/migrations/**osf1**"
       - "tests/life-os/**"
       - "tests/smoke/osf1-*"
+      - "tests/governance/**"
+      - "docs/yorisou/osf1/**"
       - ".github/workflows/osf1-life-ci.yml"
 
 jobs:
@@ -185,6 +189,10 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      # Documentary, and it costs a second. A wrong governance claim does not fail a test — it gets
+      # cited, which is how "Pack v0.4.1 is the effective corpus" survived two packages.
+      - name: Governance truth guard
+        run: node tests/governance/osf1-governance-truth.mjs
       # Pure SQL: initdb from the runner's own PostgreSQL, no service container and no Docker. The
       # harness accepts 16, and ubuntu-latest ships 16 — so this one needs nothing installed.
       - name: Forced audit failure over the whole transactional set

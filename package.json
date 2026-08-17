@@ -20,6 +20,7 @@
     "test:osf1-ai-boundary": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1AiBoundary.test.ts",
     "test:osf1-erasure-coverage": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1ErasureCoverage.test.ts",
     "test:osf1-assistant-provider": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1AssistantProvider.test.ts",
+    "test:osf1-governance-truth": "node tests/governance/osf1-governance-truth.mjs",
     "test:osf1-observability": "node --conditions=react-server --import tsx --test lib/server/__tests__/osf1Observability.test.ts",
     "test:osf1-postgres": "bash tests/life-os/postgres-acceptance.sh",
     "test:osf1-gate3": "bash tests/life-os/gate3-migration-rehearsal.sh",

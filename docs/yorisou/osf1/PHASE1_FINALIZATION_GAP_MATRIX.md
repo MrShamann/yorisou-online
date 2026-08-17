@@ -2,8 +2,14 @@
 
 **Produced 2026-08-15 before any code change**, per §0. Base: PR #135 head `afc624a`, main `f6bb81f`.
 Every row verified from source in this session, not from prior narrative.
-Governance precedence used: `OSF1_GOVERNANCE_PRECEDENCE.md` (Pack v0.4.1 binding; the package's
-v0.7.0 reference is strategic, not an in-repo execution authority).
+Governance precedence used: `OSF1_GOVERNANCE_PRECEDENCE.md`. **Corrected 2026-08-17:** the active
+governance is the **v0.7.0 complete replacement baseline** (Founder-confirmed). Pack v0.4.1 is
+historical; its requirements remain implementation constraints where compatible. What this line said
+before, kept because a deleted wrong record cannot be learned from:
+
+> **SUPERSEDED TEXT, preserved verbatim — not a current claim:**
+>
+> Pack v0.4.1 binding; the package's v0.7.0 reference is strategic, not an in-repo execution authority.
 
 ---
 

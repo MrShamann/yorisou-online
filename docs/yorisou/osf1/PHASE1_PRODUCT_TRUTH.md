@@ -2,6 +2,12 @@
 
 **Written 2026-08-15, finalized 2026-08-17.** Branch `feat/osf1-internal-beta-readiness`, PR #135, base `main` `f6bb81f`.
 
+**Governance:** the active baseline is the **YORISOU v0.7.0 complete replacement** (Founder-confirmed
+2026-08-17, 40 active resources). This file was written against Pack v0.4.1 and the correction is
+recorded in [OSF1_GOVERNANCE_PRECEDENCE.md](OSF1_GOVERNANCE_PRECEDENCE.md) §2; the delta audit against
+the active baseline is [OSF1_V070_GOVERNANCE_DELTA_AUDIT.md](OSF1_V070_GOVERNANCE_DELTA_AUDIT.md) and it
+required no code change.
+
 > **This file exists to stop future claims that outrun the code.** If a report, a prompt or an agent
 > says YORISOU has a Life Graph, an autonomous agent, a public beta, Legacy, a marketplace, or
 > complete long-term memory intelligence — **it is wrong**, and this table is the answer. Every row
@@ -95,6 +101,26 @@
    alias that selects it.
 
 ---
+
+## Phase 1 is a module, not the product
+
+**YORISOU's strategic architecture is broader than Phase 1, and this table describes only Phase 1.**
+The Canonical Current State defines YORISOU as a modular Personal Life Operating System; what is built
+here is the first module of it. Six statements follow, and each is a `NOT` for a reason — the failure
+mode this file exists to prevent is a Phase 1 capability being cited as the whole system:
+
+| Phase 1 is NOT | What Phase 1 actually is |
+|---|---|
+| the full **Personal Life Graph** | six owner-scoped tables and two optional foreign keys the person chose. **No relationships table, no edge table, no graph table exists in any migration** — a test fails if one is created |
+| the full **Memory Kernel** | one table that cannot hold an unconfirmed row, with view / correct / suppress / restore / revoke / delete and a content-free deletion receipt. No inference, no ranking, no personalisation, no retrieval |
+| the full **Life Continuity Engine** | a bounded Return offer: fixed priority, hard cap of three, deduped, and it reads no memory at all |
+| **Companion Core** | a Reflection Assistant that reads nothing stored, writes nothing, keeps no state between calls, offers no tools, and is off by default |
+| an autonomous **YORISOU Agent runtime** | no scheduler, no queue, no background process. Companion Core, Platform Orchestrator and Specialist Agents are `NOT_AUTHORIZED` and untouched |
+| **Digital Legacy** | `NOT_AUTHORIZED`. No table, route, surface or capability. (`viewer.legacyAccount` in the diff is a pre-existing *authentication* cookie shape, an unrelated word collision) |
+
+**Cross-project integration — Kakari, Mirai Move, Asterion — remains UNACTIVATED.** No shared table, no
+shared identity, no data path. The test-product boundary is a hard rule and is enforced: Imairo data
+never crosses into Life OS memory, and the protected baseline proves 8 groups byte-unchanged.
 
 ## Phase 1 status, as of 2026-08-17
 

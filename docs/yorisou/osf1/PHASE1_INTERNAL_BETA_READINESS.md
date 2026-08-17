@@ -11,11 +11,28 @@ activation still awaiting Edward.
 
 ## 1. Governance the package named, and what actually binds
 
-The package cites "YORISOU v0.7.0 governance". **No v0.7.0 governance pack exists.** The effective
-corpus is **Governance Pack v0.4.1** (`resources/governance/current/RESOURCE_MANIFEST.md`), holding
-Project Constitution **v0.4.0** and Technical Architecture **v0.4.0**. The only `v0.7.0` strings in
-the repository are in OSF-1 *product* docs, where it names the product package. This work follows the
-real corpus. The mismatch has now surfaced three times and is worth correcting in the template.
+**CORRECTED 2026-08-17 — see [OSF1_GOVERNANCE_PRECEDENCE.md](OSF1_GOVERNANCE_PRECEDENCE.md) §2.**
+
+**ACTIVE GOVERNANCE: the YORISOU v0.7.0 complete replacement baseline**, Founder-confirmed, 40 active
+Markdown resources. Authority order: Edward's latest decision → Constitution v0.7.0 → Canonical Current
+State → other active v0.7.0 resources → verified repository/runtime evidence → approved release
+evidence → historical resources.
+
+The paragraph below said the opposite, and it was wrong. What it observed was true — this **repository**
+contains no v0.7.0 file, and `resources/governance/current/` self-describes as Pack v0.4.1 — but the
+inference was not: absence from Git is not absence from existence, and a repository directory does not
+outrank the Founder's installed baseline. Pack v0.4.1 is now **historical** (tier 7); its requirements
+remain useful in-repo implementation constraints where compatible, and several of them are why this
+work contains what it does. The original text is kept below, struck through in meaning if not in
+markup, because deleting a wrong governance record hides that it was ever made.
+
+> **SUPERSEDED TEXT, preserved verbatim — not a current claim:**
+>
+> The package cites "YORISOU v0.7.0 governance". **No v0.7.0 governance pack exists.** The effective
+> corpus is **Governance Pack v0.4.1** (`resources/governance/current/RESOURCE_MANIFEST.md`), holding
+> Project Constitution **v0.4.0** and Technical Architecture **v0.4.0**. The only `v0.7.0` strings in
+> the repository are in OSF-1 *product* docs, where it names the product package. This work follows the
+> real corpus. The mismatch has now surfaced three times and is worth correcting in the template.
 
 Two binding rules the package did not name, but which bear directly on it:
 

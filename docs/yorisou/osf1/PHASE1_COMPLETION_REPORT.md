@@ -443,13 +443,30 @@ moderation queue. The surfaces say so — that is why `SAFETY_REVIEW_TRIGGER` ex
 claims 「あなただけが見られます」 — but it is a real limit on what "private" means here, and it applies
 to anything written through `/life/experience`.
 
-**The governance version named by the package does not exist.** The package is titled "YORISOU OS
-Foundation v0.7.0" and refers to a Project Constitution and Technical Architecture at v0.7.0. **There
-is no v0.7.0 pack in this repository.** The corpus that exists is **Governance Pack v0.4.1**
-(`resources/governance/current/RESOURCE_MANIFEST.md`), containing
-`Yorisou_Project_Constitution_v0.4.0.md` and `Yorisou_Technical_Architecture_v0.4.0.md`. Nothing under
-`resources/governance/` matches `v0.7.0`. This work is measured against v0.4.0/v0.4.1; anyone citing
-v0.7.0 is citing a document that is not here.
+**CORRECTED 2026-08-17 — see [OSF1_GOVERNANCE_PRECEDENCE.md](OSF1_GOVERNANCE_PRECEDENCE.md) §2.**
+
+**ACTIVE GOVERNANCE: the YORISOU v0.7.0 complete replacement baseline**, Founder-confirmed, 40 active
+Markdown resources. Authority order: Edward's latest decision → Constitution v0.7.0 → Canonical Current
+State → other active v0.7.0 resources → verified repository/runtime evidence → approved release
+evidence → historical resources.
+
+The paragraph below said the opposite, and it was wrong. What it observed was true — this **repository**
+contains no v0.7.0 file, and `resources/governance/current/` self-describes as Pack v0.4.1 — but the
+inference was not: absence from Git is not absence from existence, and a repository directory does not
+outrank the Founder's installed baseline. Pack v0.4.1 is now **historical** (tier 7); its requirements
+remain useful in-repo implementation constraints where compatible, and several of them are why this
+work contains what it does. The original text is kept below, struck through in meaning if not in
+markup, because deleting a wrong governance record hides that it was ever made.
+
+> **SUPERSEDED TEXT, preserved verbatim — not a current claim:**
+>
+> **The governance version named by the package does not exist.** The package is titled "YORISOU OS
+> Foundation v0.7.0" and refers to a Project Constitution and Technical Architecture at v0.7.0. **There
+> is no v0.7.0 pack in this repository.** The corpus that exists is **Governance Pack v0.4.1**
+> (`resources/governance/current/RESOURCE_MANIFEST.md`), containing
+> `Yorisou_Project_Constitution_v0.4.0.md` and `Yorisou_Technical_Architecture_v0.4.0.md`. Nothing under
+> `resources/governance/` matches `v0.7.0`. This work is measured against v0.4.0/v0.4.1; anyone citing
+> v0.7.0 is citing a document that is not here.
 
 ---
 

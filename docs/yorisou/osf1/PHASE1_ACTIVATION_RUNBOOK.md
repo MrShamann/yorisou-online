@@ -114,11 +114,28 @@ cluster on exit and refuses any DSN that is not a local database named `osf1_acc
 
 ### 0.3 A naming correction you will meet in other documents
 
-Parts of this package refer to "Project Constitution v0.7.0" and "Technical Architecture v0.7.0".
-**No such documents exist in this repository.** The installed corpus is **Governance Pack v0.4.1**
-(`resources/governance/current/RESOURCE_MANIFEST.md`), containing
-`Yorisou_Project_Constitution_v0.4.0.md` and `Yorisou_Technical_Architecture_v0.4.0.md`. Verify it
-yourself before citing a version:
+**CORRECTED 2026-08-17 — see [OSF1_GOVERNANCE_PRECEDENCE.md](OSF1_GOVERNANCE_PRECEDENCE.md) §2.**
+
+**ACTIVE GOVERNANCE: the YORISOU v0.7.0 complete replacement baseline**, Founder-confirmed, 40 active
+Markdown resources. Authority order: Edward's latest decision → Constitution v0.7.0 → Canonical Current
+State → other active v0.7.0 resources → verified repository/runtime evidence → approved release
+evidence → historical resources.
+
+The paragraph below said the opposite, and it was wrong. What it observed was true — this **repository**
+contains no v0.7.0 file, and `resources/governance/current/` self-describes as Pack v0.4.1 — but the
+inference was not: absence from Git is not absence from existence, and a repository directory does not
+outrank the Founder's installed baseline. Pack v0.4.1 is now **historical** (tier 7); its requirements
+remain useful in-repo implementation constraints where compatible, and several of them are why this
+work contains what it does. The original text is kept below, struck through in meaning if not in
+markup, because deleting a wrong governance record hides that it was ever made.
+
+> **SUPERSEDED TEXT, preserved verbatim — not a current claim:**
+>
+> Parts of this package refer to "Project Constitution v0.7.0" and "Technical Architecture v0.7.0".
+> **No such documents exist in this repository.** The installed corpus is **Governance Pack v0.4.1**
+> (`resources/governance/current/RESOURCE_MANIFEST.md`), containing
+> `Yorisou_Project_Constitution_v0.4.0.md` and `Yorisou_Technical_Architecture_v0.4.0.md`. Verify it
+> yourself before citing a version:
 
 ```bash
 head -6 resources/governance/current/RESOURCE_MANIFEST.md
