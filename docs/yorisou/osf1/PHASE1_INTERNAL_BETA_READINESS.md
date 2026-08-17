@@ -178,6 +178,9 @@ Nothing in this package applied a migration, set a flag, or exposed a route.
    Does internal beta proceed without them?
 4. **CI supply chain for PostgREST** — accept a pinned binary or container in CI, or keep the
    authenticated a11y run as a mandatory local gate.
+
+   **Superseded 2026-08-17.** It is in CI — `.github/workflows/osf1-life-ci.yml`, green — and the
+   recorded blocker was never a property of CI. See PHASE1_PRODUCT_TRUTH.md and risk #6.
 5. **Transactional audit trade-off, now live** — a person can lose a reflection if the audit table is
    unavailable. Implemented as the package directed; flagged because it is a product consequence.
 

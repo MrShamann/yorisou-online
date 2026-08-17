@@ -101,10 +101,12 @@ To roll back further:
 
 ## 8. Preconditions carried from earlier passes
 
-- **The authenticated accessibility gate is a mandatory local run** and is not in CI:
-  `npm run test:osf1-a11y-authenticated` must report 0 serious and 0 critical.
-- Release & Acceptance Gates v1.0 §3.4 requires the live kill-switch test before exposure. It is
-  satisfied by `npm run test:osf1-internal-access`, which must be green on the commit being deployed.
+- **The authenticated accessibility gate runs in CI** — `.github/workflows/osf1-life-ci.yml`, green on
+  every push that touches the Life OS. It is no longer a mandatory local run, and the recorded reason it
+  was not in CI ("PostgREST on the runner") was never true of CI: PostgREST has run there since
+  `dci-1-ci.yml`, pinned in Docker. The local command still exists and still works — the CI job drives
+  the same harness through `OSF1_A11Y_ATTACH_DSN` — so a failure can be reproduced on the acceptance
+  machine without translating anything.
 
 ## 9. Reproducing the whole rehearsal
 
