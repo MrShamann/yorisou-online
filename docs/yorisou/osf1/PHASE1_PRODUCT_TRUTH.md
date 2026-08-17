@@ -18,6 +18,7 @@
 | `DEFERRED` | consciously out of scope for Phase 1 |
 | `NOT_AUTHORIZED` | must not be built or turned on without a Founder act |
 | `FOUNDER_DECISION_REQUIRED` | blocked on a decision only Edward can make |
+| `BLOCKING` | must be resolved before internal exposure; not a code defect, but not optional either |
 
 ---
 
@@ -39,8 +40,8 @@
 | Memory revoke (terminal) | `VERIFIED` | restore-from-revoked and suppress-from-revoked both refused |
 | Memory delete + deletion receipt | `VERIFIED` | receipt readable by owner only, content-free |
 | Memory keyset pagination | `VERIFIED` | walked against real PostgREST: 5 pages, 30/30 distinct, ties exercised, malformed cursor refused |
-| Timeline — chronological view of existing records | `IMPLEMENTED` | five sources, sorted, stores nothing |
-| Return loop — bounded continuity | `IMPLEMENTED` | mode-aware unfinished list |
+| Timeline — chronological view of existing records | `VERIFIED` | keyset pagination and filters walked against real PostgREST: 27/27 across 4 pages, cross-kind ties, cursor bound to its filter |
+| Return loop — bounded continuity selection | `VERIFIED` | fixed priority, hard cap of three, deduped by record id, reads no memory at all |
 | Reflection Assistant — bounded draft capability | `VERIFIED` | AI-boundary suite (10 assertions); reads nothing stored, writes nothing, output refused not truncated |
 | Transactional audit for the seven destructive/permission mutations | `VERIFIED` | forced audit failure proves rollback, with a control proving the function still works |
 | Append-only audit trail | `VERIFIED` | triggers refuse UPDATE/DELETE/TRUNCATE |
@@ -59,11 +60,9 @@
 | PREVIEW cohort | `NOT_ENABLED` | dev flag absent |
 | PUBLIC | `NOT_AUTHORIZED` | **unreachable in code** — nothing returns the state; reaching it is a Gate 5 act |
 | INTERNAL in production | `NOT_ENABLED` | implemented; requires migration + schema-ready + pilot flag + a founder-admin account |
-| Timeline keyset pagination + filters | `DEFERRED` | fixed limit of 20 still in place |
-| Return loop explicit selection policy | `DEFERRED` | bounded today, but the policy is implicit |
 | Browser E2E for either reflection mode | `DEFERRED` | proven at contract, store, database and audit levels; **not** through a browser |
-| INTERNAL access E2E (founder vs normal user) | `DEFERRED` | architecture verified by unit and source assertions only |
-| Kill-switch live rehearsal | `DEFERRED` | mechanism exists; **never executed** |
+| INTERNAL access E2E (founder vs normal user) | **`BLOCKING`** | harness written and ABORTS at a verified blocker — see `OSF1_INTERNAL_ACCESS_BLOCKER.md` |
+| Kill-switch live rehearsal | **`BLOCKING`** | **never fired**; recovery class unmeasured. Release Gates v1.0 §3.4 requires it before exposure |
 | Authenticated a11y in CI | `DEFERRED` | mandatory local gate instead; blocker is PostgREST on the runner |
 | Performance smoke at ~450 rows | `DEFERRED` | never run |
 | Audit retention | `FOUNDER_DECISION_REQUIRED` | `RETENTION_POLICY_TBD`; brief with estimates and a tiered recommendation |
@@ -85,5 +84,6 @@
 3. "An agent maintains the user's memory." — Nothing writes a memory without an explicit confirmation;
    the database refuses an unconfirmed row.
 4. "The assistant knows the user." — It reads no stored record. Every call is complete in itself.
-5. "Phase 1 is fully tested end to end." — There is no browser E2E for either reflection mode, no
-   INTERNAL access E2E, and the kill switch has never been fired.
+5. "Phase 1 is fully tested end to end." — There is no browser E2E for either reflection mode, the
+   INTERNAL access rehearsal is blocked, and **the kill switch has never been fired**. Two of those
+   are `BLOCKING`.

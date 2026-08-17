@@ -138,10 +138,14 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 8 | Memory pagination unreachable past 50 | `CLOSED` | Keyset cursor, walked against real PostgREST: 5 pages, 30/30 distinct, ties exercised |
 | 9 | Timeline fixed limit of 20 | `DEFERRED` | Reachable today at Phase 1 volumes; keyset work not done |
 | 10 | Return loop boundedness implicit | `DEFERRED` | Bounded and mode-aware, but the selection policy is not explicit or separately tested |
-| 11 | Deep reflection has no browser E2E | `DEFERRED` | Proven at contract, store, database and audit levels; **not** through a browser |
+| 11 | Neither reflection mode has a browser E2E | `DEFERRED` | Proven at contract, store, database and audit levels, and both modes render and save in the authenticated a11y stack; **no dedicated browser E2E** |
 | 12 | Transactional audit failure UX | `DEFERRED` | Behaviour is correct (no false success); the message and content-preservation work is not done |
 | 13 | State ↔ Reflection link | `CLOSED` | 8 acceptance assertions: ownership, no auto-link, null-on-delete, audit records presence not content |
-| 14 | Kill switch never fired | `DEFERRED` | Mechanism exists and is env-driven; **no live rehearsal has been performed** |
+| 14 | Kill switch never fired | **`BLOCKING`** | The harness exists and ABORTS: a production-context rehearsal needs an S3-compatible identity store the auth layer can write to. Recovery class remains unmeasured. Release Gates v1.0 §3.4 requires a live test before exposure. See `OSF1_INTERNAL_ACCESS_BLOCKER.md` |
+| 21 | INTERNAL access unproven end to end in a production context | **`BLOCKING`** | Same blocker. The decision is unit-tested and every bypass is refused in the test context, but the production path — where `lifeOsInternalAccess` actually decides — has never run |
+| 22 | Timeline pagination | `CLOSED` | Merged keyset verified against real PostgREST: 27/27 across 4 pages, cross-kind ties exercised, filter bound to the cursor |
+| 23 | Return loop boundedness | `CLOSED` | Fixed priority, hard cap of three, deduped by record id, reads no memory at all |
+| 24 | Memory lifecycle transitions | `CLOSED` | Every illegal transition refused and proven: restore-from-revoked, suppress-from-revoked, unknown state, cross-owner |
 | 15 | Audit redaction | `CLOSED` | Redaction is a property of the ops record type — there is no field a reflection could occupy |
 | 16 | Moderation queue may include deleted/withdrawn cards | `DEFERRED` | Not audited in this package |
 | 17 | Memory governance §3.2 suppress/revoke/receipt missing | `CLOSED` | All three implemented and verified; revocation terminal by design |
@@ -149,7 +153,10 @@ real, understood, and tolerable for a Founder-only internal beta — not that it
 | 19 | `GET /api/life/assistant` returns 405 where siblings return 404 | `ACCEPTED_FOR_INTERNAL` | Discloses that a path exists; no data or capability exposed |
 | 20 | Governance names services (`memoryLifecycleService`, `permissionCheckService`) that do not exist | `ACCEPTED_FOR_INTERNAL` | Substance achieved under different names — single RPC write path, owner-scoped reads. A naming divergence, recorded not hidden |
 
-**Nothing is `BLOCKING`.** Two items would become blocking before any exposure beyond a single
-Founder: #14 (the kill switch must be fired before a second person is admitted — Release Gates v1.0
-§3.4) and #3 (the moderation policy must be settled before anyone who is not Edward writes about a
-diagnosis).
+**TWO ITEMS ARE `BLOCKING` (#14, #21)**, and they share one cause: a production-context rehearsal
+cannot run without an S3-compatible identity store. Neither is a code defect — the harness is written
+and the code paths are unit-tested — but until the rehearsal runs, nobody has watched the kill switch
+close the feature, and Release Gates v1.0 §3.4 requires exactly that before exposure.
+
+#3 (the PRIVATE moderation policy) remains `FOUNDER_DECISION_REQUIRED` and must be settled before
+anyone who is not Edward writes about a diagnosis.

@@ -216,3 +216,57 @@ test("the memory vocabulary is exactly the five governed categories", () => {
   const migration = readFileSync("supabase/migrations/202608160001_osf1_phase1_completion.sql", "utf8");
   for (const type of MEMORY_TYPES) assert.ok(migration.includes(`'${type}'`), `${type} missing from the check`);
 });
+
+// ── §6 Return loop: a bounded, deterministic continuity policy ───────────────
+
+test("the return selection is a policy, and the policy is bounded", () => {
+  const source = readFileSync("lib/server/lifeOs/timeline.ts", "utf8");
+  // THREE, hard. Returning to four things you left unfinished is a backlog, and a backlog is the
+  // pressure this product exists not to apply.
+  assert.match(source, /export const RETURN_MAX_ITEMS = 3;/);
+  assert.match(source, /if \(items\.length >= RETURN_MAX_ITEMS \|\| used\.has\(item\.id\)\) return;/);
+  // Deduped by record id: an unfinished deep reflection is the SAME row as the most recent one, and
+  // showing it twice would read as two separate things left undone.
+  assert.match(source, /const used = new Set<string>\(\);/);
+});
+
+test("the return selection reads no memory, so a withdrawn memory cannot influence it", () => {
+  // The whole point of revoking a memory is that the product stops using it. If the return surface
+  // read memories at all, a revoked one would have to be filtered — and a filter is something that
+  // can be forgotten. Not reading them is the stronger guarantee.
+  const selection = readFileSync("lib/server/lifeOs/timeline.ts", "utf8")
+    .slice(readFileSync("lib/server/lifeOs/timeline.ts", "utf8").indexOf("export async function lifeReturnSelection"));
+  for (const forbidden of ["listMemories", "listEligibleMemories", "listMemoryPage", "explicit_memories"]) {
+    assert.ok(!selection.includes(forbidden), `the return selection must not read ${forbidden}`);
+  }
+});
+
+test("the return surface carries no pressure mechanic anywhere", () => {
+  // Enumerated rather than trusted. Every one of these is commitment pressure with a friendly face,
+  // and the approved writing rules prohibit all of them.
+  const files = ["lib/server/lifeOs/timeline.ts", "app/life/ReturnSection.tsx"];
+  for (const file of files) {
+    const source = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    for (const banned of ["streak", "dayCount", "missedDays", "engagementScore", "loginStreak", "連続", "日連続", "サボ"]) {
+      assert.ok(!source.includes(banned), `${file} contains a pressure mechanic: ${banned}`);
+    }
+  }
+});
+
+test("the return reasons are natural Japanese, and each kind has exactly one", () => {
+  const source = readFileSync("lib/server/lifeOs/timeline.ts", "utf8");
+  for (const [kind, reason] of [
+    ["unfinished_reflection", "前に考えていたこと"],
+    ["deep_reflection", "最近残した振り返り"],
+    ["active_direction", "今、大切にしている方向"],
+    ["recent_experience", "最近の出来事"],
+    ["recent_state", "最近の記録"],
+  ]) {
+    assert.ok(source.includes(reason), `${kind} has no reason label`);
+  }
+  // Priority is FIXED and therefore testable. No score, no ranking, no recency weighting.
+  for (const scoring of ["score", "weight", "rank", "Math.random", "priority ="]) {
+    assert.ok(!source.slice(source.indexOf("lifeReturnSelection")).includes(scoring),
+      `the selection must not ${scoring} — a fixed order is what makes it deterministic`);
+  }
+});

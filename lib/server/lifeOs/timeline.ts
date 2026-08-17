@@ -323,3 +323,101 @@ export async function lifeReturnView(ownerAccountId: string): Promise<ReturnView
     recentExperience: experiences[0] ? { id: experiences[0].id, title: experiences[0].title } : null,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §6 — THE RETURN SELECTION POLICY
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// `lifeReturnView` gathers candidates. This decides WHICH of them a person actually sees, and it is
+// a policy rather than a rendering accident: previously the surface showed whatever the view
+// happened to contain, which is how a continuity card becomes a feed one field at a time.
+//
+// THREE ITEMS, HARD. Not "about three". The cap is the whole design — returning to four things you
+// left unfinished is a backlog, and a backlog is the pressure this product exists not to apply.
+//
+// FIXED PRIORITY, so the selection is deterministic and therefore testable. The order is not
+// preference-ranked or engagement-ranked; there is no score anywhere. It is simply: the thing you
+// were in the middle of, then the thing you thought hardest about, then what you said you were
+// heading toward, then what happened, then how you were.
+//
+// WHAT IS DELIBERATELY ABSENT: no streak, no count of days, no "you missed", no comparison to a
+// previous week, no completion percentage, and no notification. If nothing qualifies, the selection
+// is empty and the surface renders nothing — an empty return is a legitimate state, not a prompt.
+
+export const RETURN_MAX_ITEMS = 3;
+
+export type ReturnItem =
+  | { kind: "unfinished_reflection"; reason: string; id: string; missing: string[] }
+  | { kind: "deep_reflection"; reason: string; id: string; summary: string }
+  | { kind: "active_direction"; reason: string; id: string; summary: string }
+  | { kind: "recent_experience"; reason: string; id: string; summary: string }
+  | { kind: "recent_state"; reason: string; id: string; summary: string };
+
+/**
+ * The bounded continuity selection.
+ *
+ * Deterministic: same records in, same items out, in the same order. Nothing here reads a memory —
+ * suppressed or revoked or otherwise — so a memory a person has withdrawn cannot influence what
+ * they are shown on returning, which is the point of withdrawing it.
+ */
+export async function lifeReturnSelection(ownerAccountId: string): Promise<ReturnItem[]> {
+  const [view, states] = await Promise.all([
+    lifeReturnView(ownerAccountId),
+    listCurrentStateRecords(ownerAccountId, 1).catch(() => []),
+  ]);
+
+  const items: ReturnItem[] = [];
+  const used = new Set<string>();
+  const take = (item: ReturnItem) => {
+    // One record cannot occupy two slots: an unfinished deep reflection is the same row as the most
+    // recent one, and showing it twice would read as two separate things left undone.
+    if (items.length >= RETURN_MAX_ITEMS || used.has(item.id)) return;
+    used.add(item.id);
+    items.push(item);
+  };
+
+  if (view.unfinished) {
+    take({
+      kind: "unfinished_reflection",
+      reason: "前に考えていたこと",
+      id: view.unfinished.reflectionId,
+      missing: view.unfinished.missing,
+    });
+  }
+  if (view.lastReflection) {
+    take({
+      kind: "deep_reflection",
+      reason: "最近残した振り返り",
+      id: view.lastReflection.id,
+      summary: view.lastReflection.what_happened,
+    });
+  }
+  if (view.activeDirection) {
+    take({
+      kind: "active_direction",
+      reason: "今、大切にしている方向",
+      id: view.activeDirection.id,
+      summary: view.activeDirection.title,
+    });
+  }
+  if (view.recentExperience) {
+    take({
+      kind: "recent_experience",
+      reason: "最近の出来事",
+      id: view.recentExperience.id,
+      summary: view.recentExperience.title ?? "",
+    });
+  }
+  const state = states[0];
+  if (state) {
+    take({
+      kind: "recent_state",
+      reason: "最近の記録",
+      id: state.id,
+      // Kept local rather than importing the app's renderer: a lib/server module reaching into
+      // app/ would invert the dependency and drag a client component into the data layer.
+      summary: state.situation ?? state.reflection ?? state.state_tags.join("・"),
+    });
+  }
+  return items;
+}
