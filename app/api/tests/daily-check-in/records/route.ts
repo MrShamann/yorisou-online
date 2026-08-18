@@ -20,7 +20,7 @@ import {
   createDailyRecord,
   listDailyRecordsForOwner,
   ownerHasAnyDailyRecord,
-} from "@/lib/server/dailyCheckInStore";
+} from "@/lib/server/platform/stateCore";
 
 function isoDateDaysAgo(fromLocalDate: string, days: number): string {
   const base = new Date(`${fromLocalDate}T00:00:00Z`);

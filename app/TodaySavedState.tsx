@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { latestCurrentStateRecord } from "@/lib/server/lifeOs/store";
+import { latestCurrentStateRecord } from "@/lib/server/platform/stateCore";
 import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId } from "@/lib/yorisou/today/currentStateCheckIn";
 import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 

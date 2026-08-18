@@ -1,4 +1,4 @@
-import { listCurrentStateRecords } from "@/lib/server/lifeOs/store";
+import { listCurrentStateRecords } from "@/lib/server/platform/stateCore";
 import type { CurrentStateRecord, Energy, Mood } from "@/lib/life-os/contract";
 import { labelForIntent, labelForState, type IntentOptionId, type StateOptionId } from "@/lib/yorisou/today/currentStateCheckIn";
 
