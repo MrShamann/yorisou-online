@@ -16,7 +16,7 @@ import { executeRecordedState } from "@/lib/yorisou/method-runtime/recordedState
 import { correctionWindowOpen } from "@/lib/yorisou/methods/daily-check-in/timeContract";
 import { selectAcknowledgement } from "@/lib/yorisou/methods/daily-check-in/acknowledgement";
 import { mapDailyStoreError, readBoundedJson } from "@/lib/server/dailyCheckInApi";
-import { correctDailyRecord, deleteDailyRecord, getDailyRecordForOwner } from "@/lib/server/dailyCheckInStore";
+import { correctDailyRecord, deleteDailyRecord, getDailyRecordForOwner } from "@/lib/server/platform/stateCore";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

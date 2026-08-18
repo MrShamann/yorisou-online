@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { latestCurrentStateRecord, listGoals, listEligibleMemories, listReflections } from "@/lib/server/lifeOs/store";
+import { listGoals, listEligibleMemories, listReflections } from "@/lib/server/lifeOs/store";
+import { latestCurrentStateRecord } from "@/lib/server/platform/stateCore";
 import { GOAL_STATUS_LABELS, type Goal } from "@/lib/life-os/contract";
 import SignInRequired from "./SignInRequired";
 import { INTERNAL_HANDLING, NOT_VISIBLE_TO_OTHER_USERS } from "@/lib/life-os/privacyCopy";

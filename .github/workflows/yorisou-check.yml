@@ -180,6 +180,12 @@ jobs:
       - name: ARCH-P1 typed-event seam (state.checkin_completed.v1)
         run: npm run test:arch-p1
 
+      # ARCH-P2. The state.core boundary is a HARD gate: two adapters over the two legacy stores,
+      # no dual write, DCI/current-moment semantics lossless, provenance owner-free, Today source
+      # stability, the P1 seam intact, and the timeline named as the one P6 exception.
+      - name: ARCH-P2 state.core adapter boundary
+        run: npm run test:arch-p2
+
       - name: C02 definition and scoring checks
         run: npm run test:c02
 

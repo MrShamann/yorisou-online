@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCurrentStateRecord, listCurrentStateRecords, setCurrentStateReflection } from "@/lib/server/lifeOs/store";
+import { createCurrentStateRecord, listCurrentStateRecords, setCurrentStateReflection } from "@/lib/server/platform/stateCore";
 import { auditLifeOs } from "@/lib/server/lifeOs/audit";
 import { deliverStateCheckinCompleted, stateCheckinCompletedEvent } from "@/lib/server/platform/stateCheckinEvent";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";

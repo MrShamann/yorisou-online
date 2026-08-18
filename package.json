@@ -148,7 +148,8 @@
     "local-app:test": "bash scripts/local-app/test-contract.sh",
     "local-app:accept": "playwright test tests/smoke/local-app-interaction.spec.ts --project=desktop",
     "test:platform-contracts": "node --import tsx --test lib/platform/__tests__/platformContracts.test.ts",
-    "test:arch-p1": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP1StateCheckinEvent.test.ts"
+    "test:arch-p1": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP1StateCheckinEvent.test.ts",
+    "test:arch-p2": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP2StateCoreAdapter.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
