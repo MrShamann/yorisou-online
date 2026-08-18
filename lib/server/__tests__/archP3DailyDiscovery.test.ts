@@ -237,6 +237,39 @@ test("K: the client selects nothing — the API never reads a body, the service 
   assert.ok(!service.includes("clientResultId"), "service accepts no client-chosen result");
 });
 
+// ── Controller remediation: store failure ≠ no session ──────────────────────
+
+test("Today entry fails CLOSED on a store read failure — failure is never rendered as 'not yet drawn'", () => {
+  // The bug this pins down: `readTodaysDiscovery(...).catch(() => null)` followed by
+  // `Boolean(today?.session)` collapses TWO different states — a successful read with no session
+  // yet (render the NEW CTA) and a repository failure (render NOTHING) — into "completed = false",
+  // which put a dead 「今日のしるしを見る」 on Today while /today/discovery would 404 on the same
+  // failure. The required semantics: read throws → the entry returns null; read succeeds with no
+  // session → the NEW CTA may render; read succeeds with a session → the completed CTA renders.
+  const source = read("app", "TodayDiscoveryEntry.tsx");
+  assert.ok(
+    !/readTodaysDiscovery[\s\S]{0,240}\.catch\(/.test(source),
+    "the read must not be inline-caught into a value the render path then misreads as 'no session'",
+  );
+  assert.ok(
+    !source.includes("today?.session"),
+    "post-read code must not treat the read result as possibly-failed — failure already returned null",
+  );
+  assert.match(
+    source,
+    /} catch \{[\s\S]{0,200}?return null;/,
+    "a repository failure must return null (render nothing) before any CTA decision is made",
+  );
+  assert.ok(
+    source.includes("Boolean(today.session)"),
+    "the completed/new distinction is made only on a SUCCESSFUL read",
+  );
+  assert.ok(
+    source.includes("completed ? DAILY_SYMBOLS_COPY.completedCta : DAILY_SYMBOLS_COPY.primaryCta"),
+    "a successful read still renders the correct CTA for both no-session and completed states",
+  );
+});
+
 // ── L/M. Today placement and primacy ────────────────────────────────────────
 
 test("L/M: Today keeps the utility hero primary; curiosity sits after continuity, before 5-minute actions", () => {

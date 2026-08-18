@@ -22,14 +22,21 @@ export default async function TodayDiscoveryEntry() {
   const accountId = gate.viewer.account?.id || gate.viewer.legacyAccount?.id;
   if (!accountId) return null;
 
-  // Completed-today changes only the CTA label; a read failure degrades to the entry CTA rather
-  // than hiding the section (the route itself refuses safely if persistence is truly down).
-  const today = await readTodaysDiscovery({
-    ownerAccountId: accountId,
-    definition: DAILY_SYMBOLS_DEFINITION,
-    repository: discoveryRepository,
-  }).catch(() => null);
-  const completed = Boolean(today?.session);
+  // STORE FAILURE ≠ NO SESSION. A successful read with no session yet renders the NEW CTA; a
+  // repository failure renders NOTHING — because /today/discovery fails closed on the same
+  // failure, an entry rendered here would be a dead CTA ending in a 404. The distinction is the
+  // Controller-required invariant, and archP3DailyDiscovery.test.ts pins it structurally.
+  let today;
+  try {
+    today = await readTodaysDiscovery({
+      ownerAccountId: accountId,
+      definition: DAILY_SYMBOLS_DEFINITION,
+      repository: discoveryRepository,
+    });
+  } catch {
+    return null;
+  }
+  const completed = Boolean(today.session);
 
   return (
     <section className="mt-10">
