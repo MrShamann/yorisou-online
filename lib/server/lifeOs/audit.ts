@@ -21,9 +21,12 @@ import "server-only";
 // record, and nothing was destroyed.
 //
 // TRANSACTIONAL (NOT this file): the audit insert happens inside the mutation's own SECURITY DEFINER
-// RPC, so either both land or neither does — see 202608160001. Four actions are delivered that way:
-// reflection.created, memory.confirmed, memory.deleted and memory.updated. They are marked in
-// AUDIT_DELIVERY_CLASS below and they must NEVER be passed to auditLifeOs(): the database has
+// RPC, so either both land or neither does — see 202608160001 and 202608170001. SEVEN actions are
+// delivered that way: reflection.created, memory.confirmed, memory.updated, memory.deleted, and the
+// three permission changes memory.suppressed / .restored / .revoked. (This comment said "four" for two
+// packages after the three permission changes joined the set — the constant below is the authority, and
+// tests/life-os/audit-failure.sh reads it rather than a list in prose, for exactly this reason.) They
+// are marked in AUDIT_DELIVERY_CLASS below and they must NEVER be passed to auditLifeOs(): the database has
 // already written them, and a second best-effort insert would duplicate a row in an append-only
 // table that has no way to remove it. `assertAsynchronousAction` enforces that at the call site.
 //
@@ -32,6 +35,7 @@ import "server-only";
 // written. See docs/yorisou/osf1/OSF1_AUDIT_DELIVERY_CLASSES.md.
 
 import { createHash } from "crypto";
+import { newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
 
 /** `yorisou.life.<domain>.<verb>` — its own namespace, NOT the canonical `yorisou.exp.*` dictionary. */
 export const LIFE_OS_AUDIT_ACTIONS = [
@@ -44,6 +48,9 @@ export const LIFE_OS_AUDIT_ACTIONS = [
   "yorisou.life.memory.confirmed",
   "yorisou.life.memory.deleted",
   "yorisou.life.memory.updated",
+  "yorisou.life.memory.suppressed",
+  "yorisou.life.memory.restored",
+  "yorisou.life.memory.revoked",
   "yorisou.life.experience.created",
   "yorisou.life.experience.updated",
   "yorisou.life.assistant.drafted",
@@ -66,6 +73,11 @@ export const AUDIT_DELIVERY_CLASS: Record<LifeOsAuditAction, "transactional" | "
   "yorisou.life.memory.confirmed": "transactional",
   "yorisou.life.memory.deleted": "transactional",
   "yorisou.life.memory.updated": "transactional",
+  // Each of these changes what the product is PERMITTED to do with something the person told it.
+  // The record of a permission change must not be able to go missing separately from the change.
+  "yorisou.life.memory.suppressed": "transactional",
+  "yorisou.life.memory.restored": "transactional",
+  "yorisou.life.memory.revoked": "transactional",
   // Self-evidencing: the card is the record, and neither action destroys anything.
   "yorisou.life.experience.created": "asynchronous",
   "yorisou.life.experience.updated": "asynchronous",
@@ -118,7 +130,7 @@ export async function auditLifeOs(input: {
   const cfg = config();
   if (!cfg) return; // no store configured (local dev): nothing to write to, and not an error
   try {
-    await fetch(`${cfg.url}/rest/v1/rpc/yorisou_osf1_audit_write`, {
+    const response = await fetch(`${cfg.url}/rest/v1/rpc/yorisou_osf1_audit_write`, {
       method: "POST",
       headers: {
         apikey: cfg.key,
@@ -136,8 +148,27 @@ export async function auditLifeOs(input: {
         p_detail: input.detail ?? {},
       }),
     });
+    // A dropped asynchronous audit row is invisible by design — so it is at least COUNTED. Without
+    // this, "the audit is best-effort" and "the audit never fails" look identical from outside.
+    if (!response.ok) {
+      recordLifeOsOps({
+        event: "life_os.audit.write_failed",
+        correlationId: newCorrelationId(),
+        objectId: input.entityRef ?? null,
+        ownerAccountId: input.ownerAccountId,
+        errorClass: `http_${response.status}`,
+      });
+    }
   } catch {
     // Swallowed on purpose. The mutation the caller just performed must not be undone by the
-    // failure of its own audit record.
+    // failure of its own audit record — but it is recorded as an operational event, because an
+    // audit gap nobody can see is the failure mode this whole module exists to avoid.
+    recordLifeOsOps({
+      event: "life_os.audit.write_failed",
+      correlationId: newCorrelationId(),
+      objectId: input.entityRef ?? null,
+      ownerAccountId: input.ownerAccountId,
+      errorClass: "transport_failed",
+    });
   }
 }

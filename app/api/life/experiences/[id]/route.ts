@@ -1,3 +1,4 @@
+import { parseUuid, LifeOsInputError } from "@/lib/life-os/contract";
 import { NextResponse } from "next/server";
 import {
   ACTIVE_VISIBILITIES,
@@ -60,7 +61,17 @@ function experienceApiError(error: unknown): NextResponse {
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const gate = await requireLifeViewer({ mutation: true });
   if ("refusal" in gate) return gate.refusal;
-  const { id } = await context.params;
+  const { id: rawId } = await context.params;
+  // A path segment is caller-supplied like any other input. Validating it here keeps an unparseable
+  // id from reaching PostgREST, where it becomes a 400 the store cannot classify and the API would
+  // return as a 500.
+  let id: string;
+  try {
+    id = parseUuid(rawId, "experience_id_invalid");
+  } catch (error) {
+    if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
+    throw error;
+  }
   let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;

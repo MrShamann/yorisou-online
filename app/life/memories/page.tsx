@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { listMemories } from "@/lib/server/lifeOs/store";
+import { listMemoryPage } from "@/lib/server/lifeOs/store";
 import MemoryList from "./MemoryList";
 import SignInRequired from "../SignInRequired";
-import { lifeOsAccess } from "@/lib/life-os/access";
+import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 
 export const metadata: Metadata = {
   title: "覚えていること | Yorisou",
@@ -19,9 +18,11 @@ export const dynamic = "force-dynamic";
 export default async function MemoriesPage() {
   // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
   // session lookup or database read. Route-concealing, following pilotRouteAccess.
-  if (!lifeOsAccess().allowed) notFound();
-  const viewer = await getViewerContext();
-  const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
+  // ONE authority for the gate AND the viewer: resolving them separately is how a page ends
+  // up scoping data to a different identity than the one that passed the gate.
+  const access = await resolveLifeOsRouteAccess();
+  if (!access.allowed) notFound();
+  const accountId = access.accountId;
   if (!accountId) {
     return (
       <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
@@ -29,7 +30,9 @@ export default async function MemoriesPage() {
       </main>
     );
   }
-  const memories = await listMemories(accountId).catch(() => []);
+  // The first page only. Everything after it is reachable through the cursor rather than through a
+  // larger number — see listMemoryPage for why a bigger cap is the wrong fix.
+  const page = await listMemoryPage(accountId).catch(() => ({ memories: [], nextCursor: null }));
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
       <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">わたしの記録</p>
@@ -39,7 +42,7 @@ export default async function MemoriesPage() {
       <p className="mt-3 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
         あなたが「覚えておく」と決めたものだけが、ここにあります。忘れると、消えます。
       </p>
-      <MemoryList initialMemories={memories} />
+      <MemoryList initialMemories={page.memories} initialCursor={page.nextCursor} />
 
       <Link
         href="/life"

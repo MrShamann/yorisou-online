@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { MEMORY_TYPE_LABELS, type MemoryCandidate } from "@/lib/life-os/contract";
-import { lifePost } from "@/lib/life-os/client";
+import { lifePost, lifeFailureMessage } from "@/lib/life-os/client";
 
 // OSF-1 — 「これを覚えておきますか」.
 //
@@ -24,10 +24,16 @@ type Decision = "pending" | "saving" | "saved" | "declined" | "failed";
 
 export default function MemoryConfirmation({ candidates }: Props) {
   const [decisions, setDecisions] = useState<Record<number, Decision>>({});
+  const [messages, setMessages] = useState<Record<number, string>>({});
 
   if (candidates.length === 0) return null;
 
   async function confirm(index: number, candidate: MemoryCandidate) {
+    // The re-entry guard, held here rather than by `disabled` on the button. A disabled button is
+    // blurred by the browser, so disabling the control someone just pressed throws their focus to the
+    // document body — and when the answer is a failure, they are at the top of the page with the
+    // retry somewhere below. See the same change in ReflectionFlow.
+    if (decisions[index] === "saving") return;
     setDecisions((current) => ({ ...current, [index]: "saving" }));
     const result = await lifePost("memories", {
       // Sent as a separate top-level field, not folded into the candidate object. The endpoint reads
@@ -42,6 +48,12 @@ export default function MemoryConfirmation({ candidates }: Props) {
         subject: candidate.subject ?? {},
       },
     });
+    // THROUGH THE SHARED MESSAGE. This component hardcoded one sentence for all five outcomes, which
+    // is the same defect that was just fixed in GoalsPanel — and this is the component GoalsPanel and
+    // ReflectionFlow both render. An expired session was told 「少し時間をおいて、もう一度お試しください」,
+    // which will 401 forever, and a 503 got the same retry invitation the shared message deliberately
+    // withholds.
+    if (!result.ok) setMessages((current) => ({ ...current, [index]: lifeFailureMessage(result, "confirm") }));
     setDecisions((current) => ({ ...current, [index]: result.ok ? "saved" : "failed" }));
   }
 
@@ -83,8 +95,8 @@ export default function MemoryConfirmation({ candidates }: Props) {
                   <button
                     type="button"
                     onClick={() => void confirm(index, candidate)}
-                    disabled={decision === "saving"}
-                    className="inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 text-[15px] font-semibold text-white disabled:opacity-70"
+                    aria-busy={decision === "saving"}
+                    className="inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-6 text-[15px] font-semibold text-white aria-[busy=true]:opacity-70"
                   >
                     {decision === "saving" ? "保存しています" : "覚えておく"}
                   </button>
@@ -97,9 +109,14 @@ export default function MemoryConfirmation({ candidates }: Props) {
                   </button>
                 </div>
               )}
+              {/* The message comes from lifeFailureMessage with kind "confirm": confirmation is
+                  transactional with its audit row, so 「何も残っていません」 is a fact rather than a hope.
+                  The 覚えておく button above is still there, which is the retry — except when the
+                  reason is a lost response, where the shared message stops asserting anything and
+                  asks the person to reload instead, because a blind retry would store it twice. */}
               {decision === "failed" && (
-                <p className="mt-2 text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
-                  保存できませんでした。何も残っていません。
+                <p role="alert" className="mt-2 text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                  {messages[index]}
                 </p>
               )}
             </li>

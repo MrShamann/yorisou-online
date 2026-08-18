@@ -16,6 +16,8 @@ import {
 import { REFLECTION_FIELDS } from "@/lib/life-os/contract";
 import type {
   CurrentStateInput,
+  MemoryDeletionReceipt,
+  MemoryLifecycleState,
   CurrentStateRecord,
   ExplicitMemory,
   Goal,
@@ -203,7 +205,7 @@ export async function getGoal(ownerAccountId: string, goalId: string): Promise<G
 // ── Reflection ───────────────────────────────────────────────────────────────
 
 const REFLECTION_COLUMNS =
-  "id,experience_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at";
+  "id,experience_id,current_state_record_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at";
 
 /**
  * Create a reflection. The RPC writes the audit row INSIDE this transaction (202608160001 §3), so
@@ -214,6 +216,7 @@ export async function createReflection(ownerAccountId: string, input: LifeReflec
   return rpc<string>("yorisou_osf1_reflection_create", {
     p_owner_account_id: ownerAccountId,
     p_experience_id: input.experienceId ?? null,
+    p_current_state_record_id: input.currentStateRecordId ?? null,
     p_mode: input.mode ?? "light",
     p_what_happened: input.what_happened,
     p_felt: input.felt ?? null,
@@ -263,7 +266,8 @@ export async function getReflection(ownerAccountId: string, reflectionId: string
 
 // ── Memory ───────────────────────────────────────────────────────────────────
 
-const MEMORY_COLUMNS = "id,memory_type,content,source,user_confirmed,created_at,updated_at";
+const MEMORY_COLUMNS =
+  "id,memory_type,content,source,user_confirmed,created_at,updated_at,lifecycle_state,lifecycle_changed_at";
 
 /**
  * The only write path for a memory, and it is a CONFIRM, not a create.
@@ -330,6 +334,137 @@ export async function updateMemory(ownerAccountId: string, memoryId: string, con
   });
 }
 
+/**
+ * KEYSET PAGINATION over memories.
+ *
+ * `listMemories` caps at 50 and takes no offset, so a person who confirmed a fifty-first memory
+ * simply could not reach it — the product had quietly stopped showing them their own records. The
+ * fix is not a larger number: Memory governance §4 prohibits bulk memory reads, so raising the cap
+ * moves in the wrong direction. It is a cursor.
+ *
+ * Keyset rather than OFFSET, because offset pagination over a list that can be deleted from skips
+ * rows: remove one memory on page 1 and the first row of page 2 shifts up past the window and is
+ * never shown. That is the same defect as the 50-cap, just harder to notice.
+ *
+ * The sort is (created_at desc, id desc). The id is not decoration — two memories confirmed in the
+ * same millisecond would otherwise have no defined order, and a cursor into an undefined order is
+ * not stable. The cursor encodes both halves for exactly that reason.
+ */
+export const MEMORY_PAGE_SIZE = 25;
+
+export type MemoryPage = { memories: ExplicitMemory[]; nextCursor: string | null };
+
+/** Opaque to the caller by construction: it is the sort key, not an index into anything. */
+function encodeCursor(row: ExplicitMemory): string {
+  return Buffer.from(`${row.created_at}|${row.id}`, "utf8").toString("base64url");
+}
+
+function decodeCursor(cursor: string): { createdAt: string; id: string } | null {
+  try {
+    const [createdAt, id] = Buffer.from(cursor, "base64url").toString("utf8").split("|");
+    // A malformed cursor is refused, never coerced into "start from the beginning" — silently
+    // restarting a list is how a person scrolls forever without noticing they are seeing page 1.
+    if (!createdAt || !id || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+    if (Number.isNaN(Date.parse(createdAt))) return null;
+    return { createdAt, id };
+  } catch {
+    return null;
+  }
+}
+
+export async function listMemoryPage(
+  ownerAccountId: string,
+  options: { cursor?: string | null; limit?: number; eligibleOnly?: boolean } = {},
+): Promise<MemoryPage> {
+  const limit = Math.min(Math.max(options.limit ?? MEMORY_PAGE_SIZE, 1), 100);
+  const params = new URLSearchParams({
+    select: MEMORY_COLUMNS,
+    owner_account_id: `eq.${ownerAccountId}`,
+    order: "created_at.desc,id.desc",
+    // One more than asked for. Its presence is what tells us another page exists, without a second
+    // round trip and without a count query over the whole table.
+    limit: String(limit + 1),
+  });
+  // ELIGIBILITY, and the distinction that makes suppression mean anything.
+  //
+  // RETRIEVAL paths ask for eligible rows only: a suppressed memory must not reach anything that
+  // surfaces or personalises. MANAGEMENT asks for all of them, because a person who cannot see a
+  // suppressed memory cannot restore it — the reversibility would be theoretical.
+  if (options.eligibleOnly) params.set("lifecycle_state", "eq.active");
+  if (options.cursor) {
+    const decoded = decodeCursor(options.cursor);
+    if (!decoded) throw new Error("osf1_memory_cursor_invalid");
+    params.set(
+      "or",
+      `(created_at.lt.${decoded.createdAt},and(created_at.eq.${decoded.createdAt},id.lt.${decoded.id}))`,
+    );
+  }
+  const rows = await select<ExplicitMemory>("yorisou_explicit_memories", params);
+  const hasMore = rows.length > limit;
+  const memories = hasMore ? rows.slice(0, limit) : rows;
+  return {
+    memories,
+    nextCursor: hasMore && memories.length > 0 ? encodeCursor(memories[memories.length - 1]) : null,
+  };
+}
+
+/**
+ * Change a memory's lifecycle state. Returns false when the id is not this person's — the same
+ * answer as "no such memory", so a caller cannot use it to discover someone else's id is real.
+ *
+ * The RPC refuses to bring a REVOKED memory back: withdrawing authorization is a decision, not a
+ * toggle. Deleting it remains available, which is the only onward move a person needs.
+ */
+export async function setMemoryLifecycle(
+  ownerAccountId: string,
+  memoryId: string,
+  next: MemoryLifecycleState,
+): Promise<boolean> {
+  return rpc<boolean>("yorisou_osf1_memory_set_lifecycle", {
+    p_owner_account_id: ownerAccountId,
+    p_memory_id: memoryId,
+    p_next_state: next,
+  });
+}
+
+/**
+ * What a person's hard-deleted memories left behind.
+ *
+ * Read from the append-only audit trail, which already records every deletion inside the deletion's
+ * own transaction. A separate receipt table would be a second source of truth for one fact — and a
+ * receipt stored on the row would die with the row, which is the whole problem it exists to solve.
+ */
+export async function memoryDeletionReceipts(
+  ownerAccountId: string,
+  limit = 50,
+): Promise<MemoryDeletionReceipt[]> {
+  return rpc<MemoryDeletionReceipt[]>("yorisou_osf1_memory_receipts", {
+    p_owner_account_id: ownerAccountId,
+    p_limit: limit,
+  });
+}
+
+/**
+ * ELIGIBLE memories only — active, never suppressed or revoked.
+ *
+ * This is the retrieval path. Every surface that shows a memory as something the product is
+ * currently holding on the person's behalf uses it, which is what makes suppression and revocation
+ * real rather than a label on a row.
+ */
+export async function listEligibleMemories(ownerAccountId: string, limit = 50): Promise<ExplicitMemory[]> {
+  return select<ExplicitMemory>(
+    "yorisou_explicit_memories",
+    new URLSearchParams({
+      select: MEMORY_COLUMNS,
+      owner_account_id: `eq.${ownerAccountId}`,
+      lifecycle_state: "eq.active",
+      order: "created_at.desc",
+      limit: String(limit),
+    }),
+  );
+}
+
+/** Every memory regardless of lifecycle state. Management surfaces only — see listEligibleMemories. */
 export async function listMemories(ownerAccountId: string, limit = 50): Promise<ExplicitMemory[]> {
   return select<ExplicitMemory>(
     "yorisou_explicit_memories",

@@ -105,14 +105,44 @@ test("every /api/life route goes through the shared guard and never reads an own
   }
 });
 
-test("the guard checks the feature gate BEFORE the session, and the mutation gate before the body", () => {
-  const guard = readFileSync("lib/server/lifeOs/guard.ts", "utf8");
-  const gateAt = guard.indexOf("lifeOsAccess()");
-  const mutationAt = guard.indexOf("lifeOsMutationAccess()");
-  const sessionAt = guard.indexOf("getViewerContext()");
-  assert.ok(gateAt >= 0 && mutationAt >= 0 && sessionAt >= 0);
-  assert.ok(gateAt < sessionAt, "a closed route must answer identically for signed-in and signed-out callers");
-  assert.ok(mutationAt < sessionAt, "a write that cannot succeed must be refused before anything is accepted");
+test("the activation state is resolved BEFORE the session, and the mutation gate before the body", () => {
+  // The ordering property moved into the resolver when the four-state model was wired up, because
+  // INTERNAL cannot be decided without the viewer. It is asserted where it now lives.
+  const resolver = readFileSync("lib/server/lifeOs/routeAccess.ts", "utf8");
+  const stateAt = resolver.indexOf("lifeOsActivationState()");
+  const sessionAt = resolver.indexOf("getViewerContext()");
+  assert.ok(stateAt >= 0 && sessionAt >= 0, "the resolver must read both the state and the session");
+  assert.ok(stateAt < sessionAt, "a closed deployment must answer without ever resolving a viewer");
+  // OFF returns before any session lookup at all — not merely "after the state was read".
+  assert.match(resolver, /if \(state !== "INTERNAL"\) return DENY\(state, "off"\);/);
+
+  // The guard still refuses a write before the body, and now does it without leaking why.
+  // Measured inside requireLifeViewer, not over the whole file: the import block names the same
+  // symbols and would make any index comparison meaningless.
+  const guardFile = readFileSync("lib/server/lifeOs/guard.ts", "utf8");
+  const guard = guardFile.slice(guardFile.indexOf("export async function requireLifeViewer"));
+  const gateAt = guard.indexOf("resolveLifeOsRouteAccess()");
+  const mutationAt = guard.indexOf("LIFE_OS_SCHEMA_READY_ENV");
+  const returnAt = guard.indexOf("return { viewer:");
+  assert.ok(gateAt >= 0 && mutationAt >= 0 && returnAt >= 0);
+  assert.ok(gateAt < mutationAt, "the route gate precedes the schema declaration");
+  assert.ok(mutationAt < returnAt, "a write that cannot succeed is refused before the caller proceeds");
+  // The guard must never resolve a viewer of its own — that would be a second identity path.
+  assert.ok(!/getViewerContext/.test(guardFile), "the guard must take its identity from the resolver");
+});
+
+test("INTERNAL is a real state: it opens production for a founder admin and nobody else", () => {
+  // The four-state model was previously declared but inert — lifeOsAccess denies production
+  // unconditionally, so INTERNAL behaved exactly like OFF and lifeOsInternalAccess had no callers.
+  const resolver = readFileSync("lib/server/lifeOs/routeAccess.ts", "utf8");
+  assert.match(resolver, /lifeOsInternalAccess\(/, "INTERNAL must be decided by the internal-access function");
+  assert.match(resolver, /viewerHasAdminAccess\(viewer\)/, "founder/admin must come from the validated session");
+  // No client-supplied role claim may exist anywhere in the path.
+  for (const claim of ["req.headers", "searchParams", "body.role", "body.isAdmin", "x-admin"]) {
+    assert.ok(!resolver.includes(claim), `${claim} must not influence the internal decision`);
+  }
+  // PUBLIC is unreachable: the resolver allows only the states it names, and nothing returns PUBLIC.
+  assert.ok(!/=== "PUBLIC"/.test(resolver), "PUBLIC must not be an allowed branch");
 });
 
 test("the old action-switch route is gone — one write path only", () => {
@@ -165,17 +195,28 @@ test("a transactional action cannot be written by the asynchronous writer", asyn
   });
 });
 
-test("the four transactional actions are exactly the ones the completion package names", () => {
+test("the transactional actions are exactly the mutations that destroy or re-permit", () => {
+  // Grown from four to seven by the finalization package's memory lifecycle. The rule is unchanged
+  // and is what decides membership: an action is transactional when the surviving data cannot answer
+  // the question the audit row answers — what used to be here, or what the product may now do.
   assert.deepEqual([...TRANSACTIONAL_AUDIT_ACTIONS].sort(), [
     "yorisou.life.memory.confirmed",
     "yorisou.life.memory.deleted",
+    "yorisou.life.memory.restored",
+    "yorisou.life.memory.revoked",
+    "yorisou.life.memory.suppressed",
     "yorisou.life.memory.updated",
     "yorisou.life.reflection.created",
   ]);
-  // Every one of them must actually be written inside the migration that claims to do it.
-  const migration = readFileSync("supabase/migrations/202608160001_osf1_phase1_completion.sql", "utf8");
+  // Every one of them must actually be written inside a migration that claims to do it. The list is
+  // every OSF-1 migration rather than one file, so a later migration adding an action is covered
+  // without this assertion needing to be remembered.
+  const migrations = readdirSync("supabase/migrations")
+    .filter((f) => f.includes("osf1") && f.endsWith(".sql"))
+    .map((f) => readFileSync(join("supabase/migrations", f), "utf8"))
+    .join("\n");
   for (const action of TRANSACTIONAL_AUDIT_ACTIONS) {
-    assert.ok(migration.includes(action), `${action} is declared transactional but no RPC writes it`);
+    assert.ok(migrations.includes(action), `${action} is declared transactional but no RPC writes it`);
   }
 });
 
@@ -285,12 +326,18 @@ test("the transactional class is declared, and it is now delivered rather than p
     .filter(([, cls]) => cls === "transactional")
     .map(([action]) => action)
     .sort();
-  assert.deepEqual(transactional, [
-    "yorisou.life.memory.confirmed",
-    "yorisou.life.memory.deleted",
-    "yorisou.life.memory.updated",
-    "yorisou.life.reflection.created",
-  ]);
+  // Derived from the same constant TRANSACTIONAL_AUDIT_ACTIONS exposes, so the two cannot drift
+  // apart and this test cannot pass while the exported list says something else.
+  assert.deepEqual(transactional, [...TRANSACTIONAL_AUDIT_ACTIONS].sort());
+  // And each one must actually be written by a migration that claims to — a declaration with no
+  // implementation is precisely the gap this class was introduced to close.
+  const migrations = [
+    readFileSync("supabase/migrations/202608160001_osf1_phase1_completion.sql", "utf8"),
+    readFileSync("supabase/migrations/202608170001_osf1_phase1_finalization.sql", "utf8"),
+  ].join("\n");
+  for (const action of transactional) {
+    assert.ok(migrations.includes(action), `${action} is declared transactional but no RPC writes it`);
+  }
   // Every declared action has a class — a new event cannot be added without deciding.
   for (const action of Object.keys(AUDIT_DELIVERY_CLASS)) {
     assert.match(AUDIT_DELIVERY_CLASS[action as keyof typeof AUDIT_DELIVERY_CLASS], /^(transactional|asynchronous)$/);
@@ -325,7 +372,21 @@ test("the two new answer columns exist in the migration and in the RPC", () => {
 
 test("the timeline stores nothing and asserts no relationship", () => {
   const timeline = readFileSync("lib/server/lifeOs/timeline.ts", "utf8");
-  assert.ok(!/insert|rpc\/|POST/.test(timeline.replace(/\/\/.*$/gm, "")), "a timeline that writes is asserting relationships");
+  // WRITE MECHANISMS, not bare substrings. The previous form matched the word POSTMORTEM — which is
+  // a reflection mode, not an HTTP verb — and would have forced a rename to satisfy a false
+  // positive. This is stricter, not looser: it adds upsert, patch and delete, which the substring
+  // form missed entirely, and it still catches every real write.
+  const body = timeline.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  for (const write of [
+    /method:\s*["'`](POST|PUT|PATCH|DELETE)["'`]/,
+    /\brpc\//,
+    /\.insert\(/,
+    /\.upsert\(/,
+    /\.update\(/,
+    /\bauditLifeOs\(/,
+  ]) {
+    assert.ok(!write.test(body), `a timeline that writes is asserting relationships: ${write}`);
+  }
   // And it must not reach the assessment side.
   for (const forbidden of ["yorisou_assessment_results", "yorisou_test_results", "canonicalPrivateState", "assessmentAttemptStore"]) {
     assert.ok(!timeline.includes(forbidden), `the timeline must not include ${forbidden} — that is the methodology boundary`);

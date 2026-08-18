@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { latestCurrentStateRecord, listGoals, listMemories, listReflections } from "@/lib/server/lifeOs/store";
+import { latestCurrentStateRecord, listGoals, listEligibleMemories, listReflections } from "@/lib/server/lifeOs/store";
 import { GOAL_STATUS_LABELS, type Goal } from "@/lib/life-os/contract";
 import SignInRequired from "./SignInRequired";
-import { INTERNAL_HANDLING } from "@/lib/life-os/privacyCopy";
-import { lifeOsAccess } from "@/lib/life-os/access";
+import { INTERNAL_HANDLING, NOT_VISIBLE_TO_OTHER_USERS } from "@/lib/life-os/privacyCopy";
+import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 import ReturnSection from "./ReturnSection";
 import StateHistory, { stateDetailLine, stateTagLine } from "./StateHistory";
 
@@ -42,9 +41,11 @@ function goalLine(goal: Goal): string {
 export default async function LifePage() {
   // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
   // session lookup or database read. Route-concealing, following pilotRouteAccess.
-  if (!lifeOsAccess().allowed) notFound();
-  const viewer = await getViewerContext();
-  const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
+  // ONE authority for the gate AND the viewer: resolving them separately is how a page ends
+  // up scoping data to a different identity than the one that passed the gate.
+  const access = await resolveLifeOsRouteAccess();
+  if (!access.allowed) notFound();
+  const accountId = access.accountId;
   if (!accountId) {
     return (
       <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
@@ -59,7 +60,7 @@ export default async function LifePage() {
     latestCurrentStateRecord(accountId).catch(() => null),
     listGoals(accountId, 3).catch(() => []),
     listReflections(accountId, 3).catch(() => []),
-    listMemories(accountId, 3).catch(() => []),
+    listEligibleMemories(accountId, 3).catch(() => []),
   ]);
   const stateTags = currentState ? stateTagLine(currentState) : "";
   const stateDetail = currentState ? stateDetailLine(currentState) : null;
@@ -67,16 +68,23 @@ export default async function LifePage() {
   return (
     <main className="mx-auto flex w-full max-w-[var(--pxr-content-width)] flex-col px-5 pb-28 pt-10">
       <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">わたしの記録</p>
+      {/* The exported constant, not a retyped version of it. This heading said 「ほかの利用者に表示され
+          ません。」 while lib/life-os/privacyCopy.ts says 「ほかの利用者に表示されることはありません。」 and
+          explains at length why that phrasing was chosen. Two sentences for one promise is one too
+          many, and the one on the most-read screen was the copy. */}
       <h1 className="mt-3 text-[26px] font-semibold leading-[1.5] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
         ここに残したものは、
         <br />
-        ほかの利用者に表示されません。
+        {NOT_VISIBLE_TO_OTHER_USERS}
       </h1>
+
+      {/* The separate sentence — separate on purpose, but DIRECTLY BELOW the first half now.
+          It used to sit after the Return section, so a person read half a disclosure, then their own
+          past reflections, then the other half. Separation was the intent; interruption was not. */}
+      <p className="mt-3 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">{INTERNAL_HANDLING}</p>
+
       {/* PHASE F — what they left, shown before anything asks them to do something new. */}
       <ReturnSection accountId={accountId} />
-
-      {/* The separate sentence, not a qualifier tucked into the heading. */}
-      <p className="mt-3 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">{INTERNAL_HANDLING}</p>
 
       <section className="mt-9">
         <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">いまの状態</h2>

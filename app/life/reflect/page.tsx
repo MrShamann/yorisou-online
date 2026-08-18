@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getViewerContext } from "@/lib/server/yorisouAuth";
 import ReflectionFlow from "./ReflectionFlow";
 import SignInRequired from "../SignInRequired";
-import { lifeOsAccess } from "@/lib/life-os/access";
+import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 
 export const metadata: Metadata = {
   title: "振り返りを書く | Yorisou",
@@ -23,9 +22,11 @@ export default async function ReflectPage({
 }) {
   // OSF-1 FEATURE GATE. Default CLOSED: production and unknown contexts 404 before any
   // session lookup or database read. Route-concealing, following pilotRouteAccess.
-  if (!lifeOsAccess().allowed) notFound();
-  const viewer = await getViewerContext();
-  const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
+  // ONE authority for the gate AND the viewer: resolving them separately is how a page ends
+  // up scoping data to a different identity than the one that passed the gate.
+  const access = await resolveLifeOsRouteAccess();
+  if (!access.allowed) notFound();
+  const accountId = access.accountId;
   const params = await searchParams;
   // A reflection can be attached to an experience the person already wrote. The id is validated
   // server-side by the RPC (osf1_experience_not_owned), never here — a check in the page would only

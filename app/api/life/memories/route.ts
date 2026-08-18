@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { confirmMemory, deleteMemory, listMemories } from "@/lib/server/lifeOs/store";
+import { confirmMemory, deleteMemory, listMemoryPage, MEMORY_PAGE_SIZE } from "@/lib/server/lifeOs/store";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
-import { MEMORY_SOURCES, MEMORY_TYPES, type MemorySource, type MemoryType } from "@/lib/life-os/contract";
+import { MEMORY_SOURCES, MEMORY_TYPES, type MemorySource, type MemoryType, parseUuid, parseOptionalUuid, LifeOsInputError } from "@/lib/life-os/contract";
 
 export const dynamic = "force-dynamic";
 
@@ -9,11 +9,19 @@ export const dynamic = "force-dynamic";
 // or anywhere else, and the database refuses one regardless: yorisou_explicit_memories carries
 // `check (user_confirmed = true)`.
 
-export async function GET() {
+export async function GET(request: Request) {
   const gate = await requireLifeViewer({ mutation: false });
   if ("refusal" in gate) return gate.refusal;
+  const params = new URL(request.url).searchParams;
+  const rawLimit = Number.parseInt(params.get("limit") ?? "", 10);
   try {
-    return NextResponse.json({ memories: await listMemories(gate.viewer.accountId) });
+    // Paginated rather than capped. The previous fixed limit of 50 made a person's fifty-first
+    // memory unreachable — not hidden behind a control they could find, simply absent.
+    const page = await listMemoryPage(gate.viewer.accountId, {
+      cursor: params.get("cursor"),
+      limit: Number.isFinite(rawLimit) ? rawLimit : MEMORY_PAGE_SIZE,
+    });
+    return NextResponse.json(page);
   } catch (error) {
     return lifeApiError(error);
   }
@@ -49,9 +57,9 @@ export async function POST(request: Request) {
       confirmed: true,
       digest: candidate.digest,
       subject: {
-        goalId: subject.goalId ?? null,
-        experienceId: subject.experienceId ?? null,
-        reflectionId: subject.reflectionId ?? null,
+        goalId: parseOptionalUuid(subject.goalId, "memory_subject_invalid"),
+        experienceId: parseOptionalUuid(subject.experienceId, "memory_subject_invalid"),
+        reflectionId: parseOptionalUuid(subject.reflectionId, "memory_subject_invalid"),
       },
     });
     // Audited inside the RPC transaction (202608160001 §4) — confirming a memory is a consent act,
@@ -65,8 +73,13 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const gate = await requireLifeViewer({ mutation: true });
   if ("refusal" in gate) return gate.refusal;
-  const id = new URL(request.url).searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "memory_id_required" }, { status: 422 });
+  let id: string;
+  try {
+    id = parseUuid(new URL(request.url).searchParams.get("id"), "memory_id_required");
+  } catch (error) {
+    if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
+    throw error;
+  }
   try {
     // Audited inside the RPC transaction, and only when a row was actually removed — after a hard
     // delete that audit row is the only remaining evidence the memory existed. A 404 here means

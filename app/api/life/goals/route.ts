@@ -3,7 +3,7 @@ import { createGoal, getGoal, listGoals, setGoalStatus } from "@/lib/server/life
 import { buildMemoryCandidates } from "@/lib/server/lifeOs/aiBoundary";
 import { auditLifeOs } from "@/lib/server/lifeOs/audit";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
-import { GOAL_STATUSES, LifeOsInputError, parseGoalInput, type GoalStatus } from "@/lib/life-os/contract";
+import { GOAL_STATUSES, LifeOsInputError, parseGoalInput, type GoalStatus, parseUuid } from "@/lib/life-os/contract";
 
 export const dynamic = "force-dynamic";
 
@@ -60,17 +60,25 @@ export async function PATCH(request: Request) {
   }
   const status = body.status as GoalStatus;
   if (!GOAL_STATUSES.includes(status)) return NextResponse.json({ error: "goal_status_invalid" }, { status: 422 });
-  if (typeof body.id !== "string") return NextResponse.json({ error: "goal_id_required" }, { status: 422 });
+  // Validated as a uuid at the edge: an unparseable id can never match a row, so sending it to the
+  // database would only turn a caller typo into a 500.
+  let goalId: string;
+  try {
+    goalId = parseUuid(body.id, "goal_id_required");
+  } catch (error) {
+    if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
+    throw error;
+  }
   try {
     // Owner scope is enforced in the RPC's WHERE clause; `false` means not found OR not yours, and
     // the response cannot tell those apart — no existence oracle.
-    const updated = await setGoalStatus(gate.viewer.accountId, body.id, status);
+    const updated = await setGoalStatus(gate.viewer.accountId, goalId, status);
     if (!updated) return NextResponse.json({ error: "goal_not_found" }, { status: 404 });
     await auditLifeOs({
       ownerAccountId: gate.viewer.accountId,
       action: "yorisou.life.goal.status_changed",
       entityKind: "goal",
-      entityRef: body.id,
+      entityRef: goalId,
       reason: status,
     });
     return NextResponse.json({ ok: true });

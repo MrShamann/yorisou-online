@@ -31,7 +31,7 @@ import "server-only";
 import {
   listCurrentStateRecords,
   listGoals,
-  listMemories,
+  listEligibleMemories,
   listReflections,
 } from "@/lib/server/lifeOs/store";
 import { reflectionQuestionsFor } from "@/lib/life-os/contract";
@@ -86,7 +86,7 @@ export async function lifeTimeline(ownerAccountId: string, limit = DEFAULT_LIMIT
     listCurrentStateRecords(ownerAccountId, limit).catch(() => []),
     listGoals(ownerAccountId, limit).catch(() => []),
     listReflections(ownerAccountId, limit).catch(() => []),
-    listMemories(ownerAccountId, limit).catch(() => []),
+    listEligibleMemories(ownerAccountId, limit).catch(() => []),
     ownExperiences(ownerAccountId, limit).catch(() => []),
   ]);
 
@@ -107,6 +107,171 @@ export async function lifeTimeline(ownerAccountId: string, limit = DEFAULT_LIMIT
     .filter((entry) => typeof entry.at === "string")
     .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
     .slice(0, limit);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KEYSET PAGINATION over the merged timeline
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// WHY THIS IS NOT JUST A BIGGER LIMIT. A fixed cap hides everything past it, exactly the way the
+// memory list hid a person's fifty-first memory. The timeline is worse, because it merges five
+// sources: a naive cap silently favours whichever kind happens to be newest.
+//
+// HOW A MERGED KEYSET WORKS HERE. Each source is asked for at most `limit + 1` rows that fall after
+// the cursor. Merging those gives at least `limit` correct rows whenever `limit` exist, because no
+// source can contribute more than `limit + 1` before the merge cuts it. Bounded work: five queries
+// of `limit + 1`, never the whole history, and never a client-side slice of everything.
+//
+// The sort key is (occurred_at DESC, id DESC). The id is the tie-break and it is not decoration —
+// five sources produce ties routinely, and a cursor into an undefined order is not stable.
+//
+// SUPPORTED KINDS. Current State, Experience, Reflection (light), Deep Reflection, Direction. Memory
+// is deliberately NOT a timeline kind: a memory is a standing note with its own surface and its own
+// lifecycle controls, not something that happened at a moment. It was previously merged in; removing
+// it is the intended Phase 1 shape, not an omission.
+
+export const TIMELINE_FILTERS = ["ALL", "STATE", "EXPERIENCE", "REFLECTION", "POSTMORTEM", "DIRECTION"] as const;
+export type TimelineFilter = (typeof TIMELINE_FILTERS)[number];
+
+/** Natural Japanese for the consumer control. Internal ids stay English. */
+export const TIMELINE_FILTER_LABELS: Record<TimelineFilter, string> = {
+  ALL: "すべて",
+  STATE: "状態",
+  // 経験, not 体験. The two words were used for one thing ON THE SAME PAGE: this chip said 体験 while
+  // every entry it filtered was labelled 経験, and the hub, the page title, the memory type and the
+  // Return section all say 経験 too. 体験 belongs to the older /experiences vertical (体験カード) and is
+  // still correct there; inside the Life OS this is the outlier, so it moves.
+  EXPERIENCE: "経験",
+  // かるく振り返る, not 振り返り — and this one is a COMPREHENSION fix, not a tidying one.
+  //
+  // The two chips read 「振り返り」 and 「じっくり振り返る」, which says: reflections, and deep reflections.
+  // That is not what they do. REFLECTION shows ONLY light reflections and deliberately excludes
+  // postmortems (the reflection end-to-end test asserts exactly that), so the broader-sounding name
+  // was the narrower filter, and someone pressing it to see everything they had written would find
+  // half of it missing with no way to tell why.
+  //
+  // Named as its own act, the pair is symmetric and each chip means what its entries are labelled:
+  // かるく振り返る / じっくり振り返る, the same two words the hub offers.
+  REFLECTION: "かるく振り返る",
+  POSTMORTEM: "じっくり振り返る",
+  DIRECTION: "方向",
+};
+
+export function parseTimelineFilter(value: unknown): TimelineFilter {
+  if (value === undefined || value === null || value === "") return "ALL";
+  if (typeof value !== "string" || !TIMELINE_FILTERS.includes(value as TimelineFilter)) {
+    throw new Error("osf1_timeline_filter_invalid");
+  }
+  return value as TimelineFilter;
+}
+
+export type TimelinePage = { entries: TimelineEntry[]; nextCursor: string | null; filter: TimelineFilter };
+
+function encodeTimelineCursor(entry: TimelineEntry, filter: TimelineFilter): string {
+  // The filter travels INSIDE the cursor. A cursor minted under one filter cannot be replayed under
+  // another: the position it describes is meaningless in a differently-composed list, and silently
+  // accepting it would skip or repeat rows with no error anywhere.
+  return Buffer.from(`${filter}|${entry.at}|${entry.id}`, "utf8").toString("base64url");
+}
+
+function decodeTimelineCursor(cursor: string, filter: TimelineFilter): { at: string; id: string } | null {
+  try {
+    const [encodedFilter, at, id] = Buffer.from(cursor, "base64url").toString("utf8").split("|");
+    if (encodedFilter !== filter) return null;
+    if (!at || !id || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+    if (Number.isNaN(Date.parse(at))) return null;
+    return { at, id };
+  } catch {
+    return null;
+  }
+}
+
+/** The keyset predicate every source shares, expressed as PostgREST's `or=` form. */
+function afterCursor(params: URLSearchParams, at: string, id: string): void {
+  params.set("or", `(created_at.lt.${at},and(created_at.eq.${at},id.lt.${id}))`);
+}
+
+async function pageOf<T>(table: string, select: string, owner: string, limit: number,
+                         cursor: { at: string; id: string } | null,
+                         extra: Record<string, string> = {}): Promise<T[]> {
+  const url = process.env.SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) return [];
+  const params = new URLSearchParams({
+    select,
+    owner_account_id: `eq.${owner}`,
+    order: "created_at.desc,id.desc",
+    limit: String(limit + 1),
+    ...extra,
+  });
+  if (cursor) afterCursor(params, cursor.at, cursor.id);
+  const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/${table}?${params}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return [];
+  return (await response.json()) as T[];
+}
+
+export async function lifeTimelinePage(
+  ownerAccountId: string,
+  options: { cursor?: string | null; limit?: number; filter?: TimelineFilter } = {},
+): Promise<TimelinePage> {
+  const filter = options.filter ?? "ALL";
+  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), 50);
+  let cursor: { at: string; id: string } | null = null;
+  if (options.cursor) {
+    cursor = decodeTimelineCursor(options.cursor, filter);
+    // Refused rather than treated as "start again" — silently restarting is how a person scrolls
+    // forever without noticing they are re-reading page one.
+    if (!cursor) throw new Error("osf1_timeline_cursor_invalid");
+  }
+
+  const wants = (kind: TimelineFilter) => filter === "ALL" || filter === kind;
+  const [states, goals, reflections, experiences] = await Promise.all([
+    wants("STATE")
+      ? pageOf<CurrentStateRecord>("yorisou_current_state_records",
+          "id,state_tags,mood,energy,situation,reflection,source,created_at", ownerAccountId, limit, cursor).catch(() => [])
+      : Promise.resolve([]),
+    wants("DIRECTION")
+      ? pageOf<Goal>("yorisou_goals", "id,title,description,status,created_at,updated_at",
+          ownerAccountId, limit, cursor).catch(() => [])
+      : Promise.resolve([]),
+    wants("REFLECTION") || wants("POSTMORTEM")
+      ? pageOf<LifeReflection>("yorisou_life_reflections",
+          "id,experience_id,current_state_record_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at",
+          ownerAccountId, limit, cursor,
+          // The two reflection filters read the same table and differ only by mode, which is the
+          // whole reason the mode is a column rather than an audit reason.
+          filter === "REFLECTION" ? { mode: "eq.light" } : filter === "POSTMORTEM" ? { mode: "eq.postmortem" } : {},
+        ).catch(() => [])
+      : Promise.resolve([]),
+    wants("EXPERIENCE")
+      ? pageOf<ExperienceRow>("yorisou_experience_cards", "id,title,situation,created_at",
+          ownerAccountId, limit, cursor, { deleted_at: "is.null", withdrawn_at: "is.null" }).catch(() => [])
+      : Promise.resolve([]),
+  ]);
+
+  const merged: TimelineEntry[] = [
+    ...states.map((record) => ({ kind: "current_state" as const, at: record.created_at, id: record.id, record })),
+    ...goals.map((record) => ({ kind: "goal" as const, at: record.created_at, id: record.id, record })),
+    ...reflections.map((record) => ({ kind: "reflection" as const, at: record.created_at, id: record.id, record })),
+    ...experiences.map((row) => ({
+      kind: "experience" as const, at: row.created_at, id: row.id,
+      record: { id: row.id, title: row.title, situation: row.situation },
+    })),
+  ];
+
+  const sorted = merged
+    .filter((entry) => typeof entry.at === "string")
+    .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
+  const entries = sorted.slice(0, limit);
+  const more = sorted.length > entries.length;
+  return {
+    entries,
+    nextCursor: more && entries.length > 0 ? encodeTimelineCursor(entries[entries.length - 1], filter) : null,
+    filter,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -171,4 +336,102 @@ export async function lifeReturnView(ownerAccountId: string): Promise<ReturnView
     activeDirection: goals.find((goal) => goal.status === "active") ?? null,
     recentExperience: experiences[0] ? { id: experiences[0].id, title: experiences[0].title } : null,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §6 — THE RETURN SELECTION POLICY
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// `lifeReturnView` gathers candidates. This decides WHICH of them a person actually sees, and it is
+// a policy rather than a rendering accident: previously the surface showed whatever the view
+// happened to contain, which is how a continuity card becomes a feed one field at a time.
+//
+// THREE ITEMS, HARD. Not "about three". The cap is the whole design — returning to four things you
+// left unfinished is a backlog, and a backlog is the pressure this product exists not to apply.
+//
+// FIXED PRIORITY, so the selection is deterministic and therefore testable. The order is not
+// preference-ranked or engagement-ranked; there is no score anywhere. It is simply: the thing you
+// were in the middle of, then the thing you thought hardest about, then what you said you were
+// heading toward, then what happened, then how you were.
+//
+// WHAT IS DELIBERATELY ABSENT: no streak, no count of days, no "you missed", no comparison to a
+// previous week, no completion percentage, and no notification. If nothing qualifies, the selection
+// is empty and the surface renders nothing — an empty return is a legitimate state, not a prompt.
+
+export const RETURN_MAX_ITEMS = 3;
+
+export type ReturnItem =
+  | { kind: "unfinished_reflection"; reason: string; id: string; missing: string[] }
+  | { kind: "deep_reflection"; reason: string; id: string; summary: string }
+  | { kind: "active_direction"; reason: string; id: string; summary: string }
+  | { kind: "recent_experience"; reason: string; id: string; summary: string }
+  | { kind: "recent_state"; reason: string; id: string; summary: string };
+
+/**
+ * The bounded continuity selection.
+ *
+ * Deterministic: same records in, same items out, in the same order. Nothing here reads a memory —
+ * suppressed or revoked or otherwise — so a memory a person has withdrawn cannot influence what
+ * they are shown on returning, which is the point of withdrawing it.
+ */
+export async function lifeReturnSelection(ownerAccountId: string): Promise<ReturnItem[]> {
+  const [view, states] = await Promise.all([
+    lifeReturnView(ownerAccountId),
+    listCurrentStateRecords(ownerAccountId, 1).catch(() => []),
+  ]);
+
+  const items: ReturnItem[] = [];
+  const used = new Set<string>();
+  const take = (item: ReturnItem) => {
+    // One record cannot occupy two slots: an unfinished deep reflection is the same row as the most
+    // recent one, and showing it twice would read as two separate things left undone.
+    if (items.length >= RETURN_MAX_ITEMS || used.has(item.id)) return;
+    used.add(item.id);
+    items.push(item);
+  };
+
+  if (view.unfinished) {
+    take({
+      kind: "unfinished_reflection",
+      reason: "前に考えていたこと",
+      id: view.unfinished.reflectionId,
+      missing: view.unfinished.missing,
+    });
+  }
+  if (view.lastReflection) {
+    take({
+      kind: "deep_reflection",
+      reason: "最近残した振り返り",
+      id: view.lastReflection.id,
+      summary: view.lastReflection.what_happened,
+    });
+  }
+  if (view.activeDirection) {
+    take({
+      kind: "active_direction",
+      reason: "今、大切にしている方向",
+      id: view.activeDirection.id,
+      summary: view.activeDirection.title,
+    });
+  }
+  if (view.recentExperience) {
+    take({
+      kind: "recent_experience",
+      reason: "最近の出来事",
+      id: view.recentExperience.id,
+      summary: view.recentExperience.title ?? "",
+    });
+  }
+  const state = states[0];
+  if (state) {
+    take({
+      kind: "recent_state",
+      reason: "最近の記録",
+      id: state.id,
+      // Kept local rather than importing the app's renderer: a lib/server module reaching into
+      // app/ would invert the dependency and drag a client component into the data layer.
+      summary: state.situation ?? state.reflection ?? state.state_tags.join("・"),
+    });
+  }
+  return items;
 }

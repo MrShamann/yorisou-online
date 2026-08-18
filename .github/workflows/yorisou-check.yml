@@ -48,6 +48,41 @@ jobs:
         env:
           OSF1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/osf1_acceptance
 
+  # OSF-1 GATE 3 — the migration lineage rehearsed forwards AND backwards.
+  #
+  # Separate from the acceptance job because it proves a different thing. Acceptance proves the
+  # schema behaves once applied; this proves the lineage can be REVERSED and RE-APPLIED. Until it
+  # existed, every migration's ROLLBACK block was an untested assertion — a procedure nobody had run,
+  # written by someone who was not going to be the one running it during an incident.
+  #
+  # The re-apply is the step that earns its place in CI: a rollback that leaves a stale function
+  # overload, or drops a constraint it does not recreate, passes a one-way test and fails here.
+  life-os-gate3:
+    name: OSF-1 Gate 3 migration rehearsal (rollback + re-apply)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: osf1_acceptance
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d osf1_acceptance"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: Gate 3 rehearsal (baseline, apply, rollback, re-apply, erasure)
+        run: bash tests/life-os/gate3-migration-rehearsal.sh
+        env:
+          OSF1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/osf1_acceptance
+
   agent-runtime-postgres:
     name: Agent Runtime PostgreSQL Integration
     runs-on: ubuntu-latest

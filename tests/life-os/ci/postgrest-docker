@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# A PostgREST "binary" that is actually the pinned container image.
+#
+#   OSF1_POSTGREST_BIN=tests/life-os/ci/postgrest-docker bash tests/life-os/fullstack-a11y.sh
+#
+# WHY THIS EXISTS. tests/life-os/fullstack-a11y.sh runs `"$POSTGREST" <conf>` and needs no Docker,
+# deliberately: Docker is not running on the acceptance machine and requiring it would make the local
+# gate unrunnable exactly when it is needed. A CI runner is the opposite — it has Docker and no
+# `postgrest` binary. This script is the adapter, so the harness needs no CI branch and there is one
+# gate rather than two that drift.
+#
+# WHY THE IMAGE AND NOT A DOWNLOADED BINARY. §14 asks for a pinned version from a trusted source with
+# a verified checksum. A tagged image satisfies all three without a new decision: `postgrest:v12.2.3`
+# is the exact version .github/workflows/dci-1-ci.yml has been running for months, Docker verifies the
+# image digest on pull, and it introduces no source this repository has not already accepted. A fresh
+# tarball from a releases page would be a new supply-chain judgement, and that is the Founder's to
+# make, not this script's.
+#
+# `--network host` so the container reaches the PostgreSQL the workflow started on loopback and the
+# harness reaches PostgREST on its own port. Config goes in as PGRST_* environment variables rather
+# than a mounted file, so nothing outside the container has to be shared.
+#
+# Signals: `docker run` in the foreground forwards SIGTERM to the container, and `--rm` removes it —
+# so the harness's ordinary `kill "$REST_PID"` teardown works unchanged.
+
+set -euo pipefail
+
+IMAGE="${OSF1_POSTGREST_IMAGE:-postgrest/postgrest:v12.2.3}"
+CONF="${1:-}"
+[ -n "$CONF" ] && [ -f "$CONF" ] || { echo "usage: postgrest-docker <config-file>" >&2; exit 1; }
+
+# Read the settings the harness wrote. Quoted values, one per line: `key = "value"`.
+value() { sed -n "s/^$1[[:space:]]*=[[:space:]]*\"\{0,1\}\([^\"]*\)\"\{0,1\}[[:space:]]*$/\1/p" "$CONF" | head -1; }
+
+DB_URI="$(value db-uri)"
+DB_SCHEMAS="$(value db-schemas)"
+ANON_ROLE="$(value db-anon-role)"
+JWT_SECRET="$(value jwt-secret)"
+SERVER_PORT="$(value server-port)"
+DB_POOL="$(value db-pool)"
+
+[ -n "$DB_URI" ] && [ -n "$SERVER_PORT" ] || {
+  echo "postgrest-docker: could not read db-uri and server-port from $CONF" >&2; exit 1; }
+
+# The harness writes a loopback DSN. Inside `--network host` that is the same loopback, so it needs no
+# rewriting — but say so, because a silent assumption here would be very hard to debug later.
+exec docker run --rm --network host \
+  -e PGRST_DB_URI="$DB_URI" \
+  -e PGRST_DB_SCHEMAS="${DB_SCHEMAS:-public}" \
+  -e PGRST_DB_ANON_ROLE="${ANON_ROLE:-anon}" \
+  -e PGRST_JWT_SECRET="$JWT_SECRET" \
+  -e PGRST_SERVER_PORT="$SERVER_PORT" \
+  -e PGRST_SERVER_HOST="0.0.0.0" \
+  -e PGRST_DB_POOL="${DB_POOL:-6}" \
+  "$IMAGE"

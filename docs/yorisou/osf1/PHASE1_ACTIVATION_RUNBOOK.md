@@ -1,5 +1,53 @@
 # OSF-1 — Phase 1 Activation Runbook
 
+
+---
+
+## PRECONDITIONS ADDED BY THE INTERNAL BETA READINESS PACKAGE (2026-08-15)
+
+Three gates must be satisfied before any step below is executed. They are preconditions, not advice.
+
+**1. The authenticated accessibility gate — MANDATORY, and it is LOCAL.**
+
+```bash
+npm run test:osf1-a11y-authenticated
+```
+
+Must report **0 serious, 0 critical** across seven routes at 390×844 and 1440×900. It is not in CI:
+the harness needs a `postgrest` binary that GitHub's runner image does not provide, and adding one is
+a CI supply-chain decision for Edward (see `PHASE1_INTERNAL_BETA_READINESS.md` §3). Until that
+decision, this run is a release gate and its output must be recorded with the activation evidence.
+
+**2. The kill switch must be tested LIVE, before exposure.**
+
+Release & Acceptance Gates v1.0 §3.4 requires it at every Production Release Gate, and it applies to
+internal activation too. The kill switch is removing `osf1_life_os_internal` from
+`YORISOU_PRIVATE_PILOT_FLAGS`. Test it by turning the feature ON, confirming a Founder/Admin reaches
+`/life`, then removing the token and confirming `/life` returns 404 again — **before** any second
+person is given access. A switch that has only been reasoned about is not a switch.
+
+**3. Gate 3 must be green on the exact commit being deployed.**
+
+```bash
+npm run test:osf1-gate3
+```
+
+Rehearses apply → rollback → re-apply. It runs in CI as its own job; confirm the job passed on the
+commit, not on an earlier one.
+
+### What INTERNAL now actually requires
+
+Before this package, INTERNAL was inert — `lifeOsAccess()` denies production unconditionally, so the
+state existed in name only. It is now wired, and reaching it needs **all** of:
+
+1. the migration applied to the target database;
+2. `YORISOU_OSF1_LIFE_OS_SCHEMA_READY=true` (writes stay refused without it, reads still work);
+3. `osf1_life_os_internal` present in `YORISOU_PRIVATE_PILOT_FLAGS`;
+4. the person signed in **and** resolving as a Founder/Admin through the existing admin records.
+
+Missing any one of them yields a 404 that is identical for every reason, so nothing about the
+allowlist is discoverable from outside.
+
 **Package:** YORISOU OS Foundation Phase 1 — Life OS Activation & Capability Completion · **Branch:** `feat/osf1-life-os-activation` · **Migrations:** five, applied **nowhere**
 
 > **Nothing in this package has been applied to any real database.** Not production, not staging, not
@@ -66,11 +114,28 @@ cluster on exit and refuses any DSN that is not a local database named `osf1_acc
 
 ### 0.3 A naming correction you will meet in other documents
 
-Parts of this package refer to "Project Constitution v0.7.0" and "Technical Architecture v0.7.0".
-**No such documents exist in this repository.** The installed corpus is **Governance Pack v0.4.1**
-(`resources/governance/current/RESOURCE_MANIFEST.md`), containing
-`Yorisou_Project_Constitution_v0.4.0.md` and `Yorisou_Technical_Architecture_v0.4.0.md`. Verify it
-yourself before citing a version:
+**CORRECTED 2026-08-17 — see [OSF1_GOVERNANCE_PRECEDENCE.md](OSF1_GOVERNANCE_PRECEDENCE.md) §2.**
+
+**ACTIVE GOVERNANCE: the YORISOU v0.7.0 complete replacement baseline**, Founder-confirmed, 40 active
+Markdown resources. Authority order: Edward's latest decision → Constitution v0.7.0 → Canonical Current
+State → other active v0.7.0 resources → verified repository/runtime evidence → approved release
+evidence → historical resources.
+
+The paragraph below said the opposite, and it was wrong. What it observed was true — this **repository**
+contains no v0.7.0 file, and `resources/governance/current/` self-describes as Pack v0.4.1 — but the
+inference was not: absence from Git is not absence from existence, and a repository directory does not
+outrank the Founder's installed baseline. Pack v0.4.1 is now **historical** (tier 7); its requirements
+remain useful in-repo implementation constraints where compatible, and several of them are why this
+work contains what it does. The original text is kept below, struck through in meaning if not in
+markup, because deleting a wrong governance record hides that it was ever made.
+
+> **SUPERSEDED TEXT, preserved verbatim — not a current claim:**
+>
+> Parts of this package refer to "Project Constitution v0.7.0" and "Technical Architecture v0.7.0".
+> **No such documents exist in this repository.** The installed corpus is **Governance Pack v0.4.1**
+> (`resources/governance/current/RESOURCE_MANIFEST.md`), containing
+> `Yorisou_Project_Constitution_v0.4.0.md` and `Yorisou_Technical_Architecture_v0.4.0.md`. Verify it
+> yourself before citing a version:
 
 ```bash
 head -6 resources/governance/current/RESOURCE_MANIFEST.md

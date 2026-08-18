@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createCurrentStateRecord, listCurrentStateRecords, setCurrentStateReflection } from "@/lib/server/lifeOs/store";
 import { auditLifeOs } from "@/lib/server/lifeOs/audit";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
-import { LifeOsInputError, parseCurrentStateInput } from "@/lib/life-os/contract";
+import { LifeOsInputError, parseCurrentStateInput, parseUuid } from "@/lib/life-os/contract";
 
 export const dynamic = "force-dynamic";
 
@@ -27,18 +27,25 @@ export async function POST(request: Request) {
   }
   try {
     // Adding the optional note to an existing check-in, rather than creating one.
-    if (typeof body.id === "string") {
+    if (body.id !== undefined && body.id !== null) {
+      let recordId: string;
+      try {
+        recordId = parseUuid(body.id, "state_record_id_invalid");
+      } catch (error) {
+        if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
+        throw error;
+      }
       if (typeof body.reflection !== "string" || body.reflection.trim().length === 0) {
         return NextResponse.json({ error: "reflection_text_required" }, { status: 422 });
       }
       if (body.reflection.trim().length > 1000) return NextResponse.json({ error: "reflection_invalid" }, { status: 422 });
-      const saved = await setCurrentStateReflection(gate.viewer.accountId, body.id, body.reflection.trim());
+      const saved = await setCurrentStateReflection(gate.viewer.accountId, recordId, body.reflection.trim());
       if (!saved) return NextResponse.json({ error: "state_record_not_open_for_note" }, { status: 409 });
       await auditLifeOs({
         ownerAccountId: gate.viewer.accountId,
         action: "yorisou.life.state.annotated",
         entityKind: "current_state",
-        entityRef: body.id,
+        entityRef: recordId,
         reason: "user_note",
       });
       return NextResponse.json({ ok: true });
