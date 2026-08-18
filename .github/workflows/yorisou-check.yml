@@ -48,6 +48,17 @@ jobs:
         env:
           OSF1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/osf1_acceptance
 
+      # ARCH-P3. DD-1 database acceptance on the same service, in its OWN database (the harness's
+      # DSN guard requires the dd1_acceptance name, so this step cannot be repointed either):
+      # table, RLS, RPC-only mutation, one-per-owner/day/pack, idempotent completion,
+      # first-writer-wins, and REAL account erasure of discovery rows via the shipped function.
+      - name: Daily Discovery acceptance (DD-1 schema, idempotency, erasure)
+        env:
+          DD1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dd1_acceptance
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/osf1_acceptance -c 'create database dd1_acceptance;'
+          npm run test:arch-p3-db
+
   # OSF-1 GATE 3 — the migration lineage rehearsed forwards AND backwards.
   #
   # Separate from the acceptance job because it proves a different thing. Acceptance proves the
@@ -185,6 +196,12 @@ jobs:
       # stability, the P1 seam intact, and the timeline named as the one P6 exception.
       - name: ARCH-P2 state.core adapter boundary
         run: npm run test:arch-p2
+
+      # ARCH-P3. Daily Discovery: brand-free discovery contract, the sixteen locked results, the
+      # content-safety register, no personal-store reads, deterministic one-per-day semantics,
+      # closed-by-default gates, and the erasure-plan membership of the new family.
+      - name: ARCH-P3 Daily Discovery boundary
+        run: npm run test:arch-p3
 
       - name: C02 definition and scoring checks
         run: npm run test:c02
