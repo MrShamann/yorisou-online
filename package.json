@@ -146,7 +146,8 @@
     "local-app:doctor": "bash scripts/local-app/doctor.sh",
     "local-app:snapshot": "bash scripts/local-app/snapshot.sh",
     "local-app:test": "bash scripts/local-app/test-contract.sh",
-    "local-app:accept": "playwright test tests/smoke/local-app-interaction.spec.ts --project=desktop"
+    "local-app:accept": "playwright test tests/smoke/local-app-interaction.spec.ts --project=desktop",
+    "test:platform-contracts": "node --import tsx --test lib/platform/__tests__/platformContracts.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",
