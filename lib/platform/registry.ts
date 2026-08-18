@@ -57,7 +57,7 @@ export const CAPABILITY_MODULES: readonly ModuleRegistryEntry[] = [
   {
     module_id: "discovery.core",
     version: "0.2.0",
-    adoption_status: "declared",
+    adoption_status: "partial",
     lifecycle_state: DEFINED,
     verification_state: NOT_VERIFIED,
     privacy_class: "personal",

@@ -116,7 +116,12 @@ check("productionPilot.ts contains no admin email / secret material", () => {
   const src = readFileSync(fileURLToPath(new URL("../productionPilot.ts", import.meta.url)), "utf8");
   assert.ok(!/@gmail\.com|@yorisou|jy\.edward|shigeru/i.test(src), "no admin identifiers");
   assert.ok(!/eyJ[A-Za-z0-9_-]{10,}|service_role|SUPABASE_SERVICE/i.test(src), "no secret material");
-  assert.equal(PRODUCTION_PILOT_FLAGS.length, 2);
+  // Exact-token vocabulary count. This assertion had gone stale at 2 while the module already
+  // carried 3 flags (osf1_life_os_internal joined in the internal-beta package without this file
+  // being updated — the suite is not wired into CI, which is how that survived). Corrected to the
+  // true count when DD-1 added its token; if this fails, a flag was added or removed and BOTH the
+  // module and this count must move together, deliberately.
+  assert.equal(PRODUCTION_PILOT_FLAGS.length, 4);
 });
 
 // ── Route/API wiring: every pilot surface enforces via the server resolver ──────

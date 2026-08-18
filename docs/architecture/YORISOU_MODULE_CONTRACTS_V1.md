@@ -321,7 +321,8 @@ description: Finite, rotating, lightweight discovery experiences — the curiosi
 purpose: Deliver finite, rotating, lightweight discovery experiences.
 user_problem: "What is the product giving me today?" — a small daily novelty with no obligation
 target_users: any signed-in person on the Today surface
-adoption_status: declared         # the daily-discovery surface does not exist yet
+adoption_status: partial          # ARCH-P3: symbol_draw runtime + one gated pack exist; save,
+                                  # other pattern runtimes and events remain unimplemented
 lifecycle_state: DEFINED
 verification_state: not_verified
 responsibilities:

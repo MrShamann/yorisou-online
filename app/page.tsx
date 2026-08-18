@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import TodayContinuity from "./TodayContinuity";
 import TodaySavedState from "./TodaySavedState";
+import TodayDiscoveryEntry from "./TodayDiscoveryEntry";
 
 export const metadata: Metadata = {
   title: "YORISOU | AIと整える、わたしの毎日。",
@@ -78,6 +79,9 @@ export default function TodayPage() {
       {/* OSF-1: the same discipline for the account-backed record — nothing for a signed-out or
           empty visitor, and nothing if the database is unreachable. */}
       <TodaySavedState />
+      {/* DD-1: Today's curiosity half (今日のひとつ) — gated, authenticated, schema-ready only.
+          Utility stays primary; this renders nothing for everyone else. */}
+      <TodayDiscoveryEntry />
 
       <section className="mt-10">
         <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">

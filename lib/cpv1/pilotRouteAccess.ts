@@ -20,6 +20,7 @@ import { getViewerContext, type ViewerContext } from "@/lib/server/yorisouAuth";
 import { viewerHasAdminAccess } from "@/lib/server/foundation/access";
 import { dailyCheckInAccess } from "@/lib/yorisou/methods/daily-check-in/access";
 import { yorisouValuesAccess } from "@/lib/yorisou/methods/yorisou-values/access";
+import { discoveryAccess } from "@/lib/yorisou/discovery/access";
 import { deploymentContext } from "./deploymentContext";
 import { cpv1ProductionPilotAccess, type ProductionPilotFlag } from "./productionPilot";
 
@@ -55,4 +56,8 @@ export function resolveDailyCheckInRouteAccess(): Promise<PilotRouteResolution> 
 
 export function resolveYorisouValuesRouteAccess(): Promise<PilotRouteResolution> {
   return resolve(yorisouValuesAccess().allowed, "yorisou_values_private_pilot");
+}
+
+export function resolveDiscoveryRouteAccess(): Promise<PilotRouteResolution> {
+  return resolve(discoveryAccess().allowed, "discovery_daily_symbols_private_pilot");
 }
