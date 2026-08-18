@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createCurrentStateRecord, listCurrentStateRecords, setCurrentStateReflection } from "@/lib/server/lifeOs/store";
 import { auditLifeOs } from "@/lib/server/lifeOs/audit";
+import { deliverStateCheckinCompleted, stateCheckinCompletedEvent } from "@/lib/server/platform/stateCheckinEvent";
 import { lifeApiError, requireLifeViewer } from "@/lib/server/lifeOs/guard";
 import { LifeOsInputError, parseCurrentStateInput, parseUuid } from "@/lib/life-os/contract";
 
@@ -52,14 +53,28 @@ export async function POST(request: Request) {
     }
     const input = parseCurrentStateInput(body.record ?? body);
     const id = await createCurrentStateRecord(gate.viewer.accountId, input);
-    await auditLifeOs({
+    // ARCH-P1 — the Today check-in traverses the canonical typed-event seam: persistence success
+    // above is what makes the completion event constructible at all, and delivery feeds the SAME
+    // asynchronous audit sink as before. Every other source keeps the direct call. Either branch:
+    // exactly ONE audit write, unchanged failure semantics, unchanged response.
+    const completion = stateCheckinCompletedEvent({
       ownerAccountId: gate.viewer.accountId,
-      action: "yorisou.life.state.created",
-      entityKind: "current_state",
-      entityRef: id,
-      reason: input.source,
-      detail: { tags: input.stateTags.length },
+      stateRecordId: id,
+      source: input.source,
+      tagCount: input.stateTags.length,
     });
+    if (completion) {
+      await deliverStateCheckinCompleted(completion, gate.viewer.accountId);
+    } else {
+      await auditLifeOs({
+        ownerAccountId: gate.viewer.accountId,
+        action: "yorisou.life.state.created",
+        entityKind: "current_state",
+        entityRef: id,
+        reason: input.source,
+        detail: { tags: input.stateTags.length },
+      });
+    }
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
     if (error instanceof LifeOsInputError) return NextResponse.json({ error: error.code }, { status: 422 });
