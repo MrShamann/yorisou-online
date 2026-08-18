@@ -110,6 +110,18 @@ already alive in CI.** The platform guard tests added in this package generalize
     silently included; START_HERE refresh deserves its own reviewed change).
 12. **DB namespace** `yorisou_*` everywhere: correct for the modular monolith; at extraction time
     the portability gate (data isolation) forces a namespace strategy. Documented, not actioned.
+13. **Governance compatibility (found in Founder review, REMEDIATED 2026-08-18).** The first cut
+    of the V1 module-contract schema and event envelope defined a *second, weaker* standard beside
+    the active v0.7.0 governance: the contract schema omitted the v0.7.0 normative minimum fields,
+    and the envelope lacked the traceability/provenance fields the v0.7.0 event architecture
+    requires. Both are corrected: the schema is now a compatible superset with a lossless,
+    machine-checked field mapping (contracts doc §1.1, `V070_FIELD_MAPPING`), and the envelope
+    carries all fourteen governed fields (reference architecture §11). The relationship between
+    this architecture and the broader v0.7.0 OS concepts is now stated explicitly in reference
+    architecture §20 — scope difference vs Founder supersession, with `recommendation.core`'s
+    module placement recorded as the explicit 2026-08-18 supersession and omission never implying
+    abolition (Personal Life Graph and governed Agent Runtime are not deleted by not being in the
+    V1 slice). Future agents: read §20 before inferring anything from either corpus.
 
 ## 4. What is preserved on purpose (do not "modernize" these)
 
@@ -132,10 +144,10 @@ already alive in CI.** The platform guard tests added in this package generalize
 
 | Artifact | What it is | Why it is safe |
 |---|---|---|
-| `lib/platform/moduleContract.ts` | the Module Contract schema as types (snake_case keys mirror the contracts doc §1 exactly) | types only; imported by nothing in `app/` |
-| `lib/platform/events.ts` | `DomainEventName` template type, the canonical V1 event-name list, a minimal envelope type | names + types only; no bus, no runtime behavior |
-| `lib/platform/registry.ts` | the 12 capability declarations (id, contract version, honest status, purpose) + lookup | data + lookup only |
-| `lib/platform/__tests__/platformContracts.test.ts` | guards: 12 ids exact, event-name grammar, no duplicate names, no universal event, **brand isolation** (no Yorisou/Imairo strings in platform sources), **no import inversion** (platform imports nothing from `app/`, `lib/server/`, `lib/yorisou*`, `lib/life-os`) | test-only |
+| `lib/platform/moduleContract.ts` | the Module Contract schema as types — a **compatible superset of the v0.7.0 Module Contract Standard** with the lossless field mapping as data (`V070_FIELD_MAPPING`); three distinct state axes (adoption / lifecycle / verification) | types + declared data only; imported by nothing in `app/` |
+| `lib/platform/events.ts` | `DomainEventName` template type, the canonical V1 event-name list, the **full governed 14-field envelope** (identity, both timestamps, opaque subject/actor, correlation, causation, data class, permission context, provenance) + the one canonical version parser | names + types only; no bus, no queue, no table, no retry runtime |
+| `lib/platform/registry.ts` | the 12 capability declarations (id, contract version, adoption status, lifecycle `DEFINED`, verification `not_verified`, privacy class, purpose) + lookup | data + lookup only |
+| `lib/platform/__tests__/platformContracts.test.ts` | guards: 12 ids exact · v0.7.0 superset mapping · schema completeness of all 12 doc contracts · lifecycle/verification distinction · event grammar/uniqueness · no universal event · governed-envelope fields · name↔version single source · **brand isolation incl. no Japanese product copy** · **no import inversion** · permission/consent coherence · discovery memory_write=false · D-03 OPEN | test-only |
 | `package.json` script `test:platform-contracts` | runs the guard | additive script |
 
 Explicitly **not** implemented (documented only, per package rules): route rewrites, table
@@ -143,13 +155,23 @@ migrations, auth changes, community, matching, Imairo changes, new data collecti
 rewrites, payments, LINE changes, deployment, CI wiring of the new test (left to the next package so
 this one stays zero-risk).
 
-## 6. V1 implementation packages (recommended dependency order)
+## 6. V1 implementation packages (binding dependency order)
 
-Each package is bounded, independently shippable, and ends behind existing gates.
+**The sequence is strict and starts at P1:**
+
+```
+PR #137 accepted/merged → ARCH-P1 → ARCH-P2 → ARCH-P3 → …
+```
+
+Exactly one bounded package at a time; P2 depends on P1 and must not be started first. **ARCH-P1 is
+not optional and not housekeeping** — it is the first bounded *architecture-adoption* package: the
+moment the contract guards become CI-enforced and the first real typed-event seam exists, the
+platform tier stops being paper. Each package is bounded, independently shippable, and ends behind
+existing gates.
 
 | # | Package | Depends on | Consumer impact | Modules | Non-goals |
 |---|---|---|---|---|---|
-| **P1** | Platform contract adoption: wire `test:platform-contracts` into CI; emit the first typed events at ONE seam (check-in completion) without changing behavior | this PR | none | Kernel(events), state.core | no bus infrastructure beyond in-process |
+| **P1** | **Architecture adoption gate**: CI-enforce `test:platform-contracts`; adopt the first real typed-event seam (check-in completion) safely, with the full governed envelope, and zero consumer behavior change | PR #137 merged | none | Kernel(events), state.core | no bus infrastructure beyond in-process; no second seam |
 | **P2** | `state.core` consolidation: one contract over DCI daily-state + OSF-1 current-state (adapter, no row rewrites); Today reads through it | P1 | none visible (Today groundwork) | state.core | no schema convergence yet |
 | **P3** | `discovery.core` + first pack (`yorisou.daily-3q` or `yorisou.daily-symbols`): 今日のひとつ on Today, gated | P1 (P2 preferred) | **new**: Today gains its curiosity half | discovery.core, sharing-lite | no community loop yet; no symbolic memory writes |
 | **P4** | `sharing.core` formalization: generalize the Imairo snapshot into ShareObject + preview + deep link; Imairo Result Card first | P1 | share flow becomes uniform; existing share keeps working | sharing.core | no new share families beyond Imairo card |
@@ -198,6 +220,17 @@ architecture §15 and are not planned in detail here.
    the single canonical list.
 7. **A7 — CI wiring deferred**: the new guard test is runnable (`npm run test:platform-contracts`)
    but not yet added to CI workflows, keeping this package's blast radius zero; P1 wires it.
+8. **A8 — field-name normalizations (review remediation)**: three v0.7.0 governance fields are
+   carried under normalized names — `input_schema`→`input_contracts`,
+   `output_schema`→`output_contracts`, `rollback_method`→`rollback_strategy` — and annex
+   "dependencies" as `module_dependencies`; the mapping is lossless, tabled in the contracts doc
+   §1.1, and machine-checked (`V070_FIELD_MAPPING`). The earlier V1 name `agent_dependencies` was
+   retired in favor of the governance name `agent_requirements`.
+9. **A9 — V1-declared vocabularies**: where v0.7.0 requires a field without enumerating values
+   (`privacy_class`, `verification_state`, event `provenance`), V1 declares a minimal vocabulary
+   and labels it V1-declared (contracts doc §1.3); refining those vocabularies is a governance
+   act, not an implementation act. Event `data_class` uses the two classes the v0.7.0 event
+   architecture itself distinguishes (operational vs life-history).
 
 ## 10. Explicit NON-GOALS of this package (verbatim boundaries honored)
 

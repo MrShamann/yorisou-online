@@ -11,6 +11,9 @@ active v0.7.0 Project Resources, does not resolve any open Founder decision (D-0
 Threshold and D-09 Local/Cloud Synchronization remain OPEN), and does not itself change any product
 behavior. Where this document and repository/runtime evidence disagree about the *present*, the
 repository is the truth and the gap belongs in the gap document — this file describes the *target*.
+**§20 states exactly how this architecture relates to the active v0.7.0 governance corpus — what is
+a scope difference, what is an explicit 2026-08-18 Founder supersession, and why omission never
+implies abolition.** Read it before inferring anything from what this document does not mention.
 
 ---
 
@@ -252,7 +255,10 @@ Full contracts in [YORISOU_MODULE_CONTRACTS_V1.md](YORISOU_MODULE_CONTRACTS_V1.m
 
 ### 9.4 Iron rules (binding on every module)
 
-1. **OWN YOUR DATA** — a module directly writes only data it owns.
+1. **OWN YOUR DATA — operationally.** A module directly writes only records it holds operational
+   custody of. Custody means mutation and canonical-persistence responsibility, never ownership of
+   the person: the user owns their personal data, always, and every personal record stays visible,
+   correctable, and deletable through the Kernel (contracts doc §1.2).
 2. **READ THROUGH CONTRACT** — never directly query another capability's private tables.
 3. **BRAND-FREE CORE** — capability modules never hardcode `Yorisou`, `Imairo`, `yorisou.online`,
    result codes such as `P01/P02/…`, or Japanese Yorisou-specific copy.
@@ -297,7 +303,30 @@ decisions (D-03, D-09).
 ## 11. Event architecture
 
 Typed, versioned domain events: `family.event.vN`. In-process (modular monolith), with the envelope
-and names defined once in `lib/platform/events.ts` so they cannot drift per module.
+and names defined once in `lib/platform/events.ts` so they cannot drift per module. This naming is
+the latest Founder decision and supersedes, for this architecture, the older `domain.object.action`
+naming examples in the v0.7.0 event-architecture text (§20.B).
+
+**The governed envelope.** Every event carries the full envelope the v0.7.0 event architecture
+requires a governed event to support — declared complete *now*, before the first seam is adopted,
+because retrofitting identity or provenance onto existing events is a real contract migration:
+
+```
+event_id · name (event_type) · event_version · occurred_at · recorded_at · subject_ref ·
+actor_ref · source_module · correlation_id · causation_id · data_class · permission_context ·
+payload · provenance
+```
+
+The event's **name is the single semantic source of truth for its version**: `event_version` must
+equal the number parsed from the trailing `.vN` (one canonical parser in `lib/platform/events.ts`).
+`event_id` exists from day one so later idempotency and duplicate protection need no reshaping.
+`data_class` separates operational events from durable life-history events, so a technical event can
+never silently join a person's timeline. The envelope is privacy-minimal: `subject_ref`/`actor_ref`
+are opaque references — never an email, a name, raw free text, assessment answers, a reflection
+body, or a memory dump — and payloads carry display-safe references only. Correlation and causation
+are structurally supported (nullable when no parent workflow exists). None of this implies a bus,
+queue, table, or retry runtime — those remain out of scope until an implementation package adopts a
+seam.
 
 **Canonical V1 event families:**
 
@@ -472,7 +501,58 @@ Kakari/Mirai Move/Asterion integration · resolution of any open Founder decisio
 9. **One-person-company realism** — prefer the smallest structure that preserves the contract;
    document instead of building speculative abstraction.
 
+## 20. Governance compatibility and Founder supersession
+
+This section exists so no future agent has to guess how this document relates to the active v0.7.0
+governance corpus — and so neither of the two symmetric mistakes can be made: treating omission as
+abolition, or treating older placement as a veto over the newer Founder decision.
+
+### A. Scope — what this architecture governs
+
+Reference Architecture V1 governs the current **Consumer Product Refoundation + Modular Capability
+Foundation**: the five pillars, four engines, five-item navigation, twenty screen archetypes,
+twelve capability modules, packs, shells, and events defined above.
+
+It does **not** silently erase broader strategic OS capabilities merely because they are outside
+the V1 consumer composition. In particular: the **Personal Life Graph**, the **governed Agent
+Runtime**, Companion Core, and the other broader OS-Foundation concepts in the active v0.7.0
+resources are **not abolished by their absence from this document**. They are out of the V1
+capability slice, and that is the entire claim. **No implementation agent may infer constitutional
+removal from omission.** ("The Reference Architecture has no Life Graph, so the Life Graph was
+abolished" is a forbidden inference.)
+
+### B. Explicit 2026-08-18 Founder supersessions
+
+By the governance authority order (Edward's latest explicit decision first), the following
+placements ARE changed by the 2026-08-18 Founder Product Refoundation, and older v0.7.0 text is
+superseded **for this Product Refoundation architecture** to that exact extent:
+
+1. **`recommendation.core` is a capability module** in the twelve-module architecture. Older
+   v0.7.0 text describing Recommendation Intelligence purely as a Kernel service is superseded.
+   Do not move recommendation back into the Kernel; "v0.7.0 says Recommendation is in the Kernel,
+   so `recommendation.core` is wrong" is the second forbidden inference.
+2. **Event naming is `family.event.vN`**, superseding the older `domain.object.action` naming
+   examples for this architecture (§11). The governed envelope's *fields* follow the v0.7.0 event
+   architecture unchanged.
+
+### C. No implied constitutional amendments
+
+Any other conflict between this Reference Architecture and active v0.7.0 governance must be
+**explicitly identified and classified** — either a *scope difference* (§A) or a *Founder
+supersession* (§B) — and recorded here and in the gap document. It is never resolved silently, and
+never by implementation convenience. Lower-level implementation documents and code cannot amend
+the constitution: a conflict that is neither listed in §B nor a §A scope difference is a defect in
+*this* document, to be raised to the Founder — not a license to reinterpret governance.
+
+The module-contract schema itself follows the same discipline: it is a **compatible superset** of
+the active v0.7.0 Module Contract Standard, with a lossless field mapping (contracts doc §1.1,
+machine-checked), and the governed event envelope carries every field the v0.7.0 event architecture
+requires (§11). Where v0.7.0 requires a field but not its value vocabulary, V1 declares one and
+labels it as V1-declared (contracts doc §1.3); refining those vocabularies is a governance act.
+
 ---
 
-*Version history: v1.0 (2026-08-18) — initial canonical reference architecture, authorized by
+*Version history: v1.1 (2026-08-18) — review remediation: added §20 (governance compatibility and
+Founder supersession), the full governed event envelope in §11, and operational-custody wording in
+iron rule 1. v1.0 (2026-08-18) — initial canonical reference architecture, authorized by
 `YORISOU-REFERENCE-ARCHITECTURE-V1-FOUNDATION`.*
