@@ -170,6 +170,16 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
+      # ARCH-P1. The platform contract guards are a HARD gate from here on: brand isolation, no
+      # platform→product import inversion, the twelve canonical capability ids, the governed event
+      # envelope, and the v0.7.0 superset mapping all fail the build when they drift. Deliberately
+      # not report-only — the guards exist so contract drift is a red build, not a review comment.
+      - name: Platform architecture contract guards
+        run: npm run test:platform-contracts
+
+      - name: ARCH-P1 typed-event seam (state.checkin_completed.v1)
+        run: npm run test:arch-p1
+
       - name: C02 definition and scoring checks
         run: npm run test:c02
 
