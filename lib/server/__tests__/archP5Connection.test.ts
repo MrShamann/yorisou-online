@@ -749,6 +749,82 @@ test("R4. the inviter can actually revoke the invitation from the product", () =
   assert.ok(/新しい招待リンクを作る/.test(actions));
 });
 
+test("R6. account erasure locks ALL live sources, sorted, BEFORE the canonical result erase", () => {
+  // Account deletion was the last destructive path outside the source lock protocol, and the one
+  // whose absence I wrongly cleared by reasoning rather than by racing it. These assert the shape
+  // the fix depends on, so a future edit that moves the canonical erase back above the locks fails
+  // here rather than only under concurrency.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const fn = /create or replace function public\.yorisou_account_deletion_erase_database_unchecked\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(fn, "the account erasure function is missing");
+  const body = fn[1];
+
+  const lockAt = body.indexOf("yorisou_share_source_lock");
+  const canonicalAt = body.indexOf("yorisou_assessment_result_erase(");
+  const invitesAt = body.indexOf("delete from public.yorisou_connection_invitations");
+  const pairsAt = body.indexOf("delete from public.yorisou_connection_pairs");
+
+  assert.ok(lockAt > 0, "account erasure takes no assessment source lock");
+  assert.ok(canonicalAt > 0, "account erasure never calls the canonical result erase");
+  assert.ok(lockAt < canonicalAt, "the source locks must be taken BEFORE the canonical result erase");
+  assert.ok(lockAt < invitesAt && lockAt < pairsAt, "the source locks must precede every derivative delete");
+  assert.ok(invitesAt < pairsAt, "invitation lifecycle must precede pair lifecycle");
+  assert.ok(pairsAt < canonicalAt, "pair rows must be handled BEFORE the canonical result erase");
+
+  // Deterministic ordering, both for the lock keys and for the pair rows.
+  assert.ok(/order by r\.id::text/.test(body), "the source lock keys must be sorted deterministically");
+  assert.ok(/order by id\s+for update/.test(body), "affected pair rows must be locked in deterministic id order");
+
+  // The declarative plan still names the connection families — that is the erasure-coverage
+  // contract, and the early deletes must not be an excuse to drop them.
+  assert.ok(/\['yorisou_connection_pairs', 'participant_a_account_id'\]/.test(migration));
+  assert.ok(/\['yorisou_connection_pairs', 'participant_b_account_id'\]/.test(migration));
+});
+
+test("R7. share publish revalidates assessment source liveness in the DATABASE", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const fn = /create or replace function public\.yorisou_share_object_publish\(([\s\S]*?)\n\$\$;/.exec(migration);
+  assert.ok(fn, "publish is not re-emitted in the P5 migration");
+  const body = fn[1];
+
+  const lockAt = body.indexOf("yorisou_share_source_lock");
+  const tombstoneAt = body.indexOf("yorisou_share_source_erasures");
+  const livenessAt = body.indexOf("yorisou_assessment_source_live");
+  const selectAt = body.indexOf("from public.yorisou_share_objects");
+  const insertAt = body.indexOf("insert into public.yorisou_share_objects");
+
+  assert.ok(livenessAt > 0, "publish does not revalidate source liveness");
+  assert.ok(lockAt < livenessAt, "liveness must be checked AFTER the source lock, not before");
+  assert.ok(tombstoneAt > 0 && tombstoneAt < livenessAt, "the P4 tombstone check must remain, and come first");
+  assert.ok(livenessAt < selectAt && livenessAt < insertAt, "liveness must precede both reuse and insert");
+  assert.ok(/share_source_unavailable/.test(body), "the refusal must be one bounded error");
+
+  // The helper is assessment-generic: it must not learn the instrument.
+  const helper = /create or replace function public\.yorisou_assessment_source_live\(([\s\S]*?)\n\$\$;/.exec(migration);
+  assert.ok(helper, "the liveness helper is missing");
+  for (const forbidden of [/imairo/i, /method_id/, /result_id/, /clan/i, /taxonomy/i]) {
+    assert.ok(!forbidden.test(helper[1]), `the liveness helper references ${forbidden} — it must stay generic`);
+  }
+  // And the merged P4 migration file itself is untouched.
+  assert.ok(
+    !/yorisou_assessment_source_live/.test(read("supabase/migrations/202608180002_shr1_share_objects.sql")),
+    "the merged ARCH-P4 migration was edited",
+  );
+});
+
+test("R7. account erasure may still remove owner-linked tombstones, and sharing stays Imairo-free", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  // Data minimisation: the tombstone family remains in the erasure plan. The stale-publish fix
+  // must NOT have been bought by retaining a deleted person's source references forever.
+  assert.ok(/\['yorisou_share_source_erasures', 'owner_account_id'\]/.test(migration));
+  // And no product semantics entered sharing persistence.
+  const store = code("lib/server/sharing/store.ts");
+  for (const forbidden of [/imairo/i, /clan/i, /120q/i]) {
+    assert.ok(!forbidden.test(store), `the sharing store references ${forbidden}`);
+  }
+});
+
 // ─── the migration is registered ────────────────────────────────────────────
 
 test("the CPR-1 migration is registered in the scope manifest", () => {

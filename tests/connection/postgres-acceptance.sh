@@ -652,6 +652,229 @@ else
     && pass "30. the surviving partners' own results are untouched" || fail "30. erasure touched an unrelated owner"
 fi
 
+echo "[cpr1] stage 8b — ACCOUNT ERASURE joins the source lifecycle protocol (F, G)"
+
+# A helper to give an account a deletion job, which the erasure function requires.
+JOB() { Q "insert into public.yorisou_account_deletion_jobs (owner_account_id, owner_fingerprint)
+           values ('$1', encode(sha256(convert_to('$1','utf8')),'hex'))
+           on conflict do nothing" >/dev/null; }
+
+# ── RACE F — ACCOUNT ERASURE vs SINGLE-SOURCE ERASURE ────────────────────────────────────────
+#
+# Account deletion was the last destructive path outside the protocol. Canonical result erasure
+# UPDATEs the result row and holds it for the rest of the transaction, while the declarative plan
+# deleted invitations and pairs much later; a single-source erasure walks the other way. One
+# PENDING INVITATION is enough to close the cycle — no pair required.
+#
+# The test-only trigger pauses the account transaction after the result-row lock is taken and
+# before it reaches the derivative deletes, which is precisely the window the cycle needs.
+Q "create or replace function public.cpr1_test_pause_result() returns trigger language plpgsql as \$fn\$
+   begin
+     if coalesce(current_setting('cpr1.result_sleep', true), '') = 'on' then perform pg_sleep(2); end if;
+     return new;
+   end \$fn\$;" >/dev/null
+Q "drop trigger if exists cpr1_pause_result on public.yorisou_assessment_results;
+   create trigger cpr1_pause_result after update on public.yorisou_assessment_results
+     for each row execute function public.cpr1_test_pause_result();" >/dev/null
+
+S_RESULT=$(seed_result "acct-s" "MS-KI")
+T_RESULT=$(seed_result "acct-t" "EM-AK")
+if [ -z "$S_RESULT" ] || [ -z "$T_RESULT" ]; then
+  fail "RACE F setup: could not seed"
+else
+  INV_F=$(INVITE "acct-s" "$S_RESULT")
+  PAIR_F=$(Q "select pair_public_id from public.yorisou_connection_invite_accept('$INV_F'::uuid,'acct-t','$T_RESULT')")
+  INV_F2=$(INVITE "acct-s" "$S_RESULT")   # a second, still-pending invitation
+  JOB "acct-s"
+  ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/fAcct.out" 2>&1
+begin;
+set local cpr1.result_sleep = 'on';
+select public.yorisou_account_deletion_erase_database_unchecked('acct-s');
+commit;
+SQL
+  ) &
+  PF=$!
+  sleep 1
+  psql "$DSN" -q -t -A -c "select public.yorisou_assessment_result_erase_with_derivatives('$S_RESULT'::uuid,'acct-s')" \
+    >"$WORK/fSrc.out" 2>&1 || true
+  wait "$PF" || true
+
+  if grep -qi "deadlock detected" "$WORK/fAcct.out" "$WORK/fSrc.out"; then
+    fail "RACE F: DEADLOCK — account erasure is outside the source lock protocol" \
+      "$(grep -ih -m1 'deadlock detected' "$WORK/fAcct.out" "$WORK/fSrc.out")"
+  else
+    pass "RACE F: account erasure racing source erasure does NOT deadlock"
+  fi
+  grep -q "yorisou_" "$WORK/fAcct.out" \
+    && pass "RACE F: the account-erasure session executed and returned its counts" \
+    || fail "RACE F: account erasure did not complete" "$(head -2 "$WORK/fAcct.out" | tr '\n' ' ')"
+  grep -qE "^(t|f)$" "$WORK/fSrc.out" \
+    && pass "RACE F: the source-erasure session executed" \
+    || fail "RACE F: source erasure never executed" "$(head -2 "$WORK/fSrc.out" | tr '\n' ' ')"
+
+  [ "$(Q "select count(*) from public.yorisou_connection_pairs where pair_public_id='$PAIR_F'")" = "0" ] \
+    && pass "RACE F: the pair is gone" || fail "RACE F: pair survived"
+  [ "$(Q "select count(*) from public.yorisou_connection_invitations where inviter_account_id='acct-s'")" = "0" ] \
+    && pass "RACE F: both invitations (accepted and pending) are gone" || fail "RACE F: invitation survived"
+  [ "$(Q "select count(*) from public.yorisou_assessment_results where owner_account_id='acct-s' and deleted_at is null")" = "0" ] \
+    && pass "RACE F: the account's results are erased" || fail "RACE F: a live result survived"
+  [ "$(Q "select count(*) from public.yorisou_assessment_results where owner_account_id='acct-t' and deleted_at is null")" = "1" ] \
+    && pass "RACE F: the OTHER participant is untouched" || fail "RACE F: erasure crossed accounts"
+fi
+
+Q "drop trigger if exists cpr1_pause_result on public.yorisou_assessment_results;
+   drop function if exists public.cpr1_test_pause_result();" >/dev/null
+[ "$(Q "select count(*) from pg_trigger where tgname='cpr1_pause_result'")" = "0" ] \
+  && pass "RACE F: the test-only trigger was removed" || fail "RACE F: test trigger left installed"
+
+# ── RACE G — a STALE share publish must not resurrect a deleted account's card. ──────────────
+#
+# Account erasure legitimately DELETES owner-linked source tombstones — retaining them would keep a
+# deleted person's private source references forever. So the tombstone cannot be what stops this: a
+# publish whose candidate was built before the deletion waits on the source lock, wakes after the
+# account is gone, finds NO tombstone, and would resurrect the card. What stops it is the database
+# revalidating that the assessment source is still live and still owned.
+U_RESULT=$(seed_result "acct-u" "MS-SZ")
+if [ -z "$U_RESULT" ]; then
+  fail "RACE G setup: could not seed"
+else
+  G_PAYLOAD='{"test_name":"t","result_code":"MS-SZ","display_line":"d","code_line":"c","recognition_line":"r","share_line":"s","highlights":[],"hero_chips":[],"global_note":"n","locale":"ja"}'
+  G_DIGEST=$(printf '%064d' 7)
+  JOB "acct-u"
+  # The account transaction holds the source lock from the start, then pauses, then erases.
+  ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/gAcct.out" 2>&1
+begin;
+select public.yorisou_share_source_lock('assessment_result', '$U_RESULT');
+select pg_sleep(2);
+select public.yorisou_account_deletion_erase_database_unchecked('acct-u');
+commit;
+SQL
+  ) &
+  PG=$!
+  sleep 1
+  # The stale publish: its payload was built before the deletion. It blocks on the source lock.
+  psql "$DSN" -q -t -A -c "select public.yorisou_share_object_publish('acct-u','imairo_result_card','assessment_result','$U_RESULT','tpl','1.0.0','imairo-share-v1','$G_PAYLOAD'::jsonb,'$G_DIGEST')" \
+    >"$WORK/gPub.out" 2>&1 || true
+  wait "$PG" || true
+
+  # The guard being tested is LIVENESS, so first prove the tombstone is genuinely absent — otherwise
+  # a pass here would only show that the pre-existing tombstone check fired.
+  [ "$(Q "select count(*) from public.yorisou_share_source_erasures where source_ref='$U_RESULT'")" = "0" ] \
+    && pass "RACE G: account erasure removed the owner-linked tombstone (data minimisation intact)" \
+    || fail "RACE G: a tombstone survived — this test would not prove the liveness guard"
+  grep -q "share_source_unavailable" "$WORK/gPub.out" \
+    && pass "RACE G: the stale publish was refused by DATABASE source-liveness validation" \
+    || fail "RACE G: stale publish outcome" "$(head -2 "$WORK/gPub.out" | tr '\n' ' ')"
+  [ "$(Q "select count(*) from public.yorisou_share_objects where source_ref='$U_RESULT' and revoked_at is null")" = "0" ] \
+    && pass "RACE G: ZERO active ShareObjects for the erased account's source" \
+    || fail "RACE G: a deleted account's card was resurrected"
+  [ "$(Q "select count(*) from public.yorisou_assessment_results where owner_account_id='acct-u' and deleted_at is null")" = "0" ] \
+    && pass "RACE G: the account's source is erased" || fail "RACE G: source survived"
+  grep -qi "deadlock detected" "$WORK/gAcct.out" "$WORK/gPub.out" \
+    && fail "RACE G: deadlock" || pass "RACE G: no deadlock"
+fi
+
+# ── Stale invite create / accept against a deleted account ──────────────────────────────────
+V_RESULT=$(seed_result "acct-v" "MS-YO")
+W_RESULT=$(seed_result "acct-w" "EM-FB")
+if [ -z "$V_RESULT" ] || [ -z "$W_RESULT" ]; then
+  fail "stale-invite setup: could not seed"
+else
+  INV_W=$(INVITE "acct-v" "$V_RESULT")
+  JOB "acct-v"
+  ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/hAcct.out" 2>&1
+begin;
+select public.yorisou_share_source_lock('assessment_result', '$V_RESULT');
+select pg_sleep(2);
+select public.yorisou_account_deletion_erase_database_unchecked('acct-v');
+commit;
+SQL
+  ) &
+  PH=$!
+  sleep 1
+  psql "$DSN" -q -t -A -c "select public.yorisou_connection_invite_create('acct-v','assessment_result','$V_RESULT')" \
+    >"$WORK/hCreate.out" 2>&1 || true
+  psql "$DSN" -q -t -A -c "select * from public.yorisou_connection_invite_accept('$INV_W'::uuid,'acct-w','$W_RESULT')" \
+    >"$WORK/hAccept.out" 2>&1 || true
+  wait "$PH" || true
+
+  grep -qE "connection_source_not_invitable|connection_source_erased" "$WORK/hCreate.out" \
+    && pass "A. a stale invite-create behind account erasure is refused" \
+    || fail "A. stale invite-create outcome" "$(head -2 "$WORK/hCreate.out" | tr '\n' ' ')"
+  [ "$(Q "select count(*) from public.yorisou_connection_invitations where inviter_account_id='acct-v'")" = "0" ] \
+    && pass "A. no invitation survived the deleted account" || fail "A. an invitation survived"
+  grep -qE "connection_invitation_unavailable|connection_inviter_source_unavailable|connection_source_erased" "$WORK/hAccept.out" \
+    && pass "B. a stale invite-accept behind account erasure is refused" \
+    || fail "B. stale invite-accept outcome" "$(head -2 "$WORK/hAccept.out" | tr '\n' ' ')"
+  [ "$(Q "select count(*) from public.yorisou_connection_pairs
+          where participant_a_account_id='acct-v' or participant_b_account_id='acct-v'")" = "0" ] \
+    && pass "B. no pair or comparison survived" || fail "B. a pair survived"
+fi
+
+# ── Multi-account, multi-result, CROSSED pairs: two concurrent account erasures ──────────────
+#
+# A naive per-result ordering would let account X hold pair 1 and wait for pair 2 while account Y
+# holds pair 2 and waits for pair 1. Both erasures lock their pair rows in id order, so no cycle
+# can form; this runs it for real rather than asserting the ordering by reading the SQL.
+X1=$(seed_result "acct-x" "MS-KI"); X2=$(seed_result "acct-x" "MS-SZ")
+Y1=$(seed_result "acct-y" "EM-AK"); Y2=$(seed_result "acct-y" "EM-FB")
+if [ -z "$X1" ] || [ -z "$X2" ] || [ -z "$Y1" ] || [ -z "$Y2" ]; then
+  fail "multi-account setup: could not seed four results"
+else
+  # Two CROSSED pairs, deliberately created in opposite directions.
+  IX=$(INVITE "acct-x" "$X1")
+  PX=$(Q "select pair_public_id from public.yorisou_connection_invite_accept('$IX'::uuid,'acct-y','$Y1')")
+  IY=$(INVITE "acct-y" "$Y2")
+  PY=$(Q "select pair_public_id from public.yorisou_connection_invite_accept('$IY'::uuid,'acct-x','$X2')")
+  if [ -z "$PX" ] || [ -z "$PY" ]; then
+    fail "multi-account setup: could not create both crossed pairs"
+  else
+    JOB "acct-x"; JOB "acct-y"
+    ( psql "$DSN" -q -t -A -c "select public.yorisou_account_deletion_erase_database_unchecked('acct-x')" >"$WORK/mX.out" 2>&1 ) & MX=$!
+    ( psql "$DSN" -q -t -A -c "select public.yorisou_account_deletion_erase_database_unchecked('acct-y')" >"$WORK/mY.out" 2>&1 ) & MY=$!
+    wait "$MX" || true; wait "$MY" || true
+
+    grep -qi "deadlock detected" "$WORK/mX.out" "$WORK/mY.out" \
+      && fail "MULTI: DEADLOCK between two concurrent account erasures over crossed pairs" \
+        "$(grep -ih -m1 'deadlock detected' "$WORK/mX.out" "$WORK/mY.out")" \
+      || pass "MULTI: two concurrent account erasures over CROSSED pairs do NOT deadlock"
+    grep -q "yorisou_" "$WORK/mX.out" && grep -q "yorisou_" "$WORK/mY.out" \
+      && pass "MULTI: both account erasures completed" \
+      || fail "MULTI: an account erasure did not complete" \
+        "X=$(head -1 "$WORK/mX.out" | cut -c1-40) Y=$(head -1 "$WORK/mY.out" | cut -c1-40)"
+    [ "$(Q "select count(*) from public.yorisou_connection_pairs
+            where pair_public_id in ('$PX','$PY')")" = "0" ] \
+      && pass "MULTI: both crossed pairs are gone" || fail "MULTI: a crossed pair survived"
+    [ "$(Q "select count(*) from public.yorisou_assessment_results
+            where owner_account_id in ('acct-x','acct-y') and deleted_at is null")" = "0" ] \
+      && pass "MULTI: all four results are erased" || fail "MULTI: a result survived"
+    [ "$(Q "select count(*) from public.yorisou_pair_comparisons c
+            where not exists (select 1 from public.yorisou_connection_pairs p where p.id=c.pair_id)")" = "0" ] \
+      && pass "MULTI: no orphan comparison survives" || fail "MULTI: orphan comparison"
+  fi
+fi
+
+# POR-1 EXTERNAL AUTHORITY IS UNCHANGED. The P5 re-emission altered the BODY of the unchecked
+# erasure function; its authority model must still be POR-1's (job + executor claim + generation +
+# drained gate). The one database fact that guarantees it stays unreachable is that no role can
+# execute it directly.
+AUTH_OK=1
+for role in public anon authenticated service_role; do
+  [ "$(Q "select has_function_privilege('$role','public.yorisou_account_deletion_erase_database_unchecked(text)','execute')")" = "t" ] && AUTH_OK=0
+done
+[ "$AUTH_OK" = "1" ] && pass "POR-1: the unchecked account-erasure function is executable by NO role" \
+  || fail "POR-1: the unchecked erasure function became directly callable"
+# Exactly ONE unchecked function, and the CHECKED POR-1 wrapper still standing in front of it.
+# The wrapper is the authorized entry point and is expected to exist; what must not exist is a
+# second, weaker way in.
+[ "$(Q "select count(*) from pg_proc where proname = 'yorisou_account_deletion_erase_database_unchecked'")" = "1" ] \
+  && pass "POR-1: exactly ONE unchecked erasure function exists" || fail "POR-1: an unchecked overload appeared"
+[ "$(Q "select count(*) from pg_proc where proname = 'yorisou_account_deletion_erase_database'")" -ge 1 ] \
+  && pass "POR-1: the CHECKED wrapper still fronts it" || fail "POR-1: the checked wrapper disappeared"
+[ "$(Q "select prosrc like '%_unchecked%' from pg_proc where proname='yorisou_account_deletion_erase_database' limit 1")" = "t" ] \
+  && pass "POR-1: the checked wrapper still delegates to the unchecked body" \
+  || fail "POR-1: the checked wrapper no longer calls the unchecked body"
+
 echo "[cpr1] stage 9 — audit content-freedom (31)"
 [ "$(Q "select count(*) from public.yorisou_connection_audit_events")" -ge 3 ] \
   && pass "31. lifecycle events were audited" || fail "31. audit rows missing"

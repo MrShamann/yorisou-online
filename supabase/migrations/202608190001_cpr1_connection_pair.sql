@@ -249,6 +249,134 @@ as $$
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- Assessment-source liveness, and the ARCH-P4 publish RPC re-emitted to use it
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Is this assessment source still a live row owned by this account?
+--
+-- ASSESSMENT-GENERIC ON PURPOSE. It knows the assessment table and nothing else — no method id, no
+-- taxonomy, no scoring, no product. sharing.core may ask "is the thing I am about to publish from
+-- still there and still theirs" without learning what the thing means.
+create or replace function public.yorisou_assessment_source_live(
+  p_source_ref text,
+  p_owner_account_id text
+)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if p_source_ref is null or p_owner_account_id is null then return false; end if;
+  if p_source_ref !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    return false;
+  end if;
+  return exists (
+    select 1 from public.yorisou_assessment_results
+     where id = p_source_ref::uuid
+       and owner_account_id = p_owner_account_id
+       and deleted_at is null
+  );
+end;
+$$;
+
+-- ARCH-P4 PUBLISH, RE-EMITTED WITH ONE ADDED DATABASE INVARIANT. The merged P4 migration file is
+-- NOT touched; this replaces the function body in the lineage.
+--
+-- WHY IT IS NEEDED HERE. P4 refuses a publish whose source carries an erasure tombstone. Account
+-- erasure legitimately DELETES those tombstones — they are owner-linked personal rows, and keeping
+-- them forever would mean retaining a deleted person's private source references forever. So once
+-- account erasure holds the source lock, a publish that built its candidate BEFORE the deletion
+-- can wait on that lock, wake after the account is gone, find no tombstone, and resurrect the
+-- deleted person's card. The tombstone answers "was this source erased"; it cannot answer "does
+-- this source still exist", and after an account erasure that is the only question that matters.
+--
+-- So the publish now revalidates LIVENESS AND OWNERSHIP in the database, under the lock, after the
+-- tombstone check. Every other P4 behaviour is preserved exactly.
+create or replace function public.yorisou_share_object_publish(
+  p_owner_account_id text,
+  p_card_family text,
+  p_source_family text,
+  p_source_ref text,
+  p_template_ref text,
+  p_template_version text,
+  p_payload_version text,
+  p_public_payload jsonb,
+  p_payload_digest text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.yorisou_share_objects%rowtype;
+  v_reused boolean := false;
+begin
+  if p_owner_account_id is null or length(p_owner_account_id) = 0 then
+    raise exception 'share_invalid_owner';
+  end if;
+  if p_public_payload is null or jsonb_typeof(p_public_payload) <> 'object' then
+    raise exception 'share_invalid_payload';
+  end if;
+
+  perform public.yorisou_share_source_lock(p_source_family, p_source_ref);
+
+  if exists (
+    select 1 from public.yorisou_share_source_erasures
+     where source_family = p_source_family and source_ref = p_source_ref
+  ) then
+    raise exception 'share_source_erased';
+  end if;
+
+  -- THE NEW INVARIANT. One bounded refusal for deleted, unowned and nonexistent alike: the caller
+  -- must not learn which, and an application-side pre-read cannot substitute because the whole
+  -- problem is that its read happened before this lock was granted.
+  if p_source_family = 'assessment_result'
+     and not public.yorisou_assessment_source_live(p_source_ref, p_owner_account_id) then
+    raise exception 'share_source_unavailable';
+  end if;
+
+  select * into v_row
+    from public.yorisou_share_objects
+   where owner_account_id = p_owner_account_id
+     and source_family = p_source_family
+     and source_ref = p_source_ref
+     and template_ref = p_template_ref
+     and revoked_at is null
+   limit 1;
+
+  if found then
+    if v_row.payload_digest = p_payload_digest then
+      v_reused := true;
+    else
+      raise exception 'share_active_exists';
+    end if;
+  else
+    insert into public.yorisou_share_objects
+      (owner_account_id, card_family, source_family, source_ref, template_ref, template_version,
+       payload_version, public_payload, payload_digest)
+    values
+      (p_owner_account_id, p_card_family, p_source_family, p_source_ref, p_template_ref,
+       p_template_version, p_payload_version, p_public_payload, p_payload_digest)
+    returning * into v_row;
+
+    insert into public.yorisou_share_audit_events (actor_fingerprint, event_type, share_ref)
+    values (encode(sha256(convert_to(p_owner_account_id, 'utf8')), 'hex'), 'published', v_row.id);
+  end if;
+
+  return jsonb_build_object(
+    'public_id', v_row.public_id,
+    'card_family', v_row.card_family,
+    'template_version', v_row.template_version,
+    'published_at', v_row.published_at,
+    'reused', v_reused
+  );
+end;
+$$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Mutations
 -- ─────────────────────────────────────────────────────────────────────────────
 
@@ -650,6 +778,8 @@ declare
 begin
   foreach v_sig in array array[
     'public.yorisou_imairo_pair_live_source(text, text)',
+    'public.yorisou_assessment_source_live(text, text)',
+    'public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text)',
     'public.yorisou_connection_source_erased(text)',
     'public.yorisou_connection_invite_create(text, text, text)',
     'public.yorisou_connection_invite_cancel(text, uuid)',
@@ -767,6 +897,8 @@ declare
     ['yorisou_canonical_recommendation_sets','owner_account_id'],
     ['yorisou_account_deletion_requests','owner_account_id']
   ];
+  v_src      record;
+  v_pair_ids uuid[];
   v_i        integer;
   v_table    text;
   v_column   text;
@@ -777,6 +909,65 @@ begin
   select id into v_id from public.yorisou_account_deletion_jobs
    where owner_account_id = p_owner_account_id;
   if not found then raise exception 'account_deletion_job_not_found'; end if;
+
+  -- 5.0a ACCOUNT ERASURE JOINS THE SOURCE LIFECYCLE LOCK PROTOCOL.
+  --
+  -- This is the last destructive path that stood outside the protocol, and it deadlocked because
+  -- of it. Canonical result erasure UPDATEs the result row and holds that lock for the rest of the
+  -- transaction, while the declarative plan deletes invitations and pairs much later. A concurrent
+  -- single-source erasure walks the opposite way — invitation, pair, comparison, then the result:
+  --
+  --     account holds RESULT row,          waits for invitation/pair
+  --     source  holds invitation/pair,     waits for RESULT row        => deadlock detected
+  --
+  -- One pending invitation is enough to build that cycle; no pair is required.
+  --
+  -- So every live assessment source this account owns is locked HERE, in sorted order, before any
+  -- destructive work begins. Sorted because an account may own several results and two erasures
+  -- taking overlapping sets in different orders would deadlock against each other. Taking ALL of
+  -- them before touching ANY derivative is what makes the wait-for graph acyclic: a transaction
+  -- that holds a pair row already holds every source lock it will ever need.
+  --
+  -- The locks are transaction-scoped and released on commit.
+  for v_src in
+    select r.id::text as ref
+      from public.yorisou_assessment_results r
+     where r.owner_account_id = p_owner_account_id
+       and r.deleted_at is null
+     order by r.id::text
+  loop
+    perform public.yorisou_share_source_lock('assessment_result', v_src.ref);
+  end loop;
+
+  -- 5.0b THE P5 DERIVATIVES, BEFORE the canonical result erase — same direction the single-source
+  -- seam uses: INVITATION → PAIR → COMPARISON, then the result itself.
+  --
+  -- The declarative plan at 5.4 still names these families, and deliberately so: it is the
+  -- contract the erasure-coverage guard reads, and leaving it is what keeps "every owner-linked
+  -- table is registered" true. By the time it runs these deletes are no-ops.
+  if to_regclass('public.yorisou_connection_invitations') is not null then
+    delete from public.yorisou_connection_invitations
+     where inviter_account_id = p_owner_account_id
+        or accepted_by_account_id = p_owner_account_id;
+  end if;
+
+  if to_regclass('public.yorisou_connection_pairs') is not null then
+    -- Pair rows can be shared with an account that is ALSO being deleted, so they are locked in
+    -- deterministic id order rather than in whatever order the planner returns them.
+    select array_agg(id order by id) into v_pair_ids
+      from (
+        select id from public.yorisou_connection_pairs
+         where participant_a_account_id = p_owner_account_id
+            or participant_b_account_id = p_owner_account_id
+         order by id
+         for update
+      ) locked;
+    if v_pair_ids is not null and array_length(v_pair_ids, 1) > 0 then
+      -- Comparisons cascade from the pair rows (on delete cascade), so deleting the pairs removes
+      -- them; PAIR still precedes COMPARISON, exactly as everywhere else.
+      delete from public.yorisou_connection_pairs where id = any (v_pair_ids);
+    end if;
+  end if;
 
   -- 5.0 APPEND-ONLY FAMILIES FIRST.
   --
