@@ -79,9 +79,39 @@ test("B: the canonical family vocabulary is complete but only symbol_draw is imp
     ["binary_choice", "mini_story", "seasonal", "symbol_draw", "three_question", "visual_choice"].sort(),
   );
   assert.equal(DAILY_SYMBOLS_DEFINITION.pattern_family, "symbol_draw");
-  // No second pack and no second runtime: packs/yorisou contains exactly daily-symbols.
-  const packs = readdirSync(at("packs", "yorisou"));
-  assert.deepEqual(packs, ["daily-symbols"], "exactly one Product Pack exists in P3");
+
+  // EXACTLY ONE **DISCOVERY** PACK — scoped correctly.
+  //
+  // This assertion originally read `packs/yorisou === ["daily-symbols"]`, i.e. "Yorisou has exactly
+  // one Product Pack of any kind". True the day P3 shipped, and wrong as an invariant: the Lego
+  // architecture exists so unrelated packs (ARCH-P4's Imairo share pack, later packs) can land
+  // WITHOUT touching discovery. Scoping it to the discovery capability keeps the real guarantee —
+  // no second discovery runtime appears silently — while allowing the architecture to grow.
+  const discoveryPacks = readdirSync(at("packs", "yorisou"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .filter((entry) => {
+      const files = readdirSync(at("packs", "yorisou", entry.name)).filter((f) => f.endsWith(".ts"));
+      return files.some((file) =>
+        read("packs", "yorisou", entry.name, file).includes("DiscoveryPatternDefinition"),
+      );
+    })
+    .map((entry) => entry.name);
+  assert.deepEqual(discoveryPacks, ["daily-symbols"], "exactly one DISCOVERY Product Pack exists");
+
+  // And exactly one implemented discovery runtime: the pattern-family vocabulary stays declarative
+  // for the other five — no second `DiscoveryPatternDefinition` const anywhere in the repo's packs.
+  const definitionCount = discoveryPacks.reduce((count, pack) => {
+    const files = readdirSync(at("packs", "yorisou", pack)).filter((f) => f.endsWith(".ts"));
+    return (
+      count +
+      files.reduce(
+        (inner, file) =>
+          inner + (read("packs", "yorisou", pack, file).match(/:\s*DiscoveryPatternDefinition\s*=/g) ?? []).length,
+        0,
+      )
+    );
+  }, 0);
+  assert.equal(definitionCount, 1, "a second discovery pattern definition appeared");
 });
 
 // ── C. pack outside platform; platform never imports it ─────────────────────
