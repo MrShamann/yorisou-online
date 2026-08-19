@@ -9,6 +9,8 @@ import SiteFooter from "./SiteFooter";
 
 type Props = {
   children: ReactNode;
+  /** CPR-1 — server-resolved navigation gate for つながる. Never computed in the client. */
+  connectEnabled?: boolean;
 };
 
 // Chrome is suppressed where a person is INSIDE something — a support conversation, a running
@@ -40,7 +42,7 @@ function isSuppressedRoute(pathname: string | null): boolean {
   );
 }
 
-export default function AppShell({ children }: Props) {
+export default function AppShell({ children, connectEnabled = false }: Props) {
   const pathname = usePathname();
 
   if (isSuppressedRoute(pathname)) {
@@ -54,7 +56,7 @@ export default function AppShell({ children }: Props) {
         {children}
         <SiteFooter />
       </div>
-      <MobileBottomNav />
+      <MobileBottomNav connectEnabled={connectEnabled} />
     </>
   );
 }

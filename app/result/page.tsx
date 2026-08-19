@@ -13,8 +13,10 @@ import {
 } from "./resultIdentityRoutes";
 import ResultShareActions from "../components/ResultShareActions";
 import ShareObjectActions from "../components/ShareObjectActions";
+import PairInviteActions from "../components/PairInviteActions";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { sharingOperational } from "@/lib/yorisou/sharing/access";
+import { connectionOperational } from "@/lib/yorisou/connection/access";
 import { activeShareForSource } from "@/lib/server/sharing/store";
 import { IMAIRO_SHARE_SOURCE_FAMILY, IMAIRO_SHARE_TEMPLATE_REF } from "@/packs/yorisou/imairo/share";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
@@ -84,6 +86,10 @@ export default async function ResultPage({
   // unreachable — falls back to the EXISTING share behavior below, so a person always has a
   // working share action and never a dead CTA (the ARCH-P3 remediation lesson, applied here from
   // day one).
+  // CPR-1 — the pair entry has the same owner+persisted precondition as the ShareObject entry
+  // but its OWN gate: a deployment may have formal sharing on and pairing off, or the reverse.
+  const pairInviteResultRowId =
+    mode.kind === "persisted" && mode.isOwner && connectionOperational() ? mode.resultRowId : null;
   let shareObjectState: { resultRowId: string; activePublicId: string | null } | null = null;
   if (mode.kind === "persisted" && mode.isOwner && sharingOperational()) {
     try {
@@ -307,6 +313,18 @@ export default async function ResultPage({
               />
             )}
           </div>
+
+          {pairInviteResultRowId ? (
+            <div className="grid gap-3 rounded-[var(--pxr-radius-lg)] border border-[var(--pxr-border-subtle)] bg-[var(--pxr-surface)] p-5">
+              <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+                ふたりで見る
+              </p>
+              <p className="text-[14px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+                選んだ相手と結果を並べて、似ているところと違うところを話すためのページを作れます。
+              </p>
+              <PairInviteActions resultRowId={pairInviteResultRowId} />
+            </div>
+          ) : null}
 
           <OpenTestingNotice
             body="現在は公開テスト中のため、結果から詳しいレポート、保存導線まで一通り試せます。わかりにくかった点や不具合があれば、この結果ページからそのまま送ってください。"

@@ -93,7 +93,10 @@ export const CAPABILITY_MODULES: readonly ModuleRegistryEntry[] = [
   {
     module_id: "comparison.core",
     version: "0.2.0",
-    adoption_status: "declared",
+    // ARCH-P5: the contract boundary now exists in code (lib/platform/comparisonCore.ts + its
+    // runtime) and one product adapter uses it. `partial`, not `implemented`: only the pair
+    // Person-Person case is realized — self-to-past-self and month-to-month are still on paper.
+    adoption_status: "partial",
     lifecycle_state: DEFINED,
     verification_state: NOT_VERIFIED,
     privacy_class: "personal",
@@ -111,7 +114,10 @@ export const CAPABILITY_MODULES: readonly ModuleRegistryEntry[] = [
   {
     module_id: "connection.core",
     version: "0.2.0",
-    adoption_status: "declared",
+    // ARCH-P5: invitations, acceptance, pairs and dissolution exist behind the contract boundary.
+    // `partial`, not `implemented`: relationship context and connection preferences are declared
+    // in the contract and deliberately not built. Verification remains a separate gate.
+    adoption_status: "partial",
     lifecycle_state: DEFINED,
     verification_state: NOT_VERIFIED,
     privacy_class: "personal",

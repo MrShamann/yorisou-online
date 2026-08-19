@@ -464,12 +464,31 @@ test("W: sharing.core registry truth stays partial / DEFINED / not_verified", ()
   assert.equal(entry.verification_state, "not_verified");
 });
 
-test("X/Y: no ARCH-P5 connection/comparison, community or matching appeared", () => {
-  for (const path of [["app", "connect"], ["app", "api", "connections"], ["app", "api", "comparisons"]]) {
-    assert.ok(!existsSync(at(...path)), `${path.join("/")} exists — P5 scope leaked`);
-  }
-  const store = readCode("lib", "server", "sharing", "store.ts");
-  for (const forbidden of ["connection", "comparison", "community", "matching", "recipient"]) {
-    assert.ok(!store.toLowerCase().includes(forbidden), `sharing store mentions "${forbidden}"`);
+test("X/Y: sharing.core stays inside its own boundary — no connection, comparison, community or matching", () => {
+  // NARROWED, for the same reason ARCH-P4 narrowed the equivalent ARCH-P3 guard.
+  //
+  // This test used to assert that `app/connect` did not exist. That was a true statement about the
+  // repository when P4 shipped, but it is not a statement about SHARING: it forbade a later
+  // authorized package rather than policing this one. ARCH-P5 built /connect under Founder
+  // authorization, and a guard that fails on authorized work teaches people to delete guards.
+  //
+  // What it asserts now is the part that was always the real boundary: sharing.core must not learn
+  // about connections, comparisons, community or recipients — not in its store, and not by import
+  // anywhere in the ARCH-P4 surface. If P5 ever reached into the sharing package, this fails.
+  const p4Files = [
+    ["lib", "server", "sharing", "store.ts"],
+    ["lib", "platform", "sharingCore.ts"],
+    ["lib", "server", "platform", "sharingCore", "service.ts"],
+    ["packs", "yorisou", "imairo", "share.ts"],
+    ["lib", "server", "sharing", "imairoShareSource.ts"],
+  ];
+  for (const path of p4Files) {
+    const source = readCode(...path);
+    for (const forbidden of ["connection", "comparison", "community", "matching", "recipient"]) {
+      assert.ok(
+        !source.toLowerCase().includes(forbidden),
+        `${path.join("/")} mentions "${forbidden}" — sharing.core must not know about it`,
+      );
+    }
   }
 });

@@ -32,7 +32,8 @@ export type Cpv1DevFlag =
   | "yorisou_values_preview" // YV-1: yorisou-values scored vertical slice on authorized Preview only
   | "osf1_life_os_preview" // OSF-1: Life OS Phase 1 surfaces on authorized Preview only
   | "discovery_daily_symbols_preview" // DD-1: Daily Discovery (今日のしるし) on authorized Preview only
-  | "sharing_core_preview"; // SHR-1: formal sharing.core ShareObject flow on authorized Preview only
+  | "sharing_core_preview" // SHR-1: formal sharing.core ShareObject flow on authorized Preview only
+  | "connection_pair_preview"; // CPR-1: connection.core pair invite + ふたりのImairo on authorized Preview only
 
 export const CPV1_DEV_FLAGS: readonly Cpv1DevFlag[] = [
   "cpv1_method_universe_preview",
@@ -45,6 +46,7 @@ export const CPV1_DEV_FLAGS: readonly Cpv1DevFlag[] = [
   "osf1_life_os_preview",
   "discovery_daily_symbols_preview",
   "sharing_core_preview",
+  "connection_pair_preview",
 ];
 
 // A minimal env shape (process.env is assignable to this). Kept loose so the

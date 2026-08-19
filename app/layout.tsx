@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import AppShell from "./components/AppShell";
+import { connectionOperational } from "@/lib/yorisou/connection/access";
 import { getReleaseMarker } from "@/lib/releaseMarker";
 
 const notoSansJp = Noto_Sans_JP({
@@ -45,7 +46,7 @@ export default async function RootLayout({
     <html lang={locale} className={`${notoSansJp.variable} ${inter.variable}`}>
       <body>
         <div id="yorisou-release" hidden data-release={releaseMarker} />
-        <AppShell>{children}</AppShell>
+        <AppShell connectEnabled={connectionOperational()}>{children}</AppShell>
       </body>
     </html>
   );
