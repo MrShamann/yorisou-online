@@ -21,13 +21,31 @@
 //
 // This module knows no product, no language, no storage and no route.
 
-/** The source families a moment may project from. Adding one is a contract change. */
+/**
+ * The source families a moment may project from. Adding one is a contract change.
+ *
+ * THESE ARE DERIVED FROM WHAT THE TIMELINE ACTUALLY DISPLAYS, not from the module contract's
+ * `events_consumed` list — and the difference is not cosmetic. An earlier revision of this file
+ * took the event list (state_snapshot / assessment_result / discovery_session / experience_card /
+ * life_reflection) and would have shipped a projection that both OMITS what the timeline shows
+ * (Direction/goal, and the light-vs-deep reflection split) and INCLUDES two families it does not
+ * show at all. Switching the read onto that vocabulary would have silently emptied part of a
+ * person's timeline, which is precisely the regression P6 exists to avoid.
+ *
+ * The families below mirror the kinds the product's timeline reader actually emits — four
+ * owner-scoped sources behind five consumer filters, one of which splits a single source by mode.
+ * Durable memory is deliberately NOT a family: a memory is a standing note, not something that
+ * happened at a moment, and the timeline says so explicitly.
+ *
+ * The concrete table names deliberately do not appear here — the platform tier is brand-free, and
+ * a structural guard enforces that. The family-to-source mapping lives in the product tier, and a
+ * P6 guard pins these names against the timeline reader so the two cannot drift apart.
+ */
 export const CONTINUITY_SOURCE_FAMILIES = [
-  "state_snapshot",
-  "assessment_result",
-  "discovery_session",
-  "experience_card",
-  "life_reflection",
+  "current_state",
+  "goal",
+  "reflection",
+  "experience",
 ] as const;
 
 export type ContinuitySourceFamily = (typeof CONTINUITY_SOURCE_FAMILIES)[number];

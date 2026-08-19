@@ -33,7 +33,7 @@ const code = (path: string) =>
 function source(over: Partial<ProjectionSource> = {}): ProjectionSource {
   return {
     owner_ref: "acct-a",
-    source_family: "state_snapshot",
+    source_family: "current_state",
     source_ref: "src-1",
     occurred_at: "2026-08-19T00:00:00.000Z",
     label: "checked in",
@@ -187,6 +187,29 @@ test("D. an empty owner reads nothing rather than everything", async () => {
   assert.deepEqual(await readTimeline("", repo), []);
 });
 
+test("E. every family the timeline displays has a projection family, and vice versa", () => {
+  // THE READ-SWITCH SAFETY NET. P6's canonical scope ends with "timeline switches reads", and the
+  // way that goes wrong is a vocabulary mismatch: a family the timeline shows but the projection
+  // has no name for simply disappears when the switch happens.
+  const timeline = read("lib/server/lifeOs/timeline.ts");
+  const kinds = new Set(
+    [...timeline.matchAll(/kind:\s*"([a-z_]+)"\s*as const/g)].map((m) => m[1]),
+  );
+  // Memory is deliberately NOT a timeline kind (a standing note, not a moment) — the timeline says
+  // so explicitly, so its absence here is intended rather than an omission.
+  kinds.delete("memory");
+  assert.ok(kinds.size > 0, "could not read the timeline's kinds — this guard would pass vacuously");
+  for (const kind of kinds) {
+    assert.ok(
+      (CONTINUITY_SOURCE_FAMILIES as readonly string[]).includes(kind),
+      `the timeline displays "${kind}" but continuity.core has no family for it — the read-switch would drop it`,
+    );
+  }
+  for (const family of CONTINUITY_SOURCE_FAMILIES) {
+    assert.ok(kinds.has(family), `continuity.core declares "${family}" which the timeline never displays`);
+  }
+});
+
 // ─── scope: P6 is projections, NOT pattern detection ────────────────────────
 
 test("E. no pattern detection, no memory write, no scoring entered continuity.core", () => {
@@ -196,8 +219,10 @@ test("E. no pattern detection, no memory write, no scoring entered continuity.co
       assert.ok(!forbidden.test(source), `${file} references ${forbidden} — outside P6 scope`);
     }
   }
+  // Pinned to what lib/server/lifeOs/timeline.ts actually displays. If a family is added or
+  // removed here without the timeline changing, the read-switch would drop or invent moments.
   assert.deepEqual([...CONTINUITY_SOURCE_FAMILIES], [
-    "state_snapshot", "assessment_result", "discovery_session", "experience_card", "life_reflection",
+    "current_state", "goal", "reflection", "experience",
   ]);
 });
 
