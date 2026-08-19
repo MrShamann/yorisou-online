@@ -548,6 +548,13 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608180001_dd1_daily_discovery_sessions.sql",
     "sha256": "73b9e7a6f42d9f2793b1edf8110183064c2ee567c626226c27e37c0218c998f4"
+  },
+  {
+    "version": "202608180002",
+    "name": "shr1_share_objects",
+    "scope": "PRODUCTION_LINEAGE",
+    "path": "supabase/migrations/202608180002_shr1_share_objects.sql",
+    "sha256": "5256e96d2970d5bc195190ece9da074f74fdd25cb812249283a4060b74986c17"
   }
 ]
 ```

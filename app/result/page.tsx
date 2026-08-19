@@ -12,6 +12,11 @@ import {
   persistedIdentity,
 } from "./resultIdentityRoutes";
 import ResultShareActions from "../components/ResultShareActions";
+import ShareObjectActions from "../components/ShareObjectActions";
+import { getViewerContext } from "@/lib/server/yorisouAuth";
+import { sharingOperational } from "@/lib/yorisou/sharing/access";
+import { activeShareForSource } from "@/lib/server/sharing/store";
+import { IMAIRO_SHARE_SOURCE_FAMILY, IMAIRO_SHARE_TEMPLATE_REF } from "@/packs/yorisou/imairo/share";
 import { OpenTestingPageTracker, OpenTestingTrackingLink } from "../components/OpenTestingTracker";
 import { buildSelfUnderstandingReportHref } from "@/lib/yorisou/reports/loader";
 import RevealExperience from "./reveal/RevealExperience";
@@ -73,6 +78,30 @@ export default async function ResultPage({
   const continuityPermitted =
     mode.kind !== "persisted" || mode.understanding.continuityUsePermitted;
   const resultShareHref = buildPublicShareHref("/result/share", identity);
+  // SHR-1 — the formal ShareObject flow is offered ONLY to the authenticated owner of a persisted
+  // result, and ONLY when sharing.core is gated on AND schema-ready AND its store answered. Every
+  // other case — legacy result, anonymous attempt view, gate off, schema not declared, store
+  // unreachable — falls back to the EXISTING share behavior below, so a person always has a
+  // working share action and never a dead CTA (the ARCH-P3 remediation lesson, applied here from
+  // day one).
+  let shareObjectState: { resultRowId: string; activePublicId: string | null } | null = null;
+  if (mode.kind === "persisted" && mode.isOwner && sharingOperational()) {
+    try {
+      const viewer = await getViewerContext();
+      const shareOwnerId = viewer.account?.id || viewer.legacyAccount?.id;
+      if (shareOwnerId) {
+        const active = await activeShareForSource(
+          shareOwnerId,
+          IMAIRO_SHARE_SOURCE_FAMILY,
+          mode.resultRowId,
+          IMAIRO_SHARE_TEMPLATE_REF,
+        );
+        shareObjectState = { resultRowId: mode.resultRowId, activePublicId: active?.public_id ?? null };
+      }
+    } catch {
+      shareObjectState = null;
+    }
+  }
   const recommendationHref = buildPrivateContinuityHref("/recommendations", identity);
   // The report is built from the ACCEPTED understanding: the machine's original assignment is
   // kept on the page for honesty, but the person's confirmed/corrected code decides what the
@@ -261,15 +290,22 @@ export default async function ResultPage({
             <p className="text-[14px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
               今の印象を短い言葉のまま残したいときだけ、ここからシェアできます。
             </p>
-            <ResultShareActions
-              shareUrl={resultShareHref}
-              shareTitle={compatibility.brandedTestName}
-              shareText={`${compatibility.shareLine}\n${compatibility.currentStateNote}`}
-              shareCardUrl={resultShareHref}
-              personaId={resultId ?? "imairo-placeholder"}
-              shareSurface="result-page"
-              showCopyLink={false}
-            />
+            {shareObjectState ? (
+              <ShareObjectActions
+                resultRowId={shareObjectState.resultRowId}
+                activePublicId={shareObjectState.activePublicId}
+              />
+            ) : (
+              <ResultShareActions
+                shareUrl={resultShareHref}
+                shareTitle={compatibility.brandedTestName}
+                shareText={`${compatibility.shareLine}\n${compatibility.currentStateNote}`}
+                shareCardUrl={resultShareHref}
+                personaId={resultId ?? "imairo-placeholder"}
+                shareSurface="result-page"
+                showCopyLink={false}
+              />
+            )}
           </div>
 
           <OpenTestingNotice

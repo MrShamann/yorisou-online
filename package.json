@@ -151,7 +151,9 @@
     "test:arch-p1": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP1StateCheckinEvent.test.ts",
     "test:arch-p2": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP2StateCoreAdapter.test.ts",
     "test:arch-p3": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP3DailyDiscovery.test.ts",
-    "test:arch-p3-db": "bash tests/discovery/postgres-acceptance.sh"
+    "test:arch-p3-db": "bash tests/discovery/postgres-acceptance.sh",
+    "test:arch-p4": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP4SharingCore.test.ts",
+    "test:arch-p4-db": "bash tests/sharing/postgres-acceptance.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1086.0",

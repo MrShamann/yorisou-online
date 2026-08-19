@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { getResultById, listResponsesForResult, deriveCurrentUnderstanding, eraseAssessmentResult, hashClaimToken, getAttemptForToken } from "@/lib/server/assessmentAttemptStore";
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
+import { sharingSchemaReady } from "@/lib/yorisou/sharing/access";
+import { eraseAssessmentResultWithShares } from "@/lib/server/sharing/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,7 +69,25 @@ export async function DELETE(_request: Request, context: Context) {
   const ownerId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   try {
-    const erased = await eraseAssessmentResult(id, ownerId);
+    // SHR-1 — SOURCE ERASURE IS ONE TRANSACTION, NOT A SEQUENCE.
+    //
+    // The first version called revokeBySource and then eraseAssessmentResult as two separate
+    // database transactions. Controller review found two real defects in that: the revoke ran
+    // before ownership had been authoritatively established (and its RPC had no owner predicate at
+    // all, so another person's link could be darkened by guessing their result id), and a publish
+    // committing between the two transactions left an active link attached to an erased source.
+    // Ordering statements in one process is not a concurrency guarantee.
+    //
+    // The atomic seam does all of it inside one transaction holding the source lock: verify live
+    // AND owned first, revoke only this owner's derivatives, tombstone the source so no later
+    // publish can resurrect a link, then run the canonical erasure — rolling back entirely if that
+    // erasure does not succeed. A caller who does not own the result changes nothing anywhere.
+    //
+    // Schema-readiness picks the path: without the SHR-1 migration there is no share store, and no
+    // link could ever have been published, so the plain canonical erasure is the whole job.
+    const erased = sharingSchemaReady()
+      ? await eraseAssessmentResultWithShares(id, ownerId)
+      : await eraseAssessmentResult(id, ownerId);
     if (!erased) return NextResponse.json({ error: "result_not_found" }, { status: 404 });
     // Truthful: the answers, the interpretation responses and the result content are gone —
     // only a content-free tombstone remains.
