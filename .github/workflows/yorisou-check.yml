@@ -59,6 +59,19 @@ jobs:
           psql postgresql://postgres:postgres@localhost:5432/osf1_acceptance -c 'create database dd1_acceptance;'
           npm run test:arch-p3-db
 
+      # SHR-1. The privacy boundary crosses here on purpose, so the proofs are database-level:
+      # RLS and bounded grants, RPC-only mutation, idempotent publish, an IMMUTABLE payload (a
+      # changed card cannot silently replace an active link), owner-only idempotent revoke that a
+      # non-owner cannot perform, transactional publish/revoke audit that is append-only and
+      # content-free, source-result erasure darkening derived links, and account erasure removing
+      # ShareObjects. Its own isolated database, like every other acceptance harness here.
+      - name: sharing.core acceptance (SHR-1 schema, immutability, revoke, audit, erasure)
+        env:
+          SHR1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shr1_acceptance
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/osf1_acceptance -c 'create database shr1_acceptance;'
+          npm run test:arch-p4-db
+
   # OSF-1 GATE 3 — the migration lineage rehearsed forwards AND backwards.
   #
   # Separate from the acceptance job because it proves a different thing. Acceptance proves the
@@ -202,6 +215,9 @@ jobs:
       # closed-by-default gates, and the erasure-plan membership of the new family.
       - name: ARCH-P3 Daily Discovery boundary
         run: npm run test:arch-p3
+
+      - name: ARCH-P4 sharing.core boundary (Imairo ShareObject)
+        run: npm run test:arch-p4
 
       - name: C02 definition and scoring checks
         run: npm run test:c02

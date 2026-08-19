@@ -5,6 +5,10 @@ import { NextResponse } from "next/server";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { getResultById, listResponsesForResult, deriveCurrentUnderstanding, eraseAssessmentResult, hashClaimToken, getAttemptForToken } from "@/lib/server/assessmentAttemptStore";
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
+import { sharingSchemaReady } from "@/lib/yorisou/sharing/access";
+import { revokeSharesBySource } from "@/lib/server/platform/sharingCore/service";
+import { sharingRepository } from "@/lib/server/sharing/store";
+import { IMAIRO_SHARE_SOURCE_FAMILY } from "@/packs/yorisou/imairo/share";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,6 +71,15 @@ export async function DELETE(_request: Request, context: Context) {
   const ownerId = viewer.account?.id || viewer.legacyAccount?.id;
   if (!ownerId) return NextResponse.json({ error: "authentication_required" }, { status: 401 });
   try {
+    // SHR-1 — source-erasure propagation, REVOKE FIRST. A public derivative must not outlive its
+    // source, and revoking before erasing makes that unconditionally true: if revocation fails the
+    // erasure does not run (no dangling public card is possible); if erasure then fails, the
+    // person's shares are dark but the source survives, and they can simply share again. Guarded
+    // by schema readiness: a deployment where the SHR-1 migration was never declared applied has
+    // no share store to revoke against — and could never have published, either.
+    if (sharingSchemaReady()) {
+      await revokeSharesBySource(IMAIRO_SHARE_SOURCE_FAMILY, id, sharingRepository);
+    }
     const erased = await eraseAssessmentResult(id, ownerId);
     if (!erased) return NextResponse.json({ error: "result_not_found" }, { status: 404 });
     // Truthful: the answers, the interpretation responses and the result content are gone —
