@@ -154,6 +154,7 @@
     "test:arch-p3-db": "bash tests/discovery/postgres-acceptance.sh",
     "test:arch-p4": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP4SharingCore.test.ts",
     "test:arch-p5": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP5Connection.test.ts",
+    "test:arch-p6": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP6Continuity.test.ts",
     "test:arch-p4-db": "bash tests/sharing/postgres-acceptance.sh",
     "test:arch-p5-db": "bash tests/connection/postgres-acceptance.sh"
   },

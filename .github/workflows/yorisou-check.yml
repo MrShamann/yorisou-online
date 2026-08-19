@@ -235,6 +235,9 @@ jobs:
       - name: ARCH-P5 connection.core + comparison.core boundary (Imairo pair)
         run: npm run test:arch-p5
 
+      - name: ARCH-P6 continuity.core projection boundary
+        run: npm run test:arch-p6
+
       - name: C02 definition and scoring checks
         run: npm run test:c02
 
