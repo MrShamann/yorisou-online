@@ -289,14 +289,32 @@ begin
     raise exception 'connection_source_not_invitable';
   end if;
 
+  -- EXPIRY IS PART OF THE IDENTITY QUESTION, AND LEAVING IT OUT CREATED A DEAD END.
+  --
+  -- The first version returned ANY row with status='pending', expired or not. Combined with the
+  -- partial unique index — which deliberately excludes expiry so that a live invitation cannot be
+  -- duplicated — that produced an invitation a person could neither use nor replace: on day 8 the
+  -- recipient's link was refused as expired, while the inviter pressing "create" was handed that
+  -- same dead id back forever.
+  --
+  -- So a STILL-OPEN invitation is reused, and an EXPIRED one is retired here, under the source lock
+  -- already held, before a fresh invitation is minted. The old public id is never revived.
   select * into v_row from public.yorisou_connection_invitations
    where inviter_account_id = p_inviter_account_id
      and reference_family = p_reference_family
      and reference_ref = p_reference_ref
-     and status = 'pending';
+     and status = 'pending'
+   for update;
   if found then
-    return query select v_row.public_invite_id, v_row.expires_at, v_row.created_at, true;
-    return;
+    if v_row.expires_at > now() then
+      return query select v_row.public_invite_id, v_row.expires_at, v_row.created_at, true;
+      return;
+    end if;
+    update public.yorisou_connection_invitations
+       set status = 'cancelled', cancelled_at = now()
+     where id = v_row.id;
+    insert into public.yorisou_connection_audit_events (event_type, actor_fingerprint, object_public_ref)
+    values ('connection_cancelled', encode(digest(p_inviter_account_id, 'sha256'), 'hex'), v_row.public_invite_id);
   end if;
 
   insert into public.yorisou_connection_invitations
@@ -340,11 +358,27 @@ $$;
 
 -- ACCEPT. The critical mutation: everything below happens in ONE transaction.
 --
--- Ordering matters and is deliberate. The invitation row is locked FIRST (`for update`), which is
--- what serializes two concurrent acceptors and a racing cancel. Then BOTH assessment source locks
--- are taken IN SORTED ORDER — sorted because two acceptances involving the same two sources from
--- opposite directions would otherwise be a textbook deadlock. Only then is anything verified or
--- written, so no side effect can occur on a losing path.
+-- LOCK ORDER IS THE WHOLE POINT, AND THE FIRST VERSION HAD IT BACKWARDS.
+--
+-- That version locked the invitation row FIRST and then took the assessment source locks. Source
+-- erasure does the opposite — source lock, then UPDATE the pending invitations derived from it —
+-- so the two paths formed a textbook cycle:
+--
+--     accept holds invitation row, waits for source lock
+--     erase  holds source lock,    waits for invitation row      => deadlock detected
+--
+-- Controller review found it, and it reproduces on a real cluster in under a second. The original
+-- RACE D test could not see it because it only ever started the erasure first, which is the safe
+-- interleaving; the dangerous one is accept-first.
+--
+-- The global order is now, everywhere in this file:
+--
+--     SOURCE LOCK(S), in deterministic sorted order   →   INVITATION ROW   →   mutation
+--
+-- Learning WHICH sources to lock needs a read, so there is one NON-LOCKING lookup first. It is
+-- used for exactly one thing: naming the two lock keys. Nothing is authorized from it. After the
+-- locks are held the invitation is re-selected FOR UPDATE and EVERY fact is re-verified against
+-- that authoritative row — including that its source reference is still the one we locked.
 create or replace function public.yorisou_connection_invite_accept(
   p_public_invite_id uuid,
   p_acceptor_account_id text,
@@ -356,6 +390,7 @@ security definer
 set search_path = public
 as $$
 declare
+  v_peek public.yorisou_connection_invitations%rowtype;
   v_inv public.yorisou_connection_invitations%rowtype;
   v_pair public.yorisou_connection_pairs%rowtype;
   v_inviter_code text;
@@ -367,10 +402,43 @@ begin
     raise exception 'connection_invalid_acceptor';
   end if;
 
+  -- STEP 1 — NON-LOCKING PEEK. Its ONLY output is the source reference used to choose lock keys.
+  -- It never authorizes anything: a row read here may be stale by the time the locks are held,
+  -- which is exactly why step 4 re-reads under them.
+  select * into v_peek from public.yorisou_connection_invitations
+   where public_invite_id = p_public_invite_id;
+  if not found then
+    raise exception 'connection_invitation_unavailable';
+  end if;
+  -- Terminal states can be refused without locking; refusing is not authorizing.
+  if v_peek.status = 'cancelled' then
+    raise exception 'connection_invitation_unavailable';
+  end if;
+
+  -- STEP 2/3 — BOTH source locks, sorted. Sorted because two acceptances involving the same two
+  -- sources from opposite directions would otherwise deadlock against each other.
+  if v_peek.reference_ref <= p_acceptor_reference_ref then
+    v_first := v_peek.reference_ref; v_second := p_acceptor_reference_ref;
+  else
+    v_first := p_acceptor_reference_ref; v_second := v_peek.reference_ref;
+  end if;
+  perform public.yorisou_share_source_lock('assessment_result', v_first);
+  if v_second is distinct from v_first then
+    perform public.yorisou_share_source_lock('assessment_result', v_second);
+  end if;
+
+  -- STEP 4 — THE AUTHORITATIVE READ. Everything from here is decided on this row, under the locks.
   select * into v_inv from public.yorisou_connection_invitations
    where public_invite_id = p_public_invite_id
    for update;
   if not found then
+    raise exception 'connection_invitation_unavailable';
+  end if;
+
+  -- The source must still be the one whose lock we hold. Today reference_ref is immutable, so this
+  -- cannot fire — it is here because the correctness of every lock below depends on it, and a
+  -- future column that made it mutable must fail loudly rather than silently lock the wrong key.
+  if v_inv.reference_ref is distinct from v_peek.reference_ref then
     raise exception 'connection_invitation_unavailable';
   end if;
 
@@ -391,17 +459,6 @@ begin
   end if;
   if v_inv.inviter_account_id = p_acceptor_account_id then
     raise exception 'connection_self_accept_forbidden';
-  end if;
-
-  -- Deterministic lock order over the two source references.
-  if v_inv.reference_ref <= p_acceptor_reference_ref then
-    v_first := v_inv.reference_ref; v_second := p_acceptor_reference_ref;
-  else
-    v_first := p_acceptor_reference_ref; v_second := v_inv.reference_ref;
-  end if;
-  perform public.yorisou_share_source_lock('assessment_result', v_first);
-  if v_second is distinct from v_first then
-    perform public.yorisou_share_source_lock('assessment_result', v_second);
   end if;
 
   -- INVARIANT 4: an erased source can never join a pair.

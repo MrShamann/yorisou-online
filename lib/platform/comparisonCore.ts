@@ -86,15 +86,38 @@ export interface ComparisonView {
 }
 
 /**
+ * EXACTLY what a Product Pack adapter is allowed to see.
+ *
+ * `ComparisonInputReference` also carries `participant_ref` and `reference_ref`, which the runtime
+ * needs for authorization and lifecycle. Passing that whole object to pack code made "the adapter
+ * may only read public-safe material" a convention enforced by a comment — the private fields were
+ * right there, and the first adapter obeyed the rule only because it chose to.
+ *
+ * This type is the rule made structural. `toAdapterInput` is the only way to produce one, and it
+ * copies exactly one field, so no account id or private row reference can reach a Product Pack
+ * even by mistake. A future adapter that genuinely needs more must widen THIS type — a reviewable
+ * change to the capability contract, not a quiet read inside a pack.
+ */
+export interface ComparisonAdapterInput {
+  /** The already-public identifier of the referenced material. Nothing else is public-safe. */
+  public_reference: string;
+}
+
+/** Narrow a runtime reference to the public-safe subset a Product Pack may read. */
+export function toAdapterInput(reference: ComparisonInputReference): ComparisonAdapterInput {
+  return { public_reference: reference.public_reference };
+}
+
+/**
  * What a Product Pack supplies. The adapter is the ONLY place meaning enters a comparison: it
- * receives two granted references and returns the five families, in the reader's language.
+ * receives two PUBLIC-SAFE inputs and returns the five families, in the reader's language.
  */
 export interface ComparisonAdapter {
   adapter_ref: string;
   adapter_version: string;
   /** The reference family this adapter understands; a request for any other family is refused. */
   reference_family: string;
-  build(sideA: ComparisonInputReference, sideB: ComparisonInputReference): ComparisonView;
+  build(sideA: ComparisonAdapterInput, sideB: ComparisonAdapterInput): ComparisonView;
 }
 
 /** Upper bound per family — a comparison is a short humane read, not an analysis report. */

@@ -343,6 +343,118 @@ SQL
   fi
 fi
 
+# ── D2 — THE INTERLEAVING THAT DEADLOCKED, constructed so a cycle can actually form. ────────
+#
+# A deadlock needs BOTH sessions waiting. An earlier version of this test held the accept
+# transaction open after its RPC had already finished — holding locks but waiting for nothing — so
+# it could not deadlock under any lock order and passed against the broken code. That is the exact
+# failure mode this suite exists to prevent, so the scenario is now built to make the cycle
+# possible and then assert it does not happen.
+#
+# Session E takes the source lock and PAUSES BEFORE touching the invitation. Session A starts its
+# acceptance during that pause. Under the reviewed head's order (invitation row → source locks) A
+# grabs the invitation row and then waits for E's source lock, while E wakes and waits for A's
+# invitation row: a cycle, and PostgreSQL kills one of them. Under the corrected order (source
+# locks → invitation row) A waits at the source lock holding nothing, so no cycle exists.
+N_RESULT=$(seed_result "acct-n" "MS-KI")
+O_RESULT=$(seed_result "acct-o" "EM-AK")
+if [ -z "$N_RESULT" ] || [ -z "$O_RESULT" ]; then
+  fail "D2 setup: could not seed the accept-first race"
+else
+  INV_D2=$(INVITE "acct-n" "$N_RESULT")
+  if [ -z "$INV_D2" ]; then
+    fail "D2 setup: could not create the invitation"
+  else
+    ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/d2erase.out" 2>&1
+begin;
+select public.yorisou_share_source_lock('assessment_result', '$N_RESULT');
+select pg_sleep(2);
+select public.yorisou_assessment_result_erase_with_derivatives('$N_RESULT'::uuid, 'acct-n');
+commit;
+SQL
+    ) &
+    PE=$!
+    sleep 1
+    # Begins while E holds the source lock and has NOT yet touched the invitation row.
+    psql "$DSN" -q -t -A \
+      -c "select pair_public_id from public.yorisou_connection_invite_accept('$INV_D2'::uuid,'acct-o','$O_RESULT')" \
+      >"$WORK/d2accept.out" 2>&1 || true
+    wait "$PE" || true
+
+    # THE POINT OF THE TEST.
+    if grep -qi "deadlock detected" "$WORK/d2accept.out" "$WORK/d2erase.out"; then
+      fail "D2: DEADLOCK — the accept/erase lock order is inverted" \
+        "$(grep -ih -m1 'deadlock detected' "$WORK/d2accept.out" "$WORK/d2erase.out")"
+    else
+      pass "D2: accept racing source erasure does NOT deadlock"
+    fi
+
+    # Both sessions must actually have run, and the erasure must have committed. A scenario that
+    # silently did not execute is not a proof.
+    grep -q "^t$" "$WORK/d2erase.out" \
+      && pass "D2: the erasure session actually executed and succeeded" \
+      || fail "D2: the erasure did not succeed" "$(head -3 "$WORK/d2erase.out" | tr '\n' ' ')"
+    if grep -qE "^[0-9a-f]{8}-" "$WORK/d2accept.out"; then
+      pass "D2: the acceptance session ran and was serialized behind the erasure"
+    elif grep -qE "connection_(invitation_unavailable|source_erased|inviter_source_unavailable)" "$WORK/d2accept.out"; then
+      pass "D2: the acceptance session ran and was cleanly refused behind the erasure"
+    else
+      fail "D2: the acceptance never executed" "$(head -3 "$WORK/d2accept.out" | tr '\n' ' ')"
+    fi
+
+    # Whichever way it settled, the invariant is the same: nothing readable derives from the
+    # erased source.
+    [ "$(Q "select count(*) from public.yorisou_connection_pairs
+            where status='active'
+              and (participant_a_reference_ref='$N_RESULT' or participant_b_reference_ref='$N_RESULT')")" = "0" ] \
+      && pass "D2: ZERO active pairs derive from the erased source" \
+      || fail "D2: an active pair outlived the erased source"
+    [ "$(Q "select count(*) from public.yorisou_pair_comparisons c
+            join public.yorisou_connection_pairs p on p.id=c.pair_id
+            where (p.participant_a_reference_ref='$N_RESULT' or p.participant_b_reference_ref='$N_RESULT')
+              and (c.invalidated_at is null
+                   or c.side_a_public_reference is not null or c.side_b_public_reference is not null)")" = "0" ] \
+      && pass "D2: no readable comparison, and no retained payload, derives from it" \
+      || fail "D2: comparison payload survived"
+  fi
+fi
+
+echo "[cpr1] stage 5d — expired invitation lifecycle"
+# An expired PENDING invitation must not be handed back forever. The reviewed head returned it,
+# while the partial unique index forbade minting a replacement — a link the recipient could not use
+# and the inviter could not replace.
+P_RESULT=$(seed_result "acct-p" "MS-SZ")
+if [ -z "$P_RESULT" ]; then
+  fail "expiry setup: could not seed a result"
+else
+  INV_E1=$(INVITE "acct-p" "$P_RESULT")
+  INV_E1B=$(INVITE "acct-p" "$P_RESULT")
+  [ "$INV_E1" = "$INV_E1B" ] && pass "E1. an ACTIVE pending invitation is reused (same public id)" \
+    || fail "E1. active reuse" "$INV_E1 vs $INV_E1B"
+
+  # Age it past its expiry.
+  Q "update public.yorisou_connection_invitations set expires_at = now() - interval '1 day'
+      where public_invite_id='$INV_E1'" >/dev/null
+  INV_E2=$(INVITE "acct-p" "$P_RESULT")
+  [ -n "$INV_E2" ] && [ "$INV_E2" != "$INV_E1" ] \
+    && pass "E2. an EXPIRED pending invitation yields a NEW public id" || fail "E2. expired renewal" "$INV_E2"
+  [ "$(Q "select status from public.yorisou_connection_invitations where public_invite_id='$INV_E1'")" = "cancelled" ] \
+    && pass "E2b. the expired invitation is retired, and its old link stays unavailable" \
+    || fail "E2b. expired invite still pending"
+  [ "$(Q "select count(*) from public.yorisou_connection_invitations
+          where inviter_account_id='acct-p' and reference_ref='$P_RESULT' and status='pending'")" = "1" ] \
+    && pass "E2c. exactly ONE pending invitation remains" || fail "E2c. pending invariant broken"
+  DEADLINK=$(TRY "select * from public.yorisou_connection_invite_accept('$INV_E1'::uuid,'acct-o','$O_RESULT')")
+  echo "$DEADLINK" | grep -q "connection_invitation_unavailable" \
+    && pass "E2d. the retired link can no longer be accepted" || fail "E2d. retired link accepted" "$DEADLINK"
+
+  # A cancelled invitation also yields a fresh one.
+  Q "select public.yorisou_connection_invite_cancel('acct-p','$INV_E2'::uuid)" >/dev/null
+  INV_E3=$(INVITE "acct-p" "$P_RESULT")
+  [ -n "$INV_E3" ] && [ "$INV_E3" != "$INV_E2" ] \
+    && pass "E3. after cancelling, a NEW invitation can be created" || fail "E3. post-cancel create" "$INV_E3"
+fi
+
 echo "[cpr1] stage 6 — pair access and dissolution (20-23)"
 # 20/21. A non-participant can neither read nor end the pair. The read is expressed the way the
 # repository expresses it — a participant-filtered query — so this proves the DATA MODEL supports

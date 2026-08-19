@@ -255,12 +255,18 @@ export const connectionRepository: ConnectionRepository = {
 };
 
 /**
- * comparison.core persistence. The comparison is addressed by the pair's INTERNAL id in SQL, but
- * every caller here works in public ids, so the read joins through the pair's public id — and it
- * still requires the caller to have established participation first.
+ * comparison.core persistence, PARTICIPANT-SCOPED.
+ *
+ * The comparison is addressed by the pair's internal id in SQL while every caller works in public
+ * ids, so the read joins through the pair — and the join carries the participant predicate. That
+ * is the whole point: the previous signature took only the pair id and depended on the caller
+ * having checked participation, which made the privacy boundary a convention between files.
  */
-export async function comparisonForPair(pairPublicId: string): Promise<ComparisonRecord | null> {
-  if (!UUID_RE.test(pairPublicId)) return null;
+export async function comparisonForPair(
+  viewerRef: string,
+  pairPublicId: string,
+): Promise<ComparisonRecord | null> {
+  if (!viewerRef || !UUID_RE.test(pairPublicId)) return null;
   const params = new URLSearchParams({
     select:
       "adapter_ref,adapter_version,reference_family,side_a_public_reference,side_b_public_reference,created_at," +
@@ -269,6 +275,11 @@ export async function comparisonForPair(pairPublicId: string): Promise<Compariso
     invalidated_at: "is.null",
     [`${PAIRS}.pair_public_id`]: `eq.${pairPublicId}`,
     [`${PAIRS}.status`]: "eq.active",
+    // THE PRIVACY BOUNDARY, IN THE QUERY. A non-participant gets no row back at all — the server
+    // never holds the two account ids or the two private source references in the first place, so
+    // there is nothing for a later caller to forget to strip.
+    [`${PAIRS}.or`]:
+      `(participant_a_account_id.eq.${viewerRef},participant_b_account_id.eq.${viewerRef})`,
     limit: "1",
   });
   const response = await request(`${COMPARISONS}?${params}`, { method: "GET" });
@@ -287,6 +298,11 @@ export async function comparisonForPair(pairPublicId: string): Promise<Compariso
   // An invalidated comparison has its codes cleared; treat a missing code as "no longer readable"
   // rather than rendering a half-empty pair view.
   if (!pair || !row.side_a_public_reference || !row.side_b_public_reference) return null;
+  // Belt and braces: the query already scoped this, and the result is re-checked because a
+  // silently-changed embed filter would otherwise widen the read without failing anything.
+  if (pair.participant_a_account_id !== viewerRef && pair.participant_b_account_id !== viewerRef) {
+    return null;
+  }
   return {
     pair_ref: pairPublicId,
     adapter_ref: row.adapter_ref,

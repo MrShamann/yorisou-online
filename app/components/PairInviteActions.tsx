@@ -13,10 +13,12 @@ import { useState } from "react";
 // There is no email, SMS or LINE integration here, and no "invite more friends" prompt.
 
 export default function PairInviteActions({ resultRowId }: { resultRowId: string }) {
-  const [stage, setStage] = useState<"idle" | "explaining" | "ready">("idle");
+  const [stage, setStage] = useState<"idle" | "explaining" | "ready" | "cancelled">("idle");
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [inviteId, setInviteId] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function create() {
@@ -29,7 +31,11 @@ export default function PairInviteActions({ resultRowId }: { resultRowId: string
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resultRowId }),
       });
-      const data = (await response.json().catch(() => ({}))) as { invite_path?: string; error?: string };
+      const data = (await response.json().catch(() => ({}))) as {
+        invite_path?: string;
+        public_invite_id?: string;
+        error?: string;
+      };
       if (!response.ok || !data.invite_path) {
         setError(
           data.error === "connection_source_not_invitable"
@@ -40,6 +46,9 @@ export default function PairInviteActions({ resultRowId }: { resultRowId: string
         return;
       }
       setInviteUrl(new URL(data.invite_path, window.location.origin).toString());
+      setInviteId(data.public_invite_id ?? null);
+      setCopied(false);
+      setConfirmingCancel(false);
       setStage("ready");
     } catch {
       setError("通信できませんでした。時間をおいて試してみてください。");
@@ -57,6 +66,33 @@ export default function PairInviteActions({ resultRowId }: { resultRowId: string
     }
   }
 
+  // WITHOUT THIS, THE INVITATION WAS NOT ACTUALLY REVOCABLE.
+  //
+  // The cancel endpoint existed from the start, but nothing in the product could reach it: the
+  // ready state offered only copy and share. A link the person cannot withdraw is not a bounded,
+  // cancelable invitation however the backend describes it — so the control lives here, next to
+  // the link it withdraws.
+  async function cancel() {
+    if (!inviteId || pending) return;
+    setPending(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/connect/invite/${inviteId}/cancel`, { method: "POST" });
+      if (!response.ok) {
+        setError("いま取り消せませんでした。時間をおいて試してみてください。");
+        setPending(false);
+        return;
+      }
+      setInviteUrl(null);
+      setInviteId(null);
+      setConfirmingCancel(false);
+      setStage("cancelled");
+    } catch {
+      setError("通信できませんでした。時間をおいて試してみてください。");
+    }
+    setPending(false);
+  }
+
   async function share() {
     if (!inviteUrl || typeof navigator.share !== "function") return;
     try {
@@ -64,6 +100,23 @@ export default function PairInviteActions({ resultRowId }: { resultRowId: string
     } catch {
       // A cancelled share sheet is a normal outcome, not an error worth showing.
     }
+  }
+
+  if (stage === "cancelled") {
+    return (
+      <div>
+        <p className="text-[14px] leading-[1.85] text-[var(--pxr-text-secondary)]">
+          招待を取り消しました。このリンクはもう開けません。
+        </p>
+        <button
+          type="button"
+          onClick={() => setStage("explaining")}
+          className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-full border border-[var(--pxr-border-subtle)] px-6 text-[14px] font-semibold text-[var(--pxr-text-primary)]"
+        >
+          新しい招待リンクを作る
+        </button>
+      </div>
+    );
   }
 
   if (stage === "idle") {
@@ -143,6 +196,41 @@ export default function PairInviteActions({ resultRowId }: { resultRowId: string
           </button>
         ) : null}
       </div>
+
+      {confirmingCancel ? (
+        <div className="mt-5 border-t border-[var(--pxr-border-subtle)] pt-4">
+          <p className="text-[13.5px] leading-[1.85] text-[var(--pxr-text-primary)]">
+            取り消すと、このリンクは開けなくなります。よろしいですか。
+          </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={cancel}
+              disabled={pending}
+              className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-[var(--pxr-border-subtle)] px-6 text-[14px] font-semibold text-[var(--pxr-text-primary)] disabled:opacity-60"
+            >
+              {pending ? "取り消しています…" : "取り消す"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingCancel(false)}
+              disabled={pending}
+              className="inline-flex min-h-[48px] items-center justify-center rounded-full px-5 text-[14px] font-semibold text-[var(--pxr-text-secondary)] disabled:opacity-60"
+            >
+              もどる
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirmingCancel(true)}
+          className="mt-5 inline-flex min-h-[48px] items-center justify-center rounded-full px-5 text-[13.5px] font-semibold text-[var(--pxr-text-secondary)]"
+        >
+          招待を取り消す
+        </button>
+      )}
+
       {error ? (
         <p role="alert" className="mt-3 text-[13.5px] leading-[1.8] text-[var(--pxr-text-secondary)]">
           {error}

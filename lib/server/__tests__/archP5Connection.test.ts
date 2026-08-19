@@ -20,6 +20,7 @@ import {
   COMPARISON_OUTPUT_FAMILIES,
   assertComparisonViewShape,
   assertDistinctParticipants,
+  toAdapterInput,
   type ComparisonInputReference,
 } from "@/lib/platform/comparisonCore";
 import {
@@ -28,7 +29,7 @@ import {
   isPairParticipant,
   type PairContext,
 } from "@/lib/platform/connectionCore";
-import { buildComparison, renderComparisonFor } from "@/lib/server/platform/comparisonCore/service";
+import { buildComparison, readComparison, renderComparisonFor } from "@/lib/server/platform/comparisonCore/service";
 import {
   assertNoForbiddenPairLanguage,
   imairoPairAdapter,
@@ -592,6 +593,123 @@ test("isInvitationOpen refuses expired and non-pending invitations", () => {
   assert.equal(isInvitationOpen({ status: "pending", expires_at: "2026-08-18T00:00:00.000Z" }, now), false);
   assert.equal(isInvitationOpen({ status: "accepted", expires_at: "2026-08-26T00:00:00.000Z" }, now), false);
   assert.equal(isInvitationOpen({ status: "cancelled", expires_at: "2026-08-26T00:00:00.000Z" }, now), false);
+});
+
+// ─── REMEDIATION GUARDS (Controller review of 6ddcb9f) ──────────────────────
+
+test("R1. the global lock order is source locks BEFORE the invitation row", () => {
+  // The reviewed head locked the invitation row first and then the source locks, while source
+  // erasure locks the source and then updates the invitation — a cycle that deadlocks on a real
+  // cluster. The ordering is asserted here as a structural fact because a future edit that moves
+  // the FOR UPDATE back above the locks would reintroduce it silently.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const accept = /create or replace function public\.yorisou_connection_invite_accept\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(accept, "the accept function is missing");
+  const body = accept[1];
+  const firstLock = body.indexOf("yorisou_share_source_lock");
+  const forUpdate = body.indexOf("for update");
+  assert.ok(firstLock > 0, "accept takes no source lock");
+  assert.ok(forUpdate > 0, "accept never locks the invitation row");
+  assert.ok(
+    firstLock < forUpdate,
+    "accept locks the invitation row BEFORE the source locks — that is the deadlock ordering",
+  );
+  // And the peek that chooses the lock keys must not itself lock.
+  const peek = body.indexOf("select * into v_peek");
+  assert.ok(peek > 0 && peek < firstLock, "the non-locking peek must come first and stay non-locking");
+  assert.ok(!/into v_peek[\s\S]{0,200}?for update/.test(body), "the peek must not take a row lock");
+});
+
+test("R2. an EXPIRED pending invitation is retired and replaced, never handed back", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const create = /create or replace function public\.yorisou_connection_invite_create\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(create, "the create function is missing");
+  const body = create[1];
+  assert.ok(/if v_row\.expires_at > now\(\) then/.test(body), "create does not check expiry before reuse");
+  assert.ok(
+    /set status = 'cancelled', cancelled_at = now\(\)/.test(body),
+    "create does not retire the expired invitation",
+  );
+});
+
+test("R3. the private comparison read REQUIRES a viewer and scopes the query", () => {
+  const service = read("lib/server/platform/comparisonCore/service.ts");
+  assert.ok(
+    /forPair\(viewerRef: string, pairRef: string\)/.test(service),
+    "the comparison repository contract must require viewer identity",
+  );
+  assert.ok(/readComparison\(\s*viewerRef: string,\s*pairRef: string,/.test(service));
+
+  const store = read("lib/server/connection/store.ts");
+  const fn = /export async function comparisonForPair\(([\s\S]*?)\n\}/.exec(store);
+  assert.ok(fn, "comparisonForPair is missing");
+  assert.ok(
+    /participant_a_account_id\.eq\.\$\{viewerRef\}/.test(fn[1]) &&
+      /participant_b_account_id\.eq\.\$\{viewerRef\}/.test(fn[1]),
+    "the comparison query carries no participant predicate — this is call-order authorization",
+  );
+  // The page must not be the thing that makes it safe.
+  const page = read("app/connect/pair/[pairId]/page.tsx");
+  assert.ok(/readComparison\(accountId, pairId, comparisonRepository\)/.test(page));
+});
+
+test("R3. a non-participant calling the comparison repository directly receives nothing", async () => {
+  // Exercised against the abstraction rather than the page, which is the whole point of the fix.
+  const record = {
+    pair_ref: "pair-1",
+    adapter_ref: imairoPairAdapter.adapter_ref,
+    adapter_version: "1.0.0",
+    reference_family: IMAIRO_PAIR_REFERENCE_FAMILY,
+    side_a: side("acct-a", SAME_A),
+    side_b: side("acct-b", OTHER_CLAN),
+    created_at: "2026-08-19T00:00:00.000Z",
+  };
+  const repository = {
+    // A faithful stand-in for the scoped query: no row unless the viewer is a participant.
+    forPair: async (viewerRef: string, pairRef: string) =>
+      pairRef === record.pair_ref &&
+      [record.side_a.participant_ref, record.side_b.participant_ref].includes(viewerRef)
+        ? record
+        : null,
+  };
+  assert.equal(await readComparison("acct-c", "pair-1", repository), null);
+  assert.equal(await readComparison("", "pair-1", repository), null);
+  assert.notEqual(await readComparison("acct-b", "pair-1", repository), null);
+});
+
+test("R4. a Product Pack adapter can see ONLY public-safe input", () => {
+  const contract = read("lib/platform/comparisonCore.ts");
+  const input = /export interface ComparisonAdapterInput \{([\s\S]*?)\n\}/.exec(contract);
+  assert.ok(input, "ComparisonAdapterInput is missing");
+  const fields = [...input[1].matchAll(/^\s{2}([a-z_]+):/gm)].map((m) => m[1]);
+  assert.deepEqual(fields, ["public_reference"], "the adapter-facing type carries more than the public code");
+
+  // The runtime narrows before crossing the tier.
+  const service = read("lib/server/platform/comparisonCore/service.ts");
+  assert.ok(
+    /adapter\.build\(toAdapterInput\(request\.side_a\), toAdapterInput\(request\.side_b\)\)/.test(service),
+    "the runtime hands the pack a full reference instead of narrowing it",
+  );
+
+  // And what actually reaches the pack at runtime has one key.
+  const narrowed = toAdapterInput(side("acct-a", SAME_A));
+  assert.deepEqual(Object.keys(narrowed), ["public_reference"]);
+  const serialized = JSON.stringify(narrowed);
+  assert.ok(!serialized.includes("acct-a") && !serialized.includes("row-acct-a"));
+});
+
+test("R4. the inviter can actually revoke the invitation from the product", () => {
+  const actions = read("app/components/PairInviteActions.tsx");
+  assert.ok(
+    /fetch\(`\/api\/connect\/invite\/\$\{inviteId\}\/cancel`, \{ method: "POST" \}\)/.test(actions),
+    "the invite UI never calls the cancel endpoint — the invitation is not revocable in product",
+  );
+  assert.ok(/招待を取り消す/.test(actions), "there is no cancel affordance");
+  // After cancelling, the link stops being actionable and a fresh one can be created.
+  assert.ok(/setInviteUrl\(null\)/.test(actions) && /stage === "cancelled"/.test(actions));
+  assert.ok(/新しい招待リンクを作る/.test(actions));
 });
 
 // ─── the migration is registered ────────────────────────────────────────────

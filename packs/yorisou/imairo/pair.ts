@@ -23,7 +23,7 @@
 import {
   COMPARISON_OUTPUT_FAMILIES,
   type ComparisonAdapter,
-  type ComparisonInputReference,
+  type ComparisonAdapterInput,
   type ComparisonView,
 } from "@/lib/platform/comparisonCore";
 import { findPublicArchetypeByCode } from "@/lib/yorisou/public-result/taxonomy";
@@ -86,11 +86,13 @@ export function assertNoForbiddenPairLanguage(line: string): void {
 type Assignment = NonNullable<ReturnType<typeof findPublicArchetypeByCode>>;
 
 /**
- * The adapter reads `public_reference` — the already-public Imairo result code — and NOTHING else.
- * It deliberately never touches `reference_ref`, the private row reference, so no private id can
- * reach a rendered line even by mistake.
+ * The adapter reads `public_reference` — the already-public Imairo result code.
+ *
+ * It cannot read anything else: `ComparisonAdapterInput` has no other field. That is deliberate,
+ * and it replaced a comment promising the same thing while the private row reference was sitting
+ * in the parameter object.
  */
-function assignmentFor(side: ComparisonInputReference): Assignment {
+function assignmentFor(side: ComparisonAdapterInput): Assignment {
   const assignment = findPublicArchetypeByCode(side.public_reference);
   if (!assignment) throw new Error("imairo_pair_unassigned_result");
   return assignment;
@@ -157,7 +159,7 @@ export const imairoPairAdapter: ComparisonAdapter = {
   adapter_ref: IMAIRO_PAIR_ADAPTER_REF,
   adapter_version: IMAIRO_PAIR_ADAPTER_VERSION,
   reference_family: IMAIRO_PAIR_REFERENCE_FAMILY,
-  build(sideA: ComparisonInputReference, sideB: ComparisonInputReference): ComparisonView {
+  build(sideA: ComparisonAdapterInput, sideB: ComparisonAdapterInput): ComparisonView {
     const a = assignmentFor(sideA);
     const b = assignmentFor(sideB);
     const view: ComparisonView = {

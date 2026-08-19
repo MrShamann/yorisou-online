@@ -48,8 +48,10 @@ export default async function ConnectPairPage(context: Context) {
   let connection;
   let record;
   try {
+    // BOTH reads are participant-scoped independently. The connection read is what this page needs
+    // for its own rendering; the comparison read no longer depends on it having happened first.
     connection = await readConnection(accountId, pairId, connectionRepository);
-    record = connection ? await readComparison(pairId, comparisonRepository) : null;
+    record = await readComparison(accountId, pairId, comparisonRepository);
   } catch {
     connection = null;
     record = null;

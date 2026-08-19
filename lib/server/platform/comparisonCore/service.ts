@@ -23,6 +23,7 @@ import "server-only";
 import {
   assertComparisonViewShape,
   assertDistinctParticipants,
+  toAdapterInput,
   type ComparisonAdapter,
   type ComparisonInputReference,
   type ComparisonRequest,
@@ -45,8 +46,17 @@ export interface ComparisonRecord {
 }
 
 export interface ComparisonRepository {
-  /** Read a pair's comparison — callers MUST have already established participation. */
-  forPair(pairRef: string): Promise<ComparisonRecord | null>;
+  /**
+   * Read a pair's comparison AS A PARTICIPANT. Returns null for anyone else.
+   *
+   * The viewer is part of the signature because the first version was not: it took the pair
+   * reference alone and relied on the caller having checked participation first. That is
+   * call-order authorization, not a boundary — every future caller would have had to remember an
+   * unwritten precondition, and the one that forgot would silently read both participants'
+   * account ids and private source references. The implementation MUST carry the participant
+   * predicate in the query itself, not filter after reading.
+   */
+  forPair(viewerRef: string, pairRef: string): Promise<ComparisonRecord | null>;
 }
 
 /**
@@ -69,7 +79,10 @@ export function buildComparison(request: ComparisonRequest, adapter: ComparisonA
   if (request.adapter_ref !== adapter.adapter_ref) {
     throw new Error("comparison_adapter_mismatch");
   }
-  const view = adapter.build(request.side_a, request.side_b);
+  // NARROWED BEFORE IT CROSSES THE TIER. The pack receives public-safe inputs only; the
+  // participant and private source references stay inside comparison.core, where authorization
+  // and lifecycle need them.
+  const view = adapter.build(toAdapterInput(request.side_a), toAdapterInput(request.side_b));
   // The adapter is Product Pack code, so its output is validated rather than trusted — this is
   // the guard that makes "exactly five families, no score" a runtime fact.
   assertComparisonViewShape(view);
@@ -103,10 +116,18 @@ export function renderComparisonFor(
   );
 }
 
-/** Read one pair's stored comparison. Participation is the CALLER's precondition, not this one's. */
+/**
+ * Read one pair's stored comparison as a participant.
+ *
+ * Participation is enforced by the repository query, so this is safe to call without having
+ * established it beforehand — a non-participant receives null, which is the same answer as a pair
+ * that does not exist.
+ */
 export function readComparison(
+  viewerRef: string,
   pairRef: string,
   repository: ComparisonRepository,
 ): Promise<ComparisonRecord | null> {
-  return repository.forPair(pairRef);
+  if (!viewerRef) return Promise.resolve(null);
+  return repository.forPair(viewerRef, pairRef);
 }
