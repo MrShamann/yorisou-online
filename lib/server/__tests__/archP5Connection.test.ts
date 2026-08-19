@@ -825,30 +825,95 @@ test("R7. account erasure may still remove owner-linked tombstones, and sharing 
   }
 });
 
-test("R8. ownership-creating assessment mutations take POR-1 authority BEFORE the attempt row", () => {
-  // The premise account erasure rests on is that its owned-source set stops growing. Two canonical
-  // mutations could grow it and were unfenced; a claim issued mid-deletion left the DELETED account
-  // owning a live attempt and result on a real cluster. The gate must come BEFORE the attempt row,
-  // because deletion closes the gate first and touches attempts later.
+test("R8. the POR-1 fence for assessment mutations lives at the APPLICATION boundary, never in SQL", () => {
+  // THIS ASSERTION IS THE INVERSE OF THE ONE IT REPLACES, and the reason matters.
+  //
+  // An earlier remediation acquired the lease inside the SQL functions, "before the attempt row".
+  // A three-session PostgreSQL test showed that a lease created in the same transaction as the
+  // business mutation is UNCOMMITTED and therefore invisible to the deletion executor's crossing
+  // guard, which counts visible unreleased leases. POR-1's contract is a lease taken over the
+  // transport — one RPC that commits — so it is visible before the mutation begins.
   const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
-  for (const name of ["yorisou_attempt_claim", "yorisou_attempt_complete"]) {
-    const fn = new RegExp(`create or replace function public\\.${name}\\(([\\s\\S]*?)\\n\\$\\$;`).exec(migration);
-    assert.ok(fn, `${name} is not re-emitted in the P5 migration`);
-    const body = fn[1];
-    const gateAt = body.indexOf("yorisou_account_mutation_begin");
-    const lockAt = body.indexOf("for update");
-    assert.ok(gateAt > 0, `${name} does not take a POR-1 mutation lease`);
-    assert.ok(lockAt > 0, `${name} no longer locks the attempt row`);
-    assert.ok(gateAt < lockAt, `${name} locks the attempt BEFORE the gate — that is the inverted order`);
-    assert.ok(/yorisou_account_mutation_release/.test(body), `${name} never releases its lease`);
+
+  // No SQL function anywhere may create or release a POR-1 lease.
+  for (const file of readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql"))) {
+    const sql = read(join("supabase/migrations", file));
+    const body = sql
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n");
+    const calls = [...body.matchAll(/public\.yorisou_account_mutation_(begin|release)\s*\(/g)];
+    const defs = [...body.matchAll(/function public\.yorisou_account_mutation_(begin|release)\s*\(/gi)];
+    const grants = [...body.matchAll(/(revoke|grant)[^\n]*yorisou_account_mutation_(begin|release)/gi)];
+    assert.ok(
+      calls.length <= defs.length + grants.length,
+      `${file} calls a POR-1 lease function from inside SQL — the lease would be uncommitted`,
+    );
   }
-  // The anonymous completion path must stay lease-free: there is no account to fence.
-  const complete = /create or replace function public\.yorisou_attempt_complete\(([\s\S]*?)\n\$\$;/.exec(migration);
-  assert.ok(complete, "attempt_complete is not re-emitted");
-  assert.ok(/if p_owner_account_id is not null and length\(p_owner_account_id\) > 0 then/.test(complete[1]));
-  // The merged migration that defines them is untouched.
-  const merged = read("supabase/migrations/202608010101_por1_canonical_assessment_and_interpretation.sql");
-  assert.ok(!/yorisou_account_mutation_begin/.test(merged), "the merged canonical assessment migration was edited");
+  assert.ok(
+    !/create or replace function public\.yorisou_attempt_(claim|complete)\(/.test(migration),
+    "the P5 migration re-emits a canonical assessment mutation; it must leave them untouched",
+  );
+
+  // The fence exists at the application boundary and wraps BOTH mutations.
+  const fenced = read("lib/server/assessment/fencedAttemptMutations.ts");
+  assert.ok(/withAccountMutationLease/.test(fenced), "the fenced seam takes no POR-1 lease");
+  assert.ok(/operation: "assessment_attempt_claim"/.test(fenced));
+  assert.ok(/operation: "assessment_attempt_complete"/.test(fenced));
+  // The anonymous completion path must stay unfenced — there is no account to fence.
+  assert.ok(/if \(!accountId\) return completeAttempt\(input\)/.test(fenced));
+
+  // And no route may reach the unfenced mutations directly.
+  const routes = [
+    "app/api/assessment/results/[id]/claim/route.ts",
+    "app/api/assessment/attempts/[id]/claim/route.ts",
+    "app/api/assessment/attempts/[id]/complete/route.ts",
+  ];
+  for (const route of routes) {
+    const source = code(route);
+    assert.ok(/Fenced\(/.test(source), `${route} does not use the fenced seam`);
+    assert.ok(
+      !/\b(claimAttempt|completeAttempt)\(/.test(source),
+      `${route} calls an UNFENCED assessment mutation directly`,
+    );
+  }
+});
+
+test("R8b. the raw assessment mutations are reachable ONLY through the fenced seam", () => {
+  // BYPASS IS THE STANDING RISK OF THIS DESIGN, and it is worth naming plainly. Moving the fence to
+  // the application boundary is what POR-1's contract requires, but it also means the SQL functions
+  // no longer defend themselves: a future caller importing claimAttempt directly would be unfenced.
+  //
+  // This guard is the compensating control. It is a structural test, not a database invariant —
+  // weaker than an in-database check, and deliberately recorded as such — but it fails loudly the
+  // moment a second importer appears.
+  const roots = ["app", "lib", "packs"];
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === "__tests__") continue;
+        walk(full);
+      } else if (/\.tsx?$/.test(entry.name)) {
+        files.push(full);
+      }
+    }
+  };
+  for (const root of roots) walk(root);
+
+  // Anyone importing the raw mutations FROM THE SERVER STORE must be the fenced seam.
+  const importers = files.filter((file) => {
+    const source = read(file);
+    return /import\s*\{[^}]*\b(claimAttempt|completeAttempt)\b[^}]*\}\s*from\s*["'][^"']*assessmentAttemptStore["']/.test(
+      source,
+    );
+  });
+  assert.deepEqual(
+    importers,
+    ["lib/server/assessment/fencedAttemptMutations.ts"],
+    "the raw assessment mutations gained an importer outside the fenced seam — that path is UNFENCED",
+  );
 });
 
 test("R8. the lease vocabulary stays a CLOSED set, extended by exactly two tokens", () => {
@@ -904,8 +969,6 @@ test("R10. the migration rollback contract names every pre-existing contract it 
   // Every pre-existing contract whose BODY this migration replaces must be named for restoration.
   for (const replaced of [
     "yorisou_share_object_publish",
-    "yorisou_attempt_claim",
-    "yorisou_attempt_complete",
     "yorisou_account_deletion_erase_database_unchecked",
   ]) {
     assert.ok(
@@ -932,6 +995,63 @@ test("R10. the migration rollback contract names every pre-existing contract it 
   assert.ok(
     !/re-apply 202608180002's erasure block/.test(header),
     "the rollback still claims re-applying an earlier migration is a rollback mechanism",
+  );
+});
+
+test("R11. the writer-first proofs drive the CANONICAL lifecycle, with no raw job UPDATE", () => {
+  // The first version of H2/I2 forced the job to database_erasure with a raw UPDATE after the
+  // drain. That reduced an end-to-end lifecycle-ordering proof to "test-forced transition, then
+  // erase" — it proved the wrong thing, in the one place where the ordering IS the claim.
+  const harness = read("tests/connection/postgres-acceptance.sh");
+
+  // No test SQL may write the deletion job's state, cursor or irreversible marker.
+  for (const forbidden of [
+    /update\s+public\.yorisou_account_deletion_jobs/i,
+    /set\s+state\s*=\s*'database_erasure'/i,
+    /irreversible_started_at\s*=\s*now\(\)/i,
+    /GO_IRREVERSIBLE/,
+  ]) {
+    assert.ok(!forbidden.test(harness), `the harness still forces the deletion lifecycle: ${forbidden}`);
+  }
+
+  // Every canonical transition the real executor uses must appear.
+  for (const canonical of [
+    "yorisou_account_deletion_open",
+    "yorisou_account_deletion_advance",
+    "yorisou_account_deletion_executor_claim",
+    "yorisou_account_deletion_manifest_put",
+    "yorisou_account_deletion_drain_gate",
+    "yorisou_account_deletion_complete_step",
+    "yorisou_account_deletion_erase_database",
+  ]) {
+    assert.ok(harness.includes(canonical), `the harness never calls canonical ${canonical}`);
+  }
+  // The cursor walk must be the real one, one forward step at a time.
+  for (const step of ["'mutation_draining','lock_marker'", "'lock_marker','session_revocation'",
+                      "'session_revocation','database_erasure'"]) {
+    assert.ok(harness.includes(step), `the canonical cursor walk is missing ${step}`);
+  }
+
+  // Ordering must come from a latch and deterministic markers, not from elapsed time.
+  assert.ok(!/pg_sleep\(6\)/.test(harness), "a sleep is still the writer's hold mechanism");
+  assert.ok(/WAIT_FOR_FILE/.test(harness) && /\.ready/.test(harness) && /\.release/.test(harness),
+    "the writer latch and its readiness marker are missing");
+
+  // THE LEASE MUST BE COMMITTED BEFORE THE BUSINESS MUTATION, which is the whole R7 correction.
+  // An in-transaction lease is invisible to the deletion executor; a committed one is not, and the
+  // decisive evidence is that the crossing is REFUSED while it lives.
+  assert.ok(/LEASE_BEGIN\(\)/.test(harness), "the writer does not acquire its lease over the transport");
+  assert.ok(
+    /committed lease VISIBLE to another session/.test(harness),
+    "the harness never proves the lease is visible to an independent session",
+  );
+  assert.ok(
+    /canonical crossing REFUSED while the lease is outstanding/.test(harness),
+    "the harness never proves the irreversible crossing is refused by a live lease",
+  );
+  assert.ok(
+    /drain reports NOT drained while the writer's lease is active/.test(harness),
+    "the harness never proves the deletion executor sees the live lease",
   );
 });
 

@@ -917,11 +917,18 @@ else
   if [ -z "$H_JOB" ]; then
     fail "RACE H setup: could not arm the deletion job"
   else
-    # The account is at the irreversible stage: the fence must refuse the claim outright.
-    H_CLAIM=$(TRY "select public.yorisou_attempt_claim('$H_ATT'::uuid,'$H_TOKEN','acct-h1')")
-    echo "$H_CLAIM" | grep -qE "account_mutation_denied" \
-      && pass "RACE H: a claim during account erasure is refused by the POR-1 fence" \
-      || fail "RACE H: the claim was not fenced" "$(echo "$H_CLAIM" | head -1)"
+    # THE FENCE IS THE LEASE ACQUISITION, and it is checked where POR-1 puts it.
+    #
+    # The canonical yorisou_attempt_claim is deliberately NOT fenced in SQL — an earlier revision
+    # tried that and produced an uncommitted, invisible lease. The application takes the lease over
+    # the transport first (lib/server/assessment/fencedAttemptMutations.ts), so what must be refused
+    # for a deleting account is the lease itself. If the lease is denied, the mutation never runs.
+    H_LEASE=$(TRY "select public.yorisou_account_mutation_begin('acct-h1','assessment_attempt_claim',120)")
+    echo "$H_LEASE" | grep -qE "account_mutation_denied" \
+      && pass "RACE H: the claim LEASE is refused during account erasure — the mutation never starts" \
+      || fail "RACE H: the claim was not fenced" "$(echo "$H_LEASE" | head -1)"
+    [ "$(Q "select count(*) from public.yorisou_account_mutation_leases where owner_account_id='acct-h1' and released_at is null and drained_at is null")" = "0" ] \
+      && pass "RACE H: no lease exists, so the fenced path cannot proceed" || fail "RACE H: a lease was granted"
     [ "$(Q "select count(*) from public.yorisou_assessment_attempts where owner_account_id='acct-h1'")" = "0" ] \
       && pass "RACE H: NO attempt became owned by the deleting account" || fail "RACE H: attempt ownership resurrected"
     [ "$(Q "select count(*) from public.yorisou_assessment_results where owner_account_id='acct-h1' and deleted_at is null")" = "0" ] \
@@ -949,11 +956,13 @@ else
   if [ -z "$I_JOB" ]; then
     fail "RACE I setup: could not arm the deletion job"
   else
-    I_DONE=$(TRY "select public.yorisou_attempt_complete('$I_ATT'::uuid, null, 'acct-i1',
-                    '{\"q1\":1}'::jsonb, 1, 'MS-KI', null, '{\"v\":\"pds-v1\"}'::jsonb, 'sv-1', 'rsv-1')")
-    echo "$I_DONE" | grep -qE "account_mutation_denied" \
-      && pass "RACE I: an account-bound completion during erasure is refused by the fence" \
-      || fail "RACE I: the completion was not fenced" "$(echo "$I_DONE" | head -1)"
+    # Same boundary: the account-bound completion cannot obtain its lease, so it never runs.
+    I_LEASE=$(TRY "select public.yorisou_account_mutation_begin('acct-i1','assessment_attempt_complete',120)")
+    echo "$I_LEASE" | grep -qE "account_mutation_denied" \
+      && pass "RACE I: the completion LEASE is refused during account erasure" \
+      || fail "RACE I: the completion was not fenced" "$(echo "$I_LEASE" | head -1)"
+    [ "$(Q "select count(*) from public.yorisou_account_mutation_leases where owner_account_id='acct-i1' and released_at is null and drained_at is null")" = "0" ] \
+      && pass "RACE I: no lease exists, so no new owned source can be created" || fail "RACE I: a lease was granted"
     [ "$(Q "select count(*) from public.yorisou_assessment_results where owner_account_id='acct-i1'")" = "0" ] \
       && pass "RACE I: NO new owned result escaped the source-lock snapshot" || fail "RACE I: a late result appeared"
     I_ERASE=$(CHECKED_ERASE "$I_JOB" "acct-i1")
@@ -993,10 +1002,15 @@ if [ -n "$N_ATT" ]; then
       dimension_output,visibility,produced_at)
      values (gen_random_uuid(),'$N_ATT'::uuid,null,'imairo-120q','compat-v0.2','MS-SZ','MS-SZ',
              '{\"v\":\"pds-v1\"}'::jsonb,'private',now())" >/dev/null
+  # A healthy account: the lease is GRANTED, the mutation runs, and the lease is released — the
+  # full application shape, not just the raw RPC.
+  N_LEASE=$(Q "select public.yorisou_account_mutation_begin('acct-normal','assessment_attempt_claim',120)->>'leaseId'")
+  [ -n "$N_LEASE" ] && pass "a healthy account is GRANTED the claim lease (the fence is not a blanket block)" \
+    || fail "the fence denied a healthy account"
   N_OUT=$(TRY "select public.yorisou_attempt_claim('$N_ATT'::uuid,'$N_TOKEN','acct-normal')")
   echo "$N_OUT" | grep -qE "^[0-9a-f]{8}-" \
-    && pass "a healthy account can still claim (the fence is not a blanket block)" \
-    || fail "the fence broke ordinary claiming" "$(echo "$N_OUT" | head -1)"
+    && pass "the fenced claim then succeeds" || fail "the fence broke ordinary claiming" "$(echo "$N_OUT" | head -1)"
+  [ -n "$N_LEASE" ] && Q "select public.yorisou_account_mutation_release('$N_LEASE'::uuid)" >/dev/null
   [ "$(Q "select count(*) from public.yorisou_account_mutation_leases where owner_account_id='acct-normal' and released_at is null")" = "0" ] \
     && pass "the successful claim released its lease" || fail "a successful claim stranded its lease"
 fi
@@ -1049,53 +1063,48 @@ else
   fi
 fi
 
-echo "[cpr1] stage 8d — WRITER-FIRST: deletion must drain the writer, not race it (H2, I2)"
+echo "[cpr1] stage 8d — WRITER-FIRST with a COMMITTED lease, canonical lifecycle (H2, I2)"
 
-# H/I above prove DELETION-FIRST: a new writer is refused. They do NOT prove the other direction —
-# that a writer which already holds its lease is allowed to finish, and that whatever source it
-# creates or reassigns is then included in the erasure. Both directions together are the fence
-# semantics; one alone is half of it.
+# H/I prove DELETION-FIRST: a new writer is refused. H2/I2 prove the other direction, and they now
+# model POR-1's ACTUAL transport contract.
 #
-# THE SERIALIZING MECHANISM IS THE GATE ROW, not the lease count. `yorisou_account_mutation_begin`
-# takes `for update` on the account's gate row and holds it until the writer's transaction ends, so
-# `yorisou_account_deletion_drain_gate` cannot even read the gate while a writer is mid-flight. That
-# is what these proofs observe, and they observe it in pg_stat_activity rather than by timing.
+# WHAT CHANGED AND WHY. An earlier version had the writer acquire its lease inside the business
+# transaction. That is not how POR-1 works: withAccountMutationLease takes the lease over the
+# transport — one RPC that COMMITS — so the lease is visible to every other session before the
+# mutation begins. Acquiring it in-transaction leaves it uncommitted and therefore invisible to
+# yorisou_account_deletion_complete_step, whose crossing guard counts visible unreleased leases;
+# a three-session test showed the crossing succeeding while a writer was genuinely in flight.
 #
-# The job starts at `identity_verified` — pre-irreversible, so the writer is legitimately allowed —
-# and only reaches the irreversible stage after the drain, through the canonical functions.
-PRE_JOB() {  # $1 = account -> echoes job id, job armed but NOT yet irreversible
-  local job
-  job=$(Q "insert into public.yorisou_account_deletion_jobs
-      (owner_account_id, owner_fingerprint, state, executor_token_hash, executor_expires_at,
-       executor_generation)
-      values ('$1', encode(sha256(convert_to('$1','utf8')),'hex'), 'identity_verified',
-              '$EXEC_HASH', now() + interval '10 minutes', 1)
-      returning id::text" 2>"$WORK/pj-err.txt") || {
-    fail "arm a pre-irreversible deletion job for $1" "$(head -2 "$WORK/pj-err.txt" | tr '\n' ' ')" >&2; echo ""; return; }
-  Q "insert into public.yorisou_account_deletion_manifests (job_id, payload) values ('$job'::uuid, '{}'::jsonb)" >/dev/null
-  echo "$job"
+# So the writer below acquires its lease in a SEPARATE committed statement, exactly as the
+# application does, and the decisive assertion is that the canonical crossing is REFUSED while that
+# lease is outstanding.
+LEASE_BEGIN() { Q "select public.yorisou_account_mutation_begin('$1','$2',120)->>'leaseId'"; }
+LEASE_RELEASE() { Q "select public.yorisou_account_mutation_release('$1'::uuid)" >/dev/null; }
+WAIT_FOR_FILE() { local f="$1" n=0; while [ ! -f "$f" ]; do n=$((n+1)); [ "$n" -gt 300 ] && return 1; sleep 0.1; done; return 0; }
+JOB_IRREVERSIBLE() { Q "select (irreversible_started_at is not null)::text from public.yorisou_account_deletion_jobs where owner_account_id='$1'"; }
+JOB_CURSOR()       { Q "select coalesce(execution_cursor,'null') from public.yorisou_account_deletion_jobs where owner_account_id='$1'"; }
+JOB_STATE()        { Q "select state from public.yorisou_account_deletion_jobs where owner_account_id='$1'"; }
+ACTIVE_LEASES()    { Q "select count(*) from public.yorisou_account_mutation_leases where owner_account_id='$1' and released_at is null and drained_at is null"; }
+
+# The canonical lifecycle, driven exactly as a real executor drives it. `advance` must precede
+# `executor_claim`, because the claim sets the cursor and advance refuses once a cursor exists.
+CANON_OPEN() {  # $1 = owner -> echoes generation
+  Q "select public.yorisou_account_deletion_open('$1')" >/dev/null
+  Q "select public.yorisou_account_deletion_advance('$1','identity_verified')" >/dev/null
+  local gen
+  gen=$(Q "select (public.yorisou_account_deletion_executor_claim('$1','$EXEC_HASH',600)->>'generation')")
+  Q "select public.yorisou_account_deletion_manifest_put('$1','$EXEC_HASH',${gen},'{}'::jsonb)" >/dev/null
+  echo "$gen"
 }
-GO_IRREVERSIBLE() {  # $1 = job id
-  Q "update public.yorisou_account_deletion_jobs
-        set state='database_erasure', execution_cursor='database_erasure',
-            irreversible_started_at=coalesce(irreversible_started_at, now())
-      where id='$1'::uuid" >/dev/null
-}
-# Deterministic blocking evidence: a backend executing drain_gate and WAITING on a lock.
-DRAIN_IS_BLOCKED() {
-  Q "select count(*) from pg_stat_activity
-      where query like '%yorisou_account_deletion_drain_gate%'
-        and state = 'active' and wait_event_type = 'Lock' and pid <> pg_backend_pid()"
+CANON_CROSS() {  # $1 = owner, $2 = generation -> walks the cursor to database_erasure
+  local o="$1" g="$2"
+  Q "select public.yorisou_account_deletion_complete_step('$o','$EXEC_HASH',$g,'mutation_draining','lock_marker')" >/dev/null 2>"$WORK/cs1.txt" || { echo "STEP1:$(head -1 "$WORK/cs1.txt")"; return 1; }
+  Q "select public.yorisou_account_deletion_complete_step('$o','$EXEC_HASH',$g,'lock_marker','session_revocation')" >/dev/null 2>"$WORK/cs2.txt" || { echo "STEP2:$(head -1 "$WORK/cs2.txt")"; return 1; }
+  Q "select public.yorisou_account_deletion_complete_step('$o','$EXEC_HASH',$g,'session_revocation','database_erasure')" >/dev/null 2>"$WORK/cs3.txt" || { echo "STEP3:$(head -1 "$WORK/cs3.txt")"; return 1; }
+  echo "ok"
 }
 
-# NEGATIVE CONTROL for the blocking detector. If DRAIN_IS_BLOCKED were always positive, every
-# "the drain blocked" assertion below would pass without meaning anything. With no writer in flight
-# it must read zero.
-[ "$(DRAIN_IS_BLOCKED)" = "0" ] \
-  && pass "blocking detector reads ZERO with no writer in flight (not a vacuous check)" \
-  || fail "the blocking detector is not sensitive" "idle reading=$(DRAIN_IS_BLOCKED)"
-
-# ── RACE H2 — CLAIM-FIRST, then deletion. ───────────────────────────────────────────────────
+# ── RACE H2 — CLAIM-FIRST, committed lease, then the real deletion lifecycle. ───────────────
 H2_TOKEN=$(printf '%064d' 8484)
 H2_ATT=$(Q "insert into public.yorisou_assessment_attempts
    (id,method_id,method_version,required_count,status,claim_token_hash,expires_at)
@@ -1107,118 +1116,181 @@ H2_RES=""
     dimension_output,visibility,produced_at)
    values (gen_random_uuid(),'$H2_ATT'::uuid,null,'imairo-120q','compat-v0.2','MS-KI','MS-KI',
            '{\"v\":\"pds-v1\"}'::jsonb,'private',now()) returning id::text")
-H2_JOB=$(PRE_JOB "acct-h2")
-if [ -z "$H2_ATT" ] || [ -z "$H2_RES" ] || [ -z "$H2_JOB" ]; then
-  fail "RACE H2 setup: could not seed the claim-first scenario"
+H2_GEN=$(CANON_OPEN "acct-h2")
+H2_JOB=$(Q "select id::text from public.yorisou_account_deletion_jobs where owner_account_id='acct-h2'")
+rm -f "$WORK/h2.ready" "$WORK/h2.release"
+if [ -z "$H2_ATT" ] || [ -z "$H2_RES" ] || [ -z "$H2_GEN" ] || [ -z "$H2_JOB" ]; then
+  fail "RACE H2 setup: could not open the canonical lifecycle" "gen=$H2_GEN job=$H2_JOB"
 else
-  # WRITER: takes the real assessment_attempt_claim lease, performs the real claim, holds open.
-  ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/h2w.out" 2>&1
+  [ "$(JOB_IRREVERSIBLE acct-h2)" = "false" ] \
+    && pass "RACE H2 PRE: the job is pre-irreversible" || fail "RACE H2 PRE: already irreversible"
+  [ "$(JOB_CURSOR acct-h2)" = "mutation_draining" ] \
+    && pass "RACE H2 PRE: executor_claim set the canonical cursor to mutation_draining" \
+    || fail "RACE H2 PRE: unexpected cursor" "$(JOB_CURSOR acct-h2)"
+
+  # STEP 1 — the lease, over the transport, COMMITTED before the mutation begins.
+  H2_LEASE=$(LEASE_BEGIN "acct-h2" "assessment_attempt_claim")
+  if [ -z "$H2_LEASE" ]; then
+    fail "RACE H2: could not acquire the assessment_attempt_claim lease"
+  else
+    # Verified from an INDEPENDENT session — this is the visibility the previous model lacked.
+    H2_SEEN=$(Q "select operation_code||'|'||coalesce(released_at::text,'NULL')||'|'||coalesce(drained_at::text,'NULL')
+                 from public.yorisou_account_mutation_leases where id='$H2_LEASE'::uuid")
+    [ "$H2_SEEN" = "assessment_attempt_claim|NULL|NULL" ] \
+      && pass "RACE H2: committed lease VISIBLE to another session (op=assessment_attempt_claim, unreleased, undrained)" \
+      || fail "RACE H2: the lease is not visible as expected" "$H2_SEEN"
+
+    # STEP 2 — the business mutation, in its own transaction, held on a deterministic latch.
+    ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/h2w.out" 2>&1
 begin;
 select public.yorisou_attempt_claim('$H2_ATT'::uuid,'$H2_TOKEN','acct-h2');
-select 'LEASE_OP:' || operation_code from public.yorisou_account_mutation_leases
- where owner_account_id = 'acct-h2';
-select pg_sleep(6);
+\! touch $WORK/h2.ready
+\! bash -c 'n=0; while [ ! -f $WORK/h2.release ]; do n=\$((n+1)); [ \$n -gt 600 ] && break; sleep 0.1; done'
 commit;
 SQL
-  ) &
-  H2W=$!
-  sleep 1
-  # DELETION: the canonical drain. It must not be able to read the gate while the writer holds it.
-  ( psql "$DSN" -q -t -A -c "select public.yorisou_account_deletion_drain_gate('acct-h2','$EXEC_HASH',1)" \
-      >"$WORK/h2d.out" 2>&1 ) &
-  H2D=$!
-  sleep 2
-  H2_BLOCKED=$(DRAIN_IS_BLOCKED)
-  wait "$H2W" || true; wait "$H2D" || true
+    ) &
+    H2W=$!
+    if ! WAIT_FOR_FILE "$WORK/h2.ready"; then
+      fail "RACE H2: the writer never signalled READY" "$(head -3 "$WORK/h2w.out" | tr '\n' ' ')"
+      touch "$WORK/h2.release"
+    else
+      pass "RACE H2: writer holds its business transaction open on the latch (deterministic marker)"
 
-  grep -q "LEASE_OP:assessment_attempt_claim" "$WORK/h2w.out" \
-    && pass "RACE H2: claim-first lease observed, operation_code=assessment_attempt_claim" \
-    || fail "RACE H2: the claim did not take the new assessment lease" "$(head -3 "$WORK/h2w.out" | tr '\n' ' ')"
-  [ "${H2_BLOCKED:-0}" -ge 1 ] \
-    && pass "RACE H2: deletion drain BLOCKED on the gate while the claim was in flight" \
-    || fail "RACE H2: the drain did not wait for the writer" "waiting_backends=${H2_BLOCKED:-0}"
-  grep -qE "^[0-9a-f]{8}-" "$WORK/h2w.out" \
-    && pass "RACE H2: claim committed" || fail "RACE H2: the claim did not complete" "$(head -2 "$WORK/h2w.out" | tr '\n' ' ')"
-  grep -q '"drained": true' "$WORK/h2d.out" \
-    && pass "RACE H2: the drain completed AFTER the writer, reporting drained" \
-    || fail "RACE H2: drain outcome" "$(head -2 "$WORK/h2d.out" | tr '\n' ' ')"
-  grep -q '"activeLeases": 0' "$WORK/h2d.out" \
-    && pass "RACE H2: zero active leases remain at drain" || fail "RACE H2: a lease was still active at drain"
-  grep -qi "deadlock" "$WORK/h2w.out" "$WORK/h2d.out" && fail "RACE H2: deadlock" || pass "RACE H2: no deadlock"
+      # STEP 3 — the canonical drain must report NOT drained while the lease is outstanding.
+      H2_DRAIN=$(Q "select public.yorisou_account_deletion_drain_gate('acct-h2','$EXEC_HASH',$H2_GEN)")
+      echo "$H2_DRAIN" | grep -q '"drained": false' \
+        && pass "RACE H2: drain reports NOT drained while the writer's lease is active" \
+        || fail "RACE H2: drain claimed drained with a live lease" "$H2_DRAIN"
+      [ "$(ACTIVE_LEASES acct-h2)" -ge 1 ] \
+        && pass "RACE H2: the deletion executor SEES the active lease" || fail "RACE H2: lease invisible to deletion"
 
-  # Only now may the job cross into irreversible erasure, through the CHECKED authority.
-  GO_IRREVERSIBLE "$H2_JOB"
-  H2_ERASE=$(CHECKED_ERASE "$H2_JOB" "acct-h2")
-  echo "$H2_ERASE" | grep -q "yorisou_" \
-    && pass "RACE H2: checked erasure completed" || fail "RACE H2: checked erasure failed" "$(echo "$H2_ERASE" | head -1)"
-  [ "$(Q "select count(*) from public.yorisou_assessment_attempts where owner_account_id='acct-h2'")" = "0" ] \
-    && pass "RACE H2: the attempt the writer claimed is erased" || fail "RACE H2: claimed attempt survived"
-  [ "$(Q "select count(*) from public.yorisou_assessment_results where id='$H2_RES'::uuid and deleted_at is null")" = "0" ] \
-    && pass "RACE H2: claimed source erased — the pre-close writer's row was INCLUDED in the erasure" \
-    || fail "RACE H2: the claimed result outlived the account"
-  [ "$(Q "select count(*) from public.yorisou_account_mutation_leases
-          where owner_account_id='acct-h2' and released_at is null and drained_at is null")" = "0" ] \
-    && pass "RACE H2: no dangling lease" || fail "RACE H2: a lease was stranded"
+      # STEP 4 — THE DECISIVE ASSERTION. The crossing must be refused.
+      H2_EARLY=$(TRY "select public.yorisou_account_deletion_complete_step('acct-h2','$EXEC_HASH',$H2_GEN,'mutation_draining','lock_marker')")
+      echo "$H2_EARLY" | grep -qE "account_deletion_gate_not_drained|account_deletion_gate_not_closed" \
+        && pass "RACE H2: canonical crossing REFUSED while the lease is outstanding" \
+        || fail "RACE H2: the lifecycle allowed an early crossing" "$(echo "$H2_EARLY" | head -1)"
+      [ "$(JOB_IRREVERSIBLE acct-h2)" = "false" ] \
+        && pass "RACE H2: job has NOT crossed the irreversible boundary" || fail "RACE H2: the job crossed"
+
+      # STEP 5 — release the writer, then the lease, exactly as the application's finally-block does.
+      touch "$WORK/h2.release"; wait "$H2W" || true
+      grep -qE "^[0-9a-f]{8}-" "$WORK/h2w.out" \
+        && pass "RACE H2: claim committed" || fail "RACE H2: the claim did not complete" "$(head -2 "$WORK/h2w.out" | tr '\n' ' ')"
+      LEASE_RELEASE "$H2_LEASE"
+      [ "$(ACTIVE_LEASES acct-h2)" = "0" ] && pass "RACE H2: lease released" || fail "RACE H2: lease still active"
+
+      H2_DRAIN2=$(Q "select public.yorisou_account_deletion_drain_gate('acct-h2','$EXEC_HASH',$H2_GEN)")
+      echo "$H2_DRAIN2" | grep -q '"drained": true' \
+        && pass "RACE H2: drain completes once the writer is done" || fail "RACE H2: drain outcome" "$H2_DRAIN2"
+
+      H2_CROSS=$(CANON_CROSS "acct-h2" "$H2_GEN")
+      [ "$H2_CROSS" = "ok" ] \
+        && pass "RACE H2: canonical complete_step walked mutation_draining -> database_erasure" \
+        || fail "RACE H2: canonical transition refused" "$H2_CROSS"
+      [ "$(JOB_STATE acct-h2)" = "database_erasure" ] \
+        && pass "RACE H2: the job is at database_erasure by canonical authority" || fail "RACE H2: state=$(JOB_STATE acct-h2)"
+      [ "$(JOB_IRREVERSIBLE acct-h2)" = "true" ] \
+        && pass "RACE H2: irreversible_started_at populated by the LIFECYCLE, not by test SQL" \
+        || fail "RACE H2: the lifecycle did not mark irreversible"
+
+      H2_ERASE=$(TRY "select public.yorisou_account_deletion_erase_database('$H2_JOB'::uuid,'acct-h2','$EXEC_HASH',$H2_GEN)")
+      echo "$H2_ERASE" | grep -q "yorisou_" \
+        && pass "RACE H2: checked erasure completed" || fail "RACE H2: checked erasure failed" "$(echo "$H2_ERASE" | head -1)"
+      [ "$(Q "select count(*) from public.yorisou_assessment_attempts where owner_account_id='acct-h2'")" = "0" ] \
+        && pass "RACE H2: the attempt the writer claimed is erased" || fail "RACE H2: claimed attempt survived"
+      [ "$(Q "select count(*) from public.yorisou_assessment_results where id='$H2_RES'::uuid and deleted_at is null")" = "0" ] \
+        && pass "RACE H2: claimed source erased — the pre-close writer's row was INCLUDED" \
+        || fail "RACE H2: the claimed result outlived the account"
+      grep -qi "deadlock" "$WORK/h2w.out" && fail "RACE H2: deadlock" || pass "RACE H2: no deadlock"
+    fi
+  fi
 fi
 
-# ── RACE I2 — COMPLETION-FIRST, then deletion. ──────────────────────────────────────────────
+# ── RACE I2 — COMPLETION-FIRST, committed lease, then the real deletion lifecycle. ──────────
 I2_ATT=$(Q "insert into public.yorisou_assessment_attempts
    (id,method_id,method_version,required_count,status,owner_account_id,claimed_at,answered_count,answers)
    values (gen_random_uuid(),'imairo-120q','compat-v0.2',1,'in_progress','acct-i2',now(),0,'{}'::jsonb)
    returning id::text")
-I2_JOB=$(PRE_JOB "acct-i2")
-if [ -z "$I2_ATT" ] || [ -z "$I2_JOB" ]; then
-  fail "RACE I2 setup: could not seed the completion-first scenario"
+I2_GEN=$(CANON_OPEN "acct-i2")
+I2_JOB=$(Q "select id::text from public.yorisou_account_deletion_jobs where owner_account_id='acct-i2'")
+rm -f "$WORK/i2.ready" "$WORK/i2.release"
+if [ -z "$I2_ATT" ] || [ -z "$I2_GEN" ] || [ -z "$I2_JOB" ]; then
+  fail "RACE I2 setup: could not open the canonical lifecycle" "gen=$I2_GEN job=$I2_JOB"
 else
-  ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/i2w.out" 2>&1
+  [ "$(JOB_IRREVERSIBLE acct-i2)" = "false" ] \
+    && pass "RACE I2 PRE: the job is pre-irreversible" || fail "RACE I2 PRE: already irreversible"
+  I2_LEASE=$(LEASE_BEGIN "acct-i2" "assessment_attempt_complete")
+  if [ -z "$I2_LEASE" ]; then
+    fail "RACE I2: could not acquire the assessment_attempt_complete lease"
+  else
+    I2_SEEN=$(Q "select operation_code||'|'||coalesce(released_at::text,'NULL')||'|'||coalesce(drained_at::text,'NULL')
+                 from public.yorisou_account_mutation_leases where id='$I2_LEASE'::uuid")
+    [ "$I2_SEEN" = "assessment_attempt_complete|NULL|NULL" ] \
+      && pass "RACE I2: committed lease VISIBLE to another session (op=assessment_attempt_complete)" \
+      || fail "RACE I2: the lease is not visible as expected" "$I2_SEEN"
+
+    ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/i2w.out" 2>&1
 begin;
 select public.yorisou_attempt_complete('$I2_ATT'::uuid, null, 'acct-i2',
    '{"q1":1}'::jsonb, 1, 'MS-SZ', null, '{"v":"pds-v1"}'::jsonb, 'sv-1', 'rsv-1');
-select 'LEASE_OP:' || operation_code from public.yorisou_account_mutation_leases
- where owner_account_id = 'acct-i2';
-select pg_sleep(6);
+\! touch $WORK/i2.ready
+\! bash -c 'n=0; while [ ! -f $WORK/i2.release ]; do n=\$((n+1)); [ \$n -gt 600 ] && break; sleep 0.1; done'
 commit;
 SQL
-  ) &
-  I2W=$!
-  sleep 1
-  ( psql "$DSN" -q -t -A -c "select public.yorisou_account_deletion_drain_gate('acct-i2','$EXEC_HASH',1)" \
-      >"$WORK/i2d.out" 2>&1 ) &
-  I2D=$!
-  sleep 2
-  I2_BLOCKED=$(DRAIN_IS_BLOCKED)
-  wait "$I2W" || true; wait "$I2D" || true
+    ) &
+    I2W=$!
+    if ! WAIT_FOR_FILE "$WORK/i2.ready"; then
+      fail "RACE I2: the writer never signalled READY" "$(head -3 "$WORK/i2w.out" | tr '\n' ' ')"
+      touch "$WORK/i2.release"
+    else
+      pass "RACE I2: writer holds its business transaction open on the latch (deterministic marker)"
+      I2_DRAIN=$(Q "select public.yorisou_account_deletion_drain_gate('acct-i2','$EXEC_HASH',$I2_GEN)")
+      echo "$I2_DRAIN" | grep -q '"drained": false' \
+        && pass "RACE I2: drain reports NOT drained while the writer's lease is active" \
+        || fail "RACE I2: drain claimed drained with a live lease" "$I2_DRAIN"
 
-  grep -q "LEASE_OP:assessment_attempt_complete" "$WORK/i2w.out" \
-    && pass "RACE I2: completion-first lease observed, operation_code=assessment_attempt_complete" \
-    || fail "RACE I2: the completion did not take the new assessment lease" "$(head -3 "$WORK/i2w.out" | tr '\n' ' ')"
-  [ "${I2_BLOCKED:-0}" -ge 1 ] \
-    && pass "RACE I2: deletion drain BLOCKED on the gate while the completion was in flight" \
-    || fail "RACE I2: the drain did not wait for the writer" "waiting_backends=${I2_BLOCKED:-0}"
-  I2_NEW=$(grep -oE "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" "$WORK/i2w.out" | head -1)
-  [ -n "$I2_NEW" ] \
-    && pass "RACE I2: completion committed and created a real persisted result" \
-    || fail "RACE I2: the completion did not produce a result" "$(head -2 "$WORK/i2w.out" | tr '\n' ' ')"
-  grep -q '"drained": true' "$WORK/i2d.out" \
-    && pass "RACE I2: the drain completed AFTER the writer, reporting drained" \
-    || fail "RACE I2: drain outcome" "$(head -2 "$WORK/i2d.out" | tr '\n' ' ')"
-  grep -qi "deadlock" "$WORK/i2w.out" "$WORK/i2d.out" && fail "RACE I2: deadlock" || pass "RACE I2: no deadlock"
+      I2_EARLY=$(TRY "select public.yorisou_account_deletion_complete_step('acct-i2','$EXEC_HASH',$I2_GEN,'mutation_draining','lock_marker')")
+      echo "$I2_EARLY" | grep -qE "account_deletion_gate_not_drained|account_deletion_gate_not_closed" \
+        && pass "RACE I2: canonical crossing REFUSED while the lease is outstanding" \
+        || fail "RACE I2: the lifecycle allowed an early crossing" "$(echo "$I2_EARLY" | head -1)"
+      [ "$(JOB_IRREVERSIBLE acct-i2)" = "false" ] \
+        && pass "RACE I2: job has NOT crossed the irreversible boundary" || fail "RACE I2: the job crossed"
 
-  GO_IRREVERSIBLE "$I2_JOB"
-  I2_ERASE=$(CHECKED_ERASE "$I2_JOB" "acct-i2")
-  echo "$I2_ERASE" | grep -q "yorisou_" \
-    && pass "RACE I2: checked erasure completed" || fail "RACE I2: checked erasure failed" "$(echo "$I2_ERASE" | head -1)"
-  if [ -n "$I2_NEW" ]; then
-    [ "$(Q "select count(*) from public.yorisou_assessment_results where id='$I2_NEW'::uuid and deleted_at is null")" = "0" ] \
-      && pass "RACE I2: newly-created source erased — it did NOT escape the snapshot" \
-      || fail "RACE I2: the late-created result outlived the account"
+      touch "$WORK/i2.release"; wait "$I2W" || true
+      I2_NEW=$(grep -oE "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" "$WORK/i2w.out" | head -1)
+      [ -n "$I2_NEW" ] \
+        && pass "RACE I2: completion committed and created a real persisted result" \
+        || fail "RACE I2: the completion did not produce a result" "$(head -2 "$WORK/i2w.out" | tr '\n' ' ')"
+      LEASE_RELEASE "$I2_LEASE"
+      [ "$(ACTIVE_LEASES acct-i2)" = "0" ] && pass "RACE I2: lease released" || fail "RACE I2: lease still active"
+
+      I2_DRAIN2=$(Q "select public.yorisou_account_deletion_drain_gate('acct-i2','$EXEC_HASH',$I2_GEN)")
+      echo "$I2_DRAIN2" | grep -q '"drained": true' \
+        && pass "RACE I2: drain completes once the writer is done" || fail "RACE I2: drain outcome" "$I2_DRAIN2"
+
+      I2_CROSS=$(CANON_CROSS "acct-i2" "$I2_GEN")
+      [ "$I2_CROSS" = "ok" ] \
+        && pass "RACE I2: canonical complete_step walked mutation_draining -> database_erasure" \
+        || fail "RACE I2: canonical transition refused" "$I2_CROSS"
+      [ "$(JOB_IRREVERSIBLE acct-i2)" = "true" ] \
+        && pass "RACE I2: irreversible_started_at populated by the LIFECYCLE, not by test SQL" \
+        || fail "RACE I2: the lifecycle did not mark irreversible"
+
+      I2_ERASE=$(TRY "select public.yorisou_account_deletion_erase_database('$I2_JOB'::uuid,'acct-i2','$EXEC_HASH',$I2_GEN)")
+      echo "$I2_ERASE" | grep -q "yorisou_" \
+        && pass "RACE I2: checked erasure completed" || fail "RACE I2: checked erasure failed" "$(echo "$I2_ERASE" | head -1)"
+      if [ -n "$I2_NEW" ]; then
+        [ "$(Q "select count(*) from public.yorisou_assessment_results where id='$I2_NEW'::uuid and deleted_at is null")" = "0" ] \
+          && pass "RACE I2: newly-created source erased — it did NOT escape the snapshot" \
+          || fail "RACE I2: the late-created result outlived the account"
+      fi
+      [ "$(Q "select count(*) from public.yorisou_assessment_attempts where owner_account_id='acct-i2'")" = "0" ] \
+        && pass "RACE I2: the account's attempt is erased" || fail "RACE I2: attempt survived"
+      grep -qi "deadlock" "$WORK/i2w.out" && fail "RACE I2: deadlock" || pass "RACE I2: no deadlock"
+    fi
   fi
-  [ "$(Q "select count(*) from public.yorisou_assessment_attempts where owner_account_id='acct-i2'")" = "0" ] \
-    && pass "RACE I2: the account's attempt is erased" || fail "RACE I2: attempt survived"
-  [ "$(Q "select count(*) from public.yorisou_account_mutation_leases
-          where owner_account_id='acct-i2' and released_at is null and drained_at is null")" = "0" ] \
-    && pass "RACE I2: no dangling lease" || fail "RACE I2: a lease was stranded"
 fi
+rm -f "$WORK/h2.ready" "$WORK/h2.release" "$WORK/i2.ready" "$WORK/i2.release"
 
 echo "[cpr1] stage 9 — audit content-freedom (31)"
 [ "$(Q "select count(*) from public.yorisou_connection_audit_events")" -ge 3 ] \

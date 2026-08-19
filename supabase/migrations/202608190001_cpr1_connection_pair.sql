@@ -14,12 +14,12 @@
 --                     yorisou_assessment_source_live,
 --                     yorisou_connection_audit_block_mutation
 --   REPLACED BODIES   yorisou_share_object_publish            (ARCH-P4, merged)
---                     yorisou_attempt_claim                   (POR-1, merged)
---                     yorisou_attempt_complete                (POR-1, merged)
 --                     yorisou_account_deletion_erase_database_unchecked (POR-1, merged)
+--   NOT REPLACED      yorisou_attempt_claim / yorisou_attempt_complete — the POR-1 fence for these
+--                     lives at the application boundary, never inside their transaction (see below)
 --   REPLACED CHECK    yorisou_account_mutation_leases_operation_code_check (13 -> 15 tokens)
 --
--- No merged migration FILE is edited. The four replaced bodies are re-emitted here, which is how a
+-- No merged migration FILE is edited. The two replaced bodies are re-emitted here, which is how a
 -- forward-only lineage changes an existing function.
 --
 -- THE INVARIANTS, AND WHY THEY LIVE IN SQL.
@@ -41,8 +41,9 @@
 --      database re-check that the source is still live and still owned — because account erasure
 --      legitimately deletes owner-linked tombstones.
 --   5. THE OWNED-SOURCE SET IS CLOSED. The two assessment mutations that can create or reassign an
---      owned source take a POR-1 mutation lease BEFORE locking the attempt row, so account erasure
---      can trust its enumeration.
+--      owned source run under a POR-1 mutation lease taken at the APPLICATION boundary — committed,
+--      and therefore visible to the deletion executor — so account erasure can trust its
+--      enumeration. The lease is never created inside the mutation's own transaction.
 --   6. AUTHORIZATION IS IN THE MUTATION BOUNDARY; a guessed id grants nothing anywhere.
 --   7. CONSENT IS NOT ACCESS; no function returns one participant's identity or source to the other.
 --   8. AUDIT IS TRANSACTIONAL, append-only, and content-free.
@@ -56,22 +57,18 @@
 -- ROLLBACK CONTRACT
 -- ─────────────────────────────────────────────────────────────────────────────
 --
--- This is a CONTRACT, not a script, and deliberately so: four of the objects below are pre-existing
+-- This is a CONTRACT, not a script, and deliberately so: two of the objects below are pre-existing
 -- contracts whose PREVIOUS BODIES must be restored, and "drop it" would leave the product without a
--- publish path, without a claim path, and without an account-erasure body. Re-applying an earlier
+-- publish path and without an account-erasure body. Re-applying an earlier
 -- migration is also not a rollback mechanism — an already-applied migration restores only what it
 -- happens to define, and 202608180002 defines none of the R3/R4 replacements.
 --
 -- A rollback of this migration MUST, in this order:
 --
---   1. RESTORE THE FOUR REPLACED BODIES to their immediately-pre-CPR-1 definitions, by re-emitting
+--   1. RESTORE THE TWO REPLACED BODIES to their immediately-pre-CPR-1 definitions, by re-emitting
 --      them from the migrations that last defined them BEFORE this one:
 --        yorisou_share_object_publish
 --          <- 202608180002_shr1_share_objects.sql  (identical, minus the source-liveness check)
---        yorisou_attempt_claim
---        yorisou_attempt_complete
---          <- 202608010101_por1_canonical_assessment_and_interpretation.sql
---             (identical, minus the POR-1 mutation lease)
 --        yorisou_account_deletion_erase_database_unchecked
 --          <- 202608180002_shr1_share_objects.sql
 --             (its plan, minus the CPR-1 families and the source/invitation/pair ordering)
@@ -370,150 +367,26 @@ begin
 end
 $ops$;
 
--- CLAIM, re-emitted. Identical semantics; the lease is acquired FIRST.
-create or replace function public.yorisou_attempt_claim(
-  p_attempt_id uuid,
-  p_claim_token_hash text,
-  p_owner_account_id text
-)
-returns uuid
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_attempt public.yorisou_assessment_attempts%rowtype;
-  v_result uuid;
-  v_lease uuid;
-begin
-  if p_owner_account_id is null or length(p_owner_account_id) = 0 then
-    raise exception 'claim_owner_required';
-  end if;
-
-  -- POR-1 GATE BEFORE THE ATTEMPT ROW. This raises the existing bounded account-mutation denials
-  -- (deleted / erasing / gate_closed) and therefore fails closed: an anonymous result can never be
-  -- assigned to an account whose deletion has begun.
-  v_lease := (public.yorisou_account_mutation_begin(p_owner_account_id, 'assessment_attempt_claim', 30)->>'leaseId')::uuid;
-
-  select * into v_attempt from public.yorisou_assessment_attempts a
-   where a.id = p_attempt_id for update;
-  if not found then raise exception 'attempt_not_found'; end if;
-
-  -- Already claimed by this same account -> idempotent success.
-  if v_attempt.owner_account_id is not null then
-    if v_attempt.owner_account_id = p_owner_account_id then
-      select r.id into v_result from public.yorisou_assessment_results r where r.attempt_id = p_attempt_id;
-      perform public.yorisou_account_mutation_release(v_lease);
-      return v_result;
-    end if;
-    raise exception 'attempt_already_claimed_by_another_owner';
-  end if;
-
-  if v_attempt.claim_token_hash is null or v_attempt.claim_token_hash <> p_claim_token_hash then
-    raise exception 'claim_token_invalid';
-  end if;
-  if v_attempt.expires_at is not null and v_attempt.expires_at < now() then
-    raise exception 'claim_token_expired';
-  end if;
-
-  update public.yorisou_assessment_attempts
-     set owner_account_id = p_owner_account_id,
-         claimed_at       = now(),
-         claim_token_hash = null,   -- single use
-         expires_at       = null,   -- claimed attempts do not expire
-         updated_at       = now()
-   where id = p_attempt_id;
-
-  update public.yorisou_assessment_results
-     set owner_account_id = p_owner_account_id
-   where attempt_id = p_attempt_id
-  returning id into v_result;
-
-  -- Released on success only. Any raise above rolls the whole transaction back, lease included, so
-  -- a failure cannot strand an active lease that deletion would then wait on forever.
-  perform public.yorisou_account_mutation_release(v_lease);
-  return v_result;
-end;
-$$;
-
--- COMPLETE, re-emitted. Identical semantics, including the anonymous/token-only path, which takes
--- NO lease because there is no account to fence.
-create or replace function public.yorisou_attempt_complete(
-  p_attempt_id uuid,
-  p_claim_token_hash text,
-  p_owner_account_id text,
-  p_answers jsonb,
-  p_answered_count integer,
-  p_result_id text,
-  p_overlay_id text,
-  p_dimension_output jsonb,
-  p_scoring_version text,
-  p_result_schema_version text
-)
-returns uuid
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_attempt public.yorisou_assessment_attempts%rowtype;
-  v_existing uuid;
-  v_result_row uuid;
-  v_lease uuid;
-begin
-  -- CANONICAL ENVELOPE GUARD: exactly one key, exactly the approved version.
-  if p_dimension_output is null
-     or jsonb_typeof(p_dimension_output) <> 'object'
-     or (select count(*) from jsonb_object_keys(p_dimension_output)) <> 1
-     or p_dimension_output->>'v' is distinct from 'pds-v1' then
-    raise exception 'assessment_persisted_envelope_invalid';
-  end if;
-
-  -- POR-1 GATE BEFORE THE ATTEMPT ROW, for the account-bound path only. A completion creates a NEW
-  -- owned result, which is exactly the growth account erasure must not see after its snapshot.
-  if p_owner_account_id is not null and length(p_owner_account_id) > 0 then
-    v_lease := (public.yorisou_account_mutation_begin(p_owner_account_id, 'assessment_attempt_complete', 30)->>'leaseId')::uuid;
-  end if;
-
-  select * into v_attempt from public.yorisou_assessment_attempts a
-   where a.id = p_attempt_id
-     and (
-       (a.owner_account_id is null and a.claim_token_hash is not null and a.claim_token_hash = p_claim_token_hash)
-       or (a.owner_account_id is not null and a.owner_account_id = p_owner_account_id)
-     )
-   for update;
-  if not found then raise exception 'attempt_not_found_or_not_writable'; end if;
-
-  select r.id into v_existing from public.yorisou_assessment_results r where r.attempt_id = p_attempt_id;
-  if v_existing is not null then
-    if v_lease is not null then perform public.yorisou_account_mutation_release(v_lease); end if;
-    return v_existing;
-  end if;
-
-  if v_attempt.owner_account_id is null
-     and v_attempt.expires_at is not null and v_attempt.expires_at <= now() then
-    raise exception 'attempt_expired';
-  end if;
-  if p_answered_count < v_attempt.required_count then raise exception 'attempt_incomplete_coverage'; end if;
-
-  update public.yorisou_assessment_attempts
-     set answers = p_answers, answered_count = p_answered_count,
-         status = 'completed', completed_at = now(), updated_at = now()
-   where id = p_attempt_id;
-
-  insert into public.yorisou_assessment_results
-    (attempt_id, owner_account_id, method_id, method_version, scoring_version,
-     result_schema_version, result_id, overlay_id, dimension_output, original_result_id)
-  values
-    (p_attempt_id, v_attempt.owner_account_id, v_attempt.method_id, v_attempt.method_version,
-     p_scoring_version, p_result_schema_version, p_result_id, p_overlay_id,
-     p_dimension_output, p_result_id)
-  returning id into v_result_row;
-
-  if v_lease is not null then perform public.yorisou_account_mutation_release(v_lease); end if;
-  return v_result_row;
-end;
-$$;
+-- WHY THE TWO ASSESSMENT MUTATIONS ARE **NOT** RE-EMITTED HERE.
+--
+-- An earlier revision of this migration re-emitted yorisou_attempt_claim and
+-- yorisou_attempt_complete with a POR-1 mutation lease acquired INSIDE the function. That put the
+-- lease in the same transaction as the business mutation, and a three-session PostgreSQL test
+-- showed what that costs: the lease row is uncommitted, so it is invisible to
+-- yorisou_account_deletion_complete_step, whose crossing guard counts visible unreleased leases.
+-- The crossing therefore succeeded while a writer was genuinely in flight.
+--
+-- That is not a POR-1 defect. POR-1's contract is that a lease is acquired over the transport —
+-- one PostgREST RPC that COMMITS — and is therefore already visible before the business mutation
+-- begins. Every existing fenced mutation follows that shape via withAccountMutationLease; before
+-- this package, no SQL function called yorisou_account_mutation_begin at all.
+--
+-- So the fence lives where the contract puts it: at the application boundary, in
+-- lib/server/assessment/fencedAttemptMutations.ts. These two canonical functions are left exactly
+-- as their merged migration defines them, and this migration does not replace them.
+--
+-- The closed operation vocabulary below is still extended, because the APPLICATION now takes leases
+-- under those two operation codes.
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Assessment-source liveness, and the ARCH-P4 publish RPC re-emitted to use it
@@ -1046,8 +919,6 @@ begin
   foreach v_sig in array array[
     'public.yorisou_imairo_pair_live_source(text, text)',
     'public.yorisou_assessment_source_live(text, text)',
-    'public.yorisou_attempt_claim(uuid, text, text)',
-    'public.yorisou_attempt_complete(uuid, text, text, jsonb, integer, text, text, jsonb, text, text)',
     'public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text)',
     'public.yorisou_connection_source_erased(text)',
     'public.yorisou_connection_invite_create(text, text, text)',

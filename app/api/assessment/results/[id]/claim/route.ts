@@ -6,7 +6,11 @@ import { NextResponse } from "next/server";
 // only then claims both for the authenticated account.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { claimAttempt, getResultById, hashClaimToken } from "@/lib/server/assessmentAttemptStore";
+import { getResultById, hashClaimToken } from "@/lib/server/assessmentAttemptStore";
+// CPR-1 — claiming assigns an anonymous result to an account, so it runs under a committed
+// POR-1 mutation lease. See lib/server/assessment/fencedAttemptMutations.ts for why the fence
+// is here and not inside the SQL function.
+import { claimAttemptFenced } from "@/lib/server/assessment/fencedAttemptMutations";
 import { readAttemptCookie, clearAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
 
 export const runtime = "nodejs";
@@ -47,7 +51,7 @@ export async function POST(_request: Request, context: Context) {
   }
 
   try {
-    await claimAttempt({
+    await claimAttemptFenced({
       attemptId: result.attempt_id,
       claimTokenHash: hashClaimToken(cookie.token),
       ownerAccountId: ownerId,

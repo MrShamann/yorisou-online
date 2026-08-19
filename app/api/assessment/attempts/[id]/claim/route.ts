@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 // Single-use, expiring, and unable to re-target an attempt that already has a different owner.
 
 import { getViewerContext } from "@/lib/server/yorisouAuth";
-import { claimAttempt, hashClaimToken } from "@/lib/server/assessmentAttemptStore";
+import { hashClaimToken } from "@/lib/server/assessmentAttemptStore";
+// CPR-1 — see lib/server/assessment/fencedAttemptMutations.ts.
+import { claimAttemptFenced } from "@/lib/server/assessment/fencedAttemptMutations";
 import { readAttemptCookie, clearAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
 
 export const runtime = "nodejs";
@@ -26,7 +28,7 @@ export async function POST(_request: Request, context: Context) {
   }
 
   try {
-    const resultRowId = await claimAttempt({
+    const resultRowId = await claimAttemptFenced({
       attemptId: id, claimTokenHash: hashClaimToken(cookie.token), ownerAccountId: ownerId,
     });
     const response = NextResponse.json({ claimed: true, resultRowId });
