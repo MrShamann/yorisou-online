@@ -40,8 +40,15 @@ export interface SharingRepository {
   }): Promise<SharePublishResult>;
   /** Owner-scoped revoke; true when active-before, false when already revoked/absent. Audited. */
   revoke(ownerAccountId: string, publicId: string): Promise<boolean>;
-  /** Revoke every ACTIVE object derived from one private source (erasure propagation). */
-  revokeBySource(sourceFamily: string, sourceRef: string): Promise<number>;
+  /**
+   * Revoke that OWNER's active objects derived from one private source (erasure propagation).
+   *
+   * The owner is REQUIRED and is enforced in the database mutation itself, not merely here: the
+   * first version of this contract took only (family, ref), which meant knowing another person's
+   * private source id was enough to darken their public link. A source reference is not an
+   * authorization.
+   */
+  revokeBySource(ownerAccountId: string, sourceFamily: string, sourceRef: string): Promise<number>;
   /** The owner's active object for one exact source+template, or null. Private management state. */
   activeForSource(
     ownerAccountId: string,
@@ -95,13 +102,22 @@ export function revokeShare(
   return repository.revoke(ownerAccountId, publicId);
 }
 
-/** Erasure propagation: every active derivative of one private source becomes unavailable. */
+/**
+ * Erasure propagation: that owner's active derivatives of one private source become unavailable.
+ *
+ * NOTE ON USE. For assessment-result erasure the authoritative path is the atomic source-erasure
+ * seam, which performs owner verification, revocation and canonical erasure inside ONE database
+ * transaction holding the source lock. This function remains the contract's generic operation and
+ * is owner-scoped for the same reason; it is not sufficient on its own to guarantee "erased source
+ * implies no active derivative" under concurrency, because it commits separately.
+ */
 export function revokeSharesBySource(
+  ownerAccountId: string,
   sourceFamily: string,
   sourceRef: string,
   repository: SharingRepository,
 ): Promise<number> {
-  return repository.revokeBySource(sourceFamily, sourceRef);
+  return repository.revokeBySource(ownerAccountId, sourceFamily, sourceRef);
 }
 
 /**

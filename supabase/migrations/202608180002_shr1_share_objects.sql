@@ -1,30 +1,42 @@
 -- SHR-1 — sharing.core ShareObjects (formal Imairo Result Card sharing).
 --
--- TWO new tables + THREE RPCs + the account-erasure plan re-emitted with the new family.
+-- THREE tables + FOUR RPCs + the account-erasure plan re-emitted with the two new families.
 -- Additive only: no existing table, row, or RPC is modified.
 --
--- THE INVARIANTS THIS SCHEMA CARRIES:
---   * a published ShareObject is an IMMUTABLE snapshot — no update path exists in SQL, so none
---     can exist as behavior; revocation is a lifecycle timestamp, never a payload change;
---   * publish is IDEMPOTENT per (owner, source, template, digest) while active — a retry returns
---     the first row's public_id instead of minting duplicates;
---   * a revoked object never reactivates — republishing creates a NEW public_id;
---   * publish/revoke each write their content-free audit row IN THE SAME TRANSACTION as the
---     lifecycle change (the RPC body is the transaction), so the privacy boundary is auditable
---     or the mutation does not happen;
---   * the audit table carries a sha256 actor fingerprint and an opaque share ref ONLY — no owner
---     id, no source ref, no payload, no token — and is append-only by trigger, like the Life OS
---     audit table.
+-- THE INVARIANTS, AND WHY THEY LIVE IN SQL RATHER THAN IN APPLICATION ORDER.
 --
--- Privilege matrix (repository discipline, applied unchanged):
+-- A first version of this migration enforced the sharing lifecycle with application-level ordering
+-- and a pre-INSERT existence check. Controller review showed that is not enforcement: two
+-- concurrent transactions both pass an existence check, and a revoke that commits before an
+-- unrelated erase leaves a window in which a fresh link is published against a source that is
+-- about to disappear. Ordering in one process is not a concurrency guarantee, so each invariant
+-- below is now a database fact.
+--
+--   1. ONE ACTIVE LINK per (owner, source_family, source_ref, template_ref) — the partial unique
+--      index deliberately EXCLUDES payload_digest. Including it let two different-digest publishes
+--      both insert. Identical-digest retries stay idempotent by returning the existing row.
+--   2. PUBLISH AND SOURCE ERASURE ARE SERIALIZED by a transaction-level advisory lock keyed on
+--      source_family + source_ref. Both paths take the same lock, so they cannot interleave.
+--   3. AN ERASED SOURCE CAN NEVER BE PUBLISHED AGAIN. The erasure transaction writes a tombstone
+--      that publish checks while holding the lock — this is what closes the race rather than
+--      narrowing it. sharing.core learns only "this source ref is erased"; it never reads
+--      assessment content.
+--   4. OWNER SCOPING IS IN THE MUTATION BOUNDARY. Source revocation takes an owner and filters on
+--      it, so knowing another person's private result id cannot darken their public link.
+--   5. IMMUTABLE PAYLOAD — no UPDATE path to public_payload exists; revocation is a timestamp.
+--   6. PUBLISH/REVOKE AUDIT IS TRANSACTIONAL and append-only, carrying no owner, source or payload.
+--
+-- Privilege matrix (repository discipline, unchanged):
 --   public/anon/authenticated : NO access
 --   service_role              : bounded SELECT only
 --   mutation                  : SECURITY DEFINER RPCs exclusively
 --
 -- ROLLBACK:
---   drop function if exists public.yorisou_share_objects_revoke_by_source(text, text);
+--   drop function if exists public.yorisou_assessment_result_erase_with_shares(uuid, text);
+--   drop function if exists public.yorisou_share_objects_revoke_by_source(text, text, text);
 --   drop function if exists public.yorisou_share_object_revoke(text, uuid);
 --   drop function if exists public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text);
+--   drop table if exists public.yorisou_share_source_erasures;
 --   drop table if exists public.yorisou_share_audit_events;
 --   drop table if exists public.yorisou_share_objects;
 --   -- then re-apply 202608180001's erasure block verbatim to restore the previous plan.
@@ -37,13 +49,11 @@ create table if not exists public.yorisou_share_objects (
   id uuid primary key default gen_random_uuid(),
   owner_account_id text not null
     constraint yorisou_share_objects_owner_chk check (length(owner_account_id) between 1 and 200),
-  -- The intentionally-shareable, high-entropy public address. Never enumerable, never reused.
   public_id uuid not null default gen_random_uuid(),
   card_family text not null
     constraint yorisou_share_objects_family_chk check (length(card_family) between 1 and 100),
   source_family text not null
     constraint yorisou_share_objects_source_family_chk check (length(source_family) between 1 and 100),
-  -- PRIVATE reference to the source record. Never selected by the public read path.
   source_ref text not null
     constraint yorisou_share_objects_source_ref_chk check (length(source_ref) between 1 and 200),
   template_ref text not null
@@ -61,25 +71,37 @@ create table if not exists public.yorisou_share_objects (
   constraint yorisou_share_objects_public_id_unique unique (public_id)
 );
 
--- Idempotency truth: at most ONE ACTIVE object per owner+source+template+digest.
+-- INVARIANT 1. Digest is deliberately NOT part of the key: one active link per owner/source/
+-- template, whatever the content.
 create unique index if not exists yorisou_share_objects_active_identity
-  on public.yorisou_share_objects (owner_account_id, source_family, source_ref, template_ref, payload_digest)
+  on public.yorisou_share_objects (owner_account_id, source_family, source_ref, template_ref)
   where revoked_at is null;
 
--- Owner management reads and erasure-propagation revokes are source-scoped.
 create index if not exists yorisou_share_objects_source
   on public.yorisou_share_objects (source_family, source_ref);
 
 alter table public.yorisou_share_objects enable row level security;
 
--- Content-free lifecycle audit. Append-only; carries no personal or public payload data.
+-- INVARIANT 3. The tombstone. Owner-linked (so it joins the erasure plan) and content-free beyond
+-- the opaque source reference it retires.
+create table if not exists public.yorisou_share_source_erasures (
+  id uuid primary key default gen_random_uuid(),
+  owner_account_id text not null
+    constraint yorisou_share_source_erasures_owner_chk check (length(owner_account_id) between 1 and 200),
+  source_family text not null,
+  source_ref text not null,
+  erased_at timestamptz not null default now(),
+  constraint yorisou_share_source_erasures_identity unique (source_family, source_ref)
+);
+
+alter table public.yorisou_share_source_erasures enable row level security;
+
 create table if not exists public.yorisou_share_audit_events (
   id uuid primary key default gen_random_uuid(),
   actor_fingerprint text not null
     constraint yorisou_share_audit_actor_chk check (actor_fingerprint ~ '^[0-9a-f]{64}$'),
   event_type text not null
     constraint yorisou_share_audit_type_chk check (event_type in ('published', 'revoked')),
-  -- Opaque reference to the share object row (its id, not its public_id and not its source).
   share_ref uuid not null,
   occurred_at timestamptz not null default now()
 );
@@ -98,25 +120,36 @@ create trigger yorisou_share_audit_events_no_mutate
   before update or delete on public.yorisou_share_audit_events
   for each row execute function public.yorisou_share_audit_block_mutation();
 
+-- The one lock every source-scoped mutation takes. Keyed on the source identity so unrelated
+-- sources never contend.
+create or replace function public.yorisou_share_source_lock(p_source_family text, p_source_ref text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform pg_advisory_xact_lock(hashtextextended(p_source_family || ':' || p_source_ref, 0));
+end;
+$$;
+
 do $roles$
 begin
-  execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events from public';
+  execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events, public.yorisou_share_source_erasures from public';
   if exists (select 1 from pg_roles where rolname = 'anon') then
-    execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events from anon';
+    execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events, public.yorisou_share_source_erasures from anon';
   end if;
   if exists (select 1 from pg_roles where rolname = 'authenticated') then
-    execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events from authenticated';
+    execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events, public.yorisou_share_source_erasures from authenticated';
   end if;
   if exists (select 1 from pg_roles where rolname = 'service_role') then
-    execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events from service_role';
+    execute 'revoke all on table public.yorisou_share_objects, public.yorisou_share_audit_events, public.yorisou_share_source_erasures from service_role';
     execute 'grant select on table public.yorisou_share_objects to service_role';
     execute 'grant select on table public.yorisou_share_audit_events to service_role';
+    execute 'grant select on table public.yorisou_share_source_erasures to service_role';
   end if;
 end
 $roles$;
 
--- Atomic idempotent publish + transactional audit. First writer per active identity wins; a retry
--- returns the canonical row with reused=true. No update path.
+-- PUBLISH. Takes the source lock FIRST, so it cannot interleave with source erasure or with
+-- another publish for the same source. Refuses an erased source, refuses a different-digest
+-- publish while a link is active, and returns the canonical row for an identical retry.
 create or replace function public.yorisou_share_object_publish(
   p_owner_account_id text,
   p_card_family text,
@@ -144,57 +177,39 @@ begin
     raise exception 'share_invalid_payload';
   end if;
 
+  perform public.yorisou_share_source_lock(p_source_family, p_source_ref);
+
+  if exists (
+    select 1 from public.yorisou_share_source_erasures
+     where source_family = p_source_family and source_ref = p_source_ref
+  ) then
+    raise exception 'share_source_erased';
+  end if;
+
   select * into v_row
     from public.yorisou_share_objects
    where owner_account_id = p_owner_account_id
      and source_family = p_source_family
      and source_ref = p_source_ref
      and template_ref = p_template_ref
-     and payload_digest = p_payload_digest
      and revoked_at is null
    limit 1;
 
   if found then
-    v_reused := true;
-  else
-    -- ONE active link per source+template. A different-digest publish while an active object
-    -- exists must be an EXPLICIT lifecycle act (revoke first), never a silent second snapshot.
-    if exists (
-      select 1 from public.yorisou_share_objects
-       where owner_account_id = p_owner_account_id
-         and source_family = p_source_family
-         and source_ref = p_source_ref
-         and template_ref = p_template_ref
-         and revoked_at is null
-    ) then
+    if v_row.payload_digest = p_payload_digest then
+      v_reused := true;
+    else
       raise exception 'share_active_exists';
     end if;
-
+  else
     insert into public.yorisou_share_objects
       (owner_account_id, card_family, source_family, source_ref, template_ref, template_version,
        payload_version, public_payload, payload_digest)
     values
       (p_owner_account_id, p_card_family, p_source_family, p_source_ref, p_template_ref,
        p_template_version, p_payload_version, p_public_payload, p_payload_digest)
-    on conflict (owner_account_id, source_family, source_ref, template_ref, payload_digest)
-      where revoked_at is null
-      do nothing;
+    returning * into v_row;
 
-    select * into v_row
-      from public.yorisou_share_objects
-     where owner_account_id = p_owner_account_id
-       and source_family = p_source_family
-       and source_ref = p_source_ref
-       and template_ref = p_template_ref
-       and payload_digest = p_payload_digest
-       and revoked_at is null
-     limit 1;
-
-    if not found then
-      raise exception 'share_publish_not_persisted';
-    end if;
-
-    -- Transactional publish audit: same transaction as the insert, content-free.
     insert into public.yorisou_share_audit_events (actor_fingerprint, event_type, share_ref)
     values (encode(sha256(convert_to(p_owner_account_id, 'utf8')), 'hex'), 'published', v_row.id);
   end if;
@@ -209,8 +224,6 @@ begin
 end;
 $$;
 
--- Owner-scoped idempotent revoke + transactional audit. Already-revoked/absent returns false
--- without an audit row; concealment is the caller's job.
 create or replace function public.yorisou_share_object_revoke(
   p_owner_account_id text,
   p_public_id uuid
@@ -235,9 +248,7 @@ begin
     return false;
   end if;
 
-  update public.yorisou_share_objects
-     set revoked_at = now()
-   where id = v_row.id;
+  update public.yorisou_share_objects set revoked_at = now() where id = v_row.id;
 
   insert into public.yorisou_share_audit_events (actor_fingerprint, event_type, share_ref)
   values (encode(sha256(convert_to(p_owner_account_id, 'utf8')), 'hex'), 'revoked', v_row.id);
@@ -246,9 +257,10 @@ begin
 end;
 $$;
 
--- Erasure propagation: every ACTIVE derivative of one private source goes dark, audited per row
--- with the module fingerprint (the actor is the erasure process, not a person's raw id).
+-- INVARIANT 4. Source revocation is OWNER-SCOPED at the mutation boundary. Without the owner
+-- predicate here, knowing another person's private source id was enough to darken their link.
 create or replace function public.yorisou_share_objects_revoke_by_source(
+  p_owner_account_id text,
   p_source_family text,
   p_source_ref text
 )
@@ -261,48 +273,110 @@ declare
   v_count integer := 0;
   v_row record;
 begin
+  if p_owner_account_id is null or length(p_owner_account_id) = 0 then
+    raise exception 'share_invalid_owner';
+  end if;
+
+  perform public.yorisou_share_source_lock(p_source_family, p_source_ref);
+
   for v_row in
     select id from public.yorisou_share_objects
-     where source_family = p_source_family
+     where owner_account_id = p_owner_account_id
+       and source_family = p_source_family
        and source_ref = p_source_ref
        and revoked_at is null
      for update
   loop
     update public.yorisou_share_objects set revoked_at = now() where id = v_row.id;
     insert into public.yorisou_share_audit_events (actor_fingerprint, event_type, share_ref)
-    values (encode(sha256(convert_to('sharing.core:source_erasure', 'utf8')), 'hex'), 'revoked', v_row.id);
+    values (encode(sha256(convert_to(p_owner_account_id, 'utf8')), 'hex'), 'revoked', v_row.id);
     v_count := v_count + 1;
   end loop;
   return v_count;
 end;
 $$;
 
-do $fnroles$
+-- INVARIANT 2 + 3. THE authoritative source-erasure seam for a persisted assessment result:
+-- owner verification, derivative revocation, tombstone and the canonical erasure all happen in ONE
+-- transaction while holding the source lock. Publish cannot slip in between, and if the canonical
+-- erasure does not succeed the whole transaction rolls back — no half-erased source, no darkened
+-- link for a result that still exists.
+--
+-- It calls the EXISTING canonical erasure function; it does not reimplement or alter assessment
+-- semantics, scoring, taxonomy or interpretation.
+create or replace function public.yorisou_assessment_result_erase_with_shares(
+  p_result_row_id uuid,
+  p_owner_account_id text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_source_family constant text := 'assessment_result';
+  v_source_ref text := p_result_row_id::text;
+  v_erased boolean;
 begin
-  execute 'revoke all on function public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text) from public';
-  execute 'revoke all on function public.yorisou_share_object_revoke(text, uuid) from public';
-  execute 'revoke all on function public.yorisou_share_objects_revoke_by_source(text, text) from public';
-  if exists (select 1 from pg_roles where rolname = 'anon') then
-    execute 'revoke all on function public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text) from anon';
-    execute 'revoke all on function public.yorisou_share_object_revoke(text, uuid) from anon';
-    execute 'revoke all on function public.yorisou_share_objects_revoke_by_source(text, text) from anon';
+  if p_owner_account_id is null or length(p_owner_account_id) = 0 then
+    raise exception 'share_invalid_owner';
   end if;
-  if exists (select 1 from pg_roles where rolname = 'authenticated') then
-    execute 'revoke all on function public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text) from authenticated';
-    execute 'revoke all on function public.yorisou_share_object_revoke(text, uuid) from authenticated';
-    execute 'revoke all on function public.yorisou_share_objects_revoke_by_source(text, text) from authenticated';
+
+  perform public.yorisou_share_source_lock(v_source_family, v_source_ref);
+
+  -- Authorization BEFORE any side effect: a caller who does not own this live result changes
+  -- nothing at all — not their shares, not anyone else's.
+  perform 1 from public.yorisou_assessment_results
+   where id = p_result_row_id
+     and owner_account_id = p_owner_account_id
+     and deleted_at is null;
+  if not found then
+    return false;
   end if;
-  if exists (select 1 from pg_roles where rolname = 'service_role') then
-    execute 'grant execute on function public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text) to service_role';
-    execute 'grant execute on function public.yorisou_share_object_revoke(text, uuid) to service_role';
-    execute 'grant execute on function public.yorisou_share_objects_revoke_by_source(text, text) to service_role';
+
+  perform public.yorisou_share_objects_revoke_by_source(p_owner_account_id, v_source_family, v_source_ref);
+
+  insert into public.yorisou_share_source_erasures (owner_account_id, source_family, source_ref)
+  values (p_owner_account_id, v_source_family, v_source_ref)
+  on conflict (source_family, source_ref) do nothing;
+
+  v_erased := public.yorisou_assessment_result_erase(p_result_row_id, p_owner_account_id);
+  if not v_erased then
+    -- Roll back the revocations and the tombstone: the source still exists, so its links must too.
+    raise exception 'share_source_erasure_failed';
   end if;
+
+  return true;
+end;
+$$;
+
+do $fnroles$
+declare
+  v_sig text;
+begin
+  foreach v_sig in array array[
+    'public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text)',
+    'public.yorisou_share_object_revoke(text, uuid)',
+    'public.yorisou_share_objects_revoke_by_source(text, text, text)',
+    'public.yorisou_assessment_result_erase_with_shares(uuid, text)',
+    'public.yorisou_share_source_lock(text, text)'
+  ] loop
+    execute 'revoke all on function ' || v_sig || ' from public';
+    if exists (select 1 from pg_roles where rolname = 'anon') then
+      execute 'revoke all on function ' || v_sig || ' from anon';
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'authenticated') then
+      execute 'revoke all on function ' || v_sig || ' from authenticated';
+    end if;
+    if exists (select 1 from pg_roles where rolname = 'service_role') then
+      execute 'grant execute on function ' || v_sig || ' to service_role';
+    end if;
+  end loop;
 end
 $fnroles$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Account-erasure plan, re-emitted VERBATIM from 202608180001 with exactly one added family.
--- A new personal data family joins the declarative plan in the same change that creates it.
+-- Account-erasure plan, re-emitted VERBATIM from 202608180001 with the two new families.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create or replace function public.yorisou_account_deletion_erase_database_unchecked(p_owner_account_id text)
@@ -310,9 +384,11 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_id       uuid;
   v_plan     text[][] := array[
-    -- SHR-1 sharing.core (202608180002): published share derivatives are owner-controlled
-    -- personal/public data and die with the account — every public deep link goes dark.
+    -- SHR-1 sharing.core (202608180002): published derivatives and the source-erasure
+    -- tombstones are both owner-linked; they die with the account, so every public deep link
+    -- goes dark and no stale tombstone keeps a private source reference alive.
     ['yorisou_share_objects', 'owner_account_id'],
+    ['yorisou_share_source_erasures', 'owner_account_id'],
     -- DD-1 Daily Discovery (202608180001): symbolic discovery sessions are owner-linked
     -- personal rows and erase like every other family. Added here by re-emitting the plan verbatim
     -- plus this one entry — the erasure-coverage test reads the LAST shipped v_plan.

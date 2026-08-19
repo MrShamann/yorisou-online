@@ -81,10 +81,33 @@ export async function revokeShareObject(ownerAccountId: string, publicId: string
   });
 }
 
-export async function revokeShareObjectsBySource(sourceFamily: string, sourceRef: string): Promise<number> {
+export async function revokeShareObjectsBySource(
+  ownerAccountId: string,
+  sourceFamily: string,
+  sourceRef: string,
+): Promise<number> {
   return rpc<number>("yorisou_share_objects_revoke_by_source", {
+    p_owner_account_id: ownerAccountId,
     p_source_family: sourceFamily,
     p_source_ref: sourceRef,
+  });
+}
+
+/**
+ * THE authoritative source-erasure seam for a persisted assessment result. One RPC = one
+ * transaction: it takes the source lock, verifies the result is live AND owned before touching
+ * anything, revokes only that owner's derivatives, tombstones the source so no later publish can
+ * resurrect a link, and calls the canonical assessment erasure — rolling everything back if that
+ * erasure does not succeed. Returns false when the caller does not own a live result, having
+ * changed nothing.
+ */
+export async function eraseAssessmentResultWithShares(
+  resultRowId: string,
+  ownerAccountId: string,
+): Promise<boolean> {
+  return rpc<boolean>("yorisou_assessment_result_erase_with_shares", {
+    p_result_row_id: resultRowId,
+    p_owner_account_id: ownerAccountId,
   });
 }
 

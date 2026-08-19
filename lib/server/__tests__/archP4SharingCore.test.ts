@@ -43,6 +43,7 @@ const readCode = (...p: string[]) =>
     .join("\n");
 
 const OWNER = "acct_arch_p4_owner";
+const OTHER_OWNER = "acct_arch_p4_other_owner";
 const SOURCE_REF = "11111111-2222-4333-8444-555555555555";
 const PUBLIC_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const SAMPLE_CODE = PUBLIC_ARCHETYPE_TAXONOMY[0].publicCode;
@@ -127,26 +128,35 @@ test("E: private identifiers can never enter a payload — validation refuses ea
 // ── F/H. preview is mandatory; publish rebuilds and verifies ────────────────
 
 function fakeRepo(seed: { publicId?: string } = {}) {
-  const rows: Array<{ publicId: string; digest: string; payload: unknown; revoked: boolean; sourceRef: string }> = [];
+  const rows: Array<{ publicId: string; owner: string; digest: string; payload: unknown; revoked: boolean; sourceRef: string }> = [];
+  const calls: { revokeBySource: unknown[][] } = { revokeBySource: [] };
+  let minted = 0;
   const repository: SharingRepository = {
-    async publish({ candidate: c, digest }) {
-      const active = rows.find((r) => !r.revoked && r.digest === digest && r.sourceRef === c.source_ref);
+    async publish({ ownerAccountId, candidate: c, digest }) {
+      // Mirrors the corrected SQL: one ACTIVE row per owner+source+template regardless of digest.
+      const active = rows.find((r) => !r.revoked && r.owner === ownerAccountId && r.sourceRef === c.source_ref);
       if (active) {
+        if (active.digest !== digest) throw new Error("share_active_exists");
         return { reference: { public_id: active.publicId, card_family: c.card_family, template_version: c.template_version, published_at: "t" }, reused: true };
       }
-      const publicId = seed.publicId ?? PUBLIC_ID;
-      rows.push({ publicId, digest, payload: c.payload, revoked: false, sourceRef: c.source_ref });
+      minted += 1;
+      const publicId = minted === 1 ? (seed.publicId ?? PUBLIC_ID) : `${PUBLIC_ID.slice(0, -1)}${minted}`;
+      rows.push({ publicId, owner: ownerAccountId, digest, payload: c.payload, revoked: false, sourceRef: c.source_ref });
       return { reference: { public_id: publicId, card_family: c.card_family, template_version: c.template_version, published_at: "t" }, reused: false };
     },
-    async revoke(_owner, publicId) {
-      const row = rows.find((r) => r.publicId === publicId && !r.revoked);
+    async revoke(owner, publicId) {
+      const row = rows.find((r) => r.publicId === publicId && r.owner === owner && !r.revoked);
       if (!row) return false;
       row.revoked = true;
       return true;
     },
-    async revokeBySource(_family, sourceRef) {
+    async revokeBySource(ownerAccountId, family, sourceRef) {
+      calls.revokeBySource.push([ownerAccountId, family, sourceRef]);
       let n = 0;
-      for (const row of rows) if (row.sourceRef === sourceRef && !row.revoked) { row.revoked = true; n += 1; }
+      // Owner-scoped, exactly as the corrected RPC is.
+      for (const row of rows) {
+        if (row.owner === ownerAccountId && row.sourceRef === sourceRef && !row.revoked) { row.revoked = true; n += 1; }
+      }
       return n;
     },
     async activeForSource() { return null; },
@@ -160,7 +170,7 @@ function fakeRepo(seed: { publicId?: string } = {}) {
       };
     },
   };
-  return { repository, rows };
+  return { repository, rows, calls };
 }
 
 test("F/H: publish requires the preview digest of the SERVER-rebuilt candidate", async () => {
@@ -301,19 +311,82 @@ test("N: account erasure covers the new share family", () => {
   assert.ok(migration.includes("['yorisou_discovery_sessions', 'owner_account_id']"), "prior family dropped");
 });
 
-test("O: source-result erasure revokes active derivatives, and revoke runs BEFORE erase", async () => {
+test("O-1: source revocation is OWNER-SCOPED in the contract and the repository call", async () => {
+  // Controller blocker 1: the contract originally took only (family, ref), so a source reference —
+  // which is not an authorization — was enough to darken another person's link.
+  const { repository, calls } = fakeRepo();
+  await revokeSharesBySource(OWNER, IMAIRO_SHARE_SOURCE_FAMILY, SOURCE_REF, repository);
+  assert.deepEqual(calls.revokeBySource, [[OWNER, IMAIRO_SHARE_SOURCE_FAMILY, SOURCE_REF]],
+    "the owner must reach the repository as the first argument");
+
+  // And the store forwards the owner to the RPC (the database is where it is enforced).
+  const store = readCode("lib", "server", "sharing", "store.ts");
+  assert.match(store, /p_owner_account_id: ownerAccountId,\s*\n\s*p_source_family/,
+    "the revoke-by-source RPC call must carry the owner");
+});
+
+test("O-2: owner A's source revocation never touches owner B's object", async () => {
   const { repository, rows } = fakeRepo();
   const preview = buildSharePreview(candidate(), validateImairoSharePayload);
   await publishShare({ ownerAccountId: OWNER, candidate: candidate(), previewDigest: preview.digest, validate: validateImairoSharePayload, repository });
-  assert.equal(await revokeSharesBySource(IMAIRO_SHARE_SOURCE_FAMILY, SOURCE_REF, repository), 1);
-  assert.equal(rows[0].revoked, true);
+  await publishShare({ ownerAccountId: OTHER_OWNER, candidate: candidate(), previewDigest: preview.digest, validate: validateImairoSharePayload, repository });
+  assert.equal(rows.filter((r) => !r.revoked).length, 2, "both owners hold an active object");
 
-  // Ordering is structural in the erasure route: revoke first, so no dangling public card exists.
+  // A source-erasure authorized for OWNER must revoke exactly one row — theirs.
+  assert.equal(await revokeSharesBySource(OWNER, IMAIRO_SHARE_SOURCE_FAMILY, SOURCE_REF, repository), 1);
+  assert.equal(rows.find((r) => r.owner === OWNER)?.revoked, true, "the owner's object is revoked");
+  assert.equal(rows.find((r) => r.owner === OTHER_OWNER)?.revoked, false,
+    "ANOTHER OWNER'S PUBLIC LINK WAS DARKENED — cross-owner revocation");
+});
+
+test("O-3: the erasure route uses the ATOMIC seam, not a revoke-then-erase sequence", () => {
+  // Controller blocker 2: two separate transactions leave a window in which a publish commits
+  // between them, so an erased source keeps an active link. The route must delegate the whole
+  // lifecycle to one transaction rather than ordering two.
   const route = readCode("app", "api", "assessment", "results", "[id]", "route.ts");
-  const revokeAt = route.indexOf("revokeSharesBySource");
-  const eraseAt = route.indexOf("await eraseAssessmentResult");
-  assert.ok(revokeAt > 0 && eraseAt > 0, "both calls exist in the erasure route");
-  assert.ok(revokeAt < eraseAt, "shares must be revoked BEFORE the source is erased");
+  assert.ok(route.includes("eraseAssessmentResultWithShares"), "the atomic seam must be used");
+  assert.ok(!route.includes("revokeSharesBySource"),
+    "the route must not perform its own revoke — that is the two-transaction race");
+  // Owner is passed to the seam; the seam verifies ownership before any mutation (proven in SQL).
+  assert.match(route, /eraseAssessmentResultWithShares\(id, ownerId\)/);
+});
+
+test("O-4: the SQL seam authorizes BEFORE mutating and rolls back if canonical erasure fails", () => {
+  const sql = read("supabase", "migrations", "202608180002_shr1_share_objects.sql");
+  const fn = sql.slice(sql.indexOf("function public.yorisou_assessment_result_erase_with_shares"));
+  const lockAt = fn.indexOf("yorisou_share_source_lock");
+  const authAt = fn.indexOf("from public.yorisou_assessment_results");
+  const revokeAt = fn.indexOf("yorisou_share_objects_revoke_by_source");
+  const eraseAt = fn.indexOf("yorisou_assessment_result_erase(");
+  assert.ok(lockAt > 0 && authAt > lockAt, "the source lock is taken before the ownership check");
+  assert.ok(authAt < revokeAt, "OWNERSHIP IS VERIFIED BEFORE ANY SIDE EFFECT");
+  assert.ok(revokeAt < eraseAt, "derivatives are revoked before the canonical erasure runs");
+  assert.match(fn.slice(eraseAt), /if not v_erased then[\s\S]{0,220}raise exception/,
+    "a failed canonical erasure must roll the transaction back");
+  assert.ok(fn.includes("yorisou_share_source_erasures"), "the source is tombstoned in the same transaction");
+});
+
+test("O-5: publish is serialized with erasure and refuses an erased source", () => {
+  const sql = read("supabase", "migrations", "202608180002_shr1_share_objects.sql");
+  const pub = sql.slice(
+    sql.indexOf("function public.yorisou_share_object_publish"),
+    sql.indexOf("function public.yorisou_share_object_revoke"),
+  );
+  assert.ok(pub.includes("yorisou_share_source_lock"), "publish takes the same source lock");
+  assert.ok(pub.indexOf("yorisou_share_source_lock") < pub.indexOf("yorisou_share_source_erasures"),
+    "the lock is held before the tombstone is consulted");
+  assert.ok(pub.includes("share_source_erased"), "publish refuses an erased source");
+});
+
+test("O-6: the one-active-link index excludes payload_digest", () => {
+  // Controller blocker 3: with the digest in the key, two different-digest publishes could both
+  // insert. The declared lifecycle has to be a database fact, not an application check.
+  const sql = read("supabase", "migrations", "202608180002_shr1_share_objects.sql");
+  const idx = /create unique index if not exists yorisou_share_objects_active_identity\s+on public\.yorisou_share_objects \(([^)]+)\)\s+where revoked_at is null/.exec(sql);
+  assert.ok(idx, "the active-identity index must exist as a partial unique index");
+  const columns = idx[1].split(",").map((c) => c.trim());
+  assert.deepEqual(columns, ["owner_account_id", "source_family", "source_ref", "template_ref"]);
+  assert.ok(!columns.includes("payload_digest"), "digest in the key re-opens the two-active-rows race");
 });
 
 // ── P/Q/R. legacy compatibility survives ────────────────────────────────────

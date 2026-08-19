@@ -50,6 +50,26 @@ Q() { psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A -c "$1"; }
 # non-zero exit is swallowed deliberately and only the message text is returned for matching.
 TRY() { psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A -c "$1" 2>&1 || true; }
 
+# Seed a LIVE assessment result for an owner and echo its id. Supplies every NOT NULL column the
+# real schema requires — an incomplete insert silently produced no row and made the race setup look
+# like a race failure.
+seed_result() {
+  psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A -c "
+    with a as (
+      insert into public.yorisou_assessment_attempts (id, method_id, method_version, required_count, status)
+      values (gen_random_uuid(), 'imairo-120q', 'compat-v0.2', 120, 'in_progress')
+      returning id
+    )
+    insert into public.yorisou_assessment_results
+      (id, attempt_id, owner_account_id, method_id, method_version, result_id, original_result_id,
+       dimension_output, visibility, produced_at)
+    select gen_random_uuid(), a.id, '$1', 'imairo-120q', 'compat-v0.2', 'P01', 'P01',
+           '{\"v\":\"pds-v1\"}'::jsonb, 'private', now()
+      from a
+    returning id::text" 2>"$WORK/seed-err.txt" || {
+    fail "seed a live assessment result for $1" "$(head -2 "$WORK/seed-err.txt" | tr '\n' ' ')" >&2; echo ""; }
+}
+
 echo "[shr1] stage 1 — roles + the FULL migration lineage"
 psql "$DSN" -v ON_ERROR_STOP=1 -q -c "
   create extension if not exists pgcrypto; create extension if not exists \"uuid-ossp\";
@@ -93,7 +113,7 @@ done
 [ "$DENIED" = "1" ] && pass "3. PUBLIC/anon/authenticated have no table access" || fail "3. direct access denied"
 SIG_PUB="public.yorisou_share_object_publish(text,text,text,text,text,text,text,jsonb,text)"
 SIG_REV="public.yorisou_share_object_revoke(text,uuid)"
-SIG_SRC="public.yorisou_share_objects_revoke_by_source(text,text)"
+SIG_SRC="public.yorisou_share_objects_revoke_by_source(text,text,text)"
 BROAD=0
 for role in public anon authenticated; do
   for sig in "$SIG_PUB" "$SIG_REV" "$SIG_SRC"; do
@@ -158,9 +178,96 @@ AUDIT_COLS=$(Q "select string_agg(column_name, ',' order by column_name) from in
 OUT=$(TRY "update public.yorisou_share_audit_events set event_type='published'")
 echo "$OUT" | grep -q "share_audit_append_only" && pass "15c. the audit table is append-only" || fail "15c. append-only" "$OUT"
 
+echo "[shr1] stage 5b — CONCURRENCY: the declared lifecycle must be a database fact"
+# These are the two races Controller review found. They are proven against real PostgreSQL with two
+# genuinely concurrent sessions, because a single-threaded ordering check cannot see either of them.
+
+# --- RACE 1: two simultaneous publishes, DIFFERENT digests, same owner/source/template. ---
+# Session A opens a transaction, publishes digest A, and HOLDS it. Session B tries digest B while A
+# is uncommitted: it must block on the source lock, then — once A commits — refuse. Two active rows
+# must be impossible.
+DIGEST_A=$(printf 'c%.0s' {1..64})
+DIGEST_B=$(printf 'd%.0s' {1..64})
+PUB_SQL() { echo "select public.yorisou_share_object_publish('owner-race','imairo_result_card','assessment_result','src-race','tpl','1.0.0','imairo-share-v1','$PAYLOAD'::jsonb,'$1')"; }
+( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/raceA.out" 2>&1
+begin;
+$(PUB_SQL "$DIGEST_A");
+select pg_sleep(2);
+commit;
+SQL
+) &
+RACE_A=$!
+sleep 1   # ensure A holds the lock before B attempts
+psql "$DSN" -q -t -A -c "$(PUB_SQL "$DIGEST_B")" >"$WORK/raceB.out" 2>&1 || true
+wait "$RACE_A" || true
+ACTIVE=$(Q "select count(*) from public.yorisou_share_objects where owner_account_id='owner-race' and revoked_at is null")
+[ "$ACTIVE" = "1" ] && pass "RACE 1: concurrent different-digest publishes leave exactly ONE active row" \
+  || fail "RACE 1: two active rows" "active=$ACTIVE"
+grep -q "share_active_exists" "$WORK/raceB.out" \
+  && pass "RACE 1: the losing publish receives a bounded share_active_exists" \
+  || fail "RACE 1: loser error" "$(head -2 "$WORK/raceB.out" | tr '\n' ' ')"
+
+# --- RACE 2: publish racing source erasure for the same source. ---
+# Session A begins the ATOMIC erasure and holds it; session B publishes concurrently. When erasure
+# commits, the required invariant is ZERO active derivatives for that source — including the row B
+# tried to create.
+RESULT_ID=$(seed_result "owner-race2")
+if [ -z "$RESULT_ID" ]; then
+  fail "RACE 2 setup: could not create a live assessment result"
+else
+  Q "select public.yorisou_share_object_publish('owner-race2','imairo_result_card','assessment_result','$RESULT_ID','tpl','1.0.0','imairo-share-v1','$PAYLOAD'::jsonb,'$DIGEST_A')" >/dev/null
+  ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/eraseA.out" 2>&1
+begin;
+select public.yorisou_assessment_result_erase_with_shares('$RESULT_ID'::uuid, 'owner-race2');
+select pg_sleep(2);
+commit;
+SQL
+  ) &
+  ERASE_A=$!
+  sleep 1
+  psql "$DSN" -q -t -A -c "select public.yorisou_share_object_publish('owner-race2','imairo_result_card','assessment_result','$RESULT_ID','tpl','1.0.0','imairo-share-v1','$PAYLOAD'::jsonb,'$DIGEST_B')" >"$WORK/pubDuringErase.out" 2>&1 || true
+  wait "$ERASE_A" || true
+  ERASED_OK=$(grep -c "^t$" "$WORK/eraseA.out")
+  SURVIVORS=$(Q "select count(*) from public.yorisou_share_objects where source_ref='$RESULT_ID' and revoked_at is null")
+  if [ "$ERASED_OK" -ge 1 ]; then
+    [ "$SURVIVORS" = "0" ] \
+      && pass "RACE 2: erasure succeeded and ZERO active derivatives survive for that source" \
+      || fail "RACE 2: an active link outlived its erased source" "survivors=$SURVIVORS"
+    grep -q "share_source_erased" "$WORK/pubDuringErase.out" \
+      && pass "RACE 2: the concurrent publish was refused with share_source_erased" \
+      || fail "RACE 2: concurrent publish outcome" "$(head -2 "$WORK/pubDuringErase.out" | tr '\n' ' ')"
+  else
+    fail "RACE 2: the atomic erasure did not succeed" "$(head -3 "$WORK/eraseA.out" | tr '\n' ' ')"
+  fi
+fi
+
+echo "[shr1] stage 5c — cross-owner source revocation is refused"
+Q "select public.yorisou_share_object_publish('owner-x','imairo_result_card','assessment_result','src-shared','tpl','1.0.0','imairo-share-v1','$PAYLOAD'::jsonb,'$DIGEST_A')" >/dev/null
+Q "select public.yorisou_share_object_publish('owner-y','imairo_result_card','assessment_result','src-shared','tpl','1.0.0','imairo-share-v1','$PAYLOAD'::jsonb,'$DIGEST_A')" >/dev/null
+REVOKED_N=$(TRY "select public.yorisou_share_objects_revoke_by_source('owner-x','assessment_result','src-shared')")
+[ "$REVOKED_N" = "1" ] && pass "source revoke touches only the requesting owner's object" || fail "owner-scoped source revoke" "n=$REVOKED_N"
+[ "$(Q "select count(*) from public.yorisou_share_objects where owner_account_id='owner-y' and source_ref='src-shared' and revoked_at is null")" = "1" ] \
+  && pass "ANOTHER OWNER'S LINK SURVIVES a source revoke they did not authorize" \
+  || fail "cross-owner revocation occurred"
+# And an erase attempted by a non-owner changes nothing at all. A seed failure here must REPORT a
+# failure, never silently skip: an authorization proof that quietly does not run reads as a pass.
+VICTIM_ID=$(seed_result "owner-victim")
+if [ -z "$VICTIM_ID" ]; then
+  fail "cross-owner erase setup: could not create a live victim result"
+else
+    Q "select public.yorisou_share_object_publish('owner-victim','imairo_result_card','assessment_result','$VICTIM_ID','tpl','1.0.0','imairo-share-v1','$PAYLOAD'::jsonb,'$DIGEST_A')" >/dev/null
+    ATTACK=$(TRY "select public.yorisou_assessment_result_erase_with_shares('$VICTIM_ID'::uuid, 'owner-attacker')")
+    [ "$ATTACK" = "f" ] && pass "an unauthorized erase attempt returns false" || fail "unauthorized erase" "got=$ATTACK"
+    [ "$(Q "select count(*) from public.yorisou_share_objects where source_ref='$VICTIM_ID' and revoked_at is null")" = "1" ] \
+      && pass "THE VICTIM'S PUBLIC LINK IS UNTOUCHED by the unauthorized erase attempt" \
+      || fail "unauthorized erase darkened another owner's link"
+    [ "$(Q "select count(*) from public.yorisou_assessment_results where id='$VICTIM_ID' and deleted_at is null")" = "1" ] \
+      && pass "the victim's result itself is untouched" || fail "unauthorized erase deleted a result"
+fi
+
 echo "[shr1] stage 6 — source erasure + account erasure (13)"
 P4=$(Q "select public.yorisou_share_object_publish('owner-c','imairo_result_card','assessment_result','src-4','tpl','1.0.0','imairo-share-v1','$PAYLOAD'::jsonb,'$DIGEST')->>'public_id'")
-[ "$(Q "select public.yorisou_share_objects_revoke_by_source('assessment_result','src-4')")" = "1" ] \
+[ "$(Q "select public.yorisou_share_objects_revoke_by_source('owner-c','assessment_result','src-4')")" = "1" ] \
   && pass "source erasure revokes the derived object" || fail "source erasure"
 [ "$(Q "select count(*) from public.yorisou_share_objects where public_id='$P4' and revoked_at is null")" = "0" ] \
   && pass "the derived public link is dark after source erasure" || fail "source erasure effect"
