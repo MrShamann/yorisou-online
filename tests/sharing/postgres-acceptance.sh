@@ -26,6 +26,11 @@ trap cleanup EXIT
 pass() { printf '  ok   %s\n' "$1"; }
 fail() { printf '  FAIL %s  %s\n' "$1" "${2:-}"; FAILURES=$((FAILURES+1)); }
 
+# WORK holds scratch output (error capture) on BOTH paths. Creating it only in the local branch
+# left the CI branch redirecting stderr into a directory that does not exist — which makes psql
+# itself fail, so every migration "failed to apply" for a reason that had nothing to do with SQL.
+mkdir -p "$WORK"
+
 if [[ -n "${SHR1_DATABASE_URL:-}" ]]; then
   DSN="$SHR1_DATABASE_URL"
   if [[ "$DSN" == *"supabase.co"* || "$DSN" != *"shr1_acceptance"* ]]; then
@@ -52,11 +57,24 @@ psql "$DSN" -v ON_ERROR_STOP=1 -q -c "
   do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$;
   do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;
   grant usage on schema public to anon, authenticated, service_role;" >/dev/null
+APPLY_FAILURES=0
 for f in supabase/migrations/*.sql; do
-  psql "$DSN" -q -X -v ON_ERROR_STOP=1 -f "$f" >/dev/null 2>"${WORK:-/tmp}/shr1-err.txt" \
-    || fail "apply $(basename "$f")" "$(head -2 "${WORK:-/tmp}/shr1-err.txt" | tr '\n' ' ')"
+  psql "$DSN" -q -X -v ON_ERROR_STOP=1 -f "$f" >/dev/null 2>"$WORK/shr1-err.txt" \
+    || { fail "apply $(basename "$f")" "$(head -2 "$WORK/shr1-err.txt" | tr '\n' ' ')"; APPLY_FAILURES=$((APPLY_FAILURES+1)); }
 done
+# HONEST, AND FAIL FAST. Announcing "applied the full lineage" unconditionally is how a broken
+# apply reached stage 6 disguised as a missing-table mystery. If the lineage did not apply, every
+# later assertion is meaningless — say so once and stop.
+if [ "$APPLY_FAILURES" -gt 0 ]; then
+  echo "[shr1] FAIL — $APPLY_FAILURES migration(s) did not apply; later stages would be meaningless"
+  exit 1
+fi
 pass "applied the full lineage including 202608180002_shr1_share_objects.sql"
+# The erasure function is executor-claim-bound: prove its prerequisite exists BEFORE stage 6 needs
+# it, so a missing prerequisite reads as a prerequisite failure rather than a sharing failure.
+[ "$(Q "select to_regclass('public.yorisou_account_deletion_jobs') is not null")" = "t" ] \
+  && pass "erasure prerequisites present (deletion-job authority)" \
+  || { fail "erasure prerequisites"; echo "[shr1] FAIL"; exit 1; }
 psql "$DSN" -q -X -v ON_ERROR_STOP=1 -f supabase/migrations/202608180002_shr1_share_objects.sql >/dev/null \
   && pass "re-apply is idempotent"
 

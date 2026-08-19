@@ -28,6 +28,11 @@ pass() { printf '  ok   %s\n' "$1"; }
 fail() { printf '  FAIL %s  %s\n' "$1" "${2:-}"; FAILURES=$((FAILURES+1)); }
 
 mkdir -p "$WORK"
+# WORK holds scratch output on BOTH paths. Creating it only in the local branch left the CI branch
+# redirecting stderr into a nonexistent directory, which makes psql fail for a reason unrelated to
+# SQL. Latent here; it bit the SHR-1 harness in CI, so it is closed in both.
+mkdir -p "$WORK"
+
 if [[ -n "${DD1_DATABASE_URL:-}" ]]; then
   DSN="$DD1_DATABASE_URL"
   if [[ "$DSN" == *"supabase.co"* || "$DSN" != *"dd1_acceptance"* ]]; then
@@ -52,10 +57,17 @@ psql "$DSN" -v ON_ERROR_STOP=1 -q -c "
   do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$;
   do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;
   grant usage on schema public to anon, authenticated, service_role;" >/dev/null
+APPLY_FAILURES=0
 for f in supabase/migrations/*.sql; do
-  psql "$DSN" -q -X -v ON_ERROR_STOP=1 -f "$f" >/dev/null 2>"${WORK:-/tmp}/dd1-err.txt" \
-    || fail "apply $(basename "$f")" "$(head -2 "${WORK:-/tmp}/dd1-err.txt" | tr '\n' ' ')"
+  psql "$DSN" -q -X -v ON_ERROR_STOP=1 -f "$f" >/dev/null 2>"$WORK/dd1-err.txt" \
+    || { fail "apply $(basename "$f")" "$(head -2 "$WORK/dd1-err.txt" | tr '\n' ' ')"; APPLY_FAILURES=$((APPLY_FAILURES+1)); }
 done
+# Honest, and fail fast: announcing success unconditionally lets a broken apply masquerade as a
+# mysterious missing table several stages later.
+if [ "$APPLY_FAILURES" -gt 0 ]; then
+  echo "[dd1] FAIL — $APPLY_FAILURES migration(s) did not apply; later stages would be meaningless"
+  exit 1
+fi
 pass "applied the full lineage including 202608180001_dd1_daily_discovery_sessions.sql"
 QF supabase/migrations/202608180001_dd1_daily_discovery_sessions.sql && pass "re-apply is idempotent"
 
