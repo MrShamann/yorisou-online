@@ -10,7 +10,6 @@ import { readFileSync } from "node:fs";
 // store read it replaces.
 
 import {
-  CONTINUITY_LABEL_MAX,
   CONTINUITY_SOURCE_FAMILIES,
   assertProjectableSource,
   isReadableMoment,
@@ -36,7 +35,7 @@ function source(over: Partial<ProjectionSource> = {}): ProjectionSource {
     source_family: "current_state",
     source_ref: "src-1",
     occurred_at: "2026-08-19T00:00:00.000Z",
-    label: "checked in",
+    variant: null,
     ...over,
   };
 }
@@ -50,8 +49,8 @@ function fakeRepo() {
         (r) => r.owner_ref === s.owner_ref && r.source_family === s.source_family && r.source_ref === s.source_ref,
       );
       if (existing) {
-        existing.label = s.label;
         existing.occurred_at = s.occurred_at;
+        existing.variant = s.variant;
         return existing;
       }
       const row: TimelineMoment = { ...s, status: "active" };
@@ -101,14 +100,15 @@ test("A. the continuity platform tier carries no product identity", () => {
 test("B. a TimelineMoment has no field for source content", () => {
   const moment: TimelineMoment = { ...source(), status: "active" };
   assert.deepEqual(Object.keys(moment).sort(), [
-    "label", "occurred_at", "owner_ref", "source_family", "source_ref", "status",
+    "occurred_at", "owner_ref", "source_family", "source_ref", "status", "variant",
   ]);
+  // The index carries no content at all — not even a label. Rendering hydrates from the sources.
+  assert.ok(!("label" in moment) && !("title" in moment) && !("body" in moment));
 });
 
-test("B. an over-long label is refused — a projection is a pointer, not a record", () => {
-  assert.throws(() => assertProjectableSource(source({ label: "x".repeat(CONTINUITY_LABEL_MAX + 1) })),
-    /continuity_label_too_long/);
-  assert.throws(() => assertProjectableSource(source({ label: "" })), /continuity_label_required/);
+test("B. malformed projection input is refused", () => {
+  assert.throws(() => assertProjectableSource(source({ variant: "" })), /continuity_variant_invalid/);
+  assert.throws(() => assertProjectableSource(source({ variant: "x".repeat(41) })), /continuity_variant_invalid/);
   assert.throws(() => assertProjectableSource(source({ source_ref: "" })), /continuity_source_ref_required/);
   assert.throws(() => assertProjectableSource(source({ owner_ref: "" })), /continuity_owner_required/);
   assert.throws(
@@ -163,10 +163,10 @@ test("C. invalidation is idempotent and reports honestly", async () => {
 
 test("D. projecting the same source twice updates, never duplicates", async () => {
   const { repo, rows } = fakeRepo();
-  await projectMoment(source({ label: "first" }), repo);
-  await projectMoment(source({ label: "second" }), repo);
+  await projectMoment(source({ occurred_at: "2026-08-01T00:00:00.000Z" }), repo);
+  await projectMoment(source({ occurred_at: "2026-08-02T00:00:00.000Z" }), repo);
   assert.equal(rows.length, 1);
-  assert.equal(rows[0].label, "second");
+  assert.equal(rows[0].occurred_at, "2026-08-02T00:00:00.000Z");
 });
 
 test("D. reads are bounded and newest-first", async () => {

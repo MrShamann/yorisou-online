@@ -61,12 +61,13 @@ export interface ProjectionSource {
   source_family: ContinuitySourceFamily;
   source_ref: string;
   occurred_at: string;
-  /** Short display-safe label. Bounded, because a projection is a pointer, not a record. */
-  label: string;
+  /**
+   * Optional sub-kind WITHIN a family, when one source drives two consumer views. It exists because
+   * one family below is split by mode at read time, and the index must be able to answer that
+   * filter without opening the source.
+   */
+  variant: string | null;
 }
-
-/** Upper bound on projected label length — a projection is a pointer, not a copy. */
-export const CONTINUITY_LABEL_MAX = 120;
 
 /** Lifecycle of one projected moment. `invalidated` is terminal and irreversible. */
 export type TimelineMomentStatus = "active" | "invalidated";
@@ -81,7 +82,7 @@ export interface TimelineMoment {
   source_family: ContinuitySourceFamily;
   source_ref: string;
   occurred_at: string;
-  label: string;
+  variant: string | null;
   status: TimelineMomentStatus;
 }
 
@@ -110,8 +111,9 @@ export function assertProjectableSource(source: ProjectionSource): void {
   if (!(CONTINUITY_SOURCE_FAMILIES as readonly string[]).includes(source.source_family)) {
     throw new Error("continuity_unknown_source_family");
   }
-  if (!source.label || source.label.trim().length === 0) throw new Error("continuity_label_required");
-  if (source.label.length > CONTINUITY_LABEL_MAX) throw new Error("continuity_label_too_long");
+  if (source.variant !== null && (source.variant.length === 0 || source.variant.length > 40)) {
+    throw new Error("continuity_variant_invalid");
+  }
   if (Number.isNaN(Date.parse(source.occurred_at))) throw new Error("continuity_occurred_at_invalid");
 }
 
