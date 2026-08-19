@@ -249,6 +249,206 @@ as $$
 $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- CLOSING THE OWNED-SOURCE SET: assessment ownership-creating mutations join the
+-- POR-1 account mutation fence
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- WHY THIS IS HERE, IN A CONNECTION MIGRATION.
+--
+-- Account erasure below enumerates every live assessment source the account owns, locks them all,
+-- and then destroys their derivatives. That is only sound if the set cannot GROW after the
+-- enumeration. Two canonical assessment mutations could grow it, and neither was fenced:
+--
+--   yorisou_attempt_claim     — reassigns an ANONYMOUS attempt and its result to an account
+--   yorisou_attempt_complete  — inserts a NEW persisted result for an account-owned attempt
+--
+-- Reproduced on a real cluster: a claim issued while an account deletion was in flight left the
+-- DELETED account owning a live attempt and a live assessment result. So "all currently-owned
+-- sources are locked" did not mean "all sources this account can own before the transaction ends",
+-- and the ARCH-P5 lifecycle claim was not actually closed.
+--
+-- The fix uses the mechanism POR-1 already has rather than inventing a second one: an account
+-- mutation lease. Deletion closes the gate and drains outstanding leases before irreversible work,
+-- so once it has done that no new owned source can appear.
+--
+-- LOCK ORDER, and it matters: the POR-1 GATE is taken BEFORE the attempt row, never after.
+-- Deletion closes the gate first and touches attempts later; reversing that here would build a
+-- gate/attempt cycle of exactly the kind the previous three rounds were about.
+--
+-- Neither function's assessment semantics change: no scoring, no result envelope, no taxonomy, no
+-- idempotency behaviour, no anonymous/token path. The merged migration that defines them is NOT
+-- edited; these replace the bodies in the lineage.
+
+-- The lease vocabulary is a CLOSED list, and it stays closed: the existing thirteen tokens are
+-- re-stated verbatim and exactly two are added.
+do $ops$
+begin
+  if exists (select 1 from pg_constraint
+              where conname = 'yorisou_account_mutation_leases_operation_code_check'
+                and conrelid = 'public.yorisou_account_mutation_leases'::regclass) then
+    alter table public.yorisou_account_mutation_leases
+      drop constraint yorisou_account_mutation_leases_operation_code_check;
+  end if;
+  alter table public.yorisou_account_mutation_leases
+    add constraint yorisou_account_mutation_leases_operation_code_check
+    check (operation_code = any (array[
+      'support_profile_update'::text, 'password_update'::text, 'line_binding'::text,
+      'account_profile_update'::text, 'identity_mirror_sync'::text, 'session_identity_upgrade'::text,
+      'account_recovery'::text, 'account_registration'::text, 'line_primary_provisioning'::text,
+      'password_reset_issue'::text, 'session_account_binding'::text, 'foundation_profile_update'::text,
+      'foundation_identity_binding'::text,
+      -- CPR-1: the two ownership-creating assessment mutations.
+      'assessment_attempt_claim'::text, 'assessment_attempt_complete'::text
+    ]));
+end
+$ops$;
+
+-- CLAIM, re-emitted. Identical semantics; the lease is acquired FIRST.
+create or replace function public.yorisou_attempt_claim(
+  p_attempt_id uuid,
+  p_claim_token_hash text,
+  p_owner_account_id text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_attempt public.yorisou_assessment_attempts%rowtype;
+  v_result uuid;
+  v_lease uuid;
+begin
+  if p_owner_account_id is null or length(p_owner_account_id) = 0 then
+    raise exception 'claim_owner_required';
+  end if;
+
+  -- POR-1 GATE BEFORE THE ATTEMPT ROW. This raises the existing bounded account-mutation denials
+  -- (deleted / erasing / gate_closed) and therefore fails closed: an anonymous result can never be
+  -- assigned to an account whose deletion has begun.
+  v_lease := (public.yorisou_account_mutation_begin(p_owner_account_id, 'assessment_attempt_claim', 30)->>'leaseId')::uuid;
+
+  select * into v_attempt from public.yorisou_assessment_attempts a
+   where a.id = p_attempt_id for update;
+  if not found then raise exception 'attempt_not_found'; end if;
+
+  -- Already claimed by this same account -> idempotent success.
+  if v_attempt.owner_account_id is not null then
+    if v_attempt.owner_account_id = p_owner_account_id then
+      select r.id into v_result from public.yorisou_assessment_results r where r.attempt_id = p_attempt_id;
+      perform public.yorisou_account_mutation_release(v_lease);
+      return v_result;
+    end if;
+    raise exception 'attempt_already_claimed_by_another_owner';
+  end if;
+
+  if v_attempt.claim_token_hash is null or v_attempt.claim_token_hash <> p_claim_token_hash then
+    raise exception 'claim_token_invalid';
+  end if;
+  if v_attempt.expires_at is not null and v_attempt.expires_at < now() then
+    raise exception 'claim_token_expired';
+  end if;
+
+  update public.yorisou_assessment_attempts
+     set owner_account_id = p_owner_account_id,
+         claimed_at       = now(),
+         claim_token_hash = null,   -- single use
+         expires_at       = null,   -- claimed attempts do not expire
+         updated_at       = now()
+   where id = p_attempt_id;
+
+  update public.yorisou_assessment_results
+     set owner_account_id = p_owner_account_id
+   where attempt_id = p_attempt_id
+  returning id into v_result;
+
+  -- Released on success only. Any raise above rolls the whole transaction back, lease included, so
+  -- a failure cannot strand an active lease that deletion would then wait on forever.
+  perform public.yorisou_account_mutation_release(v_lease);
+  return v_result;
+end;
+$$;
+
+-- COMPLETE, re-emitted. Identical semantics, including the anonymous/token-only path, which takes
+-- NO lease because there is no account to fence.
+create or replace function public.yorisou_attempt_complete(
+  p_attempt_id uuid,
+  p_claim_token_hash text,
+  p_owner_account_id text,
+  p_answers jsonb,
+  p_answered_count integer,
+  p_result_id text,
+  p_overlay_id text,
+  p_dimension_output jsonb,
+  p_scoring_version text,
+  p_result_schema_version text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_attempt public.yorisou_assessment_attempts%rowtype;
+  v_existing uuid;
+  v_result_row uuid;
+  v_lease uuid;
+begin
+  -- CANONICAL ENVELOPE GUARD: exactly one key, exactly the approved version.
+  if p_dimension_output is null
+     or jsonb_typeof(p_dimension_output) <> 'object'
+     or (select count(*) from jsonb_object_keys(p_dimension_output)) <> 1
+     or p_dimension_output->>'v' is distinct from 'pds-v1' then
+    raise exception 'assessment_persisted_envelope_invalid';
+  end if;
+
+  -- POR-1 GATE BEFORE THE ATTEMPT ROW, for the account-bound path only. A completion creates a NEW
+  -- owned result, which is exactly the growth account erasure must not see after its snapshot.
+  if p_owner_account_id is not null and length(p_owner_account_id) > 0 then
+    v_lease := (public.yorisou_account_mutation_begin(p_owner_account_id, 'assessment_attempt_complete', 30)->>'leaseId')::uuid;
+  end if;
+
+  select * into v_attempt from public.yorisou_assessment_attempts a
+   where a.id = p_attempt_id
+     and (
+       (a.owner_account_id is null and a.claim_token_hash is not null and a.claim_token_hash = p_claim_token_hash)
+       or (a.owner_account_id is not null and a.owner_account_id = p_owner_account_id)
+     )
+   for update;
+  if not found then raise exception 'attempt_not_found_or_not_writable'; end if;
+
+  select r.id into v_existing from public.yorisou_assessment_results r where r.attempt_id = p_attempt_id;
+  if v_existing is not null then
+    if v_lease is not null then perform public.yorisou_account_mutation_release(v_lease); end if;
+    return v_existing;
+  end if;
+
+  if v_attempt.owner_account_id is null
+     and v_attempt.expires_at is not null and v_attempt.expires_at <= now() then
+    raise exception 'attempt_expired';
+  end if;
+  if p_answered_count < v_attempt.required_count then raise exception 'attempt_incomplete_coverage'; end if;
+
+  update public.yorisou_assessment_attempts
+     set answers = p_answers, answered_count = p_answered_count,
+         status = 'completed', completed_at = now(), updated_at = now()
+   where id = p_attempt_id;
+
+  insert into public.yorisou_assessment_results
+    (attempt_id, owner_account_id, method_id, method_version, scoring_version,
+     result_schema_version, result_id, overlay_id, dimension_output, original_result_id)
+  values
+    (p_attempt_id, v_attempt.owner_account_id, v_attempt.method_id, v_attempt.method_version,
+     p_scoring_version, p_result_schema_version, p_result_id, p_overlay_id,
+     p_dimension_output, p_result_id)
+  returning id into v_result_row;
+
+  if v_lease is not null then perform public.yorisou_account_mutation_release(v_lease); end if;
+  return v_result_row;
+end;
+$$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Assessment-source liveness, and the ARCH-P4 publish RPC re-emitted to use it
 -- ─────────────────────────────────────────────────────────────────────────────
 
@@ -779,6 +979,8 @@ begin
   foreach v_sig in array array[
     'public.yorisou_imairo_pair_live_source(text, text)',
     'public.yorisou_assessment_source_live(text, text)',
+    'public.yorisou_attempt_claim(uuid, text, text)',
+    'public.yorisou_attempt_complete(uuid, text, text, jsonb, integer, text, text, jsonb, text, text)',
     'public.yorisou_share_object_publish(text, text, text, text, text, text, text, jsonb, text)',
     'public.yorisou_connection_source_erased(text)',
     'public.yorisou_connection_invite_create(text, text, text)',
@@ -897,8 +1099,9 @@ declare
     ['yorisou_canonical_recommendation_sets','owner_account_id'],
     ['yorisou_account_deletion_requests','owner_account_id']
   ];
-  v_src      record;
-  v_pair_ids uuid[];
+  v_src        record;
+  v_invite_ids uuid[];
+  v_pair_ids   uuid[];
   v_i        integer;
   v_table    text;
   v_column   text;
@@ -946,9 +1149,22 @@ begin
   -- contract the erasure-coverage guard reads, and leaving it is what keeps "every owner-linked
   -- table is registered" true. By the time it runs these deletes are no-ops.
   if to_regclass('public.yorisou_connection_invitations') is not null then
-    delete from public.yorisou_connection_invitations
-     where inviter_account_id = p_owner_account_id
-        or accepted_by_account_id = p_owner_account_id;
+    -- DETERMINISTIC, like the pair rows. An ACCEPTED invitation names two people, so two accounts
+    -- connected through several accepted invitations target the SAME rows — and their source locks
+    -- do not serialize them, because they own different assessment sources. An unordered bulk
+    -- DELETE leaves the row order to the planner, which is not a guarantee; one lucky concurrent
+    -- run proves nothing.
+    select array_agg(id order by id) into v_invite_ids
+      from (
+        select id from public.yorisou_connection_invitations
+         where inviter_account_id = p_owner_account_id
+            or accepted_by_account_id = p_owner_account_id
+         order by id
+         for update
+      ) locked;
+    if v_invite_ids is not null and array_length(v_invite_ids, 1) > 0 then
+      delete from public.yorisou_connection_invitations where id = any (v_invite_ids);
+    end if;
   end if;
 
   if to_regclass('public.yorisou_connection_pairs') is not null then

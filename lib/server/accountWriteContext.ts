@@ -63,7 +63,13 @@ export type AccountMutationOperation =
   | "password_reset_issue"
   | "session_account_binding"
   | "foundation_profile_update"
-  | "foundation_identity_binding";
+  | "foundation_identity_binding"
+  // CPR-1 — the two assessment mutations that can CREATE or REASSIGN an owned assessment source.
+  // They were outside the fence, which meant a claim issued during an account deletion could leave
+  // the deleted account owning a live attempt and result. Account erasure enumerates owned sources
+  // and must be able to trust that set stops growing once its gate is closed.
+  | "assessment_attempt_claim"
+  | "assessment_attempt_complete";
 
 export const ACCOUNT_MUTATION_OPERATIONS: readonly AccountMutationOperation[] = [
   "support_profile_update",
@@ -79,6 +85,8 @@ export const ACCOUNT_MUTATION_OPERATIONS: readonly AccountMutationOperation[] = 
   "session_account_binding",
   "foundation_profile_update",
   "foundation_identity_binding",
+  "assessment_attempt_claim",
+  "assessment_attempt_complete",
 ];
 
 type ContextBody = {

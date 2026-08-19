@@ -875,6 +875,180 @@ done
   && pass "POR-1: the checked wrapper still delegates to the unchecked body" \
   || fail "POR-1: the checked wrapper no longer calls the unchecked body"
 
+echo "[cpr1] stage 8c — CLOSING THE OWNED-SOURCE SET (H, I, J)"
+
+# The REAL POR-1 authority shape: a job actually at the irreversible database-erasure stage, with a
+# frozen manifest and a live executor claim. Everything below drives the CHECKED wrapper, because
+# the unchecked body does not close the mutation gate and proving against it would prove nothing.
+EXEC_HASH=$(printf '%064d' 99)
+POR1_ARM() {  # $1 = account -> echoes job id
+  local job
+  job=$(Q "insert into public.yorisou_account_deletion_jobs
+      (owner_account_id, owner_fingerprint, state, execution_cursor, irreversible_started_at,
+       executor_token_hash, executor_expires_at, executor_generation)
+      values ('$1', encode(sha256(convert_to('$1','utf8')),'hex'), 'database_erasure',
+              'database_erasure', now(), '$EXEC_HASH', now() + interval '10 minutes', 1)
+      returning id::text" 2>"$WORK/job-err.txt") || {
+    fail "arm a POR-1 deletion job for $1" "$(head -2 "$WORK/job-err.txt" | tr '\n' ' ')" >&2; echo ""; return; }
+  Q "insert into public.yorisou_account_deletion_manifests (job_id, payload) values ('$job'::uuid, '{}'::jsonb)" >/dev/null
+  echo "$job"
+}
+CHECKED_ERASE() { TRY "select public.yorisou_account_deletion_erase_database('$1'::uuid,'$2','$EXEC_HASH',1)"; }
+
+# ── RACE H — an anonymous CLAIM must not resurrect ownership for a deleting account. ─────────
+#
+# Reproduced on the reviewed head: a claim issued while an account deletion was in flight left the
+# DELETED account owning a live attempt and a live assessment result. The owned-source snapshot that
+# the whole R3 lifecycle rests on was therefore not a closed set.
+H_TOKEN=$(printf '%064d' 4242)
+H_ATT=$(Q "insert into public.yorisou_assessment_attempts
+   (id,method_id,method_version,required_count,status,claim_token_hash,expires_at)
+   values (gen_random_uuid(),'imairo-120q','compat-v0.2',120,'in_progress','$H_TOKEN', now()+interval '1 day')
+   returning id::text")
+if [ -z "$H_ATT" ]; then
+  fail "RACE H setup: could not seed an anonymous attempt"
+else
+  Q "insert into public.yorisou_assessment_results
+     (id,attempt_id,owner_account_id,method_id,method_version,result_id,original_result_id,
+      dimension_output,visibility,produced_at)
+     values (gen_random_uuid(),'$H_ATT'::uuid,null,'imairo-120q','compat-v0.2','MS-KI','MS-KI',
+             '{\"v\":\"pds-v1\"}'::jsonb,'private',now())" >/dev/null
+  H_JOB=$(POR1_ARM "acct-h1")
+  if [ -z "$H_JOB" ]; then
+    fail "RACE H setup: could not arm the deletion job"
+  else
+    # The account is at the irreversible stage: the fence must refuse the claim outright.
+    H_CLAIM=$(TRY "select public.yorisou_attempt_claim('$H_ATT'::uuid,'$H_TOKEN','acct-h1')")
+    echo "$H_CLAIM" | grep -qE "account_mutation_denied" \
+      && pass "RACE H: a claim during account erasure is refused by the POR-1 fence" \
+      || fail "RACE H: the claim was not fenced" "$(echo "$H_CLAIM" | head -1)"
+    [ "$(Q "select count(*) from public.yorisou_assessment_attempts where owner_account_id='acct-h1'")" = "0" ] \
+      && pass "RACE H: NO attempt became owned by the deleting account" || fail "RACE H: attempt ownership resurrected"
+    [ "$(Q "select count(*) from public.yorisou_assessment_results where owner_account_id='acct-h1' and deleted_at is null")" = "0" ] \
+      && pass "RACE H: NO live result became owned by the deleting account" || fail "RACE H: result ownership resurrected"
+    H_ERASE=$(CHECKED_ERASE "$H_JOB" "acct-h1")
+    echo "$H_ERASE" | grep -q "yorisou_" \
+      && pass "RACE H: the CHECKED POR-1 erasure completed" || fail "RACE H: checked erasure failed" "$(echo "$H_ERASE" | head -1)"
+    [ "$(Q "select count(*) from public.yorisou_account_mutation_leases where owner_account_id='acct-h1' and released_at is null")" = "0" ] \
+      && pass "RACE H: no dangling mutation lease remains" || fail "RACE H: a lease was stranded"
+    # The anonymous rows are untouched: fencing the claim must not destroy someone else's data.
+    [ "$(Q "select count(*) from public.yorisou_assessment_results where attempt_id='$H_ATT'::uuid and owner_account_id is null")" = "1" ] \
+      && pass "RACE H: the anonymous result is still anonymous and intact" || fail "RACE H: anonymous data was harmed"
+  fi
+fi
+
+# ── RACE I — an account-bound COMPLETION cannot create a source after the snapshot. ──────────
+I_ATT=$(Q "insert into public.yorisou_assessment_attempts
+   (id,method_id,method_version,required_count,status,owner_account_id,claimed_at,answered_count,answers)
+   values (gen_random_uuid(),'imairo-120q','compat-v0.2',1,'in_progress','acct-i1',now(),0,'{}'::jsonb)
+   returning id::text")
+if [ -z "$I_ATT" ]; then
+  fail "RACE I setup: could not seed an account-owned attempt"
+else
+  I_JOB=$(POR1_ARM "acct-i1")
+  if [ -z "$I_JOB" ]; then
+    fail "RACE I setup: could not arm the deletion job"
+  else
+    I_DONE=$(TRY "select public.yorisou_attempt_complete('$I_ATT'::uuid, null, 'acct-i1',
+                    '{\"q1\":1}'::jsonb, 1, 'MS-KI', null, '{\"v\":\"pds-v1\"}'::jsonb, 'sv-1', 'rsv-1')")
+    echo "$I_DONE" | grep -qE "account_mutation_denied" \
+      && pass "RACE I: an account-bound completion during erasure is refused by the fence" \
+      || fail "RACE I: the completion was not fenced" "$(echo "$I_DONE" | head -1)"
+    [ "$(Q "select count(*) from public.yorisou_assessment_results where owner_account_id='acct-i1'")" = "0" ] \
+      && pass "RACE I: NO new owned result escaped the source-lock snapshot" || fail "RACE I: a late result appeared"
+    I_ERASE=$(CHECKED_ERASE "$I_JOB" "acct-i1")
+    echo "$I_ERASE" | grep -q "yorisou_" \
+      && pass "RACE I: the CHECKED erasure completed" || fail "RACE I: checked erasure failed" "$(echo "$I_ERASE" | head -1)"
+    [ "$(Q "select count(*) from public.yorisou_assessment_attempts where owner_account_id='acct-i1'")" = "0" ] \
+      && pass "RACE I: the account's attempt is gone" || fail "RACE I: attempt survived"
+    [ "$(Q "select count(*) from public.yorisou_account_mutation_leases where owner_account_id='acct-i1' and released_at is null")" = "0" ] \
+      && pass "RACE I: no dangling mutation lease remains" || fail "RACE I: a lease was stranded"
+  fi
+fi
+
+# The ANONYMOUS completion path must keep working — it has no account to fence.
+A_ATT=$(Q "insert into public.yorisou_assessment_attempts
+   (id,method_id,method_version,required_count,status,claim_token_hash,expires_at,answered_count,answers)
+   values (gen_random_uuid(),'imairo-120q','compat-v0.2',1,'in_progress','$(printf '%064d' 777)',
+           now()+interval '1 day',0,'{}'::jsonb) returning id::text")
+if [ -n "$A_ATT" ]; then
+  A_RES=$(TRY "select public.yorisou_attempt_complete('$A_ATT'::uuid, '$(printf '%064d' 777)', null,
+                 '{\"q1\":1}'::jsonb, 1, 'MS-KI', null, '{\"v\":\"pds-v1\"}'::jsonb, 'sv-1', 'rsv-1')")
+  echo "$A_RES" | grep -qE "^[0-9a-f]{8}-" \
+    && pass "the ANONYMOUS completion path is unchanged and takes no lease" \
+    || fail "anonymous completion broke" "$(echo "$A_RES" | head -1)"
+else
+  fail "anonymous completion setup"
+fi
+
+# A normal (non-deleting) account must still be able to claim and complete.
+N_TOKEN=$(printf '%064d' 5150)
+N_ATT=$(Q "insert into public.yorisou_assessment_attempts
+   (id,method_id,method_version,required_count,status,claim_token_hash,expires_at)
+   values (gen_random_uuid(),'imairo-120q','compat-v0.2',120,'in_progress','$N_TOKEN', now()+interval '1 day')
+   returning id::text")
+if [ -n "$N_ATT" ]; then
+  Q "insert into public.yorisou_assessment_results
+     (id,attempt_id,owner_account_id,method_id,method_version,result_id,original_result_id,
+      dimension_output,visibility,produced_at)
+     values (gen_random_uuid(),'$N_ATT'::uuid,null,'imairo-120q','compat-v0.2','MS-SZ','MS-SZ',
+             '{\"v\":\"pds-v1\"}'::jsonb,'private',now())" >/dev/null
+  N_OUT=$(TRY "select public.yorisou_attempt_claim('$N_ATT'::uuid,'$N_TOKEN','acct-normal')")
+  echo "$N_OUT" | grep -qE "^[0-9a-f]{8}-" \
+    && pass "a healthy account can still claim (the fence is not a blanket block)" \
+    || fail "the fence broke ordinary claiming" "$(echo "$N_OUT" | head -1)"
+  [ "$(Q "select count(*) from public.yorisou_account_mutation_leases where owner_account_id='acct-normal' and released_at is null")" = "0" ] \
+    && pass "the successful claim released its lease" || fail "a successful claim stranded its lease"
+fi
+
+# ── RACE J — two concurrent account erasures contending over SHARED accepted invitations. ────
+#
+# An accepted invitation names two people, so both accounts target the SAME rows, and their source
+# locks do not serialize them because they own different assessment sources. Both erasures lock the
+# invitation ids ORDER BY id, so no cycle can form.
+J_X1=$(seed_result "acct-j1" "MS-KI"); J_X2=$(seed_result "acct-j1" "MS-SZ")
+J_Y1=$(seed_result "acct-j2" "EM-AK"); J_Y2=$(seed_result "acct-j2" "EM-FB")
+if [ -z "$J_X1" ] || [ -z "$J_X2" ] || [ -z "$J_Y1" ] || [ -z "$J_Y2" ]; then
+  fail "RACE J setup: could not seed four results"
+else
+  JI1=$(INVITE "acct-j1" "$J_X1")
+  JP1=$(Q "select pair_public_id from public.yorisou_connection_invite_accept('$JI1'::uuid,'acct-j2','$J_Y1')")
+  JI2=$(INVITE "acct-j2" "$J_Y2")
+  JP2=$(Q "select pair_public_id from public.yorisou_connection_invite_accept('$JI2'::uuid,'acct-j1','$J_X2')")
+  JJ1=$(POR1_ARM "acct-j1"); JJ2=$(POR1_ARM "acct-j2")
+  if [ -z "$JP1" ] || [ -z "$JP2" ] || [ -z "$JJ1" ] || [ -z "$JJ2" ]; then
+    fail "RACE J setup: could not build two crossed accepted invitations and arm both jobs"
+  else
+    SHARED=$(Q "select count(*) from public.yorisou_connection_invitations
+                where (inviter_account_id in ('acct-j1','acct-j2') or accepted_by_account_id in ('acct-j1','acct-j2'))
+                  and status='accepted'")
+    [ "$SHARED" -ge 2 ] && pass "RACE J: at least two SHARED accepted invitations exist to contend over" \
+      || fail "RACE J: the contention set is too small" "shared=$SHARED"
+    ( psql "$DSN" -q -t -A -c "select public.yorisou_account_deletion_erase_database('$JJ1'::uuid,'acct-j1','$EXEC_HASH',1)" >"$WORK/jX.out" 2>&1 ) & JX=$!
+    ( psql "$DSN" -q -t -A -c "select public.yorisou_account_deletion_erase_database('$JJ2'::uuid,'acct-j2','$EXEC_HASH',1)" >"$WORK/jY.out" 2>&1 ) & JY=$!
+    wait "$JX" || true; wait "$JY" || true
+
+    grep -qi "deadlock detected" "$WORK/jX.out" "$WORK/jY.out" \
+      && fail "RACE J: DEADLOCK over shared accepted invitations" \
+        "$(grep -ih -m1 'deadlock detected' "$WORK/jX.out" "$WORK/jY.out")" \
+      || pass "RACE J: concurrent erasures over SHARED accepted invitations do NOT deadlock"
+    grep -q "yorisou_" "$WORK/jX.out" && grep -q "yorisou_" "$WORK/jY.out" \
+      && pass "RACE J: both CHECKED erasures completed" \
+      || fail "RACE J: an erasure did not complete" "X=$(head -1 "$WORK/jX.out" | cut -c1-40) Y=$(head -1 "$WORK/jY.out" | cut -c1-40)"
+    [ "$(Q "select count(*) from public.yorisou_connection_invitations
+            where inviter_account_id in ('acct-j1','acct-j2') or accepted_by_account_id in ('acct-j1','acct-j2')")" = "0" ] \
+      && pass "RACE J: every shared invitation row is gone" || fail "RACE J: a shared invitation survived"
+    [ "$(Q "select count(*) from public.yorisou_connection_pairs where pair_public_id in ('$JP1','$JP2')")" = "0" ] \
+      && pass "RACE J: both crossed pairs are gone" || fail "RACE J: a crossed pair survived"
+    [ "$(Q "select count(*) from public.yorisou_pair_comparisons c
+            where not exists (select 1 from public.yorisou_connection_pairs p where p.id=c.pair_id)")" = "0" ] \
+      && pass "RACE J: no orphan comparison survives" || fail "RACE J: orphan comparison"
+    [ "$(Q "select count(*) from public.yorisou_assessment_results
+            where owner_account_id in ('acct-j1','acct-j2') and deleted_at is null")" = "0" ] \
+      && pass "RACE J: all four results are erased" || fail "RACE J: a result survived"
+  fi
+fi
+
 echo "[cpr1] stage 9 — audit content-freedom (31)"
 [ "$(Q "select count(*) from public.yorisou_connection_audit_events")" -ge 3 ] \
   && pass "31. lifecycle events were audited" || fail "31. audit rows missing"

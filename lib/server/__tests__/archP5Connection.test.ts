@@ -825,6 +825,71 @@ test("R7. account erasure may still remove owner-linked tombstones, and sharing 
   }
 });
 
+test("R8. ownership-creating assessment mutations take POR-1 authority BEFORE the attempt row", () => {
+  // The premise account erasure rests on is that its owned-source set stops growing. Two canonical
+  // mutations could grow it and were unfenced; a claim issued mid-deletion left the DELETED account
+  // owning a live attempt and result on a real cluster. The gate must come BEFORE the attempt row,
+  // because deletion closes the gate first and touches attempts later.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  for (const name of ["yorisou_attempt_claim", "yorisou_attempt_complete"]) {
+    const fn = new RegExp(`create or replace function public\\.${name}\\(([\\s\\S]*?)\\n\\$\\$;`).exec(migration);
+    assert.ok(fn, `${name} is not re-emitted in the P5 migration`);
+    const body = fn[1];
+    const gateAt = body.indexOf("yorisou_account_mutation_begin");
+    const lockAt = body.indexOf("for update");
+    assert.ok(gateAt > 0, `${name} does not take a POR-1 mutation lease`);
+    assert.ok(lockAt > 0, `${name} no longer locks the attempt row`);
+    assert.ok(gateAt < lockAt, `${name} locks the attempt BEFORE the gate — that is the inverted order`);
+    assert.ok(/yorisou_account_mutation_release/.test(body), `${name} never releases its lease`);
+  }
+  // The anonymous completion path must stay lease-free: there is no account to fence.
+  const complete = /create or replace function public\.yorisou_attempt_complete\(([\s\S]*?)\n\$\$;/.exec(migration);
+  assert.ok(complete, "attempt_complete is not re-emitted");
+  assert.ok(/if p_owner_account_id is not null and length\(p_owner_account_id\) > 0 then/.test(complete[1]));
+  // The merged migration that defines them is untouched.
+  const merged = read("supabase/migrations/202608010101_por1_canonical_assessment_and_interpretation.sql");
+  assert.ok(!/yorisou_account_mutation_begin/.test(merged), "the merged canonical assessment migration was edited");
+});
+
+test("R8. the lease vocabulary stays a CLOSED set, extended by exactly two tokens", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const constraint = /operation_code = any \(array\[([\s\S]*?)\]\)\)/.exec(migration);
+  assert.ok(constraint, "the P5 migration must restate the closed operation_code set");
+  const tokens = [...constraint[1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+  assert.equal(tokens.length, 15, "the closed set must be the original 13 plus exactly 2");
+  for (const original of [
+    "support_profile_update", "password_update", "line_binding", "account_profile_update",
+    "identity_mirror_sync", "session_identity_upgrade", "account_recovery", "account_registration",
+    "line_primary_provisioning", "password_reset_issue", "session_account_binding",
+    "foundation_profile_update", "foundation_identity_binding",
+  ]) {
+    assert.ok(tokens.includes(original), `the P5 restatement dropped ${original}`);
+  }
+  assert.ok(tokens.includes("assessment_attempt_claim"));
+  assert.ok(tokens.includes("assessment_attempt_complete"));
+  // And the TypeScript mirror agrees.
+  const ts = read("lib/server/accountWriteContext.ts");
+  assert.ok(/"assessment_attempt_claim"/.test(ts) && /"assessment_attempt_complete"/.test(ts));
+});
+
+test("R9. account erasure locks invitation ids deterministically before deleting them", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const fn = /create or replace function public\.yorisou_account_deletion_erase_database_unchecked\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(fn);
+  const body = fn[1];
+  // An accepted invitation names TWO people, so two concurrent account erasures target the same
+  // rows and their source locks do not serialize them. Planner row order is not a guarantee.
+  const collectAt = body.indexOf("array_agg(id order by id) into v_invite_ids");
+  const deleteAt = body.indexOf("delete from public.yorisou_connection_invitations where id = any");
+  assert.ok(collectAt > 0, "invitation ids are not collected in deterministic order");
+  assert.ok(deleteAt > collectAt, "the invitation delete must operate on the locked, ordered set");
+  assert.ok(
+    !/delete from public\.yorisou_connection_invitations\s+where inviter_account_id/.test(body),
+    "an unordered bulk invitation DELETE remains",
+  );
+});
+
 // ─── the migration is registered ────────────────────────────────────────────
 
 test("the CPR-1 migration is registered in the scope manifest", () => {

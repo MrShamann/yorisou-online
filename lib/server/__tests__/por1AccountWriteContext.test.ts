@@ -103,20 +103,42 @@ test("null and undefined are refused, and refused distinguishably", () => {
 test("the runtime operation set matches the migration's closed set exactly", async () => {
   // The SQL constraint and the TypeScript union are two statements of one rule. If they drift, a
   // write takes a lease the database rejects — at runtime, on the deletion path, in production.
-  const { readFileSync } = await import("node:fs");
-  const sql = readFileSync(
-    new URL("../../../supabase/preview-only-migrations/202607300005_por1_deletion_resume_engine.sql", import.meta.url),
-    "utf8",
-  );
+  //
+  // THIS TEST USED TO PIN ONE FILE, AND THAT WAS THE SAME BLIND SPOT the erasure-coverage guard
+  // had: it read a single preview-only migration, so a later migration that legitimately widened
+  // the closed set failed here even though the database it produces is correct. The authoritative
+  // set is whichever migration declares it LAST across both trees — the same rule the erasure plan
+  // follows. It is still a closed set and still exact parity; only the resolution changed.
+  const { readFileSync, readdirSync, existsSync } = await import("node:fs");
+  const { join } = await import("node:path");
 
-  const constraint = /operation_code in \(([\s\S]*?)\)\)/.exec(sql);
-  assert.ok(constraint, "the migration must still declare a closed operation_code set");
-  const inSql = [...constraint[1].matchAll(/'([a-z_]+)'/g)].map((match) => match[1]).sort();
+  const trees = ["supabase/preview-only-migrations", "supabase/migrations"].filter((dir) =>
+    existsSync(dir),
+  );
+  const candidates: Array<{ name: string; sql: string }> = [];
+  for (const dir of trees) {
+    for (const name of readdirSync(dir).filter((file) => file.endsWith(".sql")).sort()) {
+      const sql = readFileSync(join(dir, name), "utf8");
+      if (/operation_code\s*(in|=\s*any)\s*\(/i.test(sql)) candidates.push({ name, sql });
+    }
+  }
+  assert.ok(candidates.length > 0, "no migration declares a closed operation_code set");
+  // Newest declaration wins, by version-sorted filename across the trees.
+  candidates.sort((a, b) => a.name.localeCompare(b.name));
+  const authoritative = candidates[candidates.length - 1];
+
+  const constraint =
+    /operation_code\s*in\s*\(([\s\S]*?)\)\)/.exec(authoritative.sql) ??
+    /operation_code\s*=\s*any\s*\(array\[([\s\S]*?)\]\)/i.exec(authoritative.sql);
+  assert.ok(constraint, `${authoritative.name} must declare a closed operation_code set`);
+  const inSql = [...new Set([...constraint[1].matchAll(/'([a-z_]+)'/g)].map((match) => match[1]))].sort();
   const inRuntime = [...ACCOUNT_MUTATION_OPERATIONS].sort();
 
-  assert.deepEqual(inRuntime, inSql);
-  // The package named thirteen; fewer would mean a write path with no code, which cannot be leased.
-  assert.equal(inRuntime.length, 13);
+  assert.deepEqual(inRuntime, inSql, `runtime vocabulary drifted from ${authoritative.name}`);
+  // Thirteen POR-1 account/identity operations, plus the two CPR-1 assessment mutations that can
+  // create or reassign an owned assessment source. Fewer would mean a write path with no code,
+  // which cannot be leased; more would mean an unreviewed operation entered the closed set.
+  assert.equal(inRuntime.length, 15);
 });
 
 test("every required operation code is present", () => {
@@ -134,6 +156,8 @@ test("every required operation code is present", () => {
     "session_account_binding",
     "foundation_profile_update",
     "foundation_identity_binding",
+    "assessment_attempt_claim",
+    "assessment_attempt_complete",
   ]) {
     assert.ok(
       (ACCOUNT_MUTATION_OPERATIONS as readonly string[]).includes(required),

@@ -561,7 +561,7 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "name": "cpr1_connection_pair",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608190001_cpr1_connection_pair.sql",
-    "sha256": "23224eee0429359b2977e3ce95af465833082d98f74b8e8ab9fbc5432d848cc0"
+    "sha256": "fcb8f3944de11b6f985bf3d191a6c57380d474adfe13cc06ca73f4de3a1f4e63"
   }
 ]
 ```
