@@ -621,6 +621,43 @@ test("R1. the global lock order is source locks BEFORE the invitation row", () =
   assert.ok(!/into v_peek[\s\S]{0,200}?for update/.test(body), "the peek must not take a row lock");
 });
 
+test("R5. every pair-lifecycle mutation touches PAIR rows before COMPARISON rows", () => {
+  // The second lock-order defect, and the reason it needed its own guard.
+  //
+  // `pair_dissolve` takes no source advisory lock — a participant ending their own pair has
+  // nothing to do with either assessment source — so the source-lock ordering that protects the
+  // accept path cannot protect this one. The ONLY thing preventing a cycle is that dissolve and
+  // source erasure touch these two tables in the SAME direction. The reviewed head had them
+  // opposed and deadlocked; this asserts the direction in both functions so a future edit cannot
+  // silently flip one of them.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const functions = [
+    "yorisou_connection_pair_dissolve",
+    "yorisou_assessment_result_erase_with_derivatives",
+  ];
+  for (const name of functions) {
+    const fn = new RegExp(`create or replace function public\\.${name}\\(([\\s\\S]*?)\\n\\$\\$;`).exec(migration);
+    assert.ok(fn, `${name} is missing`);
+    const body = fn[1];
+    const pairAt = body.search(/update public\.yorisou_connection_pairs/);
+    const comparisonAt = body.search(/update public\.yorisou_pair_comparisons/);
+    assert.ok(pairAt > 0, `${name} never updates pair rows`);
+    assert.ok(comparisonAt > 0, `${name} never updates comparison rows`);
+    assert.ok(
+      pairAt < comparisonAt,
+      `${name} updates COMPARISON before PAIR — that is the dissolve/erase deadlock ordering`,
+    );
+  }
+  // The erasure locks its affected pairs explicitly, in id order, before mutating either table.
+  const erase = /create or replace function public\.yorisou_assessment_result_erase_with_derivatives\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(erase);
+  assert.ok(
+    /order by id\s+for update/.test(erase[1]),
+    "the erasure must lock affected pair rows in deterministic id order",
+  );
+});
+
 test("R2. an EXPIRED pending invitation is retired and replaced, never handed back", () => {
   const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
   const create = /create or replace function public\.yorisou_connection_invite_create\(([\s\S]*?)\n\$\$;/

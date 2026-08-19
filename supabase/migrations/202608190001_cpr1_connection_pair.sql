@@ -534,6 +534,12 @@ begin
   returning id into v_id;
   if v_id is null then return false; end if;
 
+  -- PAIR BEFORE COMPARISON — the same global order the source-erasure seam follows. This function
+  -- takes no source lock (a participant ending their own pair has nothing to do with either
+  -- assessment source), so the ONLY thing preventing a cycle with source erasure is that both
+  -- paths touch these two tables in the same direction. Reversing either one reintroduces a
+  -- deadlock that no advisory lock can protect against.
+  --
   -- The comparison becomes unreadable AND stops retaining the result-derived codes. Dissolving is
   -- a privacy act, not a visibility toggle.
   update public.yorisou_pair_comparisons
@@ -568,6 +574,7 @@ declare
   v_family constant text := 'assessment_result';
   v_ref text := p_result_row_id::text;
   v_erased boolean;
+  v_pair_ids uuid[];
 begin
   if p_owner_account_id is null or length(p_owner_account_id) = 0 then
     raise exception 'connection_invalid_owner';
@@ -588,20 +595,43 @@ begin
      set status = 'cancelled', cancelled_at = now()
    where reference_family = v_family and reference_ref = v_ref and status = 'pending';
 
-  -- Active pairs using this source on EITHER side are dissolved, and their comparisons are both
-  -- invalidated and emptied of the result-derived codes.
-  update public.yorisou_pair_comparisons c
-     set invalidated_at = now(), side_a_public_reference = null, side_b_public_reference = null
-   where c.invalidated_at is null
-     and exists (select 1 from public.yorisou_connection_pairs p
-                  where p.id = c.pair_id
-                    and p.status = 'active'
-                    and (p.participant_a_reference_ref = v_ref or p.participant_b_reference_ref = v_ref));
+  -- PAIR ROWS BEFORE COMPARISON ROWS, and this order is not cosmetic.
+  --
+  -- The previous version invalidated comparisons FIRST and then dissolved the pairs, while
+  -- `yorisou_connection_pair_dissolve` does the opposite — pair, then comparison. Dissolve takes no
+  -- source lock, so the source-lock ordering fixed elsewhere cannot protect this path, and the two
+  -- formed a second real cycle:
+  --
+  --     dissolve holds pair row,       waits for comparison row
+  --     erase    holds comparison row, waits for pair row        => deadlock detected
+  --
+  -- Every pair-lifecycle mutation in this file now takes PAIR before COMPARISON, so the whole
+  -- lifecycle has one global order:
+  --
+  --     SOURCE LOCK(S) → INVITATION ROW(S) → PAIR ROW(S) → COMPARISON ROW(S) → downstream erasure
+  --
+  -- The affected pairs are locked explicitly and IN ID ORDER first. Ordering matters because a
+  -- source can appear in several pairs, and two erasures touching overlapping sets in different
+  -- orders would deadlock against each other.
+  select array_agg(id order by id) into v_pair_ids
+    from (
+      select id from public.yorisou_connection_pairs
+       where status = 'active'
+         and (participant_a_reference_ref = v_ref or participant_b_reference_ref = v_ref)
+       order by id
+       for update
+    ) locked;
 
-  update public.yorisou_connection_pairs
-     set status = 'dissolved', dissolved_at = now()
-   where status = 'active'
-     and (participant_a_reference_ref = v_ref or participant_b_reference_ref = v_ref);
+  if v_pair_ids is not null and array_length(v_pair_ids, 1) > 0 then
+    update public.yorisou_connection_pairs
+       set status = 'dissolved', dissolved_at = now()
+     where id = any (v_pair_ids);
+
+    update public.yorisou_pair_comparisons
+       set invalidated_at = now(), side_a_public_reference = null, side_b_public_reference = null
+     where pair_id = any (v_pair_ids)
+       and invalidated_at is null;
+  end if;
 
   -- Then the merged ARCH-P4 seam: share revocation, the tombstone, and the canonical erasure.
   v_erased := public.yorisou_assessment_result_erase_with_shares(p_result_row_id, p_owner_account_id);

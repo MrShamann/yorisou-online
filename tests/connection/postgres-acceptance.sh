@@ -419,6 +419,88 @@ SQL
   fi
 fi
 
+# ── RACE E — DISSOLVE racing SOURCE ERASURE over the same pair. ─────────────────────────────
+#
+# Neither path takes a source advisory lock on the dissolve side, so the ordering fixed for accept
+# cannot protect this one. What protects it is that BOTH paths touch the two tables in the same
+# direction: PAIR row, then COMPARISON row. The reviewed head had them opposed — erase invalidated
+# the comparison first, dissolve updated the pair first — and that is a real cycle.
+#
+# To make the cycle POSSIBLE (rather than writing another race that cannot fail), a TEST-ONLY
+# trigger pauses inside the comparison UPDATE, and only for the session that sets the marker. The
+# trigger is removed immediately afterwards so no later stage runs against modified schema.
+Q "create or replace function public.cpr1_test_pause() returns trigger language plpgsql as \$fn\$
+   begin
+     if coalesce(current_setting('cpr1.test_sleep', true), '') = 'on' then perform pg_sleep(2); end if;
+     return new;
+   end \$fn\$;" >/dev/null
+Q "drop trigger if exists cpr1_test_pause_cmp on public.yorisou_pair_comparisons;
+   create trigger cpr1_test_pause_cmp before update on public.yorisou_pair_comparisons
+     for each row execute function public.cpr1_test_pause();" >/dev/null
+
+Q_RESULT=$(seed_result "acct-q" "MS-YO")
+R_RESULT=$(seed_result "acct-r" "EM-KU")
+if [ -z "$Q_RESULT" ] || [ -z "$R_RESULT" ]; then
+  fail "RACE E setup: could not seed the dissolve/erase race"
+else
+  INV_E=$(INVITE "acct-q" "$Q_RESULT")
+  PAIR_E=$(Q "select pair_public_id from public.yorisou_connection_invite_accept('$INV_E'::uuid,'acct-r','$R_RESULT')")
+  if [ -z "$PAIR_E" ]; then
+    fail "RACE E setup: could not create the pair"
+  else
+    ( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/eErase.out" 2>&1
+begin;
+set local cpr1.test_sleep = 'on';
+select public.yorisou_assessment_result_erase_with_derivatives('$Q_RESULT'::uuid, 'acct-q');
+commit;
+SQL
+    ) &
+    PEE=$!
+    sleep 1
+    # The OTHER participant ends the pair while the erasure is mid-flight.
+    psql "$DSN" -q -t -A -c "select public.yorisou_connection_pair_dissolve('acct-r','$PAIR_E'::uuid)" \
+      >"$WORK/eDissolve.out" 2>&1 || true
+    wait "$PEE" || true
+
+    if grep -qi "deadlock detected" "$WORK/eErase.out" "$WORK/eDissolve.out"; then
+      fail "RACE E: DEADLOCK — pair/comparison lock order is inverted between dissolve and erasure" \
+        "$(grep -ih -m1 'deadlock detected' "$WORK/eErase.out" "$WORK/eDissolve.out")"
+    else
+      pass "RACE E: dissolve racing source erasure does NOT deadlock"
+    fi
+
+    # Both sessions must genuinely have run.
+    grep -q "^t$" "$WORK/eErase.out" \
+      && pass "RACE E: the erasure session executed and succeeded" \
+      || fail "RACE E: the erasure did not succeed" "$(head -3 "$WORK/eErase.out" | tr '\n' ' ')"
+    grep -qE "^(t|f)$" "$WORK/eDissolve.out" \
+      && pass "RACE E: the dissolve session executed" \
+      || fail "RACE E: the dissolve never executed" "$(head -3 "$WORK/eDissolve.out" | tr '\n' ' ')"
+
+    # And the end state is complete regardless of who won.
+    [ "$(Q "select status from public.yorisou_connection_pairs where pair_public_id='$PAIR_E'")" = "dissolved" ] \
+      && pass "RACE E: the pair ends dissolved" || fail "RACE E: pair not dissolved"
+    [ "$(Q "select count(*) from public.yorisou_pair_comparisons c
+            join public.yorisou_connection_pairs p on p.id=c.pair_id
+            where p.pair_public_id='$PAIR_E'
+              and (c.invalidated_at is null
+                   or c.side_a_public_reference is not null or c.side_b_public_reference is not null)")" = "0" ] \
+      && pass "RACE E: the comparison is invalidated and BOTH public codes are cleared" \
+      || fail "RACE E: comparison payload survived"
+    [ "$(Q "select count(*) from public.yorisou_assessment_results where id='$Q_RESULT'::uuid and deleted_at is null")" = "0" ] \
+      && pass "RACE E: the source result is erased" || fail "RACE E: source survived"
+    [ "$(Q "select count(*) from public.yorisou_share_source_erasures where source_ref='$Q_RESULT'")" = "1" ] \
+      && pass "RACE E: the ARCH-P4 source tombstone was written — no partial state" \
+      || fail "RACE E: tombstone missing"
+  fi
+fi
+
+# The test-only instrumentation must not outlive its stage.
+Q "drop trigger if exists cpr1_test_pause_cmp on public.yorisou_pair_comparisons;
+   drop function if exists public.cpr1_test_pause();" >/dev/null
+[ "$(Q "select count(*) from pg_trigger where tgname='cpr1_test_pause_cmp'")" = "0" ] \
+  && pass "RACE E: the test-only trigger was removed" || fail "RACE E: test trigger left installed"
+
 echo "[cpr1] stage 5d — expired invitation lifecycle"
 # An expired PENDING invitation must not be handed back forever. The reviewed head returned it,
 # while the partial unique index forbade minting a replacement — a link the recipient could not use
