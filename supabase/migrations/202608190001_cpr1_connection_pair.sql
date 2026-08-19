@@ -1,52 +1,119 @@
 -- CPR-1 — connection.core + comparison.core (Imairo pair 「ふたりのImairo」).
 --
--- THREE tables + ONE product-specific source adapter + SIX RPCs + the account-erasure plan
--- re-emitted with the new families. Additive only: no existing table, row, RPC or migration is
--- modified. In particular the merged ARCH-P4 sharing lifecycle is REUSED, not rewritten.
+-- WHAT THIS MIGRATION CONTAINS, after four rounds of Controller review. The original header carried
+-- a small table/RPC tally that was accurate for one afternoon; the remediation rounds added
+-- lifecycle work reaching beyond connection.core, and a rollback contract that does not name it is
+-- a false document. So the contents are enumerated exactly rather than counted:
+--
+--   NEW TABLES        yorisou_connection_pairs, yorisou_connection_invitations,
+--                     yorisou_pair_comparisons, yorisou_connection_audit_events
+--   NEW FUNCTIONS     yorisou_imairo_pair_live_source, yorisou_connection_source_erased,
+--                     yorisou_connection_invite_create/_cancel/_accept,
+--                     yorisou_connection_pair_dissolve,
+--                     yorisou_assessment_result_erase_with_derivatives,
+--                     yorisou_assessment_source_live,
+--                     yorisou_connection_audit_block_mutation
+--   REPLACED BODIES   yorisou_share_object_publish            (ARCH-P4, merged)
+--                     yorisou_attempt_claim                   (POR-1, merged)
+--                     yorisou_attempt_complete                (POR-1, merged)
+--                     yorisou_account_deletion_erase_database_unchecked (POR-1, merged)
+--   REPLACED CHECK    yorisou_account_mutation_leases_operation_code_check (13 -> 15 tokens)
+--
+-- No merged migration FILE is edited. The four replaced bodies are re-emitted here, which is how a
+-- forward-only lineage changes an existing function.
 --
 -- THE INVARIANTS, AND WHY THEY LIVE IN SQL.
 --
 -- ARCH-P4 review established the rule this migration is written to: application-level ordering is
 -- not a concurrency guarantee, and an authorization check that lives only in the process can be
--- raced. P5 creates a SECOND derivative of an assessment result — a pair comparison — so every
--- lifecycle fact below is a database fact.
+-- raced. P5 creates a SECOND derivative of an assessment result, so every lifecycle fact is a
+-- database fact. Four separate orderings were found wrong and fixed, each reproduced as a real
+-- `deadlock detected` or a real resurrection first:
 --
---   1. ONE OPEN INVITATION per (inviter, source). A partial unique index, so a retried create
---      returns the existing link instead of scattering live invitations a person must remember to
---      cancel.
---   2. ONE PAIR PER INVITATION. `pair_id` on the invitation is unique, and acceptance is
---      serialized by a lock on the invitation row. Two concurrent acceptors cannot both win.
---   3. ACCEPTANCE AND SOURCE ERASURE ARE SERIALIZED by the SAME transaction-level advisory lock
---      ARCH-P4 introduced (`yorisou_share_source_lock`). Acceptance touches two sources, so it
---      takes BOTH locks IN SORTED ORDER — two simultaneous acceptances involving the same pair of
---      sources in opposite directions would otherwise deadlock.
---   4. AN ERASED SOURCE CAN NEVER JOIN A PAIR. Acceptance checks the ARCH-P4 erasure tombstone
---      while holding the lock. This closes the race rather than narrowing it.
---   5. AUTHORIZATION IS IN THE MUTATION BOUNDARY. Create verifies the inviter owns a live source;
---      accept verifies the acceptor owns the supplied live source and is not the inviter; cancel is
---      inviter-only; dissolve is participant-only. A guessed id grants nothing anywhere.
---   6. CONSENT IS NOT ACCESS. No function here returns one participant's account id, source
---      reference, answers, state, reflection or memory to the other. The comparison stores only the
---      already-public result code each side contributed.
---   7. AUDIT IS TRANSACTIONAL, append-only, and content-free.
+--   1. ONE OPEN INVITATION per (inviter, source); an EXPIRED pending invitation is retired and
+--      replaced rather than handed back forever.
+--   2. ONE PAIR PER INVITATION.
+--   3. ONE GLOBAL LOCK ORDER for every destructive path:
+--        POR-1 gate -> assessment SOURCE LOCKS (sorted) -> INVITATION rows (sorted, FOR UPDATE)
+--        -> PAIR rows (sorted, FOR UPDATE) -> COMPARISON rows -> share seam -> canonical result.
+--      PAIR ALWAYS PRECEDES COMPARISON, in dissolve and in both erasure paths.
+--   4. AN ERASED SOURCE CAN NEVER JOIN A PAIR OR BE PUBLISHED. Tombstone plus, for publish, a
+--      database re-check that the source is still live and still owned — because account erasure
+--      legitimately deletes owner-linked tombstones.
+--   5. THE OWNED-SOURCE SET IS CLOSED. The two assessment mutations that can create or reassign an
+--      owned source take a POR-1 mutation lease BEFORE locking the attempt row, so account erasure
+--      can trust its enumeration.
+--   6. AUTHORIZATION IS IN THE MUTATION BOUNDARY; a guessed id grants nothing anywhere.
+--   7. CONSENT IS NOT ACCESS; no function returns one participant's identity or source to the other.
+--   8. AUDIT IS TRANSACTIONAL, append-only, and content-free.
 --
 -- Privilege matrix (repository discipline, unchanged):
 --   public/anon/authenticated : NO access
 --   service_role              : bounded SELECT only
 --   mutation                  : SECURITY DEFINER RPCs exclusively
 --
--- ROLLBACK:
---   drop function if exists public.yorisou_assessment_result_erase_with_derivatives(uuid, text);
---   drop function if exists public.yorisou_connection_pair_dissolve(text, uuid);
---   drop function if exists public.yorisou_connection_invite_accept(uuid, text, text);
---   drop function if exists public.yorisou_connection_invite_cancel(text, uuid);
---   drop function if exists public.yorisou_connection_invite_create(text, text, text);
---   drop function if exists public.yorisou_imairo_pair_live_source(text, text);
---   drop table if exists public.yorisou_connection_audit_events;
---   drop table if exists public.yorisou_pair_comparisons;
---   drop table if exists public.yorisou_connection_invitations;
---   drop table if exists public.yorisou_connection_pairs;
---   -- then re-apply 202608180002's erasure block verbatim to restore the previous plan.
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ROLLBACK CONTRACT
+-- ─────────────────────────────────────────────────────────────────────────────
+--
+-- This is a CONTRACT, not a script, and deliberately so: four of the objects below are pre-existing
+-- contracts whose PREVIOUS BODIES must be restored, and "drop it" would leave the product without a
+-- publish path, without a claim path, and without an account-erasure body. Re-applying an earlier
+-- migration is also not a rollback mechanism — an already-applied migration restores only what it
+-- happens to define, and 202608180002 defines none of the R3/R4 replacements.
+--
+-- A rollback of this migration MUST, in this order:
+--
+--   1. RESTORE THE FOUR REPLACED BODIES to their immediately-pre-CPR-1 definitions, by re-emitting
+--      them from the migrations that last defined them BEFORE this one:
+--        yorisou_share_object_publish
+--          <- 202608180002_shr1_share_objects.sql  (identical, minus the source-liveness check)
+--        yorisou_attempt_claim
+--        yorisou_attempt_complete
+--          <- 202608010101_por1_canonical_assessment_and_interpretation.sql
+--             (identical, minus the POR-1 mutation lease)
+--        yorisou_account_deletion_erase_database_unchecked
+--          <- 202608180002_shr1_share_objects.sql
+--             (its plan, minus the CPR-1 families and the source/invitation/pair ordering)
+--      Copy those bodies verbatim; do not hand-edit this file's versions.
+--
+--   2. RESTORE THE CLOSED OPERATION VOCABULARY to exactly the pre-CPR-1 thirteen tokens, removing
+--      only 'assessment_attempt_claim' and 'assessment_attempt_complete':
+--        alter table public.yorisou_account_mutation_leases
+--          drop constraint yorisou_account_mutation_leases_operation_code_check;
+--        -- then re-add the 13-token check from 202608010105_por1_account_mutation_fence.sql
+--      Any lease row still carrying one of the two removed codes must be released or drained first,
+--      or the constraint will refuse to validate.
+--
+--   3. RE-GRANT the restored functions as their defining migrations do (revoke from
+--      public/anon/authenticated, grant execute to service_role). CREATE OR REPLACE preserves
+--      existing grants, but a DROP-then-CREATE does not, so a rollback that drops must re-grant.
+--
+--   4. DROP THE CPR-1-ONLY FUNCTIONS:
+--        drop function if exists public.yorisou_assessment_result_erase_with_derivatives(uuid, text);
+--        drop function if exists public.yorisou_assessment_source_live(text, text);
+--        drop function if exists public.yorisou_connection_pair_dissolve(text, uuid);
+--        drop function if exists public.yorisou_connection_invite_accept(uuid, text, text);
+--        drop function if exists public.yorisou_connection_invite_cancel(text, uuid);
+--        drop function if exists public.yorisou_connection_invite_create(text, text, text);
+--        drop function if exists public.yorisou_connection_source_erased(text);
+--        drop function if exists public.yorisou_imairo_pair_live_source(text, text);
+--
+--   5. DROP THE CPR-1 TABLES, comparisons before pairs (the FK cascades, but dropping the parent
+--      first would take the child with it and obscure what was removed):
+--        drop table if exists public.yorisou_connection_audit_events;
+--        drop table if exists public.yorisou_pair_comparisons;
+--        drop table if exists public.yorisou_connection_invitations;
+--        drop table if exists public.yorisou_connection_pairs;
+--      This DESTROYS every pair, invitation and comparison. There is no recovery path for consent
+--      records, so a rollback is a data-loss event for anyone who had formed a pair.
+--
+--   6. Leave the application gates OFF. A rollback with YORISOU_CONNECTION_SCHEMA_READY still true
+--      would point live surfaces at absent tables.
+--
+-- DO NOT execute any of this against a hosted environment as part of shipping. It is the recovery
+-- description this migration is required to carry, and it has never been run.
+--
 
 begin;
 

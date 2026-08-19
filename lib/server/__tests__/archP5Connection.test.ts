@@ -890,6 +890,51 @@ test("R9. account erasure locks invitation ids deterministically before deleting
   );
 });
 
+test("R10. the migration rollback contract names every pre-existing contract it replaces", () => {
+  // DOCUMENTATION DRIFT PREVENTION, not a rollback engine.
+  //
+  // The header shipped through four remediation rounds still describing the original package, and
+  // its rollback said "re-apply 202608180002's erasure block" — which restores none of the bodies
+  // this migration replaces. A rollback contract that omits a replaced function is a false
+  // document, and the person reading it during an incident is the one who pays.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const header = migration.slice(0, migration.indexOf("begin;"));
+  assert.ok(/ROLLBACK CONTRACT/.test(header), "the rollback section is missing");
+
+  // Every pre-existing contract whose BODY this migration replaces must be named for restoration.
+  for (const replaced of [
+    "yorisou_share_object_publish",
+    "yorisou_attempt_claim",
+    "yorisou_attempt_complete",
+    "yorisou_account_deletion_erase_database_unchecked",
+  ]) {
+    assert.ok(
+      new RegExp(`${replaced}`).test(header),
+      `the rollback contract does not name the replaced contract ${replaced}`,
+    );
+    // And it must actually be re-emitted in the body — otherwise the contract describes a
+    // replacement that did not happen.
+    assert.ok(
+      new RegExp(`create or replace function public\\.${replaced}\\(`).test(migration),
+      `${replaced} is named in the rollback contract but not re-emitted`,
+    );
+  }
+  // The CPR-1-only helper must be named for removal.
+  assert.ok(/yorisou_assessment_source_live/.test(header));
+  // The operation vocabulary restoration must be explicit about returning to the closed 13.
+  assert.ok(/operation_code_check/.test(header), "the rollback contract omits the operation constraint");
+  assert.ok(/thirteen/i.test(header) || /13-token/.test(header), "the rollback contract does not state the pre-P5 vocabulary size");
+  // And the stale claim must be gone.
+  assert.ok(
+    !/SIX RPCs/.test(header),
+    "the header still carries the stale package count",
+  );
+  assert.ok(
+    !/re-apply 202608180002's erasure block/.test(header),
+    "the rollback still claims re-applying an earlier migration is a rollback mechanism",
+  );
+});
+
 // ─── the migration is registered ────────────────────────────────────────────
 
 test("the CPR-1 migration is registered in the scope manifest", () => {
