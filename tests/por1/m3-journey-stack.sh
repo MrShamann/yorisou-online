@@ -75,15 +75,27 @@ $PSQL -c "do \$\$ begin create role service_role bypassrls; exception when dupli
           do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;
           alter role service_role bypassrls;
           grant usage on schema public to anon, authenticated, service_role;"
+# THE BASELINE IS WHAT PRODUCTION HAD BEFORE POR-1: migrations numbered below the cohort. It used
+# to be "everything that is not the cohort", which was the same set until a migration landed after
+# 202608010111 — CPR-1 then depends on 202608010105 and could not apply as a "baseline" migration.
 for f in supabase/migrations/*.sql; do
-  case "$(basename "$f")" in 2026080101*) continue ;; esac
+  [ "$(basename "$f" | cut -c1-12)" -lt 202608010101 ] || continue
   $PSQL -f "$f" >/dev/null
 done
 # Supabase platform parity for the legacy tables — see tests/por1/app-compatibility.sh for why.
 $PSQL -c "grant all on all tables in schema public to service_role;
           grant all on all sequences in schema public to service_role;"
 for f in supabase/migrations/2026080101*.sql; do $PSQL -f "$f" >/dev/null; done
-echo "           12 baseline + 8 promotion migrations applied"
+# Then everything that came AFTER the promotion, in lineage order, so the stack this journey runs
+# against is the schema the application actually talks to rather than a truncated one.
+POST=0
+for f in supabase/migrations/*.sql; do
+  [ "$(basename "$f" | cut -c1-12)" -gt 202608010111 ] || continue
+  $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null \
+    || { echo "[m3] FATAL: $(basename "$f") did not apply" >&2; exit 1; }
+  POST=$((POST + 1))
+done
+echo "           baseline + 11 promotion + $POST post-promotion migrations applied"
 
 echo "[m3] 2/5 Principal A and B (so C's deletion can be measured against a bystander in M4)"
 $PSQL -f tests/por1/fixture-override-registry.sql >/dev/null

@@ -74,7 +74,9 @@ echo
 echo "── PRODUCTION BASELINE — the 12 migrations Production already has ─────────"
 for f in supabase/migrations/*.sql; do
   base="$(basename "$f")"
-  case "$base" in 2026080101*) continue ;; esac
+  # Below the cohort, not merely outside it: a migration numbered after 202608010111 is not part of
+  # the baseline POR-1 is promoted onto, and CPR-1 depends on 202608010105.
+  [ "$(echo "$base" | cut -c1-12)" -lt 202608010101 ] || continue
   printf '  %-64s' "$base"
   $PSQL -d "${DB}" -f "$f" >/dev/null
   echo "ok"
