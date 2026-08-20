@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 
 // ARCH-P6 — continuity.core projection boundary suite.
 //
@@ -77,6 +78,26 @@ function fakeRepo() {
         .filter((r) => r.owner_ref === owner && r.status === "active")
         .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
         .slice(0, limit);
+    },
+    async pageActive(request) {
+      // Same keyset the store asks PostgREST for, so the suite exercises the real page semantics
+      // rather than a convenient approximation: newest first, ties on source_ref, strictly after
+      // the cursor, and limit + 1 so "has more" is decidable.
+      const families = new Set<string>(request.families);
+      return rows
+        .filter((r) => r.owner_ref === request.owner_ref && r.status === "active")
+        .filter((r) => families.has(r.source_family))
+        .filter((r) => request.variant === null || r.variant === request.variant)
+        .filter((r) =>
+          !request.after ||
+          r.occurred_at < request.after.occurred_at ||
+          (r.occurred_at === request.after.occurred_at && r.source_ref < request.after.source_ref),
+        )
+        .sort((a, b) =>
+          a.occurred_at < b.occurred_at ? 1 : a.occurred_at > b.occurred_at ? -1
+            : a.source_ref < b.source_ref ? 1 : a.source_ref > b.source_ref ? -1 : 0,
+        )
+        .slice(0, request.limit + 1);
     },
   };
   return { repo, rows };
@@ -302,4 +323,71 @@ test("F. CNT-1 propagates from the source tables rather than trusting callers", 
     assert.ok(at >= 0 && at < projections,
       `${source} is erased after the projection index — that inverts the lock order and deadlocks`);
   }
+});
+
+// ─── APP-P6-7: schema readiness is a migration boundary, and it fails closed ─
+
+test("G. production without an explicit declaration does not read projections", async () => {
+  const { continuityReadiness, CONTINUITY_SCHEMA_READY_ENV } = await import("@/lib/yorisou/continuity/access");
+
+  // Production, nothing declared: the CNT-1 table may not exist, so reading it would empty a
+  // person's timeline. Closed.
+  assert.equal(continuityReadiness({ VERCEL_ENV: "production" }).ready, false);
+  assert.equal(continuityReadiness({ VERCEL_ENV: "production" }).reason, "not_declared_production");
+  // Preview is no different: a preview database is a real database that may not be migrated.
+  assert.equal(continuityReadiness({ VERCEL_ENV: "preview" }).ready, false);
+  // An unrecognised context is the dangerous one, and it is closed rather than optimistic.
+  assert.equal(continuityReadiness({ VERCEL_ENV: "something-new" }).ready, false);
+  assert.equal(continuityReadiness({}).ready, false);
+  // Only an explicit operator declaration opens it, and only the exact string.
+  assert.equal(continuityReadiness({ VERCEL_ENV: "production", [CONTINUITY_SCHEMA_READY_ENV]: "true" }).ready, true);
+  for (const nearly of ["TRUE ", "1", "yes", "", "false"]) {
+    const readiness = continuityReadiness({ VERCEL_ENV: "production", [CONTINUITY_SCHEMA_READY_ENV]: nearly });
+    assert.equal(readiness.ready, nearly === "TRUE ", `"${nearly}" must not be read as a declaration`);
+  }
+});
+
+test("G. readiness is a schema boundary, NOT a product rollout switch", () => {
+  const gate = code("lib/yorisou/continuity/access.ts");
+  // ARCH-P6 changes nothing a person can see, so there must be no way to switch a surface on or
+  // off. A PUBLIC_ENABLED flag or a preview dev flag here would mean P6 had grown a product
+  // rollout it was explicitly not authorised to have.
+  for (const forbidden of [/PUBLIC_ENABLED/, /isDevFlagEnabled/, /_PREVIEW_FLAG/]) {
+    assert.ok(!forbidden.test(gate), `the continuity gate references ${forbidden} — that is a rollout switch, not schema readiness`);
+  }
+});
+
+// ─── §13: the legacy aggregation is no longer authoritative ─────────────────
+
+test("H. the projection read path does not aggregate the source stores", () => {
+  const timeline = readFileSync("lib/server/lifeOs/timeline.ts", "utf8");
+  const start = timeline.indexOf("export async function lifeTimelinePage(");
+  assert.ok(start > 0, "lifeTimelinePage is missing");
+  const body = timeline.slice(start, timeline.indexOf("\n}", start));
+
+  // Exactly ONE call to the legacy reader is allowed, and only as the not-yet-migrated branch.
+  const legacyCalls = body.match(/legacyAggregatedTimelinePage\(/g) ?? [];
+  assert.equal(legacyCalls.length, 1, "the projection path calls the legacy aggregation more than once");
+  assert.match(body, /if \(!continuitySchemaReady\(\)\) return legacyAggregatedTimelinePage/,
+    "the legacy reader must be reachable ONLY as the pre-migration branch");
+
+  // And it must not have quietly regrown its own aggregation: no pageOf, no merge of four sources.
+  for (const forbidden of [/pageOf</, /Promise\.all\(\[\s*wants\(/, /const merged/]) {
+    assert.ok(!forbidden.test(body),
+      `lifeTimelinePage reintroduced direct source aggregation (${forbidden}) — that defeats P6`);
+  }
+  assert.match(body, /readTimelinePage\(/, "the projection path does not read the continuity index");
+});
+
+test("H. nothing in a route or page writes the continuity index directly", () => {
+  // Propagation is a database trigger. A route that also projected would be a second, non-atomic
+  // writer racing the first — and the divergence would only show up as a missing timeline entry.
+  const hits = execSync(
+    "grep -rl 'continuityRepository\\|yorisou_continuity_project' app lib/server/lifeOs 2>/dev/null || true",
+    { encoding: "utf8" },
+  )
+    .split("\n")
+    .filter(Boolean)
+    .filter((f) => f !== "lib/server/lifeOs/timeline.ts");
+  assert.deepEqual(hits, [], `these reach for the continuity index outside the reader: ${hits.join(", ")}`);
 });

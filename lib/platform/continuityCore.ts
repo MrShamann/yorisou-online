@@ -121,3 +121,40 @@ export function assertProjectableSource(source: ProjectionSource): void {
 export function isReadableMoment(moment: Pick<TimelineMoment, "status">): boolean {
   return moment.status === "active";
 }
+
+/**
+ * A keyset position in the timeline: the last moment already returned.
+ *
+ * The pair is `(occurred_at, source_ref)` because one instant is not unique — four independent
+ * sources produce ties routinely, and a cursor into an undefined order silently skips or repeats
+ * rows. Both halves are required for exactly that reason.
+ */
+export interface ContinuityCursor {
+  occurred_at: string;
+  source_ref: string;
+}
+
+/**
+ * One page request. `families` narrows to the sources a consumer filter shows; `variant` narrows
+ * WITHIN a family for the one source that drives two views.
+ *
+ * There is no "all" and no unbounded read: `limit` is required and the service clamps it.
+ */
+export interface ContinuityPageRequest {
+  owner_ref: string;
+  limit: number;
+  after: ContinuityCursor | null;
+  families: readonly ContinuitySourceFamily[];
+  variant: string | null;
+}
+
+/** A page of moments plus whether the index holds more beyond it. */
+export interface ContinuityPage {
+  moments: readonly TimelineMoment[];
+  has_more: boolean;
+}
+
+/** The cursor addressing one moment, for the next request. */
+export function cursorOf(moment: TimelineMoment): ContinuityCursor {
+  return { occurred_at: moment.occurred_at, source_ref: moment.source_ref };
+}

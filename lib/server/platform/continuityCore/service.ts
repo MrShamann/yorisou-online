@@ -22,8 +22,11 @@ import "server-only";
 
 import {
   assertProjectableSource,
+  cursorOf,
   isReadableMoment,
   projectionKeyOf,
+  type ContinuityPage,
+  type ContinuityPageRequest,
   type ProjectionKey,
   type ProjectionSource,
   type TimelineMoment,
@@ -49,6 +52,13 @@ export interface ContinuityRepository {
   invalidateForSource(key: ProjectionKey): Promise<number>;
   /** The caller's own ACTIVE moments, newest first, bounded. */
   listActive(ownerRef: string, limit: number): Promise<readonly TimelineMoment[]>;
+  /**
+   * One keyset page of the caller's own ACTIVE moments, newest first.
+   *
+   * The repository is asked for `limit + 1` and returns whatever it finds; deciding whether that
+   * extra row means "there is more" belongs to the service, not to storage.
+   */
+  pageActive(request: ContinuityPageRequest): Promise<readonly TimelineMoment[]>;
 }
 
 /** Project one source. Validation refuses anything that would make the projection a copy. */
@@ -86,4 +96,26 @@ export async function readTimeline(
   return moments.filter(isReadableMoment);
 }
 
-export { projectionKeyOf };
+/**
+ * One page of the caller's timeline index.
+ *
+ * This returns REFERENCES, never content — the caller hydrates records from their own stores. That
+ * is the whole reason a projection can be an index rather than a copy: the index answers identity,
+ * order, filtering and pagination, and nothing else needs to live in it.
+ *
+ * Invalidated moments are filtered here as well as in storage. Defence in depth is cheap, and the
+ * one thing this module must never do is hand back a moment whose source is gone.
+ */
+export async function readTimelinePage(
+  request: ContinuityPageRequest,
+  repository: ContinuityRepository,
+): Promise<ContinuityPage> {
+  if (!request.owner_ref) return { moments: [], has_more: false };
+  if (request.families.length === 0) return { moments: [], has_more: false };
+  const limit = Math.max(1, Math.min(request.limit, CONTINUITY_PAGE_LIMIT));
+  const found = await repository.pageActive({ ...request, limit });
+  const readable = found.filter(isReadableMoment);
+  return { moments: readable.slice(0, limit), has_more: readable.length > limit };
+}
+
+export { cursorOf, projectionKeyOf };

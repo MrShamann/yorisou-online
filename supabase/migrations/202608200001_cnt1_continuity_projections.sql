@@ -76,7 +76,13 @@ create table if not exists public.yorisou_continuity_projections (
   owner_account_id text not null check (length(owner_account_id) between 1 and 200),
   source_family text not null
     check (source_family in ('current_state', 'goal', 'reflection', 'experience')),
-  source_ref text not null check (length(source_ref) between 1 and 200),
+  -- COLLATE "C" IS THE SORT KEY, NOT A STYLE CHOICE. source_ref holds the source's uuid as text and
+  -- is the timeline's tie-break. The legacy reader broke ties on the uuid column itself, so the two
+  -- orders must agree exactly or a cursor minted by one skips or repeats rows for the other. Text
+  -- and uuid ordering happen to agree under en_US.UTF-8 today, but that is a property of the
+  -- deployment's collation rather than of the data. Pinned to C, the comparison is byte order,
+  -- which matches uuid byte order for canonical lowercase hex on every database this ever runs on.
+  source_ref text collate "C" not null check (length(source_ref) between 1 and 200),
   occurred_at timestamptz not null,
   -- Sub-view within a family. Only `reflection` uses it today (light / postmortem), because one
   -- source table drives two consumer filters and the index must answer that without opening rows.

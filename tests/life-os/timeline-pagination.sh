@@ -58,6 +58,15 @@ done
 # authority on grants; this line only makes the stack resemble the one the app really talks to.
 Q -c "grant select on all tables in schema public to service_role;" >/dev/null
 
+# An optional hook for harnesses that reuse this stack and need writes the OSF-1 reader never makes.
+# Deliberately a parameter rather than a broader default grant: widening service_role across the
+# board would also make the CNT-1 projection index writable, and "the index is RPC-only" is a
+# property other suites prove by attempting exactly that write and expecting 403.
+if [ -n "${OSF1_TL_EXTRA_SQL:-}" ]; then
+  Q -c "$OSF1_TL_EXTRA_SQL" >/dev/null
+  echo "[timeline] applied caller-supplied grants"
+fi
+
 # A mixed timeline: states, directions, light reflections, deep reflections and experiences, with a
 # deliberate cluster sharing ONE timestamp across DIFFERENT kinds so the tie-break is exercised
 # between tables and not merely inside one.
@@ -85,7 +94,15 @@ Q -c "insert into public.yorisou_current_state_records (owner_account_id, state_
       from generate_series(19,22) g;
       insert into public.yorisou_experience_cards
         (owner_account_id, situation, action_tried, perceived_outcome, visibility, created_at)
-      values ('acct_tl', 'おなじ時刻のできごと', '行動', '結果', 'PRIVATE', $TS);" >/dev/null
+      values ('acct_tl', 'おなじ時刻のできごと', '行動', '結果', 'PRIVATE', $TS);
+      -- The timeline excludes withdrawn and soft-deleted cards, and nothing was seeding either, so
+      -- that exclusion was never actually exercised here. EXPECTED below already discounts them.
+      insert into public.yorisou_experience_cards
+        (owner_account_id, situation, action_tried, perceived_outcome, visibility, created_at, withdrawn_at)
+      values ('acct_tl', 'とりさげたできごと', '行動', '結果', 'PRIVATE', $TS, $TS);
+      insert into public.yorisou_experience_cards
+        (owner_account_id, situation, action_tried, perceived_outcome, visibility, created_at, deleted_at, withdrawn_at)
+      values ('acct_tl', 'けしたできごと', '行動', '結果', 'PRIVATE', $TS, $TS, $TS);" >/dev/null
 
 # A second account, so the cross-user assertion is not vacuous.
 Q -c "insert into public.yorisou_current_state_records (owner_account_id, state_tags, source)
