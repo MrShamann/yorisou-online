@@ -236,9 +236,20 @@ test("E. Me stores nothing — there is no second profile database", () => {
       assert.ok(!forbidden.test(source), `${file} writes something (${forbidden}) — Me is a read`);
     }
   }
-  // Screen 17's non-goal, and the execution plan's: "no new profile storage". P7 adds no migration.
-  const migrations = execSync("git ls-files supabase/migrations | wc -l", { encoding: "utf8" }).trim();
-  assert.equal(migrations, "33", `P7 changed the migration inventory (${migrations}) — it must add none`);
+  // The execution plan's non-goal for P7 is "no new profile storage", and that is what this
+  // asserts — NOT an absolute migration count. Pinning a count breaks on any unrelated migration
+  // and says nothing about profiles; the same brittleness pinned CPR-1 as "the newest file" and
+  // turned every legitimate successor into a failure.
+  const ddl = execSync("cat supabase/migrations/*.sql", { encoding: "utf8" });
+  for (const shape of [
+    /create table[^;]*yorisou_me_/i,
+    /create table[^;]*_profiles?\b/i,
+    /create table[^;]*me_composition/i,
+  ]) {
+    assert.ok(!shape.test(ddl), `a profile-shaped table entered the lineage (${shape}) — Me stores nothing`);
+  }
+  // And no migration persists a composition: the parts are resolved at read time, every time.
+  assert.ok(!/yorisou_me_composition/i.test(ddl), "the composition was given storage");
 });
 
 test("E. the platform tier stays brand-free", () => {
