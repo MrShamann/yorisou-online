@@ -165,6 +165,109 @@ psql "$DSN" -q -X -v ON_ERROR_STOP=1 -f supabase/migrations/202608200001_cnt1_co
 [ "$(Q "select count(*) from public.yorisou_continuity_projections where owner_account_id='o7'")" = "$LIVE_E" ] \
   && pass "8b. re-running the backfill does not duplicate" || fail "8b. backfill duplicated"
 
+echo "[cnt1] stage 9 — PROPAGATION (P6-H): the running product produces projections"
+SEED_STATE=$(Q "insert into public.yorisou_current_state_records (owner_account_id, state_tags, source)
+   values ('o8', array['tired'], 'today_check_in') returning id")
+SEED_GOAL=$(Q "insert into public.yorisou_goals (owner_account_id, title) values ('o8','go') returning id")
+SEED_RL=$(Q "insert into public.yorisou_life_reflections (owner_account_id, mode, what_happened)
+   values ('o8','light','w') returning id")
+SEED_RP=$(Q "insert into public.yorisou_life_reflections (owner_account_id, mode, what_happened)
+   values ('o8','postmortem','w') returning id")
+SEED_EXP=$(Q "insert into public.yorisou_experience_cards (owner_account_id, situation, action_tried, perceived_outcome)
+   values ('o8','s','a','p') returning id")
+for pair in "current_state:$SEED_STATE" "goal:$SEED_GOAL" "reflection:$SEED_RL" "reflection:$SEED_RP" "experience:$SEED_EXP"; do
+  fam="${pair%%:*}"; ref="${pair#*:}"
+  n=$(Q "select count(*) from public.yorisou_continuity_projections
+          where owner_account_id='o8' and source_family='$fam' and source_ref='$ref' and invalidated_at is null")
+  [ "$n" = "1" ] && pass "P6-H. writing a $fam through the table produced its moment" \
+                 || fail "P6-H $fam" "projections=$n — the source write did not propagate"
+done
+[ "$(Q "select variant from public.yorisou_continuity_projections where source_ref='$SEED_RP'")" = "postmortem" ] \
+  && pass "P6-H. the reflection mode travelled with it" || fail "P6-H variant"
+[ "$(Q "select occurred_at = (select created_at from public.yorisou_current_state_records where id='$SEED_STATE')
+         from public.yorisou_continuity_projections where source_ref='$SEED_STATE'")" = "t" ] \
+  && pass "P6-H. occurred_at IS the source created_at the timeline orders by" || fail "P6-H occurred_at drift"
+
+echo "[cnt1] stage 10 — SOFT DELETE (P6-I): the timeline's own exclusions"
+Q "update public.yorisou_experience_cards set withdrawn_at = now() where id='$SEED_EXP'" >/dev/null
+[ "$(Q "select count(*) from public.yorisou_continuity_projections where source_ref='$SEED_EXP' and invalidated_at is null")" = "0" ] \
+  && pass "P6-I. withdrawing an experience removes the moment" || fail "P6-I withdraw"
+SEED_E2=$(Q "insert into public.yorisou_experience_cards (owner_account_id, situation, action_tried, perceived_outcome)
+   values ('o8','s2','a','p') returning id")
+Q "update public.yorisou_experience_cards set deleted_at = now(), withdrawn_at = now() where id='$SEED_E2'" >/dev/null
+[ "$(Q "select count(*) from public.yorisou_continuity_projections where source_ref='$SEED_E2' and invalidated_at is null")" = "0" ] \
+  && pass "P6-I. soft-deleting an experience removes the moment" || fail "P6-I soft delete"
+Q "update public.yorisou_experience_cards set withdrawn_at = null, deleted_at = null where id='$SEED_E2'" >/dev/null
+[ "$(Q "select count(*) from public.yorisou_continuity_projections where source_ref='$SEED_E2' and invalidated_at is null")" = "0" ] \
+  && pass "P6-I. and clearing the flags does NOT bring it back — invalidation is terminal" \
+  || fail "P6-I a soft-deleted moment came back"
+echo "       (the product has no un-withdraw; archP6Continuity.test.ts fails if one is ever added,"
+echo "        because terminal invalidation would then be the wrong model for that path.)"
+Q "delete from public.yorisou_goals where id='$SEED_GOAL'" >/dev/null
+[ "$(Q "select count(*) from public.yorisou_continuity_projections where source_ref='$SEED_GOAL' and invalidated_at is null")" = "0" ] \
+  && pass "P6-I. a hard DELETE of a source invalidates its moment" || fail "P6-I hard delete"
+
+echo "[cnt1] stage 11 — LOCK ORDER (P6-K): a live writer against a real account erasure"
+Q "insert into public.yorisou_current_state_records (id, owner_account_id, state_tags, source)
+   values ('11111111-1111-4111-8111-111111111111','oK', array['x'], 'today_check_in')" >/dev/null
+Q "insert into public.yorisou_account_deletion_jobs (owner_account_id, owner_fingerprint)
+   values ('oK', encode(sha256(convert_to('oK','utf8')),'hex'))" >/dev/null
+[ "$(Q "select count(*) from public.yorisou_continuity_projections where owner_account_id='oK' and invalidated_at is null")" = "1" ] \
+  && pass "P6-K. the writer's moment exists before the race" || fail "P6-K precondition"
+rm -f "$WORK/kready" "$WORK/krelease"
+( psql "$DSN" -v ON_ERROR_STOP=1 -q -t -A <<SQL >"$WORK/kw.out" 2>&1
+begin;
+-- Hold the SOURCE row without touching the projection yet. An UPDATE would take both locks in one
+-- statement and no interleaving would be possible; FOR UPDATE is what lets the two paths cross.
+select 1 from public.yorisou_current_state_records where owner_account_id='oK' for update;
+\! touch $WORK/kready
+-- Wait until the eraser is genuinely BLOCKED, not merely running. The synchronising FACT is the
+-- lock wait in pg_stat_activity; pg_sleep is only how often that fact is checked, which is why a
+-- fixed sleep would not do — it would be a guess that happened to work on this machine.
+do \$wait\$
+begin
+  for i in 1..1200 loop
+    -- pg_stat_clear_snapshot IS THE WHOLE REASON THIS LOOP WORKS. Statistics views are cached for
+    -- the life of a transaction (stats_fetch_consistency = cache), so a poll inside the writer's
+    -- own open transaction re-reads the snapshot taken before the eraser ever started and reports
+    -- "not blocked" forever. Without this line the race passed while proving nothing, which is what
+    -- the eraser_blocked assertion below exists to catch.
+    perform pg_stat_clear_snapshot();
+    exit when exists (
+      select 1 from pg_stat_activity
+       where pid <> pg_backend_pid()
+         and wait_event_type = 'Lock'
+         and query ilike '%erase_database_unchecked%');
+    perform pg_sleep(0.05);
+  end loop;
+end
+\$wait\$;
+select pg_stat_clear_snapshot();
+select 'eraser_blocked=' || exists (
+  select 1 from pg_stat_activity where pid <> pg_backend_pid()
+    and wait_event_type='Lock' and query ilike '%erase_database_unchecked%')::text;
+-- NOW reach for the projection, which under the old plan order the eraser already holds.
+update public.yorisou_current_state_records set situation = 'raced' where owner_account_id='oK';
+commit;
+SQL
+) & KW=$!
+if ! WAIT_FILE "$WORK/kready"; then fail "P6-K: writer never signalled READY"; else
+  ( psql "$DSN" -q -t -A -c "select public.yorisou_account_deletion_erase_database_unchecked('oK')" >"$WORK/ke.out" 2>&1 ) & KE=$!
+  wait "$KW" >/dev/null 2>&1; wait "$KE" >/dev/null 2>&1
+  grep -q "eraser_blocked=true" "$WORK/kw.out" \
+    && pass "P6-K. the writer observed the eraser BLOCKED — the paths really did cross" \
+    || fail "P6-K VACUOUS" "the eraser was never seen blocked; this race proved nothing"
+  if grep -qi "deadlock" "$WORK/kw.out" "$WORK/ke.out"; then
+    fail "P6-K DEADLOCK between a source write and account erasure" "$(grep -ohi 'deadlock[^\"]*' "$WORK/kw.out" "$WORK/ke.out" | head -1)"
+  else
+    pass "P6-K. NO DEADLOCK — both paths lock source-then-projection"
+  fi
+  [ "$(Q "select count(*) from public.yorisou_continuity_projections where owner_account_id='oK'")" = "0" ] \
+    && pass "P6-K. erasure still won: not one projection row survives" || fail "P6-K projections survived erasure"
+  [ "$(Q "select count(*) from public.yorisou_current_state_records where owner_account_id='oK'")" = "0" ] \
+    && pass "P6-K. and neither does the source" || fail "P6-K source survived"
+fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then echo "[cnt1] PASS"; else echo "[cnt1] FAIL ($FAILURES)"; fi
 exit $([ "$FAILURES" -eq 0 ] && echo 0 || echo 1)

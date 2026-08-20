@@ -230,3 +230,76 @@ test("E. isReadableMoment is the single definition of readability", () => {
   assert.equal(isReadableMoment({ status: "active" }), true);
   assert.equal(isReadableMoment({ status: "invalidated" }), false);
 });
+
+// ─── the soft-delete lifecycle CNT-1 assumes is irreversible ────────────────
+
+test("F. nothing in the product restores a withdrawn or soft-deleted experience", () => {
+  // CNT-1 invalidates TERMINALLY when an experience card gains deleted_at or withdrawn_at, and
+  // terminal is only the right model because neither column is ever cleared: withdrawExperience
+  // only ever sets them, and moderation "restore" returns moderation_status alone. If a genuine
+  // un-withdraw is ever added, terminal invalidation becomes WRONG for that path — the card would
+  // reappear in the product while its moment stayed permanently dead. This test is what turns that
+  // from a silent divergence into a build failure that names the decision to revisit.
+  const sources = [
+    "lib/server/experienceCards.ts",
+    "app/api/life/experiences/route.ts",
+    "lib/server/lifeOs/store.ts",
+  ];
+  const clears = [
+    /deleted_at\s*:\s*null/,
+    /withdrawn_at\s*:\s*null/,
+    /"deleted_at"\s*:\s*null/,
+    /"withdrawn_at"\s*:\s*null/,
+  ];
+  for (const file of sources) {
+    let source: string;
+    try {
+      source = readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    for (const pattern of clears) {
+      assert.ok(
+        !pattern.test(source),
+        `${file} clears a soft-delete flag (${pattern}). CNT-1's terminal invalidation assumes that never happens — revisit the projection lifecycle for that path before shipping it.`,
+      );
+    }
+  }
+});
+
+test("F. CNT-1 propagates from the source tables rather than trusting callers", () => {
+  const migration = readFileSync(
+    "supabase/migrations/202608200001_cnt1_continuity_projections.sql",
+    "utf8",
+  );
+  // Propagation lives in an AFTER trigger so that it is atomic with the source write and so that no
+  // writer — RPC, PostgREST, migration, or a path nobody has written yet — can produce a source row
+  // without its moment. A store-level hook would only cover callers that remembered to call it.
+  for (const table of [
+    "yorisou_current_state_records",
+    "yorisou_goals",
+    "yorisou_life_reflections",
+    "yorisou_experience_cards",
+  ]) {
+    assert.ok(
+      new RegExp(`'${table}'`).test(migration),
+      `${table} is not wired to yorisou_continuity_sync — writes to it would produce no moment`,
+    );
+  }
+  assert.match(migration, /create trigger yorisou_continuity_sync_trg after insert or update or delete/);
+  // The erasure plan must destroy the index AFTER the sources it points at. Both paths then lock
+  // source-then-projection; the reverse deadlocks, which tests/continuity/postgres-acceptance.sh
+  // demonstrates as a real `deadlock detected` when the order is put back.
+  const plan = migration.slice(migration.indexOf("v_plan     text[][]"));
+  const projections = plan.indexOf("'yorisou_continuity_projections'");
+  for (const source of [
+    "'yorisou_current_state_records'",
+    "'yorisou_goals'",
+    "'yorisou_life_reflections'",
+    "'yorisou_experience_cards'",
+  ]) {
+    const at = plan.indexOf(source);
+    assert.ok(at >= 0 && at < projections,
+      `${source} is erased after the projection index — that inverts the lock order and deadlocks`);
+  }
+});

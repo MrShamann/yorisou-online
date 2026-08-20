@@ -5,6 +5,7 @@
 --   FUNCTIONS  yorisou_continuity_project            (upsert, terminal-invalidation-safe)
 --              yorisou_continuity_invalidate_source  (owner-scoped, idempotent, terminal)
 --              yorisou_continuity_invalidate_owner   (account erasure sweep)
+--   TRIGGERS   yorisou_continuity_sync on the four source tables — transaction-owned propagation
 --   BACKFILL   deterministic, idempotent population from the four live source families
 --   PLAN       the account-erasure plan re-emitted with the new family
 --
@@ -32,11 +33,14 @@
 --   Derived from the merged P4/P5/POR-1 bodies, projections are inserted LAST among derivatives:
 --
 --     POR-1 gate -> assessment SOURCE LOCKS (sorted) -> INVITATION rows -> PAIR rows
---       -> COMPARISON rows -> CONTINUITY PROJECTION rows -> share seam -> canonical source erasure
+--       -> COMPARISON rows -> share seam -> canonical source erasure -> CONTINUITY PROJECTION rows
 --
---   Projections are a leaf: nothing waits on them, and they are keyed by (owner, family, ref) so
---   two owners never contend. Placing them after the pair/comparison rows keeps every destructive
---   path walking the same direction, which is what the P5 rounds established.
+--   PROJECTIONS MOVED TO LAST WHEN PROPAGATION BECAME A TRIGGER, and that is not cosmetic. An
+--   ordinary write now takes its source row and then, inside the same transaction, its projection
+--   row. Erasure must walk the same way or the two paths form a cycle: writer holds source and
+--   wants projection while erasure holds projection and wants source. Sources first, index last,
+--   everywhere. Projections remain a leaf — nothing waits on them — and they are keyed by
+--   (owner, family, ref), so two owners never contend.
 --
 -- EXISTING DATA
 --   A deterministic backfill runs at the end of this migration. It reads only id/owner/created_at
@@ -53,7 +57,10 @@
 --      (its plan minus the ['yorisou_continuity_projections','owner_account_id'] entry).
 --      Re-applying 202608190001 is NOT a valid rollback on its own: it would also revert the P5
 --      body, so copy the function text rather than re-running the file.
---   2. drop function if exists public.yorisou_continuity_invalidate_owner(text);
+--   2. drop trigger if exists yorisou_continuity_sync_trg on public.yorisou_current_state_records;
+--      ... and on yorisou_goals, yorisou_life_reflections, yorisou_experience_cards;
+--      drop function if exists public.yorisou_continuity_sync();
+--      drop function if exists public.yorisou_continuity_invalidate_owner(text);
 --      drop function if exists public.yorisou_continuity_invalidate_source(text, text, text);
 --      drop function if exists public.yorisou_continuity_project(text, text, text, timestamptz, text);
 --   3. drop table if exists public.yorisou_continuity_projections;
@@ -253,6 +260,92 @@ end
 $backfill$;
 
 -- ────────────────────────────────────────────────────────────────────────────
+-- PROPAGATION — the running product produces projections, and cannot opt out.
+-- ────────────────────────────────────────────────────────────────────────────
+--
+-- WHY A TRIGGER RATHER THAN A CALL IN THE STORE.
+--
+-- Propagation had to be atomic with the source write. The repository writes every source through a
+-- SECURITY DEFINER RPC over PostgREST, so a store-level "create, then project" would be two HTTP
+-- transactions: a crash between them leaves a source with no moment, and no amount of application
+-- retry makes that atomic — it only makes the divergence window smaller. An AFTER trigger runs
+-- inside the source's own transaction. If the source commits, the moment exists; if it rolls back,
+-- neither does. That is the actual guarantee, not an approximation of one.
+--
+-- It also closes the bypass. Any writer of these four tables projects — the OSF-1 RPCs, the
+-- experience-card PostgREST writes, a migration, a future path nobody has written yet. A store-level
+-- hook would only cover the callers that remembered to use it.
+--
+-- FIELDS ARE READ THROUGH to_jsonb RATHER THAN new.<column>. The four tables do not share a shape:
+-- only reflections have `mode`, only experience cards have `deleted_at`/`withdrawn_at`. One generic
+-- function over a jsonb view of the row avoids four near-identical bodies drifting apart.
+create or replace function public.yorisou_continuity_sync()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_family  text;
+  v_row     jsonb;
+  v_owner   text;
+  v_ref     text;
+  v_variant text;
+begin
+  case tg_table_name
+    when 'yorisou_current_state_records' then v_family := 'current_state';
+    when 'yorisou_goals'                 then v_family := 'goal';
+    when 'yorisou_life_reflections'      then v_family := 'reflection';
+    when 'yorisou_experience_cards'      then v_family := 'experience';
+    else return null;
+  end case;
+
+  v_row   := to_jsonb(case when tg_op = 'DELETE' then old else new end);
+  v_owner := v_row->>'owner_account_id';
+  v_ref   := v_row->>'id';
+  if v_owner is null or v_ref is null then return null; end if;
+
+  -- A destroyed source takes its moment with it. Terminal, because no path in this product restores
+  -- one: `deleted_at` and `withdrawn_at` are only ever set, never cleared, and moderation "restore"
+  -- returns moderation_status alone. If that ever changes, terminal invalidation becomes the wrong
+  -- model for the reversible path and this branch has to change with it — which is why a test
+  -- asserts the absence of a restore path rather than leaving the assumption implicit.
+  if tg_op = 'DELETE'
+     or (v_row ? 'deleted_at'   and v_row->>'deleted_at'   is not null)
+     or (v_row ? 'withdrawn_at' and v_row->>'withdrawn_at' is not null) then
+    perform public.yorisou_continuity_invalidate_source(v_owner, v_family, v_ref);
+    return null;
+  end if;
+
+  v_variant := v_row->>'mode';
+  perform public.yorisou_continuity_project(
+    v_owner, v_family, v_ref, (v_row->>'created_at')::timestamptz, v_variant);
+  return null;
+end;
+$$;
+
+revoke all on function public.yorisou_continuity_sync() from public;
+
+do $wire$
+declare v_table text;
+begin
+  foreach v_table in array array[
+    'yorisou_current_state_records',
+    'yorisou_goals',
+    'yorisou_life_reflections',
+    'yorisou_experience_cards'
+  ] loop
+    if to_regclass('public.' || v_table) is not null then
+      execute format('drop trigger if exists yorisou_continuity_sync_trg on public.%I', v_table);
+      execute format(
+        'create trigger yorisou_continuity_sync_trg after insert or update or delete on public.%I '
+        'for each row execute function public.yorisou_continuity_sync()', v_table);
+    end if;
+  end loop;
+end
+$wire$;
+
+-- ────────────────────────────────────────────────────────────────────────────
 -- Account-erasure plan, re-emitted from 202608190001 with the continuity family.
 -- ────────────────────────────────────────────────────────────────────────────
 
@@ -261,9 +354,6 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_id       uuid;
   v_plan     text[][] := array[
-    -- CNT-1 continuity.core (202608200001): the timeline index is owner-linked personal data and
-    -- dies with the account. The explicit sweep above already made it unreadable; this removes it.
-    ['yorisou_continuity_projections', 'owner_account_id'],
     -- CPR-1 connection.core + comparison.core (202608190001). A pair row belongs to TWO people, so
     -- the table appears TWICE with a different participant column — the same shape
     -- yorisou_experience_blocks already uses. Erasing EITHER participant removes the pair, and
@@ -325,7 +415,20 @@ declare
     ['yorisou_canonical_recommendation_actions','owner_account_id'],
     ['yorisou_canonical_recommendation_items','owner_account_id'],
     ['yorisou_canonical_recommendation_sets','owner_account_id'],
-    ['yorisou_account_deletion_requests','owner_account_id']
+    ['yorisou_account_deletion_requests','owner_account_id'],
+    -- CNT-1 continuity.core (202608200001) IS DELIBERATELY LAST, AND THE ORDER IS LOAD-BEARING.
+    --
+    -- Every source write takes its source row first and its projection row second, because the
+    -- projection is written by an AFTER trigger on the source. If erasure took projections first it
+    -- would walk the opposite way and the two paths would deadlock under concurrency — the same
+    -- inversion class the P5 rounds spent four rounds removing. Erasing sources first and the index
+    -- last keeps every path pointing the same direction.
+    --
+    -- Deleting the source rows above already fired the trigger that invalidated these projections,
+    -- so by the time this entry runs the moments are unreadable and this only reclaims the rows.
+    -- There is no window where a projection outlives its source: the whole function is one
+    -- transaction, so no other session observes any intermediate state.
+    ['yorisou_continuity_projections', 'owner_account_id']
   ];
   v_src        record;
   v_invite_ids uuid[];
@@ -413,11 +516,12 @@ begin
     end if;
   end if;
 
-  -- 5.0c CONTINUITY PROJECTIONS. Invalidated before anything destructive so that a failure later
-  -- in this transaction still leaves nothing readable, then removed by the plan below.
-  if to_regclass('public.yorisou_continuity_projections') is not null then
-    perform public.yorisou_continuity_invalidate_owner(p_owner_account_id);
-  end if;
+  -- CONTINUITY PROJECTIONS ARE NOT SWEPT HERE ANY MORE. An earlier revision invalidated them
+  -- before anything destructive, reasoning that a later failure would still leave nothing readable.
+  -- That reasoning was wrong: this function is a single transaction, so a later failure rolls the
+  -- invalidation back with everything else and the pre-sweep protected nothing. What it did do was
+  -- take projection locks before source locks, inverting the order every ordinary write uses. It is
+  -- gone; the plan's final entry erases the index after the sources it points at.
 
   -- 5.0 APPEND-ONLY FAMILIES FIRST.
   --
