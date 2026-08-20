@@ -6,6 +6,10 @@
 # grants and takes its runner as a parameter. What differs here is the runner, the extra seed for
 # the parts the timeline fixture does not create (memory, values, a saved Imairo result), and the
 # grants those need.
+# PORTS ARE CLEAR OF 55610-55642 ON PURPOSE. The a11y steps in osf1-life-ci.yml occupy that
+# range, and the PostgREST container binds with --network host, so one that has not finished
+# tearing down still holds its port. This harness bound 55642 and failed in CI with
+# `Network.Socket.bind: resource busy` while passing locally, which is the whole failure mode.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export YORISOU_CONTINUITY_SCHEMA_READY=true
@@ -39,8 +43,8 @@ SQL
 
 OSF1_TL_RUNNER="tests/me/composition-alignment.ts" \
 OSF1_TL_EXTRA_SQL="$EXTRA_SQL" \
-OSF1_TL_PG_PORT="${P7_PG_PORT:-55641}" \
-OSF1_TL_REST_PORT="${P7_REST_PORT:-55642}" \
-OSF1_TL_PROXY_PORT="${P7_PROXY_PORT:-55643}" \
+OSF1_TL_PG_PORT="${P7_PG_PORT:-55660}" \
+OSF1_TL_REST_PORT="${P7_REST_PORT:-55661}" \
+OSF1_TL_PROXY_PORT="${P7_PROXY_PORT:-55662}" \
 OSF1_TL_WORK="${P7_WORK:-/tmp/p7-me-alignment}" \
   bash tests/life-os/timeline-pagination.sh

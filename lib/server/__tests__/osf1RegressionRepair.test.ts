@@ -228,6 +228,21 @@ test("every Life OS page and the API enforce the gate", () => {
   // 今日 and わたし must not query or link to a closed Life OS.
   // 今日 and わたし must not query or link to a closed Life OS — and must ask the SAME question the
   // route answers, so a link never appears for someone the route will refuse.
-  assert.match(readFileSync("app/TodaySavedState.tsx", "utf8"), /const access = await resolveLifeOsRouteAccess\(\);/);
-  assert.match(readFileSync("app/me/page.tsx", "utf8"), /const lifeOsOpen = await lifeOsVisibleInNavigation\(\);/);
+  //
+  // WHAT IS ASSERTED IS THE AUTHORITY, NOT ITS SPELLING. `lifeOsVisibleInNavigation()` is exactly
+  // `(await resolveLifeOsRouteAccess()).allowed`, so a surface that calls the resolver directly
+  // satisfies this invariant at least as strictly — and a surface that needs the VIEWER as well as
+  // the gate must call the resolver, because taking the boolean from one call and the identity from
+  // another is how a page scopes data to a different person than the one it admitted. わたし now
+  // does exactly that (ARCH-P7), the same way TodaySavedState always has.
+  for (const surface of ["app/TodaySavedState.tsx", "app/me/page.tsx"]) {
+    const source = readFileSync(surface, "utf8");
+    assert.match(source, /await resolveLifeOsRouteAccess\(\)|await lifeOsVisibleInNavigation\(\)/,
+      `${surface} does not resolve the Life OS gate through its single authority`);
+    // Whichever it calls, it must call ONE of them once — two resolutions can disagree.
+    const resolutions =
+      (source.match(/await resolveLifeOsRouteAccess\(\)/g) ?? []).length +
+      (source.match(/await lifeOsVisibleInNavigation\(\)/g) ?? []).length;
+    assert.equal(resolutions, 1, `${surface} resolves the gate ${resolutions} times`);
+  }
 });

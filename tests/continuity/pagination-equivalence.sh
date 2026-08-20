@@ -6,13 +6,17 @@
 # needs — the full migration lineage, hosted-parity grants, and a fixture with a deliberate
 # cross-kind tie cluster — and it takes the runner as a parameter, so the only thing that differs
 # here is which runner walks it and that the projection path is declared ready.
+# PORTS ARE CLEAR OF 55610-55642 ON PURPOSE. The a11y steps in osf1-life-ci.yml occupy that
+# range, and the PostgREST container binds with --network host, so one that has not finished
+# tearing down still holds its port. This harness bound 55642 and failed in CI with
+# `Network.Socket.bind: resource busy` while passing locally, which is the whole failure mode.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export YORISOU_CONTINUITY_SCHEMA_READY=true
 OSF1_TL_RUNNER="tests/continuity/pagination-equivalence.ts" \
 OSF1_TL_EXTRA_SQL="grant insert, update, delete on public.yorisou_experience_cards, public.yorisou_goals, public.yorisou_current_state_records, public.yorisou_life_reflections to service_role;" \
-OSF1_TL_PG_PORT="${CNT1_EQ_PG_PORT:-55631}" \
-OSF1_TL_REST_PORT="${CNT1_EQ_REST_PORT:-55632}" \
-OSF1_TL_PROXY_PORT="${CNT1_EQ_PROXY_PORT:-55633}" \
+OSF1_TL_PG_PORT="${CNT1_EQ_PG_PORT:-55650}" \
+OSF1_TL_REST_PORT="${CNT1_EQ_REST_PORT:-55651}" \
+OSF1_TL_PROXY_PORT="${CNT1_EQ_PROXY_PORT:-55652}" \
 OSF1_TL_WORK="${CNT1_EQ_WORK:-/tmp/cnt1-equivalence}" \
   bash tests/life-os/timeline-pagination.sh
