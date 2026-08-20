@@ -47,13 +47,56 @@ $Q -q -c "create extension if not exists pgcrypto; create extension if not exist
   do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$;
   do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;
   grant usage on schema public to anon, authenticated, service_role;" >/dev/null
+# MIGRATIONS ARE APPLIED IN CANONICAL LINEAGE ORDER. THAT IS NOT A DETAIL.
+#
+# This loop used to skip the POR-1 `2026080101*` cohort and replay it at the very end, after every
+# later migration. That was invisible for as long as nothing downstream depended on the cohort, and
+# it broke the moment one did: CPR-1 (202608190001) references yorisou_account_mutation_leases, which
+# 202608010105 creates, so replaying the cohort last made CPR-1 fail with
+#
+#     ERROR: relation "public.yorisou_account_mutation_leases" does not exist
+#
+# and — because the old loop discarded stderr and `set -e` killed the run before its first echo — the
+# whole harness exited silently with no output at all. A gate that dies before saying anything is
+# worse than a red one, so failures are now reported rather than swallowed.
+#
+# The grant the cohort needs is kept at exactly the point it always occupied: immediately before the
+# first cohort migration. Nothing about what this file tests has changed; only the order it builds
+# the database in, which is now the same order Production applies.
+APPLIED_ORDER=()
+GRANTED_BEFORE_COHORT=0
 for f in supabase/migrations/*.sql; do
-  case "$(basename "$f")" in 2026080101*) continue ;; esac
-  $Q -q -f "$f" >/dev/null 2>&1
+  b="$(basename "$f")"
+  case "$b" in
+    2026080101*)
+      if [ "$GRANTED_BEFORE_COHORT" = "0" ]; then
+        $Q -q -c "grant all on all tables in schema public to service_role; grant all on all sequences in schema public to service_role;" >/dev/null
+        GRANTED_BEFORE_COHORT=1
+      fi
+      ;;
+  esac
+  if ! $Q -q -f "$f" >/dev/null 2>"$WORK/apply.err"; then
+    echo "[ao] MIGRATION FAILED TO APPLY: $b" >&2
+    grep -oE 'ERROR.*' "$WORK/apply.err" | head -2 >&2
+    exit 1
+  fi
+  APPLIED_ORDER+=("$b")
 done
-$Q -q -c "grant all on all tables in schema public to service_role; grant all on all sequences in schema public to service_role;" >/dev/null
-for f in supabase/migrations/2026080101*.sql; do $Q -q -f "$f" >/dev/null; done
-echo "[ao] $(ls supabase/migrations/*.sql | wc -l | tr -d ' ') migrations applied on PostgreSQL $("$PGBIN/postgres" --version | awk '{print $3}')"
+[ "$GRANTED_BEFORE_COHORT" = "1" ] || { echo "[ao] the POR-1 cohort vanished from the lineage" >&2; exit 1; }
+
+# REGRESSION GUARD — the order this harness applied must BE the canonical lineage order.
+#
+# Without this, any future reintroduction of a skip-and-replay shortcut goes unnoticed until some
+# later migration happens to depend on a deferred one. Comparing the recorded order against the
+# sorted listing makes that class of defect fail here, immediately, instead of years downstream.
+CANONICAL_ORDER=()
+while IFS= read -r line; do CANONICAL_ORDER+=("$line"); done < <(ls supabase/migrations/*.sql | xargs -n1 basename | sort)
+if [ "${APPLIED_ORDER[*]}" != "${CANONICAL_ORDER[*]}" ]; then
+  echo "[ao] MIGRATIONS WERE NOT APPLIED IN CANONICAL LINEAGE ORDER" >&2
+  diff <(printf '%s\n' "${APPLIED_ORDER[@]}") <(printf '%s\n' "${CANONICAL_ORDER[@]}") | head -10 >&2
+  exit 1
+fi
+echo "[ao] ${#APPLIED_ORDER[@]} migrations applied in canonical lineage order on PostgreSQL $("$PGBIN/postgres" --version | awk '{print $3}')"
 
 $Q -q -f tests/por1/fixture-override-registry.sql >/dev/null 2>&1
 for p in por1a por1b por1p; do
