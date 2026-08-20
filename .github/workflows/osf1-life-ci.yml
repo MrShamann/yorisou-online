@@ -35,6 +35,10 @@ on:
       - "supabase/migrations/**osf1**"
       - "tests/life-os/**"
       - "tests/smoke/osf1-*"
+      - "lib/server/continuity/**"
+      - "lib/yorisou/continuity/**"
+      - "lib/platform/continuityCore.ts"
+      - "tests/continuity/**"
       - "tests/governance/**"
       - "docs/yorisou/osf1/**"
       - ".github/workflows/osf1-life-ci.yml"
@@ -47,9 +51,14 @@ on:
       - "supabase/migrations/**osf1**"
       - "tests/life-os/**"
       - "tests/smoke/osf1-*"
+      - "lib/server/continuity/**"
+      - "lib/yorisou/continuity/**"
+      - "lib/platform/continuityCore.ts"
+      - "tests/continuity/**"
       - "tests/governance/**"
       - "docs/yorisou/osf1/**"
       - ".github/workflows/osf1-life-ci.yml"
+  workflow_dispatch:
 
 jobs:
   authenticated-a11y:
@@ -167,6 +176,20 @@ jobs:
           OSF1_STACK_SPEC: tests/smoke/osf1-life-reflection-e2e.spec.ts
           OSF1_A11Y_REUSE_BUILD: "1"
         run: bash tests/life-os/fullstack-a11y.sh
+
+      # ARCH-P6 §12 — the projection reader must page IDENTICALLY to the direct aggregation it
+      # replaced. Both readers walk one fixture, in one process, against this stack: every filter at
+      # limits 1/3/7/100, compared as an exact sequence with byte-identical cursors, plus the checks
+      # that stop the comparison being vacuous — emptying the index must empty the new reader and
+      # leave the old one whole. Same PostgREST shim as the steps above; the fixture builds its own
+      # cluster from the runner's PostgreSQL, so nothing new is installed.
+      - name: Timeline pagination equivalence (legacy aggregation vs continuity index)
+        env:
+          OSF1_POSTGRES_BIN: /usr/lib/postgresql/16/bin
+          OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
+        run: |
+          chmod +x tests/life-os/ci/postgrest-docker
+          npm run test:arch-p6-equivalence
 
       - name: Playwright report on failure
         if: failure()
