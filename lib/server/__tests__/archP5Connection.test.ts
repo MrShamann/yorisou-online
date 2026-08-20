@@ -1062,7 +1062,17 @@ test("the CPR-1 migration is registered in the scope manifest", () => {
   assert.ok(manifest.includes("202608190001_cpr1_connection_pair.sql"), "the new migration is unregistered");
 });
 
-test("migration lineage: CPR-1 is the newest and does not renumber anything", () => {
+test("migration lineage: CPR-1 was appended and does not renumber anything", () => {
   const names = readdirSync(join("supabase", "migrations")).filter((n) => n.endsWith(".sql")).sort();
-  assert.equal(names[names.length - 1], "202608190001_cpr1_connection_pair.sql");
+  const at = names.indexOf("202608190001_cpr1_connection_pair.sql");
+  assert.ok(at >= 0, "CPR-1 is missing from the lineage");
+  // The invariant P5 established is that CPR-1 was APPENDED: it follows SHR-1 with nothing
+  // wedged between them, and nothing ahead of it was renumbered. It is deliberately not
+  // "CPR-1 is the newest file" — later phases append their own migrations, and pinning the
+  // tail would turn every legitimate successor into a P5 failure.
+  assert.equal(names[at - 1], "202608180002_shr1_share_objects.sql");
+  assert.ok(
+    names.slice(0, at).every((n) => n.slice(0, 12) <= "202608180002"),
+    "a migration was inserted ahead of CPR-1",
+  );
 });

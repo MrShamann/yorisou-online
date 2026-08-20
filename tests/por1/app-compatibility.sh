@@ -99,11 +99,16 @@ $PSQL -c "do \$\$ begin create role service_role bypassrls; exception when dupli
           alter role service_role bypassrls;
           grant usage on schema public to anon, authenticated, service_role;"
 
+# Migrations numbered BELOW the cohort — that is what Production had before POR-1. The old test
+# ("not the cohort") silently swept in anything that landed after 202608010111, and CPR-1 depends on
+# 202608010105, so it could not apply from that position.
+BASE=0
 for f in supabase/migrations/*.sql; do
-  case "$(basename "$f")" in 2026080101*) continue ;; esac
+  [ "$(basename "$f" | cut -c1-12)" -lt 202608010101 ] || continue
   $PSQL -f "$f" >/dev/null
+  BASE=$((BASE + 1))
 done
-note "12 Production baseline migrations" "applied"
+note "$BASE Production baseline migrations" "applied"
 
 # SUPABASE PLATFORM PARITY, applied AFTER the baseline and BEFORE the promotion.
 #
@@ -142,6 +147,12 @@ echo "[compat] 3/8 the POR-1 promotion migrations"
 # ON_ERROR_STOP, because a migration that fails silently here would leave the compatibility claim
 # resting on a schema that was never actually promoted. The glob covers all eleven.
 for f in supabase/migrations/2026080101*.sql; do
+  $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null || { echo "[compat] FATAL: $(basename "$f") did not apply" >&2; exit 1; }
+done
+# And the lineage after the promotion, in order — the app talks to the full schema, not to the
+# schema as it looked at 202608010111.
+for f in supabase/migrations/*.sql; do
+  [ "$(basename "$f" | cut -c1-12)" -gt 202608010111 ] || continue
   $PSQL -v ON_ERROR_STOP=1 -f "$f" >/dev/null || { echo "[compat] FATAL: $(basename "$f") did not apply" >&2; exit 1; }
 done
 echo "[compat] promoted lineage: $(ls supabase/migrations/2026080101*.sql | wc -l | tr -d ' ') POR-1 migrations"

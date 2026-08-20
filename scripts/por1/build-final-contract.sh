@@ -92,8 +92,12 @@ prepare() {  # db
 
 baseline() {  # db — every non-POR-1 migration, i.e. what Production already has
   local dsn="postgres://postgres@localhost:$PORT/$1"
+  # "Numbered below the cohort", not "not the cohort" — see tests/por1/catalogue-baseline.sh. A
+  # migration landing after 202608010111 is not something Production already had, and counting one
+  # as baseline both breaks its apply (CPR-1 depends on 202608010105) and, because CNT-1 re-emits a
+  # POR-1 function, silently shrinks the delta this contract is derived from.
   for f in supabase/migrations/*.sql; do
-    case "$(basename "$f")" in 2026080101*) continue ;; esac
+    [ "$(basename "$f" | cut -c1-12)" -lt 202608010101 ] || continue
     psql "$dsn" -q -X -v ON_ERROR_STOP=1 -f "$f" >/dev/null
   done
   psql "$dsn" -q -X -c "grant all on all tables in schema public to service_role;" >/dev/null

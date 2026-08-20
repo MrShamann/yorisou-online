@@ -34,6 +34,13 @@ import {
   listEligibleMemories,
   listReflections,
 } from "@/lib/server/lifeOs/store";
+import { continuitySchemaReady } from "@/lib/yorisou/continuity/access";
+import { continuityRepository } from "@/lib/server/continuity/store";
+import { readTimelinePage } from "@/lib/server/platform/continuityCore/service";
+import type {
+  ContinuitySourceFamily,
+  TimelineMoment,
+} from "@/lib/platform/continuityCore";
 import { reflectionQuestionsFor } from "@/lib/life-os/contract";
 import type {
   CurrentStateRecord,
@@ -213,7 +220,20 @@ async function pageOf<T>(table: string, select: string, owner: string, limit: nu
   return (await response.json()) as T[];
 }
 
-export async function lifeTimelinePage(
+/**
+ * THE PRE-CNT-1 READER. Kept for exactly two reasons, neither of which is "in case the new one is
+ * wrong":
+ *
+ *   1. A deployment whose database has not had 202608200001 applied has no projection index to
+ *      read. Until an operator declares the schema ready, this IS the correct answer, not a
+ *      fallback from a preferred one.
+ *   2. The equivalence proof runs both readers over one fixture and compares them. Deleting this
+ *      would delete the only thing the new reader can be checked against.
+ *
+ * It is NOT authoritative once the schema is ready, and archP6Continuity.test.ts fails if the
+ * projection path ever reaches for it.
+ */
+export async function legacyAggregatedTimelinePage(
   ownerAccountId: string,
   options: { cursor?: string | null; limit?: number; filter?: TimelineFilter } = {},
 ): Promise<TimelinePage> {
@@ -270,6 +290,188 @@ export async function lifeTimelinePage(
   return {
     entries,
     nextCursor: more && entries.length > 0 ? encodeTimelineCursor(entries[entries.length - 1], filter) : null,
+    filter,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ARCH-P6 — the timeline reads continuity.core
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// WHAT CHANGED, AND WHAT DELIBERATELY DID NOT.
+//
+// The index moved; the rendering did not. Order, filtering, paging and identity now come from one
+// owner-scoped projection table, and the records themselves are still hydrated from their own
+// stores. A person sees exactly what they saw before — same entries, same order, same records.
+//
+// WHY THAT SPLIT IS THE POINT. The projection carries no title, no body and no answers, so it can
+// never become a second, staler copy of a private record. It carries WHICH source, WHEN, and WHICH
+// sub-view, which is precisely what an index needs and nothing more. Deletion correctness stops
+// being something every reader must remember to filter for and becomes a property of the index: an
+// AFTER trigger on each source invalidates the moment in the same transaction that removes the
+// source, and invalidation is terminal in SQL, so no delayed writer can bring it back.
+//
+// THE FIVE CONSUMER FILTERS OVER FOUR SOURCES. Reflection drives two of them, which is why the
+// index stores a variant: REFLECTION and POSTMORTEM are one family narrowed by mode, and the index
+// can answer that without opening a single reflection.
+
+const FAMILIES_FOR_FILTER: Record<TimelineFilter, readonly ContinuitySourceFamily[]> = {
+  ALL: ["current_state", "goal", "reflection", "experience"],
+  STATE: ["current_state"],
+  DIRECTION: ["goal"],
+  REFLECTION: ["reflection"],
+  POSTMORTEM: ["reflection"],
+  EXPERIENCE: ["experience"],
+};
+
+/** Only the one family that drives two views is narrowed further. */
+const VARIANT_FOR_FILTER: Record<TimelineFilter, string | null> = {
+  ALL: null, STATE: null, DIRECTION: null, EXPERIENCE: null,
+  REFLECTION: "light",
+  POSTMORTEM: "postmortem",
+};
+
+/** The columns each family's entry renders from — identical to what the legacy reader selected. */
+const HYDRATION: Record<ContinuitySourceFamily, { table: string; select: string }> = {
+  current_state: {
+    table: "yorisou_current_state_records",
+    select: "id,state_tags,mood,energy,situation,reflection,source,created_at",
+  },
+  goal: { table: "yorisou_goals", select: "id,title,description,status,created_at,updated_at" },
+  reflection: {
+    table: "yorisou_life_reflections",
+    select:
+      "id,experience_id,current_state_record_id,mode,what_happened,felt,tried,what_followed,next_time,goal_at_the_time,information_at_hand,options_considered,decision_made,why,what_learned,created_at",
+  },
+  experience: { table: "yorisou_experience_cards", select: "id,title,situation,created_at" },
+};
+
+async function hydrateByIds<T extends { id: string }>(
+  family: ContinuitySourceFamily, owner: string, ids: readonly string[],
+): Promise<Map<string, T>> {
+  const found = new Map<string, T>();
+  if (ids.length === 0) return found;
+  const url = process.env.SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !key) return found;
+  const { table, select } = HYDRATION[family];
+  const params = new URLSearchParams({
+    select,
+    // OWNER-SCOPED EVEN THOUGH THE IDS CAME FROM AN OWNER-SCOPED INDEX. Two independent predicates
+    // rather than one: a defect in the index must not be sufficient, on its own, to read another
+    // person's record.
+    owner_account_id: `eq.${owner}`,
+    id: `in.(${ids.join(",")})`,
+    limit: String(ids.length),
+  });
+  const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/${table}?${params}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return found;
+  for (const row of (await response.json()) as T[]) found.set(row.id, row);
+  return found;
+}
+
+function entryFor(moment: TimelineMoment, record: unknown): TimelineEntry | null {
+  const at = moment.occurred_at;
+  const id = moment.source_ref;
+  switch (moment.source_family) {
+    case "current_state": return { kind: "current_state", at, id, record: record as CurrentStateRecord };
+    case "goal":          return { kind: "goal", at, id, record: record as Goal };
+    case "reflection":    return { kind: "reflection", at, id, record: record as LifeReflection };
+    case "experience": {
+      const row = record as ExperienceRow;
+      return { kind: "experience", at, id, record: { id: row.id, title: row.title, situation: row.situation } };
+    }
+    default: return null;
+  }
+}
+
+/**
+ * The person's own timeline, one keyset page at a time.
+ *
+ * Reads the continuity index when the schema is ready, and the pre-CNT-1 direct aggregation when it
+ * is not — see lib/yorisou/continuity/access.ts for why that is a migration boundary rather than a
+ * feature switch.
+ */
+export async function lifeTimelinePage(
+  ownerAccountId: string,
+  options: { cursor?: string | null; limit?: number; filter?: TimelineFilter } = {},
+): Promise<TimelinePage> {
+  if (!continuitySchemaReady()) return legacyAggregatedTimelinePage(ownerAccountId, options);
+
+  const filter = options.filter ?? "ALL";
+  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), 50);
+  let cursor: { at: string; id: string } | null = null;
+  if (options.cursor) {
+    cursor = decodeTimelineCursor(options.cursor, filter);
+    if (!cursor) throw new Error("osf1_timeline_cursor_invalid");
+  }
+
+  let page;
+  try {
+    page = await readTimelinePage({
+      owner_ref: ownerAccountId,
+      limit,
+      after: cursor ? { occurred_at: cursor.at, source_ref: cursor.id } : null,
+      families: FAMILIES_FOR_FILTER[filter],
+      variant: VARIANT_FOR_FILTER[filter],
+    }, continuityRepository);
+  } catch {
+    // The legacy reader returned an empty slice for an unreachable source rather than failing the
+    // whole page, and equivalence means matching that too — not improving on it inside a change
+    // whose contract is "nothing visible changes".
+    return { entries: [], nextCursor: null, filter };
+  }
+
+  const byFamily = new Map<ContinuitySourceFamily, string[]>();
+  for (const moment of page.moments) {
+    const list = byFamily.get(moment.source_family) ?? [];
+    list.push(moment.source_ref);
+    byFamily.set(moment.source_family, list);
+  }
+  const hydrated = new Map<ContinuitySourceFamily, Map<string, { id: string }>>();
+  await Promise.all(
+    [...byFamily].map(async ([family, ids]) => {
+      hydrated.set(family, await hydrateByIds(family, ownerAccountId, ids));
+    }),
+  );
+
+  const entries: TimelineEntry[] = [];
+  let orphans = 0;
+  for (const moment of page.moments) {
+    const record = hydrated.get(moment.source_family)?.get(moment.source_ref);
+    if (!record) {
+      // A LIVE MOMENT WHOSE SOURCE WILL NOT HYDRATE SHOULD BE IMPOSSIBLE — the trigger invalidates
+      // in the source's own transaction. If it happens anyway (a partial rollout, a restore from an
+      // older dump), the moment is DROPPED, never rendered from stale data, and never repaired
+      // here: a read that quietly mutates canonical data is a much worse failure than a short entry
+      // list. It is counted and logged so it is visible instead of silent.
+      orphans += 1;
+      continue;
+    }
+    const entry = entryFor(moment, record);
+    if (entry) entries.push(entry);
+  }
+  if (orphans > 0) {
+    // No owner id, no source reference, no content — the fact and its shape, nothing identifying.
+    console.error("continuity: live projections without a hydratable source", {
+      filter,
+      orphans,
+      page: page.moments.length,
+    });
+  }
+
+  // THE CURSOR ADVANCES PAST THE LAST MOMENT, NOT THE LAST ENTRY. If a dropped orphan were allowed
+  // to rewind it, a page whose tail is unhydratable would be requested again forever.
+  const last = page.moments[page.moments.length - 1];
+  return {
+    entries,
+    nextCursor:
+      page.has_more && last
+        ? Buffer.from(`${filter}|${last.occurred_at}|${last.source_ref}`, "utf8").toString("base64url")
+        : null,
     filter,
   };
 }

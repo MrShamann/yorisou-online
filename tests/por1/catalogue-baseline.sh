@@ -60,8 +60,13 @@ roles() {
 }
 lineage() {   # the repository's non-POR-1 migrations: the reconstruction of main's lineage
   local db="$1"
+  # THE PRE-POR-1 BASELINE IS "NUMBERED BELOW THE COHORT", NOT "EVERYTHING THAT IS NOT THE COHORT".
+  # Those were the same set until a migration landed AFTER 202608010111. The delta this harness
+  # measures is POR-1's contribution, and CNT-1 (202608200001) re-emits a POR-1 function — counted
+  # as baseline it appeared in BOTH catalogues and hid that function from the promoted set, which is
+  # exactly the "82 functions, got 81" this suite reported.
   for f in supabase/migrations/*.sql; do
-    case "$(basename "$f")" in 2026080101*) continue ;; esac
+    [ "$(basename "$f" | cut -c1-12)" -lt 202608010101 ] || continue
     psql "postgres://postgres@localhost:$PORT/$db" -q -X -f "$f" >/dev/null 2>&1
   done
   psql "postgres://postgres@localhost:$PORT/$db" -q -X -c "grant all on all tables in schema public to service_role;" >/dev/null

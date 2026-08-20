@@ -72,8 +72,10 @@ $PSQL -c "do \$\$ begin create role service_role bypassrls; exception when dupli
 
 echo "[rehearsal] 2/8 Production baseline — the 12 migrations Production already has"
 baseline=0
+# Migrations numbered BELOW the cohort. "Not the cohort" was the same set until something landed
+# after 202608010111; CPR-1 depends on 202608010105 and cannot apply as pre-POR-1 baseline.
 for f in supabase/migrations/*.sql; do
-  case "$(basename "$f")" in 2026080101*) continue ;; esac
+  [ "$(basename "$f" | cut -c1-12)" -lt 202608010101 ] || continue
   $PSQL -f "$f" >/dev/null
   baseline=$((baseline + 1))
 done

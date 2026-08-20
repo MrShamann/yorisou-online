@@ -85,6 +85,20 @@ jobs:
           psql postgresql://postgres:postgres@localhost:5432/osf1_acceptance -c 'create database cpr1_acceptance;'
           npm run test:arch-p5-db
 
+      # CNT-1 — continuity.core against real PostgreSQL. P6's claim is that a moment cannot outlive
+      # its source, which is a database claim, so it is proved with overlapping sessions rather than
+      # unit fakes: a projection write open across a concurrent source erase, a stale writer refused
+      # after terminal invalidation, concurrent invalidations, owner collision on an identical
+      # (family, ref), and a live writer racing a REAL account erasure — the last of which deadlocks
+      # if the erasure order is put back the way it was. Also the propagation triggers, the
+      # soft-delete lifecycle and the idempotent backfill. Its own isolated database.
+      - name: continuity.core acceptance (CNT-1 propagation, invalidation, lock order, erasure)
+        env:
+          CNT1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cnt1_acceptance
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/osf1_acceptance -c 'create database cnt1_acceptance;'
+          npm run test:arch-p6-db
+
   # OSF-1 GATE 3 — the migration lineage rehearsed forwards AND backwards.
   #
   # Separate from the acceptance job because it proves a different thing. Acceptance proves the
@@ -234,6 +248,9 @@ jobs:
 
       - name: ARCH-P5 connection.core + comparison.core boundary (Imairo pair)
         run: npm run test:arch-p5
+
+      - name: ARCH-P6 continuity.core projection boundary
+        run: npm run test:arch-p6
 
       - name: C02 definition and scoring checks
         run: npm run test:c02
