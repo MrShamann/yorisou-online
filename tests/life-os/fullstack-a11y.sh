@@ -371,7 +371,8 @@ start_postgrest() {
       "http://127.0.0.1:$REST_PORT/yorisou_life_reflections?select=id&limit=1" || true)
     [ "$REST_CHECK" = "200" ] && return 0
     # If it died of a port still being released, stop waiting on a process that is already gone.
-    grep -qi "resource busy\|address in use" "$WORK/postgrest.log" 2>/dev/null && return 1
+    # `if`, not `&&` — under `set -e` a bare compound whose test fails would exit the script.
+    if grep -qi "resource busy\|address in use" "$WORK/postgrest.log" 2>/dev/null; then return 1; fi
     sleep 1
   done
   return 1
@@ -382,7 +383,10 @@ for attempt in 1 2 3 4 5; do
   start_postgrest && break
   if grep -qi "resource busy\|address in use" "$WORK/postgrest.log" 2>/dev/null; then
     echo "[osf1-a11y] port $REST_PORT still held by a departing listener; retry $attempt" >&2
-    kill "$REST_PID" 2>/dev/null
+    # `|| true`: the process this is cleaning up has usually already exited, and a failing `kill`
+    # under `set -e` is what made the first version of this retry print its message and then die
+    # instead of retrying.
+    kill "$REST_PID" 2>/dev/null || true
     sleep 3
     continue
   fi
