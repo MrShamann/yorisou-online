@@ -22,8 +22,11 @@ import {
   RETURN_MAX_ITEMS,
 } from "@/lib/server/lifeOs/timeline";
 import { continuityReadiness } from "@/lib/yorisou/continuity/access";
+import { composeYorisouMe } from "@/lib/server/me/composition";
+import { ME_COMPOSITION_PARTS, type MeCompositionPart } from "@/lib/platform/meComposition";
 
 const OWNER = process.env.OSF1_TL_OWNER ?? "acct_tl";
+const OTHER = process.env.OSF1_TL_OTHER ?? "acct_tl_other";
 const REST = `${(process.env.SUPABASE_URL ?? "").replace(/\/$/, "")}/rest/v1`;
 const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
@@ -129,6 +132,72 @@ async function main() {
     fail("the direct read also dropped it — the source was mutated, so this proved nothing");
   }
   ok("the direct read still offers it — the index, not a store scan, is now what わたし composes from");
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // THE FIVE-PART COMPOSITION — screen 17, against the real stack
+  // ══════════════════════════════════════════════════════════════════════════
+  const me = await composeYorisouMe(OWNER);
+  const stateOf = (p: MeCompositionPart) => me.parts.find((x) => x.part === p)?.state;
+  const refOf = (p: MeCompositionPart) => me.parts.find((x) => x.part === p)?.reference?.ref ?? null;
+
+  if (me.parts.map((p) => p.part).join(",") !== ME_COMPOSITION_PARTS.join(",")) {
+    fail("the parts came back in the wrong order or count — the surface renders them in this order");
+  }
+  ok("all five parts return, once each, in the reference architecture's order");
+
+  for (const part of ["current_state", "assessment_recognition", "confirmed_durable_context", "confirmed_values"] as const) {
+    if (stateOf(part) !== "present") fail(`${part} is ${stateOf(part)}, expected present — the fixture seeded one`);
+  }
+  ok("current state, Imairo, durable context and confirmed values each resolve from their own module");
+  if (stateOf("observations") !== "deferred") fail(`observations is ${stateOf("observations")}, expected deferred`);
+  ok("observations stays deferred — a V1.5 capability is not reported as \"you have none\"");
+
+  const otherMe = await composeYorisouMe(OTHER);
+  const mineRefs = new Set(me.parts.map((p) => p.reference?.ref).filter(Boolean));
+  for (const part of otherMe.parts) {
+    if (part.reference && mineRefs.has(part.reference.ref)) {
+      fail(`a reference appears in two people's compositions (${part.part})`);
+    }
+  }
+  if (otherMe.parts.find((p) => p.part === "confirmed_durable_context")?.state !== "present") {
+    fail("the other account has no memory — the isolation check would be vacuous");
+  }
+  if (otherMe.parts.find((p) => p.part === "confirmed_values")?.state !== "absent") {
+    fail("the other account unexpectedly has confirmed values — check the fixture");
+  }
+  ok("owner isolation holds, and the other account's own parts resolve independently");
+
+  const again = await composeYorisouMe(OWNER);
+  if (JSON.stringify(again) !== JSON.stringify(me)) fail("two reads of the same unchanged data disagreed");
+  ok("the composition is deterministic across repeated reads");
+
+  // A memory a person withdraws must leave the picture they are shown of themselves. This is the
+  // whole reason the composition uses the lifecycle-respecting ELIGIBLE read.
+  const memRef = refOf("confirmed_durable_context");
+  await rest(`yorisou_explicit_memories?id=eq.${memRef}`, {
+    method: "PATCH",
+    body: JSON.stringify({ lifecycle_state: "revoked", lifecycle_changed_at: new Date().toISOString() }),
+  });
+  if ((await composeYorisouMe(OWNER)).parts.find((p) => p.part === "confirmed_durable_context")?.state !== "absent") {
+    fail("a revoked memory still appears in わたし");
+  }
+  ok("a revoked memory leaves the composition — lifecycle is respected, not bypassed");
+
+  const valRef = refOf("confirmed_values");
+  await rest(`yorisou_values_assessments?id=eq.${valRef}`, {
+    method: "PATCH", body: JSON.stringify({ confirmation: "not_quite" }),
+  });
+  if ((await composeYorisouMe(OWNER)).parts.find((p) => p.part === "confirmed_values")?.state !== "absent") {
+    fail("an unconfirmed values assessment is still presented as user-confirmed");
+  }
+  ok("withdrawing confirmation removes the values part — わたし does not put words in someone's mouth");
+
+  const emptyMe = await composeYorisouMe("acct_tl_nobody");
+  for (const part of emptyMe.parts) {
+    const expected = part.part === "observations" ? "deferred" : "absent";
+    if (part.state !== expected) fail(`an empty account reported ${part.part} as ${part.state}, expected ${expected}`);
+  }
+  ok("an account with nothing reports absent, never not_ready — emptiness and failure stay distinct");
 
   console.log(`\nME COMPOSITION ALIGNED — ${checks} checks`);
 }
