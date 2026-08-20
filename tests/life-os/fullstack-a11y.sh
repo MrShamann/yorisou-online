@@ -348,15 +348,45 @@ server-host = "127.0.0.1"
 server-port = $REST_PORT
 db-pool = 6
 EOF
-"$POSTGREST" "$WORK/postgrest.conf" > "$WORK/postgrest.log" 2>&1 &
-REST_PID=$!
-disown "$REST_PID" 2>/dev/null || true
+# BINDING IS A DIFFERENT QUESTION FROM LISTENING, AND ONLY ONE OF THEM IS THE ONE THAT MATTERS.
+#
+# The pre-flight above asks "is anything listening on this port?" by connecting to it. PostgREST
+# needs "can I BIND this port?", and between the two sits the case that actually broke CI: the
+# previous step's PostgREST container, killed but not yet gone, refuses connections while still
+# holding the port. The pre-flight sees a free port, PostgREST dies with
+#
+#     postgrest: Network.Socket.bind: resource busy (Address in use)
+#
+# and the step fails with `not healthy (got 000)` — intermittently, because it depends on how fast
+# the previous container releases. Same tree, same commit: one run passed and one failed.
+#
+# So the start is retried, but ONLY on that exact signature. Anything else fails immediately and
+# loudly, because a retry loop that swallows real startup errors is worse than no retry at all.
+start_postgrest() {
+  "$POSTGREST" "$WORK/postgrest.conf" > "$WORK/postgrest.log" 2>&1 &
+  REST_PID=$!
+  disown "$REST_PID" 2>/dev/null || true
+  for _ in $(seq 1 60); do
+    REST_CHECK=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $SERVICE_KEY" \
+      "http://127.0.0.1:$REST_PORT/yorisou_life_reflections?select=id&limit=1" || true)
+    [ "$REST_CHECK" = "200" ] && return 0
+    # If it died of a port still being released, stop waiting on a process that is already gone.
+    grep -qi "resource busy\|address in use" "$WORK/postgrest.log" 2>/dev/null && return 1
+    sleep 1
+  done
+  return 1
+}
+
 REST_CHECK=""
-for _ in $(seq 1 60); do
-  REST_CHECK=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $SERVICE_KEY" \
-    "http://127.0.0.1:$REST_PORT/yorisou_life_reflections?select=id&limit=1" || true)
-  [ "$REST_CHECK" = "200" ] && break
-  sleep 1
+for attempt in 1 2 3 4 5; do
+  start_postgrest && break
+  if grep -qi "resource busy\|address in use" "$WORK/postgrest.log" 2>/dev/null; then
+    echo "[osf1-a11y] port $REST_PORT still held by a departing listener; retry $attempt" >&2
+    kill "$REST_PID" 2>/dev/null
+    sleep 3
+    continue
+  fi
+  break
 done
 [ "$REST_CHECK" = "200" ] || {
   echo "[osf1-a11y] PostgREST not healthy (got $REST_CHECK)" >&2
