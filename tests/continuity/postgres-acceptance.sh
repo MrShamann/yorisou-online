@@ -34,6 +34,17 @@ psql "$DSN" -q -c "create extension if not exists pgcrypto;
  do \$\$ begin create role service_role login bypassrls; exception when duplicate_object then null; end \$\$;
  do \$\$ begin create role anon; exception when duplicate_object then null; end \$\$;
  do \$\$ begin create role authenticated; exception when duplicate_object then null; end \$\$;" >/dev/null
+
+# HOSTED PARITY, AND IT IS THE POINT OF THIS LINE.
+#
+# A hosted Supabase project carries environment-level DEFAULT PRIVILEGES granting service_role ALL
+# on new tables in `public`. A bare cluster does not. Without this the suite proved "the index is
+# SELECT-only" against a shape Production does not have, and CNT-1 shipped with the index directly
+# writable in Production while every test was green — a `grant select` adds nothing to a role that
+# already holds everything.
+#
+# With it, check 5 below is a real assertion about the environment the product actually runs in.
+psql "$DSN" -q -c "alter default privileges in schema public grant all on tables to service_role;" >/dev/null
 AF=0
 for f in supabase/migrations/*.sql; do
   psql "$DSN" -q -X -v ON_ERROR_STOP=1 -f "$f" >/dev/null 2>"$WORK/e.txt" || { fail "apply $(basename "$f")" "$(head -2 "$WORK/e.txt"|tr '\n' ' ')"; AF=$((AF+1)); }
