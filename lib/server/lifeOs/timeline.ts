@@ -521,7 +521,34 @@ function unansweredIn(reflection: LifeReflection): ReflectionField[] {
   return missing;
 }
 
-export async function lifeReturnView(ownerAccountId: string): Promise<ReturnView> {
+/**
+ * ARCH-P7 — the newest moments of one family, already hydrated, newest first.
+ *
+ * The return view asks the same question the timeline asks — "what did this person leave?" — so it
+ * must not answer it a second, independent way. It reads the continuity index for identity and
+ * order and hydrates from the source stores, exactly as the paginated reader does.
+ */
+async function newestOfFamily<T extends { id: string }>(
+  ownerAccountId: string,
+  family: ContinuitySourceFamily,
+  count: number,
+): Promise<T[]> {
+  const page = await readTimelinePage(
+    { owner_ref: ownerAccountId, limit: count, after: null, families: [family], variant: null },
+    continuityRepository,
+  );
+  const records = await hydrateByIds<T>(family, ownerAccountId, page.moments.map((m) => m.source_ref));
+  // Index order is the answer; a moment that will not hydrate is dropped rather than rendered,
+  // the same rule the paginated reader follows.
+  return page.moments.map((m) => records.get(m.source_ref)).filter((r): r is T => r !== undefined);
+}
+
+/**
+ * THE PRE-CNT-1 RETURN VIEW, kept for the same two reasons as the pre-CNT-1 paginated reader: an
+ * unmigrated database has no index to read, and the alignment proof needs something to compare
+ * against. Not authoritative once the schema is ready.
+ */
+export async function legacyAggregatedReturnView(ownerAccountId: string): Promise<ReturnView> {
   const [reflections, goals, experiences] = await Promise.all([
     listReflections(ownerAccountId, 1).catch(() => []),
     listGoals(ownerAccountId, 10).catch(() => []),
@@ -531,6 +558,51 @@ export async function lifeReturnView(ownerAccountId: string): Promise<ReturnView
   const lastReflection = reflections[0] ?? null;
   // "Unfinished" is a fact about the record — which optional answers are empty — not a judgement
   // about the person and not a task to complete.
+  const missing = lastReflection ? unansweredIn(lastReflection) : [];
+  return {
+    lastReflection,
+    unfinished: lastReflection && missing.length > 0 ? { reflectionId: lastReflection.id, missing } : null,
+    activeDirection: goals.find((goal) => goal.status === "active") ?? null,
+    recentExperience: experiences[0] ? { id: experiences[0].id, title: experiences[0].title } : null,
+  };
+}
+
+/**
+ * What this person left, composed from continuity.core.
+ *
+ * WHY THIS MOVED IN P7. It used to read the reflection, goal and experience stores directly — the
+ * same aggregation the timeline did before P6, kept in a second place. Two independent derivations
+ * of one fact are equal only until something changes one of them, and P6 made exactly such a state
+ * reachable: a moment can be invalidated in the index while its source row is untouched. The
+ * timeline would drop it and this card would go on offering it, so わたし would show a person
+ * something the rest of the product had already stopped showing them.
+ *
+ * The POLICY is unchanged and still lives here: the newest reflection, the first ACTIVE direction
+ * among recent ones, the newest experience. Only the question "which records, in what order" moved
+ * to the module that owns it. Status is not in the index and must not be — it is a fact about the
+ * goal, so directions are hydrated and then filtered, exactly as before.
+ */
+export async function lifeReturnView(ownerAccountId: string): Promise<ReturnView> {
+  if (!continuitySchemaReady()) return legacyAggregatedReturnView(ownerAccountId);
+
+  let reflections: LifeReflection[] = [];
+  let goals: Goal[] = [];
+  let experiences: ExperienceRow[] = [];
+  try {
+    [reflections, goals, experiences] = await Promise.all([
+      newestOfFamily<LifeReflection>(ownerAccountId, "reflection", 1),
+      // Ten, because "active" is a property of the record rather than of the index; the newest ten
+      // is the same window the direct read used.
+      newestOfFamily<Goal>(ownerAccountId, "goal", 10),
+      newestOfFamily<ExperienceRow>(ownerAccountId, "experience", 1),
+    ]);
+  } catch {
+    // The direct read returned an empty slice for an unreachable source rather than failing the
+    // whole card. Matching that is part of "nothing visible changes".
+    return { lastReflection: null, unfinished: null, activeDirection: null, recentExperience: null };
+  }
+
+  const lastReflection = reflections[0] ?? null;
   const missing = lastReflection ? unansweredIn(lastReflection) : [];
   return {
     lastReflection,
@@ -579,7 +651,11 @@ export type ReturnItem =
 export async function lifeReturnSelection(ownerAccountId: string): Promise<ReturnItem[]> {
   const [view, states] = await Promise.all([
     lifeReturnView(ownerAccountId),
-    listCurrentStateRecords(ownerAccountId, 1).catch(() => []),
+    // ARCH-P7: through the index too, for the same reason. This was the last place わたし answered
+    // "the most recent X" by reaching past the module that owns the answer.
+    continuitySchemaReady()
+      ? newestOfFamily<CurrentStateRecord>(ownerAccountId, "current_state", 1).catch(() => [])
+      : listCurrentStateRecords(ownerAccountId, 1).catch(() => []),
   ]);
 
   const items: ReturnItem[] = [];

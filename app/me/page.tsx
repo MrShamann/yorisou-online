@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import MyContinuity from "./MyContinuity";
-import { lifeOsVisibleInNavigation } from "@/lib/server/lifeOs/routeAccess";
+import MeComposition from "./MeComposition";
+import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 
 export const metadata: Metadata = {
   title: "わたし | Yorisou",
@@ -22,7 +23,12 @@ export default async function MyYorisouPage() {
   // The entry point exists only while the Life OS does, and it asks the SAME question the route
   // answers. A navigation check with its own logic is how a link appears for someone the route will
   // then refuse — which both leaks that the feature exists and hands them a dead end.
-  const lifeOsOpen = await lifeOsVisibleInNavigation();
+  // ONE resolution, both uses. The gate and the viewer come from the same authority — resolving
+  // them separately is how a page ends up scoping data to a different identity than the one that
+  // passed the gate, which is the mistake app/life/page.tsx documents at length.
+  const access = await resolveLifeOsRouteAccess();
+  const lifeOsOpen = access.allowed;
+  const accountId = access.accountId;
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-8 md:pt-14">
       <h1 className="text-[26px] font-semibold leading-[1.45] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
@@ -33,6 +39,11 @@ export default async function MyYorisouPage() {
       </p>
 
       <MyContinuity />
+
+      {/* ARCH-P7 — the five-part composition, for someone who is signed in. A signed-out visitor
+          sees exactly what they saw before: the device-local history above and nothing that
+          pretends to know them. */}
+      {lifeOsOpen && accountId ? <MeComposition accountId={accountId} /> : null}
 
       {/* OSF-1 — the way through to the account-backed records.
           A link, not an embedded section: this page stays static and device-local (reading the

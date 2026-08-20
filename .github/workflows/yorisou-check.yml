@@ -252,6 +252,9 @@ jobs:
       - name: ARCH-P6 continuity.core projection boundary
         run: npm run test:arch-p6
 
+      - name: ARCH-P7 Me composition and Data/Memory alignment
+        run: npm run test:arch-p7
+
       - name: C02 definition and scoring checks
         run: npm run test:c02
 
