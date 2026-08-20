@@ -31,6 +31,17 @@ const TABS = [
     ),
   },
   {
+    href: "/connect",
+    label: "つながる",
+    icon: (
+      <>
+        <circle cx="8.5" cy="9" r="2.75" />
+        <circle cx="15.5" cy="9" r="2.75" />
+        <path d="M3.5 19c.8-2.4 2.6-3.6 5-3.6M15.5 15.4c2.4 0 4.2 1.2 5 3.6" />
+      </>
+    ),
+  },
+  {
     href: "/me",
     label: "わたし",
     icon: (
@@ -55,13 +66,27 @@ function isActive(pathname: string, href: string) {
       normalized.startsWith("/today/check-in") ||
       normalized.startsWith("/tests");
   }
+  // つながる owns the pair surfaces and nothing else.
+  if (href === "/connect") return normalized.startsWith("/connect");
   // わたし absorbs the existing saved surface.
   if (href === "/me") return normalized.startsWith("/me") || normalized.startsWith("/saved");
   return normalized === href || normalized.startsWith(`${href}/`);
 }
 
-export default function MobileBottomNav() {
+type Props = {
+  /**
+   * CPR-1 — whether つながる is part of the navigation for this deployment.
+   *
+   * Resolved on the server and passed in as a bounded boolean; the gate itself reads server-only
+   * env, so it must never be evaluated here. A closed deployment renders the original four tabs
+   * and the fifth destination does not exist in the DOM at all — this is not CSS hiding.
+   */
+  connectEnabled?: boolean;
+};
+
+export default function MobileBottomNav({ connectEnabled = false }: Props) {
   const pathname = usePathname() || "/";
+  const tabs = connectEnabled ? TABS : TABS.filter((tab) => tab.href !== "/connect");
 
   return (
     <nav
@@ -69,8 +94,11 @@ export default function MobileBottomNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--yorisou-color-neutral-100)] bg-[rgba(255,255,255,0.96)] backdrop-blur-xl md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="mx-auto grid max-w-[520px] grid-cols-4">
-        {TABS.map((tab) => {
+      <div
+        className="mx-auto grid max-w-[520px]"
+        style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+      >
+        {tabs.map((tab) => {
           const active = isActive(pathname, tab.href);
           return (
             <Link

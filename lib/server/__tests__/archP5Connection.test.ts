@@ -1,0 +1,1068 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+
+// ARCH-P5 — the connection.core + comparison.core boundary suite.
+//
+// It proves three different KINDS of thing, and the difference matters:
+//
+//   * BEHAVIOUR of the pure platform tier and the Imairo pair adapter, executed for real.
+//   * STRUCTURE that no runtime test can see — that the platform tier does not import a Product
+//     Pack, that a URL carries only a public id, that a route uses the derivative erasure seam.
+//   * ABSENCE — that P5 did not quietly grow a feed, a DM, matching, or a Memory write.
+//
+// It deliberately does NOT try to prove concurrency or database authorization. Those are database
+// facts and belong to the PostgreSQL acceptance harness; asserting them here against source
+// strings is what ARCH-P4 review correctly rejected.
+
+import {
+  COMPARISON_OUTPUT_FAMILIES,
+  assertComparisonViewShape,
+  assertDistinctParticipants,
+  toAdapterInput,
+  type ComparisonInputReference,
+} from "@/lib/platform/comparisonCore";
+import {
+  connectionViewFor,
+  isInvitationOpen,
+  isPairParticipant,
+  type PairContext,
+} from "@/lib/platform/connectionCore";
+import { buildComparison, readComparison, renderComparisonFor } from "@/lib/server/platform/comparisonCore/service";
+import {
+  assertNoForbiddenPairLanguage,
+  imairoPairAdapter,
+  IMAIRO_PAIR_FAMILY_LABELS,
+  IMAIRO_PAIR_REFERENCE_FAMILY,
+} from "@/packs/yorisou/imairo/pair";
+import {
+  connectionCoreAccess,
+  connectionOperational,
+  connectionDerivativeSchemaReady,
+  CONNECTION_PREVIEW_FLAG,
+} from "@/lib/yorisou/connection/access";
+import { CAPABILITY_MODULES } from "@/lib/platform/registry";
+import { CPV1_DEV_FLAGS } from "@/lib/cpv1/deploymentContext";
+
+const read = (path: string) => readFileSync(path, "utf8");
+
+/**
+ * Source with comments removed.
+ *
+ * The forbidden-vocabulary scans below must read CODE, not prose. Several of these files explain
+ * at length which fields they are forbidden to touch — naming them in order to rule them out — and
+ * a scan over raw text flags exactly the documentation that makes the boundary legible. Stripping
+ * comments first is the difference between "this file uses raw answers" and "this file says it
+ * does not".
+ */
+function code(path: string): string {
+  return read(path)
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");
+}
+
+/** Real approved public archetype codes. MS-KI and MS-SZ share a clan; EM-AK does not. */
+const SAME_A = "MS-KI";
+const SAME_CLAN = "MS-SZ";
+const OTHER_CLAN = "EM-AK";
+
+function side(participant: string, code: string): ComparisonInputReference {
+  return {
+    participant_ref: participant,
+    reference_family: IMAIRO_PAIR_REFERENCE_FAMILY,
+    reference_ref: `row-${participant}`,
+    public_reference: code,
+  };
+}
+
+// ─── A/B/C — the platform tier is brand-free ────────────────────────────────
+
+const PLATFORM_FILES = [
+  "lib/platform/connectionCore.ts",
+  "lib/platform/comparisonCore.ts",
+  "lib/server/platform/connectionCore/service.ts",
+  "lib/server/platform/comparisonCore/service.ts",
+];
+
+test("A/B. the connection and comparison platform tiers carry no product identity", () => {
+  // Deliberately includes Japanese: a platform file containing consumer copy has stopped being a
+  // capability and become a product.
+  const branded = [
+    /imairo/i,
+    /yorisou/i,
+    /ふたり/,
+    /いま色/,
+    /\bP0[0-9]\b/,
+    /120q/i,
+    /supabase/i,
+    /yorisou_connection/,
+    /yorisou_pair/,
+  ];
+  for (const file of PLATFORM_FILES) {
+    const source = code(file);
+    for (const pattern of branded) {
+      assert.ok(
+        !pattern.test(source),
+        `${file} mentions ${pattern} — the platform tier must not know the product, its storage or its language`,
+      );
+    }
+  }
+});
+
+test("C. the platform tier imports no Product Pack and no app route", () => {
+  for (const file of PLATFORM_FILES) {
+    const source = read(file);
+    assert.ok(!/from\s+"@\/packs\//.test(source), `${file} imports a Product Pack — the dependency is inverted`);
+    assert.ok(!/from\s+"@\/app\//.test(source), `${file} imports an app route`);
+    assert.ok(!/from\s+"@\/lib\/yorisou\//.test(source), `${file} imports product code`);
+  }
+});
+
+// ─── D — connection consent is not data access ──────────────────────────────
+
+test("D. a pair view gives a participant NOTHING about the other person's identity or source", () => {
+  const pair: PairContext = {
+    pair_public_id: "pair-1",
+    status: "active",
+    grants: [
+      { participant_ref: "acct-a", reference_family: "assessment_result", reference_ref: "row-a" },
+      { participant_ref: "acct-b", reference_family: "assessment_result", reference_ref: "row-b" },
+    ],
+    created_at: "2026-08-19T00:00:00.000Z",
+  };
+  const view = connectionViewFor(pair, "acct-a");
+  const serialized = JSON.stringify(view);
+  assert.ok(!serialized.includes("acct-b"), "the other participant's account reference leaked into the view");
+  assert.ok(!serialized.includes("row-b"), "the other participant's source reference leaked into the view");
+  assert.ok(!serialized.includes("row-a"), "even the viewer's own source reference does not belong in the view");
+  assert.equal(Object.keys(view).sort().join(","),
+    "created_at,other_reference_family,pair_public_id,self_reference_family,status");
+});
+
+test("D. a non-participant cannot obtain a view at all", () => {
+  const pair: PairContext = {
+    pair_public_id: "pair-1",
+    status: "active",
+    grants: [
+      { participant_ref: "acct-a", reference_family: "assessment_result", reference_ref: "row-a" },
+      { participant_ref: "acct-b", reference_family: "assessment_result", reference_ref: "row-b" },
+    ],
+    created_at: "2026-08-19T00:00:00.000Z",
+  };
+  assert.equal(isPairParticipant(pair, "acct-c"), false);
+  assert.throws(() => connectionViewFor(pair, "acct-c"), /connection_viewer_not_participant/);
+});
+
+// ─── E/F — comparison accepts only granted references ───────────────────────
+
+test("E. comparison refuses two sides from the same participant", () => {
+  assert.throws(
+    () =>
+      assertDistinctParticipants({
+        pair_ref: "p",
+        adapter_ref: "a",
+        adapter_version: "1",
+        side_a: side("acct-a", SAME_A),
+        side_b: side("acct-a", SAME_CLAN),
+      }),
+    /comparison_participants_identical/,
+  );
+});
+
+test("E. comparison refuses a reference family the adapter does not understand", () => {
+  assert.throws(
+    () =>
+      buildComparison(
+        {
+          pair_ref: "p",
+          adapter_ref: imairoPairAdapter.adapter_ref,
+          adapter_version: "1.0.0",
+          side_a: { ...side("acct-a", SAME_A), reference_family: "some_other_family" },
+          side_b: side("acct-b", OTHER_CLAN),
+        },
+        imairoPairAdapter,
+      ),
+    /comparison_reference_family_mismatch/,
+  );
+});
+
+test("F. the pair adapter reads the PUBLIC code only, never the private row reference", () => {
+  const a = { ...side("acct-a", SAME_A), reference_ref: "SECRET-ROW-A" };
+  const b = { ...side("acct-b", OTHER_CLAN), reference_ref: "SECRET-ROW-B" };
+  const view = imairoPairAdapter.build(a, b);
+  const serialized = JSON.stringify(view);
+  assert.ok(!serialized.includes("SECRET-ROW-A"), "a private row reference reached rendered copy");
+  assert.ok(!serialized.includes("SECRET-ROW-B"), "a private row reference reached rendered copy");
+  assert.ok(!serialized.includes("acct-a") && !serialized.includes("acct-b"), "an account reference reached copy");
+});
+
+test("F. no raw-answer, score or private-text vocabulary exists in the pair pack", () => {
+  const source = code("packs/yorisou/imairo/pair.ts");
+  for (const forbidden of [
+    "dimension_output",
+    "dimensionOutput",
+    "raw_answers",
+    "answers",
+    "confidence",
+    "payloadKey",
+    "acceptedResultId",
+    "correctedResultId",
+    "reflection",
+    "memory",
+  ]) {
+    assert.ok(
+      !new RegExp(`\\b${forbidden}\\b`).test(source),
+      `the pair pack references ${forbidden} — it may read only the approved public assignment`,
+    );
+  }
+});
+
+// ─── G — exactly five output families ───────────────────────────────────────
+
+test("G. a comparison has exactly the five semantic families", () => {
+  assert.deepEqual([...COMPARISON_OUTPUT_FAMILIES], [
+    "similarities",
+    "differences",
+    "possible_complementarity",
+    "possible_friction",
+    "shared_question",
+  ]);
+  const view = imairoPairAdapter.build(side("acct-a", SAME_A), side("acct-b", OTHER_CLAN));
+  assert.deepEqual(Object.keys(view).sort(), [...COMPARISON_OUTPUT_FAMILIES].sort());
+  assert.deepEqual(Object.keys(IMAIRO_PAIR_FAMILY_LABELS).sort(), [...COMPARISON_OUTPUT_FAMILIES].sort());
+});
+
+test("G. a sixth family — including a smuggled score — is refused", () => {
+  const base = imairoPairAdapter.build(side("acct-a", SAME_A), side("acct-b", OTHER_CLAN));
+  assert.throws(
+    () => assertComparisonViewShape({ ...base, compatibility_score: 92 }),
+    /comparison_view_unexpected_families/,
+  );
+  assert.throws(() => assertComparisonViewShape({ ...base, similarities: undefined }), /comparison_view/);
+});
+
+// ─── H — forbidden vocabulary ───────────────────────────────────────────────
+
+test("H. compatibility, soulmate and deterministic vocabulary is refused by the guard", () => {
+  for (const line of [
+    "相性は92%です",
+    "ふたりは相性がいい",
+    "あなたたちはソウルメイトです",
+    "This is a perfect match",
+    "運命の相手です",
+    "必ずうまくいきます",
+    "９０％の一致",
+  ]) {
+    assert.throws(() => assertNoForbiddenPairLanguage(line), /imairo_pair_forbidden/, `not refused: ${line}`);
+  }
+});
+
+test("H. every line the adapter can produce passes its own language guard", () => {
+  // Exercise all three branches the adapter distinguishes: same code, same clan, different clans.
+  for (const [a, b] of [[SAME_A, SAME_A], [SAME_A, SAME_CLAN], [SAME_A, OTHER_CLAN]]) {
+    const view = imairoPairAdapter.build(side("acct-a", a), side("acct-b", b));
+    assertComparisonViewShape(view);
+    for (const family of COMPARISON_OUTPUT_FAMILIES) {
+      const value = view[family];
+      const lines = typeof value === "string" ? [value] : value;
+      assert.ok(lines.length > 0, `${family} is empty for ${a}/${b}`);
+      for (const line of lines) assertNoForbiddenPairLanguage(line);
+    }
+  }
+});
+
+test("H. the pair view is rendered for the READER, not once for both", () => {
+  // The bug this pins: one stored view addresses whoever it was built for, so the second
+  // participant would read every "you" as the other person.
+  const record = {
+    pair_ref: "pair-1",
+    adapter_ref: imairoPairAdapter.adapter_ref,
+    adapter_version: "1.0.0",
+    reference_family: IMAIRO_PAIR_REFERENCE_FAMILY,
+    side_a: side("acct-a", SAME_A),
+    side_b: side("acct-b", OTHER_CLAN),
+    created_at: "2026-08-19T00:00:00.000Z",
+  };
+  const forA = renderComparisonFor("acct-a", record, imairoPairAdapter);
+  const forB = renderComparisonFor("acct-b", record, imairoPairAdapter);
+  assert.notDeepEqual(forA.differences, forB.differences, "both readers received the same 'you' — one is wrong");
+  assert.throws(() => renderComparisonFor("acct-c", record, imairoPairAdapter), /not_participant/);
+});
+
+// ─── I/J/K — the adapter is a pack, and Imairo is untouched ─────────────────
+
+test("I. the Imairo pair adapter lives in the Product Pack tier", () => {
+  assert.ok(readdirSync("packs/yorisou/imairo").includes("pair.ts"));
+  assert.ok(!readdirSync("lib/platform").includes("imairoPair.ts"));
+});
+
+test("J/K. the pair pack reads approved public taxonomy and changes no methodology", () => {
+  const source = code("packs/yorisou/imairo/pair.ts");
+  assert.ok(/findPublicArchetypeByCode/.test(source), "the pack must read the approved public assignment");
+  for (const forbidden of [/scoring/i, /subdimension/i, /questionOrder/i, /answerScale/i]) {
+    assert.ok(!forbidden.test(source), `the pair pack references ${forbidden} — methodology is protected`);
+  }
+});
+
+// ─── L/M — URLs carry only public ids ───────────────────────────────────────
+
+test("L/M. invite and pair URLs are built from public ids alone", () => {
+  const inviteRoute = read("app/api/connect/invite/route.ts");
+  assert.ok(/invite_path:\s*`\/connect\/invite\/\$\{invitation\.public_invite_id\}`/.test(inviteRoute));
+  const acceptRoute = read("app/api/connect/invite/[publicId]/accept/route.ts");
+  assert.ok(/pair_path:\s*`\/connect\/pair\/\$\{outcome\.pair\.pair_public_id\}`/.test(acceptRoute));
+
+  // No private identifier may appear in a constructed path anywhere in the connect surface.
+  for (const file of [
+    "app/api/connect/invite/route.ts",
+    "app/api/connect/invite/[publicId]/accept/route.ts",
+    "app/connect/page.tsx",
+    "app/connect/invite/[publicId]/page.tsx",
+    "app/connect/pair/[pairId]/page.tsx",
+  ]) {
+    const source = read(file);
+    for (const leak of [/\/connect\/[^`"']*\$\{[^}]*resultRowId/, /\/connect\/[^`"']*\$\{[^}]*account/i,
+                        /\/connect\/[^`"']*\$\{[^}]*reference_ref/]) {
+      assert.ok(!leak.test(source), `${file} builds a connect URL from a private identifier`);
+    }
+  }
+});
+
+// ─── N — the result-page entry is owner + persisted + gated ─────────────────
+
+test("N. the Result pair action requires owner, persisted result AND the connection gate", () => {
+  const source = read("app/result/page.tsx");
+  assert.ok(
+    /mode\.kind === "persisted" && mode\.isOwner && connectionOperational\(\)/.test(source),
+    "the pair entry must be scoped to a persisted result the viewer owns, behind its own gate",
+  );
+  assert.ok(/pairInviteResultRowId \? \(/.test(source), "the pair block must render only when that resolves");
+});
+
+// ─── O/P — ARCH-P4 and legacy sharing are untouched ─────────────────────────
+
+test("O. the ShareObject flow is unchanged by P5", () => {
+  const source = read("app/result/page.tsx");
+  assert.ok(/sharingOperational\(\)/.test(source), "the sharing gate is still what decides the ShareObject entry");
+  assert.ok(/<ShareObjectActions/.test(source));
+  // The two entries must not share a gate — a deployment may run one without the other.
+  assert.ok(
+    !/connectionOperational\(\)[^\n]*shareObjectState/.test(source),
+    "the pair gate must not decide whether the ShareObject entry renders",
+  );
+});
+
+test("P. the legacy /result/share fallback still exists and is still reachable", () => {
+  assert.ok(readdirSync("app/result").includes("share"), "the legacy share route was removed");
+  assert.ok(/<ResultShareActions/.test(read("app/result/page.tsx")), "the legacy fallback stopped rendering");
+  assert.ok(/buildPublicShareHref/.test(read("app/result/resultIdentityRoutes.ts")));
+});
+
+// ─── Q — Connect is finite: no feed, DM, matching or community ──────────────
+
+test("Q. the Connect surface implements no feed, search, DM, matching or community", () => {
+  const files = [
+    "app/connect/page.tsx",
+    "app/connect/invite/[publicId]/page.tsx",
+    "app/connect/pair/[pairId]/page.tsx",
+    "lib/server/connection/store.ts",
+  ];
+  const forbidden = [
+    /\bdirect_message\b/i, /\bsendMessage\b/, /\bfollowers?\b/i, /\blikes?Count\b/i,
+    /\bmatching\b/i, /\bdiscoverPeople\b/i, /\bsuggestedUsers\b/i, /\binfiniteScroll\b/i,
+    /\bloadMore\b/i, /\brecommendedPeople\b/i, /\bsearchUsers\b/i,
+  ];
+  for (const file of files) {
+    const source = code(file);
+    for (const pattern of forbidden) {
+      assert.ok(!pattern.test(source), `${file} implements ${pattern} — out of P5 scope`);
+    }
+  }
+  // And the list is bounded by the capability rather than by a scroll.
+  assert.ok(/CONNECTION_LIST_LIMIT/.test(read("lib/server/platform/connectionCore/service.ts")));
+  assert.ok(/limit:\s*String\(limit\)/.test(read("lib/server/connection/store.ts")));
+});
+
+// ─── R/S — navigation ───────────────────────────────────────────────────────
+
+test("R/S. the bottom nav is five tabs when enabled and the original four when gated off", () => {
+  const source = read("app/components/MobileBottomNav.tsx");
+  const order = [...source.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(order, ["今日", "気づく", "探す", "つながる", "わたし"]);
+  // Gating removes the tab from the rendered set — it is not hidden with CSS.
+  assert.ok(/TABS\.filter\(\(tab\) => tab\.href !== "\/connect"\)/.test(source));
+  // `md:hidden` on the bar itself is the responsive rule, not the gate. What must not exist is a
+  // per-tab visual hide: a gated-off tab is absent from the DOM, not merely invisible.
+  assert.ok(
+    !/tab\.href === "\/connect"[^\n]*(hidden|opacity-0|display)/.test(source),
+    "the つながる gate must remove the tab, not hide it visually",
+  );
+  // The column count follows the tab count, so four tabs still fill the bar.
+  assert.ok(/repeat\(\$\{tabs\.length\}/.test(source));
+  // The gate value is resolved on the SERVER and passed in.
+  assert.ok(/<MobileBottomNav connectEnabled=\{connectEnabled\} \/>/.test(read("app/components/AppShell.tsx")));
+  assert.ok(/connectEnabled=\{connectionOperational\(\)\}/.test(read("app/layout.tsx")));
+});
+
+// ─── T/U — gates default closed, near-miss denied ───────────────────────────
+
+test("T. Production is CLOSED by default and unknown context is CLOSED", () => {
+  assert.equal(connectionCoreAccess({ VERCEL_ENV: "production" }).allowed, false);
+  assert.equal(connectionCoreAccess({}).allowed, false);
+  assert.equal(connectionOperational({ VERCEL_ENV: "production" }), false);
+  // Even with both schema declarations, production without the switch stays closed.
+  assert.equal(
+    connectionOperational({
+      VERCEL_ENV: "production",
+      YORISOU_CONNECTION_SCHEMA_READY: "true",
+      YORISOU_COMPARISON_SCHEMA_READY: "true",
+    }),
+    false,
+  );
+  assert.equal(
+    connectionCoreAccess({ VERCEL_ENV: "production", YORISOU_CONNECTION_PUBLIC_ENABLED: "true" }).allowed,
+    true,
+  );
+});
+
+test("T. both schema declarations are required, and the derivative check is gate-independent", () => {
+  const base = { NODE_ENV: "test", YORISOU_CONNECTION_PUBLIC_ENABLED: "true", VERCEL_ENV: "production" };
+  assert.equal(connectionOperational({ ...base, YORISOU_CONNECTION_SCHEMA_READY: "true" }), false);
+  assert.equal(connectionOperational({ ...base, YORISOU_COMPARISON_SCHEMA_READY: "true" }), false);
+  assert.equal(
+    connectionOperational({
+      ...base,
+      YORISOU_CONNECTION_SCHEMA_READY: "true",
+      YORISOU_COMPARISON_SCHEMA_READY: "true",
+    }),
+    true,
+  );
+  // Feature OFF but tables present: erasure must still clear pairs.
+  assert.equal(
+    connectionDerivativeSchemaReady({
+      VERCEL_ENV: "production",
+      YORISOU_CONNECTION_SCHEMA_READY: "true",
+      YORISOU_COMPARISON_SCHEMA_READY: "true",
+    }),
+    true,
+  );
+});
+
+test("U. a near-miss preview flag is denied, and the exact token is registered", () => {
+  const preview = (flags: string) => ({ VERCEL_ENV: "preview", YORISOU_CPV1_DEV_FLAGS: flags });
+  assert.equal(connectionCoreAccess(preview(CONNECTION_PREVIEW_FLAG)).allowed, true);
+  for (const near of [
+    "connection_pair_previews",
+    "connection-pair-preview",
+    "connection_pair",
+    "pair_preview",
+    "Connection_Pair_Preview ",
+  ]) {
+    assert.equal(connectionCoreAccess(preview(near)).allowed, false, `near miss accepted: ${near}`);
+  }
+  assert.ok((CPV1_DEV_FLAGS as readonly string[]).includes(CONNECTION_PREVIEW_FLAG));
+});
+
+// ─── V — module registry truth ──────────────────────────────────────────────
+
+test("V. connection.core and comparison.core are partial / DEFINED / not_verified", () => {
+  for (const id of ["connection.core", "comparison.core"]) {
+    const entry = CAPABILITY_MODULES.find((module) => module.module_id === id);
+    assert.ok(entry, `${id} is missing from the registry`);
+    assert.equal(entry.adoption_status, "partial", `${id} must be partial — implementation is not validation`);
+    assert.equal(entry.lifecycle_state, "DEFINED");
+    assert.equal(entry.verification_state, "not_verified");
+  }
+});
+
+// ─── W/X — the two privacy surfaces ─────────────────────────────────────────
+
+test("W. the public invitation projection carries no inviter, source or result identity", () => {
+  const contract = read("lib/platform/connectionCore.ts");
+  const publicType = /export interface PublicInvitationView \{([\s\S]*?)\}/.exec(contract);
+  assert.ok(publicType, "PublicInvitationView is missing");
+  const fields = [...publicType[1].matchAll(/^\s{2}([a-z_]+):/gm)].map((m) => m[1]);
+  assert.deepEqual(fields.sort(), ["expires_at", "public_invite_id", "reference_family"]);
+
+  // And the repository selects exactly those columns — the type cannot protect a raw query.
+  const store = read("lib/server/connection/store.ts");
+  const columns = /const PUBLIC_INVITE_COLUMNS = "([^"]+)"/.exec(store);
+  assert.ok(columns, "PUBLIC_INVITE_COLUMNS is missing");
+  assert.deepEqual(columns[1].split(",").sort(), ["expires_at", "public_invite_id", "reference_family"]);
+});
+
+test("X. the pair page renders no raw account or source identifier", () => {
+  const page = read("app/connect/pair/[pairId]/page.tsx");
+  for (const leak of [/participant_a_account_id/, /participant_b_account_id/, /reference_ref/,
+                      /accountId\}/, /\{record\.side_[ab]\.reference_ref/]) {
+    assert.ok(!leak.test(page), `the pair page renders ${leak}`);
+  }
+  // Viewer-relative labels, not names or ids.
+  assert.ok(/あなた|相手/.test(read("packs/yorisou/imairo/pair.ts")));
+});
+
+// ─── Y — the erasure seam ───────────────────────────────────────────────────
+
+test("Y. the assessment DELETE route uses the derivative seam when the P5 schema is ready", () => {
+  const route = read("app/api/assessment/results/[id]/route.ts");
+  assert.ok(
+    /connectionDerivativeSchemaReady\(\)\s*\?\s*await eraseAssessmentResultWithDerivatives\(id, ownerId\)/.test(route),
+    "the P5 seam must be the first branch when the derivative schema exists",
+  );
+  // The older layers remain as fallbacks, in order.
+  assert.ok(/sharingSchemaReady\(\)\s*\?\s*await eraseAssessmentResultWithShares\(id, ownerId\)/.test(route));
+  assert.ok(/:\s*await eraseAssessmentResult\(id, ownerId\)/.test(route));
+});
+
+test("Y. the P5 erasure seam delegates to ARCH-P4 rather than reimplementing it", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  assert.ok(/yorisou_assessment_result_erase_with_shares\(p_result_row_id, p_owner_account_id\)/.test(migration));
+  assert.ok(
+    !/delete from public\.yorisou_assessment_results/.test(migration),
+    "P5 must not reimplement the canonical assessment erasure",
+  );
+  // It reuses the merged P4 lock primitive rather than renaming or generalizing it.
+  assert.ok(/yorisou_share_source_lock/.test(migration));
+});
+
+test("Y. the merged ARCH-P4 migration is untouched by this package", () => {
+  const p4 = read("supabase/migrations/202608180002_shr1_share_objects.sql");
+  assert.ok(!/connection|pair_comparison/i.test(p4), "ARCH-P4's migration was edited — it is merged and frozen");
+});
+
+// ─── Z — no Memory / state / reflection / Life Graph write ──────────────────
+
+test("Z. P5 writes no Memory, state, reflection or Life Graph record", () => {
+  const files = [
+    ...PLATFORM_FILES,
+    "packs/yorisou/imairo/pair.ts",
+    "lib/server/connection/store.ts",
+    "lib/server/connection/imairoPairSource.ts",
+    "app/api/connect/invite/route.ts",
+    "app/api/connect/invite/[publicId]/accept/route.ts",
+    "app/api/connect/invite/[publicId]/cancel/route.ts",
+    "app/api/connect/pair/[pairId]/dissolve/route.ts",
+  ];
+  for (const file of files) {
+    const source = code(file);
+    for (const forbidden of [
+      /yorisou_explicit_memories/, /yorisou_life_reflections/, /yorisou_current_state_records/,
+      /yorisou_daily_state_records/, /yorisou_goals/, /recordMemory/, /writeMemory/, /lifeGraph/i,
+    ]) {
+      assert.ok(!forbidden.test(source), `${file} touches ${forbidden} — P5 writes no life record`);
+    }
+  }
+  // The migration creates no memory/state family either.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const created = [...migration.matchAll(/create table if not exists public\.([a-z0-9_]+)/g)].map((m) => m[1]);
+  assert.deepEqual(created.sort(), [
+    "yorisou_connection_audit_events",
+    "yorisou_connection_invitations",
+    "yorisou_connection_pairs",
+    "yorisou_pair_comparisons",
+  ]);
+});
+
+// ─── audit content-freedom (contract §19) ───────────────────────────────────
+
+test("the connection audit table can hold no account id, source ref or payload", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const table = /create table if not exists public\.yorisou_connection_audit_events \(([\s\S]*?)\n\);/.exec(migration);
+  assert.ok(table, "the audit table is missing");
+  const body = table[1];
+  for (const forbidden of ["owner_account_id", "account_id text", "source_ref", "reference_ref", "payload", "email"]) {
+    assert.ok(!body.includes(forbidden), `the audit table declares ${forbidden}`);
+  }
+  assert.ok(/actor_fingerprint text not null check \(actor_fingerprint ~ '\^\[a-f0-9\]\{64\}\$'\)/.test(body),
+    "the actor must be a sha256 fingerprint, never a raw account id");
+});
+
+// ─── invitation lifetime follows the repository's existing policy ───────────
+
+test("the invitation expiry reuses the repository's existing 7-day invite policy", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  assert.ok(/v_ttl constant interval := interval '7 days'/.test(migration));
+  // The legacy experience invite is the precedent this matches.
+  assert.ok(/7\*86400000|7 \* 86400000/.test(read("lib/server/experienceCards.ts")));
+});
+
+test("isInvitationOpen refuses expired and non-pending invitations", () => {
+  const now = new Date("2026-08-19T00:00:00.000Z");
+  assert.equal(isInvitationOpen({ status: "pending", expires_at: "2026-08-26T00:00:00.000Z" }, now), true);
+  assert.equal(isInvitationOpen({ status: "pending", expires_at: "2026-08-18T00:00:00.000Z" }, now), false);
+  assert.equal(isInvitationOpen({ status: "accepted", expires_at: "2026-08-26T00:00:00.000Z" }, now), false);
+  assert.equal(isInvitationOpen({ status: "cancelled", expires_at: "2026-08-26T00:00:00.000Z" }, now), false);
+});
+
+// ─── REMEDIATION GUARDS (Controller review of 6ddcb9f) ──────────────────────
+
+test("R1. the global lock order is source locks BEFORE the invitation row", () => {
+  // The reviewed head locked the invitation row first and then the source locks, while source
+  // erasure locks the source and then updates the invitation — a cycle that deadlocks on a real
+  // cluster. The ordering is asserted here as a structural fact because a future edit that moves
+  // the FOR UPDATE back above the locks would reintroduce it silently.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const accept = /create or replace function public\.yorisou_connection_invite_accept\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(accept, "the accept function is missing");
+  const body = accept[1];
+  const firstLock = body.indexOf("yorisou_share_source_lock");
+  const forUpdate = body.indexOf("for update");
+  assert.ok(firstLock > 0, "accept takes no source lock");
+  assert.ok(forUpdate > 0, "accept never locks the invitation row");
+  assert.ok(
+    firstLock < forUpdate,
+    "accept locks the invitation row BEFORE the source locks — that is the deadlock ordering",
+  );
+  // And the peek that chooses the lock keys must not itself lock.
+  const peek = body.indexOf("select * into v_peek");
+  assert.ok(peek > 0 && peek < firstLock, "the non-locking peek must come first and stay non-locking");
+  assert.ok(!/into v_peek[\s\S]{0,200}?for update/.test(body), "the peek must not take a row lock");
+});
+
+test("R5. every pair-lifecycle mutation touches PAIR rows before COMPARISON rows", () => {
+  // The second lock-order defect, and the reason it needed its own guard.
+  //
+  // `pair_dissolve` takes no source advisory lock — a participant ending their own pair has
+  // nothing to do with either assessment source — so the source-lock ordering that protects the
+  // accept path cannot protect this one. The ONLY thing preventing a cycle is that dissolve and
+  // source erasure touch these two tables in the SAME direction. The reviewed head had them
+  // opposed and deadlocked; this asserts the direction in both functions so a future edit cannot
+  // silently flip one of them.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const functions = [
+    "yorisou_connection_pair_dissolve",
+    "yorisou_assessment_result_erase_with_derivatives",
+  ];
+  for (const name of functions) {
+    const fn = new RegExp(`create or replace function public\\.${name}\\(([\\s\\S]*?)\\n\\$\\$;`).exec(migration);
+    assert.ok(fn, `${name} is missing`);
+    const body = fn[1];
+    const pairAt = body.search(/update public\.yorisou_connection_pairs/);
+    const comparisonAt = body.search(/update public\.yorisou_pair_comparisons/);
+    assert.ok(pairAt > 0, `${name} never updates pair rows`);
+    assert.ok(comparisonAt > 0, `${name} never updates comparison rows`);
+    assert.ok(
+      pairAt < comparisonAt,
+      `${name} updates COMPARISON before PAIR — that is the dissolve/erase deadlock ordering`,
+    );
+  }
+  // The erasure locks its affected pairs explicitly, in id order, before mutating either table.
+  const erase = /create or replace function public\.yorisou_assessment_result_erase_with_derivatives\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(erase);
+  assert.ok(
+    /order by id\s+for update/.test(erase[1]),
+    "the erasure must lock affected pair rows in deterministic id order",
+  );
+});
+
+test("R2. an EXPIRED pending invitation is retired and replaced, never handed back", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const create = /create or replace function public\.yorisou_connection_invite_create\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(create, "the create function is missing");
+  const body = create[1];
+  assert.ok(/if v_row\.expires_at > now\(\) then/.test(body), "create does not check expiry before reuse");
+  assert.ok(
+    /set status = 'cancelled', cancelled_at = now\(\)/.test(body),
+    "create does not retire the expired invitation",
+  );
+});
+
+test("R3. the private comparison read REQUIRES a viewer and scopes the query", () => {
+  const service = read("lib/server/platform/comparisonCore/service.ts");
+  assert.ok(
+    /forPair\(viewerRef: string, pairRef: string\)/.test(service),
+    "the comparison repository contract must require viewer identity",
+  );
+  assert.ok(/readComparison\(\s*viewerRef: string,\s*pairRef: string,/.test(service));
+
+  const store = read("lib/server/connection/store.ts");
+  const fn = /export async function comparisonForPair\(([\s\S]*?)\n\}/.exec(store);
+  assert.ok(fn, "comparisonForPair is missing");
+  assert.ok(
+    /participant_a_account_id\.eq\.\$\{viewerRef\}/.test(fn[1]) &&
+      /participant_b_account_id\.eq\.\$\{viewerRef\}/.test(fn[1]),
+    "the comparison query carries no participant predicate — this is call-order authorization",
+  );
+  // The page must not be the thing that makes it safe.
+  const page = read("app/connect/pair/[pairId]/page.tsx");
+  assert.ok(/readComparison\(accountId, pairId, comparisonRepository\)/.test(page));
+});
+
+test("R3. a non-participant calling the comparison repository directly receives nothing", async () => {
+  // Exercised against the abstraction rather than the page, which is the whole point of the fix.
+  const record = {
+    pair_ref: "pair-1",
+    adapter_ref: imairoPairAdapter.adapter_ref,
+    adapter_version: "1.0.0",
+    reference_family: IMAIRO_PAIR_REFERENCE_FAMILY,
+    side_a: side("acct-a", SAME_A),
+    side_b: side("acct-b", OTHER_CLAN),
+    created_at: "2026-08-19T00:00:00.000Z",
+  };
+  const repository = {
+    // A faithful stand-in for the scoped query: no row unless the viewer is a participant.
+    forPair: async (viewerRef: string, pairRef: string) =>
+      pairRef === record.pair_ref &&
+      [record.side_a.participant_ref, record.side_b.participant_ref].includes(viewerRef)
+        ? record
+        : null,
+  };
+  assert.equal(await readComparison("acct-c", "pair-1", repository), null);
+  assert.equal(await readComparison("", "pair-1", repository), null);
+  assert.notEqual(await readComparison("acct-b", "pair-1", repository), null);
+});
+
+test("R4. a Product Pack adapter can see ONLY public-safe input", () => {
+  const contract = read("lib/platform/comparisonCore.ts");
+  const input = /export interface ComparisonAdapterInput \{([\s\S]*?)\n\}/.exec(contract);
+  assert.ok(input, "ComparisonAdapterInput is missing");
+  const fields = [...input[1].matchAll(/^\s{2}([a-z_]+):/gm)].map((m) => m[1]);
+  assert.deepEqual(fields, ["public_reference"], "the adapter-facing type carries more than the public code");
+
+  // The runtime narrows before crossing the tier.
+  const service = read("lib/server/platform/comparisonCore/service.ts");
+  assert.ok(
+    /adapter\.build\(toAdapterInput\(request\.side_a\), toAdapterInput\(request\.side_b\)\)/.test(service),
+    "the runtime hands the pack a full reference instead of narrowing it",
+  );
+
+  // And what actually reaches the pack at runtime has one key.
+  const narrowed = toAdapterInput(side("acct-a", SAME_A));
+  assert.deepEqual(Object.keys(narrowed), ["public_reference"]);
+  const serialized = JSON.stringify(narrowed);
+  assert.ok(!serialized.includes("acct-a") && !serialized.includes("row-acct-a"));
+});
+
+test("R4. the inviter can actually revoke the invitation from the product", () => {
+  const actions = read("app/components/PairInviteActions.tsx");
+  assert.ok(
+    /fetch\(`\/api\/connect\/invite\/\$\{inviteId\}\/cancel`, \{ method: "POST" \}\)/.test(actions),
+    "the invite UI never calls the cancel endpoint — the invitation is not revocable in product",
+  );
+  assert.ok(/招待を取り消す/.test(actions), "there is no cancel affordance");
+  // After cancelling, the link stops being actionable and a fresh one can be created.
+  assert.ok(/setInviteUrl\(null\)/.test(actions) && /stage === "cancelled"/.test(actions));
+  assert.ok(/新しい招待リンクを作る/.test(actions));
+});
+
+test("R6. account erasure locks ALL live sources, sorted, BEFORE the canonical result erase", () => {
+  // Account deletion was the last destructive path outside the source lock protocol, and the one
+  // whose absence I wrongly cleared by reasoning rather than by racing it. These assert the shape
+  // the fix depends on, so a future edit that moves the canonical erase back above the locks fails
+  // here rather than only under concurrency.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const fn = /create or replace function public\.yorisou_account_deletion_erase_database_unchecked\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(fn, "the account erasure function is missing");
+  const body = fn[1];
+
+  const lockAt = body.indexOf("yorisou_share_source_lock");
+  const canonicalAt = body.indexOf("yorisou_assessment_result_erase(");
+  const invitesAt = body.indexOf("delete from public.yorisou_connection_invitations");
+  const pairsAt = body.indexOf("delete from public.yorisou_connection_pairs");
+
+  assert.ok(lockAt > 0, "account erasure takes no assessment source lock");
+  assert.ok(canonicalAt > 0, "account erasure never calls the canonical result erase");
+  assert.ok(lockAt < canonicalAt, "the source locks must be taken BEFORE the canonical result erase");
+  assert.ok(lockAt < invitesAt && lockAt < pairsAt, "the source locks must precede every derivative delete");
+  assert.ok(invitesAt < pairsAt, "invitation lifecycle must precede pair lifecycle");
+  assert.ok(pairsAt < canonicalAt, "pair rows must be handled BEFORE the canonical result erase");
+
+  // Deterministic ordering, both for the lock keys and for the pair rows.
+  assert.ok(/order by r\.id::text/.test(body), "the source lock keys must be sorted deterministically");
+  assert.ok(/order by id\s+for update/.test(body), "affected pair rows must be locked in deterministic id order");
+
+  // The declarative plan still names the connection families — that is the erasure-coverage
+  // contract, and the early deletes must not be an excuse to drop them.
+  assert.ok(/\['yorisou_connection_pairs', 'participant_a_account_id'\]/.test(migration));
+  assert.ok(/\['yorisou_connection_pairs', 'participant_b_account_id'\]/.test(migration));
+});
+
+test("R7. share publish revalidates assessment source liveness in the DATABASE", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const fn = /create or replace function public\.yorisou_share_object_publish\(([\s\S]*?)\n\$\$;/.exec(migration);
+  assert.ok(fn, "publish is not re-emitted in the P5 migration");
+  const body = fn[1];
+
+  const lockAt = body.indexOf("yorisou_share_source_lock");
+  const tombstoneAt = body.indexOf("yorisou_share_source_erasures");
+  const livenessAt = body.indexOf("yorisou_assessment_source_live");
+  const selectAt = body.indexOf("from public.yorisou_share_objects");
+  const insertAt = body.indexOf("insert into public.yorisou_share_objects");
+
+  assert.ok(livenessAt > 0, "publish does not revalidate source liveness");
+  assert.ok(lockAt < livenessAt, "liveness must be checked AFTER the source lock, not before");
+  assert.ok(tombstoneAt > 0 && tombstoneAt < livenessAt, "the P4 tombstone check must remain, and come first");
+  assert.ok(livenessAt < selectAt && livenessAt < insertAt, "liveness must precede both reuse and insert");
+  assert.ok(/share_source_unavailable/.test(body), "the refusal must be one bounded error");
+
+  // The helper is assessment-generic: it must not learn the instrument.
+  const helper = /create or replace function public\.yorisou_assessment_source_live\(([\s\S]*?)\n\$\$;/.exec(migration);
+  assert.ok(helper, "the liveness helper is missing");
+  for (const forbidden of [/imairo/i, /method_id/, /result_id/, /clan/i, /taxonomy/i]) {
+    assert.ok(!forbidden.test(helper[1]), `the liveness helper references ${forbidden} — it must stay generic`);
+  }
+  // And the merged P4 migration file itself is untouched.
+  assert.ok(
+    !/yorisou_assessment_source_live/.test(read("supabase/migrations/202608180002_shr1_share_objects.sql")),
+    "the merged ARCH-P4 migration was edited",
+  );
+});
+
+test("R7. account erasure may still remove owner-linked tombstones, and sharing stays Imairo-free", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  // Data minimisation: the tombstone family remains in the erasure plan. The stale-publish fix
+  // must NOT have been bought by retaining a deleted person's source references forever.
+  assert.ok(/\['yorisou_share_source_erasures', 'owner_account_id'\]/.test(migration));
+  // And no product semantics entered sharing persistence.
+  const store = code("lib/server/sharing/store.ts");
+  for (const forbidden of [/imairo/i, /clan/i, /120q/i]) {
+    assert.ok(!forbidden.test(store), `the sharing store references ${forbidden}`);
+  }
+});
+
+test("R8. the POR-1 fence for assessment mutations lives at the APPLICATION boundary, never in SQL", () => {
+  // THIS ASSERTION IS THE INVERSE OF THE ONE IT REPLACES, and the reason matters.
+  //
+  // An earlier remediation acquired the lease inside the SQL functions, "before the attempt row".
+  // A three-session PostgreSQL test showed that a lease created in the same transaction as the
+  // business mutation is UNCOMMITTED and therefore invisible to the deletion executor's crossing
+  // guard, which counts visible unreleased leases. POR-1's contract is a lease taken over the
+  // transport — one RPC that commits — so it is visible before the mutation begins.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+
+  // No SQL function anywhere may create or release a POR-1 lease.
+  for (const file of readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql"))) {
+    const sql = read(join("supabase/migrations", file));
+    const body = sql
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n");
+    const calls = [...body.matchAll(/public\.yorisou_account_mutation_(begin|release)\s*\(/g)];
+    const defs = [...body.matchAll(/function public\.yorisou_account_mutation_(begin|release)\s*\(/gi)];
+    const grants = [...body.matchAll(/(revoke|grant)[^\n]*yorisou_account_mutation_(begin|release)/gi)];
+    assert.ok(
+      calls.length <= defs.length + grants.length,
+      `${file} calls a POR-1 lease function from inside SQL — the lease would be uncommitted`,
+    );
+  }
+  assert.ok(
+    !/create or replace function public\.yorisou_attempt_(claim|complete)\(/.test(migration),
+    "the P5 migration re-emits a canonical assessment mutation; it must leave them untouched",
+  );
+
+  // The fence exists at the application boundary and wraps BOTH mutations.
+  const fenced = read("lib/server/assessment/fencedAttemptMutations.ts");
+  assert.ok(/withAccountMutationLease/.test(fenced), "the fenced seam takes no POR-1 lease");
+  assert.ok(/operation: "assessment_attempt_claim"/.test(fenced));
+  assert.ok(/operation: "assessment_attempt_complete"/.test(fenced));
+  // The anonymous completion path must stay unfenced — there is no account to fence.
+  assert.ok(/if \(!accountId\) return completeAttempt\(input\)/.test(fenced));
+
+  // And no route may reach the unfenced mutations directly.
+  const routes = [
+    "app/api/assessment/results/[id]/claim/route.ts",
+    "app/api/assessment/attempts/[id]/claim/route.ts",
+    "app/api/assessment/attempts/[id]/complete/route.ts",
+  ];
+  for (const route of routes) {
+    const source = code(route);
+    assert.ok(/Fenced\(/.test(source), `${route} does not use the fenced seam`);
+    assert.ok(
+      !/\b(claimAttempt|completeAttempt)\(/.test(source),
+      `${route} calls an UNFENCED assessment mutation directly`,
+    );
+  }
+});
+
+test("R8b. the raw assessment mutations are reachable ONLY through the fenced seam", () => {
+  // BYPASS IS THE STANDING RISK OF THIS DESIGN, and it is worth naming plainly. Moving the fence to
+  // the application boundary is what POR-1's contract requires, but it also means the SQL functions
+  // no longer defend themselves: a future caller importing claimAttempt directly would be unfenced.
+  //
+  // This guard is the compensating control. It is a structural test, not a database invariant —
+  // weaker than an in-database check, and deliberately recorded as such — but it fails loudly the
+  // moment a second importer appears.
+  const roots = ["app", "lib", "packs"];
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === "node_modules" || entry.name === "__tests__") continue;
+        walk(full);
+      } else if (/\.tsx?$/.test(entry.name)) {
+        files.push(full);
+      }
+    }
+  };
+  for (const root of roots) walk(root);
+
+  // Anyone importing the raw mutations FROM THE SERVER STORE must be the fenced seam.
+  const importers = files.filter((file) => {
+    const source = read(file);
+    return /import\s*\{[^}]*\b(claimAttempt|completeAttempt)\b[^}]*\}\s*from\s*["'][^"']*assessmentAttemptStore["']/.test(
+      source,
+    );
+  });
+  assert.deepEqual(
+    importers,
+    ["lib/server/assessment/fencedAttemptMutations.ts"],
+    "the raw assessment mutations gained an importer outside the fenced seam — that path is UNFENCED",
+  );
+});
+
+test("R8. the lease vocabulary stays a CLOSED set, extended by exactly two tokens", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const constraint = /operation_code = any \(array\[([\s\S]*?)\]\)\)/.exec(migration);
+  assert.ok(constraint, "the P5 migration must restate the closed operation_code set");
+  const tokens = [...constraint[1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+  assert.equal(tokens.length, 15, "the closed set must be the original 13 plus exactly 2");
+  for (const original of [
+    "support_profile_update", "password_update", "line_binding", "account_profile_update",
+    "identity_mirror_sync", "session_identity_upgrade", "account_recovery", "account_registration",
+    "line_primary_provisioning", "password_reset_issue", "session_account_binding",
+    "foundation_profile_update", "foundation_identity_binding",
+  ]) {
+    assert.ok(tokens.includes(original), `the P5 restatement dropped ${original}`);
+  }
+  assert.ok(tokens.includes("assessment_attempt_claim"));
+  assert.ok(tokens.includes("assessment_attempt_complete"));
+  // And the TypeScript mirror agrees.
+  const ts = read("lib/server/accountWriteContext.ts");
+  assert.ok(/"assessment_attempt_claim"/.test(ts) && /"assessment_attempt_complete"/.test(ts));
+});
+
+test("R9. account erasure locks invitation ids deterministically before deleting them", () => {
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const fn = /create or replace function public\.yorisou_account_deletion_erase_database_unchecked\(([\s\S]*?)\n\$\$;/
+    .exec(migration);
+  assert.ok(fn);
+  const body = fn[1];
+  // An accepted invitation names TWO people, so two concurrent account erasures target the same
+  // rows and their source locks do not serialize them. Planner row order is not a guarantee.
+  const collectAt = body.indexOf("array_agg(id order by id) into v_invite_ids");
+  const deleteAt = body.indexOf("delete from public.yorisou_connection_invitations where id = any");
+  assert.ok(collectAt > 0, "invitation ids are not collected in deterministic order");
+  assert.ok(deleteAt > collectAt, "the invitation delete must operate on the locked, ordered set");
+  assert.ok(
+    !/delete from public\.yorisou_connection_invitations\s+where inviter_account_id/.test(body),
+    "an unordered bulk invitation DELETE remains",
+  );
+});
+
+test("R10. the migration rollback contract names every pre-existing contract it replaces", () => {
+  // DOCUMENTATION DRIFT PREVENTION, not a rollback engine.
+  //
+  // The header shipped through four remediation rounds still describing the original package, and
+  // its rollback said "re-apply 202608180002's erasure block" — which restores none of the bodies
+  // this migration replaces. A rollback contract that omits a replaced function is a false
+  // document, and the person reading it during an incident is the one who pays.
+  const migration = read("supabase/migrations/202608190001_cpr1_connection_pair.sql");
+  const header = migration.slice(0, migration.indexOf("begin;"));
+  assert.ok(/ROLLBACK CONTRACT/.test(header), "the rollback section is missing");
+
+  // Every pre-existing contract whose BODY this migration replaces must be named for restoration.
+  for (const replaced of [
+    "yorisou_share_object_publish",
+    "yorisou_account_deletion_erase_database_unchecked",
+  ]) {
+    assert.ok(
+      new RegExp(`${replaced}`).test(header),
+      `the rollback contract does not name the replaced contract ${replaced}`,
+    );
+    // And it must actually be re-emitted in the body — otherwise the contract describes a
+    // replacement that did not happen.
+    assert.ok(
+      new RegExp(`create or replace function public\\.${replaced}\\(`).test(migration),
+      `${replaced} is named in the rollback contract but not re-emitted`,
+    );
+  }
+  // The CPR-1-only helper must be named for removal.
+  assert.ok(/yorisou_assessment_source_live/.test(header));
+  // The operation vocabulary restoration must be explicit about returning to the closed 13.
+  assert.ok(/operation_code_check/.test(header), "the rollback contract omits the operation constraint");
+  assert.ok(/thirteen/i.test(header) || /13-token/.test(header), "the rollback contract does not state the pre-P5 vocabulary size");
+  // And the stale claim must be gone.
+  assert.ok(
+    !/SIX RPCs/.test(header),
+    "the header still carries the stale package count",
+  );
+  assert.ok(
+    !/re-apply 202608180002's erasure block/.test(header),
+    "the rollback still claims re-applying an earlier migration is a rollback mechanism",
+  );
+});
+
+test("R11. the writer-first proofs drive the CANONICAL lifecycle, with no raw job UPDATE", () => {
+  // The first version of H2/I2 forced the job to database_erasure with a raw UPDATE after the
+  // drain. That reduced an end-to-end lifecycle-ordering proof to "test-forced transition, then
+  // erase" — it proved the wrong thing, in the one place where the ordering IS the claim.
+  const harness = read("tests/connection/postgres-acceptance.sh");
+
+  // No test SQL may write the deletion job's state, cursor or irreversible marker.
+  for (const forbidden of [
+    /update\s+public\.yorisou_account_deletion_jobs/i,
+    /set\s+state\s*=\s*'database_erasure'/i,
+    /irreversible_started_at\s*=\s*now\(\)/i,
+    /GO_IRREVERSIBLE/,
+  ]) {
+    assert.ok(!forbidden.test(harness), `the harness still forces the deletion lifecycle: ${forbidden}`);
+  }
+
+  // Every canonical transition the real executor uses must appear.
+  for (const canonical of [
+    "yorisou_account_deletion_open",
+    "yorisou_account_deletion_advance",
+    "yorisou_account_deletion_executor_claim",
+    "yorisou_account_deletion_manifest_put",
+    "yorisou_account_deletion_drain_gate",
+    "yorisou_account_deletion_complete_step",
+    "yorisou_account_deletion_erase_database",
+  ]) {
+    assert.ok(harness.includes(canonical), `the harness never calls canonical ${canonical}`);
+  }
+  // The cursor walk must be the real one, one forward step at a time.
+  for (const step of ["'mutation_draining','lock_marker'", "'lock_marker','session_revocation'",
+                      "'session_revocation','database_erasure'"]) {
+    assert.ok(harness.includes(step), `the canonical cursor walk is missing ${step}`);
+  }
+
+  // Ordering must come from a latch and deterministic markers, not from elapsed time.
+  assert.ok(!/pg_sleep\(6\)/.test(harness), "a sleep is still the writer's hold mechanism");
+  assert.ok(/WAIT_FOR_FILE/.test(harness) && /\.ready/.test(harness) && /\.release/.test(harness),
+    "the writer latch and its readiness marker are missing");
+
+  // THE LEASE MUST BE COMMITTED BEFORE THE BUSINESS MUTATION, which is the whole R7 correction.
+  // An in-transaction lease is invisible to the deletion executor; a committed one is not, and the
+  // decisive evidence is that the crossing is REFUSED while it lives.
+  assert.ok(/LEASE_BEGIN\(\)/.test(harness), "the writer does not acquire its lease over the transport");
+  assert.ok(
+    /committed lease VISIBLE to another session/.test(harness),
+    "the harness never proves the lease is visible to an independent session",
+  );
+  assert.ok(
+    /canonical crossing REFUSED while the lease is outstanding/.test(harness),
+    "the harness never proves the irreversible crossing is refused by a live lease",
+  );
+  assert.ok(
+    /drain reports NOT drained while the writer's lease is active/.test(harness),
+    "the harness never proves the deletion executor sees the live lease",
+  );
+});
+
+// ─── the migration is registered ────────────────────────────────────────────
+
+test("the CPR-1 migration is registered in the scope manifest", () => {
+  const manifest = read("supabase/MIGRATION_SCOPE_MANIFEST.md");
+  assert.ok(manifest.includes("202608190001_cpr1_connection_pair.sql"), "the new migration is unregistered");
+});
+
+test("migration lineage: CPR-1 is the newest and does not renumber anything", () => {
+  const names = readdirSync(join("supabase", "migrations")).filter((n) => n.endsWith(".sql")).sort();
+  assert.equal(names[names.length - 1], "202608190001_cpr1_connection_pair.sql");
+});

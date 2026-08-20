@@ -72,6 +72,19 @@ jobs:
           psql postgresql://postgres:postgres@localhost:5432/osf1_acceptance -c 'create database shr1_acceptance;'
           npm run test:arch-p4-db
 
+      # CPR-1 — connection.core + comparison.core against real PostgreSQL. The claims that matter
+      # here are concurrency and authorization claims, so this harness runs OVERLAPPING sessions:
+      # two people accepting one invitation, a cancel racing an acceptance, and — the case ARCH-P4
+      # taught us to prove — an acceptance racing the erasure of a participant's source. It also
+      # asserts the ARCH-P4 source-lock and erase-with-shares privileges, closing a recorded test
+      # gap without changing any P4 behaviour. Its own isolated database.
+      - name: connection.core + comparison.core acceptance (CPR-1 consent, concurrency, erasure)
+        env:
+          CPR1_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cpr1_acceptance
+        run: |
+          psql postgresql://postgres:postgres@localhost:5432/osf1_acceptance -c 'create database cpr1_acceptance;'
+          npm run test:arch-p5-db
+
   # OSF-1 GATE 3 — the migration lineage rehearsed forwards AND backwards.
   #
   # Separate from the acceptance job because it proves a different thing. Acceptance proves the
@@ -218,6 +231,9 @@ jobs:
 
       - name: ARCH-P4 sharing.core boundary (Imairo ShareObject)
         run: npm run test:arch-p4
+
+      - name: ARCH-P5 connection.core + comparison.core boundary (Imairo pair)
+        run: npm run test:arch-p5
 
       - name: C02 definition and scoring checks
         run: npm run test:c02

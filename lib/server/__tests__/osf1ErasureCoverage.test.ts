@@ -36,6 +36,14 @@ const OWNER_COLUMNS = [
   // than the code would be invisible to a list that only knows the *_account_id shapes.
   "account_id",
   "user_id",
+  // CPR-1 — a pair belongs to TWO people, so neither participant column follows the single-owner
+  // convention. Without these names the scanner could not even ASK whether the connection families
+  // are covered by the erasure plan, which is the failure mode this guard exists to prevent: a
+  // table nobody registered AND nobody noticed.
+  "participant_a_account_id",
+  "participant_b_account_id",
+  "inviter_account_id",
+  "accepted_by_account_id",
 ];
 
 /**
@@ -250,6 +258,45 @@ test("every owner-linked table defined in supabase/migrations is registered for 
     `these tables carry an owner column but account deletion would leave them behind. Add them to ` +
       `v_plan in ${plan.path}, or add a written justification to JUSTIFIED_EXEMPTIONS here:\n  ` +
       unregistered.join("\n  "),
+  );
+});
+
+test("a table with SEVERAL owner columns is registered for EVERY one of them", () => {
+  // WHY THIS EXISTS, AND WHAT IT CAUGHT.
+  //
+  // The test above asks "is this TABLE in the plan", which is the right question for the ordinary
+  // case of one owner column. It is the WRONG question for a row that belongs to two people:
+  // registering only `participant_a_account_id` satisfies a table-granularity check completely,
+  // while erasing participant B leaves the row — and everything cascading from it — alive.
+  //
+  // CPR-1 introduced the first such table, and this guard was written after confirming the
+  // table-level check passed with one of the two participant columns deliberately unregistered.
+  // A guard that cannot fail on the case it was added for is not a guard.
+  const plan = productionErasurePlanFile();
+  const entries = planEntries(plan.sql);
+  const registeredColumns = new Map<string, Set<string>>();
+  for (const entry of entries) {
+    if (!registeredColumns.has(entry.table)) registeredColumns.set(entry.table, new Set());
+    registeredColumns.get(entry.table)!.add(entry.column);
+  }
+
+  const missing: string[] = [];
+  for (const [table, info] of everyOwnerLinkedTable()) {
+    if (info.columns.length < 2) continue;
+    if (table in JUSTIFIED_EXEMPTIONS) continue;
+    const registered = registeredColumns.get(table);
+    if (!registered) continue; // the table-level test above already reports this
+    for (const column of info.columns) {
+      if (!registered.has(column)) missing.push(`${table}.${column} (${info.file})`);
+    }
+  }
+
+  assert.deepEqual(
+    missing,
+    [],
+    "these tables belong to more than one person, but the erasure plan only covers some of them. " +
+      `Erasing the unlisted participant would leave the row behind. Add each pair to v_plan in ` +
+      `${plan.path}:\n  ${missing.join("\n  ")}`,
   );
 });
 

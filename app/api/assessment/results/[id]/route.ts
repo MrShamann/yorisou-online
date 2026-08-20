@@ -7,6 +7,8 @@ import { getResultById, listResponsesForResult, deriveCurrentUnderstanding, eras
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
 import { sharingSchemaReady } from "@/lib/yorisou/sharing/access";
 import { eraseAssessmentResultWithShares } from "@/lib/server/sharing/store";
+import { connectionDerivativeSchemaReady } from "@/lib/yorisou/connection/access";
+import { eraseAssessmentResultWithDerivatives } from "@/lib/server/connection/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,11 +85,23 @@ export async function DELETE(_request: Request, context: Context) {
     // publish can resurrect a link, then run the canonical erasure — rolling back entirely if that
     // erasure does not succeed. A caller who does not own the result changes nothing anywhere.
     //
-    // Schema-readiness picks the path: without the SHR-1 migration there is no share store, and no
-    // link could ever have been published, so the plain canonical erasure is the whole job.
-    const erased = sharingSchemaReady()
-      ? await eraseAssessmentResultWithShares(id, ownerId)
-      : await eraseAssessmentResult(id, ownerId);
+    // CPR-1 — A SECOND DERIVATIVE FAMILY, SO THE SEAM MOVED OUT ONE LAYER.
+    //
+    // A pair comparison is also derived from this result, and it must not survive its source any
+    // more than a public link may. The P5 seam cancels invitations, dissolves pairs and empties
+    // the derived comparison codes, then delegates to the ARCH-P4 share seam, which delegates to
+    // the canonical erasure — one transaction, one rollback, nothing reimplemented.
+    //
+    // Schema-readiness picks the layer, and it is deliberately layered rather than replaced:
+    // a deployment without the CPR-1 tables has no pair to dissolve, and one without SHR-1 has no
+    // link to revoke, so each falls back to exactly the erasure its data model needs. Note the P5
+    // check is the DERIVATIVE-schema question, not the feature gate: a deployment that ran the
+    // migration and then switched the pair feature off still has pairs, and they still must go.
+    const erased = connectionDerivativeSchemaReady()
+      ? await eraseAssessmentResultWithDerivatives(id, ownerId)
+      : sharingSchemaReady()
+        ? await eraseAssessmentResultWithShares(id, ownerId)
+        : await eraseAssessmentResult(id, ownerId);
     if (!erased) return NextResponse.json({ error: "result_not_found" }, { status: 404 });
     // Truthful: the answers, the interpretation responses and the result content are gone —
     // only a content-free tombstone remains.

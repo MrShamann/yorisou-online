@@ -565,7 +565,9 @@ description: Generic A ↔ B comparison over consented references, producing exa
 purpose: Generic A-to-B comparison with humane outputs.
 user_problem: "How am I similar to or different from this person (or my past self)?"
 target_users: consented pairs; a person comparing themselves across time
-adoption_status: declared
+adoption_status: partial          # ARCH-P5: the Person-Person pair case is realized through one
+                                  # pack adapter. CurrentSelf-PastSelf and Month-Month are still
+                                  # on paper, so this is partial and not implemented.
 lifecycle_state: DEFINED
 verification_state: not_verified
 responsibilities:
@@ -686,7 +688,10 @@ description: Explicit person-to-person connection — invitations, accepted conn
 purpose: Explicit person-to-person connection and pair context.
 user_problem: "I want to do this together with a specific person I chose."
 target_users: pairs of consenting people (friend, partner, family)
-adoption_status: declared         # only experience-scoped invites exist today
+adoption_status: partial          # ARCH-P5: invitations, acceptance, pairs and dissolution exist
+                                  # behind the contract boundary. RelationshipContext and
+                                  # ConnectionPreference remain declared and unbuilt, which is why
+                                  # this is partial and not implemented.
 lifecycle_state: DEFINED
 verification_state: not_verified
 responsibilities:

@@ -10,7 +10,10 @@ import { NextResponse } from "next/server";
 import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { scoreCurrentStateCheck } from "@/app/tests/ima-iro/currentStateCheckV1";
 import { buildPersistedResultEnvelope } from "@/lib/server/persistedDimensionSummary";
-import { completeAttempt, hashClaimToken } from "@/lib/server/assessmentAttemptStore";
+import { hashClaimToken } from "@/lib/server/assessmentAttemptStore";
+// CPR-1 — an account-bound completion creates a NEW owned source, so it runs under a committed
+// POR-1 mutation lease. The anonymous path is unfenced and unchanged.
+import { completeAttemptFenced } from "@/lib/server/assessment/fencedAttemptMutations";
 import { readAttemptCookie } from "@/lib/server/assessmentAttemptCookie";
 import {
   normalizeAnswerMap,
@@ -53,7 +56,7 @@ export async function POST(request: Request, context: Context) {
   const scored = scoreCurrentStateCheck(answers as never);
 
   try {
-    const resultRowId = await completeAttempt({
+    const resultRowId = await completeAttemptFenced({
       attemptId: id,
       claimTokenHash: tokenHash,
       ownerAccountId: ownerId,
