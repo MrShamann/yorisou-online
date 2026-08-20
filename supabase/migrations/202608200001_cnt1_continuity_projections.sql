@@ -53,10 +53,21 @@
 --   service_role              : bounded SELECT + EXECUTE on the three RPCs
 --
 -- ROLLBACK CONTRACT
---   1. RESTORE yorisou_account_deletion_erase_database_unchecked from 202608190001 verbatim
---      (its plan minus the ['yorisou_continuity_projections','owner_account_id'] entry).
---      Re-applying 202608190001 is NOT a valid rollback on its own: it would also revert the P5
---      body, so copy the function text rather than re-running the file.
+--   1. RESTORE yorisou_account_deletion_erase_database_unchecked to the body the lineage defined
+--      BEFORE CNT-1 — that is, the body 202608190001 establishes. CNT-1 differs from it by exactly
+--      one added plan entry, ['yorisou_continuity_projections','owner_account_id'], which is last;
+--      there is no other difference to undo.
+--
+--      Re-applying the 202608190001 FILE does restore that body, and has no other effect. But it is
+--      NOT a complete rollback on its own, because it leaves every CNT-1 object standing:
+--        - the projection table   public.yorisou_continuity_projections
+--        - the three RPCs         yorisou_continuity_project / _invalidate_source / _invalidate_owner
+--        - the four sync triggers yorisou_continuity_sync_trg on the source tables
+--      A complete rollback is therefore two separate acts: restore the function body (this step),
+--      and remove the CNT-1 objects (steps 2 and 3 below).
+--
+--      Rolling CNT-1 back does NOT roll back P5. Verified: after the full sequence the connection
+--      and comparison objects are all still present, and account erasure continues to work.
 --   2. drop trigger if exists yorisou_continuity_sync_trg on public.yorisou_current_state_records;
 --      ... and on yorisou_goals, yorisou_life_reflections, yorisou_experience_cards;
 --      drop function if exists public.yorisou_continuity_sync();

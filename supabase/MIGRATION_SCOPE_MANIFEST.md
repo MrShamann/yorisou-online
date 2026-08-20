@@ -568,7 +568,7 @@ The guard parses the single fenced `json` block below. `sha256` is the digest of
     "name": "cnt1_continuity_projections",
     "scope": "PRODUCTION_LINEAGE",
     "path": "supabase/migrations/202608200001_cnt1_continuity_projections.sql",
-    "sha256": "f0e8a9dda27a20dc1a2bb18a66b018dfb4cddbbd15770451277d65815d66894c"
+    "sha256": "77a35587f6f6ef9c9cf6b1df6ad74a8c94a4cc59554f746678ceef772354056e"
   }
 ]
 ```
