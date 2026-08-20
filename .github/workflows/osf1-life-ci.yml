@@ -191,6 +191,16 @@ jobs:
           chmod +x tests/life-os/ci/postgrest-docker
           npm run test:arch-p6-equivalence
 
+      # ARCH-P7 — わたし and the timeline must not disagree. The proof is the divergence itself: a
+      # moment is invalidated in the index while its source row is left untouched, and both the
+      # timeline and the return card have to stop offering it. Before P7 the card went on offering
+      # it, because it derived the same fact a second, independent way.
+      - name: Me composition alignment (return view vs timeline, after invalidation)
+        env:
+          OSF1_POSTGRES_BIN: /usr/lib/postgresql/16/bin
+          OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
+        run: npm run test:arch-p7-me
+
       - name: Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4
