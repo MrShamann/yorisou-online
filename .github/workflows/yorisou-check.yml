@@ -255,6 +255,9 @@ jobs:
       - name: ARCH-P7 Me composition and Data/Memory alignment
         run: npm run test:arch-p7
 
+      - name: LCO-1 Life OS authenticated activation, kill switch and consent
+        run: npm run test:life-os-authenticated
+
       - name: C02 definition and scoring checks
         run: npm run test:c02
 
