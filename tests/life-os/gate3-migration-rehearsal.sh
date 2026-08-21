@@ -41,7 +41,26 @@ fail() { printf '  FAIL %s  %s\n' "$1" "${2:-}"; FAILURES=$((FAILURES+1)); }
 # The OSF-1 lineage, in order. Derived from the repository rather than hardcoded prose, so a new
 # OSF-1 migration cannot be silently excluded from the gate.
 OSF1_MIGRATIONS=$(ls supabase/migrations/*osf1*.sql | sort)
-BASELINE_MIGRATIONS=$(ls supabase/migrations/*.sql | sort | grep -v "osf1")
+
+# THE BASELINE IS WHAT CAME BEFORE OSF-1, WHICH IS A VERSION AND NOT A FILENAME.
+#
+# This was `grep -v osf1`, i.e. "every migration that is not part of this cohort". The two were the
+# same set only while nothing landed AFTER the cohort. Everything since — DD-1, SHR-1, CPR-1, CNT-1
+# — silently became "pre-OSF-1 baseline", which was harmless only by luck: none of them happened to
+# create a table this stage looks for. LCO-1 does (`yorisou_life_os_consents` matches
+# `yorisou_life%`), and the stage-1 assertion "no Life OS table exists before the OSF-1 lineage"
+# failed on a table that is not pre-OSF-1 at all.
+#
+# Partitioning by version says what was actually meant, and keeps this rehearsal about the thing it
+# rehearses: applying, rolling back and re-applying the OSF-1 lineage in isolation. Later migrations
+# are deliberately NOT applied — CNT-1's triggers reference Life OS tables, so rolling OSF-1 back
+# underneath them would be testing a lineage state that never exists in practice.
+OSF1_FIRST=$(basename "$(echo "$OSF1_MIGRATIONS" | head -1)" | cut -c1-12)
+# `if`, not `&&`: under `set -e` a false test as the last command of the loop ends the script, and
+# the substitution returns empty with no error anyone can see.
+BASELINE_MIGRATIONS=$(for f in $(ls supabase/migrations/*.sql | sort); do
+  if [ "$(basename "$f" | cut -c1-12)" -lt "$OSF1_FIRST" ]; then echo "$f"; fi
+done)
 
 if [ -n "${OSF1_DATABASE_URL:-}" ]; then
   case "$OSF1_DATABASE_URL" in
