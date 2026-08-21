@@ -5,7 +5,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import { LIFE_OS_SCHEMA_READY_ENV } from "@/lib/life-os/access";
-import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
+import { lifeOsConsentSatisfied, resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 import { isErrorClass, newCorrelationId, recordLifeOsOps } from "@/lib/server/lifeOs/observability";
 
 export type LifeApiViewer = { accountId: string };
@@ -27,7 +27,20 @@ export type LifeApiViewer = { accountId: string };
  * and the navigation use.
  */
 export async function requireLifeViewer(
-  options: { mutation: boolean },
+  options: {
+    mutation: boolean;
+    /**
+     * What this request's relationship to consent is.
+     *
+     *   "required"  the default — a durable write is refused until the person has agreed.
+     *   "granting"  this request IS the agreement. Routing it through the ordinary rule would
+     *               require consent in order to give consent, so the one route that records it
+     *               names the exception explicitly here rather than skipping the guard entirely.
+     *               Every other condition — route access, schema readiness, authentication —
+     *               still applies, which is the reason this is an option and not a bypass.
+     */
+    consent?: "required" | "granting";
+  },
 ): Promise<{ viewer: LifeApiViewer } | { refusal: NextResponse }> {
   const route = await resolveLifeOsRouteAccess();
   if (!route.allowed) {
@@ -61,6 +74,24 @@ export async function requireLifeViewer(
   }
   if (!route.accountId) {
     return { refusal: NextResponse.json({ error: "authentication_required" }, { status: 401 }) };
+  }
+  // CONSENT — checked here, after the account is known, because it is the one condition that is
+  // about the PERSON rather than the deployment. A named 409 rather than a 404: the route exists
+  // and they may use it, they simply have not been asked yet, and the surface needs to be able to
+  // tell those apart so it can show the explanation instead of an error.
+  //
+  // Reads are untouched. Someone who declines can still see what they already have; what they
+  // cannot do is add to it. Blocking the read as well would hold their own records hostage to a
+  // question they answered "not now" to.
+  if (options.mutation && options.consent !== "granting" && !(await lifeOsConsentSatisfied(route.accountId))) {
+    recordLifeOsOps({
+      event: "life_os.consent.required",
+      correlationId: newCorrelationId(),
+      ownerAccountId: route.accountId,
+    });
+    return {
+      refusal: NextResponse.json({ error: "life_os_consent_required" }, { status: 409 }),
+    };
   }
   return { viewer: { accountId: route.accountId } };
 }

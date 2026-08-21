@@ -32,6 +32,10 @@ export const LIFE_OS_OPS_EVENTS = [
   "life_os.audit.write_failed",
   "life_os.mutation.failed",
   "life_os.access.denied",
+  // LCO-1: a signed-in person reached a durable write before answering the explanation. Not an
+  // error and not an intrusion — it is the ordinary first-visit path, and it is recorded so an
+  // operator can tell "nobody is consenting" from "nobody is arriving".
+  "life_os.consent.required",
   "life_os.schema.not_ready",
   "life_os.assistant.provider_failed",
   "life_os.erasure.failed",

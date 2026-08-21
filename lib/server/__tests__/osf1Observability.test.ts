@@ -52,6 +52,7 @@ const PRODUCERS: Record<LifeOsOpsEvent, string> = {
   "life_os.audit.write_failed": "lib/server/lifeOs/audit.ts",
   "life_os.mutation.failed": "lib/server/lifeOs/guard.ts",
   "life_os.access.denied": "lib/server/lifeOs/guard.ts",
+  "life_os.consent.required": "lib/server/lifeOs/guard.ts",
   "life_os.schema.not_ready": "lib/server/lifeOs/guard.ts",
   "life_os.assistant.provider_failed": "app/api/life/assistant/route.ts",
   "life_os.erasure.failed": "lib/server/accountDeletionOrchestrator.ts",

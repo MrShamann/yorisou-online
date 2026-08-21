@@ -48,6 +48,20 @@ export const LIFE_OS_PREVIEW_FLAG = "osf1_life_os_preview";
  */
 export const LIFE_OS_SCHEMA_READY_ENV = "YORISOU_OSF1_LIFE_OS_SCHEMA_READY";
 
+/**
+ * The declaration that the Life OS is open to ORDINARY AUTHENTICATED ACCOUNTS in true production.
+ *
+ * THIS IS THE KILL SWITCH, and it is deliberately the same lever as the activation. Unsetting it —
+ * or setting it to anything other than the exact string `true` — returns every ordinary account to
+ * a 404 on the next request, with no deploy, no migration and no data change. A kill switch that
+ * needs a code change is not one.
+ *
+ * It is a SEPARATE variable from the schema declaration on purpose. "The migration has run" and
+ * "people may use this" are different statements, and collapsing them is how a schema rollout
+ * becomes an unplanned launch.
+ */
+export const LIFE_OS_AUTHENTICATED_ENV = "YORISOU_OSF1_LIFE_OS_AUTHENTICATED";
+
 /** Read/route access. Governs whether the surfaces exist at all. */
 export function lifeOsAccess(env: Record<string, string | undefined> = process.env): LifeOsAccess {
   const context = deploymentContext(env);
@@ -92,11 +106,23 @@ export function lifeOsMutationAccess(
 //            production pilot is not public activation, and duplicating it here would create a
 //            second, weaker answer to the same question.
 //   PREVIEW  non-production only, dev flag `osf1_life_os_preview`. What lifeOsAccess already did.
-//   PUBLIC   everyone. NOT IMPLEMENTED, and deliberately not implementable from this module:
-//            reaching it is a Gate 5 event (staged rollout plan, kill switches tested LIVE,
-//            consent-comprehension copy verified verbatim, Founder acceptance recorded).
-//            `lifeOsActivationState` can NAME it so the state machine is complete and testable,
-//            but no environment variable in this codebase returns it. Adding one is a Founder act.
+//   AUTHENTICATED
+//            true production, ANY signed-in account, own data only. Added under the Gate 5 mandate
+//            that opened the Life OS. Its four requirements were met for THIS state: a staged
+//            rollout, a kill switch tested live, consent copy approved verbatim by the Founder, and
+//            Founder acceptance recorded in that mandate.
+//
+//            IT IS NOT `PUBLIC`, AND THE DISTINCTION IS THE WHOLE POINT. The Life OS is an
+//            account-owned continuity product; an anonymous visitor has no Life OS to be shown, so
+//            "everyone" was never the right shape for it. Overloading PUBLIC would have made the
+//            state machine say "anonymous may read this" while the code meant something narrower —
+//            a gap between the name and the behaviour is exactly what a governed state machine
+//            exists to prevent.
+//
+//   PUBLIC   ANONYMOUS visitors included. STILL NOT IMPLEMENTED and still not implementable from
+//            this module: no environment variable returns it. The Gate 5 mandate authorised
+//            authenticated exposure and said so explicitly; it did not authorise anonymous access,
+//            and nothing here quietly widens to it. Reaching PUBLIC remains a separate Founder act.
 //
 // WHY THE STATE IS SEPARATE FROM `lifeOsAccess`. Every existing call site reads `.allowed` as a
 // boolean and must keep failing closed for any state it does not recognise. So the state function
@@ -105,7 +131,7 @@ export function lifeOsMutationAccess(
 // because it needs the caller's authenticated Founder/Admin facts, which a pure env check cannot
 // see.
 
-export type LifeOsActivationState = "OFF" | "INTERNAL" | "PREVIEW" | "PUBLIC";
+export type LifeOsActivationState = "OFF" | "INTERNAL" | "AUTHENTICATED" | "PREVIEW" | "PUBLIC";
 
 /**
  * Which activation state the environment describes.
@@ -118,9 +144,52 @@ export function lifeOsActivationState(
   env: Record<string, string | undefined> = process.env,
 ): LifeOsActivationState {
   // PUBLIC is unreachable by construction: nothing sets it. Named so the machine is complete.
+  //
+  // AUTHENTICATED is checked FIRST because it is the broader of the two production states: every
+  // Founder/Admin is also a signed-in account, so when it is on they keep their own Life OS through
+  // it, and `lifeOsInternalAccess` continues to answer the narrower question of internal capability
+  // independently. Reporting INTERNAL here while ordinary accounts were also being served would
+  // make the reported state a lie about who can get in.
+  if (lifeOsAuthenticatedEnabled(env)) return "AUTHENTICATED";
   if (isProductionPilotFlagEnabled("osf1_life_os_internal", env)) return "INTERNAL";
   if (lifeOsAccess(env).allowed) return "PREVIEW";
   return "OFF";
+}
+
+/**
+ * Whether true production has declared the Life OS open to ordinary accounts.
+ *
+ * EXACT STRING ONLY. `TRUE`, `1`, `yes` and a stray space do not open a personal-data surface — the
+ * same rule every other declaration in this codebase follows, for the same reason: a typo must fail
+ * closed rather than half-open.
+ */
+export function lifeOsAuthenticatedEnabled(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  if (deploymentContext(env) !== "production") return false;
+  return (env[LIFE_OS_AUTHENTICATED_ENV] ?? "").trim() === "true";
+}
+
+export type LifeOsAuthenticatedDecision =
+  | { allowed: true; reason: "authenticated_owner" }
+  | { allowed: false; reason: "not_production" | "flag_off" | "not_authenticated" };
+
+/**
+ * AUTHENTICATED access, in true production only, for any signed-in account — over its OWN data.
+ *
+ * This function answers "may this person in", never "whose data". Ownership is enforced where it
+ * has to be: every store read is owner-scoped and every mutation RPC checks the owner, so a caller
+ * who passes this gate still cannot reach another person's records. Ownership decided here, in one
+ * place, would be a single point that the rest of the system trusted blindly.
+ */
+export function lifeOsAuthenticatedAccess(
+  input: { authenticated: boolean },
+  env: Record<string, string | undefined> = process.env,
+): LifeOsAuthenticatedDecision {
+  if (deploymentContext(env) !== "production") return { allowed: false, reason: "not_production" };
+  if (!lifeOsAuthenticatedEnabled(env)) return { allowed: false, reason: "flag_off" };
+  if (!input.authenticated) return { allowed: false, reason: "not_authenticated" };
+  return { allowed: true, reason: "authenticated_owner" };
 }
 
 export type LifeOsInternalDecision =

@@ -89,15 +89,25 @@ test("PUBLIC is unreachable from any environment — it is a Gate 5 act, not a v
 
 // ── API: every route gated, none trusting the client ─────────────────────────
 
-test("all six domain routes exist, plus timeline and assistant", () => {
+test("all six domain routes exist, plus timeline, assistant and consent", () => {
   const names = readdirSync(API_DIR).sort();
-  assert.deepEqual(names, ["assistant", "context", "experiences", "goals", "memories", "reflections", "state", "timeline"]);
+  // `consent` (LCO-1) is not a domain route — it records whether the person has agreed to the
+  // explanation. It is listed here because this assertion is an inventory, and an inventory that
+  // silently tolerated new routes would stop being one.
+  assert.deepEqual(names, ["assistant", "consent", "context", "experiences", "goals", "memories", "reflections", "state", "timeline"]);
 });
 
 test("every /api/life route goes through the shared guard and never reads an owner from the body", () => {
   for (const file of routeFiles) {
     const source = readFileSync(file, "utf8");
-    assert.match(source, /requireLifeViewer\(\{ mutation: (true|false) \}\)/, `${file} does not use the shared guard`);
+    // The consent option is allowed in the call, but the guard is still mandatory: the one route
+    // that RECORDS consent cannot be subject to requiring it, and naming that exception inside the
+    // shared guard is what keeps it a single gate rather than a second policy.
+    assert.match(
+      source,
+      /requireLifeViewer\(\{ mutation: (true|false)(, consent: "granting")? \}\)/,
+      `${file} does not use the shared guard`,
+    );
     assert.match(source, /if \("refusal" in gate\) return gate\.refusal;/, `${file} does not honour a refusal`);
     // The owner may only come from the guard.
     assert.ok(!/body\.(owner|ownerAccountId|user_id|userId|accountId)/.test(source), `${file} reads an owner from the request body`);
@@ -159,10 +169,15 @@ test("every mutating route is audited — by the route, or by the RPC it calls",
   // them must NOT call auditLifeOs — a second best-effort write would duplicate a row in an
   // append-only table. This test allows either mechanism and demands one of them.
   const TRANSACTIONAL_ROUTES = ["/reflections/", "/memories/"];
+  // The consent route's OWN table is the record: which version, accepted when, withdrawn when.
+  // An auditLifeOs row alongside it would duplicate the same fact in two places, which is the very
+  // thing the transactional carve-out above exists to prevent.
+  const SELF_RECORDING_ROUTES = ["/consent/"];
   for (const file of routeFiles) {
     const source = readFileSync(file, "utf8");
     if (!/mutation: true/.test(source)) continue;
     if (file.includes("/timeline/")) continue; // read-only
+    if (SELF_RECORDING_ROUTES.some((fragment) => file.includes(fragment))) continue;
     if (TRANSACTIONAL_ROUTES.some((fragment) => file.includes(fragment))) {
       assert.ok(
         !/await auditLifeOs\(/.test(source),
