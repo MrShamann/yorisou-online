@@ -201,6 +201,19 @@ jobs:
           OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
         run: npm run test:arch-p7-me
 
+      # GATE 5 — the authenticated Life OS loop, with sessions the application itself issued: a
+      # write refused before consent and accepted after, the timeline hydrating it, one account
+      # unable to see another's, and withdrawal stopping writes without confiscating what exists.
+      - name: Gate 5 authenticated activation, consent and owner isolation
+        env:
+          OSF1_POSTGRES_BIN: /usr/lib/postgresql/16/bin
+          OSF1_POSTGREST_BIN: tests/life-os/ci/postgrest-docker
+          G5_PG_PORT: "55670"
+          G5_REST_PORT: "55671"
+          G5_PROXY_PORT: "55672"
+          G5_APP_PORT: "3240"
+        run: npm run test:gate5
+
       - name: Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4
