@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import MyContinuity from "./MyContinuity";
 import MeComposition from "./MeComposition";
+import AccountContinuity from "./AccountContinuity";
+import { getViewerContext } from "@/lib/server/yorisouAuth";
 import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
 
 export const metadata: Metadata = {
@@ -29,13 +31,23 @@ export default async function MyYorisouPage() {
   const access = await resolveLifeOsRouteAccess();
   const lifeOsOpen = access.allowed;
   const accountId = access.accountId;
+  // A SECOND QUESTION, NOT A SECOND GATE. `access` answers "may this person see the Life OS?", and
+  // in production the answer is no for an ordinary account. Whether they are SIGNED IN is a
+  // different question with a different authority, and the saved-result store has its own. Reading
+  // the Life OS identity for account data would deny a signed-in person their own saved result.
+  const viewer = await getViewerContext();
+  const signedInAccountId = viewer.account?.id || viewer.legacyAccount?.id || null;
   return (
     <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-8 md:pt-14">
       <h1 className="text-[26px] font-semibold leading-[1.45] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
         わたし
       </h1>
+      {/* The old line said this of the WHOLE page, which stopped being true once a result could be
+          saved to an account. It now describes the section it actually belongs to. */}
       <p className="mt-2 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-        保存したものは、この端末のあなたにだけ表示されます。
+        {signedInAccountId
+          ? "この端末に残したものと、アカウントに残したものが並びます。"
+          : "保存したものは、この端末のあなたにだけ表示されます。"}
       </p>
 
       <MyContinuity />
@@ -44,6 +56,10 @@ export default async function MyYorisouPage() {
           sees exactly what they saw before: the device-local history above and nothing that
           pretends to know them. */}
       {lifeOsOpen && accountId ? <MeComposition accountId={accountId} /> : null}
+
+      {/* What is on the ACCOUNT — the half わたし never mentioned. Independent of the Life OS gate,
+          because a saved result is not Life OS data and its store is not that gate's to answer for. */}
+      <AccountContinuity accountId={signedInAccountId} />
 
       {/* OSF-1 — the way through to the account-backed records.
           A link, not an embedded section: this page stays static and device-local (reading the
