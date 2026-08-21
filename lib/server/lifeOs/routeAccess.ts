@@ -38,11 +38,14 @@ import { viewerHasAdminAccess } from "@/lib/server/foundation/access";
 import {
   lifeOsAccess,
   lifeOsActivationState,
+  lifeOsAuthenticatedAccess,
   lifeOsInternalAccess,
   LIFE_OS_SCHEMA_READY_ENV,
   type LifeOsActivationState,
 } from "@/lib/life-os/access";
 import { deploymentContext } from "@/lib/cpv1/deploymentContext";
+import { readLifeOsConsent } from "@/lib/server/lifeOs/consentStore";
+import { consentIsCurrent } from "@/lib/life-os/consent";
 
 export type LifeOsDenialReason =
   | "off"
@@ -72,9 +75,22 @@ const DENY = (state: LifeOsActivationState, reason: LifeOsDenialReason): LifeOsR
 export async function resolveLifeOsRouteAccess(): Promise<LifeOsRouteResolution> {
   const state = lifeOsActivationState();
 
-  // TRUE PRODUCTION. The env gate denies production outright, so INTERNAL is the only way in, and
-  // it is decided by the person rather than the deployment.
+  // TRUE PRODUCTION. The env gate denies production outright, so the way in is decided by the
+  // person rather than the deployment — through one of two states.
   if (deploymentContext() === "production") {
+    // AUTHENTICATED — any signed-in account, over its OWN data. The environment is still consulted
+    // before the session: with the flag off this falls through to the INTERNAL branch and, failing
+    // that, denies without ever reading a cookie, so a closed deployment still answers a signed-in
+    // and a signed-out caller identically.
+    if (state === "AUTHENTICATED") {
+      const viewer = await getViewerContext();
+      const accountId = viewer.account?.id || viewer.legacyAccount?.id || null;
+      const decision = lifeOsAuthenticatedAccess({ authenticated: Boolean(accountId) });
+      if (!decision.allowed) return DENY(state, "not_authenticated");
+      // The account that passed the gate is the account returned. Callers scope every read and
+      // write to it, which is what makes "own Life OS" true rather than merely intended.
+      return { allowed: true, state, viewer, accountId };
+    }
     if (state !== "INTERNAL") return DENY(state, "off");
     const viewer = await getViewerContext();
     const authenticated = Boolean(viewer.account?.id || viewer.legacyAccount?.id);
@@ -111,7 +127,7 @@ export async function resolveLifeOsRouteAccess(): Promise<LifeOsRouteResolution>
 
 export type LifeOsMutationResolution =
   | { allowed: true; accountId: string }
-  | { allowed: false; reason: LifeOsDenialReason | "schema_not_ready" | "not_authenticated" };
+  | { allowed: false; reason: LifeOsDenialReason | "schema_not_ready" | "not_authenticated" | "consent_required" };
 
 /**
  * Write access. Strictly narrower than read access, and narrower in two independent ways: the route
@@ -129,7 +145,44 @@ export async function resolveLifeOsMutationAccess(
   if (!route.accountId) return { allowed: false, reason: "not_authenticated" };
   const declared = (process.env[LIFE_OS_SCHEMA_READY_ENV] ?? "").trim().toLowerCase();
   if (declared !== "true") return { allowed: false, reason: "schema_not_ready" };
+
+  // CONSENT — the third narrowing, and the only one that is about the PERSON rather than the
+  // deployment. Nothing durable is kept until they have read the explanation and said yes to the
+  // wording currently shown.
+  //
+  // PRODUCTION ONLY, and that is a scoping decision rather than a loophole. Local and test are
+  // developer contexts with no person to inform; requiring a consent row there would mean every
+  // fixture recorded an agreement nobody made, which is a worse falsehood than not asking. Every
+  // real person reaching a real write goes through this.
+  //
+  // A FAILED READ REFUSES. If the consent row cannot be read, the answer is "not yet", never
+  // "probably fine" — an outage must not become implied agreement.
+  if (deploymentContext() === "production") {
+    let consent = null;
+    try {
+      consent = await readLifeOsConsent(route.accountId);
+    } catch {
+      return { allowed: false, reason: "consent_required" };
+    }
+    if (!consentIsCurrent(consent)) return { allowed: false, reason: "consent_required" };
+  }
   return { allowed: true, accountId: route.accountId };
+}
+
+/**
+ * Whether this person has agreed to the wording currently shown.
+ *
+ * Separate from the mutation gate because the surfaces need it for a different reason: to decide
+ * whether to show the explanation instead of the hub. Same underlying question, one definition.
+ */
+export async function lifeOsConsentSatisfied(accountId: string | null): Promise<boolean> {
+  if (!accountId) return false;
+  if (deploymentContext() !== "production") return true;
+  try {
+    return consentIsCurrent(await readLifeOsConsent(accountId));
+  } catch {
+    return false;
+  }
 }
 
 /**

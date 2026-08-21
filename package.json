@@ -158,6 +158,7 @@
     "test:arch-p6-db": "bash tests/continuity/postgres-acceptance.sh",
     "test:arch-p6-equivalence": "bash tests/continuity/pagination-equivalence.sh",
     "test:arch-p7": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP7MeComposition.test.ts",
+    "test:life-os-authenticated": "node --conditions=react-server --import tsx --test lib/server/__tests__/lifeOsAuthenticatedActivation.test.ts",
     "test:arch-p7-me": "bash tests/me/composition-alignment.sh",
     "test:arch-p4-db": "bash tests/sharing/postgres-acceptance.sh",
     "test:arch-p5-db": "bash tests/connection/postgres-acceptance.sh"

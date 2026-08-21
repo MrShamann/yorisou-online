@@ -7,7 +7,8 @@ import { latestCurrentStateRecord } from "@/lib/server/platform/stateCore";
 import { GOAL_STATUS_LABELS, type Goal } from "@/lib/life-os/contract";
 import SignInRequired from "./SignInRequired";
 import { INTERNAL_HANDLING, NOT_VISIBLE_TO_OTHER_USERS } from "@/lib/life-os/privacyCopy";
-import { resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
+import { lifeOsConsentSatisfied, resolveLifeOsRouteAccess } from "@/lib/server/lifeOs/routeAccess";
+import LifeOsConsent from "./LifeOsConsent";
 import ReturnSection from "./ReturnSection";
 import StateHistory, { stateDetailLine, stateTagLine } from "./StateHistory";
 
@@ -51,6 +52,17 @@ export default async function LifePage() {
     return (
       <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
         <SignInRequired next="/life" purpose="いまの状態や、振り返りを残しておく。" />
+      </main>
+    );
+  }
+
+  // LCO-1 — the explanation comes before anything durable is kept. Reads of what a person ALREADY
+  // has are not blocked by it (see the guard); what this prevents is arriving at a surface that
+  // invites writing before the person has been told what writing means here.
+  if (!(await lifeOsConsentSatisfied(accountId))) {
+    return (
+      <main className="mx-auto w-full max-w-[var(--pxr-content-width)] px-5 pb-28 pt-10">
+        <LifeOsConsent />
       </main>
     );
   }
