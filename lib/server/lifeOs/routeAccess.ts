@@ -58,6 +58,18 @@ export type LifeOsRouteResolution =
   | { allowed: true; state: LifeOsActivationState; viewer: ViewerContext; accountId: string | null }
   | { allowed: false; state: LifeOsActivationState; reason: LifeOsDenialReason; viewer: null; accountId: null };
 
+/**
+ * Whether a durable write must be preceded by consent here.
+ *
+ * True in production unconditionally. Also true when an operator declares it, so the path can be
+ * exercised on a disposable stack — see the note at the call site for why that is necessary rather
+ * than convenient.
+ */
+export function lifeOsConsentRequired(env: Record<string, string | undefined> = process.env): boolean {
+  if (deploymentContext(env) === "production") return true;
+  return (env.YORISOU_OSF1_LIFE_OS_CONSENT_REQUIRED ?? "").trim() === "true";
+}
+
 const DENY = (state: LifeOsActivationState, reason: LifeOsDenialReason): LifeOsRouteResolution => ({
   allowed: false,
   state,
@@ -150,14 +162,18 @@ export async function resolveLifeOsMutationAccess(
   // deployment. Nothing durable is kept until they have read the explanation and said yes to the
   // wording currently shown.
   //
-  // PRODUCTION ONLY, and that is a scoping decision rather than a loophole. Local and test are
-  // developer contexts with no person to inform; requiring a consent row there would mean every
-  // fixture recorded an agreement nobody made, which is a worse falsehood than not asking. Every
-  // real person reaching a real write goes through this.
+  // WHEN IT APPLIES. Production always, because that is where the people are. Local and test are
+  // developer contexts with no person to inform, and requiring a row there would mean every fixture
+  // recorded an agreement nobody made — a worse falsehood than not asking.
+  //
+  // It is ALSO applied whenever an operator asks for it, which is how the gate is provable at all:
+  // the production shared-store boundary correctly refuses a local stack that claims to be
+  // production, so without this the consent path could only ever be exercised by reasoning about
+  // it. A gate nobody can run is a gate nobody has tested.
   //
   // A FAILED READ REFUSES. If the consent row cannot be read, the answer is "not yet", never
   // "probably fine" — an outage must not become implied agreement.
-  if (deploymentContext() === "production") {
+  if (lifeOsConsentRequired()) {
     let consent = null;
     try {
       consent = await readLifeOsConsent(route.accountId);
@@ -177,7 +193,7 @@ export async function resolveLifeOsMutationAccess(
  */
 export async function lifeOsConsentSatisfied(accountId: string | null): Promise<boolean> {
   if (!accountId) return false;
-  if (deploymentContext() !== "production") return true;
+  if (!lifeOsConsentRequired()) return true;
   try {
     return consentIsCurrent(await readLifeOsConsent(accountId));
   } catch {
