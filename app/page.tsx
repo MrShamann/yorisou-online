@@ -123,6 +123,30 @@ export default function TodayPage() {
         </Link>
       </section>
 
+      {/* WHAT SIGNING IN IS FOR — added when the Life OS actually opened to accounts, and not a
+          moment earlier. Until then the honest homepage was the one that did not mention it: a
+          front page that describes continuity a visitor cannot reach is selling something.
+
+          It stays deliberately small and last. Tests remain the lightweight way in, the quick check
+          remains the primary action, and this is the sentence for someone who has already used one
+          of those and wondered whether any of it is kept. No feature list, no "unlock", no urgency —
+          the product's own register does not push, and the front page should not be the exception. */}
+      <section className="mt-10">
+        <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+          あとから見返したいとき
+        </h2>
+        <p className="mt-3 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+          ログインすると、残した結果や記録が、この端末を越えて残ります。
+          あとから見返したり、書き直したり、消したりできます。
+        </p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+        >
+          ログイン / アカウントを作る
+        </Link>
+      </section>
+
       <p className="mt-12 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">
         Yorisouについて詳しくは
         <Link href="/about" className="ml-1 underline underline-offset-4">
