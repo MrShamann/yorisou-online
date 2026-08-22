@@ -159,6 +159,7 @@
     "test:arch-p6-equivalence": "bash tests/continuity/pagination-equivalence.sh",
     "test:arch-p7": "node --conditions=react-server --import tsx --test lib/server/__tests__/archP7MeComposition.test.ts",
     "test:life-os-authenticated": "node --conditions=react-server --import tsx --test lib/server/__tests__/lifeOsAuthenticatedActivation.test.ts",
+    "test:v2-quality": "node --conditions=react-server --import tsx --test lib/server/__tests__/v2CheckInQuality.test.ts",
     "test:gate5": "bash tests/life-os/gate5-authenticated-activation.sh",
     "test:arch-p7-me": "bash tests/me/composition-alignment.sh",
     "test:arch-p4-db": "bash tests/sharing/postgres-acceptance.sh",

@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import {
+  CHECK_IN_FEEDBACK,
+  acknowledgeFeedback,
+  checkInResponseFor,
+  type CheckInFeedbackId,
+} from "@/lib/yorisou/today/checkInResponse";
 import { useState } from "react";
 
 import {
   INTENT_OPTIONS,
   STATE_OPTIONS,
-  labelForIntent,
-  labelForState,
-  nextStepFor,
-  reflectionFor,
   writeCurrentStateCheckIn,
   type IntentOptionId,
   type StateOptionId,
@@ -49,6 +51,9 @@ export default function CurrentStateCheckIn() {
   const [recordId, setRecordId] = useState<string | null>(null);
 
   const [noteOpen, setNoteOpen] = useState(false);
+  // Their answer to the reading. Local to the screen: a correction is not a durable claim about
+  // the person, and recording one would be the opposite of what「少し違う」means.
+  const [feedback, setFeedback] = useState<CheckInFeedbackId | null>(null);
   const [note, setNote] = useState("");
   const [noteState, setNoteState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
 
@@ -86,19 +91,57 @@ export default function CurrentStateCheckIn() {
   }
 
   if (step === "done" && state && intent) {
-    const next = nextStepFor(intent);
+    // V2 — the response is keyed on the COMBINATION, which is the one thing the person did not say.
+    // The old screen printed their two labels back and then a sentence keyed on intent alone; the
+    // state was decoration. Twenty-five inputs produced five paraphrases, and the interaction
+    // returned nothing the person had not just supplied.
+    const answer = checkInResponseFor(state, intent);
+    const next = answer.step;
     return (
       <div>
         <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
           今の気配
         </p>
-        {/* Reflection only: their words back, not our interpretation. */}
-        <h1 className="mt-3 text-[24px] font-semibold leading-[1.55] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
-          {labelForState(state)}。<br />
-          {labelForIntent(intent)}。
+        {/* THE READING, not an echo. A hypothesis about what the two choices together might mean —
+            which the person can recognise or reject, and which they did not tell us. */}
+        <h1 className="mt-3 text-[20px] font-semibold leading-[1.75] tracking-[-0.005em] text-[var(--pxr-text-primary)]">
+          {answer.reading}
         </h1>
-        <p className="mt-4 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
-          {reflectionFor(intent)}
+
+        {/* AND THEY GET TO ANSWER IT. Without this the reading would be a verdict, and P7 is
+            explicit that an inference never becomes truth about someone unless they say so.
+            「少し違う」 is a real answer: it withdraws the reading rather than thanking them for it. */}
+        <div className="mt-6">
+          {feedback === null ? (
+            <>
+              <p className="text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+                どうでしょうか。
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {CHECK_IN_FEEDBACK.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setFeedback(option.id)}
+                    className="inline-flex min-h-[var(--pxr-touch-target)] items-center rounded-[var(--pxr-radius-pill)] border border-[var(--pxr-border-subtle)] px-5 text-[15px] font-medium text-[var(--pxr-text-primary)]"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p
+              role="status"
+              className="text-[14px] leading-[1.85] text-[var(--pxr-text-secondary)]"
+            >
+              {acknowledgeFeedback(feedback)}
+            </p>
+          )}
+        </div>
+
+        <p className="mt-8 text-[13px] leading-[1.85] text-[var(--pxr-text-muted)]">
+          {answer.because}
         </p>
 
         {/* The optional note. Offered, never asked: the two questions above stay bounded, and this
