@@ -1,7 +1,12 @@
 # ASTERION INFRASTRUCTURE HANDOFF — YORISOU / yorisou-online
 
-**Schema:** `asterion.venture-handoff/1`
-**Produced:** 2026-08-21 · **Checkpoint:** `41b46f415b019a1aee836682358dfc62021dcae9` (`main`, = `origin/main`)
+**Schema:** `asterion.venture_infrastructure_handoff`, version `1` — the shared **Discovery Handoff
+Contract**. This is *not* the future Asterion runtime/SDK contract.
+**`venture_id`:** `yorisou-online`
+**`product_checkpoint_sha`:** `41b46f415b019a1aee836682358dfc62021dcae9` (`main`) — the product state described here.
+**`handoff_source_sha`:** `8e2eda750ffea13d80ea3040a451de966b87826e` — the commit at which this handoff
+entered canonical `main`. The sha of the normalization commit is deliberately absent: Asterion observes
+repository HEAD at ingestion, and a manifest cannot contain the hash of its own commit.
 **Nature:** discovery and handoff. **No production change, no external infrastructure change.**
 
 > Supersedes `ASTERION_CAPABILITY_EXPORT.md` (root, untracked, pinned to `70da80a`, 2026-07-18).
@@ -18,7 +23,8 @@
 | `project_id` | `yorisou-online` |
 | Repository | `github.com/MrShamann/yorisou-online` |
 | Canonical path | `/Users/yangjin/Projects/yorisou-online` (symlink → `/Volumes/AI-Work/Projects/yorisou-online`) |
-| Checkpoint SHA | `41b46f415b019a1aee836682358dfc62021dcae9` |
+| `product_checkpoint_sha` | `41b46f415b019a1aee836682358dfc62021dcae9` |
+| `handoff_source_sha` | `8e2eda750ffea13d80ea3040a451de966b87826e` |
 | Branch | `main`, in sync with `origin/main`, 0 unpushed |
 | Working tree | clean except two pre-existing untracked documents (below) |
 | Manifest lifecycle | `PAUSED` · sensitivity `internal` · primary tool `CLAUDE_CODE` |
@@ -31,7 +37,18 @@ time; the product connects those into continuity they can revisit, correct and d
 
 ---
 
-## B. Infrastructure inventory — by capability
+## B. Infrastructure inventory — capability, provider, resource
+
+Three distinct things, kept distinct because conflating them is what makes a handoff unusable:
+
+- **Capability** — provider-neutral, what the venture needs (`database.relational`, `identity.session`).
+  Its meaning never depends on who provides it.
+- **Provider** — who currently supplies it. A provider may advertise several capabilities.
+- **Resource** — a concrete, provider-native instance bound to an environment, carrying that
+  provider's own metadata.
+
+The machine manifest expresses these as `capabilities`, `capability_provider_bindings` and
+`resources`. The table below is the human reading of the same three-way split.
 
 Verified by direct inspection at the checkpoint unless marked. **No secret values recorded anywhere
 in this document; only names/references.**
@@ -76,21 +93,36 @@ the org-credential level.
 
 ## C. Environment map
 
-| Environment | Runtime | Database | Notes |
-|---|---|---|---|
-| local | `next dev` / `next start` | disposable `initdb` clusters per harness | Life OS open (`trusted_local`) |
-| test | node test runner | disposable clusters + PostgREST container | Life OS open (`trusted_test`) |
-| preview (Vercel) | per-branch deployments | `yorisou-preview` (**INACTIVE**) | 95 env entries — largest set |
-| production | Vercel prod, `yorisou.online` | `yorisou-production` | 35/35 migrations applied |
-| PR/temporary | Vercel branch deployments | — | `yorisou-online-git-*` aliases observed |
-| legacy | — | — | 23 merged branches still on the remote |
+**An environment is not a resource.** An environment exists because it is *declared* and because an
+application runtime is *deployed* into it — not because a database happens to be healthy. Preview is
+the case that makes the distinction load-bearing: it is declared, deployed and serving, while its
+primary database **resource** is INACTIVE. Encoding that as "preview does not exist" would lose the
+finding entirely.
+
+| Environment | Declared | App runtime deployed | Traffic live | Env vars | Notes |
+|---|---|---|---|---|---|
+| `local` | yes | yes | no | — | Life OS open as `trusted_local` |
+| `test` | yes | yes | no | — | CI + local harnesses; `trusted_test` |
+| `development` | yes | no | no | 26 | declared in the Vercel env store; no dedicated deployed runtime observed |
+| `preview` | yes | **yes** | no | **95** | branch deployments serve; **its primary database resource is INACTIVE** |
+| `production` | yes | **yes** | **yes** | 68 | `yorisou.online`; 35/35 migrations applied |
+| `temporary_pr` | yes | yes | no | — | `yorisou-online-git-*` aliases |
+| `legacy` | no | no | no | — | none declared; 23 merged branches remain as history |
+
+**Resources bound to environments** (provider-native detail lives on the resource, not the environment):
+
+| Resource | Capability | Provider | Environment | State |
+|---|---|---|---|---|
+| `krxizslnksorwhepyijs` `yorisou-production` | `database.relational` | supabase | production | ACTIVE_HEALTHY, PG 17.6, 35 migrations, no PITR, 7 daily backups |
+| `nbltsbonsnbpfptihomc` `yorisou-preview` | `database.relational` | supabase | preview | **INACTIVE**, separate org `tolnifbylbbkmvuigmpb` |
+| `prj_XGMZYPllkQF14blo4pZvBtlvhMuW` | `runtime.web` | vercel | production, preview, development, temporary_pr | 20 production deployments retained |
+| `yorisou.online` (+ `www`, `.vercel.app`) | `domain.registration` | vercel | production | Vercel-managed; **registrar null** |
+| — | `dns.authority` | **UNKNOWN_REGISTRAR** | production | **not determinable from the repository** |
 
 **Ambiguity / leakage found:**
-1. **Preview env set (95) is larger than production (68)** — preview carries variables production does not. Not leakage of prod credentials into preview, but an unreviewed surface.
-2. **`yorisou-preview` Supabase project is INACTIVE** while preview env vars still exist → preview deployments may point at a dead database.
-3. The `production_shared_store_not_production` boundary correctly refuses a local stack claiming production; **this is a strength**, and it also means the production runtime path cannot be exercised outside production.
-
----
+1. **Preview env set (95) exceeds production (68)** — preview carries variables production does not. Not a leak of production credentials, but an unreviewed surface.
+2. **Preview is deployed against an INACTIVE database resource** — the environment is live, the resource is not.
+3. The `production_shared_store_not_production` boundary correctly refuses a local stack claiming production. **This is a strength**, and it also means the production runtime path cannot be exercised outside production.
 
 ## D. Provider-specific coupling
 
@@ -99,14 +131,14 @@ the org-credential level.
 | **Supabase SDK** | **0 imports of `@supabase/*`.** All access is raw `fetch` to `${SUPABASE_URL}/rest/v1` (18 files) | **LOW** — any PostgREST-compatible host works |
 | Supabase auth | **Not used.** Auth is first-party (`yorisou_session` cookie, own password hashing) | **LOW** |
 | Supabase storage | **Not used.** Object storage is S3/S3-compatible | **LOW** |
-| Postgres semantics | `SECURITY DEFINER` RPCs, RLS, advisory locks, triggers, `pg_stat_clear_snapshot` | **HIGH** — genuine PostgreSQL dependency (not Supabase-specific) |
+| Postgres semantics | `SECURITY DEFINER` RPCs, RLS, advisory locks, triggers, `pg_stat_clear_snapshot` | **HIGH** — an **engine** dependency on PostgreSQL. This is *not* Supabase vendor lock-in, and must not be recorded as such: any PostgreSQL host satisfies it |
 | Supabase platform privileges | Hosted default privileges grant `service_role` ALL on new `public` tables — required migration `202608210001` to correct | **MEDIUM** — a real hosted-platform behaviour the schema must counter |
 | Supabase Management API | Migration transport is `POST /v1/projects/{ref}/database/query` + keychain CLI token | **MEDIUM** — operational, not in product code |
 | **Vercel SDK** | **0 imports of `@vercel/*`** | **LOW** |
 | Vercel env convention | `VERCEL_ENV` read in 18 files, but through **one** abstraction `deploymentContext()` (17 call sites) | **LOW–MEDIUM** — single seam to re-point |
 | Vercel deployment model | CLI `vercel deploy --prod`; domains project-attached; **env changes require redeploy** | **MEDIUM** |
 | Vercel build | `npm run build` (Next.js/Turbopack), Node 24.x, install auto-detected | **LOW** |
-| Next.js framework | 252 files import `next/*`; server components, App Router, route handlers | **HIGH** — framework, not provider; migration means a rewrite |
+| Next.js framework | 252 files import `next/*`; server components, App Router, route handlers | **HIGH** — a **framework** dependency, not a provider one; migration means a rewrite |
 | GitHub Actions | 7 workflows, `actions/checkout@v4`, `actions/setup-node@v4`, service containers, `postgrest/postgrest:v12.2.3` | **MEDIUM** — portable patterns, provider-specific syntax |
 | LINE | LIFF + login + messaging + webhook; `NEXT_PUBLIC_LIFF_*` reaches the client | **HIGH** — identity + channel, not substitutable |
 | AWS S3 | 11 files; `sharedStoreBoundary` enforces store/database project match | **MEDIUM** |
@@ -263,7 +295,11 @@ pattern now live in the check-in. Then Me reframing, then Timeline.
 
 ## Provenance
 
-Produced under the Asterion Infrastructure Consolidation safe-pause mandate. Read-only with respect
+Produced under the Asterion Infrastructure Consolidation safe-pause mandate, and subsequently
+normalized to the shared Discovery Handoff Contract (`asterion.venture_infrastructure_handoff` v1):
+schema identity, provenance field names, environment-vs-resource separation and
+capability-vs-provider separation. **No finding, disposition or governance statement was changed by
+that normalization** — only how they are expressed. Read-only with respect
 to all external infrastructure: **no** cloud/Vercel/Supabase/repository deletion, DNS change, domain
 transfer, production migration, payment activation, credential rotation, destructive cleanup or
 external communication was performed. The only mutation is the addition of this document and its
