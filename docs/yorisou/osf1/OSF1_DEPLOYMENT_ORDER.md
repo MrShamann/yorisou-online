@@ -1,6 +1,22 @@
 # OSF-1 — Deployment Order and Activation Runbook
 
-**Package:** OSF-1 YORISOU OS Foundation v0.7.0 Phase 1 · **PR:** [#132](https://github.com/MrShamann/yorisou-online/pull/132) · **Status:** `OPEN_UNMERGED`. No migration applied in any environment.
+**Package:** OSF-1 YORISOU OS Foundation v0.7.0 Phase 1
+**Status (2026-08-18):** the lineage is **APPLIED to hosted Production** and the Life OS is in the
+**INTERNAL** activation state (Founder/Admin only). See
+[PHASE1_HOSTED_ACTIVATION_REPORT.md](PHASE1_HOSTED_ACTIVATION_REPORT.md) for the evidence.
+
+> **Read the header of this document before its body.** Everything below §1 was written on
+> 2026-08-14, when the lineage was two migrations in an unmerged PR and nothing had been applied
+> anywhere. It is preserved because §1 and §2 explain *why* the ordering rule exists, and that
+> reasoning is still load-bearing. But its specifics are historical:
+>
+> | The body says | Actually true now |
+> |---|---|
+> | PR #132, `OPEN_UNMERGED` | merged; the final Phase 1 work landed via PR #135 |
+> | "No migration applied in any environment" | all six applied to Production on 2026-08-18 |
+> | two migrations (`202608140001`, `202608140002`) | six — through `202608170001` |
+> | "five tables" | six, including `yorisou_life_os_audit_events` |
+> | production "requires a code change" to open | no longer true: `resolveLifeOsRouteAccess()` composes the env gate with the viewer, so INTERNAL is reachable via the `osf1_life_os_internal` production-pilot token |
 
 > **The migration must be applied before the Life OS accepts a single write.** This document exists
 > because that ordering was not merely undocumented — the code enforced the opposite, and the
@@ -82,6 +98,13 @@ migration is the one action that defeats every safeguard above.
 | after route open (Preview) | remove `osf1_life_os_preview` from `YORISOU_CPV1_DEV_FLAGS`. The routes 404 again |
 
 ## 5. What is NOT covered by this runbook
+
+> **Superseded on 2026-08-18.** This section described the state before
+> `lib/server/lifeOs/routeAccess.ts` existed. Production exposure at the **INTERNAL** level no
+> longer needs a code change — it is reached with the `osf1_life_os_internal` production-pilot
+> token, and it is live today for Founder/Admin only. What the section says about **PUBLIC** remains
+> exactly true: it is a Gate 5 act, no environment variable in this codebase returns it, and nothing
+> in the INTERNAL activation moved toward it.
 
 Production exposure. `lifeOsAccess()` returns `denied_production` unconditionally and no environment
 variable overrides it — opening the Life OS in production requires a code change plus a Gate 5
