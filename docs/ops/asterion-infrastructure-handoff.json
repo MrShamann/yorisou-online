@@ -1,0 +1,189 @@
+{
+  "schema": "asterion.venture-handoff",
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-21",
+  "generator": "claude-code",
+  "secret_values_included": false,
+  "venture_id": "yorisou-online",
+  "display_name": "YORISOU",
+  "repository": "github.com/MrShamann/yorisou-online",
+  "checkpoint_sha": "41b46f415b019a1aee836682358dfc62021dcae9",
+  "branch": "main",
+  "lifecycle_state": "PAUSED",
+  "production_changed": false,
+  "external_infrastructure_changed": false,
+  "supersedes": {
+    "path": "ASTERION_CAPABILITY_EXPORT.md",
+    "pinned_sha": "70da80a09491b375c0e066be60bfe6411dc7cabc",
+    "reason": "predates ARCH-P1..P7, LCO-1 and V2; stale for infrastructure"
+  },
+
+  "environments": [
+    { "id": "local",      "runtime": "next dev/start",        "database": "disposable initdb clusters", "life_os": "open (trusted_local)" },
+    { "id": "test",       "runtime": "node test runner",      "database": "disposable + postgrest container", "life_os": "open (trusted_test)" },
+    { "id": "preview",    "runtime": "vercel branch deploys", "database": "yorisou-preview (INACTIVE)", "env_var_count": 95, "ambiguity": "env set larger than production; database inactive" },
+    { "id": "production", "runtime": "vercel production",     "database": "yorisou-production", "env_var_count": 68, "migrations_applied": 35 },
+    { "id": "development","runtime": "local",                 "env_var_count": 26 },
+    { "id": "legacy",     "note": "23 merged branches retained on remote" }
+  ],
+
+  "providers": [
+    { "id": "github",     "capabilities": ["source_control", "ci_cd"], "account": "MrShamann" },
+    { "id": "vercel",     "capabilities": ["frontend_hosting", "backend_runtime", "domains", "secrets"], "team_id": "team_s3Pfgmcz3GkUOLDW7iAJP8iS" },
+    { "id": "supabase",   "capabilities": ["database"], "orgs": ["mcbskmcwhnfbyjjrvhxd", "tolnifbylbbkmvuigmpb"], "plan": "pro", "shared_with_ventures": ["mirai-move", "kakari"] },
+    { "id": "aws_s3",     "capabilities": ["object_storage"] },
+    { "id": "resend",     "capabilities": ["transactional_email"] },
+    { "id": "line",       "capabilities": ["federated_identity", "messaging", "mini_app"] },
+    { "id": "openrouter", "capabilities": ["ai_inference"] },
+    { "id": "google",     "capabilities": ["ai_inference"], "detail": "gemini + vertex" },
+    { "id": "nvidia",     "capabilities": ["ai_inference"] },
+    { "id": "groq",       "capabilities": ["ai_inference"] },
+    { "id": "mistral",    "capabilities": ["ai_inference"] },
+    { "id": "cloudflare", "capabilities": ["ai_inference"] },
+    { "id": "revid",      "capabilities": ["media_generation"] },
+    { "id": "openclaw",   "capabilities": ["sidecar_runtime"], "verified": false }
+  ],
+
+  "capabilities_absent": ["analytics", "monitoring", "alerting", "payments", "queues", "realtime", "vector_search"],
+
+  "resources": [
+    { "capability": "database", "provider": "supabase", "id": "krxizslnksorwhepyijs", "name": "yorisou-production", "region": "ap-northeast-1", "status": "ACTIVE_HEALTHY", "env": "production", "production_critical": true, "verified": true },
+    { "capability": "database", "provider": "supabase", "id": "nbltsbonsnbpfptihomc", "name": "yorisou-preview", "status": "INACTIVE", "env": "preview", "production_critical": false, "verified": true },
+    { "capability": "runtime",  "provider": "vercel",   "id": "prj_XGMZYPllkQF14blo4pZvBtlvhMuW", "env": "all", "production_critical": true, "verified": true },
+    { "capability": "domains",  "provider": "vercel",   "id": ["yorisou.online", "www.yorisou.online", "yorisou-online.vercel.app"], "production_critical": true, "verified": true },
+    { "capability": "dns",      "provider": "UNKNOWN",  "id": null, "production_critical": true, "verified": false, "note": "registrar not determinable from repository" }
+  ],
+
+  "secret_refs": {
+    "note": "names only; no values are stored in this manifest or the handoff document",
+    "store": "vercel_env",
+    "counts": { "production": 68, "preview": 95, "development": 26 },
+    "operator_store": { "macos_keychain": ["Supabase CLI"] },
+    "critical_names": [
+      "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "YORISOU_AUTH_COOKIE_SECRET",
+      "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "YORISOU_SHARED_STORE_BUCKET",
+      "RESEND_API_KEY", "LINE_CHANNEL_SECRET", "LINE_MESSAGING_CHANNEL_ACCESS_TOKEN"
+    ],
+    "activation_flags_enabled": [
+      "YORISOU_OSF1_LIFE_OS_SCHEMA_READY", "YORISOU_OSF1_LIFE_OS_AUTHENTICATED", "YORISOU_CONTINUITY_SCHEMA_READY"
+    ],
+    "activation_flags_deliberately_unset": [
+      "YORISOU_SHARING_SCHEMA_READY", "YORISOU_CONNECTION_SCHEMA_READY",
+      "YORISOU_COMPARISON_SCHEMA_READY", "YORISOU_DISCOVERY_SCHEMA_READY",
+      "YORISOU_SHARING_PUBLIC_ENABLED", "YORISOU_CONNECTION_PUBLIC_ENABLED"
+    ]
+  },
+
+  "coupling": [
+    { "surface": "supabase_sdk",        "class": "LOW",     "evidence": "0 imports of @supabase/*; raw PostgREST in 18 files" },
+    { "surface": "supabase_auth",       "class": "LOW",     "evidence": "first-party session cookie" },
+    { "surface": "supabase_platform",   "class": "MEDIUM",  "evidence": "hosted default privileges required migration 202608210001" },
+    { "surface": "supabase_mgmt_api",   "class": "MEDIUM",  "evidence": "migration transport" },
+    { "surface": "postgres_semantics",  "class": "HIGH",    "evidence": "SECURITY DEFINER RPCs, RLS, advisory locks, triggers" },
+    { "surface": "vercel_sdk",          "class": "LOW",     "evidence": "0 imports of @vercel/*" },
+    { "surface": "vercel_env",          "class": "LOW_MEDIUM", "evidence": "VERCEL_ENV in 18 files but one abstraction, deploymentContext(), 17 call sites" },
+    { "surface": "vercel_deploy_model", "class": "MEDIUM",  "evidence": "env change requires redeploy" },
+    { "surface": "nextjs",              "class": "HIGH",    "evidence": "252 files import next/*" },
+    { "surface": "github_actions",      "class": "MEDIUM",  "evidence": "7 workflows, service containers, pinned postgrest image" },
+    { "surface": "line",                "class": "HIGH",    "evidence": "LIFF + login + messaging + webhook; account-bound" },
+    { "surface": "aws_s3",              "class": "MEDIUM",  "evidence": "11 files; store/database project-match boundary" },
+    { "surface": "resend",              "class": "LOW",     "evidence": "4 files" },
+    { "surface": "ai_providers",        "class": "LOW",     "evidence": "resolvePrivateReflectionProviders adapter" },
+    { "surface": "dns_registrar",       "class": "UNKNOWN", "evidence": "not determinable" }
+  ],
+
+  "reusable_capability_candidates": [
+    { "id": "ai_provider_routing",      "path": "lib/server/privateAiProviderResolver.ts", "rank": 1 },
+    { "id": "deployment_context",       "path": "lib/cpv1/deploymentContext.ts",           "rank": 2 },
+    { "id": "schema_readiness_policy",  "path": "lib/*/access.ts (YORISOU_*_SCHEMA_READY)", "rank": 3 },
+    { "id": "migration_scope_guard",    "path": "scripts/validate-migration-scope.mjs",    "rank": 4 },
+    { "id": "ci_disposable_db_harness", "path": "tests/**, tests/life-os/ci/postgrest-docker", "rank": 5 },
+    { "id": "bounded_ops_events",       "path": "lib/server/lifeOs/observability.ts",      "rank": 6 },
+    { "id": "shared_store_boundary",    "path": "lib/server/sharedStoreBoundary.ts",       "rank": 7 },
+    { "id": "consent_record_pattern",   "path": "supabase/migrations/202608220001_lco1_life_os_consent.sql", "rank": 8 }
+  ],
+  "not_reusable_business_logic": [
+    "120-question instrument and scoring", "24 archetypes / 31 personas / 21 dimensions",
+    "continuity projection semantics", "Me composition", "check-in response table", "Japanese product copy",
+    "POR-1 deletion lifecycle"
+  ],
+
+  "cost_unknowns": [
+    "supabase spend attribution across shared org mcbskmcwhnfbyjjrvhxd",
+    "vercel plan, bandwidth and deployment retention cost",
+    "aws s3 storage and egress",
+    "per-vendor AI inference spend across 7 providers",
+    "resend volume", "revid usage", "openclaw/hermes hosting", "domain registrar and DNS cost"
+  ],
+
+  "cleanup_candidates": [
+    { "item": "supabase project yorisou-preview (nbltsbonsnbpfptihomc)", "disposition": "INVESTIGATE", "reason": "INACTIVE, separate org, may still bill" },
+    { "item": "23 merged branches on remote",        "disposition": "ARCHIVE_CANDIDATE", "reason": "already merged into main" },
+    { "item": "architecture/* branches",             "disposition": "KEEP", "reason": "deliberately retained as audit evidence" },
+    { "item": "20 retained vercel production deployments", "disposition": "INVESTIGATE", "reason": "retention policy unreviewed" },
+    { "item": "95 preview env vars vs 68 production","disposition": "INVESTIGATE", "reason": "preview surface larger than production" },
+    { "item": "7 configured AI providers",           "disposition": "CONSOLIDATE_CANDIDATE", "reason": "many billable vendors for gated features" },
+    { "item": "revid integration",                   "disposition": "INVESTIGATE", "reason": "usage unknown" },
+    { "item": "openclaw/hermes sidecars",            "disposition": "INVESTIGATE", "reason": "host and cost unknown" },
+    { "item": "PR #113, #125, #129",                 "disposition": "INVESTIGATE", "reason": "long-open, possibly superseded" },
+    { "item": "PR #127, #136",                       "disposition": "KEEP", "reason": "PROTECTED — standing Founder exclusion" },
+    { "item": "supabase PITR",                       "disposition": "KEEP", "reason": "deferred commercial decision; $100/mo minimum" }
+  ],
+
+  "portability_risks": [
+    { "capability": "database",     "portability": "HIGH",    "blockers": ["hosted default privileges", "management-api transport", "no PITR"] },
+    { "capability": "runtime",      "portability": "MEDIUM",  "blockers": ["next.js server components", "env-change-requires-redeploy"] },
+    { "capability": "auth",         "portability": "HIGH",    "blockers": ["cookie secret rotation invalidates sessions"] },
+    { "capability": "object_store", "portability": "HIGH",    "blockers": ["store/database project-match boundary"] },
+    { "capability": "email",        "portability": "HIGH",    "blockers": ["sender domain verification"] },
+    { "capability": "ai",           "portability": "HIGH",    "blockers": [] },
+    { "capability": "line",         "portability": "LOW",     "blockers": ["account-bound channel, LIFF id, verified identity"] },
+    { "capability": "dns_domains",  "portability": "UNKNOWN", "blockers": ["registrar not established", "downtime risk"] }
+  ],
+
+  "integration_requirements": {
+    "read":  { "approval": "none", "scope": ["repo metadata", "ci conclusions", "vercel project/domains/deployments", "env var NAMES only", "supabase project metadata + migration versions", "public route health"], "forbidden": ["secret values", "user content", "authenticated user data"] },
+    "plan":  { "approval": "none", "scope": ["migration drift", "env name deltas", "stale branch/deployment detection", "cost attribution inputs"] },
+    "write": { "approval": "founder_per_action", "actions": [
+      { "action": "apply_migration",  "rollback_evidence": ["migration rollback contract", "pre-state row counts", "backup timestamp", "sha256 verified against manifest"] },
+      { "action": "set_runtime_flag", "rollback_evidence": ["prior value", "redeploy required", "kill-switch semantics"] },
+      { "action": "deploy_production","rollback_evidence": ["prior deployment id", "public route smoke"] },
+      { "action": "merge_main",       "rollback_evidence": ["exact-head CI green", "merge-commit only"] }
+    ]},
+    "destructive": { "approval": "founder_explicit_per_item", "actions": [
+      { "action": "delete_supabase_project", "rollback_evidence": ["verified backup export", "no live dependency"] },
+      { "action": "delete_vercel_project_or_domain", "rollback_evidence": ["dns ownership proven first"] },
+      { "action": "delete_branches_or_deployments", "rollback_evidence": ["merge state proven", "not aliased"] },
+      { "action": "rotate_credentials", "rollback_evidence": ["blast radius", "session invalidation impact"] },
+      { "action": "dns_or_registrar_change", "rollback_evidence": ["registrar established first"] }
+    ]},
+    "hard_invariants": [
+      "PROJECT_MANIFEST.yaml identity", "writer-lock and handoff protocol",
+      "POR-1 mutation lease boundary", "P6 continuity semantics (terminal invalidation, delete propagation)",
+      "consent governance", "owner isolation", "protected assessment and scoring assets"
+    ]
+  },
+
+  "work_ledger": {
+    "unmerged_work": [],
+    "open_prs": [
+      { "number": 113, "disposition": "INVESTIGATE" },
+      { "number": 125, "disposition": "INVESTIGATE" },
+      { "number": 127, "disposition": "PROTECTED_DO_NOT_TOUCH" },
+      { "number": 129, "disposition": "INVESTIGATE" },
+      { "number": 136, "disposition": "PROTECTED_DO_NOT_TOUCH" }
+    ],
+    "active_p0_p1_defects": [],
+    "known_defects": [
+      { "id": "local-build-font-fetch", "severity": "P3", "note": "fonts.gstatic.com; environmental; remote build green" },
+      { "id": "no-monitoring",          "severity": "P2", "note": "no uptime or error alerting exists" },
+      { "id": "no-pitr",                "severity": "P2", "note": "recovery up to 24h loss" },
+      { "id": "inactive-preview-db",    "severity": "P3", "note": "preview env vars persist against an INACTIVE project" },
+      { "id": "dns-registrar-unknown",  "severity": "P2", "note": "registrar not established" }
+    ],
+    "external_blockers": [
+      { "id": "production-authenticated-e2e", "note": "agent may not create accounts or enter passwords; needs ~2 minutes of Founder interaction" }
+    ],
+    "next_product_task_when_unpaused": "V2 Reflection — replace five mandatory textareas with expression -> grounded reading -> one follow-up, reusing the hypothesis + 近い/少し違う pattern now live in the check-in"
+  }
+}
