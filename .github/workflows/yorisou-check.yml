@@ -258,6 +258,9 @@ jobs:
       - name: LCO-1 Life OS authenticated activation, kill switch and consent
         run: npm run test:life-os-authenticated
 
+      - name: V2 response quality gate (value delta, humility, agency, safety, cost)
+        run: npm run test:v2-quality
+
       - name: C02 definition and scoring checks
         run: npm run test:c02
 
