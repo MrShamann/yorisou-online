@@ -57,8 +57,18 @@ export default function TodayPage() {
         <br />
         少しだけ見てみる。
       </h1>
+      {/* THE PROMISE, not a description of one tap.
+          This said 「1〜2分で、いまの状態を短い言葉に。」 — accurate, and it made YORISOU sound like a
+          single quick check with nothing behind it. What the product actually does is accumulate:
+          each small thing left behind is something you can look back at later. That is the reason
+          to start, and the front page was not saying it.
+
+          It stays two sentences. A front page that lists what a product can do is a catalogue; this
+          one says what happens if you use it. */}
       <p className="mt-3 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
         1〜2分で、いまの状態を短い言葉に。
+        <br />
+        少しずつ残していくと、あとから「あの頃どうだった？」を見返せます。
       </p>
 
       {/* ONE primary action. */}
