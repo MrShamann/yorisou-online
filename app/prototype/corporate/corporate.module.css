@@ -59,7 +59,7 @@
 
 .header {
   border-bottom: 1px solid var(--c-hairline);
-  position: sticky;
+  position: static;
   top: 0;
   background: color-mix(in srgb, var(--c-ground) 92%, transparent);
   backdrop-filter: saturate(1.1);
@@ -68,10 +68,12 @@
 
 .headerInner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 4px 16px;
   min-height: 64px;
+  padding-block: 8px;
 }
 
 .wordmark {
@@ -87,8 +89,13 @@
 }
 
 .nav {
-  display: none;
-  gap: 4px;
+  /* Six routes now, so the nav can no longer simply disappear on mobile — a corporate site whose
+   * pages are unreachable below 768px is not navigable. It wraps to a second line instead, and the
+   * header stops being sticky at that size so it never eats the viewport. */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2px;
+  justify-content: flex-end;
 }
 
 .navLink {
@@ -516,9 +523,6 @@
 /* ── Breakpoints: 320 base / 375 primary / 768 tablet / 1280 desktop ────── */
 
 @media (min-width: 768px) {
-  .nav {
-    display: flex;
-  }
 
   .beats {
     grid-template-columns: repeat(3, 1fr);
@@ -547,5 +551,245 @@
 @media (min-width: 1280px) {
   .methodList {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+
+/* ══ CORP-P2 additions ═══════════════════════════════════════════════════ */
+
+.skipLink {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--c-ink);
+  color: var(--c-ground);
+  padding: 12px 18px;
+  z-index: 20;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.skipLink:focus {
+  left: 0;
+}
+
+.sectionTint {
+  background: var(--c-ground-alt);
+}
+
+.pageTitle {
+  font-size: clamp(1.6rem, 4.6vw, 2.5rem);
+  line-height: 1.55;
+  font-weight: 700;
+  margin: 0 0 24px;
+  max-width: 20em;
+}
+
+.stageRow {
+  margin-top: 20px;
+}
+
+.textLink {
+  color: var(--c-accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-accent) 40%, transparent);
+  padding-block: 4px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.textLink:hover {
+  border-bottom-color: var(--c-accent);
+}
+
+.productMore {
+  margin: 32px 0 0;
+}
+
+/* Hero chips name the two fields before a reader scrolls, and double as entry points. */
+.heroChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 999px;
+  padding: 10px 18px;
+  min-height: 44px;
+  background: var(--c-ground);
+}
+
+.heroChip:hover {
+  border-color: var(--c-accent);
+}
+
+.heroChipName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-ink);
+  letter-spacing: 0.02em;
+}
+
+.heroChipField {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+/* Second product gets the accent on the opposite side so the two never read as one treatment. */
+.productAlt {
+  background: var(--c-ground-alt);
+}
+
+.productAlt .boundary {
+  background: var(--c-ground);
+}
+
+.boundaryTitle {
+  margin: 0 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--c-ink);
+}
+
+.boundaryBody {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+}
+
+.detailList {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--c-hairline);
+  border-block: 1px solid var(--c-hairline);
+}
+
+.detailItem {
+  background: var(--c-ground-alt);
+  padding: 24px 0;
+}
+
+.detailHeading {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--c-accent);
+  margin: 0 0 10px;
+}
+
+.detailBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 2;
+  color: var(--c-ink-soft);
+  max-width: 36em;
+}
+
+.methodLong {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 44px;
+  counter-reset: none;
+}
+
+.methodLongItem {
+  display: grid;
+  gap: 10px;
+  padding-left: 20px;
+  border-left: 2px solid var(--c-accent-soft);
+}
+
+.methodLongTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.methodLongBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 2;
+  color: var(--c-ink-soft);
+  max-width: 36em;
+}
+
+.plainList {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.plainListItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.plainListNote {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.pendingCode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--c-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.pendingMark {
+  width: 6px;
+  height: 6px;
+  background: var(--c-accent);
+  flex: none;
+}
+
+.pendingHeadline {
+  margin: 0 0 14px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.75;
+  color: var(--c-ink);
+  max-width: 28em;
+}
+
+.footerThesis {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-muted);
+  max-width: 24em;
+}
+
+@media (min-width: 768px) {
+  .detailList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .detailItem {
+    padding: 28px 24px;
+  }
+
+  .methodLong {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px 40px;
+  }
+
+  .header {
+    position: sticky;
   }
 }
