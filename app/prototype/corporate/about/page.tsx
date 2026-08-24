@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import styles from "../corporate.module.css";
 import CorporateShell from "../_components/CorporateShell";
 import { Eyebrow, PageIntro, Section } from "../_components/pieces";
-import { METHODS, PRODUCTS, ROUTES } from "../_content/site";
+import { PhraseHeading } from "../_components/visuals";
+import { HEADING_UNITS, METHODS, PRODUCTS, ROUTES } from "../_content/site";
 
 export const metadata: Metadata = {
   title: "私たちについて — Yorisou",
@@ -42,7 +43,7 @@ export default function AboutPage() {
 
       <Section>
         <Eyebrow>順番について</Eyebrow>
-        <h2 className={styles.h2}>ひとつずつ、最後まで。</h2>
+        <PhraseHeading units={HEADING_UNITS.aboutOrder} className={styles.h2} />
         <p className={styles.body}>
           領域を広げることよりも、ひとつの手順を最後まで引き受けられる状態を先につくります。
           途中まで支援して残りを利用者に返してしまう製品は、結局その人の負担を減らしません。
@@ -65,7 +66,7 @@ export default function AboutPage() {
 
       <Section tint>
         <Eyebrow>書かないこと</Eyebrow>
-        <h2 className={styles.h2}>確認できないことは、書きません。</h2>
+        <PhraseHeading units={HEADING_UNITS.aboutClaims} className={styles.h2} />
         <p className={styles.body}>
           このサイトには、数値や企業名を用いた実績の紹介を掲載していません。
           掲載できる根拠がまだないためです。根拠ができた時点で、根拠とともに掲載します。

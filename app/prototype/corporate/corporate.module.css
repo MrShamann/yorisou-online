@@ -28,7 +28,12 @@
   --c-accent-soft: #d7e2d3;
 
   /* Rhythm */
-  --c-gap: clamp(72px, 11vw, 128px);
+  /* CORP-P3 F-03 — desktop vertical density.
+   * Was clamp(72px, 11vw, 128px): at 1440px that is a 128px band between every section, and the
+   * homepage measured 5440px tall with several screens of empty ground carrying no pacing or
+   * meaning. Reduced to a 56-88px rhythm. Calm comes from the hairlines, the measure and the type
+   * scale — not from reserving viewport-height gaps. Body leading is untouched at 2.00. */
+  --c-gap: clamp(48px, 5.2vw, 72px);
   --c-pad: clamp(20px, 5vw, 40px);
   --c-max: 1120px;
 
@@ -59,11 +64,14 @@
 
 .header {
   border-bottom: 1px solid var(--c-hairline);
-  position: static;
+  /* CORP-P3 — `position: relative` is load-bearing, not cosmetic. It was `static`, which means the
+   * z-index below did nothing: the header established no stacking context, so <main> painted over
+   * the open disclosure panel and the hero H1 intercepted taps on the menu links. The menu looked
+   * correct and was not clickable. Caught by the mobile navigation interaction flow, not by axe. */
+  position: relative;
   top: 0;
-  background: color-mix(in srgb, var(--c-ground) 92%, transparent);
-  backdrop-filter: saturate(1.1);
-  z-index: 10;
+  background: var(--c-ground);
+  z-index: 40;
 }
 
 .headerInner {
@@ -88,14 +96,10 @@
   min-height: 44px;
 }
 
-.nav {
-  /* Six routes now, so the nav can no longer simply disappear on mobile — a corporate site whose
-   * pages are unreachable below 768px is not navigable. It wraps to a second line instead, and the
-   * header stops being sticky at that size so it never eats the viewport. */
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 2px;
-  justify-content: flex-end;
+/* CORP-P3 F-02 — desktop links direct; mobile behind a one-row disclosure. */
+.navDesktop {
+  display: none;
+  gap: 2px;
 }
 
 .navLink {
@@ -107,10 +111,88 @@
   display: inline-flex;
   align-items: center;
   border-radius: 2px;
+  border-bottom: 1px solid transparent;
 }
 
 .navLink:hover {
   color: var(--c-ink);
+}
+
+.navLink[aria-current="page"] {
+  color: var(--c-ink);
+  border-bottom-color: var(--c-accent);
+}
+
+.navDisclosure {
+  position: relative;
+}
+
+.navToggle {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--c-ink);
+  background: var(--c-ground);
+}
+
+.navToggle::-webkit-details-marker {
+  display: none;
+}
+
+.navToggleLabel {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.navToggleIcon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 15px;
+}
+
+.navToggleIcon span {
+  height: 1.5px;
+  background: currentColor;
+  display: block;
+}
+
+.navPanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 216px;
+  background: var(--c-ground);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  z-index: 30;
+  box-shadow: 0 12px 32px rgba(12, 14, 13, 0.08);
+}
+
+.navPanelLink {
+  color: var(--c-ink-soft);
+  text-decoration: none;
+  font-size: 15px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 2px;
+}
+
+.navPanelLink[aria-current="page"] {
+  color: var(--c-ink);
+  background: var(--c-ground-alt);
+  box-shadow: inset 2px 0 0 var(--c-accent);
 }
 
 /* ── Sections ───────────────────────────────────────────────────────────── */
@@ -121,7 +203,7 @@
 }
 
 .sectionFirst {
-  padding-block: clamp(56px, 10vw, 104px) var(--c-gap);
+  padding-block: clamp(36px, 4.4vw, 56px) var(--c-gap);
   border-top: 0;
 }
 
@@ -791,5 +873,319 @@
 
   .header {
     position: sticky;
+    background: color-mix(in srgb, var(--c-ground) 92%, transparent);
+    backdrop-filter: saturate(1.1);
+  }
+}
+
+/* ══ CORP-P3 additions ═══════════════════════════════════════════════════ */
+
+/* F-01 — phrase units. A break may only occur BETWEEN units, never inside one. */
+.unit {
+  display: inline-block;
+}
+
+.phraseLine {
+  display: block;
+}
+
+/* F-05 — asymmetric first screen: statement left, conceptual figure right. */
+.heroGrid {
+  display: grid;
+  gap: 40px;
+  align-items: start;
+}
+
+.heroChips {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.figure {
+  display: grid;
+  gap: 20px;
+}
+
+.figureSvg {
+  width: 100%;
+  height: auto;
+  max-width: 380px;
+  display: block;
+}
+
+.figureKey {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: var(--c-muted);
+  max-width: 32em;
+}
+
+.figureKey li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.figureKeyMark {
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+}
+
+.figureKeyMark[data-kind="people"] {
+  border-radius: 50%;
+  background: rgba(12, 14, 13, 0.34);
+}
+
+.figureKeyMark[data-kind="systems"] {
+  background: rgba(12, 14, 13, 0.24);
+}
+
+.figureKeyMark[data-kind="bridge"] {
+  border: 1.5px solid var(--c-accent);
+  background: transparent;
+}
+
+/* F-04 Mirai Move — relationship schematic. Radial, so it cannot read as a sequence. */
+.schematic {
+  margin: 32px 0 0;
+  display: grid;
+  gap: 24px;
+}
+
+.schematicSvg {
+  width: 100%;
+  height: auto;
+  max-width: 420px;
+  display: block;
+}
+
+.schematicCaption {
+  display: grid;
+  gap: 14px;
+}
+
+.schematicCentre {
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+.schematicList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.schematicList li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+.schematicIndex {
+  font-size: 11px;
+  color: var(--c-mineral);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.schematicLabel {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.schematicNote {
+  grid-column: 2;
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: var(--c-muted);
+}
+
+/* F-04 Kakari — procedural flow. Vertical, numbered, terminating in a boundary gate. */
+.procedure {
+  margin: 32px 0 0;
+}
+
+.procedureList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.procedureStep {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 4px 14px;
+  align-items: baseline;
+  padding: 16px 0 16px 0;
+  border-left: 2px solid var(--c-accent-soft);
+  padding-left: 22px;
+  position: relative;
+}
+
+.procedureStep::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 24px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-ground);
+  border: 1.5px solid var(--c-accent);
+}
+
+.procedureNo {
+  font-size: 11px;
+  color: var(--c-mineral);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.procedureLabel {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.procedureNote {
+  grid-column: 2;
+  font-size: 0.875rem;
+  line-height: 1.9;
+  color: var(--c-muted);
+  max-width: 34em;
+}
+
+/* The gate is where the line stops — the boundary is a step, not a footnote. */
+.procedureGate {
+  margin-top: 4px;
+  padding: 20px 22px;
+  background: var(--c-ground-alt);
+  border-left: 2px solid var(--c-accent);
+  position: relative;
+}
+
+.procedureGateRule {
+  position: absolute;
+  left: -2px;
+  top: -14px;
+  width: 2px;
+  height: 14px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--c-accent) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.procedureGateLabel {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--c-accent);
+  letter-spacing: 0.04em;
+}
+
+.procedureGateNote {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+  max-width: 34em;
+}
+
+@media (min-width: 768px) {
+  .schematic {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 36px;
+    align-items: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 64px;
+    align-items: center;
+  }
+}
+
+/* CORP-P3 F-03 — density corrections that remove empty ground, not content. */
+.productGrid {
+  display: grid;
+  gap: 32px;
+}
+
+.productMain {
+  min-width: 0;
+}
+
+.productAside {
+  min-width: 0;
+}
+
+/* Inside a two-column product block the schematic no longer needs its own inner split. */
+.productAside .schematic {
+  margin-top: 0;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.productAside .procedure {
+  margin-top: 0;
+}
+
+.productAside .schematicSvg {
+  max-width: 320px;
+}
+
+@media (min-width: 1024px) {
+  .productGrid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 56px;
+    align-items: start;
+  }
+
+  /* Tighter step rhythm at desktop: the notes are short and did not need 32px bands. */
+  .procedureStep {
+    padding-block: 12px;
+  }
+
+  .schematicList li {
+    padding-bottom: 10px;
+  }
+
+  .beat {
+    padding-block: 22px;
+  }
+
+  .detailItem {
+    padding-block: 22px;
+  }
+
+  .methodList {
+    gap: 28px 32px;
+  }
+
+  .methodLong {
+    gap: 36px 40px;
   }
 }

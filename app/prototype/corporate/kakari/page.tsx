@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 
 import styles from "../corporate.module.css";
 import CorporateShell from "../_components/CorporateShell";
-import { Boundary, Eyebrow, RouteDiagram, Section, StageLabel } from "../_components/pieces";
-import { KAKARI, MIRAI_MOVE, ROUTES } from "../_content/site";
+import { Boundary, Eyebrow, Section, StageLabel } from "../_components/pieces";
+import { PhraseHeading, ProcedureFlow } from "../_components/visuals";
+import { HEADING_UNITS, KAKARI, MIRAI_MOVE, ROUTES } from "../_content/site";
 
 export const metadata: Metadata = {
   title: "Kakari — Yorisou",
@@ -23,7 +24,7 @@ export default function KakariPage() {
         <div className={styles.stageRow}>
           <StageLabel>{p.stage}</StageLabel>
         </div>
-        <p className={styles.productLine}>{p.line}</p>
+        <PhraseHeading as="h2" units={p.lineUnits} className={styles.productLine} />
         <p className={styles.productBody}>{p.summary}</p>
       </Section>
 
@@ -41,8 +42,8 @@ export default function KakariPage() {
 
       <Section>
         <Eyebrow>支援する手順</Eyebrow>
-        <h2 className={styles.h2}>調べるところから、提出するところまで。</h2>
-        <RouteDiagram nodes={p.flow} label={p.flowLabel} />
+        <PhraseHeading units={HEADING_UNITS.kakariFlow} className={styles.h2} />
+        <ProcedureFlow />
         <Boundary title={p.boundaryTitle}>{p.boundary}</Boundary>
       </Section>
 

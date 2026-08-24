@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 
 import styles from "../corporate.module.css";
 import CorporateShell from "../_components/CorporateShell";
-import { Boundary, Eyebrow, RouteDiagram, Section, StageLabel } from "../_components/pieces";
-import { KAKARI, MIRAI_MOVE, ROUTES } from "../_content/site";
+import { Boundary, Eyebrow, Section, StageLabel } from "../_components/pieces";
+import { NetworkSchematic, PhraseHeading } from "../_components/visuals";
+import { HEADING_UNITS, KAKARI, MIRAI_MOVE, ROUTES } from "../_content/site";
 
 export const metadata: Metadata = {
   title: "Mirai Move — Yorisou",
@@ -23,8 +24,9 @@ export default function MiraiMovePage() {
         <div className={styles.stageRow}>
           <StageLabel>{p.stage}</StageLabel>
         </div>
-        <p className={styles.productLine}>{p.line}</p>
+        <PhraseHeading as="h2" units={p.lineUnits} className={styles.productLine} />
         <p className={styles.productBody}>{p.summary}</p>
+        <NetworkSchematic />
       </Section>
 
       <Section tint>
@@ -41,8 +43,7 @@ export default function MiraiMovePage() {
 
       <Section>
         <Eyebrow>つなぐ相手</Eyebrow>
-        <h2 className={styles.h2}>立場の違う相手が、同じ機会を別の言葉で見ている。</h2>
-        <RouteDiagram nodes={p.flow} label={p.flowLabel} />
+        <PhraseHeading units={HEADING_UNITS.miraiNetwork} className={styles.h2} />
         <Boundary title={p.boundaryTitle}>{p.boundary}</Boundary>
       </Section>
 

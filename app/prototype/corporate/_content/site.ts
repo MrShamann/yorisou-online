@@ -25,6 +25,26 @@ export const NAV = [
 
 export const THESIS = "人と社会のあいだに、次のよりそいをつくる。";
 
+/**
+ * CORP-P3 F-01 — deliberate Japanese line-breaking.
+ *
+ * Japanese has no spaces, so a browser breaks CJK anywhere it likes. At 1440px that left 「る。」
+ * stranded on its own line, and at 768px it split 「よりそい」 into 「よりそ」/「い」 — a word broken
+ * mid-morpheme, which reads as a typo rather than a line break.
+ *
+ * The fix is to hand the browser its break opportunities instead of letting it invent them: each
+ * phrase unit is an inline-block, so a break can only ever happen BETWEEN units. Shrinking the type
+ * until it fits was rejected — it destroys the hierarchy the first screen depends on.
+ *
+ * Wording is unchanged and must stay unchanged; only the composition is authored.
+ */
+export const THESIS_UNITS = ["人と社会のあいだに、", "次のよりそいを", "つくる。"] as const;
+
+export const HERO_LEAD_UNITS = [
+  ["Yorisouは、", "暮らし・仕事・地域にある", "複雑さを見つめ、"],
+  ["人が理解し、選び、", "前に進める", "プロダクトをつくる会社です。"],
+] as const;
+
 export const HERO_LEAD = [
   "Yorisouは、暮らし・仕事・地域にある複雑さを見つめ、",
   "人が理解し、選び、前に進めるプロダクトをつくる会社です。",
@@ -77,6 +97,18 @@ export const PROBLEM_BEATS = [
   },
 ] as const;
 
+/** Phrase units for headings that must not fragment. Same rule as THESIS_UNITS. */
+export const HEADING_UNITS = {
+  problem: ["複雑さは、", "個人の努力だけでは", "解けない。"],
+  method: ["複雑さを引き受けて、", "使えるかたちにする。"],
+  future: ["次のよりそいを、", "順番につくる。"],
+  aboutTitle: ["つくり方が、", "そのまま約束になる。"],
+  aboutOrder: ["ひとつずつ、", "最後まで。"],
+  aboutClaims: ["確認できないことは、", "書きません。"],
+  miraiNetwork: ["立場の違う相手が、", "同じ機会を", "別の言葉で見ている。"],
+  kakariFlow: ["調べるところから、", "提出するところまで。"],
+} as const;
+
 export type Product = {
   key: "mirai-move" | "kakari";
   name: string;
@@ -85,6 +117,8 @@ export type Product = {
   /** Required stage truth. Must match the canonical project source exactly. */
   stage: string;
   line: string;
+  /** Phrase units for the product one-liner — same non-fragmenting rule as the thesis. */
+  lineUnits: readonly string[];
   summary: string;
   /** The honest limit, rendered as a first-class block rather than a footnote. */
   boundaryTitle: string;
@@ -104,6 +138,7 @@ export const MIRAI_MOVE: Product = {
   // https://www.miraimove.com" AND "production is NOT yet the V2 full system".
   stage: "公開サイト稼働中／プラットフォーム機能は開発中",
   line: "日本のモビリティ領域における、情報・マッチング・事業開発のためのプラットフォーム。",
+  lineUnits: ["日本のモビリティ領域における、", "情報・マッチング・事業開発のための", "プラットフォーム。"],
   summary:
     "行政・自治体、企業、介護／福祉／地域の現場、海外サプライヤー、国内パートナーをつなぎ、移動に関する情報と機会を一つの流れとして扱うことを目指しています。現在は公開情報サイトが稼働しており、プラットフォーム機能は開発段階にあります。",
   boundaryTitle: "開発状況について",
@@ -138,6 +173,7 @@ export const KAKARI: Product = {
   // disabled, Draft PR #2 open and unmerged. Not generally available.
   stage: "開発中（一般公開前）",
   line: "日本で暮らす人・事業を始める人のための、多言語の行政手続き・書類サポート。",
+  lineUnits: ["日本で暮らす人・", "事業を始める人のための、", "多言語の行政手続き・", "書類サポート。"],
   summary:
     "日本語や専門知識の壁があると、本来使えるはずの制度にたどり着けません。Kakariは、必要な情報の提示、書類の準備、フォームの作成、提出・郵送の手順案内までを多言語で支援します。現在は開発段階にあり、一般には公開していません。",
   boundaryTitle: "専門家との境界について",
@@ -164,6 +200,41 @@ export const KAKARI: Product = {
 };
 
 export const PRODUCTS = [MIRAI_MOVE, KAKARI] as const;
+
+/**
+ * CORP-P3 F-04 — Mirai Move is a NETWORK, so it gets a relationship schematic: parties arranged
+ * around a shared centre, each connected to it. Source for the party list:
+ * mirai-move/PROJECT_START_HERE.md ("connecting government, institutions, enterprises,
+ * care/welfare/community use cases, overseas suppliers, Japanese partners").
+ * No coordinates imply geography; no edge implies a transaction volume.
+ */
+export const MIRAI_NETWORK = {
+  centre: "移動の機会",
+  parties: [
+    { id: "gov", label: "行政・自治体", note: "制度と予算の側" },
+    { id: "biz", label: "企業", note: "供給と実装の側" },
+    { id: "field", label: "地域・介護／福祉の現場", note: "実際に移動が起きる場所" },
+    { id: "supply", label: "海外サプライヤー／国内パートナー", note: "選択肢を持ち込む側" },
+  ],
+} as const;
+
+/**
+ * CORP-P3 F-04 — Kakari is a PROCEDURE, so it gets a sequential flow with an explicit boundary gate.
+ * The boundary is a step in the flow, not a disclaimer after it: the point at which the procedure
+ * leaves Kakari and becomes a licensed professional's responsibility.
+ */
+export const KAKARI_PROCEDURE = {
+  steps: [
+    { no: "01", label: "調べる", note: "どの制度が自分に関係するのかを特定する" },
+    { no: "02", label: "書類をそろえる", note: "必要な書類と添付物を洗い出す" },
+    { no: "03", label: "作成する", note: "多言語で記入し、内容を確認する" },
+    { no: "04", label: "提出する", note: "提出先・提出方法・郵送手順を案内する" },
+  ],
+  boundary: {
+    label: "専門家が担う範囲",
+    note: "法務・税務・公的判断が必要になった時点で、Kakariの範囲は終わります。士業の代理は行いません。",
+  },
+} as const;
 
 /** Blocker identifiers rendered on the Preview so the reason is legible, not hidden. */
 export const BLOCKERS = {

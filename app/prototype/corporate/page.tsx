@@ -3,7 +3,16 @@ import type { Metadata } from "next";
 import styles from "./corporate.module.css";
 import CorporateShell from "./_components/CorporateShell";
 import { Eyebrow, ProductComposition, Section } from "./_components/pieces";
-import { HERO_LEAD, METHODS, PRODUCTS, PROBLEM_BEATS, ROUTES, THESIS } from "./_content/site";
+import { PhraseHeading, PhraseText, ThesisFigure } from "./_components/visuals";
+import {
+  HEADING_UNITS,
+  HERO_LEAD_UNITS,
+  METHODS,
+  PRODUCTS,
+  PROBLEM_BEATS,
+  ROUTES,
+  THESIS_UNITS,
+} from "./_content/site";
 
 export const metadata: Metadata = {
   title: "Yorisou — 人と社会のあいだに、次のよりそいをつくる。",
@@ -22,30 +31,29 @@ export default function CorporateHome() {
   return (
     <CorporateShell current={ROUTES.home}>
       <Section first>
-        <div className={styles.reveal}>
-          <h1 className={styles.thesis}>{THESIS}</h1>
-          <p className={styles.lead}>
-            {HERO_LEAD[0]}
-            <br />
-            {HERO_LEAD[1]}
-          </p>
-          <div className={styles.heroMeta}>
-            {PRODUCTS.map((p) => (
-              <a key={p.key} className={styles.heroChip} href={p.href}>
-                <i className={styles.dot} aria-hidden="true" />
-                <span className={styles.heroChipName}>{p.name}</span>
-                <span className={styles.heroChipField}>
-                  {p.key === "mirai-move" ? "モビリティ" : "行政手続き"}
-                </span>
-              </a>
-            ))}
+        <div className={`${styles.heroGrid} ${styles.reveal}`}>
+          <div>
+            <PhraseHeading as="h1" units={THESIS_UNITS} className={styles.thesis} />
+            <PhraseText lines={HERO_LEAD_UNITS} className={styles.lead} />
+            <div className={styles.heroChips}>
+              {PRODUCTS.map((p) => (
+                <a key={p.key} className={styles.heroChip} href={p.href}>
+                  <i className={styles.dot} aria-hidden="true" />
+                  <span className={styles.heroChipName}>{p.name}</span>
+                  <span className={styles.heroChipField}>
+                    {p.key === "mirai-move" ? "モビリティ" : "行政手続き"}
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
+          <ThesisFigure />
         </div>
       </Section>
 
       <Section id="problem" tint>
         <Eyebrow>なぜ</Eyebrow>
-        <h2 className={styles.h2}>複雑さは、個人の努力だけでは解けない。</h2>
+        <PhraseHeading units={HEADING_UNITS.problem} className={styles.h2} />
         <p className={styles.body}>
           必要な情報はどこかに公開されている。手続きの方法も、制度上は決まっている。
           それでも、目の前の人が前に進めないことがあります。
@@ -71,7 +79,7 @@ export default function CorporateHome() {
 
       <Section>
         <Eyebrow>どうつくるか</Eyebrow>
-        <h2 className={styles.h2}>複雑さを引き受けて、使えるかたちにする。</h2>
+        <PhraseHeading units={HEADING_UNITS.method} className={styles.h2} />
         <ul className={styles.methodList}>
           {METHODS.map((m) => (
             <li className={styles.method} key={m.no}>
@@ -98,7 +106,7 @@ export default function CorporateHome() {
 
       <Section tint>
         <Eyebrow>これから</Eyebrow>
-        <h2 className={styles.h2}>次のよりそいを、順番につくる。</h2>
+        <PhraseHeading units={HEADING_UNITS.future} className={styles.h2} />
         <p className={styles.body}>
           領域は違っても、扱っている問題は同じです。制度や仕組みの側が複雑で、人が前に進めない。
           その距離を縮めるプロダクトを、ひとつずつ増やしていきます。

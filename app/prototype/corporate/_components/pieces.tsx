@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import styles from "../corporate.module.css";
 import type { Product } from "../_content/site";
+import { NetworkSchematic, ProcedureFlow } from "./visuals";
 
 /**
  * CORP-P2 shared pieces. Every one is a server component with no state and no client boundary.
@@ -166,22 +167,34 @@ export function ProductComposition({ product, index }: { product: Product; index
     <article className={`${styles.product} ${index === 1 ? styles.productAlt : ""}`}>
       <div className={styles.shell}>
         <Eyebrow>{`事業 0${index + 1}`}</Eyebrow>
-        <div className={styles.productHead}>
-          <div>
-            <h2 className={styles.productName}>{product.name}</h2>
-            <p className={styles.productDomain}>{product.domain}</p>
+        {/* CORP-P3 F-03 — two columns from 1024px. Stacking the description above a full-width
+            diagram was the single largest contributor to homepage height; side by side, the same
+            content reads faster and the section stops reserving a screen of empty ground. */}
+        <div className={styles.productGrid}>
+          <div className={styles.productMain}>
+            <div className={styles.productHead}>
+              <div>
+                <h2 className={styles.productName}>{product.name}</h2>
+                <p className={styles.productDomain}>{product.domain}</p>
+              </div>
+              <StageLabel>{product.stage}</StageLabel>
+            </div>
+            <p className={styles.productLine}>{product.line}</p>
+            <p className={styles.productBody}>{product.summary}</p>
+            <Boundary title={product.boundaryTitle}>{product.boundary}</Boundary>
+            <p className={styles.productMore}>
+              <a className={styles.textLink} href={product.href}>
+                {product.name} について詳しく
+              </a>
+            </p>
           </div>
-          <StageLabel>{product.stage}</StageLabel>
+          {/* CORP-P3 F-04 — the two products no longer share one diagram shape. Mirai Move gets a
+              radial relationship schematic, Kakari a vertical procedural flow ending at a boundary
+              gate. Structurally different, so they cannot read as interchangeable. */}
+          <div className={styles.productAside}>
+            {product.key === "mirai-move" ? <NetworkSchematic /> : <ProcedureFlow />}
+          </div>
         </div>
-        <p className={styles.productLine}>{product.line}</p>
-        <p className={styles.productBody}>{product.summary}</p>
-        <Boundary title={product.boundaryTitle}>{product.boundary}</Boundary>
-        <RouteDiagram nodes={product.flow} label={product.flowLabel} />
-        <p className={styles.productMore}>
-          <a className={styles.textLink} href={product.href}>
-            {product.name} について詳しく
-          </a>
-        </p>
       </div>
     </article>
   );
