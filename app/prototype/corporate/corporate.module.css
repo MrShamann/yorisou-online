@@ -1,0 +1,551 @@
+/* YORISOU CORPORATE HOMEPAGE — PHASE 1 PREVIEW
+ *
+ * Direction: "Quiet infrastructure / living signal".
+ * A CSS Module, deliberately. The corporate surface must not inherit or leak into the consumer
+ * product's global cascade, so every token below is scoped to :where(.page) rather than :root.
+ * Values reuse the existing YORISOU brand ground (near-black ink, cool white, mineral grey,
+ * the existing jade/teal as ACCENT ONLY) — no new brand, no AI-purple, no glassmorphism.
+ */
+
+.page {
+  /* Ground */
+  --c-ground: #fbfaf6;
+  --c-ground-alt: #f4f2ec;
+  --c-ink: #0c0e0d;
+  --c-ink-soft: #3a403c;
+  --c-muted: #5a605c; /* 6.16:1 on --c-ground, 5.75:1 on --c-ground-alt */
+  /* Mineral grey is the lightest text tone on the page, so it is the one that decides whether the
+   * palette passes. #8b918c looked right and measured 3.08:1 / 2.87:1 — a real WCAG 2.2 AA failure
+   * on 14 nodes (eyebrows, product domains, diagram captions, footer column titles). Darkened to
+   * 5.00:1 on --c-ground and 4.66:1 on --c-ground-alt, still lighter than --c-muted so the
+   * type hierarchy is preserved. */
+  --c-mineral: #686e69;
+  --c-hairline: rgba(12, 14, 13, 0.11);
+  --c-hairline-strong: rgba(12, 14, 13, 0.2);
+
+  /* Accent — jade/teal, used for signal only: rules, nodes, focus, small marks. Never a fill. */
+  --c-accent: #2f6b5e;
+  --c-accent-soft: #d7e2d3;
+
+  /* Rhythm */
+  --c-gap: clamp(72px, 11vw, 128px);
+  --c-pad: clamp(20px, 5vw, 40px);
+  --c-max: 1120px;
+
+  background: var(--c-ground);
+  color: var(--c-ink);
+  font-family: var(--font-noto-jp, "Noto Sans JP"), "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
+  /* Japanese body leading: >= 1.8 is a hard requirement of this package. */
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.shell {
+  max-width: var(--c-max);
+  margin-inline: auto;
+  padding-inline: var(--c-pad);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.header {
+  border-bottom: 1px solid var(--c-hairline);
+  position: sticky;
+  top: 0;
+  background: color-mix(in srgb, var(--c-ground) 92%, transparent);
+  backdrop-filter: saturate(1.1);
+  z-index: 10;
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+}
+
+.wordmark {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.nav {
+  display: none;
+  gap: 4px;
+}
+
+.navLink {
+  color: var(--c-muted);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 2px;
+}
+
+.navLink:hover {
+  color: var(--c-ink);
+}
+
+/* ── Sections ───────────────────────────────────────────────────────────── */
+
+.section {
+  padding-block: var(--c-gap);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.sectionFirst {
+  padding-block: clamp(56px, 10vw, 104px) var(--c-gap);
+  border-top: 0;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-mineral);
+  margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--c-hairline);
+}
+
+/* ── Hero ───────────────────────────────────────────────────────────────── */
+
+.thesis {
+  font-size: clamp(1.75rem, 5.6vw, 3.1rem);
+  line-height: 1.5;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0 0 28px;
+  max-width: 20em;
+}
+
+.lead {
+  font-size: clamp(1rem, 2.1vw, 1.125rem);
+  line-height: 2;
+  color: var(--c-ink-soft);
+  margin: 0;
+  max-width: 34em;
+}
+
+.heroMeta {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.heroMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  flex: none;
+}
+
+/* ── Problem ────────────────────────────────────────────────────────────── */
+
+.h2 {
+  font-size: clamp(1.3rem, 3.4vw, 1.9rem);
+  line-height: 1.65;
+  font-weight: 700;
+  margin: 0 0 24px;
+  max-width: 22em;
+}
+
+.body {
+  font-size: 1rem;
+  line-height: 2;
+  color: var(--c-ink-soft);
+  margin: 0 0 20px;
+  max-width: 36em;
+}
+
+.beats {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--c-hairline);
+  border-block: 1px solid var(--c-hairline);
+}
+
+.beat {
+  background: var(--c-ground);
+  padding: 24px 0;
+}
+
+.beatTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.beatIndex {
+  font-size: 12px;
+  color: var(--c-accent);
+  letter-spacing: 0.1em;
+  flex: none;
+}
+
+.beatBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-muted);
+  max-width: 34em;
+}
+
+/* ── Method ─────────────────────────────────────────────────────────────── */
+
+.methodList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 32px;
+}
+
+.method {
+  display: grid;
+  gap: 8px;
+  padding-left: 20px;
+  border-left: 2px solid var(--c-accent-soft);
+}
+
+.methodNo {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--c-accent);
+}
+
+.methodTitle {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.methodBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-muted);
+  max-width: 34em;
+}
+
+/* ── Portfolio — two DISTINCT full-width compositions, never a card grid ─── */
+
+.product {
+  padding-block: var(--c-gap);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.productHead {
+  display: grid;
+  gap: 20px;
+}
+
+.productName {
+  font-size: clamp(1.6rem, 4.6vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.productDomain {
+  font-size: 13px;
+  color: var(--c-mineral);
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--c-ink-soft);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 999px;
+  padding: 6px 14px;
+  width: fit-content;
+  background: var(--c-ground-alt);
+}
+
+.productLine {
+  font-size: clamp(1.0625rem, 2.6vw, 1.25rem);
+  line-height: 1.95;
+  font-weight: 500;
+  margin: 24px 0 0;
+  max-width: 30em;
+}
+
+.productBody {
+  font-size: 0.9375rem;
+  line-height: 2;
+  color: var(--c-muted);
+  margin: 20px 0 0;
+  max-width: 36em;
+}
+
+.boundary {
+  margin: 24px 0 0;
+  padding: 16px 18px;
+  border-left: 2px solid var(--c-accent);
+  background: var(--c-ground-alt);
+  font-size: 0.875rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+  max-width: 36em;
+}
+
+.diagram {
+  margin-top: 40px;
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.diagramCaption {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--c-mineral);
+  letter-spacing: 0.04em;
+}
+
+/* ── Company placeholder ────────────────────────────────────────────────── */
+
+.pending {
+  border: 1px dashed var(--c-hairline-strong);
+  padding: 28px 24px;
+  background: var(--c-ground-alt);
+  max-width: 40em;
+}
+
+.pendingNote {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+}
+
+.pendingList {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: var(--c-muted);
+}
+
+.pendingList li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.pendingList li::before {
+  content: "—";
+  color: var(--c-mineral);
+  flex: none;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+
+.footer {
+  border-top: 1px solid var(--c-hairline);
+  padding-block: 56px 72px;
+  background: var(--c-ground-alt);
+}
+
+.footerGrid {
+  display: grid;
+  gap: 36px;
+}
+
+.footerColTitle {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-mineral);
+  margin: 0 0 14px;
+}
+
+.footerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.footerItem {
+  font-size: 0.9375rem;
+  color: var(--c-ink-soft);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.footerLink {
+  font-size: 0.9375rem;
+  color: var(--c-ink-soft);
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-bottom: 1px solid transparent;
+}
+
+.footerLink:hover {
+  border-bottom-color: var(--c-accent);
+}
+
+.footerBase {
+  margin-top: 44px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-hairline);
+  font-size: 12px;
+  color: var(--c-mineral);
+  display: grid;
+  gap: 8px;
+}
+
+.previewBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  border: 1px solid var(--c-hairline-strong);
+  padding: 5px 10px;
+  border-radius: 2px;
+  width: fit-content;
+}
+
+/* ── Focus visibility (WCAG 2.2) ────────────────────────────────────────── */
+
+.page a:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Motion: reveal is opt-in and fully disabled under reduced-motion ───── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    animation: cReveal 320ms cubic-bezier(0.2, 0.6, 0.2, 1) both;
+  }
+
+  /* The terminal node settles in once and stops. It was an infinite pulse, which is both a WCAG
+   * 2.2.2 problem (moving content past 5s with no pause control) and a flaky-contrast source: axe
+   * sampled the node mid-fade and measured whatever opacity it caught. A single finite settle keeps
+   * the "living signal" reading without an unstoppable loop or a time-dependent audit. */
+  .signal {
+    animation: cSignal 900ms ease-out 1 both;
+  }
+}
+
+@keyframes cReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cSignal {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Breakpoints: 320 base / 375 primary / 768 tablet / 1280 desktop ────── */
+
+@media (min-width: 768px) {
+  .nav {
+    display: flex;
+  }
+
+  .beats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .beat {
+    padding: 28px 24px;
+  }
+
+  .methodList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px 32px;
+  }
+
+  .productHead {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 48px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .methodList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
