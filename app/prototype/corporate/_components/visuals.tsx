@@ -148,7 +148,7 @@ export function ThesisFigure() {
  * geographic data, and placing parties on a map of Japan would imply coverage we cannot evidence.
  * Positions are symbolic and carry no magnitude. The `<ol>` below is the accessible equivalent.
  */
-export function NetworkSchematic() {
+export function NetworkSchematic({ compact = false }: { compact?: boolean } = {}) {
   const seats = [
     { x: 60, y: 46 },
     { x: 260, y: 46 },
@@ -156,7 +156,7 @@ export function NetworkSchematic() {
     { x: 260, y: 174 },
   ];
   return (
-    <figure className={styles.schematic}>
+    <figure className={`${styles.schematic} ${compact ? styles.compact : ""}`}>
       <svg
         className={styles.schematicSvg}
         viewBox="0 0 320 220"
@@ -218,9 +218,9 @@ export function NetworkSchematic() {
  * diagram — it is where the line stops, and it looks like it. This is a governed procedure, not a
  * legal decision tree: no branching, no conditions, no advice.
  */
-export function ProcedureFlow() {
+export function ProcedureFlow({ compact = false }: { compact?: boolean } = {}) {
   return (
-    <figure className={styles.procedure}>
+    <figure className={`${styles.procedure} ${compact ? styles.compact : ""}`}>
       <ol className={styles.procedureList}>
         {KAKARI_PROCEDURE.steps.map((s) => (
           <li className={styles.procedureStep} key={s.no}>

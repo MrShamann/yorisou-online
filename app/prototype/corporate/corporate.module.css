@@ -33,7 +33,9 @@
    * homepage measured 5440px tall with several screens of empty ground carrying no pacing or
    * meaning. Reduced to a 56-88px rhythm. Calm comes from the hairlines, the measure and the type
    * scale — not from reserving viewport-height gaps. Body leading is untouched at 2.00. */
-  --c-gap: clamp(48px, 5.2vw, 72px);
+  /* CORP-P3R1 R1-4 — mobile lower bound trimmed 48->40px. home 390 sat 98px over the 6500 target
+   * after the compact visuals; the remaining excess was rhythm, not content. Desktop unchanged. */
+  --c-gap: clamp(40px, 5.2vw, 72px);
   --c-pad: clamp(20px, 5vw, 40px);
   --c-max: 1120px;
 
@@ -376,7 +378,11 @@
 }
 
 .productName {
-  font-size: clamp(1.6rem, 4.6vw, 2.4rem);
+  /* CORP-P3R1 R1-2 — at 1440 the two-column grid made "Mirai Move" wrap to "Mirai" / "Move".
+   * A product name is a single semantic unit; it never breaks. The clamp lower bound also drops so
+   * a narrow column shrinks the name instead of splitting it. */
+  white-space: nowrap;
+  font-size: clamp(1.45rem, 4.6vw, 2.4rem);
   font-weight: 700;
   letter-spacing: 0.01em;
   margin: 0;
@@ -605,6 +611,17 @@
 /* ── Breakpoints: 320 base / 375 primary / 768 tablet / 1280 desktop ────── */
 
 @media (min-width: 768px) {
+  /* CORP-P3R1 R1-1 — THE defect. In CORP-P3 this rule was written but the edit silently no-op'd, so
+   * .navDesktop stayed display:none at every width and the disclosure never hid. The prior report
+   * claimed "desktop keeps direct links at >=768px"; the screenshots proved otherwise. Validation now
+   * asserts COMPUTED visibility and non-zero boxes, not DOM presence. */
+  .navDesktop {
+    display: flex;
+  }
+
+  .navDisclosure {
+    display: none;
+  }
 
   .beats {
     grid-template-columns: repeat(3, 1fr);
@@ -1187,5 +1204,53 @@
 
   .methodLong {
     gap: 36px 40px;
+  }
+}
+
+
+/* ══ CORP-P3R1 — compact homepage visuals ═════════════════════════════════
+ * The detailed schematic and procedure stay on the product pages. The homepage carries condensed
+ * variants: same structure, same stage truth, without the per-item explanatory notes a reader only
+ * needs once they have chosen a product. Density, not deletion — every note hidden here is rendered
+ * in full one click away. */
+
+.compact .schematicNote,
+.compact .procedureNote {
+  display: none;
+}
+
+.compact .schematicList li {
+  padding-bottom: 8px;
+}
+
+.compact .procedureStep {
+  padding-block: 9px;
+}
+
+.compact .procedureStep::before {
+  top: 17px;
+}
+
+.compact .schematicSvg {
+  max-width: 268px;
+}
+
+.compact .procedureGate {
+  padding: 16px 18px;
+}
+
+
+/* CORP-P3R1 R1-4 — the hero figure is supporting material on a phone, not the headline. */
+@media (max-width: 767px) {
+  .figureSvg {
+    max-width: 300px;
+  }
+
+  .heroGrid {
+    gap: 28px;
+  }
+
+  .beat {
+    padding-block: 18px;
   }
 }

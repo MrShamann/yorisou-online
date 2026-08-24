@@ -181,7 +181,13 @@ export function ProductComposition({ product, index }: { product: Product; index
             </div>
             <p className={styles.productLine}>{product.line}</p>
             <p className={styles.productBody}>{product.summary}</p>
-            <Boundary title={product.boundaryTitle}>{product.boundary}</Boundary>
+            {/* CORP-P3R1 R1-3 — Kakari's limit now lives inside its procedure gate, so rendering a
+                second Boundary block here would state the same thing twice. Mirai Move keeps its
+                block: its limit is a development status, not a step in a flow, so it has nowhere
+                else to live. */}
+            {product.key === "mirai-move" && (
+              <Boundary title={product.boundaryTitle}>{product.boundary}</Boundary>
+            )}
             <p className={styles.productMore}>
               <a className={styles.textLink} href={product.href}>
                 {product.name} について詳しく
@@ -192,7 +198,11 @@ export function ProductComposition({ product, index }: { product: Product; index
               radial relationship schematic, Kakari a vertical procedural flow ending at a boundary
               gate. Structurally different, so they cannot read as interchangeable. */}
           <div className={styles.productAside}>
-            {product.key === "mirai-move" ? <NetworkSchematic /> : <ProcedureFlow />}
+            {product.key === "mirai-move" ? (
+              <NetworkSchematic compact />
+            ) : (
+              <ProcedureFlow compact />
+            )}
           </div>
         </div>
       </div>

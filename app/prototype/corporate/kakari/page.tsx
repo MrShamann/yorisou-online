@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import styles from "../corporate.module.css";
 import CorporateShell from "../_components/CorporateShell";
-import { Boundary, Eyebrow, Section, StageLabel } from "../_components/pieces";
+import { Eyebrow, Section, StageLabel } from "../_components/pieces";
 import { PhraseHeading, ProcedureFlow } from "../_components/visuals";
 import { HEADING_UNITS, KAKARI, MIRAI_MOVE, ROUTES } from "../_content/site";
 
@@ -43,8 +43,9 @@ export default function KakariPage() {
       <Section>
         <Eyebrow>支援する手順</Eyebrow>
         <PhraseHeading units={HEADING_UNITS.kakariFlow} className={styles.h2} />
+        {/* R1-3 — the professional boundary is carried by the flow's terminal gate, not repeated as
+            a second block beneath it. One complete statement, at the point the procedure stops. */}
         <ProcedureFlow />
-        <Boundary title={p.boundaryTitle}>{p.boundary}</Boundary>
       </Section>
 
       <Section tint>

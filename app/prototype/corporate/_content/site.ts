@@ -230,9 +230,14 @@ export const KAKARI_PROCEDURE = {
     { no: "03", label: "作成する", note: "多言語で記入し、内容を確認する" },
     { no: "04", label: "提出する", note: "提出先・提出方法・郵送手順を案内する" },
   ],
+  // CORP-P3R1 R1-3 — Kakari previously carried TWO consecutive boundary treatments: this gate and a
+  // separate 「専門家との境界について」 block. Two statements of the same limit read as hedging and
+  // weaken the one that matters. Consolidated here, where the procedure actually stops, carrying the
+  // required wording verbatim. The separate block is removed from Kakari surfaces — the boundary is
+  // strengthened by integration, never weakened.
   boundary: {
     label: "専門家が担う範囲",
-    note: "法務・税務・公的判断が必要になった時点で、Kakariの範囲は終わります。士業の代理は行いません。",
+    note: "士業の代理は行いません。法務・税務・公的判断が必要な領域は、専門家が担う範囲として明示します。弁護士・税理士・行政書士などの資格を要する判断や代理は、Kakariの機能に含まれません。",
   },
 } as const;
 
