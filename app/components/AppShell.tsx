@@ -23,6 +23,12 @@ type Props = {
 // PXR-1 added "/tests/ima-iro". The 120Q used to live at "/check-in", which was suppressed; moving
 // the flow to its own canonical route silently gave a 120-question assessment a header, a footer and
 // a bottom tab bar. A tab bar during a running assessment is an invitation to abandon it.
+// CORP-P4A — the six corporate front-door candidates bring their own shell (CorporateShell), so the
+// consumer chrome must not wrap them. This adds routes to the suppression list; it changes NO
+// consumer route's behaviour. /me, /life, /tests/*, /result, /saved, auth, LINE and sharing are
+// untouched and keep their chrome exactly as before.
+const CORPORATE_FRONT_DOOR = ["/", "/mirai-move", "/kakari", "/about", "/company", "/contact"];
+
 const SHELL_SUPPRESSED_EXACT = new Set([
   "/support",
   "/en/support",
@@ -30,6 +36,7 @@ const SHELL_SUPPRESSED_EXACT = new Set([
   "/report-loading",
   "/report-preview",
   "/tests/ima-iro",
+  ...CORPORATE_FRONT_DOOR,
 ]);
 
 const SHELL_SUPPRESSED_PREFIXES = ["/line", "/reports/self-understanding", "/prototype"];

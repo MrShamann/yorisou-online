@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import styles from "../corporate.module.css";
-import type { Product } from "../_content/site";
+import { productHref, type Product, type RouteSet } from "../_content/site";
 import { NetworkSchematic, ProcedureFlow } from "./visuals";
 
 /**
@@ -162,7 +162,15 @@ export function PendingState({
  * The product block used on the homepage. Each product gets a full-width composition with its own
  * accent side, never a card in a grid — the two businesses must not read as interchangeable.
  */
-export function ProductComposition({ product, index }: { product: Product; index: number }) {
+export function ProductComposition({
+  product,
+  index,
+  routes,
+}: {
+  product: Product;
+  index: number;
+  routes: RouteSet;
+}) {
   return (
     <article className={`${styles.product} ${index === 1 ? styles.productAlt : ""}`}>
       <div className={styles.shell}>
@@ -189,7 +197,7 @@ export function ProductComposition({ product, index }: { product: Product; index
               <Boundary title={product.boundaryTitle}>{product.boundary}</Boundary>
             )}
             <p className={styles.productMore}>
-              <a className={styles.textLink} href={product.href}>
+              <a className={styles.textLink} href={productHref(product, routes)}>
                 {product.name} について詳しく
               </a>
             </p>

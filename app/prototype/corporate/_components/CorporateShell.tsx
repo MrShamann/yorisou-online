@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import styles from "../corporate.module.css";
-import { NAV, ROUTES, THESIS } from "../_content/site";
+import { navFor, PROTOTYPE_ROUTES, THESIS, type RouteSet } from "../_content/site";
 
 /**
  * CORP-P3 F-02 — the mobile header is a native `<details>` disclosure.
@@ -21,11 +21,15 @@ import { NAV, ROUTES, THESIS } from "../_content/site";
 export default function CorporateShell({
   children,
   current,
+  routes = PROTOTYPE_ROUTES,
 }: {
   children: ReactNode;
   /** Marks the active nav item for `aria-current` on both the desktop and mobile lists. */
   current?: string;
+  /** CORP-P4A — which URL set this render uses. Prototype by default; final routes pass their own. */
+  routes?: RouteSet;
 }) {
+  const NAV = navFor(routes);
   return (
     <div className={styles.page}>
       <a className={styles.skipLink} href="#main">
@@ -34,7 +38,7 @@ export default function CorporateShell({
 
       <header className={styles.header}>
         <div className={`${styles.shell} ${styles.headerInner}`}>
-          <a className={styles.wordmark} href={ROUTES.home}>
+          <a className={styles.wordmark} href={routes.home}>
             Yorisou
           </a>
 
@@ -90,12 +94,12 @@ export default function CorporateShell({
               <p className={styles.footerColTitle}>事業</p>
               <ul className={styles.footerList}>
                 <li>
-                  <a className={styles.footerLink} href={ROUTES.miraiMove}>
+                  <a className={styles.footerLink} href={routes.miraiMove}>
                     Mirai Move
                   </a>
                 </li>
                 <li>
-                  <a className={styles.footerLink} href={ROUTES.kakari}>
+                  <a className={styles.footerLink} href={routes.kakari}>
                     Kakari
                   </a>
                 </li>
@@ -105,17 +109,17 @@ export default function CorporateShell({
               <p className={styles.footerColTitle}>会社</p>
               <ul className={styles.footerList}>
                 <li>
-                  <a className={styles.footerLink} href={ROUTES.about}>
+                  <a className={styles.footerLink} href={routes.about}>
                     私たちについて
                   </a>
                 </li>
                 <li>
-                  <a className={styles.footerLink} href={ROUTES.company}>
+                  <a className={styles.footerLink} href={routes.company}>
                     会社情報
                   </a>
                 </li>
                 <li>
-                  <a className={styles.footerLink} href={ROUTES.contact}>
+                  <a className={styles.footerLink} href={routes.contact}>
                     お問い合わせ
                   </a>
                 </li>

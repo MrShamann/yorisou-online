@@ -6,22 +6,62 @@
  * not belong in this file — see docs/yorisou/corporate/CORP_P2_CLAIM_LEDGER.md.
  */
 
-export const ROUTES = {
+/**
+ * CORP-P4A — one corporate system, two route sets.
+ *
+ * The accepted P3R1 implementation is promoted to final URLs by parameterising the URLs, not by
+ * copying the pages. Every view, component and piece of content is shared; only this map differs.
+ * `/prototype/corporate/**` therefore stays byte-identical in behaviour and remains available for
+ * evidence comparison, while `/` and its siblings render the same accepted system at final URLs.
+ */
+export type RouteSet = {
+  home: string;
+  miraiMove: string;
+  kakari: string;
+  about: string;
+  company: string;
+  contact: string;
+};
+
+/** Evidence-comparison surface. Stays noindex, stays reachable locally. */
+export const PROTOTYPE_ROUTES: RouteSet = {
   home: "/prototype/corporate",
   miraiMove: "/prototype/corporate/mirai-move",
   kakari: "/prototype/corporate/kakari",
   about: "/prototype/corporate/about",
   company: "/prototype/corporate/company",
   contact: "/prototype/corporate/contact",
-} as const;
+};
 
-export const NAV = [
-  { href: ROUTES.about, label: "私たちについて" },
-  { href: ROUTES.miraiMove, label: "Mirai Move" },
-  { href: ROUTES.kakari, label: "Kakari" },
-  { href: ROUTES.company, label: "会社情報" },
-  { href: ROUTES.contact, label: "お問い合わせ" },
-] as const;
+/** CORP-P4A final-route candidate. Local only — not deployed, not published. */
+export const FINAL_ROUTES: RouteSet = {
+  home: "/",
+  miraiMove: "/mirai-move",
+  kakari: "/kakari",
+  about: "/about",
+  company: "/company",
+  contact: "/contact",
+};
+
+/** Back-compat alias so existing prototype imports keep working. */
+export const ROUTES = PROTOTYPE_ROUTES;
+
+export function navFor(r: RouteSet) {
+  return [
+    { href: r.about, label: "私たちについて" },
+    { href: r.miraiMove, label: "Mirai Move" },
+    { href: r.kakari, label: "Kakari" },
+    { href: r.company, label: "会社情報" },
+    { href: r.contact, label: "お問い合わせ" },
+  ] as const;
+}
+
+/** A product's URL depends on the route set, never on the product record. */
+export function productHref(p: Pick<Product, "key">, r: RouteSet) {
+  return p.key === "mirai-move" ? r.miraiMove : r.kakari;
+}
+
+export const NAV = navFor(PROTOTYPE_ROUTES);
 
 export const THESIS = "人と社会のあいだに、次のよりそいをつくる。";
 
@@ -112,7 +152,6 @@ export const HEADING_UNITS = {
 export type Product = {
   key: "mirai-move" | "kakari";
   name: string;
-  href: string;
   domain: string;
   /** Required stage truth. Must match the canonical project source exactly. */
   stage: string;
@@ -131,7 +170,6 @@ export type Product = {
 export const MIRAI_MOVE: Product = {
   key: "mirai-move",
   name: "Mirai Move",
-  href: ROUTES.miraiMove,
   // Source: mirai-move/AGENT_PROJECT_RULES.md §1 — "Display name: Mirai Move (miraimove.com)".
   domain: "日本のモビリティ領域 ／ miraimove.com",
   // Source: mirai-move/PROJECT_START_HERE.md — "Live in production on Vercel at
@@ -167,7 +205,6 @@ export const MIRAI_MOVE: Product = {
 export const KAKARI: Product = {
   key: "kakari",
   name: "Kakari",
-  href: ROUTES.kakari,
   domain: "行政手続き・書類 ／ 多言語",
   // Source: kakari/PROJECT_START_HERE.md — hosted Preview foundation only, external providers
   // disabled, Draft PR #2 open and unmerged. Not generally available.
