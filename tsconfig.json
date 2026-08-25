@@ -39,9 +39,14 @@
     "/tmp/yorisou-next/types/**/*.ts",
     "/tmp/yorisou-next/dev/types/**/*.ts",
     "/tmp/yorisou-next/.next/types/**/*.ts",
-    "/tmp/yorisou-next/.next/dev/types/**/*.ts"
+    "/tmp/yorisou-next/.next/dev/types/**/*.ts",
+    "/tmp/yorisou-next-prod/.next/types/**/*.ts",
+    "/tmp/yorisou-next-prod/.next/dev/types/**/*.ts",
+    "/tmp/yorisou-base-prod/.next/types/**/*.ts",
+    "/tmp/yorisou-base-prod/.next/dev/types/**/*.ts"
   ],
   "exclude": [
+    "test-results",
     "node_modules",
     "tests",
     "scripts",

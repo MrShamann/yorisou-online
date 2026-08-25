@@ -3,29 +3,46 @@ import type { MetadataRoute } from "next";
 import { CORPORATE_BLOCKED, CORPORATE_INDEXABLE } from "@/lib/corporate/routePolicy";
 
 /**
- * CORP-P4AR1 — LOCAL CANDIDATE ONLY. Not published; this branch is never pushed or deployed.
+ * CORP-P4AR2 — LOCAL CANDIDATE ONLY. Not published; this branch is never pushed or deployed.
  *
- * CORP-P4A used `Allow: /` plus a hand-written Disallow list, and claimed everything personal,
- * authenticated, internal and legacy was covered. That claim was FALSE: the repository has 135 page
- * routes and the list named roughly twenty, so ~28 legacy public routes (/ai-advisor, /business,
- * /concept, /en, /explore, /insights, /methodology, /notice, /partners, /pilot, /privacy, /services,
- * /support, /terms, /vision and more) were crawlable. The rule was also written as `/tests/` — a
- * prefix form that does not necessarily cover the exact path `/tests`.
+ * WHAT WAS WRONG AT 29fce73. The rules rendered as:
  *
- * This candidate inverts the default. `Disallow: /` blocks everything, and only the four corporate
- * routes are re-allowed. A route omitted from any list is therefore BLOCKED, not exposed — the
- * failure mode is safe. `Allow: /$` is anchored so it matches the root exactly and does not reopen
- * the whole tree.
+ *     Allow: /$   Allow: /mirai-move   Allow: /kakari   Allow: /about   Disallow: /
  *
- * The sensitive groups are still listed explicitly below. They are redundant under `Disallow: /`,
- * and that is the point: the policy stays legible, and a future edit that loosens the default
- * cannot silently expose them.
+ * and CORP-P4AR1 claimed all four Allow rules were anchored. Only the first one was. Under the
+ * matching rules Google implements, a rule without a trailing `$` is a PATH PREFIX, and where an
+ * Allow and a Disallow both match, the LONGER rule wins. So `/mirai-move` matched — and therefore
+ * allowed — `/mirai-move-old`, `/mirai-move/anything` and every other path beginning with those
+ * characters, beating the one-character `Disallow: /`. The same held for `/kakari` (so
+ * `/kakari-preview`) and `/about` (so `/about-old`). The default-deny was real, but three of the
+ * four exceptions to it were open-ended subtrees rather than single pages.
+ *
+ * Every Allow is now anchored with `$`, so each one matches exactly one path and nothing beneath or
+ * beyond it. `Disallow: /` remains the default, so a path that is not one of these four exact
+ * strings is blocked.
+ *
+ * TWO CONSEQUENCES, ACCEPTED DELIBERATELY:
+ *
+ *  - `$` anchors the end of the matched value, and the matched value includes the query string.
+ *    `/about?utm_source=x` therefore does NOT match `Allow: /about$` and is not crawlable. This is
+ *    the intended direction: the canonical corporate URLs carry no query, and a blocked tracking
+ *    variant costs nothing, whereas an unanchored rule reopens the subtree.
+ *  - `/about/` likewise does not match. Next.js serves a 308 from the trailing-slash form to the
+ *    canonical form, which IS allowed, so the canonical page stays reachable.
+ *
+ * The sensitive groups below are redundant under `Disallow: /` and are kept on purpose: the policy
+ * stays legible, and a future edit that loosens the default cannot silently expose them.
+ *
+ * NOTE ON WHAT THIS FILE DOES AND DOES NOT DO. Every rule here controls CRAWLING only. robots.txt
+ * cannot make a page noindex; a blocked URL can still be indexed from external links, and a blocked
+ * crawler never sees a `noindex` directive on the page it was forbidden to fetch. Rendered index
+ * directives are a separate mechanism, measured separately in
+ * docs/yorisou/corporate/CORP_P4AR2_RENDERED_INDEXABILITY_CENSUS.md.
  */
 export default function robots(): MetadataRoute.Robots {
-  const allow = [
-    "/$", // anchored: the root only, never a prefix for everything beneath it
-    ...CORPORATE_INDEXABLE.filter((r) => r !== "/"),
-  ];
+  // Anchored with `$`: each rule matches that exact path and nothing else. Derived from the policy
+  // module so robots.txt and the sitemap cannot name different routes.
+  const allow = CORPORATE_INDEXABLE.map((r) => `${r}$`);
 
   return {
     rules: [
@@ -33,7 +50,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow,
         disallow: [
-          "/", // default-deny; anything not explicitly allowed above is blocked
+          "/", // default-deny; anything not exactly allowed above is blocked
           // Explicit and redundant, in both exact and descendant form.
           ...CORPORATE_BLOCKED,
           "/prototype",

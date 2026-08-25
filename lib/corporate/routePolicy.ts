@@ -10,7 +10,7 @@
  * recognises as a consumer route. Everything else — corporate routes and, critically, unknown paths
  * — is CORPORATE. The default is safe rather than permissive:
  *
- *     unknown path -> shell CORPORATE_404, sitemap EXCLUDED, indexability NOINDEX
+ *     unknown path -> shell CORPORATE_404, sitemap EXCLUDED, crawl BLOCKED
  *
  * The route table below is DERIVED FROM THE APP ROUTER FILESYSTEM, not remembered. A consistency
  * test re-derives it and fails if the two drift, so adding a route cannot silently escape policy.
@@ -21,12 +21,12 @@
 
 export type RouteGroup =
   | "CORPORATE_INDEXABLE"
-  | "CORPORATE_BLOCKED_NOINDEX"
-  | "PROTOTYPE_NOINDEX"
-  | "LEGACY_PUBLIC_NOINDEX"
-  | "PERSONAL_OR_AUTH_NOINDEX"
-  | "ADMIN_INTERNAL_NOINDEX"
-  | "DEV_INTERNAL_NOINDEX"
+  | "CORPORATE_CRAWL_BLOCKED"
+  | "PROTOTYPE_CRAWL_BLOCKED"
+  | "LEGACY_PUBLIC_CRAWL_BLOCKED"
+  | "PERSONAL_OR_AUTH_CRAWL_BLOCKED"
+  | "ADMIN_INTERNAL_CRAWL_BLOCKED"
+  | "DEV_INTERNAL_CRAWL_BLOCKED"
   | "API_NON_PAGE"
   | "DYNAMIC_ROUTE_POLICY"
   | "UNKNOWN";
@@ -214,30 +214,30 @@ function matches(list: readonly string[], p: string): boolean {
  */
 const NAMESPACES: readonly [string, RouteGroup][] = [
   ["/api", "API_NON_PAGE"],
-  ["/prototype", "PROTOTYPE_NOINDEX"],
-  ["/admin", "ADMIN_INTERNAL_NOINDEX"],
-  ["/admin-entry", "ADMIN_INTERNAL_NOINDEX"],
-  ["/dev", "DEV_INTERNAL_NOINDEX"],
-  ["/me", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/life", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/saved", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/private-state", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/dashboard", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/reports", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/login", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/register", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/forgot-password", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/reset-password", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/result", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/share", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/connect", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/progress", "PERSONAL_OR_AUTH_NOINDEX"],
-  ["/tests", "LEGACY_PUBLIC_NOINDEX"],
-  ["/line", "LEGACY_PUBLIC_NOINDEX"],
-  ["/today", "LEGACY_PUBLIC_NOINDEX"],
-  ["/en", "LEGACY_PUBLIC_NOINDEX"],
-  ["/experiences", "LEGACY_PUBLIC_NOINDEX"],
-  ["/recommendations", "LEGACY_PUBLIC_NOINDEX"],
+  ["/prototype", "PROTOTYPE_CRAWL_BLOCKED"],
+  ["/admin", "ADMIN_INTERNAL_CRAWL_BLOCKED"],
+  ["/admin-entry", "ADMIN_INTERNAL_CRAWL_BLOCKED"],
+  ["/dev", "DEV_INTERNAL_CRAWL_BLOCKED"],
+  ["/me", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/life", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/saved", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/private-state", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/dashboard", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/reports", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/login", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/register", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/forgot-password", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/reset-password", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/result", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/share", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/connect", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/progress", "PERSONAL_OR_AUTH_CRAWL_BLOCKED"],
+  ["/tests", "LEGACY_PUBLIC_CRAWL_BLOCKED"],
+  ["/line", "LEGACY_PUBLIC_CRAWL_BLOCKED"],
+  ["/today", "LEGACY_PUBLIC_CRAWL_BLOCKED"],
+  ["/en", "LEGACY_PUBLIC_CRAWL_BLOCKED"],
+  ["/experiences", "LEGACY_PUBLIC_CRAWL_BLOCKED"],
+  ["/recommendations", "LEGACY_PUBLIC_CRAWL_BLOCKED"],
 ];
 
 function namespaceOf(p: string): RouteGroup | null {
@@ -254,19 +254,27 @@ function namespaceOf(p: string): RouteGroup | null {
 export function classify(pathname: string): RouteGroup {
   const p = normalise(pathname);
   if (CORPORATE_INDEXABLE.includes(p)) return "CORPORATE_INDEXABLE";
-  if (CORPORATE_BLOCKED.includes(p)) return "CORPORATE_BLOCKED_NOINDEX";
+  if (CORPORATE_BLOCKED.includes(p)) return "CORPORATE_CRAWL_BLOCKED";
   const ns = namespaceOf(p);
   if (ns) return ns;
-  if (matches(CONSUMER_ROUTES, p)) return "LEGACY_PUBLIC_NOINDEX";
+  if (matches(CONSUMER_ROUTES, p)) return "LEGACY_PUBLIC_CRAWL_BLOCKED";
   if (DYNAMIC.test(p)) return "DYNAMIC_ROUTE_POLICY";
   return "UNKNOWN";
 }
 
 /**
- * Does a real page exist at this exact path? SHELL ownership must use this rather than the crawl
- * namespace: `/tests/c02` is a real page and keeps consumer chrome, but `/tests/nonexistent` is a
- * 404 and must NOT — otherwise the consumer shell wraps the corporate 404 again, one namespace
- * deeper. Crawl policy and shell ownership answer different questions and must not share a rule.
+ * Does this path LOOK like a route this module knows? CORP-P4AR2: read the verb carefully. This is
+ * a pathname guess, not a resolution result, and it is no longer what isolates the 404.
+ *
+ * CORP-P4AR1 used this to infer that a route had resolved successfully, which is invalid — whether a
+ * route resolves is decided by the route handler at request time. `/insights/does-not-exist` matches
+ * `/insights/[slug]`, so this returned true, so `shellOwner()` said CONSUMER, and the consumer chrome
+ * wrapped the corporate 404: two headers and two footers, measured on the production build.
+ *
+ * 404 isolation is now structural and lives in `app/global-not-found.tsx`, which renders outside the
+ * root layout and therefore outside `AppShell` entirely. No pathname judgement can get it wrong,
+ * because no pathname judgement is involved. What remains here is a preference applied only to
+ * routes that DID resolve — by the time `AppShell` renders, the request was not a 404.
  */
 export function isKnownPageRoute(pathname: string): boolean {
   const p = normalise(pathname);
@@ -291,10 +299,10 @@ export function shellOwner(pathname: string | null | undefined): ShellOwner {
   if (g === "API_NON_PAGE") return "NONE";
   if (!isKnownPageRoute(p)) return "CORPORATE";
   if (
-    g === "LEGACY_PUBLIC_NOINDEX" ||
-    g === "PERSONAL_OR_AUTH_NOINDEX" ||
-    g === "ADMIN_INTERNAL_NOINDEX" ||
-    g === "DEV_INTERNAL_NOINDEX" ||
+    g === "LEGACY_PUBLIC_CRAWL_BLOCKED" ||
+    g === "PERSONAL_OR_AUTH_CRAWL_BLOCKED" ||
+    g === "ADMIN_INTERNAL_CRAWL_BLOCKED" ||
+    g === "DEV_INTERNAL_CRAWL_BLOCKED" ||
     g === "DYNAMIC_ROUTE_POLICY"
   ) {
     return "CONSUMER";
@@ -302,12 +310,88 @@ export function shellOwner(pathname: string | null | undefined): ShellOwner {
   return "CORPORATE";
 }
 
-/** Only the four corporate routes are sitemap-eligible. Everything else, including UNKNOWN. */
-export function isSitemapEligible(pathname: string): boolean {
-  return classify(pathname) === "CORPORATE_INDEXABLE";
+/**
+ * CORP-P4AR2 — FOUR SEPARATE DISPOSITIONS, AND ONE THIS MODULE CANNOT ANSWER.
+ *
+ * CORP-P4AR1 named six of this module's groups `*_NOINDEX` and exported `isIndexable()`, then
+ * reported that "131 routes are noindex". That was false, and the falsehood was in the vocabulary
+ * rather than in any single line of logic. Nothing in this module has ever emitted a `noindex`
+ * directive. What it computes is CRAWL policy — which is what robots.txt controls, and robots.txt
+ * cannot make a page noindex. The two mechanisms are not merely different, they conflict: a URL
+ * blocked from crawling is a URL whose `noindex` a crawler is forbidden to fetch and therefore will
+ * never act on, and such a URL can still be indexed from external links alone.
+ *
+ * The names below now say what they compute, and the four questions are answered separately:
+ *
+ *   1. CRAWL disposition        — crawlDisposition(). May a crawler fetch this path? Derived from
+ *                                 the same source robots.txt renders from.
+ *   2. SITEMAP disposition      — sitemapDisposition(). Do we actively submit this path?
+ *   3. SHELL ownership          — shellOwner(). Which chrome a RESOLVED route renders in.
+ *   4. ROUTE LIFECYCLE          — routeLifecycle(). What the route is FOR, independent of crawling.
+ *
+ * The fifth question — what index directive a page actually emits in its rendered `<meta name=
+ * "robots">` tag or `X-Robots-Tag` response header — IS DELIBERATELY NOT ANSWERED HERE. It cannot be
+ * derived from a pathname; it is a property of what the route renders at request time, so it must be
+ * MEASURED against a running build. That census lives in
+ * docs/yorisou/corporate/CORP_P4AR2_RENDERED_INDEXABILITY_CENSUS.md. Any future function in this
+ * file that claims to return it would be reintroducing exactly the defect this rename removes.
+ */
+
+export type CrawlDisposition = "CRAWL_ALLOWED" | "CRAWL_BLOCKED";
+export type SitemapDisposition = "IN_SITEMAP" | "EXCLUDED_FROM_SITEMAP";
+export type RouteLifecycle =
+  | "CORPORATE_CANDIDATE"
+  | "CORPORATE_BLOCKED_PENDING_SOURCE"
+  | "CONSUMER_RETAINED"
+  | "PROTOTYPE_EVIDENCE"
+  | "INTERNAL_ONLY"
+  | "NON_PAGE"
+  | "UNRESOLVED";
+
+/**
+ * May a crawler fetch this path? This is the ONLY question robots.txt answers, and the only one this
+ * function answers. It says nothing about whether the path may be indexed.
+ */
+export function crawlDisposition(pathname: string): CrawlDisposition {
+  return classify(pathname) === "CORPORATE_INDEXABLE" ? "CRAWL_ALLOWED" : "CRAWL_BLOCKED";
 }
 
-/** Indexable iff explicitly corporate-indexable. Fails closed for anything unrecognised. */
-export function isIndexable(pathname: string): boolean {
-  return classify(pathname) === "CORPORATE_INDEXABLE";
+/** Backwards-compatible boolean form of {@link crawlDisposition}. Crawl, not index. */
+export function isCrawlAllowed(pathname: string): boolean {
+  return crawlDisposition(pathname) === "CRAWL_ALLOWED";
+}
+
+/** Do we actively submit this path in the sitemap? Distinct from whether it may be crawled. */
+export function sitemapDisposition(pathname: string): SitemapDisposition {
+  return classify(pathname) === "CORPORATE_INDEXABLE" ? "IN_SITEMAP" : "EXCLUDED_FROM_SITEMAP";
+}
+
+/** Only the four corporate routes are sitemap-eligible. Everything else, including UNKNOWN. */
+export function isSitemapEligible(pathname: string): boolean {
+  return sitemapDisposition(pathname) === "IN_SITEMAP";
+}
+
+/**
+ * What the route is FOR. Independent of crawling: `/tests` is a retained consumer route whether or
+ * not a crawler may fetch it, and blocking it in robots.txt does not retire it.
+ */
+export function routeLifecycle(pathname: string): RouteLifecycle {
+  const g = classify(pathname);
+  switch (g) {
+    case "CORPORATE_INDEXABLE":
+      return "CORPORATE_CANDIDATE";
+    case "CORPORATE_CRAWL_BLOCKED":
+      return "CORPORATE_BLOCKED_PENDING_SOURCE";
+    case "PROTOTYPE_CRAWL_BLOCKED":
+      return "PROTOTYPE_EVIDENCE";
+    case "ADMIN_INTERNAL_CRAWL_BLOCKED":
+    case "DEV_INTERNAL_CRAWL_BLOCKED":
+      return "INTERNAL_ONLY";
+    case "API_NON_PAGE":
+      return "NON_PAGE";
+    case "UNKNOWN":
+      return "UNRESOLVED";
+    default:
+      return "CONSUMER_RETAINED";
+  }
 }

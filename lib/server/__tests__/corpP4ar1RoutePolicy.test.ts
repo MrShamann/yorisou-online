@@ -8,7 +8,7 @@ import {
   CORPORATE_INDEXABLE,
   CONSUMER_ROUTES,
   classify,
-  isIndexable,
+  isCrawlAllowed,
   isSitemapEligible,
   shellOwner,
 } from "@/lib/corporate/routePolicy";
@@ -40,7 +40,7 @@ test("an unknown path belongs to the corporate shell, never the consumer shell",
 test("unknown paths fail safe: excluded from the sitemap and not indexable", () => {
   for (const p of ["/an-entirely-unknown-path", "/whatever", "/x/y"]) {
     assert.equal(isSitemapEligible(p), false, p);
-    assert.equal(isIndexable(p), false, p);
+    assert.equal(isCrawlAllowed(p), false, p);
   }
 });
 
@@ -83,8 +83,8 @@ test("exact and descendant forms of a legacy path share the same policy", () => 
   for (const [exact, child] of pairs) {
     // CRAWL policy must be identical across the namespace.
     assert.equal(classify(exact), classify(child), `${exact} vs ${child}`);
-    assert.equal(isIndexable(exact), false, exact);
-    assert.equal(isIndexable(child), false, child);
+    assert.equal(isCrawlAllowed(exact), false, exact);
+    assert.equal(isCrawlAllowed(child), false, child);
     assert.equal(isSitemapEligible(exact), false, exact);
     assert.equal(isSitemapEligible(child), false, child);
   }
@@ -96,7 +96,7 @@ test("an unknown child of a consumer namespace still gets the corporate shell", 
   // down. Crawl policy stays namespace-wide; shell ownership follows the resolved route.
   for (const p of ["/tests/nonexistent", "/line/nope", "/reports/not-real", "/me/xyz"]) {
     assert.equal(shellOwner(p), "CORPORATE", p);
-    assert.equal(isIndexable(p), false, p);
+    assert.equal(isCrawlAllowed(p), false, p);
   }
   // ...while the real pages keep their consumer shell.
   assert.equal(shellOwner("/tests"), "CONSUMER");
@@ -114,14 +114,14 @@ test("a trailing slash never changes the outcome", () => {
 
 test("exactly four routes are indexable, and root is one of them", () => {
   assert.deepEqual([...CORPORATE_INDEXABLE], ["/", "/mirai-move", "/kakari", "/about"]);
-  for (const p of CORPORATE_INDEXABLE) assert.equal(isIndexable(p), true, p);
-  assert.equal(isIndexable("/"), true);
+  for (const p of CORPORATE_INDEXABLE) assert.equal(isCrawlAllowed(p), true, p);
+  assert.equal(isCrawlAllowed("/"), true);
 });
 
 test("blocked corporate routes are never indexable or sitemap-eligible", () => {
   for (const p of CORPORATE_BLOCKED) {
-    assert.equal(classify(p), "CORPORATE_BLOCKED_NOINDEX", p);
-    assert.equal(isIndexable(p), false, p);
+    assert.equal(classify(p), "CORPORATE_CRAWL_BLOCKED", p);
+    assert.equal(isCrawlAllowed(p), false, p);
     assert.equal(isSitemapEligible(p), false, p);
   }
 });
@@ -129,7 +129,7 @@ test("blocked corporate routes are never indexable or sitemap-eligible", () => {
 test("allowing root does not make unmatched routes indexable", () => {
   // The CORP-P4A robots candidate used `Allow: /`, which reads as a prefix for the whole tree.
   for (const p of ["/ai-advisor", "/business", "/en", "/insights", "/privacy", "/terms", "/vision"]) {
-    assert.equal(isIndexable(p), false, p);
+    assert.equal(isCrawlAllowed(p), false, p);
     assert.equal(isSitemapEligible(p), false, p);
   }
 });
@@ -168,7 +168,7 @@ test("legacy public routes CORP-P4A omitted are classified and blocked", () => {
   ];
   for (const p of omitted) {
     assert.notEqual(classify(p), "UNKNOWN", `${p} must be classified, not unknown`);
-    assert.equal(isIndexable(p), false, p);
+    assert.equal(isCrawlAllowed(p), false, p);
     assert.equal(isSitemapEligible(p), false, p);
   }
 });
@@ -182,9 +182,9 @@ test("api routes are non-page and own no shell", () => {
 });
 
 test("dynamic routes inherit their parent classification", () => {
-  assert.equal(classify("/admin/users/anything"), "ADMIN_INTERNAL_NOINDEX");
-  assert.equal(classify("/connect/invite/abc123"), "PERSONAL_OR_AUTH_NOINDEX");
-  assert.equal(classify("/reports/self-understanding/xyz"), "PERSONAL_OR_AUTH_NOINDEX");
+  assert.equal(classify("/admin/users/anything"), "ADMIN_INTERNAL_CRAWL_BLOCKED");
+  assert.equal(classify("/connect/invite/abc123"), "PERSONAL_OR_AUTH_CRAWL_BLOCKED");
+  assert.equal(classify("/reports/self-understanding/xyz"), "PERSONAL_OR_AUTH_CRAWL_BLOCKED");
 });
 
 // ── the census must stay honest ──────────────────────────────────────────────
@@ -220,7 +220,7 @@ test("no route is both indexable and consumer-owned", () => {
     assert.equal(shellOwner(p), "CORPORATE", p);
   }
   for (const p of CONSUMER_ROUTES) {
-    assert.equal(isIndexable(p), false, p);
+    assert.equal(isCrawlAllowed(p), false, p);
     assert.equal(isSitemapEligible(p), false, p);
   }
 });
