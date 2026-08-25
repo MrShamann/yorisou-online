@@ -1,22 +1,23 @@
 import type { MetadataRoute } from "next";
 
+import { CORPORATE_INDEXABLE, isSitemapEligible } from "@/lib/corporate/routePolicy";
+
 /**
- * CORP-P4A — LOCAL CANDIDATE ONLY. Not published.
+ * CORP-P4AR1 — LOCAL CANDIDATE ONLY. Not published.
  *
- * Four routes. `/company` and `/contact` are deliberately EXCLUDED while
+ * Derived from the route policy rather than hand-listed, so the sitemap cannot disagree with robots
+ * or the shell. `/company` and `/contact` are excluded by classification while
  * COMPANY_REGISTRATION_SOURCE_REQUIRED and VERIFIED_CORPORATE_CONTACT_REQUIRED remain open — a
- * sitemap entry is a request to index, and neither page should be indexed yet.
+ * sitemap entry is a request to index.
  *
- * No personal, authenticated, admin, LINE, sharing, prototype or legacy consumer route appears.
- * `lastModified` is intentionally omitted: a fabricated date is a fabricated claim.
+ * `lastModified` is deliberately omitted: a fabricated date is a fabricated claim.
  */
 const BASE = "https://yorisou.online";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    { url: `${BASE}/`, changeFrequency: "monthly", priority: 1 },
-    { url: `${BASE}/mirai-move`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/kakari`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/about`, changeFrequency: "yearly", priority: 0.6 },
-  ];
+  return CORPORATE_INDEXABLE.filter(isSitemapEligible).map((route) => ({
+    url: `${BASE}${route === "/" ? "/" : route}`,
+    changeFrequency: route === "/" ? ("monthly" as const) : ("monthly" as const),
+    priority: route === "/" ? 1 : route === "/about" ? 0.6 : 0.8,
+  }));
 }

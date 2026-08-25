@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
+import { shellOwner } from "@/lib/corporate/routePolicy";
+
 import AppHeader from "./AppHeader";
 import MobileBottomNav from "./MobileBottomNav";
 import SiteFooter from "./SiteFooter";
@@ -23,12 +25,16 @@ type Props = {
 // PXR-1 added "/tests/ima-iro". The 120Q used to live at "/check-in", which was suppressed; moving
 // the flow to its own canonical route silently gave a 120-question assessment a header, a footer and
 // a bottom tab bar. A tab bar during a running assessment is an invitation to abandon it.
-// CORP-P4A — the six corporate front-door candidates bring their own shell (CorporateShell), so the
-// consumer chrome must not wrap them. This adds routes to the suppression list; it changes NO
-// consumer route's behaviour. /me, /life, /tests/*, /result, /saved, auth, LINE and sharing are
-// untouched and keep their chrome exactly as before.
-const CORPORATE_FRONT_DOOR = ["/", "/mirai-move", "/kakari", "/about", "/company", "/contact"];
-
+// CORP-P4AR1 — shell ownership is decided by one pure policy module, not by a pathname allowlist.
+//
+// CORP-P4A used a suppression allowlist. An allowlist cannot match a path that does not exist, so on
+// an unknown route the consumer chrome mounted anyway and wrapped the corporate 404: two headers,
+// two footers and the consumer mobile tab bar on one page. The model is inverted here — consumer
+// chrome renders ONLY when the policy recognises a consumer route, so UNKNOWN paths fall through to
+// the corporate shell by default rather than by enumeration.
+//
+// Known consumer routes keep exactly the chrome they had before; the routes that were already
+// suppressed stay suppressed.
 const SHELL_SUPPRESSED_EXACT = new Set([
   "/support",
   "/en/support",
@@ -36,7 +42,6 @@ const SHELL_SUPPRESSED_EXACT = new Set([
   "/report-loading",
   "/report-preview",
   "/tests/ima-iro",
-  ...CORPORATE_FRONT_DOOR,
 ]);
 
 const SHELL_SUPPRESSED_PREFIXES = ["/line", "/reports/self-understanding", "/prototype"];
@@ -52,6 +57,13 @@ function isSuppressedRoute(pathname: string | null): boolean {
 export default function AppShell({ children, connectEnabled = false }: Props) {
   const pathname = usePathname();
 
+  // Corporate routes and UNKNOWN paths never get consumer chrome. This is the fix for the
+  // double-shell 404: the decision no longer depends on the path being in a list.
+  if (shellOwner(pathname) !== "CONSUMER") {
+    return <>{children}</>;
+  }
+
+  // Retained consumer routes that were already chrome-free stay chrome-free.
   if (isSuppressedRoute(pathname)) {
     return <>{children}</>;
   }
