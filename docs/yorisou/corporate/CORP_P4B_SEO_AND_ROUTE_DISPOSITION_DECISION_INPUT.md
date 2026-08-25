@@ -1,5 +1,20 @@
 # CORP-P4B — SEO and route-disposition decision input
 
+> ## ⚠ SUPERSEDED IN PART — CORP-P4AR2R1, 2026-08-25
+>
+> The verdict `YORISOU_CORP_P4AR2_READY_FOR_CORP_P4B_DECISION` recorded in this document is
+> **WITHDRAWN**. The truthful result was `CORP_P4AR2_DYNAMIC_404_NOT_ISOLATED`: seven invalid
+> dynamic routes across four families — `/share/[publicId]`, `/connect/invite/[publicId]`,
+> `/connect/pair/[pairId]` (never tested by CORP-P4AR2) and
+> `/reports/self-understanding/[publicCode]` — serve an empty `<html id="__next_error__">` document,
+> and after hydration `/share/**` and `/connect/pair/**` carry TWO headers and TWO footers.
+>
+> Everything else in this document stands: anchored robots rules, the four-entry sitemap, the
+> corrected crawl/noindex vocabulary, the rendered census, and the router-level 404 fix.
+>
+> See `CORP_P4AR2R1_DYNAMIC_404_FRAMEWORK_BLOCK.md`.
+
+
 **Status:** DECISION INPUT ONLY. Nothing here is authorized, and nothing here is implemented.
 CORP-P4B is **not** started. Produced by CORP-P4AR2 from measured evidence.
 

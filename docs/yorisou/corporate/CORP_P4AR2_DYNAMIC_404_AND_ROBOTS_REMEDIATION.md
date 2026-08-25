@@ -1,5 +1,20 @@
 # CORP-P4AR2 — Dynamic 404 isolation, exact robots matching, indexability truth
 
+> ## ⚠ SUPERSEDED IN PART — CORP-P4AR2R1, 2026-08-25
+>
+> The verdict `YORISOU_CORP_P4AR2_READY_FOR_CORP_P4B_DECISION` recorded in this document is
+> **WITHDRAWN**. The truthful result was `CORP_P4AR2_DYNAMIC_404_NOT_ISOLATED`: seven invalid
+> dynamic routes across four families — `/share/[publicId]`, `/connect/invite/[publicId]`,
+> `/connect/pair/[pairId]` (never tested by CORP-P4AR2) and
+> `/reports/self-understanding/[publicCode]` — serve an empty `<html id="__next_error__">` document,
+> and after hydration `/share/**` and `/connect/pair/**` carry TWO headers and TWO footers.
+>
+> Everything else in this document stands: anchored robots rules, the four-entry sitemap, the
+> corrected crawl/noindex vocabulary, the rendered census, and the router-level 404 fix.
+>
+> See `CORP_P4AR2R1_DYNAMIC_404_FRAMEWORK_BLOCK.md`.
+
+
 **Status:** LOCAL CANDIDATE ONLY — never pushed, never deployed, Production untouched.
 **Branch:** `product/corporate-homepage-preview`
 **Preflight HEAD:** `29fce73eba2e5b82c13856150a44a3356fb8a48d`

@@ -25,12 +25,24 @@ import "./globals.css";
  * becomes a structural property of where the file sits. A 404 has no consumer chrome because there
  * is no code path by which it could acquire any.
  *
- * It fixes a second measured defect at the same time. For `/share/[publicId]`,
- * `/connect/invite/[publicId]` and `/reports/self-understanding/[publicCode]`, the 404 body was not
- * server-rendered at all: 869 bytes of HTML carrying only the `<title>`, with the 404 content
- * present only inside the RSC flight payload. A crawler, or any client without JavaScript, received
- * a blank page under a 404 status. Rendering as its own document removes the client boundary that
- * was suspending the content.
+ * CORP-P4AR2R1 CORRECTION. An earlier version of this comment claimed that rendering as its own
+ * document also fixed the blank 404 on `/share/[publicId]`, `/connect/invite/[publicId]` and
+ * `/reports/self-understanding/[publicCode]`. IT DID NOT, and the CORP-P4AR2 verdict that shipped
+ * alongside that claim was withdrawn.
+ *
+ * Those routes — and `/connect/pair/[pairId]`, which CORP-P4AR2 never tested — still serve
+ * `<html id="__next_error__">` with an EMPTY body. This file cannot fix them. In Next.js 16.2.10 a
+ * `notFound()` raised during a DYNAMIC render is served by `getErrorRSCPayload`, which emits an
+ * empty seed document and defers the 404 UI to the client; the branch that server-renders a
+ * not-found boundary exists only on the prerender path, under `experimental.cacheComponents`.
+ * Reproduced in a minimal stock Next.js app containing none of this repository's code.
+ *
+ * Worse, after hydration those routes render the 404 INSIDE the root layout, so `AppShell` mounts
+ * around it and the page carries two headers and two footers — the very defect this file was
+ * introduced to remove, still present where the server never renders.
+ *
+ * See docs/yorisou/corporate/CORP_P4AR2R1_DYNAMIC_404_FRAMEWORK_BLOCK.md. Do not re-state this file
+ * as a complete 404 solution until that document's contract tests pass.
  *
  * REJECTED ALTERNATIVES.
  *

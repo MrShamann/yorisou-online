@@ -16,7 +16,15 @@
  * test re-derives it and fails if the two drift, so adding a route cannot silently escape policy.
  *
  * This module is pure: no imports, no I/O, no framework types. It is used by the shell, robots,
- * the sitemap and the tests, so those four cannot disagree.
+ * the sitemap and the tests.
+ *
+ * CORP-P4AR2R1 CORRECTION: an earlier version of this sentence said those four therefore "cannot
+ * disagree". That is false and was one of four claims CORP-P4AR2 itself had to withdraw. One shared
+ * module makes the four agree WITH THE MODULE; it cannot detect a defect in what the module
+ * produces, and it says nothing about what the RUNTIME does. Both failures are on record: an
+ * unanchored `Allow` rule leaked whole subtrees while every test passed, and `shellOwner()` still
+ * returns CONSUMER for `/share/<invalid>` on the client, so a hydrated 404 there carries two
+ * headers and two footers. Agreement with this module is not correctness.
  */
 
 export type RouteGroup =
