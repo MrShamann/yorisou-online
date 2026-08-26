@@ -95,6 +95,9 @@
 }
 .navLink:hover { color: var(--c-ink); border-bottom-color: var(--c-accent); }
 .navLink:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+/* One header row: nav (desktop only), the language selector (ALWAYS visible), and the menu
+   disclosure (mobile only). A language choice a visitor cannot see is not a choice. */
+.headerRight { display: flex; align-items: center; gap: clamp(10px, 1.6vw, 22px); }
 .disclosure { position: relative; }
 @media (min-width: 860px) { .disclosure { display: none; } }
 .toggle {
@@ -107,9 +110,13 @@
 .toggle:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
 .bars { display: inline-flex; flex-direction: column; gap: 4px; }
 .bars span { display: block; width: 16px; height: 1px; background: var(--c-ink-soft); }
+/* The panel is anchored to the disclosure's right edge and may never exceed the page gutter. With
+   the wider English labels it previously reached 16px past the gutter at 375. */
 .panel {
   position: absolute; right: 0; top: calc(100% + 10px); z-index: 60; background: var(--c-ground);
-  border: 1px solid var(--c-hairline-strong); min-width: 234px; display: flex; flex-direction: column; padding: 6px 0;
+  border: 1px solid var(--c-hairline-strong);
+  min-width: 214px; max-width: calc(100vw - (var(--pad) * 2));
+  display: flex; flex-direction: column; padding: 6px 0;
 }
 .panelLink { padding: 12px 18px; min-height: 44px; display: flex; align-items: center; font-size: 14px; color: var(--c-ink-soft); text-decoration: none; }
 .panelLink:hover { background: var(--c-ground-alt); color: var(--c-ink); }
@@ -131,6 +138,16 @@
   margin: 0 0 22px; font-weight: 700; letter-spacing: 0.005em;
   font-size: clamp(27px, 3.5vw, 44px); line-height: 1.46;
 }
+/* English is set slightly larger and tighter than Japanese because Latin script carries less weight
+   per character. This is language-aware composition; the Japanese scale is NOT reduced to fit it. */
+.root[data-lang="en"] .h1 { font-size: clamp(30px, 4vw, 50px); line-height: 1.24; letter-spacing: -0.01em; }
+.root[data-lang="en"] .h2 { line-height: 1.3; letter-spacing: -0.005em; }
+.root[data-lang="en"] .lead { max-width: 40em; line-height: 1.75; }
+.root[data-lang="en"] .body,
+.root[data-lang="en"] .projectLine,
+.root[data-lang="en"] .boundaryBody,
+.root[data-lang="en"] .problemBody,
+.root[data-lang="en"] .constraintBody { line-height: 1.7; word-break: normal; }
 .h2 { margin: 0 0 18px; font-weight: 700; font-size: clamp(21px, 3.1vw, 32px); line-height: 1.58; letter-spacing: 0.005em; }
 .h3 { margin: 0 0 8px; font-weight: 600; font-size: clamp(15px, 1.9vw, 17px); line-height: 1.7; }
 .unit { display: inline-block; }
@@ -177,6 +194,33 @@
 .relLive { stroke: var(--c-accent-on-dark); stroke-opacity: 0.85; }
 .sysLabel { fill: var(--c-sys-muted); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; }
 .sysLabelJp { fill: var(--c-sys-ink); font-size: 11px; letter-spacing: 0.04em; }
+/* English labels are wider than Japanese at the same optical size, so they step down slightly rather
+   than forcing the whole field to shrink. Language-aware composition, not global type shrinking. */
+.sysLabelEn { fill: var(--c-sys-ink); font-size: 9.5px; letter-spacing: 0.02em; }
+
+/* ── language selector ─────────────────────────────────────────────────────── */
+.langGroup { display: inline-flex; align-items: center; border: 1px solid var(--c-hairline-strong); }
+.langOption {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 0 13px; font-size: 12px; letter-spacing: 0.06em;
+  color: var(--c-muted); text-decoration: none; background: transparent; white-space: nowrap;
+}
+.langOption + .langOption { border-left: 1px solid var(--c-hairline-strong); }
+.langOption:hover { color: var(--c-ink); }
+.langOption:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2px; }
+.langOption[aria-current="true"] { color: var(--c-ink); background: var(--c-ground-alt); font-weight: 600; }
+.langSep { display: none; }
+
+/* At the narrowest widths the header row (wordmark + language selector + menu control) exceeded the
+   content width and pushed the disclosure — and therefore its anchored panel — 17px past the page
+   gutter at 375. The selector keeps its full 日本語 / English labels because a compact code like
+   "JA/EN" is less clear; the row tightens instead. */
+@media (max-width: 429px) {
+  .headerRight { gap: 8px; }
+  .langOption { padding: 0 9px; font-size: 11px; letter-spacing: 0.02em; }
+  .wordmark { font-size: 13px; letter-spacing: 0.13em; }
+  .toggle { padding: 8px 11px; letter-spacing: 0.08em; }
+}
 .boundaryRule { stroke: var(--c-accent-on-dark); stroke-width: 1.4; }
 .handoffRule { stroke: var(--c-handoff); stroke-width: 1.4; }
 

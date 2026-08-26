@@ -1,4 +1,5 @@
 import styles from "./p5r1.module.css";
+import { COPY, type Locale } from "./locale";
 
 /**
  * CORP-P5R1 — the hero system field. Layer 1 of the depth system.
@@ -15,18 +16,15 @@ import styles from "./p5r1.module.css";
  * semantic list, so a screen reader receives it once, and no decorative layer can ever intercept a
  * control — which is exactly the defect that made the previous prototype's only button unclickable.
  */
-const HUMAN = [
-  { y: 62, label: "暮らし" },
-  { y: 140, label: "仕事" },
-  { y: 218, label: "地域" },
-] as const;
+const HUMAN_Y = [62, 140, 218] as const;
+const SYSTEM_Y = [104, 186] as const;
 
-const SYSTEM = [
-  { y: 104, label: "モビリティ" },
-  { y: 186, label: "行政手続き" },
-] as const;
-
-export default function SystemField() {
+export default function SystemField({ locale }: { locale: Locale }) {
+  const c = COPY[locale];
+  const HUMAN = HUMAN_Y.map((y, i) => ({ y, label: c.humanItems[i] }));
+  const SYSTEM = SYSTEM_Y.map((y, i) => ({ y, label: c.systemItems[i] }));
+  // English labels are wider than Japanese, so the field breathes outward rather than shrinking.
+  const wide = locale === "en";
   return (
     <svg
       className={styles.sysField}
@@ -75,7 +73,7 @@ export default function SystemField() {
       {HUMAN.map((h, i) => (
         <g key={`h${i}`} data-motion="resolve" style={{ ["--i" as string]: i, ["--fx" as string]: "-10px" }}>
           <circle cx="38" cy={h.y} r="4.5" className={styles.node} />
-          <text x="52" y={h.y + 4} className={styles.sysLabelJp}>
+          <text x="52" y={h.y + 4} className={wide ? styles.sysLabelEn : styles.sysLabelJp}>
             {h.label}
           </text>
         </g>
@@ -87,8 +85,8 @@ export default function SystemField() {
         <line x1="220" y1="98" x2="220" y2="182" className={`${styles.rel} ${styles.relLive}`} strokeOpacity="0.45" />
         <circle cx="220" cy="140" r="5.2" fill="none" className={`${styles.node} ${styles.nodeLive}`} />
         <circle cx="220" cy="140" r="1.9" fill="var(--c-accent-on-dark)" />
-        <text x="220" y="90" textAnchor="middle" className={styles.sysLabel}>
-          context
+        <text x="220" y="88" textAnchor="middle" className={styles.sysLabel}>
+          {c.fieldRelation}
         </text>
       </g>
 
@@ -96,7 +94,7 @@ export default function SystemField() {
       {SYSTEM.map((s, i) => (
         <g key={`s${i}`} data-motion="resolve" style={{ ["--i" as string]: 4 + i, ["--fx" as string]: "10px" }}>
           <rect x="356" y={s.y - 4.5} width="9" height="9" className={styles.node} />
-          <text x="348" y={s.y + 4} textAnchor="end" className={styles.sysLabelJp}>
+          <text x="348" y={s.y + 4} textAnchor="end" className={wide ? styles.sysLabelEn : styles.sysLabelJp}>
             {s.label}
           </text>
         </g>

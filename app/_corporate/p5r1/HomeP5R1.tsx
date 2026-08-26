@@ -1,119 +1,155 @@
+import { Fragment } from "react";
+
 import styles from "./p5r1.module.css";
 import Reveal from "./Reveal";
 import SystemField from "./SystemField";
 import { NetworkSystem, ProcedureSystem } from "./ProjectSystems";
-import { CORPORATE_NAV, ROUTES } from "../nav";
-import {
-  HEADING_UNITS,
-  HERO_LEAD_UNITS,
-  KAKARI,
-  KAKARI_PROCEDURE,
-  METHODS,
-  MIRAI_MOVE,
-  MIRAI_NETWORK,
-  PROBLEM_BEATS,
-  THESIS,
-  THESIS_UNITS,
-} from "@/app/prototype/corporate/_content/site";
+import { COPY, SUPPORTED, homeHref, type Locale } from "./locale";
+import { ROUTES } from "../nav";
+import { THESIS } from "@/app/prototype/corporate/_content/site";
 
 /**
- * CORP-P5R1 — the AI-native homepage. HOMEPAGE ONLY. PREVIEW ONLY.
+ * CORP-P5R1-AMD — the AI-native corporate homepage, Japanese-default and bilingual.
  *
- * COPY IS LOCKED. Every word here comes from the approved CORP-P5 content source. What changed is
- * composition, hierarchy, depth and motion — not strategy. If the design only worked by rewriting
- * the copy, the design would have failed.
+ * JAPANESE IS DEFAULT AND CANONICAL. Nothing here redirects on browser locale, IP, device language
+ * or inferred geography; the visitor changes language only by choosing it. English is an adapted
+ * sibling composition, not a fallback: `data-lang` drives a language-aware type scale rather than a
+ * global shrink, so the Japanese composition is never compromised to fit English.
  *
- * The page is one evolving system rather than five stacked sections:
- *   THESIS     signals emerge, relations form          SIGNAL / CONNECT
- *   PROBLEM    complexity becomes visible              CONNECT
- *   PORTFOLIO  two grammars organise two problems      RESOLVE / HAND-OFF
- *   APPROACH   constraints bound the system            RESOLVE
- *   COMPANY    the system settles and is accountable   RESOLVE (terminal)
- *
- * The human material lives on light paper; the system material lives on a dark inset surface. That
- * split is the company thesis 人 / 仕組み, and it is also the pattern five of the six benchmarked
- * companies independently arrived at.
+ * Locale travels as `?lang=en` on this one URL. The Production doctrine is `/` = ja and `/en` = en,
+ * but `/en` is currently the legacy consumer route and locale routing is deferred to the corporate
+ * topology package. Nothing here begins that migration.
  */
-
-/** 人 side. Domains of life the thesis names — not personas, not users, not customers. */
-const HUMAN_SIGNALS = ["暮らし", "仕事", "地域"] as const;
-/** 仕組み side. The two institutional domains the products actually address. */
-const SYSTEM_DOMAINS = ["モビリティ", "行政手続き"] as const;
-
-export default function HomeP5R1() {
+/** Language selector. Two real links, always visible, 44px targets, never hover-only. */
+function LangSelector({ locale }: { locale: Locale }) {
   return (
-    <div className={styles.root}>
+    <div className={styles.langGroup} role="group" aria-label={COPY[locale].langLabel}>
+      {SUPPORTED.map((l) => (
+        <a
+          key={l}
+          className={styles.langOption}
+          href={homeHref(l)}
+          hrefLang={l}
+          lang={l}
+          aria-current={l === locale ? "true" : undefined}
+        >
+          {l === "ja" ? "日本語" : "English"}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+/** Numbered rows. Every grid cell is placed explicitly — auto-placement once pushed body copy into
+ *  the index column and rendered Japanese one character per line. */
+function Rows({ items }: { items: readonly { no: string; title: string; body: string }[] }) {
+  return (
+    <ol className={styles.problemGrid}>
+      {items.map((b, i) => (
+        <li className={styles.problemRow} key={b.no} data-motion="resolve" style={{ ["--i" as string]: i }}>
+          <span className={`${styles.mono} ${styles.problemNo}`}>{b.no}</span>
+          <p className={styles.problemTitle}>{b.title}</p>
+          <p className={styles.problemBody}>{b.body}</p>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/**
+ * Phrase units: the browser may only break BETWEEN units, never inside a word.
+ *
+ * Japanese sets without spaces, so adjacent inline-block units butt together correctly. English
+ * does not — without an explicit separator the units rendered as "help peopleunderstand it". The
+ * separator is a real space in the text flow, so it also gives the browser a legitimate break
+ * opportunity between units rather than relying on the inline-block boundary alone.
+ */
+function Phrase({ units, locale }: { units: readonly string[]; locale: Locale }) {
+  const sep = locale === "en";
+  return (
+    <>
+      {units.map((u, i) => (
+        <Fragment key={i}>
+          <span className={styles.unit}>{u}</span>
+          {/* The separator must sit BETWEEN the units, not inside one. A trailing space inside an
+              inline-block collapses at the box edge, which is why "help people" and "understand it"
+              rendered as one word even though the space was present in the DOM. */}
+          {sep && i < units.length - 1 ? " " : null}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+export default function HomeP5R1({ locale }: { locale: Locale }) {
+  const c = COPY[locale];
+
+  return (
+    <div className={styles.root} data-lang={locale} lang={c.htmlLang}>
       <a className={styles.skipLink} href="#main">
-        本文へスキップ
+        {c.skip}
       </a>
 
       <header className={styles.header}>
         <div className={`${styles.shell} ${styles.headerInner}`}>
-          <a className={styles.wordmark} href={ROUTES.home}>
+          <a className={styles.wordmark} href={homeHref(locale)}>
             Yorisou
           </a>
-          <nav className={styles.navDesktop} aria-label="サイト内ナビゲーション">
-            {CORPORATE_NAV.map((i) => (
-              <a key={i.href} className={styles.navLink} href={i.href}>
-                {i.label}
-              </a>
-            ))}
-          </nav>
-          <details className={styles.disclosure}>
-            <summary className={styles.toggle} aria-label="メニューを開閉する">
-              メニュー
-              <span className={styles.bars} aria-hidden="true">
-                <span />
-                <span />
-              </span>
-            </summary>
-            <nav className={styles.panel} aria-label="サイト内ナビゲーション（モバイル）">
-              {CORPORATE_NAV.map((i) => (
-                <a key={i.href} className={styles.panelLink} href={i.href}>
+          {/* The selector is rendered ONCE and is visible at every width. Rendering it twice —
+              one copy per breakpoint — put four language links in the DOM and duplicated
+              aria-current, which is a semantic defect even when only one copy is painted. */}
+          <div className={styles.headerRight}>
+            <nav className={styles.navDesktop} aria-label={c.navLabel}>
+              {c.navItems.map((i) => (
+                <a key={i.href} className={styles.navLink} href={i.href}>
                   {i.label}
                 </a>
               ))}
             </nav>
-          </details>
+            <LangSelector locale={locale} />
+            <details className={styles.disclosure}>
+              <summary className={styles.toggle} aria-label={c.menuToggle}>
+                {c.menu}
+                <span className={styles.bars} aria-hidden="true">
+                  <span />
+                  <span />
+                </span>
+              </summary>
+              <nav className={styles.panel} aria-label={c.navLabelMobile}>
+                {c.navItems.map((i) => (
+                  <a key={i.href} className={styles.panelLink} href={i.href}>
+                    {i.label}
+                  </a>
+                ))}
+              </nav>
+            </details>
+          </div>
         </div>
       </header>
 
       <main id="main" className={styles.main}>
-        {/* ── THESIS — human field | system surface ─────────────────────────── */}
+        {/* THESIS — human field | system surface */}
         <section className={`${styles.band} ${styles.hero}`}>
           <div className={styles.env} aria-hidden="true" />
           <div className={styles.shell}>
             <div className={styles.heroGrid}>
               <Reveal className={styles.heroHuman}>
                 <p className={`${styles.mono} ${styles.eyebrow}`} data-motion="signal">
-                  Yorisou — Corporate
+                  {c.eyebrowCorporate}
                 </p>
                 <h1 className={styles.h1} data-motion="signal" style={{ animationDelay: "60ms" }}>
-                  {THESIS_UNITS.map((u, i) => (
-                    <span className={styles.unit} key={i}>
-                      {u}
-                    </span>
-                  ))}
+                  <Phrase units={c.thesisUnits} locale={locale} />
                 </h1>
                 <p className={styles.lead} data-motion="signal" style={{ animationDelay: "140ms" }}>
-                  {HERO_LEAD_UNITS.map((line, li) => (
+                  {c.leadLines.map((line, li) => (
                     <span className={styles.leadLine} key={li}>
-                      {line.map((u, i) => (
-                        <span className={styles.unit} key={i}>
-                          {u}
-                        </span>
-                      ))}
+                      <Phrase units={line} locale={locale} />
                     </span>
                   ))}
                 </p>
-                <ul className={styles.signals} aria-label="人 — 暮らし・仕事・地域">
-                  {HUMAN_SIGNALS.map((s, i) => (
-                    <li
-                      className={styles.signal}
-                      key={s}
-                      data-motion="signal"
-                      style={{ animationDelay: `${220 + i * 70}ms` }}
-                    >
+                <ul className={styles.signals} aria-label={`${c.humanSide} — ${c.humanItems.join(" / ")}`}>
+                  {c.humanItems.map((s, i) => (
+                    <li className={styles.signal} key={s} data-motion="signal" style={{ animationDelay: `${220 + i * 70}ms` }}>
                       <i className={styles.signalDot} aria-hidden="true" />
                       {s}
                     </li>
@@ -123,140 +159,89 @@ export default function HomeP5R1() {
 
               <Reveal className={styles.heroSystem}>
                 <div className={styles.heroSystemHead}>
-                  <p className={`${styles.mono} ${styles.monoDark}`}>仕組み — Systems</p>
-                  <p className={`${styles.mono} ${styles.monoDark}`}>
-                    {SYSTEM_DOMAINS.join(" / ")}
-                  </p>
+                  <p className={`${styles.mono} ${styles.monoDark}`}>{c.systemSide}</p>
+                  <p className={`${styles.mono} ${styles.monoDark}`}>{c.systemItems.join(" / ")}</p>
                 </div>
                 <div className={styles.sysFieldWrap}>
-                  <SystemField />
+                  <SystemField locale={locale} />
                 </div>
-                {/* The accessible equivalent of the field above, stated once. */}
-                <p className={`${styles.mono} ${styles.monoDark}`}>
-                  人の状況を読み取り、関係として整理し、制度側へつなぐ。
-                </p>
+                {/* Structural caption. Names the two sides using approved labels; claims nothing. */}
+                <p className={`${styles.mono} ${styles.monoDark}`}>{c.fieldCaption}</p>
               </Reveal>
             </div>
           </div>
         </section>
 
-        {/* ── PROBLEM — complexity becomes visible ──────────────────────────── */}
+        {/* PROBLEM */}
         <section className={`${styles.band} ${styles.bandRule}`} id="problem">
           <div className={styles.shell}>
             <Reveal>
               <p className={`${styles.mono} ${styles.eyebrow}`} data-motion="signal">
-                取り組む問題
+                {c.eyebrowProblem}
               </p>
               <h2 className={styles.h2} data-motion="signal" style={{ animationDelay: "60ms" }}>
-                {HEADING_UNITS.problem.map((u, i) => (
-                  <span className={styles.unit} key={i}>
-                    {u}
-                  </span>
-                ))}
+                <Phrase units={c.headingProblem} locale={locale} />
               </h2>
-              <div className={styles.problemGrid}>
-                {PROBLEM_BEATS.map((b, i) => (
-                  <div
-                    className={styles.problemRow}
-                    key={b.no}
-                    data-motion="resolve"
-                    style={{ ["--i" as string]: i }}
-                  >
-                    <span className={`${styles.mono} ${styles.problemNo}`}>{b.no}</span>
-                    <p className={styles.problemTitle}>{b.title}</p>
-                    <p className={styles.problemBody}>{b.body}</p>
-                  </div>
-                ))}
-              </div>
+              <Rows items={c.problems} />
             </Reveal>
           </div>
         </section>
 
-        {/* ── PORTFOLIO — two system grammars ───────────────────────────────── */}
+        {/* PORTFOLIO — two system grammars */}
         <section className={`${styles.band} ${styles.bandRule}`} id="projects">
           <div className={styles.shell}>
             <Reveal>
               <p className={`${styles.mono} ${styles.eyebrow}`} data-motion="signal">
-                事業
+                {c.eyebrowProjects}
               </p>
               <h2 className={styles.h2} data-motion="signal" style={{ animationDelay: "60ms" }}>
-                {HEADING_UNITS.future.map((u, i) => (
-                  <span className={styles.unit} key={i}>
-                    {u}
-                  </span>
-                ))}
+                <Phrase units={c.headingProjects} locale={locale} />
               </h2>
             </Reveal>
 
             <div className={styles.portfolio}>
               <Reveal className={styles.project} as="figure">
                 <div className={`${styles.projectSystem} ${styles.projectSystemNet}`}>
-                  <NetworkSystem />
+                  <NetworkSystem locale={locale} />
                 </div>
                 <div className={styles.projectMeta}>
                   <div className={styles.projectHead}>
-                    <h3 className={styles.projectName}>{MIRAI_MOVE.name}</h3>
-                    <span className={styles.stage}>{MIRAI_MOVE.stage}</span>
+                    <h3 className={styles.projectName}>{c.miraiName}</h3>
+                    <span className={styles.stage}>{c.miraiStage}</span>
                   </div>
                   <p className={styles.projectLine}>
-                    {MIRAI_MOVE.lineUnits.map((u, i) => (
-                      <span className={styles.unit} key={i}>
-                        {u}
-                      </span>
-                    ))}
+                    <Phrase units={c.miraiLine} locale={locale} />
                   </p>
-                  <ul className={styles.problemGrid} style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                    {MIRAI_NETWORK.parties.map((p, i) => (
-                      <li className={styles.problemRow} key={p.id}>
-                        <span className={`${styles.mono} ${styles.problemNo}`}>
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <p className={styles.problemTitle}>{p.label}</p>
-                        <p className={styles.problemBody}>{p.note}</p>
-                      </li>
-                    ))}
-                  </ul>
+                  <Rows items={c.miraiParties} />
                   <div className={styles.boundary}>
-                    <p className={styles.boundaryTitle}>{MIRAI_MOVE.boundaryTitle}</p>
-                    <p className={styles.boundaryBody}>{MIRAI_MOVE.boundary}</p>
+                    <p className={styles.boundaryTitle}>{c.miraiBoundaryTitle}</p>
+                    <p className={styles.boundaryBody}>{c.miraiBoundary}</p>
                   </div>
                   <a className={styles.more} href={ROUTES.miraiMove}>
-                    Mirai Move について詳しく →
+                    {c.more(c.miraiName)}
                   </a>
                 </div>
               </Reveal>
 
               <Reveal className={styles.project} as="figure">
                 <div className={`${styles.projectSystem} ${styles.projectSystemProc}`}>
-                  <ProcedureSystem />
+                  <ProcedureSystem locale={locale} />
                 </div>
                 <div className={styles.projectMeta}>
                   <div className={styles.projectHead}>
-                    <h3 className={styles.projectName}>{KAKARI.name}</h3>
-                    <span className={styles.stage}>{KAKARI.stage}</span>
+                    <h3 className={styles.projectName}>{c.kakariName}</h3>
+                    <span className={styles.stage}>{c.kakariStage}</span>
                   </div>
                   <p className={styles.projectLine}>
-                    {KAKARI.lineUnits.map((u, i) => (
-                      <span className={styles.unit} key={i}>
-                        {u}
-                      </span>
-                    ))}
+                    <Phrase units={c.kakariLine} locale={locale} />
                   </p>
-                  <ul className={styles.problemGrid} style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                    {KAKARI_PROCEDURE.steps.map((s) => (
-                      <li className={styles.problemRow} key={s.no}>
-                        <span className={`${styles.mono} ${styles.problemNo}`}>{s.no}</span>
-                        <p className={styles.problemTitle}>{s.label}</p>
-                        <p className={styles.problemBody}>{s.note}</p>
-                      </li>
-                    ))}
-                  </ul>
+                  <Rows items={c.kakariSteps} />
                   <div className={styles.boundary}>
-                    <p className={styles.boundaryTitle}>{KAKARI_PROCEDURE.boundary.label}</p>
-                    <p className={styles.boundaryBody}>{KAKARI_PROCEDURE.boundary.note}</p>
+                    <p className={styles.boundaryTitle}>{c.kakariBoundaryTitle}</p>
+                    <p className={styles.boundaryBody}>{c.kakariBoundary}</p>
                   </div>
                   <a className={styles.more} href={ROUTES.kakari}>
-                    Kakari について詳しく →
+                    {c.more(c.kakariName)}
                   </a>
                 </div>
               </Reveal>
@@ -264,40 +249,31 @@ export default function HomeP5R1() {
           </div>
         </section>
 
-        {/* ── APPROACH — constraints, rendered ON the system surface ────────── */}
+        {/* APPROACH — constraints on the system surface */}
         <section className={styles.constraints} id="approach">
           <div className={styles.shell}>
             <Reveal>
               <div className={styles.constraintsHead}>
                 <p className={`${styles.mono} ${styles.monoDark}`} data-motion="signal">
-                  つくり方 — operating constraints
+                  {c.eyebrowApproach}
                 </p>
                 <h2 className={`${styles.h2} ${styles.h2OnDark}`} data-motion="signal" style={{ animationDelay: "60ms" }}>
-                  {HEADING_UNITS.method.map((u, i) => (
-                    <span className={styles.unit} key={i}>
-                      {u}
-                    </span>
-                  ))}
+                  <Phrase units={c.headingApproach} locale={locale} />
                 </h2>
               </div>
               <div className={styles.constraintGrid}>
-                {METHODS.map((m, i) => (
-                  <div
-                    className={styles.constraint}
-                    key={m.no}
-                    data-motion="resolve"
-                    style={{ ["--i" as string]: i }}
-                  >
+                {c.methods.map((m, i) => (
+                  <div className={styles.constraint} key={m.no} data-motion="resolve" style={{ ["--i" as string]: i }}>
                     <span className={styles.constraintNo}>{m.no}</span>
                     <p className={styles.constraintTitle}>{m.title}</p>
-                    <p className={styles.constraintBody}>{m.short}</p>
+                    <p className={styles.constraintBody}>{m.body}</p>
                   </div>
                 ))}
               </div>
               <details className={styles.disclose}>
-                <summary className={styles.discloseSummary}>この原則が実際に何を意味するか</summary>
+                <summary className={styles.discloseSummary}>{c.discloseMethods}</summary>
                 <div className={styles.discloseBody}>
-                  {METHODS.map((m) => (
+                  {c.methodsLong.map((m) => (
                     <p key={m.no} style={{ marginBottom: 14 }}>
                       <strong>
                         {m.no} {m.title}
@@ -312,26 +288,21 @@ export default function HomeP5R1() {
           </div>
         </section>
 
-        {/* ── COMPANY — the resolve. Calmest band on the page. ──────────────── */}
+        {/* COMPANY — the resolve */}
         <section className={styles.resolveBand} id="company">
           <div className={styles.shell}>
             <Reveal>
               <p className={`${styles.mono} ${styles.eyebrow}`} data-motion="signal">
-                会社
+                {c.eyebrowCompany}
               </p>
               <h2 className={styles.h2} data-motion="signal" style={{ animationDelay: "60ms" }}>
-                {HEADING_UNITS.aboutTitle.map((u, i) => (
-                  <span className={styles.unit} key={i}>
-                    {u}
-                  </span>
-                ))}
+                <Phrase units={c.headingCompany} locale={locale} />
               </h2>
               <p className={styles.body} data-motion="signal" style={{ animationDelay: "120ms" }}>
-                事業の順番、境界の引き方、記載する事実の基準を公開しています。商号・所在地・設立・代表者・法人番号は、
-                登録情報の確認後に掲載します。
+                {c.companyBody}
               </p>
               <a className={styles.more} href={ROUTES.about}>
-                私たちについて →
+                {c.aboutLink}
               </a>
             </Reveal>
           </div>
@@ -343,27 +314,27 @@ export default function HomeP5R1() {
           <div className={styles.footerGrid}>
             <div>
               <p className={`${styles.mono} ${styles.footerTitle}`}>Yorisou</p>
-              <p className={styles.footerThesis}>{THESIS}</p>
+              <p className={styles.footerThesis}>{locale === "en" ? c.thesisUnits.join(" ") : THESIS}</p>
             </div>
             <div>
-              <p className={`${styles.mono} ${styles.footerTitle}`}>事業</p>
+              <p className={`${styles.mono} ${styles.footerTitle}`}>{c.footProjects}</p>
               <ul className={styles.footerList}>
                 <li><a className={styles.footerLink} href={ROUTES.miraiMove}>Mirai Move</a></li>
                 <li><a className={styles.footerLink} href={ROUTES.kakari}>Kakari</a></li>
               </ul>
             </div>
             <div>
-              <p className={`${styles.mono} ${styles.footerTitle}`}>会社</p>
+              <p className={`${styles.mono} ${styles.footerTitle}`}>{c.footCompany}</p>
               <ul className={styles.footerList}>
-                <li><a className={styles.footerLink} href={ROUTES.about}>私たちについて</a></li>
-                <li><a className={styles.footerLink} href={ROUTES.company}>会社情報</a></li>
-                <li><a className={styles.footerLink} href={ROUTES.contact}>お問い合わせ</a></li>
+                <li><a className={styles.footerLink} href={ROUTES.about}>{c.footAbout}</a></li>
+                <li><a className={styles.footerLink} href={ROUTES.company}>{c.footCompanyInfo}</a></li>
+                <li><a className={styles.footerLink} href={ROUTES.contact}>{c.footContact}</a></li>
               </ul>
             </div>
           </div>
           <div className={styles.footerBase}>
-            <span className={styles.badge}>Preview — not published</span>
-            <span>商号・所在地・設立・代表者・法人番号は、登録情報の確認後に掲載します。</span>
+            <span className={styles.badge}>{c.previewBadge}</span>
+            <span>{c.pendingNote}</span>
           </div>
         </div>
       </footer>

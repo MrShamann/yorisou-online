@@ -1,5 +1,5 @@
 import styles from "./p5r1.module.css";
-import { KAKARI_PROCEDURE, MIRAI_NETWORK } from "@/app/prototype/corporate/_content/site";
+import { COPY, type Locale } from "./locale";
 
 /**
  * CORP-P5R1 — the two project system grammars.
@@ -15,7 +15,8 @@ import { KAKARI_PROCEDURE, MIRAI_NETWORK } from "@/app/prototype/corporate/_cont
  */
 
 /** MIRAI MOVE — NETWORK. Parties converge on a shared opportunity. Motion: CONNECT. */
-export function NetworkSystem() {
+export function NetworkSystem({ locale }: { locale: Locale }) {
+  const c = COPY[locale];
   const seats = [
     { x: 54, y: 58 },
     { x: 226, y: 58 },
@@ -42,12 +43,9 @@ export function NetworkSystem() {
         <circle cx="140" cy="120" r="24" fill="none" className={`${styles.node} ${styles.nodeLive}`} />
         <circle cx="140" cy="120" r="2.6" fill="var(--c-accent-on-dark)" />
         <text x="140" y="164" textAnchor="middle" className={styles.sysLabel}>
-          shared opportunity
+          {c.miraiCentre}
         </text>
       </g>
-      <text x="140" y="228" textAnchor="middle" className={styles.sysLabel}>
-        network — {MIRAI_NETWORK.parties.length} parties
-      </text>
     </svg>
   );
 }
@@ -56,7 +54,8 @@ export function NetworkSystem() {
  * KAKARI — PROCEDURE. Four states resolve downward; a hand-off dot travels to the boundary rule and
  * STOPS there. The boundary is the terminal object of the drawing, not an annotation beside it.
  */
-export function ProcedureSystem() {
+export function ProcedureSystem({ locale }: { locale: Locale }) {
+  const c = COPY[locale];
   const ys = [40, 82, 124, 166];
   return (
     <svg viewBox="0 0 280 240" role="presentation" aria-hidden="true" focusable="false"
@@ -66,12 +65,12 @@ export function ProcedureSystem() {
         <g key={i} data-motion="resolve" style={{ ["--i" as string]: i, ["--fy" as string]: "8px" }}>
           <circle cx="46" cy={y} r="5.5" className={`${styles.node} ${i < 3 ? "" : styles.nodeLive}`} />
           <text x="30" y={y + 4} textAnchor="end" className={styles.sysLabel}>
-            {KAKARI_PROCEDURE.steps[i].no}
+            {c.kakariSteps[i].no}
           </text>
           <line x1="58" y1={y} x2="248" y2={y} className={styles.rel} pathLength={1}
             data-motion="connect" style={{ ["--i" as string]: i }} />
-          <text x="66" y={y - 7} className={styles.sysLabelJp}>
-            {KAKARI_PROCEDURE.steps[i].label}
+          <text x="66" y={y - 7} className={locale === "en" ? styles.sysLabelEn : styles.sysLabelJp}>
+            {c.kakariSteps[i].title}
           </text>
         </g>
       ))}
@@ -80,7 +79,7 @@ export function ProcedureSystem() {
       <g data-motion="resolve" style={{ ["--i" as string]: 4 }}>
         <line x1="18" y1="204" x2="262" y2="204" className={styles.handoffRule} />
         <text x="18" y="222" className={styles.sysLabel}>
-          professional boundary — procedure stops
+          {c.kakariBoundaryTitle}
         </text>
       </g>
 
