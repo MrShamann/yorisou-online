@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
-import Shell from "@/app/_corporate/Shell";
-import HomeView from "@/app/_corporate/HomeView";
+import HomeP5R1 from "@/app/_corporate/p5r1/HomeP5R1";
 
 /** CORP-P5 — YORISOU LLC corporate route. PREVIEW ONLY; this branch is never deployed to Production. */
 export const metadata: Metadata = {
@@ -11,9 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return (
-    <Shell current="/">
-      <HomeView />
-    </Shell>
-  );
+  // CORP-P5R1 — the homepage renders the P5R1 system directly. It brings its own shell so that the
+  // five other corporate routes keep the CORP-P5 baseline byte-for-byte.
+  return <HomeP5R1 />;
 }
