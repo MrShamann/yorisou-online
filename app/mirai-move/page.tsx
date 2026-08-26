@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 
-import MiraiMoveView from "@/app/prototype/corporate/_views/MiraiMoveView";
-import { FINAL_ROUTES, MIRAI_MOVE } from "@/app/prototype/corporate/_content/site";
+import Shell from "@/app/_corporate/Shell";
+import ProjectView from "@/app/_corporate/ProjectView";
 
-/**
- * CORP-P4A — final-route candidate. LOCAL ONLY: this branch is never pushed and never deployed.
- * The page is a thin wrapper: the accepted CORP-P3R1 view is rendered with the final URL set, so
- * there is exactly one corporate implementation and `/prototype/corporate/**` stays available for
- * evidence comparison.
- */
+/** CORP-P5 — YORISOU LLC corporate route. PREVIEW ONLY; this branch is never deployed to Production. */
 export const metadata: Metadata = {
   title: "Mirai Move — Yorisou",
-  description: MIRAI_MOVE.line,
+  description: "日本のモビリティ領域における、情報・マッチング・事業開発のためのプラットフォーム。公開サイト稼働中、プラットフォーム機能は開発中です。",
+  openGraph: { title: "Mirai Move — Yorisou", description: "日本のモビリティ領域における、情報・マッチング・事業開発のためのプラットフォーム。公開サイト稼働中、プラットフォーム機能は開発中です。", type: "website", locale: "ja_JP", siteName: "Yorisou" },
 };
 
-export default function MiraiMovePage() {
-  return <MiraiMoveView routes={FINAL_ROUTES} />;
+export default function Page() {
+  return (
+    <Shell current="/mirai-move">
+      <ProjectView which="mirai-move" />
+    </Shell>
+  );
 }

@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
 
-import ContactView from "@/app/prototype/corporate/_views/ContactView";
-import { FINAL_ROUTES } from "@/app/prototype/corporate/_content/site";
+import Shell from "@/app/_corporate/Shell";
+import PendingView from "@/app/_corporate/PendingView";
 
-/**
- * CORP-P4A — final-route candidate. LOCAL ONLY: this branch is never pushed and never deployed.
- * The page is a thin wrapper: the accepted CORP-P3R1 view is rendered with the final URL set, so
- * there is exactly one corporate implementation and `/prototype/corporate/**` stays available for
- * evidence comparison.
- */
+/** CORP-P5 — YORISOU LLC corporate route. PREVIEW ONLY; this branch is never deployed to Production. */
 export const metadata: Metadata = {
   title: "お問い合わせ — Yorisou",
-  description: "確認済みの連絡先を用意でき次第、この場所に掲載します。",
-  // CORP-P4A §6 — noindex while VERIFIED_CORPORATE_CONTACT_REQUIRED is open.
-  robots: { index: false, follow: true },
+  description: "検証済みの法人連絡先が確立するまで、問い合わせ窓口は公開しません。",
+  openGraph: { title: "お問い合わせ — Yorisou", description: "検証済みの法人連絡先が確立するまで、問い合わせ窓口は公開しません。", type: "website", locale: "ja_JP", siteName: "Yorisou" },
+  robots: { index: false, follow: false },
 };
 
-export default function ContactPage() {
-  return <ContactView routes={FINAL_ROUTES} />;
+export default function Page() {
+  return (
+    <Shell current="/contact">
+      <PendingView which="contact" />
+    </Shell>
+  );
 }

@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 
-import AboutView from "@/app/prototype/corporate/_views/AboutView";
-import { FINAL_ROUTES } from "@/app/prototype/corporate/_content/site";
+import Shell from "@/app/_corporate/Shell";
+import AboutView from "@/app/_corporate/AboutView";
 
-/**
- * CORP-P4A — final-route candidate. LOCAL ONLY: this branch is never pushed and never deployed.
- * The page is a thin wrapper: the accepted CORP-P3R1 view is rendered with the final URL set, so
- * there is exactly one corporate implementation and `/prototype/corporate/**` stays available for
- * evidence comparison.
- */
+/** CORP-P5 — YORISOU LLC corporate route. PREVIEW ONLY; this branch is never deployed to Production. */
 export const metadata: Metadata = {
   title: "私たちについて — Yorisou",
-  description: "現場の手順から始め、次の一手が分かるところまでを設計し、境界を明示し、検証できることだけを書く。Yorisouの進め方。",
+  description: "Yorisouのつくり方、事業の順番、記載する事実の基準。確認できないことは書きません。",
+  openGraph: { title: "私たちについて — Yorisou", description: "Yorisouのつくり方、事業の順番、記載する事実の基準。確認できないことは書きません。", type: "website", locale: "ja_JP", siteName: "Yorisou" },
 };
 
-export default function AboutPage() {
-  return <AboutView routes={FINAL_ROUTES} />;
+export default function Page() {
+  return (
+    <Shell current="/about">
+      <AboutView />
+    </Shell>
+  );
 }

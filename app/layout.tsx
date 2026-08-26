@@ -22,13 +22,26 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://yorisou.online"),
-  // The count lived here, in the fallback title and description every page without its own
-  // metadata inherits — so the single most-rendered claim in the product was that the test is 24
-  // questions. It is 120. The replacement is the approved copy already used on 今日 rather than a
-  // corrected number, because the site-level title should name the product, not one assessment.
-  title: "YORISOU | AIと整える、わたしの毎日。",
+  /**
+   * CORP-P5 — PREVIEW-SCOPED CORPORATE IDENTITY. This branch is never merged and never deployed to
+   * Production, so this changes nothing that is live.
+   *
+   * The previous value identified the whole site as the standalone consumer product
+   * ("YORISOU" + a LINE/Web-first self-reflection service). That is the historical product, not the
+   * identity of YORISOU LLC's corporate site, and it was the fallback inherited by every route
+   * without its own metadata — including any corporate route added later.
+   *
+   * Legacy consumer routes that define their own metadata are UNAFFECTED; only the site-level
+   * fallback changes. Production still serves the old value. The cutover is recorded as a migration
+   * option in docs/yorisou/corporate/CORP_P5_LEGACY_MIGRATION_OPTIONS.md and is not performed here.
+   */
+  title: {
+    default: "Yorisou — 人と社会のあいだに、次のよりそいをつくる。",
+    template: "%s",
+  },
   description:
-    "Yorisouは、今の状態を短い言葉にして、次の小さな一歩を見つけるためのLINE/Web-firstセルフリフレクションサービスです。診断や占いではありません。",
+    "Yorisouは、暮らし・仕事・地域にある複雑さを見つめ、人が理解し、選び、前に進めるプロダクトをつくる会社です。",
+  openGraph: { siteName: "Yorisou", locale: "ja_JP", type: "website" },
 };
 
 export default async function RootLayout({
