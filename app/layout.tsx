@@ -6,6 +6,7 @@ import "./globals.css";
 import AppShell from "./components/AppShell";
 import { connectionOperational } from "@/lib/yorisou/connection/access";
 import { getReleaseMarker } from "@/lib/releaseMarker";
+import { localeEntry, resolveLocale } from "@/app/_corporate/i18n/locales";
 
 const notoSansJp = Noto_Sans_JP({
   subsets: ["latin"],
@@ -54,9 +55,21 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const localeHeader = headerStore.get("x-yorisou-locale");
   const localeCookie = cookieStore.get("yorisou_locale")?.value;
-  const locale = localeHeader === "en" || localeCookie === "en" ? "en" : "ja";
+  /**
+   * The header is written by `proxy` on every matched request and is authoritative for THIS
+   * request; the cookie is consulted only when the header is absent. The previous
+   * `header === "en" || cookie === "en"` let a stale cookie from an earlier visit override a
+   * correctly resolved current locale, and collapsed all twenty-one published locales to two.
+   * Direction and script come from the registry, so a new locale needs no change here.
+   */
+  const entry = localeEntry(resolveLocale(localeHeader ?? localeCookie ?? undefined));
   return (
-    <html lang={locale} className={`${notoSansJp.variable} ${inter.variable}`}>
+    <html
+      lang={entry.code}
+      dir={entry.direction}
+      data-script={entry.script}
+      className={`${notoSansJp.variable} ${inter.variable}`}
+    >
       <body>
         <div id="yorisou-release" hidden data-release={releaseMarker} />
         <AppShell connectEnabled={connectionOperational()}>{children}</AppShell>

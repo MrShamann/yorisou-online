@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
 
-import Shell from "@/app/_corporate/Shell";
-import PendingView from "@/app/_corporate/PendingView";
+import Shell from "@/app/_corporate/p5r2/Shell";
+import ContactView from "@/app/_corporate/p5r2/views/ContactView";
+import { getCopy } from "@/app/_corporate/i18n";
+import { localeFrom, localeMetadata, type SearchParams } from "@/app/_corporate/p5r2/route-helpers";
 
-/** CORP-P5 — YORISOU LLC corporate route. PREVIEW ONLY; this branch is never deployed to Production. */
-export const metadata: Metadata = {
-  title: "お問い合わせ — Yorisou",
-  description: "検証済みの法人連絡先が確立するまで、問い合わせ窓口は公開しません。",
-  openGraph: { title: "お問い合わせ — Yorisou", description: "検証済みの法人連絡先が確立するまで、問い合わせ窓口は公開しません。", type: "website", locale: "ja_JP", siteName: "Yorisou" },
-  robots: { index: false, follow: false },
-};
+/** CORP-P5R2 — YORISOU LLC corporate route. PREVIEW ONLY; never deployed to Production. */
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  return localeMetadata(searchParams, "contact");
+}
 
-export default function Page() {
+export default async function Page({ searchParams }: { searchParams: SearchParams }) {
+  const locale = await localeFrom(searchParams);
+  const copy = await getCopy(locale);
   return (
-    <Shell current="/contact">
-      <PendingView which="contact" />
+    <Shell copy={copy} locale={locale} path="/contact">
+      <ContactView copy={copy} locale={locale} />
     </Shell>
   );
 }

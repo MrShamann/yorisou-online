@@ -1,0 +1,363 @@
+/*
+ * CORP-P5R2 — the global corporate design system. PREVIEW ONLY.
+ *
+ * Answers the P5R1 visual critique: the previous system was hairlines, numbered rows, black
+ * rectangles and large empty whitespace — an editorial prototype. This system keeps the honest
+ * restraint but adds surface variety, a real type scale, tinted bands, elevated panels and density,
+ * so the page reads as a company rather than a design study.
+ *
+ * RTL IS STRUCTURAL, NOT A PATCH. Every directional value uses CSS logical properties
+ * (margin-inline, padding-inline, border-inline, inset-inline, text-align: start/end). Arabic is
+ * therefore laid out correctly by the same rules as Japanese, with no mirrored stylesheet.
+ *
+ * MULTI-SCRIPT TYPOGRAPHY. One font stack carries Latin, CJK, Cyrillic, Arabic, Devanagari and Thai
+ * by falling through to the platform's own system faces rather than shipping many webfont packages.
+ * Only the two existing webfonts (Noto Sans JP, Inter) are loaded; every other script resolves to a
+ * high-quality system face, which is the performant choice at 21 locales.
+ */
+
+.root {
+  /* ground */
+  --paper: #fbfaf6;
+  --paper-2: #f4f2ec;
+  --paper-3: #edeae1;
+  --ink: #0c0e0d;
+  --ink-2: #2f3633;
+  --ink-3: #545b57;
+  /* 4.54:1 on --surface (#f4f2ec) and 4.87:1 on --paper: WCAG AA for the small uppercase labels
+     that use it. #6c736e measured 4.34:1 and failed AA by a hair. */
+  --ink-4: #69706b;
+  --line: rgba(12, 14, 13, 0.10);
+  --line-2: rgba(12, 14, 13, 0.18);
+  --line-3: rgba(12, 14, 13, 0.30);
+
+  /* system surface */
+  --sys: #0e1211;
+  --sys-2: #161b19;
+  --sys-3: #1e2523;
+  --sys-line: rgba(233, 231, 224, 0.13);
+  --sys-line-2: rgba(233, 231, 224, 0.26);
+  --sys-ink: #e9e7e0;
+  --sys-ink-2: #b3b8b3;
+  --sys-ink-3: #8d938e;
+
+  /* signal — state only */
+  --jade: #2f6b5e;
+  --jade-2: #3f8676;
+  --jade-on-dark: #74baa6;
+  --jade-wash: #e4ede9;
+  --amber: #a87f42;
+  --amber-on-dark: #d3ab6b;
+
+  --pad: clamp(20px, 5vw, 48px);
+  --max: 1240px;
+  --max-text: 62ch;
+
+  --step--1: clamp(12px, 0.78vw + 10px, 13.5px);
+  --step-0: clamp(14px, 0.5vw + 12.5px, 16px);
+  --step-1: clamp(16px, 0.7vw + 14px, 19px);
+  --step-2: clamp(19px, 1.3vw + 15px, 25px);
+  --step-3: clamp(23px, 2.2vw + 16px, 36px);
+  --step-4: clamp(28px, 3.6vw + 16px, 54px);
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-noto-jp, "Noto Sans JP"), var(--font-inter, Inter), "Hiragino Sans",
+    "Yu Gothic", "Noto Sans", "Segoe UI", system-ui, -apple-system,
+    "Noto Sans Arabic", "Geeza Pro", "Noto Sans Devanagari", "Kohinoor Devanagari",
+    "Noto Sans Thai", "Thonburi", sans-serif;
+  line-height: 1.85;
+  letter-spacing: 0.015em;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+}
+
+/* Latin-script locales read better a little tighter than Japanese. */
+.root[data-script="Latn"],
+.root[data-script="Cyrl"] { line-height: 1.68; letter-spacing: 0; }
+.root[data-script="Arab"] { line-height: 1.95; letter-spacing: 0; }
+.root[data-script="Deva"],
+.root[data-script="Thai"] { line-height: 2.05; letter-spacing: 0; }
+.root[data-script="Jpan"] .jp,
+.root[data-script="Hans"] .jp,
+.root[data-script="Hant"] .jp,
+.root[data-script="Kore"] .jp { word-break: keep-all; overflow-wrap: anywhere; }
+/* German compounds are the classic long-word break case. */
+.root[data-script="Latn"] .jp { overflow-wrap: break-word; hyphens: auto; }
+
+.shell { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: var(--pad); }
+.narrow { max-width: 74ch; }
+
+.mono {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums; color: var(--ink-4); margin: 0;
+}
+.root[data-script="Arab"] .mono,
+.root[data-script="Deva"] .mono,
+.root[data-script="Thai"] .mono { text-transform: none; letter-spacing: 0.04em; font-size: 12px; }
+.monoDark { color: var(--sys-ink-3); }
+
+.skipLink { position: absolute; inset-inline-start: -9999px; }
+.skipLink:focus {
+  inset-inline-start: var(--pad); top: 10px; z-index: 90; background: var(--paper); color: var(--ink);
+  padding: 10px 14px; outline: 2px solid var(--jade); outline-offset: 2px;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: saturate(1.2) blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.headerInner { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 66px; }
+.wordmark {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif; font-weight: 600; font-size: 15px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); text-decoration: none;
+  display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap;
+}
+.wordmark:focus-visible { outline: 2px solid var(--jade); outline-offset: 4px; }
+.headerRight { display: flex; align-items: center; gap: clamp(8px, 1.4vw, 20px); }
+.navDesktop { display: none; gap: clamp(12px, 1.7vw, 26px); align-items: center; }
+@media (min-width: 1000px) { .navDesktop { display: flex; } }
+.navLink {
+  font-size: 13.5px; color: var(--ink-3); text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; min-height: 44px;
+  border-bottom: 1.5px solid transparent;
+}
+.navLink:hover { color: var(--ink); border-bottom-color: var(--jade); }
+.navLink:focus-visible { outline: 2px solid var(--jade); outline-offset: 4px; }
+.navLink[aria-current="page"] { color: var(--ink); border-bottom-color: var(--jade); }
+
+.iconBtn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding-inline: 13px;
+  border: 1px solid var(--line-2); background: var(--paper); color: var(--ink-3);
+  font-family: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+}
+.iconBtn:hover { color: var(--ink); border-color: var(--line-3); }
+.iconBtn:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+.menuBtn { }
+@media (min-width: 1000px) { .menuBtn { display: none; } }
+.bars { display: inline-flex; flex-direction: column; gap: 4px; }
+.bars span { display: block; width: 15px; height: 1.5px; background: currentColor; }
+
+/* mobile nav panel — native details, no client JS */
+.disclosure { position: relative; }
+@media (min-width: 1000px) { .disclosure { display: none; } }
+.panel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 10px); z-index: 60;
+  background: var(--paper); border: 1px solid var(--line-2);
+  min-width: 216px; max-width: calc(100vw - (var(--pad) * 2));
+  display: flex; flex-direction: column; padding-block: 6px;
+  box-shadow: 0 18px 40px -28px rgba(12, 14, 13, 0.5);
+}
+.panelLink {
+  padding: 12px 18px; min-height: 44px; display: flex; align-items: center;
+  font-size: 14px; color: var(--ink-3); text-decoration: none;
+}
+.panelLink:hover { background: var(--paper-2); color: var(--ink); }
+.panelLink:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
+
+/* ── sections ───────────────────────────────────────────────────────────── */
+.main { flex: 1; }
+.band { padding-block: clamp(56px, 6.4vw, 104px); position: relative; }
+.bandTint { background: var(--paper-2); }
+.bandLine { border-top: 1px solid var(--line); }
+.bandDark { background: var(--sys); color: var(--sys-ink); }
+.bandDark .mono { color: var(--sys-ink-3); }
+
+.eyebrow { margin: 0 0 16px; }
+.h1 { margin: 0 0 22px; font-size: var(--step-4); line-height: 1.28; font-weight: 700; letter-spacing: -0.012em; }
+.root[data-script="Jpan"] .h1, .root[data-script="Hans"] .h1,
+.root[data-script="Hant"] .h1, .root[data-script="Kore"] .h1 { line-height: 1.46; letter-spacing: 0.005em; }
+.h2 { margin: 0 0 20px; font-size: var(--step-3); line-height: 1.34; font-weight: 700; letter-spacing: -0.008em; }
+.root[data-script="Jpan"] .h2, .root[data-script="Hans"] .h2,
+.root[data-script="Hant"] .h2, .root[data-script="Kore"] .h2 { line-height: 1.56; letter-spacing: 0.005em; }
+.h3 { margin: 0 0 10px; font-size: var(--step-1); line-height: 1.5; font-weight: 600; }
+.unit { display: inline-block; }
+.lead { margin: 0; max-width: var(--max-text); font-size: var(--step-1); line-height: 1.8; color: var(--ink-3); }
+.root[data-script="Jpan"] .lead { line-height: 2; }
+.leadLine { display: block; }
+.body { margin: 0 0 16px; max-width: var(--max-text); font-size: var(--step-0); color: var(--ink-2); }
+.bodyMuted { color: var(--ink-3); }
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.hero { position: relative; padding-block: clamp(48px, 5.6vw, 92px); overflow: hidden; }
+.heroField {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.55;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, var(--line-2) 50%, transparent 50%),
+    radial-gradient(1px 1px at 70% 60%, var(--line-2) 50%, transparent 50%),
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 104px 104px, 104px 104px;
+  mask-image: radial-gradient(130% 100% at 50% 0%, #000 35%, transparent 80%);
+}
+.heroGrid { position: relative; z-index: 1; display: grid; gap: clamp(28px, 3.4vw, 48px); align-items: center; }
+@media (min-width: 1000px) { .heroGrid { grid-template-columns: 1.08fr 0.92fr; } }
+
+.surface {
+  background: var(--sys); color: var(--sys-ink); padding: clamp(22px, 2.6vw, 34px);
+  display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
+  box-shadow: 0 30px 70px -50px rgba(12, 14, 13, 0.8);
+}
+.surfaceHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.surfaceFig { flex: 1; min-height: 200px; position: relative; }
+/*
+ * The diagrams are fixed-geometry decorative illustrations (role="presentation", aria-hidden), and
+ * every <text> is placed at an authored x with an authored text-anchor. Under `direction: rtl` the
+ * anchor origin flips, so a label written as x="14" with the default start anchor runs LEFTWARD off
+ * the canvas: in Arabic the Kakari boundary caption rendered at left:-49 and was clipped.
+ *
+ * Pinning the SVG coordinate system to ltr keeps the authored geometry intact in every locale.
+ * Glyph shaping is unaffected — the bidi algorithm still renders each Arabic run right-to-left
+ * within its own text element, so the label reads correctly; only the box placement stays as drawn.
+ */
+.svgFill { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; direction: ltr; }
+.svgBlock { width: 100%; height: auto; display: block; pointer-events: none; direction: ltr; }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 26px 0 0; padding: 0; list-style: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--line-2);
+  padding: 8px 14px; font-size: 13px; color: var(--ink-2); background: var(--paper);
+}
+.chipDot { width: 5px; height: 5px; border-radius: 50%; background: var(--jade); }
+
+/* ── cards / rows ───────────────────────────────────────────────────────── */
+.cards { display: grid; gap: clamp(14px, 1.6vw, 20px); }
+@media (min-width: 760px) { .cards3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 760px) { .cards2 { grid-template-columns: repeat(2, 1fr); } }
+.card {
+  background: var(--paper); border: 1px solid var(--line); padding: clamp(20px, 2.2vw, 28px);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cardTint { background: var(--paper-2); border-color: var(--line); }
+.cardNo { font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.14em; color: var(--jade); font-variant-numeric: tabular-nums; }
+.cardTitle { margin: 0; font-size: var(--step-1); font-weight: 600; line-height: 1.5; color: var(--ink); }
+.cardBody { margin: 0; font-size: var(--step--1); line-height: 1.8; color: var(--ink-3); }
+
+.cardDark { background: var(--sys-2); border: 1px solid var(--sys-line); }
+.cardDark .cardTitle { color: var(--sys-ink); }
+.cardDark .cardBody { color: var(--sys-ink-2); }
+.cardDark .cardNo { color: var(--jade-on-dark); }
+
+/* ── project blocks ─────────────────────────────────────────────────────── */
+.projects { display: grid; gap: clamp(28px, 3.4vw, 52px); }
+@media (min-width: 1000px) { .projects { grid-template-columns: 1fr 1fr; } }
+.project { display: flex; flex-direction: column; }
+.projectHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin-block: 20px 8px; }
+.projectName { margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: var(--step-2); font-weight: 600; color: var(--ink); }
+.stage { font-size: 11.5px; color: var(--ink-3); border: 1px solid var(--line-2); padding: 3px 9px; line-height: 1.7; }
+.projectLead { margin: 0 0 18px; font-size: var(--step--1); line-height: 1.8; color: var(--ink-2); max-width: 46ch; }
+
+.boundary { margin-top: 18px; padding-top: 15px; border-top: 2px solid var(--jade); }
+.boundaryDark { border-top-color: var(--jade-on-dark); }
+.boundaryTitle { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.boundaryDark .boundaryTitle { color: var(--sys-ink); }
+.boundaryBody { margin: 0; font-size: 12.5px; line-height: 1.85; color: var(--ink-3); max-width: 60ch; }
+.boundaryDark .boundaryBody { color: var(--sys-ink-2); }
+
+/* ── links / CTA ────────────────────────────────────────────────────────── */
+.textLink {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  font-size: 13.5px; color: var(--jade); text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--jade) 34%, transparent);
+  align-self: flex-start;
+}
+.textLink:hover { border-bottom-color: var(--jade); }
+.textLink:focus-visible { outline: 2px solid var(--jade); outline-offset: 4px; }
+.textLinkDark { color: var(--jade-on-dark); border-bottom-color: color-mix(in srgb, var(--jade-on-dark) 40%, transparent); }
+.arrow { display: inline-block; }
+.root[dir="rtl"] .arrow { transform: scaleX(-1); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 50px; padding-inline: 26px; background: var(--ink); color: var(--paper);
+  font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid var(--ink);
+  font-family: inherit; cursor: pointer;
+}
+.btn:hover { background: var(--ink-2); border-color: var(--ink-2); }
+.btn:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+.btnGhost { background: transparent; color: var(--ink); }
+.btnGhost:hover { background: var(--paper-2); }
+
+/* ── founder module ─────────────────────────────────────────────────────── */
+.founder { display: grid; gap: clamp(22px, 2.8vw, 40px); align-items: start; }
+@media (min-width: 900px) { .founder { grid-template-columns: 0.85fr 1.15fr; } }
+.founderMark {
+  aspect-ratio: 4 / 5; background: var(--sys); position: relative; overflow: hidden;
+  display: flex; align-items: flex-end; padding: clamp(18px, 2vw, 26px);
+}
+.founderMarkInner { position: relative; z-index: 1; }
+.founderInitials {
+  position: absolute; inset-block-start: clamp(16px, 2vw, 26px); inset-inline-start: clamp(18px, 2vw, 26px);
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: clamp(56px, 7vw, 88px); font-weight: 600; letter-spacing: -0.03em;
+  /* Its own value rather than --sys-line-2 (0.26 alpha => 2.08:1), which is a BORDER token and must
+     not be brightened globally. At 56-88px this is large text, so AA needs 3:1; 0.38 gives 3.11:1
+     while keeping the ghosted monogram reading as a watermark. */
+  color: rgba(233, 231, 224, 0.38); line-height: 1;
+}
+.founderName { margin: 0; font-size: var(--step-2); font-weight: 600; color: var(--sys-ink); }
+.founderRole { margin: 4px 0 0; font-size: 12.5px; color: var(--sys-ink-3); }
+.founderFacts { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.founderFacts li { display: flex; gap: 12px; font-size: var(--step--1); line-height: 1.8; color: var(--ink-2); }
+.founderFacts li::before { content: ""; flex: none; width: 5px; height: 5px; margin-top: 11px; background: var(--jade); }
+.subLabel { margin: 26px 0 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-4); text-transform: uppercase; }
+.root[data-script="Jpan"] .subLabel, .root[data-script="Arab"] .subLabel,
+.root[data-script="Deva"] .subLabel, .root[data-script="Thai"] .subLabel { text-transform: none; letter-spacing: 0.02em; }
+
+/* ── message ────────────────────────────────────────────────────────────── */
+.message { max-width: 68ch; }
+.messagePara { margin: 0 0 18px; font-size: var(--step-0); line-height: 2; color: var(--ink-2); }
+.messageFirst::first-letter { font-size: 1.9em; line-height: 1; font-weight: 600; float: inline-start; margin-inline-end: 8px; margin-block-start: 4px; color: var(--jade); }
+.signature { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+.signatureName { margin: 0; font-size: var(--step-1); font-weight: 600; }
+.signatureRole { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-4); }
+
+/* ── facts table ────────────────────────────────────────────────────────── */
+.facts { margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line-2); max-width: 72ch; }
+.factRow { display: grid; grid-template-columns: minmax(120px, 0.32fr) 1fr; gap: 4px 22px; padding-block: 16px; border-bottom: 1px solid var(--line); }
+.factLabel { margin: 0; font-size: 12.5px; color: var(--ink-4); }
+.factValue { margin: 0; font-size: var(--step-0); color: var(--ink); }
+
+/* ── disclosure ─────────────────────────────────────────────────────────── */
+.disclose { border-top: 1px solid var(--line); margin-top: 22px; }
+.discloseDark { border-top-color: var(--sys-line); }
+.discloseSummary {
+  cursor: pointer; list-style: none; padding-block: 15px; min-height: 44px; box-sizing: border-box;
+  display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--ink-3);
+}
+.discloseDark .discloseSummary { color: var(--sys-ink-2); }
+.discloseSummary::-webkit-details-marker { display: none; }
+.discloseSummary::after { content: "+"; margin-inline-start: auto; font-size: 16px; }
+.disclose[open] .discloseSummary::after { content: "\2013"; }
+.discloseSummary:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+.discloseBody { padding-block: 0 20px; font-size: var(--step--1); line-height: 1.85; color: var(--ink-3); max-width: var(--max-text); }
+.discloseDark .discloseBody { color: var(--sys-ink-2); }
+.discloseBody strong { color: var(--ink); font-weight: 600; }
+.discloseDark .discloseBody strong { color: var(--sys-ink); }
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+.footer { border-top: 1px solid var(--line); background: var(--paper-2); padding-block: clamp(36px, 4vw, 60px); }
+.footerGrid { display: grid; gap: 30px; }
+@media (min-width: 760px) { .footerGrid { grid-template-columns: 1.7fr 1fr 1fr; gap: 44px; } }
+.footerTagline { margin: 0; font-size: 13px; line-height: 1.85; color: var(--ink-3); max-width: 32ch; }
+.footerList { margin: 0; padding: 0; list-style: none; }
+.footerLink { font-size: 13.5px; color: var(--ink-2); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+.footerLink:hover { color: var(--jade); }
+.footerLink:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+.footerBase { margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; font-size: 11.5px; color: var(--ink-4); }
+.badge { border: 1px solid var(--line-2); padding: 3px 9px; letter-spacing: 0.08em; font-size: 10.5px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+  }
+}

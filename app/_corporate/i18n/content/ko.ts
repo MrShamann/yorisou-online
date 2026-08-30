@@ -1,0 +1,297 @@
+import type { SiteCopy } from "../types";
+
+/**
+ * CORP-P5R2 — KOREAN. Translated from the Japanese canonical source (ja.ts), not from the English.
+ *
+ * It may never be stronger than the Japanese. No customer, partner, metric, revenue, funding,
+ * market-position, team-size or capability claim appears here that the Japanese does not make.
+ *
+ * On the company form: the Japanese LLC form is rendered in Korean as an LLC, never as a
+ * joint-stock company; the representative is a representative member, never a corporate CEO title.
+ *
+ * On the representative: "Harvard Business School Executive Education, General Management Program"
+ * is stated precisely. It is NOT a Harvard degree and NOT an HBS MBA, and must never be shortened
+ * in a way that implies either. No endorsement by IESE, Harvard, Ficosa or any government body is
+ * implied.
+ */
+export const ko: SiteCopy = {
+  chrome: {
+    skip: "본문으로 건너뛰기",
+    menu: "메뉴",
+    menuToggle: "메뉴 열기/닫기",
+    close: "닫기",
+    navLabel: "사이트 내비게이션",
+    navLabelMobile: "사이트 내비게이션(모바일)",
+    langLabel: "표시 언어",
+    langHeading: "언어 선택",
+    langSearch: "언어 검색",
+    langCurrent: "현재 언어",
+    previewBadge: "Preview — 미공개",
+    nav: { home: "홈", miraiMove: "Mirai Move", kakari: "Kakari", about: "소개", company: "회사 정보", contact: "문의" },
+    footerTagline: "사람과 사회 사이에, 다음의 곁을 만듭니다.",
+    footerProjects: "사업",
+    footerCompany: "회사",
+    footerLegalNote: "게재된 사실은 확인된 기록에 근거합니다.",
+    backToTop: "맨 위로",
+  },
+
+  meta: {
+    home: { title: "Yorisou 합동회사 — 사람과 사회 사이에, 다음의 곁을 만듭니다.", description: "Yorisou 합동회사는 생활·일·지역에 있는 복잡함을 들여다보고, 사람이 이해하고 선택하며 앞으로 나아갈 수 있는 제품을 만드는 회사입니다. Mirai Move와 Kakari를 개발하고 있습니다." },
+    miraiMove: { title: "Mirai Move — Yorisou 합동회사", description: "일본 모빌리티 영역의 정보·매칭·사업 개발을 위한 플랫폼입니다. 공개 사이트가 운영 중이며, 플랫폼 기능은 개발 단계에 있습니다." },
+    kakari: { title: "Kakari — Yorisou 합동회사", description: "일본에서 생활하는 사람과 사업을 시작하는 사람을 위한 다국어 행정 절차·서류 지원입니다. 현재는 개발 중이며 일반에는 공개하지 않았습니다." },
+    about: { title: "소개 — Yorisou 합동회사", description: "Yorisou가 무엇을 위해 존재하고, 어떻게 생각하며, 어떻게 만드는지. 확인할 수 없는 것은 쓰지 않습니다." },
+    company: { title: "회사 정보 — Yorisou 합동회사", description: "Yorisou 합동회사의 회사 개요, 대표자 프로필, 대표 메시지, 사업 영역." },
+    contact: { title: "문의 — Yorisou 합동회사", description: "사업·제휴·취재에 관한 문의 창구입니다." },
+  },
+
+  common: {
+    readMore: (name) => `${name}에 대해 자세히 보기`,
+    backHome: "회사 소개로 돌아가기",
+    stageLabel: "현재 단계",
+    boundaryLabel: "담당하지 않는 범위",
+  },
+
+  home: {
+    eyebrow: "Yorisou 합동회사",
+    thesis: ["사람과 사회 사이에,", "다음의 곁을", "만듭니다."],
+    lead: ["Yorisou는 생활·일·지역에 있는 복잡함을 들여다보고,", "사람이 이해하고 선택하며 앞으로 나아갈 수 있는 제품을 만드는 회사입니다."],
+    humanSide: "사람",
+    humanItems: ["생활", "일", "지역"],
+    systemSide: "구조",
+    systemItems: ["모빌리티", "행정 절차"],
+    fieldCaption: "사람 — 생활·일·지역  /  구조 — 모빌리티·행정 절차",
+    fieldRelation: "관계",
+
+    whyEyebrow: "우리가 다루는 문제",
+    whyHeading: ["복잡함은 개인의 노력만으로", "풀리지 않습니다."],
+    whyBeats: [
+      { no: "01", title: "‘모르겠다’가 입구에서 사람을 멈춰 세웁니다.", body: "제도가 존재하더라도 닿을 수 없다면 없는 것과 같습니다." },
+      { no: "02", title: "전문가에게 넘기기까지의 거리가 멉니다.", body: "정말로 사람의 판단이 필요한 지점 앞에는, 구조가 대신 감당할 수 있는 거리가 있습니다." },
+      { no: "03", title: "현장과 구조가 맞물리지 않습니다.", body: "이동·복지·행정 현장에는 아직 닿지 않은 선택지가 있습니다." },
+    ],
+
+    buildEyebrow: "만들고 있는 것",
+    buildHeading: ["다음의 곁을,", "하나씩 만들어 갑니다."],
+
+    howEyebrow: "만드는 방식",
+    howHeading: ["복잡함을 대신 떠안고,", "쓸 수 있는 형태로 만듭니다."],
+    howBeats: [
+      { no: "01", title: "현장의 말에서 시작한다", body: "기술에서 발상하지 않습니다. 실제로 곤란을 겪는 사람의 절차에서 거꾸로 설계합니다." },
+      { no: "02", title: "이해하는 지점까지를 책임진다", body: "정보를 보여주고 끝내지 않습니다. 다음에 무엇을 하면 되는지 알 수 있는 상태까지를 설계에 포함합니다." },
+      { no: "03", title: "경계를 명시한다", body: "전문가가 담당해야 할 영역에는 들어가지 않습니다. 어디까지 담당하고 어디부터 사람에게 넘기는지를 제품 안에 명시합니다." },
+      { no: "04", title: "검증할 수 있는 것만 말한다", body: "실적·수치·제휴는 근거가 있는 것만 기재합니다. 확인할 수 없는 것은 쓰지 않습니다." },
+    ],
+    howDisclose: "이 원칙이 실제로 무엇을 의미하는가",
+
+    founderEyebrow: "대표자",
+    founderHeading: ["복잡한 현장을 20년 동안 지켜본", "사람이 만듭니다."],
+    founderTeaser: "자동차·모빌리티·제조·국제 사업 현장에서 20년 이상, 기술과 구현과 상거래의 흐름 사이에 서 왔습니다. 그곳에서 반복해 본 것은, 잘 만들어진 구조가 사용하는 사람에게 닿지 못한 채 멈추는 장면이었습니다.",
+    founderRole: "Yorisou 합동회사 대표사원",
+    founderCta: "대표자 소개",
+
+    messageEyebrow: "대표 메시지",
+    messageHeading: ["기술이 아니라,", "닿는지 여부로 판단합니다."],
+    messageTeaser: "우리가 다루는 것은 새로움이 아닙니다. 이미 존재하는 제도와 선택지가 정작 필요한 사람 앞에서 멈춰 섭니다. 그 거리를 하나씩 좁혀 가는 회사를 만들고 있습니다.",
+    messageCta: "메시지 전문 읽기",
+
+    originEyebrow: "거점",
+    originHeading: ["Fukuoka에서 시작합니다."],
+    originBody: "Yorisou 합동회사는 일본 Fukuoka현 Fukuoka시를 거점으로 회사를 만들어 가고 있습니다. 생활과 일과 지역이 가까운 거리에 있는 곳에서, 현장의 절차에서부터 설계를 시작합니다.",
+
+    proofEyebrow: "회사 정보",
+    proofHeading: ["쓸 수 있는 것을,", "쓸 수 있는 만큼만."],
+
+    ctaEyebrow: "문의",
+    ctaHeading: ["함께할 수 있는 여지가", "있을지도 모릅니다."],
+    ctaBody: "사업 상담, 제휴 검토, 취재 의뢰를 받고 있습니다. 내용에 따라 순차적으로 연락드립니다.",
+    ctaButton: "문의하기",
+  },
+
+  mirai: {
+    eyebrow: "사업 01",
+    heading: ["일본 모빌리티 영역의", "정보·매칭·사업 개발", "플랫폼."],
+    stage: "공개 사이트 운영 중 / 플랫폼 기능은 개발 중",
+    lead: "행정·지자체, 기업, 돌봄·복지·지역 현장, 해외 공급업체, 국내 파트너를 연결해 이동에 관한 정보와 기회를 하나의 흐름으로 다루는 것을 목표로 합니다. 현재는 공개 정보 사이트가 운영 중이며, 플랫폼 기능은 개발 단계에 있습니다.",
+    domain: "일본 모빌리티 영역",
+    networkEyebrow: "연결하는 상대",
+    networkHeading: ["입장이 다른 상대가,", "같은 기회를", "서로 다른 말로 보고 있습니다."],
+    centre: "이동의 기회",
+    parties: [
+      { no: "01", title: "행정·지자체", body: "제도와 예산을 쥔 쪽" },
+      { no: "02", title: "기업", body: "공급과 구현을 맡는 쪽" },
+      { no: "03", title: "지역·돌봄/복지 현장", body: "실제로 이동이 일어나는 곳" },
+      { no: "04", title: "해외 공급업체 / 국내 파트너", body: "선택지를 들여오는 쪽" },
+    ],
+    boundaryTitle: "개발 상황에 대하여",
+    boundaryBody: "플랫폼 본체는 개발 중입니다. 자율 에이전트에 의한 자동 실행은 활성화하지 않았습니다. 외부에 영향을 미치는 조작은 사람의 확인을 전제로 설계하고 있습니다. 완성된 전체 기능 플랫폼으로 제공하고 있지 않습니다.",
+    detail: [
+      { heading: "다루고 있는 문제", body: "이동의 선택지는 지역별로, 제도별로, 사업자별로 나뉘어 존재합니다. 필요로 하는 사람과 이미 존재하는 선택지가 같은 자리에서 만나지 못하고 있습니다." },
+      { heading: "마주하고 있는 상대", body: "행정·지자체, 기업, 돌봄·복지·지역 현장, 해외 공급업체, 국내 파트너. 입장도 판단 기준도 다른 상대가 같은 기회를 서로 다른 말로 보고 있습니다." },
+      { heading: "지금 움직이고 있는 것", body: "공개 정보 사이트가 운영 중입니다. 플랫폼으로서의 정보·매칭·사업 개발 기능은 기반과 아키텍처를 정비하는 단계에 있습니다." },
+    ],
+    siteLabel: "공개 사이트",
+    siteUrl: "https://www.miraimove.com",
+  },
+
+  kakari: {
+    eyebrow: "사업 02",
+    heading: ["일본에서 생활하는 사람과", "사업을 시작하는 사람을 위한,", "다국어 절차 지원."],
+    stage: "개발 중(일반 공개 전)",
+    lead: "일본어나 전문 지식의 벽이 있으면 본래 이용할 수 있는 제도에도 닿지 못합니다. Kakari는 필요한 정보의 제시, 서류 준비, 양식 작성, 제출·우편 절차 안내까지를 다국어로 지원합니다. 현재는 개발 단계에 있으며 일반에는 공개하지 않았습니다.",
+    domain: "행정 절차·서류 / 다국어",
+    procedureEyebrow: "지원하는 절차",
+    procedureHeading: ["알아보는 것에서,", "제출하는 것까지."],
+    steps: [
+      { no: "01", title: "알아본다", body: "어떤 제도가 자신과 관계있는지 확인한다" },
+      { no: "02", title: "서류를 갖춘다", body: "필요한 서류와 첨부물을 정리한다" },
+      { no: "03", title: "작성한다", body: "다국어로 기입하고 내용을 확인한다" },
+      { no: "04", title: "제출한다", body: "제출처·제출 방법·우편 절차를 안내한다" },
+    ],
+    boundaryTitle: "전문가가 담당하는 범위",
+    boundaryBody: "국가 자격 전문가의 대리 업무는 수행하지 않습니다. 법무·세무·공적 판단이 필요한 영역은 전문가가 담당하는 범위로 명시합니다. 변호사·세무사·행정서사 등 자격이 필요한 판단이나 대리는 Kakari의 기능에 포함되지 않습니다.",
+    detail: [
+      { heading: "다루고 있는 문제", body: "절차의 방법은 공개되어 있습니다. 그런데도 언어와 전제 지식이 부족하다는 이유만으로 제도에 닿지 못하는 사람이 있습니다. 이는 본인의 능력 문제가 아닙니다." },
+      { heading: "마주하고 있는 상대", body: "일본에서 생활하고 있는 사람, 앞으로 일본에서 사업을 시작하는 사람. 일본어로 절차를 혼자 진행하기 어려운 상황에 있는 사람을 상정하고 있습니다." },
+      { heading: "지금 움직이고 있는 것", body: "인증 기반을 독립된 검증 환경에 구축하고 권한과 스토리지를 검증하고 있는 단계입니다. 외부 연동은 비활성 상태이며 일반에는 공개하지 않았습니다." },
+    ],
+  },
+
+  about: {
+    eyebrow: "소개",
+    heading: ["만드는 방식이,", "그대로 약속이 됩니다."],
+    lead: "Yorisou는 생활·일·지역에 있는 복잡함을 들여다보고, 사람이 이해하고 선택하며 앞으로 나아갈 수 있는 제품을 만드는 회사입니다.",
+    whyHeading: ["왜 이 회사가 존재하는가."],
+    whyBody: [
+      "제도도, 기술도, 선택지도 이미 많이 존재합니다. 그런데도 정작 필요로 하는 사람 앞에서 멈춰 섭니다. 우리가 마주하고 있는 것은 그 마지막 거리입니다.",
+      "이 거리는 개인의 노력이나 정보량의 문제로 이야기되기 쉽습니다. 그러나 실제로는 구조가 감당할 수 있었을 복잡함이 그대로 개인에게 넘겨져 있는 경우가 많습니다.",
+    ],
+    thinkHeading: ["어떻게 생각하는가."],
+    thinkBody: [
+      "우리는 기술에서 발상하지 않습니다. 지금 멈춰 있는 한 수를 푸는 데서 생각을 시작합니다. 사람의 상황을 읽고, 관계로 정리하고, 다음에 무엇을 하면 되는지 알 수 있는 상태까지 옮깁니다. 거기까지를 설계의 범위로 삼습니다.",
+      "AI는 그 이해와 구조화를 위해 사용합니다. 판단을 대신하게 하기 위해서가 아닙니다. 사람이 판단하는 데 필요한 재료를 쓸 수 있는 형태로 정리하는 것이 그 역할입니다.",
+    ],
+    buildHeading: ["어떻게 만드는가."],
+    principles: [
+      { no: "01", title: "현장의 말에서 시작한다", body: "기술에서 발상하지 않습니다. 실제로 곤란을 겪는 사람의 절차에서 거꾸로 설계합니다." },
+      { no: "02", title: "이해하는 지점까지를 책임진다", body: "정보를 보여주고 끝내지 않습니다. 다음에 무엇을 하면 되는지 알 수 있는 상태까지를 설계에 포함합니다." },
+      { no: "03", title: "경계를 명시한다", body: "전문가가 담당해야 할 영역에는 들어가지 않습니다. 어디까지 담당하고 어디부터 사람에게 넘기는지를 제품 안에 명시합니다." },
+      { no: "04", title: "검증할 수 있는 것만 말한다", body: "실적·수치·제휴는 근거가 있는 것만 기재합니다. 확인할 수 없는 것은 쓰지 않습니다." },
+    ],
+    principlesLong: [
+      { no: "01", title: "현장의 말에서 시작한다", long: "어떤 제도든 사용하는 사람의 절차로 번역되지 않으면 닿지 않습니다. 우리는 실제 신청, 실제 이동, 실제로 오가는 대화에서 설계를 시작합니다. 추상적인 과제 설정이 아니라, 눈앞에서 멈춰 있는 한 수를 푸는 데서 생각합니다." },
+      { no: "02", title: "이해하는 지점까지를 책임진다", long: "검색 결과를 늘어놓는 것은 지원이 아닙니다. 필요한 것은 지금 자신이 무엇을 하면 되는지 아는 일입니다. 정보를 제시하는 데서 그치지 않고, 다음 한 수를 이해할 수 있는 상태까지를 제품의 범위로 삼습니다." },
+      { no: "03", title: "경계를 명시한다", long: "할 수 없는 일을 모호하게 둔 채 사용하게 하는 것은 가장 위험한 설계입니다. 담당하는 범위와 전문가에게 넘기는 범위를 제품 화면에 직접 씁니다. 경계는 주의 문구가 아니라 기능의 일부입니다." },
+      { no: "04", title: "검증할 수 있는 것만 말한다", long: "확인할 수 없는 실적이나 아직 동작하지 않는 기능을 앞서 말하지 않습니다. 게재하는 사실에는 반드시 그것을 뒷받침하는 기록이 있습니다. 쓸 수 있는 것이 적은 시기에는 적은 그대로 내놓습니다." },
+    ],
+    orderHeading: ["하나씩,", "끝까지."],
+    orderBody: "한 번에 여러 가지를 시작하지 않습니다. 하나의 영역에서 현장의 절차에 닿는 곳까지 만들어 내는 일을 우선합니다.",
+    claimsHeading: ["확인할 수 없는 것은,", "쓰지 않습니다."],
+    claimsBody: "게재하는 사실에는 반드시 그것을 뒷받침하는 기록이 있습니다. 쓸 수 있는 것이 적은 시기에는 적은 그대로 내놓습니다.",
+  },
+
+  company: {
+    eyebrow: "회사 정보",
+    heading: ["Yorisou 합동회사"],
+    intro: "Yorisou 합동회사는 생활·일·지역에 있는 복잡함을, 사람이 이해하고 선택하며 앞으로 나아갈 수 있는 형태로 바꾸는 제품을 만드는 회사입니다. Fukuoka를 거점으로 Mirai Move와 Kakari 두 가지 사업을 진행하고 있습니다.",
+
+    messageEyebrow: "대표 메시지",
+    messageHeading: ["기술이 아니라,", "닿는지 여부로 판단합니다."],
+    message: [
+      "우리가 다루고 있는 것은 새로움이 아닙니다.",
+      "자동차·모빌리티·제조 현장에서 20년 이상, 기술과 구현과 상거래의 흐름 사이에 서 왔습니다. 그곳에서 반복해 본 것은, 잘 만들어진 구조가 그것을 필요로 하는 사람에게 닿지 못한 채 멈추는 장면입니다. 기술이 부족해서가 아닙니다. 사용하는 사람의 절차로 번역되지 않았기 때문입니다.",
+      "제도도 선택지도 이미 많이 존재합니다. 그런데도 ‘나와 관계가 있는가’, ‘다음에 무엇을 하면 되는가’를 알 수 없다면 없는 것과 같습니다. 이 마지막 거리를 구조의 쪽이 떠안는 것. 그것이 Yorisou를 만든 이유입니다.",
+      "우리는 AI를 판단을 대신하게 하기 위해 사용하지 않습니다. 사람이 판단하는 데 필요한 재료를 읽어 내고, 관계로 정리하고, 쓸 수 있는 형태로 다듬기 위해 사용합니다. 판단과 책임은 사람의 몫으로 남깁니다. 어디까지 담당하고 어디부터 전문가에게 넘기는지를 제품 화면에 씁니다. 그것이 우리의 설계입니다.",
+      "회사로서는 아직 작고, 쓸 수 있는 것도 많지 않습니다. 그렇기 때문에 확인된 것만 씁니다. 늘려야 하는 것은 주장이 아니라 실제로 닿은 실적이라고 생각합니다.",
+    ],
+    messageSignature: "Jin Yang",
+    messageRole: "Yorisou 합동회사 대표사원",
+
+    profileEyebrow: "대표자",
+    profileHeading: ["대표사원 소개"],
+    profileName: "Jin Yang",
+    profileNameLatin: "Jin Yang / Edward Jin",
+    profileRole: "Yorisou 합동회사 대표사원",
+    profileBody: [
+      "자동차·모빌리티·제조·산업 프로젝트 개발·공급망·상업 개발·제품 개발, 그리고 국경을 넘는 국제 사업에서 20년 이상의 실무 경험이 있습니다.",
+    ],
+    profileBackgroundLabel: "경력",
+    profileBackground: [
+      "국제 자동차 부품 공급업체인 Ficosa에서 상업 및 산업 프로젝트의 상급 책임을 담당. 글로벌 산업 프로젝트와 아시아 지역의 상업 활동에 관여.",
+      "이후 중국에서 기술·제조 사업을 창업하고 운영. 자동차 전장, 제어 시스템, 정밀 제조, AI를 활용한 제품·시스템 개발에 참여.",
+      "유럽·중국·일본을 포함한 여러 시장에서 국제 사업 운영 경험을 보유.",
+      "현재는 일본에서 Yorisou 합동회사의 대표사원을 맡아 Fukuoka를 거점으로 회사를 만들어 가고 있음.",
+    ],
+    profileEducationLabel: "학력",
+    profileEducation: [
+      "IESE Business School 경영학 석사(MBA)",
+      "Harvard Business School Executive Education, General Management Program 수료",
+    ],
+    profileRelevanceLabel: "이 경력이 Yorisou로 이어지는 이유",
+    profileRelevance: [
+      "복잡한 현실의 산업을 가로지르며 오랫동안 실무를 해 왔다는 것.",
+      "기술·제조·상업 실행·국제 시장을 잇는 자리에 서 왔다는 것.",
+      "구조나 기술과, 사람이나 조직이 실제로 쓸 수 있는 것 사이의 간극을 직접 보아 왔다는 것.",
+      "그 결과로, 복잡함을 이해할 수 있고 행동할 수 있는 형태로 바꾸는 제품을 만들기에 이르렀다는 것.",
+    ],
+
+    overviewEyebrow: "회사 개요",
+    overviewHeading: ["회사 개요"],
+    facts: [
+      { label: "상호", value: "Yorisou 합동회사 (Yorisou GK)" },
+      { label: "대표사원", value: "Jin Yang" },
+      { label: "소재지", value: "일본 Fukuoka현 Fukuoka시" },
+      { label: "사업 내용", value: "Mirai Move, Kakari의 기획·개발·운영" },
+    ],
+
+    businessEyebrow: "사업 영역",
+    businessHeading: ["사업 영역"],
+    businessBody: "모빌리티 영역의 정보·매칭·사업 개발, 그리고 일본에서 생활하는 사람과 사업을 시작하는 사람을 위한 다국어 행정 절차·서류 지원. 어느 쪽이든 복잡함을 대신 떠안아 쓸 수 있는 형태로 만든다는 같은 방침 아래 진행하고 있습니다.",
+
+    projectsEyebrow: "사업",
+    projectsHeading: ["진행하고 있는 사업"],
+
+    originEyebrow: "거점",
+    originHeading: ["Fukuoka에서 시작합니다."],
+    originBody: [
+      "Yorisou 합동회사는 일본 Fukuoka현 Fukuoka시를 거점으로 회사를 만들어 가고 있습니다.",
+      "생활과 일과 지역이 가까운 거리에 있는 곳에서, 현장의 절차에서부터 설계를 시작합니다.",
+    ],
+
+    ctaHeading: ["문의"],
+    ctaBody: "사업 상담, 제휴 검토, 취재 의뢰를 받고 있습니다.",
+  },
+
+  contact: {
+    eyebrow: "문의",
+    heading: ["문의"],
+    lead: "사업 상담, 제휴 검토, 취재 의뢰를 받고 있습니다. 내용에 따라 순차적으로 연락드립니다.",
+    channelsHeading: ["문의 종류"],
+    channels: [
+      { title: "일반 문의", body: "Yorisou라는 회사와 진행하고 있는 사업에 대한 질문." },
+      { title: "사업·제휴", body: "모빌리티 영역, 행정 절차 영역에서의 협업이나 거래 상담." },
+      { title: "취재·미디어", body: "취재 의뢰, 회사와 대표자에 관한 문의." },
+    ],
+    formHeading: ["양식으로 보내기"],
+    formIntro: "아래 양식으로 보내 주세요. 보내 주신 내용은 담당자가 확인한 뒤 순차적으로 연락드립니다.",
+    fields: {
+      name: "이름", namePlaceholder: "홍길동",
+      email: "이메일", emailPlaceholder: "you@example.com",
+      org: "회사명·단체명", orgPlaceholder: "선택 사항",
+      type: "문의 종류",
+      message: "문의 내용", messagePlaceholder: "상담의 배경이나 확인하고 싶은 내용을 적어 주세요.",
+    },
+    types: [
+      { value: "general", label: "일반 문의" },
+      { value: "business", label: "사업·제휴" },
+      { value: "media", label: "취재·미디어" },
+    ],
+    submit: "보내기",
+    sending: "보내는 중…",
+    successTitle: "전송했습니다",
+    successBody: "문의를 접수했습니다. 내용을 확인한 뒤 순차적으로 연락드리겠습니다.",
+    errorTitle: "보내지 못했습니다",
+    errorBody: "잠시 후 다시 시도해 주세요.",
+    required: "필수",
+    privacyNote: "보내 주신 개인정보는 문의에 대응하는 목적으로만 사용합니다.",
+  },
+};

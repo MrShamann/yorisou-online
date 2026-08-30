@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
 
-import Shell from "@/app/_corporate/Shell";
-import AboutView from "@/app/_corporate/AboutView";
+import Shell from "@/app/_corporate/p5r2/Shell";
+import AboutView from "@/app/_corporate/p5r2/views/AboutView";
+import { getCopy } from "@/app/_corporate/i18n";
+import { localeFrom, localeMetadata, type SearchParams } from "@/app/_corporate/p5r2/route-helpers";
 
-/** CORP-P5 — YORISOU LLC corporate route. PREVIEW ONLY; this branch is never deployed to Production. */
-export const metadata: Metadata = {
-  title: "私たちについて — Yorisou",
-  description: "Yorisouのつくり方、事業の順番、記載する事実の基準。確認できないことは書きません。",
-  openGraph: { title: "私たちについて — Yorisou", description: "Yorisouのつくり方、事業の順番、記載する事実の基準。確認できないことは書きません。", type: "website", locale: "ja_JP", siteName: "Yorisou" },
-};
+/** CORP-P5R2 — YORISOU LLC corporate route. PREVIEW ONLY; never deployed to Production. */
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  return localeMetadata(searchParams, "about");
+}
 
-export default function Page() {
+export default async function Page({ searchParams }: { searchParams: SearchParams }) {
+  const locale = await localeFrom(searchParams);
+  const copy = await getCopy(locale);
   return (
-    <Shell current="/about">
-      <AboutView />
+    <Shell copy={copy} locale={locale} path="/about">
+      <AboutView copy={copy} locale={locale} />
     </Shell>
   );
 }
