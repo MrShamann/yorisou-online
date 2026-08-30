@@ -8,9 +8,16 @@ import type { SiteCopy } from "../../i18n/types";
 /** CORP-P5R2 — one project page, parameterised. Both keep their own system grammar. */
 export default function ProjectView({
   copy, locale, which,
-}: { copy: SiteCopy; locale: string; which: "mirai" | "kakari" }) {
+}: { copy: SiteCopy; locale: string; which: "mirai" | "kakari" | "chigamo" }) {
   const isNet = which === "mirai";
-  const p = isNet ? copy.mirai : copy.kakari;
+  /**
+   * CORP-v1.2 — Chigamo is at concept stage: there is no network of parties and no procedure to
+   * draw, because neither has been established. It therefore renders the shared page frame with a
+   * prose concept section instead of a system diagram. Inventing a diagram for an untested idea
+   * would make it look further along than it is.
+   */
+  const isConcept = which === "chigamo";
+  const p = isNet ? copy.mirai : isConcept ? copy.chigamo : copy.kakari;
   const L = (x: string) => localeHref(x, locale);
 
   return (
@@ -35,23 +42,44 @@ export default function ProjectView({
                 </p>
               )}
             </div>
-            <div className={styles.surface}>
-              {isNet ? (
-                <NetworkSystem labels={copy.mirai.parties.map((x) => x.title)} centre={copy.mirai.centre} />
-              ) : (
-                <ProcedureSystem steps={copy.kakari.steps.map((s) => s.title)} boundary={copy.kakari.boundaryTitle} />
-              )}
-            </div>
+            {!isConcept && (
+              <div className={styles.surface}>
+                {isNet ? (
+                  <NetworkSystem labels={copy.mirai.parties.map((x) => x.title)} centre={copy.mirai.centre} />
+                ) : (
+                  <ProcedureSystem steps={copy.kakari.steps.map((s) => s.title)} boundary={copy.kakari.boundaryTitle} />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       <Band line>
-        <Eyebrow>{isNet ? copy.mirai.networkEyebrow : copy.kakari.procedureEyebrow}</Eyebrow>
+        <Eyebrow>
+          {isNet ? copy.mirai.networkEyebrow : isConcept ? copy.chigamo.conceptEyebrow : copy.kakari.procedureEyebrow}
+        </Eyebrow>
         <h2 className={styles.h2}>
-          <Phrase units={isNet ? copy.mirai.networkHeading : copy.kakari.procedureHeading} locale={locale} />
+          <Phrase
+            units={
+              isNet
+                ? copy.mirai.networkHeading
+                : isConcept
+                  ? copy.chigamo.conceptHeading
+                  : copy.kakari.procedureHeading
+            }
+            locale={locale}
+          />
         </h2>
-        <Cards items={isNet ? copy.mirai.parties : copy.kakari.steps} columns={2} />
+        {isConcept ? (
+          copy.chigamo.conceptBody.map((t, i) => (
+            <p className={`${styles.body} ${styles.jp}`} key={i}>
+              {t}
+            </p>
+          ))
+        ) : (
+          <Cards items={isNet ? copy.mirai.parties : copy.kakari.steps} columns={2} />
+        )}
         <Boundary title={p.boundaryTitle}>{p.boundaryBody}</Boundary>
       </Band>
 

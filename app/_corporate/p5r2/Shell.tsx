@@ -7,9 +7,20 @@ import type { SiteCopy } from "../i18n/types";
 
 export const ROUTES = {
   home: "/",
+  ventures: "/ventures",
   miraiMove: "/mirai-move",
   kakari: "/kakari",
+  chigamo: "/chigamo",
+  /**
+   * CORP-v1.2 — "How we build" keeps the /about URL on purpose.
+   *
+   * /about is one of only four paths anchored in robots.ts as crawlable (CORP-P4AR2), and the
+   * venture paths are anchored the same way. Renaming them would either break that accepted policy
+   * or quietly create new indexable URLs. The nav LABEL changes to "how we build"; the URL does not.
+   * The Production rename is recorded as a decision in CORP_V12_ROUTE_AND_SURFACE_MATRIX.md.
+   */
   about: "/about",
+  buildWithUs: "/build-with-us",
   company: "/company",
   contact: "/contact",
 } as const;
@@ -38,10 +49,18 @@ export default function Shell({
 }) {
   const entry = localeEntry(locale);
   const c = copy.chrome;
+  /**
+   * CORP-v1.2 navigation: six destinations. Individual ventures live under Ventures rather than at
+   * the top level, and Asterion is a section inside "how we build" — never a nav item, because it
+   * is not a Yorisou venture.
+   *
+   * The labels come from the section eyebrows rather than from chrome.nav so that adding the two
+   * new destinations needs no new chrome strings in twenty-one locale files.
+   */
   const nav = [
-    { href: ROUTES.miraiMove, label: c.nav.miraiMove },
-    { href: ROUTES.kakari, label: c.nav.kakari },
-    { href: ROUTES.about, label: c.nav.about },
+    { href: ROUTES.ventures, label: copy.ventures.eyebrow },
+    { href: ROUTES.about, label: copy.foundry.eyebrow },
+    { href: ROUTES.buildWithUs, label: copy.buildWithUs.eyebrow },
     { href: ROUTES.company, label: c.nav.company },
     { href: ROUTES.contact, label: c.nav.contact },
   ];
@@ -135,6 +154,11 @@ export default function Shell({
                 <li>
                   <a className={styles.footerLink} href={localeHref(ROUTES.kakari, locale)}>
                     Kakari
+                  </a>
+                </li>
+                <li>
+                  <a className={styles.footerLink} href={localeHref(ROUTES.chigamo, locale)}>
+                    Chigamo
                   </a>
                 </li>
               </ul>

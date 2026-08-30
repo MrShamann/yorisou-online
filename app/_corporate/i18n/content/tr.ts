@@ -39,12 +39,15 @@ export const tr: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — İnsanla toplum arasında, yanında durmanın bir sonraki yolunu kuruyoruz.", description: "Yorisou LLC; günlük yaşamdaki, işteki ve yereldeki karmaşıklığa yakından bakar ve insanların bunu anlamasına, seçim yapmasına ve ilerlemesine yardımcı olan ürünler geliştirir. Mirai Move ve Kakari’yi geliştiriyoruz." },
+    home: { title: "Yorisou LLC — Yapısal sorunlardan, kendi ayakları üzerinde duran şirketler.", description: "Yorisou LLC bir foundry olarak çalışır: yapısal sorunları bulur, kanıt ve iş varlıkları üretir, kurucu ekiplerle birlikte bunları bağımsız şirketlere taşır. Mirai Move, Kakari ve Chigamo üzerinde çalışıyoruz." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Japonya’nın mobilite alanında bilgi, eşleştirme ve iş geliştirme için bir platform. Kamuya açık site yayında; platform özellikleri geliştirme aşamasında." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Japonya’da yaşayanlar ve burada iş kurmak isteyenler için idari işlemler ve belgeler konusunda çok dilli destek. Geliştirme aşamasında, henüz genel kullanıma açık değil." },
-    about: { title: "Hakkımızda — Yorisou LLC", description: "Yorisou neden var, nasıl düşünür ve nasıl geliştirir. Doğrulayamadığımız hiçbir şeyi yazmayız." },
+    about: { title: "Nasıl kuruyoruz — Yorisou LLC", description: "Sorunu bul, doğrula, iş olarak tasarla, kurucu ekibi oluştur ve bağımsız bir şirkete taşı. Yorisou’nun kurma biçimi ve ortak altyapının bu yapı içindeki yeri." },
     company: { title: "Şirket — Yorisou LLC", description: "Yorisou LLC’nin şirket künyesi, temsilci profili, temsilcinin mesajı ve faaliyet alanları." },
     contact: { title: "İletişim — Yorisou LLC", description: "Çalışmalarımız, iş birlikleri ve basın ile ilgili iletişim." },
+    ventures: { title: "Girişimler — Yorisou LLC", description: "Yorisou’nun bugün üzerinde çalıştığı girişimler ve tasarılar: Mirai Move, Kakari ve Chigamo. Her birinin aşamasını olduğu gibi yazıyoruz." },
+    buildWithUs: { title: "Birlikte kurmak — Yorisou LLC", description: "Kurucular, araştırmacılar, kamu ekipleri ve şirketler için giriş yolları. Açık bir başvuru programı yok; konuşabildiğimiz yerden başlıyoruz." },
+    chigamo: { title: "Chigamo — Yorisou LLC", description: "Bir yerde gerçekten işe yarayanı konum ve bağlamdan yola çıkarak bulunabilir kılma tasarısı. Tasarı aşamasında; yayımlanmış bir ürün yok." },
   },
 
   common: {
@@ -56,8 +59,11 @@ export const tr: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
-    thesis: ["İnsanla toplum arasında,", "yanında durmanın bir sonraki", "yolunu kuruyoruz."],
-    lead: ["Yorisou; günlük yaşamdaki, işteki ve yereldeki karmaşıklığa yakından bakar,", "insanların bunu anlamasına, seçim yapmasına ve ilerlemesine yardımcı olan ürünler geliştirir."],
+    thesis: ["Yapısal sorunlardan,", "kendi ayakları üzerinde duran", "şirketler kuruyoruz."],
+    lead: [
+      "Yorisou bir foundry: toplumdaki yapısal sorunları buluyor, doğruluyor, iş olarak tasarlıyor,",
+      "onları işletecek kişilerle bir araya gelip bağımsız birer şirkete taşıyoruz.",
+    ],
     humanSide: "İnsan",
     humanItems: ["Günlük yaşam", "İş", "Yerel topluluk"],
     systemSide: "Sistemler",
@@ -74,7 +80,7 @@ export const tr: SiteCopy = {
     ],
 
     buildEyebrow: "Geliştirdiklerimiz",
-    buildHeading: ["Yanında durmanın bir sonraki yolunu,", "sırayla kuruyoruz."],
+    buildHeading: ["Şu anda üç alanda", "ilerliyoruz."],
 
     howEyebrow: "Nasıl geliştiriyoruz",
     howHeading: ["Karmaşıklığı üstlenip", "kullanılabilir bir biçime getiriyoruz."],
@@ -108,6 +114,19 @@ export const tr: SiteCopy = {
     ctaHeading: ["Birlikte çalışabileceğimiz", "bir alan olabilir."],
     ctaBody: "Çalışmalarımıza ilişkin sorular, olası iş birlikleri ve basın talepleri için yazabilirsiniz. İçeriğine göre sırayla yanıt veriyoruz.",
     ctaButton: "İletişime geçin",
+
+    /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
+    asterionEyebrow: "Ortak altyapı",
+    asterionHeading: ["Her yeni yapıda,", "zemin biraz daha kalınlaşıyor."],
+    asterionBody:
+      "Asterion OS, Yorisou’nun foundry mimarisi içinde konumlanan bağımsız bir ortak teknoloji ve yürütme platformudur. Ortak zemin hazır olduğu için her girişim, gücünü gerçekten kendine ait olan kısma ayırabiliyor.",
+    asterionNote:
+      "Her girişim ayrı yönetilir; fikrî mülkiyeti, verisi ve işletme sorumluluğu kendisine aittir. Asterion, Yorisou’nun mülkiyetinde değildir.",
+    engageEyebrow: "Birlikte kurmak",
+    engageHeading: ["Henüz şirket olmadan,", "işin içinde olun."],
+    engageBody:
+      "Kurucular, araştırmacılar, kamu ekipleri, şirketler. Nereden dâhil olabileceğiniz, nerede durduğunuza bağlı. Şimdilik konuşabildiğimiz yerden başlıyoruz.",
+    engageCta: "Katılma yollarını görün",
   },
 
   mirai: {
@@ -296,5 +315,180 @@ export const tr: SiteCopy = {
     errorBody: "Lütfen biraz bekleyip tekrar deneyin.",
     required: "Zorunlu",
     privacyNote: "Paylaştığınız kişisel bilgiler yalnızca talebinize yanıt vermek amacıyla kullanılır.",
+  },
+
+  /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
+  ventures: {
+    eyebrow: "Bugün üzerinde çalıştıklarımız",
+    heading: ["Üç alanda,", "şirket olmanın hemen öncesindeyiz."],
+    lead:
+      "Üçünde de kurallar ve sistemler zaten var; yalnızca ihtiyaç duyan kişiye varmadan duruyorlar. Yorisou bu aralığa giriyor ve ilerledikçe doğruluyor.",
+    cards: [
+      {
+        name: "Mirai Move",
+        href: "/mirai-move",
+        thesis: "Mobilite alanında bilgiyi, eşleştirmeyi ve iş geliştirmeyi birbirine bağlamak.",
+        problem: "Bilgi ve fırsat; işletmeciler, bölgeler ve kamu kurumları arasında bölünmüş durumda.",
+        building: "Yurt içinden ve yurt dışından tarafların aynı bilgi üzerinden konuşabildiği bir platform.",
+        status: "Geliştirme ve işletme sürüyor. Kamuya açık site yayında.",
+      },
+      {
+        name: "Kakari",
+        href: "/kakari",
+        thesis: "Japonya’da yaşayanların ve burada iş kuranların işlemlerini çok dilli olarak desteklemek.",
+        problem: "Sistem var; ama dil ve sıra bilgisi engel olduğu için hiç kullanılmadan kalıyor.",
+        building: "İşlemi aşamalara bölen ve kişinin nereye kadar kendi başına gidebileceğini gösteren bir yapı.",
+        status: "Geliştirme aşamasında. Yayına hazırlanıyor.",
+      },
+      {
+        name: "Chigamo",
+        href: "/chigamo",
+        thesis: "Bir yeri, konum ve bağlam üzerinden okunabilir kılmak.",
+        problem: "Bulunduğunuz yerde gerçekten işinize yarayacak bilgi, en zor bulunanıdır.",
+        building: "Konum ve bağlamdan yola çıkan, yaşanılan çevreye dair bir keşif yapısı.",
+        status: "Tasarı aşamasında. Henüz denenmedi.",
+      },
+    ],
+    noteHeading: ["Bu sayfanın söylediği,", "bir de söylemediği."],
+    noteBody: [
+      "Burada yer alanlar, Yorisou’nun bugün üzerinde çalıştığı girişimler ve tasarılardır.",
+      "Tüzel kişiliği olan bağlı şirketler, yatırımlar ya da müşteriler değildir. Her biri farklı bir aşamada; aşamasını olduğu gibi yazdık.",
+      "Amaç, her birinin bağımsız bir şirket olarak ayakta durması. Henüz hiçbiri o noktaya ulaşmadı.",
+    ],
+  },
+
+  /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
+  chigamo: {
+    eyebrow: "Girişim",
+    heading: ["Bir yeri,", "orada dururken anlamak."],
+    stage: "Tasarı aşaması",
+    lead:
+      "Bir tasarı: konum ve bağlamı kullanarak, belirli bir yerde gerçekten işe yarayanı görünür kılmak. Henüz doğrulama aşamasının da öncesinde.",
+    domain: "Yaşam çevresi / konum ve bağlam / keşif",
+    conceptEyebrow: "Düşündüğümüz şey",
+    conceptHeading: ["Bilgi yok değil;", "yerine ulaşmıyor."],
+    conceptBody: [
+      "Bir yer hakkında en çok bilmek istediğiniz şeyler, aramanın en kötü karşılık verdiği şeylerdir. Bilgi olmadığı için değil; yerle ve durumla ilişkilendirilerek hiç düzenlenmediği için.",
+      "Nerede olduğunuz, zamanın ne olduğu ve içinde bulunduğunuz durum. Bazı bilgiler ancak bu üçü aynı anda örtüştüğünde “bu beni ilgilendiriyor” diye okunur hâle gelir. Chigamo’nun ele almaya çalıştığı yer burasıdır.",
+    ],
+    boundaryTitle: "Bugünkü aşama",
+    boundaryBody:
+      "Chigamo tasarı aşamasındadır. Yayımlanmış bir ürün, kullanıcı ya da belediyeyle yürütülen bir program yoktur. Burada yazılanlar, sınamayı düşündüğümüz varsayımlardır.",
+    detail: [
+      {
+        heading: "Neden şimdi",
+        body: "Haritalar da arama da yeterince olgunlaştı. Yine de “şu anda bulunduğum yerde benim için ne anlam taşıyor” sorusunu insanlar hâlâ kendileri çözüyor.",
+      },
+      {
+        heading: "Neyi doğrulamamız gerekiyor",
+        body: "Konum ve bağlamla daraltmak, bilgiyi gerçekten kullanılabilir hâle getiriyor mu. Önce bunu, küçük ölçekte sınamak istiyoruz.",
+      },
+    ],
+  },
+
+  /* ── HOW WE BUILD / FOUNDRY (CORP-v1.2) ─────────────────────────────── */
+  foundry: {
+    eyebrow: "Nasıl kuruyoruz",
+    heading: ["Sorundan şirkete,", "sırayı atlamadan."],
+    lead:
+      "Beğendiğimiz bir fikirden başlamıyoruz. Yapısal bir sorunu buluyor, doğruluyor, iş olarak tasarlıyor, onu işletebilecek kişilerle bir araya geliyor ve bağımsız bir şirkete taşıyoruz. Yorisou bu sıralamaya foundry diyor.",
+    stagesEyebrow: "Aşamalar",
+    stagesHeading: ["Sekiz aşama,", "hiçbiri atlanmadan."],
+    stages: [
+      { no: "01", name: "Varsayım", body: "Yapısal sorunun nerede olduğunu ortaya koymak. Bir sezgiden değil, sahanın gerçek biçiminden." },
+      { no: "02", name: "Kanıt", body: "Sorunun gerçekten var olup olmadığını ve kimin üzerine kaldığını doğrulamak. Burada elenen varsayım az değildir." },
+      { no: "03", name: "İş tasarımı", body: "Çözümü iş biçimine getirmek: kimin kullanacağını ve karşılığın nerede doğduğunu tasarlamak." },
+      { no: "04", name: "İnşa", body: "Fiilen kurmak. Ortak zeminin kullanılabildiği yerde onu kullanmak, gücü o girişime özgü olan kısma vermek." },
+      { no: "05", name: "Devredilebilir hâl", body: "Varlıkları ve süreçleri, dışarıdan birinin devralıp işletebileceği hâle getirmek." },
+      { no: "06", name: "Kurucu ekibin oluşması", body: "Girişimi kendi işi olarak üstlenebilecek kişiyle bir araya gelmek. İstihdam olarak değil, kuruculuk olarak." },
+      { no: "07", name: "Bağımsızlaşma ve işletme", body: "Bağımsız bir şirket olarak yürütmek. Yorisou’ya bağlı kalmayacak bir biçim hedeflenir." },
+      { no: "08", name: "Öğrenme", body: "İşe yarayanı da elenen varsayımı da, bir sonraki girişimin malzemesi olarak saklamak." },
+    ],
+    independenceHeading: ["Amaç,", "kendi ayakları üzerinde duran bir şirket."],
+    independenceBody: [
+      "Bu çalışma biçiminin amacı, Yorisou’nun çatısı altındakileri çoğaltmak değil. Her girişimi, bağımsız bir şirket olarak kendi ayakları üzerinde durabileceği noktaya getirmek.",
+      "Bu yüzden en baştan devredilebilir biçimde kuruyoruz. İşletecek kişiler gerçek kararları veremiyorsa, orada henüz bir şirket yok demektir.",
+    ],
+    asterionEyebrow: "Ortak teknoloji ve yürütme",
+    asterionHeading: ["Aynı şeyi", "iki kez kurmamak."],
+    asterionBody: [
+      "Asterion OS, Yorisou’nun foundry mimarisi içinde konumlanan bağımsız bir ortak teknoloji ve yürütme platformudur. Yorisou’nun mülkiyetinde değildir.",
+      "Ortak zemin hazır olduğu için hiçbir girişim aynı yapıyı yeniden kurmak zorunda kalmıyor; her biri kendi alanına yoğunlaşabiliyor. Biriken yetkinlik, bir sonrakinin başlangıç noktası oluyor.",
+    ],
+    asterionBoundaryTitle: "Sınır",
+    asterionBoundaryBody:
+      "Her girişim ayrı yönetilir. Fikrî mülkiyet, veri ve işletme sorumluluğu girişimin kendisine aittir. Girişimlerin ya da kullanıcıların verisinin kendiliğinden platform tarafına akacağı bir tasarım yoktur.",
+    economicsHeading: ["Pay,", "katkıyı ve sorumluluğu izler."],
+    economicsBody: [
+      "Koşullar girişimden girişime değişir. Tek bir kalıbı her şeye uygulamıyoruz.",
+      "Ortak olan yalnızca ilkedir: pay; katkıyı, üstlenilen riski ve devam eden sorumluluğu izler. Girişimi işletenler gerçek karar yetkisini taşır.",
+      "Ayrıntılar her girişim ve her kişi için ayrıca konuşulur. Bir web sitesine yazılacak türden şeyler değildir.",
+    ],
+    maturityTitle: "Bugünkü durum",
+    maturityBody:
+      "Bu çalışma biçimi, kanıtlanmış ve tekrarlanabilir bir yöntem değildir. Yorisou erken aşamadadır ve bugüne kadar hiçbir girişimi bağımsız bir şirket olarak yola çıkarmış değildir. Burada yazılanlar, fiilen izlediğimiz yoldur; bir sonuç iddiası değildir.",
+  },
+
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  buildWithUs: {
+    eyebrow: "Birlikte kurmak",
+    heading: ["Nerede durduğunuza göre,", "giriş de değişiyor."],
+    lead:
+      "Şimdilik konuşabildiğimiz yerden başlıyoruz. Belirlenmiş bir başvuru dönemi yok. İlginizi çekiyorsa, önce aklınızdakini anlatın.",
+    lanes: [
+      {
+        key: "founders",
+        title: "Kurucular ve işletenler",
+        body:
+          "Yorisou, girişimleri şirket olmalarının hemen öncesine kadar getiriyor ve her birini kendi işi olarak üstlenebilecek kişilerle çalışmak istiyor. Bu, devredilen bir görev değil; kuruculuk olarak üstlenilen bir konum.",
+        invites: [
+          "Sahası olan bir işi fiilen yürütmüş olmak",
+          "Çoğu şeyin henüz belirsiz olduğu bir aşamada ilerleyebilmek",
+          "Teknoloji, üretim, kamu ya da yerel alanlardan birine dair saha bilgisi",
+        ],
+        cta: "İlginizi iletin",
+      },
+      {
+        key: "research",
+        title: "Üniversiteler ve araştırma",
+        body:
+          "Araştırma sonucunun toplumda kullanılabilir hâle gelmesi, yanında iş tarafının tasarımını gerektiriyor. Kurucu yetişmesi ve araştırmanın uygulamaya geçmesi üzerine birlikte düşünebileceğimiz muhataplar arıyoruz.",
+        invites: [
+          "Araştırma sonucuna uygulama alanı aramak",
+          "Öğrencilere ve araştırmacılara gerçek bir kuruculuk deneyimi kazandırmak istemek",
+          "Önce ortak bir keşifle başlamayı tercih etmek",
+        ],
+        cta: "Konuşmaya başlayalım",
+      },
+      {
+        key: "public",
+        title: "Kamu ve idare",
+        body:
+          "Kamusal sorunlarda kural çoğu zaman zaten vardır; ama vatandaşın izleyebileceği adımlara çevrilmemiştir. Küçük denemeyi, etkinin ölçülmesini ve kalıcı hâle gelme yolunu birlikte tasarlamak istiyoruz.",
+        invites: [
+          "Sahada denenebilecek bir sorunun olması",
+          "Etkinin ölçülebildiği bir biçim istemek",
+          "Tek seferlik bir pilotla bitmesini istememek",
+        ],
+        cta: "İletişime geçin",
+      },
+      {
+        key: "corporate",
+        title: "Şirketler",
+        body:
+          "Kendi sahanızdaki bir sorunun iş biçimine dönüşmesini istiyorsanız. Ortak geliştirmeyle ya da sahada küçük bir denemeyle başlayabiliriz.",
+        invites: [
+          "İşleyişte çözülmemiş bir sorunun olması",
+          "Yeni bir işin biçimini aramak",
+          "Ortak geliştirme için muhatap aramak",
+        ],
+        cta: "Bize yazın",
+      },
+    ],
+    intakeTitle: "Başvuru durumu hakkında",
+    intakeBody:
+      "Şu anda ne bir başvuru süreci ne de bir seçim programı var. Buradakiler birer davettir; yürüyen bir iş birliği ya da açık bir pozisyon değildir. Önce elinizdekini dinliyor, konuşulacak bir şey var mı oradan başlıyoruz.",
+    ctaHeading: ["Hangi taraftan olursanız olun,", "ilk kapı aynı."],
+    ctaBody: "Aklınızdakini yazıp gönderin. Sırayla okuyoruz.",
   },
 };

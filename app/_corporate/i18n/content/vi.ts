@@ -15,6 +15,15 @@ import type { SiteCopy } from "../types";
  * On the representative: "Harvard Business School Executive Education" is stated precisely. It is
  * NOT a Harvard University degree and NOT an HBS MBA, and must never be shortened in a way that
  * implies either. No endorsement by IESE, Harvard, Ficosa, or any government body is implied.
+ *
+ * On Asterion (CORP-v1.2): Asterion OS is an INDEPENDENT shared technology and execution platform.
+ * It is not owned by Yorisou and is not a Yorisou venture. Vietnamese must never render it as
+ * "nền tảng của Yorisou" or imply that ventures or user data flow into it. The boundary sentence
+ * stays intact.
+ *
+ * On the ventures (CORP-v1.2): Mirai Move, Kakari and Chigamo are dự án — ventures and concepts.
+ * They are never "công ty con", "khoản đầu tư", "khách hàng" or funded companies. Chigamo is at
+ * concept stage: no product, no users, no municipal programme.
  */
 export const vi: SiteCopy = {
   chrome: {
@@ -38,12 +47,15 @@ export const vi: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Giữa con người và xã hội, chúng tôi tạo nên sự đồng hành tiếp theo.", description: "Yorisou LLC nhìn thẳng vào sự phức tạp trong đời sống, công việc và cộng đồng địa phương, và tạo ra những sản phẩm giúp con người hiểu, lựa chọn và tiến về phía trước. Chúng tôi đang phát triển Mirai Move và Kakari." },
+    home: { title: "Yorisou LLC — Từ những vấn đề mang tính cấu trúc đến những công ty đứng vững độc lập.", description: "Yorisou LLC là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc, dựng nên bằng chứng và tài sản cho từng dự án, rồi cùng các nhóm sáng lập đưa chúng thành những công ty độc lập. Hiện chúng tôi đang triển khai Mirai Move, Kakari và Chigamo." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Nền tảng thông tin, kết nối và phát triển kinh doanh trong lĩnh vực di chuyển tại Nhật Bản. Trang thông tin công khai đang hoạt động; các tính năng nền tảng đang trong giai đoạn phát triển." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Hỗ trợ đa ngôn ngữ cho thủ tục hành chính và giấy tờ, dành cho người đang sinh sống tại Nhật Bản và người bắt đầu kinh doanh tại đây. Hiện đang trong giai đoạn phát triển, chưa mở cho công chúng." },
-    about: { title: "Về chúng tôi — Yorisou LLC", description: "Vì sao Yorisou tồn tại, chúng tôi tư duy thế nào và tạo dựng ra sao. Điều gì không xác minh được, chúng tôi không viết." },
+    about: { title: "Cách chúng tôi xây dựng — Yorisou LLC", description: "Tìm ra vấn đề, kiểm chứng nó, thiết kế thành một hoạt động kinh doanh, rồi cùng nhóm sáng lập đưa nó thành một công ty độc lập. Cách vận hành foundry của Yorisou, và vị trí của hạ tầng dùng chung." },
     company: { title: "Thông tin công ty — Yorisou LLC", description: "Tổng quan công ty, hồ sơ người đại diện, thông điệp của người đại diện và các lĩnh vực hoạt động của Yorisou LLC." },
     contact: { title: "Liên hệ — Yorisou LLC", description: "Đầu mối tiếp nhận trao đổi về hoạt động kinh doanh, hợp tác và báo chí." },
+    ventures: { title: "Dự án — Yorisou LLC", description: "Những dự án và ý tưởng Yorisou đang theo đuổi: Mirai Move, Kakari và Chigamo. Mỗi dự án ở một giai đoạn khác nhau, và chúng tôi ghi đúng giai đoạn đó." },
+    buildWithUs: { title: "Cùng xây dựng — Yorisou LLC", description: "Lối vào dành cho nhà sáng lập, nhà nghiên cứu, khu vực công và doanh nghiệp. Hiện không có chương trình tuyển chọn nào; mọi việc bắt đầu từ một cuộc trò chuyện." },
+    chigamo: { title: "Chigamo — Yorisou LLC", description: "Ý tưởng về việc dựa vào vị trí và bối cảnh để thấy được điều thực sự hữu ích tại một nơi chốn. Hiện ở giai đoạn ý tưởng, chưa có sản phẩm nào được công bố." },
   },
 
   common: {
@@ -55,8 +67,12 @@ export const vi: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
-    thesis: ["Giữa con người và xã hội,", "chúng tôi tạo nên", "sự đồng hành tiếp theo."],
-    lead: ["Yorisou nhìn thẳng vào sự phức tạp trong đời sống, công việc và cộng đồng địa phương,", "và tạo ra những sản phẩm giúp con người hiểu, lựa chọn và tiến về phía trước."],
+    thesis: ["Từ những vấn đề mang tính cấu trúc,", "chúng tôi gây dựng những công ty", "đứng vững độc lập."],
+    lead: [
+      "Yorisou là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc của xã hội,",
+      "kiểm chứng, thiết kế chúng thành mô hình kinh doanh, rồi bắt tay cùng những người sẽ vận hành",
+      "để đưa từng dự án trở thành một công ty độc lập.",
+    ],
     humanSide: "Con người",
     humanItems: ["Đời sống", "Công việc", "Cộng đồng"],
     systemSide: "Hệ thống",
@@ -73,7 +89,7 @@ export const vi: SiteCopy = {
     ],
 
     buildEyebrow: "Những gì chúng tôi đang xây dựng",
-    buildHeading: ["Chúng tôi tạo nên sự đồng hành tiếp theo,", "từng việc một."],
+    buildHeading: ["Ba lĩnh vực,", "hiện đang triển khai."],
 
     howEyebrow: "Cách chúng tôi xây dựng",
     howHeading: ["Chúng tôi nhận lấy sự phức tạp", "và biến nó thành thứ dùng được."],
@@ -107,6 +123,19 @@ export const vi: SiteCopy = {
     ctaHeading: ["Có thể vẫn còn chỗ", "để chúng ta cùng làm việc."],
     ctaBody: "Chúng tôi tiếp nhận trao đổi về hoạt động kinh doanh, đề xuất hợp tác và đề nghị phỏng vấn từ báo chí. Chúng tôi sẽ lần lượt phản hồi tùy theo nội dung.",
     ctaButton: "Gửi liên hệ",
+
+    /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
+    asterionEyebrow: "Hạ tầng dùng chung",
+    asterionHeading: ["Mỗi lần xây dựng,", "nền móng lại dày thêm."],
+    asterionBody:
+      "Asterion OS là một nền tảng công nghệ và thực thi dùng chung, độc lập, được đặt trong kiến trúc foundry của Yorisou. Vì phần nền chung đã có sẵn, mỗi dự án không phải dựng lại cùng một cơ chế và có thể dồn sức vào phần thuộc về lĩnh vực của riêng mình.",
+    asterionNote:
+      "Mỗi dự án được quản trị riêng biệt, và tự giữ quyền sở hữu trí tuệ, dữ liệu cùng trách nhiệm vận hành của mình. Asterion không thuộc sở hữu của Yorisou.",
+    engageEyebrow: "Cùng xây dựng",
+    engageHeading: ["Hãy tham gia ngay khi dự án", "vẫn đang trên đường thành một công ty."],
+    engageBody:
+      "Nhà sáng lập, nhà nghiên cứu, khu vực công, doanh nghiệp. Bạn tham gia được ở đâu là tùy vào vị trí bạn đang đứng. Chúng tôi bắt đầu từ những gì có thể trao đổi ngay lúc này.",
+    engageCta: "Xem các cách tham gia",
   },
 
   mirai: {
@@ -295,5 +324,180 @@ export const vi: SiteCopy = {
     errorBody: "Vui lòng đợi một lát rồi thử lại.",
     required: "Bắt buộc",
     privacyNote: "Thông tin cá nhân bạn cung cấp chỉ được sử dụng cho mục đích phản hồi liên hệ của bạn.",
+  },
+
+  /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
+  ventures: {
+    eyebrow: "Những dự án hiện nay",
+    heading: ["Ba lĩnh vực, mỗi lĩnh vực", "còn cách một bước", "để trở thành một công ty."],
+    lead:
+      "Ở cả ba, thiết chế và hệ thống vốn đã tồn tại — và dừng lại ngay trước những người cần đến chúng. Yorisou bước vào đúng khoảng trống đó, vừa làm vừa kiểm chứng.",
+    cards: [
+      {
+        name: "Mirai Move",
+        href: "/mirai-move",
+        thesis: "Nối liền thông tin, kết nối cung cầu và phát triển kinh doanh trong lĩnh vực di chuyển.",
+        problem: "Thông tin và cơ hội bị chia cắt giữa doanh nghiệp, địa phương và cơ quan nhà nước.",
+        building: "Một nền tảng để các bên trong và ngoài nước cùng làm việc trên một nguồn thông tin.",
+        status: "Đang phát triển và vận hành. Đã có trang công khai.",
+      },
+      {
+        name: "Kakari",
+        href: "/kakari",
+        thesis: "Hỗ trợ đa ngôn ngữ cho các thủ tục của việc sinh sống và khởi sự kinh doanh tại Nhật Bản.",
+        problem: "Thiết chế thì có, nhưng rào cản ngôn ngữ và trình tự khiến chúng không bao giờ được dùng đến.",
+        building: "Cách chia một thủ tục thành từng bước và cho thấy bạn tự làm được đến đâu.",
+        status: "Đang phát triển. Chuẩn bị công bố.",
+      },
+      {
+        name: "Chigamo",
+        href: "/chigamo",
+        thesis: "Từ vị trí và bối cảnh, làm cho một nơi chốn trở nên dễ hiểu.",
+        problem: "Thông tin thực sự hữu ích ngay tại chỗ lại là thứ khó tìm nhất.",
+        building: "Cách khám phá khu vực sinh sống, dựa trên vị trí và bối cảnh.",
+        status: "Giai đoạn ý tưởng. Chưa được kiểm chứng.",
+      },
+    ],
+    noteHeading: ["Trang này nói gì,", "và không nói gì."],
+    noteBody: [
+      "Đây là những dự án và ý tưởng mà Yorisou đang theo đuổi hiện nay.",
+      "Chúng không phải là công ty con đã thành lập, không phải khoản đầu tư, cũng không phải khách hàng. Mỗi dự án ở một giai đoạn khác nhau, và chúng tôi ghi đúng giai đoạn đó.",
+      "Mục tiêu là để mỗi dự án đứng được như một công ty độc lập. Chưa dự án nào đạt tới đó.",
+    ],
+  },
+
+  /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
+  chigamo: {
+    eyebrow: "Dự án",
+    heading: ["Hiểu một nơi chốn,", "ngay khi đang ở đó."],
+    stage: "Giai đoạn ý tưởng",
+    lead:
+      "Một ý tưởng: dùng vị trí và bối cảnh để làm hiện lên những gì thực sự hữu ích tại một nơi chốn cụ thể. Dự án vẫn đang ở trước giai đoạn kiểm chứng.",
+    domain: "Khu vực sinh sống / vị trí và bối cảnh / khám phá",
+    conceptEyebrow: "Điều chúng tôi đang nghĩ",
+    conceptHeading: ["Không phải là không có thông tin,", "mà là thông tin không đến nơi."],
+    conceptBody: [
+      "Những điều bạn muốn biết nhất về một nơi chốn lại là những điều mà tìm kiếm trả về tệ nhất. Không phải vì thông tin không tồn tại, mà vì nó chưa từng được sắp xếp theo nơi chốn và hoàn cảnh.",
+      "Bạn đang ở đâu, vào lúc nào, và đang đối diện với chuyện gì. Có những thông tin chỉ trở nên “liên quan đến mình” khi cả ba điều đó khớp lại. Đó là chỗ Chigamo muốn xử lý.",
+    ],
+    boundaryTitle: "Dự án đang ở đâu",
+    boundaryBody:
+      "Chigamo đang ở giai đoạn ý tưởng. Chưa có sản phẩm nào được công bố, chưa có người dùng, và chưa có chương trình nào với chính quyền địa phương. Những gì viết ở đây là một giả thuyết mà chúng tôi định kiểm chứng.",
+    detail: [
+      {
+        heading: "Vì sao là lúc này",
+        body: "Bản đồ và công cụ tìm kiếm đều đã rất phát triển. Vậy mà “điều gì có ý nghĩa với tôi, ngay tại nơi tôi đang đứng” vẫn là thứ mỗi người phải tự tra lại.",
+      },
+      {
+        heading: "Điều cần kiểm chứng",
+        body: "Liệu khi thu hẹp theo vị trí và bối cảnh, thông tin có thực sự trở nên dùng được hay không. Chúng tôi sẽ kiểm chứng điều đó ở quy mô nhỏ trước.",
+      },
+    ],
+  },
+
+  /* ── HOW WE BUILD / FOUNDRY (CORP-v1.2) ─────────────────────────────── */
+  foundry: {
+    eyebrow: "Cách chúng tôi xây dựng",
+    heading: ["Từ một vấn đề", "đến một công ty,", "theo đúng trình tự."],
+    lead:
+      "Chúng tôi không bắt đầu từ một ý tưởng mình thấy hay. Chúng tôi tìm ra một vấn đề mang tính cấu trúc, kiểm chứng nó, thiết kế nó thành một hoạt động kinh doanh, bắt tay với những người có thể vận hành, rồi đưa nó thành một công ty độc lập. Yorisou gọi trình tự đó là foundry — xưởng kiến tạo doanh nghiệp.",
+    stagesEyebrow: "Các giai đoạn",
+    stagesHeading: ["Tám giai đoạn,", "không bỏ qua giai đoạn nào."],
+    stages: [
+      { no: "01", name: "Giả thuyết", body: "Xác định vấn đề mang tính cấu trúc nằm ở đâu — từ hình dạng của công việc thực tế, không phải từ một linh cảm." },
+      { no: "02", name: "Bằng chứng", body: "Kiểm chứng xem vấn đề có thật hay không và nó đang rơi lên vai ai. Rất nhiều giả thuyết chết ở đây." },
+      { no: "03", name: "Thiết kế kinh doanh", body: "Biến lời giải thành một hoạt động kinh doanh: ai sử dụng, và giá trị thực sự được trao đổi ở đâu." },
+      { no: "04", name: "Xây dựng", body: "Bắt tay làm. Dùng lại phần nền chung ở những chỗ đã có, và dồn sức vào phần riêng của dự án này." },
+      { no: "05", name: "Sẵn sàng đứng độc lập", body: "Đưa tài sản và quy trình tới trạng thái mà người bên ngoài có thể tiếp nhận và vận hành được." },
+      { no: "06", name: "Hình thành nhóm sáng lập", body: "Bắt tay với người có thể gánh dự án như của chính mình — với tư cách nhà sáng lập, không phải người làm thuê." },
+      { no: "07", name: "Tách ra và vận hành", body: "Vận hành như một công ty độc lập, được định hình để không tiếp tục phụ thuộc vào Yorisou." },
+      { no: "08", name: "Đúc kết", body: "Giữ lại cả những gì đã hiệu quả lẫn những giả thuyết đã chết, làm chất liệu cho dự án tiếp theo." },
+    ],
+    independenceHeading: ["Mục tiêu là", "một công ty đứng vững độc lập."],
+    independenceBody: [
+      "Mục đích của foundry không phải là gom thêm thứ gì đó về dưới trướng Yorisou. Mục đích là đưa mỗi dự án đến chỗ tự đứng được như một công ty độc lập.",
+      "Vì vậy ngay từ đầu, mọi thứ được làm ra ở dạng có thể bàn giao. Nếu người vận hành không thực sự nắm quyền quyết định, thì nó chưa thành một công ty.",
+    ],
+    asterionEyebrow: "Nền tảng công nghệ và thực thi dùng chung",
+    asterionHeading: ["Không dựng lại", "cùng một thứ hai lần."],
+    asterionBody: [
+      "Asterion OS là một nền tảng công nghệ và thực thi dùng chung, độc lập, được đặt trong kiến trúc foundry của Yorisou. Nó không thuộc sở hữu của Yorisou.",
+      "Vì phần nền chung đã có sẵn, không dự án nào phải dựng lại nó, và mỗi dự án có thể tập trung vào lĩnh vực của riêng mình. Những gì tích lũy được trở thành điểm xuất phát cho dự án tiếp theo.",
+    ],
+    asterionBoundaryTitle: "Ranh giới",
+    asterionBoundaryBody:
+      "Mỗi dự án được quản trị riêng biệt. Quyền sở hữu trí tuệ, dữ liệu và trách nhiệm vận hành thuộc về chính dự án đó. Không có thiết kế nào khiến dữ liệu của dự án hay của người dùng tự động chảy về phía nền tảng.",
+    economicsHeading: ["Quyền sở hữu đi theo", "đóng góp và trách nhiệm."],
+    economicsBody: [
+      "Điều kiện khác nhau theo từng dự án. Chúng tôi không áp một công thức cố định cho tất cả.",
+      "Chỉ có nguyên tắc là chung: quyền sở hữu đi theo đóng góp, theo rủi ro đã gánh và theo trách nhiệm còn tiếp tục. Người vận hành một dự án nắm quyền quyết định thực sự.",
+      "Các điều kiện cụ thể được bàn theo từng dự án và từng người. Đó không phải loại nội dung thuộc về một trang web.",
+    ],
+    maturityTitle: "Cách làm này đang ở đâu",
+    maturityBody:
+      "Cách làm này chưa phải là một phương pháp đã được chứng minh và có thể lặp lại. Yorisou đang ở giai đoạn đầu, và chưa từng đưa dự án nào ra ngoài thành một công ty độc lập. Những gì viết ở đây là cách chúng tôi thực sự tiến hành, không phải một tuyên bố về kết quả.",
+  },
+
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  buildWithUs: {
+    eyebrow: "Cùng xây dựng",
+    heading: ["Bạn bước vào từ đâu", "tùy vào vị trí bạn đang đứng."],
+    lead:
+      "Hiện tại chúng tôi bắt đầu từ những gì có thể trao đổi. Không có khuôn tuyển chọn cố định nào. Nếu bạn quan tâm, hãy cho chúng tôi biết bạn đang nghĩ đến điều gì.",
+    lanes: [
+      {
+        key: "founders",
+        title: "Nhà sáng lập và người vận hành",
+        body:
+          "Yorisou xây dựng các dự án đến ngay trước điểm chúng trở thành công ty, và tìm những người có thể gánh lấy một dự án như của chính mình. Đây là vị trí của một người đồng sáng lập, không phải một công việc được giao.",
+        invites: [
+          "Bạn đã thực sự vận hành một việc có hiện trường phía sau",
+          "Bạn tiến được về phía trước khi còn rất nhiều thứ chưa ngã ngũ",
+          "Bạn am hiểu một trong các mảng: công nghệ, sản xuất, hành chính công hoặc công việc ở địa phương",
+        ],
+        cta: "Bày tỏ quan tâm",
+      },
+      {
+        key: "research",
+        title: "Đại học và nghiên cứu",
+        body:
+          "Để đưa kết quả nghiên cứu thành thứ xã hội dùng được, cần có thiết kế ở phía kinh doanh đi kèm. Chúng tôi đang tìm những người cùng suy nghĩ về việc đào tạo nhà sáng lập và đưa nghiên cứu vào triển khai.",
+        invites: [
+          "Bạn đang tìm nơi để kết quả nghiên cứu được ứng dụng",
+          "Bạn muốn sinh viên và nhà nghiên cứu có trải nghiệm khởi sự thực tế",
+          "Bạn muốn bắt đầu từ việc cùng nhau tìm hiểu",
+        ],
+        cta: "Bắt đầu một cuộc trò chuyện",
+      },
+      {
+        key: "public",
+        title: "Cơ quan nhà nước và khu vực công",
+        body:
+          "Các vấn đề công thường đã có sẵn thiết chế, nhưng chưa được dịch thành những bước mà người dân có thể làm theo. Chúng tôi muốn cùng thiết kế phần thử nghiệm nhỏ, cách đo hiệu quả, và con đường đi đến một thứ bền được.",
+        invites: [
+          "Bạn có một vấn đề có thể thử ngay trên thực địa",
+          "Bạn muốn nó ở dạng đo được hiệu quả",
+          "Bạn không muốn nó dừng lại ở một lần thí điểm",
+        ],
+        cta: "Liên hệ",
+      },
+      {
+        key: "corporate",
+        title: "Doanh nghiệp",
+        body:
+          "Nếu trong hoạt động của bạn có một vấn đề đáng để trở thành một hoạt động kinh doanh. Chúng ta có thể bắt đầu từ việc cùng phát triển hoặc một thử nghiệm trên thực địa.",
+        invites: [
+          "Ở hiện trường của bạn có một vấn đề vận hành chưa được giải",
+          "Bạn đang tìm hình hài của một hoạt động kinh doanh mới",
+          "Bạn đang tìm một đối tác cùng phát triển",
+        ],
+        cta: "Gửi câu hỏi",
+      },
+    ],
+    intakeTitle: "Về việc tiếp nhận",
+    intakeBody:
+      "Hiện chúng tôi không có quy trình ứng tuyển và không có chương trình tuyển chọn nào. Những gì ở đây là lời mời, không phải một quan hệ hợp tác đang có hay một vị trí đang tuyển. Chúng tôi bắt đầu bằng việc lắng nghe điều bạn có, và xem có gì để cùng bàn hay không.",
+    ctaHeading: ["Dù bạn là ai,", "lối vào ban đầu đều như nhau."],
+    ctaBody: "Hãy viết ra điều bạn đang nghĩ và gửi cho chúng tôi. Chúng tôi đọc lần lượt.",
   },
 };

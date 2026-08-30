@@ -101,10 +101,41 @@
 .root[data-script="Thai"] .mono { text-transform: none; letter-spacing: 0.04em; font-size: 12px; }
 .monoDark { color: var(--sys-ink-3); }
 
-.skipLink { position: absolute; inset-inline-start: -9999px; }
+/*
+ * The skip link is parked with the clip-path visually-hidden pattern, NOT by pushing it off-screen.
+ *
+ * It used to sit at `inset-inline-start: -9999px`. In a left-to-right document that resolves to
+ * `left: -9999px`, which is harmless — browsers do not scroll into negative space. In Arabic it
+ * resolves to `right: -9999px`, which places the link 9999px past the RIGHT edge and made every
+ * RTL page 11439px wide with a horizontal scrollbar attached to an invisible element.
+ *
+ * A zero-area clipped box has no side, so it cannot overflow in either direction, and it stays in
+ * the accessibility tree and the tab order — which an off-screen `display:none` would not.
+ */
+.skipLink {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 .skipLink:focus {
-  inset-inline-start: var(--pad); top: 10px; z-index: 90; background: var(--paper); color: var(--ink);
-  padding: 10px 14px; outline: 2px solid var(--jade); outline-offset: 2px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  inset-inline-start: var(--pad);
+  top: 10px;
+  z-index: 90;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 10px 14px;
+  outline: 2px solid var(--jade);
+  outline-offset: 2px;
 }
 
 /* ── header ─────────────────────────────────────────────────────────────── */
@@ -169,6 +200,17 @@
 .bandLine { border-top: 1px solid var(--line); }
 .bandDark { background: var(--sys); color: var(--sys-ink); }
 .bandDark .mono { color: var(--sys-ink-3); }
+/*
+ * Prose inside a dark band needs the dark-surface inks.
+ *
+ * .bandDark sets `color: var(--sys-ink)`, but .body / .lead / .bodyMuted each set their own
+ * light-surface ink and therefore win on specificity. On the Asterion band that rendered
+ * #2f3633 on #0e1211 — 1.52:1, far below AA — while the headings looked fine because .h2 sets no
+ * colour at all and inherits. These give 9.36:1 for body and lead and 6.02:1 for muted text.
+ */
+.bandDark .body,
+.bandDark .lead { color: var(--sys-ink-2); }
+.bandDark .bodyMuted { color: var(--sys-ink-3); }
 
 .eyebrow { margin: 0 0 16px; }
 .h1 { margin: 0 0 22px; font-size: var(--step-4); line-height: 1.28; font-weight: 700; letter-spacing: -0.012em; }

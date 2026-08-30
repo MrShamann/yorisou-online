@@ -38,12 +38,15 @@ export const pt: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Entre as pessoas e a sociedade, criamos a próxima forma de estar ao lado.", description: "A Yorisou LLC observa de perto a complexidade da vida cotidiana, do trabalho e das comunidades locais e cria produtos que ajudam as pessoas a entender, escolher e seguir em frente. Desenvolvemos o Mirai Move e o Kakari." },
+    home: { title: "Yorisou LLC — De problemas estruturais a empresas que se sustentam sozinhas.", description: "A Yorisou LLC atua como foundry: encontra problemas estruturais, constrói evidência e ativos de negócio e forma equipes fundadoras para levá-los até empresas independentes. Mirai Move, Kakari e Chigamo estão em andamento." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Uma plataforma de informação, conexão e desenvolvimento de negócios no setor de mobilidade do Japão. O site público está no ar; as funcionalidades da plataforma estão em desenvolvimento." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Suporte multilíngue para procedimentos administrativos e documentos, para quem vive no Japão e para quem vai abrir um negócio aqui. Em desenvolvimento, ainda não disponível ao público." },
-    about: { title: "Sobre nós — Yorisou LLC", description: "Por que a Yorisou existe, como pensa e como constrói. Não escrevemos o que não podemos verificar." },
+    about: { title: "Como construímos — Yorisou LLC", description: "Encontrar o problema, verificar, desenhar o negócio, formar a equipe fundadora e levar até uma empresa independente. Como funciona o processo de foundry da Yorisou e onde se situa a infraestrutura compartilhada." },
     company: { title: "A empresa — Yorisou LLC", description: "Perfil corporativo, perfil do sócio administrador, mensagem do sócio administrador e áreas de atuação da Yorisou LLC." },
     contact: { title: "Contato — Yorisou LLC", description: "Canal para consultas sobre nosso trabalho, parcerias e imprensa." },
+    ventures: { title: "Projetos — Yorisou LLC", description: "O que a Yorisou desenvolve hoje: Mirai Move, Kakari e Chigamo. Cada um está em um estágio diferente, e dizemos qual." },
+    buildWithUs: { title: "Construir junto — Yorisou LLC", description: "Formas de entrada para fundadores, pesquisadores, órgãos públicos e empresas. Não há programa de candidaturas aberto; começamos por uma conversa." },
+    chigamo: { title: "Chigamo — Yorisou LLC", description: "Um conceito para tornar visível, a partir de posição e contexto, o que de fato é útil em um lugar. Está em estágio conceitual; não há produto disponível ao público." },
   },
 
   common: {
@@ -55,8 +58,8 @@ export const pt: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
-    thesis: ["Entre as pessoas e a sociedade,", "criamos a próxima forma", "de estar ao lado."],
-    lead: ["A Yorisou observa de perto a complexidade da vida cotidiana, do trabalho e das comunidades locais", "e cria produtos que ajudam as pessoas a entender, escolher e seguir em frente."],
+    thesis: ["A partir de problemas estruturais,", "construímos empresas", "que se sustentam sozinhas."],
+    lead: ["A Yorisou é uma foundry: encontramos problemas estruturais na sociedade, verificamos cada um,", "desenhamos como negócio e nos juntamos a quem vai conduzi-lo, levando-o até uma empresa independente."],
     humanSide: "Pessoas",
     humanItems: ["Vida cotidiana", "Trabalho", "Comunidade"],
     systemSide: "Sistemas",
@@ -73,7 +76,7 @@ export const pt: SiteCopy = {
     ],
 
     buildEyebrow: "O que construímos",
-    buildHeading: ["Criamos a próxima forma de estar ao lado,", "uma de cada vez."],
+    buildHeading: ["Três áreas,", "agora em andamento."],
 
     howEyebrow: "Como construímos",
     howHeading: ["Assumimos a complexidade", "e a transformamos em algo utilizável."],
@@ -107,6 +110,19 @@ export const pt: SiteCopy = {
     ctaHeading: ["Talvez haja espaço", "para trabalharmos juntos."],
     ctaBody: "Recebemos consultas sobre nosso trabalho, propostas de parceria e pedidos de imprensa. Respondemos conforme o conteúdo de cada mensagem.",
     ctaButton: "Fale conosco",
+
+    /* CORP-v1.2 — camada Asterion e camada de engajamento na página inicial. */
+    asterionEyebrow: "Infraestrutura compartilhada",
+    asterionHeading: ["A cada projeto,", "o chão comum fica mais firme."],
+    asterionBody:
+      "O Asterion OS é uma plataforma independente de tecnologia e execução compartilhada, situada dentro da arquitetura de foundry da Yorisou. Como esse terreno comum já existe, cada projeto não precisa refazer os mesmos mecanismos e pode concentrar o esforço naquilo que é próprio dele.",
+    asterionNote:
+      "Cada projeto é governado separadamente e mantém sua própria propriedade intelectual, seus dados e sua responsabilidade operacional. O Asterion não pertence à Yorisou.",
+    engageEyebrow: "Construir junto",
+    engageHeading: ["Entre enquanto ainda", "está virando empresa."],
+    engageBody:
+      "Fundadores, pesquisadores, órgãos públicos, empresas. Por onde se entra depende de onde você está. Começamos pelo que já dá para conversar.",
+    engageCta: "Ver as formas de entrada",
   },
 
   mirai: {
@@ -295,5 +311,180 @@ export const pt: SiteCopy = {
     errorBody: "Aguarde um momento e tente novamente.",
     required: "Obrigatório",
     privacyNote: "Os dados pessoais fornecidos são usados apenas para responder à sua mensagem.",
+  },
+
+  /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
+  ventures: {
+    eyebrow: "Projetos em andamento",
+    heading: ["Três áreas, ainda", "a caminho de virar empresa."],
+    lead:
+      "Em todas elas, as instituições e os sistemas já existem — e param pouco antes de chegar a quem precisa. A Yorisou entra nesse intervalo e vai dando forma enquanto verifica.",
+    cards: [
+      {
+        name: "Mirai Move",
+        href: "/mirai-move",
+        thesis: "Reunir informação, conexão e desenvolvimento de negócios no setor de mobilidade.",
+        problem: "Entre operadores, regiões e governo, informação e oportunidade estão separadas.",
+        building: "Uma plataforma em que partes do Japão e de fora trabalhem sobre a mesma informação.",
+        status: "Em desenvolvimento e operação. Site público no ar.",
+      },
+      {
+        name: "Kakari",
+        href: "/kakari",
+        thesis: "Apoiar em vários idiomas os procedimentos de quem vive no Japão e de quem abre um negócio aqui.",
+        problem: "Os sistemas existem, mas a língua e a sequência de passos impedem que sejam usados.",
+        building: "Uma forma de dividir o procedimento em etapas e mostrar até onde se consegue ir sozinho.",
+        status: "Em desenvolvimento. Em preparação para a abertura ao público.",
+      },
+      {
+        name: "Chigamo",
+        href: "/chigamo",
+        thesis: "Fazer com que se entenda um lugar a partir de posição e contexto.",
+        problem: "A informação que mais ajudaria ali é justamente a mais difícil de encontrar.",
+        building: "Uma forma de descobrir o entorno, apoiada em posição e contexto.",
+        status: "Estágio conceitual. A verificação ainda está por vir.",
+      },
+    ],
+    noteHeading: ["O que esta página diz", "e o que não diz."],
+    noteBody: [
+      "Estes são os projetos e os conceitos em que a Yorisou trabalha hoje.",
+      "Não são subsidiárias constituídas, não são investimentos e não são clientes. Estão em estágios diferentes, e escrevemos o estágio como ele é.",
+      "O objetivo é que cada um se sustente como empresa independente. Nenhum chegou a esse ponto.",
+    ],
+  },
+
+  /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
+  chigamo: {
+    eyebrow: "Projeto",
+    heading: ["Entender um lugar,", "estando nele."],
+    stage: "Estágio conceitual",
+    lead:
+      "Um conceito: usar posição e contexto para trazer à tona o que é de fato útil em determinado lugar. Ainda está antes da fase de verificação.",
+    domain: "Entorno cotidiano / posição e contexto / descoberta",
+    conceptEyebrow: "O que estamos pensando",
+    conceptHeading: ["Não falta informação.", "Ela é que não chega."],
+    conceptBody: [
+      "O que mais se quer saber sobre um lugar é justamente o que a busca devolve pior. Não porque a informação não exista, mas porque ela nunca foi organizada em relação ao lugar e à situação.",
+      "Onde a pessoa está, em que momento e diante de qual situação. Há informação que só se torna reconhecivelmente sua quando essas três coisas coincidem. É disso que o Chigamo tenta tratar.",
+    ],
+    boundaryTitle: "Em que ponto isto está",
+    boundaryBody:
+      "O Chigamo está em estágio conceitual. Não há produto disponível ao público, não há usuários e não há nenhum programa com municípios. O que está escrito aqui é uma hipótese que pretendemos verificar.",
+    detail: [
+      {
+        heading: "Por que agora",
+        body: "Mapas e busca já amadureceram. Ainda assim, “o que faz sentido para mim, no lugar onde estou” continua sendo algo que cada pessoa levanta por conta própria.",
+      },
+      {
+        heading: "O que precisamos verificar",
+        body: "Se filtrar por posição e contexto torna a informação realmente utilizável. É isso que queremos testar primeiro, em pequena escala.",
+      },
+    ],
+  },
+
+  /* ── HOW WE BUILD / FOUNDRY (CORP-v1.2) ─────────────────────────────── */
+  foundry: {
+    eyebrow: "Como construímos",
+    heading: ["Do problema até a empresa,", "na ordem."],
+    lead:
+      "Não começamos por uma ideia que nos agradou. Encontramos um problema estrutural, verificamos, desenhamos como negócio, nos juntamos a quem pode conduzi-lo e levamos até uma empresa independente. A Yorisou chama essa sequência de foundry.",
+    stagesEyebrow: "Etapas",
+    stagesHeading: ["Oito etapas,", "sem pular nenhuma."],
+    stages: [
+      { no: "01", name: "Hipótese", body: "Definir onde está o problema estrutural — a partir da forma do trabalho real, não de um palpite." },
+      { no: "02", name: "Evidência", body: "Verificar se o problema existe mesmo e sobre quem ele recai. Muitas hipóteses morrem aqui." },
+      { no: "03", name: "Desenho do negócio", body: "Transformar a resposta em negócio: quem usa e onde o valor é de fato trocado." },
+      { no: "04", name: "Construção", body: "Construir. Usar o terreno comum onde ele existe e concentrar o esforço no que é específico deste projeto." },
+      { no: "05", name: "Pronto para operar", body: "Deixar os ativos e os procedimentos em um estado em que alguém de fora consiga assumir e conduzir." },
+      { no: "06", name: "Formação da equipe fundadora", body: "Juntar-se a quem consegue carregar o projeto como seu — como fundador, não como empregado." },
+      { no: "07", name: "Independência e operação", body: "Conduzir como empresa independente, desenhada para não seguir dependente da Yorisou." },
+      { no: "08", name: "Aprendizado", body: "Guardar o que funcionou e o que morreu como material para o próximo projeto." },
+    ],
+    independenceHeading: ["O objetivo é uma empresa", "que se sustenta sozinha."],
+    independenceBody: [
+      "O propósito desse processo não é acumular coisas sob a Yorisou. É levar cada projeto até o ponto em que ele se sustenta como empresa independente.",
+      "Por isso construímos, desde o início, de um jeito que possa ser transferido. Se quem conduz não pode tomar as decisões de verdade, aquilo não virou uma empresa.",
+    ],
+    asterionEyebrow: "Tecnologia e execução compartilhadas",
+    asterionHeading: ["Não construir", "a mesma coisa duas vezes."],
+    asterionBody: [
+      "O Asterion OS é uma plataforma independente de tecnologia e execução compartilhada, situada dentro da arquitetura de foundry da Yorisou. Não é propriedade da Yorisou.",
+      "Como esse terreno comum existe, nenhum projeto precisa reconstruí-lo, e cada um pode se concentrar no próprio domínio. A capacidade que se acumula vira o ponto de partida do projeto seguinte.",
+    ],
+    asterionBoundaryTitle: "O limite",
+    asterionBoundaryBody:
+      "Cada projeto é governado separadamente. A propriedade intelectual, os dados e a responsabilidade operacional pertencem ao projeto. Nada é desenhado para que dados de um projeto ou de seus usuários fluam automaticamente para a plataforma.",
+    economicsHeading: ["A participação segue", "a contribuição e a responsabilidade."],
+    economicsBody: [
+      "As condições variam de projeto para projeto. Não aplicamos uma fórmula fixa a tudo.",
+      "Só o princípio é comum: a participação segue a contribuição, o risco assumido e a responsabilidade que continua. Quem conduz um projeto tem poder real de decisão.",
+      "Os detalhes são conversados caso a caso, com cada projeto e cada pessoa. Não são o tipo de coisa que cabe em um site.",
+    ],
+    maturityTitle: "Em que ponto isto está",
+    maturityBody:
+      "Esta forma de trabalhar não é um método comprovado nem repetível. A Yorisou está em estágio inicial e ainda não levou nenhum projeto até uma empresa independente. O que está escrito aqui é como de fato procedemos — não é uma afirmação sobre resultados.",
+  },
+
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  buildWithUs: {
+    eyebrow: "Construir junto",
+    heading: ["A porta de entrada muda", "conforme a sua posição."],
+    lead:
+      "Por enquanto, começamos pelo que já dá para conversar. Não existe um processo de entrada definido. Se houver interesse, conte o que você tem em mente.",
+    lanes: [
+      {
+        key: "founders",
+        title: "Fundadores e operadores",
+        body:
+          "A Yorisou desenvolve projetos até pouco antes de virarem empresas e procura pessoas capazes de assumir um deles como seu. É uma posição de fundador, não um cargo que se recebe pronto.",
+        invites: [
+          "Você já conduziu de verdade algo com operação real por trás",
+          "Você consegue avançar enquanto muita coisa ainda está indefinida",
+          "Você conhece de perto ao menos uma destas áreas: tecnologia, manufatura, administração pública ou trabalho comunitário",
+        ],
+        cta: "Manifestar interesse",
+      },
+      {
+        key: "research",
+        title: "Universidades e pesquisa",
+        body:
+          "Transformar pesquisa em algo que a sociedade consiga usar exige também desenho de negócio. Procuramos pessoas para pensar junto a formação de fundadores e a implementação de pesquisa.",
+        invites: [
+          "Você procura onde a pesquisa pode aterrissar",
+          "Você quer que estudantes e pesquisadores tenham experiência real de fundação",
+          "Você prefere começar por uma exploração conjunta",
+        ],
+        cta: "Começar uma conversa",
+      },
+      {
+        key: "public",
+        title: "Governo e setor público",
+        body:
+          "Nos problemas públicos, muitas vezes as regras já existem, mas nunca foram traduzidas em passos que o cidadão consiga seguir. Queremos desenhar junto o teste pequeno, a medição e o caminho até algo que se sustente.",
+        invites: [
+          "Você tem um problema que dá para testar em campo",
+          "Você quer um formato em que o efeito possa ser medido",
+          "Você não quer que termine como um piloto isolado",
+        ],
+        cta: "Fale conosco",
+      },
+      {
+        key: "corporate",
+        title: "Empresas",
+        body:
+          "Se há um problema na sua própria operação que deveria virar um negócio, podemos começar por desenvolvimento conjunto ou por um teste em campo.",
+        invites: [
+          "Há um problema operacional não resolvido no seu dia a dia",
+          "Você procura o formato de um novo negócio",
+          "Você procura um parceiro de desenvolvimento",
+        ],
+        cta: "Entrar em contato",
+      },
+    ],
+    intakeTitle: "Sobre a entrada",
+    intakeBody:
+      "No momento não há processo de candidatura nem programa de seleção. O que está aqui é um convite, não uma parceria em andamento nem uma vaga aberta. Começamos ouvindo o que você tem e vendo se há algo a conversar.",
+    ctaHeading: ["Seja qual for a posição,", "a porta de entrada é a mesma."],
+    ctaBody: "Escreva o que tem em mente e envie. Lemos na ordem em que chegam.",
   },
 };

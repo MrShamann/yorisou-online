@@ -10,7 +10,16 @@ export async function localeFrom(searchParams: SearchParams): Promise<string> {
   return resolveLocale((await searchParams).lang);
 }
 
-type MetaKey = "home" | "miraiMove" | "kakari" | "about" | "company" | "contact";
+type MetaKey =
+  | "home"
+  | "ventures"
+  | "miraiMove"
+  | "kakari"
+  | "chigamo"
+  | "about"
+  | "buildWithUs"
+  | "company"
+  | "contact";
 
 /**
  * Locale-aware metadata for a corporate route.

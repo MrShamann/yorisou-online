@@ -40,12 +40,15 @@ export const nl: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Tussen mens en samenleving bouwen wij de volgende vorm van nabijheid.", description: "Yorisou LLC kijkt nauwkeurig naar de complexiteit in het dagelijks leven, het werk en de lokale gemeenschap, en bouwt producten waarmee mensen die complexiteit begrijpen, kiezen en verder komen. Wij ontwikkelen Mirai Move en Kakari." },
+    home: { title: "Yorisou LLC — Van structurele vraagstukken naar bedrijven die op eigen benen staan.", description: "Yorisou LLC is een foundry: wij zoeken structurele vraagstukken op, bouwen het bewijs en de bouwstenen van een onderneming, en vormen samen met oprichters zelfstandige bedrijven. Mirai Move, Kakari en Chigamo zijn onderweg." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Een platform voor informatie, matching en business development in de Japanse mobiliteitssector. De publieke website is live; de platformfuncties zijn in ontwikkeling." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Meertalige ondersteuning bij administratieve procedures en documenten, voor mensen die in Japan wonen en voor wie hier een onderneming start. In ontwikkeling en nog niet algemeen beschikbaar." },
-    about: { title: "Over ons — Yorisou LLC", description: "Waarom Yorisou bestaat, hoe wij denken en hoe wij bouwen. Wat wij niet kunnen verifiëren, schrijven wij niet op." },
+    about: { title: "Hoe wij bouwen — Yorisou LLC", description: "Het vraagstuk vinden, het toetsen, het als onderneming ontwerpen, een oprichtersteam vormen en het naar een zelfstandig bedrijf brengen. Hoe de foundry van Yorisou werkt, en waar de gedeelde basis zich bevindt." },
     company: { title: "Bedrijf — Yorisou LLC", description: "Bedrijfsprofiel, profiel van de vertegenwoordiger, boodschap van de vertegenwoordiger en werkgebieden van Yorisou LLC." },
     contact: { title: "Contact — Yorisou LLC", description: "Vragen over ons werk, samenwerking en pers." },
+    ventures: { title: "Projecten — Yorisou LLC", description: "Waar Yorisou nu aan werkt: Mirai Move, Kakari en Chigamo. Elk project staat in een andere fase, en die fase benoemen wij zoals hij is." },
+    buildWithUs: { title: "Samen bouwen — Yorisou LLC", description: "Ingangen voor oprichters, onderzoekers, overheid en bedrijven. Er is geen open aanmeldings- of selectieprogramma; wij beginnen bij een gesprek." },
+    chigamo: { title: "Chigamo — Yorisou LLC", description: "Een concept om vanuit locatie en context zichtbaar te maken wat op een bepaalde plek werkelijk van nut is. Bevindt zich in de conceptfase; er is niets openbaar beschikbaar." },
   },
 
   common: {
@@ -57,8 +60,11 @@ export const nl: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
-    thesis: ["Tussen mens en samenleving", "bouwen wij de volgende", "vorm van nabijheid."],
-    lead: ["Yorisou kijkt nauwkeurig naar de complexiteit in het dagelijks leven, het werk en de lokale gemeenschap,", "en bouwt producten waarmee mensen die begrijpen, kiezen en verder komen."],
+    thesis: ["Van structurele vraagstukken", "maken wij bedrijven", "die op eigen benen staan."],
+    lead: [
+      "Yorisou is een foundry: wij zoeken structurele vraagstukken in de samenleving op, toetsen ze en ontwerpen ze als onderneming,",
+      "en werken samen met de mensen die ze gaan leiden, op weg naar zelfstandige bedrijven.",
+    ],
     humanSide: "Mens",
     humanItems: ["Dagelijks leven", "Werk", "Gemeenschap"],
     systemSide: "Systemen",
@@ -75,7 +81,7 @@ export const nl: SiteCopy = {
     ],
 
     buildEyebrow: "Wat wij bouwen",
-    buildHeading: ["Wij bouwen de volgende vorm van nabijheid,", "één voor één."],
+    buildHeading: ["Drie gebieden", "waar wij nu aan werken."],
 
     howEyebrow: "Hoe wij bouwen",
     howHeading: ["Wij nemen de complexiteit op ons", "en maken er iets bruikbaars van."],
@@ -109,6 +115,19 @@ export const nl: SiteCopy = {
     ctaHeading: ["Misschien is er ruimte", "om hier samen aan te werken."],
     ctaBody: "Wij ontvangen graag vragen over ons werk, mogelijke samenwerking en persverzoeken. Wij reageren op volgorde, afhankelijk van de vraag.",
     ctaButton: "Neem contact op",
+
+    /* CORP-v1.2 — Asterion-laag en de laag voor betrokkenheid op de homepage. */
+    asterionEyebrow: "Gedeelde basis",
+    asterionHeading: ["Elke keer dat wij bouwen,", "wordt de bodem steviger."],
+    asterionBody:
+      "Asterion OS is een zelfstandig, gedeeld technologie- en uitvoeringsplatform dat een plaats heeft binnen de foundry-opzet van Yorisou. Doordat die gemeenschappelijke basis er al ligt, hoeft niet elk project dezelfde onderdelen opnieuw te bouwen en kan het zijn inspanning richten op het eigen vraagstuk.",
+    asterionNote:
+      "Elk project wordt afzonderlijk bestuurd en houdt zijn eigen intellectuele eigendom, gegevens en operationele verantwoordelijkheid. Asterion is geen eigendom van Yorisou.",
+    engageEyebrow: "Samen bouwen",
+    engageHeading: ["Stap in terwijl het nog", "een bedrijf aan het worden is."],
+    engageBody:
+      "Oprichters, onderzoekers, overheid, bedrijven. Waar u kunt aanhaken, hangt af van waar u staat. Wij beginnen bij wat nu al te bespreken valt.",
+    engageCta: "Bekijk de ingangen",
   },
 
   mirai: {
@@ -297,5 +316,180 @@ export const nl: SiteCopy = {
     errorBody: "Wacht een moment en probeer het opnieuw.",
     required: "Verplicht",
     privacyNote: "De persoonsgegevens die u verstrekt, gebruiken wij uitsluitend om uw vraag te beantwoorden.",
+  },
+
+  /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
+  ventures: {
+    eyebrow: "Waar wij nu aan bouwen",
+    heading: ["Drie gebieden,", "elk nog net geen bedrijf."],
+    lead:
+      "In alle drie bestaan de regelingen en de systemen al — en stoppen ze net voordat ze de mensen bereiken die ze nodig hebben. Yorisou werkt in die ruimte, en toetst gaandeweg.",
+    cards: [
+      {
+        name: "Mirai Move",
+        href: "/mirai-move",
+        thesis: "Informatie, matching en business development in mobiliteit met elkaar verbinden.",
+        problem: "Tussen aanbieders, regio’s en overheid liggen informatie en kansen van elkaar gescheiden.",
+        building: "Een platform waarop partijen binnen en buiten Japan vanuit dezelfde informatie kunnen werken.",
+        status: "In ontwikkeling en in bedrijf. Publieke website live.",
+      },
+      {
+        name: "Kakari",
+        href: "/kakari",
+        thesis: "Meertalige ondersteuning bij de procedures van wonen en ondernemen in Japan.",
+        problem: "De regelingen bestaan, maar taal en volgorde zorgen dat mensen ze nooit gebruiken.",
+        building: "Een manier om een procedure in stappen te verdelen en te tonen hoe ver u zelf komt.",
+        status: "In ontwikkeling. In voorbereiding op publicatie.",
+      },
+      {
+        name: "Chigamo",
+        href: "/chigamo",
+        thesis: "Een plek leesbaar maken vanuit locatie en context.",
+        problem: "Juist de informatie die hier werkelijk zou helpen, is het moeilijkst te vinden.",
+        building: "Ontdekken binnen de eigen leefomgeving, op basis van locatie en context.",
+        status: "Conceptfase. Nog niet getoetst.",
+      },
+    ],
+    noteHeading: ["Wat deze pagina zegt,", "en wat niet."],
+    noteBody: [
+      "Dit zijn de projecten en concepten waaraan Yorisou op dit moment werkt.",
+      "Het zijn geen als rechtspersoon opgerichte dochterondernemingen, geen deelnemingen en geen klanten. Ze staan in verschillende fasen, en die fase hebben wij opgeschreven zoals hij is.",
+      "Het doel is dat elk project als zelfstandig bedrijf op eigen benen komt te staan. Geen van de projecten heeft dat punt bereikt.",
+    ],
+  },
+
+  /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
+  chigamo: {
+    eyebrow: "Project",
+    heading: ["Een plek begrijpen,", "vanaf de plek zelf."],
+    stage: "Conceptfase",
+    lead:
+      "Een concept: vanuit locatie en context zichtbaar maken wat op een bepaalde plek werkelijk van nut is. Het staat nog vóór de fase van toetsen.",
+    domain: "Leefomgeving / locatie en context / ontdekken",
+    conceptEyebrow: "De gedachte erachter",
+    conceptHeading: ["De informatie bestaat.", "Zij komt alleen niet aan."],
+    conceptBody: [
+      "Juist wat u over een plek zou willen weten, is wat een zoekopdracht het slechtst oplevert. Niet omdat de informatie ontbreekt, maar omdat zij nooit is geordend naar plaats en situatie.",
+      "Waar u bent, wanneer het is, en waar u mee te maken heeft. Sommige informatie wordt pas werkelijk de uwe wanneer die drie samenvallen. Dat is wat Chigamo probeert te behandelen.",
+    ],
+    boundaryTitle: "De huidige fase",
+    boundaryBody:
+      "Chigamo staat in de conceptfase. Er is geen product beschikbaar, er zijn geen gebruikers en er loopt geen traject met een gemeente. Wat hier staat, is een veronderstelling die wij willen toetsen.",
+    detail: [
+      {
+        heading: "Waarom nu",
+        body: "Kaarten en zoekmachines zijn allebei volwassen geworden. Toch is ‘wat betekent iets voor mij, hier waar ik sta’ nog altijd iets wat mensen zelf uitzoeken.",
+      },
+      {
+        heading: "Wat wij willen nagaan",
+        body: "Of informatie werkelijk bruikbaar wordt wanneer je haar afbakent op locatie en context. Dat willen wij eerst klein onderzoeken.",
+      },
+    ],
+  },
+
+  /* ── HOW WE BUILD / FOUNDRY (CORP-v1.2) ─────────────────────────────── */
+  foundry: {
+    eyebrow: "Hoe wij bouwen",
+    heading: ["Van vraagstuk naar bedrijf,", "in die volgorde."],
+    lead:
+      "Wij beginnen niet bij een inval. Wij zoeken een structureel vraagstuk op, toetsen het, ontwerpen het als onderneming, werken samen met mensen die het kunnen leiden, en brengen het naar een zelfstandig bedrijf. Die volgorde noemt Yorisou de foundry.",
+    stagesEyebrow: "Fasen",
+    stagesHeading: ["Acht fasen,", "en wij slaan er geen over."],
+    stages: [
+      { no: "01", name: "Hypothese", body: "Bepalen waar het structurele vraagstuk zit — vanuit de vorm van het werkelijke werk, niet vanuit een ingeving." },
+      { no: "02", name: "Bewijs", body: "Nagaan of het vraagstuk echt bestaat en bij wie het terechtkomt. Hier sneuvelen veel hypothesen." },
+      { no: "03", name: "Ondernemingsontwerp", body: "Van het antwoord een onderneming maken: wie het gebruikt, en waar werkelijk waarde wordt uitgewisseld." },
+      { no: "04", name: "Bouwen", body: "Het daadwerkelijk maken. Gebruikmaken van de gedeelde basis waar die er is, en de inspanning richten op wat eigen is aan dit project." },
+      { no: "05", name: "Klaar als onderneming", body: "De bouwstenen en de werkwijze op een punt brengen waar iemand van buiten ze kan overnemen en voortzetten." },
+      { no: "06", name: "Oprichtersteam vormen", body: "Samenwerken met iemand die het als het zijne kan dragen — als oprichter, niet als werknemer." },
+      { no: "07", name: "Verzelfstandiging en exploitatie", body: "Het laten draaien als zelfstandig bedrijf, zo ingericht dat het niet afhankelijk blijft van Yorisou." },
+      { no: "08", name: "Leren", body: "Wat werkte en wat sneuvelde bewaren als materiaal voor het volgende project." },
+    ],
+    independenceHeading: ["Het doel is een bedrijf", "dat op eigen benen staat."],
+    independenceBody: [
+      "De foundry is er niet om steeds meer onder Yorisou te verzamelen. Zij is er om elk project te brengen tot waar het als zelfstandig bedrijf kan staan.",
+      "Daarom bouwen wij vanaf het begin op een manier die zich laat overdragen. Als de mensen die het leiden niet de werkelijke beslissingen kunnen nemen, is het geen bedrijf geworden.",
+    ],
+    asterionEyebrow: "Gedeelde technologie en uitvoering",
+    asterionHeading: ["Hetzelfde bouwen wij", "geen tweede keer."],
+    asterionBody: [
+      "Asterion OS is een zelfstandig, gedeeld technologie- en uitvoeringsplatform dat een plaats heeft binnen de foundry-opzet van Yorisou. Het is geen eigendom van Yorisou.",
+      "Doordat die gemeenschappelijke basis er is, hoeft geen enkel project haar opnieuw te bouwen en kan elk zich concentreren op het eigen domein. Wat zich opbouwt, wordt het vertrekpunt voor het volgende.",
+    ],
+    asterionBoundaryTitle: "De grens",
+    asterionBoundaryBody:
+      "Elk project wordt afzonderlijk bestuurd. Intellectueel eigendom, gegevens en operationele verantwoordelijkheid behoren toe aan het project zelf. Niets is zo ontworpen dat gegevens van een project of van gebruikers automatisch naar het platform stromen.",
+    economicsHeading: ["Eigendom volgt", "bijdrage en verantwoordelijkheid."],
+    economicsBody: [
+      "De voorwaarden verschillen per project. Wij leggen niet één vaste formule over alles heen.",
+      "Alleen het uitgangspunt is gedeeld: eigendom volgt de bijdrage, het gedragen risico en de verantwoordelijkheid die blijft. Wie een project leidt, heeft werkelijke zeggenschap.",
+      "Het concrete bespreken wij per project en per persoon. Dat hoort niet op een website thuis.",
+    ],
+    maturityTitle: "Waar dit nu staat",
+    maturityBody:
+      "Deze manier van werken is geen bewezen, herhaalbare methode. Yorisou staat aan het begin en heeft nog geen project als zelfstandig bedrijf naar buiten gebracht. Wat hier staat, is hoe wij feitelijk te werk gaan — geen bewering over resultaten.",
+  },
+
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  buildWithUs: {
+    eyebrow: "Samen bouwen",
+    heading: ["Waar u instapt, hangt af", "van waar u staat."],
+    lead:
+      "Voor nu beginnen wij bij wat te bespreken valt. Er is geen vaste aanmelding. Als het u interesseert, laat dan weten wat u voor ogen heeft.",
+    lanes: [
+      {
+        key: "founders",
+        title: "Oprichters en operationele leiders",
+        body:
+          "Yorisou brengt projecten tot vlak vóór het punt waarop zij een bedrijf worden, en zoekt mensen die er een als het hunne kunnen dragen. Het is geen baan in loondienst, maar een rol als oprichter.",
+        invites: [
+          "U heeft werkelijk iets geleid waar echte uitvoering achter zat",
+          "U kunt vooruit terwijl er nog veel onbeslist is",
+          "U kent een van deze werelden: techniek, productie, overheid of de lokale praktijk",
+        ],
+        cta: "Laat uw interesse weten",
+      },
+      {
+        key: "research",
+        title: "Universiteiten en onderzoek",
+        body:
+          "Om onderzoek bruikbaar te maken voor de samenleving is er naast het onderzoek ook ondernemingsontwerp nodig. Wij zoeken mensen om samen mee na te denken over het opleiden van oprichters en over de implementatie van onderzoek.",
+        invites: [
+          "U zoekt een plek waar onderzoek kan landen",
+          "U wilt studenten en onderzoekers echte oprichterservaring geven",
+          "U begint liever bij een gezamenlijke verkenning",
+        ],
+        cta: "Begin een gesprek",
+      },
+      {
+        key: "public",
+        title: "Overheid en publieke sector",
+        body:
+          "Bij publieke vraagstukken zijn de regels vaak al aanwezig, maar nooit vertaald naar stappen die een inwoner kan volgen. Wij willen de kleine proef, de meting en de weg naar iets blijvends samen ontwerpen.",
+        invites: [
+          "U heeft een vraagstuk dat in de praktijk beproefd kan worden",
+          "U wilt het in een vorm waarin het effect meetbaar is",
+          "U wilt niet dat het bij een eenmalige pilot blijft",
+        ],
+        cta: "Neem contact op",
+      },
+      {
+        key: "corporate",
+        title: "Bedrijven",
+        body:
+          "Wanneer er in uw eigen praktijk een vraagstuk ligt dat een onderneming zou moeten worden. Wij kunnen beginnen bij gezamenlijke ontwikkeling of bij een proef in de praktijk.",
+        invites: [
+          "In uw werk ligt een onopgelost operationeel vraagstuk",
+          "U zoekt de vorm van een nieuwe onderneming",
+          "U zoekt een partner om samen mee te ontwikkelen",
+        ],
+        cta: "Stel uw vraag",
+      },
+    ],
+    intakeTitle: "Over aanmelden",
+    intakeBody:
+      "Er is op dit moment geen aanmeldingsprocedure en geen selectieprogramma. Wat hier staat is een uitnodiging, geen bestaande samenwerking en geen openstaande functie. Wij beginnen door te horen wat u heeft, en of er iets te bespreken valt.",
+    ctaHeading: ["Wie u ook bent,", "de ingang is dezelfde."],
+    ctaBody: "Schrijf wat u voor ogen heeft en stuur het ons. Wij lezen alles op volgorde.",
   },
 };

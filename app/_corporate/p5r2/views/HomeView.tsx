@@ -1,5 +1,5 @@
 import styles from "../site.module.css";
-import { Band, Cards, Disclose, Eyebrow, Facts, TextLink } from "../pieces";
+import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink } from "../pieces";
 import { HeroField, NetworkSystem, ProcedureSystem } from "../systems";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
@@ -91,7 +91,22 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
             <p className={`${styles.projectLead} ${styles.jp}`}>{copy.kakari.lead}</p>
             <TextLink href={L(ROUTES.kakari)}>{copy.common.readMore("Kakari")}</TextLink>
           </article>
+
+          {/*
+            CORP-v1.2 — Chigamo is at concept stage, so it carries no system diagram. The other two
+            have a network and a procedure because those exist; drawing one here would make an
+            untested idea look further along than it is. The stage chip says so outright.
+          */}
+          <article className={styles.project}>
+            <div className={styles.projectHead}>
+              <h3 className={styles.projectName}>Chigamo</h3>
+              <span className={styles.stage}>{copy.chigamo.stage}</span>
+            </div>
+            <p className={`${styles.projectLead} ${styles.jp}`}>{copy.chigamo.lead}</p>
+            <TextLink href={L(ROUTES.chigamo)}>{copy.common.readMore("Chigamo")}</TextLink>
+          </article>
         </div>
+        <TextLink href={L(ROUTES.ventures)}>{copy.ventures.eyebrow}</TextLink>
       </Band>
 
       {/* 04 — how we build */}
@@ -108,6 +123,30 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
             </p>
           ))}
         </Disclose>
+      </Band>
+
+      {/*
+        CORP-v1.2 §7.4 — the Asterion layer.
+
+        It sits AFTER "how we build" and before the engagement layer, as a shared floor underneath
+        the ventures rather than as a fourth venture. Asterion is independent and is not owned by
+        Yorisou, so the boundary note is rendered immediately with the capability claim — never
+        several screens away — and there is no "powered by" badge anywhere on this page.
+      */}
+      <Band tint>
+        <Eyebrow>{h.asterionEyebrow}</Eyebrow>
+        <h2 className={styles.h2}><Phrase units={h.asterionHeading} locale={locale} /></h2>
+        <p className={`${styles.body} ${styles.jp}`}>{h.asterionBody}</p>
+        <Boundary title={copy.foundry.asterionBoundaryTitle}>{h.asterionNote}</Boundary>
+        <TextLink href={L(ROUTES.about)}>{copy.foundry.eyebrow}</TextLink>
+      </Band>
+
+      {/* CORP-v1.2 §7.5 — how to engage. Invitations, not partnerships. */}
+      <Band line>
+        <Eyebrow>{h.engageEyebrow}</Eyebrow>
+        <h2 className={styles.h2}><Phrase units={h.engageHeading} locale={locale} /></h2>
+        <p className={`${styles.body} ${styles.jp}`}>{h.engageBody}</p>
+        <TextLink href={L(ROUTES.buildWithUs)}>{h.engageCta}</TextLink>
       </Band>
 
       {/* 05 + 06 — representative and message */}

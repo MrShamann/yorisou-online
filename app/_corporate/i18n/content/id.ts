@@ -38,12 +38,15 @@ export const id: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Di antara manusia dan masyarakat, kami menciptakan pendampingan berikutnya.", description: "Yorisou LLC menatap kompleksitas dalam kehidupan sehari-hari, pekerjaan, dan komunitas, lalu membangun produk yang membantu orang memahaminya, memilih, dan melangkah maju. Kami sedang mengembangkan Mirai Move dan Kakari." },
+    home: { title: "Yorisou LLC — Dari masalah struktural menjadi perusahaan yang berdiri sendiri.", description: "Yorisou LLC bekerja sebagai foundry: kami menemukan masalah struktural, membangun bukti dan aset usaha, lalu bergabung dengan tim pendiri untuk mengubahnya menjadi perusahaan yang mandiri. Mirai Move, Kakari, dan Chigamo sedang kami jalankan." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Platform untuk informasi, pencocokan, dan pengembangan bisnis di sektor mobilitas Jepang. Situs publiknya sudah aktif; fitur platformnya masih dalam tahap pengembangan." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Dukungan multibahasa untuk prosedur administrasi dan dokumen, bagi orang yang tinggal di Jepang dan yang memulai usaha di sini. Masih dalam pengembangan dan belum dibuka untuk umum." },
-    about: { title: "Tentang Kami — Yorisou LLC", description: "Alasan Yorisou ada, cara kami berpikir, dan cara kami membangun. Kami tidak menuliskan apa yang tidak dapat kami pastikan." },
+    about: { title: "Cara kami membangun — Yorisou LLC", description: "Menemukan masalahnya, memastikannya, merancangnya sebagai usaha, bergabung dengan tim pendiri, lalu membawanya menjadi perusahaan yang mandiri. Cara kerja foundry Yorisou, dan letak fondasi bersama di dalamnya." },
     company: { title: "Perusahaan — Yorisou LLC", description: "Profil perusahaan, profil perwakilan perusahaan, pesan perwakilan perusahaan, dan bidang usaha Yorisou LLC." },
     contact: { title: "Kontak — Yorisou LLC", description: "Kanal pertanyaan mengenai kegiatan usaha, kemitraan, dan liputan media." },
+    ventures: { title: "Usaha — Yorisou LLC", description: "Usaha dan gagasan yang sedang Yorisou kerjakan: Mirai Move, Kakari, dan Chigamo. Tahapnya berbeda-beda, dan kami menuliskannya apa adanya." },
+    buildWithUs: { title: "Membangun bersama kami — Yorisou LLC", description: "Pintu masuk bagi pendiri, peneliti, instansi publik, dan perusahaan. Saat ini tidak ada program pendaftaran; kami memulainya dari percakapan." },
+    chigamo: { title: "Chigamo — Yorisou LLC", description: "Gagasan untuk membuat hal yang benar-benar berguna di suatu tempat dapat dikenali dari lokasi dan konteksnya. Masih pada tahap gagasan, dan belum ada produk yang dirilis." },
   },
 
   common: {
@@ -55,8 +58,12 @@ export const id: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
-    thesis: ["Di antara manusia dan masyarakat,", "kami menciptakan pendampingan", "berikutnya."],
-    lead: ["Yorisou menatap kompleksitas dalam kehidupan sehari-hari, pekerjaan, dan komunitas,", "lalu membangun produk yang membantu orang memahami, memilih, dan melangkah maju."],
+    thesis: ["Dari masalah struktural,", "kami membangun perusahaan", "yang berdiri sendiri."],
+    lead: [
+      "Yorisou adalah sebuah foundry: kami menemukan masalah struktural di masyarakat,",
+      "memastikannya, merancangnya sebagai usaha, lalu bergabung dengan orang yang akan menjalankannya,",
+      "dan membawanya sampai menjadi perusahaan yang mandiri.",
+    ],
     humanSide: "Manusia",
     humanItems: ["Kehidupan sehari-hari", "Pekerjaan", "Komunitas"],
     systemSide: "Sistem",
@@ -73,7 +80,7 @@ export const id: SiteCopy = {
     ],
 
     buildEyebrow: "Yang kami bangun",
-    buildHeading: ["Kami membangun pendampingan berikutnya,", "satu per satu."],
+    buildHeading: ["Tiga bidang", "yang sedang berjalan sekarang."],
 
     howEyebrow: "Cara kami membangun",
     howHeading: ["Kami memikul kompleksitasnya", "dan mengubahnya menjadi sesuatu yang bisa dipakai."],
@@ -107,6 +114,19 @@ export const id: SiteCopy = {
     ctaHeading: ["Mungkin ada ruang", "untuk mengerjakannya bersama."],
     ctaBody: "Kami menerima pertanyaan tentang kegiatan usaha, penjajakan kemitraan, dan permintaan liputan. Kami akan membalas satu per satu sesuai isi pesannya.",
     ctaButton: "Hubungi kami",
+
+    /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
+    asterionEyebrow: "Fondasi bersama",
+    asterionHeading: ["Setiap kali kami membangun,", "landasannya bertambah tebal."],
+    asterionBody:
+      "Asterion OS adalah platform teknologi dan eksekusi bersama yang independen, yang ditempatkan di dalam arsitektur foundry Yorisou. Karena landasan bersamanya sudah ada, setiap usaha dapat memusatkan tenaganya pada bagian yang memang menjadi wilayahnya sendiri.",
+    asterionNote:
+      "Setiap usaha diatur secara terpisah, dengan kekayaan intelektual, data, dan tanggung jawab operasionalnya masing-masing. Asterion bukan milik Yorisou.",
+    engageEyebrow: "Membangun bersama kami",
+    engageHeading: ["Terlibatlah selagi ini", "masih dalam proses menjadi perusahaan."],
+    engageBody:
+      "Pendiri, peneliti, instansi publik, perusahaan. Di mana Anda dapat ikut serta bergantung pada posisi Anda. Kami mulai dari apa pun yang bisa dibicarakan sekarang.",
+    engageCta: "Lihat cara terlibat",
   },
 
   mirai: {
@@ -295,5 +315,180 @@ export const id: SiteCopy = {
     errorBody: "Mohon tunggu sejenak, lalu coba lagi.",
     required: "Wajib",
     privacyNote: "Data pribadi yang Anda berikan hanya kami gunakan untuk keperluan menanggapi pertanyaan Anda.",
+  },
+
+  /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
+  ventures: {
+    eyebrow: "Usaha kami saat ini",
+    heading: ["Tiga bidang, dan masing-masing", "belum sampai menjadi perusahaan."],
+    lead:
+      "Di setiap bidang itu, aturan dan sistemnya sudah tersedia — lalu berhenti tepat sebelum sampai kepada orang yang membutuhkannya. Yorisou masuk ke celah itu dan memastikannya sambil berjalan.",
+    cards: [
+      {
+        name: "Mirai Move",
+        href: "/mirai-move",
+        thesis: "Menghubungkan informasi, pencocokan, dan pengembangan bisnis di bidang mobilitas.",
+        problem: "Informasi dan peluang terpisah-pisah di antara penyelenggara, daerah, dan pemerintah.",
+        building: "Platform tempat pihak di dalam dan luar Jepang dapat berbicara di atas informasi yang sama.",
+        status: "Dalam pengembangan dan pengoperasian. Situs publik aktif.",
+      },
+      {
+        name: "Kakari",
+        href: "/kakari",
+        thesis: "Mendukung prosedur bagi orang yang tinggal dan memulai usaha di Jepang, dalam berbagai bahasa.",
+        problem: "Aturannya sudah ada, tetapi bahasa dan urutan langkahnya membuatnya tidak pernah terpakai.",
+        building: "Cara memecah prosedur menjadi tahapan dan menunjukkan sampai mana orang bisa mengurusnya sendiri.",
+        status: "Dalam pengembangan. Tahap persiapan rilis.",
+      },
+      {
+        name: "Chigamo",
+        href: "/chigamo",
+        thesis: "Membuat sebuah tempat dapat dipahami dari lokasi dan konteksnya.",
+        problem: "Justru informasi yang benar-benar berguna di suatu tempat paling sulit ditemukan.",
+        building: "Cara menemukan hal-hal di lingkungan sekitar, berpijak pada lokasi dan konteks.",
+        status: "Tahap gagasan. Belum diuji.",
+      },
+    ],
+    noteHeading: ["Apa yang halaman ini nyatakan,", "dan apa yang tidak."],
+    noteBody: [
+      "Yang berjajar di sini adalah usaha dan gagasan yang sedang Yorisou kerjakan saat ini.",
+      "Semuanya bukan anak perusahaan yang berbadan hukum, bukan penyertaan modal, dan bukan klien. Tahapnya berbeda-beda, dan kami menuliskannya apa adanya.",
+      "Tujuan kami adalah agar masing-masing dapat berdiri sebagai perusahaan yang mandiri. Belum ada satu pun yang sampai ke titik itu.",
+    ],
+  },
+
+  /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
+  chigamo: {
+    eyebrow: "Proyek",
+    heading: ["Memahami sebuah tempat,", "dari dalam tempat itu."],
+    stage: "Tahap gagasan",
+    lead:
+      "Sebuah gagasan: memakai lokasi dan konteks untuk memunculkan apa yang benar-benar berguna di suatu tempat. Ini masih berada sebelum tahap pengujian.",
+    domain: "Lingkungan sekitar / lokasi dan konteks / penemuan",
+    conceptEyebrow: "Yang sedang kami pikirkan",
+    conceptHeading: ["Bukan informasinya tidak ada,", "melainkan tidak sampai."],
+    conceptBody: [
+      "Hal yang paling ingin diketahui tentang sebuah tempat justru paling sulit muncul dalam pencarian. Bukan karena informasinya tidak ada, melainkan karena ia tidak pernah ditata menurut tempat dan situasinya.",
+      "Di mana seseorang berada, kapan waktunya, dan situasi apa yang sedang dihadapinya. Ada informasi yang baru terasa berkaitan dengan diri sendiri ketika ketiganya bertemu. Di sanalah Chigamo mencoba bekerja.",
+    ],
+    boundaryTitle: "Tahap saat ini",
+    boundaryBody:
+      "Chigamo berada pada tahap gagasan. Belum ada produk yang dirilis, belum ada pengguna, dan belum ada program bersama pemerintah daerah. Yang tertulis di sini adalah hipotesis yang hendak kami pastikan.",
+    detail: [
+      {
+        heading: "Mengapa sekarang",
+        body: "Peta maupun mesin pencari sudah cukup matang. Meski begitu, “apa yang berarti bagi saya, di tempat saya berdiri sekarang” masih harus dicari ulang sendiri oleh setiap orang.",
+      },
+      {
+        heading: "Yang perlu kami pastikan",
+        body: "Apakah penyaringan berdasarkan lokasi dan konteks benar-benar membuat informasi menjadi bisa dipakai. Itulah yang lebih dahulu kami pastikan, dalam skala kecil.",
+      },
+    ],
+  },
+
+  /* ── HOW WE BUILD / FOUNDRY (CORP-v1.2) ─────────────────────────────── */
+  foundry: {
+    eyebrow: "Cara kami membangun",
+    heading: ["Dari sebuah masalah sampai menjadi perusahaan,", "secara berurutan."],
+    lead:
+      "Kami tidak berangkat dari gagasan yang sekadar terlintas. Kami menemukan masalah struktural, memastikannya, merancangnya sebagai usaha, bergabung dengan orang yang mampu menjalankannya, lalu membawanya menjadi perusahaan yang mandiri. Urutan itulah yang Yorisou sebut foundry.",
+    stagesEyebrow: "Tahapan",
+    stagesHeading: ["Delapan tahap,", "tanpa ada yang dilewati."],
+    stages: [
+      { no: "01", name: "Hipotesis", body: "Menetapkan di mana letak masalah strukturalnya — dari bentuk pekerjaan yang nyata di lapangan, bukan dari sesuatu yang sekadar terlintas." },
+      { no: "02", name: "Bukti", body: "Memastikan apakah masalah itu benar-benar ada dan siapa yang menanggungnya. Banyak hipotesis gugur di tahap ini." },
+      { no: "03", name: "Perancangan usaha", body: "Mengubah cara menyelesaikannya menjadi bentuk usaha: siapa yang memakainya, dan di mana nilainya dipertukarkan." },
+      { no: "04", name: "Pembangunan", body: "Membangunnya. Memakai landasan bersama pada bagian yang memungkinkan, dan memusatkan tenaga pada bagian yang khas bagi usaha itu." },
+      { no: "05", name: "Siap berdiri sebagai usaha", body: "Menyiapkan aset dan prosedurnya sampai orang dari luar dapat mengambil alih dan menjalankannya." },
+      { no: "06", name: "Pembentukan tim pendiri", body: "Bergabung dengan orang yang mampu memikulnya sebagai miliknya sendiri — sebagai pendiri, bukan sebagai karyawan." },
+      { no: "07", name: "Berdiri sendiri dan beroperasi", body: "Menjalankannya sebagai perusahaan yang mandiri, dalam bentuk yang tidak terus bergantung pada Yorisou." },
+      { no: "08", name: "Pembelajaran", body: "Menyimpan apa yang berhasil maupun hipotesis yang gugur sebagai bahan untuk usaha berikutnya." },
+    ],
+    independenceHeading: ["Tujuannya adalah perusahaan", "yang berdiri sendiri."],
+    independenceBody: [
+      "Tujuan foundry ini bukan menambah jumlah hal yang bernaung di bawah Yorisou, melainkan membawa setiap usaha sampai mampu berdiri sebagai perusahaan yang mandiri.",
+      "Karena itu, sejak awal kami membangunnya dalam bentuk yang dapat diserahkan. Bila orang yang menjalankannya tidak memegang kewenangan yang sesungguhnya, ia belum menjadi sebuah perusahaan.",
+    ],
+    asterionEyebrow: "Teknologi dan eksekusi bersama",
+    asterionHeading: ["Tidak membangun", "hal yang sama dua kali."],
+    asterionBody: [
+      "Asterion OS adalah platform teknologi dan eksekusi bersama yang independen, yang ditempatkan di dalam arsitektur foundry Yorisou. Platform ini bukan milik Yorisou.",
+      "Karena landasan bersamanya sudah ada, tidak ada usaha yang perlu membangun ulang hal yang sama, dan masing-masing dapat memusatkan perhatian pada bidangnya sendiri. Kemampuan yang terkumpul menjadi titik berangkat bagi usaha berikutnya.",
+    ],
+    asterionBoundaryTitle: "Batasnya",
+    asterionBoundaryBody:
+      "Setiap usaha diatur secara terpisah. Kekayaan intelektual, data, dan tanggung jawab operasional melekat pada usaha itu sendiri. Tidak ada rancangan yang membuat data usaha maupun data pengguna mengalir secara otomatis ke sisi platform.",
+    economicsHeading: ["Kepemilikan mengikuti", "kontribusi dan tanggung jawab."],
+    economicsBody: [
+      "Ketentuannya berbeda pada setiap usaha. Kami tidak menerapkan satu pola tetap untuk semuanya.",
+      "Yang sama hanyalah prinsipnya: kepemilikan mengikuti kontribusi, risiko yang dipikul, dan tanggung jawab yang berlanjut. Orang yang menjalankan sebuah usaha memegang kewenangan pengambilan keputusan yang sesungguhnya.",
+      "Rinciannya dibicarakan per usaha dan per pihak. Hal seperti itu bukan sesuatu yang dapat dituliskan di halaman ini.",
+    ],
+    maturityTitle: "Tahap saat ini",
+    maturityBody:
+      "Cara kerja ini belum merupakan metode yang terbukti dan dapat diulang. Yorisou masih berada pada tahap awal, dan belum pernah melepas satu pun usaha menjadi perusahaan yang berdiri sendiri. Yang tertulis di sini adalah cara kami benar-benar bekerja, bukan klaim atas hasil.",
+  },
+
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  buildWithUs: {
+    eyebrow: "Membangun bersama kami",
+    heading: ["Pintu masuknya berbeda,", "tergantung posisi Anda."],
+    lead:
+      "Untuk saat ini kami mulai dari apa pun yang bisa dibicarakan. Tidak ada jalur penerimaan yang baku. Bila Anda tertarik, ceritakan lebih dahulu apa yang Anda pikirkan.",
+    lanes: [
+      {
+        key: "founders",
+        title: "Pendiri dan pengelola",
+        body:
+          "Yorisou membangun usaha sampai titik tepat sebelum ia menjadi perusahaan, dan mencari orang yang mampu memikulnya sebagai miliknya sendiri. Ini adalah posisi pendiri, bukan pekerjaan yang diserahkan sebagai karyawan.",
+        invites: [
+          "Anda pernah benar-benar menjalankan sesuatu yang punya operasi nyata di belakangnya",
+          "Anda dapat melangkah maju ketika banyak hal masih belum diputuskan",
+          "Anda punya pijakan di salah satu bidang: teknologi, manufaktur, pemerintahan, atau kerja di daerah",
+        ],
+        cta: "Sampaikan ketertarikan Anda",
+      },
+      {
+        key: "research",
+        title: "Universitas dan riset",
+        body:
+          "Mengubah hasil riset menjadi sesuatu yang dapat dipakai masyarakat memerlukan perancangan dari sisi usaha. Kami mencari pihak yang dapat memikirkan bersama soal penyiapan pendiri dan penerapan hasil riset.",
+        invites: [
+          "Anda sedang mencari tempat berlabuh bagi hasil riset",
+          "Anda ingin mahasiswa dan peneliti mendapat pengalaman mendirikan usaha secara langsung",
+          "Anda lebih suka memulai dari penjajakan bersama",
+        ],
+        cta: "Mulai percakapan",
+      },
+      {
+        key: "public",
+        title: "Pemerintah dan sektor publik",
+        body:
+          "Pada persoalan publik, aturannya kerap sudah ada tetapi belum diterjemahkan menjadi langkah yang dapat diikuti warga. Kami ingin ikut merancang uji cobanya yang kecil, pengukuran hasilnya, sampai bentuk yang dapat bertahan.",
+        invites: [
+          "Ada persoalan yang dapat dicoba langsung di lapangan",
+          "Anda ingin hasilnya berbentuk sesuatu yang dapat diukur",
+          "Anda tidak ingin berhenti sebagai uji coba sekali jalan",
+        ],
+        cta: "Hubungi kami",
+      },
+      {
+        key: "corporate",
+        title: "Perusahaan",
+        body:
+          "Bila ada persoalan di lapangan Anda sendiri yang semestinya menjadi sebuah usaha. Kami dapat memulainya dari pengembangan bersama atau uji coba langsung di lapangan.",
+        invites: [
+          "Ada persoalan operasional yang belum terselesaikan di lapangan Anda",
+          "Anda sedang mencari bentuk usaha yang baru",
+          "Anda sedang mencari mitra pengembangan bersama",
+        ],
+        cta: "Ajukan pertanyaan",
+      },
+    ],
+    intakeTitle: "Tentang jalur penerimaan",
+    intakeBody:
+      "Saat ini tidak ada proses pendaftaran dan tidak ada program seleksi. Yang ada di sini adalah undangan, bukan kemitraan yang sedang berjalan maupun lowongan yang sedang dibuka. Kami mulai dengan mendengar apa yang Anda bawa, lalu melihat apakah ada hal yang bisa dibicarakan.",
+    ctaHeading: ["Dari posisi mana pun,", "pintu masuk awalnya sama."],
+    ctaBody: "Tuliskan apa yang Anda pikirkan lalu kirimkan kepada kami. Kami membacanya satu per satu.",
   },
 };

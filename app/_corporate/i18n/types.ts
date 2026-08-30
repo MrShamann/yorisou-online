@@ -40,6 +40,9 @@ export type SiteCopy = {
     about: { title: string; description: string };
     company: { title: string; description: string };
     contact: { title: string; description: string };
+    ventures: { title: string; description: string };
+    buildWithUs: { title: string; description: string };
+    chigamo: { title: string; description: string };
   };
 
   /* ── shared ─────────────────────────────────────────────────────────── */
@@ -88,6 +91,92 @@ export type SiteCopy = {
     ctaHeading: readonly string[];
     ctaBody: string;
     ctaButton: string;
+    /* ── CORP-v1.2: Foundry story order ────────────────────────────────
+     * The homepage must answer, in order: what YORISOU is, which ventures exist now, how it
+     * builds, what shared infrastructure sits underneath, and how to engage. The first four
+     * already had fields; the Asterion layer and the engagement layer are new. */
+    asterionEyebrow: string;
+    asterionHeading: readonly string[];
+    asterionBody: string;
+    asterionNote: string;
+    engageEyebrow: string;
+    engageHeading: readonly string[];
+    engageBody: string;
+    engageCta: string;
+  };
+
+  /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
+  ventures: {
+    eyebrow: string;
+    heading: readonly string[];
+    lead: string;
+    cards: readonly {
+      name: string;
+      href: string;
+      thesis: string;
+      problem: string;
+      building: string;
+      /** Public-safe maturity in ordinary language. Never a metric, never a claim of traction. */
+      status: string;
+    }[];
+    /** States plainly what inclusion on this page does and does not mean. */
+    noteHeading: readonly string[];
+    noteBody: readonly string[];
+  };
+
+  /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
+  chigamo: {
+    eyebrow: string;
+    heading: readonly string[];
+    stage: string;
+    lead: string;
+    domain: string;
+    conceptEyebrow: string;
+    conceptHeading: readonly string[];
+    conceptBody: readonly string[];
+    boundaryTitle: string;
+    boundaryBody: string;
+    detail: readonly { heading: string; body: string }[];
+  };
+
+  /* ── HOW WE BUILD / FOUNDRY (CORP-v1.2) ─────────────────────────────── */
+  foundry: {
+    eyebrow: string;
+    heading: readonly string[];
+    lead: string;
+    stagesEyebrow: string;
+    stagesHeading: readonly string[];
+    stages: readonly { no: string; name: string; body: string }[];
+    independenceHeading: readonly string[];
+    independenceBody: readonly string[];
+    asterionEyebrow: string;
+    asterionHeading: readonly string[];
+    asterionBody: readonly string[];
+    asterionBoundaryTitle: string;
+    asterionBoundaryBody: string;
+    economicsHeading: readonly string[];
+    economicsBody: readonly string[];
+    maturityTitle: string;
+    maturityBody: string;
+  };
+
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  buildWithUs: {
+    eyebrow: string;
+    heading: readonly string[];
+    lead: string;
+    lanes: readonly {
+      key: string;
+      title: string;
+      body: string;
+      invites: readonly string[];
+      cta: string;
+    }[];
+    /** Honest statement of what intake currently is. No "Apply now" while no programme runs. */
+    intakeTitle: string;
+    intakeBody: string;
+    ctaHeading: readonly string[];
+    ctaBody: string;
   };
 
   /* ── PROJECTS ───────────────────────────────────────────────────────── */

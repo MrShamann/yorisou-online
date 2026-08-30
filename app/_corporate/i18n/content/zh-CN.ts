@@ -12,6 +12,14 @@ import type { SiteCopy } from "../types";
  * On the company form: Yorisou is a Japanese 合同会社 (LLC). It is rendered as 有限责任公司 and never
  * as a joint-stock company; the representative is 代表, never a 株式会社-style corporate officer title.
  *
+ * On Asterion OS: it is an INDEPENDENT shared technology and execution platform. It is not owned
+ * by Yorisou, is not a Yorisou venture, and nothing here may say or imply otherwise. The boundary
+ * sentence about separate governance, IP, data and operating responsibility must stay intact.
+ *
+ * On the ventures: Mirai Move, Kakari and Chigamo are ventures and concepts, never subsidiaries,
+ * portfolio companies, investments or clients. Chigamo is at concept stage — no product, no users,
+ * no municipal programme.
+ *
  * On the representative: "Harvard Business School Executive Education" and its General Management
  * Program are stated precisely. It is NOT a Harvard degree and NOT an HBS MBA, and must never be
  * shortened in a way that implies either. No endorsement by IESE, Harvard, Ficosa, or any
@@ -39,12 +47,15 @@ export const zh_CN: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou 有限责任公司 — 在人与社会之间，构筑下一种相伴的方式。", description: "Yorisou 有限责任公司关注生活、工作与地区中的复杂性，打造让人能够理解、选择并向前迈进的产品。目前正在开发 Mirai Move 与 Kakari。" },
+    home: { title: "Yorisou 有限责任公司 — 从结构性问题，做出能够独立存在的公司。", description: "Yorisou 有限责任公司是一家创业工场：发现结构性问题，积累证据与事业资产，并与创始团队一起把它带成独立的公司。目前正在推进 Mirai Move、Kakari 与 Chigamo。" },
     miraiMove: { title: "Mirai Move — Yorisou 有限责任公司", description: "面向日本出行领域的信息、对接与业务开发平台。公开网站已在运行，平台功能仍处于开发阶段。" },
     kakari: { title: "Kakari — Yorisou 有限责任公司", description: "面向在日本生活的人与在日本创业的人，提供多语言的行政手续与文书支持。目前处于开发阶段，尚未面向公众开放。" },
-    about: { title: "关于我们 — Yorisou 有限责任公司", description: "Yorisou 为何存在、如何思考、如何构建。无法确认的事，我们不写。" },
+    about: { title: "我们如何构建 — Yorisou 有限责任公司", description: "发现问题、加以确认、设计成一项事业，再与创始团队一起把它带向独立的公司。Yorisou 创业工场的推进方式，以及共通基础所处的位置。" },
     company: { title: "公司信息 — Yorisou 有限责任公司", description: "Yorisou 有限责任公司的公司概要、代表人简介、代表致辞与业务领域。" },
     contact: { title: "联系我们 — Yorisou 有限责任公司", description: "关于业务、合作与采访的咨询窗口。" },
+    ventures: { title: "业务 — Yorisou 有限责任公司", description: "Yorisou 目前正在推进的事业与构想：Mirai Move、Kakari、Chigamo。各自所处的阶段并不相同，我们如实写明。" },
+    buildWithUs: { title: "一起构建 — Yorisou 有限责任公司", description: "面向创业者、研究者、行政机构与企业的入口。目前没有固定的招募名额，我们从可以谈的范围开始。" },
+    chigamo: { title: "Chigamo — Yorisou 有限责任公司", description: "从位置与情境出发，让人看清一个地方真正有用的是什么——这是一个构想。目前处于构想阶段，没有已公开的产品。" },
   },
 
   common: {
@@ -56,8 +67,11 @@ export const zh_CN: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou 有限责任公司",
-    thesis: ["在人与社会之间，", "构筑下一种", "相伴的方式。"],
-    lead: ["Yorisou 关注生活、工作与地区中的复杂性，", "打造让人能够理解、选择并向前迈进的产品。"],
+    thesis: ["从结构性的问题出发，", "创建能够独立存在的", "公司。"],
+    lead: [
+      "Yorisou 是一家创业工场：发现社会中结构性的问题，加以确认，设计成一项事业，",
+      "再与运营它的人组队，把它带向独立的公司。",
+    ],
     humanSide: "人",
     humanItems: ["生活", "工作", "地区"],
     systemSide: "机制",
@@ -74,7 +88,7 @@ export const zh_CN: SiteCopy = {
     ],
 
     buildEyebrow: "我们在做什么",
-    buildHeading: ["把下一种相伴的方式，", "一件一件地做出来。"],
+    buildHeading: ["三个领域，", "正在推进中。"],
 
     howEyebrow: "我们如何构建",
     howHeading: ["承接复杂，", "把它变成可用的形态。"],
@@ -108,6 +122,19 @@ export const zh_CN: SiteCopy = {
     ctaHeading: ["或许有可以", "一起推进的空间。"],
     ctaBody: "我们接受业务咨询、合作洽谈与采访申请。将根据内容依次回复。",
     ctaButton: "前往咨询",
+
+    /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
+    asterionEyebrow: "共享基础设施",
+    asterionHeading: ["每构建一次，", "根基就厚一层。"],
+    asterionBody:
+      "Asterion OS 是一个独立的共享技术与执行平台，在 Yorisou 的创业工场构想中被置于共通的位置。因为不必反复重建同样的机制，每一项事业都可以把力气用在真正属于自己的领域上。",
+    asterionNote:
+      "各项事业分别独立治理，知识产权、数据与运营责任也各自归属于事业本身。Asterion 并不为 Yorisou 所有。",
+    engageEyebrow: "一起构建",
+    engageHeading: ["在它成为公司之前，", "就参与进来。"],
+    engageBody:
+      "创业者、研究者、行政机构、企业。立场不同，能够参与的位置也不同。我们从现在可以谈的范围开始。",
+    engageCta: "查看参与方式",
   },
 
   mirai: {
@@ -296,5 +323,180 @@ export const zh_CN: SiteCopy = {
     errorBody: "请稍后再试一次。",
     required: "必填",
     privacyNote: "您提供的个人信息，仅用于回复本次咨询。",
+  },
+
+  /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
+  ventures: {
+    eyebrow: "目前的业务",
+    heading: ["三个领域，", "都还在成为公司之前的阶段。"],
+    lead:
+      "它们的共同点是：制度与机制都已经存在，却在真正需要的人面前停下。Yorisou 走进这段空白，一边确认，一边把它做成形。",
+    cards: [
+      {
+        name: "Mirai Move",
+        href: "/mirai-move",
+        thesis: "把出行领域的信息、对接与业务开发连接起来。",
+        problem: "在运营方、地区与行政之间，信息与机会被割裂开。",
+        building: "一个让日本国内外的相关方基于同一份信息对话的平台。",
+        status: "开发与运营中。已有公开网站。",
+      },
+      {
+        name: "Kakari",
+        href: "/kakari",
+        thesis: "以多语言支持在日本生活与创业所需的各项手续。",
+        problem: "制度明明存在，却因为语言与流程的门槛而无人用得上。",
+        building: "把手续拆成阶段，并让人看清自己能走到哪一步的机制。",
+        status: "开发中。正在准备公开。",
+      },
+      {
+        name: "Chigamo",
+        href: "/chigamo",
+        thesis: "从位置与情境出发，让人看懂一个地方。",
+        problem: "越是在当地真正有用的信息，越是搜不出来。",
+        building: "以位置与情境为线索的生活圈发现机制。",
+        status: "构想阶段。验证尚未开始。",
+      },
+    ],
+    noteHeading: ["这一页说明了什么，", "又没有说明什么。"],
+    noteBody: [
+      "这里列出的，是 Yorisou 目前正在推进的事业与构想。",
+      "它们不是已经法人化的子公司，不是出资对象，也不是客户。各自所处的阶段并不相同，我们如实写明。",
+      "我们的目标是让它们成为能够独立存在的公司，但目前还没有一项达到那个状态。",
+    ],
+  },
+
+  /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
+  chigamo: {
+    eyebrow: "业务",
+    heading: ["身在一个地方，", "就能看懂这个地方。"],
+    stage: "构想阶段",
+    lead:
+      "以位置与情境为线索，让人看清在这片土地上真正有用的是什么——这是一个构想。目前仍处于验证之前的阶段。",
+    domain: "生活圈 ／ 位置与情境 ／ 发现",
+    conceptEyebrow: "我们的思考",
+    conceptHeading: ["不是没有信息，", "而是信息没有送达。"],
+    conceptBody: [
+      "关于一个地方，越是真正想知道的事，越是搜不到。原因不是信息不存在，而是它从未按照位置与情境被整理起来。",
+      "所在的位置、当下的时间，以及这个人正处的状况。有些信息，只有当这三者对上，人才会意识到“这与我有关”。Chigamo 想要处理的正是这一处。",
+    ],
+    boundaryTitle: "目前的阶段",
+    boundaryBody:
+      "Chigamo 处于构想阶段。没有已公开的产品，没有用户，也还没有与地方政府开展的任何项目。这里写下的，是我们打算去验证的假设。",
+    detail: [
+      {
+        heading: "为什么是现在",
+        body: "地图与检索都已经足够成熟。即便如此，“此刻我所在的地方，对我来说什么才有意义”，仍然需要人自己重新去查。",
+      },
+      {
+        heading: "需要确认什么",
+        body: "当以位置与情境收窄范围时，信息是否真的会变得可用。我们打算先从小处确认这一点。",
+      },
+    ],
+  },
+
+  /* ── HOW WE BUILD / FOUNDRY (CORP-v1.2) ─────────────────────────────── */
+  foundry: {
+    eyebrow: "我们如何构建",
+    heading: ["从问题到公司，", "按顺序一步步走完。"],
+    lead:
+      "我们不从灵光一现开始。发现结构性的问题，加以确认，设计成一项事业，与能够运营它的人组队，最终让它成为独立的公司。Yorisou 把这一顺序称为创业工场（foundry）。",
+    stagesEyebrow: "阶段",
+    stagesHeading: ["八个阶段，", "一个都不跳过。"],
+    stages: [
+      { no: "01", name: "假设", body: "先确定结构性的问题出在哪里。不是凭灵感，而是从一线的实际形态出发。" },
+      { no: "02", name: "证据", body: "确认这个问题是否真的存在、究竟是谁在为它所困。有不少假设会在这一步消失。" },
+      { no: "03", name: "事业设计", body: "把解法变成事业的形态。设计清楚由谁使用，以及价值在哪里完成交换。" },
+      { no: "04", name: "构建", body: "真正动手做。能用共通基础的地方就用，把力气集中在这项事业特有的部分上。" },
+      { no: "05", name: "事业就绪", body: "把资产与流程整理到外部的人可以接手运营的程度。" },
+      { no: "06", name: "组建创始团队", body: "与能够把这项事业当作自己的事来承担的人组队。不是雇佣关系，而是共同创业。" },
+      { no: "07", name: "独立与运营", body: "作为独立的公司运转起来。目标是不再持续依赖 Yorisou 的形态。" },
+      { no: "08", name: "学习", body: "无论是做成的部分，还是中途消失的假设，都作为下一项事业的材料留存下来。" },
+    ],
+    independenceHeading: ["目的是，", "一家能够独立存在的公司。"],
+    independenceBody: [
+      "创业工场的目的，不是让 Yorisou 旗下的名单变长，而是让每一项事业都达到能够作为独立公司自己站住的状态。",
+      "所以我们从一开始就按可以交接的方式来做。如果运营它的人手里没有真正的决定权，那它就还不算一家公司。",
+    ],
+    asterionEyebrow: "共享技术与执行基础",
+    asterionHeading: ["同样的东西，", "不做第二遍。"],
+    asterionBody: [
+      "Asterion OS 是一个独立的共享技术与执行平台，在 Yorisou 的创业工场构想中被置于共通的位置。它并不为 Yorisou 所有。",
+      "因为有共通的基础，各项事业不必重建同样的机制，可以专注在自己的领域上。积累下来的能力，会成为下一项事业的起点。",
+    ],
+    asterionBoundaryTitle: "边界",
+    asterionBoundaryBody:
+      "各项事业分别独立治理。知识产权、数据与运营责任，都归属于事业本身。我们没有做成让事业或用户的数据自动流向基础平台的设计。",
+    economicsHeading: ["权益的归属，", "取决于贡献与责任。"],
+    economicsBody: [
+      "每项事业的条件都不一样。我们不会把同一个固定的模板套到所有事业上。",
+      "共通的只有原则：权益取决于贡献、所承担的风险，以及此后持续的责任。运营这项事业的人，握有实际的决定权。",
+      "具体条件按事业、按对象逐一商谈。这不是能够写在网站上的内容。",
+    ],
+    maturityTitle: "目前的阶段",
+    maturityBody:
+      "这套做法还不是一种经过反复验证的方法。Yorisou 仍处于早期阶段，尚未把任何一项事业送出成为独立的公司。这里写下的是我们实际采用的推进方式，而不是对成果的主张。",
+  },
+
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  buildWithUs: {
+    eyebrow: "一起构建",
+    heading: ["立场不同，", "入口也不同。"],
+    lead:
+      "目前，我们从可以谈的范围开始。并不存在固定的招募名额。如果有兴趣，请先告诉我们你的想法。",
+    lanes: [
+      {
+        key: "founders",
+        title: "创业者与运营者",
+        body:
+          "Yorisou 会把一项事业推进到成为公司之前的位置，并希望与能够把它当作自己的事来承担的人组队。这不是以雇佣关系接下的工作，而是以共同创业的身份接下的位置。",
+        invites: [
+          "有过真正把一项带一线的事业运转起来的经验",
+          "能在大量事情尚未确定的阶段推动它向前",
+          "对技术、制造、行政或地区事务中的某一项有实地的熟悉",
+        ],
+        cta: "表达意向",
+      },
+      {
+        key: "research",
+        title: "大学与研究机构",
+        body:
+          "把研究成果变成社会可用的形态，这一步需要来自事业侧的设计。关于创业人才的培养与研究的落地，我们在寻找可以一起思考的伙伴。",
+        invites: [
+          "正在为研究成果寻找落地的去处",
+          "希望让学生与研究者获得创业的实地经验",
+          "希望从共同的探索开始",
+        ],
+        cta: "先聊一聊",
+      },
+      {
+        key: "public",
+        title: "行政与公共部门",
+        body:
+          "公共领域的问题，往往是制度已经具备，却没有被翻译成居民可以照着走的步骤。我们希望一起设计：从小范围试行，到衡量效果，再到形成可以持续的形态。",
+        invites: [
+          "有可以在实地试行的课题",
+          "希望做成可以衡量效果的形态",
+          "不希望止步于一次性的试点",
+        ],
+        cta: "咨询洽谈",
+      },
+      {
+        key: "corporate",
+        title: "企业",
+        body:
+          "如果希望把自家一线存在的问题做成事业的形态。我们可以从共同开发，或是实地的验证开始。",
+        invites: [
+          "一线存在尚未解决的运营问题",
+          "正在寻找新事业的形态",
+          "正在寻找共同开发的伙伴",
+        ],
+        cta: "联系我们",
+      },
+    ],
+    intakeTitle: "关于受理方式",
+    intakeBody:
+      "目前没有申请受理，也没有任何选拔机制。这里写的是邀请，而不是进行中的合作，也不是开放的招聘名额。我们先听听你的想法，从能不能谈得起来开始。",
+    ctaHeading: ["无论哪种立场，", "最初的入口都是同一个。"],
+    ctaBody: "请把想法写下来发给我们。我们会依次阅读。",
   },
 };
