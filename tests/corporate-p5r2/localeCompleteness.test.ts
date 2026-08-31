@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { getCopy } from "../../app/_corporate/i18n";
-import { DEFAULT_LOCALE, LOCALES, PUBLISHED } from "../../app/_corporate/i18n/locales";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  PRODUCTION_READY,
+  PUBLISHED,
+} from "../../app/_corporate/i18n/locales";
 
 /**
  * CORP-P5R2 §31 — every published locale is complete.
@@ -99,4 +104,33 @@ test("every RTL locale is declared with a direction the shell can act on", () =>
     assert.ok(l.script.trim().length > 0, `locale ${l.code} has no script tag`);
   }
   assert.ok(LOCALES.some((l) => l.direction === "rtl"), "expected at least one RTL locale");
+});
+
+/**
+ * CORP-v1.2R1 §7 — Preview availability and Production readiness are separate axes.
+ *
+ * Nineteen locales are complete, type-checked and render correctly, and have still never been read
+ * by a native speaker. Rendering correctly is not the same as being fit to publish, so Production
+ * routing must consult PRODUCTION_READY rather than "did it render". This test exists so that a
+ * later change cannot quietly promote an unreviewed locale by flipping one word in the registry.
+ */
+test("only human-reviewed locales are cleared for Production", () => {
+  const ready = PRODUCTION_READY.map((l) => l.code).sort();
+  assert.deepEqual(ready, ["en", "ja"], `unexpected Production-ready set: ${ready.join(", ")}`);
+
+  for (const l of PRODUCTION_READY) {
+    assert.ok(
+      l.reviewState === "SOURCE_CANONICAL" || l.reviewState === "HUMAN_REVIEWED",
+      `${l.code} is cleared for Production but its review state is ${l.reviewState}`,
+    );
+  }
+
+  // Everything else must still be available in Preview — this posture must not hide translations.
+  const previewCodes = PUBLISHED.map((l) => l.code);
+  assert.equal(previewCodes.length, 21, `expected 21 locales available in Preview, got ${previewCodes.length}`);
+  for (const l of LOCALES) {
+    if (l.reviewState === "AI_TRANSLATED") {
+      assert.equal(l.status, "preview_only", `${l.code} is AI-translated but is not marked preview_only`);
+    }
+  }
 });

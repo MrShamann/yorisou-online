@@ -1,5 +1,10 @@
 # CORP-v1.2 — release blockers before Production
 
+> **Updated after CORP-v1.2R1.** Closed since v1.2: mobile performance (now 91/91/93), the repository
+> authority conflict (root entrypoint now routes two surfaces), most dependency exposure (production
+> highs 5 → 1), and locale Production posture (now a typed gate). Still open: everything below.
+> Full detail in `CORP_V12R1_PREMERGE_REMEDIATION.md`.
+
 Everything below must close before this corporate site can go to Production.
 None of these is resolved by this package. An unresolved blocker is never recorded as a pass.
 
@@ -45,7 +50,11 @@ The Contact page and `/api/corporate-contact` are structurally complete, hold no
 private address. **The form must not claim a delivery it cannot perform** until an end-to-end send is
 verified.
 
-## 6. Translation review — OPEN
+## 6. Translation review — OPEN (now typed, not prose)
+
+Since v1.2R1 this is enforced in the registry rather than described in prose: ja and en are
+`status: "published"` (Production-cleared); the other 19 are `status: "preview_only"` and a test
+asserts Production routing cannot serve them. They remain fully available in Preview.
 
 19 of 21 locales are AI-translated from the Japanese canonical source and have **not** been reviewed
 by a native speaker. They are complete, type-checked and claim-bounded, but fluency and register are
@@ -62,15 +71,29 @@ surface), **ko**, **zh-CN**, **zh-TW**, **hi**, **th**, **ru**.
 | **University / government / corporate collaboration** | No agreements exist. Published strictly as invitations. Any named institution needs written permission. |
 | **Venture legal status** | Mirai Move, Kakari and Chigamo are not incorporated as separate companies. The Ventures page says so explicitly. |
 
-## 8. Known CI failure — PRE-EXISTING, needs a scope decision
+## 8. Consumer Today surface is missing — CI is correctly red
 
-`Lint, Build & Env Check` fails on `lib/server/__tests__/archP3DailyDiscovery.test.ts`, assertion
-`L/M`, which requires `app/page.tsx` to be the consumer "Today" surface. The root route stopped being
-Today at commit `9f0e8ff`, and **PR #154 (CORP-P5) and PR #155 (CORP-P5R1) fail the identical
-check**. It is inherited by the corporate track, not introduced by this package.
+Investigated in CORP-v1.2R1. This is **not** a stale test binding, which is what it looked like:
 
-The guard was **not** weakened, skipped or rewritten to obtain green CI. Closing it requires a Founder
-decision about that test's scope now that the root route belongs to the corporate surface.
+`archP3DailyDiscovery.test.ts` assertion **L/M** requires the consumer Today composition — utility
+hero → continuity → 今日のひとつ → 5-minute actions. Until commit `9f0e8ff`, `app/page.tsx` was
+literally `export default function TodayPage()` and contained all four in order. That commit
+promoted the corporate site to the root URLs and **did not relocate Today anywhere**.
+
+The composition now exists in **no file**: `5分でできること` appears only inside the test itself, and
+`app/TodaySavedState.tsx` / `app/TodayDiscoveryEntry.tsx` are rendered by nothing. `app/today/`
+retains only `check-in/` and `discovery/`.
+
+So the failing assertion is reporting a **real, current gap in the consumer product**, not noise.
+The guard was deliberately **not** rebound: no current file contains the composition, so pointing
+the assertion elsewhere would silently delete the protection while turning CI green.
+
+The other 20 assertions in that file still pass, so discovery core, the pack, fail-closed behaviour
+and the refused shapes remain protected.
+
+**Decision required (consumer product, not corporate):** restore the Today landing at some route, or
+consciously retire it and retire assertion L/M with a recorded rationale. Until then CI stays red,
+and that is the honest state.
 
 ## 9. Production approval — REQUIRED
 

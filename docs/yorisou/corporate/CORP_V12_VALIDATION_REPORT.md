@@ -67,24 +67,36 @@ zero narrow-column text fragmentation.
 
 ## Performance (Lighthouse, local `next start`, mobile throttling)
 
+Values below are **after** the CORP-v1.2R1 font remediation. See
+`CORP_V12R1_PREMERGE_REMEDIATION.md` for the profile and the before/after.
+
 | Target | Perf | A11y | Best practices | SEO | LCP | CLS | TBT |
 |---|---|---|---|---|---|---|---|
-| Home ja | 61 | **100** | **100** | **100** | 7.7 s | 0 | 0 ms |
-| Home ar | 87 | **100** | **100** | 63 | 3.8 s | 0 | 10 ms |
-| Company ja | 62 | **100** | **100** | 63 | 7.2 s | 0 | 0 ms |
+| Home ja | **91** (was 61) | **100** | **100** | **100** | 3.3 s | 0 | 10 ms |
+| Home ar | **91** (was 87) | **100** | **100** | 63 | 3.3 s | 0 | 10 ms |
+| Company ja | **93** (was 62) | **100** | **100** | 63 | 3.2 s | 0 | 0 ms |
 
-**Reading these honestly.** Accessibility and best practices are 100 everywhere; CLS is 0 and TBT is
-effectively 0. Performance is **not** at the ≥90 mobile target on Japanese pages, and that is
-reported as a miss rather than dressed up. Two contributing factors are identified and neither is
-fixed here: the Japanese pages load a heavier web-font payload than the Arabic page (87 vs 61 on the
-same server), and these numbers come from a local `next start` under Lighthouse's mobile throttling
-rather than from a CDN. The correct next step is to measure on the Vercel Preview before optimising.
+The corporate surface uses the system Japanese stack instead of the Noto Sans JP webfont, taking the
+font payload from 36 files / ~729 KB to **2 files / ~73 KB**. The consumer product's typography is
+unchanged — the switch is scoped to the corporate stylesheet.
 
-**SEO 63 on `/company` and `home-ar` is the crawl policy working, not a defect**: `/company` is in
-`CORPORATE_BLOCKED` and `?lang=` URLs do not match the anchored `Allow: /$` rule. `robots.ts` is
+**SEO 63 on `/company` and `?lang=` URLs is the crawl policy working, not a defect**: `/company` is
+in `CORPORATE_BLOCKED` and `?lang=` URLs do not match the anchored `Allow: /$` rule. `robots.ts` is
 unchanged by this package.
 
 Locale bundles remain per-locale dynamic imports — one locale's content per visitor, not all 21.
+
+## Lint
+
+**0 errors, 13 warnings** across 11 files (`npx eslint app lib tests scripts`). **None is
+corporate-owned**; all are pre-existing consumer/product/scripts debt already documented in
+`yorisou-check.yml`. This is not "eslint clean" and is not described as such.
+
+## Dependency security
+
+`npm audit`: 11 → **7** findings. Production-only: 5 high → **1 high** (`js-yaml`, transitive,
+unresolved). Fix applied was a bounded `next` 16.2.10 → 16.3.3 minor upgrade, which also resolves
+`postcss` and `sharp`. **Not "security clean".**
 
 ## Known CI failure — pre-existing
 
