@@ -54,6 +54,9 @@ export const es: SiteCopy = {
     backHome: "Volver a la página de la empresa",
     stageLabel: "Etapa actual",
     boundaryLabel: "Lo que no asumimos",
+    nowLabel: "Ahora",
+    nextLabel: "Siguiente paso",
+    whoLabel: "Con quién queremos hablar",
   },
 
   home: {
@@ -126,9 +129,27 @@ export const es: SiteCopy = {
     engageBody:
       "Fundadores, investigadores, administración pública y empresas. El punto de entrada depende del lugar desde el que llegue. Empezamos por lo que ya se pueda hablar.",
     engageCta: "Ver las vías de entrada",
+    engageNote: "Todas empiezan por una conversación. Todavía no existe ningún proceso de solicitud ni de selección.",
+    explainerLabel: "Yorisou en 30 segundos",
+    explainerHeading: ["De un problema a una empresa,", "en treinta segundos."],
+    explainerClose: "Cerrar",
   },
 
   mirai: {
+    reading: "Llevar la movilidad local hasta la solución.",
+    now: "El sitio público está en funcionamiento, y el sistema que lee información pública sigue trabajando por su cuenta. Aun así, no hemos hecho llegar nada a nadie fuera: ni una sola vez.",
+    next: "En el primer caso con contenido real quedan cuestiones que no se pueden cerrar desde el escritorio. A partir de aquí le toca moverse a una persona.",
+    who: "Quien conozca por dentro la movilidad local —municipios, operadores, el propio terreno— y pueda explicar las restricciones reales.",
+    join: {
+      title: "Participar en este proyecto",
+      body: "Lo que hace falta ahora es alguien que sepa describir esas restricciones de forma concreta. Es una etapa de comprobación, no de venta.",
+      roles: [
+        "Trabaja en transporte o movilidad local: municipio, operador o el propio terreno",
+        "Podría asumir este ámbito como fundador o como responsable de la operación",
+        "Conoce cómo funciona realmente la operación",
+      ],
+      state: "Estamos en la etapa de querer escuchar. No hay ninguna plaza abierta.",
+    },
     eyebrow: "Proyecto 01",
     heading: ["Una plataforma de información, conexión", "y desarrollo de negocio", "en el sector de la movilidad en Japón."],
     stage: "Sitio público en funcionamiento / funciones de plataforma en desarrollo",
@@ -155,6 +176,21 @@ export const es: SiteCopy = {
   },
 
   kakari: {
+    reading: "Que los trámites en Japón pueda hacerlos uno mismo.",
+    now: "Está en pruebas privadas. No está disponible al público y todavía no lo usa nadie.",
+    next: "Los trámites necesarios para distribuirlo y la fijación de los datos registrales de la empresa. Las dos cosas requieren una confirmación externa.",
+    who: "Personas extranjeras que viven en Japón, quienes las acompañan y los profesionales habilitados.",
+    join: {
+      title: "Participar en este proyecto",
+      body: "Primero queremos que lo mire quien conoce cómo son de verdad estos trámites. No es una herramienta para sustituir a un profesional.",
+      roles: [
+        "Ha tenido dificultades reales con un trámite en Japón",
+        "Acompaña de algún modo a personas extranjeras residentes",
+        "Es profesional habilitado y puede ayudarnos a comprobar dónde está el límite",
+        "Podría asumir este proyecto como fundador o como responsable de la operación",
+      ],
+      state: "Buscamos a quién enseñárselo. Todavía no está publicado ni hay convocatoria.",
+    },
     eyebrow: "Proyecto 02",
     heading: ["Apoyo multilingüe para trámites", "y documentos, para quienes viven en Japón", "y quienes inician aquí una actividad."],
     stage: "En desarrollo (todavía no disponible de forma general)",
@@ -358,6 +394,20 @@ export const es: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    reading: "Entender un lugar desde dentro del lugar.",
+    now: "Está en fase de concepto. No hay ningún producto publicado, ni personas usuarias, ni ningún programa con administraciones locales.",
+    next: "Comprobar si acotar por ubicación y contexto convierte de verdad la información en algo utilizable. Queremos empezar por ahí, a pequeña escala.",
+    who: "Quien conozca de verdad un sitio concreto y sepa explicar dónde deja de servir la información del entorno cotidiano.",
+    join: {
+      title: "Participar en este proyecto",
+      body: "Todavía estamos antes de la fase de comprobación. Por eso buscamos menos a alguien con quien construir que a alguien que rompa la hipótesis.",
+      roles: [
+        "Conoce en detalle una zona concreta, por vivir en ella",
+        "Ha trabajado con datos de ubicación o datos del territorio",
+        "No le importa participar cuando todavía es solo un concepto",
+      ],
+      state: "Fase de concepto. Todavía no está decidido de qué forma se puede participar.",
+    },
     eyebrow: "Proyecto",
     heading: ["Entender un lugar", "desde dentro del lugar."],
     stage: "Fase de concepto",
@@ -428,27 +478,67 @@ export const es: SiteCopy = {
       "Esta forma de trabajar no es todavía un método probado ni repetible. Yorisou está en una etapa inicial y aún no ha puesto en marcha ningún proyecto como empresa independiente. Lo que aquí se describe es cómo procedemos en la práctica, no una afirmación sobre resultados.",
   },
 
-  /* ── CONSTRUIR JUNTOS (CORP-v1.2) ───────────────────────────────────── */
+  /* ── CONSTRUIR JUNTOS (CORP-v1.2R2) ──────────────────────── */
   buildWithUs: {
     eyebrow: "Construir juntos",
     heading: ["Cada punto de partida", "tiene su propia entrada."],
     lead:
-      "Por ahora empezamos por lo que ya se pueda hablar. No hay una convocatoria establecida. Si le interesa, cuéntenos primero de qué se trata.",
+      "Yorisou lleva un proyecto hasta justo antes de que sea una empresa y entonces se asocia con quien pueda cargar con él. Por eso no buscamos a alguien a quien contratar, sino a alguien que lo asuma.",
     lanes: [
       {
         key: "founders",
-        title: "Fundadores y operadores",
+        label: "Fundadores",
+        title: "Fundadores y cofundadores",
         body:
-          "Yorisou desarrolla proyectos hasta justo antes de que sean empresas, y busca a quien pueda asumir uno como propio. No es un empleo que se acepta, sino un papel que se asume como fundador.",
+          "Asumir como propio un proyecto llevado hasta justo antes de ser una empresa. Se entra como fundador, no como persona contratada: las decisiones quedan de su lado, y la responsabilidad también.",
         invites: [
           "Ha dirigido de verdad algo con operación real detrás",
           "Sabe avanzar cuando todavía hay mucho sin decidir",
           "Conoce el terreno en tecnología, fabricación, administración pública o trabajo local",
         ],
+        offers: "Investigación y pruebas, un producto inicial, el diseño del negocio y la infraestructura compartida. Se empieza a medio camino, no desde cero.",
+        cannot: "A día de hoy no podemos prometer salario, ni financiación, ni condiciones de participación en el capital. Las condiciones se hablan proyecto por proyecto.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Estamos en la etapa de querer escuchar. No hay ninguna plaza abierta.",
+        cta: "Manifestar interés",
+      },
+      {
+        key: "team",
+        label: "Equipo fundador",
+        title: "Equipo fundador y personas especialistas",
+        body:
+          "Con un fundador solo nunca basta. Buscamos a quien pueda sostener desde el principio una de las partes: la técnica, la operación o el terreno.",
+        invites: [
+          "Ha acompañado las cosas hasta la operación, no solo hasta el lanzamiento",
+          "Ha puesto algo en marcha con un equipo pequeño",
+          "Sabe qué se da por supuesto en su ámbito",
+        ],
+        offers: "Un sitio desde el principio y margen real de decisión sobre la parte que sostenga.",
+        cannot: "No hay ningún proceso de contratación permanente. No podemos decir que estemos en condiciones de contratar ahora mismo.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Depende de la etapa de cada proyecto. Cuéntenos primero qué podría asumir.",
+        cta: "Empezar una conversación",
+      },
+      {
+        key: "users",
+        label: "Primeras personas usuarias",
+        title: "Primeras personas usuarias y quienes prueban con nosotros",
+        body:
+          "Queremos que se mire lo construido desde la posición de quien lo usa de verdad. No para que nos digan que está bien, sino para que nos digan dónde se atasca.",
+        invites: [
+          "Ha tenido dificultades reales con este problema",
+          "Puede decir con claridad qué no funcionó",
+          "No le importa ver algo antes de que sea público",
+        ],
+        offers: "Ver algo a medio construir, y que lo que diga vuelva al diseño.",
+        cannot: "No podemos prometer una fecha de publicación, ni que su petición se incorpore, ni ninguna compensación.",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "Buscamos a quién enseñárselo. No es una convocatoria formal.",
         cta: "Manifestar interés",
       },
       {
         key: "research",
+        label: "Universidad",
         title: "Universidad e investigación",
         body:
           "Llevar un resultado de investigación a una forma que la sociedad pueda usar exige también diseño de negocio. Buscamos con quién pensar la formación de personas fundadoras y la implementación de la investigación.",
@@ -457,22 +547,32 @@ export const es: SiteCopy = {
           "Quiere que estudiantes e investigadores tengan experiencia real de creación de empresas",
           "Prefiere empezar por una exploración conjunta",
         ],
+        offers: "El diseño desde el lado del negocio y un terreno que está realmente en marcha. Se puede empezar por explorar.",
+        cannot: "Todavía no hay ningún convenio de investigación, ni financiación, ni colaboración formal.",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "No tenemos ninguna colaboración previa. Se empieza por hablar.",
         cta: "Empezar una conversación",
       },
       {
         key: "public",
+        label: "Sector público",
         title: "Administración y sector público",
         body:
-          "En lo público, muchas veces el sistema existe pero nunca se ha traducido a los pasos que puede seguir un residente. Queremos diseñar juntos la prueba pequeña, la medición y el camino hasta algo que perdure.",
+          "El sistema existe, pero nunca se ha traducido a los pasos que puede seguir un residente. Queremos diseñar juntos, en ese desnivel, la prueba pequeña, la medición del efecto y el camino hasta algo que perdure.",
         invites: [
           "Tiene un problema que puede probarse sobre el terreno",
           "Quiere darle una forma en la que el efecto pueda medirse",
           "No quiere que se quede en una prueba piloto aislada",
         ],
+        offers: "Investigación, pruebas ordenadas en una forma utilizable y un diseño para probar a pequeña escala.",
+        cannot: "No tenemos ningún trabajo previo con administraciones locales y no podemos ofrecer ninguna garantía en términos normativos.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Se empieza por una consulta. No hay ninguna colaboración en marcha.",
         cta: "Consultarnos",
       },
       {
         key: "corporate",
+        label: "Empresas",
         title: "Empresas",
         body:
           "Si tiene en su propia operación un problema que debería convertirse en negocio. Podemos empezar por un desarrollo conjunto o por una prueba sobre el terreno.",
@@ -481,12 +581,23 @@ export const es: SiteCopy = {
           "Busca la forma de un nuevo negocio",
           "Busca un socio de desarrollo conjunto",
         ],
+        offers: "Se puede participar ya desde el momento de rediseñar el problema como negocio.",
+        cannot: "No tenemos operaciones comerciales previas ni casos de implantación que podamos enseñar.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Se empieza por escuchar.",
         cta: "Escribirnos",
       },
     ],
     intakeTitle: "Sobre la recepción de propuestas",
     intakeBody:
       "Actualmente no existe ningún proceso de solicitud ni programa de selección. Lo que aquí figura es una invitación, no una colaboración en marcha ni una vacante abierta. Empezamos por escuchar de qué se trata y por ver si hay algo que hablar.",
+    foundingTeamEyebrow: "Equipo fundador",
+    foundingTeamHeading: ["Empezamos a construir", "antes de que haya una empresa."],
+    foundingTeamBody: [
+      "Lo habitual es que un proyecto empiece cuando ya se ha reunido la gente. Yorisou trabaja en el orden inverso: primero la investigación y las pruebas, el producto inicial y el diseño como negocio; después buscamos a quien vaya a asumirlo.",
+      "Así, quien participa no empieza con la página en blanco. Empieza recogiendo algo que ya tiene forma y haciéndolo suyo.",
+      "Lo que no cambia es qué significa asumirlo. Quien tiene las decisiones tiene también la responsabilidad. Si quien dirige no puede decidir de verdad, eso todavía no es una empresa.",
+    ],
     ctaHeading: ["Sea cual sea su posición,", "la primera puerta es la misma."],
     ctaBody: "Escríbanos lo que tiene en mente. Lo leemos por orden.",
   },

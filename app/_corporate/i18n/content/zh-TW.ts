@@ -27,6 +27,14 @@ import type { SiteCopy } from "../types";
  * foundry method is not claimed as proven or repeatable, and no venture has been spun out yet.
  * Build-with-us intake states plainly that there is no application process and no selection
  * programme; no CTA is ever rendered as "apply now".
+ *
+ * CORP-v1.2R2. `reading` is each venture's own one-line positioning, never a transliteration: the
+ * wordmarks Mirai Move, Kakari and Chigamo stay in Latin script here, exactly as Kakari's own
+ * localisation glossary requires. Every `cannot` keeps the Japanese bluntness — no salary, no
+ * funding, no ownership terms, no track record, no case studies, no municipal programme, no
+ * research agreement — and every `state` carries the weakest truthful status, so nothing reads as
+ * an open intake. Mirai Move has sent nothing to anyone externally; Kakari is in private testing
+ * with zero users and never substitutes for a licensed professional; Chigamo is concept only.
  */
 export const zh_TW: SiteCopy = {
   chrome: {
@@ -66,6 +74,9 @@ export const zh_TW: SiteCopy = {
     backHome: "返回公司首頁",
     stageLabel: "目前階段",
     boundaryLabel: "不承擔的範圍",
+    nowLabel: "目前",
+    nextLabel: "下一步",
+    whoLabel: "想談談的對象",
   },
 
   home: {
@@ -138,9 +149,27 @@ export const zh_TW: SiteCopy = {
     engageBody:
       "創業者、研究者、行政、企業。立場不同，能參與的位置也不同。我們從現在能談的範圍開始。",
     engageCta: "看看參與的方式",
+    engageNote: "每一種都是從洽談開始。目前還沒有應徵受理或甄選的機制。",
+    explainerLabel: "30 秒認識 Yorisou",
+    explainerHeading: ["從一個課題到一家公司，", "30 秒說完。"],
+    explainerClose: "關閉",
   },
 
   mirai: {
+    reading: "把地方的移動，一路推到解決為止。",
+    now: "公開網站正在運作，持續讀取公開資訊的機制也自動在跑。但對外送出去的東西，到目前為止一件也沒有。",
+    next: "在第一個實質的案例上，還留著幾個不到外面確認就無法往前的問題。從這裡開始，換人親自去跑。",
+    who: "了解地方移動現場的人。能以地方政府或交通業者的立場，說出實際限制的人。",
+    join: {
+      title: "參與這項事業",
+      body: "現在需要的，是能具體說出現場限制的對象。這是去查證的階段，不是推銷的階段。",
+      roles: [
+        "正在參與地方的交通或移動（地方政府、業者、現場）",
+        "能把這個領域當成事業背負起來的創業者或營運者",
+        "了解實際運作方式的專業人才",
+      ],
+      state: "目前是想先聽聽你怎麼說的階段。沒有招募名額。",
+    },
     eyebrow: "事業 01",
     heading: ["面向日本移動出行領域的", "資訊、媒合與", "事業開發平台。"],
     stage: "公開網站營運中／平台功能開發中",
@@ -167,6 +196,21 @@ export const zh_TW: SiteCopy = {
   },
 
   kakari: {
+    reading: "讓在日本的手續，能靠自己走完。",
+    now: "目前是非公開的測試階段。尚未對外公開，也還沒有任何人在使用。",
+    next: "發布所需的手續，以及公司登記資訊的確定。兩件都是需要外部確認的工作。",
+    who: "在日本生活的外國籍人士。站在支援立場的人。以及具國家資格的專業人士。",
+    join: {
+      title: "參與這項事業",
+      body: "目前希望先讓了解手續實況的人看看。這不是用來取代專業人士的工具。",
+      roles: [
+        "在日本辦手續時實際遇過困難",
+        "正在參與對外國籍人士的支援",
+        "身為行政書士等具資格的專業人士，能一起確認界線該畫在哪裡",
+        "能把這項事業背負起來的創業者或營運者",
+      ],
+      state: "我們正在找能看看它的人。既未公開，也還沒有招募。",
+    },
     eyebrow: "事業 02",
     heading: ["為在日本生活的人、", "在日本創業的人提供的", "多語言手續支援。"],
     stage: "開發中（尚未對外公開）",
@@ -370,6 +414,20 @@ export const zh_TW: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────── */
   chigamo: {
+    reading: "在那個地方，就看得懂那個地方。",
+    now: "構想階段。沒有公開中的產品，沒有使用者，也沒有與地方政府的任何合作。",
+    next: "當資訊以位置與脈絡收斂之後，是否真的變得可用。我們打算先從小規模確認這一點。",
+    who: "真正了解那塊土地的人。能說明生活圈的資訊在哪裡斷掉的人。",
+    join: {
+      title: "參與這項事業",
+      body: "這還是查證之前的階段。所以與其說是找一起做的人，不如說是在找能把假設打破的人。",
+      roles: [
+        "以居住者的角度，熟知某個特定地區",
+        "處理過位置資訊或地區資料",
+        "不排斥從構想階段就參與",
+      ],
+      state: "構想階段。能參與的形式還沒有定下來。",
+    },
     eyebrow: "事業",
     heading: ["在那個地方，", "就看得懂那個地方。"],
     stage: "構想階段",
@@ -445,22 +503,62 @@ export const zh_TW: SiteCopy = {
     eyebrow: "一起打造",
     heading: ["立場不同，", "入口也不同。"],
     lead:
-      "目前我們從能談的範圍開始，並沒有固定的招募名額。如果有興趣，請先告訴我們你的想法。",
+      "Yorisou 會先把事業推進到成為公司之前的那一步，再與能背負它的人組隊。所以我們找的不是受雇的人，而是願意承接的人。",
     lanes: [
       {
         key: "founders",
-        title: "創業者與營運者",
+        label: "創業者",
+        title: "創業者與共同創業者",
         body:
-          "Yorisou 會把事業推進到成為公司之前的那一步，並希望與能把它當成自己的事來背負的人組隊。這不是受雇承接的工作，而是以共同創業的身分承接的位置。",
+          "把已經推進到成為公司之前的事業，當成自己的事來承接的位置。不是受雇，而是以共同創業的身分參與。決定權與責任，都放在那個人身上。",
         invites: [
           "實際運作過有現場的事業",
           "在許多事都還沒定下來的階段，仍能把事情往前推",
           "在技術、製造、行政或地方之中，至少有一個領域的實地理解",
         ],
+        offers: "調查與證據、初期的產品、事業設計，以及共用基礎。不是從零開始，而是從半途接手。",
+        cannot: "薪資、募資與持分條件，現階段我們都無法承諾。條件會依事業個別再談。",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "目前是想先聽聽你怎麼說的階段。沒有招募名額。",
+        cta: "表達興趣",
+      },
+      {
+        key: "team",
+        label: "創業成員",
+        title: "創業成員與專業人才",
+        body:
+          "光靠創業者一個人，從來都不夠。我們在找能從初期就一起扛起技術、營運或現場其中一塊的人。",
+        invites: [
+          "不只把東西做出來，也一路看到營運",
+          "有以少數人啟動一件事的經驗",
+          "知道那個領域裡什麼叫理所當然",
+        ],
+        offers: "從初期就參與的位置，以及在自己實際動手的範圍內的裁量。",
+        cannot: "我們沒有常設的職缺。現在也還說不上是能夠聘人的狀態。",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "要看事業的階段。請先告訴我們你能承接什麼。",
+        cta: "聊聊看",
+      },
+      {
+        key: "users",
+        label: "早期使用者",
+        title: "早期使用者與參與試用的人",
+        body:
+          "希望有人能站在實際使用的位置，看看我們做出來的東西。不是為了聽到稱讚，而是為了知道它會在哪裡卡住。",
+        invites: [
+          "在這個課題上實際遇過困難",
+          "能把不順利的地方原話說出來",
+          "不介意看還沒公開的東西",
+        ],
+        offers: "讓你看看做到一半的東西，你說的會回到設計裡。",
+        cannot: "公開時程、需求是否會被採納，以及報酬，我們都無法承諾。",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "我們正在找能看看它的人。這不是正式的招募。",
         cta: "表達興趣",
       },
       {
         key: "research",
+        label: "大學與研究",
         title: "大學與研究",
         body:
           "要把研究成果帶到社會上可用的階段，需要事業端的設計。我們正在尋找能一起思考創業人才培育與研究落地的對象。",
@@ -469,22 +567,32 @@ export const zh_TW: SiteCopy = {
           "希望讓學生與研究者累積實地的創業經驗",
           "想先從共同探索開始",
         ],
+        offers: "事業端的設計，以及實際在運作的現場。可以從共同探索開始。",
+        cannot: "共同研究契約、資金與正式的合作關係，目前都還沒有。",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "我們沒有任何合作實績。一切從談起。",
         cta: "聊聊看",
       },
       {
         key: "public",
+        label: "行政與公共部門",
         title: "行政與公共部門",
         body:
-          "公共領域的課題，往往制度已經存在，卻沒有被翻譯成居民實際會走的步驟。我們希望一起設計：先小規模嘗試、量得出成效，並且能延續下去。",
+          "制度明明存在，卻沒有被翻譯成居民實際會走的步驟。我們希望一起設計那段落差：先小規模嘗試、量得出成效，並且能延續下去。",
         invites: [
           "有可以在實地嘗試的課題",
           "希望做成能衡量成效的形式",
           "不想停在一次性的實證",
         ],
+        offers: "調查與證據的整理，以及小規模試行的設計。",
+        cannot: "我們還沒有與地方政府合作的實績，也無法提供制度上的保證。",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "從洽談開始。目前沒有進行中的合作。",
         cta: "洽談",
       },
       {
         key: "corporate",
+        label: "企業",
         title: "企業",
         body:
           "如果想把自家現場的課題，做成事業的形狀。我們可以從共同開發，或從實地驗證開始。",
@@ -493,12 +601,23 @@ export const zh_TW: SiteCopy = {
           "正在尋找新事業的形狀",
           "正在尋找共同開發的對象",
         ],
+        offers: "可以從把課題重新設計成事業的那一步開始參與。",
+        cannot: "我們沒有商務往來的實績，也沒有可以拿出來給你看的導入案例。",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "先從聽你說起。",
         cta: "來信詢問",
       },
     ],
     intakeTitle: "關於招募狀況",
     intakeBody:
       "目前沒有應徵受理的機制，也沒有甄選的制度。這裡寫的是邀請，不是進行中的合作，也不是開放中的職缺。我們會先聽聽你的內容，從能不能談起開始。",
+    foundingTeamEyebrow: "創業團隊",
+    foundingTeamHeading: ["在成為公司之前，", "我們已經開始做了。"],
+    foundingTeamBody: [
+      "多數情況下，事業是在人聚齊之後才開始。Yorisou 的順序相反：先做出調查與證據、初期的產品，以及作為事業的設計，然後才去找能承接它的人。",
+      "所以參與的人不會從一張白紙開始。可以從接手一個已經有形狀的東西、把它變成自己的，開始做起。",
+      "相對地，承接這件事的意義並不會因此變輕。握有決定權的人，也承擔責任。如果營運的人沒有真正的決定權，那它就還不是一家公司。",
+    ],
     ctaHeading: ["無論哪一種立場，", "最初的入口都一樣。"],
     ctaBody: "把想法寫下來寄給我們。我們會依序閱讀。",
   },

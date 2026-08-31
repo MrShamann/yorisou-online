@@ -54,6 +54,9 @@ export const id: SiteCopy = {
     backHome: "Kembali ke halaman perusahaan",
     stageLabel: "Tahap saat ini",
     boundaryLabel: "Yang tidak kami tangani",
+    nowLabel: "Saat ini",
+    nextLabel: "Langkah berikutnya",
+    whoLabel: "Yang ingin kami ajak bicara",
   },
 
   home: {
@@ -127,9 +130,27 @@ export const id: SiteCopy = {
     engageBody:
       "Pendiri, peneliti, instansi publik, perusahaan. Di mana Anda dapat ikut serta bergantung pada posisi Anda. Kami mulai dari apa pun yang bisa dibicarakan sekarang.",
     engageCta: "Lihat cara terlibat",
+    engageNote: "Semuanya dimulai dari percakapan. Belum ada proses pendaftaran maupun mekanisme seleksi.",
+    explainerLabel: "Yorisou dalam 30 detik",
+    explainerHeading: ["Dari sebuah masalah sampai menjadi perusahaan,", "dalam tiga puluh detik."],
+    explainerClose: "Tutup",
   },
 
   mirai: {
+    reading: "Menggerakkan mobilitas daerah sampai ke penyelesaiannya.",
+    now: "Situs publiknya berjalan, dan sistem yang terus membaca informasi publik pun berjalan secara otomatis. Namun sampai sekarang, belum ada satu pun yang kami kirimkan ke pihak luar.",
+    next: "Pada kasus nyata yang pertama, masih tersisa hal-hal yang tidak dapat dipastikan tanpa menanyakannya ke luar. Dari titik ini, giliran manusia yang bergerak.",
+    who: "Orang yang mengenal lapangan mobilitas daerah dari dalam — pemerintah daerah, penyelenggara angkutan, atau lapangan itu sendiri — dan dapat menjelaskan batasan yang sebenarnya.",
+    join: {
+      title: "Terlibat dalam usaha ini",
+      body: "Yang kami butuhkan sekarang adalah orang yang dapat menjelaskan batasan di lapangan secara konkret. Ini tahap memastikan, bukan tahap menawarkan.",
+      roles: [
+        "Anda terlibat dalam angkutan atau mobilitas daerah — pemerintah daerah, penyelenggara, atau lapangan itu sendiri",
+        "Anda dapat memikul bidang ini sebagai pendiri atau pengelola",
+        "Anda mengetahui bagaimana operasinya benar-benar berjalan sehari-hari",
+      ],
+      state: "Kami berada pada tahap ingin mendengarkan. Tidak ada lowongan yang dibuka.",
+    },
     eyebrow: "Proyek 01",
     heading: ["Platform untuk informasi, pencocokan,", "dan pengembangan bisnis", "di sektor mobilitas Jepang."],
     stage: "Situs publik aktif / fitur platform dalam pengembangan",
@@ -156,6 +177,21 @@ export const id: SiteCopy = {
   },
 
   kakari: {
+    reading: "Agar prosedur di Jepang dapat dijalani sendiri.",
+    now: "Tahap pengujian tertutup. Belum dibuka untuk umum, dan belum ada seorang pun yang memakainya.",
+    next: "Langkah yang diperlukan untuk pendistribusiannya, dan penetapan data pendaftaran perusahaan. Keduanya memerlukan konfirmasi dari pihak luar.",
+    who: "Warga negara asing yang tinggal di Jepang, orang yang mendampingi mereka, dan tenaga profesional berlisensi.",
+    join: {
+      title: "Terlibat dalam usaha ini",
+      body: "Ini tahap ketika kami ingin lebih dahulu memperlihatkannya kepada orang yang tahu seperti apa prosedur ini sebenarnya. Ini bukan alat untuk menggantikan tenaga profesional.",
+      roles: [
+        "Anda pernah benar-benar kesulitan menjalani prosedur di Jepang",
+        "Anda terlibat dalam pendampingan warga negara asing",
+        "Anda tenaga profesional berlisensi dan dapat ikut memastikan di mana batas itu semestinya ditarik",
+        "Anda dapat memikul usaha ini sebagai pendiri atau pengelola",
+      ],
+      state: "Kami sedang mencari orang untuk melihatnya. Belum dibuka untuk umum dan belum ada penerimaan apa pun.",
+    },
     eyebrow: "Proyek 02",
     heading: ["Dukungan prosedur multibahasa", "bagi orang yang tinggal di Jepang", "dan yang memulai usaha di sini."],
     stage: "Dalam pengembangan (belum dibuka untuk umum)",
@@ -359,6 +395,20 @@ export const id: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    reading: "Memahami sebuah tempat, dari dalam tempat itu.",
+    now: "Tahap gagasan. Belum ada produk yang dirilis, belum ada pengguna, dan belum ada program bersama pemerintah daerah.",
+    next: "Apakah penyaringan berdasarkan lokasi dan konteks benar-benar membuat informasi menjadi bisa dipakai. Itulah yang lebih dahulu kami pastikan, dalam skala kecil.",
+    who: "Orang yang benar-benar mengenal suatu tempat, dan dapat menjelaskan di titik mana informasi tentang lingkungan sekitarnya berhenti berguna.",
+    join: {
+      title: "Terlibat dalam usaha ini",
+      body: "Ini masih berada sebelum tahap pengujian. Karena itu, yang kami cari bukan orang untuk membangun bersama, melainkan orang yang mau meruntuhkan hipotesis kami.",
+      roles: [
+        "Anda mengenal suatu daerah tertentu secara mendalam, dari sisi orang yang tinggal di sana",
+        "Anda pernah bekerja dengan data lokasi atau data kewilayahan",
+        "Anda tidak keberatan terlibat selagi ini masih berupa gagasan",
+      ],
+      state: "Tahap gagasan. Bentuk keterlibatannya belum ditentukan.",
+    },
     eyebrow: "Proyek",
     heading: ["Memahami sebuah tempat,", "dari dalam tempat itu."],
     stage: "Tahap gagasan",
@@ -429,27 +479,67 @@ export const id: SiteCopy = {
       "Cara kerja ini belum merupakan metode yang terbukti dan dapat diulang. Yorisou masih berada pada tahap awal, dan belum pernah melepas satu pun usaha menjadi perusahaan yang berdiri sendiri. Yang tertulis di sini adalah cara kami benar-benar bekerja, bukan klaim atas hasil.",
   },
 
-  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────────── */
+  /* ── BUILD WITH US (CORP-v1.2) ──────────────────────────────────── */
   buildWithUs: {
     eyebrow: "Membangun bersama kami",
     heading: ["Pintu masuknya berbeda,", "tergantung posisi Anda."],
     lead:
-      "Untuk saat ini kami mulai dari apa pun yang bisa dibicarakan. Tidak ada jalur penerimaan yang baku. Bila Anda tertarik, ceritakan lebih dahulu apa yang Anda pikirkan.",
+      "Yorisou membawa sebuah usaha sampai titik tepat sebelum ia menjadi perusahaan, lalu bergabung dengan orang yang mampu memikulnya. Karena itu, yang kami cari bukan orang untuk dipekerjakan, melainkan orang yang mau mengambil alihnya.",
     lanes: [
       {
         key: "founders",
-        title: "Pendiri dan pengelola",
+        label: "Pendiri",
+        title: "Pendiri dan rekan pendiri",
         body:
-          "Yorisou membangun usaha sampai titik tepat sebelum ia menjadi perusahaan, dan mencari orang yang mampu memikulnya sebagai miliknya sendiri. Ini adalah posisi pendiri, bukan pekerjaan yang diserahkan sebagai karyawan.",
+          "Posisi ini adalah mengambil alih usaha yang sudah dibawa sampai titik tepat sebelum menjadi perusahaan, sebagai milik Anda sendiri. Anda terlibat sebagai pendiri, bukan sebagai karyawan — kewenangan pengambilan keputusan ada pada Anda, begitu pula tanggung jawabnya.",
         invites: [
           "Anda pernah benar-benar menjalankan sesuatu yang punya operasi nyata di belakangnya",
           "Anda dapat melangkah maju ketika banyak hal masih belum diputuskan",
           "Anda punya pijakan di salah satu bidang: teknologi, manufaktur, pemerintahan, atau kerja di daerah",
         ],
+        offers: "Riset dan bukti, produk awal, rancangan usahanya, serta landasan bersama. Anda mulai dari tengah jalan, bukan dari nol.",
+        cannot: "Kami tidak dapat menjanjikan gaji, pendanaan, maupun ketentuan kepemilikan pada saat ini. Ketentuannya dibicarakan per usaha.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Kami berada pada tahap ingin mendengarkan. Tidak ada lowongan yang dibuka.",
+        cta: "Sampaikan ketertarikan Anda",
+      },
+      {
+        key: "team",
+        label: "Tim pendiri",
+        title: "Tim pendiri dan tenaga ahli",
+        body:
+          "Seorang pendiri sendirian tidak pernah cukup. Kami mencari orang yang sejak awal ikut memegang salah satu bagiannya — teknik, operasional, atau lapangan.",
+        invites: [
+          "Anda tidak berhenti pada membangun, tetapi pernah mengawalnya sampai tahap operasional",
+          "Anda pernah memulai sesuatu dengan tim yang kecil",
+          "Anda tahu apa yang dianggap biasa di bidang Anda",
+        ],
+        offers: "Posisi yang terlibat sejak awal, dan keleluasaan yang nyata atas bagian yang Anda pegang.",
+        cannot: "Tidak ada jalur perekrutan yang dibuka secara tetap. Kami tidak dapat mengatakan bahwa saat ini kami berada dalam posisi untuk merekrut.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Bergantung pada tahap usahanya. Ceritakan lebih dahulu apa yang dapat Anda pikul.",
+        cta: "Mulai percakapan",
+      },
+      {
+        key: "users",
+        label: "Pengguna awal",
+        title: "Pengguna awal dan orang yang ikut menguji bersama kami",
+        body:
+          "Ini tahap ketika kami ingin orang melihat apa yang kami bangun dari posisi orang yang benar-benar memakainya — bukan untuk dipuji, melainkan untuk diberi tahu di titik mana ia berhenti bekerja.",
+        invites: [
+          "Anda pernah benar-benar kesulitan menghadapi masalah ini",
+          "Anda dapat mengatakan apa adanya bagian mana yang tidak berjalan",
+          "Anda tidak keberatan melihat sesuatu sebelum dibuka untuk umum",
+        ],
+        offers: "Kesempatan melihat sesuatu yang masih dalam proses, dan apa yang Anda sampaikan kembali masuk ke dalam rancangannya.",
+        cannot: "Kami tidak dapat menjanjikan waktu peluncuran, bahwa permintaan Anda akan diterapkan, maupun imbalan.",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "Kami sedang mencari orang untuk melihatnya. Ini bukan program penerimaan resmi.",
         cta: "Sampaikan ketertarikan Anda",
       },
       {
         key: "research",
+        label: "Universitas",
         title: "Universitas dan riset",
         body:
           "Mengubah hasil riset menjadi sesuatu yang dapat dipakai masyarakat memerlukan perancangan dari sisi usaha. Kami mencari pihak yang dapat memikirkan bersama soal penyiapan pendiri dan penerapan hasil riset.",
@@ -458,22 +548,32 @@ export const id: SiteCopy = {
           "Anda ingin mahasiswa dan peneliti mendapat pengalaman mendirikan usaha secara langsung",
           "Anda lebih suka memulai dari penjajakan bersama",
         ],
+        offers: "Perancangan dari sisi usaha, dan pekerjaan yang benar-benar sedang berjalan. Kami dapat mulai dari penjajakan.",
+        cannot: "Belum ada perjanjian riset bersama, belum ada pendanaan, dan belum ada kerja sama resmi.",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "Kami tidak punya rekam jejak kemitraan. Semuanya dimulai dari percakapan.",
         cta: "Mulai percakapan",
       },
       {
         key: "public",
+        label: "Sektor publik",
         title: "Pemerintah dan sektor publik",
         body:
-          "Pada persoalan publik, aturannya kerap sudah ada tetapi belum diterjemahkan menjadi langkah yang dapat diikuti warga. Kami ingin ikut merancang uji cobanya yang kecil, pengukuran hasilnya, sampai bentuk yang dapat bertahan.",
+          "Aturannya ada, tetapi belum pernah diterjemahkan menjadi langkah yang dapat diikuti warga. Kami ingin ikut merancang uji cobanya yang kecil, pengukuran hasilnya, sampai bentuk yang dapat bertahan.",
         invites: [
           "Ada persoalan yang dapat dicoba langsung di lapangan",
           "Anda ingin hasilnya berbentuk sesuatu yang dapat diukur",
           "Anda tidak ingin berhenti sebagai uji coba sekali jalan",
         ],
+        offers: "Riset, bukti yang ditata menjadi bentuk yang bisa dipakai, dan rancangan untuk mencobanya dalam skala kecil.",
+        cannot: "Kami belum punya rekam jejak kerja sama dengan pemerintah daerah, dan kami tidak dapat memberikan jaminan apa pun dari sisi aturan.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Dimulai dari percakapan. Tidak ada kerja sama yang sedang berjalan.",
         cta: "Hubungi kami",
       },
       {
         key: "corporate",
+        label: "Perusahaan",
         title: "Perusahaan",
         body:
           "Bila ada persoalan di lapangan Anda sendiri yang semestinya menjadi sebuah usaha. Kami dapat memulainya dari pengembangan bersama atau uji coba langsung di lapangan.",
@@ -482,12 +582,23 @@ export const id: SiteCopy = {
           "Anda sedang mencari bentuk usaha yang baru",
           "Anda sedang mencari mitra pengembangan bersama",
         ],
+        offers: "Kami dapat terlibat sejak tahap merancang ulang persoalan itu sebagai sebuah usaha.",
+        cannot: "Kami tidak punya rekam jejak transaksi komersial, dan tidak punya contoh penerapan yang dapat kami perlihatkan.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Dimulai dari mendengarkan.",
         cta: "Ajukan pertanyaan",
       },
     ],
     intakeTitle: "Tentang jalur penerimaan",
     intakeBody:
       "Saat ini tidak ada proses pendaftaran dan tidak ada program seleksi. Yang ada di sini adalah undangan, bukan kemitraan yang sedang berjalan maupun lowongan yang sedang dibuka. Kami mulai dengan mendengar apa yang Anda bawa, lalu melihat apakah ada hal yang bisa dibicarakan.",
+    foundingTeamEyebrow: "Tim pendiri",
+    foundingTeamHeading: ["Kami mulai membangun", "sebelum ada perusahaannya."],
+    foundingTeamBody: [
+      "Pada umumnya, sebuah usaha baru dimulai setelah orang-orangnya berkumpul. Yorisou bergerak dengan urutan yang sebaliknya: riset dan bukti, produk awal, serta rancangan usahanya dibuat lebih dahulu, baru setelah itu kami mencari orang yang akan mengambil alihnya.",
+      "Karena itu, tidak ada yang memulai dari halaman kosong. Anda mulai dengan mengambil sesuatu yang sudah punya bentuk, lalu menjadikannya milik Anda sendiri.",
+      "Sebagai gantinya, makna dari mengambil alih itu tidak berubah. Orang yang memegang kewenangan pengambilan keputusan juga memegang tanggung jawabnya. Bila orang yang menjalankannya tidak memegang kewenangan yang sesungguhnya, ia belum menjadi sebuah perusahaan.",
+    ],
     ctaHeading: ["Dari posisi mana pun,", "pintu masuk awalnya sama."],
     ctaBody: "Tuliskan apa yang Anda pikirkan lalu kirimkan kepada kami. Kami membacanya satu per satu.",
   },

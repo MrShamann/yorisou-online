@@ -56,6 +56,9 @@ export const nl: SiteCopy = {
     backHome: "Terug naar het bedrijfsoverzicht",
     stageLabel: "Huidige fase",
     boundaryLabel: "Wat wij niet op ons nemen",
+    nowLabel: "Nu",
+    nextLabel: "Volgende stap",
+    whoLabel: "Met wie wij willen spreken",
   },
 
   home: {
@@ -128,9 +131,27 @@ export const nl: SiteCopy = {
     engageBody:
       "Oprichters, onderzoekers, overheid, bedrijven. Waar u kunt aanhaken, hangt af van waar u staat. Wij beginnen bij wat nu al te bespreken valt.",
     engageCta: "Bekijk de ingangen",
+    engageNote: "Alles begint nu bij een gesprek. Er is nog geen aanmeldingsprocedure en geen selectie.",
+    explainerLabel: "Yorisou in 30 seconden",
+    explainerHeading: ["Van vraagstuk naar bedrijf,", "in dertig seconden."],
+    explainerClose: "Sluiten",
   },
 
   mirai: {
+    reading: "Regionale mobiliteit in beweging brengen, tot aan de oplossing.",
+    now: "De publieke website draait, en het systeem dat openbare bronnen blijft lezen, loopt vanzelf door. Naar buiten toe is er echter nog niets uitgegaan — geen enkele keer.",
+    next: "Bij de eerste werkelijke casus blijven er punten liggen die niet vanachter het bureau te beslissen zijn. Vanaf hier is het aan mensen.",
+    who: "Mensen die de praktijk van regionaal vervoer van binnenuit kennen — gemeenten, vervoerders, de werkvloer zelf — en die de werkelijke beperkingen kunnen benoemen.",
+    join: {
+      title: "Betrokken raken bij dit project",
+      body: "Wat nu nodig is, zijn mensen die de beperkingen in de praktijk concreet kunnen benoemen. Dit is de fase van nagaan, niet van verkopen.",
+      roles: [
+        "U werkt in regionaal vervoer of mobiliteit — bij een gemeente, bij een vervoerder of in de praktijk zelf",
+        "U zou dit gebied als oprichter of operationeel leider kunnen dragen",
+        "U weet hoe de uitvoering in werkelijkheid verloopt",
+      ],
+      state: "Wij zijn in de fase van luisteren. Er is geen openstaande positie.",
+    },
     eyebrow: "Project 01",
     heading: ["Een platform voor informatie, matching", "en business development", "in de Japanse mobiliteitssector."],
     stage: "Publieke website live / platformfuncties in ontwikkeling",
@@ -157,6 +178,21 @@ export const nl: SiteCopy = {
   },
 
   kakari: {
+    reading: "Zodat u procedures in Japan zelf kunt doorlopen.",
+    now: "Een besloten testfase. Kakari is niet algemeen beschikbaar en er zijn nog geen gebruikers.",
+    next: "De stappen die nodig zijn voor distributie, en het vaststellen van de registratiegegevens van het bedrijf. Beide vragen bevestiging van buiten.",
+    who: "Mensen met een buitenlandse nationaliteit die in Japan wonen, de mensen die hen ondersteunen, en erkende professionals.",
+    join: {
+      title: "Betrokken raken bij dit project",
+      body: "Wij willen dit eerst laten zien aan mensen die weten hoe deze procedures in werkelijkheid verlopen. Het is geen middel om professionals te vervangen.",
+      roles: [
+        "U bent in Japan zelf vastgelopen op een procedure",
+        "U ondersteunt in enige vorm mensen met een buitenlandse nationaliteit",
+        "U bent gyoseishoshi of een andere erkende professional en kunt meekijken waar de grens hoort te liggen",
+        "U zou dit project als oprichter of operationeel leider kunnen dragen",
+      ],
+      state: "Wij zoeken mensen om het aan te laten zien. Er is nog niets openbaar en niets opengesteld.",
+    },
     eyebrow: "Project 02",
     heading: ["Meertalige ondersteuning bij procedures", "en documenten, voor mensen die in Japan wonen", "en voor wie hier een onderneming start."],
     stage: "In ontwikkeling (nog niet algemeen beschikbaar)",
@@ -360,6 +396,20 @@ export const nl: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    reading: "Een plek begrijpen, vanaf de plek zelf.",
+    now: "Conceptfase. Er is geen beschikbaar product, er zijn geen gebruikers en er loopt geen traject met een gemeente.",
+    next: "Of informatie werkelijk bruikbaar wordt wanneer je haar afbakent op locatie en context. Dat willen wij eerst klein onderzoeken.",
+    who: "Mensen die een bepaalde plek werkelijk kennen en kunnen uitleggen waar informatie over de leefomgeving ophoudt bruikbaar te zijn.",
+    join: {
+      title: "Betrokken raken bij dit project",
+      body: "Dit staat nog vóór de fase van toetsen. Wij zoeken daarom minder mensen om mee te bouwen dan mensen die de veronderstelling onderuit willen halen.",
+      roles: [
+        "U kent een bepaald gebied van binnenuit, omdat u er woont",
+        "U heeft gewerkt met locatiegegevens of regionale data",
+        "U vindt het geen bezwaar om al in de conceptfase mee te kijken",
+      ],
+      state: "Conceptfase. Hoe betrokkenheid eruitziet, ligt nog niet vast.",
+    },
     eyebrow: "Project",
     heading: ["Een plek begrijpen,", "vanaf de plek zelf."],
     stage: "Conceptfase",
@@ -435,22 +485,62 @@ export const nl: SiteCopy = {
     eyebrow: "Samen bouwen",
     heading: ["Waar u instapt, hangt af", "van waar u staat."],
     lead:
-      "Voor nu beginnen wij bij wat te bespreken valt. Er is geen vaste aanmelding. Als het u interesseert, laat dan weten wat u voor ogen heeft.",
+      "Yorisou brengt een project tot vlak vóór het punt waarop het een bedrijf wordt, en werkt dan samen met iemand die het kan dragen. Wij zoeken dus geen mensen om in dienst te nemen, maar mensen die het overnemen.",
     lanes: [
       {
         key: "founders",
-        title: "Oprichters en operationele leiders",
+        label: "Oprichters",
+        title: "Oprichters en medeoprichters",
         body:
-          "Yorisou brengt projecten tot vlak vóór het punt waarop zij een bedrijf worden, en zoekt mensen die er een als het hunne kunnen dragen. Het is geen baan in loondienst, maar een rol als oprichter.",
+          "U neemt een project dat tot vlak vóór een bedrijf is gebracht over als het uwe. U stapt in als oprichter, niet in loondienst — de beslissingen liggen bij u, en de verantwoordelijkheid ook.",
         invites: [
           "U heeft werkelijk iets geleid waar echte uitvoering achter zat",
           "U kunt vooruit terwijl er nog veel onbeslist is",
           "U kent een van deze werelden: techniek, productie, overheid of de lokale praktijk",
         ],
+        offers: "Onderzoek en bewijs, een eerste product, het ondernemingsontwerp en de gedeelde basis. U begint niet bij nul, maar halverwege.",
+        cannot: "Wij kunnen op dit moment geen salaris, geen financiering en geen voorwaarden over een aandeel toezeggen. De voorwaarden bespreken wij per project.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Wij zijn in de fase van luisteren. Er is geen openstaande positie.",
+        cta: "Laat uw interesse weten",
+      },
+      {
+        key: "team",
+        label: "Oprichtingsteam",
+        title: "Oprichtingsteam en specialisten",
+        body:
+          "Eén oprichter is nooit genoeg. Wij zoeken mensen die vanaf het begin een deel dragen: de techniek, de uitvoering of de praktijk zelf.",
+        invites: [
+          "U heeft niet alleen gebouwd, maar het ook in de uitvoering meegemaakt",
+          "U heeft met een klein team iets opgezet",
+          "U weet wat in uw vakgebied vanzelfsprekend is",
+        ],
+        offers: "Een plek vanaf het begin, en werkelijke ruimte over het deel dat u draagt.",
+        cannot: "Er is geen doorlopende werving. Wij kunnen niet zeggen dat wij op dit moment in staat zijn mensen aan te nemen.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Het hangt af van de fase van het project. Vertel ons eerst wat u zou kunnen doen.",
+        cta: "Begin een gesprek",
+      },
+      {
+        key: "users",
+        label: "Eerste gebruikers",
+        title: "Eerste gebruikers en mensen die met ons meetesten",
+        body:
+          "Wij willen dat mensen naar het gebouwde kijken vanuit de positie van iemand die het werkelijk gebruikt — niet om te horen dat het goed is, maar om te horen waar het vastloopt.",
+        invites: [
+          "U bent zelf op dit vraagstuk vastgelopen",
+          "U kunt onomwonden zeggen wat niet werkte",
+          "U vindt het geen bezwaar iets te zien voordat het openbaar is",
+        ],
+        offers: "U krijgt iets te zien dat nog in aanbouw is, en wat u zegt gaat terug het ontwerp in.",
+        cannot: "Wij kunnen geen datum van publicatie toezeggen, niet dat uw wens wordt overgenomen, en geen vergoeding.",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "Wij zoeken mensen om het aan te laten zien. Dit is geen formeel programma.",
         cta: "Laat uw interesse weten",
       },
       {
         key: "research",
+        label: "Universiteiten",
         title: "Universiteiten en onderzoek",
         body:
           "Om onderzoek bruikbaar te maken voor de samenleving is er naast het onderzoek ook ondernemingsontwerp nodig. Wij zoeken mensen om samen mee na te denken over het opleiden van oprichters en over de implementatie van onderzoek.",
@@ -459,22 +549,32 @@ export const nl: SiteCopy = {
           "U wilt studenten en onderzoekers echte oprichterservaring geven",
           "U begint liever bij een gezamenlijke verkenning",
         ],
+        offers: "Ondernemingsontwerp, en werk dat werkelijk draait. Wij kunnen beginnen bij een verkenning.",
+        cannot: "Er is nog geen onderzoeksovereenkomst, geen financiering en geen formele samenwerking.",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "Wij hebben nog geen enkele samenwerking achter ons. Het begint bij een gesprek.",
         cta: "Begin een gesprek",
       },
       {
         key: "public",
+        label: "Publieke sector",
         title: "Overheid en publieke sector",
         body:
-          "Bij publieke vraagstukken zijn de regels vaak al aanwezig, maar nooit vertaald naar stappen die een inwoner kan volgen. Wij willen de kleine proef, de meting en de weg naar iets blijvends samen ontwerpen.",
+          "De regels bestaan al, maar zijn nooit vertaald naar stappen die een inwoner kan volgen. Wij willen de kleine proef, de meting en de weg naar iets blijvends samen ontwerpen.",
         invites: [
           "U heeft een vraagstuk dat in de praktijk beproefd kan worden",
           "U wilt het in een vorm waarin het effect meetbaar is",
           "U wilt niet dat het bij een eenmalige pilot blijft",
         ],
+        offers: "Onderzoek, bewijs geordend tot iets bruikbaars, en een opzet om klein te beproeven.",
+        cannot: "Wij hebben nog geen traject met een gemeente achter ons, en wij kunnen geen enkele bestuurlijke of wettelijke garantie geven.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Het begint bij een gesprek. Er loopt op dit moment niets.",
         cta: "Neem contact op",
       },
       {
         key: "corporate",
+        label: "Bedrijven",
         title: "Bedrijven",
         body:
           "Wanneer er in uw eigen praktijk een vraagstuk ligt dat een onderneming zou moeten worden. Wij kunnen beginnen bij gezamenlijke ontwikkeling of bij een proef in de praktijk.",
@@ -483,12 +583,23 @@ export const nl: SiteCopy = {
           "U zoekt de vorm van een nieuwe onderneming",
           "U zoekt een partner om samen mee te ontwikkelen",
         ],
+        offers: "Wij kunnen instappen bij het opnieuw ontwerpen van het vraagstuk als onderneming.",
+        cannot: "Wij hebben geen zakelijke referenties en geen klantcases die wij u kunnen laten zien.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Het begint bij luisteren.",
         cta: "Stel uw vraag",
       },
     ],
     intakeTitle: "Over aanmelden",
     intakeBody:
       "Er is op dit moment geen aanmeldingsprocedure en geen selectieprogramma. Wat hier staat is een uitnodiging, geen bestaande samenwerking en geen openstaande functie. Wij beginnen door te horen wat u heeft, en of er iets te bespreken valt.",
+    foundingTeamEyebrow: "Oprichtingsteam",
+    foundingTeamHeading: ["Wij beginnen te bouwen", "vóór er een bedrijf is."],
+    foundingTeamBody: [
+      "Meestal begint een onderneming pas nadat er mensen bij elkaar zijn gekomen. Yorisou werkt in de omgekeerde volgorde: eerst het onderzoek en het bewijs, het eerste product en het ondernemingsontwerp, en daarna zoeken wij degene die het overneemt.",
+      "Niemand begint dus met een leeg blad. U begint door iets op te pakken dat al een vorm heeft, en het het uwe te maken.",
+      "Wat daarbij niet verandert, is wat overnemen betekent. Wie de beslissingen heeft, draagt ook de verantwoordelijkheid. Als de mensen die het leiden niet werkelijk kunnen beslissen, is het geen bedrijf geworden.",
+    ],
     ctaHeading: ["Wie u ook bent,", "de ingang is dezelfde."],
     ctaBody: "Schrijf wat u voor ogen heeft en stuur het ons. Wij lezen alles op volgorde.",
   },

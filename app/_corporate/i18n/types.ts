@@ -51,6 +51,11 @@ export type SiteCopy = {
     backHome: string;
     stageLabel: string;
     boundaryLabel: string;
+    /* CORP-v1.2R2 — shared column labels for the venture state triad. */
+    nowLabel: string;
+    nextLabel: string;
+    whoLabel: string;
+
   };
 
   /* ── HOME ───────────────────────────────────────────────────────────── */
@@ -103,6 +108,12 @@ export type SiteCopy = {
     engageHeading: readonly string[];
     engageBody: string;
     engageCta: string;
+    /* CORP-v1.2R2 — the homepage participation layer. Lane labels come from buildWithUs.lanes. */
+    engageNote: string;
+    /* CORP-v1.2R2 — the "30 seconds" explainer affordance. */
+    explainerLabel: string;
+    explainerHeading: readonly string[];
+    explainerClose: string;
   };
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
@@ -126,6 +137,34 @@ export type SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    /* ── CORP-v1.2R2 ────────────────────────────────────────────────────────
+     * The state triad. `now` is what is true today, `next` is an evidenced next step (never a
+     * roadmap wish), `who` is who it would genuinely help to hear from at this stage. A venture
+     * with no evidenced next step says so rather than inventing one.
+     */
+    now: string;
+    next: string;
+    who: string;
+    /**
+     * The venture's OWN canonical Japanese line, shown beside the Latin wordmark on Japanese
+     * surfaces.
+     *
+     * Deliberately NOT a katakana transliteration. Kakari's own localisation glossary forbids one
+     * ("ASCII wordmark only. Never transliterated") and enforces it in CI; Mirai Move's brand.ts —
+     * its stated single source of truth for public identity — carries a Latin wordmark and a
+     * Japanese slogan, with no reading anywhere; Chigamo has no canonical source at all. Inventing
+     * readings would be creating names against two projects' governance. Pairing each wordmark with
+     * its own Japanese line makes the Japanese site read as Japanese without doing that.
+     */
+    reading: string;
+    /** Participation for THIS venture. Roles must make sense for this venture specifically. */
+    join: {
+      title: string;
+      body: string;
+      roles: readonly string[];
+      /** The weakest truthful state — never "applications open" unless a process exists. */
+      state: string;
+    };
     eyebrow: string;
     heading: readonly string[];
     stage: string;
@@ -165,22 +204,74 @@ export type SiteCopy = {
     eyebrow: string;
     heading: readonly string[];
     lead: string;
+    /**
+     * CORP-v1.2R2 — the participation matrix.
+     *
+     * Six relationship classes in natural language, never internal governance vocabulary. Each lane
+     * states what Yorisou can actually offer today AND what it cannot promise, because an invitation
+     * that only lists upside is a recruitment pitch, not an honest one. `state` carries the weakest
+     * truthful status, so nothing reads as an open application process while none exists.
+     *
+     * Home renders `label` from this same array, so the homepage participation layer and this page
+     * can never drift apart or contradict each other.
+     */
     lanes: readonly {
       key: string;
+      /** Short label for the homepage participation grid. */
+      label: string;
       title: string;
       body: string;
       invites: readonly string[];
+      /** What Yorisou can genuinely provide today. */
+      offers: string;
+      /** What Yorisou explicitly cannot promise. */
+      cannot: string;
+      /** Names of current ventures this lane may be relevant to. Empty when none specifically. */
+      ventures: readonly string[];
+      state: string;
       cta: string;
     }[];
     /** Honest statement of what intake currently is. No "Apply now" while no programme runs. */
     intakeTitle: string;
     intakeBody: string;
+    /* CORP-v1.2R2 — the founding-team idea, without inventing a team. */
+    foundingTeamEyebrow: string;
+    foundingTeamHeading: readonly string[];
+    foundingTeamBody: readonly string[];
     ctaHeading: readonly string[];
     ctaBody: string;
   };
 
   /* ── PROJECTS ───────────────────────────────────────────────────────── */
   mirai: {
+    /* ── CORP-v1.2R2 ────────────────────────────────────────────────────────
+     * The state triad. `now` is what is true today, `next` is an evidenced next step (never a
+     * roadmap wish), `who` is who it would genuinely help to hear from at this stage. A venture
+     * with no evidenced next step says so rather than inventing one.
+     */
+    now: string;
+    next: string;
+    who: string;
+    /**
+     * The venture's OWN canonical Japanese line, shown beside the Latin wordmark on Japanese
+     * surfaces.
+     *
+     * Deliberately NOT a katakana transliteration. Kakari's own localisation glossary forbids one
+     * ("ASCII wordmark only. Never transliterated") and enforces it in CI; Mirai Move's brand.ts —
+     * its stated single source of truth for public identity — carries a Latin wordmark and a
+     * Japanese slogan, with no reading anywhere; Chigamo has no canonical source at all. Inventing
+     * readings would be creating names against two projects' governance. Pairing each wordmark with
+     * its own Japanese line makes the Japanese site read as Japanese without doing that.
+     */
+    reading: string;
+    /** Participation for THIS venture. Roles must make sense for this venture specifically. */
+    join: {
+      title: string;
+      body: string;
+      roles: readonly string[];
+      /** The weakest truthful state — never "applications open" unless a process exists. */
+      state: string;
+    };
     eyebrow: string;
     heading: readonly string[];
     stage: string;
@@ -197,6 +288,34 @@ export type SiteCopy = {
     siteUrl: string;
   };
   kakari: {
+    /* ── CORP-v1.2R2 ────────────────────────────────────────────────────────
+     * The state triad. `now` is what is true today, `next` is an evidenced next step (never a
+     * roadmap wish), `who` is who it would genuinely help to hear from at this stage. A venture
+     * with no evidenced next step says so rather than inventing one.
+     */
+    now: string;
+    next: string;
+    who: string;
+    /**
+     * The venture's OWN canonical Japanese line, shown beside the Latin wordmark on Japanese
+     * surfaces.
+     *
+     * Deliberately NOT a katakana transliteration. Kakari's own localisation glossary forbids one
+     * ("ASCII wordmark only. Never transliterated") and enforces it in CI; Mirai Move's brand.ts —
+     * its stated single source of truth for public identity — carries a Latin wordmark and a
+     * Japanese slogan, with no reading anywhere; Chigamo has no canonical source at all. Inventing
+     * readings would be creating names against two projects' governance. Pairing each wordmark with
+     * its own Japanese line makes the Japanese site read as Japanese without doing that.
+     */
+    reading: string;
+    /** Participation for THIS venture. Roles must make sense for this venture specifically. */
+    join: {
+      title: string;
+      body: string;
+      roles: readonly string[];
+      /** The weakest truthful state — never "applications open" unless a process exists. */
+      state: string;
+    };
     eyebrow: string;
     heading: readonly string[];
     stage: string;

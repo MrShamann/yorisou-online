@@ -55,6 +55,9 @@ export const tr: SiteCopy = {
     backHome: "Şirket sayfasına dön",
     stageLabel: "Mevcut aşama",
     boundaryLabel: "Üstlenmediğimiz alan",
+    nowLabel: "Şu an",
+    nextLabel: "Sonraki adım",
+    whoLabel: "Kimlerle konuşmak istiyoruz",
   },
 
   home: {
@@ -127,9 +130,27 @@ export const tr: SiteCopy = {
     engageBody:
       "Kurucular, araştırmacılar, kamu ekipleri, şirketler. Nereden dâhil olabileceğiniz, nerede durduğunuza bağlı. Şimdilik konuşabildiğimiz yerden başlıyoruz.",
     engageCta: "Katılma yollarını görün",
+    engageNote: "Hepsi şimdilik bir görüşmeyle başlıyor. Henüz ne bir başvuru süreci ne de bir seçim düzeni var.",
+    explainerLabel: "30 saniyede Yorisou",
+    explainerHeading: ["Sorundan şirkete,", "otuz saniyede."],
+    explainerClose: "Kapat",
   },
 
   mirai: {
+    reading: "Yereldeki ulaşımı, çözüme varana kadar götürmek.",
+    now: "Kamuya açık site çalışıyor. Kamuya açık kaynakları sürekli okuyan sistem de kendi başına dönüyor. Ancak bugüne kadar dışarıya, kimseye gönderilmiş tek bir şey yok.",
+    next: "İlk gerçek örnekte, masa başında kapanmayan sorular kaldı. Buradan sonrası insanın işi.",
+    who: "Yereldeki ulaşım sahasını içeriden bilenler — belediyeler, işletmeciler, sahanın kendisi. Gerçek kısıtları anlatabilecek kişiler.",
+    join: {
+      title: "Bu girişime dâhil olmak",
+      body: "Şu anda ihtiyacımız olan, sahanın kısıtlarını somut biçimde anlatabilecek bir muhatap. Bu bir satış değil; doğrulamaya gittiğimiz aşama.",
+      roles: [
+        "Yereldeki ulaşımın ya da toplu taşımanın içinde olmak — belediye, işletmeci ya da sahanın kendisi",
+        "Bu alanı bir girişim olarak üstlenebilecek kurucu ya da işleten olmak",
+        "İşleyişin gerçekte nasıl yürüdüğünü bilen bir uzman olmak",
+      ],
+      state: "Şimdilik yalnızca dinlemek istediğimiz bir aşamadayız. Açık bir pozisyon yok.",
+    },
     eyebrow: "Proje 01",
     heading: ["Japonya’nın mobilite alanında", "bilgi, eşleştirme ve iş geliştirme", "platformu."],
     stage: "Kamuya açık site yayında / platform özellikleri geliştirme aşamasında",
@@ -156,6 +177,21 @@ export const tr: SiteCopy = {
   },
 
   kakari: {
+    reading: "Japonya’daki işlemleri kişinin kendi başına yürütebilmesi için.",
+    now: "Kapalı bir test aşaması. Genel kullanıma açık değil ve henüz kullanan kimse yok.",
+    next: "Dağıtım için gereken işlemler ve şirketin tescil bilgilerinin kesinleşmesi. İkisi de dışarıdan onay gerektiriyor.",
+    who: "Japonya’da yaşayan yabancı uyruklu kişiler, onlara destek verenler ve ruhsatlı meslek mensupları.",
+    join: {
+      title: "Bu girişime dâhil olmak",
+      body: "Önce, bu işlemlerin gerçekte nasıl yürüdüğünü bilen kişilerin bakmasını istiyoruz. Bu, meslek mensubunun yerini alacak bir araç değil.",
+      roles: [
+        "Japonya’da bir işlemde fiilen zorlanmış olmak",
+        "Yabancı uyruklu kişilere bir biçimde destek veriyor olmak",
+        "Ruhsatlı meslek mensubu olarak sınırın nereye çizileceğini birlikte doğrulayabilmek",
+        "Bu girişimi kurucu ya da işleten olarak üstlenebilmek",
+      ],
+      state: "Gösterebileceğimiz kişileri arıyoruz. Ne yayımlandı ne de açık bir çağrı var.",
+    },
     eyebrow: "Proje 02",
     heading: ["Japonya’da yaşayanlar ve", "burada iş kurmak isteyenler için", "çok dilli işlem desteği."],
     stage: "Geliştirme aşamasında (henüz genel kullanıma açık değil)",
@@ -359,6 +395,20 @@ export const tr: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    reading: "Bir yeri, orada dururken anlamak.",
+    now: "Tasarı aşaması. Yayımlanmış bir ürün, kullanıcı ya da belediyeyle yürütülen bir program yok.",
+    next: "Konum ve bağlamla daraltmak bilgiyi gerçekten kullanılabilir kılıyor mu. Önce bunu küçük ölçekte sınamak istiyoruz.",
+    who: "Belirli bir yeri gerçekten bilenler; yaşanılan çevreye dair bilginin nerede tükendiğini anlatabilecek kişiler.",
+    join: {
+      title: "Bu girişime dâhil olmak",
+      body: "Henüz doğrulamanın da öncesindeyiz. Bu yüzden birlikte kuracak birinden çok, varsayımı yıkacak birini arıyoruz.",
+      roles: [
+        "Belirli bir bölgeyi, orada yaşayan biri olarak ayrıntısıyla bilmek",
+        "Konum ya da bölge verisiyle çalışmış olmak",
+        "Henüz tasarı aşamasındayken dâhil olmaktan çekinmemek",
+      ],
+      state: "Tasarı aşaması. Nasıl dâhil olunacağı henüz belli değil.",
+    },
     eyebrow: "Girişim",
     heading: ["Bir yeri,", "orada dururken anlamak."],
     stage: "Tasarı aşaması",
@@ -434,22 +484,62 @@ export const tr: SiteCopy = {
     eyebrow: "Birlikte kurmak",
     heading: ["Nerede durduğunuza göre,", "giriş de değişiyor."],
     lead:
-      "Şimdilik konuşabildiğimiz yerden başlıyoruz. Belirlenmiş bir başvuru dönemi yok. İlginizi çekiyorsa, önce aklınızdakini anlatın.",
+      "Yorisou, bir girişimi şirket olmasının hemen öncesine kadar götürüyor; sonra onu üstlenebilecek kişiyle bir araya geliyor. Bu yüzden aradığımız, çalıştıracağımız kişiler değil; işi devralacak kişiler.",
     lanes: [
       {
         key: "founders",
-        title: "Kurucular ve işletenler",
+        label: "Kurucular",
+        title: "Kurucular ve ortak kurucular",
         body:
-          "Yorisou, girişimleri şirket olmalarının hemen öncesine kadar getiriyor ve her birini kendi işi olarak üstlenebilecek kişilerle çalışmak istiyor. Bu, devredilen bir görev değil; kuruculuk olarak üstlenilen bir konum.",
+          "Şirket olmasının hemen öncesine kadar getirilmiş bir girişimi kendi işiniz olarak üstlenmek. İstihdam olarak değil, kuruculuk olarak dâhil olunur: karar da sorumluluk da o kişide durur.",
         invites: [
           "Sahası olan bir işi fiilen yürütmüş olmak",
           "Çoğu şeyin henüz belirsiz olduğu bir aşamada ilerleyebilmek",
           "Teknoloji, üretim, kamu ya da yerel alanlardan birine dair saha bilgisi",
         ],
+        offers: "Araştırma ve kanıt, erken bir ürün, işin tasarımı ve ortak altyapı. Sıfırdan değil, yolun ortasından başlanır.",
+        cannot: "Bu noktada ne maaş, ne finansman, ne de pay koşulları konusunda söz verebiliriz. Koşullar her girişim için ayrıca konuşulur.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Şimdilik yalnızca dinlemek istediğimiz bir aşamadayız. Açık bir pozisyon yok.",
+        cta: "İlginizi iletin",
+      },
+      {
+        key: "team",
+        label: "Kurucu ekip",
+        title: "Kurucu ekip ve uzmanlar",
+        body:
+          "Tek başına bir kurucu hiçbir zaman yetmiyor. Teknik tarafı, işleyişi ya da sahayı en baştan birlikte taşıyacak kişiler arıyoruz.",
+        invites: [
+          "Yalnızca kurmakla kalmayıp işletmeye kadar görmüş olmak",
+          "Küçük bir ekiple bir işi ayağa kaldırmış olmak",
+          "Kendi alanında neyin olağan olduğunu bilmek",
+        ],
+        offers: "En baştan içinde olunan bir konum ve üstlenilen kısımda gerçek bir hareket alanı.",
+        cannot: "Sürekli açık bir işe alım kanalımız yok. Şu anda birini işe alabilecek durumda olduğumuzu söyleyemeyiz.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Girişimin aşamasına bağlı. Önce neyi üstlenebileceğinizi anlatın.",
+        cta: "Konuşmaya başlayalım",
+      },
+      {
+        key: "users",
+        label: "İlk kullanıcılar",
+        title: "İlk kullanıcılar ve birlikte deneyenler",
+        body:
+          "Yaptığımıza, onu gerçekten kullanacak kişinin yerinden bakılmasını istiyoruz. Beğenildiğini duymak için değil; nerede tıkandığını öğrenmek için.",
+        invites: [
+          "Bu sorunla fiilen boğuşmuş olmak",
+          "İşe yaramayan yeri olduğu gibi söyleyebilmek",
+          "Henüz yayımlanmamış bir şeye bakmaktan rahatsız olmamak",
+        ],
+        offers: "Yapım hâlindeki bir şeye bakmak; söyledikleriniz tasarıma geri döner.",
+        cannot: "Ne yayın tarihi, ne isteğinizin karşılanacağı, ne de herhangi bir ödeme konusunda söz veremeyiz.",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "Gösterebileceğimiz kişileri arıyoruz. Bu resmî bir çağrı değil.",
         cta: "İlginizi iletin",
       },
       {
         key: "research",
+        label: "Üniversiteler",
         title: "Üniversiteler ve araştırma",
         body:
           "Araştırma sonucunun toplumda kullanılabilir hâle gelmesi, yanında iş tarafının tasarımını gerektiriyor. Kurucu yetişmesi ve araştırmanın uygulamaya geçmesi üzerine birlikte düşünebileceğimiz muhataplar arıyoruz.",
@@ -458,10 +548,15 @@ export const tr: SiteCopy = {
           "Öğrencilere ve araştırmacılara gerçek bir kuruculuk deneyimi kazandırmak istemek",
           "Önce ortak bir keşifle başlamayı tercih etmek",
         ],
+        offers: "İş tarafının tasarımı ve fiilen yürüyen bir saha. Ortak bir keşifle başlanabilir.",
+        cannot: "Henüz ne bir ortak araştırma sözleşmesi, ne finansman, ne de resmî bir iş birliği var.",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "Geçmişe dönük bir iş birliği kaydımız yok. Konuşmakla başlıyor.",
         cta: "Konuşmaya başlayalım",
       },
       {
         key: "public",
+        label: "Kamu",
         title: "Kamu ve idare",
         body:
           "Kamusal sorunlarda kural çoğu zaman zaten vardır; ama vatandaşın izleyebileceği adımlara çevrilmemiştir. Küçük denemeyi, etkinin ölçülmesini ve kalıcı hâle gelme yolunu birlikte tasarlamak istiyoruz.",
@@ -470,10 +565,15 @@ export const tr: SiteCopy = {
           "Etkinin ölçülebildiği bir biçim istemek",
           "Tek seferlik bir pilotla bitmesini istememek",
         ],
+        offers: "Araştırma, kanıtın kullanılabilir biçimde düzenlenmesi ve küçük ölçekli bir deneme tasarımı.",
+        cannot: "Belediyelerle yürütülmüş bir çalışma kaydımız yok. Mevzuata dair bir garanti de veremeyiz.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Görüşmeyle başlıyor. Yürüyen bir iş birliği yok.",
         cta: "İletişime geçin",
       },
       {
         key: "corporate",
+        label: "Şirketler",
         title: "Şirketler",
         body:
           "Kendi sahanızdaki bir sorunun iş biçimine dönüşmesini istiyorsanız. Ortak geliştirmeyle ya da sahada küçük bir denemeyle başlayabiliriz.",
@@ -482,12 +582,23 @@ export const tr: SiteCopy = {
           "Yeni bir işin biçimini aramak",
           "Ortak geliştirme için muhatap aramak",
         ],
+        offers: "Sorunu en baştan bir iş olarak yeniden tasarlamaktan itibaren dâhil olunabilir.",
+        cannot: "Ticari bir geçmişimiz yok. Gösterebileceğimiz bir uygulama örneği de yok.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Dinlemekle başlıyor.",
         cta: "Bize yazın",
       },
     ],
     intakeTitle: "Başvuru durumu hakkında",
     intakeBody:
       "Şu anda ne bir başvuru süreci ne de bir seçim programı var. Buradakiler birer davettir; yürüyen bir iş birliği ya da açık bir pozisyon değildir. Önce elinizdekini dinliyor, konuşulacak bir şey var mı oradan başlıyoruz.",
+    foundingTeamEyebrow: "Kurucu ekip",
+    foundingTeamHeading: ["Şirket olmadan önce,", "kurmaya başlıyoruz."],
+    foundingTeamBody: [
+      "Çoğu durumda bir girişim, insanlar bir araya geldikten sonra başlar. Yorisou tersten çalışıyor: araştırma ve kanıt, erken ürün ve işin tasarımı önce kuruluyor; ardından bunu üstlenecek kişi aranıyor.",
+      "Bu yüzden dâhil olan kimse boş sayfadan başlamıyor. Zaten bir biçimi olan bir şeyi devralıp kendi işi hâline getirerek başlıyor.",
+      "Buna karşılık üstlenmenin anlamı değişmiyor. Kararı veren, sorumluluğu da taşır. İşletecek kişiler gerçek kararları veremiyorsa, orada henüz bir şirket yok demektir.",
+    ],
     ctaHeading: ["Hangi taraftan olursanız olun,", "ilk kapı aynı."],
     ctaBody: "Aklınızdakini yazıp gönderin. Sırayla okuyoruz.",
   },

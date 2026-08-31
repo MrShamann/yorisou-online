@@ -50,6 +50,9 @@ export const en: SiteCopy = {
     backHome: "Back to the company overview",
     stageLabel: "Current stage",
     boundaryLabel: "What we do not take on",
+    nowLabel: "Now",
+    nextLabel: "Next step",
+    whoLabel: "Who we want to hear from",
   },
 
   home: {
@@ -122,9 +125,27 @@ export const en: SiteCopy = {
     engageBody:
       "Founders, researchers, public-sector teams, companies. Where you can join depends on where you stand. We start from whatever can be discussed now.",
     engageCta: "See the ways in",
+    engageNote: "All of them start from a conversation. There is no application process and no selection yet.",
+    explainerLabel: "Yorisou in 30 seconds",
+    explainerHeading: ["From a problem to a company,", "in thirty seconds."],
+    explainerClose: "Close",
   },
 
   mirai: {
+    reading: "Move regional mobility all the way to a solution.",
+    now: "The public site is running, and the system that reads public sources keeps running on its own. Nothing has gone out to anyone yet — not once.",
+    next: "On the first substantial case, the open questions left are ones that cannot be settled from the desk. From here it is a person's turn.",
+    who: "People who know regional mobility from the inside — municipalities, operators, the actual field — and can describe the real constraints.",
+    join: {
+      title: "Work on this venture",
+      body: "What is needed now is someone who can describe the constraints concretely. This is the checking stage, not the selling stage.",
+      roles: [
+        "You work in regional transport or mobility — municipality, operator, or the field itself",
+        "You could carry this domain as a founder or operator",
+        "You know how the operations actually run",
+      ],
+      state: "We are at the stage of wanting to listen. There is no open position.",
+    },
     eyebrow: "Project 01",
     heading: ["A platform for information, matching", "and business development", "in Japan’s mobility sector."],
     stage: "Public site live / platform features in development",
@@ -151,6 +172,21 @@ export const en: SiteCopy = {
   },
 
   kakari: {
+    reading: "So that procedures in Japan can be done by the person themselves.",
+    now: "A private testing stage. It is not publicly available, and nobody is using it yet.",
+    next: "The steps needed for distribution, and settling the company's own registration details. Both need confirmation from outside.",
+    who: "People living in Japan on a foreign passport, the people who support them, and licensed specialists.",
+    join: {
+      title: "Work on this venture",
+      body: "We want people who know what these procedures are really like to look at it first. It is not a tool for replacing specialists.",
+      roles: [
+        "You have actually struggled with a procedure in Japan",
+        "You support foreign residents in some capacity",
+        "You are a licensed specialist and could help check where the boundary belongs",
+        "You could carry this venture as a founder or operator",
+      ],
+      state: "We are looking for people to show it to. Nothing is public and nothing is open.",
+    },
     eyebrow: "Project 02",
     heading: ["Multilingual support for procedures", "and documents, for people living in Japan", "and those starting a business here."],
     stage: "In development (not yet generally available)",
@@ -354,6 +390,20 @@ export const en: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    reading: "Understand a place, from inside it.",
+    now: "Concept stage. There is no released product, no users, and no municipal programme.",
+    next: "Whether narrowing by location and context actually makes information usable. We intend to test that small, first.",
+    who: "People who genuinely know a particular place, and can say where local information stops being useful.",
+    join: {
+      title: "Work on this venture",
+      body: "This is still before the testing stage. So we are less looking for people to build with than for people who will break the hypothesis.",
+      roles: [
+        "You know a specific area in detail, from living there",
+        "You have worked with location or regional data",
+        "You do not mind being involved while it is still a concept",
+      ],
+      state: "Concept stage. What involvement looks like is not yet decided.",
+    },
     eyebrow: "Venture",
     heading: ["Understand a place,", "from inside it."],
     stage: "Concept stage",
@@ -429,22 +479,62 @@ export const en: SiteCopy = {
     eyebrow: "Build with us",
     heading: ["Where you come in", "depends on where you stand."],
     lead:
-      "For now we start from whatever can be discussed. There is no fixed intake. If it interests you, tell us what you have in mind.",
+      "Yorisou carries a venture to just before it becomes a company, then teams up with someone who can carry it. So we are not looking for people to employ. We are looking for people to hand it to.",
     lanes: [
       {
         key: "founders",
-        title: "Founders and operators",
+        label: "Founder",
+        title: "Founders and co-founders",
         body:
-          "Yorisou builds ventures up to the point just before they become companies, and looks for people who can carry one as their own. This is a founding role, not a job to be handed.",
+          "Taking on a venture that has been carried to just short of being a company, as your own. You come in as a founder, not as a hire — the decisions sit with you, and so does the responsibility.",
         invites: [
           "You have actually run something with real operations behind it",
           "You can move forward while a lot is still undecided",
           "You know one of: technology, manufacturing, government, or local work",
         ],
+        offers: "Research and evidence, an early product, the business design, and shared infrastructure. You start partway, not from zero.",
+        cannot: "We cannot promise a salary, funding, or ownership terms at this point. Terms are discussed per venture.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "We are at the stage of wanting to listen. There is no open position.",
+        cta: "Register interest",
+      },
+      {
+        key: "team",
+        label: "Founding team",
+        title: "Founding team and specialists",
+        body:
+          "A founder alone is never enough. We are looking for people to hold one part of it — engineering, operations, or the field — from early on.",
+        invites: [
+          "You have seen things through to operation, not just to launch",
+          "You have started something with a small team",
+          "You know what is ordinary in your domain",
+        ],
+        offers: "A place from the beginning, and real latitude over the part you hold.",
+        cannot: "There is no standing hiring pipeline. We cannot say we are in a position to hire right now.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "It depends on the venture's stage. Tell us what you could take on.",
+        cta: "Start a conversation",
+      },
+      {
+        key: "users",
+        label: "Early users",
+        title: "Early users and people testing with us",
+        body:
+          "We want people to look at what we have built from the position of actually using it — not to be told it is good, but to be told where it stops working.",
+        invites: [
+          "You have actually struggled with this problem",
+          "You can say plainly what did not work",
+          "You do not mind seeing something before it is public",
+        ],
+        offers: "A look at something mid-build, and what you say goes back into the design.",
+        cannot: "We cannot promise a release date, that your request lands, or payment.",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "We are looking for people to show it to. This is not a formal programme.",
         cta: "Register interest",
       },
       {
         key: "research",
+        label: "Universities",
         title: "Universities and research",
         body:
           "Turning research into something society can use needs business design alongside it. We are looking for people to think about founder development and research implementation with.",
@@ -453,22 +543,32 @@ export const en: SiteCopy = {
           "You want students and researchers to get real founding experience",
           "You would rather start from joint exploration",
         ],
+        offers: "Business-side design, and work that is genuinely running. We can start from exploration.",
+        cannot: "There is no research agreement, no funding, and no formal collaboration yet.",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "We have no partnership record. It starts with a conversation.",
         cta: "Start a conversation",
       },
       {
         key: "public",
+        label: "Public sector",
         title: "Government and public sector",
         body:
-          "Public problems often have the rules already in place, but never translated into steps a resident can follow. We want to design the small test, the measurement, and the path to something that lasts.",
+          "The rules exist but were never translated into steps a resident can follow. We want to design the small test, the measurement, and the path to something that lasts.",
         invites: [
           "You have a problem that can be tried in the field",
           "You want it in a form where the effect can be measured",
           "You do not want it to end as a one-off pilot",
         ],
+        offers: "Research, evidence organised into a usable shape, and a design for testing small.",
+        cannot: "We have no track record with a municipality, and we cannot offer any procedural guarantee.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "It starts with a conversation. Nothing is in progress.",
         cta: "Get in touch",
       },
       {
         key: "corporate",
+        label: "Companies",
         title: "Companies",
         body:
           "If you have a problem in your own operations that should become a business. We can start from joint development or a test in the field.",
@@ -477,12 +577,23 @@ export const en: SiteCopy = {
           "You are looking for the shape of a new business",
           "You are looking for a development partner",
         ],
+        offers: "Redesigning the problem as a business, from the beginning.",
+        cannot: "We have no commercial track record and no case studies to show you.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "It starts with listening.",
         cta: "Enquire",
       },
     ],
     intakeTitle: "About intake",
     intakeBody:
       "There is currently no application process and no selection programme. What is here is an invitation, not an existing partnership or an open role. We start by hearing what you have, and whether there is something to talk about.",
+    foundingTeamEyebrow: "Founding team",
+    foundingTeamHeading: ["We start building", "before there is a company."],
+    foundingTeamBody: [
+      "Usually a venture starts once people have gathered. Yorisou runs the other way round: the research and evidence, the early product and the business design come first, and then we look for the person who will take it on.",
+      "So nobody starts from a blank page. You start by picking up something that already has a shape, and making it yours.",
+      "What does not change is what taking it on means. Whoever holds the decisions holds the responsibility. If the people running it cannot make the real decisions, it has not become a company.",
+    ],
     ctaHeading: ["Whoever you are,", "the way in is the same."],
     ctaBody: "Write what you have in mind and send it. We read them in order.",
   },

@@ -24,6 +24,14 @@ import type { SiteCopy } from "../types";
  * On the ventures (CORP-v1.2): Mirai Move, Kakari and Chigamo are dự án — ventures and concepts.
  * They are never "công ty con", "khoản đầu tư", "khách hàng" or funded companies. Chigamo is at
  * concept stage: no product, no users, no municipal programme.
+ *
+ * On the venture names (CORP-v1.2R2): "Mirai Move", "Kakari" and "Chigamo" stay in Latin script,
+ * always. `reading` is each venture's own one-line positioning translated from the Japanese — it is
+ * NOT a transliteration of the wordmark, and Vietnamese must never invent one.
+ *
+ * On participation (CORP-v1.2R2): `cannot` and `state` carry the weakest truthful status. No lane
+ * may read as an open application ("đang tuyển", "nộp hồ sơ", "ứng tuyển ngay") while no process
+ * exists, and `cannot` is never softened into an upside.
  */
 export const vi: SiteCopy = {
   chrome: {
@@ -63,6 +71,10 @@ export const vi: SiteCopy = {
     backHome: "Quay lại trang thông tin công ty",
     stageLabel: "Giai đoạn hiện tại",
     boundaryLabel: "Phạm vi chúng tôi không đảm nhận",
+    /* CORP-v1.2R2 — shared column labels for the venture state triad. */
+    nowLabel: "Hiện tại",
+    nextLabel: "Bước tiếp theo",
+    whoLabel: "Người chúng tôi muốn lắng nghe",
   },
 
   home: {
@@ -136,9 +148,27 @@ export const vi: SiteCopy = {
     engageBody:
       "Nhà sáng lập, nhà nghiên cứu, khu vực công, doanh nghiệp. Bạn tham gia được ở đâu là tùy vào vị trí bạn đang đứng. Chúng tôi bắt đầu từ những gì có thể trao đổi ngay lúc này.",
     engageCta: "Xem các cách tham gia",
+    engageNote: "Tất cả đều bắt đầu từ một cuộc trò chuyện. Hiện chưa có quy trình ứng tuyển và chưa có cơ chế tuyển chọn nào.",
+    explainerLabel: "Yorisou trong 30 giây",
+    explainerHeading: ["Từ một vấn đề đến một công ty,", "trong ba mươi giây."],
+    explainerClose: "Đóng",
   },
 
   mirai: {
+    reading: "Đưa việc di chuyển ở địa phương đi đến tận lời giải.",
+    now: "Trang công khai đang chạy, và cơ chế đọc liên tục các nguồn thông tin công khai cũng đang tự động vận hành. Nhưng chưa từng có bất cứ thứ gì được gửi ra bên ngoài — chưa một lần nào.",
+    next: "Ở trường hợp thực chất đầu tiên, những điểm còn lại là những điểm không thể ngồi bàn giấy mà chốt được, phải ra ngoài xác nhận. Từ đây trở đi là lượt của con người.",
+    who: "Những người hiểu hiện trường di chuyển ở địa phương — từ phía chính quyền địa phương hoặc đơn vị vận tải — và có thể nói ra những ràng buộc thực tế.",
+    join: {
+      title: "Tham gia vào dự án này",
+      body: "Điều chúng tôi cần lúc này là người có thể nói cụ thể về những ràng buộc ở hiện trường. Đây là giai đoạn đi xác minh, không phải giai đoạn chào bán.",
+      roles: [
+        "Bạn đang làm việc trong lĩnh vực giao thông, di chuyển ở địa phương — chính quyền, đơn vị vận hành, hoặc chính hiện trường",
+        "Bạn có thể gánh lĩnh vực này với tư cách nhà sáng lập hoặc người vận hành",
+        "Bạn hiểu công việc vận hành thực tế diễn ra thế nào",
+      ],
+      state: "Chúng tôi đang ở giai đoạn muốn được lắng nghe. Không có vị trí nào đang tuyển.",
+    },
     eyebrow: "Dự án 01",
     heading: ["Nền tảng thông tin, kết nối", "và phát triển kinh doanh", "trong lĩnh vực di chuyển tại Nhật Bản."],
     stage: "Trang công khai đang hoạt động / các tính năng nền tảng đang phát triển",
@@ -165,6 +195,21 @@ export const vi: SiteCopy = {
   },
 
   kakari: {
+    reading: "Để thủ tục ở Nhật Bản là việc chính bạn tự làm được.",
+    now: "Giai đoạn thử nghiệm nội bộ, không công khai. Sản phẩm chưa mở cho công chúng và chưa có ai đang sử dụng.",
+    next: "Các thủ tục cần thiết để phân phối, và việc chốt thông tin đăng ký của công ty. Cả hai đều là việc phải có xác nhận từ bên ngoài.",
+    who: "Người nước ngoài đang sinh sống tại Nhật Bản, những người ở vị trí hỗ trợ họ, và những người hành nghề chuyên môn có chứng chỉ.",
+    join: {
+      title: "Tham gia vào dự án này",
+      body: "Chúng tôi đang ở giai đoạn muốn những người hiểu rõ thực tế của các thủ tục xem trước. Đây không phải công cụ để thay thế chuyên gia.",
+      roles: [
+        "Bạn từng thực sự gặp khó với một thủ tục tại Nhật Bản",
+        "Bạn đang tham gia hỗ trợ người nước ngoài ở một vai trò nào đó",
+        "Bạn là người hành nghề chuyên môn có chứng chỉ và có thể cùng chúng tôi xác định ranh giới nên đặt ở đâu",
+        "Bạn có thể gánh dự án này với tư cách nhà sáng lập hoặc người vận hành",
+      ],
+      state: "Chúng tôi đang tìm người để cho xem. Chưa có gì được công bố và chưa có gì được mở tuyển.",
+    },
     eyebrow: "Dự án 02",
     heading: ["Hỗ trợ thủ tục đa ngôn ngữ", "dành cho người sinh sống tại Nhật Bản", "và người bắt đầu kinh doanh tại đây."],
     stage: "Đang phát triển (chưa mở cho công chúng)",
@@ -368,6 +413,20 @@ export const vi: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    reading: "Hiểu một nơi chốn, ngay khi đang ở đó.",
+    now: "Giai đoạn ý tưởng. Chưa có sản phẩm nào được công bố, chưa có người dùng, và chưa có chương trình nào với chính quyền địa phương.",
+    next: "Liệu khi thu hẹp theo vị trí và bối cảnh, thông tin có thực sự trở nên dùng được hay không. Chúng tôi sẽ kiểm chứng điều đó ở quy mô nhỏ trước.",
+    who: "Những người thực sự hiểu một vùng đất cụ thể, và có thể chỉ ra thông tin về khu vực sinh sống đứt gãy ở chỗ nào.",
+    join: {
+      title: "Tham gia vào dự án này",
+      body: "Dự án vẫn ở trước giai đoạn kiểm chứng. Vì vậy chúng tôi không tìm người để cùng làm cho bằng tìm người sẵn sàng đập vỡ giả thuyết của chúng tôi.",
+      roles: [
+        "Bạn hiểu tường tận một khu vực cụ thể, từ góc nhìn của người sống ở đó",
+        "Bạn từng làm việc với dữ liệu vị trí hoặc dữ liệu địa phương",
+        "Bạn không ngại tham gia khi mọi thứ còn là ý tưởng",
+      ],
+      state: "Giai đoạn ý tưởng. Hình thức tham gia vẫn chưa được xác định.",
+    },
     eyebrow: "Dự án",
     heading: ["Hiểu một nơi chốn,", "ngay khi đang ở đó."],
     stage: "Giai đoạn ý tưởng",
@@ -443,22 +502,62 @@ export const vi: SiteCopy = {
     eyebrow: "Cùng xây dựng",
     heading: ["Bạn bước vào từ đâu", "tùy vào vị trí bạn đang đứng."],
     lead:
-      "Hiện tại chúng tôi bắt đầu từ những gì có thể trao đổi. Không có khuôn tuyển chọn cố định nào. Nếu bạn quan tâm, hãy cho chúng tôi biết bạn đang nghĩ đến điều gì.",
+      "Yorisou đưa một dự án đến ngay trước điểm nó trở thành công ty, rồi mới bắt tay với người có thể gánh lấy nó. Vì vậy chúng tôi không tìm người để thuê, mà tìm người để trao lại.",
     lanes: [
       {
         key: "founders",
-        title: "Nhà sáng lập và người vận hành",
+        label: "Nhà sáng lập",
+        title: "Nhà sáng lập và đồng sáng lập",
         body:
-          "Yorisou xây dựng các dự án đến ngay trước điểm chúng trở thành công ty, và tìm những người có thể gánh lấy một dự án như của chính mình. Đây là vị trí của một người đồng sáng lập, không phải một công việc được giao.",
+          "Gánh lấy như của chính mình một dự án đã được đưa đến ngay trước điểm trở thành công ty. Bạn tham gia với tư cách nhà sáng lập, không phải người được thuê — quyền quyết định nằm ở bạn, và trách nhiệm cũng vậy.",
         invites: [
           "Bạn đã thực sự vận hành một việc có hiện trường phía sau",
           "Bạn tiến được về phía trước khi còn rất nhiều thứ chưa ngã ngũ",
           "Bạn am hiểu một trong các mảng: công nghệ, sản xuất, hành chính công hoặc công việc ở địa phương",
         ],
+        offers: "Nghiên cứu và bằng chứng, sản phẩm giai đoạn đầu, thiết kế kinh doanh và hạ tầng dùng chung. Bạn bắt đầu từ giữa chặng, không phải từ con số không.",
+        cannot: "Ở thời điểm này chúng tôi không thể hứa lương, không thể hứa vốn, cũng không thể hứa điều kiện sở hữu. Điều kiện được bàn theo từng dự án.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Chúng tôi đang ở giai đoạn muốn được lắng nghe. Không có vị trí nào đang tuyển.",
+        cta: "Bày tỏ quan tâm",
+      },
+      {
+        key: "team",
+        label: "Nhóm sáng lập",
+        title: "Nhóm sáng lập và nhân sự chuyên môn",
+        body:
+          "Một nhà sáng lập đơn độc chưa bao giờ là đủ. Chúng tôi đang tìm những người cùng gánh một phần — kỹ thuật, vận hành hoặc hiện trường — ngay từ giai đoạn đầu.",
+        invites: [
+          "Bạn đã theo một việc đến tận khâu vận hành, không chỉ đến lúc ra mắt",
+          "Bạn từng khởi động một việc với đội ngũ rất nhỏ",
+          "Bạn biết điều gì là hiển nhiên trong lĩnh vực của mình",
+        ],
+        offers: "Một vị trí tham gia ngay từ đầu, và quyền tự quyết thực sự trong phần việc bạn nắm.",
+        cannot: "Không có kênh tuyển dụng thường trực. Chúng tôi không thể nói rằng mình đang ở trạng thái tuyển được người.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Còn tùy vào giai đoạn của từng dự án. Trước hết, hãy cho chúng tôi biết bạn có thể đảm nhận điều gì.",
+        cta: "Bắt đầu một cuộc trò chuyện",
+      },
+      {
+        key: "users",
+        label: "Người dùng đầu tiên",
+        title: "Người dùng đầu tiên và những người cùng chúng tôi thử nghiệm",
+        body:
+          "Chúng tôi muốn có người nhìn thứ mình làm ra từ vị trí của người thực sự sử dụng — không phải để được khen, mà để được chỉ ra chỗ nó tắc lại.",
+        invites: [
+          "Bạn từng thực sự gặp khó với chính vấn đề này",
+          "Bạn nói thẳng được chỗ nào không chạy",
+          "Bạn không ngại xem một thứ chưa được công bố",
+        ],
+        offers: "Một lần được xem thứ còn đang làm dở, và điều bạn nói sẽ quay lại vào thiết kế.",
+        cannot: "Chúng tôi không thể hứa thời điểm công bố, không hứa yêu cầu của bạn sẽ được đưa vào, và không hứa thù lao.",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "Chúng tôi đang tìm người để cho xem. Đây không phải một đợt tuyển chính thức.",
         cta: "Bày tỏ quan tâm",
       },
       {
         key: "research",
+        label: "Đại học",
         title: "Đại học và nghiên cứu",
         body:
           "Để đưa kết quả nghiên cứu thành thứ xã hội dùng được, cần có thiết kế ở phía kinh doanh đi kèm. Chúng tôi đang tìm những người cùng suy nghĩ về việc đào tạo nhà sáng lập và đưa nghiên cứu vào triển khai.",
@@ -467,22 +566,32 @@ export const vi: SiteCopy = {
           "Bạn muốn sinh viên và nhà nghiên cứu có trải nghiệm khởi sự thực tế",
           "Bạn muốn bắt đầu từ việc cùng nhau tìm hiểu",
         ],
+        offers: "Thiết kế ở phía kinh doanh, và những công việc đang thực sự chạy. Chúng ta có thể bắt đầu từ việc cùng tìm hiểu.",
+        cannot: "Chưa có hợp đồng nghiên cứu chung, chưa có kinh phí, và chưa có hợp tác chính thức nào.",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "Chúng tôi chưa có hợp tác nào từng thực hiện. Mọi việc bắt đầu từ một cuộc trò chuyện.",
         cta: "Bắt đầu một cuộc trò chuyện",
       },
       {
         key: "public",
+        label: "Khu vực công",
         title: "Cơ quan nhà nước và khu vực công",
         body:
-          "Các vấn đề công thường đã có sẵn thiết chế, nhưng chưa được dịch thành những bước mà người dân có thể làm theo. Chúng tôi muốn cùng thiết kế phần thử nghiệm nhỏ, cách đo hiệu quả, và con đường đi đến một thứ bền được.",
+          "Thiết chế thì đã có, nhưng chưa được dịch thành những bước mà người dân có thể làm theo. Chúng tôi muốn cùng thiết kế, ngay tại chỗ chênh lệch đó, một thử nghiệm nhỏ, cách đo hiệu quả, và con đường đi đến một thứ bền được.",
         invites: [
           "Bạn có một vấn đề có thể thử ngay trên thực địa",
           "Bạn muốn nó ở dạng đo được hiệu quả",
           "Bạn không muốn nó dừng lại ở một lần thí điểm",
         ],
+        offers: "Nghiên cứu, bằng chứng được sắp xếp thành dạng dùng được, và thiết kế cho một thử nghiệm nhỏ.",
+        cannot: "Chúng tôi chưa từng có chương trình nào với chính quyền địa phương, và không thể đưa ra bất kỳ bảo đảm nào về mặt thủ tục.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Mọi việc bắt đầu từ một cuộc trao đổi. Không có hợp tác nào đang diễn ra.",
         cta: "Liên hệ",
       },
       {
         key: "corporate",
+        label: "Doanh nghiệp",
         title: "Doanh nghiệp",
         body:
           "Nếu trong hoạt động của bạn có một vấn đề đáng để trở thành một hoạt động kinh doanh. Chúng ta có thể bắt đầu từ việc cùng phát triển hoặc một thử nghiệm trên thực địa.",
@@ -491,12 +600,23 @@ export const vi: SiteCopy = {
           "Bạn đang tìm hình hài của một hoạt động kinh doanh mới",
           "Bạn đang tìm một đối tác cùng phát triển",
         ],
+        offers: "Bạn có thể tham gia ngay từ khâu thiết kế lại vấn đề thành một hoạt động kinh doanh.",
+        cannot: "Chúng tôi chưa có giao dịch thương mại nào, và cũng không có trường hợp triển khai nào để cho bạn xem.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Mọi việc bắt đầu từ việc lắng nghe.",
         cta: "Gửi câu hỏi",
       },
     ],
     intakeTitle: "Về việc tiếp nhận",
     intakeBody:
       "Hiện chúng tôi không có quy trình ứng tuyển và không có chương trình tuyển chọn nào. Những gì ở đây là lời mời, không phải một quan hệ hợp tác đang có hay một vị trí đang tuyển. Chúng tôi bắt đầu bằng việc lắng nghe điều bạn có, và xem có gì để cùng bàn hay không.",
+    foundingTeamEyebrow: "Nhóm sáng lập",
+    foundingTeamHeading: ["Chúng tôi bắt đầu xây dựng", "trước khi có một công ty."],
+    foundingTeamBody: [
+      "Thường thì một dự án bắt đầu sau khi người ta đã tụ họp lại. Yorisou đi theo trình tự ngược lại: nghiên cứu và bằng chứng, sản phẩm giai đoạn đầu và thiết kế kinh doanh được làm trước, rồi sau đó chúng tôi mới đi tìm người sẽ gánh lấy nó.",
+      "Vì vậy người tham gia không phải bắt đầu từ một tờ giấy trắng. Bạn bắt đầu bằng việc nhận lấy một thứ đã có hình hài và biến nó thành của mình.",
+      "Đổi lại, ý nghĩa của việc gánh lấy thì không thay đổi. Ai nắm quyền quyết định thì người đó nắm trách nhiệm. Nếu người vận hành không thực sự nắm quyền quyết định, thì nó chưa thành một công ty.",
+    ],
     ctaHeading: ["Dù bạn là ai,", "lối vào ban đầu đều như nhau."],
     ctaBody: "Hãy viết ra điều bạn đang nghĩ và gửi cho chúng tôi. Chúng tôi đọc lần lượt.",
   },

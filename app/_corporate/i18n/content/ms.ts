@@ -53,6 +53,9 @@ export const ms: SiteCopy = {
     backHome: "Kembali ke halaman utama syarikat",
     stageLabel: "Peringkat semasa",
     boundaryLabel: "Apa yang tidak kami galas",
+    nowLabel: "Sekarang",
+    nextLabel: "Langkah seterusnya",
+    whoLabel: "Siapa yang ingin kami dengar",
   },
 
   home: {
@@ -126,9 +129,27 @@ export const ms: SiteCopy = {
     engageBody:
       "Pengasas, penyelidik, pihak awam, syarikat. Tempat anda boleh masuk bergantung pada kedudukan anda. Kami bermula daripada apa yang boleh dibincangkan sekarang.",
     engageCta: "Lihat cara untuk terlibat",
+    engageNote: "Semuanya bermula daripada perbualan buat masa ini. Belum ada proses permohonan mahupun kaedah pemilihan.",
+    explainerLabel: "Yorisou dalam 30 saat",
+    explainerHeading: ["Daripada masalah kepada syarikat,", "dalam tiga puluh saat."],
+    explainerClose: "Tutup",
   },
 
   mirai: {
+    reading: "Menggerakkan mobiliti setempat sehingga ke penyelesaiannya.",
+    now: "Laman awam sedang beroperasi, dan sistem yang terus membaca maklumat awam juga berjalan dengan sendirinya. Namun belum ada satu pun yang kami hantar keluar kepada sesiapa.",
+    next: "Pada kes bermakna yang pertama, masih tinggal persoalan yang tidak dapat diselesaikan tanpa disahkan di luar. Selepas ini, giliran manusia pula bergerak.",
+    who: "Orang yang mengenali lapangan mobiliti setempat — pihak berkuasa tempatan, pengendali pengangkutan atau lapangan itu sendiri — dan boleh menerangkan kekangan yang sebenar.",
+    join: {
+      title: "Terlibat dalam usaha niaga ini",
+      body: "Apa yang kami perlukan sekarang ialah orang yang boleh menerangkan kekangan di lapangan secara konkrit. Ini peringkat untuk mengesahkan, bukan untuk menjual.",
+      roles: [
+        "Anda terlibat dalam pengangkutan atau mobiliti setempat — pihak berkuasa tempatan, pengendali atau lapangan itu sendiri",
+        "Anda mampu memikul bidang ini sebagai pengasas atau pengendali",
+        "Anda tahu bagaimana operasinya benar-benar berjalan",
+      ],
+      state: "Kami berada pada peringkat ingin mendengar. Tiada jawatan yang dibuka.",
+    },
     eyebrow: "Projek 01",
     heading: ["Platform untuk maklumat, pemadanan", "dan pembangunan perniagaan", "dalam sektor mobiliti Jepun."],
     stage: "Laman awam beroperasi / fungsi platform dalam pembangunan",
@@ -155,6 +176,21 @@ export const ms: SiteCopy = {
   },
 
   kakari: {
+    reading: "Supaya prosedur di Jepun dapat diuruskan sendiri.",
+    now: "Ia berada pada peringkat ujian tertutup. Ia tidak dibuka kepada umum, dan belum ada sesiapa yang menggunakannya.",
+    next: "Langkah yang diperlukan untuk pengedaran, dan pemuktamadan maklumat pendaftaran syarikat. Kedua-duanya memerlukan pengesahan dari pihak luar.",
+    who: "Warga asing yang tinggal di Jepun, orang yang membantu mereka, dan pakar bertauliah.",
+    join: {
+      title: "Terlibat dalam usaha niaga ini",
+      body: "Pada peringkat ini kami mahu ia dilihat dahulu oleh orang yang tahu realiti prosedur ini. Ia bukan alat untuk menggantikan pakar bertauliah.",
+      roles: [
+        "Anda pernah benar-benar tersekat dengan sesuatu prosedur di Jepun",
+        "Anda terlibat dalam membantu penduduk warga asing",
+        "Anda seorang pakar bertauliah dan boleh sama-sama menyemak di mana batasannya patut diletakkan",
+        "Anda mampu memikul usaha niaga ini sebagai pengasas atau pengendali",
+      ],
+      state: "Kami sedang mencari orang untuk melihatnya. Ia belum dibuka kepada umum, dan tiada pengambilan.",
+    },
     eyebrow: "Projek 02",
     heading: ["Sokongan pelbagai bahasa untuk prosedur", "dan dokumen, bagi mereka yang tinggal di Jepun", "dan yang ingin memulakan perniagaan di sini."],
     stage: "Dalam pembangunan (belum dibuka kepada umum)",
@@ -358,6 +394,20 @@ export const ms: SiteCopy = {
 
   /* ── CHIGAMO (CORP-v1.2) ────────────────────────────────────────────── */
   chigamo: {
+    reading: "Memahami sesuatu tempat, dari dalam tempat itu sendiri.",
+    now: "Peringkat konsep. Tiada produk yang dibuka kepada umum, tiada pengguna, dan tiada program bersama mana-mana pihak berkuasa tempatan.",
+    next: "Sama ada penapisan mengikut lokasi dan konteks benar-benar menjadikan maklumat itu boleh digunakan. Itulah yang ingin kami uji dahulu, dalam skala kecil.",
+    who: "Orang yang benar-benar mengenali sesuatu kawasan, dan boleh menerangkan di mana maklumat setempat berhenti berguna.",
+    join: {
+      title: "Terlibat dalam usaha niaga ini",
+      body: "Ini masih sebelum peringkat pengujian. Jadi kami bukan sangat mencari orang untuk membina bersama, tetapi orang yang akan meruntuhkan hipotesis kami.",
+      roles: [
+        "Anda mengenali sesuatu kawasan secara terperinci, daripada pengalaman tinggal di situ",
+        "Anda pernah bekerja dengan data lokasi atau data kawasan",
+        "Anda tidak keberatan terlibat sewaktu ia masih sebuah gagasan",
+      ],
+      state: "Peringkat konsep. Bentuk penglibatan masih belum ditentukan.",
+    },
     eyebrow: "Usaha niaga",
     heading: ["Memahami sesuatu tempat,", "dari dalam tempat itu sendiri."],
     stage: "Peringkat konsep",
@@ -433,22 +483,62 @@ export const ms: SiteCopy = {
     eyebrow: "Bina bersama kami",
     heading: ["Pintu masuk anda", "bergantung pada kedudukan anda."],
     lead:
-      "Buat masa ini kami bermula daripada apa sahaja yang boleh dibincangkan. Tiada saluran kemasukan yang tetap. Jika ia menarik minat anda, ceritakan apa yang ada dalam fikiran anda.",
+      "Yorisou membawa sesuatu usaha niaga sehingga ke titik sebelum ia menjadi syarikat, kemudian bekerjasama dengan orang yang mampu memikulnya. Jadi yang kami cari bukan orang untuk diambil bekerja, tetapi orang yang akan mengambil alih.",
     lanes: [
       {
         key: "founders",
-        title: "Pengasas dan pengendali",
+        label: "Pengasas",
+        title: "Pengasas dan pengasas bersama",
         body:
-          "Yorisou membina usaha niaga sehingga ke titik sebelum ia menjadi sebuah syarikat, dan mencari orang yang mampu memikul salah satunya sebagai milik sendiri. Ini peranan sebagai pengasas, bukan pekerjaan yang diserahkan kepada seseorang.",
+          "Mengambil alih sebagai milik sendiri sebuah usaha niaga yang telah dibawa sehingga ke titik sebelum ia menjadi syarikat. Anda masuk sebagai pengasas, bukan sebagai pekerja: kuasa membuat keputusan ada pada anda, dan begitu juga tanggungjawabnya.",
         invites: [
           "Anda pernah benar-benar mengendalikan sesuatu yang mempunyai operasi sebenar di belakangnya",
           "Anda mampu melangkah ke hadapan sedangkan banyak perkara masih belum diputuskan",
           "Anda mempunyai kefahaman mendalam dalam salah satu bidang: teknologi, pembuatan, pentadbiran awam atau kerja di peringkat komuniti",
         ],
+        offers: "Kajian dan bukti, produk peringkat awal, reka bentuk perniagaan, dan asas bersama. Anda bermula dari pertengahan, bukan dari kosong.",
+        cannot: "Kami tidak dapat menjanjikan gaji, pembiayaan mahupun syarat pemilikan pada waktu ini. Syaratnya dibincangkan mengikut usaha niaga.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Kami berada pada peringkat ingin mendengar. Tiada jawatan yang dibuka.",
+        cta: "Nyatakan minat anda",
+      },
+      {
+        key: "team",
+        label: "Pasukan pengasas",
+        title: "Pasukan pengasas dan pakar bidang",
+        body:
+          "Seorang pengasas tidak pernah mencukupi. Kami mencari orang yang boleh memegang salah satu bahagiannya — kejuruteraan, operasi atau lapangan — sejak awal lagi.",
+        invites: [
+          "Anda bukan sahaja membina, tetapi mengikutinya sehingga ke peringkat operasi",
+          "Anda pernah memulakan sesuatu dengan pasukan yang kecil",
+          "Anda tahu apa yang dianggap biasa dalam bidang anda",
+        ],
+        offers: "Tempat sejak peringkat awal, dan kelonggaran yang sebenar ke atas bahagian yang anda pegang.",
+        cannot: "Tiada saluran pengambilan pekerja yang tetap. Kami tidak boleh mengatakan bahawa kami berada dalam keadaan mampu mengambil pekerja sekarang.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Ia bergantung pada peringkat usaha niaga itu. Ceritakan dahulu apa yang boleh anda pikul.",
+        cta: "Mulakan perbualan",
+      },
+      {
+        key: "users",
+        label: "Pengguna awal",
+        title: "Pengguna awal dan mereka yang menguji bersama kami",
+        body:
+          "Kami mahu apa yang kami bina dilihat daripada kedudukan orang yang benar-benar menggunakannya — bukan untuk dipuji, tetapi untuk diberitahu di mana ia tersekat.",
+        invites: [
+          "Anda pernah benar-benar tersekat dengan masalah ini",
+          "Anda boleh menyatakan secara terus terang apa yang tidak menjadi",
+          "Anda tidak keberatan melihat sesuatu sebelum ia dibuka kepada umum",
+        ],
+        offers: "Melihat sesuatu yang masih dalam pembinaan, dan apa yang anda katakan dikembalikan ke dalam reka bentuknya.",
+        cannot: "Kami tidak dapat menjanjikan tarikh ia dibuka, bahawa permintaan anda akan dilaksanakan, mahupun sebarang bayaran.",
+        ventures: ["Kakari", "Mirai Move"],
+        state: "Kami sedang mencari orang untuk melihatnya. Ini bukan program rasmi.",
         cta: "Nyatakan minat anda",
       },
       {
         key: "research",
+        label: "Universiti",
         title: "Universiti dan penyelidikan",
         body:
           "Mengubah hasil penyelidikan menjadi sesuatu yang boleh digunakan masyarakat memerlukan reka bentuk perniagaan di sisinya. Kami sedang mencari orang untuk berfikir bersama tentang pembangunan pengasas dan pelaksanaan penyelidikan.",
@@ -457,22 +547,32 @@ export const ms: SiteCopy = {
           "Anda mahu pelajar dan penyelidik mendapat pengalaman sebenar sebagai pengasas",
           "Anda lebih suka bermula daripada penerokaan bersama",
         ],
+        offers: "Reka bentuk di sisi perniagaan, dan kerja yang benar-benar sedang berjalan. Kami boleh bermula daripada penerokaan.",
+        cannot: "Belum ada perjanjian penyelidikan bersama, tiada pembiayaan, dan tiada kerjasama rasmi.",
+        ventures: ["Mirai Move", "Chigamo"],
+        state: "Kami tiada rekod kerjasama. Ia bermula daripada perbualan.",
         cta: "Mulakan perbualan",
       },
       {
         key: "public",
+        label: "Sektor awam",
         title: "Kerajaan dan sektor awam",
         body:
-          "Masalah awam sering kali sudah mempunyai peraturannya, tetapi tidak pernah diterjemahkan kepada langkah yang boleh diikuti oleh penduduk. Kami ingin mereka bentuk ujian kecilnya, cara mengukur kesannya, dan jalan ke arah sesuatu yang berkekalan.",
+          "Peraturannya wujud, tetapi tidak pernah diterjemahkan kepada langkah yang boleh diikuti oleh penduduk. Di titik jurang itulah kami ingin mereka bentuk bersama ujian kecilnya, cara mengukur kesannya, dan jalan ke arah sesuatu yang berkekalan.",
         invites: [
           "Anda mempunyai masalah yang boleh dicuba di lapangan",
           "Anda mahu ia dalam bentuk yang kesannya boleh diukur",
           "Anda tidak mahu ia berakhir sebagai projek perintis sekali sahaja",
         ],
+        offers: "Kajian, bukti yang disusun dalam bentuk yang boleh digunakan, dan reka bentuk untuk mencuba dalam skala kecil.",
+        cannot: "Kami tiada rekod kerja bersama mana-mana pihak berkuasa tempatan, dan kami tidak dapat memberikan sebarang jaminan dari segi peraturan.",
+        ventures: ["Mirai Move", "Kakari"],
+        state: "Ia bermula daripada perbualan. Tiada kerjasama yang sedang berjalan.",
         cta: "Hubungi kami",
       },
       {
         key: "corporate",
+        label: "Syarikat",
         title: "Syarikat",
         body:
           "Jika ada masalah dalam operasi anda sendiri yang sepatutnya menjadi sebuah perniagaan. Kami boleh bermula daripada pembangunan bersama atau ujian di lapangan.",
@@ -481,12 +581,23 @@ export const ms: SiteCopy = {
           "Anda sedang mencari bentuk perniagaan yang baharu",
           "Anda sedang mencari rakan pembangunan",
         ],
+        offers: "Mereka bentuk semula masalah itu sebagai sebuah perniagaan, bermula dari awal.",
+        cannot: "Kami tiada rekod urus niaga komersial, dan tiada kajian kes untuk ditunjukkan kepada anda.",
+        ventures: ["Mirai Move", "Kakari", "Chigamo"],
+        state: "Ia bermula daripada mendengar.",
         cta: "Kemukakan pertanyaan",
       },
     ],
     intakeTitle: "Tentang kemasukan",
     intakeBody:
       "Buat masa ini tiada proses permohonan dan tiada program pemilihan. Apa yang ada di sini ialah jemputan — bukan kerjasama yang sedang berjalan dan bukan jawatan yang dibuka. Kami bermula dengan mendengar apa yang ada pada anda, dan sama ada ada sesuatu untuk dibincangkan.",
+    foundingTeamEyebrow: "Pasukan pengasas",
+    foundingTeamHeading: ["Kami mula membina", "sebelum ada sebuah syarikat."],
+    foundingTeamBody: [
+      "Kebiasaannya sesebuah usaha niaga bermula setelah orangnya berkumpul. Yorisou bergerak mengikut susunan yang sebaliknya: kajian dan bukti, produk peringkat awal dan reka bentuk perniagaan disiapkan dahulu, kemudian barulah kami mencari orang yang akan memikulnya.",
+      "Jadi tiada sesiapa yang bermula daripada helaian kosong. Anda bermula dengan mengambil sesuatu yang sudah pun berbentuk, dan menjadikannya milik anda sendiri.",
+      "Yang tidak berubah ialah maksud memikulnya. Orang yang memegang keputusan juga memegang tanggungjawabnya. Jika orang yang mengendalikannya tidak dapat membuat keputusan yang sebenar, ia belum menjadi sebuah syarikat.",
+    ],
     ctaHeading: ["Siapa pun anda,", "pintu masuknya sama."],
     ctaBody: "Tuliskan apa yang ada dalam fikiran anda dan hantarkannya. Kami membacanya satu demi satu.",
   },
