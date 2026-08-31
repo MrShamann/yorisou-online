@@ -1,5 +1,5 @@
 import styles from "../site.module.css";
-import { Band, Eyebrow, TextLink } from "../pieces";
+import { Band, Eyebrow, StateTriad, TextLink } from "../pieces";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -16,6 +16,9 @@ import type { SiteCopy } from "../../i18n/types";
 export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale: string }) {
   const v = copy.ventures;
   const L = (p: string) => localeHref(p, locale);
+  /** Each card's state triad comes from that venture's own block, so the two can never drift. */
+  const detail = (href: string) =>
+    href === "/mirai-move" ? copy.mirai : href === "/kakari" ? copy.kakari : copy.chigamo;
 
   return (
     <>
@@ -38,9 +41,21 @@ export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale:
                 <h2 className={styles.projectName}>{c.name}</h2>
                 <span className={styles.stage}>{c.status}</span>
               </div>
+              <p className={`${styles.brandLine} ${styles.jp}`}>{detail(c.href).reading}</p>
               <p className={`${styles.projectLead} ${styles.jp}`}>{c.thesis}</p>
               <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.problem}</p>
               <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.building}</p>
+              {/*
+                CORP-v1.2R2 — NOW / NEXT / WHO, always visible. The brief permits revealing these on
+                hover, but essential information must never be hover-only and a keyboard user must
+                get the same content, so they are simply always rendered.
+              */}
+              <StateTriad
+                labels={{ now: copy.common.nowLabel, next: copy.common.nextLabel, who: copy.common.whoLabel }}
+                now={detail(c.href).now}
+                next={detail(c.href).next}
+                who={detail(c.href).who}
+              />
               <TextLink href={L(c.href)}>{copy.common.readMore(c.name)}</TextLink>
             </article>
           ))}

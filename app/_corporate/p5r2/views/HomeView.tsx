@@ -1,6 +1,7 @@
 import styles from "../site.module.css";
 import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink } from "../pieces";
-import { HeroField, NetworkSystem, ProcedureSystem } from "../systems";
+import { NetworkSystem, ProcedureSystem } from "../systems";
+import FoundryField from "../FoundryField";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -41,6 +42,17 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
                   </li>
                 ))}
               </ul>
+              {/*
+                CORP-v1.2R2 — the "30 seconds" affordance. It opens the extended web-native
+                explainer built from the same system grammar; no recorded film is claimed to exist,
+                and no placeholder media file is shipped in its place.
+              */}
+              <p className={styles.explainer}>
+                <a className={styles.explainerBtn} href={L(ROUTES.about) + "#explainer"}>
+                  <span className={styles.explainerDot} aria-hidden="true" />
+                  {h.explainerLabel}
+                </a>
+              </p>
             </div>
             <div className={styles.surface}>
               <div className={styles.surfaceHead}>
@@ -48,7 +60,18 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
                 <p className={`${styles.mono} ${styles.monoDark}`}>{h.systemItems.join(" / ")}</p>
               </div>
               <div className={styles.surfaceFig}>
-                <HeroField human={h.humanItems} systems={h.systemItems} relation={h.fieldRelation} />
+                {/*
+                  CORP-v1.2R2 — the hero now states the operating model as behaviour rather than as
+                  a picture. Labels are drawn from foundry.stages, which already exists in all 21
+                  locales, so the field is fully localised without adding a translatable string.
+                */}
+                <FoundryField
+                  evidence={copy.foundry.stages[1]?.name ?? ""}
+                  venture={copy.foundry.stages[2]?.name ?? ""}
+                  team={copy.foundry.stages[5]?.name ?? ""}
+                  independent={copy.foundry.stages[6]?.name ?? ""}
+                  infrastructure={copy.foundry.asterionEyebrow}
+                />
               </div>
               <p className={`${styles.mono} ${styles.monoDark}`}>{h.fieldCaption}</p>
             </div>
@@ -146,6 +169,24 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
         <Eyebrow>{h.engageEyebrow}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={h.engageHeading} locale={locale} /></h2>
         <p className={`${styles.body} ${styles.jp}`}>{h.engageBody}</p>
+        {/*
+          CORP-v1.2R2 — the participation layer, exposed rather than hidden behind one link.
+          A visitor should be able to see in seconds that there is a place for someone like them.
+          Labels and states come from buildWithUs.lanes, so this grid and that page cannot drift.
+        */}
+        <div className={styles.engageGrid}>
+          {copy.buildWithUs.lanes.map((lane) => (
+            <a
+              className={styles.engageCell}
+              key={lane.key}
+              href={`${L(ROUTES.buildWithUs)}#lane-${lane.key}`}
+            >
+              <p className={styles.engageLabel}>{lane.label}</p>
+              <p className={`${styles.engageState} ${styles.jp}`}>{lane.state}</p>
+            </a>
+          ))}
+        </div>
+        <p className={`${styles.bodyMuted} ${styles.jp}`}>{h.engageNote}</p>
         <TextLink href={L(ROUTES.buildWithUs)}>{h.engageCta}</TextLink>
       </Band>
 

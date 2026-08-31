@@ -1,6 +1,6 @@
 import styles from "../site.module.css";
-import { Band, Boundary, Cards, Eyebrow, TextLink } from "../pieces";
-import { NetworkSystem, ProcedureSystem } from "../systems";
+import { Band, Boundary, Cards, Eyebrow, JoinVenture, StateTriad, TextLink } from "../pieces";
+import { ContextField, NetworkSystem, ProcedureSystem } from "../systems";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -29,6 +29,11 @@ export default function ProjectView({
             <div>
               <Eyebrow>{p.eyebrow} — {p.domain}</Eyebrow>
               <h1 className={styles.h1}><Phrase units={p.heading} locale={locale} /></h1>
+              {/*
+                CORP-v1.2R2 — the venture's OWN Japanese line beside the Latin wordmark. Not a
+                transliteration: Kakari's glossary forbids one and Mirai Move's brand source has none.
+              */}
+              <p className={`${styles.brandLine} ${styles.jp}`}>{p.reading}</p>
               <p className={styles.projectHead} style={{ marginTop: 0 }}>
                 <span className={styles.stage}>{p.stage}</span>
               </p>
@@ -42,15 +47,19 @@ export default function ProjectView({
                 </p>
               )}
             </div>
-            {!isConcept && (
-              <div className={styles.surface}>
-                {isNet ? (
-                  <NetworkSystem labels={copy.mirai.parties.map((x) => x.title)} centre={copy.mirai.centre} />
-                ) : (
-                  <ProcedureSystem steps={copy.kakari.steps.map((s) => s.title)} boundary={copy.kakari.boundaryTitle} />
-                )}
-              </div>
-            )}
+            <div className={styles.surface}>
+              {isNet ? (
+                <NetworkSystem labels={copy.mirai.parties.map((x) => x.title)} centre={copy.mirai.centre} />
+              ) : isConcept ? (
+                <ContextField
+                  place={copy.chigamo.conceptEyebrow}
+                  context={copy.chigamo.domain}
+                  result={copy.chigamo.stage}
+                />
+              ) : (
+                <ProcedureSystem steps={copy.kakari.steps.map((s) => s.title)} boundary={copy.kakari.boundaryTitle} />
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -92,6 +101,23 @@ export default function ProjectView({
             </div>
           ))}
         </div>
+        <StateTriad
+          labels={{ now: copy.common.nowLabel, next: copy.common.nextLabel, who: copy.common.whoLabel }}
+          now={p.now}
+          next={p.next}
+          who={p.who}
+        />
+      </Band>
+
+      <Band tint>
+        <JoinVenture
+          title={p.join.title}
+          body={p.join.body}
+          roles={p.join.roles}
+          state={p.join.state}
+          cta={copy.buildWithUs.lanes[0]?.cta ?? copy.chrome.nav.contact}
+          href={L(ROUTES.buildWithUs)}
+        />
         <TextLink href={L(ROUTES.home)}>{copy.common.backHome}</TextLink>
       </Band>
     </>

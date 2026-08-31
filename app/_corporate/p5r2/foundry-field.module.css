@@ -1,0 +1,237 @@
+/*
+ * CORP-v1.2R2 — Foundry Motion Field.
+ *
+ * One ~11s loop, expressed entirely in CSS keyframes so the component ships no JavaScript. Every
+ * animation is semantic: a thing appears when it happens in the operating model, and nothing moves
+ * for decoration. Jade stays the single accent, reserved for state and signal, exactly as in the
+ * rest of the system — no second AI colour is introduced.
+ *
+ * The loop is one shared duration with per-element delays rather than many independent timelines,
+ * so the phases stay in order at any playback speed and the whole field can be slowed on hover by
+ * changing one value.
+ */
+
+.field {
+  --loop: 11s;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  direction: ltr; /* fixed geometry: authored coordinates must survive RTL */
+}
+
+/* Dwell affordance: the whole field slows when the hero is hovered or focused within.
+   It is a comfort, never a control — the narrative never depends on it. */
+.field:hover,
+.field:focus-within {
+  --loop: 16s;
+}
+
+.grid line {
+  stroke: rgba(233, 231, 224, 0.07);
+}
+
+/* ── shared capability layer ─────────────────────────────────────────────────────── */
+
+.baseRule {
+  stroke: rgba(233, 231, 224, 0.18);
+}
+
+.baseLabel {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  fill: #8d938e;
+  text-transform: uppercase;
+}
+
+.baseCell {
+  fill: none;
+  stroke: rgba(233, 231, 224, 0.26);
+  animation: cellFill var(--loop) linear infinite;
+}
+
+@keyframes cellFill {
+  0%, 76% { fill: transparent; stroke: rgba(233, 231, 224, 0.26); }
+  84%, 96% { fill: rgba(116, 186, 166, 0.5); stroke: #74baa6; }
+  100% { fill: transparent; stroke: rgba(233, 231, 224, 0.26); }
+}
+
+/* ── 1. signals ──────────────────────────────────────────────────────────────────── */
+
+.signal circle {
+  fill: none;
+  stroke: rgba(233, 231, 224, 0.5);
+}
+
+.signalTail {
+  stroke: rgba(233, 231, 224, 0.22);
+  stroke-dasharray: 3 5;
+}
+
+.signal {
+  opacity: 0;
+  animation: signalIn var(--loop) ease-out infinite;
+}
+
+@keyframes signalIn {
+  0% { opacity: 0; transform: translateX(-8px); }
+  6%, 82% { opacity: 1; transform: translateX(0); }
+  94%, 100% { opacity: 0; transform: translateX(0); }
+}
+
+/* ── 2-4. connections draw themselves in order ───────────────────────────────────── */
+
+.edge {
+  fill: none;
+  stroke: #74baa6;
+  stroke-opacity: 0.55;
+  stroke-width: 1.1;
+  stroke-dasharray: 140;
+  stroke-dashoffset: 140;
+  animation: draw var(--loop) ease-in-out infinite;
+}
+
+@keyframes draw {
+  0%, 10% { stroke-dashoffset: 140; }
+  26%, 84% { stroke-dashoffset: 0; }
+  96%, 100% { stroke-dashoffset: 140; }
+}
+
+/* the evidence node verifies — the moment a hypothesis becomes evidence */
+.nodeRing {
+  fill: #0e1211;
+  stroke: rgba(233, 231, 224, 0.4);
+  animation: verify var(--loop) ease-out infinite;
+}
+
+.nodeCore {
+  fill: rgba(233, 231, 224, 0.35);
+  animation: verifyCore var(--loop) ease-out infinite;
+}
+
+@keyframes verify {
+  0%, 26% { stroke: rgba(233, 231, 224, 0.4); }
+  34%, 88% { stroke: #74baa6; }
+  96%, 100% { stroke: rgba(233, 231, 224, 0.4); }
+}
+
+@keyframes verifyCore {
+  0%, 26% { fill: rgba(233, 231, 224, 0.35); }
+  34%, 88% { fill: #74baa6; }
+  96%, 100% { fill: rgba(233, 231, 224, 0.35); }
+}
+
+/* ── 3. the venture becomes a defined object ─────────────────────────────────────── */
+
+.ventureBox {
+  fill: none;
+  stroke: rgba(233, 231, 224, 0.22);
+  animation: define var(--loop) ease-out infinite;
+}
+
+.ventureSpine {
+  stroke: #74baa6;
+  stroke-opacity: 0;
+  animation: spine var(--loop) ease-out infinite;
+}
+
+@keyframes define {
+  0%, 40% { stroke: rgba(233, 231, 224, 0.22); }
+  48%, 88% { stroke: rgba(233, 231, 224, 0.62); }
+  96%, 100% { stroke: rgba(233, 231, 224, 0.22); }
+}
+
+@keyframes spine {
+  0%, 42% { stroke-opacity: 0; }
+  52%, 88% { stroke-opacity: 0.45; }
+  96%, 100% { stroke-opacity: 0; }
+}
+
+/* ── 4. the founding team attaches ───────────────────────────────────────────────── */
+
+.teamNode {
+  fill: #0e1211;
+  stroke: rgba(233, 231, 224, 0.35);
+  animation: attach var(--loop) ease-out infinite;
+}
+
+@keyframes attach {
+  0%, 54% { stroke: rgba(233, 231, 224, 0.35); r: 5.5px; }
+  62%, 88% { stroke: #74baa6; r: 6.5px; }
+  96%, 100% { stroke: rgba(233, 231, 224, 0.35); r: 5.5px; }
+}
+
+/* ── 5. the company separates and stands on its own ──────────────────────────────── */
+
+.company {
+  opacity: 0;
+  animation: separate var(--loop) cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+}
+
+.companyBox {
+  fill: none;
+  stroke: rgba(233, 231, 224, 0.7);
+}
+
+.companyCore {
+  fill: #74baa6;
+}
+
+@keyframes separate {
+  0%, 64% { opacity: 0; transform: translateX(-26px); }
+  74%, 88% { opacity: 1; transform: translateX(0); }
+  96%, 100% { opacity: 0; transform: translateX(0); }
+}
+
+/* ── 6. capability returns to the shared layer ───────────────────────────────────── */
+
+.returnPath {
+  fill: none;
+  stroke: #74baa6;
+  stroke-opacity: 0.32;
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+  stroke-dashoffset: 200;
+  animation: returnFlow var(--loop) linear infinite;
+}
+
+@keyframes returnFlow {
+  0%, 76% { stroke-dashoffset: 200; opacity: 0; }
+  80% { opacity: 1; }
+  94% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+/* ── labels ──────────────────────────────────────────────────────────────────────── */
+
+.label {
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  fill: #8d938e;
+  text-anchor: middle;
+}
+
+/*
+ * Reduced motion: the field resolves to its FINAL composed state and stops.
+ *
+ * Everything that would have animated is pinned to the value it holds at the end of the sequence —
+ * edges fully drawn, evidence verified, venture defined, team attached, company separated,
+ * capability returned. A reader who cannot tolerate motion sees the completed system diagram and
+ * loses none of the meaning; they simply do not watch it assemble.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .field :is(.signal, .edge, .nodeRing, .nodeCore, .ventureBox, .ventureSpine, .teamNode, .company, .returnPath, .baseCell) {
+    animation: none;
+  }
+  .field .signal { opacity: 1; transform: none; }
+  .field .edge { stroke-dashoffset: 0; }
+  .field .nodeRing { stroke: #74baa6; }
+  .field .nodeCore { fill: #74baa6; }
+  .field .ventureBox { stroke: rgba(233, 231, 224, 0.62); }
+  .field .ventureSpine { stroke-opacity: 0.45; }
+  .field .teamNode { stroke: #74baa6; }
+  .field .company { opacity: 1; transform: none; }
+  .field .returnPath { stroke-dashoffset: 0; opacity: 1; }
+  .field .baseCell { fill: rgba(116, 186, 166, 0.5); stroke: #74baa6; }
+}

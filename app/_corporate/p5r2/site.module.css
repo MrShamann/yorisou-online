@@ -421,3 +421,85 @@
     transition-duration: 0.001ms !important; scroll-behavior: auto !important;
   }
 }
+
+/* ── CORP-v1.2R2: venture state triad, participation, brand line ─────────────────── */
+
+.triad { margin: 20px 0 0; padding: 0; border-block-start: 1px solid var(--line); }
+.triadRow {
+  display: grid; grid-template-columns: minmax(96px, 22%) 1fr; gap: 14px;
+  padding: 12px 0; border-block-end: 1px solid var(--line);
+}
+.triadKey {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+}
+.triadValue { margin: 0; font-size: var(--step-0); line-height: 1.8; color: var(--ink-2); }
+@media (max-width: 560px) {
+  .triadRow { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* the venture's own Japanese line, set beside the Latin wordmark */
+.brandLine {
+  margin: 2px 0 0; font-size: 13px; line-height: 1.7; color: var(--ink-3);
+}
+
+.join { border-block-start: 2px solid var(--ink); padding-block-start: 26px; }
+/* The truthful status, not a call to action — see JoinVenture. */
+.joinState {
+  margin: 18px 0 20px; padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--jade);
+  font-size: 13.5px; line-height: 1.8; color: var(--ink-3);
+}
+
+/* participation matrix */
+.lanes { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 28px; }
+@media (min-width: 900px) { .lanes { grid-template-columns: repeat(2, 1fr); } }
+.lane { background: var(--paper); padding: 24px; }
+.laneHead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.laneTitle {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step-1); font-weight: 600; color: var(--ink);
+}
+.laneOffer, .laneCannot { margin: 10px 0 0; font-size: 13.5px; line-height: 1.8; }
+.laneOffer { color: var(--ink-2); }
+/* the limit is set in the boundary colour, never hidden as fine print */
+.laneCannot { color: var(--ink-3); padding-inline-start: 12px; border-inline-start: 2px solid var(--c-mineral, #686e69); }
+.laneVentures { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.laneVenture {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3);
+  border: 1px solid var(--line); padding: 3px 8px;
+}
+.laneState { margin: 14px 0 0; font-size: 12.5px; line-height: 1.7; color: var(--ink-4); }
+
+/* homepage participation grid — labels only, linking into the matrix */
+.engageGrid { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 24px 0 20px; }
+@media (min-width: 700px) { .engageGrid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1100px) { .engageGrid { grid-template-columns: repeat(6, 1fr); } }
+.engageCell {
+  background: var(--paper); padding: 18px 16px; display: block; text-decoration: none;
+  color: var(--ink); transition: background 160ms ease;
+}
+.engageCell:hover, .engageCell:focus-visible { background: var(--surface); }
+.engageLabel {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 13.5px; font-weight: 600;
+}
+.engageState { margin: 6px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--ink-4); }
+
+/* primary participation action in the header */
+.navCta {
+  border: 1px solid var(--ink); padding: 7px 14px; text-decoration: none; color: var(--ink);
+  font-size: 13px; white-space: nowrap; transition: background 160ms ease, color 160ms ease;
+}
+.navCta:hover, .navCta:focus-visible { background: var(--ink); color: var(--paper); }
+
+/* the 30-second explainer affordance */
+.explainer { margin-top: 26px; }
+.explainerBtn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: none; border: 1px solid var(--line); color: var(--ink);
+  font-family: inherit; font-size: 13px; padding: 9px 16px; cursor: pointer;
+}
+.explainerBtn:hover, .explainerBtn:focus-visible { border-color: var(--ink); }
+.explainerDot { width: 6px; height: 6px; border-radius: 50%; background: var(--jade); }

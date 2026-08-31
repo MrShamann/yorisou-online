@@ -84,3 +84,80 @@ export function TextLink({ href, children, dark }: { href: string; children: Rea
     </a>
   );
 }
+
+/**
+ * CORP-v1.2R2 — the venture state triad: what is true NOW, the evidenced NEXT step, and WHO we want
+ * to hear from.
+ *
+ * Rendered as a definition list and always visible. The brief allows hover and touch to reveal it,
+ * but essential information must never be hover-only, and a keyboard user must get the same content
+ * — so it is simply always there. Nothing is behind an interaction.
+ */
+export function StateTriad({
+  labels,
+  now,
+  next,
+  who,
+}: {
+  labels: { now: string; next: string; who: string };
+  now: string;
+  next: string;
+  who: string;
+}) {
+  const rows = [
+    { k: labels.now, v: now },
+    { k: labels.next, v: next },
+    { k: labels.who, v: who },
+  ];
+  return (
+    <dl className={styles.triad}>
+      {rows.map((r) => (
+        <div className={styles.triadRow} key={r.k}>
+          <dt className={styles.triadKey}>{r.k}</dt>
+          <dd className={`${styles.triadValue} ${styles.jp}`}>{r.v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * CORP-v1.2R2 — "work on this venture".
+ *
+ * The `state` line is deliberately rendered last and in the boundary style rather than as a button:
+ * there is no application process, so the strongest thing on this block must be the truthful status,
+ * not a call to action that would imply one.
+ */
+export function JoinVenture({
+  title,
+  body,
+  roles,
+  state,
+  cta,
+  href,
+}: {
+  title: string;
+  body: string;
+  roles: readonly string[];
+  state: string;
+  cta: string;
+  href: string;
+}) {
+  return (
+    <div className={styles.join}>
+      <h2 className={styles.h2}>{title}</h2>
+      <p className={`${styles.body} ${styles.jp}`}>{body}</p>
+      <ul className={styles.founderFacts}>
+        {roles.map((r) => (
+          <li className={styles.jp} key={r}>
+            {r}
+          </li>
+        ))}
+      </ul>
+      <p className={`${styles.joinState} ${styles.jp}`}>{state}</p>
+      <a className={styles.btn} href={href}>
+        {cta}
+      </a>
+    </div>
+  );
+}

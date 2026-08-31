@@ -79,10 +79,15 @@ export default function Shell({
 
           <div className={styles.headerRight}>
             <nav className={styles.navDesktop} aria-label={c.navLabel}>
+              {/*
+                CORP-v1.2R2 — participation is the primary action, so "build with us" is set apart
+                from the other links. Deliberately a bordered link, not a filled conversion button:
+                there is no application process behind it, and an aggressive CTA would imply one.
+              */}
               {nav.map((i) => (
                 <a
                   key={i.href}
-                  className={styles.navLink}
+                  className={i.href === ROUTES.buildWithUs ? styles.navCta : styles.navLink}
                   href={localeHref(i.href, locale)}
                   aria-current={path === i.href ? "page" : undefined}
                 >

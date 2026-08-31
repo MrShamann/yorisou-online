@@ -114,3 +114,44 @@ export function HeroField({ human, systems, relation }: { human: readonly string
     </svg>
   );
 }
+
+/**
+ * CORP-v1.2R2 — Chigamo's context field.
+ *
+ * Deliberately the simplest of the three venture diagrams. Mirai Move gets a network because it has
+ * one; Kakari gets an ordered procedure because it has one. Chigamo is at concept stage with no
+ * product, no users and no municipality, so drawing it a mature platform topology would make it look
+ * further along than it is. Three faint rings converging on one point states the hypothesis —
+ * place plus context yields something locally relevant — and stops there.
+ *
+ * Its visual simplicity is the honest signal of its maturity, not a gap in the design.
+ */
+export function ContextField({ place, context, result }: { place: string; context: string; result: string }) {
+  return (
+    <svg viewBox="0 0 300 250" role="presentation" aria-hidden="true" focusable="false" className={styles.svgBlock}>
+      {[34, 58, 82].map((r, i) => (
+        <circle
+          key={r}
+          cx="104"
+          cy="126"
+          r={r}
+          fill="none"
+          stroke="rgba(233,231,224,0.16)"
+          strokeDasharray={i === 0 ? undefined : "2 6"}
+        />
+      ))}
+      <circle cx="104" cy="126" r="4" fill="#74baa6" />
+      <text x="104" y="34" textAnchor="middle" fontSize="9" fill="#8d938e" letterSpacing="0.06em">
+        {place}
+      </text>
+      <line x1="104" y1="126" x2="228" y2="126" stroke="rgba(116,186,166,0.34)" strokeDasharray="3 5" />
+      <text x="166" y="118" textAnchor="middle" fontSize="8.5" fill="#8d938e" letterSpacing="0.06em">
+        {context}
+      </text>
+      <rect x="228" y="116" width="20" height="20" fill="none" stroke="rgba(233,231,224,0.4)" />
+      <text x="238" y="152" textAnchor="middle" fontSize="8.5" fill="#8d938e" letterSpacing="0.06em">
+        {result}
+      </text>
+    </svg>
+  );
+}
