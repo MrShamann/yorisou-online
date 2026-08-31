@@ -3,13 +3,17 @@
 All figures are observed results from the **production build** (`npm run build` + `next start`),
 not from the dev server and not targets. Date: 2026-08-30.
 
+> **Updated after CORP-v1.2R2** (AI-native experience and participation refoundation). Guards grew
+> from 11 to 15; performance held at 91/91/92 with the new motion field, which ships no JavaScript.
+> Detail in `CORP_V12R2_AI_NATIVE_EXPERIENCE.md`.
+
 ## Build and code
 
 | Gate | Command | Result |
 |---|---|---|
 | Typecheck | `npx tsc --noEmit` | **PASS** — no output |
 | Lint | `npx eslint app/_corporate tests/corporate-p5r2 app/ventures app/build-with-us app/chigamo …` | **PASS** — exit 0 |
-| Unit / guard tests | `node --import tsx --test tests/corporate-p5r2/*.test.ts` | **PASS — 11/11**, 0 fail |
+| Unit / guard tests | `node --import tsx --test tests/corporate-p5r2/*.test.ts` | **PASS — 15/15**, 0 fail |
 | Production build | `npm run build` | **PASS** — compiled successfully |
 
 ### Guard tests (11)
@@ -72,9 +76,9 @@ Values below are **after** the CORP-v1.2R1 font remediation. See
 
 | Target | Perf | A11y | Best practices | SEO | LCP | CLS | TBT |
 |---|---|---|---|---|---|---|---|
-| Home ja | **91** (was 61) | **100** | **100** | **100** | 3.3 s | 0 | 10 ms |
-| Home ar | **91** (was 87) | **100** | **100** | 63 | 3.3 s | 0 | 10 ms |
-| Company ja | **93** (was 62) | **100** | **100** | 63 | 3.2 s | 0 | 0 ms |
+| Home ja | **91** | **100** | **100** | **100** | 3.3 s | 0 | 10 ms |
+| Home ar | **91** | **100** | **100** | 63 | 3.3 s | 0 | 10 ms |
+| Company ja | **92** | **100** | **100** | 63 | 3.2 s | 0 | 0 ms |
 
 The corporate surface uses the system Japanese stack instead of the Noto Sans JP webfont, taking the
 font payload from 36 files / ~729 KB to **2 files / ~73 KB**. The consumer product's typography is

@@ -77,6 +77,15 @@ test("no locale is missing any string the canonical Japanese source defines", as
 test("no locale silently ships the Japanese source text as its own", async () => {
   // Proper nouns are legitimately identical everywhere; prose is not.
   const ALLOWED_IDENTICAL = /^(Yorisou|YORISOU|MIRAI MOVE|Kakari|かかり|よりそう|合同会社YORISOU|YORISOU LLC)$/;
+
+  /**
+   * Paths that carry IDENTIFIERS rather than prose, and must be byte-identical in every locale:
+   * URLs, route hrefs, venture wordmarks and lane keys. Excluding them BY PATH keeps the echo
+   * detector sharp. The alternative — raising the "how many identical strings are tolerable"
+   * threshold — would blunt exactly the signal this test exists to catch.
+   */
+  const IDENTIFIER_PATH =
+    /(\.siteUrl$|\.href$|\.key$|^ventures\.cards\[\d+\]\.name$|^buildWithUs\.lanes\[\d+\]\.ventures$)/;
   const source = stringPaths(await getCopy(DEFAULT_LOCALE));
   const failures: string[] = [];
   for (const { code } of PUBLISHED) {
@@ -84,11 +93,19 @@ test("no locale silently ships the Japanese source text as its own", async () =>
     const target = stringPaths(await getCopy(code));
     const echoed = [...source.entries()].filter(([k, v]) => {
       const t = target.get(k);
-      return t !== undefined && t === v && v.length > 12 && !ALLOWED_IDENTICAL.test(v.trim());
+      return (
+        t !== undefined &&
+        t === v &&
+        v.length > 12 &&
+        !ALLOWED_IDENTICAL.test(v.trim()) &&
+        !IDENTIFIER_PATH.test(k)
+      );
     });
     // A handful of shared brand lines is fine; wholesale echo means the locale was never translated.
     if (echoed.length > 3) {
-      failures.push(`${code}: ${echoed.length} untranslated strings (e.g. ${echoed[0][0]})`);
+      failures.push(
+        `${code}: ${echoed.length} untranslated — ${echoed.slice(0, 6).map(([k]) => k).join(", ")}`,
+      );
     }
   }
   assert.deepEqual(failures, [], `locales echoing the Japanese source:\n${failures.join("\n")}`);

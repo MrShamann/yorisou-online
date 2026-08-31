@@ -131,6 +131,21 @@ const RULES: Rule[] = [
     why: "there is no application process or selection programme; CTAs must be interest/contact",
   },
   {
+    id: "fake-recruitment",
+    re: /\b(now hiring|we are hiring|applications? (are )?open|join our team)\b|(募集中|応募受付|採用中|選考中)/i,
+    why: "there is no application process, no selection programme and no open role",
+  },
+  {
+    id: "fake-live-state",
+    re: /\b(real[- ]?time|live (data|activity|feed)|active users now|currently running agents)\b|(リアルタイム(で)?(表示|更新)|稼働中のエージェント|現在の利用者数)/i,
+    why: "no diagram or surface may be labelled live or real-time, because none of them is",
+  },
+  {
+    id: "brand-transliteration",
+    re: /(カカリ|かかり(?!ます)|卡卡里|ミライムーブ|ミライ・ムーブ|チガモ|Какари|كاكاري)/,
+    why: "venture wordmarks stay Latin — Kakari's own glossary forbids transliteration and enforces it in CI",
+  },
+  {
     id: "preview-as-production",
     re: /(now\s+live\s+in\s+production|本番稼働中|正式リリース済み)/i,
     why: "this is a Preview; it must never describe itself as Production",
@@ -181,4 +196,75 @@ test("every locale keeps the Asterion independence boundary", () => {
     if (!/asterionBoundaryTitle/.test(text) || !/asterionBoundaryBody/.test(text)) missing.push(name);
   }
   assert.deepEqual(missing, [], `locales missing the Asterion boundary statement: ${missing.join(", ")}`);
+});
+
+/**
+ * CORP-v1.2R2 — every venture carries its own Japanese line and a participation path.
+ *
+ * `reading` is the venture's own one-line positioning, NOT a transliteration of its wordmark. The
+ * brand-transliteration rule above enforces the other half of that: Kakari's localisation glossary
+ * says "ASCII wordmark only. Never transliterated", and Mirai Move's brand source carries a Latin
+ * wordmark with no reading, so inventing katakana would be creating names against two projects'
+ * governance rather than documenting them.
+ */
+test("every venture states its own Japanese line, its state triad and a way in", () => {
+  const missing: string[] = [];
+  for (const { name, text } of contentFiles()) {
+    for (const venture of ["mirai", "kakari", "chigamo"]) {
+      const block = new RegExp(`^  ${venture}: \\{[\\s\\S]*?^  \\},`, "m").exec(text)?.[0] ?? "";
+      if (!block) {
+        missing.push(`${name}: ${venture} block not found`);
+        continue;
+      }
+      for (const field of ["reading:", "now:", "next:", "who:", "join:"]) {
+        if (!block.includes(field)) missing.push(`${name}: ${venture} missing ${field}`);
+      }
+      if (!/roles:\s*\[/.test(block)) missing.push(`${name}: ${venture}.join missing roles`);
+      if (!/state:\s*"/.test(block)) missing.push(`${name}: ${venture}.join missing state`);
+    }
+  }
+  assert.deepEqual(missing, [], `venture participation gaps:\n${missing.join("\n")}`);
+});
+
+/**
+ * The participation matrix must keep BOTH halves. A lane that lists only what Yorisou offers is a
+ * recruitment pitch; the `cannot` field is what makes it an honest invitation, so its presence is
+ * enforced rather than trusted.
+ */
+test("every participation lane states what Yorisou cannot promise", () => {
+  const bad: string[] = [];
+  for (const { name, text } of contentFiles()) {
+    const block = /^  buildWithUs: \{[\s\S]*?^  \},/m.exec(text)?.[0] ?? "";
+    if (!block) {
+      bad.push(`${name}: buildWithUs block not found`);
+      continue;
+    }
+    const lanes = block.match(/key:\s*"[a-z]+"/g) ?? [];
+    if (lanes.length !== 6) bad.push(`${name}: expected 6 participation lanes, found ${lanes.length}`);
+    const offers = (block.match(/offers:\s*"/g) ?? []).length;
+    const cannot = (block.match(/cannot:\s*"/g) ?? []).length;
+    if (offers !== 6 || cannot !== 6) {
+      bad.push(`${name}: offers=${offers} cannot=${cannot} (both must be 6)`);
+    }
+    if (!block.includes("foundingTeamBody")) bad.push(`${name}: missing the founding-team section`);
+  }
+  assert.deepEqual(bad, [], `participation matrix gaps:\n${bad.join("\n")}`);
+});
+
+/**
+ * The hero motion field must resolve to a complete, static diagram under prefers-reduced-motion.
+ * A motion narrative that simply stops would leave the operating model unexplained for anyone who
+ * cannot tolerate animation, so the reduced-motion branch is a correctness requirement, not a nicety.
+ */
+test("the Foundry motion field has a reduced-motion resolution", () => {
+  const css = readFileSync(path.join(ROOT, "app/_corporate/p5r2/foundry-field.module.css"), "utf8");
+  assert.ok(
+    /@media \(prefers-reduced-motion: reduce\)/.test(css),
+    "foundry-field.module.css has no prefers-reduced-motion block",
+  );
+  const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.ok(/animation:\s*none/.test(reduced), "reduced-motion block does not stop the animations");
+  for (const cls of ["signal", "edge", "company", "returnPath"]) {
+    assert.ok(reduced.includes(cls), `reduced-motion block does not resolve .${cls} to its final state`);
+  }
 });

@@ -38,6 +38,21 @@ Review date for all rows: **2026-08-30**. Preview only.
 | C-24 | Contact delivery | contact@yorisou.online is the public identity | Outbound transport unverified; no valid credential, no authoritative DNS | **BOUNDED** — the form must not claim delivery it cannot perform | Low | Address yes; delivery no |
 | C-25 | Translation review state | ja canonical, en human-reviewed, 19 AI-translated | Registry | BOUNDED — internal metadata, never shown to visitors | — | No |
 
+## CORP-v1.2R2 additions
+
+| ID | Object | Meaning | Evidence | State | Public |
+|---|---|---|---|---|---|
+| C-26 | Mirai Move NOW | Public site live; the research system runs unattended; **nothing has ever been sent externally** | Its own repo: verified zeros for outreach sends, replies, deliveries, payments | BOUNDED | Yes |
+| C-27 | Mirai Move NEXT | Open questions on the one substantive case need external contact | Its own case records classify them EXTERNAL_CONTACT_REQUIRED | VERIFIED | Yes |
+| C-28 | Kakari NOW | Private testing; not publicly available; no users | Its own positioning: "a private-testing MVP, not a public product: no deployment, no provider/domain, no customers, no revenue"; Production 0 users | VERIFIED | Yes |
+| C-29 | Kakari professional boundary | Never replaces 弁護士 / 税理士 / 行政書士 / 司法書士 | Its own shipped product string in three languages | BOUNDED | Yes |
+| C-30 | Venture Japanese lines | Each wordmark paired with that venture's own Japanese line | Mirai Move `lib/brand.ts` slogan; Kakari positioning; Chigamo approved thesis | BOUNDED | Yes |
+| C-31 | Brand transliteration | カカリ / ミライムーブ / チガモ are **never** published | Kakari's own glossary forbids it and enforces it in CI; Mirai Move has no reading in its brand source | **OMITTED** | No |
+| C-32 | "DP" acronym | — | No canonical definition anywhere; established three independent ways including full git history | **OMITTED** — plain Japanese used instead | No |
+| C-33 | Participation lanes | Six lanes, each stating what cannot be promised | No salary, funding, ownership terms, hiring pipeline, municipal record, research agreement or case studies | BOUNDED | Yes |
+| C-34 | Recruitment state | No application process, no selection programme | None exists | **Denied explicitly** | Yes, as denial |
+| C-35 | Motion field | Not live, not real-time, no activity counts | It is an explanatory loop; the only text is Foundry stage names | BOUNDED | Yes |
+
 ## Enforcement
 
 Rows C-13, C-14, C-15, C-17, C-19, C-22, C-23 and C-20 are enforced by
