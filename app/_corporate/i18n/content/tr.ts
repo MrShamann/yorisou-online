@@ -31,7 +31,7 @@ export const tr: SiteCopy = {
     langCurrent: "Geçerli dil",
     previewBadge: "Önizleme — yayımlanmadı",
     nav: { home: "Ana sayfa", miraiMove: "Mirai Move", kakari: "Kakari", about: "Hakkımızda", company: "Şirket", contact: "İletişim" },
-    footerTagline: "İnsanla toplum arasında, yanında durmanın bir sonraki yolunu kuruyoruz.",
+    footerTagline: "Yapısal sorunları şirkete dönüştürüyoruz.",
     footerProjects: "Projeler",
     footerCompany: "Şirket",
     footerLegalNote: "Burada yer alan her bilgi, doğrulayabildiğimiz bir kayda dayanır.",
@@ -62,6 +62,7 @@ export const tr: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Yapısal sorunları,", "şirkete dönüştürüyoruz."],
     thesis: ["Yapısal sorunlardan,", "kendi ayakları üzerinde duran", "şirketler kuruyoruz."],
     lead: [
       "Yorisou bir foundry: toplumdaki yapısal sorunları buluyor, doğruluyor, iş olarak tasarlıyor,",

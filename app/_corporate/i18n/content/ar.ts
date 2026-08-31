@@ -31,7 +31,7 @@ export const ar: SiteCopy = {
     langCurrent: "اللغة الحالية",
     previewBadge: "معاينة — غير منشور",
     nav: { home: "الرئيسية", miraiMove: "Mirai Move", kakari: "Kakari", about: "من نحن", company: "معلومات الشركة", contact: "تواصل معنا" },
-    footerTagline: "بين الناس والمجتمع، نبني الطريقة التالية للوقوف إلى جانبهم.",
+    footerTagline: "المشكلات البنيوية، نجعلها شركات.",
     footerProjects: "المشاريع",
     footerCompany: "الشركة",
     footerLegalNote: "كل ما نذكره هنا يستند إلى سجل يمكننا التحقق منه.",
@@ -62,6 +62,7 @@ export const ar: SiteCopy = {
 
   home: {
     eyebrow: "شركة Yorisou ذات المسؤولية المحدودة",
+    hook: ["المشكلات البنيوية،", "نجعلها شركات."],
     thesis: ["من مشكلات بنيوية،", "نبني شركات", "تقف على قدميها."],
     lead: [
       "Yorisou مسبك لبناء الشركات: نجد المشكلات البنيوية في المجتمع،",

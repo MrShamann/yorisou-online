@@ -50,7 +50,7 @@ export const zh_TW: SiteCopy = {
     langCurrent: "目前語言",
     previewBadge: "Preview — 尚未公開",
     nav: { home: "首頁", miraiMove: "Mirai Move", kakari: "Kakari", about: "關於我們", company: "公司資訊", contact: "聯絡我們" },
-    footerTagline: "在人與社會之間，打造下一種相伴的方式。",
+    footerTagline: "把結構性課題，變成公司。",
     footerProjects: "事業",
     footerCompany: "公司",
     footerLegalNote: "本網站記載的事實，皆以可查證的紀錄為依據。",
@@ -81,6 +81,7 @@ export const zh_TW: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou 合同會社",
+    hook: ["把結構性課題，", "變成公司。"],
     thesis: ["從結構性的課題，", "打造能獨立站立的公司。"],
     lead: [
       "Yorisou 是一家 foundry：我們找出社會中結構性的課題，加以查證，設計成事業，",

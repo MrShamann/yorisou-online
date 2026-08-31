@@ -29,7 +29,7 @@ export const hi: SiteCopy = {
     langCurrent: "वर्तमान भाषा",
     previewBadge: "Preview — अप्रकाशित",
     nav: { home: "होम", miraiMove: "Mirai Move", kakari: "Kakari", about: "हमारे बारे में", company: "कंपनी", contact: "संपर्क" },
-    footerTagline: "लोगों और समाज के बीच, साथ खड़े होने का अगला तरीका बनाते हैं।",
+    footerTagline: "संरचनात्मक समस्याओं को कंपनियों में बदलते हैं।",
     footerProjects: "परियोजनाएँ",
     footerCompany: "कंपनी",
     footerLegalNote: "यहाँ दिया गया हर तथ्य किसी सत्यापित रिकॉर्ड पर आधारित है।",
@@ -60,6 +60,7 @@ export const hi: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["संरचनात्मक समस्याओं को,", "कंपनियों में बदलते हैं।"],
     thesis: ["संरचनात्मक समस्याओं से,", "अपने पैरों पर खड़ी होने वाली", "कंपनियाँ बनाते हैं।"],
     lead: [
       "Yorisou एक फ़ाउंड्री है: हम समाज की संरचनात्मक समस्याएँ खोजते हैं, उन्हें जाँचते हैं, उन्हें व्यवसाय के रूप में डिज़ाइन करते हैं,",

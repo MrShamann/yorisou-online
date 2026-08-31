@@ -47,35 +47,7 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
         nothing here claims a video exists. The motion field states the arc; the stage names beneath
         it name each beat, so the story reads with motion disabled too.
       */}
-      <Band id="explainer" dark>
-        <Eyebrow dark>{copy.home.explainerLabel}</Eyebrow>
-        <h2 className={styles.h2}>
-          <Phrase units={copy.home.explainerHeading} locale={locale} />
-        </h2>
-        {/*
-          CORP-v1.2R2.1 — seven beats, each CHANGING the same system field rather than scrolling
-          past cards. Beat text is drawn from stages and section names that already exist in all 21
-          locales, so the walkthrough is localised without a single new sentence to translate.
-          It is never called a video: no video asset exists.
-        */}
-        <GuidedExplainer
-          labels={{
-            play: copy.home.explainerPlay,
-            pause: copy.home.explainerPause,
-            restart: copy.home.explainerRestart,
-            step: copy.home.explainerStepLabel,
-          }}
-          beats={[
-            { key: "signal", label: f.stages[0]?.name ?? "", body: f.stages[0]?.body ?? "" },
-            { key: "evidence", label: f.stages[1]?.name ?? "", body: f.stages[1]?.body ?? "" },
-            { key: "venture", label: f.stages[2]?.name ?? "", body: f.stages[2]?.body ?? "" },
-            { key: "team", label: f.stages[5]?.name ?? "", body: f.stages[5]?.body ?? "" },
-            { key: "independent", label: f.stages[6]?.name ?? "", body: f.stages[6]?.body ?? "" },
-            { key: "ventures", label: copy.ventures.eyebrow, body: copy.ventures.lead },
-            { key: "shared", label: f.asterionEyebrow, body: copy.buildWithUs.lead },
-          ]}
-        />
-      </Band>
+
 
       <Band line>
         <Eyebrow>{f.stagesEyebrow}</Eyebrow>
@@ -159,6 +131,46 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
             );
           })}
         </div>
+      </Band>
+
+      {/*
+        CORP-v1.2R3 — the 30-second explainer, DEMOTED to supporting content.
+
+        R2.1 opened this page with it, and then repeated five of the same stage bodies as cards
+        directly underneath — the duplicated wall the brief forbids. It is no longer the
+        comprehension mechanism either: the homepage now states the company at frame zero, so
+        nobody needs to watch anything. The stages, independence and Asterion sections lead; this
+        sits after them for a reader who wants the walkthrough, and it does not autoplay ahead of
+        the content it summarises.
+      */}
+      <Band id="explainer" dark>
+        <Eyebrow dark>{copy.home.explainerLabel}</Eyebrow>
+        <h2 className={styles.h2}>
+          <Phrase units={copy.home.explainerHeading} locale={locale} />
+        </h2>
+        {/*
+          CORP-v1.2R2.1 — seven beats, each CHANGING the same system field rather than scrolling
+          past cards. Beat text is drawn from stages and section names that already exist in all 21
+          locales, so the walkthrough is localised without a single new sentence to translate.
+          It is never called a video: no video asset exists.
+        */}
+        <GuidedExplainer
+          labels={{
+            play: copy.home.explainerPlay,
+            pause: copy.home.explainerPause,
+            restart: copy.home.explainerRestart,
+            step: copy.home.explainerStepLabel,
+          }}
+          beats={[
+            { key: "signal", label: f.stages[0]?.name ?? "", body: f.stages[0]?.body ?? "" },
+            { key: "evidence", label: f.stages[1]?.name ?? "", body: f.stages[1]?.body ?? "" },
+            { key: "venture", label: f.stages[2]?.name ?? "", body: f.stages[2]?.body ?? "" },
+            { key: "team", label: f.stages[5]?.name ?? "", body: f.stages[5]?.body ?? "" },
+            { key: "independent", label: f.stages[6]?.name ?? "", body: f.stages[6]?.body ?? "" },
+            { key: "ventures", label: copy.ventures.eyebrow, body: copy.ventures.lead },
+            { key: "shared", label: f.asterionEyebrow, body: copy.buildWithUs.lead },
+          ]}
+        />
       </Band>
 
       <Band tint>

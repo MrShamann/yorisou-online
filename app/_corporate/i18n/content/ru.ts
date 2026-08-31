@@ -29,7 +29,7 @@ export const ru: SiteCopy = {
     langCurrent: "Текущий язык",
     previewBadge: "Preview — не опубликовано",
     nav: { home: "Главная", miraiMove: "Mirai Move", kakari: "Kakari", about: "О нас", company: "О компании", contact: "Контакты" },
-    footerTagline: "Между человеком и обществом мы создаём следующую форму поддержки.",
+    footerTagline: "Структурные задачи превращаем в компании.",
     footerProjects: "Проекты",
     footerCompany: "Компания",
     footerLegalNote: "Все сведения на сайте основаны на подтверждённых записях.",
@@ -60,6 +60,7 @@ export const ru: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Структурные задачи", "превращаем в компании."],
     thesis: ["Из структурных задач", "мы создаём компании,", "которые стоят самостоятельно."],
     lead: [
       "Yorisou — это фаундри: мы находим структурную задачу в устройстве общества,",

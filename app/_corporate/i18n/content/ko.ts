@@ -28,7 +28,7 @@ export const ko: SiteCopy = {
     langCurrent: "현재 언어",
     previewBadge: "Preview — 미공개",
     nav: { home: "홈", miraiMove: "Mirai Move", kakari: "Kakari", about: "소개", company: "회사 정보", contact: "문의" },
-    footerTagline: "사람과 사회 사이에, 다음의 곁을 만듭니다.",
+    footerTagline: "구조적 문제를, 회사로 만듭니다.",
     footerProjects: "사업",
     footerCompany: "회사",
     footerLegalNote: "게재된 사실은 확인된 기록에 근거합니다.",
@@ -59,6 +59,7 @@ export const ko: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou 합동회사",
+    hook: ["구조적 문제를,", "회사로 만듭니다."],
     thesis: ["구조적인 문제에서,", "스스로 서는 회사를", "만듭니다."],
     lead: [
       "Yorisou는 사회의 구조적인 문제를 찾아내고, 확인하고, 사업으로 설계하고,",

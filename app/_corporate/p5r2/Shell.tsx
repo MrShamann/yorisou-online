@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 import styles from "./site.module.css";
@@ -74,8 +75,25 @@ export default function Shell({
 
       <header className={styles.header}>
         <div className={`${styles.shell} ${styles.headerInner}`}>
-          <a className={styles.wordmark} href={localeHref(ROUTES.home, locale)}>
-            Yorisou
+          {/*
+            CORP-v1.2R3 — the real lockup replaces the text wordmark.
+
+            The asset is a STACKED square lockup (symbol over wordmark over tagline) with no
+            horizontal or vector variant, and §1.3 forbids cropping it. So the header is sized around
+            the artwork rather than the artwork being cut to fit a short bar: at 46px the symbol and
+            wordmark both read, and the strapline resolves as texture. The alt text carries the name,
+            so the wordmark is not duplicated in text beside it.
+          */}
+          <a className={styles.wordmarkLink} href={localeHref(ROUTES.home, locale)}>
+            <Image
+              src="/brand/yorisou-logo.png"
+              alt="Yorisou"
+              width={1254}
+              height={1254}
+              priority
+              sizes="120px"
+              className={styles.headerLogo}
+            />
           </a>
 
           <div className={styles.headerRight}>
@@ -142,9 +160,14 @@ export default function Shell({
         <div className={styles.shell}>
           <div className={styles.footerGrid}>
             <div>
-              <p className={`${styles.mono}`} style={{ marginBottom: 12 }}>
-                Yorisou
-              </p>
+              <Image
+                src="/brand/yorisou-logo.png"
+                alt="Yorisou"
+                width={1254}
+                height={1254}
+                sizes="160px"
+                className={styles.footerLogo}
+              />
               <p className={styles.footerTagline}>{c.footerTagline}</p>
             </div>
             <div>

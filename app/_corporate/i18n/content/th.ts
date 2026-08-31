@@ -30,7 +30,7 @@ export const th: SiteCopy = {
     langCurrent: "ภาษาปัจจุบัน",
     previewBadge: "Preview — ยังไม่เผยแพร่",
     nav: { home: "หน้าแรก", miraiMove: "Mirai Move", kakari: "Kakari", about: "เกี่ยวกับเรา", company: "ข้อมูลบริษัท", contact: "ติดต่อเรา" },
-    footerTagline: "สร้างการอยู่เคียงข้างรูปแบบต่อไป ระหว่างผู้คนกับสังคม",
+    footerTagline: "เปลี่ยนปัญหาโครงสร้างเป็นบริษัท",
     footerProjects: "โครงการ",
     footerCompany: "บริษัท",
     footerLegalNote: "ข้อเท็จจริงที่เผยแพร่ที่นี่ตั้งอยู่บนบันทึกที่เราตรวจสอบได้",
@@ -61,6 +61,7 @@ export const th: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["เปลี่ยนปัญหาโครงสร้าง", "เป็นบริษัท"],
     thesis: ["จากปัญหาเชิงโครงสร้าง", "เราสร้างบริษัทที่ยืนได้ด้วยตัวเอง"],
     lead: [
       "Yorisou ทำงานแบบฟาวน์ดรี คือค้นหาปัญหาเชิงโครงสร้างในสังคม ตรวจสอบให้แน่ใจ ออกแบบให้เป็นธุรกิจ",

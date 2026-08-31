@@ -47,7 +47,7 @@ export const vi: SiteCopy = {
     langCurrent: "Ngôn ngữ hiện tại",
     previewBadge: "Preview — chưa công bố",
     nav: { home: "Trang chủ", miraiMove: "Mirai Move", kakari: "Kakari", about: "Về chúng tôi", company: "Thông tin công ty", contact: "Liên hệ" },
-    footerTagline: "Giữa con người và xã hội, chúng tôi tạo nên sự đồng hành tiếp theo.",
+    footerTagline: "Biến vấn đề cấu trúc thành công ty.",
     footerProjects: "Dự án",
     footerCompany: "Công ty",
     footerLegalNote: "Những điều được nêu ở đây đều dựa trên hồ sơ mà chúng tôi xác minh được.",
@@ -79,6 +79,7 @@ export const vi: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Biến vấn đề cấu trúc", "thành công ty."],
     thesis: ["Từ những vấn đề mang tính cấu trúc,", "chúng tôi gây dựng những công ty", "đứng vững độc lập."],
     lead: [
       "Yorisou là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc của xã hội,",

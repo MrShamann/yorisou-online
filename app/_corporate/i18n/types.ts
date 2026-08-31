@@ -61,6 +61,11 @@ export type SiteCopy = {
   /* ── HOME ───────────────────────────────────────────────────────────── */
   home: {
     eyebrow: string;
+    /**
+     * CORP-v1.2R3 — the display hook. Deliberately shorter and blunter than `thesis`, which stays
+     * as the supporting line. A visitor reading for three seconds reads this and nothing else.
+     */
+    hook: readonly string[];
     thesis: readonly string[];
     lead: readonly string[];
     humanSide: string;

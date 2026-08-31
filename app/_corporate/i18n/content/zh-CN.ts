@@ -39,7 +39,7 @@ export const zh_CN: SiteCopy = {
     langCurrent: "当前语言",
     previewBadge: "Preview — 未公开",
     nav: { home: "首页", miraiMove: "Mirai Move", kakari: "Kakari", about: "关于我们", company: "公司信息", contact: "联系我们" },
-    footerTagline: "在人与社会之间，构筑下一种相伴的方式。",
+    footerTagline: "把结构性问题，做成公司。",
     footerProjects: "业务",
     footerCompany: "公司",
     footerLegalNote: "本站所载事实，均以可核实的记录为依据。",
@@ -70,6 +70,7 @@ export const zh_CN: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou 有限责任公司",
+    hook: ["把结构性问题，", "做成公司。"],
     thesis: ["从结构性的问题出发，", "创建能够独立存在的", "公司。"],
     lead: [
       "Yorisou 是一家创业工场：发现社会中结构性的问题，加以确认，设计成一项事业，",

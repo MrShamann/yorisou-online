@@ -586,3 +586,128 @@
   font-size: 10px; letter-spacing: 0.04em; color: var(--ink-4);
   border: 1px solid var(--line); padding: 2px 6px;
 }
+
+/* ── CORP-v1.2R3: the signature ──────────────────────────────────────────────────── */
+
+/*
+ * This section deliberately does NOT use .shell. Every other section on the site sits in the same
+ * centred container, and that uniformity is what made the page forgettable. The signature is the
+ * one place the container is broken on purpose: the system object runs to the viewport edge.
+ */
+.signature {
+  position: relative;
+  border-block-end: 1px solid var(--line);
+  background: var(--paper);
+  overflow: hidden;
+}
+.signatureInner {
+  display: grid;
+  gap: clamp(24px, 3vw, 44px);
+  align-items: center;
+  /*
+   * Tuned against the rendered 1440x900 frame, not guessed: with the earlier padding the venture
+   * rail fell below the fold, which defeats the whole point of putting what is being formed in the
+   * first screen. The hero is now sized so brand + hook + rail all land inside 900px.
+   */
+  padding-block: clamp(28px, 3.4vw, 44px);
+  padding-inline-start: var(--pad);
+}
+@media (min-width: 900px) {
+  .signatureInner {
+    /* asymmetric on purpose: brand column is the minority, the system object dominates */
+    grid-template-columns: minmax(320px, 34%) 1fr;
+    padding-inline-end: 0; /* the field bleeds */
+  }
+}
+
+/*
+ * The grid only pads its inline-start so the field can bleed off the opposite edge, which left the
+ * hook and lead running to the exact viewport edge in the single-column mobile layout. The brand
+ * column carries its own end padding instead — the text gets a margin, the panel still bleeds.
+ */
+.signatureBrand { max-width: 30rem; padding-inline-end: var(--pad); }
+.heroLogo {
+  width: clamp(118px, 12vw, 168px);
+  height: auto;
+  display: block;
+  margin-block-end: clamp(14px, 1.6vw, 22px);
+}
+
+/* the hook: the one line a three-second visitor reads */
+.hook {
+  margin: 0 0 14px;
+  font-size: clamp(32px, 4.4vw, 54px);
+  line-height: 1.22;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.root[data-script="Jpan"] .hook,
+.root[data-script="Hans"] .hook,
+.root[data-script="Hant"] .hook,
+.root[data-script="Kore"] .hook { line-height: 1.34; letter-spacing: 0.004em; }
+
+.signatureLead {
+  margin: 0 0 22px; font-size: var(--step-1); line-height: 1.7; color: var(--ink-2);
+}
+.signatureSupport {
+  margin: 0 0 26px; font-size: var(--step-0); line-height: 1.85; color: var(--ink-3);
+  max-width: 34rem;
+}
+.signatureActions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+
+/* the dark computational object — full height, bleeding to the right edge */
+/*
+ * The field must actually touch the viewport edge. The grid column ends at the container, so the
+ * panel is pushed the remaining distance with a negative inline-end margin — this is the deliberate
+ * container break, and without it the panel reads as one more card with a margin around it.
+ */
+.signatureField {
+  position: relative;
+  min-height: clamp(240px, 27vw, 380px);
+  background: var(--sys);
+  border-inline-start: 1px solid var(--sys-line);
+  margin-inline-end: calc(var(--pad) * -1);
+}
+@media (max-width: 899px) {
+  .signatureField {
+    margin-inline-end: calc(var(--pad) * -1);
+    min-height: 240px;
+    border-inline-start: none;
+    border-block-start: 1px solid var(--sys-line);
+  }
+}
+
+/* ── NOW FORMING rail: what is being formed, without scrolling ───────────────────── */
+
+.ventureRail {
+  border-block-start: 1px solid var(--line);
+  background: var(--surface);
+  padding: 18px var(--pad) 20px;
+}
+.railLabel { margin: 0 0 12px; }
+.railList {
+  display: grid; gap: 1px; margin: 0; padding: 0; list-style: none;
+  background: var(--line); border: 1px solid var(--line);
+}
+@media (min-width: 760px) { .railList { grid-template-columns: repeat(3, 1fr); } }
+.railItem { background: var(--surface); }
+.railLink {
+  display: grid; gap: 3px; padding: 14px 16px; text-decoration: none; color: var(--ink);
+  transition: background 160ms ease;
+}
+.railLink:hover, .railLink:focus-visible { background: var(--paper); }
+.railName {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 15px; font-weight: 600; letter-spacing: -0.005em;
+}
+.railReading { font-size: 12.5px; line-height: 1.6; color: var(--ink-3); }
+.railStage {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--ink-4); margin-block-start: 2px;
+}
+
+/* header + footer marks */
+.headerLogo { width: auto; height: 46px; display: block; }
+.footerLogo { width: clamp(120px, 14vw, 158px); height: auto; display: block; margin-block-end: 14px; }
+.wordmarkLink { display: inline-flex; align-items: center; text-decoration: none; }

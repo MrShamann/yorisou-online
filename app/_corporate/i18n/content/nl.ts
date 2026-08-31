@@ -32,7 +32,7 @@ export const nl: SiteCopy = {
     langCurrent: "Huidige taal",
     previewBadge: "Preview — niet gepubliceerd",
     nav: { home: "Home", miraiMove: "Mirai Move", kakari: "Kakari", about: "Over ons", company: "Bedrijf", contact: "Contact" },
-    footerTagline: "Tussen mens en samenleving bouwen wij de volgende vorm van nabijheid.",
+    footerTagline: "Structurele vraagstukken, omgezet in bedrijven.",
     footerProjects: "Projecten",
     footerCompany: "Bedrijf",
     footerLegalNote: "Alles wat hier staat, berust op een vastgelegd gegeven dat wij hebben kunnen verifiëren.",
@@ -63,6 +63,7 @@ export const nl: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Structurele vraagstukken,", "omgezet in bedrijven."],
     thesis: ["Van structurele vraagstukken", "maken wij bedrijven", "die op eigen benen staan."],
     lead: [
       "Yorisou is een foundry: wij zoeken structurele vraagstukken in de samenleving op, toetsen ze en ontwerpen ze als onderneming,",

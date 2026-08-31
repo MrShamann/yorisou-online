@@ -30,7 +30,7 @@ export const uk: SiteCopy = {
     langCurrent: "Поточна мова",
     previewBadge: "Попередній перегляд — не опубліковано",
     nav: { home: "Головна", miraiMove: "Mirai Move", kakari: "Kakari", about: "Про нас", company: "Компанія", contact: "Контакти" },
-    footerTagline: "Між людиною і суспільством створюємо наступний спосіб бути поруч.",
+    footerTagline: "Структурну проблему робимо компанією.",
     footerProjects: "Проєкти",
     footerCompany: "Компанія",
     footerLegalNote: "Наведені тут факти спираються на записи, які ми можемо підтвердити.",
@@ -61,6 +61,7 @@ export const uk: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Структурну проблему", "робимо компанією."],
     thesis: ["Зі структурних проблем", "будуємо компанії,", "які стоять самостійно."],
     lead: [
       "Yorisou — це фаундрі: ми знаходимо структурні проблеми суспільства, перевіряємо їх",

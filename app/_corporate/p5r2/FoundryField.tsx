@@ -1,32 +1,30 @@
 import styles from "./foundry-field.module.css";
 
 /**
- * CORP-v1.2R2 — the Foundry Motion Field.
+ * CORP-v1.2R3 — the Foundry Motion Field, refounded for frame-zero comprehension.
  *
- * The hero previously carried a static diagram. It was competent, and it behaved as an
- * illustration: nothing about it said that Yorisou continuously converts real-world signals into
- * evidence, ventures, founding teams and independent companies. This replaces it with a silent
- * ~11-second loop that states the operating model as behaviour rather than as a picture:
+ * The operating model, stated as a single readable object:
  *
  *   signals arrive → evidence connects and verifies → a venture becomes defined →
  *   a founding team attaches → the company separates and stands on its own →
  *   the generalised capability returns to the shared infrastructure layer
  *
- * Deliberate constraints, all of them from the brief:
+ * R2 revealed this over ~11 seconds. Benchmarking showed why that fails: every site that lands its
+ * hook is fully legible in a still frame, and a visitor who looks for three seconds and leaves got
+ * nothing from a sequence that delivered its point last. **Every element is now drawn at its final
+ * state at frame zero.** The ~3.4s loop only pulses jade along the chain, confirming the reading
+ * order rather than withholding it, and reduced motion simply stops with nothing lost.
  *
- * - No fake data. Nothing here is labelled live, real-time, or an activity count, because none of
- *   it is. The only text is stage names, which are real vocabulary from the Foundry process.
- * - Asterion is drawn as the floor UNDER the flow, never as its origin or owner, and is never the
- *   thing the signals come from. It receives capability back; it does not drive the ventures.
- * - Pure SVG + CSS keyframes. No animation library, no Lottie, no WebGL, no video, no JS. The cost
- *   of this component is the markup itself, which is what keeps the R1 performance gain intact.
- * - Labels come from `foundry.stages`, which already exists in all 21 locales, so the field is
- *   fully localised without adding a single new string to translate.
- * - Under prefers-reduced-motion every element resolves to its FINAL composed state — the whole
- *   diagram, fully formed, no looping. The meaning survives; only the motion stops.
+ * The remaining constraints are unchanged from R2 and still hold:
  *
- * The narrative works with no interaction at all. Pointer and focus only slow the loop slightly so
- * a reader can dwell, which is why there is no interactive control to miss.
+ * - No fake data. Nothing is labelled live, real-time, or an activity count. The only text is
+ *   Foundry stage names, which are real process vocabulary.
+ * - Asterion is the floor UNDER the flow — it receives capability back and never drives the
+ *   ventures or owns them.
+ * - Pure SVG + CSS. No animation library, no Lottie, no WebGL, no video, no JavaScript, which is
+ *   why it costs nothing at runtime.
+ * - Labels come from `foundry.stages`, already present in all 21 locales, so it is fully localised
+ *   without adding a translatable string.
  */
 export default function FoundryField({
   evidence,
@@ -60,18 +58,23 @@ export default function FoundryField({
       {/* ── the shared capability layer. Under everything; owns nothing. ─────────────── */}
       <g className={styles.base}>
         <line x1="24" y1="250" x2="416" y2="250" className={styles.baseRule} />
-        <text x="24" y="266" className={styles.baseLabel}>
+        {/*
+          Inset further than the rule it labels. The Arabic string is the longest of the 21 and was
+          reaching the canvas edge at 375px; starting it further in gives every locale room without
+          moving the rule itself.
+        */}
+        <text x="64" y="266" className={styles.baseLabel}>
           {infrastructure}
         </text>
-        {[110, 190, 270, 350].map((x, i) => (
-          <rect key={x} x={x} y="245" width="10" height="10" className={styles.baseCell} style={{ animationDelay: `${8.6 + i * 0.16}s` }} />
+        {[110, 190, 270, 350].map((x) => (
+          <rect key={x} x={x} y="245" width="10" height="10" className={styles.baseCell} />
         ))}
       </g>
 
       {/* ── 1. signals arrive: weak, unequal, real-world ─────────────────────────────── */}
       <g className={styles.signals}>
-        {[62, 118, 174].map((y, i) => (
-          <g key={y} style={{ animationDelay: `${i * 0.34}s` }} className={styles.signal}>
+        {[62, 118, 174].map((y) => (
+          <g key={y} className={styles.signal}>
             <circle cx="34" cy={y} r="3.2" />
             <line x1="41" y1={y} x2="92" y2={y} className={styles.signalTail} />
           </g>
@@ -80,13 +83,8 @@ export default function FoundryField({
 
       {/* ── 2. evidence: the connections form, then the node verifies ────────────────── */}
       <g className={styles.evidence}>
-        {[62, 118, 174].map((y, i) => (
-          <path
-            key={y}
-            d={`M 92 ${y} C 130 ${y}, 138 118, 168 118`}
-            className={styles.edge}
-            style={{ animationDelay: `${1.5 + i * 0.22}s` }}
-          />
+        {[62, 118, 174].map((y) => (
+          <path key={y} d={`M 92 ${y} C 130 ${y}, 138 118, 168 118`} className={styles.edge} />
         ))}
         <g className={styles.evidenceNode}>
           <circle cx="176" cy="118" r="9" className={styles.nodeRing} />
@@ -99,7 +97,7 @@ export default function FoundryField({
 
       {/* ── 3. venture: an outline becomes a defined object ──────────────────────────── */}
       <g className={styles.venture}>
-        <path d="M 185 118 L 232 118" className={styles.edge} style={{ animationDelay: "4.1s" }} />
+        <path d="M 185 118 L 232 118" className={styles.edge} />
         <rect x="232" y="98" width="42" height="40" rx="2" className={styles.ventureBox} />
         <line x1="253" y1="98" x2="253" y2="138" className={styles.ventureSpine} />
         <text x="253" y="90" className={styles.label}>
@@ -109,7 +107,7 @@ export default function FoundryField({
 
       {/* ── 4. a founding team attaches from below — people, not machinery ───────────── */}
       <g className={styles.team}>
-        <path d="M 253 186 L 253 142" className={styles.edge} style={{ animationDelay: "6.0s" }} />
+        <path d="M 253 186 L 253 142" className={styles.edge} />
         <circle cx="253" cy="192" r="5.5" className={styles.teamNode} />
         <text x="253" y="212" className={styles.label}>
           {team}

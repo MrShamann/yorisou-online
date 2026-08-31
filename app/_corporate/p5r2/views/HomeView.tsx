@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import styles from "../site.module.css";
 import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink, VentureName } from "../pieces";
 import { NetworkSystem, ProcedureSystem } from "../systems";
@@ -19,63 +21,79 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
 
   return (
     <>
-      {/* 01 — company hero */}
-      <section className={styles.hero}>
-        <div className={styles.heroField} aria-hidden="true" />
-        <div className={styles.shell}>
-          <div className={styles.heroGrid}>
-            <div>
-              <Eyebrow>{h.eyebrow}</Eyebrow>
-              <h1 className={styles.h1}>
-                <Phrase units={h.thesis} locale={locale} />
-              </h1>
-              <p className={`${styles.lead} ${styles.jp}`}>
-                {h.lead.map((line, i) => (
-                  <span className={styles.leadLine} key={i}>{line}</span>
-                ))}
-              </p>
-              <ul className={styles.chips} aria-label={`${h.humanSide} — ${h.humanItems.join(" / ")}`}>
-                {h.humanItems.map((s) => (
-                  <li className={styles.chip} key={s}>
-                    <i className={styles.chipDot} aria-hidden="true" />
-                    {s}
-                  </li>
-                ))}
-              </ul>
-              {/*
-                CORP-v1.2R2 — the "30 seconds" affordance. It opens the extended web-native
-                explainer built from the same system grammar; no recorded film is claimed to exist,
-                and no placeholder media file is shipped in its place.
-              */}
-              <p className={styles.explainer}>
-                <a className={styles.explainerBtn} href={L(ROUTES.about) + "#explainer"}>
-                  <span className={styles.explainerDot} aria-hidden="true" />
-                  {h.explainerLabel}
-                </a>
-              </p>
-            </div>
-            <div className={styles.surface}>
-              <div className={styles.surfaceHead}>
-                <p className={`${styles.mono} ${styles.monoDark}`}>{h.systemSide}</p>
-                <p className={`${styles.mono} ${styles.monoDark}`}>{h.systemItems.join(" / ")}</p>
-              </div>
-              <div className={styles.surfaceFig}>
-                {/*
-                  CORP-v1.2R2 — the hero now states the operating model as behaviour rather than as
-                  a picture. Labels are drawn from foundry.stages, which already exists in all 21
-                  locales, so the field is fully localised without adding a translatable string.
-                */}
-                <FoundryField
-                  evidence={copy.foundry.stages[1]?.name ?? ""}
-                  venture={copy.foundry.stages[2]?.name ?? ""}
-                  team={copy.foundry.stages[5]?.name ?? ""}
-                  independent={copy.foundry.stages[6]?.name ?? ""}
-                  infrastructure={copy.foundry.asterionEyebrow}
-                />
-              </div>
-              <p className={`${styles.mono} ${styles.monoDark}`}>{h.fieldCaption}</p>
+      {/*
+        CORP-v1.2R3 — the signature.
+
+        Benchmarking found that every site which lands its hook gives ONE object most of the
+        viewport, full-bleed or cropped by the edge, and is completely legible in a still frame.
+        The previous hero did the opposite: a 50/50 split with the system figure sitting inside a
+        card, inside the same container width as every other section, delivering its meaning over
+        eleven seconds.
+
+        So this section deliberately breaks the container. The brand and hook hold a narrow left
+        column; the Foundry object runs to the right viewport edge at full height; and the three
+        ventures sit on an edge-anchored rail immediately beneath, so what is being formed is
+        visible without scrolling. Yorisou has no product screenshot it can honestly show and no
+        photography it should use — the formation system IS the proof surface, so it is given the
+        weight Linear gives its product UI.
+      */}
+      <section className={styles.signature}>
+        <div className={styles.signatureInner}>
+          <div className={styles.signatureBrand}>
+            <Image
+              src="/brand/yorisou-logo.png"
+              alt="Yorisou"
+              width={1254}
+              height={1254}
+              priority
+              sizes="(max-width: 900px) 200px, 260px"
+              className={styles.heroLogo}
+            />
+            <h1 className={styles.hook}>
+              <Phrase units={h.hook} locale={locale} />
+            </h1>
+            <p className={`${styles.signatureLead} ${styles.jp}`}>
+              <Phrase units={h.thesis} locale={locale} />
+            </p>
+            <div className={styles.signatureActions}>
+              <a className={styles.btn} href={L(ROUTES.buildWithUs)}>
+                {copy.buildWithUs.eyebrow}
+              </a>
+              <TextLink href={L(ROUTES.about)}>{copy.foundry.eyebrow}</TextLink>
             </div>
           </div>
+
+          <div className={styles.signatureField}>
+            <FoundryField
+              evidence={copy.foundry.stages[1]?.name ?? ""}
+              venture={copy.foundry.stages[2]?.name ?? ""}
+              team={copy.foundry.stages[5]?.name ?? ""}
+              independent={copy.foundry.stages[6]?.name ?? ""}
+              infrastructure={copy.foundry.asterionEyebrow}
+            />
+          </div>
+        </div>
+
+        {/*
+          The NOW-FORMING rail. Not a dashboard and never labelled live: each venture shows its own
+          Japanese line and its own stage text, which is the same evidence the detail pages carry.
+        */}
+        <div className={styles.ventureRail}>
+          <p className={`${styles.mono} ${styles.railLabel}`}>{copy.ventures.eyebrow}</p>
+          <ul className={styles.railList}>
+            {copy.ventures.cards.map((c) => {
+              const d = c.href === "/mirai-move" ? copy.mirai : c.href === "/kakari" ? copy.kakari : copy.chigamo;
+              return (
+                <li className={styles.railItem} key={c.href}>
+                  <a className={styles.railLink} href={L(c.href)}>
+                    <span className={styles.railName}>{c.name}</span>
+                    <span className={`${styles.railReading} ${styles.jp}`}>{d.reading}</span>
+                    <span className={styles.railStage}>{d.stage}</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </section>
 

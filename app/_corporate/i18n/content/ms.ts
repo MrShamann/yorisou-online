@@ -29,7 +29,7 @@ export const ms: SiteCopy = {
     langCurrent: "Bahasa semasa",
     previewBadge: "Pratonton — belum diterbitkan",
     nav: { home: "Utama", miraiMove: "Mirai Move", kakari: "Kakari", about: "Tentang Kami", company: "Maklumat Syarikat", contact: "Hubungi Kami" },
-    footerTagline: "Antara manusia dan masyarakat, kami membina cara seterusnya untuk mendampingi.",
+    footerTagline: "Masalah struktur, kami jadikan syarikat.",
     footerProjects: "Projek",
     footerCompany: "Syarikat",
     footerLegalNote: "Setiap fakta yang tersiar di sini berdasarkan rekod yang dapat kami sahkan.",
@@ -60,6 +60,7 @@ export const ms: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Masalah struktur,", "kami jadikan syarikat."],
     thesis: ["Daripada masalah struktur,", "kami membina syarikat", "yang berdiri sendiri."],
     lead: [
       "Yorisou ialah sebuah foundry: kami mencari masalah struktur dalam masyarakat, mengesahkannya,",

@@ -30,7 +30,7 @@ export const pt: SiteCopy = {
     langCurrent: "Idioma atual",
     previewBadge: "Preview — não publicado",
     nav: { home: "Início", miraiMove: "Mirai Move", kakari: "Kakari", about: "Sobre nós", company: "A empresa", contact: "Contato" },
-    footerTagline: "Entre as pessoas e a sociedade, criamos a próxima forma de estar ao lado.",
+    footerTagline: "Problemas estruturais, transformados em empresas.",
     footerProjects: "Projetos",
     footerCompany: "Empresa",
     footerLegalNote: "Os fatos publicados aqui baseiam-se em registros que pudemos verificar.",
@@ -61,6 +61,7 @@ export const pt: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Problemas estruturais,", "transformados em empresas."],
     thesis: ["A partir de problemas estruturais,", "construímos empresas", "que se sustentam sozinhas."],
     lead: ["A Yorisou é uma foundry: encontramos problemas estruturais na sociedade, verificamos cada um,", "desenhamos como negócio e nos juntamos a quem vai conduzi-lo, levando-o até uma empresa independente."],
     humanSide: "Pessoas",

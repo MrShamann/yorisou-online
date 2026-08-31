@@ -43,7 +43,7 @@ export const ja: SiteCopy = {
     langCurrent: "現在の言語",
     previewBadge: "Preview — 未公開",
     nav: { home: "ホーム", miraiMove: "Mirai Move", kakari: "Kakari", about: "私たちについて", company: "会社情報", contact: "お問い合わせ" },
-    footerTagline: "人と社会のあいだに、次のよりそいをつくる。",
+    footerTagline: "構造の課題を、会社にする。",
     footerProjects: "事業",
     footerCompany: "会社",
     footerLegalNote: "掲載している事実は、確認できた記録に基づいています。",
@@ -74,6 +74,7 @@ export const ja: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou 合同会社",
+    hook: ["構造の課題を、", "会社にする。"],
     thesis: ["構造の課題から、", "独立して立つ会社を", "つくる。"],
     lead: [
       "YORISOU は、社会の構造的な課題を見つけ、確かめ、事業として設計し、",

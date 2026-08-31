@@ -30,7 +30,7 @@ export const id: SiteCopy = {
     langCurrent: "Bahasa saat ini",
     previewBadge: "Pratinjau — belum dipublikasikan",
     nav: { home: "Beranda", miraiMove: "Mirai Move", kakari: "Kakari", about: "Tentang Kami", company: "Perusahaan", contact: "Kontak" },
-    footerTagline: "Di antara manusia dan masyarakat, kami menciptakan pendampingan berikutnya.",
+    footerTagline: "Masalah struktural, kami jadikan perusahaan.",
     footerProjects: "Proyek",
     footerCompany: "Perusahaan",
     footerLegalNote: "Semua yang kami cantumkan berpijak pada catatan yang dapat kami pastikan.",
@@ -61,6 +61,7 @@ export const id: SiteCopy = {
 
   home: {
     eyebrow: "Yorisou LLC",
+    hook: ["Masalah struktural,", "kami jadikan perusahaan."],
     thesis: ["Dari masalah struktural,", "kami membangun perusahaan", "yang berdiri sendiri."],
     lead: [
       "Yorisou adalah sebuah foundry: kami menemukan masalah struktural di masyarakat,",
