@@ -1,10 +1,11 @@
 import Image from "next/image";
 
 import styles from "../site.module.css";
-import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink, VentureName } from "../pieces";
+import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink, VentureComposition, VentureName } from "../pieces";
 import { NetworkSystem, ProcedureSystem } from "../systems";
 import FoundryField from "../FoundryField";
 import { Phrase, ROUTES } from "../Shell";
+import { VENTURE_BRAND } from "../../brand";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
 
@@ -79,14 +80,39 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
           Japanese line and its own stage text, which is the same evidence the detail pages carry.
         */}
         <div className={styles.ventureRail}>
-          <p className={`${styles.mono} ${styles.railLabel}`}>{copy.ventures.eyebrow}</p>
+          <div className={styles.railHead}>
+            <p className={`${styles.mono} ${styles.railLabel}`}>{copy.ventures.eyebrow}</p>
+            {/*
+              CORP-v1.3 — the composition, in the first viewport. A visitor who reads only the
+              signature now learns that two of the three are being built and one is still an idea,
+              rather than inferring three equal ventures from three equal-looking rail items.
+            */}
+            <VentureComposition
+              building={copy.common.buildingLabel}
+              concept={copy.common.conceptLabel}
+              className={styles.railComposition}
+            />
+          </div>
           <ul className={styles.railList}>
             {copy.ventures.cards.map((c) => {
               const d = c.href === "/mirai-move" ? copy.mirai : c.href === "/kakari" ? copy.kakari : copy.chigamo;
               return (
                 <li className={styles.railItem} key={c.href}>
                   <a className={styles.railLink} href={L(c.href)}>
-                    <span className={styles.railName}>{c.name}</span>
+                    <span className={styles.railNameRow}>
+                      {/* the venture's own colour, or an open square where it has no brand source */}
+                      <span
+                        className={styles.ventureAccent}
+                        data-defined={VENTURE_BRAND[c.href]?.accent ? "yes" : "no"}
+                        style={
+                          VENTURE_BRAND[c.href]?.accent
+                            ? { background: VENTURE_BRAND[c.href].accent as string, borderColor: VENTURE_BRAND[c.href].accent as string }
+                            : undefined
+                        }
+                        aria-hidden="true"
+                      />
+                      <span className={styles.railName}>{c.name}</span>
+                    </span>
                     <span className={`${styles.railReading} ${styles.jp}`}>{d.reading}</span>
                     <span className={styles.railStage}>{d.stage}</span>
                   </a>
@@ -108,6 +134,7 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
       <Band id="projects" tint>
         <Eyebrow>{h.buildEyebrow}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={h.buildHeading} locale={locale} /></h2>
+        <VentureComposition building={copy.common.buildingLabel} concept={copy.common.conceptLabel} />
         <div className={styles.projects}>
           <article className={styles.project}>
             <div className={styles.surface}>

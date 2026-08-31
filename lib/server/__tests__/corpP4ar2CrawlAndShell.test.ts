@@ -45,12 +45,15 @@ const ROOT = process.cwd();
 
 test("1. every Allow rule in the rendered robots.txt is anchored with $", () => {
   const allows = RULES.filter((r) => r.type === "allow");
-  assert.equal(allows.length, 4, "expected exactly four Allow rules");
+  // CORP-v1.3: derived from the policy, not a magic number. The EXACT crawlable list is pinned once,
+  // in corpP4ar1RoutePolicy.test.ts — duplicating the count here only made both go stale together
+  // while proving nothing extra. What this test is actually for is the anchoring, below.
+  assert.equal(allows.length, CORPORATE_INDEXABLE.length, "one Allow rule per indexable route");
   const unanchored = allows.filter((r) => !r.path.endsWith("$")).map((r) => r.path);
   assert.deepEqual(unanchored, [], `unanchored Allow rules re-open a whole subtree: ${unanchored}`);
 });
 
-test("2. the four corporate routes are crawlable", () => {
+test("2. every indexable corporate route is crawlable", () => {
   for (const p of CORPORATE_INDEXABLE) {
     assert.equal(isCrawlable(RULES, p), true, `${p} must be crawlable`);
   }
@@ -135,7 +138,7 @@ test("9. the parser reproduces the unanchored 29fce73 rules and shows them leaki
 
 test("10. every sitemap URL is crawlable, and nothing else is", () => {
   const urls = sitemap().map((e) => new URL(e.url).pathname);
-  assert.equal(urls.length, 4);
+  assert.equal(urls.length, CORPORATE_INDEXABLE.length);
   for (const p of urls) assert.equal(isCrawlable(RULES, p), true, `${p} is in the sitemap`);
   const crawlableConsumer = CONSUMER_ROUTES.filter((r) => isCrawlable(RULES, r));
   assert.deepEqual(crawlableConsumer, [], `consumer routes must not be crawlable: ${crawlableConsumer}`);
@@ -190,8 +193,16 @@ test("13. the 404 document cannot import the consumer shell", () => {
   for (const banned of ["AppShell", "AppHeader", "MobileBottomNav", "SiteFooter"]) {
     assert.ok(!code.includes(banned), `the 404 document must not reference ${banned} in code`);
   }
-  assert.match(code, /import CorporateShell/, "the shared body imports the corporate shell");
-  assert.match(code, /<CorporateShell/, "it renders the corporate shell");
+  // CORP-v1.3: the 404 moved OFF the frozen `prototype/corporate` shell and onto the live one, so
+  // it stops presenting a company from two refoundations ago. The protection is unchanged — a
+  // corporate shell must still be imported and rendered, and the consumer chrome above stays
+  // banned; only the name of the corporate shell is different.
+  assert.match(code, /import Shell(?:,| ).*p5r2\/Shell/, "the shared body imports the live corporate shell");
+  assert.match(code, /<Shell\b/, "it renders the live corporate shell");
+  assert.ok(
+    !code.includes("prototype/corporate"),
+    "the 404 is back on the frozen prototype shell, which shows a retired identity",
+  );
   // And the check must be capable of failing: the stripper must not have eaten the whole file.
   assert.ok(code.includes("GlobalNotFound"), "comment stripping removed real code");
 });

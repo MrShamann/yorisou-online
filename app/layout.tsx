@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { Inter, Noto_Sans_JP } from "next/font/google";
@@ -37,12 +37,46 @@ export const metadata: Metadata = {
    * option in docs/yorisou/corporate/CORP_P5_LEGACY_MIGRATION_OPTIONS.md and is not performed here.
    */
   title: {
-    default: "Yorisou — 人と社会のあいだに、次のよりそいをつくる。",
+    /**
+     * CORP-v1.3 — the site-level fallback was still the CONSUMER product's line, so every tab,
+     * bookmark and share card that fell back to it introduced the company as a self-reflection
+     * service. The descriptor is the one the Founder set inside the logo artwork itself, so it is
+     * the company's own words rather than a positioning statement written here.
+     */
+    default: "Yorisou 合同会社 — AI-Native Venture Foundry",
     template: "%s",
   },
   description:
-    "Yorisouは、暮らし・仕事・地域にある複雑さを見つめ、人が理解し、選び、前に進めるプロダクトをつくる会社です。",
+    "Yorisou 合同会社は、制度や仕組みが必要な人のところで止まっている領域に入り、事業として立つところまでを設計・構築する会社です。",
+  /**
+   * CORP-v1.3 — browser-level identity.
+   *
+   * `app/icon.png`, `app/apple-icon.png` and `app/opengraph-image.png` are generated from the
+   * Founder's own artwork by proportional scale onto the site's paper ground — no crop, no
+   * recolour, no redraw — and Next.js wires them from the filesystem, so they are not repeated here.
+   * What IS declared here is the browser chrome colour, which has no file convention.
+   *
+   * KNOWN LIMIT, recorded rather than papered over: the artwork is a STACKED square lockup, so at
+   * 32px the wordmark below the symbol is not legible — only the blue symbol reads. Fixing that
+   * properly needs a logomark-only or vector variant, which does not exist. Shipping the real mark
+   * illegibly small is still strictly better than shipping the previous icon, which was the purple
+   * consumer-product heart and identified the company as something it is not.
+   *
+   * The browser chrome colour is declared in `viewport` below, which is where Next.js reads it from.
+   */
   openGraph: { siteName: "Yorisou", locale: "ja_JP", type: "website" },
+};
+
+/**
+ * CORP-v1.3 — the browser chrome colour, in both schemes. Both values are brand values: the paper
+ * the site is set on, and the navy the wordmark is drawn in. `themeColor` belongs on `viewport`
+ * rather than on `metadata`; putting it on `metadata` is accepted at build time but ignored.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbfaf6" },
+    { media: "(prefers-color-scheme: dark)", color: "#061133" },
+  ],
 };
 
 export default async function RootLayout({

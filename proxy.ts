@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { DEFAULT_LOCALE, resolveLocale } from "@/app/_corporate/i18n/locales";
+import { CORPORATE_BLOCKED, CORPORATE_INDEXABLE } from "@/lib/corporate/routePolicy";
 
 const localeCookie = "yorisou_locale";
 const localeHeader = "x-yorisou-locale";
@@ -16,7 +17,7 @@ const pathnameHeader = "x-yorisou-pathname";
  * else is Japanese. Nothing about that behaviour changes here, and no query parameter is consulted
  * for those paths.
  *
- * THE SIX CORPORATE ROUTES resolve their locale from `?lang`, validated against the locale registry.
+ * THE CORPORATE ROUTES resolve their locale from `?lang`, validated against the locale registry.
  * Previously only `?lang=en` on the exact path `/` was understood, so nineteen of the twenty-one
  * published locales served correctly translated bodies inside `<html lang="ja">` with no `dir` at
  * all — an Arabic page announced to assistive technology as Japanese and laid out left-to-right.
@@ -30,14 +31,23 @@ const pathnameHeader = "x-yorisou-pathname";
  * choosing a language never silently becomes a persistent preference. Nothing is inferred from
  * browser language, IP, device or geography.
  */
-const CORPORATE_PATHS = new Set([
-  "/",
-  "/mirai-move",
-  "/kakari",
-  "/about",
-  "/company",
-  "/contact",
-]);
+/**
+ * CORP-v1.3 — DERIVED, not listed.
+ *
+ * This was a hand-maintained set of the six corporate paths that existed when it was written.
+ * CORP-v1.2 then added `/ventures`, `/chigamo` and `/build-with-us` and did not add them here, so
+ * for those three routes `?lang=` was never read: the BODY came out correctly translated, because
+ * each page resolves its own locale from the query, while the DOCUMENT stayed
+ * `<html lang="ja" dir="ltr" data-script="Jpan">`. An Arabic reader on /ventures got Arabic text in
+ * a document announced to assistive technology as Japanese, with a left-to-right base direction and
+ * Japanese script tuning — the exact failure the comment above says was fixed, reintroduced on three
+ * routes by a list that could go stale.
+ *
+ * It now comes from the route policy, which is itself checked against the App Router filesystem. A
+ * corporate route cannot be added without being locale-resolved, because there is no second list to
+ * forget. `corporateLocaleResolution.test.ts` asserts the two agree.
+ */
+const CORPORATE_PATHS = new Set<string>([...CORPORATE_INDEXABLE, ...CORPORATE_BLOCKED]);
 
 export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;

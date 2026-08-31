@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { contactDeliveryConfigured } from "@/lib/corporate/contactDelivery";
+
 /**
  * CORP-P5R2 — corporate contact intake. PREVIEW ONLY.
  *
@@ -77,7 +79,8 @@ export async function POST(request: Request) {
   const to = process.env.CORPORATE_CONTACT_TO || process.env.CONTACT_TO_EMAIL;
   const from = process.env.CORPORATE_CONTACT_FROM || process.env.CONTACT_FROM_EMAIL;
 
-  if (!apiKey || !to || !from) {
+  // CORP-v1.3 — the same predicate the page uses to decide whether to promise a reply at all.
+  if (!contactDeliveryConfigured()) {
     // No address, no key, no message body in the log.
     console.error("[corporate-contact] transport not configured; enquiry not delivered");
     return NextResponse.json({ ok: false }, { status: 503 });

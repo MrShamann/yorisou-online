@@ -50,14 +50,14 @@
   direction: ltr; unicode-bidi: isolate; text-anchor: start;
 }
 .baseCell {
-  fill: rgba(116, 186, 166, 0.42);
-  stroke: #74baa6;
+  fill: rgba(60, 156, 240, 0.42);
+  stroke: #3c9cf0;
   animation: cellPulse var(--loop) ease-in-out infinite;
 }
 @keyframes cellPulse {
-  0%, 74% { fill: rgba(116, 186, 166, 0.42); }
-  86% { fill: rgba(116, 186, 166, 0.9); }
-  100% { fill: rgba(116, 186, 166, 0.42); }
+  0%, 74% { fill: rgba(60, 156, 240, 0.42); }
+  86% { fill: rgba(60, 156, 240, 0.9); }
+  100% { fill: rgba(60, 156, 240, 0.42); }
 }
 
 /* 1 — signals: present from frame zero, pulsing first */
@@ -72,7 +72,7 @@
 
 /* 2 — evidence: edges are fully drawn; a jade sweep runs along them */
 .edge {
-  fill: none; stroke: #74baa6; stroke-opacity: 0.5; stroke-width: 1.1;
+  fill: none; stroke: #3c9cf0; stroke-opacity: 0.5; stroke-width: 1.1;
   stroke-dasharray: 6 4;
   animation: flow var(--loop) linear infinite;
 }
@@ -81,8 +81,8 @@
   100% { stroke-dashoffset: 0; }
 }
 
-.nodeRing { fill: #0e1211; stroke: #74baa6; }
-.nodeCore { fill: #74baa6; animation: corePulse var(--loop) ease-in-out infinite; }
+.nodeRing { fill: #0e1211; stroke: #3c9cf0; }
+.nodeCore { fill: #3c9cf0; animation: corePulse var(--loop) ease-in-out infinite; }
 @keyframes corePulse {
   0%, 14% { r: 3px; opacity: 0.85; }
   22% { r: 4.2px; opacity: 1; }
@@ -92,7 +92,7 @@
 /* 3 — venture: defined from frame zero; its spine brightens on cue */
 .ventureBox { fill: none; stroke: rgba(233, 231, 224, 0.62); }
 .ventureSpine {
-  stroke: #74baa6; stroke-opacity: 0.45;
+  stroke: #3c9cf0; stroke-opacity: 0.45;
   animation: spinePulse var(--loop) ease-in-out infinite;
 }
 @keyframes spinePulse {
@@ -103,7 +103,7 @@
 
 /* 4 — founding team: attached from frame zero */
 .teamNode {
-  fill: #0e1211; stroke: #74baa6;
+  fill: #0e1211; stroke: #3c9cf0;
   animation: attachPulse var(--loop) ease-in-out infinite;
 }
 @keyframes attachPulse {
@@ -115,7 +115,7 @@
 /* 5 — the independent company: separated from frame zero */
 .company { opacity: 1; }
 .companyBox { fill: none; stroke: rgba(233, 231, 224, 0.8); }
-.companyCore { fill: #74baa6; animation: companyPulse var(--loop) ease-in-out infinite; }
+.companyCore { fill: #3c9cf0; animation: companyPulse var(--loop) ease-in-out infinite; }
 @keyframes companyPulse {
   0%, 62% { opacity: 0.8; }
   74% { opacity: 1; }
@@ -124,7 +124,7 @@
 
 /* 6 — capability returning to the shared floor */
 .returnPath {
-  fill: none; stroke: #74baa6; stroke-opacity: 0.34; stroke-width: 1;
+  fill: none; stroke: #3c9cf0; stroke-opacity: 0.34; stroke-width: 1;
   stroke-dasharray: 4 6;
   animation: returnFlow var(--loop) linear infinite;
 }

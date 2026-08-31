@@ -47,6 +47,17 @@ export type SiteCopy = {
 
   /* ── shared ─────────────────────────────────────────────────────────── */
   common: {
+    /**
+     * CORP-v1.3 — the two words the venture COMPOSITION line is built from.
+     *
+     * The site used to write the venture count into a sentence in twenty-one languages ("three
+     * areas, underway now"), which was wrong in two ways at once: it counted a concept as a fourth
+     * kind of thing that was underway, and it put a number in a place no evidence could correct. The
+     * numbers now come from `brand.ts` — derived from the same repository evidence as the formation
+     * stages — and the only translated part is the two nouns they attach to.
+     */
+    buildingLabel: string;
+    conceptLabel: string;
     readMore: (name: string) => string;
     backHome: string;
     stageLabel: string;
@@ -403,6 +414,13 @@ export type SiteCopy = {
     channels: readonly { title: string; body: string }[];
     formHeading: readonly string[];
     formIntro: string;
+    /**
+     * CORP-v1.3 — what the page says when the transport is not configured. It REPLACES the lead
+     * rather than being added below it: `lead` ends by promising a reply, and a page that invites a
+     * message it cannot receive should say so once, at the top, instead of contradicting itself
+     * three sections down. The form is not rendered at all in that state.
+     */
+    unavailableBody: string;
     fields: {
       name: string; namePlaceholder: string;
       email: string; emailPlaceholder: string;

@@ -41,8 +41,30 @@ export type RouteGroup =
 
 export type ShellOwner = "CORPORATE" | "CONSUMER" | "NONE";
 
-/** The only routes that may be indexed in the local corporate candidate. */
-export const CORPORATE_INDEXABLE: readonly string[] = ["/", "/mirai-move", "/kakari", "/about"];
+/**
+ * The only routes a crawler may fetch.
+ *
+ * CORP-v1.3 — three corporate pages are added: `/ventures`, `/chigamo` and `/build-with-us`. They
+ * were blocked only because they did not exist when this list was written in CORP-P4AR1, and a
+ * corporate site whose Ventures index cannot be crawled is not a public company site. Their copy is
+ * under the same claim guard as the four already here, so nothing indexable becomes less checked.
+ *
+ * `/company` and `/contact` stay OUT, and deliberately: `/contact` must not be advertised while its
+ * delivery is unverified, and `/company` becoming the crawlable record of the company is a Founder
+ * decision, not a routing one. Both are listed in CORPORATE_BLOCKED with their unblock conditions in
+ * docs/yorisou/corporate/CORP_V13_PRODUCTION_LAUNCH_GATE.md.
+ *
+ * Every entry here is rendered into robots.txt ANCHORED with `$`, so each matches exactly one path.
+ */
+export const CORPORATE_INDEXABLE: readonly string[] = [
+  "/",
+  "/ventures",
+  "/mirai-move",
+  "/kakari",
+  "/chigamo",
+  "/about",
+  "/build-with-us",
+];
 
 /** Corporate routes blocked while their release blockers remain open. */
 export const CORPORATE_BLOCKED: readonly string[] = ["/company", "/contact"];

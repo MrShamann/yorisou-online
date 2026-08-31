@@ -30,7 +30,7 @@ export const fr: SiteCopy = {
     langCurrent: "Langue actuelle",
     previewBadge: "Aperçu — non publié",
     nav: { home: "Accueil", miraiMove: "Mirai Move", kakari: "Kakari", about: "À propos", company: "Entreprise", contact: "Contact" },
-    footerTagline: "Faire d’un problème structurel une entreprise.",
+    footerTagline: "Les personnes et la technique construisent l’avenir.",
     footerProjects: "Projets",
     footerCompany: "Entreprise",
     footerLegalNote: "Les faits présentés ici reposent sur des éléments que nous avons pu vérifier.",
@@ -38,7 +38,7 @@ export const fr: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — D’un problème structurel à une entreprise qui tient debout seule.", description: "Yorisou LLC est une fonderie d’entreprises : nous cherchons des problèmes structurels, réunissons les preuves et les actifs nécessaires, et nous associons à des équipes fondatrices pour en faire des entreprises indépendantes. Mirai Move, Kakari et Chigamo sont en cours." },
+    home: { title: "Yorisou LLC — D’un problème structurel à une entreprise qui tient debout seule.", description: "Yorisou LLC est une fonderie d’entreprises : nous cherchons des problèmes structurels, réunissons les preuves et les actifs nécessaires, et nous associons à des équipes fondatrices pour en faire des entreprises indépendantes. Mirai Move et Kakari sont en construction ; Chigamo en est au stade du concept." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Une plateforme d’information, de mise en relation et de développement d’activités dans le secteur de la mobilité au Japon. Le site public est en ligne ; les fonctionnalités de la plateforme sont en cours de développement." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Un accompagnement multilingue pour les démarches administratives et les documents, destiné aux personnes qui vivent au Japon et à celles qui y créent une activité. En cours de développement, pas encore accessible au public." },
     about: { title: "Notre façon de construire — Yorisou LLC", description: "Trouver le problème, le vérifier, le concevoir comme une activité, constituer une équipe fondatrice et la conduire jusqu’à une entreprise indépendante. Le fonctionnement de la fonderie Yorisou, et la place qu’y occupe le socle technique commun." },
@@ -50,6 +50,8 @@ export const fr: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "en construction",
+    conceptLabel: "au stade du concept",
     readMore: (name) => `En savoir plus sur ${name}`,
     backHome: "Retour à la présentation de l’entreprise",
     stageLabel: "Étape actuelle",
@@ -83,7 +85,7 @@ export const fr: SiteCopy = {
     ],
 
     buildEyebrow: "Ce que nous construisons",
-    buildHeading: ["Trois domaines,", "en cours aujourd’hui."],
+    buildHeading: ["Des domaines que le système n’atteint pas —", "abordés un par un."],
 
     howEyebrow: "Notre façon de construire",
     howHeading: ["Prendre en charge la complexité", "et la rendre utilisable."],
@@ -336,6 +338,7 @@ export const fr: SiteCopy = {
     ],
     formHeading: ["Nous écrire"],
     formIntro: "Utilisez le formulaire ci-dessous. Chaque demande est lue et reçoit une réponse au fur et à mesure.",
+    unavailableBody: "Le chemin de distribution n’a pas encore été vérifié : un message envoyé d’ici ne pourrait pas être garanti. Le formulaire s’ouvrira sur cette page dès que ce sera confirmé.",
     fields: {
       name: "Nom", namePlaceholder: "Votre nom",
       email: "E-mail", emailPlaceholder: "vous@exemple.com",
@@ -361,7 +364,7 @@ export const fr: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ───────────────────────────────── */
   ventures: {
     eyebrow: "Les projets en cours",
-    heading: ["Trois domaines, menés", "jusqu’au seuil de l’entreprise."],
+    heading: ["Aucun d’eux ne tient encore", "debout comme entreprise."],
     lead:
       "Dans chacun d’eux, les dispositifs et les systèmes existent déjà — et s’arrêtent juste avant les personnes qui en ont besoin. Yorisou travaille dans cet écart, et vérifie à mesure qu’il avance.",
     cards: [

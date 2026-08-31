@@ -20,8 +20,8 @@ export function NetworkSystem({ labels, centre }: { labels: readonly string[]; c
     <svg viewBox="0 0 300 250" role="presentation" aria-hidden="true" focusable="false" className={styles.svgBlock}>
       <defs>
         <radialGradient id="p5r2net" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#74baa6" stopOpacity="0.20" />
-          <stop offset="100%" stopColor="#74baa6" stopOpacity="0" />
+          <stop offset="0%" stopColor="#3c9cf0" stopOpacity="0.20" />
+          <stop offset="100%" stopColor="#3c9cf0" stopOpacity="0" />
         </radialGradient>
       </defs>
       <circle cx="150" cy="120" r="72" fill="url(#p5r2net)" />
@@ -35,8 +35,8 @@ export function NetworkSystem({ labels, centre }: { labels: readonly string[]; c
           <text x={s.x} y={s.y + 3} textAnchor="middle" fontSize="8" fill="#b3b8b3">{i + 1}</text>
         </g>
       ))}
-      <circle cx="150" cy="120" r="26" fill="#0e1211" stroke="#74baa6" strokeWidth="1.3" />
-      <circle cx="150" cy="120" r="3" fill="#74baa6" />
+      <circle cx="150" cy="120" r="26" fill="#0e1211" stroke="#3c9cf0" strokeWidth="1.3" />
+      <circle cx="150" cy="120" r="3" fill="#3c9cf0" />
       <text x="150" y="168" textAnchor="middle" fontSize="9.5" fill="#8d938e" letterSpacing="0.06em">{centre}</text>
       {labels.slice(0, 4).map((l, i) => (
         <text key={`l${i}`} x={seats[i].x} y={seats[i].y + (i < 2 ? -16 : 24)} textAnchor="middle"
@@ -53,7 +53,7 @@ export function ProcedureSystem({ steps, boundary }: { steps: readonly string[];
       <line x1="34" y1="38" x2="34" y2="158" stroke="rgba(233,231,224,0.22)" strokeWidth="1" />
       {ys.map((y, i) => (
         <g key={i}>
-          <circle cx="34" cy={y} r="6" fill="#0e1211" stroke={i === 3 ? "#74baa6" : "rgba(233,231,224,0.42)"} />
+          <circle cx="34" cy={y} r="6" fill="#0e1211" stroke={i === 3 ? "#3c9cf0" : "rgba(233,231,224,0.42)"} />
           <line x1="44" y1={y} x2="268" y2={y} stroke="rgba(233,231,224,0.13)" strokeWidth="1" />
           <text x="50" y={y - 8} fontSize="9.5" fill="#b3b8b3">
             {(steps[i] ?? "").length > 26 ? (steps[i] ?? "").slice(0, 25) + "…" : steps[i] ?? ""}
@@ -78,9 +78,9 @@ export function HeroField({ human, systems, relation }: { human: readonly string
     <svg viewBox="0 0 440 280" preserveAspectRatio="xMidYMid meet" role="presentation" aria-hidden="true" focusable="false" className={styles.svgFill}>
       <defs>
         <linearGradient id="p5r2beam" x1="0" x2="1">
-          <stop offset="0%" stopColor="#74baa6" stopOpacity="0.1" />
-          <stop offset="50%" stopColor="#74baa6" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#74baa6" stopOpacity="0.1" />
+          <stop offset="0%" stopColor="#3c9cf0" stopOpacity="0.1" />
+          <stop offset="50%" stopColor="#3c9cf0" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#3c9cf0" stopOpacity="0.1" />
         </linearGradient>
       </defs>
       {[70, 140, 210].map((y) => (
@@ -100,9 +100,9 @@ export function HeroField({ human, systems, relation }: { human: readonly string
       ))}
       <g>
         <rect x="206" y="96" width="48" height="88" rx="2" fill="none" stroke="rgba(233,231,224,0.28)" />
-        <line x1="230" y1="96" x2="230" y2="184" stroke="#74baa6" strokeOpacity="0.4" />
-        <circle cx="230" cy="140" r="6" fill="#0e1211" stroke="#74baa6" strokeWidth="1.3" />
-        <circle cx="230" cy="140" r="2" fill="#74baa6" />
+        <line x1="230" y1="96" x2="230" y2="184" stroke="#3c9cf0" strokeOpacity="0.4" />
+        <circle cx="230" cy="140" r="6" fill="#0e1211" stroke="#3c9cf0" strokeWidth="1.3" />
+        <circle cx="230" cy="140" r="2" fill="#3c9cf0" />
         <text x="230" y="86" textAnchor="middle" fontSize="9" fill="#8d938e" letterSpacing="0.08em">{relation}</text>
       </g>
       {sy.map((y, i) => (
@@ -140,11 +140,11 @@ export function ContextField({ place, context, result }: { place: string; contex
           strokeDasharray={i === 0 ? undefined : "2 6"}
         />
       ))}
-      <circle cx="104" cy="126" r="4" fill="#74baa6" />
+      <circle cx="104" cy="126" r="4" fill="#3c9cf0" />
       <text x="104" y="34" textAnchor="middle" fontSize="9" fill="#8d938e" letterSpacing="0.06em">
         {place}
       </text>
-      <line x1="104" y1="126" x2="228" y2="126" stroke="rgba(116,186,166,0.34)" strokeDasharray="3 5" />
+      <line x1="104" y1="126" x2="228" y2="126" stroke="rgba(60, 156, 240,0.34)" strokeDasharray="3 5" />
       <text x="166" y="118" textAnchor="middle" fontSize="8.5" fill="#8d938e" letterSpacing="0.06em">
         {context}
       </text>

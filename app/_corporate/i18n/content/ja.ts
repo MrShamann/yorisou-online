@@ -43,7 +43,7 @@ export const ja: SiteCopy = {
     langCurrent: "現在の言語",
     previewBadge: "Preview — 未公開",
     nav: { home: "ホーム", miraiMove: "Mirai Move", kakari: "Kakari", about: "私たちについて", company: "会社情報", contact: "お問い合わせ" },
-    footerTagline: "構造の課題を、会社にする。",
+    footerTagline: "人と技術が、未来をつくる。",
     footerProjects: "事業",
     footerCompany: "会社",
     footerLegalNote: "掲載している事実は、確認できた記録に基づいています。",
@@ -51,7 +51,7 @@ export const ja: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou 合同会社 — 構造の課題から、独立して立つ会社をつくる。", description: "Yorisou合同会社は、構造的な課題を見つけ、証拠と事業資産をつくり、創業チームと組んで独立した会社にしていくファウンドリーです。Mirai Move、Kakari、Chigamo を進めています。" },
+    home: { title: "Yorisou 合同会社 — 構造の課題から、独立して立つ会社をつくる。", description: "Yorisou合同会社は、構造的な課題を見つけ、証拠と事業資産をつくり、創業チームと組んで独立した会社にしていくファウンドリーです。Mirai Move と Kakari を構築中で、Chigamo は構想段階です。" },
     miraiMove: { title: "Mirai Move — Yorisou 合同会社", description: "日本のモビリティ領域における、情報・マッチング・事業開発のためのプラットフォーム。公開サイトが稼働中で、プラットフォーム機能は開発段階です。" },
     kakari: { title: "Kakari — Yorisou 合同会社", description: "日本で暮らす人・事業を始める人のための、多言語の行政手続き・書類サポート。現在は開発中で、一般には公開していません。" },
     about: { title: "つくり方 — Yorisou 合同会社", description: "課題を見つけ、確かめ、事業として設計し、創業チームと組んで独立した会社にしていく。Yorisouのファウンドリーの進め方と、共通基盤の位置づけ。" },
@@ -63,6 +63,8 @@ export const ja: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "構築中",
+    conceptLabel: "構想段階",
     readMore: (name) => `${name} について詳しく`,
     backHome: "会社トップへ戻る",
     stageLabel: "現在の段階",
@@ -96,7 +98,7 @@ export const ja: SiteCopy = {
     ],
 
     buildEyebrow: "つくっているもの",
-    buildHeading: ["いま、三つの領域で", "進めています。"],
+    buildHeading: ["制度が届いていない領域を、", "ひとつずつ形にしています。"],
 
     howEyebrow: "つくり方",
     howHeading: ["複雑さを引き受けて、", "使えるかたちにする。"],
@@ -349,6 +351,7 @@ export const ja: SiteCopy = {
     ],
     formHeading: ["フォームから送る"],
     formIntro: "以下のフォームからお送りください。いただいた内容は担当者が確認し、順次ご連絡します。",
+    unavailableBody: "送信経路の検証が完了していないため、確実にお届けできる状態ではありません。確認が取れ次第、このページで受け付けを開始します。",
     fields: {
       name: "お名前", namePlaceholder: "山田 太郎",
       email: "メールアドレス", emailPlaceholder: "you@example.com",
@@ -374,7 +377,7 @@ export const ja: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
     eyebrow: "いまの事業",
-    heading: ["いま、三つの領域で", "会社になる手前を進めています。"],
+    heading: ["どれも、会社として", "立つ手前にあります。"],
     lead:
       "どれも、制度や仕組みがすでにあるのに、必要な人のところで止まっている領域です。YORISOU はそこに入り、確かめながら形にしています。",
     cards: [

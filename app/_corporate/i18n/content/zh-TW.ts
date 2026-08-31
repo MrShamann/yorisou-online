@@ -50,7 +50,7 @@ export const zh_TW: SiteCopy = {
     langCurrent: "目前語言",
     previewBadge: "Preview — 尚未公開",
     nav: { home: "首頁", miraiMove: "Mirai Move", kakari: "Kakari", about: "關於我們", company: "公司資訊", contact: "聯絡我們" },
-    footerTagline: "把結構性課題，變成公司。",
+    footerTagline: "人與技術，創造未來。",
     footerProjects: "事業",
     footerCompany: "公司",
     footerLegalNote: "本網站記載的事實，皆以可查證的紀錄為依據。",
@@ -58,7 +58,7 @@ export const zh_TW: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou 合同會社 — 從結構性的課題，打造能獨立站立的公司。", description: "Yorisou 合同會社找出結構性的課題，建立證據與事業資產，並與創業團隊一起把它們帶向能獨立站立的公司。目前推進 Mirai Move、Kakari 與 Chigamo。" },
+    home: { title: "Yorisou 合同會社 — 從結構性的課題，打造能獨立站立的公司。", description: "Yorisou 合同會社找出結構性的課題，建立證據與事業資產，並與創業團隊一起把它們帶向能獨立站立的公司。目前正在建構 Mirai Move 與 Kakari，Chigamo 仍在構想階段。" },
     miraiMove: { title: "Mirai Move — Yorisou 合同會社", description: "面向日本移動出行領域的資訊、媒合與事業開發平台。公開網站營運中，平台功能仍在開發階段。" },
     kakari: { title: "Kakari — Yorisou 合同會社", description: "為在日本生活的人、在日本創業的人提供多語言的行政程序與文件支援。目前開發中，尚未對外公開。" },
     about: { title: "我們的做法 — Yorisou 合同會社", description: "找出課題、加以查證、設計成事業，再與創業團隊一起帶到獨立的公司。Yorisou 的 foundry 如何進行，以及共用基礎落在什麼位置。" },
@@ -70,6 +70,8 @@ export const zh_TW: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "建構中",
+    conceptLabel: "構想階段",
     readMore: (name) => `深入了解 ${name}`,
     backHome: "返回公司首頁",
     stageLabel: "目前階段",
@@ -103,7 +105,7 @@ export const zh_TW: SiteCopy = {
     ],
 
     buildEyebrow: "我們正在打造的",
-    buildHeading: ["三個領域，", "目前同時推進中。"],
+    buildHeading: ["制度沒有觸及的領域，", "我們一個一個做出來。"],
 
     howEyebrow: "我們的做法",
     howHeading: ["承接複雜，", "轉化成可以使用的形式。"],
@@ -356,6 +358,7 @@ export const zh_TW: SiteCopy = {
     ],
     formHeading: ["透過表單聯絡"],
     formIntro: "請使用以下表單傳送。我們會確認每一封來信，並依序回覆。",
+    unavailableBody: "我們尚未完成寄送路徑的驗證，因此無法保證從這裡送出的訊息一定送達。確認之後，表單會在本頁開放。",
     fields: {
       name: "姓名", namePlaceholder: "您的姓名",
       email: "電子郵件", emailPlaceholder: "you@example.com",
@@ -381,7 +384,7 @@ export const zh_TW: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────── */
   ventures: {
     eyebrow: "目前的事業",
-    heading: ["我們在三個領域，", "推進成為公司之前的階段。"],
+    heading: ["它們都還沒有", "作為公司獨立站住。"],
     lead:
       "這三個領域有一個共同點：制度與機制其實都已經存在，卻在需要的人面前停了下來。Yorisou 走進那個位置，一邊查證，一邊把它做成形。",
     cards: [

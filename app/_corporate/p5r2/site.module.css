@@ -41,13 +41,33 @@
   --sys-ink-2: #b3b8b3;
   --sys-ink-3: #8d938e;
 
-  /* signal — state only */
-  --jade: #2f6b5e;
-  --jade-2: #3f8676;
-  --jade-on-dark: #74baa6;
-  --jade-wash: #e4ede9;
+  /*
+   * CORP-v1.3 — the signal colour is now DERIVED FROM THE LOGO, not chosen beside it.
+   *
+   * Until v1.2R3 this site had no logo, and the accent was a jade green picked to suit the paper.
+   * R3 integrated the Founder's real artwork, which is deep navy and blue — so the company's own
+   * mark and the company's own site were stating two different identities on the same screen. That
+   * is an incomplete brand system, not a taste question, and it is fixed here at the token level:
+   * no element moves, no type changes, no layout is touched. Only the hue is reconciled.
+   *
+   * Every value below is SAMPLED from `public/brand/yorisou-logo.png` — the pixel clusters of the
+   * wordmark ink, the symbol core, the bright highlight and the pale ribbon. Nothing is invented
+   * and nothing is a tint of a guess. Contrast is measured in `tests/corporate-p5r2/brandSystem.test.ts`.
+   */
+  --brand-ink: #061133;        /* wordmark navy, the artwork's dominant opaque colour */
+  --signal: #0c3c9c;           /* symbol core blue — 9.39:1 on --paper */
+  --signal-2: #1854b4;         /* mid blue in the ribbon gradient */
+  --signal-on-dark: #3c9cf0;   /* bright highlight and accent dot — 6.47:1 on --sys */
+  --signal-wash: #cce4fc;      /* the pale ribbon, used as a surface */
   --amber: #a87f42;
   --amber-on-dark: #d3ab6b;
+
+  /*
+   * The venture accents are deliberately NOT tokens here. They live once, in
+   * `app/_corporate/brand.ts`, with the source each was read from, and reach the page as an inline
+   * value from that registry. Declaring them again in CSS would create a second place for the same
+   * fact — which is precisely how `proxy.ts` lost three routes' locales for a whole release.
+   */
 
   --pad: clamp(20px, 5vw, 48px);
   --max: 1240px;
@@ -152,7 +172,7 @@
   background: var(--paper);
   color: var(--ink);
   padding: 10px 14px;
-  outline: 2px solid var(--jade);
+  outline: 2px solid var(--signal);
   outline-offset: 2px;
 }
 
@@ -169,18 +189,27 @@
   letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); text-decoration: none;
   display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap;
 }
-.wordmark:focus-visible { outline: 2px solid var(--jade); outline-offset: 4px; }
+.wordmark:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
 .headerRight { display: flex; align-items: center; gap: clamp(8px, 1.4vw, 20px); }
 .navDesktop { display: none; gap: clamp(12px, 1.7vw, 26px); align-items: center; }
 @media (min-width: 1000px) { .navDesktop { display: flex; } }
+/*
+ * CORP-v1.3 — `min-inline-size` so a two-character label is still a 24px target.
+ *
+ * Measured: the Korean 「문의」 rendered 23.84 x 44 — 0.16px under the WCAG 2.2 minimum. It already
+ * CONFORMED, because adjacent nav targets sit 24.5px apart and SC 2.5.8's spacing exception applies,
+ * which is why axe reported nothing. Sitting on the line by a sixth of a pixel in one of twenty-one
+ * languages is not worth keeping, and this only affects labels narrower than 24px.
+ */
 .navLink {
   font-size: 13.5px; color: var(--ink-3); text-decoration: none; white-space: nowrap;
-  display: inline-flex; align-items: center; min-height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; min-inline-size: 24px;
   border-bottom: 1.5px solid transparent;
 }
-.navLink:hover { color: var(--ink); border-bottom-color: var(--jade); }
-.navLink:focus-visible { outline: 2px solid var(--jade); outline-offset: 4px; }
-.navLink[aria-current="page"] { color: var(--ink); border-bottom-color: var(--jade); }
+.navLink:hover { color: var(--ink); border-bottom-color: var(--signal); }
+.navLink:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.navLink[aria-current="page"] { color: var(--ink); border-bottom-color: var(--signal); }
 
 .iconBtn {
   display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding-inline: 13px;
@@ -188,7 +217,7 @@
   font-family: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap;
 }
 .iconBtn:hover { color: var(--ink); border-color: var(--line-3); }
-.iconBtn:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+.iconBtn:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .menuBtn { }
 @media (min-width: 1000px) { .menuBtn { display: none; } }
 .bars { display: inline-flex; flex-direction: column; gap: 4px; }
@@ -209,7 +238,7 @@
   font-size: 14px; color: var(--ink-3); text-decoration: none;
 }
 .panelLink:hover { background: var(--paper-2); color: var(--ink); }
-.panelLink:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
+.panelLink:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
 
 /* ── sections ───────────────────────────────────────────────────────────── */
 .main { flex: 1; }
@@ -286,7 +315,7 @@
   display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--line-2);
   padding: 8px 14px; font-size: 13px; color: var(--ink-2); background: var(--paper);
 }
-.chipDot { width: 5px; height: 5px; border-radius: 50%; background: var(--jade); }
+.chipDot { width: 5px; height: 5px; border-radius: 50%; background: var(--signal); }
 
 /* ── cards / rows ───────────────────────────────────────────────────────── */
 .cards { display: grid; gap: clamp(14px, 1.6vw, 20px); }
@@ -297,14 +326,14 @@
   display: flex; flex-direction: column; gap: 8px;
 }
 .cardTint { background: var(--paper-2); border-color: var(--line); }
-.cardNo { font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.14em; color: var(--jade); font-variant-numeric: tabular-nums; }
+.cardNo { font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.14em; color: var(--signal); font-variant-numeric: tabular-nums; }
 .cardTitle { margin: 0; font-size: var(--step-1); font-weight: 600; line-height: 1.5; color: var(--ink); }
 .cardBody { margin: 0; font-size: var(--step--1); line-height: 1.8; color: var(--ink-3); }
 
 .cardDark { background: var(--sys-2); border: 1px solid var(--sys-line); }
 .cardDark .cardTitle { color: var(--sys-ink); }
 .cardDark .cardBody { color: var(--sys-ink-2); }
-.cardDark .cardNo { color: var(--jade-on-dark); }
+.cardDark .cardNo { color: var(--signal-on-dark); }
 
 /* ── project blocks ─────────────────────────────────────────────────────── */
 .projects { display: grid; gap: clamp(28px, 3.4vw, 52px); }
@@ -315,8 +344,8 @@
 .stage { font-size: 11.5px; color: var(--ink-3); border: 1px solid var(--line-2); padding: 3px 9px; line-height: 1.7; }
 .projectLead { margin: 0 0 18px; font-size: var(--step--1); line-height: 1.8; color: var(--ink-2); max-width: 46ch; }
 
-.boundary { margin-top: 18px; padding-top: 15px; border-top: 2px solid var(--jade); }
-.boundaryDark { border-top-color: var(--jade-on-dark); }
+.boundary { margin-top: 18px; padding-top: 15px; border-top: 2px solid var(--signal); }
+.boundaryDark { border-top-color: var(--signal-on-dark); }
 .boundaryTitle { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
 .boundaryDark .boundaryTitle { color: var(--sys-ink); }
 .boundaryBody { margin: 0; font-size: 12.5px; line-height: 1.85; color: var(--ink-3); max-width: 60ch; }
@@ -325,13 +354,13 @@
 /* ── links / CTA ────────────────────────────────────────────────────────── */
 .textLink {
   display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
-  font-size: 13.5px; color: var(--jade); text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--jade) 34%, transparent);
+  font-size: 13.5px; color: var(--signal); text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--signal) 34%, transparent);
   align-self: flex-start;
 }
-.textLink:hover { border-bottom-color: var(--jade); }
-.textLink:focus-visible { outline: 2px solid var(--jade); outline-offset: 4px; }
-.textLinkDark { color: var(--jade-on-dark); border-bottom-color: color-mix(in srgb, var(--jade-on-dark) 40%, transparent); }
+.textLink:hover { border-bottom-color: var(--signal); }
+.textLink:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.textLinkDark { color: var(--signal-on-dark); border-bottom-color: color-mix(in srgb, var(--signal-on-dark) 40%, transparent); }
 .arrow { display: inline-block; }
 .root[dir="rtl"] .arrow { transform: scaleX(-1); }
 
@@ -342,7 +371,7 @@
   font-family: inherit; cursor: pointer;
 }
 .btn:hover { background: var(--ink-2); border-color: var(--ink-2); }
-.btn:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+.btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .btnGhost { background: transparent; color: var(--ink); }
 .btnGhost:hover { background: var(--paper-2); }
 
@@ -367,7 +396,7 @@
 .founderRole { margin: 4px 0 0; font-size: 12.5px; color: var(--sys-ink-3); }
 .founderFacts { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
 .founderFacts li { display: flex; gap: 12px; font-size: var(--step--1); line-height: 1.8; color: var(--ink-2); }
-.founderFacts li::before { content: ""; flex: none; width: 5px; height: 5px; margin-top: 11px; background: var(--jade); }
+.founderFacts li::before { content: ""; flex: none; width: 5px; height: 5px; margin-top: 11px; background: var(--signal); }
 .subLabel { margin: 26px 0 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-4); text-transform: uppercase; }
 .root[data-script="Jpan"] .subLabel, .root[data-script="Arab"] .subLabel,
 .root[data-script="Deva"] .subLabel, .root[data-script="Thai"] .subLabel { text-transform: none; letter-spacing: 0.02em; }
@@ -375,7 +404,7 @@
 /* ── message ────────────────────────────────────────────────────────────── */
 .message { max-width: 68ch; }
 .messagePara { margin: 0 0 18px; font-size: var(--step-0); line-height: 2; color: var(--ink-2); }
-.messageFirst::first-letter { font-size: 1.9em; line-height: 1; font-weight: 600; float: inline-start; margin-inline-end: 8px; margin-block-start: 4px; color: var(--jade); }
+.messageFirst::first-letter { font-size: 1.9em; line-height: 1; font-weight: 600; float: inline-start; margin-inline-end: 8px; margin-block-start: 4px; color: var(--signal); }
 .signature { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
 .signatureName { margin: 0; font-size: var(--step-1); font-weight: 600; }
 .signatureRole { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-4); }
@@ -397,7 +426,7 @@
 .discloseSummary::-webkit-details-marker { display: none; }
 .discloseSummary::after { content: "+"; margin-inline-start: auto; font-size: 16px; }
 .disclose[open] .discloseSummary::after { content: "\2013"; }
-.discloseSummary:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+.discloseSummary:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .discloseBody { padding-block: 0 20px; font-size: var(--step--1); line-height: 1.85; color: var(--ink-3); max-width: var(--max-text); }
 .discloseDark .discloseBody { color: var(--sys-ink-2); }
 .discloseBody strong { color: var(--ink); font-weight: 600; }
@@ -409,9 +438,10 @@
 @media (min-width: 760px) { .footerGrid { grid-template-columns: 1.7fr 1fr 1fr; gap: 44px; } }
 .footerTagline { margin: 0; font-size: 13px; line-height: 1.85; color: var(--ink-3); max-width: 32ch; }
 .footerList { margin: 0; padding: 0; list-style: none; }
-.footerLink { font-size: 13.5px; color: var(--ink-2); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
-.footerLink:hover { color: var(--jade); }
-.footerLink:focus-visible { outline: 2px solid var(--jade); outline-offset: 3px; }
+/* `min-inline-size` for the same reason as .navLink: 「소개」 and 「문의」 render 23.84px wide. */
+.footerLink { font-size: 13.5px; color: var(--ink-2); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; min-inline-size: 24px; }
+.footerLink:hover { color: var(--signal); }
+.footerLink:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .footerBase { margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; font-size: 11.5px; color: var(--ink-4); }
 .badge { border: 1px solid var(--line-2); padding: 3px 9px; letter-spacing: 0.08em; font-size: 10.5px; }
 
@@ -447,7 +477,7 @@
 /* The truthful status, not a call to action — see JoinVenture. */
 .joinState {
   margin: 18px 0 20px; padding-inline-start: 12px;
-  border-inline-start: 2px solid var(--jade);
+  border-inline-start: 2px solid var(--signal);
   font-size: 13.5px; line-height: 1.8; color: var(--ink-3);
 }
 
@@ -502,11 +532,68 @@
   font-family: inherit; font-size: 13px; padding: 9px 16px; cursor: pointer;
 }
 .explainerBtn:hover, .explainerBtn:focus-visible { border-color: var(--ink); }
-.explainerDot { width: 6px; height: 6px; border-radius: 50%; background: var(--jade); }
+.explainerDot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
 
 /* ── CORP-v1.2R2.1: venture identity + formation state ───────────────────────────── */
 
 .ventureName { display: block; }
+
+/*
+ * CORP-v1.3 — the venture accent mark.
+ *
+ * A 9px square set on the wordmark's own baseline row. Mirai Move's own Open Graph card puts a
+ * coloured dot beside its wordmark, so this is that venture's device rather than one invented here;
+ * Kakari's square takes its own product accent. Chigamo's is an OPEN outline because it has no brand
+ * source at all — the emptiness is the honest state, not a placeholder waiting to be filled.
+ *
+ * `flex-shrink: 0` matters: at 375px in Arabic the row is tight, and a mark that collapses to a
+ * sliver looks like a rendering fault rather than a brand.
+ */
+.ventureMarkRow { display: flex; align-items: baseline; gap: 8px; }
+.ventureAccent {
+  flex: 0 0 auto;
+  width: 9px; height: 9px;
+  border: 1px solid transparent;
+  border-radius: 1px;
+  transform: translateY(-1px);
+}
+.ventureAccent[data-defined="no"] {
+  background: transparent;
+  border-color: var(--line-3);
+}
+.bandDark .ventureAccent[data-defined="no"] { border-color: var(--sys-line-2); }
+.ventureMarkCompact + *, .ventureMarkRow .ventureMarkCompact { line-height: 1.2; }
+.ventureMarkRow:has(.ventureMarkCompact) { gap: 6px; }
+.ventureMarkRow:has(.ventureMarkCompact) .ventureAccent { width: 7px; height: 7px; }
+
+/*
+ * CORP-v1.3 — the composition line: "2 in build · 1 at concept".
+ *
+ * Digits, not words, and computed from evidence rather than translated. The separator is a drawn
+ * rule instead of a middot character so it needs no bidi handling: in Arabic the two parts simply
+ * swap sides and the rule stays between them.
+ */
+.composition {
+  margin: 10px 0 0;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step--1);
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+}
+.compositionPart { display: inline-flex; align-items: baseline; gap: 5px; }
+.compositionCount { font-weight: 600; font-size: 1.15em; color: var(--signal); font-variant-numeric: tabular-nums; }
+.compositionSep { width: 14px; height: 1px; background: var(--line-2); }
+/*
+ * Dark-surface variants only. An earlier version of this block also scoped them to `.signature`,
+ * which is WRONG and axe caught it: `.signature` is a light section — only `.signatureField`, the
+ * Foundry panel inside it, is dark. The rail composition therefore rendered #8d938e on #fffdf8
+ * (about 3:1) and its digits #3c9cf0 on the same ground (3.1:1), both below AA at 13.5px/15.5px.
+ * On the paper ground the base rule already gives 4.87:1 and 9.39:1.
+ */
+.bandDark .composition { color: var(--sys-ink-3); }
+.bandDark .compositionCount { color: var(--signal-on-dark); }
+.bandDark .compositionSep { background: var(--sys-line-2); }
 .ventureMarkHero {
   margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
   font-size: var(--step-2); font-weight: 600; letter-spacing: -0.01em; color: var(--ink);
@@ -542,10 +629,10 @@
   background: transparent; flex: none;
 }
 .formationDone { color: var(--ink-2); }
-.formationDone .formationDot { background: var(--jade); border-color: var(--jade); }
-.formationDone::after { border-block-start-style: solid; border-color: var(--jade); }
+.formationDone .formationDot { background: var(--signal); border-color: var(--signal); }
+.formationDone::after { border-block-start-style: solid; border-color: var(--signal); }
 .formationCurrent .formationName { color: var(--ink); font-weight: 600; }
-.formationCurrent .formationDot { box-shadow: 0 0 0 3px rgba(116, 186, 166, 0.22); }
+.formationCurrent .formationDot { box-shadow: 0 0 0 3px rgba(60, 156, 240, 0.22); }
 @media (max-width: 560px) {
   .formationNode { font-size: 11px; padding-inline-end: 10px; }
 }
@@ -564,7 +651,7 @@
 }
 .laneSummary::-webkit-details-marker { display: none; }
 .laneSummary:hover { background: var(--surface); }
-.laneSummary:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
+.laneSummary:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
 .lane[open] .laneSummary { border-block-end: 1px solid var(--line); background: var(--surface); }
 /* a quiet affordance — the row is the control, so the marker never competes with the label */
 .laneSummary::after {
@@ -685,7 +772,18 @@
   background: var(--surface);
   padding: 18px var(--pad) 20px;
 }
-.railLabel { margin: 0 0 12px; }
+/*
+ * CORP-v1.3 — the rail head carries the label and the computed composition on one row, so the
+ * first viewport states both WHAT is forming and HOW MUCH of it is real. They stack below 560px
+ * rather than compressing, because the composition is the part a hurried reader most needs.
+ */
+.railHead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px 18px; flex-wrap: wrap; margin-block-end: 12px;
+}
+.railLabel { margin: 0; }
+.railComposition { margin: 0; }
+.railNameRow { display: flex; align-items: center; gap: 8px; }
 .railList {
   display: grid; gap: 1px; margin: 0; padding: 0; list-style: none;
   background: var(--line); border: 1px solid var(--line);

@@ -31,7 +31,7 @@ export const tr: SiteCopy = {
     langCurrent: "Geçerli dil",
     previewBadge: "Önizleme — yayımlanmadı",
     nav: { home: "Ana sayfa", miraiMove: "Mirai Move", kakari: "Kakari", about: "Hakkımızda", company: "Şirket", contact: "İletişim" },
-    footerTagline: "Yapısal sorunları şirkete dönüştürüyoruz.",
+    footerTagline: "İnsan ve teknoloji geleceği kurar.",
     footerProjects: "Projeler",
     footerCompany: "Şirket",
     footerLegalNote: "Burada yer alan her bilgi, doğrulayabildiğimiz bir kayda dayanır.",
@@ -39,7 +39,7 @@ export const tr: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Yapısal sorunlardan, kendi ayakları üzerinde duran şirketler.", description: "Yorisou LLC bir foundry olarak çalışır: yapısal sorunları bulur, kanıt ve iş varlıkları üretir, kurucu ekiplerle birlikte bunları bağımsız şirketlere taşır. Mirai Move, Kakari ve Chigamo üzerinde çalışıyoruz." },
+    home: { title: "Yorisou LLC — Yapısal sorunlardan, kendi ayakları üzerinde duran şirketler.", description: "Yorisou LLC bir foundry olarak çalışır: yapısal sorunları bulur, kanıt ve iş varlıkları üretir, kurucu ekiplerle birlikte bunları bağımsız şirketlere taşır. Mirai Move ve Kakari yapım aşamasında; Chigamo fikir aşamasında." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Japonya’nın mobilite alanında bilgi, eşleştirme ve iş geliştirme için bir platform. Kamuya açık site yayında; platform özellikleri geliştirme aşamasında." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Japonya’da yaşayanlar ve burada iş kurmak isteyenler için idari işlemler ve belgeler konusunda çok dilli destek. Geliştirme aşamasında, henüz genel kullanıma açık değil." },
     about: { title: "Nasıl kuruyoruz — Yorisou LLC", description: "Sorunu bul, doğrula, iş olarak tasarla, kurucu ekibi oluştur ve bağımsız bir şirkete taşı. Yorisou’nun kurma biçimi ve ortak altyapının bu yapı içindeki yeri." },
@@ -51,6 +51,8 @@ export const tr: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "yapım aşamasında",
+    conceptLabel: "fikir aşamasında",
     readMore: (name) => `${name} hakkında daha fazlası`,
     backHome: "Şirket sayfasına dön",
     stageLabel: "Mevcut aşama",
@@ -84,7 +86,7 @@ export const tr: SiteCopy = {
     ],
 
     buildEyebrow: "Geliştirdiklerimiz",
-    buildHeading: ["Şu anda üç alanda", "ilerliyoruz."],
+    buildHeading: ["Sistemin ulaşmadığı alanlar —", "birer birer ele alıyoruz."],
 
     howEyebrow: "Nasıl geliştiriyoruz",
     howHeading: ["Karmaşıklığı üstlenip", "kullanılabilir bir biçime getiriyoruz."],
@@ -337,6 +339,7 @@ export const tr: SiteCopy = {
     ],
     formHeading: ["Bize mesaj gönderin"],
     formIntro: "Aşağıdaki formu kullanabilirsiniz. Gelen her mesajı okuyor ve sırayla yanıtlıyoruz.",
+    unavailableBody: "Teslim yolunu doğrulamayı tamamlamadık; bu nedenle buradan gönderilen bir mesajın ulaşacağını garanti edemeyiz. Doğrulandığı anda form bu sayfada açılacak.",
     fields: {
       name: "Ad soyad", namePlaceholder: "Adınız",
       email: "E-posta", emailPlaceholder: "you@example.com",
@@ -362,7 +365,7 @@ export const tr: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
     eyebrow: "Bugün üzerinde çalıştıklarımız",
-    heading: ["Üç alanda,", "şirket olmanın hemen öncesindeyiz."],
+    heading: ["Hiçbiri henüz", "bir şirket olarak ayakta değil."],
     lead:
       "Üçünde de kurallar ve sistemler zaten var; yalnızca ihtiyaç duyan kişiye varmadan duruyorlar. Yorisou bu aralığa giriyor ve ilerledikçe doğruluyor.",
     cards: [

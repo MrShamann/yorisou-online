@@ -1,5 +1,5 @@
 import styles from "../site.module.css";
-import { Band, Eyebrow, FormationState, StateTriad, TextLink, VentureName } from "../pieces";
+import { Band, Eyebrow, FormationState, StateTriad, TextLink, VentureComposition, VentureName } from "../pieces";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -31,6 +31,12 @@ export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale:
             <Phrase units={v.heading} locale={locale} />
           </h1>
           <p className={`${styles.lead} ${styles.jp}`}>{v.lead}</p>
+          {/*
+            CORP-v1.3 — what the count actually is. The heading no longer states a number, because
+            the number it stated ("three areas, underway now") counted a concept as a venture under
+            construction. This line is computed from each venture's own recorded evidence.
+          */}
+          <VentureComposition building={copy.common.buildingLabel} concept={copy.common.conceptLabel} />
         </div>
       </section>
 

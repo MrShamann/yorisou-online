@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import styles from "./site.module.css";
+import { ventureBrandByName, ventureCounts } from "../brand";
 
 export function Band({
   children, id, tint, line, dark,
@@ -186,11 +187,69 @@ export function VentureName({
 }) {
   const markClass =
     size === "hero" ? styles.ventureMarkHero : size === "compact" ? styles.ventureMarkCompact : styles.projectName;
+  /*
+   * CORP-v1.3 — each venture now carries its OWN colour, read from its own repository, and the one
+   * venture that has no canonical source carries none.
+   *
+   * Chigamo is drawn as an open square rather than a filled one. That is not a styling choice: it
+   * has no brand source of any kind, so assigning it a colour would be inventing an identity for a
+   * concept, and the site would then look like it has three equally-established ventures. An empty
+   * outline says what is true — the shape exists, nothing has been filled in yet.
+   *
+   * The mark is aria-hidden and purely decorative. The wordmark and the stage are always rendered
+   * as text beside it, so nothing here is communicated by colour alone.
+   */
+  const brand = ventureBrandByName(name);
   return (
     <span className={styles.ventureName}>
-      <Tag className={markClass}>{name}</Tag>
+      <span className={styles.ventureMarkRow}>
+        {brand ? (
+          <span
+            className={styles.ventureAccent}
+            data-defined={brand.accent ? "yes" : "no"}
+            style={brand.accent ? { background: brand.accent, borderColor: brand.accent } : undefined}
+            aria-hidden="true"
+          />
+        ) : null}
+        <Tag className={markClass}>{name}</Tag>
+      </span>
       {reading ? <span className={`${styles.brandLine} ${styles.jp}`}>{reading}</span> : null}
     </span>
+  );
+}
+
+/**
+ * CORP-v1.3 — the venture COMPOSITION, computed rather than written.
+ *
+ * The old copy said "three areas, underway now" in twenty-one languages. Two of the three are being
+ * built; the third is a hypothesis with no repository, no product and no users. Counting all three
+ * as one kind of thing overstated the company by exactly one venture, and no translator could have
+ * caught it, because the number was inside a sentence rather than derived from anything.
+ *
+ * These numbers come from `VENTURE_CLASS`, which is set from the same repository evidence as the
+ * formation stages. If a venture's evidence changes, this line changes with it; if someone adds a
+ * fourth venture, it counts itself. The only translated part is the two nouns.
+ */
+export function VentureComposition({
+  building,
+  concept,
+  className,
+}: {
+  building: string;
+  concept: string;
+  className?: string;
+}) {
+  const counts = ventureCounts();
+  return (
+    <p className={`${styles.composition}${className ? ` ${className}` : ""}`}>
+      <span className={styles.compositionPart}>
+        <b className={styles.compositionCount}>{counts.building}</b> {building}
+      </span>
+      <span className={styles.compositionSep} aria-hidden="true" />
+      <span className={styles.compositionPart}>
+        <b className={styles.compositionCount}>{counts.concept}</b> {concept}
+      </span>
+    </p>
   );
 }
 

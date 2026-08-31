@@ -104,3 +104,29 @@ Revisit — and expect to split — when any of these becomes true:
 The corporate surface is additive and confined to `app/_corporate/**` plus its own routes, with three
 shared files touched. Reverting the branch removes it entirely; the consumer product is unaffected
 because no consumer file's behaviour was changed. There is no data migration to unwind.
+
+## CORP-v1.3 amendment — the shared browser identity
+
+One shared surface was not in the original list and turns out to matter: **the document-level
+identity**. `app/icon.*`, `app/opengraph-image.*` and the root `metadata` fallback are per-app, not
+per-route, so both surfaces necessarily share one favicon, one home-screen icon, one share card and
+one fallback title.
+
+Before v1.3 that shared identity was the **consumer** one: a purple `#6C4CFF` heart mark in
+`app/icon.svg`, and a fallback title introducing the company as a self-reflection service. Because
+commit `9f0e8ff` had already promoted the corporate site to the root URLs, every corporate page was
+being identified in the browser as the consumer product.
+
+v1.3 makes the shared identity **corporate**, which is correct while the root is corporate:
+
+- `app/icon.svg` (consumer heart) removed; `app/icon.png`, `app/apple-icon.png`,
+  `app/opengraph-image.png` and `app/twitter-image.png` generated from the Founder's artwork.
+- The root `metadata` title default and description are the company's.
+- `viewport.themeColor` is declared in both colour schemes from brand values.
+
+**The consequence, stated rather than discovered later:** the legacy consumer routes in this
+repository now inherit the corporate favicon, home-screen icon, share card and fallback title.
+Consumer routes that define their own metadata are unaffected; only the fallback changes. This is one
+more reason option **B** — separate repositories, or at minimum a route-group split — is the right end
+state, and it is recorded as decision **B2** in `CORP_V13_PRODUCTION_LAUNCH_GATE.md`. Production
+still serves the old identity, because none of this is deployed.

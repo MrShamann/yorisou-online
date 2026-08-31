@@ -30,7 +30,7 @@ export const id: SiteCopy = {
     langCurrent: "Bahasa saat ini",
     previewBadge: "Pratinjau — belum dipublikasikan",
     nav: { home: "Beranda", miraiMove: "Mirai Move", kakari: "Kakari", about: "Tentang Kami", company: "Perusahaan", contact: "Kontak" },
-    footerTagline: "Masalah struktural, kami jadikan perusahaan.",
+    footerTagline: "Manusia dan teknologi membangun masa depan.",
     footerProjects: "Proyek",
     footerCompany: "Perusahaan",
     footerLegalNote: "Semua yang kami cantumkan berpijak pada catatan yang dapat kami pastikan.",
@@ -38,7 +38,7 @@ export const id: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Dari masalah struktural menjadi perusahaan yang berdiri sendiri.", description: "Yorisou LLC bekerja sebagai foundry: kami menemukan masalah struktural, membangun bukti dan aset usaha, lalu bergabung dengan tim pendiri untuk mengubahnya menjadi perusahaan yang mandiri. Mirai Move, Kakari, dan Chigamo sedang kami jalankan." },
+    home: { title: "Yorisou LLC — Dari masalah struktural menjadi perusahaan yang berdiri sendiri.", description: "Yorisou LLC bekerja sebagai foundry: kami menemukan masalah struktural, membangun bukti dan aset usaha, lalu bergabung dengan tim pendiri untuk mengubahnya menjadi perusahaan yang mandiri. Mirai Move dan Kakari sedang dibangun; Chigamo masih pada tahap konsep." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Platform untuk informasi, pencocokan, dan pengembangan bisnis di sektor mobilitas Jepang. Situs publiknya sudah aktif; fitur platformnya masih dalam tahap pengembangan." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Dukungan multibahasa untuk prosedur administrasi dan dokumen, bagi orang yang tinggal di Jepang dan yang memulai usaha di sini. Masih dalam pengembangan dan belum dibuka untuk umum." },
     about: { title: "Cara kami membangun — Yorisou LLC", description: "Menemukan masalahnya, memastikannya, merancangnya sebagai usaha, bergabung dengan tim pendiri, lalu membawanya menjadi perusahaan yang mandiri. Cara kerja foundry Yorisou, dan letak fondasi bersama di dalamnya." },
@@ -50,6 +50,8 @@ export const id: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "sedang dibangun",
+    conceptLabel: "tahap konsep",
     readMore: (name) => `Selengkapnya tentang ${name}`,
     backHome: "Kembali ke halaman perusahaan",
     stageLabel: "Tahap saat ini",
@@ -84,7 +86,7 @@ export const id: SiteCopy = {
     ],
 
     buildEyebrow: "Yang kami bangun",
-    buildHeading: ["Tiga bidang", "yang sedang berjalan sekarang."],
+    buildHeading: ["Bidang yang tidak dijangkau sistem —", "kami tangani satu per satu."],
 
     howEyebrow: "Cara kami membangun",
     howHeading: ["Kami memikul kompleksitasnya", "dan mengubahnya menjadi sesuatu yang bisa dipakai."],
@@ -337,6 +339,7 @@ export const id: SiteCopy = {
     ],
     formHeading: ["Kirim melalui formulir"],
     formIntro: "Silakan kirim melalui formulir di bawah ini. Isi pesan yang kami terima akan diperiksa oleh penanggung jawab dan kami balas satu per satu.",
+    unavailableBody: "Kami belum selesai memverifikasi jalur pengiriman, sehingga pesan yang dikirim dari sini belum dapat dipastikan sampai. Formulir akan dibuka di halaman ini begitu hal itu dipastikan.",
     fields: {
       name: "Nama", namePlaceholder: "Nama Anda",
       email: "Alamat email", emailPlaceholder: "you@example.com",
@@ -362,7 +365,7 @@ export const id: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
     eyebrow: "Usaha kami saat ini",
-    heading: ["Tiga bidang, dan masing-masing", "belum sampai menjadi perusahaan."],
+    heading: ["Belum satu pun di antaranya", "berdiri sebagai perusahaan."],
     lead:
       "Di setiap bidang itu, aturan dan sistemnya sudah tersedia — lalu berhenti tepat sebelum sampai kepada orang yang membutuhkannya. Yorisou masuk ke celah itu dan memastikannya sambil berjalan.",
     cards: [

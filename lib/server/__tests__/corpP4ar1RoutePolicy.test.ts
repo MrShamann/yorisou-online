@@ -112,8 +112,14 @@ test("a trailing slash never changes the outcome", () => {
 
 // ── indexability is closed by default ────────────────────────────────────────
 
-test("exactly four routes are indexable, and root is one of them", () => {
-  assert.deepEqual([...CORPORATE_INDEXABLE], ["/", "/mirai-move", "/kakari", "/about"]);
+test("exactly the seven corporate pages are indexable, and root is one of them", () => {
+  // CORP-v1.3 widened this from four to seven. The assertion stays an EXACT list rather than a
+  // length or a subset check: the point of it is that adding a crawlable URL has to be a deliberate
+  // edit here, and a looser assertion would let the next one through silently.
+  assert.deepEqual(
+    [...CORPORATE_INDEXABLE],
+    ["/", "/ventures", "/mirai-move", "/kakari", "/chigamo", "/about", "/build-with-us"],
+  );
   for (const p of CORPORATE_INDEXABLE) assert.equal(isCrawlAllowed(p), true, p);
   assert.equal(isCrawlAllowed("/"), true);
 });

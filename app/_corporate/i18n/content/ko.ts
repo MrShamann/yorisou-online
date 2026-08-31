@@ -28,7 +28,7 @@ export const ko: SiteCopy = {
     langCurrent: "현재 언어",
     previewBadge: "Preview — 미공개",
     nav: { home: "홈", miraiMove: "Mirai Move", kakari: "Kakari", about: "소개", company: "회사 정보", contact: "문의" },
-    footerTagline: "구조적 문제를, 회사로 만듭니다.",
+    footerTagline: "사람과 기술이, 미래를 만듭니다.",
     footerProjects: "사업",
     footerCompany: "회사",
     footerLegalNote: "게재된 사실은 확인된 기록에 근거합니다.",
@@ -36,7 +36,7 @@ export const ko: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou 합동회사 — 구조적인 문제에서, 스스로 서는 회사를 만듭니다.", description: "Yorisou 합동회사는 구조적인 문제를 찾아내고, 근거와 사업 자산을 만들고, 창업 팀과 함께 독립된 회사로 만들어 가는 파운드리입니다. Mirai Move, Kakari, Chigamo를 진행하고 있습니다." },
+    home: { title: "Yorisou 합동회사 — 구조적인 문제에서, 스스로 서는 회사를 만듭니다.", description: "Yorisou 합동회사는 구조적인 문제를 찾아내고, 근거와 사업 자산을 만들고, 창업 팀과 함께 독립된 회사로 만들어 가는 파운드리입니다. Mirai Move와 Kakari는 구축 중이며, Chigamo는 구상 단계입니다." },
     miraiMove: { title: "Mirai Move — Yorisou 합동회사", description: "일본 모빌리티 영역의 정보·매칭·사업 개발을 위한 플랫폼입니다. 공개 사이트가 운영 중이며, 플랫폼 기능은 개발 단계에 있습니다." },
     kakari: { title: "Kakari — Yorisou 합동회사", description: "일본에서 생활하는 사람과 사업을 시작하는 사람을 위한 다국어 행정 절차·서류 지원입니다. 현재는 개발 중이며 일반에는 공개하지 않았습니다." },
     about: { title: "만드는 방식 — Yorisou 합동회사", description: "문제를 찾아내고, 확인하고, 사업으로 설계하고, 창업 팀과 함께 독립된 회사로 만들어 갑니다. Yorisou 파운드리의 진행 방식과 공통 기반의 위치." },
@@ -48,6 +48,8 @@ export const ko: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "구축 중",
+    conceptLabel: "구상 단계",
     readMore: (name) => `${name}에 대해 자세히 보기`,
     backHome: "회사 소개로 돌아가기",
     stageLabel: "현재 단계",
@@ -81,7 +83,7 @@ export const ko: SiteCopy = {
     ],
 
     buildEyebrow: "만들고 있는 것",
-    buildHeading: ["지금, 세 영역에서", "진행하고 있습니다."],
+    buildHeading: ["제도가 닿지 않는 영역을,", "하나씩 형태로 만듭니다."],
 
     howEyebrow: "만드는 방식",
     howHeading: ["복잡함을 대신 떠안고,", "쓸 수 있는 형태로 만듭니다."],
@@ -334,6 +336,7 @@ export const ko: SiteCopy = {
     ],
     formHeading: ["양식으로 보내기"],
     formIntro: "아래 양식으로 보내 주세요. 보내 주신 내용은 담당자가 확인한 뒤 순차적으로 연락드립니다.",
+    unavailableBody: "전송 경로 검증이 끝나지 않아, 여기서 보낸 메시지가 확실히 도착한다고 말할 수 없습니다. 확인되는 대로 이 페이지에서 폼을 엽니다.",
     fields: {
       name: "이름", namePlaceholder: "홍길동",
       email: "이메일", emailPlaceholder: "you@example.com",
@@ -359,7 +362,7 @@ export const ko: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
     eyebrow: "지금의 사업",
-    heading: ["지금 세 영역에서,", "회사가 되기 직전까지", "진행하고 있습니다."],
+    heading: ["어느 것도 아직", "회사로 서 있지 않습니다."],
     lead:
       "모두 제도와 구조는 이미 있는데도, 정작 필요한 사람 앞에서 멈춰 서 있는 영역입니다. Yorisou는 그 자리에 들어가, 확인해 가며 형태를 만들고 있습니다.",
     cards: [

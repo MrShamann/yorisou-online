@@ -32,7 +32,7 @@ export const nl: SiteCopy = {
     langCurrent: "Huidige taal",
     previewBadge: "Preview — niet gepubliceerd",
     nav: { home: "Home", miraiMove: "Mirai Move", kakari: "Kakari", about: "Over ons", company: "Bedrijf", contact: "Contact" },
-    footerTagline: "Structurele vraagstukken, omgezet in bedrijven.",
+    footerTagline: "Mensen en techniek maken de toekomst.",
     footerProjects: "Projecten",
     footerCompany: "Bedrijf",
     footerLegalNote: "Alles wat hier staat, berust op een vastgelegd gegeven dat wij hebben kunnen verifiëren.",
@@ -40,7 +40,7 @@ export const nl: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Van structurele vraagstukken naar bedrijven die op eigen benen staan.", description: "Yorisou LLC is een foundry: wij zoeken structurele vraagstukken op, bouwen het bewijs en de bouwstenen van een onderneming, en vormen samen met oprichters zelfstandige bedrijven. Mirai Move, Kakari en Chigamo zijn onderweg." },
+    home: { title: "Yorisou LLC — Van structurele vraagstukken naar bedrijven die op eigen benen staan.", description: "Yorisou LLC is een foundry: wij zoeken structurele vraagstukken op, bouwen het bewijs en de bouwstenen van een onderneming, en vormen samen met oprichters zelfstandige bedrijven. Mirai Move en Kakari worden gebouwd; Chigamo is nog een concept." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Een platform voor informatie, matching en business development in de Japanse mobiliteitssector. De publieke website is live; de platformfuncties zijn in ontwikkeling." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Meertalige ondersteuning bij administratieve procedures en documenten, voor mensen die in Japan wonen en voor wie hier een onderneming start. In ontwikkeling en nog niet algemeen beschikbaar." },
     about: { title: "Hoe wij bouwen — Yorisou LLC", description: "Het vraagstuk vinden, het toetsen, het als onderneming ontwerpen, een oprichtersteam vormen en het naar een zelfstandig bedrijf brengen. Hoe de foundry van Yorisou werkt, en waar de gedeelde basis zich bevindt." },
@@ -52,6 +52,8 @@ export const nl: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "in aanbouw",
+    conceptLabel: "in concept",
     readMore: (name) => `Meer over ${name}`,
     backHome: "Terug naar het bedrijfsoverzicht",
     stageLabel: "Huidige fase",
@@ -85,7 +87,7 @@ export const nl: SiteCopy = {
     ],
 
     buildEyebrow: "Wat wij bouwen",
-    buildHeading: ["Drie gebieden", "waar wij nu aan werken."],
+    buildHeading: ["Gebieden die het systeem niet bereikt —", "één voor één opgepakt."],
 
     howEyebrow: "Hoe wij bouwen",
     howHeading: ["Wij nemen de complexiteit op ons", "en maken er iets bruikbaars van."],
@@ -338,6 +340,7 @@ export const nl: SiteCopy = {
     ],
     formHeading: ["Stuur ons een bericht"],
     formIntro: "Gebruik het onderstaande formulier. Wij lezen elke vraag en reageren op volgorde.",
+    unavailableBody: "We hebben de bezorgroute nog niet geverifieerd, dus een bericht dat hier wordt verzonden kan niet gegarandeerd aankomen. Zodra dat bevestigd is, opent het formulier op deze pagina.",
     fields: {
       name: "Naam", namePlaceholder: "Uw naam",
       email: "E-mailadres", emailPlaceholder: "u@example.com",
@@ -363,7 +366,7 @@ export const nl: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
     eyebrow: "Waar wij nu aan bouwen",
-    heading: ["Drie gebieden,", "elk nog net geen bedrijf."],
+    heading: ["Geen daarvan staat al", "op eigen benen als bedrijf."],
     lead:
       "In alle drie bestaan de regelingen en de systemen al — en stoppen ze net voordat ze de mensen bereiken die ze nodig hebben. Yorisou werkt in die ruimte, en toetst gaandeweg.",
     cards: [

@@ -24,8 +24,11 @@
   --c-hairline-strong: rgba(12, 14, 13, 0.2);
 
   /* Accent — jade/teal, used for signal only: rules, nodes, focus, small marks. Never a fill. */
-  --c-accent: #2f6b5e;
-  --c-accent-soft: #d7e2d3;
+  /* CORP-v1.3 — reconciled to the logo-sampled signal blue. This stylesheet is also what the
+     corporate 404 (app/_notFound/NotFoundBody.tsx) renders in, so leaving it jade would have
+     left one live corporate surface on the old accent. */
+  --c-accent: #0c3c9c;
+  --c-accent-soft: #cce4fc;
 
   /* Rhythm */
   /* CORP-P3 F-03 — desktop vertical density.

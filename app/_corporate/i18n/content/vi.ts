@@ -47,7 +47,7 @@ export const vi: SiteCopy = {
     langCurrent: "Ngôn ngữ hiện tại",
     previewBadge: "Preview — chưa công bố",
     nav: { home: "Trang chủ", miraiMove: "Mirai Move", kakari: "Kakari", about: "Về chúng tôi", company: "Thông tin công ty", contact: "Liên hệ" },
-    footerTagline: "Biến vấn đề cấu trúc thành công ty.",
+    footerTagline: "Con người và công nghệ tạo nên tương lai.",
     footerProjects: "Dự án",
     footerCompany: "Công ty",
     footerLegalNote: "Những điều được nêu ở đây đều dựa trên hồ sơ mà chúng tôi xác minh được.",
@@ -55,7 +55,7 @@ export const vi: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Từ những vấn đề mang tính cấu trúc đến những công ty đứng vững độc lập.", description: "Yorisou LLC là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc, dựng nên bằng chứng và tài sản cho từng dự án, rồi cùng các nhóm sáng lập đưa chúng thành những công ty độc lập. Hiện chúng tôi đang triển khai Mirai Move, Kakari và Chigamo." },
+    home: { title: "Yorisou LLC — Từ những vấn đề mang tính cấu trúc đến những công ty đứng vững độc lập.", description: "Yorisou LLC là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc, dựng nên bằng chứng và tài sản cho từng dự án, rồi cùng các nhóm sáng lập đưa chúng thành những công ty độc lập. Hiện Mirai Move và Kakari đang được xây dựng; Chigamo vẫn ở giai đoạn ý tưởng." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Nền tảng thông tin, kết nối và phát triển kinh doanh trong lĩnh vực di chuyển tại Nhật Bản. Trang thông tin công khai đang hoạt động; các tính năng nền tảng đang trong giai đoạn phát triển." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Hỗ trợ đa ngôn ngữ cho thủ tục hành chính và giấy tờ, dành cho người đang sinh sống tại Nhật Bản và người bắt đầu kinh doanh tại đây. Hiện đang trong giai đoạn phát triển, chưa mở cho công chúng." },
     about: { title: "Cách chúng tôi xây dựng — Yorisou LLC", description: "Tìm ra vấn đề, kiểm chứng nó, thiết kế thành một hoạt động kinh doanh, rồi cùng nhóm sáng lập đưa nó thành một công ty độc lập. Cách vận hành foundry của Yorisou, và vị trí của hạ tầng dùng chung." },
@@ -67,6 +67,8 @@ export const vi: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "đang xây dựng",
+    conceptLabel: "giai đoạn ý tưởng",
     readMore: (name) => `Tìm hiểu thêm về ${name}`,
     backHome: "Quay lại trang thông tin công ty",
     stageLabel: "Giai đoạn hiện tại",
@@ -102,7 +104,7 @@ export const vi: SiteCopy = {
     ],
 
     buildEyebrow: "Những gì chúng tôi đang xây dựng",
-    buildHeading: ["Ba lĩnh vực,", "hiện đang triển khai."],
+    buildHeading: ["Những lĩnh vực hệ thống chưa với tới —", "chúng tôi làm từng việc một."],
 
     howEyebrow: "Cách chúng tôi xây dựng",
     howHeading: ["Chúng tôi nhận lấy sự phức tạp", "và biến nó thành thứ dùng được."],
@@ -355,6 +357,7 @@ export const vi: SiteCopy = {
     ],
     formHeading: ["Gửi qua biểu mẫu"],
     formIntro: "Vui lòng gửi qua biểu mẫu dưới đây. Chúng tôi sẽ xem xét nội dung và lần lượt phản hồi.",
+    unavailableBody: "Chúng tôi chưa hoàn tất kiểm chứng đường gửi, nên chưa thể bảo đảm một tin nhắn gửi từ đây sẽ đến nơi. Biểu mẫu sẽ mở trên trang này ngay khi điều đó được xác nhận.",
     fields: {
       name: "Họ và tên", namePlaceholder: "Nguyễn Văn A",
       email: "Địa chỉ email", emailPlaceholder: "you@example.com",
@@ -380,7 +383,7 @@ export const vi: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
     eyebrow: "Những dự án hiện nay",
-    heading: ["Ba lĩnh vực, mỗi lĩnh vực", "còn cách một bước", "để trở thành một công ty."],
+    heading: ["Chưa cái nào trong số này", "đứng được như một công ty."],
     lead:
       "Ở cả ba, thiết chế và hệ thống vốn đã tồn tại — và dừng lại ngay trước những người cần đến chúng. Yorisou bước vào đúng khoảng trống đó, vừa làm vừa kiểm chứng.",
     cards: [

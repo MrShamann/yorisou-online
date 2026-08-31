@@ -29,7 +29,7 @@ export const ms: SiteCopy = {
     langCurrent: "Bahasa semasa",
     previewBadge: "Pratonton — belum diterbitkan",
     nav: { home: "Utama", miraiMove: "Mirai Move", kakari: "Kakari", about: "Tentang Kami", company: "Maklumat Syarikat", contact: "Hubungi Kami" },
-    footerTagline: "Masalah struktur, kami jadikan syarikat.",
+    footerTagline: "Manusia dan teknologi membina masa depan.",
     footerProjects: "Projek",
     footerCompany: "Syarikat",
     footerLegalNote: "Setiap fakta yang tersiar di sini berdasarkan rekod yang dapat kami sahkan.",
@@ -37,7 +37,7 @@ export const ms: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Daripada masalah struktur kepada syarikat yang berdiri sendiri.", description: "Yorisou LLC ialah sebuah foundry: kami mencari masalah yang bersifat struktur, membina bukti dan aset usaha niaga, serta bekerjasama dengan pasukan pengasas untuk menjadikannya syarikat yang berdiri sendiri. Mirai Move, Kakari dan Chigamo sedang dijalankan." },
+    home: { title: "Yorisou LLC — Daripada masalah struktur kepada syarikat yang berdiri sendiri.", description: "Yorisou LLC ialah sebuah foundry: kami mencari masalah yang bersifat struktur, membina bukti dan aset usaha niaga, serta bekerjasama dengan pasukan pengasas untuk menjadikannya syarikat yang berdiri sendiri. Mirai Move dan Kakari sedang dibina; Chigamo masih di peringkat konsep." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Platform untuk maklumat, pemadanan dan pembangunan perniagaan dalam sektor mobiliti Jepun. Laman awam sudah beroperasi; fungsi platform masih dalam pembangunan." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Sokongan pelbagai bahasa untuk prosedur pentadbiran dan dokumen, bagi mereka yang tinggal di Jepun dan yang ingin memulakan perniagaan di sini. Masih dalam pembangunan dan belum dibuka kepada umum." },
     about: { title: "Cara kami membina — Yorisou LLC", description: "Mencari masalah, mengesahkannya, mereka bentuknya sebagai perniagaan, membentuk pasukan pengasas dan membawanya menjadi syarikat yang berdiri sendiri. Bagaimana foundry Yorisou berjalan, dan di mana kedudukan asas bersama." },
@@ -49,6 +49,8 @@ export const ms: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "sedang dibina",
+    conceptLabel: "peringkat konsep",
     readMore: (name) => `Lanjut tentang ${name}`,
     backHome: "Kembali ke halaman utama syarikat",
     stageLabel: "Peringkat semasa",
@@ -83,7 +85,7 @@ export const ms: SiteCopy = {
     ],
 
     buildEyebrow: "Apa yang kami bina",
-    buildHeading: ["Tiga bidang,", "sedang kami jalankan sekarang."],
+    buildHeading: ["Bidang yang tidak dicapai sistem —", "kami tangani satu demi satu."],
 
     howEyebrow: "Cara kami membina",
     howHeading: ["Kami menggalas kerumitan itu", "dan mengubahnya menjadi sesuatu yang boleh digunakan."],
@@ -336,6 +338,7 @@ export const ms: SiteCopy = {
     ],
     formHeading: ["Hantar melalui borang"],
     formIntro: "Sila gunakan borang di bawah. Setiap pertanyaan akan disemak oleh pihak kami dan dibalas satu demi satu.",
+    unavailableBody: "Kami belum selesai mengesahkan laluan penghantaran, jadi mesej yang dihantar dari sini belum pasti sampai. Borang akan dibuka di halaman ini sebaik sahaja perkara itu disahkan.",
     fields: {
       name: "Nama", namePlaceholder: "Nama anda",
       email: "Alamat e-mel", emailPlaceholder: "you@example.com",
@@ -361,7 +364,7 @@ export const ms: SiteCopy = {
   /* ── INDEKS USAHA NIAGA (CORP-v1.2) ─────────────────────────────────── */
   ventures: {
     eyebrow: "Usaha niaga semasa",
-    heading: ["Tiga bidang,", "masing-masing belum lagi menjadi syarikat."],
+    heading: ["Belum satu pun daripadanya", "berdiri sebagai syarikat."],
     lead:
       "Dalam setiap satunya, peraturan dan sistemnya sudah pun wujud — dan terhenti tepat sebelum sampai kepada orang yang memerlukannya. Yorisou masuk ke dalam jurang itu dan membentuknya sambil terus mengesahkan.",
     cards: [

@@ -31,7 +31,7 @@ export const it: SiteCopy = {
     langCurrent: "Lingua attuale",
     previewBadge: "Anteprima — non pubblicato",
     nav: { home: "Home", miraiMove: "Mirai Move", kakari: "Kakari", about: "Chi siamo", company: "Società", contact: "Contatti" },
-    footerTagline: "Trasformiamo i problemi strutturali in aziende.",
+    footerTagline: "Le persone e la tecnologia costruiscono il futuro.",
     footerProjects: "Progetti",
     footerCompany: "Società",
     footerLegalNote: "Tutto ciò che dichiariamo qui si basa su un documento che possiamo verificare.",
@@ -39,7 +39,7 @@ export const it: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Dai problemi strutturali a società che stanno in piedi da sole.", description: "Yorisou LLC è una foundry: individuiamo problemi strutturali, costruiamo prove e asset d’impresa e formiamo team fondatori per farne società indipendenti. Mirai Move, Kakari e Chigamo sono in corso." },
+    home: { title: "Yorisou LLC — Dai problemi strutturali a società che stanno in piedi da sole.", description: "Yorisou LLC è una foundry: individuiamo problemi strutturali, costruiamo prove e asset d’impresa e formiamo team fondatori per farne società indipendenti. Mirai Move e Kakari sono in costruzione; Chigamo è allo stadio di concetto." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Una piattaforma per l’informazione, il matching e lo sviluppo di business nel settore della mobilità in Giappone. Il sito pubblico è online; le funzionalità della piattaforma sono in sviluppo." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Supporto multilingue per procedure amministrative e documenti, per chi vive in Giappone e per chi avvia qui un’attività. In sviluppo, non ancora disponibile al pubblico." },
     about: { title: "Come costruiamo — Yorisou LLC", description: "Individuare il problema, verificarlo, progettarlo come impresa, formare un team fondatore e portarlo fino a una società indipendente. Come funziona la foundry di Yorisou e quale posto occupa l’infrastruttura condivisa." },
@@ -51,6 +51,8 @@ export const it: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "in costruzione",
+    conceptLabel: "allo stadio di concetto",
     readMore: (name) => `Scopri di più su ${name}`,
     backHome: "Torna alla panoramica della società",
     stageLabel: "Stato attuale",
@@ -85,7 +87,7 @@ export const it: SiteCopy = {
     ],
 
     buildEyebrow: "Ciò che costruiamo",
-    buildHeading: ["Tre ambiti su cui", "stiamo lavorando ora."],
+    buildHeading: ["Ambiti che il sistema non raggiunge:", "li affrontiamo uno alla volta."],
 
     howEyebrow: "Come costruiamo",
     howHeading: ["Ci facciamo carico della complessità", "e la trasformiamo in qualcosa di utilizzabile."],
@@ -338,6 +340,7 @@ export const it: SiteCopy = {
     ],
     formHeading: ["Scrivici un messaggio"],
     formIntro: "Usa il modulo qui sotto. Leggiamo ogni richiesta e rispondiamo via via.",
+    unavailableBody: "Non abbiamo ancora verificato il percorso di consegna, quindi un messaggio inviato da qui non potrebbe essere garantito. Il modulo si aprirà su questa pagina appena sarà confermato.",
     fields: {
       name: "Nome", namePlaceholder: "Il tuo nome",
       email: "Email", emailPlaceholder: "you@example.com",
@@ -363,7 +366,7 @@ export const it: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────── */
   ventures: {
     eyebrow: "Ciò che stiamo costruendo",
-    heading: ["In tre ambiti, il lavoro", "che precede la nascita di una società."],
+    heading: ["Nessuno di questi sta ancora", "in piedi come azienda."],
     lead:
       "In tutti e tre, le regole e i sistemi esistono già e si fermano appena prima delle persone che ne hanno bisogno. Yorisou entra in quello spazio e dà forma alle cose verificandole man mano.",
     cards: [

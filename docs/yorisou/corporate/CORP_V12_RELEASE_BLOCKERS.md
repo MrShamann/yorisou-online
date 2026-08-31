@@ -1,9 +1,21 @@
 # CORP-v1.2 — release blockers before Production
 
-> **Updated after CORP-v1.2R1.** Closed since v1.2: mobile performance (now 91/91/93), the repository
-> authority conflict (root entrypoint now routes two surfaces), most dependency exposure (production
-> highs 5 → 1), and locale Production posture (now a typed gate). Still open: everything below.
-> Full detail in `CORP_V12R1_PREMERGE_REMEDIATION.md`.
+> **SUPERSEDED BY `CORP_V13_PRODUCTION_LAUNCH_GATE.md`.** That document is now the authority: it
+> carries every item, its exact unblock condition, its owner and a command that checks it. This file
+> is kept for its history.
+>
+> **Closed since this file was last accurate (CORP-v1.3):** indexability — §4 below — is now seven
+> crawlable routes rather than four; contact honesty — §5 — is enforced in code, not requested in
+> prose; and production dependency exposure is **0** rather than one high. §7's Chigamo row is now
+> also enforced visually: it has no colour and no device, because it has no source.
+>
+> **One item below was factually wrong and is corrected in the claim ledger, not here:** the
+> registration number is *not* omitted. 法人番号 2290003018125 has been published in every locale
+> since `8be233c`, verified against the National Tax Agency publication site.
+>
+> **Updated after CORP-v1.2R1.** Closed since v1.2: mobile performance, the repository authority
+> conflict (root entrypoint now routes two surfaces), most dependency exposure, and locale Production
+> posture (now a typed gate). Full detail in `CORP_V12R1_PREMERGE_REMEDIATION.md`.
 
 Everything below must close before this corporate site can go to Production.
 None of these is resolved by this package. An unresolved blocker is never recorded as a pass.

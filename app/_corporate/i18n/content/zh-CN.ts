@@ -39,7 +39,7 @@ export const zh_CN: SiteCopy = {
     langCurrent: "当前语言",
     previewBadge: "Preview — 未公开",
     nav: { home: "首页", miraiMove: "Mirai Move", kakari: "Kakari", about: "关于我们", company: "公司信息", contact: "联系我们" },
-    footerTagline: "把结构性问题，做成公司。",
+    footerTagline: "人与技术，创造未来。",
     footerProjects: "业务",
     footerCompany: "公司",
     footerLegalNote: "本站所载事实，均以可核实的记录为依据。",
@@ -47,7 +47,7 @@ export const zh_CN: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou 有限责任公司 — 从结构性问题，做出能够独立存在的公司。", description: "Yorisou 有限责任公司是一家创业工场：发现结构性问题，积累证据与事业资产，并与创始团队一起把它带成独立的公司。目前正在推进 Mirai Move、Kakari 与 Chigamo。" },
+    home: { title: "Yorisou 有限责任公司 — 从结构性问题，做出能够独立存在的公司。", description: "Yorisou 有限责任公司是一家创业工场：发现结构性问题，积累证据与事业资产，并与创始团队一起把它带成独立的公司。目前正在建设 Mirai Move 与 Kakari，Chigamo 处于构想阶段。" },
     miraiMove: { title: "Mirai Move — Yorisou 有限责任公司", description: "面向日本出行领域的信息、对接与业务开发平台。公开网站已在运行，平台功能仍处于开发阶段。" },
     kakari: { title: "Kakari — Yorisou 有限责任公司", description: "面向在日本生活的人与在日本创业的人，提供多语言的行政手续与文书支持。目前处于开发阶段，尚未面向公众开放。" },
     about: { title: "我们如何构建 — Yorisou 有限责任公司", description: "发现问题、加以确认、设计成一项事业，再与创始团队一起把它带向独立的公司。Yorisou 创业工场的推进方式，以及共通基础所处的位置。" },
@@ -59,6 +59,8 @@ export const zh_CN: SiteCopy = {
   },
 
   common: {
+    buildingLabel: "建设中",
+    conceptLabel: "构想阶段",
     readMore: (name) => `了解 ${name}`,
     backHome: "返回公司首页",
     stageLabel: "当前阶段",
@@ -92,7 +94,7 @@ export const zh_CN: SiteCopy = {
     ],
 
     buildEyebrow: "我们在做什么",
-    buildHeading: ["三个领域，", "正在推进中。"],
+    buildHeading: ["制度没有触及的领域，", "我们一个一个做出来。"],
 
     howEyebrow: "我们如何构建",
     howHeading: ["承接复杂，", "把它变成可用的形态。"],
@@ -345,6 +347,7 @@ export const zh_CN: SiteCopy = {
     ],
     formHeading: ["通过表单发送"],
     formIntro: "请通过下方表单发送。我们会确认收到的内容，并依次回复。",
+    unavailableBody: "我们还没有完成发送路径的验证，因此无法保证从这里发出的消息一定送达。确认之后，表单会在本页开放。",
     fields: {
       name: "姓名", namePlaceholder: "您的姓名",
       email: "电子邮箱", emailPlaceholder: "you@example.com",
@@ -370,7 +373,7 @@ export const zh_CN: SiteCopy = {
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
     eyebrow: "目前的业务",
-    heading: ["三个领域，", "都还在成为公司之前的阶段。"],
+    heading: ["它们都还没有", "作为公司独立站住。"],
     lead:
       "它们的共同点是：制度与机制都已经存在，却在真正需要的人面前停下。Yorisou 走进这段空白，一边确认，一边把它做成形。",
     cards: [
