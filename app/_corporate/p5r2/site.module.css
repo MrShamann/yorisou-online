@@ -62,8 +62,26 @@
 
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-noto-jp, "Noto Sans JP"), var(--font-inter, Inter), "Hiragino Sans",
-    "Yu Gothic", "Noto Sans", "Segoe UI", system-ui, -apple-system,
+  /*
+   * The corporate surface uses the SYSTEM Japanese stack, not the Noto Sans JP webfont.
+   *
+   * A Japanese webfont ships as dozens of unicode-range subsets, and a page with varied kanji
+   * touches most of them: the Japanese homepage pulled 36 files totalling ~729KB, while the Arabic
+   * page — which needs none of those ranges — pulled 4 files at ~115KB and scored 88 to Japanese's
+   * 60 on the same server. Disabling preload did not help, because the fetches are driven by the
+   * characters on the page rather than by preload hints.
+   *
+   * Hiragino Sans (Apple), Yu Gothic (Windows) and Noto Sans CJK (Android/Linux) are high-quality
+   * Japanese faces already present on the reader's device, so body copy loses nothing a visitor
+   * would notice while the page loses the entire webfont payload. Inter is kept for Latin display
+   * text, where it is small and does the typographic work.
+   *
+   * This is scoped to the corporate root ONLY. `globals.css` still resolves --font-noto-jp for the
+   * live consumer product, whose typography is deliberately unchanged.
+   */
+  font-family: var(--font-inter, Inter), "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Noto Sans JP", "Meiryo",
+    "Noto Sans", "Segoe UI", system-ui, -apple-system,
     "Noto Sans Arabic", "Geeza Pro", "Noto Sans Devanagari", "Kohinoor Devanagari",
     "Noto Sans Thai", "Thonburi", sans-serif;
   line-height: 1.85;
