@@ -133,6 +133,10 @@ export const th: SiteCopy = {
     explainerLabel: "Yorisou ใน 30 วินาที",
     explainerHeading: ["จากปัญหาไปจนถึงบริษัท", "ภายใน 30 วินาที"],
     explainerClose: "ปิด",
+    explainerPlay: "เล่น",
+    explainerPause: "หยุดชั่วคราว",
+    explainerRestart: "เริ่มใหม่",
+    explainerStepLabel: "ฉาก",
   },
 
   mirai: {

@@ -268,3 +268,99 @@ test("the Foundry motion field has a reduced-motion resolution", () => {
     assert.ok(reduced.includes(cls), `reduced-motion block does not resolve .${cls} to its final state`);
   }
 });
+
+/**
+ * CORP-v1.2R2.1 — the venture identity treatment is applied everywhere, not just on one surface.
+ *
+ * R2 established that the wordmark stays Latin and the Japanese-ness comes from each venture's own
+ * line beneath it. R2.1's defect was that the treatment was applied inconsistently — Home and the
+ * footer showed the bare English mark. One component now renders it, so this asserts every surface
+ * uses that component rather than hand-rolling a heading.
+ */
+test("every venture surface renders the shared identity unit", () => {
+  const surfaces = [
+    "app/_corporate/p5r2/views/HomeView.tsx",
+    "app/_corporate/p5r2/views/VenturesView.tsx",
+    "app/_corporate/p5r2/views/FoundryView.tsx",
+    "app/_corporate/p5r2/views/ProjectView.tsx",
+    "app/_corporate/p5r2/Shell.tsx",
+  ];
+  const missing: string[] = [];
+  for (const rel of surfaces) {
+    const src = readFileSync(path.join(ROOT, rel), "utf8");
+    if (!src.includes("VentureName")) missing.push(rel);
+  }
+  assert.deepEqual(missing, [], `surfaces not using the venture identity unit:\n${missing.join("\n")}`);
+
+  // The detail hero must carry the wordmark AND the venture's own line, at hero scale.
+  const detail = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/ProjectView.tsx"), "utf8");
+  assert.ok(/size="hero"/.test(detail), "the venture detail hero does not render the wordmark at hero scale");
+  assert.ok(/reading=\{p\.reading\}/.test(detail), "the venture detail hero does not render the venture's own line");
+});
+
+/**
+ * The guided explainer must carry every required story beat, and must remain understandable without
+ * motion. A walkthrough that autoplays for some readers and simply stops for others would leave the
+ * operating model unexplained for exactly the people who asked for less motion.
+ */
+test("the guided explainer has all seven beats and a reduced-motion path", () => {
+  const src = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/FoundryView.tsx"), "utf8");
+  for (const key of ["signal", "evidence", "venture", "team", "independent", "ventures", "shared"]) {
+    assert.ok(new RegExp(`key: "${key}"`).test(src), `explainer is missing the "${key}" beat`);
+  }
+
+  const comp = readFileSync(path.join(ROOT, "app/_corporate/p5r2/GuidedExplainer.tsx"), "utf8");
+  assert.ok(/prefers-reduced-motion/.test(comp), "the explainer does not consult the motion preference");
+  assert.ok(/setPlaying\(!mq\.matches\)/.test(comp), "the explainer autoplays regardless of the motion preference");
+  for (const control of ["labels.play", "labels.pause", "labels.restart", "labels.step"]) {
+    assert.ok(comp.includes(control), `the explainer is missing the ${control} control`);
+  }
+  assert.ok(/role="tab"/.test(comp) && /onKeyDown/.test(comp), "explainer beats are not keyboard-operable");
+
+  /*
+   * It must never present itself as a video, because no video asset exists — but scan the CODE, not
+   * the comments. The source explains at length that no MP4, Lottie or WebGL is used, and a guard
+   * that could not tell an explanation from an import would fire on its own rationale.
+   */
+  const css = readFileSync(path.join(ROOT, "app/_corporate/p5r2/guided-explainer.module.css"), "utf8");
+  for (const text of [comp, css]) {
+    assert.ok(
+      !/<video|\.mp4|from ["']lottie|require\(["']lottie|WebGLRenderer|getContext\(["']webgl/i.test(copyOnly(text)),
+      "the explainer references video or a heavy runtime",
+    );
+  }
+});
+
+/**
+ * Participation content must never be hover-only. The lanes use native <details>, which is
+ * keyboard-operable and keeps every lane's content in the DOM whether open or closed.
+ */
+test("participation lane content is disclosed semantically, never by hover", () => {
+  const view = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/BuildWithUsView.tsx"), "utf8");
+  assert.ok(/<details/.test(view) && /<summary/.test(view), "lanes are not semantic disclosures");
+  for (const field of ["lane.offers", "lane.cannot", "lane.state", "lane.ventures"]) {
+    assert.ok(view.includes(field), `the lane interface dropped ${field}`);
+  }
+
+  const css = readFileSync(path.join(ROOT, "app/_corporate/p5r2/site.module.css"), "utf8");
+  const laneRules = css.slice(css.indexOf(".laneList"));
+  assert.ok(
+    !/:hover[^{]*\{[^}]*(display:\s*block|visibility:\s*visible|opacity:\s*1)/.test(laneRules),
+    "lane content is revealed by :hover",
+  );
+});
+
+/**
+ * Formation state shows a named stage or nothing. A percentage or a completion bar would imply a
+ * precision the repository evidence cannot support.
+ */
+test("formation state publishes no percentage or completion bar", () => {
+  const pieces = readFileSync(path.join(ROOT, "app/_corporate/p5r2/pieces.tsx"), "utf8");
+  const block = pieces.slice(pieces.indexOf("export function FormationState"));
+  assert.ok(!/%|progress|<meter|aria-valuenow/i.test(block), "formation state renders a numeric progress value");
+
+  const state = readFileSync(path.join(ROOT, "app/_corporate/p5r2/ventureState.ts"), "utf8");
+  for (const href of ["/mirai-move", "/kakari", "/chigamo"]) {
+    assert.ok(state.includes(`"${href}"`), `no formation evidence recorded for ${href}`);
+  }
+});

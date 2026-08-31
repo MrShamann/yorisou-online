@@ -114,6 +114,11 @@ export type SiteCopy = {
     explainerLabel: string;
     explainerHeading: readonly string[];
     explainerClose: string;
+    /* CORP-v1.2R2.1 — guided-explainer transport controls. */
+    explainerPlay: string;
+    explainerPause: string;
+    explainerRestart: string;
+    explainerStepLabel: string;
   };
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */

@@ -132,6 +132,10 @@ export const hi: SiteCopy = {
     explainerLabel: "Yorisou, 30 सेकंड में",
     explainerHeading: ["समस्या से कंपनी तक,", "30 सेकंड में।"],
     explainerClose: "बंद करें",
+    explainerPlay: "चलाएँ",
+    explainerPause: "रोकें",
+    explainerRestart: "शुरू से",
+    explainerStepLabel: "चरण",
   },
 
   mirai: {

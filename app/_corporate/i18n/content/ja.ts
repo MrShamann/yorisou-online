@@ -146,6 +146,10 @@ export const ja: SiteCopy = {
     explainerLabel: "YORISOUを30秒で",
     explainerHeading: ["課題から会社まで、", "30秒で。"],
     explainerClose: "閉じる",
+    explainerPlay: "再生",
+    explainerPause: "一時停止",
+    explainerRestart: "最初から",
+    explainerStepLabel: "場面",
   },
 
   mirai: {

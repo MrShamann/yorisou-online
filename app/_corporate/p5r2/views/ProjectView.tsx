@@ -1,9 +1,10 @@
 import styles from "../site.module.css";
-import { Band, Boundary, Cards, Eyebrow, JoinVenture, StateTriad, TextLink } from "../pieces";
+import { Band, Boundary, Cards, Eyebrow, FormationState, JoinVenture, StateTriad, TextLink, VentureName } from "../pieces";
 import { ContextField, NetworkSystem, ProcedureSystem } from "../systems";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
+import { VENTURE_FORMATION } from "../ventureState";
 
 /** CORP-P5R2 — one project page, parameterised. Both keep their own system grammar. */
 export default function ProjectView({
@@ -17,6 +18,8 @@ export default function ProjectView({
    * would make it look further along than it is.
    */
   const isConcept = which === "chigamo";
+  const ventureName = isNet ? "Mirai Move" : isConcept ? "Chigamo" : "Kakari";
+  const venturePath = isNet ? "/mirai-move" : isConcept ? "/chigamo" : "/kakari";
   const p = isNet ? copy.mirai : isConcept ? copy.chigamo : copy.kakari;
   const L = (x: string) => localeHref(x, locale);
 
@@ -28,12 +31,16 @@ export default function ProjectView({
           <div className={styles.heroGrid}>
             <div>
               <Eyebrow>{p.eyebrow} — {p.domain}</Eyebrow>
-              <h1 className={styles.h1}><Phrase units={p.heading} locale={locale} /></h1>
               {/*
-                CORP-v1.2R2 — the venture's OWN Japanese line beside the Latin wordmark. Not a
-                transliteration: Kakari's glossary forbids one and Mirai Move's brand source has none.
+                CORP-v1.2R2.1 — the wordmark leads. A visitor landing here must know WHICH venture
+                this is before reading the positioning headline, rather than inferring it from the
+                URL. The Japanese line sits with the mark; it is that venture's own sentence, never
+                a transliteration.
               */}
-              <p className={`${styles.brandLine} ${styles.jp}`}>{p.reading}</p>
+              <VentureName name={ventureName} reading={p.reading} size="hero" as="h1" />
+              <p className={`${styles.h1} ${styles.ventureThesis}`}>
+                <Phrase units={p.heading} locale={locale} />
+              </p>
               <p className={styles.projectHead} style={{ marginTop: 0 }}>
                 <span className={styles.stage}>{p.stage}</span>
               </p>
@@ -101,6 +108,11 @@ export default function ProjectView({
             </div>
           ))}
         </div>
+        <FormationState
+          stages={copy.foundry.stages}
+          reached={VENTURE_FORMATION[venturePath] ?? 0}
+          label={copy.foundry.stagesEyebrow}
+        />
         <StateTriad
           labels={{ now: copy.common.nowLabel, next: copy.common.nextLabel, who: copy.common.whoLabel }}
           now={p.now}

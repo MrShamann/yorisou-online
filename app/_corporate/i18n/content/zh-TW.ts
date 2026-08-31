@@ -153,6 +153,10 @@ export const zh_TW: SiteCopy = {
     explainerLabel: "30 秒認識 Yorisou",
     explainerHeading: ["從一個課題到一家公司，", "30 秒說完。"],
     explainerClose: "關閉",
+    explainerPlay: "播放",
+    explainerPause: "暫停",
+    explainerRestart: "從頭播放",
+    explainerStepLabel: "場景",
   },
 
   mirai: {

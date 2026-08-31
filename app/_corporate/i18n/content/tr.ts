@@ -134,6 +134,10 @@ export const tr: SiteCopy = {
     explainerLabel: "30 saniyede Yorisou",
     explainerHeading: ["Sorundan şirkete,", "otuz saniyede."],
     explainerClose: "Kapat",
+    explainerPlay: "Oynat",
+    explainerPause: "Duraklat",
+    explainerRestart: "Baştan başlat",
+    explainerStepLabel: "Sahne",
   },
 
   mirai: {

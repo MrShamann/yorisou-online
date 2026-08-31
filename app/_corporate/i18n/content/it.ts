@@ -135,6 +135,10 @@ export const it: SiteCopy = {
     explainerLabel: "Yorisou in 30 secondi",
     explainerHeading: ["Dal problema alla società,", "in trenta secondi."],
     explainerClose: "Chiudi",
+    explainerPlay: "Riproduci",
+    explainerPause: "Pausa",
+    explainerRestart: "Ricomincia",
+    explainerStepLabel: "Scena",
   },
 
   mirai: {

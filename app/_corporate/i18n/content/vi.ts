@@ -152,6 +152,10 @@ export const vi: SiteCopy = {
     explainerLabel: "Yorisou trong 30 giây",
     explainerHeading: ["Từ một vấn đề đến một công ty,", "trong ba mươi giây."],
     explainerClose: "Đóng",
+    explainerPlay: "Phát",
+    explainerPause: "Tạm dừng",
+    explainerRestart: "Phát lại",
+    explainerStepLabel: "Cảnh",
   },
 
   mirai: {

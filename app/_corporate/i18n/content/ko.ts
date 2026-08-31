@@ -131,6 +131,10 @@ export const ko: SiteCopy = {
     explainerLabel: "30초로 보는 Yorisou",
     explainerHeading: ["문제에서 회사까지,", "30초로."],
     explainerClose: "닫기",
+    explainerPlay: "재생",
+    explainerPause: "일시정지",
+    explainerRestart: "처음부터",
+    explainerStepLabel: "장면",
   },
 
   mirai: {

@@ -134,6 +134,10 @@ export const id: SiteCopy = {
     explainerLabel: "Yorisou dalam 30 detik",
     explainerHeading: ["Dari sebuah masalah sampai menjadi perusahaan,", "dalam tiga puluh detik."],
     explainerClose: "Tutup",
+    explainerPlay: "Putar",
+    explainerPause: "Jeda",
+    explainerRestart: "Dari awal",
+    explainerStepLabel: "Langkah",
   },
 
   mirai: {

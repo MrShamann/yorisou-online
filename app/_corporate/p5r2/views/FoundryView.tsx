@@ -1,6 +1,7 @@
 import styles from "../site.module.css";
-import { Band, Boundary, Cards, Eyebrow, TextLink } from "../pieces";
-import FoundryField from "../FoundryField";
+import { Band, Boundary, Cards, Eyebrow, FormationState, TextLink, VentureName } from "../pieces";
+import GuidedExplainer from "../GuidedExplainer";
+import { VENTURE_FORMATION } from "../ventureState";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -51,18 +52,29 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
         <h2 className={styles.h2}>
           <Phrase units={copy.home.explainerHeading} locale={locale} />
         </h2>
-        <div className={styles.surface}>
-          <div className={styles.surfaceFig}>
-            <FoundryField
-              evidence={f.stages[1]?.name ?? ""}
-              venture={f.stages[2]?.name ?? ""}
-              team={f.stages[5]?.name ?? ""}
-              independent={f.stages[6]?.name ?? ""}
-              infrastructure={f.asterionEyebrow}
-            />
-          </div>
-        </div>
-        <Cards items={f.stages.map((st) => ({ no: st.no, title: st.name, body: st.body }))} columns={2} dark />
+        {/*
+          CORP-v1.2R2.1 — seven beats, each CHANGING the same system field rather than scrolling
+          past cards. Beat text is drawn from stages and section names that already exist in all 21
+          locales, so the walkthrough is localised without a single new sentence to translate.
+          It is never called a video: no video asset exists.
+        */}
+        <GuidedExplainer
+          labels={{
+            play: copy.home.explainerPlay,
+            pause: copy.home.explainerPause,
+            restart: copy.home.explainerRestart,
+            step: copy.home.explainerStepLabel,
+          }}
+          beats={[
+            { key: "signal", label: f.stages[0]?.name ?? "", body: f.stages[0]?.body ?? "" },
+            { key: "evidence", label: f.stages[1]?.name ?? "", body: f.stages[1]?.body ?? "" },
+            { key: "venture", label: f.stages[2]?.name ?? "", body: f.stages[2]?.body ?? "" },
+            { key: "team", label: f.stages[5]?.name ?? "", body: f.stages[5]?.body ?? "" },
+            { key: "independent", label: f.stages[6]?.name ?? "", body: f.stages[6]?.body ?? "" },
+            { key: "ventures", label: copy.ventures.eyebrow, body: copy.ventures.lead },
+            { key: "shared", label: f.asterionEyebrow, body: copy.buildWithUs.lead },
+          ]}
+        />
       </Band>
 
       <Band line>
@@ -132,11 +144,16 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
             return (
               <article className={styles.project} key={c.href}>
                 <div className={styles.projectHead}>
-                  <h3 className={styles.projectName}>{c.name}</h3>
+                  <VentureName name={c.name} reading={d.reading} />
                   <span className={styles.stage}>{d.stage}</span>
                 </div>
-                <p className={`${styles.brandLine} ${styles.jp}`}>{d.reading}</p>
                 <p className={`${styles.bodyMuted} ${styles.jp}`}>{d.next}</p>
+                {/* the same node/line/state vocabulary as the hero, at this venture's real stage */}
+                <FormationState
+                  stages={f.stages}
+                  reached={VENTURE_FORMATION[c.href] ?? 0}
+                  label={f.stagesEyebrow}
+                />
                 <TextLink href={L(c.href)}>{copy.common.readMore(c.name)}</TextLink>
               </article>
             );

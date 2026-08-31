@@ -133,6 +133,10 @@ export const ms: SiteCopy = {
     explainerLabel: "Yorisou dalam 30 saat",
     explainerHeading: ["Daripada masalah kepada syarikat,", "dalam tiga puluh saat."],
     explainerClose: "Tutup",
+    explainerPlay: "Main",
+    explainerPause: "Jeda",
+    explainerRestart: "Mula semula",
+    explainerStepLabel: "Babak",
   },
 
   mirai: {

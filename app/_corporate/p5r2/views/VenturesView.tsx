@@ -1,8 +1,9 @@
 import styles from "../site.module.css";
-import { Band, Eyebrow, StateTriad, TextLink } from "../pieces";
+import { Band, Eyebrow, FormationState, StateTriad, TextLink, VentureName } from "../pieces";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
+import { VENTURE_FORMATION } from "../ventureState";
 
 /**
  * CORP-v1.2 — the Ventures index.
@@ -38,10 +39,9 @@ export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale:
           {v.cards.map((c) => (
             <article className={styles.project} key={c.href}>
               <div className={styles.projectHead}>
-                <h2 className={styles.projectName}>{c.name}</h2>
+                <VentureName name={c.name} reading={detail(c.href).reading} as="h2" />
                 <span className={styles.stage}>{c.status}</span>
               </div>
-              <p className={`${styles.brandLine} ${styles.jp}`}>{detail(c.href).reading}</p>
               <p className={`${styles.projectLead} ${styles.jp}`}>{c.thesis}</p>
               <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.problem}</p>
               <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.building}</p>
@@ -55,6 +55,11 @@ export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale:
                 now={detail(c.href).now}
                 next={detail(c.href).next}
                 who={detail(c.href).who}
+              />
+              <FormationState
+                stages={copy.foundry.stages}
+                reached={VENTURE_FORMATION[c.href] ?? 0}
+                label={copy.foundry.stagesEyebrow}
               />
               <TextLink href={L(c.href)}>{copy.common.readMore(c.name)}</TextLink>
             </article>

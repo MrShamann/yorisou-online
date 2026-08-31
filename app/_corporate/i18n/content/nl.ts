@@ -135,6 +135,10 @@ export const nl: SiteCopy = {
     explainerLabel: "Yorisou in 30 seconden",
     explainerHeading: ["Van vraagstuk naar bedrijf,", "in dertig seconden."],
     explainerClose: "Sluiten",
+    explainerPlay: "Afspelen",
+    explainerPause: "Pauzeren",
+    explainerRestart: "Opnieuw",
+    explainerStepLabel: "Stap",
   },
 
   mirai: {

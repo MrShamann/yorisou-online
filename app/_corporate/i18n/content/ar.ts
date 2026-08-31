@@ -135,6 +135,10 @@ export const ar: SiteCopy = {
     explainerLabel: "Yorisou في ثلاثين ثانية",
     explainerHeading: ["من المشكلة إلى الشركة،", "في ثلاثين ثانية."],
     explainerClose: "إغلاق",
+    explainerPlay: "تشغيل",
+    explainerPause: "إيقاف مؤقت",
+    explainerRestart: "من البداية",
+    explainerStepLabel: "مشهد",
   },
 
   mirai: {

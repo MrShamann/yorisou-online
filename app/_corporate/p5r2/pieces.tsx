@@ -161,3 +161,78 @@ export function JoinVenture({
     </div>
   );
 }
+
+/**
+ * CORP-v1.2R2.1 — the venture identity unit: Latin wordmark + that venture's own Japanese line.
+ *
+ * One component so the treatment cannot drift between Home, Ventures, How We Build, the detail hero
+ * and the footer. R2 established the wordmark stays Latin — Kakari's own glossary forbids
+ * transliteration and enforces it in CI, and Mirai Move's brand source has no reading — so the
+ * Japanese-ness of a Japanese page comes from the line beneath the mark, not from inventing katakana.
+ *
+ * `size` only changes scale, never the structure: a detail-page hero states the venture more loudly
+ * than a footer link, but a reader meets the same two-level unit everywhere.
+ */
+export function VentureName({
+  name,
+  reading,
+  size = "card",
+  as: Tag = "h3",
+}: {
+  name: string;
+  reading: string;
+  size?: "hero" | "card" | "compact";
+  as?: "h1" | "h2" | "h3" | "p";
+}) {
+  const markClass =
+    size === "hero" ? styles.ventureMarkHero : size === "compact" ? styles.ventureMarkCompact : styles.projectName;
+  return (
+    <span className={styles.ventureName}>
+      <Tag className={markClass}>{name}</Tag>
+      {reading ? <span className={`${styles.brandLine} ${styles.jp}`}>{reading}</span> : null}
+    </span>
+  );
+}
+
+/**
+ * CORP-v1.2R2.1 — a venture's position in the Foundry sequence, in the SAME grammar as the hero.
+ *
+ * Nodes reached are filled and joined by a solid rule; nodes not yet reached are hollow and joined
+ * by a dashed one. That is the whole vocabulary — node, line, state — reused from FoundryField so
+ * Hero → Ventures → How We Build reads as one system rather than four.
+ *
+ * There are deliberately NO percentages and NO completion bars. A venture is at a named stage or it
+ * is not; a number would imply a precision the evidence does not support. Nothing here is labelled
+ * live, and the reached index is set from repository evidence, not from ambition.
+ */
+export function FormationState({
+  stages,
+  reached,
+  label,
+}: {
+  stages: readonly { no: string; name: string }[];
+  reached: number;
+  label: string;
+}) {
+  return (
+    <div className={styles.formation}>
+      <p className={styles.formationLabel}>{label}</p>
+      <ol className={styles.formationTrack}>
+        {stages.map((st, i) => {
+          const done = i < reached;
+          const current = i === reached - 1;
+          return (
+            <li
+              className={`${styles.formationNode} ${done ? styles.formationDone : ""} ${current ? styles.formationCurrent : ""}`}
+              key={st.no}
+              aria-current={current ? "step" : undefined}
+            >
+              <span className={styles.formationDot} aria-hidden="true" />
+              <span className={styles.formationName}>{st.name}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}

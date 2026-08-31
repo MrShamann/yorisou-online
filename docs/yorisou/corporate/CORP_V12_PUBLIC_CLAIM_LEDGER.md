@@ -13,7 +13,7 @@ Review date for all rows: **2026-08-30**. Preview only.
 | ID | Object | Japanese canonical meaning | Evidence | State | Translation risk | Public |
 |---|---|---|---|---|---|---|
 | C-01 | Legal entity | Yorisou 合同会社 — a Japanese GK, member-managed LLC | Founder-supplied; consistent across prior packages | VERIFIED | **High** — many languages have no GK; must not render as a joint-stock company | Yes |
-| C-02 | Representative | 代表社員 Jin Yang / ジン・ヤン | Founder-supplied (Answer 2) | VERIFIED | **High** — must never become CEO/取締役 | Yes |
+| C-02 | Representative | **業務執行社員** Jin Yang / ジン・ヤン (corrected by RELEASE_GATES_3 Track F: 代表社員 is designated *from among* the 業務執行社員 under 会社法 §599(3), so 業務執行社員 is true under either answer) | Founder-supplied + 会社法 §599(3) | VERIFIED | **High** — must never become CEO/取締役 | Yes |
 | C-03 | Location | 福岡県福岡市 — city level only | Founder-supplied | VERIFIED | Low | Yes |
 | C-04 | Company facts | Trade name, representative, city, business activity — four rows | Founder-supplied | BOUNDED | Low | Yes |
 | C-05 | Registration no., capital, founding date, street address | — | No evidence supplied | **OMITTED** | — | No |
@@ -52,6 +52,14 @@ Review date for all rows: **2026-08-30**. Preview only.
 | C-33 | Participation lanes | Six lanes, each stating what cannot be promised | No salary, funding, ownership terms, hiring pipeline, municipal record, research agreement or case studies | BOUNDED | Yes |
 | C-34 | Recruitment state | No application process, no selection programme | None exists | **Denied explicitly** | Yes, as denial |
 | C-35 | Motion field | Not live, not real-time, no activity counts | It is an explanatory loop; the only text is Foundry stage names | BOUNDED | Yes |
+
+## CORP-v1.2R2.1 additions
+
+| ID | Object | Meaning | Evidence | State | Public |
+|---|---|---|---|---|---|
+| C-36 | Venture formation stage | Mirai Move 4, Kakari 4, Chigamo 1 on the Foundry sequence | Each venture's own repository evidence, recorded per-venture in `ventureState.ts` | BOUNDED — named stage only, never a percentage | Yes |
+| C-37 | Guided explainer | A ~32s animated explanation, never a video | No video asset exists; no MP4/Lottie/WebGL is referenced | BOUNDED | Yes |
+| C-38 | Home role→venture links | Which ventures each participation role connects to | That lane's own `ventures` field | BOUNDED — information architecture, never matching or personalisation | Yes |
 
 ## Enforcement
 

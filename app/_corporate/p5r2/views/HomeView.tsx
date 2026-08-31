@@ -1,5 +1,5 @@
 import styles from "../site.module.css";
-import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink } from "../pieces";
+import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink, VentureName } from "../pieces";
 import { NetworkSystem, ProcedureSystem } from "../systems";
 import FoundryField from "../FoundryField";
 import { Phrase, ROUTES } from "../Shell";
@@ -96,7 +96,7 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
               <NetworkSystem labels={copy.mirai.parties.map((p) => p.title)} centre={copy.mirai.centre} />
             </div>
             <div className={styles.projectHead}>
-              <h3 className={styles.projectName}>Mirai Move</h3>
+              <VentureName name="Mirai Move" reading={copy.mirai.reading} />
               <span className={styles.stage}>{copy.mirai.stage}</span>
             </div>
             <p className={`${styles.projectLead} ${styles.jp}`}>{copy.mirai.lead}</p>
@@ -108,7 +108,7 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
               <ProcedureSystem steps={copy.kakari.steps.map((s) => s.title)} boundary={copy.kakari.boundaryTitle} />
             </div>
             <div className={styles.projectHead}>
-              <h3 className={styles.projectName}>Kakari</h3>
+              <VentureName name="Kakari" reading={copy.kakari.reading} />
               <span className={styles.stage}>{copy.kakari.stage}</span>
             </div>
             <p className={`${styles.projectLead} ${styles.jp}`}>{copy.kakari.lead}</p>
@@ -122,7 +122,7 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
           */}
           <article className={styles.project}>
             <div className={styles.projectHead}>
-              <h3 className={styles.projectName}>Chigamo</h3>
+              <VentureName name="Chigamo" reading={copy.chigamo.reading} />
               <span className={styles.stage}>{copy.chigamo.stage}</span>
             </div>
             <p className={`${styles.projectLead} ${styles.jp}`}>{copy.chigamo.lead}</p>
@@ -182,6 +182,20 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
               href={`${L(ROUTES.buildWithUs)}#lane-${lane.key}`}
             >
               <p className={styles.engageLabel}>{lane.label}</p>
+              {/*
+                CORP-v1.2R2.1 — each role shows the ventures it connects to. This is information
+                architecture, not personalisation: the list comes from that lane's own `ventures`
+                field. Nothing is matched, recommended, or claimed to be chosen for the reader.
+              */}
+              {lane.ventures.length > 0 && (
+                <ul className={styles.engageMarks}>
+                  {lane.ventures.map((n) => (
+                    <li className={styles.engageMark} key={n}>
+                      {n}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <p className={`${styles.engageState} ${styles.jp}`}>{lane.state}</p>
             </a>
           ))}

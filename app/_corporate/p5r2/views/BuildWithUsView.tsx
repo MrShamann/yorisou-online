@@ -38,41 +38,50 @@ export default function BuildWithUsView({ copy, locale }: { copy: SiteCopy; loca
 
       <Band tint>
         {/*
-          CORP-v1.2R2 — the participation matrix.
+          CORP-v1.2R2.1 — the participation matrix as an interface rather than a wall of text.
 
-          Each lane states what Yorisou can actually offer today AND what it cannot promise. An
-          invitation that lists only upside is a recruitment pitch, and the whole point of this page
-          is that it must not be one. The `state` line carries the weakest truthful status, so
-          nothing reads as an open application while none exists.
+          Each lane is a native <details> disclosure: the summary carries the role and who it is
+          for, and opening it reveals the contribution that fits, the relevant ventures, what
+          Yorisou can offer today, what it CANNOT promise, the current state and the next action.
+
+          <details> is deliberate. It is keyboard-operable with no JavaScript, every lane's content
+          stays in the DOM for assistive technology whether or not it is open, and nothing is
+          revealed by hover — the brief is explicit that essential content must not be hover-only.
+          The first lane is open so the page opens as an answer, not as six closed rows.
+
+          `offers`, `cannot`, `ventures` and `state` are all retained. A lane that showed only the
+          upside would be a recruitment pitch, which is exactly what this page must not become.
         */}
-        <div className={styles.lanes}>
-          {b.lanes.map((lane) => (
-            <article className={styles.lane} key={lane.key} id={`lane-${lane.key}`}>
-              <div className={styles.laneHead}>
-                <h2 className={styles.laneTitle}>{lane.title}</h2>
-              </div>
-              <p className={`${styles.body} ${styles.jp}`}>{lane.body}</p>
-              <ul className={styles.founderFacts}>
-                {lane.invites.map((t) => (
-                  <li className={styles.jp} key={t}>
-                    {t}
-                  </li>
-                ))}
-              </ul>
-              <p className={`${styles.laneOffer} ${styles.jp}`}>{lane.offers}</p>
-              <p className={`${styles.laneCannot} ${styles.jp}`}>{lane.cannot}</p>
-              {lane.ventures.length > 0 && (
-                <ul className={styles.laneVentures}>
-                  {lane.ventures.map((n) => (
-                    <li className={styles.laneVenture} key={n}>
-                      {n}
+        <div className={styles.laneList}>
+          {b.lanes.map((lane, i) => (
+            <details className={styles.lane} key={lane.key} id={`lane-${lane.key}`} open={i === 0}>
+              <summary className={styles.laneSummary}>
+                <span className={styles.laneTitle}>{lane.title}</span>
+                <span className={`${styles.laneState} ${styles.jp}`}>{lane.state}</span>
+              </summary>
+              <div className={styles.laneBody}>
+                <p className={`${styles.body} ${styles.jp}`}>{lane.body}</p>
+                <ul className={styles.founderFacts}>
+                  {lane.invites.map((t) => (
+                    <li className={styles.jp} key={t}>
+                      {t}
                     </li>
                   ))}
                 </ul>
-              )}
-              <p className={`${styles.laneState} ${styles.jp}`}>{lane.state}</p>
-              <TextLink href={L(ROUTES.contact)}>{lane.cta}</TextLink>
-            </article>
+                <p className={`${styles.laneOffer} ${styles.jp}`}>{lane.offers}</p>
+                <p className={`${styles.laneCannot} ${styles.jp}`}>{lane.cannot}</p>
+                {lane.ventures.length > 0 && (
+                  <ul className={styles.laneVentures}>
+                    {lane.ventures.map((n) => (
+                      <li className={styles.laneVenture} key={n}>
+                        {n}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <TextLink href={L(ROUTES.contact)}>{lane.cta}</TextLink>
+              </div>
+            </details>
           ))}
         </div>
       </Band>

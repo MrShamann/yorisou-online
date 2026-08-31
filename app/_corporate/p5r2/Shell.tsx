@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import styles from "./site.module.css";
 import LanguageSelector from "./LanguageSelector";
+import { VentureName } from "./pieces";
 import { localeEntry, localeHref } from "../i18n/locales";
 import type { SiteCopy } from "../i18n/types";
 
@@ -153,17 +154,17 @@ export default function Shell({
               <ul className={styles.footerList}>
                 <li>
                   <a className={styles.footerLink} href={localeHref(ROUTES.miraiMove, locale)}>
-                    Mirai Move
+                    <VentureName name="Mirai Move" reading={copy.mirai.reading} size="compact" as="p" />
                   </a>
                 </li>
                 <li>
                   <a className={styles.footerLink} href={localeHref(ROUTES.kakari, locale)}>
-                    Kakari
+                    <VentureName name="Kakari" reading={copy.kakari.reading} size="compact" as="p" />
                   </a>
                 </li>
                 <li>
                   <a className={styles.footerLink} href={localeHref(ROUTES.chigamo, locale)}>
-                    Chigamo
+                    <VentureName name="Chigamo" reading={copy.chigamo.reading} size="compact" as="p" />
                   </a>
                 </li>
               </ul>

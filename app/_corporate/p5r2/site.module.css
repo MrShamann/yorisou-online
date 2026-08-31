@@ -503,3 +503,86 @@
 }
 .explainerBtn:hover, .explainerBtn:focus-visible { border-color: var(--ink); }
 .explainerDot { width: 6px; height: 6px; border-radius: 50%; background: var(--jade); }
+
+/* ── CORP-v1.2R2.1: venture identity + formation state ───────────────────────────── */
+
+.ventureName { display: block; }
+.ventureMarkHero {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step-2); font-weight: 600; letter-spacing: -0.01em; color: var(--ink);
+}
+.ventureMarkCompact {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 13.5px; font-weight: 600; color: inherit;
+}
+
+/*
+ * Formation state. Reached nodes are filled and joined solid; unreached are hollow and joined
+ * dashed. No percentages, no completion bars — a venture is at a named stage or it is not.
+ */
+.formation { margin-top: 20px; }
+.formationLabel {
+  margin: 0 0 10px; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+}
+.formationTrack {
+  display: flex; flex-wrap: wrap; gap: 0; margin: 0; padding: 0; list-style: none;
+}
+.formationNode {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11.5px; color: var(--ink-4); padding-inline-end: 14px; position: relative;
+}
+.formationNode::after {
+  content: ""; position: absolute; inset-inline-end: 4px; top: 50%;
+  width: 6px; border-block-start: 1px dashed var(--line-strong, #c9c6bd);
+}
+.formationNode:last-child::after { content: none; }
+.formationDot {
+  width: 7px; height: 7px; border: 1px solid var(--line-strong, #c9c6bd); border-radius: 50%;
+  background: transparent; flex: none;
+}
+.formationDone { color: var(--ink-2); }
+.formationDone .formationDot { background: var(--jade); border-color: var(--jade); }
+.formationDone::after { border-block-start-style: solid; border-color: var(--jade); }
+.formationCurrent .formationName { color: var(--ink); font-weight: 600; }
+.formationCurrent .formationDot { box-shadow: 0 0 0 3px rgba(116, 186, 166, 0.22); }
+@media (max-width: 560px) {
+  .formationNode { font-size: 11px; padding-inline-end: 10px; }
+}
+
+/* the positioning headline on a venture detail page, set below the wordmark */
+.ventureThesis { margin-top: 14px; }
+
+/* ── CORP-v1.2R2.1: participation interface ──────────────────────────────────────── */
+
+.laneList { border: 1px solid var(--line); margin-top: 28px; }
+.lane { border-block-end: 1px solid var(--line); background: var(--paper); }
+.lane:last-child { border-block-end: none; }
+.laneSummary {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 20px 24px; cursor: pointer; list-style: none;
+}
+.laneSummary::-webkit-details-marker { display: none; }
+.laneSummary:hover { background: var(--surface); }
+.laneSummary:focus-visible { outline: 2px solid var(--jade); outline-offset: -2px; }
+.lane[open] .laneSummary { border-block-end: 1px solid var(--line); background: var(--surface); }
+/* a quiet affordance — the row is the control, so the marker never competes with the label */
+.laneSummary::after {
+  content: "+"; margin-inline-start: auto; color: var(--ink-4);
+  font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 15px; line-height: 1;
+}
+.lane[open] .laneSummary::after { content: "−"; }
+.laneBody { padding: 22px 24px 26px; }
+@media (max-width: 560px) {
+  .laneSummary { padding: 16px 18px; }
+  .laneBody { padding: 18px 18px 22px; }
+}
+
+/* homepage participation: an entry system, not six more text cards */
+.engageCell { display: flex; flex-direction: column; gap: 6px; }
+.engageMarks { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 0; padding: 0; list-style: none; }
+.engageMark {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10px; letter-spacing: 0.04em; color: var(--ink-4);
+  border: 1px solid var(--line); padding: 2px 6px;
+}
