@@ -291,6 +291,7 @@ export const en: SiteCopy = {
     overviewHeading: ["Company overview"],
     facts: [
       { label: "Name", value: "Yorisou LLC (Yorisou GK)" },
+      { label: "Corporate Number (hōjin bangō)", value: "2290003018125" },
       { label: "Representative", value: "Jin Yang" },
       { label: "Location", value: "Fukuoka City, Fukuoka, Japan" },
       { label: "Business", value: "Planning, development and operation of Mirai Move and Kakari" },

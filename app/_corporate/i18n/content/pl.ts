@@ -295,6 +295,7 @@ export const pl: SiteCopy = {
     overviewHeading: ["Informacje o firmie"],
     facts: [
       { label: "Nazwa", value: "Yorisou LLC (Yorisou GK)" },
+      { label: "Numer podmiotu (hōjin bangō)", value: "2290003018125" },
       { label: "Wspólnik zarządzający", value: "Jin Yang" },
       { label: "Siedziba", value: "Fukuoka, prefektura Fukuoka, Japonia" },
       { label: "Działalność", value: "Planowanie, rozwój i prowadzenie Mirai Move oraz Kakari" },

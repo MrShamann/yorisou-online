@@ -304,6 +304,7 @@ export const zh_CN: SiteCopy = {
     overviewHeading: ["公司概要"],
     facts: [
       { label: "名称", value: "Yorisou 有限责任公司（Yorisou LLC）" },
+      { label: "法人番号（日本国税厅）", value: "2290003018125" },
       { label: "代表", value: "Jin Yang" },
       { label: "所在地", value: "日本福冈县福冈市" },
       { label: "业务内容", value: "Mirai Move、Kakari 的策划、开发与运营" },

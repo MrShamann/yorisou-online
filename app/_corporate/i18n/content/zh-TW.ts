@@ -315,6 +315,7 @@ export const zh_TW: SiteCopy = {
     overviewHeading: ["公司概要"],
     facts: [
       { label: "商號", value: "Yorisou 合同會社（Yorisou LLC）" },
+      { label: "法人番號（日本國稅廳）", value: "2290003018125" },
       { label: "代表", value: "Jin Yang" },
       { label: "所在地", value: "日本福岡縣福岡市" },
       { label: "事業內容", value: "Mirai Move、Kakari 的企劃、開發與營運" },

@@ -95,7 +95,7 @@ export const ko: SiteCopy = {
     founderEyebrow: "대표자",
     founderHeading: ["복잡한 현장을 20년 동안 지켜본", "사람이 만듭니다."],
     founderTeaser: "자동차·모빌리티·제조·국제 사업 현장에서 20년 이상, 기술과 구현과 상거래의 흐름 사이에 서 왔습니다. 그곳에서 반복해 본 것은, 잘 만들어진 구조가 사용하는 사람에게 닿지 못한 채 멈추는 장면이었습니다.",
-    founderRole: "Yorisou 합동회사 대표사원",
+    founderRole: "Yorisou 합동회사 업무집행사원",
     founderCta: "대표자 소개",
 
     messageEyebrow: "대표 메시지",
@@ -259,13 +259,13 @@ export const ko: SiteCopy = {
       "회사로서는 아직 작고, 쓸 수 있는 것도 많지 않습니다. 그렇기 때문에 확인된 것만 씁니다. 늘려야 하는 것은 주장이 아니라 실제로 닿은 실적이라고 생각합니다.",
     ],
     messageSignature: "Jin Yang",
-    messageRole: "Yorisou 합동회사 대표사원",
+    messageRole: "Yorisou 합동회사 업무집행사원",
 
     profileEyebrow: "대표자",
-    profileHeading: ["대표사원 소개"],
+    profileHeading: ["업무집행사원 소개"],
     profileName: "Jin Yang",
     profileNameLatin: "Jin Yang / Edward Jin",
-    profileRole: "Yorisou 합동회사 대표사원",
+    profileRole: "Yorisou 합동회사 업무집행사원",
     profileBody: [
       "자동차·모빌리티·제조·산업 프로젝트 개발·공급망·상업 개발·제품 개발, 그리고 국경을 넘는 국제 사업에서 20년 이상의 실무 경험이 있습니다.",
     ],
@@ -274,7 +274,7 @@ export const ko: SiteCopy = {
       "국제 자동차 부품 공급업체인 Ficosa에서 상업 및 산업 프로젝트의 상급 책임을 담당. 글로벌 산업 프로젝트와 아시아 지역의 상업 활동에 관여.",
       "이후 중국에서 기술·제조 사업을 창업하고 운영. 자동차 전장, 제어 시스템, 정밀 제조, AI를 활용한 제품·시스템 개발에 참여.",
       "유럽·중국·일본을 포함한 여러 시장에서 국제 사업 운영 경험을 보유.",
-      "현재는 일본에서 Yorisou 합동회사의 대표사원을 맡아 Fukuoka를 거점으로 회사를 만들어 가고 있음.",
+      "현재는 일본에서 Yorisou 합동회사의 업무집행사원을 맡아 Fukuoka를 거점으로 회사를 만들어 가고 있음.",
     ],
     profileEducationLabel: "학력",
     profileEducation: [
@@ -293,7 +293,8 @@ export const ko: SiteCopy = {
     overviewHeading: ["회사 개요"],
     facts: [
       { label: "상호", value: "Yorisou 합동회사 (Yorisou GK)" },
-      { label: "대표사원", value: "Jin Yang" },
+      { label: "법인번호", value: "2290003018125" },
+      { label: "업무집행사원", value: "Jin Yang" },
       { label: "소재지", value: "일본 Fukuoka현 Fukuoka시" },
       { label: "사업 내용", value: "Mirai Move, Kakari의 기획·개발·운영" },
     ],

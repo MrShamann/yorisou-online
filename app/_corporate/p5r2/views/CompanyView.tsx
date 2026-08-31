@@ -8,9 +8,13 @@ import type { SiteCopy } from "../../i18n/types";
  * CORP-P5R2 — the full Company page.
  *
  * Replaces the CORP-P5 placeholder entirely. It presents only facts with a source: the company name
- * and form, the representative, the city, and the business. Fields with no authoritative source
- * (registration number, capital, incorporation date, street address) are OMITTED — a visitor never
- * sees an internal blocker token, and nothing is invented to fill a gap.
+ * and form, the corporate number, the managing member, the city, and the business. Fields with no
+ * authoritative source (capital, incorporation date) are OMITTED — a visitor never sees an internal
+ * blocker token, and nothing is invented to fill a gap.
+ *
+ * The corporate number moved out of that omitted list on 2026-08-31, verified against the National
+ * Tax Agency publication site. The street address did not: it is verified, but publishing it is a
+ * Founder decision rather than a fact correction. See the note in i18n/content/ja.ts.
  */
 export default function CompanyView({ copy, locale }: { copy: SiteCopy; locale: string }) {
   const c = copy.company;

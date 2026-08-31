@@ -116,7 +116,7 @@ export const vi: SiteCopy = {
     founderEyebrow: "Người đại diện",
     founderHeading: ["Được xây dựng bởi một người đã hai mươi năm", "nhìn tận nơi những hiện trường phức tạp."],
     founderTeaser: "Hơn hai mươi năm trong ngành ô tô, di chuyển, sản xuất và kinh doanh quốc tế, đứng giữa công nghệ, việc triển khai và dòng chảy thương mại. Điều lặp đi lặp lại ở đó là cảnh một cơ chế được làm tốt lại dừng lại trước khi đến được với người cần nó.",
-    founderRole: "Thành viên đại diện, Yorisou LLC",
+    founderRole: "Thành viên điều hành, Yorisou LLC",
     founderCta: "Về người đại diện",
 
     messageEyebrow: "Thông điệp",
@@ -280,13 +280,13 @@ export const vi: SiteCopy = {
       "Công ty vẫn còn nhỏ, và những điều viết được cũng chưa nhiều. Chính vì vậy, chúng tôi chỉ viết những gì đã xác minh được. Thứ cần tăng lên không phải là lời tuyên bố, mà là những kết quả thực sự đã đến nơi.",
     ],
     messageSignature: "Jin Yang",
-    messageRole: "Thành viên đại diện, Yorisou LLC",
+    messageRole: "Thành viên điều hành, Yorisou LLC",
 
     profileEyebrow: "Người đại diện",
     profileHeading: ["Về thành viên đại diện"],
     profileName: "Jin Yang",
     profileNameLatin: "Jin Yang / Edward Jin",
-    profileRole: "Thành viên đại diện, Yorisou LLC",
+    profileRole: "Thành viên điều hành, Yorisou LLC",
     profileBody: [
       "Hơn hai mươi năm kinh nghiệm thực tiễn trong ngành ô tô, di chuyển, sản xuất, phát triển dự án công nghiệp, chuỗi cung ứng, phát triển thương mại, phát triển sản phẩm, và kinh doanh quốc tế xuyên biên giới.",
     ],
@@ -314,7 +314,8 @@ export const vi: SiteCopy = {
     overviewHeading: ["Tổng quan công ty"],
     facts: [
       { label: "Tên công ty", value: "Yorisou LLC (Yorisou GK)" },
-      { label: "Thành viên đại diện", value: "Jin Yang" },
+      { label: "Mã số doanh nghiệp (hōjin bangō)", value: "2290003018125" },
+      { label: "Thành viên điều hành", value: "Jin Yang" },
       { label: "Trụ sở", value: "Thành phố Fukuoka, tỉnh Fukuoka, Nhật Bản" },
       { label: "Ngành nghề kinh doanh", value: "Lập kế hoạch, phát triển và vận hành Mirai Move và Kakari" },
     ],

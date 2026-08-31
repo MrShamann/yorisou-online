@@ -9,11 +9,25 @@ import type { SiteCopy } from "../types";
  * CLAIM DISCIPLINE. Nothing here asserts a customer, partner, metric, revenue, funding, market
  * position, team size, government relationship or capability that is not evidenced. Company facts
  * are limited to what the Founder has stated or what a canonical project document proves; fields
- * without a source (法人番号 / 資本金 / 設立年月日 / 番地) are OMITTED rather than shown as pending —
- * a visitor must never see an internal blocker token.
+ * without a source (資本金 / 設立年月日 / 番地) are OMITTED rather than shown as pending — a visitor
+ * must never see an internal blocker token.
  *
- * 代表社員 is used deliberately. The live consumer-era page renders 代表取締役, which is a 株式会社
- * title and legally wrong for a 合同会社.
+ * 法人番号 2290003018125 WAS in that omitted list and no longer is. It was queried directly against
+ * the National Tax Agency publication site on 2026-08-31 and resolves to ＹＯＲＩＳＯＵ合同会社. It is
+ * the one company fact a stranger can verify without asking us, which is exactly why it belongs on
+ * this page. 設立年月日 stays omitted: the NTA publishes 法人番号指定年月日 (2026-03-09), which is the
+ * date the NUMBER was assigned and is not the same fact.
+ *
+ * 番地 stays omitted BY DECISION, not for lack of a source. The registered address is verified and
+ * public record, but publishing a residential street address across twenty-one locales is the
+ * Founder's call to make, not a mechanical fact correction. Raised, not assumed.
+ *
+ * 業務執行社員, NOT 代表社員. Two different errors are being avoided here. The live consumer-era page
+ * renders 代表取締役 — a 株式会社 office that a 合同会社 does not have, so it cannot be right. But the
+ * obvious repair is also unproven: the evidence on file records 業務執行社員, and 代表社員 is a
+ * distinct status that is designated FROM AMONG the 業務執行社員 (会社法 §599(3)) rather than
+ * following automatically. Only the 履歴事項全部証明書 or the 定款 settles which applies. 業務執行社員
+ * is true under either answer, so it is what this file says until the register is read.
  */
 export const ja: SiteCopy = {
   chrome: {
@@ -96,7 +110,7 @@ export const ja: SiteCopy = {
     founderEyebrow: "代表者",
     founderHeading: ["複雑な現場を、", "20年見てきた人間がつくる。"],
     founderTeaser: "自動車・モビリティ・製造・国際事業の現場で20年以上、技術と実装と商流のあいだに立ってきました。そこで繰り返し見たのは、優れた仕組みが、使う人に届かないまま止まる場面でした。",
-    founderRole: "Yorisou 合同会社 代表社員",
+    founderRole: "Yorisou 合同会社 業務執行社員",
     founderCta: "代表者について",
 
     messageEyebrow: "代表メッセージ",
@@ -260,13 +274,13 @@ export const ja: SiteCopy = {
       "会社としてはまだ小さく、書けることも多くありません。だからこそ、確認できたことだけを書きます。増やすべきは、主張ではなく、届いた実績のほうだと考えています。",
     ],
     messageSignature: "ジン・ヤン",
-    messageRole: "Yorisou 合同会社 代表社員",
+    messageRole: "Yorisou 合同会社 業務執行社員",
 
     profileEyebrow: "代表者",
-    profileHeading: ["代表社員について"],
+    profileHeading: ["業務執行社員について"],
     profileName: "ジン・ヤン",
     profileNameLatin: "Jin Yang / Edward Jin",
-    profileRole: "Yorisou 合同会社 代表社員",
+    profileRole: "Yorisou 合同会社 業務執行社員",
     profileBody: [
       "自動車・モビリティ・製造・産業プロジェクト開発・サプライチェーン・商業開発・製品開発、そして国境をまたぐ国際事業において、20年以上の実務経験があります。",
     ],
@@ -275,7 +289,7 @@ export const ja: SiteCopy = {
       "国際的な自動車部品サプライヤーである Ficosa にて、商業および産業プロジェクトの上級責任を担当。グローバル産業プロジェクトおよびアジア地域の商業活動に関わる。",
       "その後、中国において技術・製造事業を創業し運営。自動車エレクトロニクス、制御システム、精密製造、AIを活用した製品・システム開発に携わる。",
       "欧州・中国・日本を含む複数の市場で、国際的な事業運営の経験を持つ。",
-      "現在は日本で Yorisou 合同会社の代表社員を務め、福岡を拠点に会社づくりを進めている。",
+      "現在は日本で Yorisou 合同会社の業務執行社員を務め、福岡を拠点に会社づくりを進めている。",
     ],
     profileEducationLabel: "学歴",
     profileEducation: [
@@ -294,7 +308,8 @@ export const ja: SiteCopy = {
     overviewHeading: ["会社概要"],
     facts: [
       { label: "商号", value: "Yorisou 合同会社" },
-      { label: "代表社員", value: "ジン・ヤン（Jin Yang）" },
+      { label: "法人番号", value: "2290003018125" },
+      { label: "業務執行社員", value: "ジン・ヤン（Jin Yang）" },
       { label: "所在地", value: "福岡県福岡市" },
       { label: "事業内容", value: "Mirai Move、Kakari の企画・開発・運営" },
     ],

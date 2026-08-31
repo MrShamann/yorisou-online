@@ -265,7 +265,7 @@ export const tr: SiteCopy = {
     messageRole: "Yorisou LLC Temsilci Ortağı",
 
     profileEyebrow: "Temsilci",
-    profileHeading: ["Temsilci ortak hakkında"],
+    profileHeading: ["Yöneten ortak hakkında"],
     profileName: "Jin Yang",
     profileNameLatin: "Jin Yang / Edward Jin",
     profileRole: "Yorisou LLC Temsilci Ortağı",
@@ -296,7 +296,8 @@ export const tr: SiteCopy = {
     overviewHeading: ["Şirket künyesi"],
     facts: [
       { label: "Unvan", value: "Yorisou LLC (Yorisou GK)" },
-      { label: "Temsilci ortak", value: "Jin Yang" },
+      { label: "Kurum numarası (hōjin bangō)", value: "2290003018125" },
+      { label: "Yöneten ortak", value: "Jin Yang" },
       { label: "Adres", value: "Fukuoka şehri, Fukuoka, Japonya" },
       { label: "Faaliyet konusu", value: "Mirai Move ve Kakari’nin planlanması, geliştirilmesi ve işletilmesi" },
     ],

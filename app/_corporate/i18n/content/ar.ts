@@ -11,7 +11,7 @@ import type { SiteCopy } from "../types";
  * On the company form: Yorisou is a Japanese GK (godo kaisha) — a member-managed LLC, not a
  * joint-stock company.
  * It is rendered as "شركة ذات المسؤولية المحدودة" and never with a joint-stock-company term, and
- * the representative is "الشريك الممثل" — never a corporate-CEO title.
+ * the representative is "الشريك المدير" — never a corporate-CEO title.
  *
  * On the representative: "Harvard Business School Executive Education" is stated precisely. It is
  * NOT a Harvard University degree and NOT an HBS MBA, and must never be shortened in a way that
@@ -96,13 +96,13 @@ export const ar: SiteCopy = {
     ],
     howDisclose: "ماذا تعني هذه المبادئ عملياً",
 
-    founderEyebrow: "الشريك الممثل",
+    founderEyebrow: "الشريك المدير",
     founderHeading: ["يبنيها شخص أمضى", "عشرين عاماً داخل صناعات معقّدة."],
     founderTeaser: "أكثر من عشرين عاماً في السيارات والتنقل والتصنيع والأعمال الدولية، وقوفاً بين التقنية والتنفيذ والواقع التجاري. وتكرّر أمامه المشهد نفسه: نظام مُحكَم يتوقف قبل أن يصل إلى من يحتاجه.",
-    founderRole: "الشريك الممثل لشركة Yorisou ذات المسؤولية المحدودة",
-    founderCta: "عن الشريك الممثل",
+    founderRole: "الشريك المدير لشركة Yorisou ذات المسؤولية المحدودة",
+    founderCta: "عن الشريك المدير",
 
-    messageEyebrow: "رسالة الشريك الممثل",
+    messageEyebrow: "رسالة الشريك المدير",
     messageHeading: ["نحكم بما إذا كان يصل،", "لا بما إذا كان متقدّماً."],
     messageTeaser: "ما نتعامل معه ليس الجِدّة. فالأنظمة والخيارات موجودة بالفعل، لكنها تتوقف قبل أن تصل إلى من يحتاجها. نبني شركة تُقلّص تلك المسافة، خطوة بعد خطوة.",
     messageCta: "قراءة الرسالة كاملة",
@@ -253,7 +253,7 @@ export const ar: SiteCopy = {
     heading: ["شركة Yorisou ذات المسؤولية المحدودة"],
     intro: "تبني شركة Yorisou ذات المسؤولية المحدودة منتجات تحوّل تعقيد الحياة اليومية والعمل والمجتمع المحلي إلى شيء يستطيع الإنسان فهمه، والاختيار منه، والتصرف بناءً عليه. ومن Fukuoka، نعمل على مشروعين: Mirai Move و Kakari.",
 
-    messageEyebrow: "رسالة الشريك الممثل",
+    messageEyebrow: "رسالة الشريك المدير",
     messageHeading: ["نحكم بما إذا كان يصل،", "لا بما إذا كان متقدّماً."],
     message: [
       "ما نتعامل معه ليس الجِدّة.",
@@ -263,13 +263,13 @@ export const ar: SiteCopy = {
       "ما زلنا شركة صغيرة، وليس هناك الكثير مما يمكننا قوله بعد. ولهذا تحديداً لا نكتب إلا ما تحققنا منه. فما ينبغي أن ينمو ليس الادعاء، بل سجلّ ما وصل فعلاً.",
     ],
     messageSignature: "Jin Yang",
-    messageRole: "الشريك الممثل لشركة Yorisou ذات المسؤولية المحدودة",
+    messageRole: "الشريك المدير لشركة Yorisou ذات المسؤولية المحدودة",
 
-    profileEyebrow: "الشريك الممثل",
-    profileHeading: ["عن الشريك الممثل"],
+    profileEyebrow: "الشريك المدير",
+    profileHeading: ["عن الشريك المدير"],
     profileName: "Jin Yang",
     profileNameLatin: "Jin Yang / Edward Jin",
-    profileRole: "الشريك الممثل لشركة Yorisou ذات المسؤولية المحدودة",
+    profileRole: "الشريك المدير لشركة Yorisou ذات المسؤولية المحدودة",
     profileBody: [
       "أكثر من عشرين عاماً من الخبرة العملية في السيارات والتنقل والتصنيع وتطوير المشاريع الصناعية وسلاسل التوريد والتطوير التجاري وتطوير المنتجات، وفي الأعمال الدولية العابرة للحدود.",
     ],
@@ -297,7 +297,8 @@ export const ar: SiteCopy = {
     overviewHeading: ["نبذة عن الشركة"],
     facts: [
       { label: "الاسم التجاري", value: "شركة Yorisou ذات المسؤولية المحدودة (Yorisou GK)" },
-      { label: "الشريك الممثل", value: "Jin Yang" },
+      { label: "رقم تسجيل الشركة (hōjin bangō)", value: "2290003018125" },
+      { label: "الشريك المدير", value: "Jin Yang" },
       { label: "المقر", value: "مدينة Fukuoka، محافظة Fukuoka، اليابان" },
       { label: "النشاط", value: "تخطيط وتطوير وتشغيل Mirai Move و Kakari" },
     ],
@@ -328,7 +329,7 @@ export const ar: SiteCopy = {
     channels: [
       { title: "استفسارات عامة", body: "أسئلة عن Yorisou كشركة، وعن المشاريع التي نبنيها." },
       { title: "الأعمال والشراكات", body: "التعاون أو المناقشات التجارية في مجال التنقل أو الإجراءات الإدارية." },
-      { title: "الصحافة والإعلام", body: "طلبات المقابلات، والأسئلة عن الشركة أو عن الشريك الممثل." },
+      { title: "الصحافة والإعلام", body: "طلبات المقابلات، والأسئلة عن الشركة أو عن الشريك المدير." },
     ],
     formHeading: ["أرسل لنا رسالة"],
     formIntro: "استخدم النموذج أدناه. نقرأ كل استفسار ونردّ تباعاً.",

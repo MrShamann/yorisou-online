@@ -295,6 +295,7 @@ export const th: SiteCopy = {
     overviewHeading: ["ข้อมูลทั่วไปของบริษัท"],
     facts: [
       { label: "ชื่อบริษัท", value: "Yorisou LLC (Yorisou GK)" },
+      { label: "เลขทะเบียนนิติบุคคล (hōjin bangō)", value: "2290003018125" },
       { label: "ผู้แทนบริษัท", value: "Jin Yang" },
       { label: "ที่ตั้ง", value: "เมือง Fukuoka จังหวัด Fukuoka ประเทศญี่ปุ่น" },
       { label: "ธุรกิจ", value: "การวางแผน พัฒนา และดำเนินงาน Mirai Move และ Kakari" },

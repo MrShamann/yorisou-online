@@ -296,6 +296,7 @@ export const uk: SiteCopy = {
     overviewHeading: ["Загальні відомості про компанію"],
     facts: [
       { label: "Назва", value: "Yorisou LLC (Yorisou GK)" },
+      { label: "Корпоративний номер (hōjin bangō)", value: "2290003018125" },
       { label: "Представник", value: "Jin Yang" },
       { label: "Місцезнаходження", value: "місто Fukuoka, префектура Fukuoka, Японія" },
       { label: "Діяльність", value: "Планування, розробка та ведення Mirai Move і Kakari" },

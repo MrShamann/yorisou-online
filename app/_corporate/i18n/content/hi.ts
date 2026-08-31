@@ -13,7 +13,7 @@ import type { SiteCopy } from "../types";
  *
  * The company is a Japanese LLC (godo kaisha). The representative is its representative member
  * (daihyo shain) — rendered as
- * "प्रतिनिधि सदस्य", never as a joint-stock-company CEO title.
+ * "प्रबंधक सदस्य", never as a joint-stock-company CEO title.
  */
 export const hi: SiteCopy = {
   chrome: {
@@ -96,7 +96,7 @@ export const hi: SiteCopy = {
     founderEyebrow: "प्रतिनिधि",
     founderHeading: ["इसे वह व्यक्ति बना रहा है जिसने", "जटिल उद्योगों में बीस साल बिताए हैं।"],
     founderTeaser: "ऑटोमोटिव, मोबिलिटी, विनिर्माण और अंतरराष्ट्रीय कारोबार में बीस से अधिक वर्ष — तकनीक, क्रियान्वयन और व्यावसायिक वास्तविकता के बीच खड़े रहकर। वहाँ बार-बार यही दिखा: एक अच्छी बनी व्यवस्था उस व्यक्ति तक पहुँचने से पहले ही रुक जाती है जिसे उसकी ज़रूरत थी।",
-    founderRole: "प्रतिनिधि सदस्य, Yorisou LLC",
+    founderRole: "प्रबंधक सदस्य, Yorisou LLC",
     founderCta: "प्रतिनिधि के बारे में",
 
     messageEyebrow: "संदेश",
@@ -260,13 +260,13 @@ export const hi: SiteCopy = {
       "कंपनी अभी छोटी है, और अभी लिखने को बहुत कुछ नहीं है। ठीक इसीलिए हम केवल वही लिखते हैं जिसकी पुष्टि हो सकी है। बढ़ना दावों को नहीं, बल्कि वास्तव में पहुँच पाने के रिकॉर्ड को चाहिए।",
     ],
     messageSignature: "Jin Yang",
-    messageRole: "प्रतिनिधि सदस्य, Yorisou LLC",
+    messageRole: "प्रबंधक सदस्य, Yorisou LLC",
 
     profileEyebrow: "प्रतिनिधि",
-    profileHeading: ["प्रतिनिधि सदस्य के बारे में"],
+    profileHeading: ["प्रबंधक सदस्य के बारे में"],
     profileName: "Jin Yang",
     profileNameLatin: "Jin Yang / Edward Jin",
-    profileRole: "प्रतिनिधि सदस्य, Yorisou LLC",
+    profileRole: "प्रबंधक सदस्य, Yorisou LLC",
     profileBody: [
       "ऑटोमोटिव, मोबिलिटी, विनिर्माण, औद्योगिक परियोजना विकास, आपूर्ति शृंखला, वाणिज्यिक विकास, उत्पाद विकास तथा सीमा-पार अंतरराष्ट्रीय कारोबार में बीस से अधिक वर्षों का व्यावसायिक अनुभव।",
     ],
@@ -275,7 +275,7 @@ export const hi: SiteCopy = {
       "अंतरराष्ट्रीय ऑटोमोटिव आपूर्तिकर्ता Ficosa में वरिष्ठ वाणिज्यिक और औद्योगिक परियोजना ज़िम्मेदारियाँ निभाईं, जिनमें वैश्विक औद्योगिक परियोजनाओं और एशिया की वाणिज्यिक गतिविधियों से जुड़ा कार्य शामिल है।",
       "उसके बाद चीन में तकनीक और विनिर्माण व्यवसाय स्थापित किए और संचालित किए, जिनमें ऑटोमोटिव इलेक्ट्रॉनिक्स, नियंत्रण प्रणालियाँ, परिशुद्ध विनिर्माण तथा AI-सक्षम उत्पाद एवं सिस्टम विकास से जुड़ा कार्य शामिल है।",
       "यूरोप, चीन और जापान सहित कई बाज़ारों में अंतरराष्ट्रीय व्यवसाय संचालन का अनुभव।",
-      "अब जापान में Yorisou LLC के प्रतिनिधि सदस्य हैं और Fukuoka से कंपनी का निर्माण कर रहे हैं।",
+      "अब जापान में Yorisou LLC के प्रबंधक सदस्य हैं और Fukuoka से कंपनी का निर्माण कर रहे हैं।",
     ],
     profileEducationLabel: "शिक्षा",
     profileEducation: [
@@ -294,7 +294,8 @@ export const hi: SiteCopy = {
     overviewHeading: ["कंपनी परिचय"],
     facts: [
       { label: "नाम", value: "Yorisou LLC (Yorisou GK)" },
-      { label: "प्रतिनिधि सदस्य", value: "Jin Yang" },
+      { label: "कॉर्पोरेट नंबर (hōjin bangō)", value: "2290003018125" },
+      { label: "प्रबंधक सदस्य", value: "Jin Yang" },
       { label: "स्थान", value: "Fukuoka शहर, Fukuoka, जापान" },
       { label: "व्यवसाय", value: "Mirai Move और Kakari की योजना, विकास और संचालन" },
     ],

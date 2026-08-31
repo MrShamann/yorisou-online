@@ -99,7 +99,7 @@ export const nl: SiteCopy = {
     founderEyebrow: "Vertegenwoordiger",
     founderHeading: ["Gebouwd door iemand die twintig jaar", "in complexe industrieën heeft gestaan."],
     founderTeaser: "Ruim twintig jaar in de automotive, mobiliteit, productie en internationaal zakendoen, steeds tussen de techniek, de uitvoering en de commerciële praktijk in. Wat zich daar telkens herhaalde: een goed werkend systeem dat stilvalt voordat het de mens bereikt die het nodig heeft.",
-    founderRole: "Vertegenwoordigend vennoot, Yorisou LLC",
+    founderRole: "Besturend vennoot, Yorisou LLC",
     founderCta: "Over de vertegenwoordiger",
 
     messageEyebrow: "Boodschap",
@@ -263,13 +263,13 @@ export const nl: SiteCopy = {
       "Wij zijn nog een klein bedrijf en er is nog niet veel dat wij kunnen vermelden. Juist daarom schrijven wij alleen op wat wij kunnen verifiëren. Wat moet groeien is niet de bewering, maar wat werkelijk is aangekomen.",
     ],
     messageSignature: "Jin Yang",
-    messageRole: "Vertegenwoordigend vennoot, Yorisou LLC",
+    messageRole: "Besturend vennoot, Yorisou LLC",
 
     profileEyebrow: "Vertegenwoordiger",
     profileHeading: ["Over de vertegenwoordigend vennoot"],
     profileName: "Jin Yang",
     profileNameLatin: "Jin Yang / Edward Jin",
-    profileRole: "Vertegenwoordigend vennoot, Yorisou LLC",
+    profileRole: "Besturend vennoot, Yorisou LLC",
     profileBody: [
       "Ruim twintig jaar praktijkervaring in de automotive, mobiliteit, productie, industriële projectontwikkeling, supply chain, commerciële ontwikkeling, productontwikkeling en grensoverschrijdend internationaal zakendoen.",
     ],
@@ -297,7 +297,8 @@ export const nl: SiteCopy = {
     overviewHeading: ["Bedrijfsprofiel"],
     facts: [
       { label: "Naam", value: "Yorisou LLC (Yorisou GK)" },
-      { label: "Vertegenwoordigend vennoot", value: "Jin Yang" },
+      { label: "Ondernemingsnummer (hōjin bangō)", value: "2290003018125" },
+      { label: "Besturend vennoot", value: "Jin Yang" },
       { label: "Vestiging", value: "Fukuoka, prefectuur Fukuoka, Japan" },
       { label: "Activiteiten", value: "Ontwerp, ontwikkeling en exploitatie van Mirai Move en Kakari" },
     ],
