@@ -38,10 +38,10 @@ export const fr: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — D’un problème structurel à une entreprise qui tient debout seule.", description: "Yorisou LLC est une fonderie d’entreprises : nous cherchons des problèmes structurels, réunissons les preuves et les actifs nécessaires, et nous associons à des équipes fondatrices pour en faire des entreprises indépendantes. Mirai Move et Kakari sont en construction ; Chigamo en est au stade du concept." },
+    home: { title: "Yorisou LLC — Faire d’un problème structurel une activité.", description: "Yorisou LLC est une fonderie d’entreprises : nous cherchons des problèmes structurels, réunissons les preuves et les actifs nécessaires, et nous nous associons à ceux qui les conduiront pour les lancer comme activités. Mirai Move et Kakari sont en construction ; Chigamo en est au stade du concept." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Une plateforme d’information, de mise en relation et de développement d’activités dans le secteur de la mobilité au Japon. Le site public est en ligne ; les fonctionnalités de la plateforme sont en cours de développement." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Un accompagnement multilingue pour les démarches administratives et les documents, destiné aux personnes qui vivent au Japon et à celles qui y créent une activité. En cours de développement, pas encore accessible au public." },
-    about: { title: "Notre façon de construire — Yorisou LLC", description: "Trouver le problème, le vérifier, le concevoir comme une activité, constituer une équipe fondatrice et la conduire jusqu’à une entreprise indépendante. Le fonctionnement de la fonderie Yorisou, et la place qu’y occupe le socle technique commun." },
+    about: { title: "Notre façon de construire — Yorisou LLC", description: "Trouver le problème, le vérifier, le concevoir comme une activité, constituer une équipe fondatrice et la mettre debout. Le fonctionnement de la fonderie Yorisou, les formes que peut prendre une activité, et la place qu’y occupe le socle commun." },
     company: { title: "Entreprise — Yorisou LLC", description: "Présentation de Yorisou LLC, profil du représentant, message du représentant et domaines d’activité." },
     contact: { title: "Contact — Yorisou LLC", description: "Point de contact pour les demandes liées à nos activités, aux partenariats et à la presse." },
     ventures: { title: "Projets — Yorisou LLC", description: "Ce que Yorisou construit aujourd’hui : Mirai Move, Kakari et Chigamo. Chacun en est à une étape différente, et nous l’indiquons telle quelle." },
@@ -64,10 +64,10 @@ export const fr: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Faire d’un problème structurel", "une entreprise."],
-    thesis: ["D’un problème structurel,", "nous bâtissons une entreprise", "qui tient debout seule."],
+    thesis: ["D’un problème structurel,", "nous bâtissons une activité,", "puis nous la faisons grandir."],
     lead: [
       "Yorisou est une fonderie d’entreprises : nous cherchons les problèmes structurels de la société, nous les vérifions, nous les concevons comme des activités,",
-      "puis nous nous associons à ceux qui les conduiront, jusqu’à en faire des entreprises indépendantes.",
+      "puis nous nous associons à ceux qui les conduiront, pour les lancer comme activités.",
     ],
     humanSide: "Personnes",
     humanItems: ["Vie quotidienne", "Travail", "Territoire"],
@@ -124,9 +124,16 @@ export const fr: SiteCopy = {
     asterionEyebrow: "Socle commun",
     asterionHeading: ["À chaque projet,", "le socle s’épaissit."],
     asterionBody:
-      "Asterion OS est une plateforme technique et d’exécution commune, indépendante, qui trouve sa place dans l’architecture de la fonderie Yorisou. Parce que ce socle existe déjà, aucun projet n’a à le reconstruire : chacun peut consacrer son énergie à ce qui lui est propre.",
+      "Asterion OS est un projet de plateforme technique indépendant. Parce qu’un socle commun existe déjà, aucun projet n’a à reconstruire les mêmes mécanismes : chacun peut consacrer son énergie à ce qui lui est propre.",
     asterionNote:
-      "Chaque projet est gouverné séparément et conserve sa propre propriété intellectuelle, ses propres données et sa propre responsabilité d’exploitation. Asterion n’appartient pas à Yorisou.",
+      "Chaque projet est gouverné séparément. La propriété intellectuelle, les données et la responsabilité d’exploitation — ainsi que les droits relatifs à Asterion — dépendent des accords applicables à chaque cas.",
+    /* CORP-v1.4 — le lien que Yorisou garde avec ce qu’elle construit. Conditionnel, jamais promis. */
+    portfolioEyebrow: "Notre lien avec les projets",
+    portfolioHeading: ["Construire n’est pas", "le point final."],
+    portfolioBody:
+      "Une fois un projet lancé, Yorisou peut rester associée à sa valeur dans la durée : en conservant une participation, sous la forme d’une licence, ou en l’exploitant conjointement. Un projet peut aussi être constitué en société distincte, cédé ou vendu.",
+    portfolioNote:
+      "La forme retenue dépend de la maturité du projet, des personnes avec qui il se fait, du marché, du capital et de l’accord conclu pour ce projet. Rien n’est fixé à l’avance.",
     engageEyebrow: "Construire avec nous",
     engageHeading: ["Entrer maintenant,", "pendant que l’entreprise se forme."],
     engageBody:
@@ -256,7 +263,7 @@ export const fr: SiteCopy = {
   company: {
     eyebrow: "Entreprise",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC conçoit des produits qui transforment la complexité de la vie quotidienne, du travail et des territoires en quelque chose que chacun peut comprendre, choisir et mettre en œuvre. Basée à Fukuoka, l’entreprise développe deux projets : Mirai Move et Kakari.",
+    intro: "Yorisou LLC est une fonderie d’entreprises : nous cherchons des problèmes structurels, nous les concevons comme des activités et nous les lançons avec des personnes capables de les conduire. Basée à Fukuoka, l’entreprise construit plusieurs projets ; ceux qui sont publics aujourd’hui sont Mirai Move, Kakari et Chigamo.",
 
     messageEyebrow: "Message du représentant",
     messageHeading: ["Ce qui compte n’est pas la technologie,", "mais le fait que cela arrive à destination."],
@@ -305,12 +312,12 @@ export const fr: SiteCopy = {
       { label: "Numéro d’entreprise (hōjin bangō)", value: "2290003018125" },
       { label: "Représentant", value: "Jin Yang" },
       { label: "Siège", value: "Ville de Fukuoka, préfecture de Fukuoka, Japon" },
-      { label: "Activité", value: "Conception, développement et exploitation de Mirai Move et Kakari" },
+      { label: "Activité", value: "Exploration, conception, développement et exploitation de nouvelles activités ; constitution d’équipes fondatrices ; et mise en œuvre par exploitation conjointe, licence ou dispositifs équivalents" },
     ],
 
     businessEyebrow: "Domaines d’activité",
     businessHeading: ["Domaines d’activité"],
-    businessBody: "Information, mise en relation et développement d’activités dans le secteur de la mobilité ; et accompagnement multilingue pour les démarches administratives et les documents, destiné aux personnes qui vivent au Japon et à celles qui y créent une activité. Les deux suivent le même principe : prendre en charge la complexité et restituer quelque chose d’utilisable.",
+    businessBody: "Ce qui est au centre de Yorisou, c’est la construction des projets eux-mêmes : trouver un problème structurel, le vérifier, le concevoir comme une activité, le construire, et le lancer avec des personnes capables de le conduire. Les projets publics aujourd’hui sont l’information, la mise en relation et le développement d’activités dans le secteur de la mobilité (Mirai Move) ; l’accompagnement multilingue pour les démarches administratives, destiné aux personnes qui vivent au Japon et à celles qui y créent une activité (Kakari) ; et la découverte d’un bassin de vie à partir du lieu et du contexte (Chigamo, au stade du concept). Tous suivent le même principe : prendre en charge la complexité et restituer quelque chose d’utilisable.",
 
     projectsEyebrow: "Projets",
     projectsHeading: ["Ce que nous construisons"],
@@ -395,11 +402,18 @@ export const fr: SiteCopy = {
         status: "Stade du concept. Rien n’a encore été vérifié.",
       },
     ],
+    /* CORP-v1.4 — sépare ce qui est vrai aujourd’hui de ce qui peut suivre. */
+    structureHeading: ["Ce qui est vrai aujourd’hui,", "et ce qui peut suivre."],
+    structureBody: [
+      "Les étapes indiquées ci-dessus décrivent la situation actuelle. Nous n’y écrivons que ce qui a déjà eu lieu.",
+      "La suite n’est pas arrêtée. Un projet peut continuer d’être exploité au sein de Yorisou, accueillir une équipe d’exploitation venue de l’extérieur, être détenu conjointement ou être constitué en société distincte. Il peut aussi prendre la forme d’une licence, d’une cession ou d’une vente.",
+      "Laquelle de ces formes s’appliquera dépend de la maturité du projet, des personnes avec qui il se fait, du marché, du capital et de l’accord conclu. Ce qui est écrit ici décrit des formes possibles : ce n’est ni un plan ni une promesse.",
+    ],
     noteHeading: ["Ce que dit cette page,", "et ce qu’elle ne dit pas."],
     noteBody: [
       "Ce qui figure ici, ce sont les projets et les idées sur lesquels Yorisou travaille actuellement.",
       "Il ne s’agit ni de filiales constituées, ni de participations, ni de clients. Chacun en est à une étape différente, et nous l’écrivons telle quelle.",
-      "L’objectif est que chacun tienne un jour comme entreprise indépendante. Aucun n’y est encore parvenu.",
+      "Ce qui figure ici est vrai aujourd’hui. La forme que prendra ensuite chacun d’eux n’est pas arrêtée.",
     ],
   },
 
@@ -451,7 +465,7 @@ export const fr: SiteCopy = {
     eyebrow: "Notre façon de construire",
     heading: ["D’un problème", "à une entreprise, dans l’ordre."],
     lead:
-      "Nous ne partons pas d’une intuition. Nous cherchons un problème structurel, nous le vérifions, nous le concevons comme une activité, nous nous associons à des personnes capables de la conduire, puis nous la menons jusqu’à une entreprise indépendante. C’est cet enchaînement que Yorisou appelle sa fonderie.",
+      "Nous ne partons pas d’une intuition. Nous cherchons un problème structurel, nous le vérifions, nous le concevons comme une activité, nous nous associons à des personnes capables de la conduire, puis nous la menons jusqu’au point où elle tient debout comme activité. C’est cet enchaînement que Yorisou appelle sa fonderie.",
     stagesEyebrow: "Les étapes",
     stagesHeading: ["Huit étapes,", "et aucune n’est sautée."],
     stages: [
@@ -461,27 +475,32 @@ export const fr: SiteCopy = {
       { no: "04", name: "Construction", body: "Construire. Utiliser le socle commun là où il existe, et concentrer l’effort sur ce qui est propre au projet." },
       { no: "05", name: "Projet transmissible", body: "Amener les actifs et les procédures au point où quelqu’un d’extérieur peut les reprendre et les exploiter." },
       { no: "06", name: "Équipe fondatrice", body: "S’associer à une personne capable de porter le projet comme le sien — en tant que fondateur, non comme salarié." },
-      { no: "07", name: "Indépendance et exploitation", body: "Faire fonctionner le projet comme une entreprise indépendante, conçue pour ne pas rester dépendante de Yorisou." },
-      { no: "08", name: "Apprentissage", body: "Conserver ce qui a fonctionné comme ce qui s’est arrêté, en matière première pour le projet suivant." },
+      { no: "07", name: "Indépendance et exploitation", body: "Amener le projet au point où il fonctionne par ses propres moyens. Il peut être constitué en société distincte, continuer d’être exploité au sein de Yorisou, ou être détenu conjointement avec d’autres." },
+      { no: "08", name: "Apprentissage", body: "Conserver ce qui a fonctionné comme ce qui s’est arrêté, en matière première pour le projet suivant. La relation avec le projet ne s’arrête pas nécessairement là." },
     ],
-    independenceHeading: ["Le but est une entreprise", "qui tient debout seule."],
+    independenceHeading: ["Un projet peut prendre", "plus d’une forme."],
     independenceBody: [
-      "La fonderie n’a pas pour but d’accumuler des entités sous Yorisou. Elle a pour but d’amener chaque projet au point où il peut tenir comme entreprise indépendante.",
-      "C’est pourquoi tout est construit, dès le départ, pour être transmis. Si ceux qui exploitent le projet ne détiennent pas les véritables décisions, ce n’est pas encore une entreprise.",
+      "Tenir debout comme entreprise indépendante est l’une des formes que nous visons. Cela ne signifie pas pour autant qu’y parvenir mette fin à la relation avec Yorisou.",
+      "Un projet peut continuer d’être exploité au sein de Yorisou. Il peut aussi accueillir un fondateur ou une équipe d’exploitation venue de l’extérieur et être détenu conjointement, être constitué en société distincte, prendre la forme d’une licence, ou faire l’objet d’une cession ou d’une vente.",
+      "La forme retenue dépend de la maturité du projet, des personnes avec qui il se fait, du marché, du capital et de l’accord conclu pour ce projet. Il n’existe pas de modèle fixé d’avance.",
+      "Un seul point est constant : tout est construit, dès le départ, pour être transmis. Si ceux qui exploitent le projet ne détiennent pas les véritables décisions, il ne tient pas comme activité.",
     ],
     asterionEyebrow: "Socle technique et d’exécution commun",
     asterionHeading: ["Ne pas construire", "deux fois la même chose."],
     asterionBody: [
-      "Asterion OS est une plateforme technique et d’exécution commune, indépendante, qui trouve sa place dans l’architecture de la fonderie Yorisou. Elle n’appartient pas à Yorisou.",
-      "Parce que ce socle commun existe, aucun projet n’a à reconstruire les mêmes mécanismes et chacun peut se concentrer sur son propre domaine. Ce qui s’accumule devient le point de départ du projet suivant.",
+      "Asterion OS est un projet de plateforme technique indépendant. Il ne fait pas partie des projets Yorisou présentés sur ce site.",
+      "Il est possible qu’un projet Yorisou utilise certaines capacités d’Asterion là où cela est approprié. La propriété, les licences, les droits sur les données et la responsabilité d’exploitation dépendent alors des accords applicables au cas considéré.",
+      "Parce qu’un socle commun peut être utilisé, aucun projet n’a à reconstruire les mêmes mécanismes et chacun peut se concentrer sur son propre domaine. Ce qui s’accumule devient le point de départ du projet suivant.",
     ],
     asterionBoundaryTitle: "La limite",
     asterionBoundaryBody:
-      "Chaque projet est gouverné séparément. La propriété intellectuelle, les données et la responsabilité d’exploitation appartiennent au projet. Rien n’est conçu pour que les données d’un projet ou de ses utilisateurs remontent automatiquement vers le socle.",
+      "Chaque projet est gouverné séparément. La propriété intellectuelle, les données et la responsabilité d’exploitation sont réglées par l’accord propre à chaque projet. Rien n’est conçu pour que les données d’un projet ou de ses utilisateurs remontent automatiquement vers le socle.",
     economicsHeading: ["La détention suit", "la contribution et la responsabilité."],
     economicsBody: [
       "Les conditions diffèrent d’un projet à l’autre. Nous n’appliquons pas une formule unique à tous.",
       "Seul le principe est commun : la détention suit la contribution, le risque assumé et la responsabilité qui se poursuit. Ceux qui conduisent un projet y détiennent un véritable pouvoir de décision.",
+      "Yorisou peut elle aussi rester associée à la valeur d’un projet dans la durée : en conservant une participation, sous la forme d’une licence, ou en l’exploitant conjointement. Ce qui s’applique dépend de la part que Yorisou a portée et du risque qu’elle a pris.",
+      "Aucune condition ne peut être promise aujourd’hui. Ni la détention, ni la forme d’un droit ne sont fixées avant un accord.",
       "Les modalités concrètes se discutent projet par projet et personne par personne. Elles n’ont pas leur place sur un site.",
     ],
     maturityTitle: "Où nous en sommes",
@@ -494,7 +513,13 @@ export const fr: SiteCopy = {
     eyebrow: "Construire avec nous",
     heading: ["Le point d’entrée dépend", "de la place que vous occupez."],
     lead:
-      "Yorisou mène un projet jusqu’au seuil de l’entreprise, puis s’associe à quelqu’un capable de le porter. Nous ne cherchons donc pas des personnes à employer, mais des personnes à qui le transmettre.",
+      "Yorisou mène un projet jusqu’au seuil de l’activité, puis s’associe à qui peut le porter. Nous ne cherchons donc pas des personnes à employer, mais des personnes et des organisations prêtes à reprendre un projet.",
+    /* CORP-v1.4 — la forme d’une participation se conçoit projet par projet, et n’est promise d’avance pour aucun. */
+    structureHeading: ["La forme de votre participation", "se conçoit projet par projet."],
+    structureBody: [
+      "Il n’existe pas de case toute faite dans laquelle entrer. Cofondation, équipe fondatrice, participation dans un projet, licence, exploitation conjointe, constitution en société distincte : la forme dépend du projet et de la part que vous en portez.",
+      "Quelle que soit la forme retenue, la gouvernance, la propriété intellectuelle, le rôle, les responsabilités et les conditions économiques sont fixés par un accord distinct. Aucune condition ne peut être promise ici à l’avance.",
+    ],
     lanes: [
       {
         key: "founders",

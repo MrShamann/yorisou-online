@@ -5,7 +5,10 @@ import { getCopy } from "../../app/_corporate/i18n";
 import {
   DEFAULT_LOCALE,
   LOCALES,
-  PRODUCTION_READY,
+  PUBLIC_LOCALES,
+  REVIEWED,
+  NATIVE_REVIEW_PENDING,
+  localeEntry,
   PUBLISHED,
 } from "../../app/_corporate/i18n/locales";
 
@@ -133,30 +136,65 @@ test("every RTL locale is declared with a direction the shell can act on", () =>
 });
 
 /**
- * CORP-v1.2R1 §7 — Preview availability and Production readiness are separate axes.
+ * CORP-v1.4 — access and review are separate axes, and this now asserts BOTH of them.
  *
- * Nineteen locales are complete, type-checked and render correctly, and have still never been read
- * by a native speaker. Rendering correctly is not the same as being fit to publish, so Production
- * routing must consult PRODUCTION_READY rather than "did it render". This test exists so that a
- * later change cannot quietly promote an unreviewed locale by flipping one word in the registry.
+ * The v1.2R1 version of this test asserted that only ja and en were cleared to be served. That was
+ * a defensible reading of "not reviewed" at the time, and it had a consequence nobody measured: the
+ * language selector filtered on the same field, so nineteen complete, rendering, claim-guarded
+ * locales became unreachable. Not reviewed is a reason to be honest about the review; it is not a
+ * reason to be unreachable.
+ *
+ * So the assertion inverts. Every built locale must be REACHABLE, and the review state must stay
+ * TRUTHFUL — nineteen of them must keep saying that no native speaker has read them. The failure
+ * this guards against is no longer "an unreviewed locale got published"; it is "an unreviewed
+ * locale got quietly relabelled as reviewed".
  */
-test("only human-reviewed locales are cleared for Production", () => {
-  const ready = PRODUCTION_READY.map((l) => l.code).sort();
-  assert.deepEqual(ready, ["en", "ja"], `unexpected Production-ready set: ${ready.join(", ")}`);
-
-  for (const l of PRODUCTION_READY) {
-    assert.ok(
-      l.reviewState === "SOURCE_CANONICAL" || l.reviewState === "HUMAN_REVIEWED",
-      `${l.code} is cleared for Production but its review state is ${l.reviewState}`,
-    );
-  }
-
-  // Everything else must still be available in Preview — this posture must not hide translations.
-  const previewCodes = PUBLISHED.map((l) => l.code);
-  assert.equal(previewCodes.length, 21, `expected 21 locales available in Preview, got ${previewCodes.length}`);
+test("every built locale is reachable, and no locale overstates its review", () => {
+  const publicCodes = PUBLIC_LOCALES.map((l) => l.code).sort();
+  assert.equal(
+    publicCodes.length,
+    21,
+    `expected all 21 locales to be reachable, got ${publicCodes.length}: ${publicCodes.join(", ")}`,
+  );
   for (const l of LOCALES) {
-    if (l.reviewState === "AI_TRANSLATED") {
-      assert.equal(l.status, "preview_only", `${l.code} is AI-translated but is not marked preview_only`);
-    }
+    assert.equal(l.access, "public", `${l.code} is built but not reachable`);
   }
+
+  // Reviewed is a small, explicit set. Anything else must say so.
+  const reviewed = REVIEWED.map((l) => l.code).sort();
+  assert.deepEqual(
+    reviewed,
+    ["en", "ja"],
+    `a locale claims to have been reviewed when it has not: ${reviewed.join(", ")}`,
+  );
+  assert.equal(localeEntry("ja").reviewState, "SOURCE_CANONICAL");
+  assert.equal(localeEntry("en").reviewState, "FOUNDER_REVIEWED");
+
+  // The other nineteen must keep saying a native speaker has not read them.
+  const pending = NATIVE_REVIEW_PENDING.map((l) => l.code).sort();
+  assert.equal(
+    pending.length,
+    19,
+    `expected 19 locales awaiting native review, got ${pending.length}: ${pending.join(", ")}`,
+  );
+  for (const l of NATIVE_REVIEW_PENDING) {
+    assert.equal(l.reviewState, "AI_TRANSLATED_NATIVE_REVIEW_PENDING", l.code);
+  }
+  assert.equal(reviewed.length + pending.length, 21, "every locale must sit on exactly one side");
+});
+
+/**
+ * The review state is INTERNAL. A visitor must never be shown a token like AI_TRANSLATED — the
+ * honest thing is to tell the Founder, not to caption nineteen languages with a disclaimer that
+ * says "we did not check this" in the language of the person reading it.
+ */
+test("no review-state token is renderable", async () => {
+  const TOKENS = ["AI_TRANSLATED", "NATIVE_REVIEW_PENDING", "FOUNDER_REVIEWED", "SOURCE_CANONICAL", "NATIVE_REVIEWED"];
+  const offences: string[] = [];
+  for (const locale of PUBLIC_LOCALES) {
+    const copy = await getCopy(locale.code);
+    const flat = JSON.stringify(copy);
+    for (const t of TOKENS) if (flat.includes(t)) offences.push(`${locale.code}: ${t}`);
+  }
+  assert.deepEqual(offences, [], `a review-state token reached rendered copy:\n${offences.join("\n")}`);
 });

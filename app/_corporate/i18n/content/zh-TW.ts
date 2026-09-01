@@ -19,9 +19,11 @@ import type { SiteCopy } from "../types";
  * The Kakari professional boundary and the Mirai Move development-status boundary are carried at
  * full strength.
  *
- * CORP-v1.2 boundaries, carried at full strength: Asterion OS is an INDEPENDENT shared technology
- * and execution platform that Yorisou does not own — never "our platform", never "powered by", and
- * the separate-governance sentence (IP, data, operating responsibility per venture) stays intact.
+ * CORP-v1.2/v1.4 boundaries, carried at full strength: Asterion OS is an INDEPENDENT
+ * technology-platform project and is NOT one of the ventures presented on this site — never "our
+ * platform", never "powered by", and no claim either way about who owns it. Ownership, licensing,
+ * data rights and operating responsibility follow the agreements that apply in each case, and the
+ * separate-governance sentence (IP, data, operating responsibility per venture) stays intact.
  * Mirai Move, Kakari and Chigamo are ventures and concepts, never subsidiaries, investments or
  * clients. Chigamo is at concept stage with no product, no users and no municipal programme. The
  * foundry method is not claimed as proven or repeatable, and no venture has been spun out yet.
@@ -58,10 +60,10 @@ export const zh_TW: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou 合同會社 — 從結構性的課題，打造能獨立站立的公司。", description: "Yorisou 合同會社找出結構性的課題，建立證據與事業資產，並與創業團隊一起把它們帶向能獨立站立的公司。目前正在建構 Mirai Move 與 Kakari，Chigamo 仍在構想階段。" },
+    home: { title: "Yorisou 合同會社 — 把結構性的課題，變成事業。", description: "Yorisou 合同會社是一家創業 foundry：找出結構性的課題，建立證據與事業資產，並與能夠營運的人組隊，把它立成事業。目前正在建構 Mirai Move 與 Kakari，Chigamo 仍在構想階段。" },
     miraiMove: { title: "Mirai Move — Yorisou 合同會社", description: "面向日本移動出行領域的資訊、媒合與事業開發平台。公開網站營運中，平台功能仍在開發階段。" },
     kakari: { title: "Kakari — Yorisou 合同會社", description: "為在日本生活的人、在日本創業的人提供多語言的行政程序與文件支援。目前開發中，尚未對外公開。" },
-    about: { title: "我們的做法 — Yorisou 合同會社", description: "找出課題、加以查證、設計成事業，再與創業團隊一起帶到獨立的公司。Yorisou 的 foundry 如何進行，以及共用基礎落在什麼位置。" },
+    about: { title: "我們的做法 — Yorisou 合同會社", description: "找出課題、加以查證、設計成事業，再與創業團隊一起把它立起來。Yorisou 的 foundry 如何進行、事業可以有哪些形態，以及共用基礎落在什麼位置。" },
     company: { title: "公司資訊 — Yorisou 合同會社", description: "Yorisou 合同會社的公司概要、代表人簡介、代表致詞與事業領域。" },
     contact: { title: "聯絡我們 — Yorisou 合同會社", description: "事業、合作與採訪相關的聯絡窗口。" },
     ventures: { title: "事業 — Yorisou 合同會社", description: "Yorisou 目前推進中的事業與構想：Mirai Move、Kakari、Chigamo。各自的階段不同，我們照實記載。" },
@@ -84,10 +86,10 @@ export const zh_TW: SiteCopy = {
   home: {
     eyebrow: "Yorisou 合同會社",
     hook: ["把結構性課題，", "變成公司。"],
-    thesis: ["從結構性的課題，", "打造能獨立站立的公司。"],
+    thesis: ["從結構性的課題，", "打造事業，", "並持續培育。"],
     lead: [
       "Yorisou 是一家 foundry：我們找出社會中結構性的課題，加以查證，設計成事業，",
-      "並與接手營運的人組隊，一路帶到能獨立站立的公司。",
+      "並與營運的人組隊，把它立成一項事業。",
     ],
     humanSide: "人",
     humanItems: ["生活", "工作", "地方"],
@@ -144,9 +146,16 @@ export const zh_TW: SiteCopy = {
     asterionEyebrow: "共用基礎",
     asterionHeading: ["每做一次，", "底層就厚一分。"],
     asterionBody:
-      "Asterion OS 是一個獨立的共用技術與執行基礎，在 Yorisou 的 foundry 構想中有其位置。有了共用的底層，同樣的機制不必反覆重建，各項事業也就能把力氣放在自己的領域上。",
+      "Asterion OS 是一個獨立的技術基礎專案。同樣的機制不必反覆重建，各項事業也就能把力氣放在自己的領域上。",
     asterionNote:
-      "各項事業分別治理，智慧財產、資料與營運責任也各自歸屬。Asterion 並不屬於 Yorisou。",
+      "各項事業分別治理。智慧財產、資料與營運責任的歸屬，以及 Asterion 相關的權利，都取決於所適用的協議。",
+    /* CORP-v1.4 — how Yorisou stays involved in what it builds. Conditional, never promised. */
+    portfolioEyebrow: "與事業的關係",
+    portfolioHeading: ["做出來，", "不是終點。"],
+    portfolioBody:
+      "事業立起來之後，Yorisou 也可能持續參與它的價值：繼續持有股份、以授權的形式參與，或是共同營運。事業也可能分割成獨立的公司，或走向轉讓與出售。",
+    portfolioNote:
+      "會是哪一種形態，取決於事業的成熟度、合作的對象、市場、資本，以及各事業的協議。沒有事先定好的條件。",
     engageEyebrow: "一起打造",
     engageHeading: ["還沒成為公司的階段，", "就希望你一起參與。"],
     engageBody:
@@ -276,7 +285,7 @@ export const zh_TW: SiteCopy = {
   company: {
     eyebrow: "公司資訊",
     heading: ["Yorisou 合同會社"],
-    intro: "Yorisou 合同會社打造的產品，是把生活、工作與地方之中的複雜，轉化成人能夠理解、選擇並採取行動的形式。我們以福岡為據點，推進 Mirai Move 與 Kakari 兩項事業。",
+    intro: "Yorisou 合同會社是一家創業 foundry：找出結構性的課題，設計成事業，並與能夠營運的人組隊，一起把它立起來。我們以福岡為據點建構多項事業，目前公開的是 Mirai Move、Kakari 與 Chigamo。",
 
     messageEyebrow: "代表致詞",
     messageHeading: ["判斷的標準不是技術，", "而是能不能送達。"],
@@ -325,12 +334,12 @@ export const zh_TW: SiteCopy = {
       { label: "法人番號（日本國稅廳）", value: "2290003018125" },
       { label: "代表", value: "Jin Yang" },
       { label: "所在地", value: "日本福岡縣福岡市" },
-      { label: "事業內容", value: "Mirai Move、Kakari 的企劃、開發與營運" },
+      { label: "事業內容", value: "新事業的探索、企劃、開發與營運；創業團隊的組成；以及透過共同事業化、授權等方式推動事業化" },
     ],
 
     businessEyebrow: "事業領域",
     businessHeading: ["事業領域"],
-    businessBody: "移動出行領域的資訊、媒合與事業開發；以及為在日本生活的人、在日本創業的人提供的多語言行政程序與文件支援。兩者都依循同一個方針：承接複雜，交還可以使用的形式。",
+    businessBody: "Yorisou 的核心，是打造事業本身。找出結構性的課題，加以查證，設計成事業，實際做出來，再與能夠營運的人組隊把它立起來。目前公開的事業是：移動出行領域的資訊、媒合與事業開發（Mirai Move）；為在日本生活的人、在日本創業的人提供的多語言手續支援（Kakari）；以及從位置與脈絡出發的生活圈探索（Chigamo，構想階段）。三者都依循同一個方針推進：承接複雜，交還可以使用的形式。",
 
     projectsEyebrow: "事業",
     projectsHeading: ["推進中的事業"],
@@ -415,11 +424,18 @@ export const zh_TW: SiteCopy = {
         status: "構想階段。驗證尚未開始。",
       },
     ],
+    /* CORP-v1.4 — separates what is true today from what may follow. */
+    structureHeading: ["現在的形態，", "與往後的形態。"],
+    structureBody: [
+      "上面寫的階段，是目前的事實。我們只寫已經發生的事。",
+      "往後的形態還沒有定下來。可能繼續在 Yorisou 之內營運，可能從外部迎入營運團隊，可能共同持有，也可能分割成獨立的公司。也可能採取授權、轉讓或出售的形式。",
+      "會是哪一種，取決於事業的成熟度、合作的對象、市場、資本，以及協議。這裡寫的是可能發生的形態，不是計畫，也不是承諾。",
+    ],
     noteHeading: ["這個頁面說了什麼，", "又沒有說什麼。"],
     noteBody: [
       "這裡列出的，是 Yorisou 目前正在推進的事業與構想。",
       "它們不是已經法人化的子公司，不是出資對象，也不是客戶。各自的階段不同，我們就照實寫。",
-      "我們的目標，是讓它們能以獨立的公司站起來；但目前還沒有任何一項達到那個狀態。",
+      "這裡寫的是目前的事實。它們接下來會變成什麼形態，還沒有定下來。",
     ],
   },
 
@@ -471,7 +487,7 @@ export const zh_TW: SiteCopy = {
     eyebrow: "我們的做法",
     heading: ["從一個課題，", "一路帶到一家公司。"],
     lead:
-      "我們不從突然想到的點子開始。找出結構性的課題，加以查證，設計成事業，與能夠營運的人組隊，再把它帶到獨立的公司。Yorisou 把這個順序稱為 foundry。",
+      "我們不從突然想到的點子開始。找出結構性的課題，加以查證，設計成事業，與能夠營運的人組隊，一路推進到它能作為事業站住為止。Yorisou 把這個順序稱為 foundry。",
     stagesEyebrow: "階段",
     stagesHeading: ["八個階段，", "一個都不跳過。"],
     stages: [
@@ -479,29 +495,34 @@ export const zh_TW: SiteCopy = {
       { no: "02", name: "證據", body: "確認這個課題是否真的存在、困住的是誰。有不少假說會在這裡消失。" },
       { no: "03", name: "事業設計", body: "把解法做成事業的形狀。設計出誰會使用，以及對價在哪裡產生。" },
       { no: "04", name: "建置", body: "實際動手做。能沿用共用基礎的地方就沿用，把力氣集中在這項事業獨有的部分。" },
-      { no: "05", name: "事業就緒", body: "把資產與流程整理到外部的人能夠接手營運的程度。" },
+      { no: "05", name: "事業就緒", body: "把資產與流程整理到他人能夠接手營運的程度。" },
       { no: "06", name: "創業團隊的組成", body: "與能把這項事業當成自己的事來背負的人組隊。不是雇用，而是共同創業。" },
-      { no: "07", name: "獨立與營運", body: "以獨立的公司運作。目標是不再持續依賴 Yorisou 的形狀。" },
-      { no: "08", name: "學習", body: "順利的部分，以及消失的假說，都留下來作為下一項事業的材料。" },
+      { no: "07", name: "獨立與營運", body: "讓這項事業能靠自己的力量運轉。可能分割成獨立的公司，可能繼續在 Yorisou 之內營運，也可能與他人共同持有。" },
+      { no: "08", name: "學習", body: "順利的部分，以及消失的假說，都留下來作為下一項事業的材料。與事業的關係，並不一定到此為止。" },
     ],
-    independenceHeading: ["目的是一家", "能獨立站立的公司。"],
+    independenceHeading: ["事業的形態，", "不只有一種。"],
     independenceBody: [
-      "foundry 的目的，不是增加 Yorisou 旗下的東西，而是讓每一項事業都能以獨立的公司站起來。",
-      "所以從一開始，我們就用可以交接的方式做。如果營運的人沒有真正的決定權，那它就還不是一家公司。",
+      "以獨立的公司站起來，是我們期望的形態之一。但那並不代表走到那一步，與 Yorisou 的關係就結束了。",
+      "也有事業會繼續在 Yorisou 之內營運。可能從外部迎入創業者或營運團隊、共同持有，可能分割成獨立的公司，可能採取授權的形式，也可能走向轉讓或出售。",
+      "會採取哪一種形態，取決於事業的成熟度、合作的對象、市場、資本，以及該事業的協議。沒有事先定好的模式。",
+      "共通的只有一點：從一開始就用可以交接的方式做。如果營運的人沒有真正的決定權，那它就還沒有作為事業站住。",
     ],
     asterionEyebrow: "共用技術與執行基礎",
     asterionHeading: ["同樣的東西，", "不做第二次。"],
     asterionBody: [
-      "Asterion OS 是一個獨立的共用技術與執行基礎，在 Yorisou 的 foundry 構想中有其位置。它並不屬於 Yorisou。",
-      "有了共用的底層，各項事業不必再重建同樣的機制，能專注在自己的領域。累積起來的能力，會成為下一項事業的起點。",
+      "Asterion OS 是一個獨立的技術基礎專案。它並不是這份公司介紹裡所談的 Yorisou 事業之一。",
+      "Yorisou 的事業在必要時，有可能使用 Asterion 的功能。所有權、授權、資料權利與營運責任，都取決於當時所適用的協議。",
+      "有了可以共用的基礎，各項事業不必再重建同樣的機制，能專注在自己的領域。累積起來的能力，會成為下一項事業的起點。",
     ],
     asterionBoundaryTitle: "界線",
     asterionBoundaryBody:
-      "各項事業分別治理。智慧財產、資料與營運責任，都歸屬於各自的事業。我們沒有讓事業或使用者的資料自動流向基礎層的設計。",
+      "各項事業分別治理。智慧財產、資料與營運責任的歸屬，由各事業的協議訂定。我們沒有讓事業或使用者的資料自動流向基礎層的設計。",
     economicsHeading: ["持分依循", "貢獻與責任。"],
     economicsBody: [
       "每項事業的條件都不同。我們不會把同一套固定的模式套用在所有事情上。",
       "共通的只有原則：持分依循貢獻、承擔的風險，以及會延續下去的責任。實際營運的人，握有真正的決定權。",
+      "Yorisou 自身也可能持續參與該事業的長期價值：繼續持有股份、以授權的形式參與，或是共同營運。採取哪一種，取決於在那項事業裡承擔了多少、又負了多少風險。",
+      "現階段還沒有能夠承諾的條件。無論是持分，還是權利的形式，都不是在協議之前就已經定好的。",
       "具體的條件，會依事業、依對象個別談。那不是能寫在網站上的東西。",
     ],
     maturityTitle: "目前的階段",
@@ -514,7 +535,13 @@ export const zh_TW: SiteCopy = {
     eyebrow: "一起打造",
     heading: ["立場不同，", "入口也不同。"],
     lead:
-      "Yorisou 會先把事業推進到成為公司之前的那一步，再與能背負它的人組隊。所以我們找的不是受雇的人，而是願意承接的人。",
+      "Yorisou 會先把事業推進到能夠站住之前的那一步，再與能背負它的人組隊。所以我們找的不是受雇的人，而是願意承接這項事業的人或組織。",
+    /* CORP-v1.4 — the shape of an involvement is designed per project, and promised in advance for none. */
+    structureHeading: ["參與的方式，", "依專案個別設計。"],
+    structureBody: [
+      "不是把人套進固定的框架裡。共同創業、創業團隊、事業的持分、授權、共同營運、分割成獨立的公司——依事業、依承擔的範圍而不同。",
+      "不論採取哪一種形式，治理、智慧財產、角色、責任與經濟條件，都以另行締結的協議訂定。在這裡無法事先承諾任何條件。",
+    ],
     lanes: [
       {
         key: "founders",

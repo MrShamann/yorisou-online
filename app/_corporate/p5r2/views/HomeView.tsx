@@ -195,6 +195,36 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
       </Band>
 
       {/*
+        CORP-v1.4 — how YORISOU stays involved in what it builds.
+
+        This section did not exist, and its absence was the site's biggest commercial defect. The
+        page walked a reader through a foundry that carries a venture to independence and then said
+        nothing more, which reads as: YORISOU builds companies and hands them away. That is not the
+        model. It may keep equity, hold a licence, operate jointly, or agree something else.
+
+        It sits AFTER "how we build" on purpose. The first viewport stays the hook, the thesis and
+        the ventures — a reader deciding in three seconds should not meet an economic structure. By
+        the time they reach here they have seen what YORISOU builds, so the question this answers is
+        the one they are actually holding.
+
+        Every sentence is conditional, and the note underneath says outright that nothing is fixed
+        in advance, because nothing is.
+      */}
+      <Band id="portfolio" line>
+        <Eyebrow>{h.portfolioEyebrow}</Eyebrow>
+        <h2 className={styles.h2}><Phrase units={h.portfolioHeading} locale={locale} /></h2>
+        <p className={`${styles.body} ${styles.jp}`}>{h.portfolioBody}</p>
+        {/*
+          A qualifier on the paragraph above, not a boundary box. The first version wrapped this in
+          <Boundary title={copy.ventures.publicLabel}>, which put the heading "Ventures currently
+          public" over a sentence about what shape a venture may take — the right visual weight
+          attached to the wrong label. `bodyMuted` is what the site already uses for a qualifier,
+          and it needs no new string in twenty-one languages to say what it is.
+        */}
+        <p className={`${styles.bodyMuted} ${styles.jp}`}>{h.portfolioNote}</p>
+      </Band>
+
+      {/*
         CORP-v1.2 §7.4 — the Asterion layer.
 
         It sits AFTER "how we build" and before the engagement layer, as a shared floor underneath

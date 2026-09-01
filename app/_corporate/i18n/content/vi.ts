@@ -16,10 +16,12 @@ import type { SiteCopy } from "../types";
  * NOT a Harvard University degree and NOT an HBS MBA, and must never be shortened in a way that
  * implies either. No endorsement by IESE, Harvard, Ficosa, or any government body is implied.
  *
- * On Asterion (CORP-v1.2): Asterion OS is an INDEPENDENT shared technology and execution platform.
- * It is not owned by Yorisou and is not a Yorisou venture. Vietnamese must never render it as
- * "nền tảng của Yorisou" or imply that ventures or user data flow into it. The boundary sentence
- * stays intact.
+ * On Asterion (CORP-v1.4): Asterion OS is an INDEPENDENT technology-platform project. It is not one
+ * of the Yorisou ventures presented on this site. Yorisou ventures MAY use Asterion capabilities
+ * where appropriate; ownership, licensing, data rights and operating responsibility depend on the
+ * agreements that apply in each case. Vietnamese must never render it as "nền tảng của Yorisou",
+ * never state that Yorisou does or does not own it, and never imply that venture or user data
+ * flows into it. The boundary sentence stays intact.
  *
  * On the ventures (CORP-v1.2): Mirai Move, Kakari and Chigamo are dự án — ventures and concepts.
  * They are never "công ty con", "khoản đầu tư", "khách hàng" or funded companies. Chigamo is at
@@ -55,10 +57,10 @@ export const vi: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Từ những vấn đề mang tính cấu trúc đến những công ty đứng vững độc lập.", description: "Yorisou LLC là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc, dựng nên bằng chứng và tài sản cho từng dự án, rồi cùng các nhóm sáng lập đưa chúng thành những công ty độc lập. Hiện Mirai Move và Kakari đang được xây dựng; Chigamo vẫn ở giai đoạn ý tưởng." },
+    home: { title: "Yorisou LLC — Biến vấn đề mang tính cấu trúc thành hoạt động kinh doanh.", description: "Yorisou LLC là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc, dựng nên bằng chứng và tài sản cho từng dự án, rồi bắt tay cùng những người có thể vận hành để đưa chúng thành hoạt động kinh doanh thực sự. Hiện Mirai Move và Kakari đang được xây dựng; Chigamo vẫn ở giai đoạn ý tưởng." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Nền tảng thông tin, kết nối và phát triển kinh doanh trong lĩnh vực di chuyển tại Nhật Bản. Trang thông tin công khai đang hoạt động; các tính năng nền tảng đang trong giai đoạn phát triển." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Hỗ trợ đa ngôn ngữ cho thủ tục hành chính và giấy tờ, dành cho người đang sinh sống tại Nhật Bản và người bắt đầu kinh doanh tại đây. Hiện đang trong giai đoạn phát triển, chưa mở cho công chúng." },
-    about: { title: "Cách chúng tôi xây dựng — Yorisou LLC", description: "Tìm ra vấn đề, kiểm chứng nó, thiết kế thành một hoạt động kinh doanh, rồi cùng nhóm sáng lập đưa nó thành một công ty độc lập. Cách vận hành foundry của Yorisou, và vị trí của hạ tầng dùng chung." },
+    about: { title: "Cách chúng tôi xây dựng — Yorisou LLC", description: "Tìm ra vấn đề, kiểm chứng nó, thiết kế thành một hoạt động kinh doanh, rồi cùng nhóm sáng lập đưa nó vào vận hành. Cách vận hành foundry của Yorisou, những hình thái mà một dự án có thể mang, và vị trí của hạ tầng dùng chung." },
     company: { title: "Thông tin công ty — Yorisou LLC", description: "Tổng quan công ty, hồ sơ người đại diện, thông điệp của người đại diện và các lĩnh vực hoạt động của Yorisou LLC." },
     contact: { title: "Liên hệ — Yorisou LLC", description: "Đầu mối tiếp nhận trao đổi về hoạt động kinh doanh, hợp tác và báo chí." },
     ventures: { title: "Dự án — Yorisou LLC", description: "Những dự án và ý tưởng Yorisou đang theo đuổi: Mirai Move, Kakari và Chigamo. Mỗi dự án ở một giai đoạn khác nhau, và chúng tôi ghi đúng giai đoạn đó." },
@@ -82,11 +84,11 @@ export const vi: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Biến vấn đề cấu trúc", "thành công ty."],
-    thesis: ["Từ những vấn đề mang tính cấu trúc,", "chúng tôi gây dựng những công ty", "đứng vững độc lập."],
+    thesis: ["Từ những vấn đề mang tính cấu trúc,", "chúng tôi gây dựng những dự án kinh doanh,", "rồi tiếp tục nuôi chúng lớn lên."],
     lead: [
       "Yorisou là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc của xã hội,",
       "kiểm chứng, thiết kế chúng thành mô hình kinh doanh, rồi bắt tay cùng những người sẽ vận hành",
-      "để đưa từng dự án trở thành một công ty độc lập.",
+      "để dựng chúng thành những hoạt động kinh doanh thực sự.",
     ],
     humanSide: "Con người",
     humanItems: ["Đời sống", "Công việc", "Cộng đồng"],
@@ -143,9 +145,16 @@ export const vi: SiteCopy = {
     asterionEyebrow: "Hạ tầng dùng chung",
     asterionHeading: ["Mỗi lần xây dựng,", "nền móng lại dày thêm."],
     asterionBody:
-      "Asterion OS là một nền tảng công nghệ và thực thi dùng chung, độc lập, được đặt trong kiến trúc foundry của Yorisou. Vì phần nền chung đã có sẵn, mỗi dự án không phải dựng lại cùng một cơ chế và có thể dồn sức vào phần thuộc về lĩnh vực của riêng mình.",
+      "Asterion OS là một dự án nền tảng công nghệ độc lập. Nhờ không phải dựng lại cùng một cơ chế nhiều lần, mỗi dự án có thể dồn sức vào phần thuộc về lĩnh vực của riêng mình.",
     asterionNote:
-      "Mỗi dự án được quản trị riêng biệt, và tự giữ quyền sở hữu trí tuệ, dữ liệu cùng trách nhiệm vận hành của mình. Asterion không thuộc sở hữu của Yorisou.",
+      "Mỗi dự án được quản trị riêng biệt. Quyền sở hữu trí tuệ, dữ liệu và trách nhiệm vận hành thuộc về đâu — cũng như các quyền liên quan đến Asterion — đều do những thỏa thuận được áp dụng trong từng trường hợp quyết định.",
+    /* CORP-v1.4 — how Yorisou stays involved in what it builds. Conditional, never promised. */
+    portfolioEyebrow: "Cách chúng tôi tiếp tục gắn bó",
+    portfolioHeading: ["Xây xong", "không phải là hết."],
+    portfolioBody:
+      "Sau khi một dự án đã đứng được, Yorisou có thể vẫn tiếp tục gắn với giá trị dài hạn của nó — bằng việc tiếp tục nắm giữ phần vốn, bằng một thỏa thuận cấp phép, hoặc bằng việc cùng vận hành. Dự án cũng có thể được tách thành một công ty riêng, hoặc được chuyển nhượng, bán lại.",
+    portfolioNote:
+      "Hình thái nào sẽ đến còn tùy vào độ trưởng thành của dự án, những người cùng tham gia, thị trường, nguồn vốn và thỏa thuận đạt được cho riêng dự án đó. Không có điều kiện nào được định trước.",
     engageEyebrow: "Cùng xây dựng",
     engageHeading: ["Hãy tham gia ngay khi dự án", "vẫn đang trên đường thành một công ty."],
     engageBody:
@@ -275,7 +284,7 @@ export const vi: SiteCopy = {
   company: {
     eyebrow: "Thông tin công ty",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC là công ty tạo ra những sản phẩm biến sự phức tạp trong đời sống, công việc và cộng đồng địa phương thành thứ mà con người có thể hiểu, lựa chọn và hành động. Lấy Fukuoka làm địa bàn, chúng tôi đang triển khai hai dự án: Mirai Move và Kakari.",
+    intro: "Yorisou LLC là một foundry — xưởng kiến tạo doanh nghiệp: chúng tôi tìm ra những vấn đề mang tính cấu trúc, thiết kế chúng thành hoạt động kinh doanh, rồi bắt tay cùng những người có thể vận hành để đưa chúng vào cuộc. Lấy Fukuoka làm địa bàn, chúng tôi đang xây dựng nhiều dự án; những dự án hiện được công bố là Mirai Move, Kakari và Chigamo.",
 
     messageEyebrow: "Thông điệp của người đại diện",
     messageHeading: ["Không phải bằng công nghệ,", "mà bằng việc có đến được hay không."],
@@ -324,12 +333,12 @@ export const vi: SiteCopy = {
       { label: "Mã số doanh nghiệp (hōjin bangō)", value: "2290003018125" },
       { label: "Thành viên điều hành", value: "Jin Yang" },
       { label: "Trụ sở", value: "Thành phố Fukuoka, tỉnh Fukuoka, Nhật Bản" },
-      { label: "Ngành nghề kinh doanh", value: "Lập kế hoạch, phát triển và vận hành Mirai Move và Kakari" },
+      { label: "Ngành nghề kinh doanh", value: "Tìm kiếm, lập kế hoạch, phát triển và vận hành các hoạt động kinh doanh mới; hình thành nhóm sáng lập; và đưa dự án vào kinh doanh thông qua hợp tác chung, cấp phép và các hình thức tương tự" },
     ],
 
     businessEyebrow: "Lĩnh vực hoạt động",
     businessHeading: ["Lĩnh vực hoạt động"],
-    businessBody: "Thông tin, kết nối và phát triển kinh doanh trong lĩnh vực di chuyển; và hỗ trợ đa ngôn ngữ cho thủ tục hành chính, giấy tờ dành cho người sinh sống tại Nhật Bản và người bắt đầu kinh doanh tại đây. Cả hai đều đi theo cùng một phương châm: nhận lấy sự phức tạp và trả lại thứ dùng được.",
+    businessBody: "Điều nằm ở trung tâm của Yorisou là việc tạo ra chính các hoạt động kinh doanh: tìm ra một vấn đề mang tính cấu trúc, kiểm chứng nó, thiết kế nó thành một hoạt động kinh doanh, xây dựng nó, rồi bắt tay cùng những người có thể vận hành để đưa nó vào cuộc. Những dự án hiện được công bố là thông tin, kết nối và phát triển kinh doanh trong lĩnh vực di chuyển (Mirai Move); hỗ trợ đa ngôn ngữ cho thủ tục hành chính, dành cho người sinh sống tại Nhật Bản và người bắt đầu kinh doanh tại đây (Kakari); và việc khám phá khu vực sinh sống từ vị trí và bối cảnh (Chigamo, giai đoạn ý tưởng). Tất cả đều đi theo cùng một phương châm: nhận lấy sự phức tạp và trả lại thứ dùng được.",
 
     projectsEyebrow: "Dự án",
     projectsHeading: ["Những gì chúng tôi đang xây dựng"],
@@ -414,11 +423,18 @@ export const vi: SiteCopy = {
         status: "Giai đoạn ý tưởng. Chưa được kiểm chứng.",
       },
     ],
+    /* CORP-v1.4 — separates what is true today from what may follow. */
+    structureHeading: ["Hình thái hiện tại,", "và hình thái phía trước."],
+    structureBody: [
+      "Những giai đoạn ghi ở trên là sự thật ở thời điểm hiện tại. Chúng tôi chỉ viết những gì đã thực sự xảy ra.",
+      "Hình thái phía trước thì chưa được định đoạt. Một dự án có thể tiếp tục được vận hành bên trong Yorisou, có thể đón một nhóm vận hành từ bên ngoài, có thể được nắm giữ chung, hoặc được tách thành một công ty riêng. Nó cũng có thể đi theo hình thức cấp phép, hoặc được chuyển nhượng, bán lại.",
+      "Hình thái nào sẽ đến còn tùy vào độ trưởng thành của dự án, những người cùng tham gia, thị trường, nguồn vốn và thỏa thuận. Những gì viết ở đây là các hình thái có thể xảy ra — không phải một kế hoạch, cũng không phải một lời hứa.",
+    ],
     noteHeading: ["Trang này nói gì,", "và không nói gì."],
     noteBody: [
       "Đây là những dự án và ý tưởng mà Yorisou đang theo đuổi hiện nay.",
       "Chúng không phải là công ty con đã thành lập, không phải khoản đầu tư, cũng không phải khách hàng. Mỗi dự án ở một giai đoạn khác nhau, và chúng tôi ghi đúng giai đoạn đó.",
-      "Mục tiêu là để mỗi dự án đứng được như một công ty độc lập. Chưa dự án nào đạt tới đó.",
+      "Những gì viết ở đây là sự thật ở thời điểm hiện tại. Còn hình thái mà mỗi dự án sẽ mang tiếp theo thì vẫn chưa được định đoạt.",
     ],
   },
 
@@ -470,7 +486,7 @@ export const vi: SiteCopy = {
     eyebrow: "Cách chúng tôi xây dựng",
     heading: ["Từ một vấn đề", "đến một công ty,", "theo đúng trình tự."],
     lead:
-      "Chúng tôi không bắt đầu từ một ý tưởng mình thấy hay. Chúng tôi tìm ra một vấn đề mang tính cấu trúc, kiểm chứng nó, thiết kế nó thành một hoạt động kinh doanh, bắt tay với những người có thể vận hành, rồi đưa nó thành một công ty độc lập. Yorisou gọi trình tự đó là foundry — xưởng kiến tạo doanh nghiệp.",
+      "Chúng tôi không bắt đầu từ một ý tưởng mình thấy hay. Chúng tôi tìm ra một vấn đề mang tính cấu trúc, kiểm chứng nó, thiết kế nó thành một hoạt động kinh doanh, bắt tay với những người có thể vận hành, rồi đưa nó đến điểm nó tự đứng được như một dự án kinh doanh. Yorisou gọi trình tự đó là foundry — xưởng kiến tạo doanh nghiệp.",
     stagesEyebrow: "Các giai đoạn",
     stagesHeading: ["Tám giai đoạn,", "không bỏ qua giai đoạn nào."],
     stages: [
@@ -478,29 +494,34 @@ export const vi: SiteCopy = {
       { no: "02", name: "Bằng chứng", body: "Kiểm chứng xem vấn đề có thật hay không và nó đang rơi lên vai ai. Rất nhiều giả thuyết chết ở đây." },
       { no: "03", name: "Thiết kế kinh doanh", body: "Biến lời giải thành một hoạt động kinh doanh: ai sử dụng, và giá trị thực sự được trao đổi ở đâu." },
       { no: "04", name: "Xây dựng", body: "Bắt tay làm. Dùng lại phần nền chung ở những chỗ đã có, và dồn sức vào phần riêng của dự án này." },
-      { no: "05", name: "Sẵn sàng đứng độc lập", body: "Đưa tài sản và quy trình tới trạng thái mà người bên ngoài có thể tiếp nhận và vận hành được." },
+      { no: "05", name: "Sẵn sàng đứng độc lập", body: "Đưa tài sản và quy trình tới trạng thái mà ai đó có thể tiếp nhận và vận hành được." },
       { no: "06", name: "Hình thành nhóm sáng lập", body: "Bắt tay với người có thể gánh dự án như của chính mình — với tư cách nhà sáng lập, không phải người làm thuê." },
-      { no: "07", name: "Tách ra và vận hành", body: "Vận hành như một công ty độc lập, được định hình để không tiếp tục phụ thuộc vào Yorisou." },
-      { no: "08", name: "Đúc kết", body: "Giữ lại cả những gì đã hiệu quả lẫn những giả thuyết đã chết, làm chất liệu cho dự án tiếp theo." },
+      { no: "07", name: "Tách ra và vận hành", body: "Đưa dự án đến trạng thái tự vận hành được bằng sức của chính nó. Nó có thể được tách thành một công ty riêng, có thể tiếp tục được vận hành bên trong Yorisou, hoặc được nắm giữ chung với một bên khác." },
+      { no: "08", name: "Đúc kết", body: "Giữ lại cả những gì đã hiệu quả lẫn những giả thuyết đã chết, làm chất liệu cho dự án tiếp theo. Mối quan hệ với dự án không nhất thiết kết thúc ở đây." },
     ],
-    independenceHeading: ["Mục tiêu là", "một công ty đứng vững độc lập."],
+    independenceHeading: ["Hình thái của một dự án", "không chỉ có một."],
     independenceBody: [
-      "Mục đích của foundry không phải là gom thêm thứ gì đó về dưới trướng Yorisou. Mục đích là đưa mỗi dự án đến chỗ tự đứng được như một công ty độc lập.",
-      "Vì vậy ngay từ đầu, mọi thứ được làm ra ở dạng có thể bàn giao. Nếu người vận hành không thực sự nắm quyền quyết định, thì nó chưa thành một công ty.",
+      "Đứng được như một công ty độc lập là một trong những hình thái chúng tôi hướng tới. Nhưng đạt tới đó không có nghĩa là quan hệ giữa dự án và Yorisou chấm dứt.",
+      "Có dự án tiếp tục được vận hành bên trong Yorisou. Một dự án cũng có thể đón nhà sáng lập hoặc nhóm vận hành từ bên ngoài và được nắm giữ chung, được tách thành một công ty riêng, đi theo hình thức cấp phép, hoặc được chuyển nhượng hay bán lại.",
+      "Hình thái nào được chọn còn tùy vào độ trưởng thành của dự án, những người cùng tham gia, thị trường, nguồn vốn và thỏa thuận đạt được cho riêng dự án đó. Không có khuôn mẫu nào được định sẵn.",
+      "Chỉ có đúng một điểm chung: ngay từ đầu, mọi thứ được làm ra ở dạng có thể bàn giao. Nếu người vận hành không thực sự nắm quyền quyết định, thì dự án đó chưa đứng được.",
     ],
     asterionEyebrow: "Nền tảng công nghệ và thực thi dùng chung",
     asterionHeading: ["Không dựng lại", "cùng một thứ hai lần."],
     asterionBody: [
-      "Asterion OS là một nền tảng công nghệ và thực thi dùng chung, độc lập, được đặt trong kiến trúc foundry của Yorisou. Nó không thuộc sở hữu của Yorisou.",
-      "Vì phần nền chung đã có sẵn, không dự án nào phải dựng lại nó, và mỗi dự án có thể tập trung vào lĩnh vực của riêng mình. Những gì tích lũy được trở thành điểm xuất phát cho dự án tiếp theo.",
+      "Asterion OS là một dự án nền tảng công nghệ độc lập. Nó không phải là một trong những dự án của Yorisou được giới thiệu trên trang thông tin công ty này.",
+      "Các dự án của Yorisou có thể sử dụng những năng lực của Asterion ở nơi điều đó là phù hợp. Quyền sở hữu, việc cấp phép, quyền đối với dữ liệu và trách nhiệm vận hành đều do những thỏa thuận được áp dụng trong từng trường hợp quyết định.",
+      "Nhờ có thể dùng chung một phần nền, không dự án nào phải dựng lại cùng một cơ chế, và mỗi dự án có thể tập trung vào lĩnh vực của riêng mình. Những gì tích lũy được trở thành điểm xuất phát cho dự án tiếp theo.",
     ],
     asterionBoundaryTitle: "Ranh giới",
     asterionBoundaryBody:
-      "Mỗi dự án được quản trị riêng biệt. Quyền sở hữu trí tuệ, dữ liệu và trách nhiệm vận hành thuộc về chính dự án đó. Không có thiết kế nào khiến dữ liệu của dự án hay của người dùng tự động chảy về phía nền tảng.",
+      "Mỗi dự án được quản trị riêng biệt. Quyền sở hữu trí tuệ, dữ liệu và trách nhiệm vận hành thuộc về đâu là do thỏa thuận của riêng dự án đó xác định. Chúng tôi không thiết kế để dữ liệu của dự án hay của người dùng tự động chảy về phía nền tảng.",
     economicsHeading: ["Quyền sở hữu đi theo", "đóng góp và trách nhiệm."],
     economicsBody: [
       "Điều kiện khác nhau theo từng dự án. Chúng tôi không áp một công thức cố định cho tất cả.",
       "Chỉ có nguyên tắc là chung: quyền sở hữu đi theo đóng góp, theo rủi ro đã gánh và theo trách nhiệm còn tiếp tục. Người vận hành một dự án nắm quyền quyết định thực sự.",
+      "Bản thân Yorisou cũng có thể tiếp tục gắn với giá trị dài hạn của một dự án — bằng việc tiếp tục nắm giữ phần vốn, bằng một thỏa thuận cấp phép, hoặc bằng việc cùng vận hành. Hình thái nào được áp dụng còn tùy vào việc Yorisou đã gánh đến đâu và chịu bao nhiêu rủi ro trong dự án đó.",
+      "Hiện chưa có điều kiện nào chúng tôi có thể hứa. Cả quyền sở hữu lẫn hình thức của bất kỳ quyền nào đều chưa được định đoạt trước khi có thỏa thuận.",
       "Các điều kiện cụ thể được bàn theo từng dự án và từng người. Đó không phải loại nội dung thuộc về một trang web.",
     ],
     maturityTitle: "Cách làm này đang ở đâu",
@@ -513,7 +534,13 @@ export const vi: SiteCopy = {
     eyebrow: "Cùng xây dựng",
     heading: ["Bạn bước vào từ đâu", "tùy vào vị trí bạn đang đứng."],
     lead:
-      "Yorisou đưa một dự án đến ngay trước điểm nó trở thành công ty, rồi mới bắt tay với người có thể gánh lấy nó. Vì vậy chúng tôi không tìm người để thuê, mà tìm người để trao lại.",
+      "Yorisou đưa một dự án đến ngay trước điểm nó đứng được như một hoạt động kinh doanh, rồi mới bắt tay với người có thể gánh lấy nó. Vì vậy chúng tôi không tìm người để thuê, mà tìm những cá nhân và tổ chức sẵn sàng nhận lấy một dự án.",
+    /* CORP-v1.4 — the shape of an involvement is designed per project, and promised in advance for none. */
+    structureHeading: ["Cách bạn tham gia", "được thiết kế theo từng dự án."],
+    structureBody: [
+      "Không có một khuôn có sẵn để bạn phải vừa vào. Đồng sáng lập, nhóm sáng lập, phần sở hữu trong một dự án, cấp phép, cùng vận hành, tách thành một công ty riêng — hình thái nào được áp dụng còn tùy vào dự án và vào phần bạn gánh lấy.",
+      "Dù ở hình thái nào, việc quản trị, quyền sở hữu trí tuệ, vai trò, trách nhiệm và các điều kiện kinh tế đều được xác định bằng một thỏa thuận riêng. Ở đây chúng tôi không thể hứa trước bất kỳ điều kiện nào.",
+    ],
     lanes: [
       {
         key: "founders",

@@ -38,10 +38,10 @@ export const pl: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Od problemów strukturalnych do firm, które stoją o własnych siłach.", description: "Yorisou LLC działa jak foundry: znajdujemy problemy strukturalne, gromadzimy dowody i budujemy zasoby przedsięwzięcia, a wraz z zespołami założycielskimi doprowadzamy je do samodzielnych firm. Budujemy Mirai Move i Kakari; Chigamo jest na etapie koncepcji." },
+    home: { title: "Yorisou LLC — Z problemów strukturalnych budujemy przedsięwzięcia.", description: "Yorisou LLC działa jak foundry: znajdujemy problemy strukturalne, gromadzimy dowody i budujemy zasoby przedsięwzięcia, a wraz z ludźmi, którzy potrafią je prowadzić, doprowadzamy je do działania jako przedsięwzięcie. Budujemy Mirai Move i Kakari; Chigamo jest na etapie koncepcji." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Platforma informacji, kojarzenia partnerów i rozwoju biznesu w japońskim sektorze mobilności. Strona publiczna działa, funkcje platformy są w fazie rozwoju." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Wielojęzyczne wsparcie w procedurach administracyjnych i dokumentach dla osób mieszkających w Japonii oraz rozpoczynających tu działalność. W fazie rozwoju, jeszcze niedostępne publicznie." },
-    about: { title: "Jak budujemy — Yorisou LLC", description: "Znaleźć problem, sprawdzić go, zaprojektować przedsięwzięcie, zebrać zespół założycielski i doprowadzić rzecz do niezależnej firmy. Jak działa foundry Yorisou i gdzie mieści się wspólna infrastruktura." },
+    about: { title: "Jak budujemy — Yorisou LLC", description: "Znaleźć problem, sprawdzić go, zaprojektować przedsięwzięcie, zebrać zespół założycielski i doprowadzić je do działania. Jak działa foundry Yorisou, jakie formy może przyjąć przedsięwzięcie i gdzie mieści się wspólna infrastruktura." },
     company: { title: "Firma — Yorisou LLC", description: "Informacje o firmie, profil wspólnika zarządzającego, jego przesłanie oraz obszary działalności Yorisou LLC." },
     contact: { title: "Kontakt — Yorisou LLC", description: "Zapytania dotyczące naszej działalności, współpracy i kontaktu dla mediów." },
     ventures: { title: "Przedsięwzięcia — Yorisou LLC", description: "Nad czym Yorisou pracuje teraz: Mirai Move, Kakari i Chigamo. Każde jest na innym etapie i tak też go opisujemy." },
@@ -64,10 +64,10 @@ export const pl: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Problemy strukturalne", "zamieniamy w firmy."],
-    thesis: ["Z problemów strukturalnych", "budujemy firmy,", "które stoją na własnych nogach."],
+    thesis: ["Z problemów strukturalnych", "budujemy przedsięwzięcia", "i rozwijamy je dalej."],
     lead: [
       "Yorisou to foundry: znajdujemy strukturalne problemy społeczne, sprawdzamy je i projektujemy z nich przedsięwzięcia,",
-      "a razem z ludźmi, którzy będą nimi kierować, doprowadzamy je do samodzielnych firm.",
+      "a razem z ludźmi, którzy będą nimi kierować, doprowadzamy je do działania.",
     ],
     humanSide: "Ludzie",
     humanItems: ["Codzienne życie", "Praca", "Społeczność"],
@@ -124,9 +124,16 @@ export const pl: SiteCopy = {
     asterionEyebrow: "Wspólna infrastruktura",
     asterionHeading: ["Z każdą budową", "fundament rośnie."],
     asterionBody:
-      "Asterion OS to niezależna, wspólna platforma technologiczna i wykonawcza, wpisana w koncepcję foundry Yorisou. Ponieważ wspólny grunt już istnieje, każde przedsięwzięcie może poświęcić wysiłek tej części, która naprawdę jest jego własna.",
+      "Asterion OS to niezależny projekt platformy technologicznej. Skoro tego samego mechanizmu nie trzeba budować za każdym razem od nowa, każde przedsięwzięcie może poświęcić wysiłek tej części, która naprawdę jest jego własna.",
     asterionNote:
-      "Każde przedsięwzięcie podlega odrębnemu zarządzaniu i zachowuje swoją własność intelektualną, dane oraz odpowiedzialność operacyjną. Asterion nie należy do Yorisou.",
+      "Każde przedsięwzięcie podlega odrębnemu zarządzaniu. To, gdzie leżą własność intelektualna, dane i odpowiedzialność operacyjna, a także jakie prawa odnoszą się do Asterion OS, wynika z umów obowiązujących w danym przypadku.",
+    /* CORP-v1.4 — jak Yorisou pozostaje związane z tym, co zbudowało. Warunkowo, nigdy jako obietnica. */
+    portfolioEyebrow: "Nasza dalsza rola",
+    portfolioHeading: ["Na zbudowaniu", "się nie kończy."],
+    portfolioBody:
+      "Yorisou może pozostać związane z wartością przedsięwzięcia także po tym, jak zacznie ono stać o własnych siłach — zachowując udziały, poprzez licencję albo prowadząc je wspólnie. Przedsięwzięcie może też zostać wydzielone jako osobna spółka, przeniesione na inny podmiot lub sprzedane.",
+    portfolioNote:
+      "To, która z tych form dojdzie do skutku, zależy od dojrzałości przedsięwzięcia, od tego, z kim je prowadzimy, od rynku, od kapitału i od umowy zawartej dla danego przedsięwzięcia. Żadne warunki nie są ustalone z góry.",
     engageEyebrow: "Buduj z nami",
     engageHeading: ["Wejdź, zanim", "stanie się to firmą."],
     engageBody:
@@ -256,7 +263,7 @@ export const pl: SiteCopy = {
   company: {
     eyebrow: "Firma",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC tworzy produkty, które zamieniają złożoność codziennego życia, pracy i lokalnych społeczności w coś, co człowiek może zrozumieć, z czego może wybrać i na czym może oprzeć działanie. Z siedzibą w Fukuoce rozwijamy dwa projekty: Mirai Move i Kakari.",
+    intro: "Yorisou LLC działa jak foundry: znajdujemy problemy strukturalne, projektujemy je jako przedsięwzięcia i budujemy je razem z ludźmi, którzy potrafią je prowadzić. Z siedzibą w Fukuoce rozwijamy kilka przedsięwzięć; obecnie publiczne są Mirai Move, Kakari i Chigamo.",
 
     messageEyebrow: "Przesłanie wspólnika zarządzającego",
     messageHeading: ["Oceniamy po tym, czy dociera,", "a nie po tym, czy jest nowoczesne."],
@@ -305,12 +312,12 @@ export const pl: SiteCopy = {
       { label: "Numer podmiotu (hōjin bangō)", value: "2290003018125" },
       { label: "Wspólnik zarządzający", value: "Jin Yang" },
       { label: "Siedziba", value: "Fukuoka, prefektura Fukuoka, Japonia" },
-      { label: "Działalność", value: "Planowanie, rozwój i prowadzenie Mirai Move oraz Kakari" },
+      { label: "Działalność", value: "Poszukiwanie, planowanie, rozwój i prowadzenie nowych przedsięwzięć; tworzenie zespołów założycielskich; uruchamianie przedsięwzięć w formie wspólnego prowadzenia, licencji i podobnych rozwiązań" },
     ],
 
     businessEyebrow: "Obszary działalności",
     businessHeading: ["Obszary działalności"],
-    businessBody: "Informacja, kojarzenie partnerów i rozwój biznesu w sektorze mobilności oraz wielojęzyczne wsparcie w procedurach administracyjnych i dokumentach dla osób mieszkających w Japonii i rozpoczynających tu działalność. Oba obszary prowadzimy według tej samej zasady: przejąć złożoność i oddać coś użytecznego.",
+    businessBody: "W centrum Yorisou stoi budowanie samych przedsięwzięć: znaleźć problem strukturalny, sprawdzić go, zaprojektować jako przedsięwzięcie, zbudować i prowadzić razem z ludźmi, którzy to potrafią. Obecnie publiczne przedsięwzięcia to informacja, kojarzenie partnerów i rozwój biznesu w sektorze mobilności (Mirai Move), wielojęzyczne wsparcie w procedurach administracyjnych i dokumentach dla osób mieszkających w Japonii i rozpoczynających tu działalność (Kakari) oraz odkrywanie najbliższej okolicy na podstawie miejsca i kontekstu (Chigamo, etap koncepcji). Wszystkie prowadzimy według tej samej zasady: przejąć złożoność i oddać coś użytecznego.",
 
     projectsEyebrow: "Projekty",
     projectsHeading: ["Co budujemy"],
@@ -395,11 +402,17 @@ export const pl: SiteCopy = {
         status: "Etap koncepcji. Weryfikacja jeszcze przed nami.",
       },
     ],
+    structureHeading: ["Co jest teraz,", "i co może przyjść dalej."],
+    structureBody: [
+      "Podane wyżej etapy są stanem na dziś. Piszemy wyłącznie o tym, co już się wydarzyło.",
+      "Dalsza forma nie jest przesądzona. Przedsięwzięcie może być dalej prowadzone wewnątrz Yorisou, może przyjąć zespół prowadzący z zewnątrz, może należeć wspólnie do kilku stron albo zostać wydzielone jako osobna spółka. Może też przyjąć formę licencji, zostać przeniesione lub sprzedane.",
+      "To, która z tych form dojdzie do skutku, zależy od dojrzałości przedsięwzięcia, od tego, z kim je prowadzimy, od rynku, od kapitału i od umowy. Wymieniamy tu formy możliwe — nie plan i nie obietnicę.",
+    ],
     noteHeading: ["Co ta strona mówi,", "a czego nie mówi."],
     noteBody: [
       "Wymieniamy tu przedsięwzięcia i koncepcje, nad którymi Yorisou pracuje obecnie.",
       "Nie są to zarejestrowane spółki zależne, podmioty, w które zainwestowaliśmy, ani klienci. Każde jest na innym etapie i tak też go opisujemy.",
-      "Naszym celem jest, by każde stanęło jako niezależna firma. Żadne jeszcze do tego punktu nie doszło.",
+      "To, co tu napisaliśmy, jest stanem na dziś. Jaką formę każde z nich przyjmie dalej, nie jest jeszcze rozstrzygnięte.",
     ],
   },
 
@@ -451,7 +464,7 @@ export const pl: SiteCopy = {
     eyebrow: "Jak budujemy",
     heading: ["Od problemu", "do firmy, po kolei."],
     lead:
-      "Nie zaczynamy od pomysłu, który nam się spodobał. Znajdujemy problem strukturalny, sprawdzamy go, projektujemy jako przedsięwzięcie, łączymy siły z ludźmi, którzy potrafią je prowadzić, i doprowadzamy je do niezależnej firmy. Ten porządek nazywamy w Yorisou „foundry”.",
+      "Nie zaczynamy od pomysłu, który nam się spodobał. Znajdujemy problem strukturalny, sprawdzamy go, projektujemy jako przedsięwzięcie, łączymy siły z ludźmi, którzy potrafią je prowadzić, i prowadzimy je aż do punktu, w którym stoi o własnych siłach. Ten porządek nazywamy w Yorisou „foundry”.",
     stagesEyebrow: "Etapy",
     stagesHeading: ["Osiem etapów,", "żadnego pominiętego."],
     stages: [
@@ -459,29 +472,34 @@ export const pl: SiteCopy = {
       { no: "02", name: "Dowody", body: "Sprawdzamy, czy problem jest prawdziwy i na kogo spada. Sporo tez ginie właśnie tutaj." },
       { no: "03", name: "Projekt przedsięwzięcia", body: "Zamieniamy rozwiązanie w przedsięwzięcie: kto z niego korzysta i gdzie faktycznie dochodzi do wymiany wartości." },
       { no: "04", name: "Budowa", body: "Budujemy. Korzystamy ze wspólnego gruntu tam, gdzie już istnieje, a wysiłek kierujemy na to, co dla tego przedsięwzięcia specyficzne." },
-      { no: "05", name: "Gotowość przedsięwzięcia", body: "Doprowadzamy zasoby i procedury do stanu, w którym ktoś z zewnątrz może je przejąć i prowadzić." },
+      { no: "05", name: "Gotowość przedsięwzięcia", body: "Doprowadzamy zasoby i procedury do stanu, w którym ktoś może je przejąć i prowadzić." },
       { no: "06", name: "Zespół założycielski", body: "Łączymy siły z kimś, kto uniesie to jako własne — jako założyciel, a nie jako pracownik." },
-      { no: "07", name: "Usamodzielnienie i prowadzenie", body: "Przedsięwzięcie działa jako niezależna firma, uformowana tak, by nie pozostawała zależna od Yorisou." },
-      { no: "08", name: "Wnioski", body: "Zachowujemy i to, co się sprawdziło, i to, co upadło, jako materiał do kolejnego przedsięwzięcia." },
+      { no: "07", name: "Usamodzielnienie i prowadzenie", body: "Doprowadzamy przedsięwzięcie do stanu, w którym działa o własnych siłach. Może zostać wydzielone jako osobna spółka, może być dalej prowadzone wewnątrz Yorisou, może też należeć wspólnie do kilku stron." },
+      { no: "08", name: "Wnioski", body: "Zachowujemy i to, co się sprawdziło, i to, co upadło, jako materiał do kolejnego przedsięwzięcia. Relacja z przedsięwzięciem niekoniecznie kończy się w tym miejscu." },
     ],
-    independenceHeading: ["Celem jest firma,", "która stoi o własnych siłach."],
+    independenceHeading: ["Przedsięwzięcie może przyjąć", "więcej niż jedną formę."],
     independenceBody: [
-      "Celem foundry nie jest powiększanie tego, co znajduje się pod Yorisou. Chodzi o doprowadzenie każdego przedsięwzięcia do punktu, w którym stoi jako niezależna firma.",
-      "Dlatego od początku budujemy tak, by dało się to przekazać. Jeśli osoby prowadzące nie mogą podejmować rzeczywistych decyzji, to nie jest jeszcze firma.",
+      "Samodzielna firma to jedna z form, do których dążymy. Nie znaczy to jednak, że jej osiągnięcie kończy relację przedsięwzięcia z Yorisou.",
+      "Część przedsięwzięć jest dalej prowadzona wewnątrz Yorisou. Do innych dołącza z zewnątrz założyciel albo zespół prowadzący i wtedy przedsięwzięcie należy wspólnie do kilku stron. Jeszcze inne zostają wydzielone jako osobna spółka, przyjmują formę licencji albo zostają przeniesione lub sprzedane.",
+      "To, którą formę przyjmie dane przedsięwzięcie, zależy od jego dojrzałości, od tego, z kim je prowadzimy, od rynku, od kapitału i od umowy zawartej dla tego przedsięwzięcia. Nie ma z góry ustalonego schematu.",
+      "Wspólny jest tylko jeden punkt: od początku budujemy tak, by dało się to przekazać. Jeśli osoby prowadzące nie mogą podejmować rzeczywistych decyzji, przedsięwzięcie nie stoi o własnych siłach.",
     ],
     asterionEyebrow: "Wspólna technologia i warstwa wykonawcza",
     asterionHeading: ["Nie budujemy", "tego samego dwa razy."],
     asterionBody: [
-      "Asterion OS to niezależna, wspólna platforma technologiczna i wykonawcza, wpisana w koncepcję foundry Yorisou. Nie jest własnością Yorisou.",
-      "Ponieważ wspólny grunt już istnieje, żadne przedsięwzięcie nie musi budować go od nowa i każde może skupić się na własnej dziedzinie. Wypracowane w ten sposób umiejętności stają się punktem wyjścia dla kolejnego.",
+      "Asterion OS to niezależny projekt platformy technologicznej. Nie jest jednym z przedsięwzięć Yorisou przedstawionych na tej stronie firmowej.",
+      "Przedsięwzięcia Yorisou mogą korzystać z funkcji Asterion OS tam, gdzie jest to zasadne. Kwestie własności, licencji, praw do danych i odpowiedzialności operacyjnej wynikają z umów obowiązujących w danym przypadku.",
+      "Skoro wspólny grunt jest dostępny, żadne przedsięwzięcie nie musi budować go od nowa i każde może skupić się na własnej dziedzinie. To, co się w ten sposób odkłada, staje się punktem wyjścia dla kolejnego.",
     ],
     asterionBoundaryTitle: "Granica",
     asterionBoundaryBody:
-      "Każde przedsięwzięcie podlega odrębnemu zarządzaniu. Własność intelektualna, dane i odpowiedzialność operacyjna należą do przedsięwzięcia. Nic nie jest zaprojektowane tak, aby dane przedsięwzięć lub użytkowników trafiały automatycznie do platformy.",
+      "Każde przedsięwzięcie podlega odrębnemu zarządzaniu. To, gdzie leżą własność intelektualna, dane i odpowiedzialność operacyjna, określa umowa zawarta dla danego przedsięwzięcia. Nic nie jest zaprojektowane tak, aby dane przedsięwzięć lub użytkowników trafiały automatycznie do platformy.",
     economicsHeading: ["Udział wynika z wkładu", "i odpowiedzialności."],
     economicsBody: [
       "Warunki różnią się w zależności od przedsięwzięcia. Nie stosujemy jednego schematu do wszystkiego.",
       "Wspólna jest wyłącznie zasada: udział wynika z wkładu, z podjętego ryzyka i z odpowiedzialności, która trwa dalej. Osoby prowadzące przedsięwzięcie mają rzeczywiste prawo decyzji.",
+      "Samo Yorisou również może pozostać związane z długoterminową wartością przedsięwzięcia — zachowując udziały, poprzez licencję albo prowadząc je wspólnie. To, która z tych form dojdzie do skutku, zależy od tego, jak dużą część przedsięwzięcia wzięliśmy na siebie i jak duże ryzyko ponieśliśmy.",
+      "Nie ma dziś warunków, które moglibyśmy obiecać. Ani udział, ani kształt jakiegokolwiek prawa nie są przesądzone przed zawarciem umowy.",
       "Konkretne warunki omawiamy osobno — dla każdego przedsięwzięcia i każdej osoby. To nie jest coś, co można zapisać na stronie internetowej.",
     ],
     maturityTitle: "Na jakim etapie to jest",
@@ -494,7 +512,13 @@ export const pl: SiteCopy = {
     eyebrow: "Buduj z nami",
     heading: ["Punkt wejścia zależy od tego,", "po której stronie stoisz."],
     lead:
-      "Yorisou doprowadza przedsięwzięcie do punktu tuż przed tym, jak stanie się firmą, i dopiero wtedy łączy siły z kimś, kto je uniesie. Nie szukamy więc osób do zatrudnienia, lecz osób, które to przejmą.",
+      "Yorisou doprowadza przedsięwzięcie do punktu tuż przed tym, jak zacznie ono stać o własnych siłach, i dopiero wtedy łączy siły z kimś, kto je uniesie. Nie szukamy więc osób do zatrudnienia, lecz ludzi i instytucji, którzy przejmą przedsięwzięcie.",
+    /* CORP-v1.4 — formę zaangażowania projektujemy dla każdego projektu, żadnej nie obiecujemy z góry. */
+    structureHeading: ["Formę zaangażowania", "projektujemy osobno dla każdego projektu."],
+    structureBody: [
+      "Nie ma gotowej ramy, w którą trzeba się wpisać. Współzałożycielstwo, zespół założycielski, udział w danym przedsięwzięciu, licencja, wspólne prowadzenie, wydzielenie osobnej spółki. To, co będzie właściwe, zależy od przedsięwzięcia i od tego, jak dużą jego część bierzesz na siebie.",
+      "Niezależnie od formy zarządzanie, własność intelektualna, rola, odpowiedzialność i warunki ekonomiczne określa odrębna umowa. Nie ma warunków, które moglibyśmy tu obiecać z góry.",
+    ],
     lanes: [
       {
         key: "founders",

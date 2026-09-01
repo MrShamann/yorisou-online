@@ -78,6 +78,26 @@ export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale:
         </div>
       </Band>
 
+      {/*
+        CORP-v1.4 — what is true today, kept apart from what may follow.
+
+        Every stage above is a current fact. What a venture becomes next — staying inside YORISOU,
+        joint operation, a separate company, a licence, a transfer, a sale — is a possibility, and
+        a page that lists possibilities without marking them as such is how a plan gets read as an
+        announcement. So the two are separated by a section break, and the last line says plainly
+        that what precedes it is neither a plan nor a promise.
+      */}
+      <Band line>
+        <h2 className={styles.h2}>
+          <Phrase units={v.structureHeading} locale={locale} />
+        </h2>
+        {v.structureBody.map((t, i) => (
+          <p className={`${styles.body} ${styles.jp}`} key={i}>
+            {t}
+          </p>
+        ))}
+      </Band>
+
       <Band tint>
         <h2 className={styles.h2}>
           <Phrase units={v.noteHeading} locale={locale} />

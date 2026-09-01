@@ -17,12 +17,44 @@
 
 export type Direction = "ltr" | "rtl";
 
-/** Internal translation provenance. NEVER rendered. */
+/**
+ * CORP-v1.4 — TWO INDEPENDENT AXES, because conflating them cost nineteen languages their audience.
+ *
+ * `access` answers: may a visitor select and open this locale?
+ * `reviewState` answers: has a native speaker actually read the copy?
+ *
+ * v1.2R1 introduced a single `status` field that tried to answer both, and the answer it gave to
+ * the first question was driven by the second: nineteen complete, rendering, claim-guarded locales
+ * were marked `preview_only` because nobody had reviewed them, and the language selector — which
+ * filtered on that same field — silently narrowed from twenty-one languages to two. A reader in
+ * Seoul or Riyadh could not reach the Korean or Arabic site at all, even though both existed and
+ * rendered correctly.
+ *
+ * Not reviewed is a reason to be honest about the review, not a reason to be unreachable. The two
+ * axes are now separate types so they cannot be collapsed again by accident.
+ */
+
+/** Can a visitor select and open this locale? */
+export type AccessState =
+  /** Selectable in the language selector and served on request. */
+  | "public"
+  /** Known to the registry, not built, not shown anywhere. */
+  | "registered";
+
+/**
+ * Has this copy been read by a person, and by whom? INTERNAL ONLY — never rendered, never
+ * serialised into the page, never exposed in metadata. A visitor must never see a token like
+ * AI_TRANSLATED. It exists so a report can state honestly which locales are editorially reviewed.
+ */
 export type ReviewState =
+  /** The source language everything else is derived from. */
   | "SOURCE_CANONICAL"
-  | "AI_TRANSLATED"
-  | "HUMAN_REVIEWED"
-  | "FOUNDER_APPROVED";
+  /** Read and edited by the Founder or under Founder direction. Not a native-speaker review. */
+  | "FOUNDER_REVIEWED"
+  /** Read by a native speaker of that language. */
+  | "NATIVE_REVIEWED"
+  /** Machine-translated from the canonical source; no native speaker has read it yet. */
+  | "AI_TRANSLATED_NATIVE_REVIEW_PENDING";
 
 export type LocaleEntry = {
   /** BCP 47 code. */
@@ -33,20 +65,10 @@ export type LocaleEntry = {
   nativeName: string;
   direction: Direction;
   /**
-   * Availability, on two axes rather than one.
-   *
-   * - `published`   — available in Preview AND cleared for Production publication.
-   * - `preview_only` — available in Preview, NOT cleared for Production. This is the state for a
-   *   locale whose copy is complete and structurally verified but has never been read by a native
-   *   speaker. It renders correctly, which is exactly why it needs a typed gate: rendering
-   *   correctly is not the same as being fit to publish.
-   * - `registered`  — known to the registry, not built, not shown anywhere.
-   *
-   * Preview availability is `status !== "registered"`. Production publication requires
-   * `status === "published"` — see PRODUCTION_READY and isProductionReady below. Routing that
-   * publishes to Production must consult that, not this field's truthiness.
+   * Whether a visitor can reach this locale. Independent of whether it has been reviewed — see
+   * `reviewState`. Anything that gates on review must read `reviewState`, never this.
    */
-  status: "published" | "preview_only" | "registered";
+  access: AccessState;
   /**
    * Whether a search engine should index this locale in Production. Preview URLs are never
    * indexable regardless; this describes the intended Production doctrine only.
@@ -60,57 +82,76 @@ export type LocaleEntry = {
 };
 
 export const LOCALES: readonly LocaleEntry[] = [
-  { code: "ja",    englishName: "Japanese",             nativeName: "日本語",        direction: "ltr", status: "published", seoIndexable: true, translationSource: null, reviewState: "SOURCE_CANONICAL", script: "Jpan" },
-  { code: "en",    englishName: "English",              nativeName: "English",       direction: "ltr", status: "published", seoIndexable: true, translationSource: "ja", reviewState: "HUMAN_REVIEWED", script: "Latn" },
-  { code: "zh-CN", englishName: "Chinese (Simplified)", nativeName: "简体中文",      direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Hans" },
-  { code: "zh-TW", englishName: "Chinese (Traditional)",nativeName: "繁體中文",      direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Hant" },
-  { code: "ko",    englishName: "Korean",               nativeName: "한국어",        direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Kore" },
-  { code: "es",    englishName: "Spanish",              nativeName: "Español",       direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "fr",    englishName: "French",               nativeName: "Français",      direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "de",    englishName: "German",               nativeName: "Deutsch",       direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "pt",    englishName: "Portuguese",           nativeName: "Português",     direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "it",    englishName: "Italian",              nativeName: "Italiano",      direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "nl",    englishName: "Dutch",                nativeName: "Nederlands",    direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "ar",    englishName: "Arabic",               nativeName: "العربية",        direction: "rtl", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Arab" },
-  { code: "hi",    englishName: "Hindi",                nativeName: "हिन्दी",          direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Deva" },
-  { code: "th",    englishName: "Thai",                 nativeName: "ไทย",           direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Thai" },
-  { code: "vi",    englishName: "Vietnamese",           nativeName: "Tiếng Việt",    direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "id",    englishName: "Indonesian",           nativeName: "Bahasa Indonesia", direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "ms",    englishName: "Malay",                nativeName: "Bahasa Melayu", direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "tr",    englishName: "Turkish",              nativeName: "Türkçe",        direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "pl",    englishName: "Polish",               nativeName: "Polski",        direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Latn" },
-  { code: "ru",    englishName: "Russian",              nativeName: "Русский",       direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Cyrl" },
-  { code: "uk",    englishName: "Ukrainian",            nativeName: "Українська",    direction: "ltr", status: "preview_only", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED", script: "Cyrl" },
+  { code: "ja",    englishName: "Japanese",             nativeName: "日本語",        direction: "ltr", access: "public", seoIndexable: true, translationSource: null, reviewState: "SOURCE_CANONICAL", script: "Jpan" },
+  { code: "en",    englishName: "English",              nativeName: "English",       direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "FOUNDER_REVIEWED", script: "Latn" },
+  { code: "zh-CN", englishName: "Chinese (Simplified)", nativeName: "简体中文",      direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Hans" },
+  { code: "zh-TW", englishName: "Chinese (Traditional)",nativeName: "繁體中文",      direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Hant" },
+  { code: "ko",    englishName: "Korean",               nativeName: "한국어",        direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Kore" },
+  { code: "es",    englishName: "Spanish",              nativeName: "Español",       direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "fr",    englishName: "French",               nativeName: "Français",      direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "de",    englishName: "German",               nativeName: "Deutsch",       direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "pt",    englishName: "Portuguese",           nativeName: "Português",     direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "it",    englishName: "Italian",              nativeName: "Italiano",      direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "nl",    englishName: "Dutch",                nativeName: "Nederlands",    direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "ar",    englishName: "Arabic",               nativeName: "العربية",        direction: "rtl", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Arab" },
+  { code: "hi",    englishName: "Hindi",                nativeName: "हिन्दी",          direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Deva" },
+  { code: "th",    englishName: "Thai",                 nativeName: "ไทย",           direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Thai" },
+  { code: "vi",    englishName: "Vietnamese",           nativeName: "Tiếng Việt",    direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "id",    englishName: "Indonesian",           nativeName: "Bahasa Indonesia", direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "ms",    englishName: "Malay",                nativeName: "Bahasa Melayu", direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "tr",    englishName: "Turkish",              nativeName: "Türkçe",        direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "pl",    englishName: "Polish",               nativeName: "Polski",        direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Latn" },
+  { code: "ru",    englishName: "Russian",              nativeName: "Русский",       direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Cyrl" },
+  { code: "uk",    englishName: "Ukrainian",            nativeName: "Українська",    direction: "ltr", access: "public", seoIndexable: true, translationSource: "ja", reviewState: "AI_TRANSLATED_NATIVE_REVIEW_PENDING", script: "Cyrl" },
 ];
 
 export const DEFAULT_LOCALE = "ja";
 export type LocaleCode = string;
 
-/** Available in Preview: everything that is actually built. */
-export const PUBLISHED = LOCALES.filter((l) => l.status !== "registered");
+/**
+ * Every locale a visitor can reach. This is what the language selector renders, and it is now all
+ * twenty-one — the site is global by architecture, and hiding nineteen finished languages behind a
+ * review gate served nobody: it did not make the copy better, and it made it unreachable.
+ */
+export const PUBLIC_LOCALES = LOCALES.filter((l) => l.access === "public");
 
 /**
- * Cleared for PRODUCTION publication. Currently Japanese (canonical) and English (human-reviewed).
+ * Locales a native speaker has actually read. Currently ja (the source) and en (Founder-reviewed).
  *
- * The other nineteen are complete and render correctly but have not been reviewed by a native
- * speaker, so they must not be published to Production merely because Preview looked fine.
- * Promoting one is a data change here, after a review actually happens.
+ * This drives HONESTY, not access. It is what a report cites when it says how much of the site has
+ * been read by a person, and it is what a future native-review programme works through. It must
+ * never be used to decide whether a visitor may open a page.
  */
-export const PRODUCTION_READY = LOCALES.filter((l) => l.status === "published");
+export const REVIEWED = LOCALES.filter(
+  (l) => l.reviewState === "SOURCE_CANONICAL" || l.reviewState === "NATIVE_REVIEWED" || l.reviewState === "FOUNDER_REVIEWED",
+);
+
+/** Awaiting a native-speaker read. Complete and serving; not yet editorially confirmed. */
+export const NATIVE_REVIEW_PENDING = LOCALES.filter(
+  (l) => l.reviewState === "AI_TRANSLATED_NATIVE_REVIEW_PENDING",
+);
+
+/**
+ * Retained as an alias so existing callers keep working. Both now mean the same thing, and that is
+ * the point: availability is one question, and it has one answer.
+ */
+export const PUBLISHED = PUBLIC_LOCALES;
+
 const BY_CODE = new Map(LOCALES.map((l) => [l.code, l]));
 
 export function localeEntry(code: string): LocaleEntry {
   return BY_CODE.get(code) ?? BY_CODE.get(DEFAULT_LOCALE)!;
 }
 
-/** Selectable and renderable (Preview). */
+/** Selectable and renderable by a visitor. */
 export function isPublished(code: string): boolean {
-  return BY_CODE.get(code)?.status !== undefined && BY_CODE.get(code)!.status !== "registered";
+  return BY_CODE.get(code)?.access === "public";
 }
 
-/** Cleared to be served on the Production corporate domain. */
-export function isProductionReady(code: string): boolean {
-  return BY_CODE.get(code)?.status === "published";
+/** Has a person read this locale's copy? Never gate access on this. */
+export function isReviewed(code: string): boolean {
+  const r = BY_CODE.get(code)?.reviewState;
+  return r === "SOURCE_CANONICAL" || r === "NATIVE_REVIEWED" || r === "FOUNDER_REVIEWED";
 }
 
 /** Resolve a requested locale. Never infers from browser, IP, device or geography. */

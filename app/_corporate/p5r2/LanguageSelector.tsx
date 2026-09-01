@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "./site.module.css";
 import selector from "./selector.module.css";
-import { LOCALES, localeEntry, localeHref } from "../i18n/locales";
+import { PUBLIC_LOCALES, localeEntry, localeHref } from "../i18n/locales";
 
 /**
  * CORP-P5R2 — the global language selector.
@@ -84,7 +84,19 @@ export default function LanguageSelector({
     };
   }, [open]);
 
-  const published = LOCALES.filter((l) => l.status === "published");
+  /*
+   * CORP-v1.4 — every reachable locale, read from the registry rather than filtered here.
+   *
+   * This line was `LOCALES.filter((l) => l.status === "published")`, which meant Japanese and
+   * English and nothing else. It dated from CORP-P5R2, when "published" meant "built"; CORP-v1.2R1
+   * later reused the same field to mean "cleared for Production", and this filter silently narrowed
+   * from twenty-one languages to two. Nineteen complete, rendering, claim-guarded locales became
+   * unreachable, and no test noticed — the selector had no coverage at all.
+   *
+   * Access now comes from the registry's own `access` axis, so a change to review policy cannot
+   * take a language away from the people who read it. `localeSelector.test.ts` asserts the count.
+   */
+  const published = PUBLIC_LOCALES;
   const needle = q.trim().toLowerCase();
   const shown = needle
     ? published.filter(

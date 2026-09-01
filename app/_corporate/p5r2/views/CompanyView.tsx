@@ -93,21 +93,34 @@ export default function CompanyView({ copy, locale }: { copy: SiteCopy; locale: 
         <p className={`${styles.body} ${styles.jp}`}>{c.businessBody}</p>
       </Band>
 
-      {/* projects */}
+      {/*
+        CORP-v1.4 — driven by the venture list, not by two hardcoded cards.
+
+        This band listed Mirai Move and Kakari and omitted Chigamo, so the Company page said the
+        company was two ventures while the Ventures index, `VENTURE_CLASS` and the composition line
+        all said three. Two literals in a view are exactly how that drifts. It now reads the same
+        `copy.ventures.cards` every other surface reads, and it names the set it is showing rather
+        than implying the set is everything YORISOU has.
+      */}
       <Band id="projects" dark>
-        <Eyebrow dark>{c.projectsEyebrow}</Eyebrow>
+        <Eyebrow dark>{copy.ventures.publicLabel}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={c.projectsHeading} locale={locale} /></h2>
+        <p className={`${styles.body} ${styles.jp}`}>{copy.ventures.publicNote}</p>
         <Cards
-          items={[
-            { no: "01", title: "Mirai Move", body: copy.mirai.stage },
-            { no: "02", title: "Kakari", body: copy.kakari.stage },
-          ]}
-          columns={2}
+          items={copy.ventures.cards.map((v, i) => ({
+            no: String(i + 1).padStart(2, "0"),
+            title: v.name,
+            body: (v.href === "/mirai-move" ? copy.mirai : v.href === "/kakari" ? copy.kakari : copy.chigamo).stage,
+          }))}
+          columns={3}
           dark
         />
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 20 }}>
-          <TextLink href={L(ROUTES.miraiMove)} dark>{copy.common.readMore("Mirai Move")}</TextLink>
-          <TextLink href={L(ROUTES.kakari)} dark>{copy.common.readMore("Kakari")}</TextLink>
+          {copy.ventures.cards.map((v) => (
+            <TextLink key={v.href} href={L(v.href)} dark>
+              {copy.common.readMore(v.name)}
+            </TextLink>
+          ))}
         </div>
       </Band>
 

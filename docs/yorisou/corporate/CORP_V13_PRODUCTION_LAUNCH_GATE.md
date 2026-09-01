@@ -1,5 +1,20 @@
 # CORP-v1.3 — Production Launch Gate
 
+> **The launch happened.** `yorisou.online` has served the corporate site since 2026-09-01
+> (`main 279cacd`, deployment `dpl_AMJE3PzsU8haAiU7NrQzydRt76E4`). This document is the record of
+> the gate that was met, not a gate still ahead.
+>
+> **CORP-v1.4 is post-launch remediation, in Preview only.** It corrects the business-model
+> narrative and makes all 21 locales reachable. Its own record is
+> `CORP_V14_BUSINESS_MODEL_AND_GLOBAL_LOCALE.md`, and the items it closes are:
+>
+> - **B5 translation review** — reframed rather than closed. Access and review are now separate
+>   axes: all 21 locales are reachable, and 19 remain honestly marked as awaiting native review.
+>   `CORP_V14_LOCALE_REVIEW_REGISTER.md` carries the state.
+> - The `?lang=` → `/{locale}/` migration in **B2** remains deferred, with a concrete plan recorded
+>   rather than an intention.
+> - **B3 contact** and **B4 licence** are unchanged and still open. Neither blocks the live site.
+
 > **CORP-v1.3.1 — the Founder has decided the open questions this gate was holding.** `yorisou.online`
 > becomes the corporate apex; the consumer product keeps its own explicit routes with Today restored
 > at `/today`; ja and en launch public and the other 19 locales stay `preview_only`; contact stays

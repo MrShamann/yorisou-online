@@ -120,6 +120,18 @@ export type SiteCopy = {
     asterionHeading: readonly string[];
     asterionBody: string;
     asterionNote: string;
+    /**
+     * CORP-v1.4 — how YORISOU stays involved in what it builds.
+     *
+     * The site described a foundry that carries a venture to independence, and stopped there. Read
+     * commercially that says YORISOU builds companies and hands them away, which is not the model:
+     * it may keep equity, hold a licence, operate jointly, or agree something else entirely. Every
+     * word here is conditional, because none of it is settled before an agreement exists.
+     */
+    portfolioEyebrow: string;
+    portfolioHeading: readonly string[];
+    portfolioBody: string;
+    portfolioNote: string;
     engageEyebrow: string;
     engageHeading: readonly string[];
     engageBody: string;
@@ -165,6 +177,16 @@ export type SiteCopy = {
       status: string;
     }[];
     /** States plainly what inclusion on this page does and does not mean. */
+    /**
+     * CORP-v1.4 — what is true today, kept apart from what may follow.
+     *
+     * Every stage on this page is a current fact. The shapes a venture can take next — staying
+     * inside YORISOU, joint operation, a separate company, a licence, a transfer, a sale — are
+     * possibilities, and the page has to say which is which. A possible structure presented as a
+     * completed event is the exact claim this site exists not to make.
+     */
+    structureHeading: readonly string[];
+    structureBody: readonly string[];
     noteHeading: readonly string[];
     noteBody: readonly string[];
   };
@@ -238,6 +260,16 @@ export type SiteCopy = {
     eyebrow: string;
     heading: readonly string[];
     lead: string;
+    /**
+     * CORP-v1.4 — the shape of an involvement is designed per project, and promised for none.
+     *
+     * The lanes already say what cannot be offered — no salary, no funding, no equity, no role.
+     * That is the honest floor and it stays. What was missing is the other half: what an
+     * arrangement CAN be. Co-founder, founding team, a stake, a licence, joint operation. Naming
+     * them is not an offer, and this says so in the same breath.
+     */
+    structureHeading: readonly string[];
+    structureBody: readonly string[];
     /**
      * CORP-v1.2R2 — the participation matrix.
      *

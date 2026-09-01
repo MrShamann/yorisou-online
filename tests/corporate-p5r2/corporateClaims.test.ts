@@ -97,7 +97,7 @@ const RULES: Rule[] = [
   },
   {
     id: "portfolio-companies",
-    re: /portfolio\s+(compan|firm)|ポートフォリオ企業|傘下企業|子会社/i,
+    re: /portfolio\s+(compan|firm)|ポートフォリオ企業|傘下企業|子会社|子公司|자회사/i,
     why: "the ventures are not incorporated subsidiaries or portfolio companies",
   },
   {
@@ -150,16 +150,54 @@ const RULES: Rule[] = [
     re: /(now\s+live\s+in\s+production|本番稼働中|正式リリース済み)/i,
     why: "this is a Preview; it must never describe itself as Production",
   },
+  /**
+   * CORP-v1.4 — the claim class the business-model narrative introduces.
+   *
+   * The site now says YORISOU MAY hold equity, MAY hold a licence, MAY operate a venture jointly.
+   * Every one of those is conditional and none of it is executed. Nothing in the guard covered
+   * ownership, shareholding or licence-holding at all — rule `powered-by-asterion` even asserts in
+   * its own reason that no licence has been executed, while no rule checked for the claim.
+   *
+   * This fires on the ASSERTED form. The conditional forms the site actually uses — "may hold",
+   * 「持ち続けることもあります」 — do not match, which is the distinction the whole section rests on.
+   */
+  {
+    id: "executed-economic-right",
+    re: /(we|yorisou)\s+(currently\s+)?(holds?|owns?|retains?)\s+(equity|shares?|a\s+stake|a\s+licen[cs]e)|(株式|持ち分|ライセンス)を(保有しています|取得しました|保有している)|(equity|licen[cs]e)\s+(is|has\s+been)\s+(granted|executed|secured)/i,
+    why: "no equity, shareholding or licence is evidenced as held or executed; the site may only say a structure is possible",
+  },
 ];
+
+/**
+ * CORP-v1.4 — EVERY match, not just the first.
+ *
+ * Both scans used `r.re.exec(copy)` on a non-global regex, which returns only the FIRST match in
+ * the file. If that first occurrence sat inside a denial — and this site denies its forbidden
+ * claims constantly, on purpose — `isNegated` suppressed it and the loop moved on, so a genuine
+ * violation later in the same file was never looked at. A guard that stops at the first honest
+ * sentence is a guard that gets quieter the more honest the copy becomes.
+ *
+ * The rule regexes are shared module state, so a fresh global copy is made per scan rather than
+ * mutating `lastIndex` on the original.
+ */
+function* matchesOf(re: RegExp, text: string): Generator<RegExpExecArray> {
+  const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
+  let m: RegExpExecArray | null;
+  while ((m = g.exec(text)) !== null) {
+    yield m;
+    if (m[0].length === 0) g.lastIndex += 1;
+  }
+}
 
 test("public corporate copy makes no unsupported claim", () => {
   const hits: string[] = [];
   for (const { name, text } of contentFiles()) {
     const copy = copyOnly(text);
     for (const r of RULES) {
-      const m = r.re.exec(copy);
-      if (m && !isNegated(copy, m.index)) {
-        hits.push(`${name}: [${r.id}] matched "${m[0].slice(0, 48)}" — ${r.why}`);
+      for (const m of matchesOf(r.re, copy)) {
+        if (!isNegated(copy, m.index)) {
+          hits.push(`${name}: [${r.id}] matched "${m[0].slice(0, 48)}" — ${r.why}`);
+        }
       }
     }
   }
@@ -171,9 +209,10 @@ test("the corporate view layer makes no unsupported claim", () => {
   for (const p of walk(VIEW_DIR)) {
     const copy = copyOnly(readFileSync(p, "utf8"));
     for (const r of RULES) {
-      const m = r.re.exec(copy);
-      if (m && !isNegated(copy, m.index)) {
-        hits.push(`${path.relative(ROOT, p)}: [${r.id}] matched "${m[0].slice(0, 48)}"`);
+      for (const m of matchesOf(r.re, copy)) {
+        if (!isNegated(copy, m.index)) {
+          hits.push(`${path.relative(ROOT, p)}: [${r.id}] matched "${m[0].slice(0, 48)}"`);
+        }
       }
     }
   }
@@ -190,12 +229,67 @@ test("Asterion is never listed as a Yorisou venture", () => {
   assert.deepEqual(bad, [], `Asterion appears inside the ventures list in: ${bad.join(", ")}`);
 });
 
-test("every locale keeps the Asterion independence boundary", () => {
+test("every locale keeps the Asterion boundary, and none concludes who owns Asterion", () => {
   const missing: string[] = [];
   for (const { name, text } of contentFiles()) {
     if (!/asterionBoundaryTitle/.test(text) || !/asterionBoundaryBody/.test(text)) missing.push(name);
   }
   assert.deepEqual(missing, [], `locales missing the Asterion boundary statement: ${missing.join(", ")}`);
+});
+
+/**
+ * CORP-v1.4 — the withdrawn conclusion, in both directions.
+ *
+ * The site used to state as an absolute legal fact that Asterion "is not owned by Yorisou". No
+ * executed rights record supports that sentence, so the Founder withdrew it. The opposite claim was
+ * already forbidden. What is permitted is the honest position: rights depend on the agreements that
+ * apply.
+ *
+ * The existing boundary test only checked that the two KEY NAMES were present — a locale could have
+ * set the body to anything at all and passed. This checks the values, and it checks the denial as
+ * well as the assertion, because an unsupported denial is an unsupported claim.
+ */
+/**
+ * The denial phrases themselves. These are matched at FILE scope, not by proximity to the word
+ * "Asterion", because the withdrawn Japanese wording put the denial in its own sentence —
+ * 「Asterion OS は…独立した共通技術・実行基盤です。YORISOU が所有しているものではありません。」 — and a
+ * proximity window stops at the 。 and misses it. Verified: a proximity-anchored version of this
+ * check passed that exact string.
+ */
+const OWNERSHIP_DENIALS = [
+  /所有物ではありません/,
+  /所有しているものではありません/,
+  /(は|が)?所有していません/,
+  /is\s+not\s+owned/i,
+  /(do(es)?\s+not|don['’]t)\s+own/i,
+  /n[’']?(est|appartient)\s+pas\s+(la\s+propriété|à)/i,
+  /no\s+es\s+(de\s+)?propiedad/i,
+  /nicht\s+im\s+Besitz/i,
+  /não\s+é\s+(de\s+)?propriedade/i,
+  /не\s+принадлежит/i,
+  /소유하고\s*있지\s*않습니다|소유가\s*아닙니다/,
+  /不属于|不屬於|并非.{0,6}所有|並非.{0,6}所有/,
+];
+
+test("no locale concludes who owns Asterion — in either direction", () => {
+  const hits: string[] = [];
+  for (const { name, text } of contentFiles()) {
+    const copy = copyOnly(text);
+    if (!/asterion/i.test(copy)) continue;
+    for (const re of OWNERSHIP_DENIALS) {
+      // Deliberately NOT negation-aware: these patterns ARE the denial. A denial of something
+      // nobody can evidence is itself an unsupported claim, which is what was withdrawn.
+      for (const m of matchesOf(re, copy)) {
+        hits.push(`${name}: "${copy.slice(Math.max(0, m.index - 44), m.index + m[0].length + 8).replace(/\s+/g, " ")}"`);
+      }
+    }
+  }
+  assert.deepEqual(
+    hits,
+    [],
+    `a locale still concludes who owns Asterion. The supported position is that rights depend on ` +
+      `the agreements that apply:\n${hits.join("\n")}`,
+  );
 });
 
 /**

@@ -37,10 +37,10 @@ export const de: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Von strukturellen Problemen zu Unternehmen, die für sich stehen.", description: "Yorisou LLC ist eine Foundry: Wir finden strukturelle Probleme, erarbeiten Belege und geschäftliche Grundlagen und bilden Gründungsteams, um daraus eigenständige Unternehmen zu machen. Mirai Move und Kakari werden gebaut; Chigamo ist noch im Konzept." },
+    home: { title: "Yorisou LLC — Aus strukturellen Problemen Vorhaben aufbauen.", description: "Yorisou LLC ist eine Foundry für neue Vorhaben: Wir finden strukturelle Probleme, erarbeiten Belege und geschäftliche Grundlagen und bauen sie gemeinsam mit den Menschen auf, die sie führen werden. Mirai Move und Kakari werden gebaut; Chigamo ist noch im Konzept." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Eine Plattform für Information, Vermittlung und Geschäftsentwicklung im japanischen Mobilitätsbereich. Die öffentliche Website ist online, die Plattformfunktionen befinden sich in Entwicklung." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Mehrsprachige Unterstützung bei Behördenverfahren und Dokumenten – für Menschen, die in Japan leben, und für alle, die hier ein Unternehmen gründen. In Entwicklung und noch nicht allgemein verfügbar." },
-    about: { title: "Wie wir entwickeln — Yorisou LLC", description: "Das Problem finden, es überprüfen, es als Geschäft entwerfen, ein Gründungsteam bilden und es bis zum eigenständigen Unternehmen tragen. Wie die Foundry von Yorisou vorgeht und wo die gemeinsame Basis steht." },
+    about: { title: "Wie wir entwickeln — Yorisou LLC", description: "Das Problem finden, es überprüfen, es als Geschäft entwerfen, ein Gründungsteam bilden und es so weit bringen, dass es trägt. Wie die Foundry von Yorisou vorgeht, welche Formen ein Vorhaben annehmen kann und wo die gemeinsame Basis steht." },
     company: { title: "Unternehmen — Yorisou LLC", description: "Unternehmensprofil, Profil des geschäftsführenden Gesellschafters, Botschaft der Geschäftsführung und Geschäftsfelder von Yorisou LLC." },
     contact: { title: "Kontakt — Yorisou LLC", description: "Anfragen zu unserer Arbeit, zu Partnerschaften und von der Presse." },
     ventures: { title: "Projekte — Yorisou LLC", description: "Woran Yorisou gerade arbeitet: Mirai Move, Kakari und Chigamo. Jedes steht an einem anderen Punkt, und wir schreiben, an welchem." },
@@ -63,11 +63,11 @@ export const de: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Strukturprobleme", "zu Unternehmen machen."],
-    thesis: ["Aus strukturellen Problemen", "bauen wir Unternehmen auf,", "die eigenständig bestehen."],
+    thesis: ["Aus strukturellen Problemen", "bauen wir Vorhaben auf", "und entwickeln sie weiter."],
     lead: [
       "Yorisou ist eine Foundry: Wir finden strukturelle Probleme in der Gesellschaft,",
-      "überprüfen sie, entwerfen sie als Geschäft und tun uns mit den Menschen zusammen,",
-      "die sie führen werden – bis hin zu eigenständigen Unternehmen.",
+      "überprüfen sie, entwerfen sie als Geschäft und bauen sie gemeinsam",
+      "mit den Menschen auf, die sie führen werden.",
     ],
     humanSide: "Mensch",
     humanItems: ["Alltag", "Arbeit", "Region"],
@@ -124,9 +124,16 @@ export const de: SiteCopy = {
     asterionEyebrow: "Gemeinsame Basis",
     asterionHeading: ["Mit jedem Vorhaben", "wächst das Fundament."],
     asterionBody:
-      "Asterion OS ist eine eigenständige, gemeinsam genutzte Technologie- und Umsetzungsplattform, die innerhalb der Foundry-Architektur von Yorisou ihren Platz hat. Weil die gemeinsame Grundlage bereits da ist, kann jedes Vorhaben seine Kraft auf das verwenden, was wirklich sein eigenes ist.",
+      "Asterion OS ist ein eigenständiges Projekt für eine Technologieplattform. Weil dieselben Mechanismen nicht immer wieder neu gebaut werden müssen, kann jedes Vorhaben seine Kraft auf das verwenden, was wirklich sein eigenes ist.",
     asterionNote:
-      "Jedes Vorhaben wird getrennt geführt; geistiges Eigentum, Daten und operative Verantwortung liegen jeweils bei ihm. Asterion ist nicht Eigentum von Yorisou.",
+      "Jedes Vorhaben wird getrennt geführt. Wo geistiges Eigentum, Daten und operative Verantwortung liegen – und welche Rechte an Asterion gelten –, bestimmen die jeweils anwendbaren Vereinbarungen.",
+    /* CORP-v1.4 — wie Yorisou mit dem verbunden bleibt, was es aufbaut. Bedingt, nie zugesagt. */
+    portfolioEyebrow: "Wie wir verbunden bleiben",
+    portfolioHeading: ["Mit dem Aufbau", "ist es nicht getan."],
+    portfolioBody:
+      "Yorisou kann auch dann noch am langfristigen Wert eines Vorhabens beteiligt bleiben, wenn es einmal trägt – indem es weiterhin Anteile hält, indem es eine Lizenz hält oder indem es das Vorhaben gemeinsam führt. Ein Vorhaben kann auch als eigenes Unternehmen abgetrennt, übertragen oder verkauft werden.",
+    portfolioNote:
+      "Welche Form es annimmt, hängt vom Reifegrad des Vorhabens, von den Beteiligten, vom Markt, vom Kapital und von der Vereinbarung für dieses Vorhaben ab. Nichts davon steht im Voraus fest.",
     engageEyebrow: "Gemeinsam entwickeln",
     engageHeading: ["Kommen Sie dazu, solange", "daraus erst ein Unternehmen wird."],
     engageBody:
@@ -256,7 +263,7 @@ export const de: SiteCopy = {
   company: {
     eyebrow: "Unternehmen",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC entwickelt Produkte, die die Komplexität von Alltag, Arbeit und Region in etwas verwandeln, das Menschen verstehen, abwägen und in Handeln überführen können. Von Fukuoka aus arbeiten wir an zwei Projekten: Mirai Move und Kakari.",
+    intro: "Yorisou LLC ist eine Foundry für neue Vorhaben: Wir finden strukturelle Probleme, entwerfen sie als Geschäft und bauen sie gemeinsam mit den Menschen auf, die sie führen können. Von Fukuoka aus arbeiten wir an mehreren Vorhaben; öffentlich sind derzeit Mirai Move, Kakari und Chigamo.",
 
     messageEyebrow: "Botschaft der Geschäftsführung",
     messageHeading: ["Wir entscheiden danach, ob es ankommt –", "nicht danach, wie fortschrittlich es ist."],
@@ -305,12 +312,12 @@ export const de: SiteCopy = {
       { label: "Unternehmensnummer (hōjin bangō)", value: "2290003018125" },
       { label: "Geschäftsführender Gesellschafter", value: "Jin Yang" },
       { label: "Sitz", value: "Stadt Fukuoka, Präfektur Fukuoka, Japan" },
-      { label: "Geschäftstätigkeit", value: "Planung, Entwicklung und Betrieb von Mirai Move und Kakari" },
+      { label: "Geschäftstätigkeit", value: "Erkundung, Planung, Entwicklung und Betrieb neuer Vorhaben, Bildung von Gründungsteams sowie die Überführung in ein Geschäft durch gemeinsame Umsetzung, Lizenzierung und vergleichbare Formen" },
     ],
 
     businessEyebrow: "Geschäftsfelder",
     businessHeading: ["Geschäftsfelder"],
-    businessBody: "Information, Vermittlung und Geschäftsentwicklung im Mobilitätsbereich sowie mehrsprachige Unterstützung bei Behördenverfahren und Dokumenten für Menschen, die in Japan leben, und für alle, die hier ein Unternehmen gründen. Beides folgt demselben Grundsatz: die Komplexität aufnehmen und etwas Nutzbares zurückgeben.",
+    businessBody: "Im Zentrum von Yorisou steht, die Vorhaben selbst aufzubauen: ein strukturelles Problem finden, es überprüfen, es als Geschäft entwerfen, es bauen und es gemeinsam mit Menschen aufbauen, die es führen können. Öffentlich sind derzeit: Information, Vermittlung und Geschäftsentwicklung im Mobilitätsbereich (Mirai Move), mehrsprachige Unterstützung bei Behördenverfahren für Menschen, die in Japan leben, und für alle, die hier ein Unternehmen gründen (Kakari), sowie die Erschließung des eigenen Lebensraums über Ort und Kontext (Chigamo, im Konzeptstadium). Alle folgen demselben Grundsatz: die Komplexität aufnehmen und etwas Nutzbares zurückgeben.",
 
     projectsEyebrow: "Projekte",
     projectsHeading: ["Woran wir arbeiten"],
@@ -395,11 +402,18 @@ export const de: SiteCopy = {
         status: "Konzeptstadium. Die Erprobung steht noch aus.",
       },
     ],
+    /* CORP-v1.4 — was heute gilt, und welche Formen daraus werden können. Nie ein Plan, nie eine Zusage. */
+    structureHeading: ["Was heute gilt –", "und was daraus werden kann."],
+    structureBody: [
+      "Die Stände oben sind der Stand von heute. Dort steht nur, was bereits geschehen ist.",
+      "Welche Form daraus wird, ist nicht entschieden. Ein Vorhaben kann weiterhin innerhalb von Yorisou betrieben werden, es kann ein Betriebsteam von außen dazuholen, es kann gemeinsam gehalten oder als eigenes Unternehmen abgetrennt werden. Es kann auch die Form einer Lizenz annehmen, übertragen oder verkauft werden.",
+      "Welche davon es wird, hängt vom Reifegrad des Vorhabens, von den Beteiligten, vom Markt, vom Kapital und von der Vereinbarung ab. Was hier steht, sind mögliche Formen – kein Plan und keine Zusage.",
+    ],
     noteHeading: ["Was diese Seite sagt", "– und was nicht."],
     noteBody: [
       "Hier stehen die Projekte und Konzepte, an denen Yorisou gerade arbeitet.",
       "Es sind keine eingetragenen Tochtergesellschaften, keine Beteiligungen und keine Kunden. Sie stehen an unterschiedlichen Punkten, und wir haben den jeweiligen Stand so geschrieben, wie er ist.",
-      "Das Ziel ist, dass jedes für sich als eigenständiges Unternehmen bestehen kann. Erreicht hat das bisher keines.",
+      "Was hier steht, ist der Stand von heute. Welche Form daraus wird, ist noch nicht entschieden.",
     ],
   },
 
@@ -451,7 +465,7 @@ export const de: SiteCopy = {
     eyebrow: "Wie wir entwickeln",
     heading: ["Vom Problem", "bis zum Unternehmen –", "der Reihe nach."],
     lead:
-      "Wir beginnen nicht bei einer Idee, die uns gefallen hat. Wir finden ein strukturelles Problem, überprüfen es, entwerfen es als Geschäft, tun uns mit Menschen zusammen, die es führen können, und tragen es bis zum eigenständigen Unternehmen. Diese Reihenfolge nennt Yorisou seine Foundry.",
+      "Wir beginnen nicht bei einer Idee, die uns gefallen hat. Wir finden ein strukturelles Problem, überprüfen es, entwerfen es als Geschäft, tun uns mit Menschen zusammen, die es führen können, und bringen es so weit, dass es als Vorhaben trägt. Diese Reihenfolge nennt Yorisou seine Foundry.",
     stagesEyebrow: "Etappen",
     stagesHeading: ["Acht Etappen,", "keine davon übersprungen."],
     stages: [
@@ -461,27 +475,32 @@ export const de: SiteCopy = {
       { no: "04", name: "Aufbau", body: "Tatsächlich bauen. Die gemeinsame Basis nutzen, wo es sie gibt, und die Kraft auf das verwenden, was diesem Vorhaben eigen ist." },
       { no: "05", name: "Tragfähig als Geschäft", body: "Werte und Abläufe so weit bringen, dass Außenstehende sie übernehmen und weiterführen können." },
       { no: "06", name: "Gründungsteam", body: "Sich mit jemandem zusammentun, der das Vorhaben als sein eigenes tragen kann – als Gründung, nicht als Anstellung." },
-      { no: "07", name: "Ausgründung und Betrieb", body: "Als eigenständiges Unternehmen führen, angelegt so, dass es nicht von Yorisou abhängig bleibt." },
-      { no: "08", name: "Lernen", body: "Was funktioniert hat und was gescheitert ist, bleibt als Material für das nächste Vorhaben." },
+      { no: "07", name: "Ausgründung und Betrieb", body: "Das Vorhaben so weit bringen, dass es aus eigener Kraft läuft. Es kann als eigenes Unternehmen abgetrennt werden, es kann innerhalb von Yorisou weiter betrieben werden, oder es wird gemeinsam gehalten." },
+      { no: "08", name: "Lernen", body: "Was funktioniert hat und was gescheitert ist, bleibt als Material für das nächste Vorhaben. Die Beziehung zum Vorhaben endet hier nicht zwangsläufig." },
     ],
-    independenceHeading: ["Das Ziel ist ein Unternehmen,", "das für sich steht."],
+    independenceHeading: ["Ein Vorhaben kann", "mehr als eine Form annehmen."],
     independenceBody: [
-      "Der Zweck der Foundry ist nicht, unter Yorisou etwas anzuhäufen. Er ist, jedes Vorhaben so weit zu bringen, dass es als eigenständiges Unternehmen bestehen kann.",
-      "Deshalb bauen wir es von Anfang an so, dass es übergeben werden kann. Wenn die Menschen, die es führen, nicht wirklich entscheiden können, ist daraus kein Unternehmen geworden.",
+      "Als eigenständiges Unternehmen zu bestehen, ist eine der Formen, die wir anstreben. Es bedeutet aber nicht, dass die Verbindung zu Yorisou damit endet.",
+      "Manche Vorhaben werden weiterhin innerhalb von Yorisou betrieben. Ein Vorhaben kann außerdem eine Gründerin, einen Gründer oder ein Betriebsteam von außen dazuholen und gemeinsam gehalten werden, als eigenes Unternehmen abgetrennt werden, die Form einer Lizenz annehmen oder übertragen beziehungsweise verkauft werden.",
+      "Welche Form ein Vorhaben annimmt, hängt von seinem Reifegrad, von den Beteiligten, vom Markt, vom Kapital und von der Vereinbarung für dieses Vorhaben ab. Es gibt keine feste Vorlage.",
+      "Nur eines gilt immer: Wir bauen es von Anfang an so, dass es übergeben werden kann. Wenn die Menschen, die es führen, nicht wirklich entscheiden können, trägt es nicht als Vorhaben.",
     ],
     asterionEyebrow: "Gemeinsame Technik- und Umsetzungsbasis",
     asterionHeading: ["Dasselbe", "nicht zweimal bauen."],
     asterionBody: [
-      "Asterion OS ist eine eigenständige, gemeinsam genutzte Technologie- und Umsetzungsplattform, die innerhalb der Foundry-Architektur von Yorisou ihren Platz hat. Yorisou ist nicht ihr Eigentümer.",
-      "Weil diese gemeinsame Grundlage vorhanden ist, muss kein Vorhaben sie erneut bauen, und jedes kann sich auf sein eigenes Feld konzentrieren. Was sich dabei ansammelt, wird zum Ausgangspunkt für das nächste.",
+      "Asterion OS ist ein eigenständiges Projekt für eine Technologieplattform. Es ist keines der Vorhaben von Yorisou, die auf dieser Unternehmensseite vorgestellt werden.",
+      "Vorhaben von Yorisou können Funktionen von Asterion nutzen, wo das sinnvoll ist. Eigentum, Lizenzierung, Datenrechte und operative Verantwortung richten sich nach den jeweils anwendbaren Vereinbarungen.",
+      "Weil eine gemeinsame Grundlage genutzt werden kann, muss kein Vorhaben sie erneut bauen, und jedes kann sich auf sein eigenes Feld konzentrieren. Was sich dabei an Fähigkeiten ansammelt, wird zum Ausgangspunkt für das nächste Vorhaben.",
     ],
     asterionBoundaryTitle: "Die Grenze",
     asterionBoundaryBody:
-      "Jedes Vorhaben wird getrennt geführt. Geistiges Eigentum, Daten und operative Verantwortung liegen beim jeweiligen Vorhaben. Nichts ist so angelegt, dass Daten aus einem Vorhaben oder von dessen Nutzerinnen und Nutzern automatisch an die Plattform fließen.",
+      "Jedes Vorhaben wird getrennt geführt. Wo geistiges Eigentum, Daten und operative Verantwortung liegen, legt die Vereinbarung für das jeweilige Vorhaben fest. Nichts ist so angelegt, dass Daten aus einem Vorhaben oder von dessen Nutzerinnen und Nutzern automatisch an die Plattform fließen.",
     economicsHeading: ["Anteile richten sich nach", "Beitrag und Verantwortung."],
     economicsBody: [
       "Die Bedingungen unterscheiden sich von Vorhaben zu Vorhaben. Wir legen nicht eine feste Formel über alles.",
       "Gemeinsam ist nur der Grundsatz: Anteile richten sich nach dem Beitrag, nach dem getragenen Risiko und nach der Verantwortung, die bleibt. Wer ein Vorhaben führt, hat tatsächliche Entscheidungsbefugnis.",
+      "Auch Yorisou selbst kann am langfristigen Wert eines Vorhabens beteiligt bleiben – indem es weiterhin Anteile hält, indem es eine Lizenz hält oder indem es das Vorhaben gemeinsam führt. Was davon zutrifft, hängt davon ab, wie viel Yorisou an diesem Vorhaben getragen und wie viel Risiko es dabei übernommen hat.",
+      "Bedingungen, die wir zusagen könnten, gibt es derzeit nicht. Weder Anteile noch die Form eines Rechts stehen vor einer Vereinbarung fest.",
       "Das Konkrete besprechen wir je Vorhaben und je Person. Es ist nicht die Art von Sache, die auf eine Website gehört.",
     ],
     maturityTitle: "Der aktuelle Stand",
@@ -494,7 +513,13 @@ export const de: SiteCopy = {
     eyebrow: "Gemeinsam entwickeln",
     heading: ["Wo Sie einsteigen,", "hängt davon ab, wo Sie stehen."],
     lead:
-      "Yorisou entwickelt ein Vorhaben bis kurz vor den Punkt, an dem daraus ein Unternehmen wird, und tut sich dann mit jemandem zusammen, der es tragen kann. Wir suchen deshalb keine Angestellten, sondern Menschen, die es übernehmen.",
+      "Yorisou entwickelt ein Vorhaben bis kurz vor den Punkt, an dem es aus eigener Kraft trägt, und tut sich dann mit denen zusammen, die es tragen können. Wir suchen deshalb keine Angestellten, sondern Menschen und Organisationen, die ein Vorhaben übernehmen.",
+    /* CORP-v1.4 — die Form der Beteiligung wird je Projekt entworfen und für keines im Voraus zugesagt. */
+    structureHeading: ["Wie Sie beteiligt sind,", "entwerfen wir je Projekt."],
+    structureBody: [
+      "Es gibt kein festes Raster, in das Sie passen müssten. Mitgründung, Gründungsteam, ein Anteil am Vorhaben, eine Lizenz, gemeinsame Führung, die Abtrennung als eigenes Unternehmen – was davon zutrifft, hängt vom Vorhaben ab und davon, wie viel Sie davon tragen.",
+      "Welche Form es auch annimmt: Führung, geistiges Eigentum, Rolle, Verantwortung und wirtschaftliche Bedingungen legt eine gesonderte Vereinbarung fest. Bedingungen, die wir hier im Voraus zusagen könnten, gibt es nicht.",
+    ],
     lanes: [
       {
         key: "founders",
