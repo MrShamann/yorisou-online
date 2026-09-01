@@ -21,7 +21,6 @@ const EXPECTED_MARKS = {
   Kakari: { kind: "svg", glyph: "係" },
   Chigamo: { kind: "svg", glyph: "" },
 };
-const DEAD_COLOURS = ["rgb(116, 186, 166)", "rgb(47, 107, 94)", "rgb(63, 134, 118)", "rgb(228, 237, 233)"];
 
 const b = await chromium.launch();
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
