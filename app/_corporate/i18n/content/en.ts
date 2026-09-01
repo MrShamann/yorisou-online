@@ -118,7 +118,6 @@ export const en: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "Shared infrastructure",
-    asterionHeading: ["Each build", "thickens the floor."],
     asterionBody:
       "Asterion OS is an independent technology-platform project. Because common ground is already there, each venture can spend its effort on the part that is actually its own.",
     asterionNote:
@@ -128,6 +127,7 @@ export const en: SiteCopy = {
     portfolioHeading: ["Building it", "is not the end."],
     portfolioBody:
       "Yorisou may keep a stake in the long-term value of a venture after it is standing — by continuing to hold equity, by holding a licence, or by operating it jointly. A venture may also become a separate company, or be transferred or sold.",
+    portfolioBranches: ["Operated inside Yorisou", "Co-founded, jointly operated", "Equity", "Licence", "Separate company", "Transfer or sale"],
     portfolioNote:
       "Which shape it takes depends on the venture's maturity, who is involved, the market, the capital, and the agreement reached for that venture. Nothing is fixed in advance.",
     engageEyebrow: "Build with us",
@@ -312,7 +312,6 @@ export const en: SiteCopy = {
     ],
 
     businessEyebrow: "Business areas",
-    businessHeading: ["Business areas"],
     businessBody: "What sits at the centre of Yorisou is building the ventures themselves: finding a structural problem, verifying it, designing it as a business, building it, and running it with people who can. The ventures currently public are information, matching and business development in the mobility sector (Mirai Move); multilingual support for administrative procedures, for people living in Japan and those starting a business here (Kakari); and discovery of a local area from place and context (Chigamo, at concept stage). All follow the same principle: absorb the complexity, and return something usable.",
 
     projectsEyebrow: "Projects",
@@ -379,7 +378,6 @@ export const en: SiteCopy = {
         thesis: "Connect information, matching and business development across mobility.",
         problem: "Information and opportunity are split apart between operators, regions and government.",
         building: "A platform where parties in and outside Japan can work from the same information.",
-        status: "In development and operation. Public site live.",
       },
       {
         name: "Kakari",
@@ -387,7 +385,6 @@ export const en: SiteCopy = {
         thesis: "Multilingual support for the procedures of living and starting a business in Japan.",
         problem: "The systems exist, but language and sequence stop people from ever using them.",
         building: "A way to break a procedure into stages and show how far you can get yourself.",
-        status: "In development. Preparing for release.",
       },
       {
         name: "Chigamo",
@@ -395,7 +392,6 @@ export const en: SiteCopy = {
         thesis: "Make a place legible from location and context.",
         problem: "The information that would actually help you here is the hardest to find.",
         building: "Discovery for the area you live in, built on location and context.",
-        status: "Concept stage. Not yet tested.",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

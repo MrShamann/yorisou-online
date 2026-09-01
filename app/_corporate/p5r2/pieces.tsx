@@ -4,13 +4,21 @@ import styles from "./site.module.css";
 import { ventureCounts } from "../brand";
 import { VentureMark } from "./VentureMark";
 
+/**
+ * CORP-v1.4R1 — `quiet` is a DENSITY mode, not another colour.
+ *
+ * Every band had roughly the same vertical padding, so the page scrolled as "here is the next
+ * part" nine times over. Density is now deliberate: a quiet band gets far more space and carries
+ * one statement, so the dense surfaces on either side of it read as arrivals rather than as the
+ * next item in a list.
+ */
 export function Band({
-  children, id, tint, line, dark,
-}: { children: ReactNode; id?: string; tint?: boolean; line?: boolean; dark?: boolean }) {
+  children, id, tint, line, dark, quiet,
+}: { children: ReactNode; id?: string; tint?: boolean; line?: boolean; dark?: boolean; quiet?: boolean }) {
   return (
     <section
       id={id}
-      className={[styles.band, tint ? styles.bandTint : "", line ? styles.bandLine : "", dark ? styles.bandDark : ""]
+      className={[styles.band, tint ? styles.bandTint : "", line ? styles.bandLine : "", dark ? styles.bandDark : "", quiet ? styles.bandQuiet : ""]
         .filter(Boolean).join(" ")}
     >
       <div className={styles.shell}>{children}</div>
@@ -184,7 +192,13 @@ export function VentureName({
   name: string;
   reading: string;
   size?: "hero" | "card" | "compact";
-  as?: "h1" | "h2" | "h3" | "p";
+  /*
+   * `span` exists for the Foundry spine's stage markers, which sit inside a <label>. A <p> there is
+   * not phrasing content, so the identity unit could not be used at all and the marker was rendering
+   * a mark beside a bare text node — which the brand-paint scan correctly reported as a mark it
+   * could not attribute to any venture.
+   */
+  as?: "h1" | "h2" | "h3" | "p" | "span";
 }) {
   const markClass =
     size === "hero" ? styles.ventureMarkHero : size === "compact" ? styles.ventureMarkCompact : styles.projectName;
@@ -285,5 +299,51 @@ export function FormationState({
         })}
       </ol>
     </div>
+  );
+}
+
+/**
+ * CORP-v1.4R1 — the quiet venture index.
+ *
+ * The Company page used to present the ventures as three dark numbered cards, which put a second
+ * portfolio pitch on the page whose job is to be the calmest, most editorial surface on the site —
+ * and repeated a presentation the Home operating field and the Ventures index both do better.
+ *
+ * This is the low-energy form: the same shared identity unit, each venture's own stage in its own
+ * words, and a route in. No number, no box, no accent.
+ */
+export function VentureIndex({
+  items,
+}: {
+  items: readonly { href: string; name: string; reading: string; stage: string }[];
+}) {
+  return (
+    <ul className={styles.ventureIndex}>
+      {items.map((v) => (
+        <li className={styles.ventureIndexItem} key={v.href}>
+          {/*
+            THE WHOLE ROW IS THE LINK, and the arrow sits in its own column.
+
+            Two earlier versions were worse by looking at them. The first linked the name alone and
+            gave no affordance at all — three rows that read as static labels. The second put the
+            arrow inside the name link, so it landed after whichever line was widest and the three
+            arrows stepped raggedly across the column. A grid pins them, and a row-sized target beats
+            a word-sized one.
+          */}
+          {/*
+            NO aria-label. An aria-label REPLACES a link's inner text as its accessible name, so
+            labelling this row "read more about Mirai Move" deleted the stage sentence — the one
+            piece of information the row exists to carry — for anyone using assistive technology.
+            The link's own content already names the venture and its stage, which is both unique and
+            more informative than the label was.
+          */}
+          <a className={styles.ventureIndexLink} href={v.href}>
+            <VentureName name={v.name} reading={v.reading} size="compact" as="p" />
+            <span className={`${styles.ventureIndexStage} ${styles.jp}`}>{v.stage}</span>
+            <span className={styles.arrow} aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))}
+    </ul>
   );
 }

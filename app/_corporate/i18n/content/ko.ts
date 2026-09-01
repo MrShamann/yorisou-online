@@ -120,7 +120,6 @@ export const ko: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "공통 기반",
-    asterionHeading: ["만들 때마다,", "토대가 두꺼워집니다."],
     asterionBody:
       "Asterion OS는 독립된 기술 기반 프로젝트입니다. 같은 구조를 몇 번씩 다시 만들지 않아도 되는 만큼, 각 사업은 자기 영역에 집중할 수 있습니다.",
     asterionNote:
@@ -130,6 +129,7 @@ export const ko: SiteCopy = {
     portfolioHeading: ["만드는 것으로", "끝나지 않습니다."],
     portfolioBody:
       "Yorisou는 사업을 세운 뒤에도 그 가치에 계속 관여하는 경우가 있습니다. 주식을 계속 보유하는 형태, 라이선스라는 형태, 공동으로 운영하는 형태. 회사로 분리하는 경우도, 양도나 매각에 이르는 경우도 있습니다.",
+    portfolioBranches: ["YORISOU 안에서 운영", "공동 창업·공동 운영", "지분", "라이선스", "별도 회사", "양도 또는 매각"],
     portfolioNote:
       "어떤 형태가 될지는 사업의 성숙도, 함께하는 상대, 시장, 자본, 그리고 사업마다의 합의에 따라 정해집니다. 미리 정해진 조건은 없습니다.",
     engageEyebrow: "함께 만들기",
@@ -314,7 +314,6 @@ export const ko: SiteCopy = {
     ],
 
     businessEyebrow: "사업 영역",
-    businessHeading: ["사업 영역"],
     businessBody: "Yorisou의 중심에 있는 것은 사업 자체를 만드는 일입니다. 구조적인 문제를 찾아내고, 확인하고, 사업으로 설계하고, 구축하고, 운영할 수 있는 사람과 팀을 이루어 세웁니다. 현재 공개하고 있는 사업은 모빌리티 영역의 정보·매칭·사업 개발(Mirai Move), 일본에서 생활하는 사람과 사업을 시작하는 사람을 위한 다국어 행정 절차·서류 지원(Kakari), 그리고 장소와 맥락에서 출발하는 생활권 탐색(Chigamo, 구상 단계)입니다. 모두 복잡함을 대신 떠안아 쓸 수 있는 형태로 만든다는 같은 방침 아래 진행하고 있습니다.",
 
     projectsEyebrow: "사업",
@@ -381,7 +380,6 @@ export const ko: SiteCopy = {
         thesis: "모빌리티 영역의 정보·매칭·사업 개발을 잇습니다.",
         problem: "사업자·지역·행정 사이에서 정보와 기회가 끊겨 있습니다.",
         building: "국내외 관계자가 같은 정보 위에서 이야기할 수 있는 플랫폼.",
-        status: "개발·운영 중. 공개 사이트 있음.",
       },
       {
         name: "Kakari",
@@ -389,7 +387,6 @@ export const ko: SiteCopy = {
         thesis: "일본에서 생활하는 사람과 사업을 시작하는 사람의 절차를 다국어로 지원합니다.",
         problem: "제도는 존재하는데도, 언어와 절차의 벽에 막혀 쓰이지 못한 채 끝납니다.",
         building: "절차를 단계로 나누어, 어디까지 스스로 할 수 있는지 보여 주는 구조.",
-        status: "개발 중. 공개 준비 단계.",
       },
       {
         name: "Chigamo",
@@ -397,7 +394,6 @@ export const ko: SiteCopy = {
         thesis: "장소와 맥락에서 출발해, 그 지역을 알 수 있게 합니다.",
         problem: "그 장소에서 정말로 도움이 되는 정보일수록 찾아도 나오지 않습니다.",
         building: "위치와 맥락을 실마리로 삼은, 생활권 탐색의 구조.",
-        status: "구상 단계. 검증은 아직 시작하지 않았습니다.",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

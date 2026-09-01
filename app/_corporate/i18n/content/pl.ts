@@ -122,7 +122,6 @@ export const pl: SiteCopy = {
 
     /* CORP-v1.2 — warstwa Asterion i warstwa współpracy na stronie głównej. */
     asterionEyebrow: "Wspólna infrastruktura",
-    asterionHeading: ["Z każdą budową", "fundament rośnie."],
     asterionBody:
       "Asterion OS to niezależny projekt platformy technologicznej. Skoro tego samego mechanizmu nie trzeba budować za każdym razem od nowa, każde przedsięwzięcie może poświęcić wysiłek tej części, która naprawdę jest jego własna.",
     asterionNote:
@@ -132,6 +131,7 @@ export const pl: SiteCopy = {
     portfolioHeading: ["Na zbudowaniu", "się nie kończy."],
     portfolioBody:
       "Yorisou może pozostać związane z wartością przedsięwzięcia także po tym, jak zacznie ono stać o własnych siłach — zachowując udziały, poprzez licencję albo prowadząc je wspólnie. Przedsięwzięcie może też zostać wydzielone jako osobna spółka, przeniesione na inny podmiot lub sprzedane.",
+    portfolioBranches: ["Prowadzone wewnątrz Yorisou", "Współzałożone i wspólnie prowadzone", "Udziały", "Licencja", "Osobna firma", "Przeniesienie lub sprzedaż"],
     portfolioNote:
       "To, która z tych form dojdzie do skutku, zależy od dojrzałości przedsięwzięcia, od tego, z kim je prowadzimy, od rynku, od kapitału i od umowy zawartej dla danego przedsięwzięcia. Żadne warunki nie są ustalone z góry.",
     engageEyebrow: "Buduj z nami",
@@ -316,7 +316,6 @@ export const pl: SiteCopy = {
     ],
 
     businessEyebrow: "Obszary działalności",
-    businessHeading: ["Obszary działalności"],
     businessBody: "W centrum Yorisou stoi budowanie samych przedsięwzięć: znaleźć problem strukturalny, sprawdzić go, zaprojektować jako przedsięwzięcie, zbudować i prowadzić razem z ludźmi, którzy to potrafią. Obecnie publiczne przedsięwzięcia to informacja, kojarzenie partnerów i rozwój biznesu w sektorze mobilności (Mirai Move), wielojęzyczne wsparcie w procedurach administracyjnych i dokumentach dla osób mieszkających w Japonii i rozpoczynających tu działalność (Kakari) oraz odkrywanie najbliższej okolicy na podstawie miejsca i kontekstu (Chigamo, etap koncepcji). Wszystkie prowadzimy według tej samej zasady: przejąć złożoność i oddać coś użytecznego.",
 
     projectsEyebrow: "Projekty",
@@ -383,7 +382,6 @@ export const pl: SiteCopy = {
         thesis: "Połączyć informację, kojarzenie partnerów i rozwój biznesu w obszarze mobilności.",
         problem: "Informacje i możliwości są rozdzielone między operatorów, regiony i administrację.",
         building: "Platforma, na której strony z Japonii i spoza niej pracują na tych samych informacjach.",
-        status: "W fazie rozwoju i prowadzenia. Strona publiczna działa.",
       },
       {
         name: "Kakari",
@@ -391,7 +389,6 @@ export const pl: SiteCopy = {
         thesis: "Wielojęzyczne wsparcie w procedurach dla osób mieszkających w Japonii i rozpoczynających tu działalność.",
         problem: "System istnieje, ale bariera języka i kolejności kroków sprawia, że nikt z niego nie korzysta.",
         building: "Sposób na podzielenie procedury na etapy i pokazanie, jak daleko można dojść samodzielnie.",
-        status: "W fazie rozwoju. Przygotowania do udostępnienia.",
       },
       {
         name: "Chigamo",
@@ -399,7 +396,6 @@ export const pl: SiteCopy = {
         thesis: "Sprawić, by dane miejsce stało się czytelne dzięki lokalizacji i kontekstowi.",
         problem: "Im bardziej informacja przydałaby się tutaj, tym trudniej ją znaleźć.",
         building: "Odkrywanie najbliższej okolicy w oparciu o lokalizację i kontekst.",
-        status: "Etap koncepcji. Weryfikacja jeszcze przed nami.",
       },
     ],
     structureHeading: ["Co jest teraz,", "i co może przyjść dalej."],

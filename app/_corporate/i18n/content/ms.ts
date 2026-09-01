@@ -122,7 +122,6 @@ export const ms: SiteCopy = {
 
     /* CORP-v1.2 — lapisan Asterion dan lapisan penglibatan di halaman utama. */
     asterionEyebrow: "Asas bersama",
-    asterionHeading: ["Setiap kali kami membina,", "asasnya menjadi lebih tebal."],
     asterionBody:
       "Asterion OS ialah projek platform teknologi yang berdiri sendiri. Kerana mekanisme yang sama tidak perlu dibina semula berulang kali, setiap usaha niaga boleh menumpukan tenaganya pada bidangnya sendiri.",
     asterionNote:
@@ -132,6 +131,7 @@ export const ms: SiteCopy = {
     portfolioHeading: ["Membinanya", "bukanlah penamatnya."],
     portfolioBody:
       "Selepas sesuatu usaha niaga berdiri, Yorisou mungkin terus terlibat dengan nilainya: dengan terus memegang ekuiti, dengan memegang lesen, atau dengan mengendalikannya bersama. Ia juga boleh diasingkan sebagai syarikat tersendiri, atau dipindah milik atau dijual.",
+    portfolioBranches: ["Dijalankan dalam Yorisou", "Diasaskan dan dijalankan bersama", "Pegangan saham", "Lesen", "Syarikat berasingan", "Pemindahan atau jualan"],
     portfolioNote:
       "Bentuk mana yang diambil bergantung pada kematangan usaha niaga itu, siapa yang terlibat, pasaran, modal, dan perjanjian yang dicapai bagi usaha niaga itu. Tiada syarat yang ditetapkan terlebih dahulu.",
     engageEyebrow: "Bina bersama kami",
@@ -316,7 +316,6 @@ export const ms: SiteCopy = {
     ],
 
     businessEyebrow: "Bidang perniagaan",
-    businessHeading: ["Bidang perniagaan"],
     businessBody: "Yang berada di tengah Yorisou ialah membina usaha niaga itu sendiri: mencari masalah yang bersifat struktur, mengesahkannya, mereka bentuknya sebagai perniagaan, membinanya, dan mengendalikannya bersama orang yang mampu. Usaha niaga yang kini didedahkan ialah maklumat, pemadanan dan pembangunan perniagaan dalam sektor mobiliti (Mirai Move); sokongan pelbagai bahasa untuk prosedur pentadbiran bagi mereka yang tinggal di Jepun dan yang memulakan perniagaan di sini (Kakari); serta penemuan kawasan kediaman melalui lokasi dan konteks (Chigamo, peringkat konsep). Semuanya dijalankan mengikut prinsip yang sama: menggalas kerumitan dan mengembalikannya dalam bentuk yang boleh digunakan.",
 
     projectsEyebrow: "Projek",
@@ -383,7 +382,6 @@ export const ms: SiteCopy = {
         thesis: "Menghubungkan maklumat, pemadanan dan pembangunan perniagaan dalam sektor mobiliti.",
         problem: "Maklumat dan peluang terpisah antara pengendali, kawasan dan pihak berkuasa.",
         building: "Platform tempat pihak di dalam dan di luar Jepun boleh berbincang atas maklumat yang sama.",
-        status: "Dalam pembangunan dan pengendalian. Laman awam sudah beroperasi.",
       },
       {
         name: "Kakari",
@@ -391,7 +389,6 @@ export const ms: SiteCopy = {
         thesis: "Menyokong prosedur bagi mereka yang tinggal di Jepun dan yang memulakan perniagaan di sini, dalam pelbagai bahasa.",
         problem: "Sistemnya wujud, tetapi halangan bahasa dan susunan langkah menyebabkan ia tidak pernah digunakan.",
         building: "Cara memecahkan sesuatu prosedur kepada peringkat, dan menunjukkan sejauh mana seseorang boleh melakukannya sendiri.",
-        status: "Dalam pembangunan. Sedang bersiap untuk dibuka.",
       },
       {
         name: "Chigamo",
@@ -399,7 +396,6 @@ export const ms: SiteCopy = {
         thesis: "Menjadikan sesuatu tempat dapat difahami melalui lokasi dan konteks.",
         problem: "Maklumat yang paling berguna di sesuatu tempat itulah yang paling sukar ditemui.",
         building: "Cara meneroka kawasan kediaman sendiri, berpandukan lokasi dan konteks.",
-        status: "Peringkat konsep. Belum diuji.",
       },
     ],
     /* CORP-v1.4 — memisahkan apa yang benar hari ini daripada apa yang mungkin menyusul. */

@@ -135,7 +135,6 @@ export const ja: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "共通基盤",
-    asterionHeading: ["つくるたびに、", "土台が厚くなる。"],
     asterionBody:
       "Asterion OS は、独立した技術基盤のプロジェクトです。同じ仕組みを何度もつくり直さずに済むぶん、それぞれの事業は自分の領域に集中できます。",
     asterionNote:
@@ -145,6 +144,7 @@ export const ja: SiteCopy = {
     portfolioHeading: ["つくって終わり、", "ではありません。"],
     portfolioBody:
       "YORISOU は、事業を立ち上げたあともその価値に関わり続けることがあります。株式を持ち続けること、ライセンスという形をとること、共同で運営すること。会社として分けることも、譲渡や売却に至ることもあります。",
+    portfolioBranches: ["YORISOU の中で運営", "共同で創業・運営", "株式", "ライセンス", "会社として分離", "譲渡・売却"],
     portfolioNote:
       "どの形になるかは、事業の成熟度、組む相手、市場、資本、そして事業ごとの合意で決まります。あらかじめ決まった条件はありません。",
     engageEyebrow: "一緒につくる",
@@ -329,7 +329,6 @@ export const ja: SiteCopy = {
     ],
 
     businessEyebrow: "事業領域",
-    businessHeading: ["事業領域"],
     businessBody: "YORISOU の中心にあるのは、事業そのものをつくることです。構造的な課題を見つけ、確かめ、事業として設計し、構築し、運営できる人と組んで立ち上げる。現在公開している事業は、モビリティ領域の情報・マッチング・事業開発（Mirai Move）、日本で暮らす人・事業を始める人のための多言語の手続き支援（Kakari）、そして場所と文脈からの生活圏の発見（Chigamo、構想段階）です。いずれも、複雑さを引き受けて使えるかたちにするという同じ方針のもとで進めています。",
 
     projectsEyebrow: "事業",
@@ -396,7 +395,6 @@ export const ja: SiteCopy = {
         thesis: "モビリティ領域の情報・マッチング・事業開発をつなぐ。",
         problem: "事業者・地域・行政のあいだで、情報と機会が分断されている。",
         building: "国内外の関係者が同じ情報の上で話せるプラットフォーム。",
-        status: "開発・運営中。公開サイトあり。",
       },
       {
         name: "Kakari",
@@ -404,7 +402,6 @@ export const ja: SiteCopy = {
         thesis: "日本で暮らす人・事業を始める人の手続きを、多言語で支える。",
         problem: "制度は存在しているのに、言語と手順の壁で使われないまま終わる。",
         building: "手続きを段階に分け、どこまで自分でできるかを示す仕組み。",
-        status: "開発中。公開準備段階。",
       },
       {
         name: "Chigamo",
@@ -412,7 +409,6 @@ export const ja: SiteCopy = {
         thesis: "場所と文脈から、その土地のことがわかるようにする。",
         problem: "その場所で本当に役立つ情報ほど、探しても出てこない。",
         building: "位置と文脈を手がかりにした、生活圏の発見の仕組み。",
-        status: "構想段階。検証はこれから。",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

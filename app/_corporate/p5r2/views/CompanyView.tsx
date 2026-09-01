@@ -1,5 +1,5 @@
 import styles from "../site.module.css";
-import { Band, Cards, Eyebrow, Facts, TextLink } from "../pieces";
+import { Band, Eyebrow, Facts, VentureIndex } from "../pieces";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -32,7 +32,7 @@ export default function CompanyView({ copy, locale }: { copy: SiteCopy; locale: 
       </section>
 
       {/* representative message */}
-      <Band id="message" line>
+      <Band id="message" line quiet>
         <Eyebrow>{c.messageEyebrow}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={c.messageHeading} locale={locale} /></h2>
         <div className={styles.message}>
@@ -79,18 +79,21 @@ export default function CompanyView({ copy, locale }: { copy: SiteCopy; locale: 
         </div>
       </Band>
 
-      {/* company overview */}
+      {/*
+        Company overview. CORP-v1.4R1 folded the former standalone "business areas" band in here.
+
+        That band was an eyebrow, a heading and a single sentence describing what the company does —
+        a caption on the statutory facts, not a section. Given its own full band on the page that is
+        supposed to be the calmest on the site, it read as padding and forced a tint stripe between
+        two quiet sections. Nothing was cut: the sentence now introduces the facts it always
+        described, and its heading is the one the band already had.
+      */}
       <Band id="overview" line>
         <Eyebrow>{c.overviewEyebrow}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={c.overviewHeading} locale={locale} /></h2>
-        <Facts facts={c.facts} />
-      </Band>
-
-      {/* business areas */}
-      <Band tint>
-        <Eyebrow>{c.businessEyebrow}</Eyebrow>
-        <h2 className={styles.h2}><Phrase units={c.businessHeading} locale={locale} /></h2>
+        <p className={styles.subLabel}>{c.businessEyebrow}</p>
         <p className={`${styles.body} ${styles.jp}`}>{c.businessBody}</p>
+        <Facts facts={c.facts} />
       </Band>
 
       {/*
@@ -101,31 +104,31 @@ export default function CompanyView({ copy, locale }: { copy: SiteCopy; locale: 
         all said three. Two literals in a view are exactly how that drifts. It now reads the same
         `copy.ventures.cards` every other surface reads, and it names the set it is showing rather
         than implying the set is everything YORISOU has.
+
+        CORP-v1.4R1 changed HOW it is shown, not what. It was a dark band of three numbered cards —
+        a second portfolio pitch on the page that should be the quietest, duplicating a presentation
+        that the Home operating field and the Ventures index each do properly. It is now an index:
+        the shared identity unit, each venture's own stage in its own words, and a route in.
       */}
-      <Band id="projects" dark>
-        <Eyebrow dark>{copy.ventures.publicLabel}</Eyebrow>
+      <Band id="projects" tint>
+        <Eyebrow>{copy.ventures.publicLabel}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={c.projectsHeading} locale={locale} /></h2>
         <p className={`${styles.body} ${styles.jp}`}>{copy.ventures.publicNote}</p>
-        <Cards
-          items={copy.ventures.cards.map((v, i) => ({
-            no: String(i + 1).padStart(2, "0"),
-            title: v.name,
-            body: (v.href === "/mirai-move" ? copy.mirai : v.href === "/kakari" ? copy.kakari : copy.chigamo).stage,
-          }))}
-          columns={3}
-          dark
+        <VentureIndex
+          items={copy.ventures.cards.map((v) => {
+            const d = v.href === "/mirai-move" ? copy.mirai : v.href === "/kakari" ? copy.kakari : copy.chigamo;
+            return {
+              href: L(v.href),
+              name: v.name,
+              reading: d.reading,
+              stage: d.stage,
+            };
+          })}
         />
-        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginTop: 20 }}>
-          {copy.ventures.cards.map((v) => (
-            <TextLink key={v.href} href={L(v.href)} dark>
-              {copy.common.readMore(v.name)}
-            </TextLink>
-          ))}
-        </div>
       </Band>
 
       {/* origin */}
-      <Band line>
+      <Band line quiet>
         <Eyebrow>{c.originEyebrow}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={c.originHeading} locale={locale} /></h2>
         {c.originBody.map((t, i) => (<p className={`${styles.body} ${styles.jp}`} key={i}>{t}</p>))}

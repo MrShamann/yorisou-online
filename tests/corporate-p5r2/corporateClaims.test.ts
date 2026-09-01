@@ -372,10 +372,19 @@ test("the Foundry motion field has a reduced-motion resolution", () => {
  * uses that component rather than hand-rolling a heading.
  */
 test("every venture surface renders the shared identity unit", () => {
+  /*
+   * CORP-v1.4R1 — the list follows the SURFACE, not the file.
+   *
+   * The homepage's venture block moved into `PublicVentureSurface`, so HomeView.tsx stopped
+   * containing the literal string while still being the surface that shows the ventures. Dropping
+   * HomeView from the list would have deleted the protection; adding the component it delegates to
+   * keeps it, and the delegation itself is pinned below so the indirection cannot become an escape
+   * hatch. A first version of that surface HAD rebuilt the mark/wordmark/reading pairing by hand,
+   * and this test is what caught it.
+   */
   const surfaces = [
-    "app/_corporate/p5r2/views/HomeView.tsx",
+    "app/_corporate/p5r2/OperatingField.tsx",
     "app/_corporate/p5r2/views/VenturesView.tsx",
-    "app/_corporate/p5r2/views/FoundryView.tsx",
     "app/_corporate/p5r2/views/ProjectView.tsx",
     "app/_corporate/p5r2/Shell.tsx",
   ];
@@ -385,6 +394,47 @@ test("every venture surface renders the shared identity unit", () => {
     if (!src.includes("VentureName")) missing.push(rel);
   }
   assert.deepEqual(missing, [], `surfaces not using the venture identity unit:\n${missing.join("\n")}`);
+
+  // The homepage must still reach the unit — through the surface component, and provably so.
+  const home = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/HomeView.tsx"), "utf8");
+  assert.ok(
+    /<PublicVentureSurface\b/.test(home),
+    "the homepage no longer renders the public venture surface, so it shows no venture identity at all",
+  );
+
+  /*
+   * CORP-v1.4R1 — How We Build delegates the same way, and the delegation is pinned the same way.
+   *
+   * FoundryView used to render venture names itself. Its eleven stage/venture rectangles are now one
+   * `FoundrySpine`, so the file no longer contains the string this test looks for. Dropping it from
+   * the list without pinning the delegation would have deleted the protection, so the pin is here.
+   */
+  const foundry = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/FoundryView.tsx"), "utf8");
+  assert.ok(
+    /<FoundrySpine\b/.test(foundry),
+    "How We Build no longer renders the foundry spine, so it shows no venture identity at all",
+  );
+
+  /*
+   * And the spine's own markers must not be bare Latin names.
+   *
+   * A rail marker cannot carry the full unit — mark, wordmark and the venture's Japanese line is
+   * three lines of type — but a name beside a generic coloured dot is exactly the defect
+   * CORP-v1.2R2.1 was written to remove. This asserts the marker takes its mark from the shared
+   * registry component, keyed by href, so a hand-rolled dot cannot come back. The check is stricter
+   * than the one it replaces: the previous version was satisfied by ANY use of `VentureName`
+   * anywhere in the file, which the spine's markers never had.
+   */
+  const opfield = readFileSync(path.join(ROOT, "app/_corporate/p5r2/OperatingField.tsx"), "utf8");
+  const spine = opfield.slice(opfield.indexOf("export function FoundrySpine"));
+  assert.ok(
+    /<VentureName\s+name=\{c\.name\}/.test(spine),
+    "the foundry spine's venture markers do not render the shared venture identity unit",
+  );
+  assert.ok(
+    !/spineVentureDot/.test(opfield),
+    "the foundry spine still renders a generic dot in place of the venture's own mark",
+  );
 
   // The detail hero must carry the wordmark AND the venture's own line, at hero scale.
   const detail = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/ProjectView.tsx"), "utf8");
@@ -397,11 +447,41 @@ test("every venture surface renders the shared identity unit", () => {
  * motion. A walkthrough that autoplays for some readers and simply stops for others would leave the
  * operating model unexplained for exactly the people who asked for less motion.
  */
-test("the guided explainer has all seven beats and a reduced-motion path", () => {
-  const src = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/FoundryView.tsx"), "utf8");
-  for (const key of ["signal", "evidence", "venture", "team", "independent", "ventures", "shared"]) {
-    assert.ok(new RegExp(`key: "${key}"`).test(src), `explainer is missing the "${key}" beat`);
-  }
+/**
+ * CORP-v1.4R1 — the explainer is retired, so its beat assertion has no subject.
+ *
+ * The first half of this test required FoundryView to instantiate seven walkthrough beats. That
+ * walkthrough was the THIRD representation of the same eight stages on one page — stage cards, a
+ * venture-stage grid, and a seven-beat replay of five of the same stage bodies. The Foundry spine
+ * replaces all three with one object that also carries each venture's real stage marker, so the
+ * explainer is redundant rather than merely secondary and is no longer rendered.
+ *
+ * What that assertion actually protected was COMPREHENSION — that the method is presented whole,
+ * not in fragments. That protection is not deleted; it moves to the object that now carries it,
+ * and it is stricter, because the spine must show all EIGHT stages rather than a seven-beat
+ * selection from them.
+ *
+ * The component itself stays in the tree, unreferenced, and its own protections below are
+ * unchanged: if anyone re-mounts it, it must still respect reduced motion, must still be
+ * keyboard-operable, and must still never present itself as a video.
+ */
+test("the method is presented whole, and the explainer stays safe if it is ever re-mounted", () => {
+  const view = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/FoundryView.tsx"), "utf8");
+  assert.ok(/<FoundrySpine\b/.test(view), "the Foundry page no longer presents the method as one system");
+
+  const spine = readFileSync(path.join(ROOT, "app/_corporate/p5r2/OperatingField.tsx"), "utf8");
+  assert.ok(
+    /copy\.foundry\.stages/.test(spine),
+    "the spine does not read the canonical stages, so it could show a selection of them",
+  );
+  assert.ok(
+    /VENTURE_FORMATION/.test(spine),
+    "the spine does not place ventures at their recorded stage — the markers would be decorative",
+  );
+  assert.ok(
+    !/(percent|%\s*complete|progress\s*bar|LIVE|live-)/i.test(copyOnly(spine)),
+    "the spine implies measurable progress; a venture is at a named stage or it is not",
+  );
 
   const comp = readFileSync(path.join(ROOT, "app/_corporate/p5r2/GuidedExplainer.tsx"), "utf8");
   assert.ok(/prefers-reduced-motion/.test(comp), "the explainer does not consult the motion preference");
@@ -429,19 +509,52 @@ test("the guided explainer has all seven beats and a reduced-motion path", () =>
  * Participation content must never be hover-only. The lanes use native <details>, which is
  * keyboard-operable and keeps every lane's content in the DOM whether open or closed.
  */
+/**
+ * CORP-v1.4R1 — the mechanism changed; the property being protected did not.
+ *
+ * This required `<details>`/`<summary>` in BuildWithUsView. The six lanes are now a native RADIO
+ * GROUP shared with the homepage: a reader picks a role once and the answer arrives in place,
+ * instead of opening six disclosures to find out which one is theirs. That is at least as
+ * accessible — a radio group gives arrow-key navigation the browser provides for free, and
+ * `display:none` on unselected panels gives assistive technology real tab semantics.
+ *
+ * So the assertion follows the property rather than the element: essential content must be revealed
+ * by a native form control or a disclosure element, NEVER by hover, and every lane field must
+ * survive. The anti-hover CSS check now covers the new stylesheet too — the mechanism moved, and an
+ * un-extended check would have stopped looking at the place the content actually lives.
+ */
 test("participation lane content is disclosed semantically, never by hover", () => {
-  const view = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/BuildWithUsView.tsx"), "utf8");
-  assert.ok(/<details/.test(view) && /<summary/.test(view), "lanes are not semantic disclosures");
-  for (const field of ["lane.offers", "lane.cannot", "lane.state", "lane.ventures"]) {
-    assert.ok(view.includes(field), `the lane interface dropped ${field}`);
+  const entry = readFileSync(path.join(ROOT, "app/_corporate/p5r2/OperatingField.tsx"), "utf8");
+
+  // A native control, not a div listening for pointer events.
+  assert.ok(
+    /<input[^>]*type="radio"/.test(entry) || /<details/.test(entry),
+    "lane content is not disclosed by a native control",
+  );
+  assert.ok(/<label[^>]*htmlFor=/.test(entry), "the role selectors are not real labels for their inputs");
+  assert.ok(/<legend/.test(entry), "the role group has no accessible name");
+  assert.ok(!/onMouseOver|onMouseEnter/.test(entry), "lane content responds to pointer hover");
+
+  for (const field of ["lane.offers", "lane.cannot", "lane.state", "lane.ventures", "lane.invites"]) {
+    assert.ok(entry.includes(field), `the lane interface dropped ${field}`);
   }
 
-  const css = readFileSync(path.join(ROOT, "app/_corporate/p5r2/site.module.css"), "utf8");
-  const laneRules = css.slice(css.indexOf(".laneList"));
-  assert.ok(
-    !/:hover[^{]*\{[^}]*(display:\s*block|visibility:\s*visible|opacity:\s*1)/.test(laneRules),
-    "lane content is revealed by :hover",
-  );
+  // Both surfaces must reach the same interface, so neither can drift into a weaker one.
+  for (const rel of [
+    "app/_corporate/p5r2/views/BuildWithUsView.tsx",
+    "app/_corporate/p5r2/views/HomeView.tsx",
+  ]) {
+    const src = readFileSync(path.join(ROOT, rel), "utf8");
+    assert.ok(/<ParticipationEntry\b/.test(src), `${rel} no longer renders the participation interface`);
+  }
+
+  for (const sheet of ["app/_corporate/p5r2/site.module.css", "app/_corporate/p5r2/operating-field.module.css"]) {
+    const css = readFileSync(path.join(ROOT, sheet), "utf8");
+    assert.ok(
+      !/:hover[^{]*\{[^}]*(display:\s*block|visibility:\s*visible|opacity:\s*1)/.test(css),
+      `${sheet} reveals content on :hover`,
+    );
+  }
 });
 
 /**

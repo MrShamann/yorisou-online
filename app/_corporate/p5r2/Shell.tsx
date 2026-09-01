@@ -66,6 +66,17 @@ export default function Shell({
     { href: ROUTES.company, label: c.nav.company },
     { href: ROUTES.contact, label: c.nav.contact },
   ];
+  /*
+   * CORP-v1.4R1 — the primary action leaves the link run.
+   *
+   * The bordered "build with us" link sat THIRD OF FIVE inside the nav, so a boxed element
+   * interrupted the row of plain links and every header read as five items of competing weight plus
+   * a globe. Desktop now renders the four plain destinations as one even run and seats the action at
+   * the right, next to the language control, where a reader's eye finishes. Nothing is added or
+   * removed — same five destinations, same order on mobile, same bordered (not filled) treatment.
+   */
+  const navPrimary = nav.filter((i) => i.href !== ROUTES.buildWithUs);
+  const navAction = nav.find((i) => i.href === ROUTES.buildWithUs)!;
 
   return (
     <div className={styles.root} lang={entry.code} dir={entry.direction} data-script={entry.script}>
@@ -98,21 +109,31 @@ export default function Shell({
 
           <div className={styles.headerRight}>
             <nav className={styles.navDesktop} aria-label={c.navLabel}>
-              {/*
-                CORP-v1.2R2 — participation is the primary action, so "build with us" is set apart
-                from the other links. Deliberately a bordered link, not a filled conversion button:
-                there is no application process behind it, and an aggressive CTA would imply one.
-              */}
-              {nav.map((i) => (
+              {navPrimary.map((i) => (
                 <a
                   key={i.href}
-                  className={i.href === ROUTES.buildWithUs ? styles.navCta : styles.navLink}
+                  className={styles.navLink}
                   href={localeHref(i.href, locale)}
                   aria-current={path === i.href ? "page" : undefined}
                 >
                   {i.label}
                 </a>
               ))}
+              {/*
+                CORP-v1.2R2 — participation is the primary action, so "build with us" is set apart
+                from the other links. Deliberately a bordered link, not a filled conversion button:
+                there is no application process behind it, and an aggressive CTA would imply one.
+
+                It stays INSIDE the nav landmark: it is a destination, and moving it out would drop
+                it from the navigation for a screen-reader user browsing by landmark.
+              */}
+              <a
+                className={styles.navCta}
+                href={localeHref(navAction.href, locale)}
+                aria-current={path === navAction.href ? "page" : undefined}
+              >
+                {navAction.label}
+              </a>
             </nav>
 
             <LanguageSelector

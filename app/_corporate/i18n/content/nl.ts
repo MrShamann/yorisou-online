@@ -124,7 +124,6 @@ export const nl: SiteCopy = {
 
     /* CORP-v1.2 — Asterion-laag en de laag voor betrokkenheid op de homepage. */
     asterionEyebrow: "Gedeelde basis",
-    asterionHeading: ["Elke keer dat wij bouwen,", "wordt de bodem steviger."],
     asterionBody:
       "Asterion OS is een zelfstandig project rond een technologieplatform. Doordat dezelfde onderdelen niet telkens opnieuw gebouwd hoeven te worden, kan elk project zijn inspanning richten op het eigen vraagstuk.",
     asterionNote:
@@ -134,6 +133,7 @@ export const nl: SiteCopy = {
     portfolioHeading: ["Met bouwen", "houdt het niet op."],
     portfolioBody:
       "Ook nadat een project op eigen kracht draait, kan Yorisou betrokken blijven bij de waarde ervan: door aandelen te blijven houden, door een licentie te houden, of door het samen te exploiteren. Een project kan ook als apart bedrijf worden afgesplitst, of worden overgedragen of verkocht.",
+    portfolioBranches: ["Binnen Yorisou geëxploiteerd", "Samen opgericht en geëxploiteerd", "Aandeel", "Licentie", "Zelfstandig bedrijf", "Overdracht of verkoop"],
     portfolioNote:
       "Welke vorm het wordt, hangt af van de fase waarin het project verkeert, van wie erbij betrokken is, van de markt, van het kapitaal en van de afspraak die voor dat project wordt gemaakt. Niets ligt vooraf vast.",
     engageEyebrow: "Samen bouwen",
@@ -318,7 +318,6 @@ export const nl: SiteCopy = {
     ],
 
     businessEyebrow: "Werkgebieden",
-    businessHeading: ["Werkgebieden"],
     businessBody: "In de kern bouwt Yorisou de ondernemingen zelf: een structureel vraagstuk vinden, het toetsen, het als onderneming ontwerpen, het bouwen, en het draaien met mensen die dat kunnen. Nu openbaar zijn informatie, matching en business development in de mobiliteitssector (Mirai Move); meertalige ondersteuning bij administratieve procedures en documenten, voor mensen die in Japan wonen en voor wie hier een onderneming start (Kakari); en het ontdekken van de eigen leefomgeving vanuit locatie en context (Chigamo, conceptfase). Alle volgen hetzelfde uitgangspunt: de complexiteit op ons nemen en er iets bruikbaars van teruggeven.",
 
     projectsEyebrow: "Projecten",
@@ -385,7 +384,6 @@ export const nl: SiteCopy = {
         thesis: "Informatie, matching en business development in mobiliteit met elkaar verbinden.",
         problem: "Tussen aanbieders, regio’s en overheid liggen informatie en kansen van elkaar gescheiden.",
         building: "Een platform waarop partijen binnen en buiten Japan vanuit dezelfde informatie kunnen werken.",
-        status: "In ontwikkeling en in bedrijf. Publieke website live.",
       },
       {
         name: "Kakari",
@@ -393,7 +391,6 @@ export const nl: SiteCopy = {
         thesis: "Meertalige ondersteuning bij de procedures van wonen en ondernemen in Japan.",
         problem: "De regelingen bestaan, maar taal en volgorde zorgen dat mensen ze nooit gebruiken.",
         building: "Een manier om een procedure in stappen te verdelen en te tonen hoe ver u zelf komt.",
-        status: "In ontwikkeling. In voorbereiding op publicatie.",
       },
       {
         name: "Chigamo",
@@ -401,7 +398,6 @@ export const nl: SiteCopy = {
         thesis: "Een plek leesbaar maken vanuit locatie en context.",
         problem: "Juist de informatie die hier werkelijk zou helpen, is het moeilijkst te vinden.",
         building: "Ontdekken binnen de eigen leefomgeving, op basis van locatie en context.",
-        status: "Conceptfase. Nog niet getoetst.",
       },
     ],
     /* CORP-v1.4 — wat vandaag geldt, en welke vormen daaruit kunnen volgen. Nooit een planning, nooit een toezegging. */

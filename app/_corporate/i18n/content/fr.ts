@@ -122,7 +122,6 @@ export const fr: SiteCopy = {
 
     /* CORP-v1.2 — Le socle commun et la porte d’entrée, sur la page d’accueil. */
     asterionEyebrow: "Socle commun",
-    asterionHeading: ["À chaque projet,", "le socle s’épaissit."],
     asterionBody:
       "Asterion OS est un projet de plateforme technique indépendant. Parce qu’un socle commun existe déjà, aucun projet n’a à reconstruire les mêmes mécanismes : chacun peut consacrer son énergie à ce qui lui est propre.",
     asterionNote:
@@ -132,6 +131,7 @@ export const fr: SiteCopy = {
     portfolioHeading: ["Construire n’est pas", "le point final."],
     portfolioBody:
       "Une fois un projet lancé, Yorisou peut rester associée à sa valeur dans la durée : en conservant une participation, sous la forme d’une licence, ou en l’exploitant conjointement. Un projet peut aussi être constitué en société distincte, cédé ou vendu.",
+    portfolioBranches: ["Exploité au sein de Yorisou", "Cofondé et exploité en commun", "Participation", "Licence", "Société distincte", "Cession ou vente"],
     portfolioNote:
       "La forme retenue dépend de la maturité du projet, des personnes avec qui il se fait, du marché, du capital et de l’accord conclu pour ce projet. Rien n’est fixé à l’avance.",
     engageEyebrow: "Construire avec nous",
@@ -316,7 +316,6 @@ export const fr: SiteCopy = {
     ],
 
     businessEyebrow: "Domaines d’activité",
-    businessHeading: ["Domaines d’activité"],
     businessBody: "Ce qui est au centre de Yorisou, c’est la construction des projets eux-mêmes : trouver un problème structurel, le vérifier, le concevoir comme une activité, le construire, et le lancer avec des personnes capables de le conduire. Les projets publics aujourd’hui sont l’information, la mise en relation et le développement d’activités dans le secteur de la mobilité (Mirai Move) ; l’accompagnement multilingue pour les démarches administratives, destiné aux personnes qui vivent au Japon et à celles qui y créent une activité (Kakari) ; et la découverte d’un bassin de vie à partir du lieu et du contexte (Chigamo, au stade du concept). Tous suivent le même principe : prendre en charge la complexité et restituer quelque chose d’utilisable.",
 
     projectsEyebrow: "Projets",
@@ -383,7 +382,6 @@ export const fr: SiteCopy = {
         thesis: "Relier l’information, la mise en relation et le développement d’activités dans la mobilité.",
         problem: "Entre opérateurs, territoires et administration, l’information et les opportunités restent cloisonnées.",
         building: "Une plateforme où les acteurs japonais et étrangers travaillent à partir des mêmes informations.",
-        status: "En développement et en exploitation. Site public en ligne.",
       },
       {
         name: "Kakari",
@@ -391,7 +389,6 @@ export const fr: SiteCopy = {
         thesis: "Accompagner en plusieurs langues les démarches de ceux qui vivent au Japon ou y créent une activité.",
         problem: "Les dispositifs existent, mais la langue et l’enchaînement des étapes empêchent d’y recourir.",
         building: "Un moyen de découper une démarche en étapes et de montrer jusqu’où l’on peut aller seul.",
-        status: "En développement. Préparation de la mise en ligne.",
       },
       {
         name: "Chigamo",
@@ -399,7 +396,6 @@ export const fr: SiteCopy = {
         thesis: "Rendre un lieu lisible à partir de la position et du contexte.",
         problem: "Les informations les plus utiles sur un lieu sont précisément celles que l’on trouve le moins.",
         building: "Une manière de découvrir son bassin de vie à partir de la position et du contexte.",
-        status: "Stade du concept. Rien n’a encore été vérifié.",
       },
     ],
     /* CORP-v1.4 — sépare ce qui est vrai aujourd’hui de ce qui peut suivre. */

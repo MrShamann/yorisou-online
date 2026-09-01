@@ -124,7 +124,6 @@ export const it: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "Infrastruttura condivisa",
-    asterionHeading: ["A ogni progetto,", "le fondamenta si fanno più solide."],
     asterionBody:
       "Asterion OS è un progetto indipendente di piattaforma tecnologica. Non dovendo ricostruire ogni volta gli stessi meccanismi, ciascun progetto può concentrare le proprie energie sulla parte che gli è davvero propria.",
     asterionNote:
@@ -134,6 +133,7 @@ export const it: SiteCopy = {
     portfolioHeading: ["Costruire un progetto", "non è la fine."],
     portfolioBody:
       "Anche dopo che un progetto sta in piedi, Yorisou può mantenere un interesse nel suo valore di lungo periodo: conservando una quota, tramite una licenza o gestendolo insieme ad altri. Un progetto può anche diventare una società a sé, oppure essere ceduto o venduto.",
+    portfolioBranches: ["Gestito dentro Yorisou", "Cofondato e gestito insieme", "Quota", "Licenza", "Società separata", "Cessione o vendita"],
     portfolioNote:
       "Quale forma prenda dipende dalla maturità del progetto, da chi vi partecipa, dal mercato, dal capitale e dall’accordo raggiunto per quel progetto. Nulla è stabilito in anticipo.",
     engageEyebrow: "Costruire insieme",
@@ -318,7 +318,6 @@ export const it: SiteCopy = {
     ],
 
     businessEyebrow: "Aree di attività",
-    businessHeading: ["Aree di attività"],
     businessBody: "Al centro di Yorisou c’è la costruzione delle imprese stesse: individuare un problema strutturale, verificarlo, progettarlo come impresa, costruirlo e avviarlo insieme a chi può gestirlo. Le attività attualmente pubbliche sono l’informazione, il matching e lo sviluppo di business nel settore della mobilità (Mirai Move); il supporto multilingue per procedure amministrative e documenti, rivolto a chi vive in Giappone e a chi vi avvia un’attività (Kakari); e la scoperta del proprio territorio a partire da posizione e contesto (Chigamo, allo stadio di concetto). Tutti seguono lo stesso principio: farsi carico della complessità e restituire qualcosa di utilizzabile.",
 
     projectsEyebrow: "Progetti",
@@ -385,7 +384,6 @@ export const it: SiteCopy = {
         thesis: "Mettere in relazione informazione, matching e sviluppo di business nella mobilità.",
         problem: "Informazioni e opportunità restano divise tra operatori, territori e amministrazioni.",
         building: "Una piattaforma in cui i soggetti giapponesi ed esteri possano parlare a partire dalle stesse informazioni.",
-        status: "In sviluppo e in esercizio. Sito pubblico online.",
       },
       {
         name: "Kakari",
@@ -393,7 +391,6 @@ export const it: SiteCopy = {
         thesis: "Sostenere in più lingue le procedure di chi vive in Giappone e di chi vi avvia un’attività.",
         problem: "I sistemi esistono, ma la barriera della lingua e dei passaggi li lascia inutilizzati.",
         building: "Un modo per scomporre una procedura in fasi e mostrare fin dove si può arrivare da soli.",
-        status: "In sviluppo. In preparazione per il rilascio.",
       },
       {
         name: "Chigamo",
@@ -401,7 +398,6 @@ export const it: SiteCopy = {
         thesis: "Rendere comprensibile un luogo a partire da posizione e contesto.",
         problem: "Proprio le informazioni davvero utili in un luogo sono quelle che non si trovano.",
         building: "Uno strumento di scoperta del proprio territorio, costruito su posizione e contesto.",
-        status: "Fase di concept. La verifica deve ancora cominciare.",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

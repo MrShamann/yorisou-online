@@ -122,7 +122,6 @@ export const de: SiteCopy = {
 
     /* CORP-v1.2 — Asterion-Ebene und Beteiligungsebene auf der Startseite. */
     asterionEyebrow: "Gemeinsame Basis",
-    asterionHeading: ["Mit jedem Vorhaben", "wächst das Fundament."],
     asterionBody:
       "Asterion OS ist ein eigenständiges Projekt für eine Technologieplattform. Weil dieselben Mechanismen nicht immer wieder neu gebaut werden müssen, kann jedes Vorhaben seine Kraft auf das verwenden, was wirklich sein eigenes ist.",
     asterionNote:
@@ -132,6 +131,7 @@ export const de: SiteCopy = {
     portfolioHeading: ["Mit dem Aufbau", "ist es nicht getan."],
     portfolioBody:
       "Yorisou kann auch dann noch am langfristigen Wert eines Vorhabens beteiligt bleiben, wenn es einmal trägt – indem es weiterhin Anteile hält, indem es eine Lizenz hält oder indem es das Vorhaben gemeinsam führt. Ein Vorhaben kann auch als eigenes Unternehmen abgetrennt, übertragen oder verkauft werden.",
+    portfolioBranches: ["Betrieb innerhalb von Yorisou", "Gemeinsam gegründet und betrieben", "Beteiligung", "Lizenz", "Eigenes Unternehmen", "Übertragung oder Verkauf"],
     portfolioNote:
       "Welche Form es annimmt, hängt vom Reifegrad des Vorhabens, von den Beteiligten, vom Markt, vom Kapital und von der Vereinbarung für dieses Vorhaben ab. Nichts davon steht im Voraus fest.",
     engageEyebrow: "Gemeinsam entwickeln",
@@ -316,7 +316,6 @@ export const de: SiteCopy = {
     ],
 
     businessEyebrow: "Geschäftsfelder",
-    businessHeading: ["Geschäftsfelder"],
     businessBody: "Im Zentrum von Yorisou steht, die Vorhaben selbst aufzubauen: ein strukturelles Problem finden, es überprüfen, es als Geschäft entwerfen, es bauen und es gemeinsam mit Menschen aufbauen, die es führen können. Öffentlich sind derzeit: Information, Vermittlung und Geschäftsentwicklung im Mobilitätsbereich (Mirai Move), mehrsprachige Unterstützung bei Behördenverfahren für Menschen, die in Japan leben, und für alle, die hier ein Unternehmen gründen (Kakari), sowie die Erschließung des eigenen Lebensraums über Ort und Kontext (Chigamo, im Konzeptstadium). Alle folgen demselben Grundsatz: die Komplexität aufnehmen und etwas Nutzbares zurückgeben.",
 
     projectsEyebrow: "Projekte",
@@ -383,7 +382,6 @@ export const de: SiteCopy = {
         thesis: "Information, Vermittlung und Geschäftsentwicklung im Mobilitätsbereich zusammenführen.",
         problem: "Zwischen Anbietern, Regionen und Behörden liegen Informationen und Chancen getrennt voneinander.",
         building: "Eine Plattform, auf der Beteiligte im In- und Ausland von derselben Informationsgrundlage aus sprechen können.",
-        status: "In Entwicklung und im Betrieb. Öffentliche Website online.",
       },
       {
         name: "Kakari",
@@ -391,7 +389,6 @@ export const de: SiteCopy = {
         thesis: "Verfahren mehrsprachig begleiten – für Menschen, die in Japan leben oder hier gründen.",
         problem: "Die Angebote bestehen, doch Sprache und Ablauf sorgen dafür, dass sie ungenutzt bleiben.",
         building: "Ein Weg, ein Verfahren in Etappen zu zerlegen und zu zeigen, wie weit man allein kommt.",
-        status: "In Entwicklung. In Vorbereitung auf die Veröffentlichung.",
       },
       {
         name: "Chigamo",
@@ -399,7 +396,6 @@ export const de: SiteCopy = {
         thesis: "Einen Ort aus Lage und Kontext heraus verständlich machen.",
         problem: "Gerade die Informationen, die vor Ort wirklich helfen, findet man am schwersten.",
         building: "Ein Weg, den eigenen Lebensraum über Ort und Kontext zu erschließen.",
-        status: "Konzeptstadium. Die Erprobung steht noch aus.",
       },
     ],
     /* CORP-v1.4 — was heute gilt, und welche Formen daraus werden können. Nie ein Plan, nie eine Zusage. */

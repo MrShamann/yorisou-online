@@ -1,5 +1,6 @@
 import styles from "../site.module.css";
-import { Band, Eyebrow, FormationState, StateTriad, TextLink, VentureComposition, VentureName } from "../pieces";
+import { Band, Disclose, Eyebrow, FormationState, StateTriad, TextLink, VentureComposition, VentureName } from "../pieces";
+import { ContextField, NetworkSystem, ProcedureSystem } from "../systems";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -45,38 +46,62 @@ export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale:
         </div>
       </section>
 
-      <Band line>
-        <div className={styles.projects}>
-          {v.cards.map((c) => (
-            <article className={styles.project} key={c.href}>
-              <div className={styles.projectHead}>
-                <VentureName name={c.name} reading={detail(c.href).reading} as="h2" />
-                <span className={styles.stage}>{c.status}</span>
+      {/*
+        CORP-v1.4R1 — three venture chapters, not three memo cards.
+
+        The page rendered three equal cards, each holding a thesis, a problem, what is being built,
+        a NOW/NEXT/WHO triad, a formation strip and a link. Everything true, and it read as three
+        small project memos: a reader had to work through a wall of copy before the ventures became
+        distinguishable from one another.
+
+        Each venture now takes a chapter with its own system drawing — a network converging, an
+        ordered procedure stopping at a boundary, a context field — so the three are visibly
+        different KINDS of system before a word is read. The first layer is what it is, its state,
+        and its next step. The diligence layer — the problem, what is being built, who it needs — is
+        a disclosure directly beneath, so nothing true became unreachable; it stopped being the
+        first thing.
+      */}
+      {v.cards.map((c, i) => {
+        const d = detail(c.href);
+        return (
+          <Band key={c.href} tint={i % 2 === 1}>
+            <div className={styles.chapter}>
+              <div className={styles.chapterIdent}>
+                <VentureName name={c.name} reading={d.reading} as="h2" size="hero" />
+                <span className={styles.chapterDomain}>{d.domain}</span>
+                <p className={`${styles.chapterThesis} ${styles.jp}`}>{c.thesis}</p>
+                <FormationState
+                  stages={copy.foundry.stages}
+                  reached={VENTURE_FORMATION[c.href] ?? 0}
+                  label={copy.foundry.stagesEyebrow}
+                />
               </div>
-              <p className={`${styles.projectLead} ${styles.jp}`}>{c.thesis}</p>
-              <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.problem}</p>
-              <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.building}</p>
-              {/*
-                CORP-v1.2R2 — NOW / NEXT / WHO, always visible. The brief permits revealing these on
-                hover, but essential information must never be hover-only and a keyboard user must
-                get the same content, so they are simply always rendered.
-              */}
-              <StateTriad
-                labels={{ now: copy.common.nowLabel, next: copy.common.nextLabel, who: copy.common.whoLabel }}
-                now={detail(c.href).now}
-                next={detail(c.href).next}
-                who={detail(c.href).who}
-              />
-              <FormationState
-                stages={copy.foundry.stages}
-                reached={VENTURE_FORMATION[c.href] ?? 0}
-                label={copy.foundry.stagesEyebrow}
-              />
-              <TextLink href={L(c.href)}>{copy.common.readMore(c.name)}</TextLink>
-            </article>
-          ))}
-        </div>
-      </Band>
+              <div className={styles.chapterFigure}>
+                {c.href === "/mirai-move" ? (
+                  <NetworkSystem labels={copy.mirai.parties.map((x) => x.title)} centre={copy.mirai.centre} />
+                ) : c.href === "/kakari" ? (
+                  <ProcedureSystem steps={copy.kakari.steps.map((x) => x.title)} boundary={copy.kakari.boundaryTitle} />
+                ) : (
+                  <ContextField place={copy.chigamo.conceptEyebrow} context={copy.chigamo.domain} result={copy.chigamo.stage} />
+                )}
+              </div>
+              <div className={styles.chapterState}>
+                <StateTriad
+                  labels={{ now: copy.common.nowLabel, next: copy.common.nextLabel, who: copy.common.whoLabel }}
+                  now={d.now}
+                  next={d.next}
+                  who={d.who}
+                />
+                <Disclose label={copy.common.readMore(c.name)}>
+                  <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.problem}</p>
+                  <p className={`${styles.bodyMuted} ${styles.jp}`}>{c.building}</p>
+                </Disclose>
+                <TextLink href={L(c.href)}>{copy.common.readMore(c.name)}</TextLink>
+              </div>
+            </div>
+          </Band>
+        );
+      })}
 
       {/*
         CORP-v1.4 — what is true today, kept apart from what may follow.

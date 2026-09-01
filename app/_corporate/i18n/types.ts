@@ -117,7 +117,6 @@ export type SiteCopy = {
      * builds, what shared infrastructure sits underneath, and how to engage. The first four
      * already had fields; the Asterion layer and the engagement layer are new. */
     asterionEyebrow: string;
-    asterionHeading: readonly string[];
     asterionBody: string;
     asterionNote: string;
     /**
@@ -132,6 +131,15 @@ export type SiteCopy = {
     portfolioHeading: readonly string[];
     portfolioBody: string;
     portfolioNote: string;
+    /**
+     * CORP-v1.4R1 — the shapes a venture may take, as terms rather than a sentence.
+     *
+     * The paragraph above says the same thing, and a paragraph is the wrong instrument for a set of
+     * alternatives: a reader has to hold six options in their head to see that they are options.
+     * These are the labels on the branches of the value-continuity figure. Short noun phrases, not
+     * sentences — none of them has happened, and the figure's dashed connectors say so.
+     */
+    portfolioBranches: readonly string[];
     engageEyebrow: string;
     engageHeading: readonly string[];
     engageBody: string;
@@ -174,7 +182,6 @@ export type SiteCopy = {
       problem: string;
       building: string;
       /** Public-safe maturity in ordinary language. Never a metric, never a claim of traction. */
-      status: string;
     }[];
     /** States plainly what inclusion on this page does and does not mean. */
     /**
@@ -439,7 +446,6 @@ export type SiteCopy = {
     overviewHeading: readonly string[];
     facts: readonly Fact[];
     businessEyebrow: string;
-    businessHeading: readonly string[];
     businessBody: string;
     projectsEyebrow: string;
     projectsHeading: readonly string[];

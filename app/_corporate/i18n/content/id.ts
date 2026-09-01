@@ -123,7 +123,6 @@ export const id: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "Fondasi bersama",
-    asterionHeading: ["Setiap kali kami membangun,", "landasannya bertambah tebal."],
     asterionBody:
       "Asterion OS adalah proyek platform teknologi yang independen. Karena tidak perlu membangun ulang mekanisme yang sama berkali-kali, setiap usaha dapat memusatkan tenaganya pada bagian yang memang menjadi wilayahnya sendiri.",
     asterionNote:
@@ -133,6 +132,7 @@ export const id: SiteCopy = {
     portfolioHeading: ["Selesai dibangun", "bukan berarti selesai."],
     portfolioBody:
       "Setelah sebuah usaha berdiri, Yorisou dapat tetap terkait dengan nilai jangka panjangnya: dengan terus memegang saham, dengan memegang lisensi, atau dengan menjalankannya bersama. Usaha itu juga dapat dipisahkan menjadi perusahaan tersendiri, atau berakhir pada pengalihan maupun penjualan.",
+    portfolioBranches: ["Dijalankan di dalam Yorisou", "Didirikan dan dijalankan bersama", "Kepemilikan saham", "Lisensi", "Perusahaan tersendiri", "Pengalihan atau penjualan"],
     portfolioNote:
       "Bentuk mana yang berlaku bergantung pada tingkat kematangan usaha, pihak yang terlibat, pasar, modal, dan kesepakatan yang dicapai untuk usaha itu. Tidak ada ketentuan yang sudah ditetapkan sebelumnya.",
     engageEyebrow: "Membangun bersama kami",
@@ -317,7 +317,6 @@ export const id: SiteCopy = {
     ],
 
     businessEyebrow: "Bidang usaha",
-    businessHeading: ["Bidang usaha"],
     businessBody: "Yang berada di pusat Yorisou adalah membangun usaha itu sendiri: menemukan masalah struktural, memastikannya, merancangnya sebagai usaha, membangunnya, lalu mendirikannya bersama orang yang mampu menjalankannya. Usaha yang saat ini dipublikasikan adalah informasi, pencocokan, dan pengembangan bisnis di sektor mobilitas (Mirai Move); dukungan multibahasa untuk prosedur administrasi bagi orang yang tinggal di Jepang dan yang memulai usaha di sini (Kakari); serta penemuan lingkungan sekitar dari lokasi dan konteks (Chigamo, tahap gagasan). Semuanya kami jalankan dengan prinsip yang sama: memikul kompleksitasnya dan mengembalikannya dalam bentuk yang bisa dipakai.",
 
     projectsEyebrow: "Proyek",
@@ -384,7 +383,6 @@ export const id: SiteCopy = {
         thesis: "Menghubungkan informasi, pencocokan, dan pengembangan bisnis di bidang mobilitas.",
         problem: "Informasi dan peluang terpisah-pisah di antara penyelenggara, daerah, dan pemerintah.",
         building: "Platform tempat pihak di dalam dan luar Jepang dapat berbicara di atas informasi yang sama.",
-        status: "Dalam pengembangan dan pengoperasian. Situs publik aktif.",
       },
       {
         name: "Kakari",
@@ -392,7 +390,6 @@ export const id: SiteCopy = {
         thesis: "Mendukung prosedur bagi orang yang tinggal dan memulai usaha di Jepang, dalam berbagai bahasa.",
         problem: "Aturannya sudah ada, tetapi bahasa dan urutan langkahnya membuatnya tidak pernah terpakai.",
         building: "Cara memecah prosedur menjadi tahapan dan menunjukkan sampai mana orang bisa mengurusnya sendiri.",
-        status: "Dalam pengembangan. Tahap persiapan rilis.",
       },
       {
         name: "Chigamo",
@@ -400,7 +397,6 @@ export const id: SiteCopy = {
         thesis: "Membuat sebuah tempat dapat dipahami dari lokasi dan konteksnya.",
         problem: "Justru informasi yang benar-benar berguna di suatu tempat paling sulit ditemukan.",
         building: "Cara menemukan hal-hal di lingkungan sekitar, berpijak pada lokasi dan konteks.",
-        status: "Tahap gagasan. Belum diuji.",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

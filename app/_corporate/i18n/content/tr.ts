@@ -123,7 +123,6 @@ export const tr: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "Ortak altyapı",
-    asterionHeading: ["Her yeni yapıda,", "zemin biraz daha kalınlaşıyor."],
     asterionBody:
       "Asterion OS, bağımsız bir teknoloji platformu projesidir. Aynı yapıyı defalarca yeniden kurmak gerekmediği için her girişim kendi alanına yoğunlaşabiliyor.",
     asterionNote:
@@ -133,6 +132,7 @@ export const tr: SiteCopy = {
     portfolioHeading: ["Bir girişimi kurmak,", "işin sonu değil."],
     portfolioBody:
       "Yorisou, bir girişim ayağa kalktıktan sonra da onun uzun vadeli değerine bağlı kalabilir: pay sahipliğini sürdürerek, bir lisans yoluyla ya da girişimi ortaklaşa işleterek. Bir girişim ayrı bir şirkete dönüşebilir, devredilebilir ya da satılabilir.",
+    portfolioBranches: ["Yorisou içinde işletme", "Ortak kuruluş ve ortak işletme", "Pay", "Lisans", "Ayrı şirket", "Devir veya satış"],
     portfolioNote:
       "Hangi biçimin geçerli olacağı; girişimin olgunluğuna, birlikte çalışılan taraflara, pazara, sermayeye ve o girişim için varılan anlaşmaya bağlıdır. Önceden belirlenmiş bir koşul yoktur.",
     engageEyebrow: "Birlikte kurmak",
@@ -317,7 +317,6 @@ export const tr: SiteCopy = {
     ],
 
     businessEyebrow: "Faaliyet alanları",
-    businessHeading: ["Faaliyet alanları"],
     businessBody: "Yorisou’nun merkezinde girişimlerin kendisini kurmak vardır: yapısal bir sorunu bulmak, doğrulamak, iş olarak tasarlamak, inşa etmek ve onu işletebilecek kişilerle birlikte ayağa kaldırmak. Şu anda kamuya açık girişimler şunlardır: mobilite alanında bilgi, eşleştirme ve iş geliştirme (Mirai Move); Japonya’da yaşayanlar ve burada iş kurmak isteyenler için çok dilli işlem desteği (Kakari); ve konum ile bağlamdan yola çıkan yaşam çevresi keşfi (Chigamo, tasarı aşamasında). Hepsini aynı ilkeyle yürütüyoruz: karmaşıklığı üstlenip kullanılabilir bir biçime getirmek.",
 
     projectsEyebrow: "Projeler",
@@ -384,7 +383,6 @@ export const tr: SiteCopy = {
         thesis: "Mobilite alanında bilgiyi, eşleştirmeyi ve iş geliştirmeyi birbirine bağlamak.",
         problem: "Bilgi ve fırsat; işletmeciler, bölgeler ve kamu kurumları arasında bölünmüş durumda.",
         building: "Yurt içinden ve yurt dışından tarafların aynı bilgi üzerinden konuşabildiği bir platform.",
-        status: "Geliştirme ve işletme sürüyor. Kamuya açık site yayında.",
       },
       {
         name: "Kakari",
@@ -392,7 +390,6 @@ export const tr: SiteCopy = {
         thesis: "Japonya’da yaşayanların ve burada iş kuranların işlemlerini çok dilli olarak desteklemek.",
         problem: "Sistem var; ama dil ve sıra bilgisi engel olduğu için hiç kullanılmadan kalıyor.",
         building: "İşlemi aşamalara bölen ve kişinin nereye kadar kendi başına gidebileceğini gösteren bir yapı.",
-        status: "Geliştirme aşamasında. Yayına hazırlanıyor.",
       },
       {
         name: "Chigamo",
@@ -400,7 +397,6 @@ export const tr: SiteCopy = {
         thesis: "Bir yeri, konum ve bağlam üzerinden okunabilir kılmak.",
         problem: "Bulunduğunuz yerde gerçekten işinize yarayacak bilgi, en zor bulunanıdır.",
         building: "Konum ve bağlamdan yola çıkan, yaşanılan çevreye dair bir keşif yapısı.",
-        status: "Tasarı aşamasında. Henüz denenmedi.",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

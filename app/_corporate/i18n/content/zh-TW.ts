@@ -144,7 +144,6 @@ export const zh_TW: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "共用基礎",
-    asterionHeading: ["每做一次，", "底層就厚一分。"],
     asterionBody:
       "Asterion OS 是一個獨立的技術基礎專案。同樣的機制不必反覆重建，各項事業也就能把力氣放在自己的領域上。",
     asterionNote:
@@ -154,6 +153,7 @@ export const zh_TW: SiteCopy = {
     portfolioHeading: ["做出來，", "不是終點。"],
     portfolioBody:
       "事業立起來之後，Yorisou 也可能持續參與它的價值：繼續持有股份、以授權的形式參與，或是共同營運。事業也可能分割成獨立的公司，或走向轉讓與出售。",
+    portfolioBranches: ["在 YORISOU 內部營運", "共同創業、共同營運", "股份", "授權", "獨立公司", "轉讓或出售"],
     portfolioNote:
       "會是哪一種形態，取決於事業的成熟度、合作的對象、市場、資本，以及各事業的協議。沒有事先定好的條件。",
     engageEyebrow: "一起打造",
@@ -338,7 +338,6 @@ export const zh_TW: SiteCopy = {
     ],
 
     businessEyebrow: "事業領域",
-    businessHeading: ["事業領域"],
     businessBody: "Yorisou 的核心，是打造事業本身。找出結構性的課題，加以查證，設計成事業，實際做出來，再與能夠營運的人組隊把它立起來。目前公開的事業是：移動出行領域的資訊、媒合與事業開發（Mirai Move）；為在日本生活的人、在日本創業的人提供的多語言手續支援（Kakari）；以及從位置與脈絡出發的生活圈探索（Chigamo，構想階段）。三者都依循同一個方針推進：承接複雜，交還可以使用的形式。",
 
     projectsEyebrow: "事業",
@@ -405,7 +404,6 @@ export const zh_TW: SiteCopy = {
         thesis: "串連移動出行領域的資訊、媒合與事業開發。",
         problem: "在業者、地方與行政之間，資訊與機會是被切開的。",
         building: "讓國內外的關係人能站在同一份資訊上對話的平台。",
-        status: "開發與營運中。已有公開網站。",
       },
       {
         name: "Kakari",
@@ -413,7 +411,6 @@ export const zh_TW: SiteCopy = {
         thesis: "以多語言支援在日本生活的人、在日本創業的人的各項手續。",
         problem: "制度明明存在，卻因語言與流程的障礙而沒有被使用。",
         building: "把手續拆成階段，讓人看得出自己能做到哪裡的機制。",
-        status: "開發中。準備公開的階段。",
       },
       {
         name: "Chigamo",
@@ -421,7 +418,6 @@ export const zh_TW: SiteCopy = {
         thesis: "從位置與脈絡出發，讓人看懂一個地方。",
         problem: "在那個地方真正派得上用場的資訊，反而最難找到。",
         building: "以位置與脈絡為線索的生活圈探索機制。",
-        status: "構想階段。驗證尚未開始。",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

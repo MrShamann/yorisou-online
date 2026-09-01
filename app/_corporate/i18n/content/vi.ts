@@ -143,7 +143,6 @@ export const vi: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "Hạ tầng dùng chung",
-    asterionHeading: ["Mỗi lần xây dựng,", "nền móng lại dày thêm."],
     asterionBody:
       "Asterion OS là một dự án nền tảng công nghệ độc lập. Nhờ không phải dựng lại cùng một cơ chế nhiều lần, mỗi dự án có thể dồn sức vào phần thuộc về lĩnh vực của riêng mình.",
     asterionNote:
@@ -153,6 +152,7 @@ export const vi: SiteCopy = {
     portfolioHeading: ["Xây xong", "không phải là hết."],
     portfolioBody:
       "Sau khi một dự án đã đứng được, Yorisou có thể vẫn tiếp tục gắn với giá trị dài hạn của nó — bằng việc tiếp tục nắm giữ phần vốn, bằng một thỏa thuận cấp phép, hoặc bằng việc cùng vận hành. Dự án cũng có thể được tách thành một công ty riêng, hoặc được chuyển nhượng, bán lại.",
+    portfolioBranches: ["Vận hành bên trong Yorisou", "Đồng sáng lập, cùng vận hành", "Cổ phần", "Cấp phép", "Công ty riêng", "Chuyển nhượng hoặc bán"],
     portfolioNote:
       "Hình thái nào sẽ đến còn tùy vào độ trưởng thành của dự án, những người cùng tham gia, thị trường, nguồn vốn và thỏa thuận đạt được cho riêng dự án đó. Không có điều kiện nào được định trước.",
     engageEyebrow: "Cùng xây dựng",
@@ -337,7 +337,6 @@ export const vi: SiteCopy = {
     ],
 
     businessEyebrow: "Lĩnh vực hoạt động",
-    businessHeading: ["Lĩnh vực hoạt động"],
     businessBody: "Điều nằm ở trung tâm của Yorisou là việc tạo ra chính các hoạt động kinh doanh: tìm ra một vấn đề mang tính cấu trúc, kiểm chứng nó, thiết kế nó thành một hoạt động kinh doanh, xây dựng nó, rồi bắt tay cùng những người có thể vận hành để đưa nó vào cuộc. Những dự án hiện được công bố là thông tin, kết nối và phát triển kinh doanh trong lĩnh vực di chuyển (Mirai Move); hỗ trợ đa ngôn ngữ cho thủ tục hành chính, dành cho người sinh sống tại Nhật Bản và người bắt đầu kinh doanh tại đây (Kakari); và việc khám phá khu vực sinh sống từ vị trí và bối cảnh (Chigamo, giai đoạn ý tưởng). Tất cả đều đi theo cùng một phương châm: nhận lấy sự phức tạp và trả lại thứ dùng được.",
 
     projectsEyebrow: "Dự án",
@@ -404,7 +403,6 @@ export const vi: SiteCopy = {
         thesis: "Nối liền thông tin, kết nối cung cầu và phát triển kinh doanh trong lĩnh vực di chuyển.",
         problem: "Thông tin và cơ hội bị chia cắt giữa doanh nghiệp, địa phương và cơ quan nhà nước.",
         building: "Một nền tảng để các bên trong và ngoài nước cùng làm việc trên một nguồn thông tin.",
-        status: "Đang phát triển và vận hành. Đã có trang công khai.",
       },
       {
         name: "Kakari",
@@ -412,7 +410,6 @@ export const vi: SiteCopy = {
         thesis: "Hỗ trợ đa ngôn ngữ cho các thủ tục của việc sinh sống và khởi sự kinh doanh tại Nhật Bản.",
         problem: "Thiết chế thì có, nhưng rào cản ngôn ngữ và trình tự khiến chúng không bao giờ được dùng đến.",
         building: "Cách chia một thủ tục thành từng bước và cho thấy bạn tự làm được đến đâu.",
-        status: "Đang phát triển. Chuẩn bị công bố.",
       },
       {
         name: "Chigamo",
@@ -420,7 +417,6 @@ export const vi: SiteCopy = {
         thesis: "Từ vị trí và bối cảnh, làm cho một nơi chốn trở nên dễ hiểu.",
         problem: "Thông tin thực sự hữu ích ngay tại chỗ lại là thứ khó tìm nhất.",
         building: "Cách khám phá khu vực sinh sống, dựa trên vị trí và bối cảnh.",
-        status: "Giai đoạn ý tưởng. Chưa được kiểm chứng.",
       },
     ],
     /* CORP-v1.4 — separates what is true today from what may follow. */

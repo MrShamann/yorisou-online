@@ -517,12 +517,23 @@
 }
 .engageState { margin: 6px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--ink-4); }
 
-/* primary participation action in the header */
+/*
+ * Primary participation action in the header.
+ *
+ * CORP-v1.4R1 seats it at the END of the desktop link run rather than third of five. The extra
+ * The extra inline start margin separates "the four places you can go" from "the one thing you can
+ * do", so the plain links read as one even run instead of a row interrupted by a box. A hairline
+ * rule was tried here and removed: a separator immediately beside a bordered box is two devices
+ * doing one job.
+ */
 .navCta {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px;
   border: 1px solid var(--ink); padding: 7px 14px; text-decoration: none; color: var(--ink);
   font-size: 13px; white-space: nowrap; transition: background 160ms ease, color 160ms ease;
 }
 .navCta:hover, .navCta:focus-visible { background: var(--ink); color: var(--paper); }
+.navDesktop .navCta { margin-inline-start: clamp(8px, 1.2vw, 18px); }
 
 /* the 30-second explainer affordance */
 .explainer { margin-top: 26px; }
@@ -795,3 +806,106 @@
 .headerLogo { width: auto; height: 46px; display: block; }
 .footerLogo { width: clamp(120px, 14vw, 158px); height: auto; display: block; margin-block-end: 14px; }
 .wordmarkLink { display: inline-flex; align-items: center; text-decoration: none; }
+
+/*
+ * CORP-v1.4R1 — the three density modes.
+ *
+ * `bandQuiet` roughly doubles the vertical space and is used for a single statement. `beatList`
+ * replaces the card grids: same words, no rectangles. A numbered list states a sequence or a set
+ * without giving each item its own bordered box, which is what made five separate ideas on the
+ * homepage read as five equal features.
+ */
+.bandQuiet { padding-block: clamp(80px, 12vw, 180px); }
+.bandQuiet .h2 { max-width: 18ch; }
+
+.beatList {
+  display: grid; gap: 0; margin: clamp(28px, 4vw, 48px) 0 0; padding: 0; list-style: none;
+  max-width: 78ch;
+}
+.beatItem {
+  display: grid; grid-template-columns: 34px 1fr; gap: 14px;
+  padding-block: 18px;
+  border-block-start: 1px solid var(--line);
+}
+.beatItem:last-child { border-block-end: 1px solid var(--line); }
+.beatNo {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.08em; color: var(--ink-4);
+  font-variant-numeric: tabular-nums; padding-block-start: 4px;
+}
+.beatText { display: grid; gap: 5px; }
+.beatTitle { font-size: 15.5px; font-weight: 600; line-height: 1.6; color: var(--ink); }
+.beatBody { font-size: 14px; line-height: 1.85; color: var(--ink-3); }
+.bandDark .beatItem { border-color: var(--sys-line); }
+.bandDark .beatTitle { color: var(--sys-ink); }
+.bandDark .beatBody { color: var(--sys-ink-2); }
+.bandDark .beatNo { color: var(--sys-ink-3); }
+
+/* CORP-v1.4R1 — the shared venture identity unit, on the dark operating surface. */
+.onDark .projectName, .onDark .ventureMarkHero { color: var(--sys-ink); }
+.onDark .brandLine { color: var(--sys-ink-2); }
+
+/*
+ * CORP-v1.4R1 — a venture chapter.
+ *
+ * Three equal cards made three ventures look like three of the same thing. A chapter gives each one
+ * real space and puts its own system drawing beside its identity, so a reader sees a network, a
+ * procedure and a context field — three different KINDS of system — before reading a word.
+ */
+.chapter { display: grid; gap: clamp(24px, 3.5vw, 48px); }
+@media (min-width: 940px) {
+  .chapter { grid-template-columns: minmax(0, 1fr) minmax(0, 300px) minmax(0, 1fr); align-items: start; }
+}
+.chapterIdent { display: grid; gap: 14px; align-content: start; }
+.chapterDomain {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.1em; color: var(--ink-4);
+}
+.chapterThesis { margin: 0; font-size: var(--step-1); line-height: 1.85; color: var(--ink-2); max-width: 34ch; }
+.chapterFigure { display: none; }
+@media (min-width: 940px) { .chapterFigure { display: block; } }
+.chapterState { display: grid; gap: 16px; align-content: start; }
+
+/*
+ * CORP-v1.4R1 — quiet venture index (Company page).
+ *
+ * Rows, not cards: a rule between, no box, no number, no accent panel. The Home operating field and
+ * the Ventures index each present these three properly; the Company page only needs to name them
+ * and get out of the way.
+ */
+.ventureIndex { list-style: none; margin: 28px 0 0; padding: 0; display: grid; border-block-start: 1px solid var(--line); }
+.ventureIndexItem { border-block-end: 1px solid var(--line); }
+/*
+ * Three children — identity, stage, arrow — so the narrow layout needs explicit placement, not two
+ * columns. The first version declared `minmax(0,1fr) auto` for three items, which put the stage
+ * sentence in the `auto` column beside the name and wrapped the arrow onto a row of its own.
+ * Below 720px the stage takes its own row under the identity; the arrow stays pinned to the end of
+ * the first row at both sizes.
+ */
+.ventureIndexLink {
+  display: grid; gap: 6px 32px; align-items: baseline;
+  padding-block: 20px;
+  text-decoration: none; color: inherit;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.ventureIndexLink > :nth-child(1) { grid-column: 1; grid-row: 1; }
+.ventureIndexLink .arrow { grid-column: 2; grid-row: 1; }
+.ventureIndexStage { grid-column: 1; grid-row: 2; }
+@media (min-width: 720px) {
+  .ventureIndexLink { grid-template-columns: minmax(0, 310px) minmax(0, 1fr) auto; }
+  .ventureIndexStage { grid-column: 2; grid-row: 1; }
+  .ventureIndexLink .arrow { grid-column: 3; grid-row: 1; }
+}
+.ventureIndexLink:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.ventureIndexStage { font-size: var(--step--1); line-height: 1.75; color: var(--ink-2); }
+/*
+ * NO hover transform on this arrow.
+ *
+ * A `translateX(3px)` nudge was tried and removed. `.ventureIndexLink:hover .arrow` and the
+ * site-wide RTL mirror `.root[dir="rtl"] .arrow { transform: scaleX(-1) }` have identical
+ * specificity (0-3-0), and this file's rule sits later — so in all five RTL locales, hovering a
+ * venture row un-flipped the arrow and slid it in the physically wrong direction. The reduced-motion
+ * override had the same defect. The row already signals itself with a coloured arrow and a hover
+ * colour change; a 3px slide was not worth breaking mirroring to keep.
+ */
+.ventureIndexLink .arrow { color: var(--signal); font-size: 13px; justify-self: end; }
