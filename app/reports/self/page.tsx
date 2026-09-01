@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 export const metadata: Metadata = {
   title: "今の自分を深く読むレポート | Yorisou",
@@ -23,7 +24,7 @@ export default function ReportSelfPage() {
 
           {/* Back */}
           <Link
-            href="/"
+            href={CONSUMER_HOME}
             className="inline-flex items-center gap-1.5 text-[13px] text-[#49615B] hover:underline"
           >
             ← ホームへ戻る

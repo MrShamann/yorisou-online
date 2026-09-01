@@ -539,32 +539,18 @@
 .ventureName { display: block; }
 
 /*
- * CORP-v1.3 — the venture accent mark.
+ * CORP-v1.3.1 — the venture mark slot.
  *
- * A 9px square set on the wordmark's own baseline row. Mirai Move's own Open Graph card puts a
- * coloured dot beside its wordmark, so this is that venture's device rather than one invented here;
- * Kakari's square takes its own product accent. Chigamo's is an OPEN outline because it has no brand
- * source at all — the emptiness is the honest state, not a placeholder waiting to be filled.
+ * v1.3 put a 9px colour square here. All three ventures now have a real mark, so the slot holds
+ * artwork instead: Mirai Move's official logo, Kakari's 「係 / Kakari」 co-mark, Chigamo's new mark.
  *
- * `flex-shrink: 0` matters: at 375px in Arabic the row is tight, and a mark that collapses to a
- * sliver looks like a rendering fault rather than a brand.
+ * Sized by HEIGHT in VentureMark.tsx, never by a fixed box — the Mirai Move logo is 2.2:1 and the
+ * two glyph marks are square, so forcing a common width would squash one of them. `flex-shrink: 0`
+ * matters at 375px in Arabic, where the row is tight and a collapsed mark reads as a render fault.
  */
-.ventureMarkRow { display: flex; align-items: baseline; gap: 8px; }
-.ventureAccent {
-  flex: 0 0 auto;
-  width: 9px; height: 9px;
-  border: 1px solid transparent;
-  border-radius: 1px;
-  transform: translateY(-1px);
-}
-.ventureAccent[data-defined="no"] {
-  background: transparent;
-  border-color: var(--line-3);
-}
-.bandDark .ventureAccent[data-defined="no"] { border-color: var(--sys-line-2); }
-.ventureMarkCompact + *, .ventureMarkRow .ventureMarkCompact { line-height: 1.2; }
-.ventureMarkRow:has(.ventureMarkCompact) { gap: 6px; }
-.ventureMarkRow:has(.ventureMarkCompact) .ventureAccent { width: 7px; height: 7px; }
+.ventureMarkRow { display: flex; align-items: center; gap: 9px; }
+.ventureMark { flex: 0 0 auto; display: block; }
+.ventureMarkRow:has(.ventureMarkCompact) { gap: 7px; }
 
 /*
  * CORP-v1.3 — the composition line: "2 in build · 1 at concept".

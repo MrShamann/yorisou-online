@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpSection } from "../components/MvpSurface";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 export const metadata: Metadata = {
   title: "Life-State Archetype の見方 | Yorisou",
@@ -86,7 +87,7 @@ export default function MethodologyPage() {
         actions={
           <>
             <MvpActionLink href="/tests/ima-iro" label="いま色テストをはじめる" />
-            <MvpActionLink href="/" label="ホームへ戻る" tone="secondary" />
+            <MvpActionLink href={CONSUMER_HOME} label="ホームへ戻る" tone="secondary" />
           </>
         }
       >

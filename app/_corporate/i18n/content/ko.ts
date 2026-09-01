@@ -361,7 +361,9 @@ export const ko: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "지금의 사업",
+    eyebrow: "사업",
+    publicLabel: "현재 공개하고 있는 사업",
+    publicNote: "Yorisou는 여러 사업을 만들고 있습니다. 여기서는 현재 공개하고 있는 사업을 소개합니다.",
     heading: ["어느 것도 아직", "회사로 서 있지 않습니다."],
     lead:
       "모두 제도와 구조는 이미 있는데도, 정작 필요한 사람 앞에서 멈춰 서 있는 영역입니다. Yorisou는 그 자리에 들어가, 확인해 가며 형태를 만들고 있습니다.",

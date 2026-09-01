@@ -363,7 +363,9 @@ export const es: SiteCopy = {
 
   /* ── ÍNDICE DE PROYECTOS (CORP-v1.2) ────────────────────────────────── */
   ventures: {
-    eyebrow: "En lo que trabajamos ahora",
+    eyebrow: "Proyectos",
+    publicLabel: "Proyectos actualmente públicos",
+    publicNote: "Yorisou está construyendo varios proyectos. Aquí están los que son públicos por ahora.",
     heading: ["Ninguno de ellos se sostiene", "todavía como empresa."],
     lead:
       "En todos ellos los sistemas y los programas ya existen, pero se detienen justo antes de llegar a quien los necesita. Yorisou trabaja en ese hueco y va comprobando sobre la marcha.",

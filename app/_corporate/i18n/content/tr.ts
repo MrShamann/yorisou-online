@@ -364,10 +364,12 @@ export const tr: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "Bugün üzerinde çalıştıklarımız",
+    eyebrow: "Girişimler",
+    publicLabel: "Şu anda kamuya açık girişimler",
+    publicNote: "Yorisou birden fazla girişim kuruyor. Burada şu anda kamuya açık olanlar var.",
     heading: ["Hiçbiri henüz", "bir şirket olarak ayakta değil."],
     lead:
-      "Üçünde de kurallar ve sistemler zaten var; yalnızca ihtiyaç duyan kişiye varmadan duruyorlar. Yorisou bu aralığa giriyor ve ilerledikçe doğruluyor.",
+      "Her birinde kurallar ve sistemler zaten var; yalnızca ihtiyaç duyan kişiye varmadan duruyorlar. Yorisou bu aralığa giriyor ve ilerledikçe doğruluyor.",
     cards: [
       {
         name: "Mirai Move",

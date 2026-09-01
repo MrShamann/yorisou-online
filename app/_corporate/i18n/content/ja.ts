@@ -376,7 +376,9 @@ export const ja: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "いまの事業",
+    eyebrow: "事業",
+    publicLabel: "現在公開している事業",
+    publicNote: "YORISOUでは複数の事業を構築しています。ここでは、現在公開している事業を紹介します。",
     heading: ["どれも、会社として", "立つ手前にあります。"],
     lead:
       "どれも、制度や仕組みがすでにあるのに、必要な人のところで止まっている領域です。YORISOU はそこに入り、確かめながら形にしています。",

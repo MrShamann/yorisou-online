@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import YorisouLogo from "./YorisouLogo";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 const PRIMARY_NAV = [
   // PXR-1 — the SAME information architecture the mobile shell uses.
@@ -34,7 +35,7 @@ export default function AppHeader() {
     <header className="sticky top-0 z-40 border-b border-[var(--yorisou-color-neutral-100)] bg-[rgba(250,248,243,0.92)] backdrop-blur-xl">
       <div className="container">
         <div className="flex items-center justify-between gap-4 py-3 md:py-3.5">
-          <Link href="/" className="flex min-w-0 items-center no-underline" aria-label="YORISOU ホーム" onClick={() => setOpen(false)}>
+          <Link href={CONSUMER_HOME} className="flex min-w-0 items-center no-underline" aria-label="YORISOU ホーム" onClick={() => setOpen(false)}>
             <YorisouLogo variant="primary" size={30} />
           </Link>
 

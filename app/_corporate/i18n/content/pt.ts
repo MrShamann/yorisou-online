@@ -360,7 +360,9 @@ export const pt: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "Projetos em andamento",
+    eyebrow: "Projetos",
+    publicLabel: "Projetos atualmente públicos",
+    publicNote: "A Yorisou está a construir vários projetos. Estes são os atualmente públicos.",
     heading: ["Nenhum deles se sustenta", "ainda como empresa."],
     lead:
       "Em todas elas, as instituições e os sistemas já existem — e param pouco antes de chegar a quem precisa. A Yorisou entra nesse intervalo e vai dando forma enquanto verifica.",

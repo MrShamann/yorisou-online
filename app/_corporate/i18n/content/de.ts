@@ -363,10 +363,12 @@ export const de: SiteCopy = {
 
   /* ── PROJEKTÜBERSICHT (CORP-v1.2) ───────────────────────────────────── */
   ventures: {
-    eyebrow: "Woran wir gerade arbeiten",
+    eyebrow: "Vorhaben",
+    publicLabel: "Derzeit öffentliche Vorhaben",
+    publicNote: "Yorisou baut mehrere Vorhaben auf. Hier stehen die derzeit öffentlichen.",
     heading: ["Keines davon steht bisher", "als eigenes Unternehmen."],
     lead:
-      "In allen dreien gibt es die Regeln und die Systeme längst – und sie bleiben kurz vor den Menschen stehen, die sie brauchen. Genau in dieser Lücke arbeitet Yorisou und prüft dabei Schritt für Schritt.",
+      "In jedem davon gibt es die Regeln und die Systeme längst – und sie bleiben kurz vor den Menschen stehen, die sie brauchen. Genau in dieser Lücke arbeitet Yorisou und prüft dabei Schritt für Schritt.",
     cards: [
       {
         name: "Mirai Move",

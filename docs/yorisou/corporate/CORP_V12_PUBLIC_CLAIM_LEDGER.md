@@ -95,3 +95,23 @@ Review date for these rows: **2026-08-31**. Preview only.
 | C-47 | Favicon legibility | At 32px only the symbol reads; the wordmark does not | The artwork is a stacked square lockup and no logomark-only or vector variant exists | **Stated as a limitation**, not hidden | Recorded in the launch gate |
 | C-48 | Crawlable corporate routes | `/`, `/ventures`, `/mirai-move`, `/kakari`, `/chigamo`, `/about`, `/build-with-us` | Every one is claim-guarded copy; each `Allow` is `$`-anchored | BOUNDED | Yes |
 | C-49 | `/company` and `/contact` remain crawl-blocked | Contact delivery is unverified; the company record is a Founder decision | `CORPORATE_BLOCKED` + the launch gate | BOUNDED | No |
+
+## CORP-v1.3.1 additions
+
+Review date: **2026-09-01**. This is the release that goes to Production.
+
+| ID | Object | Meaning | Evidence | State | Public |
+|---|---|---|---|---|---|
+| C-50 | **Venture total** | YORISOU builds several ventures; the site shows the ones ready to be shown | Founder statement. The three published are named and counted as a labelled subset — 現在公開している事業 — never as the company's total | **BOUNDED — the count describes the public set only** | Yes |
+| C-51 | Norynto | Not a portfolio venture and not on the site | Standing v1.2 governance: `NORYNTO PORTFOLIO_VENTURE = NO`. Corroborated by `CORP_P5_CORPORATE_PORTFOLIO_TRUTH_MATRIX.md`, which already ruled EXCLUDE | **OMITTED by standing decision** — not an open question | No |
+| C-52 | YORISOU symbol favicon | The tab icon is the logo's symbol, cropped from the approved artwork | Founder authorisation, narrowly scoped to favicon/app-icon. Crop box measured from the artwork's own alpha profile; geometry, colour and proportion untouched | VERIFIED | Yes |
+| C-53 | Mirai Move logo | The venture's official mark | Founder original `sha256 c7d62d96…`; the file shipped is Mirai Move's own committed derivative `sha256 108e085b…`, whose repo README records the same source hash | VERIFIED — `PROJECT_CANONICAL_BRAND` | Yes |
+| C-54 | Mirai Move accent `#8e5330` | Corrects the stale `#0e9f9a` citation | That repo's effective `--accent` on origin/main; the teal token is never overridden but is referenced nowhere, so it was never the effective accent | **CORRECTED** — supporting data, not painted | No |
+| C-55 | Kakari 「係 / Kakari」 | A corporate co-mark, not a translation and not a transliteration | Founder decision for this surface only | BOUNDED — corporate surface only; the application keeps `Kakari` | Yes |
+| C-56 | カカリ / 卡卡里 | Still forbidden everywhere | The claim guard's transliteration rule is **byte-identical** to v1.3; 係 never matched it, so no exception was granted | **OMITTED, unchanged** | No |
+| C-57 | Chigamo mark | A Founder-approved new mark for a venture that had none | Founder authorisation. Three concepts built and judged at 24px; two rejected by looking | VERIFIED — `FOUNDER_APPROVED_NEW_VENTURE_MARK` | Yes |
+| C-58 | Chigamo maturity | Unchanged by the new mark | Still concept stage, still Foundry stage 1, still counted apart, still **no brand colour** | **BOUNDED — a logo is not a product**; C-12 unaffected | Yes |
+| C-59 | Corporate apex | `yorisou.online` is the YORISOU / Yorisou Foundry website | Founder decision | VERIFIED | Yes |
+| C-60 | Consumer Today | Restored at `/today`, verbatim from `8fd5bd5` | Recovered from repository history; components byte-identical; ARCH-P3 L/M rebound to the real surface and green | VERIFIED — not a new product | Yes |
+| C-61 | Production locales | ja and en public; 19 others `preview_only` | The typed registry gate, unchanged | BOUNDED | ja/en yes |
+| C-62 | Contact at launch | Truthful, and the form is not shown | Transport still unconfigured; page and endpoint share one predicate | **BOUNDED — no delivery is claimed** | Yes, as state |

@@ -363,7 +363,9 @@ export const ms: SiteCopy = {
 
   /* ── INDEKS USAHA NIAGA (CORP-v1.2) ─────────────────────────────────── */
   ventures: {
-    eyebrow: "Usaha niaga semasa",
+    eyebrow: "Usaha niaga",
+    publicLabel: "Usaha niaga yang kini didedahkan",
+    publicNote: "Yorisou sedang membina beberapa usaha niaga. Ini yang kini didedahkan.",
     heading: ["Belum satu pun daripadanya", "berdiri sebagai syarikat."],
     lead:
       "Dalam setiap satunya, peraturan dan sistemnya sudah pun wujud — dan terhenti tepat sebelum sampai kepada orang yang memerlukannya. Yorisou masuk ke dalam jurang itu dan membentuknya sambil terus mengesahkan.",

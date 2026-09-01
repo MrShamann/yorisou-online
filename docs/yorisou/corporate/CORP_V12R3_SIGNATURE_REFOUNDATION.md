@@ -11,9 +11,14 @@ acquired. Working tree clean apart from the two protected untracked files.
 
 ## The logo
 
-Found by Spotlight: `mdfind` for a Yorisou-named image located the Founder's folder under
-`Documents/Jinyang/Jinyang2026/…` (the "Jin Yang 2026" folder the package described). An identical
-copy sits in `Downloads` — same sha256, so no version ambiguity.
+Found by Spotlight: `mdfind` for a Yorisou-named image located the Founder's own brand folder — the
+"Jin Yang 2026" hierarchy the package described. An identical copy sits elsewhere on the machine with
+the same sha256, so there is no version ambiguity.
+
+> **CORP-v1.3.1 redaction.** This paragraph previously spelled out the directory path. This
+> repository is public, and the standing rule is that the Founder's local filesystem path is not
+> committed to it. The identifying facts that matter — the hash, the dimensions, the alpha state —
+> are recorded below and are what any later check needs.
 
 | | |
 |---|---|

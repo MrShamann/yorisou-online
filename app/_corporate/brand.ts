@@ -1,31 +1,35 @@
 /**
- * CORP-v1.3 — the brand system, in one place, with provenance on every value.
+ * CORP-v1.3.1 — the brand system, in one place, with typed provenance on every value.
  *
- * WHY THIS FILE EXISTS. Until now the corporate site had a logo (added in v1.2R3) and three venture
- * names set as plain text, and the two had nothing to do with each other: the artwork is deep navy
- * and blue, the site's accent was a jade green chosen before any logo existed, and the ventures had
- * no visual identity at all. Four brands appeared on the same screen with no system connecting them.
+ * WHAT CHANGED FROM v1.3, AND WHY THE OLD RULE WAS WRONG.
  *
- * THE RULE THIS FILE ENFORCES. **Every brand value here is read from that brand's own canonical
- * source.** Nothing is chosen to look good, and nothing is invented to fill a gap. Where a brand has
- * no canonical source, the field is `null` and the site renders the absence rather than a
- * plausible-looking substitute — which is why Chigamo has no colour.
+ * v1.3 said: "every brand value here is read from that brand's own canonical source; nothing is
+ * invented to fill a gap." That was the right rule while no Founder brand decision existed — it is
+ * what kept a jade accent from being invented for a venture with no identity. It is now stale, and
+ * it was actively producing a false result: it left Kakari and Chigamo permanently unmarked and
+ * left Mirai Move represented by a coloured square while its real logo sat on the Founder's disk.
  *
- * Sources, all verified 2026-08-31:
- *
- * - YORISOU     the Founder's artwork, `public/brand/yorisou-logo.png`. The palette below is
- *               SAMPLED from its pixels, not eyeballed. The artwork is used unmodified everywhere:
- *               never cropped, never recoloured, never redrawn, never replaced by a text wordmark.
- * - Mirai Move  its own repository's canonical brand module, which defines the name, the Japanese
- *               slogan and the mobility-teal accent, and whose own Open Graph card is a wordmark and
- *               a teal dot — so the dot is that venture's own device, not one invented here.
- * - Kakari      its own product shell defines the accent, and its own localisation glossary states
- *               "ASCII wordmark only. Never transliterated" — a rule enforced in its CI and in
- *               `tests/corporate-p5r2/corporateClaims.test.ts` here.
- * - Chigamo     NO canonical source exists. Not a repository, not a registry entry, nothing in this
- *               repo. Claim ledger row C-12 records it as THESIS. It therefore gets no accent and no
- *               device, and the site draws it as an open outline. The absence is the honest signal.
+ * **The Founder is itself an authorised brand source for this corporate surface.** So provenance is
+ * now TYPED rather than assumed, and every value says which kind of authority it rests on. What has
+ * not changed: nothing is invented, and no value may exist without a source.
  */
+
+/**
+ * Where a brand value's authority comes from. Every value in this file carries one.
+ *
+ * - `EXISTING_OFFICIAL_ASSET`            artwork the Founder supplied, used as supplied.
+ * - `PROJECT_CANONICAL_BRAND`            read from that project's own repository or product source.
+ * - `FOUNDER_BRAND_DECISION`             a Founder decision about this corporate surface.
+ * - `FOUNDER_APPROVED_CORPORATE_COMARK`  a mark approved for the corporate site that the venture's
+ *                                        own product does NOT adopt. Scope is the boundary.
+ * - `FOUNDER_APPROVED_NEW_VENTURE_MARK`  a mark created for a venture that had none.
+ */
+export type BrandProvenance =
+  | "EXISTING_OFFICIAL_ASSET"
+  | "PROJECT_CANONICAL_BRAND"
+  | "FOUNDER_BRAND_DECISION"
+  | "FOUNDER_APPROVED_CORPORATE_COMARK"
+  | "FOUNDER_APPROVED_NEW_VENTURE_MARK";
 
 /** The Founder's artwork. Intrinsic size and hash are recorded so a substitution is detectable. */
 export const YORISOU_ARTWORK = {
@@ -37,6 +41,30 @@ export const YORISOU_ARTWORK = {
   lockup: "stacked-square",
   /** No vector original exists. Recorded so nobody re-searches for one, and so the gap stays visible. */
   vectorOriginal: null,
+  provenance: "EXISTING_OFFICIAL_ASSET" as BrandProvenance,
+} as const;
+
+/**
+ * CORP-v1.3.1 — the symbol, extracted for the browser.
+ *
+ * v1.3 shipped the whole stacked lockup as the favicon and recorded that at 32px only a blue smudge
+ * read, because cropping the artwork was forbidden. The Founder has now authorised a NARROW
+ * derivative: the symbol area only, for favicon and app-icon use.
+ *
+ * It is a pure crop. The band was found from the artwork's own alpha profile — rows 161 to 786 are
+ * one contiguous content band, cleanly separated from the wordmark band that begins at row 844 — so
+ * the boundary is measured, not eyeballed. Geometry, colours and proportions are untouched: nothing
+ * is redrawn, simplified, recoloured, or re-proportioned. The full lockup remains the mark for the
+ * header, the homepage signature, the footer and the share cards.
+ */
+export const YORISOU_SYMBOL = {
+  src: "/brand/yorisou-symbol.png",
+  /** (left, top, right, bottom) in the artwork's own pixel space. */
+  cropBox: [111, 161, 1119, 787] as const,
+  width: 1008,
+  height: 626,
+  provenance: "FOUNDER_BRAND_DECISION" as BrandProvenance,
+  note: "Founder-authorised symbol derivative for favicon and app icons. Crop only.",
 } as const;
 
 /**
@@ -68,36 +96,109 @@ export const YORISOU_STRAPLINE_JA = "人と技術が、未来をつくる。";
 /** Also set inside the lockup, in Latin capitals, in every locale's artwork. */
 export const YORISOU_DESCRIPTOR = "AI-NATIVE VENTURE FOUNDRY";
 
+export type VentureMark =
+  | { readonly kind: "image"; readonly src: string; readonly width: number; readonly height: number }
+  | { readonly kind: "svg"; readonly id: "kakari" | "chigamo" };
+
 export type VentureBrand = {
   /** ASCII wordmark. Never transliterated in any locale — see the claim guard. */
   readonly name: string;
   /**
-   * That venture's own accent colour, or `null` where the venture has no canonical brand source.
-   * Decorative only: the name and the stage are always rendered as text beside it, so nothing is
-   * communicated by hue alone and the 3:1 non-text contrast floor is the applicable bar.
+   * The venture's own mark, rendered in the shared venture slot on every surface.
+   *
+   * v1.3 had no marks at all: a 9px colour square stood in for each venture, and the one with no
+   * colour got an empty square. All three now have a real mark, and the square is gone.
+   */
+  readonly mark: VentureMark;
+  readonly markProvenance: BrandProvenance;
+  /** Where the mark came from. Never empty. */
+  readonly markSource: string;
+  /**
+   * A supporting brand colour, or `null` where the venture has none. It is NOT rendered as an
+   * identity any more — the mark is. It stays recorded because it is a fact about the venture.
    */
   readonly accent: string | null;
-  /** Where the value above was read from. Empty string is not acceptable; `null` accent needs a reason. */
+  /** Where the accent above was read from. */
   readonly source: string;
 };
 
 export const VENTURE_BRAND: Record<string, VentureBrand> = {
   "/mirai-move": {
     name: "Mirai Move",
-    accent: "#0e9f9a",
-    source: "Mirai Move's own repository: brand module (mobility teal) and its own OG card device.",
+    /*
+     * The real logo, at last. The Founder's original is `Miraimove logo.png` (1254x1254, sha256
+     * c7d62d96…, NO alpha, ~95% flat #F8F8F8 padding) — three byte-identical copies exist on the
+     * Founder's machine, and no vector original was found anywhere that was searched (the Founder
+     * directories, both project trees, and both Founder decks, whose archives contain no media at
+     * all). Stated as "not found", not as "does not exist": the search keyed on the name.
+     *
+     * The file used here is NOT derived by this repository. Mirai Move's own repository already
+     * carries a committed, documented brand kit built from that exact source — cropped to the
+     * artwork bounds, background keyed to transparency with un-premultiplied edges so it does not
+     * halo on dark, resized with Lanczos, and nothing redrawn or recoloured. Its own
+     * `public/brand/README.md` records the same source hash. Taking that asset rather than
+     * re-deriving one keeps a single canonical Mirai Move identity across both sites.
+     */
+    mark: { kind: "image", src: "/brand/ventures/mirai-move-mark.png", width: 542, height: 245 },
+    markProvenance: "PROJECT_CANONICAL_BRAND",
+    markSource:
+      "Mirai Move's own repository brand kit (public/brand/mirai-move-mark.png, sha256 108e085b…), " +
+      "a documented technical derivative of the Founder original sha256 c7d62d96…",
+    /*
+     * CORRECTED IN v1.3.1. This said #0e9f9a "mobility teal", sourced to "Mirai Move's own
+     * repository". That citation had gone stale, though not in the way it first appeared:
+     * `--color-mobility-teal: #0e9f9a` is still declared in that repo's globals.css and is never
+     * overridden — it is dead, referenced by nothing anywhere on origin/main. What IS overridden is
+     * `--accent`, which a later `:root` block resets to the copper below. So teal was never the
+     * effective accent this site should have been citing. The mark now carries the identity, so this
+     * value is supporting data rather than something the site paints.
+     */
+    accent: "#8e5330",
+    source:
+      "Mirai Move's own globals.css on origin/main — the effective --accent after the second :root " +
+      "block overrides the earlier mobility-teal declaration.",
   },
   "/kakari": {
     name: "Kakari",
+    /*
+     * FOUNDER DECISION: the corporate site presents Kakari as the co-mark 「係 / Kakari」. 係 is the
+     * identity character — 亻 carrying 系, a person carrying a thread — and it is set above the
+     * terminal rule that is Kakari's own diagram signature.
+     *
+     * SCOPE IS THE POINT. This is a CORPORATE co-mark. The Kakari application keeps the ASCII
+     * `Kakari` wordmark, and its glossary's ban on カカリ and 卡卡里 is untouched and still enforced
+     * here by the claim guard. The kanji is not a transliteration and not a translation: it is a
+     * second mark the corporate surface is authorised to use, and the application is not.
+     */
+    mark: { kind: "svg", id: "kakari" },
+    markProvenance: "FOUNDER_APPROVED_CORPORATE_COMARK",
+    markSource:
+      "Founder decision for the YORISOU corporate surface only. 係 set in the corporate site's own " +
+      "Japanese stack above the terminal rule from Kakari's own ProcedureSystem diagram.",
     accent: "#a63e2d",
-    source: "Kakari's own product shell accent, plus its localisation glossary (ASCII wordmark only).",
+    source: "Kakari's own product shell accent (--u-accent in its unified shell).",
   },
   "/chigamo": {
     name: "Chigamo",
+    /*
+     * FOUNDER DECISION, SUPERSEDING v1.3. v1.3 drew Chigamo as an empty square because it had no
+     * brand source, and recorded the absence as the honest signal. The Founder has now authorised a
+     * mark, so the absence is no longer the truth about its identity.
+     *
+     * What has NOT changed is its EVIDENCE state. A logo is not a product: Chigamo is still concept
+     * stage, still Foundry stage 1, still counted apart from the two ventures in build, and still
+     * has no brand colour — the mark is monochrome, because a colour would be an identity nobody
+     * has approved. Claim ledger C-12 is unaffected.
+     */
+    mark: { kind: "svg", id: "chigamo" },
+    markProvenance: "FOUNDER_APPROVED_NEW_VENTURE_MARK",
+    markSource:
+      "Founder-authorised new mark, designed for this release: three brackets closing on one point, " +
+      "from Chigamo's own thesis that place, time and situation must align. Monochrome.",
     accent: null,
     source:
-      "No canonical source exists — no repository, no registry entry, nothing in this repo. " +
-      "Claim ledger C-12 records it as THESIS, so no colour may be assigned to it.",
+      "No canonical colour source exists. Claim ledger C-12 records Chigamo as THESIS, so no colour " +
+      "is assigned; the mark carries the identity and carries no hue.",
   },
 };
 

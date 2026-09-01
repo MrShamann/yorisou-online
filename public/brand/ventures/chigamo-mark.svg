@@ -1,0 +1,31 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chigamo">
+  <!--
+    Chigamo — Founder-approved new venture mark.
+
+    THE IDEA, TAKEN FROM THE VENTURE'S OWN WORDS. Chigamo's thesis is that information about a place
+    only becomes yours when three things line up: 「位置と、時間と、その人が置かれている状況。この三つが
+    揃ってはじめて『自分に関係がある』と分かる情報があります。」 So the mark is three brackets arriving
+    from three directions and closing on one solid point. Nothing is retrieved from a distance; the
+    point is where they meet.
+
+    WHAT IT DELIBERATELY IS NOT. No map pin, no compass, no globe, no radar sweep, no sparkle. Two
+    earlier directions were built and rejected by looking at them at 24px: concentric arcs read as a
+    wifi indicator, and a horizon-plus-arc read as a speedometer. A four-corner variant read as a
+    camera focus box — legible, but a generic UI idiom rather than an identity.
+
+    HOW IT RELATES TO THE FAMILY. Orthogonal and square-cornered, which is the corporate system's
+    own geometry — 811 lines of site.module.css contain four border-radius declarations. The two
+    shoulders and a stem echo the YORISOU Y as a family relationship, not a copy: YORISOU's Y is a
+    soft ribbon closing into a lemniscate; this is hard brackets on a grid.
+
+    MATURITY IS NOT UPGRADED BY A LOGO. Chigamo remains concept stage, stays at Foundry stage 1, is
+    still counted separately from the two ventures in build, and still carries NO brand colour — the
+    mark is monochrome `currentColor`, because a colour would be an identity nobody has approved.
+  -->
+  <g fill="none" stroke="currentColor" stroke-width="3">
+    <path d="M 11 11 H 26 V 26"/>
+    <path d="M 53 11 H 38 V 26"/>
+    <path d="M 32 55 V 38"/>
+  </g>
+  <rect x="28" y="28" width="8" height="8" fill="currentColor"/>
+</svg>

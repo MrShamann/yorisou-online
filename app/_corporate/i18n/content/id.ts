@@ -364,7 +364,9 @@ export const id: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "Usaha kami saat ini",
+    eyebrow: "Usaha",
+    publicLabel: "Usaha yang saat ini dipublikasikan",
+    publicNote: "Yorisou sedang membangun beberapa usaha. Berikut yang saat ini dipublikasikan.",
     heading: ["Belum satu pun di antaranya", "berdiri sebagai perusahaan."],
     lead:
       "Di setiap bidang itu, aturan dan sistemnya sudah tersedia — lalu berhenti tepat sebelum sampai kepada orang yang membutuhkannya. Yorisou masuk ke celah itu dan memastikannya sambil berjalan.",

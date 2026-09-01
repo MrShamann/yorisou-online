@@ -302,8 +302,21 @@ test("Today entry fails CLOSED on a store read failure — failure is never rend
 
 // ── L/M. Today placement and primacy ────────────────────────────────────────
 
+/**
+ * CORP-v1.3.1 — REBOUND from `app/page.tsx` to `app/today/page.tsx`, and only now.
+ *
+ * Commit 9f0e8ff promoted the corporate site to the root URLs without relocating Today, so this
+ * composition existed in no file at all. Four packages left the assertion red and pointed at the
+ * old path on purpose: with no file containing the composition, pointing it anywhere else would
+ * have turned CI green by DELETING the protection rather than by restoring the surface.
+ *
+ * The surface genuinely exists again — recovered verbatim from `8fd5bd5:app/page.tsx`, the last
+ * commit before it was dropped — so the binding follows it. The assertion is otherwise unchanged:
+ * same four markers, same required order, same failure message. If Today moves again, this must
+ * move with it, and it must not be repointed at a file that does not contain the composition.
+ */
 test("L/M: Today keeps the utility hero primary; curiosity sits after continuity, before 5-minute actions", () => {
-  const page = read("app", "page.tsx");
+  const page = read("app", "today", "page.tsx");
   const hero = page.indexOf("今の気配を見る");
   const continuity = page.indexOf("<TodaySavedState />");
   const discovery = page.indexOf("<TodayDiscoveryEntry />");

@@ -32,10 +32,15 @@ export default function VenturesView({ copy, locale }: { copy: SiteCopy; locale:
           </h1>
           <p className={`${styles.lead} ${styles.jp}`}>{v.lead}</p>
           {/*
-            CORP-v1.3 — what the count actually is. The heading no longer states a number, because
-            the number it stated ("three areas, underway now") counted a concept as a venture under
-            construction. This line is computed from each venture's own recorded evidence.
+            CORP-v1.3.1 — the count is scoped to the set it describes.
+
+            v1.3 removed "three areas, underway now" and replaced it with a computed composition,
+            which is right about the three shown and still read as the whole company. The note states
+            the relationship first — YORISOU builds several ventures, these are the public ones — and
+            only then does the composition count that set.
           */}
+          <p className={`${styles.body} ${styles.jp}`}>{v.publicNote}</p>
+          <p className={styles.subLabel}>{v.publicLabel}</p>
           <VentureComposition building={copy.common.buildingLabel} concept={copy.common.conceptLabel} />
         </div>
       </section>

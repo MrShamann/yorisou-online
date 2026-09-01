@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 export const metadata: Metadata = {
   title: "人間関係の疲れを、もう少し深く読む | Yorisou",
@@ -195,11 +196,11 @@ export default function ReportRelationshipFatiguePage() {
               今は無料結果だけ見る
             </Link>
             <span className="text-[#D4CCC6]">·</span>
-            <Link href="/" className="text-[12px] text-[#7A7068] hover:underline">
+            <Link href={CONSUMER_HOME} className="text-[12px] text-[#7A7068] hover:underline">
               今日はここまでにする
             </Link>
             <span className="text-[#D4CCC6]">·</span>
-            <Link href="/" className="text-[12px] text-[#7A7068] hover:underline">
+            <Link href={CONSUMER_HOME} className="text-[12px] text-[#7A7068] hover:underline">
               必要になったら、あとで深く読む
             </Link>
           </div>

@@ -211,32 +211,115 @@ test("brand colours meet the contrast floor on the surface each one is used on",
   need("signal on paper", YORISOU_PALETTE.signal, PAPER, 4.5);
   need("signal-on-dark on system", YORISOU_PALETTE.signalOnDark, SYS, 4.5);
   need("wordmark ink on paper", YORISOU_PALETTE.ink, PAPER, 4.5);
-  // Venture accents are decorative squares: the name and the stage are always rendered as text
-  // beside them, so the applicable bar is the 3:1 non-text floor, on BOTH surfaces they appear on.
-  for (const [href, b] of Object.entries(VENTURE_BRAND)) {
-    if (!b.accent) continue;
-    need(`${href} accent on paper`, b.accent, PAPER, 3);
-    need(`${href} accent on system`, b.accent, SYS, 3);
-  }
+  // CORP-v1.3.1 — the venture accents are no longer PAINTED. Each venture now renders its own mark
+  // in that slot, so asserting a contrast floor on a colour the site does not draw would be
+  // asserting something about nothing. The accents remain recorded brand facts and are checked for
+  // provenance below; what is checked here is only what the site actually puts on screen.
   assert.deepEqual(fails, [], fails.join("\n"));
 });
 
 /* ── 4. no venture gets an identity it has no source for ─────────────────────────────────── */
 
-test("every venture brand value names where it came from, and the one with no source has no colour", () => {
+const PROVENANCE_KINDS = new Set([
+  "EXISTING_OFFICIAL_ASSET",
+  "PROJECT_CANONICAL_BRAND",
+  "FOUNDER_BRAND_DECISION",
+  "FOUNDER_APPROVED_CORPORATE_COMARK",
+  "FOUNDER_APPROVED_NEW_VENTURE_MARK",
+]);
+
+test("every venture brand value names where it came from, and under which authority", () => {
   for (const [href, b] of Object.entries(VENTURE_BRAND)) {
     assert.ok(b.name.length > 0, `${href} has no wordmark`);
-    assert.ok(b.source.trim().length > 20, `${href} does not say where its brand values came from`);
+    assert.ok(b.source.trim().length > 20, `${href} does not say where its accent came from`);
+    assert.ok(b.markSource.trim().length > 20, `${href} does not say where its MARK came from`);
+    assert.ok(
+      PROVENANCE_KINDS.has(b.markProvenance),
+      `${href} claims an unknown provenance kind: ${b.markProvenance}`,
+    );
     if (b.accent) assert.match(b.accent, /^#[0-9a-f]{6}$/, `${href} accent is not a plain hex`);
   }
-  const uncoloured = Object.entries(VENTURE_BRAND)
-    .filter(([, b]) => b.accent === null)
-    .map(([href]) => href);
+});
+
+/**
+ * CORP-v1.3.1 — the marks exist and are what they claim to be.
+ *
+ * v1.3 asserted that exactly one venture had no colour, and used that to keep Chigamo unmarked.
+ * The Founder has since authorised a Chigamo mark, so that assertion would now be enforcing a
+ * superseded decision. It is replaced by the ones that still carry weight: every venture has a real
+ * mark, raster marks resolve to a file that exists, and the two SVG marks are monochrome so one
+ * asset serves both surfaces.
+ */
+test("all three ventures have a real mark, and every raster mark is a file that exists", () => {
+  const missing: string[] = [];
+  for (const [href, b] of Object.entries(VENTURE_BRAND)) {
+    if (b.mark.kind === "image") {
+      const f = join(ROOT, "public", b.mark.src.replace(/^\//, ""));
+      if (!existsSync(f)) missing.push(`${href}: ${b.mark.src} does not exist`);
+      else if (statSync(f).size < 2000) missing.push(`${href}: ${b.mark.src} is suspiciously small`);
+    } else if (!["kakari", "chigamo"].includes(b.mark.id)) {
+      missing.push(`${href}: unknown inline mark id ${b.mark.id}`);
+    }
+  }
+  assert.deepEqual(missing, [], missing.join("\n"));
+  assert.equal(Object.keys(VENTURE_BRAND).length, 3, "the published venture set changed size");
+});
+
+test("the two drawn marks are monochrome, so one asset works on both surfaces", () => {
+  const offences: string[] = [];
+  for (const f of ["public/brand/ventures/kakari-mark.svg", "public/brand/ventures/chigamo-mark.svg"]) {
+    const p = join(ROOT, f);
+    assert.ok(existsSync(p), `${f} is missing`);
+    const svg = readFileSync(p, "utf8");
+    // Strip the rationale comment: it names colour tokens in prose, and a check that cannot tell
+    // prose from markup would forbid explaining the design.
+    const markup = svg.replace(/<!--[\s\S]*?-->/g, " ");
+    const hex = markup.match(/#[0-9a-fA-F]{3,8}/g) ?? [];
+    if (hex.length) offences.push(`${f} hardcodes ${hex.join(", ")} instead of currentColor`);
+    if (!markup.includes("currentColor")) offences.push(`${f} never uses currentColor`);
+    if (/<image|xlink:href/.test(markup)) offences.push(`${f} embeds a raster instead of being drawn`);
+  }
+  assert.deepEqual(offences, [], offences.join("\n"));
+});
+
+/**
+ * A logo is not a product. Chigamo gained a Founder-approved mark in v1.3.1 and gained nothing else:
+ * this pins that its evidence state did not move with its identity.
+ */
+test("Chigamo's new mark did not upgrade its stage, its class, or its colour", () => {
+  const chigamo = VENTURE_BRAND["/chigamo"];
+  assert.equal(chigamo.accent, null, "a mark is not a licence to invent a brand colour");
+  assert.equal(chigamo.markProvenance, "FOUNDER_APPROVED_NEW_VENTURE_MARK");
+  assert.equal(VENTURE_CLASS["/chigamo"], "concept", "Chigamo is still a concept, not a build");
+  assert.equal(VENTURE_FORMATION["/chigamo"], 1, "Chigamo is still at Foundry stage 1");
+});
+
+/**
+ * CORP-v1.3.1 — the Kakari corporate exception, and its boundary.
+ *
+ * The Founder approved 「係 / Kakari」 for THIS surface. That approval does not reach the Kakari
+ * application, and it does not loosen the transliteration ban by one character: カカリ, 卡卡里 and
+ * every other reading stay forbidden everywhere, which the claim guard still enforces unchanged.
+ */
+test("the 係 co-mark is confined to corporate brand code, and カカリ is still banned", () => {
+  const comark = readFileSync(join(ROOT, "app/_corporate/p5r2/VentureMark.tsx"), "utf8");
+  assert.ok(comark.includes("係"), "the co-mark component no longer renders 係");
+  assert.ok(!comark.includes("カカリ"), "a kana reading appeared in the co-mark component");
+
+  // The kanji may appear ONLY in the corporate brand components and the mark asset — never in the
+  // translated copy, where it would become a locale-specific rendering of the wordmark.
+  const offences: string[] = [];
+  const contentDir = join(ROOT, "app/_corporate/i18n/content");
+  for (const f of readdirSync(contentDir)) {
+    if (!f.endsWith(".ts")) continue;
+    const src = readFileSync(join(contentDir, f), "utf8");
+    // 係 is a common character (関係, 係わる); what is forbidden is it standing beside the wordmark.
+    if (/係\s*[／/]\s*Kakari|Kakari\s*[／/]\s*係/.test(src)) offences.push(f);
+  }
   assert.deepEqual(
-    uncoloured,
-    ["/chigamo"],
-    "exactly one venture has no canonical brand source, and it is Chigamo. If that changed, the " +
-      "claim ledger row C-12 changed with it — update both or neither.",
+    offences,
+    [],
+    `the co-mark leaked into translated copy — it belongs in the brand components only: ${offences}`,
   );
 });
 

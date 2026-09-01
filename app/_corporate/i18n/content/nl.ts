@@ -365,10 +365,12 @@ export const nl: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "Waar wij nu aan bouwen",
+    eyebrow: "Ondernemingen",
+    publicLabel: "Nu openbare ondernemingen",
+    publicNote: "Yorisou bouwt aan meerdere ondernemingen. Dit zijn de nu openbare.",
     heading: ["Geen daarvan staat al", "op eigen benen als bedrijf."],
     lead:
-      "In alle drie bestaan de regelingen en de systemen al — en stoppen ze net voordat ze de mensen bereiken die ze nodig hebben. Yorisou werkt in die ruimte, en toetst gaandeweg.",
+      "In elk daarvan bestaan de regelingen en de systemen al — en stoppen ze net voordat ze de mensen bereiken die ze nodig hebben. Yorisou werkt in die ruimte, en toetst gaandeweg.",
     cards: [
       {
         name: "Mirai Move",

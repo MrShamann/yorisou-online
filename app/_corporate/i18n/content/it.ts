@@ -365,10 +365,12 @@ export const it: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────── */
   ventures: {
-    eyebrow: "Ciò che stiamo costruendo",
+    eyebrow: "Progetti",
+    publicLabel: "Progetti attualmente pubblici",
+    publicNote: "Yorisou sta costruendo diversi progetti. Questi sono quelli attualmente pubblici.",
     heading: ["Nessuno di questi sta ancora", "in piedi come azienda."],
     lead:
-      "In tutti e tre, le regole e i sistemi esistono già e si fermano appena prima delle persone che ne hanno bisogno. Yorisou entra in quello spazio e dà forma alle cose verificandole man mano.",
+      "In ognuno di essi, le regole e i sistemi esistono già e si fermano appena prima delle persone che ne hanno bisogno. Yorisou entra in quello spazio e dà forma alle cose verificandole man mano.",
     cards: [
       {
         name: "Mirai Move",

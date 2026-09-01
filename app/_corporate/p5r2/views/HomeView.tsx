@@ -4,8 +4,8 @@ import styles from "../site.module.css";
 import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink, VentureComposition, VentureName } from "../pieces";
 import { NetworkSystem, ProcedureSystem } from "../systems";
 import FoundryField from "../FoundryField";
+import { VentureMark } from "../VentureMark";
 import { Phrase, ROUTES } from "../Shell";
-import { VENTURE_BRAND } from "../../brand";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
 
@@ -81,7 +81,14 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
         */}
         <div className={styles.ventureRail}>
           <div className={styles.railHead}>
-            <p className={`${styles.mono} ${styles.railLabel}`}>{copy.ventures.eyebrow}</p>
+            {/*
+              CORP-v1.3.1 — the rail names the set it is showing.
+
+              v1.3 labelled it "the ventures", which read as the company's whole activity. YORISOU
+              builds more than it publishes; this rail is the published ones, and the composition
+              beside it counts THAT set, not the company.
+            */}
+            <p className={`${styles.mono} ${styles.railLabel}`}>{copy.ventures.publicLabel}</p>
             {/*
               CORP-v1.3 — the composition, in the first viewport. A visitor who reads only the
               signature now learns that two of the three are being built and one is still an idea,
@@ -100,17 +107,8 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
                 <li className={styles.railItem} key={c.href}>
                   <a className={styles.railLink} href={L(c.href)}>
                     <span className={styles.railNameRow}>
-                      {/* the venture's own colour, or an open square where it has no brand source */}
-                      <span
-                        className={styles.ventureAccent}
-                        data-defined={VENTURE_BRAND[c.href]?.accent ? "yes" : "no"}
-                        style={
-                          VENTURE_BRAND[c.href]?.accent
-                            ? { background: VENTURE_BRAND[c.href].accent as string, borderColor: VENTURE_BRAND[c.href].accent as string }
-                            : undefined
-                        }
-                        aria-hidden="true"
-                      />
+                      {/* each venture's own mark, in the same slot on every surface */}
+                      <VentureMark href={c.href} size="card" />
                       <span className={styles.railName}>{c.name}</span>
                     </span>
                     <span className={`${styles.railReading} ${styles.jp}`}>{d.reading}</span>
@@ -134,6 +132,9 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
       <Band id="projects" tint>
         <Eyebrow>{h.buildEyebrow}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={h.buildHeading} locale={locale} /></h2>
+        {/* The company-level statement, before any count: YORISOU builds several; these are public. */}
+        <p className={`${styles.body} ${styles.jp}`}>{copy.ventures.publicNote}</p>
+        <p className={styles.subLabel}>{copy.ventures.publicLabel}</p>
         <VentureComposition building={copy.common.buildingLabel} concept={copy.common.conceptLabel} />
         <div className={styles.projects}>
           <article className={styles.project}>

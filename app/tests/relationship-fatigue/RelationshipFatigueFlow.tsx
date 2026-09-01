@@ -14,6 +14,7 @@ import ResultConversionCommunity from "../../components/ResultConversionCommunit
 import { RelationshipFatiguePrivateSave } from "./PrivateSaveAndNext";
 import { trackOpenTestingEvent } from "@/app/components/OpenTestingTracker";
 import { YorisouSymbol } from "@/app/components/YorisouLogo";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
@@ -190,7 +191,7 @@ export default function RelationshipFatigueFlow() {
               </div>
 
               <div className="pt-2">
-                <Link href="/" className="text-[13px] text-[#49615B] underline-offset-2 hover:underline">
+                <Link href={CONSUMER_HOME} className="text-[13px] text-[#49615B] underline-offset-2 hover:underline">
                   ← トップに戻る
                 </Link>
               </div>
@@ -412,7 +413,7 @@ function ResultView({ result, answers, onRetake }: { result: RFResult; answers: 
               >
                 もう一度チェックする
               </button>
-              <Link href="/" className="underline-offset-2 hover:underline">
+              <Link href={CONSUMER_HOME} className="underline-offset-2 hover:underline">
                 ← トップに戻る
               </Link>
             </div>

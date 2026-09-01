@@ -13,6 +13,7 @@ import YorisouCompanionCard from "@/app/components/YorisouCompanionCard";
 import YorisouRecommendationSlot from "@/app/components/YorisouRecommendationSlot";
 import ResultConversionCommunity from "../../components/ResultConversionCommunity";
 import { trackRecommendationSignal } from "@/app/components/YorisouSignalTracker";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 type Phase = "intro" | "quiz" | "result";
 const AUTO_ADVANCE_MS = 320;
@@ -182,7 +183,7 @@ export default function LoveDistanceFlow() {
               </div>
 
               <div className="pt-2">
-                <Link href="/" className="text-[13px] text-[#49615B] underline-offset-2 hover:underline">
+                <Link href={CONSUMER_HOME} className="text-[13px] text-[#49615B] underline-offset-2 hover:underline">
                   ← トップに戻る
                 </Link>
               </div>
@@ -410,7 +411,7 @@ function ResultView({ result, onRetake }: { result: LDResult; onRetake: () => vo
               >
                 もう一度チェックする
               </button>
-              <Link href="/" className="underline-offset-2 hover:underline">
+              <Link href={CONSUMER_HOME} className="underline-offset-2 hover:underline">
                 ← トップに戻る
               </Link>
             </div>

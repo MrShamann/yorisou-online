@@ -139,7 +139,20 @@ export type SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
+    /** Short, neutral, and the nav label. Must not assert how many ventures YORISOU has. */
     eyebrow: string;
+    /**
+     * CORP-v1.3.1 — the label on the set that is actually shown.
+     *
+     * v1.3 corrected "three areas, underway now" into a composition of the three ventures on the
+     * page, which is true of those three and still read as if three were all of YORISOU. It is not:
+     * the company builds more than it publishes, and the site shows the ones ready to be shown.
+     * `publicLabel` names that set wherever it appears, and `publicNote` states the relationship in
+     * a sentence, so the composition figures underneath are scoped to the public set rather than
+     * standing as a company total.
+     */
+    publicLabel: string;
+    publicNote: string;
     heading: readonly string[];
     lead: string;
     cards: readonly {

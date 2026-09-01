@@ -16,6 +16,15 @@ const CASES = [
   ["/notice", "ja", true],
   ["/tests", "ja", true],
   ["/tests/ima-iro", "ja", false],
+  /*
+   * CORP-v1.3.1 — the restored consumer home.
+   *
+   * The apex cutover moved the company to "/", so Today lives at /today. This is the case that would
+   * have caught the shell defect: before "/today" was added to CONSUMER_ROUTES, shellOwner("/today")
+   * returned CORPORATE and the page rendered with no header, footer or tab bar while every route
+   * test stayed green.
+   */
+  ["/today", "ja", true],
   ["/legal", "ja", true],
   ["/privacy", "ja", true],
 ];

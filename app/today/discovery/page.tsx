@@ -14,6 +14,7 @@ import {
 import SignInRequired from "@/app/life/SignInRequired";
 import RevealButton from "./RevealButton";
 import ShareButton from "./ShareButton";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 export const metadata: Metadata = {
   title: "今日のしるし | Yorisou",
@@ -97,7 +98,7 @@ export default async function DiscoveryPage() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
-              href="/"
+              href={CONSUMER_HOME}
               className="inline-flex min-h-[var(--pxr-touch-target)] items-center justify-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-8 py-3 text-[15px] font-semibold text-white"
             >
               {DAILY_SYMBOLS_COPY.closeCta}

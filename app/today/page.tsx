@@ -1,0 +1,186 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import TodayContinuity from "../TodayContinuity";
+import TodaySavedState from "../TodaySavedState";
+import TodayDiscoveryEntry from "../TodayDiscoveryEntry";
+
+export const metadata: Metadata = {
+  title: "YORISOU | AIと整える、わたしの毎日。",
+  description: "今の状態を短い言葉にして、次の小さな一歩へ。ログインなしではじめられます。",
+};
+
+// 今日 — the consumer product home, restored at /today.
+//
+// CORP-v1.3.1 — WHY THIS FILE EXISTS AGAIN.
+//
+// Commit 9f0e8ff promoted the corporate site to the root URLs and did not relocate Today anywhere.
+// The composition below then existed in NO file: its closing section heading survived only inside
+// `archP3DailyDiscovery.test.ts`, and `TodaySavedState` / `TodayDiscoveryEntry` were rendered by
+// nothing. Assertion L/M went red and stayed red for four packages, correctly reporting a real gap
+// in the consumer product rather than a stale test binding — which is why it was never rebound.
+//
+// This is the last valid composition, recovered verbatim from `8fd5bd5:app/page.tsx` — the commit
+// immediately before it was dropped. It is NOT a new product: nothing is redesigned, no copy is
+// rewritten, and the protected order is exactly as it was. Only three import paths changed, because
+// the file now sits one directory deeper.
+//
+// The Founder decision this implements: yorisou.online is the corporate apex, and the consumer
+// product keeps its own explicit routes. Today owns /today, next to /today/check-in and
+// /today/discovery, which never moved.
+//
+// WHAT THIS REPLACED, AND WHY (retained from the original file).
+//
+// The previous root screen was a project explainer: a three-line manifesto, two competing CTAs, then
+// a five-step 体験の流れ diagram, a six-card capability grid, an AI section and a LINE section. It
+// answered "what is Yorisou?" — a question only a newcomer evaluating the company asks, and only
+// once. It never answered "what is useful to me now?", which is the question every visit after the
+// first one actually has.
+//
+// So the business architecture — Select, Design, Community, the roadmap — is gone from here. Those
+// capabilities still exist; they surface contextually, when they are relevant to a person, rather
+// than as permanent explanatory blocks on the surface someone opens every day. Deeper explanation
+// belongs at /about.
+//
+// NO FABRICATED PERSONALIZATION. Everything on this server-rendered screen is identical for every
+// visitor, because a first-time visitor has told us nothing. The one personal element —
+// `TodayContinuity` — reads a real governed record and renders nothing when there isn't one.
+//
+// FIRST VIEWPORT BUDGET: product context, one entry hero, ONE primary action, and the beginning of
+// the next section. Not five cards and four CTAs.
+
+const SHORT_ACTIONS = [
+  {
+    href: "/tests",
+    title: "テーマから見る",
+    time: "5分ほど",
+  },
+  {
+    href: "/explore",
+    title: "合いそうなものを探す",
+    time: "数分",
+  },
+] as const;
+
+export default function TodayPage() {
+  return (
+    <main className="mx-auto flex w-full max-w-[var(--pxr-content-width)] flex-col px-5 pb-28 pt-8 md:pt-14">
+      <p className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">今日</p>
+
+      {/* The entry hero. One motif's worth of weight, carried by type and space rather than an
+          illustration that would push the primary action below the fold. */}
+      <h1 className="mt-3 text-[28px] font-semibold leading-[1.5] tracking-[-0.01em] text-[var(--pxr-text-primary)]">
+        今の気分から、
+        <br />
+        少しだけ見てみる。
+      </h1>
+      {/* THE PROMISE, not a description of one tap.
+          This said 「1〜2分で、いまの状態を短い言葉に。」 — accurate, and it made YORISOU sound like a
+          single quick check with nothing behind it. What the product actually does is accumulate:
+          each small thing left behind is something you can look back at later. That is the reason
+          to start, and the front page was not saying it.
+
+          It stays two sentences. A front page that lists what a product can do is a catalogue; this
+          one says what happens if you use it. */}
+      <p className="mt-3 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+        1〜2分で、いまの状態を短い言葉に。
+        <br />
+        少しずつ残していくと、あとから「あの頃どうだった？」を見返せます。
+      </p>
+
+      {/* ONE primary action. */}
+      <Link
+        href="/today/check-in"
+        // Full width where the thumb needs it; intrinsic width once there is room, because a 560px
+        // button on desktop reads as an unfinished layout rather than a confident one.
+        className="mt-6 flex min-h-[var(--pxr-touch-target)] w-full items-center justify-center rounded-[var(--pxr-radius-pill)] bg-[var(--pxr-accent)] px-8 py-4 text-[16px] font-semibold text-white sm:w-auto sm:self-start"
+      >
+        今の気配を見る
+      </Link>
+      <p className="mt-3 text-[13px] leading-[1.8] text-[var(--pxr-text-muted)]">
+        ログインなしではじめられます。診断ではありません。
+      </p>
+
+      {/* Real history only. Renders nothing for a new visitor. */}
+      <TodayContinuity />
+      {/* OSF-1: the same discipline for the account-backed record — nothing for a signed-out or
+          empty visitor, and nothing if the database is unreachable. */}
+      <TodaySavedState />
+      {/* DD-1: Today's curiosity half (今日のひとつ) — gated, authenticated, schema-ready only.
+          Utility stays primary; this renders nothing for everyone else. */}
+      <TodayDiscoveryEntry />
+
+      <section className="mt-10">
+        <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+          5分でできること
+        </h2>
+        {/* Rows, not cards. A bordered rectangle per item would make a calm list look like a
+            dashboard, and on a 390px screen that is most of the viewport. */}
+        <ul className="mt-2 divide-y divide-[var(--pxr-border-subtle)] border-y border-[var(--pxr-border-subtle)]">
+          {SHORT_ACTIONS.map((action) => (
+            <li key={action.href}>
+              <Link
+                href={action.href}
+                className="flex min-h-[var(--pxr-touch-target)] items-baseline justify-between gap-4 py-4"
+              >
+                <span className="text-[16px] font-medium leading-[1.6] text-[var(--pxr-text-primary)]">
+                  {action.title}
+                </span>
+                <span className="shrink-0 text-[13px] text-[var(--pxr-text-muted)]">{action.time}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+          じっくり見たいとき
+        </h2>
+        <Link
+          href="/tests/ima-iro"
+          className="mt-3 flex min-h-[var(--pxr-touch-target)] flex-col rounded-[var(--pxr-radius-lg)] border border-[var(--pxr-border-subtle)] bg-[var(--pxr-surface-emphasis)] px-5 py-5"
+        >
+          <span className="text-[17px] font-semibold leading-[1.5] text-[var(--pxr-text-primary)]">
+            いま色テスト
+          </span>
+          <span className="mt-1 text-[14px] leading-[1.8] text-[var(--pxr-text-secondary)]">
+            120問・今の動き方を、24の色と名前で。
+          </span>
+        </Link>
+      </section>
+
+      {/* WHAT SIGNING IN IS FOR — added when the Life OS actually opened to accounts, and not a
+          moment earlier. Until then the honest homepage was the one that did not mention it: a
+          front page that describes continuity a visitor cannot reach is selling something.
+
+          It stays deliberately small and last. Tests remain the lightweight way in, the quick check
+          remains the primary action, and this is the sentence for someone who has already used one
+          of those and wondered whether any of it is kept. No feature list, no "unlock", no urgency —
+          the product's own register does not push, and the front page should not be the exception. */}
+      <section className="mt-10">
+        <h2 className="text-[13px] font-medium tracking-[0.04em] text-[var(--pxr-text-muted)]">
+          あとから見返したいとき
+        </h2>
+        <p className="mt-3 text-[15px] leading-[var(--pxr-leading-body)] text-[var(--pxr-text-secondary)]">
+          ログインすると、残した結果や記録が、この端末を越えて残ります。
+          あとから見返したり、書き直したり、消したりできます。
+        </p>
+        <Link
+          href="/login"
+          className="mt-3 inline-flex min-h-[var(--pxr-touch-target)] items-center text-[15px] font-medium text-[var(--pxr-accent)]"
+        >
+          ログイン / アカウントを作る
+        </Link>
+      </section>
+
+      <p className="mt-12 text-[13px] leading-[1.9] text-[var(--pxr-text-muted)]">
+        Yorisouについて詳しくは
+        <Link href="/about" className="ml-1 underline underline-offset-4">
+          こちら
+        </Link>
+        。
+      </p>
+    </main>
+  );
+}

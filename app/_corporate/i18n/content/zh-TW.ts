@@ -383,10 +383,12 @@ export const zh_TW: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────── */
   ventures: {
-    eyebrow: "目前的事業",
+    eyebrow: "事業",
+    publicLabel: "目前公開的事業",
+    publicNote: "Yorisou 正在建構多個事業。這裡介紹目前公開的事業。",
     heading: ["它們都還沒有", "作為公司獨立站住。"],
     lead:
-      "這三個領域有一個共同點：制度與機制其實都已經存在，卻在需要的人面前停了下來。Yorisou 走進那個位置，一邊查證，一邊把它做成形。",
+      "這些領域有一個共同點：制度與機制其實都已經存在，卻在需要的人面前停了下來。Yorisou 走進那個位置，一邊查證，一邊把它做成形。",
     cards: [
       {
         name: "Mirai Move",

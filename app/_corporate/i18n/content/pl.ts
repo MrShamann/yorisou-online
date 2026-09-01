@@ -363,7 +363,9 @@ export const pl: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "Co budujemy teraz",
+    eyebrow: "Przedsięwzięcia",
+    publicLabel: "Przedsięwzięcia obecnie publiczne",
+    publicNote: "Yorisou buduje kilka przedsięwzięć. Tutaj te, które są obecnie publiczne.",
     heading: ["Żadne z nich nie stoi jeszcze", "jako osobna firma."],
     lead:
       "W każdym z nich przepisy i systemy już istnieją — i zatrzymują się tuż przed osobami, które ich potrzebują. Yorisou wchodzi w tę lukę i nadaje jej kształt, sprawdzając po drodze.",

@@ -3,14 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { CONSUMER_HOME } from "@/lib/consumerHome";
+
 // PXR-1 — the consumer information architecture.
 //
 // This shell already existed; PXR-1 changes what it MEANS rather than adding a second navigation.
 // `ホーム` became `今日` because the destination stopped being a description of Yorisou and became
 // what is useful to this person now — the label had to move with the product model, not decorate it.
+//
+// CORP-v1.3.1 — the 今日 tab points at /today, not at "/".
+//
+// The apex cutover makes "/" the YORISOU company site. Left alone, the first tab of the consumer
+// product's own tab bar — the one labelled 今日 — would have taken a person from inside the product
+// to the corporate front page. Nothing would have 404ed; it would just have been the wrong site.
 const TABS = [
   {
-    href: "/",
+    href: CONSUMER_HOME,
     label: "今日",
     icon: (
       <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1v-7.5Z" />
@@ -55,7 +63,9 @@ const TABS = [
 
 function isActive(pathname: string, href: string) {
   const normalized = pathname.replace(/\/$/, "") || "/";
-  if (href === "/") return normalized === "/";
+  // Exact match, so /today/check-in and /today/discovery do not light the 今日 tab. Previously this
+  // read `href === "/"`; the tab's destination moved, so its active rule moved with it.
+  if (href === CONSUMER_HOME) return normalized === CONSUMER_HOME;
   // 探す owns discovery, including the existing recommendation surfaces it absorbs.
   if (href === "/explore") {
     return normalized.startsWith("/explore") || normalized.startsWith("/recommendations");

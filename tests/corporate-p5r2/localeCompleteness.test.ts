@@ -76,7 +76,16 @@ test("no locale is missing any string the canonical Japanese source defines", as
 
 test("no locale silently ships the Japanese source text as its own", async () => {
   // Proper nouns are legitimately identical everywhere; prose is not.
-  const ALLOWED_IDENTICAL = /^(Yorisou|YORISOU|MIRAI MOVE|Kakari|かかり|よりそう|合同会社YORISOU|YORISOU LLC)$/;
+  /*
+ * CORP-v1.3.1 — `かかり` removed.
+ *
+ * This is an ALLOW list of strings a locale may legitimately leave identical to the Japanese. It
+ * listed `かかり`, which the claim guard's `brand-transliteration` rule forbids outright — an allow
+ * entry directly contradicting a ban. It was unreachable (no locale contains it, and the ban would
+ * fail the build first), so removing it changes no outcome; it closes a loophole that would have
+ * opened the moment someone added the string this list said was fine.
+ */
+const ALLOWED_IDENTICAL = /^(Yorisou|YORISOU|MIRAI MOVE|Kakari|よりそう|合同会社YORISOU|YORISOU LLC)$/;
 
   /**
    * Paths that carry IDENTIFIERS rather than prose, and must be byte-identical in every locale:

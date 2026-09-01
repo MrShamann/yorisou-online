@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
 import styles from "./site.module.css";
-import { ventureBrandByName, ventureCounts } from "../brand";
+import { ventureCounts } from "../brand";
+import { VentureMark } from "./VentureMark";
 
 export function Band({
   children, id, tint, line, dark,
@@ -188,29 +189,20 @@ export function VentureName({
   const markClass =
     size === "hero" ? styles.ventureMarkHero : size === "compact" ? styles.ventureMarkCompact : styles.projectName;
   /*
-   * CORP-v1.3 — each venture now carries its OWN colour, read from its own repository, and the one
-   * venture that has no canonical source carries none.
+   * CORP-v1.3.1 — each venture now carries its OWN MARK, not a colour square.
    *
-   * Chigamo is drawn as an open square rather than a filled one. That is not a styling choice: it
-   * has no brand source of any kind, so assigning it a colour would be inventing an identity for a
-   * concept, and the site would then look like it has three equally-established ventures. An empty
-   * outline says what is true — the shape exists, nothing has been filled in yet.
+   * v1.3 put a 9px accent square here and drew Chigamo's as an empty outline, because it had no
+   * brand source. All three now have a real identity — Mirai Move's official logo, Kakari's
+   * Founder-approved 「係 / Kakari」 co-mark, and Chigamo's new Founder-approved mark — so the
+   * placeholder is gone. See app/_corporate/p5r2/VentureMark.tsx.
    *
-   * The mark is aria-hidden and purely decorative. The wordmark and the stage are always rendered
-   * as text beside it, so nothing here is communicated by colour alone.
+   * The mark stays aria-hidden and decorative: the wordmark and the stage are always rendered as
+   * text beside it, so nothing is communicated by the mark alone.
    */
-  const brand = ventureBrandByName(name);
   return (
     <span className={styles.ventureName}>
       <span className={styles.ventureMarkRow}>
-        {brand ? (
-          <span
-            className={styles.ventureAccent}
-            data-defined={brand.accent ? "yes" : "no"}
-            style={brand.accent ? { background: brand.accent, borderColor: brand.accent } : undefined}
-            aria-hidden="true"
-          />
-        ) : null}
+        <VentureMark name={name} size={size === "compact" ? "compact" : size === "hero" ? "hero" : "card"} />
         <Tag className={markClass}>{name}</Tag>
       </span>
       {reading ? <span className={`${styles.brandLine} ${styles.jp}`}>{reading}</span> : null}

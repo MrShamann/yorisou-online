@@ -382,10 +382,12 @@ export const vi: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "Những dự án hiện nay",
+    eyebrow: "Dự án",
+    publicLabel: "Các dự án hiện được công bố",
+    publicNote: "Yorisou đang xây dựng nhiều dự án. Đây là những dự án hiện được công bố.",
     heading: ["Chưa cái nào trong số này", "đứng được như một công ty."],
     lead:
-      "Ở cả ba, thiết chế và hệ thống vốn đã tồn tại — và dừng lại ngay trước những người cần đến chúng. Yorisou bước vào đúng khoảng trống đó, vừa làm vừa kiểm chứng.",
+      "Ở mỗi dự án, thiết chế và hệ thống vốn đã tồn tại — và dừng lại ngay trước những người cần đến chúng. Yorisou bước vào đúng khoảng trống đó, vừa làm vừa kiểm chứng.",
     cards: [
       {
         name: "Mirai Move",

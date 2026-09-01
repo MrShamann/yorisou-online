@@ -372,7 +372,9 @@ export const zh_CN: SiteCopy = {
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
   ventures: {
-    eyebrow: "目前的业务",
+    eyebrow: "事业",
+    publicLabel: "目前公开的事业",
+    publicNote: "Yorisou 正在构建多个事业。这里介绍目前公开的事业。",
     heading: ["它们都还没有", "作为公司独立站住。"],
     lead:
       "它们的共同点是：制度与机制都已经存在，却在真正需要的人面前停下。Yorisou 走进这段空白，一边确认，一边把它做成形。",

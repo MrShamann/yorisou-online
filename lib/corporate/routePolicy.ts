@@ -185,6 +185,21 @@ export const CONSUMER_ROUTES: readonly string[] = [
   "/tests/s01",
   "/tests/work-rhythm",
   "/tests/yorisou-values",
+  /*
+   * CORP-v1.3.1 — `/today` itself, not only its children.
+   *
+   * The consumer Today surface is restored at app/today/page.tsx as part of the corporate apex
+   * cutover. `isKnownPageRoute()` tests this list with an EXACT `includes()`, while `classify()`
+   * uses the prefix-tolerant NAMESPACES table — so before this entry existed, `/today` classified
+   * as a consumer namespace for CRAWL purposes while `shellOwner("/today")` returned CORPORATE.
+   * The restored page would have rendered with no AppHeader, no SiteFooter and no MobileBottomNav,
+   * and no test would have caught it: both consistency tests only check that nothing classifies
+   * UNKNOWN and that no listed route is stale, and `/today` classified fine either way.
+   *
+   * `consumerShellIntegrity.test.ts` now asserts every consumer page on disk actually resolves to
+   * the consumer shell, which closes the general trap rather than just this instance of it.
+   */
+  "/today",
   "/today/check-in",
   "/today/discovery",
   "/vision",

@@ -1,0 +1,29 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kakari">
+  <!--
+    Kakari — the Founder-approved corporate co-mark 「係 / Kakari」.
+
+    WHAT THE DESIGN IS. 係 is the identity character: 亻 (a person) carrying 系 (a thread) — the
+    venture's own meaning, responsibility and handoff, already inside the character. The designed
+    element is the TERMINAL RULE beneath it. That rule is Kakari's own signature: its system diagram
+    in app/_corporate/p5r2/systems.tsx is an ordered descent down a rail that stops at a full-width
+    rule — the point where a procedure hands off to a qualified human. Setting 係 above that rule
+    states the venture in its own established visual language.
+
+    WHY THE CHARACTER IS SET AND NOT DRAWN. A first version constructed 係 from monoline paths on a
+    grid. Rendered beside the real character it was malformed — the 亻 read as a lollipop and the 幺
+    coils as a zigzag — and a malformed kanji is worse for a Japanese-market brand than no mark at
+    all. So the character is SET, in the corporate site's own Japanese stack, at a weight and optical
+    size chosen for this slot; the design work is the composition, not a traced glyph. The stack is
+    the same one the whole corporate surface already uses, so no font is bundled or redistributed.
+
+    Monochrome by construction: everything is `currentColor`, so it inherits the surface it sits on
+    and works on both the paper and the dark system surface with no variant.
+
+    SCOPE. This co-mark is for the YORISOU corporate surface only. The Kakari APPLICATION keeps the
+    ASCII `Kakari` wordmark, and its localisation glossary's ban on カカリ / 卡卡里 is untouched and
+    still enforced by tests/corporate-p5r2/corporateClaims.test.ts.
+  -->
+  <text x="32" y="43" text-anchor="middle" fill="currentColor" font-size="46" font-weight="600"
+        font-family="'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic','Noto Sans CJK JP',sans-serif">係</text>
+  <path d="M 18 56 L 46 56" fill="none" stroke="currentColor" stroke-width="3" opacity="0.5"/>
+</svg>
