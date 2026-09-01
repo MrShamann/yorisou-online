@@ -84,7 +84,6 @@ export const ms: SiteCopy = {
       { no: "03", title: "Lapangan dan sistem tidak sejajar.", body: "Dalam bidang mobiliti, kebajikan dan pentadbiran awam, ada pilihan yang masih belum sampai kepada mereka yang berada di lapangan." },
     ],
 
-    buildEyebrow: "Apa yang kami bina",
     buildHeading: ["Bidang yang tidak dicapai sistem —", "kami tangani satu demi satu."],
 
     howEyebrow: "Cara kami membina",
@@ -95,7 +94,6 @@ export const ms: SiteCopy = {
       { no: "03", title: "Menyatakan batasan dengan jelas", body: "Kami tidak masuk ke dalam bidang yang menjadi tanggungjawab pakar bertauliah. Apa yang kami galas dan di mana kami menyerahkannya kepada pakar ditulis di dalam produk itu sendiri." },
       { no: "04", title: "Menyebut hanya apa yang boleh disahkan", body: "Pencapaian, angka dan kerjasama hanya disenaraikan apabila ada buktinya. Apa yang tidak dapat disahkan tidak kami tulis." },
     ],
-    howDisclose: "Apa maksud prinsip ini dalam amalan",
 
     founderEyebrow: "Wakil syarikat",
     founderHeading: ["Dibina oleh seseorang yang telah", "20 tahun berada dalam industri yang rumit."],
@@ -140,13 +138,6 @@ export const ms: SiteCopy = {
       "Pengasas, penyelidik, pihak awam, syarikat. Tempat anda boleh masuk bergantung pada kedudukan anda. Kami bermula daripada apa yang boleh dibincangkan sekarang.",
     engageCta: "Lihat cara untuk terlibat",
     engageNote: "Semuanya bermula daripada perbualan buat masa ini. Belum ada proses permohonan mahupun kaedah pemilihan.",
-    explainerLabel: "Yorisou dalam 30 saat",
-    explainerHeading: ["Daripada masalah kepada syarikat,", "dalam tiga puluh saat."],
-    explainerClose: "Tutup",
-    explainerPlay: "Main",
-    explainerPause: "Jeda",
-    explainerRestart: "Mula semula",
-    explainerStepLabel: "Babak",
   },
 
   mirai: {
@@ -247,12 +238,6 @@ export const ms: SiteCopy = {
       { no: "02", title: "Bertanggungjawab sehingga ia difahami", body: "Menyampaikan maklumat bukanlah penamatnya. Mengetahui apa yang perlu dilakukan seterusnya termasuk dalam skop reka bentuk kami." },
       { no: "03", title: "Menyatakan batasan dengan jelas", body: "Kami tidak masuk ke dalam bidang yang menjadi tanggungjawab pakar bertauliah. Apa yang kami galas dan di mana kami menyerahkannya kepada pakar ditulis di dalam produk itu sendiri." },
       { no: "04", title: "Menyebut hanya apa yang boleh disahkan", body: "Pencapaian, angka dan kerjasama hanya disenaraikan apabila ada buktinya. Apa yang tidak dapat disahkan tidak kami tulis." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Bermula daripada bahasa di lapangan", long: "Tiada sistem yang sampai kepada sesiapa selagi ia belum diterjemahkan kepada langkah yang benar-benar diambil oleh penggunanya. Kami bermula daripada permohonan sebenar, pergerakan sebenar dan urusan sebenar — bukan daripada rumusan masalah yang abstrak, tetapi daripada satu langkah yang sedang tersekat di hadapan mata." },
-      { no: "02", title: "Bertanggungjawab sehingga ia difahami", long: "Menyenaraikan hasil carian bukanlah sokongan. Apa yang seseorang perlukan ialah mengetahui apa yang perlu dilakukan olehnya sekarang. Skop produk kami berterusan sehingga langkah seterusnya benar-benar difahami, bukan sekadar sehingga maklumat dipaparkan." },
-      { no: "03", title: "Menyatakan batasan dengan jelas", long: "Membiarkan seseorang menggunakan produk tanpa kejelasan tentang apa yang tidak mampu dilakukannya ialah reka bentuk yang paling berbahaya. Apa yang kami galas dan di mana pakar bertauliah mengambil alih ditulis pada skrin produk itu sendiri. Batasan ialah sebahagian daripada fungsi, bukan sekadar nota penafian." },
-      { no: "04", title: "Menyebut hanya apa yang boleh disahkan", long: "Kami tidak memperkatakan pencapaian yang tidak dapat disahkan atau fungsi yang belum beroperasi. Setiap fakta yang kami siarkan mempunyai rekod yang menyokongnya. Pada tempoh yang sedikit sahaja boleh kami tulis, sedikit itulah yang kami siarkan." },
     ],
     orderHeading: ["Satu demi satu,", "sehingga tuntas."],
     orderBody: "Kami tidak memulakan banyak perkara serentak. Kami mengutamakan satu bidang dibina sehingga benar-benar sampai kepada langkah yang diambil orang di lapangan.",

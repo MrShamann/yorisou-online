@@ -86,7 +86,6 @@ export const nl: SiteCopy = {
       { no: "03", title: "De praktijk en het systeem sluiten niet op elkaar aan.", body: "In mobiliteit, zorg en overheidsdienstverlening bestaan mogelijkheden die de mensen in de praktijk nog niet hebben bereikt." },
     ],
 
-    buildEyebrow: "Wat wij bouwen",
     buildHeading: ["Gebieden die het systeem niet bereikt —", "één voor één opgepakt."],
 
     howEyebrow: "Hoe wij bouwen",
@@ -97,7 +96,6 @@ export const nl: SiteCopy = {
       { no: "03", title: "De grens benoemen", body: "Wij treden niet in het werk dat aan een erkende professional toebehoort. Wat wij wel doen en waar wij overdragen, staat in het product zelf beschreven." },
       { no: "04", title: "Alleen zeggen wat te verifiëren is", body: "Resultaten, cijfers en samenwerkingen vermelden wij alleen waar bewijs voor is. Wat wij niet kunnen bevestigen, schrijven wij niet op." },
     ],
-    howDisclose: "Wat deze uitgangspunten in de praktijk betekenen",
 
     founderEyebrow: "Vertegenwoordiger",
     founderHeading: ["Gebouwd door iemand die twintig jaar", "in complexe industrieën heeft gestaan."],
@@ -142,13 +140,6 @@ export const nl: SiteCopy = {
       "Oprichters, onderzoekers, overheid, bedrijven. Waar u kunt aanhaken, hangt af van waar u staat. Wij beginnen bij wat nu al te bespreken valt.",
     engageCta: "Bekijk de ingangen",
     engageNote: "Alles begint nu bij een gesprek. Er is nog geen aanmeldingsprocedure en geen selectie.",
-    explainerLabel: "Yorisou in 30 seconden",
-    explainerHeading: ["Van vraagstuk naar bedrijf,", "in dertig seconden."],
-    explainerClose: "Sluiten",
-    explainerPlay: "Afspelen",
-    explainerPause: "Pauzeren",
-    explainerRestart: "Opnieuw",
-    explainerStepLabel: "Stap",
   },
 
   mirai: {
@@ -249,12 +240,6 @@ export const nl: SiteCopy = {
       { no: "02", title: "Verantwoordelijk tot het begrepen is", body: "Informatie tonen is niet het eindpunt. Weten wat de volgende stap is, hoort binnen de reikwijdte van het ontwerp." },
       { no: "03", title: "De grens benoemen", body: "Wij treden niet in het werk dat aan een erkende professional toebehoort. Wat wij wel doen en waar wij overdragen, staat in het product zelf beschreven." },
       { no: "04", title: "Alleen zeggen wat te verifiëren is", body: "Resultaten, cijfers en samenwerkingen vermelden wij alleen waar bewijs voor is. Wat wij niet kunnen bevestigen, schrijven wij niet op." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Beginnen bij de taal van de praktijk", long: "Geen enkele regeling bereikt iemand voordat zij vertaald is naar de stappen die de betrokkene daadwerkelijk zet. Wij beginnen bij de werkelijke aanvraag, de werkelijke verplaatsing, het werkelijke contact — niet bij een abstracte probleemstelling, maar bij de ene stap die nu vastzit." },
-      { no: "02", title: "Verantwoordelijk tot het begrepen is", long: "Zoekresultaten opsommen is geen ondersteuning. Wat iemand nodig heeft, is weten wat hij nu moet doen. De reikwijdte van het product loopt tot het punt waarop de volgende stap begrepen is, niet tot het punt waarop informatie is getoond." },
-      { no: "03", title: "De grens benoemen", long: "Iemand een product laten gebruiken zonder duidelijk te maken wat het niet kan, is het gevaarlijkste ontwerp dat er is. Wat wij zelf doen en waar een professional het overneemt, schrijven wij in het scherm zelf. De grens is een functie, geen kleine lettertjes." },
-      { no: "04", title: "Alleen zeggen wat te verifiëren is", long: "Wij spreken niet over resultaten die wij niet kunnen bevestigen, of over functies die nog niet draaien. Achter elk feit dat wij publiceren ligt een vastgelegd gegeven. In periodes waarin wij weinig kunnen zeggen, publiceren wij weinig." },
     ],
     orderHeading: ["Eén voor één,", "helemaal tot het einde."],
     orderBody: "Wij starten niet veel dingen tegelijk. Liever brengen wij één gebied helemaal tot het punt waarop het aansluit bij de stappen die mensen werkelijk zetten.",

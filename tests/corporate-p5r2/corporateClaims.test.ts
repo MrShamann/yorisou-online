@@ -83,7 +83,7 @@ const RULES: Rule[] = [
   {
     id: "yorisou-owns-asterion",
     re: /(our|yorisou[’'`s]{0,2}|私たちの|当社の|弊社の)\s*asterion|asterion[^.。\n]{0,24}(を所有|の所有者)|owns?\s+asterion/i,
-    why: "Asterion is independent and is not owned by Yorisou",
+    why: "the site draws no ownership conclusion about Asterion in either direction; rights depend on the applicable agreements",
   },
   {
     id: "our-customers",
@@ -293,6 +293,117 @@ test("no locale concludes who owns Asterion — in either direction", () => {
 });
 
 /**
+ * CORP-v1.4R1.1 — the SOURCE layer of the same rule.
+ *
+ * The test above protects the rendered copy. It does not protect the code, and that is the gap this
+ * package closed: v1.4 removed the absolute "Asterion is not owned by Yorisou" from all twenty-one
+ * locales, but implementation comments in `HomeView.tsx`, `FoundryView.tsx` and this very file went
+ * on stating it as the canonical current intent for another two releases. A future agent reads a
+ * comment like that as the design it is meant to preserve, and writes the withdrawn conclusion back
+ * onto the page. Public copy was fixed; source intent had drifted.
+ *
+ * NEGATION-AWARE BY DESIGN, unlike its locale counterpart. Source legitimately DISCUSSES the
+ * withdrawn phrase — this file quotes it in three test names and a rationale, and both views explain
+ * why it was withdrawn. So a hit is only a violation when it is NOT accompanied by a withdrawal
+ * marker. Without that exemption the guard would fire on its own explanation, which is the failure
+ * mode `tests/corporate-qa/README.md` records: a guard that cannot tell a prohibition from a
+ * violation gets disabled.
+ */
+const SOURCE_OWNERSHIP_CONCLUSIONS = [
+  /\b(?:yorisou|we)\s+(?:do(?:es)?\s+not|don[’'`]?t)\s+own\b/i,
+  /\bis\s+not\s+owned\s+by\s+yorisou\b/i,
+  /\bnot\s+owned\s+by\s+(?:us|yorisou)\b/i,
+  /\byorisou\s+owns\s+asterion\b/i,
+];
+
+/**
+ * Text that marks a mention as narrating a WITHDRAWN position rather than asserting a current one.
+ *
+ * The list grew by one entry on its first run: the guard fired on the very paragraph above, which
+ * says v1.4 "removed the absolute ...". That is the failure this exemption exists for, and it is
+ * worth recording that it happened rather than quietly widening the pattern.
+ */
+const WITHDRAWAL_MARKERS =
+  /withdrew|withdrawn|used to|no longer|until CORP|earlier absolute|(was |v1\.4 )?removed|kept asserting|prior state|historical|reintroduc|must not|forbidden/i;
+
+test("no corporate source comment asserts an Asterion ownership conclusion as current intent", () => {
+  const roots = ["app/_corporate", "tests/corporate-p5r2"];
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
+      const rel = `${dir}/${e.name}`;
+      if (e.isDirectory()) walk(rel);
+      // The locale content files are covered by the rendered-copy test above, which is stricter.
+      else if (/\.(ts|tsx|css)$/.test(e.name) && !rel.includes("i18n/content")) files.push(rel);
+    }
+  };
+  roots.forEach(walk);
+
+  /*
+   * PROJECT_START_HERE.md is in this list because leaving it out is what let the drift survive.
+   *
+   * The first version of this guard walked source directories only. It passed — while the repository's
+   * MANDATORY context entrypoint still said, flatly and in the present tense, "It is NOT owned by
+   * Yorisou and is NOT a Yorisou venture." CLAUDE.md requires every agent to read that file before
+   * planning or editing, so it is the single highest-leverage place the withdrawn conclusion could
+   * sit, and it was the only place no guard was looking. A guard scoped to code cannot protect a
+   * doctrine that lives in a document.
+   */
+  files.push("PROJECT_START_HERE.md");
+
+  const hits: string[] = [];
+  for (const rel of files) {
+    const src = readFileSync(path.join(ROOT, rel), "utf8");
+    const lines = src.split("\n");
+    for (const re of SOURCE_OWNERSHIP_CONCLUSIONS) {
+      lines.forEach((line, i) => {
+        /*
+         * MATCH ACROSS THE LINE BREAK, not within one line.
+         *
+         * The per-line version passed while PROJECT_START_HERE.md said "It is NOT owned by\nYorisou
+         * and is NOT a Yorisou venture." — the assertion was simply wrapped, and prose files wrap at
+         * about a hundred characters, so a wrapped assertion is the normal case rather than a clever
+         * evasion. Testing each line joined to the next catches it; the exemption is evaluated on the
+         * same joined text, so a narration whose framing sits on either line still passes.
+         */
+        const joined = line + " " + (lines[i + 1] ?? "");
+        const m = re.exec(joined);
+        re.lastIndex = 0;
+        if (!m) return;
+        /*
+         * THE EXEMPTION IS PER-LINE, deliberately.
+         *
+         * The first version looked at a +/-3 line window, and an injected violation proved it
+         * useless: any file that legitimately explains the withdrawal earns a seven-line blanket
+         * exemption, and both views and this file do exactly that. A new assertion dropped anywhere
+         * near the explanation would have passed silently.
+         *
+         * Every legitimate mention in this repository carries its framing on its OWN line — either
+         * the withdrawn wording is in quotation marks, or the same line says it was withdrawn. So
+         * the narrower rule keeps all of them and catches a bare new assertion.
+         */
+        const before = joined.slice(0, m.index);
+        const after = joined.slice(m.index + m[0].length);
+        const quoted = /["“”]/.test(before) && /["“”]/.test(after);
+        if (quoted || WITHDRAWAL_MARKERS.test(joined)) return;
+        const hit = `${rel}:${i + 1}: ${line.trim().slice(0, 120)}`;
+        // One line can match several patterns; report it once.
+        if (!hits.includes(hit)) hits.push(hit);
+      });
+    }
+  }
+
+  assert.deepEqual(
+    hits,
+    [],
+    `corporate source states an Asterion ownership conclusion as current intent. The supported ` +
+      `position is that Asterion is an independent technology-platform project, is not a public ` +
+      `Yorisou venture, and that rights depend on the applicable agreements — no conclusion in ` +
+      `EITHER direction. If you are narrating the withdrawn claim, say so on the same line:\n${hits.join("\n")}`,
+  );
+});
+
+/**
  * CORP-v1.2R2 — every venture carries its own Japanese line and a participation path.
  *
  * `reading` is the venture's own one-line positioning, NOT a transliteration of its wordmark. The
@@ -461,11 +572,10 @@ test("every venture surface renders the shared identity unit", () => {
  * and it is stricter, because the spine must show all EIGHT stages rather than a seven-beat
  * selection from them.
  *
- * The component itself stays in the tree, unreferenced, and its own protections below are
- * unchanged: if anyone re-mounts it, it must still respect reduced motion, must still be
- * keyboard-operable, and must still never present itself as a video.
+ * CORP-v1.4R1.1 removed the component itself. What its assertions protected is now protected on the
+ * surface that replaced it — see the note inside the test.
  */
-test("the method is presented whole, and the explainer stays safe if it is ever re-mounted", () => {
+test("the method is presented whole, by one system object with no client runtime", () => {
   const view = readFileSync(path.join(ROOT, "app/_corporate/p5r2/views/FoundryView.tsx"), "utf8");
   assert.ok(/<FoundrySpine\b/.test(view), "the Foundry page no longer presents the method as one system");
 
@@ -483,26 +593,29 @@ test("the method is presented whole, and the explainer stays safe if it is ever 
     "the spine implies measurable progress; a venture is at a named stage or it is not",
   );
 
-  const comp = readFileSync(path.join(ROOT, "app/_corporate/p5r2/GuidedExplainer.tsx"), "utf8");
-  assert.ok(/prefers-reduced-motion/.test(comp), "the explainer does not consult the motion preference");
-  assert.ok(/setPlaying\(!mq\.matches\)/.test(comp), "the explainer autoplays regardless of the motion preference");
-  for (const control of ["labels.play", "labels.pause", "labels.restart", "labels.step"]) {
-    assert.ok(comp.includes(control), `the explainer is missing the ${control} control`);
-  }
-  assert.ok(/role="tab"/.test(comp) && /onKeyDown/.test(comp), "explainer beats are not keyboard-operable");
-
   /*
-   * It must never present itself as a video, because no video asset exists — but scan the CODE, not
-   * the comments. The source explains at length that no MP4, Lottie or WebGL is used, and a guard
-   * that could not tell an explanation from an import would fire on its own rationale.
+   * CORP-v1.4R1.1 — the explainer half of this test is gone because its subject is gone.
+   *
+   * It asserted that GuidedExplainer respected `prefers-reduced-motion`, exposed play/pause/restart
+   * /step controls, kept its beats keyboard-operable, and never referenced video or a heavy runtime.
+   * Those assertions had no subject once the Founder authorized deleting the component, and a test
+   * that reads a deleted file does not fail politely — it throws ENOENT.
+   *
+   * The property they protected is NOT dropped. The surface that replaced the explainer is asserted
+   * above (the spine reads canonical stages, places ventures at recorded stages, and implies no
+   * measurable progress), and it carries the protection for free: the spine is a server component
+   * with no JavaScript, so there is no autoplay to gate on a motion preference and no transport to
+   * make keyboard-operable. The no-heavy-runtime check moves to the whole operating field, where a
+   * regression could actually occur now.
    */
-  const css = readFileSync(path.join(ROOT, "app/_corporate/p5r2/guided-explainer.module.css"), "utf8");
-  for (const text of [comp, css]) {
-    assert.ok(
-      !/<video|\.mp4|from ["']lottie|require\(["']lottie|WebGLRenderer|getContext\(["']webgl/i.test(copyOnly(text)),
-      "the explainer references video or a heavy runtime",
-    );
-  }
+  assert.ok(
+    !/<video|\.mp4|from ["']lottie|require\(["']lottie|WebGLRenderer|getContext\(["']webgl/i.test(copyOnly(spine)),
+    "the operating field references video or a heavy runtime",
+  );
+  assert.ok(
+    !/"use client"|useState|useEffect|onClick=/.test(spine),
+    "the operating field is no longer a pure server component; the explainer was retired precisely to stop shipping interaction JavaScript",
+  );
 });
 
 /**
@@ -515,8 +628,10 @@ test("the method is presented whole, and the explainer stays safe if it is ever 
  * This required `<details>`/`<summary>` in BuildWithUsView. The six lanes are now a native RADIO
  * GROUP shared with the homepage: a reader picks a role once and the answer arrives in place,
  * instead of opening six disclosures to find out which one is theirs. That is at least as
- * accessible — a radio group gives arrow-key navigation the browser provides for free, and
- * `display:none` on unselected panels gives assistive technology real tab semantics.
+ * accessible — a radio group gives arrow-key navigation the browser provides for free, the inputs
+ * stay focusable (visually hidden, never `display:none`), and `display:none` on the unselected
+ * PANELS means assistive technology is offered exactly one panel at a time. It is a native
+ * radio-group controlling conditional content, not an ARIA tabs widget.
  *
  * So the assertion follows the property rather than the element: essential content must be revealed
  * by a native form control or a disclosure element, NEVER by hover, and every lane field must

@@ -88,12 +88,10 @@ export type SiteCopy = {
     whyEyebrow: string;
     whyHeading: readonly string[];
     whyBeats: readonly Beat[];
-    buildEyebrow: string;
     buildHeading: readonly string[];
     howEyebrow: string;
     howHeading: readonly string[];
     howBeats: readonly Beat[];
-    howDisclose: string;
     founderEyebrow: string;
     founderHeading: readonly string[];
     founderTeaser: string;
@@ -146,15 +144,6 @@ export type SiteCopy = {
     engageCta: string;
     /* CORP-v1.2R2 — the homepage participation layer. Lane labels come from buildWithUs.lanes. */
     engageNote: string;
-    /* CORP-v1.2R2 — the "30 seconds" explainer affordance. */
-    explainerLabel: string;
-    explainerHeading: readonly string[];
-    explainerClose: string;
-    /* CORP-v1.2R2.1 — guided-explainer transport controls. */
-    explainerPlay: string;
-    explainerPause: string;
-    explainerRestart: string;
-    explainerStepLabel: string;
   };
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
@@ -413,7 +402,6 @@ export type SiteCopy = {
     thinkBody: readonly string[];
     buildHeading: readonly string[];
     principles: readonly Beat[];
-    principlesLong: readonly { no: string; title: string; long: string }[];
     orderHeading: readonly string[];
     orderBody: string;
     claimsHeading: readonly string[];

@@ -28,9 +28,17 @@ import type { SiteCopy } from "../i18n/types";
  * matching or recommendation. Every number and state comes from `ventureState.ts`, which is set
  * from each venture's own repository evidence.
  *
- * INTERACTION IS A NATIVE RADIO GROUP. No JavaScript, no new dependency, no hydration cost. Arrow
- * keys work because the browser provides them, `display:none` gives real tab/panel semantics to
- * assistive technology, and reduced motion has nothing to switch off.
+ * INTERACTION IS A NATIVE RADIO GROUP — not an ARIA tabs implementation.
+ *
+ * The inputs are visually hidden but FOCUSABLE (`position:absolute; opacity:0; 1x1`, never
+ * `display:none`), each paired with a real `<label for>`; the unselected panels are the things that
+ * carry `display:none`, so exactly one panel is in the accessibility tree at a time. Arrow keys work
+ * because a radio group gives them for free, and reduced motion has nothing to switch off.
+ *
+ * The accurate name for this is a native radio-group controlling conditional content. There are no
+ * `role="tab"`, `role="tabpanel"` or `aria-selected` attributes anywhere in this file, and calling
+ * it "tab semantics" — as an earlier version of this comment did — would tell the next reader to
+ * expect an ARIA widget contract that is deliberately not implemented here.
  */
 
 const STAGE_COUNT = 8;

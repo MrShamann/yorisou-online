@@ -84,7 +84,6 @@ export const fr: SiteCopy = {
       { no: "03", title: "Le terrain et les systèmes ne s’articulent pas.", body: "Dans la mobilité, l’action sociale et l’administration, il existe des options qui n’ont pas encore atteint les personnes sur le terrain." },
     ],
 
-    buildEyebrow: "Ce que nous construisons",
     buildHeading: ["Des domaines que le système n’atteint pas —", "abordés un par un."],
 
     howEyebrow: "Notre façon de construire",
@@ -95,7 +94,6 @@ export const fr: SiteCopy = {
       { no: "03", title: "Énoncer les limites", body: "Nous n’empiétons pas sur ce qui relève d’un professionnel agréé. Ce que nous prenons en charge, et le moment où nous passons le relais, est inscrit dans le produit lui-même." },
       { no: "04", title: "Ne dire que ce qui peut être vérifié", body: "Résultats, chiffres et partenariats ne figurent ici que lorsqu’il existe des preuves. Ce qui ne peut pas être confirmé n’est pas écrit." },
     ],
-    howDisclose: "Ce que ces principes signifient concrètement",
 
     founderEyebrow: "Le représentant",
     founderHeading: ["Construit par quelqu’un qui observe", "des secteurs complexes depuis vingt ans."],
@@ -140,13 +138,6 @@ export const fr: SiteCopy = {
       "Fondateurs, chercheurs, acteurs publics, entreprises. Le point d’entrée dépend de la place que vous occupez. Nous commençons par ce dont il est possible de parler aujourd’hui.",
     engageCta: "Voir les portes d’entrée",
     engageNote: "Toutes commencent aujourd’hui par une conversation. Il n’existe encore ni procédure de candidature ni processus de sélection.",
-    explainerLabel: "Yorisou en 30 secondes",
-    explainerHeading: ["D’un problème à une entreprise,", "en trente secondes."],
-    explainerClose: "Fermer",
-    explainerPlay: "Lecture",
-    explainerPause: "Pause",
-    explainerRestart: "Recommencer",
-    explainerStepLabel: "Étape",
   },
 
   mirai: {
@@ -247,12 +238,6 @@ export const fr: SiteCopy = {
       { no: "02", title: "Assumer jusqu’à la compréhension", body: "Afficher l’information ne suffit pas. Savoir quoi faire ensuite fait partie du périmètre de la conception." },
       { no: "03", title: "Énoncer les limites", body: "Nous n’empiétons pas sur ce qui relève d’un professionnel agréé. Ce que nous prenons en charge, et le moment où nous passons le relais, est inscrit dans le produit lui-même." },
       { no: "04", title: "Ne dire que ce qui peut être vérifié", body: "Résultats, chiffres et partenariats ne figurent ici que lorsqu’il existe des preuves. Ce qui ne peut pas être confirmé n’est pas écrit." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Partir des mots du terrain", long: "Aucun dispositif n’atteint qui que ce soit tant qu’il n’a pas été traduit dans les démarches que la personne accomplit réellement. Nous partons de la demande réelle, du déplacement réel, de l’échange réel — non d’un énoncé abstrait du problème, mais du seul geste qui reste aujourd’hui bloqué." },
-      { no: "02", title: "Assumer jusqu’à la compréhension", long: "Aligner des résultats de recherche n’est pas un accompagnement. Ce dont une personne a besoin, c’est de savoir quoi faire ensuite. Le périmètre du produit va jusqu’au point où l’étape suivante est comprise, et non jusqu’au point où l’information a été affichée." },
-      { no: "03", title: "Énoncer les limites", long: "Laisser quelqu’un utiliser un produit sans dire clairement ce qu’il ne peut pas faire est la conception la plus dangereuse qui soit. Ce que nous prenons en charge, et le moment où un professionnel prend le relais, est inscrit sur l’écran lui-même. La limite est une fonctionnalité, non une mention d’avertissement." },
-      { no: "04", title: "Ne dire que ce qui peut être vérifié", long: "Nous ne parlons pas de résultats que nous ne pouvons pas confirmer, ni de fonctionnalités qui ne sont pas encore en service. Chaque fait que nous publions repose sur un élément qui l’atteste. Lorsqu’il y a peu à dire, nous publions peu." },
     ],
     orderHeading: ["Un domaine à la fois,", "jusqu’au bout."],
     orderBody: "Nous ne lançons pas beaucoup de choses en même temps. Nous préférons mener un domaine jusqu’au point où il rejoint les démarches que les gens accomplissent réellement.",

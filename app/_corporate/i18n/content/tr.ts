@@ -85,7 +85,6 @@ export const tr: SiteCopy = {
       { no: "03", title: "Saha ile sistem birbirine oturmuyor.", body: "Ulaşım, sosyal hizmet ve kamu yönetimi sahasında henüz yerine ulaşmamış seçenekler var." },
     ],
 
-    buildEyebrow: "Geliştirdiklerimiz",
     buildHeading: ["Sistemin ulaşmadığı alanlar —", "birer birer ele alıyoruz."],
 
     howEyebrow: "Nasıl geliştiriyoruz",
@@ -96,7 +95,6 @@ export const tr: SiteCopy = {
       { no: "03", title: "Sınırı açıkça belirtiriz", body: "Yetkili bir meslek mensubuna ait işlere girmeyiz. Neyi üstlendiğimiz ve nereden itibaren devrettiğimiz, ürünün içine yazılıdır." },
       { no: "04", title: "Yalnızca doğrulanabilir olanı söyleriz", body: "Sonuçlar, rakamlar ve iş birlikleri yalnızca kanıtı olduğunda yer alır. Doğrulanamayan hiçbir şey yazılmaz." },
     ],
-    howDisclose: "Bu ilkelerin uygulamada ne anlama geldiği",
 
     founderEyebrow: "Temsilci",
     founderHeading: ["Karmaşık sahaları yirmi yıl boyunca", "içeriden görmüş biri kuruyor."],
@@ -141,13 +139,6 @@ export const tr: SiteCopy = {
       "Kurucular, araştırmacılar, kamu ekipleri, şirketler. Nereden dâhil olabileceğiniz, nerede durduğunuza bağlı. Şimdilik konuşabildiğimiz yerden başlıyoruz.",
     engageCta: "Katılma yollarını görün",
     engageNote: "Hepsi şimdilik bir görüşmeyle başlıyor. Henüz ne bir başvuru süreci ne de bir seçim düzeni var.",
-    explainerLabel: "30 saniyede Yorisou",
-    explainerHeading: ["Sorundan şirkete,", "otuz saniyede."],
-    explainerClose: "Kapat",
-    explainerPlay: "Oynat",
-    explainerPause: "Duraklat",
-    explainerRestart: "Baştan başlat",
-    explainerStepLabel: "Sahne",
   },
 
   mirai: {
@@ -248,12 +239,6 @@ export const tr: SiteCopy = {
       { no: "02", title: "Anlaşılır olana kadar sorumluluk alırız", body: "Bilgiyi sunmak son nokta değildir. Bundan sonra ne yapılacağının anlaşılması da tasarımın kapsamındadır." },
       { no: "03", title: "Sınırı açıkça belirtiriz", body: "Yetkili bir meslek mensubuna ait işlere girmeyiz. Neyi üstlendiğimiz ve nereden itibaren devrettiğimiz, ürünün içine yazılıdır." },
       { no: "04", title: "Yalnızca doğrulanabilir olanı söyleriz", body: "Sonuçlar, rakamlar ve iş birlikleri yalnızca kanıtı olduğunda yer alır. Doğrulanamayan hiçbir şey yazılmaz." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Sahanın dilinden başlarız", long: "Hiçbir sistem, karşısındaki kişinin gerçekten attığı adımlara çevrilmeden ona ulaşmaz. Biz gerçek başvurudan, gerçek yolculuktan, gerçek yazışmadan başlarız: soyut bir sorun tanımından değil, şu anda tıkanmış olan tek hamleden." },
-      { no: "02", title: "Anlaşılır olana kadar sorumluluk alırız", long: "Arama sonuçlarını sıralamak destek değildir. Kişinin ihtiyaç duyduğu şey, şu anda ne yapması gerektiğini bilmektir. Ürünün kapsamı, bilginin gösterildiği yere kadar değil, bir sonraki adımın anlaşıldığı yere kadar uzanır." },
-      { no: "03", title: "Sınırı açıkça belirtiriz", long: "Bir ürünü, neyi yapamadığı belirsiz bırakılarak kullandırmak, var olan en tehlikeli tasarımdır. Neyi üstlendiğimiz ve meslek mensubunun nereden itibaren devraldığı, ekranın kendisine yazılır. Sınır bir uyarı notu değil, işlevin bir parçasıdır." },
-      { no: "04", title: "Yalnızca doğrulanabilir olanı söyleriz", long: "Doğrulayamadığımız sonuçları ya da henüz çalışmayan özellikleri önden anlatmayız. Yayımladığımız her bilginin arkasında onu doğrulayan bir kayıt vardır. Söyleyebileceğimizin az olduğu dönemlerde az yayımlarız." },
     ],
     orderHeading: ["Teker teker,", "sonuna kadar."],
     orderBody: "Aynı anda birçok işe başlamayız. Tek bir alanı, sahanın gerçek adımlarına ulaşacak noktaya kadar sonuna dek götürmeyi önceliklendiririz.",

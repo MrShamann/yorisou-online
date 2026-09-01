@@ -84,7 +84,6 @@ export const de: SiteCopy = {
       { no: "03", title: "Praxis und System greifen nicht ineinander.", body: "In Mobilität, Pflege und Verwaltung gibt es Möglichkeiten, die bei den Menschen vor Ort noch nicht angekommen sind." },
     ],
 
-    buildEyebrow: "Was wir entwickeln",
     buildHeading: ["Bereiche, die das System nicht erreicht —", "eines nach dem anderen."],
 
     howEyebrow: "Wie wir entwickeln",
@@ -95,7 +94,6 @@ export const de: SiteCopy = {
       { no: "03", title: "Die Grenze deutlich machen", body: "Wir greifen nicht in Aufgaben ein, die zugelassenen Fachleuten vorbehalten sind. Was wir übernehmen und wo wir übergeben, steht im Produkt selbst." },
       { no: "04", title: "Nur sagen, was überprüfbar ist", body: "Ergebnisse, Zahlen und Partnerschaften nennen wir nur dort, wo es Belege gibt. Was sich nicht bestätigen lässt, schreiben wir nicht." },
     ],
-    howDisclose: "Was diese Grundsätze in der Praxis bedeuten",
 
     founderEyebrow: "Geschäftsführung",
     founderHeading: ["Entwickelt von jemandem, der zwanzig Jahre lang", "in komplexen Industrien gearbeitet hat."],
@@ -140,13 +138,6 @@ export const de: SiteCopy = {
       "Gründerinnen und Gründer, Forschung, Verwaltung, Unternehmen. Wo Sie einsteigen können, hängt davon ab, wo Sie stehen. Wir beginnen mit dem, worüber sich jetzt sprechen lässt.",
     engageCta: "Die Einstiege ansehen",
     engageNote: "Alle Einstiege beginnen mit einem Gespräch. Ein Bewerbungsverfahren und ein Auswahlprogramm gibt es noch nicht.",
-    explainerLabel: "Yorisou in 30 Sekunden",
-    explainerHeading: ["Vom Problem zum Unternehmen –", "in dreißig Sekunden."],
-    explainerClose: "Schließen",
-    explainerPlay: "Abspielen",
-    explainerPause: "Pause",
-    explainerRestart: "Von vorne",
-    explainerStepLabel: "Schritt",
   },
 
   mirai: {
@@ -247,12 +238,6 @@ export const de: SiteCopy = {
       { no: "02", title: "Verantwortung bis zum Verstehen übernehmen", body: "Informationen auszugeben ist nicht das Ende. Zu wissen, was als Nächstes zu tun ist, gehört zum Entwurf." },
       { no: "03", title: "Die Grenze deutlich machen", body: "Wir greifen nicht in Aufgaben ein, die zugelassenen Fachleuten vorbehalten sind. Was wir übernehmen und wo wir übergeben, steht im Produkt selbst." },
       { no: "04", title: "Nur sagen, was überprüfbar ist", body: "Ergebnisse, Zahlen und Partnerschaften nennen wir nur dort, wo es Belege gibt. Was sich nicht bestätigen lässt, schreiben wir nicht." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Bei der Sprache der Praxis beginnen", long: "Kein Angebot erreicht jemanden, solange es nicht in die Schritte übersetzt ist, die der Mensch davor tatsächlich geht. Wir beginnen beim tatsächlichen Antrag, beim tatsächlichen Weg, beim tatsächlichen Austausch – nicht bei einer abstrakten Problemstellung, sondern bei dem einen Schritt, der gerade feststeckt." },
-      { no: "02", title: "Verantwortung bis zum Verstehen übernehmen", long: "Suchergebnisse aufzulisten ist keine Unterstützung. Was ein Mensch braucht, ist zu wissen, was als Nächstes zu tun ist. Das Produkt reicht bis zu dem Punkt, an dem der nächste Schritt verstanden ist – nicht bis zu dem Punkt, an dem Informationen angezeigt wurden." },
-      { no: "03", title: "Die Grenze deutlich machen", long: "Menschen etwas nutzen zu lassen, ohne klar zu sagen, was es nicht kann, ist der gefährlichste Entwurf überhaupt. Was wir übernehmen und wo wir an Fachleute übergeben, schreiben wir auf den Bildschirm selbst. Die Grenze ist Teil der Funktion, kein Hinweis im Kleingedruckten." },
-      { no: "04", title: "Nur sagen, was überprüfbar ist", long: "Wir sprechen weder über Ergebnisse, die wir nicht bestätigen können, noch über Funktionen, die noch nicht laufen. Hinter jeder Angabe, die wir veröffentlichen, steht eine Aufzeichnung. In Zeiten, in denen wir wenig sagen können, veröffentlichen wir wenig." },
     ],
     orderHeading: ["Eines nach dem anderen –", "und ganz zu Ende."],
     orderBody: "Wir beginnen nicht vieles auf einmal. Lieber führen wir ein Feld so weit, dass es die Schritte erreicht, die Menschen tatsächlich gehen.",

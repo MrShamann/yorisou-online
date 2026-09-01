@@ -85,7 +85,6 @@ export const id: SiteCopy = {
       { no: "03", title: "Lapangan dan sistem tidak saling bertaut.", body: "Di bidang mobilitas, kesejahteraan sosial, dan administrasi publik masih ada pilihan yang belum sampai ke orang-orang di lapangan." },
     ],
 
-    buildEyebrow: "Yang kami bangun",
     buildHeading: ["Bidang yang tidak dijangkau sistem —", "kami tangani satu per satu."],
 
     howEyebrow: "Cara kami membangun",
@@ -96,7 +95,6 @@ export const id: SiteCopy = {
       { no: "03", title: "Menyatakan batas dengan jelas", body: "Kami tidak melangkah ke wilayah yang menjadi tugas tenaga profesional berlisensi. Sampai mana kami menangani dan dari mana kami menyerahkannya, ditulis di dalam produk itu sendiri." },
       { no: "04", title: "Hanya menyebut yang dapat dipastikan", body: "Hasil, angka, dan kemitraan hanya kami cantumkan bila ada buktinya. Yang tidak dapat dipastikan tidak kami tulis." },
     ],
-    howDisclose: "Apa arti prinsip ini dalam praktik",
 
     founderEyebrow: "Perwakilan perusahaan",
     founderHeading: ["Dibangun oleh orang yang dua puluh tahun", "berada di dalam industri yang kompleks."],
@@ -141,13 +139,6 @@ export const id: SiteCopy = {
       "Pendiri, peneliti, instansi publik, perusahaan. Di mana Anda dapat ikut serta bergantung pada posisi Anda. Kami mulai dari apa pun yang bisa dibicarakan sekarang.",
     engageCta: "Lihat cara terlibat",
     engageNote: "Semuanya dimulai dari percakapan. Belum ada proses pendaftaran maupun mekanisme seleksi.",
-    explainerLabel: "Yorisou dalam 30 detik",
-    explainerHeading: ["Dari sebuah masalah sampai menjadi perusahaan,", "dalam tiga puluh detik."],
-    explainerClose: "Tutup",
-    explainerPlay: "Putar",
-    explainerPause: "Jeda",
-    explainerRestart: "Dari awal",
-    explainerStepLabel: "Langkah",
   },
 
   mirai: {
@@ -248,12 +239,6 @@ export const id: SiteCopy = {
       { no: "02", title: "Bertanggung jawab sampai orang benar-benar paham", body: "Menyajikan informasi bukan akhir dari tugas kami. Kondisi ketika orang tahu apa langkah berikutnya termasuk dalam cakupan rancangan." },
       { no: "03", title: "Menyatakan batas dengan jelas", body: "Kami tidak melangkah ke wilayah yang menjadi tugas tenaga profesional berlisensi. Sampai mana kami menangani dan dari mana kami menyerahkannya, ditulis di dalam produk itu sendiri." },
       { no: "04", title: "Hanya menyebut yang dapat dipastikan", body: "Hasil, angka, dan kemitraan hanya kami cantumkan bila ada buktinya. Yang tidak dapat dipastikan tidak kami tulis." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Mulai dari bahasa lapangan", long: "Aturan apa pun tidak akan sampai sebelum diterjemahkan ke dalam langkah orang yang memakainya. Kami memulai perancangan dari pengajuan yang nyata, perpindahan yang nyata, dan percakapan yang nyata. Bukan dari rumusan masalah yang abstrak, melainkan dari satu langkah yang sedang terhenti di depan mata." },
-      { no: "02", title: "Bertanggung jawab sampai orang benar-benar paham", long: "Menderetkan hasil pencarian bukanlah dukungan. Yang dibutuhkan adalah mengetahui apa yang harus dilakukan sekarang. Cakupan produk kami bukan sampai informasi ditampilkan, melainkan sampai langkah berikutnya dapat dipahami." },
-      { no: "03", title: "Menyatakan batas dengan jelas", long: "Membiarkan orang memakai produk tanpa kejelasan tentang apa yang tidak dapat dilakukannya adalah rancangan yang paling berbahaya. Sampai mana kami menangani dan dari mana kami menyerahkannya kepada tenaga profesional, kami tuliskan pada layar produk itu sendiri. Batas bukan catatan peringatan, melainkan bagian dari fungsinya." },
-      { no: "04", title: "Hanya menyebut yang dapat dipastikan", long: "Kami tidak lebih dahulu membicarakan hasil yang tidak dapat dipastikan atau fitur yang belum berjalan. Setiap fakta yang kami cantumkan selalu memiliki catatan yang mendukungnya. Pada masa ketika yang dapat kami tuliskan hanya sedikit, kami menerbitkannya sedikit apa adanya." },
     ],
     orderHeading: ["Satu per satu,", "sampai tuntas."],
     orderBody: "Kami tidak memulai banyak hal sekaligus. Kami mendahulukan menuntaskan satu bidang sampai benar-benar menjangkau langkah nyata di lapangan.",

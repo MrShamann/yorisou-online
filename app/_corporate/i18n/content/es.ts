@@ -84,7 +84,6 @@ export const es: SiteCopy = {
       { no: "03", title: "El terreno real y el sistema no encajan.", body: "En movilidad, servicios sociales y administración pública hay opciones que aún no han llegado a quienes trabajan sobre el terreno." },
     ],
 
-    buildEyebrow: "Lo que construimos",
     buildHeading: ["Ámbitos a los que el sistema no llega:", "los abordamos de uno en uno."],
 
     howEyebrow: "Cómo construimos",
@@ -95,7 +94,6 @@ export const es: SiteCopy = {
       { no: "03", title: "Explicitar el límite", body: "No entramos en el trabajo que corresponde a un profesional habilitado. Lo que cubrimos y dónde traspasamos está escrito en el propio producto." },
       { no: "04", title: "Decir solo lo que se puede verificar", body: "Los resultados, las cifras y las colaboraciones solo aparecen cuando hay pruebas. Lo que no se puede confirmar no se escribe." },
     ],
-    howDisclose: "Qué significan estos principios en la práctica",
 
     founderEyebrow: "Representante",
     founderHeading: ["Lo construye alguien que lleva", "veinte años dentro de industrias complejas."],
@@ -140,13 +138,6 @@ export const es: SiteCopy = {
       "Fundadores, investigadores, administración pública y empresas. El punto de entrada depende del lugar desde el que llegue. Empezamos por lo que ya se pueda hablar.",
     engageCta: "Ver las vías de entrada",
     engageNote: "Todas empiezan por una conversación. Todavía no existe ningún proceso de solicitud ni de selección.",
-    explainerLabel: "Yorisou en 30 segundos",
-    explainerHeading: ["De un problema a una empresa,", "en treinta segundos."],
-    explainerClose: "Cerrar",
-    explainerPlay: "Reproducir",
-    explainerPause: "Pausar",
-    explainerRestart: "Reiniciar",
-    explainerStepLabel: "Paso",
   },
 
   mirai: {
@@ -247,12 +238,6 @@ export const es: SiteCopy = {
       { no: "02", title: "Responder hasta que se entienda", body: "Mostrar información no es el final. Saber qué hacer a continuación forma parte del alcance del diseño." },
       { no: "03", title: "Explicitar el límite", body: "No entramos en el trabajo que corresponde a un profesional habilitado. Lo que cubrimos y dónde traspasamos está escrito en el propio producto." },
       { no: "04", title: "Decir solo lo que se puede verificar", body: "Los resultados, las cifras y las colaboraciones solo aparecen cuando hay pruebas. Lo que no se puede confirmar no se escribe." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Empezar por el lenguaje del terreno", long: "Ningún sistema llega a nadie hasta que se traduce a los pasos que da realmente la persona que lo tiene delante. Empezamos por la solicitud real, el trayecto real, el intercambio real: no por un planteamiento abstracto del problema, sino por el único movimiento que ahora está bloqueado." },
-      { no: "02", title: "Responder hasta que se entienda", long: "Enumerar resultados de búsqueda no es acompañar. Lo que una persona necesita es saber qué hacer a continuación. El alcance del producto llega hasta el punto en que se entiende el siguiente paso, no hasta el punto en que se ha mostrado la información." },
-      { no: "03", title: "Explicitar el límite", long: "Dejar que alguien use un producto sin aclarar lo que no puede hacer es el diseño más peligroso que existe. Lo que asumimos y dónde toma el relevo un profesional está escrito en la propia pantalla. El límite es una función, no una advertencia al pie." },
-      { no: "04", title: "Decir solo lo que se puede verificar", long: "No describimos resultados que no podemos confirmar ni funciones que aún no están en marcha. Cada hecho que publicamos tiene un registro detrás. En las etapas en las que hay poco que podamos decir, publicamos poco." },
     ],
     orderHeading: ["De una en una,", "hasta el final."],
     orderBody: "No ponemos muchas cosas en marcha a la vez. Preferimos llevar un solo ámbito hasta el punto en que alcanza los pasos que las personas dan realmente.",

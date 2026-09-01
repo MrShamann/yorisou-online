@@ -215,9 +215,16 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
         CORP-v1.2 §7.4 — the Asterion layer.
 
         It sits AFTER "how we build" and before the engagement layer, as a shared floor underneath
-        the ventures rather than as a fourth venture. Asterion is independent and is not owned by
-        Yorisou, so the boundary note is rendered immediately with the capability claim — never
-        several screens away — and there is no "powered by" badge anywhere on this page.
+        the ventures rather than as a fourth venture.
+
+        Asterion is an independent technology-platform project and is not a public Yorisou venture.
+        The site draws NO ownership conclusion in either direction — rights, licensing, data and
+        operating responsibility depend on the applicable agreements. CORP-v1.4 withdrew the earlier
+        absolute "is not owned by Yorisou" from the rendered copy; this comment kept asserting it
+        until CORP-v1.4R1.1, which is exactly how a withdrawn claim finds its way back onto a page.
+
+        The boundary note is rendered immediately with the capability claim — never several screens
+        away — and there is no "powered by" badge anywhere on this page.
       */}
       {/*
         CORP-v1.4R1 — Asterion sits UNDER the architecture, and is sized accordingly.
@@ -243,7 +250,7 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
         place — what the role contributes, which ventures it touches, what YORISOU can offer, and
         what it cannot promise, the last of those never behind a disclosure.
 
-        Native radio group: no JavaScript, arrow keys from the browser, real tab semantics for
+        Native radio group: no JavaScript, arrow keys from the browser, one panel at a time for
         assistive technology, and nothing for reduced motion to switch off. No matching, no
         recommendation, no "AI suggests a venture for you".
       */}

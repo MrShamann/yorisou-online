@@ -81,7 +81,6 @@ export const pt: SiteCopy = {
       { no: "03", title: "A prática e o sistema não se encaixam.", body: "Na mobilidade, na assistência social e na administração pública existem opções que ainda não chegaram a quem está no dia a dia." },
     ],
 
-    buildEyebrow: "O que construímos",
     buildHeading: ["Áreas onde o sistema não chega —", "assumidas uma de cada vez."],
 
     howEyebrow: "Como construímos",
@@ -92,7 +91,6 @@ export const pt: SiteCopy = {
       { no: "03", title: "Explicitar o limite", body: "Não entramos no que cabe a um profissional habilitado. Até onde vamos e a partir de onde passamos adiante está escrito dentro do próprio produto." },
       { no: "04", title: "Dizer apenas o que pode ser verificado", body: "Resultados, números e parcerias só aparecem quando há evidência. O que não pode ser confirmado não é escrito." },
     ],
-    howDisclose: "O que esses princípios significam na prática",
 
     founderEyebrow: "Representante",
     founderHeading: ["Construído por quem passou", "vinte anos dentro de setores complexos."],
@@ -137,13 +135,6 @@ export const pt: SiteCopy = {
       "Fundadores, pesquisadores, órgãos públicos, empresas. Por onde se entra depende de onde você está. Começamos pelo que já dá para conversar.",
     engageCta: "Ver as formas de entrada",
     engageNote: "Todas começam por uma conversa. Ainda não há processo de candidatura nem seleção.",
-    explainerLabel: "A Yorisou em 30 segundos",
-    explainerHeading: ["Do problema até a empresa,", "em trinta segundos."],
-    explainerClose: "Fechar",
-    explainerPlay: "Reproduzir",
-    explainerPause: "Pausar",
-    explainerRestart: "Recomeçar",
-    explainerStepLabel: "Cena",
   },
 
   mirai: {
@@ -244,12 +235,6 @@ export const pt: SiteCopy = {
       { no: "02", title: "Responder até o ponto da compreensão", body: "Apresentar a informação não é o fim. Saber o que fazer a seguir faz parte do escopo do projeto." },
       { no: "03", title: "Explicitar o limite", body: "Não entramos no que cabe a um profissional habilitado. Até onde vamos e a partir de onde passamos adiante está escrito dentro do próprio produto." },
       { no: "04", title: "Dizer apenas o que pode ser verificado", body: "Resultados, números e parcerias só aparecem quando há evidência. O que não pode ser confirmado não é escrito." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Começar pela linguagem de quem está no dia a dia", long: "Nenhum sistema chega a alguém enquanto não for traduzido para os passos que a pessoa à sua frente realmente dá. Começamos pelo pedido real, pelo deslocamento real, pela conversa real — não por um enunciado abstrato de problema, mas pelo único passo que está travado agora." },
-      { no: "02", title: "Responder até o ponto da compreensão", long: "Listar resultados de busca não é apoio. O que a pessoa precisa é saber o que fazer a seguir. O escopo do produto vai até o ponto em que o próximo passo é compreendido, e não até o ponto em que a informação foi exibida." },
-      { no: "03", title: "Explicitar o limite", long: "Deixar alguém usar um produto sem deixar claro o que ele não faz é o projeto mais perigoso que existe. O que assumimos e o ponto em que um profissional habilitado assume estão escritos na própria tela. O limite é uma função, não um aviso legal." },
-      { no: "04", title: "Dizer apenas o que pode ser verificado", long: "Não falamos de resultados que não podemos confirmar nem de funcionalidades que ainda não estão em operação. Todo fato que publicamos tem um registro por trás. Nos períodos em que há pouco a dizer, publicamos pouco." },
     ],
     orderHeading: ["Um de cada vez,", "até o fim."],
     orderBody: "Não iniciamos muitas coisas ao mesmo tempo. Preferimos levar uma área até o ponto em que ela alcança os passos que as pessoas realmente dão.",

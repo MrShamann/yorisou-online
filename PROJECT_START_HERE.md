@@ -21,9 +21,16 @@ YORISOU LLC / Yorisou 合同会社, operating as **Yorisou Foundry**: finding st
 building evidence and venture assets, forming founding teams, and carrying ventures toward
 independently governed companies. Ventures: **Mirai Move · Kakari · Chigamo**.
 
-**Asterion OS is an independent shared technology and execution platform. It is NOT owned by
-Yorisou and is NOT a Yorisou venture.** No "powered by" claim, no executed-licence claim, and no
-claim that venture or user data flows to it.
+**Asterion OS is an independent shared technology and execution platform. It is NOT a public
+Yorisou venture.** Yorisou ventures may use Asterion capabilities where appropriate authorization
+exists. Ownership, licensing, data rights and operating responsibility depend on the agreements
+that apply — this repository draws **NO ownership conclusion in either direction**. No "powered by"
+claim, no executed-licence claim, and no claim that venture or user data flows to it.
+
+> CORP-v1.4 withdrew the earlier absolute "It is NOT owned by Yorisou" that stood here, because an
+> unsupported denial is still an unsupported claim; see `CORP_V12_PUBLIC_CLAIM_LEDGER.md` C-68. This
+> file was missed at the time and corrected in CORP-v1.4R1.1 — which is exactly how a withdrawn
+> claim gets written back onto a page, since every agent is required to read this file first.
 
 Covers: corporate public routes · venture presentation · the Foundry narrative · the Asterion public
 narrative · founder / government / university engagement pages · corporate multilingual content ·

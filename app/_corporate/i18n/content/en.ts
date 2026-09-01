@@ -80,7 +80,6 @@ export const en: SiteCopy = {
       { no: "03", title: "The frontline and the system do not mesh.", body: "In mobility, welfare and public administration there are options that have not yet reached the people doing the work." },
     ],
 
-    buildEyebrow: "What we build",
     buildHeading: ["Areas the rules do not reach —", "taken on one at a time."],
 
     howEyebrow: "How we build",
@@ -91,7 +90,6 @@ export const en: SiteCopy = {
       { no: "03", title: "State the boundary", body: "We do not step into work that belongs to a licensed professional. What we cover, and where we hand over, is written into the product itself." },
       { no: "04", title: "Say only what can be verified", body: "Results, figures and partnerships appear only where there is evidence. What cannot be confirmed is not written." },
     ],
-    howDisclose: "What these principles mean in practice",
 
     founderEyebrow: "Representative",
     founderHeading: ["Built by someone who has spent", "twenty years inside complex industries."],
@@ -136,13 +134,6 @@ export const en: SiteCopy = {
       "Founders, researchers, public-sector teams, companies. Where you can join depends on where you stand. We start from whatever can be discussed now.",
     engageCta: "See the ways in",
     engageNote: "All of them start from a conversation. There is no application process and no selection yet.",
-    explainerLabel: "Yorisou in 30 seconds",
-    explainerHeading: ["From a problem to a company,", "in thirty seconds."],
-    explainerClose: "Close",
-    explainerPlay: "Play",
-    explainerPause: "Pause",
-    explainerRestart: "Restart",
-    explainerStepLabel: "Step",
   },
 
   mirai: {
@@ -243,12 +234,6 @@ export const en: SiteCopy = {
       { no: "02", title: "Own the problem as far as understanding", body: "Presenting information is not the end. Knowing what to do next is inside the scope of the design." },
       { no: "03", title: "State the boundary", body: "We do not step into work that belongs to a licensed professional. What we cover, and where we hand over, is written into the product itself." },
       { no: "04", title: "Say only what can be verified", body: "Results, figures and partnerships appear only where there is evidence. What cannot be confirmed is not written." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Start from the language of the frontline", long: "No system reaches anyone until it has been translated into the steps the person in front of it actually takes. We begin from the real application, the real journey, the real exchange — not from an abstract problem statement, but from the single move that is currently stuck." },
-      { no: "02", title: "Own the problem as far as understanding", long: "Listing search results is not support. What a person needs is to know what to do next. The scope of the product runs to the point where the next step is understood, not to the point where information has been displayed." },
-      { no: "03", title: "State the boundary", long: "Letting someone use a product without being clear about what it cannot do is the most dangerous design there is. What we handle, and where a professional takes over, is written into the screen itself. The boundary is a feature, not a disclaimer." },
-      { no: "04", title: "Say only what can be verified", long: "We do not describe results we cannot confirm, or features that are not yet running. Every fact we publish has a record behind it. In periods when there is little we can say, we publish little." },
     ],
     orderHeading: ["One at a time,", "all the way through."],
     orderBody: "We do not start many things at once. We would rather carry one area all the way to the point where it reaches the steps people actually take.",

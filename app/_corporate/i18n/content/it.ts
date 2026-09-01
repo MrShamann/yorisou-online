@@ -86,7 +86,6 @@ export const it: SiteCopy = {
       { no: "03", title: "Il campo e il sistema non si incastrano.", body: "Nella mobilità, nel welfare e nella pubblica amministrazione esistono possibilità che non sono ancora arrivate a chi lavora sul campo." },
     ],
 
-    buildEyebrow: "Ciò che costruiamo",
     buildHeading: ["Ambiti che il sistema non raggiunge:", "li affrontiamo uno alla volta."],
 
     howEyebrow: "Come costruiamo",
@@ -97,7 +96,6 @@ export const it: SiteCopy = {
       { no: "03", title: "Dichiarare il confine", body: "Non entriamo nel lavoro che spetta a un professionista abilitato. Ciò di cui ci occupiamo, e il punto in cui passiamo il testimone, è scritto nel prodotto stesso." },
       { no: "04", title: "Dire solo ciò che è verificabile", body: "Risultati, numeri e collaborazioni compaiono solo dove esistono prove. Ciò che non può essere confermato non viene scritto." },
     ],
-    howDisclose: "Che cosa significano questi principi nella pratica",
 
     founderEyebrow: "Socio amministratore",
     founderHeading: ["Costruito da chi ha passato", "vent’anni dentro settori complessi."],
@@ -142,13 +140,6 @@ export const it: SiteCopy = {
       "Fondatori, ricercatori, enti pubblici, imprese. Il punto in cui si entra dipende da dove ci si trova. Partiamo da ciò di cui si può parlare adesso.",
     engageCta: "Vedi le vie d’ingresso",
     engageNote: "In ogni caso si comincia da una conversazione. Non esiste ancora né una procedura di candidatura né un meccanismo di selezione.",
-    explainerLabel: "Yorisou in 30 secondi",
-    explainerHeading: ["Dal problema alla società,", "in trenta secondi."],
-    explainerClose: "Chiudi",
-    explainerPlay: "Riproduci",
-    explainerPause: "Pausa",
-    explainerRestart: "Ricomincia",
-    explainerStepLabel: "Scena",
   },
 
   mirai: {
@@ -249,12 +240,6 @@ export const it: SiteCopy = {
       { no: "02", title: "Farci carico del problema fino alla comprensione", body: "Presentare informazioni non basta. Sapere che cosa fare dopo rientra nel perimetro della progettazione." },
       { no: "03", title: "Dichiarare il confine", body: "Non entriamo nel lavoro che spetta a un professionista abilitato. Ciò di cui ci occupiamo, e il punto in cui passiamo il testimone, è scritto nel prodotto stesso." },
       { no: "04", title: "Dire solo ciò che è verificabile", body: "Risultati, numeri e collaborazioni compaiono solo dove esistono prove. Ciò che non può essere confermato non viene scritto." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Partire dal linguaggio di chi è sul campo", long: "Nessun sistema arriva a qualcuno finché non è tradotto nei passaggi che quella persona compie davvero. Partiamo dalla domanda reale, dallo spostamento reale, dallo scambio reale: non da un problema astratto, ma dalla singola mossa che in questo momento è bloccata." },
-      { no: "02", title: "Farci carico del problema fino alla comprensione", long: "Elencare risultati di ricerca non è supporto. Ciò di cui una persona ha bisogno è sapere che cosa fare adesso. Il perimetro del prodotto arriva al punto in cui il passo successivo è compreso, non al punto in cui l’informazione è stata mostrata." },
-      { no: "03", title: "Dichiarare il confine", long: "Lasciare che qualcuno usi un prodotto senza chiarire ciò che non può fare è la progettazione più pericolosa che esista. Ciò di cui ci occupiamo, e il punto in cui subentra un professionista, è scritto nella schermata stessa. Il confine è una funzione, non una postilla." },
-      { no: "04", title: "Dire solo ciò che è verificabile", long: "Non raccontiamo risultati che non possiamo confermare, né funzioni che non sono ancora attive. Ogni fatto che pubblichiamo ha alle spalle un documento che lo sostiene. Nei periodi in cui c’è poco da dire, pubblichiamo poco." },
     ],
     orderHeading: ["Una cosa alla volta,", "fino in fondo."],
     orderBody: "Non avviamo molte cose insieme. Preferiamo portare un solo ambito fino al punto in cui raggiunge i passaggi che le persone compiono davvero.",

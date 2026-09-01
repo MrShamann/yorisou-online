@@ -192,7 +192,8 @@
 .wordmark:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
 .headerRight { display: flex; align-items: center; gap: clamp(8px, 1.4vw, 20px); }
 .navDesktop { display: none; gap: clamp(12px, 1.7vw, 26px); align-items: center; }
-@media (min-width: 1000px) { .navDesktop { display: flex; } }
+@media (min-width: 1000px) { .navDesktop { display: flex; }
+}
 /*
  * CORP-v1.3 — `min-inline-size` so a two-character label is still a 24px target.
  *
@@ -219,13 +220,15 @@
 .iconBtn:hover { color: var(--ink); border-color: var(--line-3); }
 .iconBtn:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
 .menuBtn { }
-@media (min-width: 1000px) { .menuBtn { display: none; } }
+@media (min-width: 1000px) { .menuBtn { display: none; }
+}
 .bars { display: inline-flex; flex-direction: column; gap: 4px; }
 .bars span { display: block; width: 15px; height: 1.5px; background: currentColor; }
 
 /* mobile nav panel — native details, no client JS */
 .disclosure { position: relative; }
-@media (min-width: 1000px) { .disclosure { display: none; } }
+@media (min-width: 1000px) { .disclosure { display: none; }
+}
 .panel {
   position: absolute; inset-inline-end: 0; top: calc(100% + 10px); z-index: 60;
   background: var(--paper); border: 1px solid var(--line-2);
@@ -287,7 +290,8 @@
   mask-image: radial-gradient(130% 100% at 50% 0%, #000 35%, transparent 80%);
 }
 .heroGrid { position: relative; z-index: 1; display: grid; gap: clamp(28px, 3.4vw, 48px); align-items: center; }
-@media (min-width: 1000px) { .heroGrid { grid-template-columns: 1.08fr 0.92fr; } }
+@media (min-width: 1000px) { .heroGrid { grid-template-columns: 1.08fr 0.92fr; }
+}
 
 .surface {
   background: var(--sys); color: var(--sys-ink); padding: clamp(22px, 2.6vw, 34px);
@@ -319,8 +323,10 @@
 
 /* ── cards / rows ───────────────────────────────────────────────────────── */
 .cards { display: grid; gap: clamp(14px, 1.6vw, 20px); }
-@media (min-width: 760px) { .cards3 { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 760px) { .cards2 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 760px) { .cards3 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 760px) { .cards2 { grid-template-columns: repeat(2, 1fr); }
+}
 .card {
   background: var(--paper); border: 1px solid var(--line); padding: clamp(20px, 2.2vw, 28px);
   display: flex; flex-direction: column; gap: 8px;
@@ -336,13 +342,10 @@
 .cardDark .cardNo { color: var(--signal-on-dark); }
 
 /* ── project blocks ─────────────────────────────────────────────────────── */
-.projects { display: grid; gap: clamp(28px, 3.4vw, 52px); }
-@media (min-width: 1000px) { .projects { grid-template-columns: 1fr 1fr; } }
 .project { display: flex; flex-direction: column; }
 .projectHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin-block: 20px 8px; }
 .projectName { margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: var(--step-2); font-weight: 600; color: var(--ink); }
 .stage { font-size: 11.5px; color: var(--ink-3); border: 1px solid var(--line-2); padding: 3px 9px; line-height: 1.7; }
-.projectLead { margin: 0 0 18px; font-size: var(--step--1); line-height: 1.8; color: var(--ink-2); max-width: 46ch; }
 
 .boundary { margin-top: 18px; padding-top: 15px; border-top: 2px solid var(--signal); }
 .boundaryDark { border-top-color: var(--signal-on-dark); }
@@ -377,7 +380,8 @@
 
 /* ── founder module ─────────────────────────────────────────────────────── */
 .founder { display: grid; gap: clamp(22px, 2.8vw, 40px); align-items: start; }
-@media (min-width: 900px) { .founder { grid-template-columns: 0.85fr 1.15fr; } }
+@media (min-width: 900px) { .founder { grid-template-columns: 0.85fr 1.15fr; }
+}
 .founderMark {
   aspect-ratio: 4 / 5; background: var(--sys); position: relative; overflow: hidden;
   display: flex; align-items: flex-end; padding: clamp(18px, 2vw, 26px);
@@ -435,7 +439,8 @@
 /* ── footer ─────────────────────────────────────────────────────────────── */
 .footer { border-top: 1px solid var(--line); background: var(--paper-2); padding-block: clamp(36px, 4vw, 60px); }
 .footerGrid { display: grid; gap: 30px; }
-@media (min-width: 760px) { .footerGrid { grid-template-columns: 1.7fr 1fr 1fr; gap: 44px; } }
+@media (min-width: 760px) { .footerGrid { grid-template-columns: 1.7fr 1fr 1fr; gap: 44px; }
+}
 .footerTagline { margin: 0; font-size: 13px; line-height: 1.85; color: var(--ink-3); max-width: 32ch; }
 .footerList { margin: 0; padding: 0; list-style: none; }
 /* `min-inline-size` for the same reason as .navLink: 「소개」 and 「문의」 render 23.84px wide. */
@@ -481,42 +486,6 @@
   font-size: 13.5px; line-height: 1.8; color: var(--ink-3);
 }
 
-/* participation matrix */
-.lanes { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 28px; }
-@media (min-width: 900px) { .lanes { grid-template-columns: repeat(2, 1fr); } }
-.lane { background: var(--paper); padding: 24px; }
-.laneHead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-.laneTitle {
-  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
-  font-size: var(--step-1); font-weight: 600; color: var(--ink);
-}
-.laneOffer, .laneCannot { margin: 10px 0 0; font-size: 13.5px; line-height: 1.8; }
-.laneOffer { color: var(--ink-2); }
-/* the limit is set in the boundary colour, never hidden as fine print */
-.laneCannot { color: var(--ink-3); padding-inline-start: 12px; border-inline-start: 2px solid var(--c-mineral, #686e69); }
-.laneVentures { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
-.laneVenture {
-  font-family: var(--font-inter, Inter), system-ui, sans-serif;
-  font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3);
-  border: 1px solid var(--line); padding: 3px 8px;
-}
-.laneState { margin: 14px 0 0; font-size: 12.5px; line-height: 1.7; color: var(--ink-4); }
-
-/* homepage participation grid — labels only, linking into the matrix */
-.engageGrid { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 24px 0 20px; }
-@media (min-width: 700px) { .engageGrid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1100px) { .engageGrid { grid-template-columns: repeat(6, 1fr); } }
-.engageCell {
-  background: var(--paper); padding: 18px 16px; display: block; text-decoration: none;
-  color: var(--ink); transition: background 160ms ease;
-}
-.engageCell:hover, .engageCell:focus-visible { background: var(--surface); }
-.engageLabel {
-  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
-  font-size: 13.5px; font-weight: 600;
-}
-.engageState { margin: 6px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--ink-4); }
-
 /*
  * Primary participation action in the header.
  *
@@ -535,15 +504,6 @@
 .navCta:hover, .navCta:focus-visible { background: var(--ink); color: var(--paper); }
 .navDesktop .navCta { margin-inline-start: clamp(8px, 1.2vw, 18px); }
 
-/* the 30-second explainer affordance */
-.explainer { margin-top: 26px; }
-.explainerBtn {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: none; border: 1px solid var(--line); color: var(--ink);
-  font-family: inherit; font-size: 13px; padding: 9px 16px; cursor: pointer;
-}
-.explainerBtn:hover, .explainerBtn:focus-visible { border-color: var(--ink); }
-.explainerDot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
 
 /* ── CORP-v1.2R2.1: venture identity + formation state ───────────────────────────── */
 
@@ -637,39 +597,14 @@
 /* the positioning headline on a venture detail page, set below the wordmark */
 .ventureThesis { margin-top: 14px; }
 
-/* ── CORP-v1.2R2.1: participation interface ──────────────────────────────────────── */
-
-.laneList { border: 1px solid var(--line); margin-top: 28px; }
-.lane { border-block-end: 1px solid var(--line); background: var(--paper); }
-.lane:last-child { border-block-end: none; }
-.laneSummary {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-  padding: 20px 24px; cursor: pointer; list-style: none;
-}
-.laneSummary::-webkit-details-marker { display: none; }
-.laneSummary:hover { background: var(--surface); }
-.laneSummary:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
-.lane[open] .laneSummary { border-block-end: 1px solid var(--line); background: var(--surface); }
-/* a quiet affordance — the row is the control, so the marker never competes with the label */
-.laneSummary::after {
-  content: "+"; margin-inline-start: auto; color: var(--ink-4);
-  font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 15px; line-height: 1;
-}
-.lane[open] .laneSummary::after { content: "−"; }
-.laneBody { padding: 22px 24px 26px; }
-@media (max-width: 560px) {
-  .laneSummary { padding: 16px 18px; }
-  .laneBody { padding: 18px 18px 22px; }
-}
-
-/* homepage participation: an entry system, not six more text cards */
-.engageCell { display: flex; flex-direction: column; gap: 6px; }
-.engageMarks { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 0; padding: 0; list-style: none; }
-.engageMark {
-  font-family: var(--font-inter, Inter), system-ui, sans-serif;
-  font-size: 10px; letter-spacing: 0.04em; color: var(--ink-4);
-  border: 1px solid var(--line); padding: 2px 6px;
-}
+/*
+ * CORP-v1.4R1.1 — the participation-interface section is gone from this stylesheet.
+ *
+ * Its rules — the lane and engage families — styled the disclosure matrix and the homepage engage
+ * grid that CORP-v1.4R1 replaced with `ParticipationEntry`. That component brings its own
+ * stylesheet, so what was left here was 34 rules nothing could reach. The section headers went with
+ * them rather than standing over an empty space.
+ */
 
 /* ── CORP-v1.2R3: the signature ──────────────────────────────────────────────────── */
 
@@ -785,7 +720,8 @@
   display: grid; gap: 1px; margin: 0; padding: 0; list-style: none;
   background: var(--line); border: 1px solid var(--line);
 }
-@media (min-width: 760px) { .railList { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 760px) { .railList { grid-template-columns: repeat(3, 1fr); }
+}
 .railItem { background: var(--surface); }
 .railLink {
   display: grid; gap: 3px; padding: 14px 16px; text-decoration: none; color: var(--ink);
@@ -863,7 +799,8 @@
 }
 .chapterThesis { margin: 0; font-size: var(--step-1); line-height: 1.85; color: var(--ink-2); max-width: 34ch; }
 .chapterFigure { display: none; }
-@media (min-width: 940px) { .chapterFigure { display: block; } }
+@media (min-width: 940px) { .chapterFigure { display: block; }
+}
 .chapterState { display: grid; gap: 16px; align-content: start; }
 
 /*

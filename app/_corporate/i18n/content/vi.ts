@@ -105,7 +105,6 @@ export const vi: SiteCopy = {
       { no: "03", title: "Hiện trường và hệ thống chưa ăn khớp.", body: "Trong lĩnh vực di chuyển, phúc lợi và hành chính, vẫn còn những lựa chọn chưa đến được với người trong cuộc." },
     ],
 
-    buildEyebrow: "Những gì chúng tôi đang xây dựng",
     buildHeading: ["Những lĩnh vực hệ thống chưa với tới —", "chúng tôi làm từng việc một."],
 
     howEyebrow: "Cách chúng tôi xây dựng",
@@ -116,7 +115,6 @@ export const vi: SiteCopy = {
       { no: "03", title: "Nói rõ ranh giới", body: "Chúng tôi không bước vào phần việc thuộc về chuyên gia có chứng chỉ hành nghề. Chúng tôi đảm nhận đến đâu và bàn giao lại cho con người từ đâu đều được ghi rõ ngay trong sản phẩm." },
       { no: "04", title: "Chỉ nói những gì kiểm chứng được", body: "Thành tích, số liệu và quan hệ hợp tác chỉ được nêu khi có bằng chứng. Điều gì không xác minh được, chúng tôi không viết." },
     ],
-    howDisclose: "Những nguyên tắc này có nghĩa gì trên thực tế",
 
     founderEyebrow: "Người đại diện",
     founderHeading: ["Được xây dựng bởi một người đã hai mươi năm", "nhìn tận nơi những hiện trường phức tạp."],
@@ -161,13 +159,6 @@ export const vi: SiteCopy = {
       "Nhà sáng lập, nhà nghiên cứu, khu vực công, doanh nghiệp. Bạn tham gia được ở đâu là tùy vào vị trí bạn đang đứng. Chúng tôi bắt đầu từ những gì có thể trao đổi ngay lúc này.",
     engageCta: "Xem các cách tham gia",
     engageNote: "Tất cả đều bắt đầu từ một cuộc trò chuyện. Hiện chưa có quy trình ứng tuyển và chưa có cơ chế tuyển chọn nào.",
-    explainerLabel: "Yorisou trong 30 giây",
-    explainerHeading: ["Từ một vấn đề đến một công ty,", "trong ba mươi giây."],
-    explainerClose: "Đóng",
-    explainerPlay: "Phát",
-    explainerPause: "Tạm dừng",
-    explainerRestart: "Phát lại",
-    explainerStepLabel: "Cảnh",
   },
 
   mirai: {
@@ -268,12 +259,6 @@ export const vi: SiteCopy = {
       { no: "02", title: "Chịu trách nhiệm đến khi người dùng thật sự hiểu", body: "Đưa ra thông tin không phải là điểm dừng. Việc người dùng biết mình cần làm gì tiếp theo nằm trong phạm vi thiết kế." },
       { no: "03", title: "Nói rõ ranh giới", body: "Chúng tôi không bước vào phần việc thuộc về chuyên gia có chứng chỉ hành nghề. Chúng tôi đảm nhận đến đâu và bàn giao lại cho con người từ đâu đều được ghi rõ ngay trong sản phẩm." },
       { no: "04", title: "Chỉ nói những gì kiểm chứng được", body: "Thành tích, số liệu và quan hệ hợp tác chỉ được nêu khi có bằng chứng. Điều gì không xác minh được, chúng tôi không viết." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Bắt đầu từ ngôn ngữ của hiện trường", long: "Không một thiết chế nào đến được với ai nếu chưa được dịch sang các bước mà người dùng thực sự phải làm. Chúng tôi bắt đầu từ hồ sơ thật, chuyến đi thật, cuộc trao đổi thật — không phải từ một đề bài trừu tượng, mà từ đúng nước đi đang mắc kẹt ngay trước mắt." },
-      { no: "02", title: "Chịu trách nhiệm đến khi người dùng thật sự hiểu", long: "Bày ra một danh sách kết quả tìm kiếm không phải là hỗ trợ. Điều người ta cần là biết ngay lúc này mình phải làm gì. Phạm vi của sản phẩm kéo dài đến khi bước tiếp theo được hiểu rõ, chứ không dừng ở chỗ thông tin đã được hiển thị." },
-      { no: "03", title: "Nói rõ ranh giới", long: "Để người dùng sử dụng sản phẩm mà không nói rõ những gì nó không làm được là thiết kế nguy hiểm nhất. Chúng tôi đảm nhận đến đâu và bàn giao cho chuyên gia từ đâu đều được viết ngay trên màn hình sản phẩm. Ranh giới là một phần của chức năng, không phải một dòng lưu ý." },
-      { no: "04", title: "Chỉ nói những gì kiểm chứng được", long: "Chúng tôi không nói trước về những thành tích chưa xác minh được hay những tính năng chưa vận hành. Mọi sự thật được đăng tải đều có hồ sơ chứng minh phía sau. Giai đoạn nào viết được ít, chúng tôi để nó ít như vậy." },
     ],
     orderHeading: ["Từng việc một,", "làm đến cùng."],
     orderBody: "Chúng tôi không khởi động nhiều thứ cùng lúc. Chúng tôi ưu tiên làm trọn vẹn một lĩnh vực, cho đến khi nó chạm được vào các bước mà con người thực sự làm.",

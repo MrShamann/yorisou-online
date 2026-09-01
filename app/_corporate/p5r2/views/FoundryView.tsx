@@ -13,10 +13,16 @@ import type { SiteCopy } from "../../i18n/types";
  * First, the eight stages end in an independent company, not in permanent Foundry dependency, so the
  * independence section follows the stages immediately rather than being buried.
  *
- * Second, Asterion. It is an INDEPENDENT platform that Yorisou does not own, so it appears here as a
- * secondary layer inside "how we build" — never in the venture grid, never in the hero, and never
- * with a "powered by" badge. The boundary callout sits directly under it so the ownership and data
- * separation is read at the same moment as the capability claim, not several screens later.
+ * Second, Asterion. Asterion is an independent technology-platform project and is not a public Yorisou
+ * venture. The site draws NO ownership conclusion in either direction — rights, licensing, data and
+ * operating responsibility depend on the applicable agreements. CORP-v1.4 withdrew the earlier
+ * absolute "Yorisou does not own Asterion", because an unsupported denial is still an unsupported
+ * claim, and this comment said the withdrawn thing until CORP-v1.4R1.1.
+ *
+ * It therefore appears here as a secondary layer inside "how we build" — never in the venture grid,
+ * never in the hero, and never with a "powered by" badge. The boundary callout sits directly under
+ * it so the governance and data separation is read at the same moment as the capability claim, not
+ * several screens later.
  *
  * The maturity note is last and is not softened: the method is not yet proven and nothing has been
  * spun out. A polished page does not upgrade evidence.
@@ -37,16 +43,6 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
           <p className={`${styles.lead} ${styles.jp}`}>{f.lead}</p>
         </div>
       </section>
-
-      {/*
-        CORP-v1.2R2 — the "Yorisou in 30 seconds" target.
-
-        This is option A from the brief: an extended web-native motion explainer built from the same
-        system grammar as the hero, not a recorded film. No placeholder media file is shipped, and
-        nothing here claims a video exists. The motion field states the arc; the stage names beneath
-        it name each beat, so the story reads with motion disabled too.
-      */}
-
 
       {/*
         CORP-v1.4R1 — the eight stages are one system, not eight cards.
@@ -125,9 +121,13 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
         preserve work rather than serve a reader.
 
         Nothing it said is lost: every beat drew its text from `foundry.stages` and the section
-        eyebrows, all of which the spine and the surrounding sections still render. The component
-        and its stylesheet remain in the tree, unreferenced, so restoring it is a one-line change if
-        the Founder disagrees.
+        eyebrows, all of which the spine and the surrounding sections still render.
+
+        CORP-v1.4R1.1 deleted the implementation. R1 had left the component and its stylesheet in
+        the tree, unreferenced, on the reasoning that they cost no client bytes — true, but it left
+        the repository holding two UX doctrines for one job, and the stale one is what a future
+        agent finds first. The Founder authorized removal. `git log` is where a retired
+        implementation belongs.
       */}
       <Band tint>
         <Boundary title={f.maturityTitle}>{f.maturityBody}</Boundary>

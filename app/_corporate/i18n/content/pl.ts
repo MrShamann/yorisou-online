@@ -84,7 +84,6 @@ export const pl: SiteCopy = {
       { no: "03", title: "Praktyka i system nie zazębiają się.", body: "W mobilności, pomocy społecznej i administracji istnieją możliwości, które nie dotarły jeszcze do osób pracujących na miejscu." },
     ],
 
-    buildEyebrow: "Co budujemy",
     buildHeading: ["Obszary, do których system nie dociera —", "podejmujemy je po kolei."],
 
     howEyebrow: "Jak budujemy",
@@ -95,7 +94,6 @@ export const pl: SiteCopy = {
       { no: "03", title: "Wyraźnie określamy granicę", body: "Nie wkraczamy w obszar zastrzeżony dla licencjonowanych specjalistów. To, co obejmujemy, i miejsce, w którym przekazujemy sprawę dalej, jest zapisane w samym produkcie." },
       { no: "04", title: "Mówimy tylko to, co można zweryfikować", body: "Wyniki, liczby i współpraca pojawiają się wyłącznie tam, gdzie istnieją dowody. Czego nie da się potwierdzić, tego nie piszemy." },
     ],
-    howDisclose: "Co te zasady oznaczają w praktyce",
 
     founderEyebrow: "Wspólnik zarządzający",
     founderHeading: ["Buduje to ktoś, kto przez dwadzieścia lat", "pracował wewnątrz złożonych branż."],
@@ -140,13 +138,6 @@ export const pl: SiteCopy = {
       "Założyciele, badacze, zespoły publiczne, firmy. To, gdzie możesz się włączyć, zależy od tego, po której stronie stoisz. Zaczynamy od tego, o czym da się rozmawiać już teraz.",
     engageCta: "Zobacz możliwe drogi",
     engageNote: "Każda z tych dróg zaczyna się dziś od rozmowy. Nie prowadzimy jeszcze naboru zgłoszeń ani selekcji.",
-    explainerLabel: "Yorisou w 30 sekund",
-    explainerHeading: ["Od problemu do firmy,", "w trzydzieści sekund."],
-    explainerClose: "Zamknij",
-    explainerPlay: "Odtwórz",
-    explainerPause: "Wstrzymaj",
-    explainerRestart: "Od początku",
-    explainerStepLabel: "Scena",
   },
 
   mirai: {
@@ -247,12 +238,6 @@ export const pl: SiteCopy = {
       { no: "02", title: "Bierzemy odpowiedzialność aż do zrozumienia", body: "Podanie informacji to nie koniec. Wiedza o tym, co zrobić dalej, mieści się w zakresie projektu." },
       { no: "03", title: "Wyraźnie określamy granicę", body: "Nie wkraczamy w obszar zastrzeżony dla licencjonowanych specjalistów. To, co obejmujemy, i miejsce, w którym przekazujemy sprawę dalej, jest zapisane w samym produkcie." },
       { no: "04", title: "Mówimy tylko to, co można zweryfikować", body: "Wyniki, liczby i współpraca pojawiają się wyłącznie tam, gdzie istnieją dowody. Czego nie da się potwierdzić, tego nie piszemy." },
-    ],
-    principlesLong: [
-      { no: "01", title: "Zaczynamy od języka praktyki", long: "Żaden system do nikogo nie dociera, dopóki nie zostanie przełożony na kroki, które ta osoba faktycznie wykonuje. Zaczynamy od prawdziwego wniosku, prawdziwej drogi, prawdziwej rozmowy — nie od abstrakcyjnie postawionego problemu, lecz od tego jednego ruchu, który właśnie utknął." },
-      { no: "02", title: "Bierzemy odpowiedzialność aż do zrozumienia", long: "Wyliczenie wyników wyszukiwania to jeszcze nie wsparcie. Człowiek potrzebuje wiedzieć, co zrobić dalej. Zakres produktu sięga do momentu, w którym następny krok jest zrozumiały, a nie do momentu, w którym wyświetlono informację." },
-      { no: "03", title: "Wyraźnie określamy granicę", long: "Pozwolić komuś korzystać z produktu bez jasnego powiedzenia, czego produkt nie potrafi, to najbardziej niebezpieczny sposób projektowania. To, czym zajmujemy się my, i to, w którym miejscu sprawę przejmuje specjalista, zapisujemy na samym ekranie. Granica jest funkcją, a nie zastrzeżeniem drobnym drukiem." },
-      { no: "04", title: "Mówimy tylko to, co można zweryfikować", long: "Nie opisujemy wyników, których nie możemy potwierdzić, ani funkcji, które jeszcze nie działają. Za każdym publikowanym faktem stoi zapis. W okresach, gdy mamy niewiele do powiedzenia, publikujemy niewiele." },
     ],
     orderHeading: ["Po jednym,", "do samego końca."],
     orderBody: "Nie zaczynamy wielu rzeczy naraz. Wolimy doprowadzić jeden obszar do momentu, w którym sięga kroków, jakie ludzie rzeczywiście wykonują.",

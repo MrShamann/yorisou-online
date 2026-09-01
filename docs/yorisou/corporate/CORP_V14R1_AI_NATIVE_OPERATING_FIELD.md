@@ -42,8 +42,12 @@ selectors. Consequences, all of them deliberate:
 
 - **zero JavaScript** — every object is a server component; no hydration cost, no new dependency
 - **arrow keys work** because the browser provides them, not because we wrote a key handler
-- **`display:none` on unselected panels** gives real tab/panel semantics to assistive technology —
-  exactly one stage panel and one lane panel is in the accessibility tree at a time (verified)
+- **the inputs are visually hidden but focusable** (`position:absolute; opacity:0; 1×1` — never
+  `display:none`, which would make them unreachable), each paired with a real `<label for>`
+- **`display:none` on the unselected panels** means exactly one stage panel and one lane panel is in
+  the accessibility tree at a time (verified). This is a *native radio-group controlling conditional
+  content* — there is no `role="tab"`, `role="tabpanel"` or `aria-selected` anywhere, and it does
+  not implement the ARIA tabs contract
 - **reduced motion has nothing to disable** — selection is a state change, not an animation
 
 Keyboard tab stops fell from 154 to 136 across the nine routes. That is the accordion becoming a
