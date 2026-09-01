@@ -69,7 +69,21 @@ test("the four consumer tabs are the locked IA, each pointing at a real route", 
   for (const old of ["ホーム", "今を知る", "おすすめ", "わたしの今"]) {
     assert.ok(!nav.includes(`"${old}"`), `stale tab label still present: ${old}`);
   }
-  for (const href of ['href: "/"', 'href: "/notice"', 'href: "/explore"', 'href: "/me"']) {
+  /*
+   * CORP-v1.3.1 — the 今日 tab's destination moved from "/" to CONSUMER_HOME.
+   *
+   * The apex cutover makes "/" the YORISOU company site, so a literal `href: "/"` here would have
+   * sent a person from inside the consumer product to the corporate front page. Nothing would have
+   * 404ed — it would just have been the wrong site. The assertion follows the destination and stays
+   * exact; it now also pins that the tab reads the shared constant rather than any literal, so the
+   * next move cannot happen in one place only.
+   */
+  assert.ok(
+    nav.includes("href: CONSUMER_HOME"),
+    "the 今日 tab must read CONSUMER_HOME, not a literal path",
+  );
+  assert.ok(!nav.includes('href: "/"'), 'the 今日 tab must not point at the corporate apex');
+  for (const href of ['href: "/notice"', 'href: "/explore"', 'href: "/me"']) {
     assert.ok(nav.includes(href), `missing destination: ${href}`);
   }
   // One navigation system, not two.
@@ -146,16 +160,36 @@ test("no surface claims the いま色テスト is 24 questions", () => {
   assert.deepEqual(offenders, [], "these claim a 24-question いま色テスト; it has 120");
 });
 
-test("/about's action and its prose describe the same product", () => {
-  const about = read("about/page.tsx");
-  assert.ok(!about.includes("24問"), "the body must not contradict the CTA it sits beside");
-  assert.match(about, /href="\/tests\/ima-iro"/, "the CTA opens the canonical 120Q");
-  // 「短く」 belongs to /today/check-in. Promising it above a button that opens 120 questions is the
-  // same broken promise in words rather than in routing.
+/**
+ * CORP-v1.3.1 — REBOUND from `/about` to the restored Today surface.
+ *
+ * This asserted that `app/about/page.tsx` promised the same product its CTA opened: a body that did
+ * not say 「24問」, a CTA on the canonical 120Q, and no 「短くふり返ってみる」 promise above a button
+ * that opens 120 questions. It has been failing since commit `9f0e8ff`, alongside ARCH-P3 L/M and
+ * for the same reason — `/about` became the CORPORATE "How we build" page and the consumer about
+ * surface ceased to exist. The assertion was reading a corporate page and asking consumer questions
+ * of it.
+ *
+ * Unlike Today, `/about` is NOT being restored: the Founder's apex decision assigns `/about` to the
+ * corporate site. So the SUBJECT is retired with that rationale recorded, and the INVARIANT — a
+ * short-look promise must sit above the short surface, never above the 120Q — is bound to the page
+ * that now carries it. That page exists and contains these strings, so this is not vacuous: the
+ * first assertion fails loudly if the file is ever emptied or moved.
+ */
+test("the consumer entry promises the surface its own button opens", () => {
+  const today = read("today/page.tsx");
+  assert.ok(today.length > 500, "the Today surface is missing — this check would pass over nothing");
+
+  // The short promise and the short surface must be the same thing.
+  assert.match(today, /1〜2分/, "the entry states a short-look promise");
+  assert.match(today, /href="\/today\/check-in"/, "and its primary action opens the short surface");
+
+  // The 120Q is a deliberate, separate depth step — never what a short promise opens.
   assert.ok(
-    !/短くふり返ってみる/.test(about),
-    "a short-look-back promise must not introduce the 120Q",
+    !/href="\/tests\/ima-iro"[\s\S]{0,400}1〜2分/.test(today),
+    "a short-look promise must not sit on the 120Q",
   );
+  assert.ok(!today.includes("24問"), "the body must not contradict the action it sits beside");
 });
 
 test("nothing offers a light re-look by sending the person into the 120Q", () => {

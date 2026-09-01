@@ -1,0 +1,797 @@
+/*
+ * CORP-P5R2 — the global corporate design system. PREVIEW ONLY.
+ *
+ * Answers the P5R1 visual critique: the previous system was hairlines, numbered rows, black
+ * rectangles and large empty whitespace — an editorial prototype. This system keeps the honest
+ * restraint but adds surface variety, a real type scale, tinted bands, elevated panels and density,
+ * so the page reads as a company rather than a design study.
+ *
+ * RTL IS STRUCTURAL, NOT A PATCH. Every directional value uses CSS logical properties
+ * (margin-inline, padding-inline, border-inline, inset-inline, text-align: start/end). Arabic is
+ * therefore laid out correctly by the same rules as Japanese, with no mirrored stylesheet.
+ *
+ * MULTI-SCRIPT TYPOGRAPHY. One font stack carries Latin, CJK, Cyrillic, Arabic, Devanagari and Thai
+ * by falling through to the platform's own system faces rather than shipping many webfont packages.
+ * Only the two existing webfonts (Noto Sans JP, Inter) are loaded; every other script resolves to a
+ * high-quality system face, which is the performant choice at 21 locales.
+ */
+
+.root {
+  /* ground */
+  --paper: #fbfaf6;
+  --paper-2: #f4f2ec;
+  --paper-3: #edeae1;
+  --ink: #0c0e0d;
+  --ink-2: #2f3633;
+  --ink-3: #545b57;
+  /* 4.54:1 on --surface (#f4f2ec) and 4.87:1 on --paper: WCAG AA for the small uppercase labels
+     that use it. #6c736e measured 4.34:1 and failed AA by a hair. */
+  --ink-4: #69706b;
+  --line: rgba(12, 14, 13, 0.10);
+  --line-2: rgba(12, 14, 13, 0.18);
+  --line-3: rgba(12, 14, 13, 0.30);
+
+  /* system surface */
+  --sys: #0e1211;
+  --sys-2: #161b19;
+  --sys-3: #1e2523;
+  --sys-line: rgba(233, 231, 224, 0.13);
+  --sys-line-2: rgba(233, 231, 224, 0.26);
+  --sys-ink: #e9e7e0;
+  --sys-ink-2: #b3b8b3;
+  --sys-ink-3: #8d938e;
+
+  /*
+   * CORP-v1.3 — the signal colour is now DERIVED FROM THE LOGO, not chosen beside it.
+   *
+   * Until v1.2R3 this site had no logo, and the accent was a jade green picked to suit the paper.
+   * R3 integrated the Founder's real artwork, which is deep navy and blue — so the company's own
+   * mark and the company's own site were stating two different identities on the same screen. That
+   * is an incomplete brand system, not a taste question, and it is fixed here at the token level:
+   * no element moves, no type changes, no layout is touched. Only the hue is reconciled.
+   *
+   * Every value below is SAMPLED from `public/brand/yorisou-logo.png` — the pixel clusters of the
+   * wordmark ink, the symbol core, the bright highlight and the pale ribbon. Nothing is invented
+   * and nothing is a tint of a guess. Contrast is measured in `tests/corporate-p5r2/brandSystem.test.ts`.
+   */
+  --brand-ink: #061133;        /* wordmark navy, the artwork's dominant opaque colour */
+  --signal: #0c3c9c;           /* symbol core blue — 9.39:1 on --paper */
+  --signal-2: #1854b4;         /* mid blue in the ribbon gradient */
+  --signal-on-dark: #3c9cf0;   /* bright highlight and accent dot — 6.47:1 on --sys */
+  --signal-wash: #cce4fc;      /* the pale ribbon, used as a surface */
+  --amber: #a87f42;
+  --amber-on-dark: #d3ab6b;
+
+  /*
+   * The venture accents are deliberately NOT tokens here. They live once, in
+   * `app/_corporate/brand.ts`, with the source each was read from, and reach the page as an inline
+   * value from that registry. Declaring them again in CSS would create a second place for the same
+   * fact — which is precisely how `proxy.ts` lost three routes' locales for a whole release.
+   */
+
+  --pad: clamp(20px, 5vw, 48px);
+  --max: 1240px;
+  --max-text: 62ch;
+
+  --step--1: clamp(12px, 0.78vw + 10px, 13.5px);
+  --step-0: clamp(14px, 0.5vw + 12.5px, 16px);
+  --step-1: clamp(16px, 0.7vw + 14px, 19px);
+  --step-2: clamp(19px, 1.3vw + 15px, 25px);
+  --step-3: clamp(23px, 2.2vw + 16px, 36px);
+  --step-4: clamp(28px, 3.6vw + 16px, 54px);
+
+  background: var(--paper);
+  color: var(--ink);
+  /*
+   * The corporate surface uses the SYSTEM Japanese stack, not the Noto Sans JP webfont.
+   *
+   * A Japanese webfont ships as dozens of unicode-range subsets, and a page with varied kanji
+   * touches most of them: the Japanese homepage pulled 36 files totalling ~729KB, while the Arabic
+   * page — which needs none of those ranges — pulled 4 files at ~115KB and scored 88 to Japanese's
+   * 60 on the same server. Disabling preload did not help, because the fetches are driven by the
+   * characters on the page rather than by preload hints.
+   *
+   * Hiragino Sans (Apple), Yu Gothic (Windows) and Noto Sans CJK (Android/Linux) are high-quality
+   * Japanese faces already present on the reader's device, so body copy loses nothing a visitor
+   * would notice while the page loses the entire webfont payload. Inter is kept for Latin display
+   * text, where it is small and does the typographic work.
+   *
+   * This is scoped to the corporate root ONLY. `globals.css` still resolves --font-noto-jp for the
+   * live consumer product, whose typography is deliberately unchanged.
+   */
+  font-family: var(--font-inter, Inter), "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", "YuGothic", "Noto Sans CJK JP", "Noto Sans JP", "Meiryo",
+    "Noto Sans", "Segoe UI", system-ui, -apple-system,
+    "Noto Sans Arabic", "Geeza Pro", "Noto Sans Devanagari", "Kohinoor Devanagari",
+    "Noto Sans Thai", "Thonburi", sans-serif;
+  line-height: 1.85;
+  letter-spacing: 0.015em;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+}
+
+/* Latin-script locales read better a little tighter than Japanese. */
+.root[data-script="Latn"],
+.root[data-script="Cyrl"] { line-height: 1.68; letter-spacing: 0; }
+.root[data-script="Arab"] { line-height: 1.95; letter-spacing: 0; }
+.root[data-script="Deva"],
+.root[data-script="Thai"] { line-height: 2.05; letter-spacing: 0; }
+.root[data-script="Jpan"] .jp,
+.root[data-script="Hans"] .jp,
+.root[data-script="Hant"] .jp,
+.root[data-script="Kore"] .jp { word-break: keep-all; overflow-wrap: anywhere; }
+/* German compounds are the classic long-word break case. */
+.root[data-script="Latn"] .jp { overflow-wrap: break-word; hyphens: auto; }
+
+.shell { width: 100%; max-width: var(--max); margin-inline: auto; padding-inline: var(--pad); }
+.narrow { max-width: 74ch; }
+
+.mono {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums; color: var(--ink-4); margin: 0;
+}
+.root[data-script="Arab"] .mono,
+.root[data-script="Deva"] .mono,
+.root[data-script="Thai"] .mono { text-transform: none; letter-spacing: 0.04em; font-size: 12px; }
+.monoDark { color: var(--sys-ink-3); }
+
+/*
+ * The skip link is parked with the clip-path visually-hidden pattern, NOT by pushing it off-screen.
+ *
+ * It used to sit at `inset-inline-start: -9999px`. In a left-to-right document that resolves to
+ * `left: -9999px`, which is harmless — browsers do not scroll into negative space. In Arabic it
+ * resolves to `right: -9999px`, which places the link 9999px past the RIGHT edge and made every
+ * RTL page 11439px wide with a horizontal scrollbar attached to an invisible element.
+ *
+ * A zero-area clipped box has no side, so it cannot overflow in either direction, and it stays in
+ * the accessibility tree and the tab order — which an off-screen `display:none` would not.
+ */
+.skipLink {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skipLink:focus {
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  inset-inline-start: var(--pad);
+  top: 10px;
+  z-index: 90;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 10px 14px;
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.header {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: saturate(1.2) blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.headerInner { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 66px; }
+.wordmark {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif; font-weight: 600; font-size: 15px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); text-decoration: none;
+  display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap;
+}
+.wordmark:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.headerRight { display: flex; align-items: center; gap: clamp(8px, 1.4vw, 20px); }
+.navDesktop { display: none; gap: clamp(12px, 1.7vw, 26px); align-items: center; }
+@media (min-width: 1000px) { .navDesktop { display: flex; } }
+/*
+ * CORP-v1.3 — `min-inline-size` so a two-character label is still a 24px target.
+ *
+ * Measured: the Korean 「문의」 rendered 23.84 x 44 — 0.16px under the WCAG 2.2 minimum. It already
+ * CONFORMED, because adjacent nav targets sit 24.5px apart and SC 2.5.8's spacing exception applies,
+ * which is why axe reported nothing. Sitting on the line by a sixth of a pixel in one of twenty-one
+ * languages is not worth keeping, and this only affects labels narrower than 24px.
+ */
+.navLink {
+  font-size: 13.5px; color: var(--ink-3); text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; min-inline-size: 24px;
+  border-bottom: 1.5px solid transparent;
+}
+.navLink:hover { color: var(--ink); border-bottom-color: var(--signal); }
+.navLink:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.navLink[aria-current="page"] { color: var(--ink); border-bottom-color: var(--signal); }
+
+.iconBtn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding-inline: 13px;
+  border: 1px solid var(--line-2); background: var(--paper); color: var(--ink-3);
+  font-family: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+}
+.iconBtn:hover { color: var(--ink); border-color: var(--line-3); }
+.iconBtn:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+.menuBtn { }
+@media (min-width: 1000px) { .menuBtn { display: none; } }
+.bars { display: inline-flex; flex-direction: column; gap: 4px; }
+.bars span { display: block; width: 15px; height: 1.5px; background: currentColor; }
+
+/* mobile nav panel — native details, no client JS */
+.disclosure { position: relative; }
+@media (min-width: 1000px) { .disclosure { display: none; } }
+.panel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 10px); z-index: 60;
+  background: var(--paper); border: 1px solid var(--line-2);
+  min-width: 216px; max-width: calc(100vw - (var(--pad) * 2));
+  display: flex; flex-direction: column; padding-block: 6px;
+  box-shadow: 0 18px 40px -28px rgba(12, 14, 13, 0.5);
+}
+.panelLink {
+  padding: 12px 18px; min-height: 44px; display: flex; align-items: center;
+  font-size: 14px; color: var(--ink-3); text-decoration: none;
+}
+.panelLink:hover { background: var(--paper-2); color: var(--ink); }
+.panelLink:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
+
+/* ── sections ───────────────────────────────────────────────────────────── */
+.main { flex: 1; }
+.band { padding-block: clamp(56px, 6.4vw, 104px); position: relative; }
+.bandTint { background: var(--paper-2); }
+.bandLine { border-top: 1px solid var(--line); }
+.bandDark { background: var(--sys); color: var(--sys-ink); }
+.bandDark .mono { color: var(--sys-ink-3); }
+/*
+ * Prose inside a dark band needs the dark-surface inks.
+ *
+ * .bandDark sets `color: var(--sys-ink)`, but .body / .lead / .bodyMuted each set their own
+ * light-surface ink and therefore win on specificity. On the Asterion band that rendered
+ * #2f3633 on #0e1211 — 1.52:1, far below AA — while the headings looked fine because .h2 sets no
+ * colour at all and inherits. These give 9.36:1 for body and lead and 6.02:1 for muted text.
+ */
+.bandDark .body,
+.bandDark .lead { color: var(--sys-ink-2); }
+.bandDark .bodyMuted { color: var(--sys-ink-3); }
+
+.eyebrow { margin: 0 0 16px; }
+.h1 { margin: 0 0 22px; font-size: var(--step-4); line-height: 1.28; font-weight: 700; letter-spacing: -0.012em; }
+.root[data-script="Jpan"] .h1, .root[data-script="Hans"] .h1,
+.root[data-script="Hant"] .h1, .root[data-script="Kore"] .h1 { line-height: 1.46; letter-spacing: 0.005em; }
+.h2 { margin: 0 0 20px; font-size: var(--step-3); line-height: 1.34; font-weight: 700; letter-spacing: -0.008em; }
+.root[data-script="Jpan"] .h2, .root[data-script="Hans"] .h2,
+.root[data-script="Hant"] .h2, .root[data-script="Kore"] .h2 { line-height: 1.56; letter-spacing: 0.005em; }
+.h3 { margin: 0 0 10px; font-size: var(--step-1); line-height: 1.5; font-weight: 600; }
+.unit { display: inline-block; }
+.lead { margin: 0; max-width: var(--max-text); font-size: var(--step-1); line-height: 1.8; color: var(--ink-3); }
+.root[data-script="Jpan"] .lead { line-height: 2; }
+.leadLine { display: block; }
+.body { margin: 0 0 16px; max-width: var(--max-text); font-size: var(--step-0); color: var(--ink-2); }
+.bodyMuted { color: var(--ink-3); }
+
+/* ── hero ───────────────────────────────────────────────────────────────── */
+.hero { position: relative; padding-block: clamp(48px, 5.6vw, 92px); overflow: hidden; }
+.heroField {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.55;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, var(--line-2) 50%, transparent 50%),
+    radial-gradient(1px 1px at 70% 60%, var(--line-2) 50%, transparent 50%),
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 104px 104px, 104px 104px;
+  mask-image: radial-gradient(130% 100% at 50% 0%, #000 35%, transparent 80%);
+}
+.heroGrid { position: relative; z-index: 1; display: grid; gap: clamp(28px, 3.4vw, 48px); align-items: center; }
+@media (min-width: 1000px) { .heroGrid { grid-template-columns: 1.08fr 0.92fr; } }
+
+.surface {
+  background: var(--sys); color: var(--sys-ink); padding: clamp(22px, 2.6vw, 34px);
+  display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
+  box-shadow: 0 30px 70px -50px rgba(12, 14, 13, 0.8);
+}
+.surfaceHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.surfaceFig { flex: 1; min-height: 200px; position: relative; }
+/*
+ * The diagrams are fixed-geometry decorative illustrations (role="presentation", aria-hidden), and
+ * every <text> is placed at an authored x with an authored text-anchor. Under `direction: rtl` the
+ * anchor origin flips, so a label written as x="14" with the default start anchor runs LEFTWARD off
+ * the canvas: in Arabic the Kakari boundary caption rendered at left:-49 and was clipped.
+ *
+ * Pinning the SVG coordinate system to ltr keeps the authored geometry intact in every locale.
+ * Glyph shaping is unaffected — the bidi algorithm still renders each Arabic run right-to-left
+ * within its own text element, so the label reads correctly; only the box placement stays as drawn.
+ */
+.svgFill { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; direction: ltr; }
+.svgBlock { width: 100%; height: auto; display: block; pointer-events: none; direction: ltr; }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 26px 0 0; padding: 0; list-style: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--line-2);
+  padding: 8px 14px; font-size: 13px; color: var(--ink-2); background: var(--paper);
+}
+.chipDot { width: 5px; height: 5px; border-radius: 50%; background: var(--signal); }
+
+/* ── cards / rows ───────────────────────────────────────────────────────── */
+.cards { display: grid; gap: clamp(14px, 1.6vw, 20px); }
+@media (min-width: 760px) { .cards3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 760px) { .cards2 { grid-template-columns: repeat(2, 1fr); } }
+.card {
+  background: var(--paper); border: 1px solid var(--line); padding: clamp(20px, 2.2vw, 28px);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cardTint { background: var(--paper-2); border-color: var(--line); }
+.cardNo { font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.14em; color: var(--signal); font-variant-numeric: tabular-nums; }
+.cardTitle { margin: 0; font-size: var(--step-1); font-weight: 600; line-height: 1.5; color: var(--ink); }
+.cardBody { margin: 0; font-size: var(--step--1); line-height: 1.8; color: var(--ink-3); }
+
+.cardDark { background: var(--sys-2); border: 1px solid var(--sys-line); }
+.cardDark .cardTitle { color: var(--sys-ink); }
+.cardDark .cardBody { color: var(--sys-ink-2); }
+.cardDark .cardNo { color: var(--signal-on-dark); }
+
+/* ── project blocks ─────────────────────────────────────────────────────── */
+.projects { display: grid; gap: clamp(28px, 3.4vw, 52px); }
+@media (min-width: 1000px) { .projects { grid-template-columns: 1fr 1fr; } }
+.project { display: flex; flex-direction: column; }
+.projectHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin-block: 20px 8px; }
+.projectName { margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: var(--step-2); font-weight: 600; color: var(--ink); }
+.stage { font-size: 11.5px; color: var(--ink-3); border: 1px solid var(--line-2); padding: 3px 9px; line-height: 1.7; }
+.projectLead { margin: 0 0 18px; font-size: var(--step--1); line-height: 1.8; color: var(--ink-2); max-width: 46ch; }
+
+.boundary { margin-top: 18px; padding-top: 15px; border-top: 2px solid var(--signal); }
+.boundaryDark { border-top-color: var(--signal-on-dark); }
+.boundaryTitle { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.boundaryDark .boundaryTitle { color: var(--sys-ink); }
+.boundaryBody { margin: 0; font-size: 12.5px; line-height: 1.85; color: var(--ink-3); max-width: 60ch; }
+.boundaryDark .boundaryBody { color: var(--sys-ink-2); }
+
+/* ── links / CTA ────────────────────────────────────────────────────────── */
+.textLink {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  font-size: 13.5px; color: var(--signal); text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--signal) 34%, transparent);
+  align-self: flex-start;
+}
+.textLink:hover { border-bottom-color: var(--signal); }
+.textLink:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.textLinkDark { color: var(--signal-on-dark); border-bottom-color: color-mix(in srgb, var(--signal-on-dark) 40%, transparent); }
+.arrow { display: inline-block; }
+.root[dir="rtl"] .arrow { transform: scaleX(-1); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 50px; padding-inline: 26px; background: var(--ink); color: var(--paper);
+  font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid var(--ink);
+  font-family: inherit; cursor: pointer;
+}
+.btn:hover { background: var(--ink-2); border-color: var(--ink-2); }
+.btn:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+.btnGhost { background: transparent; color: var(--ink); }
+.btnGhost:hover { background: var(--paper-2); }
+
+/* ── founder module ─────────────────────────────────────────────────────── */
+.founder { display: grid; gap: clamp(22px, 2.8vw, 40px); align-items: start; }
+@media (min-width: 900px) { .founder { grid-template-columns: 0.85fr 1.15fr; } }
+.founderMark {
+  aspect-ratio: 4 / 5; background: var(--sys); position: relative; overflow: hidden;
+  display: flex; align-items: flex-end; padding: clamp(18px, 2vw, 26px);
+}
+.founderMarkInner { position: relative; z-index: 1; }
+.founderInitials {
+  position: absolute; inset-block-start: clamp(16px, 2vw, 26px); inset-inline-start: clamp(18px, 2vw, 26px);
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: clamp(56px, 7vw, 88px); font-weight: 600; letter-spacing: -0.03em;
+  /* Its own value rather than --sys-line-2 (0.26 alpha => 2.08:1), which is a BORDER token and must
+     not be brightened globally. At 56-88px this is large text, so AA needs 3:1; 0.38 gives 3.11:1
+     while keeping the ghosted monogram reading as a watermark. */
+  color: rgba(233, 231, 224, 0.38); line-height: 1;
+}
+.founderName { margin: 0; font-size: var(--step-2); font-weight: 600; color: var(--sys-ink); }
+.founderRole { margin: 4px 0 0; font-size: 12.5px; color: var(--sys-ink-3); }
+.founderFacts { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.founderFacts li { display: flex; gap: 12px; font-size: var(--step--1); line-height: 1.8; color: var(--ink-2); }
+.founderFacts li::before { content: ""; flex: none; width: 5px; height: 5px; margin-top: 11px; background: var(--signal); }
+.subLabel { margin: 26px 0 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-4); text-transform: uppercase; }
+.root[data-script="Jpan"] .subLabel, .root[data-script="Arab"] .subLabel,
+.root[data-script="Deva"] .subLabel, .root[data-script="Thai"] .subLabel { text-transform: none; letter-spacing: 0.02em; }
+
+/* ── message ────────────────────────────────────────────────────────────── */
+.message { max-width: 68ch; }
+.messagePara { margin: 0 0 18px; font-size: var(--step-0); line-height: 2; color: var(--ink-2); }
+.messageFirst::first-letter { font-size: 1.9em; line-height: 1; font-weight: 600; float: inline-start; margin-inline-end: 8px; margin-block-start: 4px; color: var(--signal); }
+.signature { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+.signatureName { margin: 0; font-size: var(--step-1); font-weight: 600; }
+.signatureRole { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-4); }
+
+/* ── facts table ────────────────────────────────────────────────────────── */
+.facts { margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line-2); max-width: 72ch; }
+.factRow { display: grid; grid-template-columns: minmax(120px, 0.32fr) 1fr; gap: 4px 22px; padding-block: 16px; border-bottom: 1px solid var(--line); }
+.factLabel { margin: 0; font-size: 12.5px; color: var(--ink-4); }
+.factValue { margin: 0; font-size: var(--step-0); color: var(--ink); }
+
+/* ── disclosure ─────────────────────────────────────────────────────────── */
+.disclose { border-top: 1px solid var(--line); margin-top: 22px; }
+.discloseDark { border-top-color: var(--sys-line); }
+.discloseSummary {
+  cursor: pointer; list-style: none; padding-block: 15px; min-height: 44px; box-sizing: border-box;
+  display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--ink-3);
+}
+.discloseDark .discloseSummary { color: var(--sys-ink-2); }
+.discloseSummary::-webkit-details-marker { display: none; }
+.discloseSummary::after { content: "+"; margin-inline-start: auto; font-size: 16px; }
+.disclose[open] .discloseSummary::after { content: "\2013"; }
+.discloseSummary:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+.discloseBody { padding-block: 0 20px; font-size: var(--step--1); line-height: 1.85; color: var(--ink-3); max-width: var(--max-text); }
+.discloseDark .discloseBody { color: var(--sys-ink-2); }
+.discloseBody strong { color: var(--ink); font-weight: 600; }
+.discloseDark .discloseBody strong { color: var(--sys-ink); }
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+.footer { border-top: 1px solid var(--line); background: var(--paper-2); padding-block: clamp(36px, 4vw, 60px); }
+.footerGrid { display: grid; gap: 30px; }
+@media (min-width: 760px) { .footerGrid { grid-template-columns: 1.7fr 1fr 1fr; gap: 44px; } }
+.footerTagline { margin: 0; font-size: 13px; line-height: 1.85; color: var(--ink-3); max-width: 32ch; }
+.footerList { margin: 0; padding: 0; list-style: none; }
+/* `min-inline-size` for the same reason as .navLink: 「소개」 and 「문의」 render 23.84px wide. */
+.footerLink { font-size: 13.5px; color: var(--ink-2); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; min-inline-size: 24px; }
+.footerLink:hover { color: var(--signal); }
+.footerLink:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+.footerBase { margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; font-size: 11.5px; color: var(--ink-4); }
+.badge { border: 1px solid var(--line-2); padding: 3px 9px; letter-spacing: 0.08em; font-size: 10.5px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .root *, .root *::before, .root *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+  }
+}
+
+/* ── CORP-v1.2R2: venture state triad, participation, brand line ─────────────────── */
+
+.triad { margin: 20px 0 0; padding: 0; border-block-start: 1px solid var(--line); }
+.triadRow {
+  display: grid; grid-template-columns: minmax(96px, 22%) 1fr; gap: 14px;
+  padding: 12px 0; border-block-end: 1px solid var(--line);
+}
+.triadKey {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+}
+.triadValue { margin: 0; font-size: var(--step-0); line-height: 1.8; color: var(--ink-2); }
+@media (max-width: 560px) {
+  .triadRow { grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* the venture's own Japanese line, set beside the Latin wordmark */
+.brandLine {
+  margin: 2px 0 0; font-size: 13px; line-height: 1.7; color: var(--ink-3);
+}
+
+.join { border-block-start: 2px solid var(--ink); padding-block-start: 26px; }
+/* The truthful status, not a call to action — see JoinVenture. */
+.joinState {
+  margin: 18px 0 20px; padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--signal);
+  font-size: 13.5px; line-height: 1.8; color: var(--ink-3);
+}
+
+/* participation matrix */
+.lanes { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 28px; }
+@media (min-width: 900px) { .lanes { grid-template-columns: repeat(2, 1fr); } }
+.lane { background: var(--paper); padding: 24px; }
+.laneHead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.laneTitle {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step-1); font-weight: 600; color: var(--ink);
+}
+.laneOffer, .laneCannot { margin: 10px 0 0; font-size: 13.5px; line-height: 1.8; }
+.laneOffer { color: var(--ink-2); }
+/* the limit is set in the boundary colour, never hidden as fine print */
+.laneCannot { color: var(--ink-3); padding-inline-start: 12px; border-inline-start: 2px solid var(--c-mineral, #686e69); }
+.laneVentures { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.laneVenture {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3);
+  border: 1px solid var(--line); padding: 3px 8px;
+}
+.laneState { margin: 14px 0 0; font-size: 12.5px; line-height: 1.7; color: var(--ink-4); }
+
+/* homepage participation grid — labels only, linking into the matrix */
+.engageGrid { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 24px 0 20px; }
+@media (min-width: 700px) { .engageGrid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1100px) { .engageGrid { grid-template-columns: repeat(6, 1fr); } }
+.engageCell {
+  background: var(--paper); padding: 18px 16px; display: block; text-decoration: none;
+  color: var(--ink); transition: background 160ms ease;
+}
+.engageCell:hover, .engageCell:focus-visible { background: var(--surface); }
+.engageLabel {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 13.5px; font-weight: 600;
+}
+.engageState { margin: 6px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--ink-4); }
+
+/* primary participation action in the header */
+.navCta {
+  border: 1px solid var(--ink); padding: 7px 14px; text-decoration: none; color: var(--ink);
+  font-size: 13px; white-space: nowrap; transition: background 160ms ease, color 160ms ease;
+}
+.navCta:hover, .navCta:focus-visible { background: var(--ink); color: var(--paper); }
+
+/* the 30-second explainer affordance */
+.explainer { margin-top: 26px; }
+.explainerBtn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: none; border: 1px solid var(--line); color: var(--ink);
+  font-family: inherit; font-size: 13px; padding: 9px 16px; cursor: pointer;
+}
+.explainerBtn:hover, .explainerBtn:focus-visible { border-color: var(--ink); }
+.explainerDot { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); }
+
+/* ── CORP-v1.2R2.1: venture identity + formation state ───────────────────────────── */
+
+.ventureName { display: block; }
+
+/*
+ * CORP-v1.3.1 — the venture mark slot.
+ *
+ * v1.3 put a 9px colour square here. All three ventures now have a real mark, so the slot holds
+ * artwork instead: Mirai Move's official logo, Kakari's 「係 / Kakari」 co-mark, Chigamo's new mark.
+ *
+ * Sized by HEIGHT in VentureMark.tsx, never by a fixed box — the Mirai Move logo is 2.2:1 and the
+ * two glyph marks are square, so forcing a common width would squash one of them. `flex-shrink: 0`
+ * matters at 375px in Arabic, where the row is tight and a collapsed mark reads as a render fault.
+ */
+.ventureMarkRow { display: flex; align-items: center; gap: 9px; }
+.ventureMark { flex: 0 0 auto; display: block; }
+.ventureMarkRow:has(.ventureMarkCompact) { gap: 7px; }
+
+/*
+ * CORP-v1.3 — the composition line: "2 in build · 1 at concept".
+ *
+ * Digits, not words, and computed from evidence rather than translated. The separator is a drawn
+ * rule instead of a middot character so it needs no bidi handling: in Arabic the two parts simply
+ * swap sides and the rule stays between them.
+ */
+.composition {
+  margin: 10px 0 0;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step--1);
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+}
+.compositionPart { display: inline-flex; align-items: baseline; gap: 5px; }
+.compositionCount { font-weight: 600; font-size: 1.15em; color: var(--signal); font-variant-numeric: tabular-nums; }
+.compositionSep { width: 14px; height: 1px; background: var(--line-2); }
+/*
+ * Dark-surface variants only. An earlier version of this block also scoped them to `.signature`,
+ * which is WRONG and axe caught it: `.signature` is a light section — only `.signatureField`, the
+ * Foundry panel inside it, is dark. The rail composition therefore rendered #8d938e on #fffdf8
+ * (about 3:1) and its digits #3c9cf0 on the same ground (3.1:1), both below AA at 13.5px/15.5px.
+ * On the paper ground the base rule already gives 4.87:1 and 9.39:1.
+ */
+.bandDark .composition { color: var(--sys-ink-3); }
+.bandDark .compositionCount { color: var(--signal-on-dark); }
+.bandDark .compositionSep { background: var(--sys-line-2); }
+.ventureMarkHero {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step-2); font-weight: 600; letter-spacing: -0.01em; color: var(--ink);
+}
+.ventureMarkCompact {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 13.5px; font-weight: 600; color: inherit;
+}
+
+/*
+ * Formation state. Reached nodes are filled and joined solid; unreached are hollow and joined
+ * dashed. No percentages, no completion bars — a venture is at a named stage or it is not.
+ */
+.formation { margin-top: 20px; }
+.formationLabel {
+  margin: 0 0 10px; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+}
+.formationTrack {
+  display: flex; flex-wrap: wrap; gap: 0; margin: 0; padding: 0; list-style: none;
+}
+.formationNode {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11.5px; color: var(--ink-4); padding-inline-end: 14px; position: relative;
+}
+.formationNode::after {
+  content: ""; position: absolute; inset-inline-end: 4px; top: 50%;
+  width: 6px; border-block-start: 1px dashed var(--line-strong, #c9c6bd);
+}
+.formationNode:last-child::after { content: none; }
+.formationDot {
+  width: 7px; height: 7px; border: 1px solid var(--line-strong, #c9c6bd); border-radius: 50%;
+  background: transparent; flex: none;
+}
+.formationDone { color: var(--ink-2); }
+.formationDone .formationDot { background: var(--signal); border-color: var(--signal); }
+.formationDone::after { border-block-start-style: solid; border-color: var(--signal); }
+.formationCurrent .formationName { color: var(--ink); font-weight: 600; }
+.formationCurrent .formationDot { box-shadow: 0 0 0 3px rgba(60, 156, 240, 0.22); }
+@media (max-width: 560px) {
+  .formationNode { font-size: 11px; padding-inline-end: 10px; }
+}
+
+/* the positioning headline on a venture detail page, set below the wordmark */
+.ventureThesis { margin-top: 14px; }
+
+/* ── CORP-v1.2R2.1: participation interface ──────────────────────────────────────── */
+
+.laneList { border: 1px solid var(--line); margin-top: 28px; }
+.lane { border-block-end: 1px solid var(--line); background: var(--paper); }
+.lane:last-child { border-block-end: none; }
+.laneSummary {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 20px 24px; cursor: pointer; list-style: none;
+}
+.laneSummary::-webkit-details-marker { display: none; }
+.laneSummary:hover { background: var(--surface); }
+.laneSummary:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
+.lane[open] .laneSummary { border-block-end: 1px solid var(--line); background: var(--surface); }
+/* a quiet affordance — the row is the control, so the marker never competes with the label */
+.laneSummary::after {
+  content: "+"; margin-inline-start: auto; color: var(--ink-4);
+  font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 15px; line-height: 1;
+}
+.lane[open] .laneSummary::after { content: "−"; }
+.laneBody { padding: 22px 24px 26px; }
+@media (max-width: 560px) {
+  .laneSummary { padding: 16px 18px; }
+  .laneBody { padding: 18px 18px 22px; }
+}
+
+/* homepage participation: an entry system, not six more text cards */
+.engageCell { display: flex; flex-direction: column; gap: 6px; }
+.engageMarks { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 0; padding: 0; list-style: none; }
+.engageMark {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10px; letter-spacing: 0.04em; color: var(--ink-4);
+  border: 1px solid var(--line); padding: 2px 6px;
+}
+
+/* ── CORP-v1.2R3: the signature ──────────────────────────────────────────────────── */
+
+/*
+ * This section deliberately does NOT use .shell. Every other section on the site sits in the same
+ * centred container, and that uniformity is what made the page forgettable. The signature is the
+ * one place the container is broken on purpose: the system object runs to the viewport edge.
+ */
+.signature {
+  position: relative;
+  border-block-end: 1px solid var(--line);
+  background: var(--paper);
+  overflow: hidden;
+}
+.signatureInner {
+  display: grid;
+  gap: clamp(24px, 3vw, 44px);
+  align-items: center;
+  /*
+   * Tuned against the rendered 1440x900 frame, not guessed: with the earlier padding the venture
+   * rail fell below the fold, which defeats the whole point of putting what is being formed in the
+   * first screen. The hero is now sized so brand + hook + rail all land inside 900px.
+   */
+  padding-block: clamp(28px, 3.4vw, 44px);
+  padding-inline-start: var(--pad);
+}
+@media (min-width: 900px) {
+  .signatureInner {
+    /* asymmetric on purpose: brand column is the minority, the system object dominates */
+    grid-template-columns: minmax(320px, 34%) 1fr;
+    padding-inline-end: 0; /* the field bleeds */
+  }
+}
+
+/*
+ * The grid only pads its inline-start so the field can bleed off the opposite edge, which left the
+ * hook and lead running to the exact viewport edge in the single-column mobile layout. The brand
+ * column carries its own end padding instead — the text gets a margin, the panel still bleeds.
+ */
+.signatureBrand { max-width: 30rem; padding-inline-end: var(--pad); }
+.heroLogo {
+  width: clamp(118px, 12vw, 168px);
+  height: auto;
+  display: block;
+  margin-block-end: clamp(14px, 1.6vw, 22px);
+}
+
+/* the hook: the one line a three-second visitor reads */
+.hook {
+  margin: 0 0 14px;
+  font-size: clamp(32px, 4.4vw, 54px);
+  line-height: 1.22;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.root[data-script="Jpan"] .hook,
+.root[data-script="Hans"] .hook,
+.root[data-script="Hant"] .hook,
+.root[data-script="Kore"] .hook { line-height: 1.34; letter-spacing: 0.004em; }
+
+.signatureLead {
+  margin: 0 0 22px; font-size: var(--step-1); line-height: 1.7; color: var(--ink-2);
+}
+.signatureSupport {
+  margin: 0 0 26px; font-size: var(--step-0); line-height: 1.85; color: var(--ink-3);
+  max-width: 34rem;
+}
+.signatureActions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+
+/* the dark computational object — full height, bleeding to the right edge */
+/*
+ * The field must actually touch the viewport edge. The grid column ends at the container, so the
+ * panel is pushed the remaining distance with a negative inline-end margin — this is the deliberate
+ * container break, and without it the panel reads as one more card with a margin around it.
+ */
+.signatureField {
+  position: relative;
+  min-height: clamp(240px, 27vw, 380px);
+  background: var(--sys);
+  border-inline-start: 1px solid var(--sys-line);
+  margin-inline-end: calc(var(--pad) * -1);
+}
+@media (max-width: 899px) {
+  .signatureField {
+    margin-inline-end: calc(var(--pad) * -1);
+    min-height: 240px;
+    border-inline-start: none;
+    border-block-start: 1px solid var(--sys-line);
+  }
+}
+
+/* ── NOW FORMING rail: what is being formed, without scrolling ───────────────────── */
+
+.ventureRail {
+  border-block-start: 1px solid var(--line);
+  background: var(--surface);
+  padding: 18px var(--pad) 20px;
+}
+/*
+ * CORP-v1.3 — the rail head carries the label and the computed composition on one row, so the
+ * first viewport states both WHAT is forming and HOW MUCH of it is real. They stack below 560px
+ * rather than compressing, because the composition is the part a hurried reader most needs.
+ */
+.railHead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px 18px; flex-wrap: wrap; margin-block-end: 12px;
+}
+.railLabel { margin: 0; }
+.railComposition { margin: 0; }
+.railNameRow { display: flex; align-items: center; gap: 8px; }
+.railList {
+  display: grid; gap: 1px; margin: 0; padding: 0; list-style: none;
+  background: var(--line); border: 1px solid var(--line);
+}
+@media (min-width: 760px) { .railList { grid-template-columns: repeat(3, 1fr); } }
+.railItem { background: var(--surface); }
+.railLink {
+  display: grid; gap: 3px; padding: 14px 16px; text-decoration: none; color: var(--ink);
+  transition: background 160ms ease;
+}
+.railLink:hover, .railLink:focus-visible { background: var(--paper); }
+.railName {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 15px; font-weight: 600; letter-spacing: -0.005em;
+}
+.railReading { font-size: 12.5px; line-height: 1.6; color: var(--ink-3); }
+.railStage {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--ink-4); margin-block-start: 2px;
+}
+
+/* header + footer marks */
+.headerLogo { width: auto; height: 46px; display: block; }
+.footerLogo { width: clamp(120px, 14vw, 158px); height: auto; display: block; margin-block-end: 14px; }
+.wordmarkLink { display: inline-flex; align-items: center; text-decoration: none; }

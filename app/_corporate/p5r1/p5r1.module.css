@@ -1,0 +1,354 @@
+/*
+ * CORP-P5R1 — AI-native homepage visual system. HOMEPAGE ONLY, PREVIEW ONLY.
+ *
+ * Isolated on purpose: nothing in this file is imported by /mirai-move, /kakari, /about, /company or
+ * /contact, which keep the CORP-P5 baseline exactly.
+ *
+ * The system in one sentence: a warm human field on one side, a dark system surface on the other,
+ * and a seam between them where YORISOU does its work. Evidenced by the benchmark teardown — five of
+ * the six reference sites inset a DARK COMPUTATIONAL SURFACE into a LIGHT editorial field rather
+ * than going fully dark. That pattern happens to be 人 / 仕組み, which is already this company's
+ * thesis.
+ */
+
+.root {
+  /* Human field — the light side. Carried unchanged from the accepted corporate palette. */
+  --c-ground: #fbfaf6;
+  --c-ground-alt: #f4f2ec;
+  --c-ink: #0c0e0d;
+  --c-ink-soft: #3a403c;
+  --c-muted: #5a605c;
+  --c-mineral: #686e69;
+  --c-hairline: rgba(12, 14, 13, 0.11);
+  --c-hairline-strong: rgba(12, 14, 13, 0.2);
+
+  /* System surface — the dark side. */
+  --c-sys: #0f1211;
+  --c-sys-2: #171b19;
+  --c-sys-line: rgba(232, 230, 223, 0.14);
+  --c-sys-line-2: rgba(232, 230, 223, 0.26);
+  --c-sys-ink: #e8e6df;      /* 14.6:1 on --c-sys */
+  --c-sys-muted: #a7aca6;    /* 7.2:1  on --c-sys */
+
+  /* Signal — state only, never decoration. */
+  --c-accent: #2f6b5e;       /* on light */
+  --c-accent-on-dark: #6fb3a0;
+  --c-handoff: #b08a4a;
+
+  --pad: clamp(20px, 5vw, 40px);
+  --max: 1180px;
+
+  background: var(--c-ground);
+  color: var(--c-ink);
+  font-family: var(--font-noto-jp, "Noto Sans JP"), "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+}
+
+.shell { width: 100%; max-width: var(--max); margin: 0 auto; padding-inline: var(--pad); }
+.mono {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums; color: var(--c-mineral); margin: 0;
+}
+.monoDark { color: var(--c-sys-muted); }
+
+.skipLink { position: absolute; left: -9999px; }
+.skipLink:focus {
+  left: var(--pad); top: 10px; z-index: 80; background: var(--c-ground); color: var(--c-ink);
+  padding: 10px 14px; outline: 2px solid var(--c-accent); outline-offset: 2px;
+}
+
+/* ── LAYER 0: environmental field ───────────────────────────────────────────
+   A very low-contrast lattice. It establishes that there is a structured space before any content
+   arrives. It never animates on its own and never reacts to a pointer. */
+.env {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--c-hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--c-hairline) 1px, transparent 1px);
+  background-size: 96px 96px;
+  opacity: 0.5;
+  mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+}
+
+/* ── header ─────────────────────────────────────────────────────────────────── */
+.header { position: relative; z-index: 40; border-bottom: 1px solid var(--c-hairline); background: var(--c-ground); }
+.headerInner { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
+.wordmark {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif; font-weight: 600; font-size: 15px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--c-ink); text-decoration: none;
+  display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap;
+}
+.wordmark:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+.navDesktop { display: none; gap: clamp(14px, 2vw, 30px); align-items: center; }
+@media (min-width: 860px) { .navDesktop { display: flex; } }
+.navLink {
+  font-size: 13px; color: var(--c-ink-soft); text-decoration: none; letter-spacing: 0.04em;
+  display: inline-flex; align-items: center; min-height: 44px; border-bottom: 1px solid transparent; white-space: nowrap;
+}
+.navLink:hover { color: var(--c-ink); border-bottom-color: var(--c-accent); }
+.navLink:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+/* One header row: nav (desktop only), the language selector (ALWAYS visible), and the menu
+   disclosure (mobile only). A language choice a visitor cannot see is not a choice. */
+.headerRight { display: flex; align-items: center; gap: clamp(10px, 1.6vw, 22px); }
+.disclosure { position: relative; }
+@media (min-width: 860px) { .disclosure { display: none; } }
+.toggle {
+  list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
+  border: 1px solid var(--c-hairline-strong); padding: 8px 14px; min-height: 44px; box-sizing: border-box;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-ink-soft); background: var(--c-ground);
+}
+.toggle::-webkit-details-marker { display: none; }
+.toggle:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
+.bars { display: inline-flex; flex-direction: column; gap: 4px; }
+.bars span { display: block; width: 16px; height: 1px; background: var(--c-ink-soft); }
+/* The panel is anchored to the disclosure's right edge and may never exceed the page gutter. With
+   the wider English labels it previously reached 16px past the gutter at 375. */
+.panel {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 60; background: var(--c-ground);
+  border: 1px solid var(--c-hairline-strong);
+  min-width: 214px; max-width: calc(100vw - (var(--pad) * 2));
+  display: flex; flex-direction: column; padding: 6px 0;
+}
+.panelLink { padding: 12px 18px; min-height: 44px; display: flex; align-items: center; font-size: 14px; color: var(--c-ink-soft); text-decoration: none; }
+.panelLink:hover { background: var(--c-ground-alt); color: var(--c-ink); }
+.panelLink:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2px; }
+
+/* ── sections ───────────────────────────────────────────────────────────────── */
+.main { flex: 1; position: relative; z-index: 1; }
+.band { position: relative; padding-block: clamp(48px, 5.6vw, 80px); }
+.bandTight { padding-block: clamp(40px, 5vw, 72px); }
+.bandRule { border-top: 1px solid var(--c-hairline); }
+
+.eyebrow { margin: 0 0 14px; }
+/* The thesis must never fragment. The longest phrase unit is 「人と社会のあいだに、」 at 11 characters;
+   at 58px that is ~640px against a ~590px column, so the inline-block broke INSIDE itself and left
+   「に、」 orphaned on its own line — the same class of defect CORP-P3 fixed once already. The scale
+   is bounded so the longest unit always fits the human column, and it is verified by measurement,
+   not by eye. */
+.h1 {
+  margin: 0 0 22px; font-weight: 700; letter-spacing: 0.005em;
+  font-size: clamp(27px, 3.5vw, 44px); line-height: 1.46;
+}
+/* English is set slightly larger and tighter than Japanese because Latin script carries less weight
+   per character. This is language-aware composition; the Japanese scale is NOT reduced to fit it. */
+.root[data-lang="en"] .h1 { font-size: clamp(30px, 4vw, 50px); line-height: 1.24; letter-spacing: -0.01em; }
+.root[data-lang="en"] .h2 { line-height: 1.3; letter-spacing: -0.005em; }
+.root[data-lang="en"] .lead { max-width: 40em; line-height: 1.75; }
+.root[data-lang="en"] .body,
+.root[data-lang="en"] .projectLine,
+.root[data-lang="en"] .boundaryBody,
+.root[data-lang="en"] .problemBody,
+.root[data-lang="en"] .constraintBody { line-height: 1.7; word-break: normal; }
+.h2 { margin: 0 0 18px; font-weight: 700; font-size: clamp(21px, 3.1vw, 32px); line-height: 1.58; letter-spacing: 0.005em; }
+.h3 { margin: 0 0 8px; font-weight: 600; font-size: clamp(15px, 1.9vw, 17px); line-height: 1.7; }
+.unit { display: inline-block; }
+.lead { margin: 0; max-width: 34em; font-size: clamp(14px, 1.5vw, 15px); line-height: 2; color: var(--c-muted); }
+.leadLine { display: block; }
+.body { margin: 0 0 14px; max-width: 38em; font-size: 14px; line-height: 2; color: var(--c-ink-soft); word-break: keep-all; overflow-wrap: anywhere; }
+
+/* ── HERO: human field | seam | system surface ──────────────────────────────── */
+.hero { position: relative; }
+.heroGrid { display: grid; gap: 0; align-items: stretch; }
+@media (min-width: 1024px) { .heroGrid { grid-template-columns: 1.12fr 0.88fr; } }
+
+.heroHuman { position: relative; z-index: 2; padding-block: clamp(36px, 4.2vw, 64px); padding-right: clamp(0px, 3vw, 44px); display: flex; flex-direction: column; justify-content: center; }
+
+/* The dark system surface: an inset object with a hard edge, not a full-bleed band. */
+.heroSystem {
+  position: relative; background: var(--c-sys); color: var(--c-sys-ink);
+  padding: clamp(24px, 3vw, 34px); display: flex; flex-direction: column; gap: 16px;
+  min-height: 340px; overflow: hidden;
+}
+@media (min-width: 1024px) {
+  .heroSystem { min-height: 460px; margin-block: clamp(28px, 3.4vw, 56px); }
+}
+.heroSystemHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.sysFieldWrap { flex: 1; position: relative; min-height: 210px; }
+.sysField { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+/* Human-side signal list — the 人 material. */
+.signals { margin: 26px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 10px; }
+.signal {
+  display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--c-hairline-strong);
+  padding: 7px 13px; font-size: 12.5px; color: var(--c-ink-soft); letter-spacing: 0.03em;
+}
+.signalDot { width: 5px; height: 5px; border-radius: 50%; background: var(--c-accent); opacity: 0.75; }
+
+/* ── system topology primitives (shared by hero + portfolio) ───────────────── */
+/* Every decorative system drawing is inert. The hero field, the two project grammars and the
+   environmental lattice all refuse pointer events — a decorative layer intercepting a control is
+   exactly the defect that made the previous prototype's only button unclickable at desktop widths. */
+.sysDrawing { width: 100%; height: auto; display: block; pointer-events: none; }
+.node { fill: var(--c-sys); stroke: var(--c-sys-line-2); stroke-width: 1; }
+.nodeLive { stroke: var(--c-accent-on-dark); }
+.rel { stroke: var(--c-sys-line); stroke-width: 1; fill: none; }
+.relLive { stroke: var(--c-accent-on-dark); stroke-opacity: 0.85; }
+.sysLabel { fill: var(--c-sys-muted); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+.sysLabelJp { fill: var(--c-sys-ink); font-size: 11px; letter-spacing: 0.04em; }
+/* English labels are wider than Japanese at the same optical size, so they step down slightly rather
+   than forcing the whole field to shrink. Language-aware composition, not global type shrinking. */
+.sysLabelEn { fill: var(--c-sys-ink); font-size: 9.5px; letter-spacing: 0.02em; }
+
+/* ── language selector ─────────────────────────────────────────────────────── */
+.langGroup { display: inline-flex; align-items: center; border: 1px solid var(--c-hairline-strong); }
+.langOption {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 0 13px; font-size: 12px; letter-spacing: 0.06em;
+  color: var(--c-muted); text-decoration: none; background: transparent; white-space: nowrap;
+}
+.langOption + .langOption { border-left: 1px solid var(--c-hairline-strong); }
+.langOption:hover { color: var(--c-ink); }
+.langOption:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2px; }
+.langOption[aria-current="true"] { color: var(--c-ink); background: var(--c-ground-alt); font-weight: 600; }
+.langSep { display: none; }
+
+/* At the narrowest widths the header row (wordmark + language selector + menu control) exceeded the
+   content width and pushed the disclosure — and therefore its anchored panel — 17px past the page
+   gutter at 375. The selector keeps its full 日本語 / English labels because a compact code like
+   "JA/EN" is less clear; the row tightens instead. */
+@media (max-width: 429px) {
+  .headerRight { gap: 8px; }
+  .langOption { padding: 0 9px; font-size: 11px; letter-spacing: 0.02em; }
+  .wordmark { font-size: 13px; letter-spacing: 0.13em; }
+  .toggle { padding: 8px 11px; letter-spacing: 0.08em; }
+}
+.boundaryRule { stroke: var(--c-accent-on-dark); stroke-width: 1.4; }
+.handoffRule { stroke: var(--c-handoff); stroke-width: 1.4; }
+
+/* ── MOTION GRAMMAR — four primitives, all finite, all state-triggered ─────
+   Every selector is scoped under .root. CSS Modules requires a local class in each selector, and
+   scoping here also guarantees these rules can never reach the five CORP-P5 baseline routes. */
+.root [data-motion] { --dur: 620ms; }
+
+/* SIGNAL — something becomes visible or relevant. */
+.root [data-motion="signal"] { opacity: 0; transform: translateY(8px); }
+.root [data-in="true"][data-motion="signal"],
+.root [data-in="true"] [data-motion="signal"] {
+  animation: sigIn var(--dur) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes sigIn { to { opacity: 1; transform: none; } }
+
+/* CONNECT — a meaningful relationship forms. */
+.root [data-motion="connect"] { stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.root [data-in="true"] [data-motion="connect"] {
+  animation: conn 760ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+@keyframes conn { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* RESOLVE — scattered complexity settles into structure. */
+.root [data-motion="resolve"] { opacity: 0; transform: translate(var(--fx, 0px), var(--fy, 10px)); }
+.root [data-in="true"] [data-motion="resolve"],
+.root [data-in="true"][data-motion="resolve"] {
+  animation: res 900ms cubic-bezier(0.16, 0.84, 0.32, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes res { to { opacity: 1; transform: none; } }
+
+/* HAND-OFF — responsibility transfers, and stops at the boundary. */
+.root [data-motion="handoff"] { opacity: 0; }
+.root [data-in="true"] [data-motion="handoff"] {
+  animation: hand 1100ms cubic-bezier(0.3, 0.7, 0.3, 1) both;
+  animation-delay: 420ms;
+}
+@keyframes hand {
+  0% { opacity: 0; offset-distance: 0%; }
+  25% { opacity: 1; }
+  100% { opacity: 1; offset-distance: 100%; }
+}
+
+/* ── PORTFOLIO — two system grammars, one parent system ────────────────────── */
+.portfolio { display: grid; gap: clamp(28px, 4vw, 56px); }
+@media (min-width: 1000px) { .portfolio { grid-template-columns: 1fr 1fr; column-gap: clamp(32px, 4vw, 64px); } }
+
+.project { display: flex; flex-direction: column; }
+/* The system surface for each project. Same material, different grammar inside. */
+.projectSystem {
+  background: var(--c-sys); color: var(--c-sys-ink); padding: clamp(18px, 2.2vw, 26px);
+  position: relative; overflow: hidden;
+}
+.projectSystemNet { min-height: 268px; }
+.projectSystemProc { min-height: 268px; }
+.projectMeta { padding-top: 20px; }
+.projectHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; margin-bottom: 8px; }
+.projectName {
+  margin: 0; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: clamp(19px, 2.3vw, 24px); font-weight: 600; letter-spacing: 0.01em; color: var(--c-ink);
+}
+.stage { font-size: 11px; letter-spacing: 0.04em; color: var(--c-muted); border: 1px solid var(--c-hairline-strong); padding: 3px 9px; line-height: 1.7; }
+.projectLine { margin: 0 0 16px; font-size: 13.5px; line-height: 1.95; color: var(--c-ink-soft); max-width: 32em; word-break: keep-all; overflow-wrap: anywhere; }
+.more {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px;
+  color: var(--c-accent); text-decoration: none; border-bottom: 1px solid rgba(47,107,94,0.28); align-self: flex-start;
+}
+.more:hover { border-bottom-color: var(--c-accent); }
+.more:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+
+/* boundary — first-class, never a footnote */
+.boundary { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--c-hairline-strong); }
+.boundaryTitle { margin: 0 0 5px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.05em; color: var(--c-ink); }
+.boundaryBody { margin: 0; font-size: 12.5px; line-height: 1.95; color: var(--c-muted); max-width: 36em; word-break: keep-all; overflow-wrap: anywhere; }
+
+/* ── PROBLEM — complexity accumulating ─────────────────────────────────────── */
+.problemGrid { display: grid; gap: 0; border-top: 1px solid var(--c-hairline); }
+.problemRow { border-bottom: 1px solid var(--c-hairline); padding: 18px 0; display: grid; grid-template-columns: 40px 1fr; gap: 4px 12px; }
+.problemNo { grid-column: 1; grid-row: 1 / span 2; }
+.problemTitle { grid-column: 2; grid-row: 1; margin: 0; font-size: clamp(15px,1.9vw,17px); font-weight: 600; color: var(--c-ink); line-height: 1.7; }
+.problemBody { grid-column: 2; grid-row: 2; margin: 0; min-width: 12em; font-size: 13px; line-height: 1.95; color: var(--c-muted); max-width: 40em; word-break: keep-all; overflow-wrap: anywhere; }
+
+/* ── APPROACH — constraints, on the system surface ─────────────────────────── */
+.constraints { background: var(--c-sys); color: var(--c-sys-ink); padding: clamp(26px, 4vw, 52px) 0; }
+.constraintGrid { display: grid; gap: 0; border-top: 1px solid var(--c-sys-line); }
+@media (min-width: 860px) { .constraintGrid { grid-template-columns: 1fr 1fr; column-gap: clamp(28px,3.6vw,56px); } }
+.constraint { border-bottom: 1px solid var(--c-sys-line); padding: 20px 0; display: grid; grid-template-columns: 44px 1fr; gap: 4px 12px; }
+.constraintNo { grid-column: 1; grid-row: 1 / span 2; color: var(--c-sys-muted); font-family: var(--font-inter, Inter), system-ui, sans-serif; font-size: 11px; letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
+.constraintTitle { grid-column: 2; grid-row: 1; margin: 0; font-size: clamp(15px,1.8vw,16.5px); font-weight: 600; color: var(--c-sys-ink); line-height: 1.7; }
+.constraintBody { grid-column: 2; grid-row: 2; margin: 0; min-width: 12em; font-size: 13px; line-height: 1.95; color: var(--c-sys-muted); max-width: 38em; word-break: keep-all; overflow-wrap: anywhere; }
+.constraintsHead { margin-bottom: 26px; }
+.h2OnDark { color: var(--c-sys-ink); }
+
+.disclose { border-top: 1px solid var(--c-sys-line); }
+.discloseSummary {
+  cursor: pointer; list-style: none; padding: 15px 0; min-height: 44px; box-sizing: border-box;
+  display: flex; align-items: center; gap: 12px; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-sys-muted);
+}
+.discloseSummary::-webkit-details-marker { display: none; }
+.discloseSummary::after { content: "+"; margin-left: auto; font-size: 15px; }
+.disclose[open] .discloseSummary::after { content: "–"; }
+.discloseSummary:focus-visible { outline: 2px solid var(--c-accent-on-dark); outline-offset: 3px; }
+.discloseBody { padding: 0 0 20px; font-size: 13px; line-height: 1.95; color: var(--c-sys-muted); max-width: 42em; }
+.discloseBody strong { color: var(--c-sys-ink); font-weight: 600; }
+
+/* ── COMPANY — the resolve. Calmest band on the page. ──────────────────────── */
+.resolveBand { background: var(--c-ground-alt); padding-block: clamp(52px, 7vw, 100px); }
+
+/* ── footer ─────────────────────────────────────────────────────────────────── */
+.footer { border-top: 1px solid var(--c-hairline); background: var(--c-ground); padding-block: clamp(32px, 4vw, 56px); }
+.footerGrid { display: grid; gap: 28px; }
+@media (min-width: 720px) { .footerGrid { grid-template-columns: 1.6fr 1fr 1fr; gap: 40px; } }
+.footerTitle { margin: 0 0 12px; }
+.footerThesis { margin: 0; font-size: 13px; line-height: 1.95; color: var(--c-muted); max-width: 24em; }
+.footerList { margin: 0; padding: 0; list-style: none; }
+.footerLink { font-size: 13px; color: var(--c-ink-soft); text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+.footerLink:hover { color: var(--c-accent); }
+.footerLink:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
+.footerBase { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--c-hairline); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 11.5px; color: var(--c-mineral); }
+.badge { border: 1px solid var(--c-hairline-strong); padding: 3px 9px; letter-spacing: 0.1em; text-transform: uppercase; font-size: 10px; }
+
+/* ── reduced motion: every primitive resolves to its COMPLETED state ───────── */
+@media (prefers-reduced-motion: reduce) {
+  .root [data-motion] { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .root [data-motion="connect"] { stroke-dashoffset: 0 !important; }
+  .root [data-motion="handoff"] { offset-distance: 100% !important; opacity: 1 !important; }
+  .root * { scroll-behavior: auto !important; }
+}

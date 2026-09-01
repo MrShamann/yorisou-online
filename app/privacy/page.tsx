@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { MvpActionLink, MvpCard, MvpSection } from "../components/MvpSurface";
+import { CONSUMER_HOME } from "@/lib/consumerHome";
 
 export const metadata: Metadata = {
   title: "プライバシー | Yorisou",
@@ -63,7 +64,7 @@ export default function PrivacyPage() {
         actions={
           <>
             <MvpActionLink href="/today/check-in" label="チェックインをはじめる" />
-            <MvpActionLink href="/" label="ホームへ戻る" tone="secondary" />
+            <MvpActionLink href={CONSUMER_HOME} label="ホームへ戻る" tone="secondary" />
           </>
         }
       >

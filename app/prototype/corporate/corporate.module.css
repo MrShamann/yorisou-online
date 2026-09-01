@@ -1,0 +1,1259 @@
+/* YORISOU CORPORATE HOMEPAGE — PHASE 1 PREVIEW
+ *
+ * Direction: "Quiet infrastructure / living signal".
+ * A CSS Module, deliberately. The corporate surface must not inherit or leak into the consumer
+ * product's global cascade, so every token below is scoped to :where(.page) rather than :root.
+ * Values reuse the existing YORISOU brand ground (near-black ink, cool white, mineral grey,
+ * the existing jade/teal as ACCENT ONLY) — no new brand, no AI-purple, no glassmorphism.
+ */
+
+.page {
+  /* Ground */
+  --c-ground: #fbfaf6;
+  --c-ground-alt: #f4f2ec;
+  --c-ink: #0c0e0d;
+  --c-ink-soft: #3a403c;
+  --c-muted: #5a605c; /* 6.16:1 on --c-ground, 5.75:1 on --c-ground-alt */
+  /* Mineral grey is the lightest text tone on the page, so it is the one that decides whether the
+   * palette passes. #8b918c looked right and measured 3.08:1 / 2.87:1 — a real WCAG 2.2 AA failure
+   * on 14 nodes (eyebrows, product domains, diagram captions, footer column titles). Darkened to
+   * 5.00:1 on --c-ground and 4.66:1 on --c-ground-alt, still lighter than --c-muted so the
+   * type hierarchy is preserved. */
+  --c-mineral: #686e69;
+  --c-hairline: rgba(12, 14, 13, 0.11);
+  --c-hairline-strong: rgba(12, 14, 13, 0.2);
+
+  /* Accent — jade/teal, used for signal only: rules, nodes, focus, small marks. Never a fill. */
+  /* CORP-v1.3 — reconciled to the logo-sampled signal blue. This stylesheet is also what the
+     corporate 404 (app/_notFound/NotFoundBody.tsx) renders in, so leaving it jade would have
+     left one live corporate surface on the old accent. */
+  --c-accent: #0c3c9c;
+  --c-accent-soft: #cce4fc;
+
+  /* Rhythm */
+  /* CORP-P3 F-03 — desktop vertical density.
+   * Was clamp(72px, 11vw, 128px): at 1440px that is a 128px band between every section, and the
+   * homepage measured 5440px tall with several screens of empty ground carrying no pacing or
+   * meaning. Reduced to a 56-88px rhythm. Calm comes from the hairlines, the measure and the type
+   * scale — not from reserving viewport-height gaps. Body leading is untouched at 2.00. */
+  /* CORP-P3R1 R1-4 — mobile lower bound trimmed 48->40px. home 390 sat 98px over the 6500 target
+   * after the compact visuals; the remaining excess was rhythm, not content. Desktop unchanged. */
+  --c-gap: clamp(40px, 5.2vw, 72px);
+  --c-pad: clamp(20px, 5vw, 40px);
+  --c-max: 1120px;
+
+  background: var(--c-ground);
+  color: var(--c-ink);
+  font-family: var(--font-noto-jp, "Noto Sans JP"), "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", "YuGothic", "Meiryo", sans-serif;
+  /* Japanese body leading: >= 1.8 is a hard requirement of this package. */
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.shell {
+  max-width: var(--c-max);
+  margin-inline: auto;
+  padding-inline: var(--c-pad);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.header {
+  border-bottom: 1px solid var(--c-hairline);
+  /* CORP-P3 — `position: relative` is load-bearing, not cosmetic. It was `static`, which means the
+   * z-index below did nothing: the header established no stacking context, so <main> painted over
+   * the open disclosure panel and the hero H1 intercepted taps on the menu links. The menu looked
+   * correct and was not clickable. Caught by the mobile navigation interaction flow, not by axe. */
+  position: relative;
+  top: 0;
+  background: var(--c-ground);
+  z-index: 40;
+}
+
+.headerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  min-height: 64px;
+  padding-block: 8px;
+}
+
+.wordmark {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+/* CORP-P3 F-02 — desktop links direct; mobile behind a one-row disclosure. */
+.navDesktop {
+  display: none;
+  gap: 2px;
+}
+
+.navLink {
+  color: var(--c-muted);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 10px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 2px;
+  border-bottom: 1px solid transparent;
+}
+
+.navLink:hover {
+  color: var(--c-ink);
+}
+
+.navLink[aria-current="page"] {
+  color: var(--c-ink);
+  border-bottom-color: var(--c-accent);
+}
+
+.navDisclosure {
+  position: relative;
+}
+
+.navToggle {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--c-ink);
+  background: var(--c-ground);
+}
+
+.navToggle::-webkit-details-marker {
+  display: none;
+}
+
+.navToggleLabel {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.navToggleIcon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 15px;
+}
+
+.navToggleIcon span {
+  height: 1.5px;
+  background: currentColor;
+  display: block;
+}
+
+.navPanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 216px;
+  background: var(--c-ground);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  z-index: 30;
+  box-shadow: 0 12px 32px rgba(12, 14, 13, 0.08);
+}
+
+.navPanelLink {
+  color: var(--c-ink-soft);
+  text-decoration: none;
+  font-size: 15px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 2px;
+}
+
+.navPanelLink[aria-current="page"] {
+  color: var(--c-ink);
+  background: var(--c-ground-alt);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+
+/* ── Sections ───────────────────────────────────────────────────────────── */
+
+.section {
+  padding-block: var(--c-gap);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.sectionFirst {
+  padding-block: clamp(36px, 4.4vw, 56px) var(--c-gap);
+  border-top: 0;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-mineral);
+  margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--c-hairline);
+}
+
+/* ── Hero ───────────────────────────────────────────────────────────────── */
+
+.thesis {
+  font-size: clamp(1.75rem, 5.6vw, 3.1rem);
+  line-height: 1.5;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0 0 28px;
+  max-width: 20em;
+}
+
+.lead {
+  font-size: clamp(1rem, 2.1vw, 1.125rem);
+  line-height: 2;
+  color: var(--c-ink-soft);
+  margin: 0;
+  max-width: 34em;
+}
+
+.heroMeta {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.heroMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  flex: none;
+}
+
+/* ── Problem ────────────────────────────────────────────────────────────── */
+
+.h2 {
+  font-size: clamp(1.3rem, 3.4vw, 1.9rem);
+  line-height: 1.65;
+  font-weight: 700;
+  margin: 0 0 24px;
+  max-width: 22em;
+}
+
+.body {
+  font-size: 1rem;
+  line-height: 2;
+  color: var(--c-ink-soft);
+  margin: 0 0 20px;
+  max-width: 36em;
+}
+
+.beats {
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--c-hairline);
+  border-block: 1px solid var(--c-hairline);
+}
+
+.beat {
+  background: var(--c-ground);
+  padding: 24px 0;
+}
+
+.beatTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.beatIndex {
+  font-size: 12px;
+  color: var(--c-accent);
+  letter-spacing: 0.1em;
+  flex: none;
+}
+
+.beatBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-muted);
+  max-width: 34em;
+}
+
+/* ── Method ─────────────────────────────────────────────────────────────── */
+
+.methodList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 32px;
+}
+
+.method {
+  display: grid;
+  gap: 8px;
+  padding-left: 20px;
+  border-left: 2px solid var(--c-accent-soft);
+}
+
+.methodNo {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--c-accent);
+}
+
+.methodTitle {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.methodBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-muted);
+  max-width: 34em;
+}
+
+/* ── Portfolio — two DISTINCT full-width compositions, never a card grid ─── */
+
+.product {
+  padding-block: var(--c-gap);
+  border-top: 1px solid var(--c-hairline);
+}
+
+.productHead {
+  display: grid;
+  gap: 20px;
+}
+
+.productName {
+  /* CORP-P3R1 R1-2 — at 1440 the two-column grid made "Mirai Move" wrap to "Mirai" / "Move".
+   * A product name is a single semantic unit; it never breaks. The clamp lower bound also drops so
+   * a narrow column shrinks the name instead of splitting it. */
+  white-space: nowrap;
+  font-size: clamp(1.45rem, 4.6vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.productDomain {
+  font-size: 13px;
+  color: var(--c-mineral);
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--c-ink-soft);
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 999px;
+  padding: 6px 14px;
+  width: fit-content;
+  background: var(--c-ground-alt);
+}
+
+.productLine {
+  font-size: clamp(1.0625rem, 2.6vw, 1.25rem);
+  line-height: 1.95;
+  font-weight: 500;
+  margin: 24px 0 0;
+  max-width: 30em;
+}
+
+.productBody {
+  font-size: 0.9375rem;
+  line-height: 2;
+  color: var(--c-muted);
+  margin: 20px 0 0;
+  max-width: 36em;
+}
+
+.boundary {
+  margin: 24px 0 0;
+  padding: 16px 18px;
+  border-left: 2px solid var(--c-accent);
+  background: var(--c-ground-alt);
+  font-size: 0.875rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+  max-width: 36em;
+}
+
+.diagram {
+  margin-top: 40px;
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.diagramCaption {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--c-mineral);
+  letter-spacing: 0.04em;
+}
+
+/* ── Company placeholder ────────────────────────────────────────────────── */
+
+.pending {
+  border: 1px dashed var(--c-hairline-strong);
+  padding: 28px 24px;
+  background: var(--c-ground-alt);
+  max-width: 40em;
+}
+
+.pendingNote {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+}
+
+.pendingList {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: var(--c-muted);
+}
+
+.pendingList li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.pendingList li::before {
+  content: "—";
+  color: var(--c-mineral);
+  flex: none;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+
+.footer {
+  border-top: 1px solid var(--c-hairline);
+  padding-block: 56px 72px;
+  background: var(--c-ground-alt);
+}
+
+.footerGrid {
+  display: grid;
+  gap: 36px;
+}
+
+.footerColTitle {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-mineral);
+  margin: 0 0 14px;
+}
+
+.footerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.footerItem {
+  font-size: 0.9375rem;
+  color: var(--c-ink-soft);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.footerLink {
+  font-size: 0.9375rem;
+  color: var(--c-ink-soft);
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-bottom: 1px solid transparent;
+}
+
+.footerLink:hover {
+  border-bottom-color: var(--c-accent);
+}
+
+.footerBase {
+  margin-top: 44px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-hairline);
+  font-size: 12px;
+  color: var(--c-mineral);
+  display: grid;
+  gap: 8px;
+}
+
+.previewBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  border: 1px solid var(--c-hairline-strong);
+  padding: 5px 10px;
+  border-radius: 2px;
+  width: fit-content;
+}
+
+/* ── Focus visibility (WCAG 2.2) ────────────────────────────────────────── */
+
+.page a:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Motion: reveal is opt-in and fully disabled under reduced-motion ───── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    animation: cReveal 320ms cubic-bezier(0.2, 0.6, 0.2, 1) both;
+  }
+
+  /* The terminal node settles in once and stops. It was an infinite pulse, which is both a WCAG
+   * 2.2.2 problem (moving content past 5s with no pause control) and a flaky-contrast source: axe
+   * sampled the node mid-fade and measured whatever opacity it caught. A single finite settle keeps
+   * the "living signal" reading without an unstoppable loop or a time-dependent audit. */
+  .signal {
+    animation: cSignal 900ms ease-out 1 both;
+  }
+}
+
+@keyframes cReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cSignal {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Breakpoints: 320 base / 375 primary / 768 tablet / 1280 desktop ────── */
+
+@media (min-width: 768px) {
+  /* CORP-P3R1 R1-1 — THE defect. In CORP-P3 this rule was written but the edit silently no-op'd, so
+   * .navDesktop stayed display:none at every width and the disclosure never hid. The prior report
+   * claimed "desktop keeps direct links at >=768px"; the screenshots proved otherwise. Validation now
+   * asserts COMPUTED visibility and non-zero boxes, not DOM presence. */
+  .navDesktop {
+    display: flex;
+  }
+
+  .navDisclosure {
+    display: none;
+  }
+
+  .beats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .beat {
+    padding: 28px 24px;
+  }
+
+  .methodList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px 32px;
+  }
+
+  .productHead {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 48px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .methodList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+
+/* ══ CORP-P2 additions ═══════════════════════════════════════════════════ */
+
+.skipLink {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--c-ink);
+  color: var(--c-ground);
+  padding: 12px 18px;
+  z-index: 20;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.skipLink:focus {
+  left: 0;
+}
+
+.sectionTint {
+  background: var(--c-ground-alt);
+}
+
+.pageTitle {
+  font-size: clamp(1.6rem, 4.6vw, 2.5rem);
+  line-height: 1.55;
+  font-weight: 700;
+  margin: 0 0 24px;
+  max-width: 20em;
+}
+
+.stageRow {
+  margin-top: 20px;
+}
+
+.textLink {
+  color: var(--c-accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-accent) 40%, transparent);
+  padding-block: 4px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.textLink:hover {
+  border-bottom-color: var(--c-accent);
+}
+
+.productMore {
+  margin: 32px 0 0;
+}
+
+/* Hero chips name the two fields before a reader scrolls, and double as entry points. */
+.heroChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  border: 1px solid var(--c-hairline-strong);
+  border-radius: 999px;
+  padding: 10px 18px;
+  min-height: 44px;
+  background: var(--c-ground);
+}
+
+.heroChip:hover {
+  border-color: var(--c-accent);
+}
+
+.heroChipName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-ink);
+  letter-spacing: 0.02em;
+}
+
+.heroChipField {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+/* Second product gets the accent on the opposite side so the two never read as one treatment. */
+.productAlt {
+  background: var(--c-ground-alt);
+}
+
+.productAlt .boundary {
+  background: var(--c-ground);
+}
+
+.boundaryTitle {
+  margin: 0 0 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--c-ink);
+}
+
+.boundaryBody {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+}
+
+.detailList {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--c-hairline);
+  border-block: 1px solid var(--c-hairline);
+}
+
+.detailItem {
+  background: var(--c-ground-alt);
+  padding: 24px 0;
+}
+
+.detailHeading {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--c-accent);
+  margin: 0 0 10px;
+}
+
+.detailBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 2;
+  color: var(--c-ink-soft);
+  max-width: 36em;
+}
+
+.methodLong {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 44px;
+  counter-reset: none;
+}
+
+.methodLongItem {
+  display: grid;
+  gap: 10px;
+  padding-left: 20px;
+  border-left: 2px solid var(--c-accent-soft);
+}
+
+.methodLongTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.methodLongBody {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 2;
+  color: var(--c-ink-soft);
+  max-width: 36em;
+}
+
+.plainList {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.plainListItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.plainListNote {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.pendingCode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--c-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.pendingMark {
+  width: 6px;
+  height: 6px;
+  background: var(--c-accent);
+  flex: none;
+}
+
+.pendingHeadline {
+  margin: 0 0 14px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.75;
+  color: var(--c-ink);
+  max-width: 28em;
+}
+
+.footerThesis {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.95;
+  color: var(--c-muted);
+  max-width: 24em;
+}
+
+@media (min-width: 768px) {
+  .detailList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .detailItem {
+    padding: 28px 24px;
+  }
+
+  .methodLong {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px 40px;
+  }
+
+  .header {
+    position: sticky;
+    background: color-mix(in srgb, var(--c-ground) 92%, transparent);
+    backdrop-filter: saturate(1.1);
+  }
+}
+
+/* ══ CORP-P3 additions ═══════════════════════════════════════════════════ */
+
+/* F-01 — phrase units. A break may only occur BETWEEN units, never inside one. */
+.unit {
+  display: inline-block;
+}
+
+.phraseLine {
+  display: block;
+}
+
+/* F-05 — asymmetric first screen: statement left, conceptual figure right. */
+.heroGrid {
+  display: grid;
+  gap: 40px;
+  align-items: start;
+}
+
+.heroChips {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--c-hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.figure {
+  display: grid;
+  gap: 20px;
+}
+
+.figureSvg {
+  width: 100%;
+  height: auto;
+  max-width: 380px;
+  display: block;
+}
+
+.figureKey {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: var(--c-muted);
+  max-width: 32em;
+}
+
+.figureKey li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.figureKeyMark {
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+}
+
+.figureKeyMark[data-kind="people"] {
+  border-radius: 50%;
+  background: rgba(12, 14, 13, 0.34);
+}
+
+.figureKeyMark[data-kind="systems"] {
+  background: rgba(12, 14, 13, 0.24);
+}
+
+.figureKeyMark[data-kind="bridge"] {
+  border: 1.5px solid var(--c-accent);
+  background: transparent;
+}
+
+/* F-04 Mirai Move — relationship schematic. Radial, so it cannot read as a sequence. */
+.schematic {
+  margin: 32px 0 0;
+  display: grid;
+  gap: 24px;
+}
+
+.schematicSvg {
+  width: 100%;
+  height: auto;
+  max-width: 420px;
+  display: block;
+}
+
+.schematicCaption {
+  display: grid;
+  gap: 14px;
+}
+
+.schematicCentre {
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+.schematicList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.schematicList li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+.schematicIndex {
+  font-size: 11px;
+  color: var(--c-mineral);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.schematicLabel {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.schematicNote {
+  grid-column: 2;
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: var(--c-muted);
+}
+
+/* F-04 Kakari — procedural flow. Vertical, numbered, terminating in a boundary gate. */
+.procedure {
+  margin: 32px 0 0;
+}
+
+.procedureList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.procedureStep {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 4px 14px;
+  align-items: baseline;
+  padding: 16px 0 16px 0;
+  border-left: 2px solid var(--c-accent-soft);
+  padding-left: 22px;
+  position: relative;
+}
+
+.procedureStep::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 24px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-ground);
+  border: 1.5px solid var(--c-accent);
+}
+
+.procedureNo {
+  font-size: 11px;
+  color: var(--c-mineral);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.procedureLabel {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.procedureNote {
+  grid-column: 2;
+  font-size: 0.875rem;
+  line-height: 1.9;
+  color: var(--c-muted);
+  max-width: 34em;
+}
+
+/* The gate is where the line stops — the boundary is a step, not a footnote. */
+.procedureGate {
+  margin-top: 4px;
+  padding: 20px 22px;
+  background: var(--c-ground-alt);
+  border-left: 2px solid var(--c-accent);
+  position: relative;
+}
+
+.procedureGateRule {
+  position: absolute;
+  left: -2px;
+  top: -14px;
+  width: 2px;
+  height: 14px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--c-accent) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.procedureGateLabel {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--c-accent);
+  letter-spacing: 0.04em;
+}
+
+.procedureGateNote {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.95;
+  color: var(--c-ink-soft);
+  max-width: 34em;
+}
+
+@media (min-width: 768px) {
+  .schematic {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 36px;
+    align-items: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 64px;
+    align-items: center;
+  }
+}
+
+/* CORP-P3 F-03 — density corrections that remove empty ground, not content. */
+.productGrid {
+  display: grid;
+  gap: 32px;
+}
+
+.productMain {
+  min-width: 0;
+}
+
+.productAside {
+  min-width: 0;
+}
+
+/* Inside a two-column product block the schematic no longer needs its own inner split. */
+.productAside .schematic {
+  margin-top: 0;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.productAside .procedure {
+  margin-top: 0;
+}
+
+.productAside .schematicSvg {
+  max-width: 320px;
+}
+
+@media (min-width: 1024px) {
+  .productGrid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 56px;
+    align-items: start;
+  }
+
+  /* Tighter step rhythm at desktop: the notes are short and did not need 32px bands. */
+  .procedureStep {
+    padding-block: 12px;
+  }
+
+  .schematicList li {
+    padding-bottom: 10px;
+  }
+
+  .beat {
+    padding-block: 22px;
+  }
+
+  .detailItem {
+    padding-block: 22px;
+  }
+
+  .methodList {
+    gap: 28px 32px;
+  }
+
+  .methodLong {
+    gap: 36px 40px;
+  }
+}
+
+
+/* ══ CORP-P3R1 — compact homepage visuals ═════════════════════════════════
+ * The detailed schematic and procedure stay on the product pages. The homepage carries condensed
+ * variants: same structure, same stage truth, without the per-item explanatory notes a reader only
+ * needs once they have chosen a product. Density, not deletion — every note hidden here is rendered
+ * in full one click away. */
+
+.compact .schematicNote,
+.compact .procedureNote {
+  display: none;
+}
+
+.compact .schematicList li {
+  padding-bottom: 8px;
+}
+
+.compact .procedureStep {
+  padding-block: 9px;
+}
+
+.compact .procedureStep::before {
+  top: 17px;
+}
+
+.compact .schematicSvg {
+  max-width: 268px;
+}
+
+.compact .procedureGate {
+  padding: 16px 18px;
+}
+
+
+/* CORP-P3R1 R1-4 — the hero figure is supporting material on a phone, not the headline. */
+@media (max-width: 767px) {
+  .figureSvg {
+    max-width: 300px;
+  }
+
+  .heroGrid {
+    gap: 28px;
+  }
+
+  .beat {
+    padding-block: 18px;
+  }
+}

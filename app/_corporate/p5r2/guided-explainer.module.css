@@ -1,0 +1,139 @@
+/*
+ * CORP-v1.2R2.1 — guided explainer.
+ *
+ * Reveal is driven by `data-on` per beat group, so a beat CHANGES the field rather than replacing
+ * it. Transitions are short and only ever affect opacity and a small translate — nothing here
+ * animates for its own sake, and there is no second accent colour: jade remains state and signal.
+ */
+
+.explainer {
+  display: grid;
+  gap: 22px;
+  border: 1px solid var(--sys-line, rgba(233, 231, 224, 0.13));
+  background: var(--sys, #0e1211);
+  padding: clamp(18px, 3vw, 30px);
+}
+
+@media (min-width: 900px) {
+  .explainer {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-areas: "stage readout" "stage controls";
+    align-items: start;
+  }
+  .stage { grid-area: stage; }
+  .readout { grid-area: readout; }
+  .controls { grid-area: controls; align-self: end; }
+}
+
+.stage { position: relative; min-height: 200px; }
+.field { width: 100%; height: auto; display: block; direction: ltr; }
+
+.grid { stroke: rgba(233, 231, 224, 0.07); }
+
+/* ── beat groups ─────────────────────────────────────────────────────────────────── */
+
+.gSignals,
+.gEvidence,
+.gVenture,
+.gTeam,
+.gCompany,
+.gVentures,
+.gShared {
+  opacity: 0;
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+.gSignals[data-on="true"],
+.gEvidence[data-on="true"],
+.gVenture[data-on="true"],
+.gTeam[data-on="true"],
+.gCompany[data-on="true"],
+.gVentures[data-on="true"],
+.gShared[data-on="true"] {
+  opacity: 1;
+}
+
+.gSignals circle { fill: none; stroke: rgba(233, 231, 224, 0.5); }
+.gSignals line { stroke: rgba(233, 231, 224, 0.22); }
+
+.gEvidence path { fill: none; stroke: #3c9cf0; stroke-opacity: 0.55; stroke-width: 1.1; }
+.node { fill: #0e1211; stroke: #3c9cf0; }
+.core { fill: #3c9cf0; }
+
+.gVenture path { fill: none; stroke: #3c9cf0; stroke-opacity: 0.55; stroke-width: 1.1; }
+.gVenture rect { fill: none; stroke: rgba(233, 231, 224, 0.62); }
+.spine { stroke: #3c9cf0; stroke-opacity: 0.45; }
+
+.gTeam path { fill: none; stroke: #3c9cf0; stroke-opacity: 0.55; stroke-width: 1.1; }
+.gTeam circle { fill: #0e1211; stroke: #3c9cf0; }
+
+/* the company arrives from the left — separation, read as movement */
+.gCompany { transform: translateX(-18px); }
+.gCompany[data-on="true"] { transform: translateX(0); }
+.gCompany rect { fill: none; stroke: rgba(233, 231, 224, 0.7); }
+
+.gVentures rect { fill: none; stroke: rgba(233, 231, 224, 0.45); }
+.gVentures text {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 9.5px; fill: #b3b8b3; letter-spacing: 0.04em;
+}
+
+.gShared path { fill: none; stroke: #3c9cf0; stroke-opacity: 0.32; stroke-width: 1; }
+.gShared line { stroke: rgba(233, 231, 224, 0.18); }
+.gShared rect { fill: rgba(60, 156, 240, 0.5); stroke: #3c9cf0; }
+
+/* ── readout ─────────────────────────────────────────────────────────────────────── */
+
+.beatIndex {
+  margin: 0 0 8px; font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #8d938e;
+  font-variant-numeric: tabular-nums;
+}
+.beatLabel { margin: 0 0 10px; font-size: var(--step-2); font-weight: 700; color: var(--sys-ink, #e9e7e0); }
+.beatBody { margin: 0; font-size: var(--step-0); line-height: 1.85; color: var(--sys-ink-2, #b3b8b3); max-width: 46ch; }
+
+/* ── controls ────────────────────────────────────────────────────────────────────── */
+
+.controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.transport {
+  background: none; border: 1px solid rgba(233, 231, 224, 0.28); color: var(--sys-ink, #e9e7e0);
+  font-family: inherit; font-size: 12.5px; padding: 7px 14px; cursor: pointer;
+  transition: border-color 160ms ease;
+}
+.transport:hover, .transport:focus-visible { border-color: #3c9cf0; }
+
+.beats { display: flex; gap: 7px; margin: 0; padding: 0; list-style: none; }
+/*
+ * CORP-v1.3 — 22px to 24px.
+ *
+ * At 22 x 22 these already CONFORMED: SC 2.5.8's spacing exception applies because adjacent pips
+ * sit 29px apart centre to centre, comfortably past the 24px the exception requires, which is why
+ * axe reported nothing. But conforming by exception is a weaker position than conforming outright,
+ * and the pitch is unchanged, so nothing moves.
+ */
+.beatPip {
+  width: 24px; height: 24px; padding: 0; background: none; border: none; cursor: pointer;
+  display: grid; place-items: center;
+}
+/* the visible pip is small; the hit area is not — 24px plus the row's padding keeps it comfortable */
+.beatPip::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%;
+  border: 1px solid rgba(233, 231, 224, 0.4); background: transparent;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.beatPipOn::before { background: #3c9cf0; border-color: #3c9cf0; }
+.beatPip:focus-visible { outline: 2px solid #3c9cf0; outline-offset: 1px; }
+
+.jp { word-break: keep-all; }
+
+/*
+ * Reduced motion: no autoplay (handled in the component), and no transitions here. Every beat the
+ * reader steps to appears immediately and completely. The explanation is identical; only the easing
+ * is gone.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .gSignals, .gEvidence, .gVenture, .gTeam, .gCompany, .gVentures, .gShared {
+    transition: none;
+  }
+  .gCompany, .gCompany[data-on="true"] { transform: none; }
+  .transport, .beatPip::before { transition: none; }
+}
