@@ -236,8 +236,31 @@ export default function Shell({
               </ul>
             </div>
           </div>
+          {/*
+            CORP-v1.4.1 — the Preview badge is gated on the deployment environment.
+
+            It rendered unconditionally, so from the moment `yorisou.online` went live every
+            corporate page in all twenty-one languages told visitors the site was not published
+            ("Preview — not published" / 「Preview — 未公開」). That was true while the site was
+            Preview-only, and became a factual misstatement the instant it shipped.
+
+            `VERCEL_ENV` is the signal this project already uses for exactly this question — see
+            `app/api/build-identity/route.ts` and `lib/life-os/access.ts`. Shell is a server
+            component, so reading it here is safe: the variable is deliberately not `NEXT_PUBLIC_`
+            and never reaches a client bundle.
+
+            IT FAILS TOWARD SILENCE. Any value other than "preview" — production, development, or
+            the variable being absent altogether — renders no badge. The dangerous direction, a live
+            site calling itself unpublished, is therefore unreachable; the worst case is a Preview
+            deployment missing a reviewer convenience.
+
+            A "Production" or "Live" badge is deliberately NOT substituted. A corporate site does
+            not announce its own deployment state.
+          */}
           <div className={styles.footerBase}>
-            <span className={styles.badge}>{c.previewBadge}</span>
+            {process.env.VERCEL_ENV === "preview" && (
+              <span className={styles.badge}>{c.previewBadge}</span>
+            )}
             <span>{c.footerLegalNote}</span>
           </div>
         </div>
