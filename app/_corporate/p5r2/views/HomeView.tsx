@@ -1,8 +1,9 @@
 import Image from "next/image";
 
 import styles from "../site.module.css";
-import { Band, Boundary, Cards, Disclose, Eyebrow, Facts, TextLink, VentureComposition, VentureName } from "../pieces";
-import { NetworkSystem, ProcedureSystem } from "../systems";
+import { Band, Boundary, Eyebrow, Facts, TextLink, VentureComposition } from "../pieces";
+import field from "../operating-field.module.css";
+import { ParticipationEntry, PublicVentureSurface, ValueContinuityField } from "../OperatingField";
 import FoundryField from "../FoundryField";
 import { VentureMark } from "../VentureMark";
 import { Phrase, ROUTES } from "../Shell";
@@ -121,131 +122,143 @@ export default function HomeView({ copy, locale }: { copy: SiteCopy; locale: str
         </div>
       </section>
 
-      {/* 02 — why */}
-      <Band id="why" line>
+      {/*
+        CORP-v1.4R1 — SCENE boundary: editorial quiet.
+
+        This was three cards. Three bordered rectangles is the wrong instrument for three symptoms
+        of one problem: it gives them equal, separate weight and asks the reader to compare them,
+        when what they should do is accumulate. The heading carries the statement; the three sit
+        under it as a spare numbered list. Same words, no rectangles, and the section can breathe —
+        which is what makes the dense surface after it land.
+      */}
+      <Band id="why" quiet>
         <Eyebrow>{h.whyEyebrow}</Eyebrow>
-        <h2 className={styles.h2}><Phrase units={h.whyHeading} locale={locale} /></h2>
-        <Cards items={h.whyBeats} columns={3} />
-      </Band>
-
-      {/* 03 — what we build */}
-      <Band id="projects" tint>
-        <Eyebrow>{h.buildEyebrow}</Eyebrow>
-        <h2 className={styles.h2}><Phrase units={h.buildHeading} locale={locale} /></h2>
-        {/* The company-level statement, before any count: YORISOU builds several; these are public. */}
-        <p className={`${styles.body} ${styles.jp}`}>{copy.ventures.publicNote}</p>
-        <p className={styles.subLabel}>{copy.ventures.publicLabel}</p>
-        <VentureComposition building={copy.common.buildingLabel} concept={copy.common.conceptLabel} />
-        <div className={styles.projects}>
-          <article className={styles.project}>
-            <div className={styles.surface}>
-              <NetworkSystem labels={copy.mirai.parties.map((p) => p.title)} centre={copy.mirai.centre} />
-            </div>
-            <div className={styles.projectHead}>
-              <VentureName name="Mirai Move" reading={copy.mirai.reading} />
-              <span className={styles.stage}>{copy.mirai.stage}</span>
-            </div>
-            <p className={`${styles.projectLead} ${styles.jp}`}>{copy.mirai.lead}</p>
-            <TextLink href={L(ROUTES.miraiMove)}>{copy.common.readMore("Mirai Move")}</TextLink>
-          </article>
-
-          <article className={styles.project}>
-            <div className={styles.surface}>
-              <ProcedureSystem steps={copy.kakari.steps.map((s) => s.title)} boundary={copy.kakari.boundaryTitle} />
-            </div>
-            <div className={styles.projectHead}>
-              <VentureName name="Kakari" reading={copy.kakari.reading} />
-              <span className={styles.stage}>{copy.kakari.stage}</span>
-            </div>
-            <p className={`${styles.projectLead} ${styles.jp}`}>{copy.kakari.lead}</p>
-            <TextLink href={L(ROUTES.kakari)}>{copy.common.readMore("Kakari")}</TextLink>
-          </article>
-
-          {/*
-            CORP-v1.2 — Chigamo is at concept stage, so it carries no system diagram. The other two
-            have a network and a procedure because those exist; drawing one here would make an
-            untested idea look further along than it is. The stage chip says so outright.
-          */}
-          <article className={styles.project}>
-            <div className={styles.projectHead}>
-              <VentureName name="Chigamo" reading={copy.chigamo.reading} />
-              <span className={styles.stage}>{copy.chigamo.stage}</span>
-            </div>
-            <p className={`${styles.projectLead} ${styles.jp}`}>{copy.chigamo.lead}</p>
-            <TextLink href={L(ROUTES.chigamo)}>{copy.common.readMore("Chigamo")}</TextLink>
-          </article>
-        </div>
-        <TextLink href={L(ROUTES.ventures)}>{copy.ventures.eyebrow}</TextLink>
-      </Band>
-
-      {/* 04 — how we build */}
-      <Band id="how" dark>
-        <Eyebrow dark>{h.howEyebrow}</Eyebrow>
-        <h2 className={styles.h2}><Phrase units={h.howHeading} locale={locale} /></h2>
-        <Cards items={h.howBeats} columns={2} dark />
-        <Disclose label={h.howDisclose} dark>
-          {copy.about.principlesLong.map((m) => (
-            <p key={m.no} style={{ marginBottom: 14 }}>
-              <strong>{m.no} {m.title}</strong>
-              <br />
-              {m.long}
-            </p>
+        <h2 className={field.quietStatement}><Phrase units={h.whyHeading} locale={locale} /></h2>
+        <ol className={styles.beatList}>
+          {h.whyBeats.map((b) => (
+            <li className={styles.beatItem} key={b.no}>
+              <span className={styles.beatNo}>{b.no}</span>
+              <span className={styles.beatText}>
+                <span className={`${styles.beatTitle} ${styles.jp}`}>{b.title}</span>
+                <span className={`${styles.beatBody} ${styles.jp}`}>{b.body}</span>
+              </span>
+            </li>
           ))}
-        </Disclose>
+        </ol>
+      </Band>
+
+      {/*
+        CORP-v1.4R1 — SCENE 2: what is forming.
+
+        This was an eyebrow, a heading, two paragraphs and three project cards inside the standard
+        container — the same shape as every other section on the page, for the single most important
+        thing YORISOU has to show. Benchmarking made the cost plain: the sites that read as large
+        companies give ONE object most of a viewport, and let it break its own frame.
+
+        So the ventures now occupy a full-bleed dark surface carrying real state: each venture's own
+        mark, its own Japanese line, its domain, its stage on the eight-stage Foundry taken from its
+        own repository evidence, and its own system grammar — a network, a procedure, a context
+        field — so the three read as different KINDS of system before a word is read.
+
+        It is not a dashboard. Nothing is live, nothing is a percentage, and the only state shown is
+        a named stage the evidence supports.
+      */}
+      <PublicVentureSurface copy={copy} locale={locale} />
+
+      {/*
+        CORP-v1.4R1 — quiet again, and shorter.
+
+        This carried two cards plus a disclosure holding the full principles text, which is the same
+        material /about presents at length. Three representations of one method across two pages is
+        how a site starts explaining itself instead of showing itself. The homepage now states the
+        method and hands off; the Foundry spine on /about is where it is actually shown.
+      */}
+      <Band id="how" quiet>
+        <Eyebrow>{h.howEyebrow}</Eyebrow>
+        <h2 className={field.quietStatement}><Phrase units={h.howHeading} locale={locale} /></h2>
+        <ol className={styles.beatList}>
+          {h.howBeats.map((b) => (
+            <li className={styles.beatItem} key={b.no}>
+              <span className={styles.beatNo}>{b.no}</span>
+              <span className={styles.beatText}>
+                <span className={`${styles.beatTitle} ${styles.jp}`}>{b.title}</span>
+                <span className={`${styles.beatBody} ${styles.jp}`}>{b.body}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <TextLink href={L(ROUTES.about)}>{copy.foundry.eyebrow}</TextLink>
+      </Band>
+
+      {/*
+        CORP-v1.4R1 — SCENE 3: how value continues. The second system object on the page.
+
+        v1.4 added this idea as a heading and two paragraphs, which is the wrong instrument for a
+        set of alternatives — a reader has to hold six options in their head before they can see
+        that they ARE options. It is also the single most important commercial statement the site
+        makes, and it was the least visual thing on the page.
+
+        One venture, six branches, every connector dashed: none of these has happened. No equity is
+        held, no licence is executed, nothing has been spun out. The figure states possibility and
+        the line beneath states that nothing is decided in advance — in the same frame, so the
+        second cannot be scrolled past.
+      */}
+      <Band id="portfolio" line>
+        <Eyebrow>{h.portfolioEyebrow}</Eyebrow>
+        <h2 className={styles.h2}><Phrase units={h.portfolioHeading} locale={locale} /></h2>
+        <p className={`${styles.body} ${styles.jp}`}>{h.portfolioBody}</p>
+        <ValueContinuityField copy={copy} />
+        <p className={`${styles.bodyMuted} ${styles.jp}`}>{h.portfolioNote}</p>
       </Band>
 
       {/*
         CORP-v1.2 §7.4 — the Asterion layer.
 
         It sits AFTER "how we build" and before the engagement layer, as a shared floor underneath
-        the ventures rather than as a fourth venture. Asterion is independent and is not owned by
-        Yorisou, so the boundary note is rendered immediately with the capability claim — never
-        several screens away — and there is no "powered by" badge anywhere on this page.
+        the ventures rather than as a fourth venture.
+
+        Asterion is an independent technology-platform project and is not a public Yorisou venture.
+        The site draws NO ownership conclusion in either direction — rights, licensing, data and
+        operating responsibility depend on the applicable agreements. CORP-v1.4 withdrew the earlier
+        absolute "is not owned by Yorisou" from the rendered copy; this comment kept asserting it
+        until CORP-v1.4R1.1, which is exactly how a withdrawn claim finds its way back onto a page.
+
+        The boundary note is rendered immediately with the capability claim — never several screens
+        away — and there is no "powered by" badge anywhere on this page.
+      */}
+      {/*
+        CORP-v1.4R1 — Asterion sits UNDER the architecture, and is sized accordingly.
+
+        It kept a full section with its own h2, which gave a shared technology layer the same weight
+        as the ventures themselves. It is not a venture and must not read as the dominant product.
+        The boundary note stays adjacent to the capability sentence — that pairing is load-bearing
+        and does not move.
       */}
       <Band tint>
         <Eyebrow>{h.asterionEyebrow}</Eyebrow>
-        <h2 className={styles.h2}><Phrase units={h.asterionHeading} locale={locale} /></h2>
         <p className={`${styles.body} ${styles.jp}`}>{h.asterionBody}</p>
         <Boundary title={copy.foundry.asterionBoundaryTitle}>{h.asterionNote}</Boundary>
         <TextLink href={L(ROUTES.about)}>{copy.foundry.eyebrow}</TextLink>
       </Band>
 
-      {/* CORP-v1.2 §7.5 — how to engage. Invitations, not partnerships. */}
-      <Band line>
+      {/*
+        CORP-v1.4R1 — SCENE 4: entering the system. A decision, not six cards.
+
+        The six lanes were six linked cells in a grid, which is a navigation menu wearing the
+        clothes of an answer: a reader had to pick a card, leave the page, and read a second page to
+        find out whether there was a place for them. Now they pick a role and the answer arrives in
+        place — what the role contributes, which ventures it touches, what YORISOU can offer, and
+        what it cannot promise, the last of those never behind a disclosure.
+
+        Native radio group: no JavaScript, arrow keys from the browser, one panel at a time for
+        assistive technology, and nothing for reduced motion to switch off. No matching, no
+        recommendation, no "AI suggests a venture for you".
+      */}
+      <Band id="engage" line>
         <Eyebrow>{h.engageEyebrow}</Eyebrow>
         <h2 className={styles.h2}><Phrase units={h.engageHeading} locale={locale} /></h2>
         <p className={`${styles.body} ${styles.jp}`}>{h.engageBody}</p>
-        {/*
-          CORP-v1.2R2 — the participation layer, exposed rather than hidden behind one link.
-          A visitor should be able to see in seconds that there is a place for someone like them.
-          Labels and states come from buildWithUs.lanes, so this grid and that page cannot drift.
-        */}
-        <div className={styles.engageGrid}>
-          {copy.buildWithUs.lanes.map((lane) => (
-            <a
-              className={styles.engageCell}
-              key={lane.key}
-              href={`${L(ROUTES.buildWithUs)}#lane-${lane.key}`}
-            >
-              <p className={styles.engageLabel}>{lane.label}</p>
-              {/*
-                CORP-v1.2R2.1 — each role shows the ventures it connects to. This is information
-                architecture, not personalisation: the list comes from that lane's own `ventures`
-                field. Nothing is matched, recommended, or claimed to be chosen for the reader.
-              */}
-              {lane.ventures.length > 0 && (
-                <ul className={styles.engageMarks}>
-                  {lane.ventures.map((n) => (
-                    <li className={styles.engageMark} key={n}>
-                      {n}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className={`${styles.engageState} ${styles.jp}`}>{lane.state}</p>
-            </a>
-          ))}
-        </div>
+        <ParticipationEntry copy={copy} idPrefix="home-entry" />
         <p className={`${styles.bodyMuted} ${styles.jp}`}>{h.engageNote}</p>
         <TextLink href={L(ROUTES.buildWithUs)}>{h.engageCta}</TextLink>
       </Band>

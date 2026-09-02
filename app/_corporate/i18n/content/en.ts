@@ -34,10 +34,10 @@ export const en: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — From structural problems to companies that stand on their own.", description: "Yorisou LLC is a foundry: we find structural problems, build evidence and venture assets, and form founding teams to turn them into independent companies. Mirai Move and Kakari are being built; Chigamo is at concept stage." },
+    home: { title: "Yorisou LLC — Structural problems, built into ventures.", description: "Yorisou LLC is a venture foundry: we find structural problems, build the evidence and the venture, and form founding teams to run it. Mirai Move and Kakari are being built; Chigamo is at concept stage." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "A platform for information, matching and business development across Japan's mobility sector. The public site is live; platform features are in development." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Multilingual support for administrative procedures and paperwork, for people living in Japan and those starting a business here. In development, not yet publicly released." },
-    about: { title: "How we build — Yorisou LLC", description: "Find the problem, verify it, design the business, form a founding team, and carry it to an independent company. How the Yorisou foundry works, and where shared infrastructure sits." },
+    about: { title: "How we build — Yorisou LLC", description: "Find the problem, verify it, design the business, form a founding team, and get it standing. How the Yorisou foundry works, what shapes a venture can take, and where shared infrastructure sits." },
     company: { title: "Company — Yorisou LLC", description: "Company information, representative profile and message, and the areas Yorisou works in." },
     contact: { title: "Contact — Yorisou LLC", description: "For enquiries about our work, collaboration, or press." },
     ventures: { title: "Ventures — Yorisou LLC", description: "What Yorisou is working on now: Mirai Move, Kakari and Chigamo. Each is at a different stage, and we say which." },
@@ -60,10 +60,10 @@ export const en: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Structural problems,", "made into companies."],
-    thesis: ["From structural problems,", "to companies that", "stand on their own."],
+    thesis: ["From structural problems,", "we build ventures", "and keep building them."],
     lead: [
       "Yorisou is a foundry: we find structural problems, verify them, design them as businesses,",
-      "and team up with the people who will run them as independent companies.",
+      "and team up with the people who will run them.",
     ],
     humanSide: "People",
     humanItems: ["Daily life", "Work", "Community"],
@@ -80,7 +80,6 @@ export const en: SiteCopy = {
       { no: "03", title: "The frontline and the system do not mesh.", body: "In mobility, welfare and public administration there are options that have not yet reached the people doing the work." },
     ],
 
-    buildEyebrow: "What we build",
     buildHeading: ["Areas the rules do not reach —", "taken on one at a time."],
 
     howEyebrow: "How we build",
@@ -91,7 +90,6 @@ export const en: SiteCopy = {
       { no: "03", title: "State the boundary", body: "We do not step into work that belongs to a licensed professional. What we cover, and where we hand over, is written into the product itself." },
       { no: "04", title: "Say only what can be verified", body: "Results, figures and partnerships appear only where there is evidence. What cannot be confirmed is not written." },
     ],
-    howDisclose: "What these principles mean in practice",
 
     founderEyebrow: "Representative",
     founderHeading: ["Built by someone who has spent", "twenty years inside complex industries."],
@@ -118,24 +116,24 @@ export const en: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "Shared infrastructure",
-    asterionHeading: ["Each build", "thickens the floor."],
     asterionBody:
-      "Asterion OS is an independent shared technology and execution platform, positioned within Yorisou's foundry architecture. Because the common ground is already there, each venture can spend its effort on the part that is actually its own.",
+      "Asterion OS is an independent technology-platform project. Because common ground is already there, each venture can spend its effort on the part that is actually its own.",
     asterionNote:
-      "Every venture is governed separately, and keeps its own intellectual property, data and operating responsibility. Asterion is not owned by Yorisou.",
+      "Every venture is governed separately. Where intellectual property, data and operating responsibility sit — and what rights apply to Asterion — is set by the agreements that apply in each case.",
+    /* CORP-v1.4 — how Yorisou stays involved in what it builds. Conditional, never promised. */
+    portfolioEyebrow: "How we stay involved",
+    portfolioHeading: ["Building it", "is not the end."],
+    portfolioBody:
+      "Yorisou may keep a stake in the long-term value of a venture after it is standing — by continuing to hold equity, by holding a licence, or by operating it jointly. A venture may also become a separate company, or be transferred or sold.",
+    portfolioBranches: ["Operated inside Yorisou", "Co-founded, jointly operated", "Equity", "Licence", "Separate company", "Transfer or sale"],
+    portfolioNote:
+      "Which shape it takes depends on the venture's maturity, who is involved, the market, the capital, and the agreement reached for that venture. Nothing is fixed in advance.",
     engageEyebrow: "Build with us",
     engageHeading: ["Come in while it is", "still becoming a company."],
     engageBody:
       "Founders, researchers, public-sector teams, companies. Where you can join depends on where you stand. We start from whatever can be discussed now.",
     engageCta: "See the ways in",
     engageNote: "All of them start from a conversation. There is no application process and no selection yet.",
-    explainerLabel: "Yorisou in 30 seconds",
-    explainerHeading: ["From a problem to a company,", "in thirty seconds."],
-    explainerClose: "Close",
-    explainerPlay: "Play",
-    explainerPause: "Pause",
-    explainerRestart: "Restart",
-    explainerStepLabel: "Step",
   },
 
   mirai: {
@@ -237,12 +235,6 @@ export const en: SiteCopy = {
       { no: "03", title: "State the boundary", body: "We do not step into work that belongs to a licensed professional. What we cover, and where we hand over, is written into the product itself." },
       { no: "04", title: "Say only what can be verified", body: "Results, figures and partnerships appear only where there is evidence. What cannot be confirmed is not written." },
     ],
-    principlesLong: [
-      { no: "01", title: "Start from the language of the frontline", long: "No system reaches anyone until it has been translated into the steps the person in front of it actually takes. We begin from the real application, the real journey, the real exchange — not from an abstract problem statement, but from the single move that is currently stuck." },
-      { no: "02", title: "Own the problem as far as understanding", long: "Listing search results is not support. What a person needs is to know what to do next. The scope of the product runs to the point where the next step is understood, not to the point where information has been displayed." },
-      { no: "03", title: "State the boundary", long: "Letting someone use a product without being clear about what it cannot do is the most dangerous design there is. What we handle, and where a professional takes over, is written into the screen itself. The boundary is a feature, not a disclaimer." },
-      { no: "04", title: "Say only what can be verified", long: "We do not describe results we cannot confirm, or features that are not yet running. Every fact we publish has a record behind it. In periods when there is little we can say, we publish little." },
-    ],
     orderHeading: ["One at a time,", "all the way through."],
     orderBody: "We do not start many things at once. We would rather carry one area all the way to the point where it reaches the steps people actually take.",
     claimsHeading: ["We do not write", "what we cannot verify."],
@@ -252,7 +244,7 @@ export const en: SiteCopy = {
   company: {
     eyebrow: "Company",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC builds products that turn the complexity of daily life, work and local communities into something a person can understand, choose from, and act on. Based in Fukuoka, we are developing two projects: Mirai Move and Kakari.",
+    intro: "Yorisou LLC is a venture foundry: we find structural problems, design them as businesses, and build them with people who can run them. Based in Fukuoka, we are building several ventures; the ones currently public are Mirai Move, Kakari and Chigamo.",
 
     messageEyebrow: "Message from the representative",
     messageHeading: ["We judge by whether it arrives,", "not by whether it is advanced."],
@@ -301,12 +293,11 @@ export const en: SiteCopy = {
       { label: "Corporate Number (hōjin bangō)", value: "2290003018125" },
       { label: "Representative", value: "Jin Yang" },
       { label: "Location", value: "Fukuoka City, Fukuoka, Japan" },
-      { label: "Business", value: "Planning, development and operation of Mirai Move and Kakari" },
+      { label: "Business", value: "Discovery, planning, development and operation of new ventures; founding-team formation; and venture formation through joint operation, licensing and related arrangements" },
     ],
 
     businessEyebrow: "Business areas",
-    businessHeading: ["Business areas"],
-    businessBody: "Information, matching and business development in the mobility sector; and multilingual support for administrative procedures and documents, for people living in Japan and those starting a business here. Both follow the same principle: absorb the complexity, and return something usable.",
+    businessBody: "What sits at the centre of Yorisou is building the ventures themselves: finding a structural problem, verifying it, designing it as a business, building it, and running it with people who can. The ventures currently public are information, matching and business development in the mobility sector (Mirai Move); multilingual support for administrative procedures, for people living in Japan and those starting a business here (Kakari); and discovery of a local area from place and context (Chigamo, at concept stage). All follow the same principle: absorb the complexity, and return something usable.",
 
     projectsEyebrow: "Projects",
     projectsHeading: ["What we are building"],
@@ -372,7 +363,6 @@ export const en: SiteCopy = {
         thesis: "Connect information, matching and business development across mobility.",
         problem: "Information and opportunity are split apart between operators, regions and government.",
         building: "A platform where parties in and outside Japan can work from the same information.",
-        status: "In development and operation. Public site live.",
       },
       {
         name: "Kakari",
@@ -380,7 +370,6 @@ export const en: SiteCopy = {
         thesis: "Multilingual support for the procedures of living and starting a business in Japan.",
         problem: "The systems exist, but language and sequence stop people from ever using them.",
         building: "A way to break a procedure into stages and show how far you can get yourself.",
-        status: "In development. Preparing for release.",
       },
       {
         name: "Chigamo",
@@ -388,14 +377,20 @@ export const en: SiteCopy = {
         thesis: "Make a place legible from location and context.",
         problem: "The information that would actually help you here is the hardest to find.",
         building: "Discovery for the area you live in, built on location and context.",
-        status: "Concept stage. Not yet tested.",
       },
+    ],
+    /* CORP-v1.4 — separates what is true today from what may follow. */
+    structureHeading: ["What is true now,", "and what may follow."],
+    structureBody: [
+      "The stages above are what is true today. Only things that have already happened are written there.",
+      "What shape each takes next is not settled. A venture may keep being operated inside Yorisou, bring in an operating team from outside, be held jointly, or become a separate company. It may take the form of a licence, or be transferred or sold.",
+      "Which one depends on the venture's maturity, who is involved, the market, the capital, and the agreement. What is written here is a possible shape — not a plan, and not a promise.",
     ],
     noteHeading: ["What this page says,", "and what it does not."],
     noteBody: [
       "These are the ventures and concepts Yorisou is working on now.",
       "They are not incorporated subsidiaries, not investments, and not clients. They sit at different stages, and we have written the stage as it is.",
-      "The aim is for each to stand as an independent company. None has reached that point yet.",
+      "What is written here is what is true today. What shape any of them takes next is not settled.",
     ],
   },
 
@@ -447,7 +442,7 @@ export const en: SiteCopy = {
     eyebrow: "How we build",
     heading: ["From a problem", "to a company, in order."],
     lead:
-      "We do not start from an idea we liked. We find a structural problem, verify it, design it as a business, team up with people who can run it, and carry it to an independent company. Yorisou calls that order the foundry.",
+      "We do not start from an idea we liked. We find a structural problem, verify it, design it as a business, team up with people who can run it, and carry it to the point where it stands as a venture. Yorisou calls that order the foundry.",
     stagesEyebrow: "Stages",
     stagesHeading: ["Eight stages,", "none of them skipped."],
     stages: [
@@ -455,29 +450,34 @@ export const en: SiteCopy = {
       { no: "02", name: "Evidence", body: "Check whether the problem is real and who it falls on. Plenty of theses die here." },
       { no: "03", name: "Venture design", body: "Turn the answer into a business: who uses it, and where value is actually exchanged." },
       { no: "04", name: "Build", body: "Make it. Use shared ground where it exists, and spend the effort on what is specific to this venture." },
-      { no: "05", name: "Venture ready", body: "Get the assets and the procedures to a state where someone outside can pick them up and run them." },
+      { no: "05", name: "Venture ready", body: "Get the assets and the procedures to a state where someone can pick them up and run them." },
       { no: "06", name: "Founder formation", body: "Team up with someone who can carry it as their own — as a founder, not as an employee." },
-      { no: "07", name: "Spin-out and operate", body: "Run it as an independent company, shaped so that it does not stay dependent on Yorisou." },
-      { no: "08", name: "Learning", body: "Keep what worked and what died as material for the next venture." },
+      { no: "07", name: "Spin-out and operate", body: "Get it to where it runs under its own power. It may become a separate company, it may keep being operated inside Yorisou, or it may be held jointly." },
+      { no: "08", name: "Learning", body: "Keep what worked and what died as material for the next venture. The relationship with the venture does not necessarily end here." },
     ],
-    independenceHeading: ["The goal is a company", "that stands on its own."],
+    independenceHeading: ["A venture can take", "more than one shape."],
     independenceBody: [
-      "The point of the foundry is not to accumulate things under Yorisou. It is to get each venture to where it can stand as an independent company.",
-      "So it is built to be handed over from the start. If the people running it cannot make the real decisions, it has not become a company.",
+      "Standing as an independent company is one of the shapes we aim for. It does not mean that reaching it ends Yorisou's relationship with the venture.",
+      "Some ventures keep being operated inside Yorisou. A venture may also bring in a founder or an operating team from outside and be held jointly, become a separate company, take the form of a licence, or be transferred or sold.",
+      "Which shape it takes depends on the venture's maturity, who is involved, the market, the capital, and the agreement reached for that venture. There is no fixed template.",
+      "Only one thing is constant: it is built to be handed over from the start. If the people running it cannot make the real decisions, it is not standing as a venture.",
     ],
     asterionEyebrow: "Shared technology and execution",
     asterionHeading: ["Do not build", "the same thing twice."],
     asterionBody: [
-      "Asterion OS is an independent shared technology and execution platform, positioned within Yorisou's foundry architecture. It is not owned by Yorisou.",
-      "Because the common ground is there, no venture has to rebuild it, and each can concentrate on its own domain. What accumulates becomes the starting point for the next one.",
+      "Asterion OS is an independent technology-platform project. It is not one of the Yorisou ventures presented in this corporate site.",
+      "Yorisou ventures may use Asterion capabilities where that is appropriate. Ownership, licensing, data rights and operating responsibility depend on the agreements that apply in each case.",
+      "Because common ground can be used, no venture has to rebuild it, and each can concentrate on its own domain. What accumulates becomes the starting point for the next one.",
     ],
     asterionBoundaryTitle: "The boundary",
     asterionBoundaryBody:
-      "Each venture is governed separately. Intellectual property, data and operating responsibility belong to the venture. Nothing is designed so that venture or user data flows automatically to the platform.",
+      "Each venture is governed separately. Where intellectual property, data and operating responsibility sit is set by the agreement for that venture. Nothing is designed so that venture or user data flows automatically to the platform.",
     economicsHeading: ["Ownership follows", "contribution and responsibility."],
     economicsBody: [
       "The terms differ by venture. We do not apply one fixed formula to everything.",
       "Only the principle is shared: ownership follows contribution, the risk carried, and the responsibility that continues. People who run a venture hold real decision-making authority.",
+      "Yorisou may also keep a stake in the long-term value of a venture — by continuing to hold equity, by holding a licence, or by operating it jointly. Which of those applies depends on how much of the venture Yorisou carried and how much risk it took.",
+      "There are no terms we can promise yet. Neither ownership nor the shape of any right is settled before an agreement.",
       "The specifics are discussed per venture and per person. They are not the kind of thing that belongs on a website.",
     ],
     maturityTitle: "Where this stands",
@@ -490,7 +490,13 @@ export const en: SiteCopy = {
     eyebrow: "Build with us",
     heading: ["Where you come in", "depends on where you stand."],
     lead:
-      "Yorisou carries a venture to just before it becomes a company, then teams up with someone who can carry it. So we are not looking for people to employ. We are looking for people to hand it to.",
+      "Yorisou carries a venture to just before it stands on its own, then teams up with whoever can carry it. So we are not looking for people to employ. We are looking for people and institutions to take a venture on.",
+    /* CORP-v1.4 — the shape of an involvement is designed per project, and promised in advance for none. */
+    structureHeading: ["How you take part", "is designed per project."],
+    structureBody: [
+      "There is no fixed slot to fit into. A co-founder relationship, a founding team, a stake in the venture, a licence, joint operation, a separate company — which one applies depends on the venture and on how much of it you carry.",
+      "Whichever shape it takes, governance, intellectual property, role, responsibility and economics are set by a separate agreement. There are no terms we can promise here in advance.",
+    ],
     lanes: [
       {
         key: "founders",

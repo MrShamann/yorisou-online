@@ -37,10 +37,10 @@ export const ms: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Daripada masalah struktur kepada syarikat yang berdiri sendiri.", description: "Yorisou LLC ialah sebuah foundry: kami mencari masalah yang bersifat struktur, membina bukti dan aset usaha niaga, serta bekerjasama dengan pasukan pengasas untuk menjadikannya syarikat yang berdiri sendiri. Mirai Move dan Kakari sedang dibina; Chigamo masih di peringkat konsep." },
+    home: { title: "Yorisou LLC — Masalah struktur, kami bina menjadi usaha niaga.", description: "Yorisou LLC ialah sebuah foundry usaha niaga: kami mencari masalah yang bersifat struktur, membina bukti dan aset usaha niaga, serta bekerjasama dengan orang yang mampu mengendalikannya untuk membawanya berdiri sebagai sebuah perniagaan. Mirai Move dan Kakari sedang dibina; Chigamo masih di peringkat konsep." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Platform untuk maklumat, pemadanan dan pembangunan perniagaan dalam sektor mobiliti Jepun. Laman awam sudah beroperasi; fungsi platform masih dalam pembangunan." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Sokongan pelbagai bahasa untuk prosedur pentadbiran dan dokumen, bagi mereka yang tinggal di Jepun dan yang ingin memulakan perniagaan di sini. Masih dalam pembangunan dan belum dibuka kepada umum." },
-    about: { title: "Cara kami membina — Yorisou LLC", description: "Mencari masalah, mengesahkannya, mereka bentuknya sebagai perniagaan, membentuk pasukan pengasas dan membawanya menjadi syarikat yang berdiri sendiri. Bagaimana foundry Yorisou berjalan, dan di mana kedudukan asas bersama." },
+    about: { title: "Cara kami membina — Yorisou LLC", description: "Mencari masalah, mengesahkannya, mereka bentuknya sebagai perniagaan, dan bekerjasama dengan pasukan pengasas untuk membawanya berdiri. Bagaimana foundry Yorisou berjalan, bentuk yang boleh diambil oleh sesuatu usaha niaga, dan di mana kedudukan asas bersama." },
     company: { title: "Maklumat Syarikat — Yorisou LLC", description: "Gambaran syarikat, profil wakil syarikat, mesej wakil syarikat dan bidang perniagaan Yorisou LLC." },
     contact: { title: "Hubungi Kami — Yorisou LLC", description: "Saluran pertanyaan berkaitan perniagaan, kerjasama dan liputan media." },
     ventures: { title: "Usaha Niaga — Yorisou LLC", description: "Apa yang sedang Yorisou jalankan sekarang: Mirai Move, Kakari dan Chigamo. Setiap satu berada pada peringkat yang berbeza, dan kami menulis peringkat itu sebagaimana adanya." },
@@ -63,11 +63,11 @@ export const ms: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Masalah struktur,", "kami jadikan syarikat."],
-    thesis: ["Daripada masalah struktur,", "kami membina syarikat", "yang berdiri sendiri."],
+    thesis: ["Daripada masalah struktur,", "kami membina usaha niaga,", "dan terus membesarkannya."],
     lead: [
       "Yorisou ialah sebuah foundry: kami mencari masalah struktur dalam masyarakat, mengesahkannya,",
       "mereka bentuknya sebagai perniagaan, dan bekerjasama dengan orang yang akan mengendalikannya",
-      "untuk membawanya menjadi syarikat yang berdiri sendiri.",
+      "untuk membawanya berdiri sebagai sebuah usaha niaga.",
     ],
     humanSide: "Manusia",
     humanItems: ["Kehidupan seharian", "Pekerjaan", "Komuniti"],
@@ -84,7 +84,6 @@ export const ms: SiteCopy = {
       { no: "03", title: "Lapangan dan sistem tidak sejajar.", body: "Dalam bidang mobiliti, kebajikan dan pentadbiran awam, ada pilihan yang masih belum sampai kepada mereka yang berada di lapangan." },
     ],
 
-    buildEyebrow: "Apa yang kami bina",
     buildHeading: ["Bidang yang tidak dicapai sistem —", "kami tangani satu demi satu."],
 
     howEyebrow: "Cara kami membina",
@@ -95,7 +94,6 @@ export const ms: SiteCopy = {
       { no: "03", title: "Menyatakan batasan dengan jelas", body: "Kami tidak masuk ke dalam bidang yang menjadi tanggungjawab pakar bertauliah. Apa yang kami galas dan di mana kami menyerahkannya kepada pakar ditulis di dalam produk itu sendiri." },
       { no: "04", title: "Menyebut hanya apa yang boleh disahkan", body: "Pencapaian, angka dan kerjasama hanya disenaraikan apabila ada buktinya. Apa yang tidak dapat disahkan tidak kami tulis." },
     ],
-    howDisclose: "Apa maksud prinsip ini dalam amalan",
 
     founderEyebrow: "Wakil syarikat",
     founderHeading: ["Dibina oleh seseorang yang telah", "20 tahun berada dalam industri yang rumit."],
@@ -122,24 +120,24 @@ export const ms: SiteCopy = {
 
     /* CORP-v1.2 — lapisan Asterion dan lapisan penglibatan di halaman utama. */
     asterionEyebrow: "Asas bersama",
-    asterionHeading: ["Setiap kali kami membina,", "asasnya menjadi lebih tebal."],
     asterionBody:
-      "Asterion OS ialah platform teknologi dan pelaksanaan bersama yang berdiri sendiri, diletakkan dalam seni bina foundry Yorisou. Kerana asas bersama itu sudah ada, setiap usaha niaga boleh menumpukan tenaganya pada bahagian yang benar-benar miliknya sendiri.",
+      "Asterion OS ialah projek platform teknologi yang berdiri sendiri. Kerana mekanisme yang sama tidak perlu dibina semula berulang kali, setiap usaha niaga boleh menumpukan tenaganya pada bidangnya sendiri.",
     asterionNote:
-      "Setiap usaha niaga ditadbir urus secara berasingan, dan mengekalkan harta intelek, data serta tanggungjawab operasinya sendiri. Asterion bukan milik Yorisou.",
+      "Setiap usaha niaga ditadbir urus secara berasingan. Kedudukan harta intelek, data dan tanggungjawab operasi — serta hak berkaitan Asterion — ditentukan oleh perjanjian yang terpakai dalam setiap kes.",
+    /* CORP-v1.4 — bagaimana Yorisou kekal terlibat dengan apa yang dibinanya. Bersyarat, tidak pernah dijanjikan. */
+    portfolioEyebrow: "Cara kami kekal terlibat",
+    portfolioHeading: ["Membinanya", "bukanlah penamatnya."],
+    portfolioBody:
+      "Selepas sesuatu usaha niaga berdiri, Yorisou mungkin terus terlibat dengan nilainya: dengan terus memegang ekuiti, dengan memegang lesen, atau dengan mengendalikannya bersama. Ia juga boleh diasingkan sebagai syarikat tersendiri, atau dipindah milik atau dijual.",
+    portfolioBranches: ["Dijalankan dalam Yorisou", "Diasaskan dan dijalankan bersama", "Pegangan saham", "Lesen", "Syarikat berasingan", "Pemindahan atau jualan"],
+    portfolioNote:
+      "Bentuk mana yang diambil bergantung pada kematangan usaha niaga itu, siapa yang terlibat, pasaran, modal, dan perjanjian yang dicapai bagi usaha niaga itu. Tiada syarat yang ditetapkan terlebih dahulu.",
     engageEyebrow: "Bina bersama kami",
     engageHeading: ["Sertailah ketika ia masih", "dalam perjalanan menjadi sebuah syarikat."],
     engageBody:
       "Pengasas, penyelidik, pihak awam, syarikat. Tempat anda boleh masuk bergantung pada kedudukan anda. Kami bermula daripada apa yang boleh dibincangkan sekarang.",
     engageCta: "Lihat cara untuk terlibat",
     engageNote: "Semuanya bermula daripada perbualan buat masa ini. Belum ada proses permohonan mahupun kaedah pemilihan.",
-    explainerLabel: "Yorisou dalam 30 saat",
-    explainerHeading: ["Daripada masalah kepada syarikat,", "dalam tiga puluh saat."],
-    explainerClose: "Tutup",
-    explainerPlay: "Main",
-    explainerPause: "Jeda",
-    explainerRestart: "Mula semula",
-    explainerStepLabel: "Babak",
   },
 
   mirai: {
@@ -241,12 +239,6 @@ export const ms: SiteCopy = {
       { no: "03", title: "Menyatakan batasan dengan jelas", body: "Kami tidak masuk ke dalam bidang yang menjadi tanggungjawab pakar bertauliah. Apa yang kami galas dan di mana kami menyerahkannya kepada pakar ditulis di dalam produk itu sendiri." },
       { no: "04", title: "Menyebut hanya apa yang boleh disahkan", body: "Pencapaian, angka dan kerjasama hanya disenaraikan apabila ada buktinya. Apa yang tidak dapat disahkan tidak kami tulis." },
     ],
-    principlesLong: [
-      { no: "01", title: "Bermula daripada bahasa di lapangan", long: "Tiada sistem yang sampai kepada sesiapa selagi ia belum diterjemahkan kepada langkah yang benar-benar diambil oleh penggunanya. Kami bermula daripada permohonan sebenar, pergerakan sebenar dan urusan sebenar — bukan daripada rumusan masalah yang abstrak, tetapi daripada satu langkah yang sedang tersekat di hadapan mata." },
-      { no: "02", title: "Bertanggungjawab sehingga ia difahami", long: "Menyenaraikan hasil carian bukanlah sokongan. Apa yang seseorang perlukan ialah mengetahui apa yang perlu dilakukan olehnya sekarang. Skop produk kami berterusan sehingga langkah seterusnya benar-benar difahami, bukan sekadar sehingga maklumat dipaparkan." },
-      { no: "03", title: "Menyatakan batasan dengan jelas", long: "Membiarkan seseorang menggunakan produk tanpa kejelasan tentang apa yang tidak mampu dilakukannya ialah reka bentuk yang paling berbahaya. Apa yang kami galas dan di mana pakar bertauliah mengambil alih ditulis pada skrin produk itu sendiri. Batasan ialah sebahagian daripada fungsi, bukan sekadar nota penafian." },
-      { no: "04", title: "Menyebut hanya apa yang boleh disahkan", long: "Kami tidak memperkatakan pencapaian yang tidak dapat disahkan atau fungsi yang belum beroperasi. Setiap fakta yang kami siarkan mempunyai rekod yang menyokongnya. Pada tempoh yang sedikit sahaja boleh kami tulis, sedikit itulah yang kami siarkan." },
-    ],
     orderHeading: ["Satu demi satu,", "sehingga tuntas."],
     orderBody: "Kami tidak memulakan banyak perkara serentak. Kami mengutamakan satu bidang dibina sehingga benar-benar sampai kepada langkah yang diambil orang di lapangan.",
     claimsHeading: ["Kami tidak menulis", "apa yang tidak dapat kami sahkan."],
@@ -256,7 +248,7 @@ export const ms: SiteCopy = {
   company: {
     eyebrow: "Maklumat Syarikat",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC ialah sebuah syarikat yang membina produk untuk mengubah kerumitan dalam kehidupan seharian, pekerjaan dan komuniti setempat menjadi sesuatu yang boleh difahami, dipilih dan ditindaklanjuti oleh seseorang. Berpangkalan di Fukuoka, kami sedang menjalankan dua projek: Mirai Move dan Kakari.",
+    intro: "Yorisou LLC ialah sebuah foundry usaha niaga: kami mencari masalah yang bersifat struktur, mereka bentuknya sebagai perniagaan, dan membinanya bersama orang yang mampu mengendalikannya. Berpangkalan di Fukuoka, kami sedang membina beberapa usaha niaga; yang kini didedahkan ialah Mirai Move, Kakari dan Chigamo.",
 
     messageEyebrow: "Mesej wakil syarikat",
     messageHeading: ["Kami menilai daripada sama ada ia sampai,", "bukan daripada sama ada ia canggih."],
@@ -305,12 +297,11 @@ export const ms: SiteCopy = {
       { label: "Nombor syarikat (hōjin bangō)", value: "2290003018125" },
       { label: "Wakil syarikat", value: "Jin Yang" },
       { label: "Lokasi", value: "Bandar Fukuoka, Wilayah Fukuoka, Jepun" },
-      { label: "Bidang perniagaan", value: "Perancangan, pembangunan dan pengendalian Mirai Move dan Kakari" },
+      { label: "Bidang perniagaan", value: "Penerokaan, perancangan, pembangunan dan pengendalian usaha niaga baharu; pembentukan pasukan pengasas; serta pelaksanaan usaha niaga melalui pengendalian bersama, pelesenan dan pengaturan yang berkaitan" },
     ],
 
     businessEyebrow: "Bidang perniagaan",
-    businessHeading: ["Bidang perniagaan"],
-    businessBody: "Maklumat, pemadanan dan pembangunan perniagaan dalam sektor mobiliti; serta sokongan pelbagai bahasa untuk prosedur pentadbiran dan dokumen bagi mereka yang tinggal di Jepun dan yang ingin memulakan perniagaan di sini. Kedua-duanya dijalankan mengikut prinsip yang sama: menggalas kerumitan dan mengembalikannya dalam bentuk yang boleh digunakan.",
+    businessBody: "Yang berada di tengah Yorisou ialah membina usaha niaga itu sendiri: mencari masalah yang bersifat struktur, mengesahkannya, mereka bentuknya sebagai perniagaan, membinanya, dan mengendalikannya bersama orang yang mampu. Usaha niaga yang kini didedahkan ialah maklumat, pemadanan dan pembangunan perniagaan dalam sektor mobiliti (Mirai Move); sokongan pelbagai bahasa untuk prosedur pentadbiran bagi mereka yang tinggal di Jepun dan yang memulakan perniagaan di sini (Kakari); serta penemuan kawasan kediaman melalui lokasi dan konteks (Chigamo, peringkat konsep). Semuanya dijalankan mengikut prinsip yang sama: menggalas kerumitan dan mengembalikannya dalam bentuk yang boleh digunakan.",
 
     projectsEyebrow: "Projek",
     projectsHeading: ["Apa yang sedang kami jalankan"],
@@ -376,7 +367,6 @@ export const ms: SiteCopy = {
         thesis: "Menghubungkan maklumat, pemadanan dan pembangunan perniagaan dalam sektor mobiliti.",
         problem: "Maklumat dan peluang terpisah antara pengendali, kawasan dan pihak berkuasa.",
         building: "Platform tempat pihak di dalam dan di luar Jepun boleh berbincang atas maklumat yang sama.",
-        status: "Dalam pembangunan dan pengendalian. Laman awam sudah beroperasi.",
       },
       {
         name: "Kakari",
@@ -384,7 +374,6 @@ export const ms: SiteCopy = {
         thesis: "Menyokong prosedur bagi mereka yang tinggal di Jepun dan yang memulakan perniagaan di sini, dalam pelbagai bahasa.",
         problem: "Sistemnya wujud, tetapi halangan bahasa dan susunan langkah menyebabkan ia tidak pernah digunakan.",
         building: "Cara memecahkan sesuatu prosedur kepada peringkat, dan menunjukkan sejauh mana seseorang boleh melakukannya sendiri.",
-        status: "Dalam pembangunan. Sedang bersiap untuk dibuka.",
       },
       {
         name: "Chigamo",
@@ -392,14 +381,20 @@ export const ms: SiteCopy = {
         thesis: "Menjadikan sesuatu tempat dapat difahami melalui lokasi dan konteks.",
         problem: "Maklumat yang paling berguna di sesuatu tempat itulah yang paling sukar ditemui.",
         building: "Cara meneroka kawasan kediaman sendiri, berpandukan lokasi dan konteks.",
-        status: "Peringkat konsep. Belum diuji.",
       },
+    ],
+    /* CORP-v1.4 — memisahkan apa yang benar hari ini daripada apa yang mungkin menyusul. */
+    structureHeading: ["Apa yang benar sekarang,", "dan apa yang mungkin menyusul."],
+    structureBody: [
+      "Peringkat yang tertulis di atas ialah fakta pada hari ini. Hanya perkara yang sudah berlaku ditulis di situ.",
+      "Bentuk selepas ini belum ditetapkan. Sesuatu usaha niaga boleh terus dikendalikan di dalam Yorisou, boleh menerima pasukan pengendali dari luar, boleh dimiliki bersama, atau boleh diasingkan sebagai syarikat tersendiri. Ia juga boleh mengambil bentuk lesen, atau dipindah milik atau dijual.",
+      "Yang mana satu bergantung pada kematangan usaha niaga itu, siapa yang terlibat, pasaran, modal dan perjanjian. Apa yang tertulis di sini ialah bentuk yang mungkin berlaku — bukan rancangan, dan bukan janji.",
     ],
     noteHeading: ["Apa yang halaman ini nyatakan,", "dan apa yang tidak."],
     noteBody: [
       "Inilah usaha niaga dan gagasan yang sedang Yorisou jalankan sekarang.",
       "Ia bukan anak syarikat yang diperbadankan, bukan pelaburan dan bukan pelanggan. Peringkatnya berbeza-beza, dan kami menulis peringkat itu sebagaimana adanya.",
-      "Matlamatnya ialah setiap satu dapat berdiri sendiri sebagai sebuah syarikat. Belum ada satu pun yang sampai ke tahap itu.",
+      "Apa yang tertulis di sini ialah fakta pada hari ini. Bentuk yang akan diambil oleh mana-mana satu daripadanya selepas ini belum ditetapkan.",
     ],
   },
 
@@ -451,7 +446,7 @@ export const ms: SiteCopy = {
     eyebrow: "Cara kami membina",
     heading: ["Daripada masalah kepada syarikat,", "mengikut urutannya."],
     lead:
-      "Kami tidak bermula daripada idea yang kami gemari. Kami mencari masalah yang bersifat struktur, mengesahkannya, mereka bentuknya sebagai perniagaan, bekerjasama dengan orang yang mampu mengendalikannya, dan membawanya menjadi syarikat yang berdiri sendiri. Susunan itulah yang Yorisou sebut sebagai foundry.",
+      "Kami tidak bermula daripada idea yang kami gemari. Kami mencari masalah yang bersifat struktur, mengesahkannya, mereka bentuknya sebagai perniagaan, bekerjasama dengan orang yang mampu mengendalikannya, dan membawanya sehingga ia berdiri sebagai sebuah usaha niaga. Susunan itulah yang Yorisou sebut sebagai foundry.",
     stagesEyebrow: "Peringkat",
     stagesHeading: ["Lapan peringkat,", "tiada satu pun yang dilangkau."],
     stages: [
@@ -459,29 +454,34 @@ export const ms: SiteCopy = {
       { no: "02", name: "Bukti", body: "Menyemak sama ada masalah itu benar-benar wujud dan siapa yang menanggungnya. Banyak hipotesis mati di sini." },
       { no: "03", name: "Reka bentuk usaha niaga", body: "Menjadikan jawapannya sebuah perniagaan: siapa yang menggunakannya, dan di mana nilai benar-benar bertukar tangan." },
       { no: "04", name: "Pembinaan", body: "Membinanya. Menggunakan asas bersama di tempat yang sudah ada, dan menumpukan tenaga pada bahagian yang khusus bagi usaha niaga ini." },
-      { no: "05", name: "Sedia sebagai usaha niaga", body: "Menyiapkan aset dan prosedurnya sehingga orang dari luar boleh mengambil alih dan mengendalikannya." },
+      { no: "05", name: "Sedia sebagai usaha niaga", body: "Menyiapkan aset dan prosedurnya sehingga seseorang boleh mengambil alih dan mengendalikannya." },
       { no: "06", name: "Pembentukan pasukan pengasas", body: "Bekerjasama dengan orang yang mampu memikulnya sebagai milik sendiri — sebagai pengasas, bukan sebagai pekerja." },
-      { no: "07", name: "Berdikari dan beroperasi", body: "Mengendalikannya sebagai syarikat yang berdiri sendiri, dibentuk supaya ia tidak kekal bergantung pada Yorisou." },
-      { no: "08", name: "Pembelajaran", body: "Menyimpan apa yang berhasil dan apa yang mati sebagai bahan untuk usaha niaga seterusnya." },
+      { no: "07", name: "Berdikari dan beroperasi", body: "Membawanya ke tahap ia berjalan dengan kuasanya sendiri. Ia boleh diasingkan sebagai syarikat tersendiri, boleh terus dikendalikan di dalam Yorisou, atau boleh dimiliki bersama." },
+      { no: "08", name: "Pembelajaran", body: "Menyimpan apa yang berhasil dan apa yang mati sebagai bahan untuk usaha niaga seterusnya. Hubungan dengan usaha niaga itu belum tentu berakhir di sini." },
     ],
-    independenceHeading: ["Matlamatnya ialah sebuah syarikat", "yang berdiri sendiri."],
+    independenceHeading: ["Bentuk sesuatu usaha niaga", "bukan hanya satu."],
     independenceBody: [
-      "Tujuan foundry ini bukan untuk menambah bilangan perkara di bawah Yorisou, tetapi untuk membawa setiap usaha niaga ke tahap ia boleh berdiri sendiri sebagai sebuah syarikat.",
-      "Kerana itu ia dibina supaya boleh diserahkan sejak awal lagi. Jika orang yang mengendalikannya tidak memegang keputusan yang sebenar, ia belum menjadi sebuah syarikat.",
+      "Menjadi syarikat yang berdiri sendiri ialah salah satu bentuk yang kami tuju. Namun sampai ke tahap itu tidak bermakna hubungannya dengan Yorisou berakhir.",
+      "Ada usaha niaga yang terus dikendalikan di dalam Yorisou. Ada yang menerima pengasas atau pasukan pengendali dari luar dan dimiliki bersama. Ada yang diasingkan sebagai syarikat tersendiri, ada yang mengambil bentuk lesen, dan ada yang dipindah milik atau dijual.",
+      "Bentuk mana yang diambil bergantung pada kematangan usaha niaga itu, siapa yang terlibat, pasaran, modal, dan perjanjian yang dicapai bagi usaha niaga itu. Tiada acuan yang ditetapkan terlebih dahulu.",
+      "Hanya satu perkara yang sama pada semuanya: ia dibina supaya boleh diserahkan sejak awal lagi. Jika orang yang mengendalikannya tidak memegang keputusan yang sebenar, ia belum berdiri sebagai sebuah usaha niaga.",
     ],
     asterionEyebrow: "Teknologi dan pelaksanaan bersama",
     asterionHeading: ["Jangan bina", "perkara yang sama dua kali."],
     asterionBody: [
-      "Asterion OS ialah platform teknologi dan pelaksanaan bersama yang berdiri sendiri, diletakkan dalam seni bina foundry Yorisou. Ia bukan milik Yorisou.",
-      "Kerana asas bersama itu ada, tiada usaha niaga yang perlu membinanya semula, dan setiap satu boleh menumpukan perhatian pada bidangnya sendiri. Keupayaan yang terkumpul menjadi titik permulaan bagi usaha niaga seterusnya.",
+      "Asterion OS ialah projek platform teknologi yang berdiri sendiri. Ia bukan salah satu usaha niaga Yorisou yang diperkenalkan dalam laman syarikat ini.",
+      "Usaha niaga Yorisou mungkin menggunakan keupayaan Asterion apabila sesuai. Pemilikan, pelesenan, hak ke atas data dan tanggungjawab operasi ditentukan oleh perjanjian yang terpakai dalam setiap kes.",
+      "Kerana asas bersama boleh digunakan, tiada usaha niaga yang perlu membinanya semula, dan setiap satu boleh menumpukan perhatian pada bidangnya sendiri. Keupayaan yang terkumpul menjadi titik permulaan bagi usaha niaga seterusnya.",
     ],
     asterionBoundaryTitle: "Batasannya",
     asterionBoundaryBody:
-      "Setiap usaha niaga ditadbir urus secara berasingan. Harta intelek, data dan tanggungjawab operasi adalah milik usaha niaga itu sendiri. Tiada apa-apa yang direka bentuk supaya data usaha niaga atau data pengguna mengalir secara automatik ke platform.",
+      "Setiap usaha niaga ditadbir urus secara berasingan. Kedudukan harta intelek, data dan tanggungjawab operasi ditetapkan oleh perjanjian bagi usaha niaga itu. Tiada apa-apa yang direka bentuk supaya data usaha niaga atau data pengguna mengalir secara automatik ke platform.",
     economicsHeading: ["Pemilikan mengikut", "sumbangan dan tanggungjawab."],
     economicsBody: [
       "Syaratnya berbeza mengikut usaha niaga. Kami tidak mengenakan satu formula yang tetap kepada semuanya.",
       "Hanya prinsipnya yang sama: pemilikan mengikut sumbangan, risiko yang dipikul dan tanggungjawab yang berterusan. Orang yang mengendalikan sesuatu usaha niaga memegang kuasa membuat keputusan yang sebenar.",
+      "Yorisou sendiri mungkin terus terlibat dengan nilai jangka panjang sesuatu usaha niaga: dengan terus memegang ekuiti, dengan memegang lesen, atau dengan mengendalikannya bersama. Yang mana satu terpakai bergantung pada sejauh mana Yorisou memikul usaha niaga itu dan sebanyak mana risiko yang ditanggungnya.",
+      "Buat masa ini tiada syarat yang boleh kami janjikan. Pemilikan mahupun bentuk sebarang hak tidak ditetapkan sebelum ada perjanjian.",
       "Butiran khususnya dibincangkan mengikut usaha niaga dan mengikut orangnya. Ia bukan perkara yang sesuai diletakkan di laman web.",
     ],
     maturityTitle: "Kedudukannya sekarang",
@@ -494,7 +494,13 @@ export const ms: SiteCopy = {
     eyebrow: "Bina bersama kami",
     heading: ["Pintu masuk anda", "bergantung pada kedudukan anda."],
     lead:
-      "Yorisou membawa sesuatu usaha niaga sehingga ke titik sebelum ia menjadi syarikat, kemudian bekerjasama dengan orang yang mampu memikulnya. Jadi yang kami cari bukan orang untuk diambil bekerja, tetapi orang yang akan mengambil alih.",
+      "Yorisou membawa sesuatu usaha niaga sehingga ke titik sebelum ia berdiri sendiri, kemudian bekerjasama dengan orang yang mampu memikulnya. Jadi yang kami cari bukan orang untuk diambil bekerja, tetapi orang dan institusi yang akan mengambil alih usaha niaga itu.",
+    /* CORP-v1.4 — bentuk penglibatan direka bentuk mengikut projek, dan tiada satu pun dijanjikan terlebih dahulu. */
+    structureHeading: ["Cara anda terlibat", "direka bentuk mengikut projek."],
+    structureBody: [
+      "Tiada slot tetap untuk dimasuki. Pengasasan bersama, pasukan pengasas, pemilikan dalam usaha niaga, lesen, pengendalian bersama, pengasingan sebagai syarikat tersendiri — yang mana satu terpakai bergantung pada usaha niaga itu dan sebanyak mana yang anda pikul.",
+      "Apa pun bentuknya, tadbir urus, harta intelek, peranan, tanggungjawab dan syarat ekonomi ditetapkan melalui perjanjian yang berasingan. Tiada syarat yang boleh kami janjikan terlebih dahulu di sini.",
+    ],
     lanes: [
       {
         key: "founders",

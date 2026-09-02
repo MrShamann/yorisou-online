@@ -1,7 +1,6 @@
 import styles from "../site.module.css";
-import { Band, Boundary, Cards, Eyebrow, FormationState, TextLink, VentureName } from "../pieces";
-import GuidedExplainer from "../GuidedExplainer";
-import { VENTURE_FORMATION } from "../ventureState";
+import { Band, Boundary, Eyebrow, TextLink } from "../pieces";
+import { FoundrySpine } from "../OperatingField";
 import { Phrase, ROUTES } from "../Shell";
 import { localeHref } from "../../i18n/locales";
 import type { SiteCopy } from "../../i18n/types";
@@ -14,10 +13,16 @@ import type { SiteCopy } from "../../i18n/types";
  * First, the eight stages end in an independent company, not in permanent Foundry dependency, so the
  * independence section follows the stages immediately rather than being buried.
  *
- * Second, Asterion. It is an INDEPENDENT platform that Yorisou does not own, so it appears here as a
- * secondary layer inside "how we build" — never in the venture grid, never in the hero, and never
- * with a "powered by" badge. The boundary callout sits directly under it so the ownership and data
- * separation is read at the same moment as the capability claim, not several screens later.
+ * Second, Asterion. Asterion is an independent technology-platform project and is not a public Yorisou
+ * venture. The site draws NO ownership conclusion in either direction — rights, licensing, data and
+ * operating responsibility depend on the applicable agreements. CORP-v1.4 withdrew the earlier
+ * absolute "Yorisou does not own Asterion", because an unsupported denial is still an unsupported
+ * claim, and this comment said the withdrawn thing until CORP-v1.4R1.1.
+ *
+ * It therefore appears here as a secondary layer inside "how we build" — never in the venture grid,
+ * never in the hero, and never with a "powered by" badge. The boundary callout sits directly under
+ * it so the governance and data separation is read at the same moment as the capability claim, not
+ * several screens later.
  *
  * The maturity note is last and is not softened: the method is not yet proven and nothing has been
  * spun out. A polished page does not upgrade evidence.
@@ -40,24 +45,24 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
       </section>
 
       {/*
-        CORP-v1.2R2 — the "Yorisou in 30 seconds" target.
+        CORP-v1.4R1 — the eight stages are one system, not eight cards.
 
-        This is option A from the brief: an extended web-native motion explainer built from the same
-        system grammar as the hero, not a recorded film. No placeholder media file is shipped, and
-        nothing here claims a video exists. The motion field states the arc; the stage names beneath
-        it name each beat, so the story reads with motion disabled too.
+        `Cards columns={2}` was semantically correct and visually generic: a reader had to assemble
+        a sequence out of a two-column grid, and eight bordered rectangles is what a SaaS template
+        looks like. A spine states the sequence, and it carries something the grid could not —
+        Mirai Move, Kakari and Chigamo pinned at the stage their OWN repository evidence puts them
+        at. The method stops being a description of how we would work and becomes the thing three
+        real ventures are currently on.
+
+        No percentage, no "live", no autoplay. Selecting a stage is a native radio: no JavaScript,
+        arrow keys from the browser, and nothing for reduced motion to disable.
       */}
-
-
       <Band line>
         <Eyebrow>{f.stagesEyebrow}</Eyebrow>
         <h2 className={styles.h2}>
           <Phrase units={f.stagesHeading} locale={locale} />
         </h2>
-        <Cards
-          items={f.stages.map((s) => ({ no: s.no, title: s.name, body: s.body }))}
-          columns={2}
-        />
+        <FoundrySpine copy={copy} />
       </Band>
 
       <Band tint>
@@ -98,81 +103,32 @@ export default function FoundryView({ copy, locale }: { copy: SiteCopy; locale: 
       </Band>
 
       {/*
-        CORP-v1.2R2 — the ventures inside the method.
+        CORP-v1.4R1 — the venture-stage band is gone, and deliberately so.
 
-        The brief is explicit that the three ventures must not appear once on Home and then vanish
-        from the Foundry narrative. This is NOT a live dashboard and is not labelled as one: it is
-        each venture's own stage and next step, shown where the method is explained, so a reader
-        sees that the Foundry is not an abstraction.
+        It restated each venture's stage in a three-card grid directly under a page that had just
+        listed the stages as eight cards. That was the same fact drawn twice, in two grids, on one
+        page. The spine above now carries each venture's marker at its real stage, which is the same
+        information in one object instead of eleven rectangles. The detail links live on /ventures,
+        where the ventures are the subject.
       */}
-      <Band line>
-        <Eyebrow>{copy.ventures.eyebrow}</Eyebrow>
-        <h2 className={styles.h2}>
-          <Phrase units={copy.ventures.heading} locale={locale} />
-        </h2>
-        <div className={styles.projects}>
-          {copy.ventures.cards.map((c) => {
-            const d = c.href === "/mirai-move" ? copy.mirai : c.href === "/kakari" ? copy.kakari : copy.chigamo;
-            return (
-              <article className={styles.project} key={c.href}>
-                <div className={styles.projectHead}>
-                  <VentureName name={c.name} reading={d.reading} />
-                  <span className={styles.stage}>{d.stage}</span>
-                </div>
-                <p className={`${styles.bodyMuted} ${styles.jp}`}>{d.next}</p>
-                {/* the same node/line/state vocabulary as the hero, at this venture's real stage */}
-                <FormationState
-                  stages={f.stages}
-                  reached={VENTURE_FORMATION[c.href] ?? 0}
-                  label={f.stagesEyebrow}
-                />
-                <TextLink href={L(c.href)}>{copy.common.readMore(c.name)}</TextLink>
-              </article>
-            );
-          })}
-        </div>
-      </Band>
-
       {/*
-        CORP-v1.2R3 — the 30-second explainer, DEMOTED to supporting content.
+        CORP-v1.4R1 — the guided explainer is retired.
 
-        R2.1 opened this page with it, and then repeated five of the same stage bodies as cards
-        directly underneath — the duplicated wall the brief forbids. It is no longer the
-        comprehension mechanism either: the homepage now states the company at frame zero, so
-        nobody needs to watch anything. The stages, independence and Asterion sections lead; this
-        sits after them for a reader who wants the walkthrough, and it does not autoplay ahead of
-        the content it summarises.
+        With the spine in place this page carried THREE representations of the same eight stages:
+        the cards, the venture-stage grid, and a seven-beat walkthrough that re-read five of the
+        same stage bodies. v1.2R3 had already demoted the explainer to sixth of seven for exactly
+        this reason; the spine makes it redundant rather than merely secondary, and keeping it would
+        preserve work rather than serve a reader.
+
+        Nothing it said is lost: every beat drew its text from `foundry.stages` and the section
+        eyebrows, all of which the spine and the surrounding sections still render.
+
+        CORP-v1.4R1.1 deleted the implementation. R1 had left the component and its stylesheet in
+        the tree, unreferenced, on the reasoning that they cost no client bytes — true, but it left
+        the repository holding two UX doctrines for one job, and the stale one is what a future
+        agent finds first. The Founder authorized removal. `git log` is where a retired
+        implementation belongs.
       */}
-      <Band id="explainer" dark>
-        <Eyebrow dark>{copy.home.explainerLabel}</Eyebrow>
-        <h2 className={styles.h2}>
-          <Phrase units={copy.home.explainerHeading} locale={locale} />
-        </h2>
-        {/*
-          CORP-v1.2R2.1 — seven beats, each CHANGING the same system field rather than scrolling
-          past cards. Beat text is drawn from stages and section names that already exist in all 21
-          locales, so the walkthrough is localised without a single new sentence to translate.
-          It is never called a video: no video asset exists.
-        */}
-        <GuidedExplainer
-          labels={{
-            play: copy.home.explainerPlay,
-            pause: copy.home.explainerPause,
-            restart: copy.home.explainerRestart,
-            step: copy.home.explainerStepLabel,
-          }}
-          beats={[
-            { key: "signal", label: f.stages[0]?.name ?? "", body: f.stages[0]?.body ?? "" },
-            { key: "evidence", label: f.stages[1]?.name ?? "", body: f.stages[1]?.body ?? "" },
-            { key: "venture", label: f.stages[2]?.name ?? "", body: f.stages[2]?.body ?? "" },
-            { key: "team", label: f.stages[5]?.name ?? "", body: f.stages[5]?.body ?? "" },
-            { key: "independent", label: f.stages[6]?.name ?? "", body: f.stages[6]?.body ?? "" },
-            { key: "ventures", label: copy.ventures.eyebrow, body: copy.ventures.lead },
-            { key: "shared", label: f.asterionEyebrow, body: copy.buildWithUs.lead },
-          ]}
-        />
-      </Band>
-
       <Band tint>
         <Boundary title={f.maturityTitle}>{f.maturityBody}</Boundary>
         <TextLink href={L(ROUTES.buildWithUs)}>{copy.buildWithUs.eyebrow}</TextLink>

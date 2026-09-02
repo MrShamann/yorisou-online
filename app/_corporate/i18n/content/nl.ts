@@ -40,10 +40,10 @@ export const nl: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Van structurele vraagstukken naar bedrijven die op eigen benen staan.", description: "Yorisou LLC is een foundry: wij zoeken structurele vraagstukken op, bouwen het bewijs en de bouwstenen van een onderneming, en vormen samen met oprichters zelfstandige bedrijven. Mirai Move en Kakari worden gebouwd; Chigamo is nog een concept." },
+    home: { title: "Yorisou LLC — Structurele vraagstukken omzetten in ondernemingen.", description: "Yorisou LLC is een venture foundry: wij zoeken structurele vraagstukken op, bouwen het bewijs en de bouwstenen bij elkaar, en zetten daarmee samen met de mensen die het gaan leiden een onderneming op. Mirai Move en Kakari worden gebouwd; Chigamo is nog een concept." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Een platform voor informatie, matching en business development in de Japanse mobiliteitssector. De publieke website is live; de platformfuncties zijn in ontwikkeling." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Meertalige ondersteuning bij administratieve procedures en documenten, voor mensen die in Japan wonen en voor wie hier een onderneming start. In ontwikkeling en nog niet algemeen beschikbaar." },
-    about: { title: "Hoe wij bouwen — Yorisou LLC", description: "Het vraagstuk vinden, het toetsen, het als onderneming ontwerpen, een oprichtersteam vormen en het naar een zelfstandig bedrijf brengen. Hoe de foundry van Yorisou werkt, en waar de gedeelde basis zich bevindt." },
+    about: { title: "Hoe wij bouwen — Yorisou LLC", description: "Het vraagstuk vinden, het toetsen, het als onderneming ontwerpen, een oprichtersteam vormen en het op gang brengen. Hoe de foundry van Yorisou werkt, welke vormen een project kan aannemen, en waar de gedeelde basis zich bevindt." },
     company: { title: "Bedrijf — Yorisou LLC", description: "Bedrijfsprofiel, profiel van de vertegenwoordiger, boodschap van de vertegenwoordiger en werkgebieden van Yorisou LLC." },
     contact: { title: "Contact — Yorisou LLC", description: "Vragen over ons werk, samenwerking en pers." },
     ventures: { title: "Projecten — Yorisou LLC", description: "Waar Yorisou nu aan werkt: Mirai Move, Kakari en Chigamo. Elk project staat in een andere fase, en die fase benoemen wij zoals hij is." },
@@ -66,10 +66,10 @@ export const nl: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Structurele vraagstukken,", "omgezet in bedrijven."],
-    thesis: ["Van structurele vraagstukken", "maken wij bedrijven", "die op eigen benen staan."],
+    thesis: ["Van structurele vraagstukken", "maken wij ondernemingen", "en laten wij ze groeien."],
     lead: [
       "Yorisou is een foundry: wij zoeken structurele vraagstukken in de samenleving op, toetsen ze en ontwerpen ze als onderneming,",
-      "en werken samen met de mensen die ze gaan leiden, op weg naar zelfstandige bedrijven.",
+      "en zetten ze op samen met de mensen die ze gaan leiden.",
     ],
     humanSide: "Mens",
     humanItems: ["Dagelijks leven", "Werk", "Gemeenschap"],
@@ -86,7 +86,6 @@ export const nl: SiteCopy = {
       { no: "03", title: "De praktijk en het systeem sluiten niet op elkaar aan.", body: "In mobiliteit, zorg en overheidsdienstverlening bestaan mogelijkheden die de mensen in de praktijk nog niet hebben bereikt." },
     ],
 
-    buildEyebrow: "Wat wij bouwen",
     buildHeading: ["Gebieden die het systeem niet bereikt —", "één voor één opgepakt."],
 
     howEyebrow: "Hoe wij bouwen",
@@ -97,7 +96,6 @@ export const nl: SiteCopy = {
       { no: "03", title: "De grens benoemen", body: "Wij treden niet in het werk dat aan een erkende professional toebehoort. Wat wij wel doen en waar wij overdragen, staat in het product zelf beschreven." },
       { no: "04", title: "Alleen zeggen wat te verifiëren is", body: "Resultaten, cijfers en samenwerkingen vermelden wij alleen waar bewijs voor is. Wat wij niet kunnen bevestigen, schrijven wij niet op." },
     ],
-    howDisclose: "Wat deze uitgangspunten in de praktijk betekenen",
 
     founderEyebrow: "Vertegenwoordiger",
     founderHeading: ["Gebouwd door iemand die twintig jaar", "in complexe industrieën heeft gestaan."],
@@ -124,24 +122,24 @@ export const nl: SiteCopy = {
 
     /* CORP-v1.2 — Asterion-laag en de laag voor betrokkenheid op de homepage. */
     asterionEyebrow: "Gedeelde basis",
-    asterionHeading: ["Elke keer dat wij bouwen,", "wordt de bodem steviger."],
     asterionBody:
-      "Asterion OS is een zelfstandig, gedeeld technologie- en uitvoeringsplatform dat een plaats heeft binnen de foundry-opzet van Yorisou. Doordat die gemeenschappelijke basis er al ligt, hoeft niet elk project dezelfde onderdelen opnieuw te bouwen en kan het zijn inspanning richten op het eigen vraagstuk.",
+      "Asterion OS is een zelfstandig project rond een technologieplatform. Doordat dezelfde onderdelen niet telkens opnieuw gebouwd hoeven te worden, kan elk project zijn inspanning richten op het eigen vraagstuk.",
     asterionNote:
-      "Elk project wordt afzonderlijk bestuurd en houdt zijn eigen intellectuele eigendom, gegevens en operationele verantwoordelijkheid. Asterion is geen eigendom van Yorisou.",
+      "Elk project wordt afzonderlijk bestuurd. Waar intellectueel eigendom, gegevens en operationele verantwoordelijkheid liggen — en welke rechten op Asterion gelden — volgt uit de afspraken die per geval van toepassing zijn.",
+    /* CORP-v1.4 — hoe Yorisou verbonden blijft met wat het bouwt. Voorwaardelijk, nooit toegezegd. */
+    portfolioEyebrow: "Hoe wij betrokken blijven",
+    portfolioHeading: ["Met bouwen", "houdt het niet op."],
+    portfolioBody:
+      "Ook nadat een project op eigen kracht draait, kan Yorisou betrokken blijven bij de waarde ervan: door aandelen te blijven houden, door een licentie te houden, of door het samen te exploiteren. Een project kan ook als apart bedrijf worden afgesplitst, of worden overgedragen of verkocht.",
+    portfolioBranches: ["Binnen Yorisou geëxploiteerd", "Samen opgericht en geëxploiteerd", "Aandeel", "Licentie", "Zelfstandig bedrijf", "Overdracht of verkoop"],
+    portfolioNote:
+      "Welke vorm het wordt, hangt af van de fase waarin het project verkeert, van wie erbij betrokken is, van de markt, van het kapitaal en van de afspraak die voor dat project wordt gemaakt. Niets ligt vooraf vast.",
     engageEyebrow: "Samen bouwen",
     engageHeading: ["Stap in terwijl het nog", "een bedrijf aan het worden is."],
     engageBody:
       "Oprichters, onderzoekers, overheid, bedrijven. Waar u kunt aanhaken, hangt af van waar u staat. Wij beginnen bij wat nu al te bespreken valt.",
     engageCta: "Bekijk de ingangen",
     engageNote: "Alles begint nu bij een gesprek. Er is nog geen aanmeldingsprocedure en geen selectie.",
-    explainerLabel: "Yorisou in 30 seconden",
-    explainerHeading: ["Van vraagstuk naar bedrijf,", "in dertig seconden."],
-    explainerClose: "Sluiten",
-    explainerPlay: "Afspelen",
-    explainerPause: "Pauzeren",
-    explainerRestart: "Opnieuw",
-    explainerStepLabel: "Stap",
   },
 
   mirai: {
@@ -243,12 +241,6 @@ export const nl: SiteCopy = {
       { no: "03", title: "De grens benoemen", body: "Wij treden niet in het werk dat aan een erkende professional toebehoort. Wat wij wel doen en waar wij overdragen, staat in het product zelf beschreven." },
       { no: "04", title: "Alleen zeggen wat te verifiëren is", body: "Resultaten, cijfers en samenwerkingen vermelden wij alleen waar bewijs voor is. Wat wij niet kunnen bevestigen, schrijven wij niet op." },
     ],
-    principlesLong: [
-      { no: "01", title: "Beginnen bij de taal van de praktijk", long: "Geen enkele regeling bereikt iemand voordat zij vertaald is naar de stappen die de betrokkene daadwerkelijk zet. Wij beginnen bij de werkelijke aanvraag, de werkelijke verplaatsing, het werkelijke contact — niet bij een abstracte probleemstelling, maar bij de ene stap die nu vastzit." },
-      { no: "02", title: "Verantwoordelijk tot het begrepen is", long: "Zoekresultaten opsommen is geen ondersteuning. Wat iemand nodig heeft, is weten wat hij nu moet doen. De reikwijdte van het product loopt tot het punt waarop de volgende stap begrepen is, niet tot het punt waarop informatie is getoond." },
-      { no: "03", title: "De grens benoemen", long: "Iemand een product laten gebruiken zonder duidelijk te maken wat het niet kan, is het gevaarlijkste ontwerp dat er is. Wat wij zelf doen en waar een professional het overneemt, schrijven wij in het scherm zelf. De grens is een functie, geen kleine lettertjes." },
-      { no: "04", title: "Alleen zeggen wat te verifiëren is", long: "Wij spreken niet over resultaten die wij niet kunnen bevestigen, of over functies die nog niet draaien. Achter elk feit dat wij publiceren ligt een vastgelegd gegeven. In periodes waarin wij weinig kunnen zeggen, publiceren wij weinig." },
-    ],
     orderHeading: ["Eén voor één,", "helemaal tot het einde."],
     orderBody: "Wij starten niet veel dingen tegelijk. Liever brengen wij één gebied helemaal tot het punt waarop het aansluit bij de stappen die mensen werkelijk zetten.",
     claimsHeading: ["Wat wij niet kunnen verifiëren,", "schrijven wij niet op."],
@@ -258,7 +250,7 @@ export const nl: SiteCopy = {
   company: {
     eyebrow: "Bedrijf",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC bouwt producten die de complexiteit van het dagelijks leven, het werk en de lokale gemeenschap omzetten in iets wat mensen kunnen begrijpen, waaruit zij kunnen kiezen en waarnaar zij kunnen handelen. Vanuit Fukuoka werken wij aan twee projecten: Mirai Move en Kakari.",
+    intro: "Yorisou LLC is een venture foundry: wij zoeken structurele vraagstukken op, ontwerpen ze als onderneming en zetten ze op samen met de mensen die ze kunnen leiden. Vanuit Fukuoka bouwen wij aan meerdere projecten; nu openbaar zijn Mirai Move, Kakari en Chigamo.",
 
     messageEyebrow: "Boodschap van de vertegenwoordiger",
     messageHeading: ["Wij beoordelen of het aankomt,", "niet of het geavanceerd is."],
@@ -307,12 +299,11 @@ export const nl: SiteCopy = {
       { label: "Ondernemingsnummer (hōjin bangō)", value: "2290003018125" },
       { label: "Besturend vennoot", value: "Jin Yang" },
       { label: "Vestiging", value: "Fukuoka, prefectuur Fukuoka, Japan" },
-      { label: "Activiteiten", value: "Ontwerp, ontwikkeling en exploitatie van Mirai Move en Kakari" },
+      { label: "Activiteiten", value: "Verkennen, plannen, ontwikkelen en exploiteren van nieuwe ondernemingen; het vormen van oprichtersteams; en het tot onderneming brengen daarvan via gezamenlijke exploitatie, licenties en vergelijkbare vormen" },
     ],
 
     businessEyebrow: "Werkgebieden",
-    businessHeading: ["Werkgebieden"],
-    businessBody: "Informatie, matching en business development in de mobiliteitssector; en meertalige ondersteuning bij administratieve procedures en documenten, voor mensen die in Japan wonen en voor wie hier een onderneming start. Beide volgen hetzelfde uitgangspunt: de complexiteit op ons nemen en er iets bruikbaars van teruggeven.",
+    businessBody: "In de kern bouwt Yorisou de ondernemingen zelf: een structureel vraagstuk vinden, het toetsen, het als onderneming ontwerpen, het bouwen, en het draaien met mensen die dat kunnen. Nu openbaar zijn informatie, matching en business development in de mobiliteitssector (Mirai Move); meertalige ondersteuning bij administratieve procedures en documenten, voor mensen die in Japan wonen en voor wie hier een onderneming start (Kakari); en het ontdekken van de eigen leefomgeving vanuit locatie en context (Chigamo, conceptfase). Alle volgen hetzelfde uitgangspunt: de complexiteit op ons nemen en er iets bruikbaars van teruggeven.",
 
     projectsEyebrow: "Projecten",
     projectsHeading: ["Waar wij aan bouwen"],
@@ -378,7 +369,6 @@ export const nl: SiteCopy = {
         thesis: "Informatie, matching en business development in mobiliteit met elkaar verbinden.",
         problem: "Tussen aanbieders, regio’s en overheid liggen informatie en kansen van elkaar gescheiden.",
         building: "Een platform waarop partijen binnen en buiten Japan vanuit dezelfde informatie kunnen werken.",
-        status: "In ontwikkeling en in bedrijf. Publieke website live.",
       },
       {
         name: "Kakari",
@@ -386,7 +376,6 @@ export const nl: SiteCopy = {
         thesis: "Meertalige ondersteuning bij de procedures van wonen en ondernemen in Japan.",
         problem: "De regelingen bestaan, maar taal en volgorde zorgen dat mensen ze nooit gebruiken.",
         building: "Een manier om een procedure in stappen te verdelen en te tonen hoe ver u zelf komt.",
-        status: "In ontwikkeling. In voorbereiding op publicatie.",
       },
       {
         name: "Chigamo",
@@ -394,14 +383,20 @@ export const nl: SiteCopy = {
         thesis: "Een plek leesbaar maken vanuit locatie en context.",
         problem: "Juist de informatie die hier werkelijk zou helpen, is het moeilijkst te vinden.",
         building: "Ontdekken binnen de eigen leefomgeving, op basis van locatie en context.",
-        status: "Conceptfase. Nog niet getoetst.",
       },
+    ],
+    /* CORP-v1.4 — wat vandaag geldt, en welke vormen daaruit kunnen volgen. Nooit een planning, nooit een toezegging. */
+    structureHeading: ["Wat nu waar is,", "en wat daarna kan komen."],
+    structureBody: [
+      "De fasen hierboven zijn wat vandaag waar is. Er staat alleen wat al is gebeurd.",
+      "Welke vorm daarna volgt, ligt niet vast. Een project kan binnen Yorisou blijven draaien, een operationeel team van buiten binnenhalen, gezamenlijk worden gehouden of als apart bedrijf worden afgesplitst. Het kan ook de vorm van een licentie krijgen, of worden overgedragen of verkocht.",
+      "Welke het wordt, hangt af van de fase waarin het project verkeert, van wie erbij betrokken is, van de markt, van het kapitaal en van de afspraak. Wat hier staat, is een mogelijke vorm — geen planning en geen toezegging.",
     ],
     noteHeading: ["Wat deze pagina zegt,", "en wat niet."],
     noteBody: [
       "Dit zijn de projecten en concepten waaraan Yorisou op dit moment werkt.",
       "Het zijn geen als rechtspersoon opgerichte dochterondernemingen, geen deelnemingen en geen klanten. Ze staan in verschillende fasen, en die fase hebben wij opgeschreven zoals hij is.",
-      "Het doel is dat elk project als zelfstandig bedrijf op eigen benen komt te staan. Geen van de projecten heeft dat punt bereikt.",
+      "Wat hier staat, is wat vandaag waar is. Welke vorm elk daarvan hierna krijgt, ligt nog niet vast.",
     ],
   },
 
@@ -453,7 +448,7 @@ export const nl: SiteCopy = {
     eyebrow: "Hoe wij bouwen",
     heading: ["Van vraagstuk naar bedrijf,", "in die volgorde."],
     lead:
-      "Wij beginnen niet bij een inval. Wij zoeken een structureel vraagstuk op, toetsen het, ontwerpen het als onderneming, werken samen met mensen die het kunnen leiden, en brengen het naar een zelfstandig bedrijf. Die volgorde noemt Yorisou de foundry.",
+      "Wij beginnen niet bij een inval. Wij zoeken een structureel vraagstuk op, toetsen het, ontwerpen het als onderneming, werken samen met mensen die het kunnen leiden, en brengen het tot het punt waarop het als onderneming staat. Die volgorde noemt Yorisou de foundry.",
     stagesEyebrow: "Fasen",
     stagesHeading: ["Acht fasen,", "en wij slaan er geen over."],
     stages: [
@@ -461,29 +456,34 @@ export const nl: SiteCopy = {
       { no: "02", name: "Bewijs", body: "Nagaan of het vraagstuk echt bestaat en bij wie het terechtkomt. Hier sneuvelen veel hypothesen." },
       { no: "03", name: "Ondernemingsontwerp", body: "Van het antwoord een onderneming maken: wie het gebruikt, en waar werkelijk waarde wordt uitgewisseld." },
       { no: "04", name: "Bouwen", body: "Het daadwerkelijk maken. Gebruikmaken van de gedeelde basis waar die er is, en de inspanning richten op wat eigen is aan dit project." },
-      { no: "05", name: "Klaar als onderneming", body: "De bouwstenen en de werkwijze op een punt brengen waar iemand van buiten ze kan overnemen en voortzetten." },
+      { no: "05", name: "Klaar als onderneming", body: "De bouwstenen en de werkwijze op een punt brengen waar iemand ze kan overnemen en voortzetten." },
       { no: "06", name: "Oprichtersteam vormen", body: "Samenwerken met iemand die het als het zijne kan dragen — als oprichter, niet als werknemer." },
-      { no: "07", name: "Verzelfstandiging en exploitatie", body: "Het laten draaien als zelfstandig bedrijf, zo ingericht dat het niet afhankelijk blijft van Yorisou." },
-      { no: "08", name: "Leren", body: "Wat werkte en wat sneuvelde bewaren als materiaal voor het volgende project." },
+      { no: "07", name: "Verzelfstandiging en exploitatie", body: "Het op eigen kracht laten draaien. Het kan als apart bedrijf worden afgesplitst, het kan binnen Yorisou geëxploiteerd blijven, of het kan samen met anderen worden gehouden." },
+      { no: "08", name: "Leren", body: "Wat werkte en wat sneuvelde bewaren als materiaal voor het volgende project. De band met het project houdt hier niet per se op." },
     ],
-    independenceHeading: ["Het doel is een bedrijf", "dat op eigen benen staat."],
+    independenceHeading: ["Een project kan", "meer dan één vorm aannemen."],
     independenceBody: [
-      "De foundry is er niet om steeds meer onder Yorisou te verzamelen. Zij is er om elk project te brengen tot waar het als zelfstandig bedrijf kan staan.",
-      "Daarom bouwen wij vanaf het begin op een manier die zich laat overdragen. Als de mensen die het leiden niet de werkelijke beslissingen kunnen nemen, is het geen bedrijf geworden.",
+      "Als zelfstandig bedrijf op eigen benen staan is een van de vormen die wij nastreven. Het betekent niet dat de band met Yorisou ophoudt zodra dat punt bereikt is.",
+      "Sommige projecten blijven binnen Yorisou draaien. Andere halen een oprichter of een operationeel team van buiten binnen en worden gezamenlijk gehouden. Weer andere worden als apart bedrijf afgesplitst, krijgen de vorm van een licentie, of worden overgedragen of verkocht.",
+      "Welke vorm het wordt, hangt af van de fase waarin het project verkeert, van wie erbij betrokken is, van de markt, van het kapitaal en van de afspraak die voor dat project wordt gemaakt. Er is geen vast sjabloon.",
+      "Eén ding is altijd hetzelfde: wij bouwen vanaf het begin op een manier die zich laat overdragen. Als de mensen die het leiden niet de werkelijke beslissingen kunnen nemen, staat het niet als onderneming.",
     ],
     asterionEyebrow: "Gedeelde technologie en uitvoering",
     asterionHeading: ["Hetzelfde bouwen wij", "geen tweede keer."],
     asterionBody: [
-      "Asterion OS is een zelfstandig, gedeeld technologie- en uitvoeringsplatform dat een plaats heeft binnen de foundry-opzet van Yorisou. Het is geen eigendom van Yorisou.",
-      "Doordat die gemeenschappelijke basis er is, hoeft geen enkel project haar opnieuw te bouwen en kan elk zich concentreren op het eigen domein. Wat zich opbouwt, wordt het vertrekpunt voor het volgende.",
+      "Asterion OS is een zelfstandig project rond een technologieplatform. Het is niet een van de projecten van Yorisou die op deze bedrijfssite worden gepresenteerd.",
+      "Projecten van Yorisou kunnen functies van Asterion gebruiken waar dat passend is. Eigendom, licenties, rechten op gegevens en operationele verantwoordelijkheid volgen uit de afspraken die in dat geval van toepassing zijn.",
+      "Doordat een gemeenschappelijke basis gebruikt kan worden, hoeft geen enkel project dezelfde onderdelen opnieuw te bouwen en kan elk zich concentreren op het eigen domein. Wat zich opbouwt, wordt het vertrekpunt voor het volgende.",
     ],
     asterionBoundaryTitle: "De grens",
     asterionBoundaryBody:
-      "Elk project wordt afzonderlijk bestuurd. Intellectueel eigendom, gegevens en operationele verantwoordelijkheid behoren toe aan het project zelf. Niets is zo ontworpen dat gegevens van een project of van gebruikers automatisch naar het platform stromen.",
+      "Elk project wordt afzonderlijk bestuurd. Waar intellectueel eigendom, gegevens en operationele verantwoordelijkheid liggen, wordt vastgelegd in de afspraak voor dat project. Niets is zo ontworpen dat gegevens van een project of van gebruikers automatisch naar het platform stromen.",
     economicsHeading: ["Eigendom volgt", "bijdrage en verantwoordelijkheid."],
     economicsBody: [
       "De voorwaarden verschillen per project. Wij leggen niet één vaste formule over alles heen.",
       "Alleen het uitgangspunt is gedeeld: eigendom volgt de bijdrage, het gedragen risico en de verantwoordelijkheid die blijft. Wie een project leidt, heeft werkelijke zeggenschap.",
+      "Yorisou kan ook zelf betrokken blijven bij de waarde die een project op lange termijn heeft: door aandelen te blijven houden, door een licentie te houden, of door het samen te exploiteren. Welke van die vormen geldt, hangt af van hoeveel Yorisou in dat project heeft gedragen en hoeveel risico het heeft genomen.",
+      "Er zijn op dit moment geen voorwaarden die wij kunnen toezeggen. Noch een aandeel, noch de vorm van enig recht ligt vast vóór er een afspraak is.",
       "Het concrete bespreken wij per project en per persoon. Dat hoort niet op een website thuis.",
     ],
     maturityTitle: "Waar dit nu staat",
@@ -496,7 +496,13 @@ export const nl: SiteCopy = {
     eyebrow: "Samen bouwen",
     heading: ["Waar u instapt, hangt af", "van waar u staat."],
     lead:
-      "Yorisou brengt een project tot vlak vóór het punt waarop het een bedrijf wordt, en werkt dan samen met iemand die het kan dragen. Wij zoeken dus geen mensen om in dienst te nemen, maar mensen die het overnemen.",
+      "Yorisou brengt een project tot vlak vóór het punt waarop het als onderneming staat, en werkt dan samen met wie het kan dragen. Wij zoeken dus geen mensen om in dienst te nemen, maar mensen en organisaties die een project overnemen.",
+    /* CORP-v1.4 — de vorm van de betrokkenheid ontwerpen wij per project, en voor geen enkel project zeggen wij die vooraf toe. */
+    structureHeading: ["Hoe u meedoet,", "ontwerpen wij per project."],
+    structureBody: [
+      "Er is geen vast vakje om in te passen. Medeoprichterschap, een oprichtingsteam, een aandeel in het project, een licentie, gezamenlijke exploitatie, een apart bedrijf — welke vorm geldt, hangt af van het project en van hoeveel u ervan draagt.",
+      "Welke vorm het ook wordt, bestuur, intellectueel eigendom, rol, verantwoordelijkheid en economische voorwaarden leggen wij vast in een aparte afspraak. Er zijn hier geen voorwaarden die wij vooraf kunnen toezeggen.",
+    ],
     lanes: [
       {
         key: "founders",

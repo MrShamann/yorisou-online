@@ -88,12 +88,10 @@ export type SiteCopy = {
     whyEyebrow: string;
     whyHeading: readonly string[];
     whyBeats: readonly Beat[];
-    buildEyebrow: string;
     buildHeading: readonly string[];
     howEyebrow: string;
     howHeading: readonly string[];
     howBeats: readonly Beat[];
-    howDisclose: string;
     founderEyebrow: string;
     founderHeading: readonly string[];
     founderTeaser: string;
@@ -117,24 +115,35 @@ export type SiteCopy = {
      * builds, what shared infrastructure sits underneath, and how to engage. The first four
      * already had fields; the Asterion layer and the engagement layer are new. */
     asterionEyebrow: string;
-    asterionHeading: readonly string[];
     asterionBody: string;
     asterionNote: string;
+    /**
+     * CORP-v1.4 — how YORISOU stays involved in what it builds.
+     *
+     * The site described a foundry that carries a venture to independence, and stopped there. Read
+     * commercially that says YORISOU builds companies and hands them away, which is not the model:
+     * it may keep equity, hold a licence, operate jointly, or agree something else entirely. Every
+     * word here is conditional, because none of it is settled before an agreement exists.
+     */
+    portfolioEyebrow: string;
+    portfolioHeading: readonly string[];
+    portfolioBody: string;
+    portfolioNote: string;
+    /**
+     * CORP-v1.4R1 — the shapes a venture may take, as terms rather than a sentence.
+     *
+     * The paragraph above says the same thing, and a paragraph is the wrong instrument for a set of
+     * alternatives: a reader has to hold six options in their head to see that they are options.
+     * These are the labels on the branches of the value-continuity figure. Short noun phrases, not
+     * sentences — none of them has happened, and the figure's dashed connectors say so.
+     */
+    portfolioBranches: readonly string[];
     engageEyebrow: string;
     engageHeading: readonly string[];
     engageBody: string;
     engageCta: string;
     /* CORP-v1.2R2 — the homepage participation layer. Lane labels come from buildWithUs.lanes. */
     engageNote: string;
-    /* CORP-v1.2R2 — the "30 seconds" explainer affordance. */
-    explainerLabel: string;
-    explainerHeading: readonly string[];
-    explainerClose: string;
-    /* CORP-v1.2R2.1 — guided-explainer transport controls. */
-    explainerPlay: string;
-    explainerPause: string;
-    explainerRestart: string;
-    explainerStepLabel: string;
   };
 
   /* ── VENTURES INDEX (CORP-v1.2) ─────────────────────────────────────── */
@@ -162,9 +171,18 @@ export type SiteCopy = {
       problem: string;
       building: string;
       /** Public-safe maturity in ordinary language. Never a metric, never a claim of traction. */
-      status: string;
     }[];
     /** States plainly what inclusion on this page does and does not mean. */
+    /**
+     * CORP-v1.4 — what is true today, kept apart from what may follow.
+     *
+     * Every stage on this page is a current fact. The shapes a venture can take next — staying
+     * inside YORISOU, joint operation, a separate company, a licence, a transfer, a sale — are
+     * possibilities, and the page has to say which is which. A possible structure presented as a
+     * completed event is the exact claim this site exists not to make.
+     */
+    structureHeading: readonly string[];
+    structureBody: readonly string[];
     noteHeading: readonly string[];
     noteBody: readonly string[];
   };
@@ -238,6 +256,16 @@ export type SiteCopy = {
     eyebrow: string;
     heading: readonly string[];
     lead: string;
+    /**
+     * CORP-v1.4 — the shape of an involvement is designed per project, and promised for none.
+     *
+     * The lanes already say what cannot be offered — no salary, no funding, no equity, no role.
+     * That is the honest floor and it stays. What was missing is the other half: what an
+     * arrangement CAN be. Co-founder, founding team, a stake, a licence, joint operation. Naming
+     * them is not an offer, and this says so in the same breath.
+     */
+    structureHeading: readonly string[];
+    structureBody: readonly string[];
     /**
      * CORP-v1.2R2 — the participation matrix.
      *
@@ -374,7 +402,6 @@ export type SiteCopy = {
     thinkBody: readonly string[];
     buildHeading: readonly string[];
     principles: readonly Beat[];
-    principlesLong: readonly { no: string; title: string; long: string }[];
     orderHeading: readonly string[];
     orderBody: string;
     claimsHeading: readonly string[];
@@ -407,7 +434,6 @@ export type SiteCopy = {
     overviewHeading: readonly string[];
     facts: readonly Fact[];
     businessEyebrow: string;
-    businessHeading: readonly string[];
     businessBody: string;
     projectsEyebrow: string;
     projectsHeading: readonly string[];

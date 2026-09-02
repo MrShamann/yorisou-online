@@ -39,10 +39,10 @@ export const it: SiteCopy = {
   },
 
   meta: {
-    home: { title: "Yorisou LLC — Dai problemi strutturali a società che stanno in piedi da sole.", description: "Yorisou LLC è una foundry: individuiamo problemi strutturali, costruiamo prove e asset d’impresa e formiamo team fondatori per farne società indipendenti. Mirai Move e Kakari sono in costruzione; Chigamo è allo stadio di concetto." },
+    home: { title: "Yorisou LLC — Trasformiamo i problemi strutturali in imprese.", description: "Yorisou LLC è una foundry: individuiamo problemi strutturali, costruiamo le prove e gli asset d’impresa e formiamo team fondatori che avviino e gestiscano l’attività. Mirai Move e Kakari sono in costruzione; Chigamo è allo stadio di concetto." },
     miraiMove: { title: "Mirai Move — Yorisou LLC", description: "Una piattaforma per l’informazione, il matching e lo sviluppo di business nel settore della mobilità in Giappone. Il sito pubblico è online; le funzionalità della piattaforma sono in sviluppo." },
     kakari: { title: "Kakari — Yorisou LLC", description: "Supporto multilingue per procedure amministrative e documenti, per chi vive in Giappone e per chi avvia qui un’attività. In sviluppo, non ancora disponibile al pubblico." },
-    about: { title: "Come costruiamo — Yorisou LLC", description: "Individuare il problema, verificarlo, progettarlo come impresa, formare un team fondatore e portarlo fino a una società indipendente. Come funziona la foundry di Yorisou e quale posto occupa l’infrastruttura condivisa." },
+    about: { title: "Come costruiamo — Yorisou LLC", description: "Individuare il problema, verificarlo, progettarlo come impresa, formare un team fondatore e farlo stare in piedi. Come funziona la foundry di Yorisou, quali forme può prendere un’impresa e quale posto occupa l’infrastruttura condivisa." },
     company: { title: "Società — Yorisou LLC", description: "Profilo societario, profilo del socio amministratore, messaggio del socio amministratore e aree di attività di Yorisou LLC." },
     contact: { title: "Contatti — Yorisou LLC", description: "Richieste relative alle nostre attività, a collaborazioni e alla stampa." },
     ventures: { title: "Progetti — Yorisou LLC", description: "I progetti e le idee su cui Yorisou sta lavorando ora: Mirai Move, Kakari e Chigamo. Ognuno è a uno stadio diverso, e lo scriviamo com’è." },
@@ -65,11 +65,11 @@ export const it: SiteCopy = {
   home: {
     eyebrow: "Yorisou LLC",
     hook: ["Trasformiamo i problemi strutturali", "in aziende."],
-    thesis: ["Dai problemi strutturali,", "costruiamo aziende", "che stanno in piedi da sole."],
+    thesis: ["Dai problemi strutturali,", "costruiamo imprese", "e continuiamo a farle crescere."],
     lead: [
-      "Yorisou è una foundry: individuiamo i problemi strutturali della società, li verifichiamo,",
-      "li progettiamo come imprese e facciamo squadra con chi le guiderà,",
-      "accompagnandole fino a farne società indipendenti.",
+      "Yorisou è una foundry: individuiamo i problemi strutturali della società,",
+      "li verifichiamo, li progettiamo come imprese",
+      "e le avviamo insieme a chi le gestirà.",
     ],
     humanSide: "Persone",
     humanItems: ["Vita quotidiana", "Lavoro", "Comunità"],
@@ -86,7 +86,6 @@ export const it: SiteCopy = {
       { no: "03", title: "Il campo e il sistema non si incastrano.", body: "Nella mobilità, nel welfare e nella pubblica amministrazione esistono possibilità che non sono ancora arrivate a chi lavora sul campo." },
     ],
 
-    buildEyebrow: "Ciò che costruiamo",
     buildHeading: ["Ambiti che il sistema non raggiunge:", "li affrontiamo uno alla volta."],
 
     howEyebrow: "Come costruiamo",
@@ -97,7 +96,6 @@ export const it: SiteCopy = {
       { no: "03", title: "Dichiarare il confine", body: "Non entriamo nel lavoro che spetta a un professionista abilitato. Ciò di cui ci occupiamo, e il punto in cui passiamo il testimone, è scritto nel prodotto stesso." },
       { no: "04", title: "Dire solo ciò che è verificabile", body: "Risultati, numeri e collaborazioni compaiono solo dove esistono prove. Ciò che non può essere confermato non viene scritto." },
     ],
-    howDisclose: "Che cosa significano questi principi nella pratica",
 
     founderEyebrow: "Socio amministratore",
     founderHeading: ["Costruito da chi ha passato", "vent’anni dentro settori complessi."],
@@ -124,24 +122,24 @@ export const it: SiteCopy = {
 
     /* CORP-v1.2 — Asterion layer and engagement layer on the homepage. */
     asterionEyebrow: "Infrastruttura condivisa",
-    asterionHeading: ["A ogni progetto,", "le fondamenta si fanno più solide."],
     asterionBody:
-      "Asterion OS è una piattaforma tecnologica e di esecuzione condivisa e indipendente, collocata all’interno dell’architettura foundry di Yorisou. Poiché la base comune esiste già, ogni progetto può concentrare le proprie energie sulla parte che gli è davvero propria.",
+      "Asterion OS è un progetto indipendente di piattaforma tecnologica. Non dovendo ricostruire ogni volta gli stessi meccanismi, ciascun progetto può concentrare le proprie energie sulla parte che gli è davvero propria.",
     asterionNote:
-      "Ogni progetto è governato separatamente e mantiene proprietà intellettuale, dati e responsabilità operativa propri. Asterion non è di proprietà di Yorisou.",
+      "Ogni progetto è governato separatamente. La collocazione della proprietà intellettuale, dei dati e della responsabilità operativa, e i diritti relativi ad Asterion, sono stabiliti dagli accordi applicabili in ciascun caso.",
+    /* CORP-v1.4 — how Yorisou stays involved in what it builds. Conditional, never promised. */
+    portfolioEyebrow: "Come restiamo coinvolti",
+    portfolioHeading: ["Costruire un progetto", "non è la fine."],
+    portfolioBody:
+      "Anche dopo che un progetto sta in piedi, Yorisou può mantenere un interesse nel suo valore di lungo periodo: conservando una quota, tramite una licenza o gestendolo insieme ad altri. Un progetto può anche diventare una società a sé, oppure essere ceduto o venduto.",
+    portfolioBranches: ["Gestito dentro Yorisou", "Cofondato e gestito insieme", "Quota", "Licenza", "Società separata", "Cessione o vendita"],
+    portfolioNote:
+      "Quale forma prenda dipende dalla maturità del progetto, da chi vi partecipa, dal mercato, dal capitale e dall’accordo raggiunto per quel progetto. Nulla è stabilito in anticipo.",
     engageEyebrow: "Costruire insieme",
     engageHeading: ["Entra già nella fase", "in cui diventa una società."],
     engageBody:
       "Fondatori, ricercatori, enti pubblici, imprese. Il punto in cui si entra dipende da dove ci si trova. Partiamo da ciò di cui si può parlare adesso.",
     engageCta: "Vedi le vie d’ingresso",
     engageNote: "In ogni caso si comincia da una conversazione. Non esiste ancora né una procedura di candidatura né un meccanismo di selezione.",
-    explainerLabel: "Yorisou in 30 secondi",
-    explainerHeading: ["Dal problema alla società,", "in trenta secondi."],
-    explainerClose: "Chiudi",
-    explainerPlay: "Riproduci",
-    explainerPause: "Pausa",
-    explainerRestart: "Ricomincia",
-    explainerStepLabel: "Scena",
   },
 
   mirai: {
@@ -243,12 +241,6 @@ export const it: SiteCopy = {
       { no: "03", title: "Dichiarare il confine", body: "Non entriamo nel lavoro che spetta a un professionista abilitato. Ciò di cui ci occupiamo, e il punto in cui passiamo il testimone, è scritto nel prodotto stesso." },
       { no: "04", title: "Dire solo ciò che è verificabile", body: "Risultati, numeri e collaborazioni compaiono solo dove esistono prove. Ciò che non può essere confermato non viene scritto." },
     ],
-    principlesLong: [
-      { no: "01", title: "Partire dal linguaggio di chi è sul campo", long: "Nessun sistema arriva a qualcuno finché non è tradotto nei passaggi che quella persona compie davvero. Partiamo dalla domanda reale, dallo spostamento reale, dallo scambio reale: non da un problema astratto, ma dalla singola mossa che in questo momento è bloccata." },
-      { no: "02", title: "Farci carico del problema fino alla comprensione", long: "Elencare risultati di ricerca non è supporto. Ciò di cui una persona ha bisogno è sapere che cosa fare adesso. Il perimetro del prodotto arriva al punto in cui il passo successivo è compreso, non al punto in cui l’informazione è stata mostrata." },
-      { no: "03", title: "Dichiarare il confine", long: "Lasciare che qualcuno usi un prodotto senza chiarire ciò che non può fare è la progettazione più pericolosa che esista. Ciò di cui ci occupiamo, e il punto in cui subentra un professionista, è scritto nella schermata stessa. Il confine è una funzione, non una postilla." },
-      { no: "04", title: "Dire solo ciò che è verificabile", long: "Non raccontiamo risultati che non possiamo confermare, né funzioni che non sono ancora attive. Ogni fatto che pubblichiamo ha alle spalle un documento che lo sostiene. Nei periodi in cui c’è poco da dire, pubblichiamo poco." },
-    ],
     orderHeading: ["Una cosa alla volta,", "fino in fondo."],
     orderBody: "Non avviamo molte cose insieme. Preferiamo portare un solo ambito fino al punto in cui raggiunge i passaggi che le persone compiono davvero.",
     claimsHeading: ["Non scriviamo ciò", "che non possiamo verificare."],
@@ -258,7 +250,7 @@ export const it: SiteCopy = {
   company: {
     eyebrow: "Società",
     heading: ["Yorisou LLC"],
-    intro: "Yorisou LLC costruisce prodotti che trasformano la complessità della vita quotidiana, del lavoro e delle comunità locali in qualcosa che una persona può comprendere, scegliere e mettere in pratica. Con base a Fukuoka, portiamo avanti due progetti: Mirai Move e Kakari.",
+    intro: "Yorisou LLC è una foundry: individuiamo problemi strutturali, li progettiamo come imprese e li avviamo insieme a chi può gestirli. Con base a Fukuoka stiamo costruendo diversi progetti; quelli attualmente pubblici sono Mirai Move, Kakari e Chigamo.",
 
     messageEyebrow: "Messaggio del socio amministratore",
     messageHeading: ["Giudichiamo se arriva,", "non se è avanzato."],
@@ -307,12 +299,11 @@ export const it: SiteCopy = {
       { label: "Numero d’impresa (hōjin bangō)", value: "2290003018125" },
       { label: "Socio amministratore", value: "Jin Yang" },
       { label: "Sede", value: "Città di Fukuoka, prefettura di Fukuoka, Giappone" },
-      { label: "Attività", value: "Ideazione, sviluppo e gestione di Mirai Move e Kakari" },
+      { label: "Attività", value: "Esplorazione, ideazione, sviluppo e gestione di nuove imprese; formazione di team fondatori; e avvio di imprese tramite gestione congiunta, licenze e accordi analoghi" },
     ],
 
     businessEyebrow: "Aree di attività",
-    businessHeading: ["Aree di attività"],
-    businessBody: "Informazione, matching e sviluppo di business nel settore della mobilità; e supporto multilingue per procedure amministrative e documenti, rivolto a chi vive in Giappone e a chi avvia qui un’attività. Entrambe seguono lo stesso principio: farsi carico della complessità e restituire qualcosa di utilizzabile.",
+    businessBody: "Al centro di Yorisou c’è la costruzione delle imprese stesse: individuare un problema strutturale, verificarlo, progettarlo come impresa, costruirlo e avviarlo insieme a chi può gestirlo. Le attività attualmente pubbliche sono l’informazione, il matching e lo sviluppo di business nel settore della mobilità (Mirai Move); il supporto multilingue per procedure amministrative e documenti, rivolto a chi vive in Giappone e a chi vi avvia un’attività (Kakari); e la scoperta del proprio territorio a partire da posizione e contesto (Chigamo, allo stadio di concetto). Tutti seguono lo stesso principio: farsi carico della complessità e restituire qualcosa di utilizzabile.",
 
     projectsEyebrow: "Progetti",
     projectsHeading: ["Che cosa stiamo costruendo"],
@@ -378,7 +369,6 @@ export const it: SiteCopy = {
         thesis: "Mettere in relazione informazione, matching e sviluppo di business nella mobilità.",
         problem: "Informazioni e opportunità restano divise tra operatori, territori e amministrazioni.",
         building: "Una piattaforma in cui i soggetti giapponesi ed esteri possano parlare a partire dalle stesse informazioni.",
-        status: "In sviluppo e in esercizio. Sito pubblico online.",
       },
       {
         name: "Kakari",
@@ -386,7 +376,6 @@ export const it: SiteCopy = {
         thesis: "Sostenere in più lingue le procedure di chi vive in Giappone e di chi vi avvia un’attività.",
         problem: "I sistemi esistono, ma la barriera della lingua e dei passaggi li lascia inutilizzati.",
         building: "Un modo per scomporre una procedura in fasi e mostrare fin dove si può arrivare da soli.",
-        status: "In sviluppo. In preparazione per il rilascio.",
       },
       {
         name: "Chigamo",
@@ -394,14 +383,20 @@ export const it: SiteCopy = {
         thesis: "Rendere comprensibile un luogo a partire da posizione e contesto.",
         problem: "Proprio le informazioni davvero utili in un luogo sono quelle che non si trovano.",
         building: "Uno strumento di scoperta del proprio territorio, costruito su posizione e contesto.",
-        status: "Fase di concept. La verifica deve ancora cominciare.",
       },
+    ],
+    /* CORP-v1.4 — separates what is true today from what may follow. */
+    structureHeading: ["Com’è oggi,", "e che forma potrà prendere."],
+    structureBody: [
+      "Gli stadi indicati qui sopra sono ciò che è vero oggi. Scriviamo soltanto ciò che è già accaduto.",
+      "La forma futura non è decisa. Un progetto può continuare a essere gestito dentro Yorisou, accogliere dall’esterno un team di gestione, essere tenuto insieme ad altri o diventare una società a sé. Può anche prendere la forma di una licenza, di una cessione o di una vendita.",
+      "Quale sarà dipende dalla maturità del progetto, da chi vi partecipa, dal mercato, dal capitale e dall’accordo. Quanto scritto qui è una forma possibile: non è un piano e non è una promessa.",
     ],
     noteHeading: ["Che cosa dice questa pagina,", "e che cosa non dice."],
     noteBody: [
       "Qui sono elencati i progetti e le idee su cui Yorisou sta lavorando ora.",
       "Non sono società controllate, non sono partecipazioni e non sono clienti. Ognuno è a uno stadio diverso, e lo abbiamo scritto com’è.",
-      "L’obiettivo è che ciascuno arrivi a reggersi come società indipendente. Nessuno ci è ancora arrivato.",
+      "Quanto scritto qui è ciò che è vero oggi. Quale forma prenderà ciascuno in futuro non è ancora deciso.",
     ],
   },
 
@@ -453,7 +448,7 @@ export const it: SiteCopy = {
     eyebrow: "Come costruiamo",
     heading: ["Dal problema alla società,", "un passaggio alla volta."],
     lead:
-      "Non partiamo da un’intuizione che ci è piaciuta. Individuiamo un problema strutturale, lo verifichiamo, lo progettiamo come impresa, ci uniamo a chi può gestirlo e lo portiamo fino a una società indipendente. Yorisou chiama foundry questo ordine di lavoro.",
+      "Non partiamo da un’intuizione che ci è piaciuta. Individuiamo un problema strutturale, lo verifichiamo, lo progettiamo come impresa, ci uniamo a chi può gestirlo e lo portiamo fino al punto in cui sta in piedi come attività. Yorisou chiama foundry questo ordine di lavoro.",
     stagesEyebrow: "Le fasi",
     stagesHeading: ["Otto fasi,", "senza saltarne nessuna."],
     stages: [
@@ -461,29 +456,34 @@ export const it: SiteCopy = {
       { no: "02", name: "Prove", body: "Verificare se il problema esiste davvero e su chi ricade. Molte ipotesi si fermano qui." },
       { no: "03", name: "Progettazione dell’impresa", body: "Dare al modo di risolverlo la forma di un’attività: chi la usa e dove nasce davvero uno scambio di valore." },
       { no: "04", name: "Costruzione", body: "Realizzarlo. Usare la base comune dove c’è e concentrare le forze su ciò che è specifico di quel progetto." },
-      { no: "05", name: "Pronto come impresa", body: "Portare asset e procedure a uno stato in cui qualcuno dall’esterno possa prenderli in mano e farli funzionare." },
+      { no: "05", name: "Pronto come impresa", body: "Portare asset e procedure a uno stato in cui qualcuno possa prenderli in mano e farli funzionare." },
       { no: "06", name: "Formazione del team fondatore", body: "Unirsi a chi può portarlo avanti come cosa propria: come fondatore, non come dipendente." },
-      { no: "07", name: "Indipendenza e gestione", body: "Farlo funzionare come società indipendente, in una forma che non resti dipendente da Yorisou." },
-      { no: "08", name: "Apprendimento", body: "Conservare ciò che ha funzionato e ciò che si è fermato come materiale per il progetto successivo." },
+      { no: "07", name: "Indipendenza e gestione", body: "Portarlo allo stato in cui gira con le proprie forze. Può diventare una società a sé, può continuare a essere gestito dentro Yorisou, oppure può essere tenuto insieme a qualcun altro." },
+      { no: "08", name: "Apprendimento", body: "Conservare ciò che ha funzionato e ciò che si è fermato come materiale per il progetto successivo. Il rapporto con il progetto non finisce necessariamente qui." },
     ],
-    independenceHeading: ["L’obiettivo è una società", "che sta in piedi da sola."],
+    independenceHeading: ["La forma di un progetto", "non è una sola."],
     independenceBody: [
-      "Lo scopo della foundry non è accumulare cose sotto Yorisou. È portare ogni progetto al punto in cui può reggersi come società indipendente.",
-      "Per questo lo costruiamo fin dall’inizio in una forma che si possa consegnare. Se chi lo gestisce non ha un potere decisionale reale, non è diventato una società.",
+      "Stare in piedi come società indipendente è una delle forme a cui puntiamo. Ma arrivarci non significa che il rapporto con Yorisou finisca.",
+      "Un progetto può continuare a essere gestito dentro Yorisou. Può accogliere dall’esterno un fondatore o un team di gestione ed essere tenuto insieme ad altri; può diventare una società a sé, prendere la forma di una licenza, oppure essere ceduto o venduto.",
+      "Quale forma prenda dipende dalla maturità del progetto, da chi vi partecipa, dal mercato, dal capitale e dall’accordo raggiunto per quel progetto. Non esiste uno schema fissato in anticipo.",
+      "In comune c’è un solo punto: lo costruiamo fin dall’inizio in una forma che si possa consegnare. Se chi lo gestisce non ha un potere decisionale reale, quel progetto non sta in piedi come impresa.",
     ],
     asterionEyebrow: "Tecnologia ed esecuzione condivise",
     asterionHeading: ["Non costruire due volte", "la stessa cosa."],
     asterionBody: [
-      "Asterion OS è una piattaforma tecnologica e di esecuzione condivisa e indipendente, collocata all’interno dell’architettura foundry di Yorisou. Non è di proprietà di Yorisou.",
-      "Poiché la base comune c’è, nessun progetto deve ricostruirla e ognuno può concentrarsi sul proprio ambito. Ciò che si accumula diventa il punto di partenza per il progetto successivo.",
+      "Asterion OS è un progetto indipendente di piattaforma tecnologica. Non è uno dei progetti di Yorisou presentati in questo sito societario.",
+      "I progetti di Yorisou possono servirsi delle funzionalità di Asterion dove è opportuno. Proprietà, licenze, diritti sui dati e responsabilità operativa dipendono dagli accordi applicabili in ciascun caso.",
+      "Potendo contare su una base comune, nessun progetto deve ricostruire gli stessi meccanismi e ognuno può concentrarsi sul proprio ambito. Ciò che si accumula diventa il punto di partenza per il progetto successivo.",
     ],
     asterionBoundaryTitle: "Il confine",
     asterionBoundaryBody:
-      "Ogni progetto è governato separatamente. Proprietà intellettuale, dati e responsabilità operativa appartengono al progetto. Nulla è progettato perché i dati di un progetto o dei suoi utenti confluiscano automaticamente verso la piattaforma.",
+      "Ogni progetto è governato separatamente. La collocazione della proprietà intellettuale, dei dati e della responsabilità operativa è stabilita dall’accordo relativo a quel progetto. Nulla è progettato perché i dati di un progetto o dei suoi utenti confluiscano automaticamente verso la piattaforma.",
     economicsHeading: ["La proprietà segue", "il contributo e la responsabilità."],
     economicsBody: [
       "Le condizioni cambiano da progetto a progetto. Non applichiamo a tutto una formula fissa.",
       "In comune c’è solo il principio: la proprietà segue il contributo, il rischio assunto e la responsabilità che continua nel tempo. Chi gestisce un progetto ha un potere decisionale reale.",
+      "Anche Yorisou può mantenere un interesse nel valore di lungo periodo di un progetto: conservando una quota, tramite una licenza o gestendolo insieme ad altri. Quale di queste forme si applichi dipende da quanto Yorisou ha portato di quel progetto e da quanto rischio ha assunto.",
+      "Al momento non ci sono condizioni che possiamo promettere. Né la quota di partecipazione né la forma dei diritti sono definite prima di un accordo.",
       "Le condizioni concrete si discutono per ogni progetto e con ciascun interlocutore. Non sono il genere di cose che stanno su un sito.",
     ],
     maturityTitle: "A che punto siamo",
@@ -496,7 +496,13 @@ export const it: SiteCopy = {
     eyebrow: "Costruire insieme",
     heading: ["Il punto d’ingresso cambia", "a seconda di dove ti trovi."],
     lead:
-      "Yorisou porta un progetto fino al punto immediatamente precedente alla nascita di una società, e solo allora fa squadra con chi può portarselo sulle spalle. Per questo non cerchiamo persone da assumere, ma persone che se ne facciano carico.",
+      "Yorisou porta un progetto fino a poco prima che stia in piedi come impresa, e solo allora fa squadra con chi può portarselo sulle spalle. Per questo non cerchiamo persone da assumere, ma persone e organizzazioni che se ne facciano carico.",
+    /* CORP-v1.4 — the shape of an involvement is designed per project, and promised in advance for none. */
+    structureHeading: ["Il modo di partecipare", "si definisce per ciascun progetto."],
+    structureBody: [
+      "Non c’è una casella prestabilita in cui rientrare. Cofondazione, team fondatore, una quota nel progetto, una licenza, una gestione congiunta, una società a sé: quale di queste forme si applichi dipende dal progetto e da quanto se ne porta sulle spalle.",
+      "Qualunque forma prenda, il governo del progetto, la proprietà intellettuale, il ruolo, la responsabilità e le condizioni economiche sono stabiliti da un accordo a parte. Qui non ci sono condizioni che possiamo promettere in anticipo.",
+    ],
     lanes: [
       {
         key: "founders",

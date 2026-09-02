@@ -9,6 +9,9 @@ import { CORPORATE_BLOCKED, CORPORATE_INDEXABLE } from "@/lib/corporate/routePol
  *
  *     Allow: /$   Allow: /mirai-move   Allow: /kakari   Allow: /about   Disallow: /
  *
+ * (CORP-v1.4 note: that was the CORP-P4AR1 state. The list is seven routes now, still derived and
+ * still `$`-anchored; the defect described below is what the anchoring fixed.)
+ *
  * and CORP-P4AR1 claimed all four Allow rules were anchored. Only the first one was. Under the
  * matching rules Google implements, a rule without a trailing `$` is a PATH PREFIX, and where an
  * Allow and a Disallow both match, the LONGER rule wins. So `/mirai-move` matched — and therefore

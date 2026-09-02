@@ -115,3 +115,26 @@ Review date: **2026-09-01**. This is the release that goes to Production.
 | C-60 | Consumer Today | Restored at `/today`, verbatim from `8fd5bd5` | Recovered from repository history; components byte-identical; ARCH-P3 L/M rebound to the real surface and green | VERIFIED — not a new product | Yes |
 | C-61 | Production locales | ja and en public; 19 others `preview_only` | The typed registry gate, unchanged | BOUNDED | ja/en yes |
 | C-62 | Contact at launch | Truthful, and the form is not shown | Transport still unconfigured; page and endpoint share one predicate | **BOUNDED — no delivery is claimed** | Yes, as state |
+
+## CORP-v1.4 additions and corrections
+
+Review date: **2026-09-01**. Preview only — not merged, not deployed.
+
+| ID | Object | Meaning | Evidence | State | Public |
+|---|---|---|---|---|---|
+| C-63 | **Business model** | YORISOU LLC is a venture foundry: it finds structural problems, builds them into ventures, and co-creates with founders, teams and institutions | Founder decision | VERIFIED — a description of what the company does, not a claim of results | Yes |
+| C-64 | **Continuing participation** | YORISOU **may** keep a stake in a venture's long-term value through equity, a licence, joint operation or another agreed structure | Founder decision on the model. **No instance is evidenced as executed** | **BOUNDED — conditional in every sentence.** Guard `executed-economic-right` fires on the asserted form and not on the conditional one | Yes, as possibility |
+| C-65 | Independence as an exit | v1.3.1 and earlier implied a venture becoming independent **ends** YORISOU's relationship with it | No evidence supported that as a rule; it was one-sided framing | **CORRECTED** — independence is one shape among several | Yes, corrected |
+| C-66 | Fixed terms, bands, percentages | — | Internal planning only | **OMITTED, unchanged** — no percentage, band or guaranteed structure is published | No |
+| C-67 | **Possible venture structures** | Stay inside YORISOU · joint operation · external operating team · separate company · licence · transfer · sale | Founder decision on the model | **BOUNDED — presented as possibilities, explicitly "neither a plan nor a promise"** | Yes |
+| C-68 | Asterion ownership | The site previously concluded that Asterion **is not owned by** YORISOU | **Not evidenced.** No executed rights record supports that sentence | **WITHDRAWN.** Both directions are now forbidden; the published position is that rights depend on the agreements that apply | Corrected |
+| C-69 | Asterion use by ventures | YORISOU ventures **may** use Asterion capabilities where appropriate | Founder decision on public posture | BOUNDED — conditional; no venture is presented as running on Asterion | Yes |
+| C-70 | Company business activity | Discovery, planning, development and operation of new ventures; founding-team formation; venture formation through joint operation, licensing and related arrangements | Founder-supplied description of actual activity. **Not quoted from any registry** — no 定款 or 履歴事項全部証明書 is on file | **BOUNDED**, as C-04 already was | Yes |
+| C-71 | Company scope | The Company page defined YORISOU as "Mirai Move and Kakari"; its project band listed two hardcoded ventures and omitted Chigamo | Contradicted the Ventures index, `VENTURE_CLASS` and C-39 | **CORRECTED** — the band now reads the venture list | Yes |
+| C-72 | **Locale access** | All 21 locales are reachable and selectable | Founder decision. The selector had narrowed to 2 through a shared field, unnoticed and untested | VERIFIED | Yes |
+| C-73 | **Locale review state** | ja canonical · en Founder-reviewed · 19 awaiting native review | The registry, on an axis separate from access. `en` **downgraded** from HUMAN_REVIEWED to FOUNDER_REVIEWED — accurate, not native | BOUNDED — internal, never rendered | No |
+| C-74 | Native review | — | 19 locales have not been read by a native speaker | **Stated internally, never claimed publicly.** No locale is presented as reviewed | No |
+| C-75 | Canonical / hreflang | A canonical is emitted per corporate route; **no hreflang is** | Every `?lang=` URL is crawl-blocked by the `$`-anchored robots rules, so an hreflang set would advertise URLs a crawler may not fetch | **BOUNDED** — no SEO claim is made | Canonical yes |
+| C-76 | Archived `/en` consumer tree | 24 pages of the early-2026 consumer product, now `noindex, nofollow` | They were crawl-blocked but not noindexed, so an inbound link could index a product page as the company's English about page | **Not presented as the corporate site**; the corporate English is `?lang=en` | Reachable, not indexable |
+| C-77 | Norynto | Still outside the portfolio | Standing v1.2 governance; `CORP_P5_CORPORATE_PORTFOLIO_TRUTH_MATRIX.md` already ruled EXCLUDE | **OMITTED, unchanged** | No |
+| C-78 | Chigamo maturity | Unchanged again | A logo did not upgrade it in v1.3.1, and a business-model correction does not upgrade it now | **BOUNDED — still concept stage** | Yes |

@@ -1,0 +1,370 @@
+/*
+ * CORP-v1.4R1 — the YORISOU Operating Field.
+ *
+ * THE DIAGNOSIS THIS ANSWERS. Everything after the hero fell back into one shape:
+ * Band → eyebrow → h2 → paragraph → cards. Ten sections on the homepage, each correct, each the
+ * same weight, so scrolling read as "here is the next part" nine times. The hero was AI-native and
+ * nothing after it was.
+ *
+ * The fix is not more motion. It is that the page inherits the hero's grammar — node, line, state,
+ * boundary — and that density stops being uniform. Three modes, deliberately alternated:
+ *
+ *   SYSTEM DENSE     a structured surface carrying state
+ *   EDITORIAL QUIET  one statement and space around it
+ *   DECISION         a choice the reader can actually make
+ *
+ * Every interaction here is a native radio group. No JavaScript, no new dependency, arrow keys work
+ * because the browser gives them to us, and reduced motion has nothing to disable.
+ *
+ * WHICH ELEMENT HIDES HOW matters, and an earlier version of this note had it backwards. The radio
+ * inputs are visually hidden but FOCUSABLE — `.radio` below is absolute/opacity-0/1x1, never
+ * `display:none`, because a `display:none` input cannot be reached at all. The PANELS are what carry
+ * `display:none`, so only the selected one reaches the accessibility tree. This is a native
+ * radio-group controlling conditional content; it is not an ARIA tabs widget and implements no
+ * tab/tabpanel roles.
+ */
+
+/* ── shared vocabulary ─────────────────────────────────────────────────────────────────────── */
+
+.hiddenLegend {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px; height: 1px;
+}
+
+.stateChip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--sys-ink-3);
+}
+.stateChip::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--signal-on-dark);
+}
+.stateChip[data-state="concept"]::before {
+  background: transparent;
+  border: 1px solid var(--sys-line-2);
+}
+
+/* ── SCENE 2 — the public venture surface ─────────────────────────────────────────────────── */
+
+.surface {
+  background: var(--sys);
+  color: var(--sys-ink);
+  padding-block: clamp(48px, 7vw, 96px);
+}
+.surfaceHeadRow {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px 24px; flex-wrap: wrap;
+  margin-block-end: clamp(28px, 4vw, 48px);
+}
+.surfaceTitle {
+  margin: 0;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step-2); font-weight: 600; letter-spacing: -0.01em;
+  color: var(--sys-ink);
+}
+.surfaceNote { margin: 0; max-width: 46ch; font-size: var(--step--1); line-height: 1.75; color: var(--sys-ink-2); }
+
+.ventureRows { display: grid; gap: 1px; background: var(--sys-line); border-block: 1px solid var(--sys-line); }
+.ventureRow {
+  background: var(--sys);
+  display: grid;
+  gap: 18px 32px;
+  padding-block: clamp(24px, 3.2vw, 38px);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+  .ventureRow { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 200px; align-items: center; }
+}
+.ventureIdent { display: grid; gap: 10px; align-content: start; }
+.ventureLink {
+  display: inline-block; text-decoration: none; color: inherit;
+  border-block-end: 1px solid transparent; transition: border-color 160ms ease;
+}
+.ventureLink:hover, .ventureLink:focus-visible { border-block-end-color: var(--signal-on-dark); }
+.ventureName {
+  margin: 0;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: var(--step-2); font-weight: 600; letter-spacing: -0.01em; color: var(--sys-ink);
+}
+.ventureDomain {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.1em; color: var(--sys-ink-3);
+}
+.ventureState { display: grid; gap: 10px; align-content: center; }
+.ventureStateLine { margin: 0; font-size: 13px; line-height: 1.75; color: var(--sys-ink-2); }
+/*
+ * The glyph column carries the SHAPE of each venture's system, not its labels — see the `compact`
+ * note in systems.tsx, which owns that decision in the drawing itself rather than hiding text here.
+ */
+.ventureGlyph { display: none; }
+@media (min-width: 900px) {
+  /*
+   * A FIXED BOX, not an auto height. The three compact viewBoxes have very different aspect ratios —
+   * Kakari's ordered procedure is inherently portrait — and `.svgBlock` sizes height from width, so
+   * letting them size themselves made the Kakari row roughly four hundred pixels tall and broke the
+   * even rhythm of the surface. Each glyph now fits (xMidYMid meet) inside the same box, so the rows
+   * stay level and each drawing keeps its own proportions.
+   */
+  .ventureGlyph { display: block; opacity: 0.8; block-size: 132px; }
+  .ventureGlyph svg { inline-size: 100%; block-size: 100%; }
+}
+
+/*
+ * The stage rail. Eight stops, the venture's own marker filled at its real position and the rest
+ * hollow — the same reached/unreached idiom the formation state already uses, so a reader who has
+ * seen one has seen both. No percentage, no bar: a venture is at a named stage or it is not.
+ */
+.stageRail { display: flex; align-items: center; gap: 8px; }
+.stageStops { display: flex; align-items: center; gap: 4px; flex: 1 1 auto; min-inline-size: 0; }
+.stageStop {
+  flex: 1 1 0; height: 2px; background: var(--sys-line-2); border-radius: 1px;
+}
+.stageStop[data-reached="yes"] { background: var(--signal-on-dark); }
+.stageMarker {
+  flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--signal-on-dark);
+  box-shadow: 0 0 0 3px rgba(60, 156, 240, 0.22);
+}
+.stageMarker[data-state="concept"] {
+  background: transparent; border: 1px solid var(--sys-line-2); box-shadow: none;
+}
+.stageCaption {
+  flex: 0 0 auto;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.1em; color: var(--sys-ink-3);
+}
+
+/* ── SCENE 3 — the value continuity field ─────────────────────────────────────────────────── */
+
+.continuity { display: grid; gap: clamp(24px, 3vw, 40px); }
+@media (min-width: 980px) { .continuity { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); align-items: start; }
+}
+.continuityFigure { width: 100%; height: auto; display: block; }
+.continuityList { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.continuityItem {
+  display: grid; gap: 4px;
+  padding-block: 14px;
+  border-block-start: 1px solid var(--line);
+}
+.continuityItem:last-child { border-block-end: 1px solid var(--line); }
+.continuityTerm {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 13.5px; font-weight: 600; color: var(--ink);
+}
+
+/* ── SCENE 4 / Build With Us — the entry selector ──────────────────────────────────────────── */
+
+.entry { display: block; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.entryBody { display: grid; gap: 0; }
+.entryRoles {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding-block-end: 20px;
+  border-block-end: 1px solid var(--line);
+}
+.entryRole {
+  display: inline-flex; align-items: center; min-height: 40px;
+  padding-inline: 14px;
+  border: 1px solid var(--line-2);
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 13px; color: var(--ink-3);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+.entryRole:hover { color: var(--ink); border-color: var(--line-3); }
+/* The focus ring is painted by the per-index `.radio:nth-of-type(N):focus-visible ~ ...` rules
+   below, mirroring the checked rules. An earlier pair of selectors here — one naming a class
+   (`.entryRolesWrap`) that exists nowhere, one `:has(:focus-visible)` that can never match because
+   the labels contain no focusable descendant — was dead and is removed. */
+
+.entryPanel { display: none; padding-block-start: 22px; }
+.entryPanelGrid { display: grid; gap: 20px 40px; }
+@media (min-width: 820px) { .entryPanelGrid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+}
+.entryField { display: grid; gap: 6px; padding-block: 12px; border-block-start: 1px solid var(--line); }
+.entryFieldLabel {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4);
+}
+.entryFieldValue { font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+.entryOffer { border-inline-start: 2px solid var(--signal); padding-inline-start: 12px; display: block; }
+.entryCannot { border-inline-start: 2px solid var(--line-3); padding-inline-start: 12px; display: block; color: var(--ink-3); }
+.entryInvites { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.8; color: var(--ink-2); }
+.entryVentures { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.entryVenture {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 12px; color: var(--ink-2);
+  border: 1px solid var(--line); padding: 3px 9px;
+}
+
+/* ── the Foundry spine ─────────────────────────────────────────────────────────────────────── */
+
+/*
+ * The grid belongs on `.spineBody`, not on `.spine`.
+ *
+ * `.spine` is the fieldset, and its children are the legend, eight radio inputs and the body. Making
+ * IT the grid handed eight grid cells to the inputs, so the rail and the panel could never sit side
+ * by side and the panel column came out empty — visible immediately in the first screenshot.
+ */
+.spine { display: block; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.spineBody { display: grid; gap: clamp(24px, 3vw, 44px); }
+@media (min-width: 900px) {
+  /*
+   * `stretch`, not `start`, so the panel column's rule runs the full height of the rail. With the
+   * panel top-aligned, a two-line stage description left a large unbounded void under it that read
+   * as a layout fault rather than as space. A rule turns the same emptiness into a column.
+   */
+  .spineBody { grid-template-columns: minmax(0, 320px) minmax(0, 1fr); align-items: stretch; }
+  .spinePanels {
+    border-inline-start: 1px solid var(--line);
+    padding-inline-start: clamp(24px, 3vw, 52px);
+  }
+}
+
+.spineRail { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.spineStop {
+  display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 12px;
+  min-height: 44px; padding-block: 6px;
+  cursor: pointer;
+  color: var(--ink-4);
+  transition: color 160ms ease;
+}
+.spineStop:hover { color: var(--ink-2); }
+.spineNo {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.06em; font-variant-numeric: tabular-nums;
+}
+.spineName { font-size: 14px; line-height: 1.5; }
+/* the connector between stops — a line, drawn once, like every other connector on the site */
+.spineStopWrap { position: relative; }
+.spineStopWrap::before {
+  content: ""; position: absolute;
+  inset-inline-start: 12px; inset-block: 0;
+  width: 1px; background: var(--line-2);
+}
+.spineStopWrap:first-child::before { inset-block-start: 50%; }
+.spineStopWrap:last-child::before { inset-block-end: 50%; }
+.spineDot {
+  position: relative; z-index: 1;
+  inline-size: 9px; block-size: 9px; border-radius: 50%;
+  background: var(--paper); border: 1px solid var(--line-3);
+  justify-self: center;
+}
+
+.spinePanel { display: none; }
+.spinePanelInner { display: grid; gap: 14px; }
+.spinePanelNo {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; letter-spacing: 0.14em; color: var(--ink-4); font-variant-numeric: tabular-nums;
+}
+.spinePanelName { margin: 0; font-size: var(--step-3); font-weight: 600; letter-spacing: -0.015em; color: var(--ink); }
+.spinePanelBody { margin: 0; max-width: 54ch; font-size: 15px; line-height: 1.9; color: var(--ink-2); }
+
+/* venture markers pinned to the spine at their real stage, on the stage's own row */
+.spineVentures { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.spineVenture {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 11px; color: var(--ink-3);
+  border: 1px solid var(--line-2); padding: 2px 7px;
+}
+/* A concept-stage venture's marker is outlined, a building one's is solid — the same
+   reached/unreached idiom the stage rail and the formation chips already use. The state itself is
+   always ALSO stated in text on the venture surface and on the venture's own page; nothing here is
+   carried by the border alone. */
+.spineVenture[data-state="concept"] { border-style: dashed; }
+
+/*
+ * The selected states. Written out rather than generated because a stylesheet cannot loop, and
+ * because being able to read exactly which stop lights which panel is worth the repetition.
+ */
+.radio:nth-of-type(1):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(1) .spineStop,
+.radio:nth-of-type(2):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(2) .spineStop,
+.radio:nth-of-type(3):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(3) .spineStop,
+.radio:nth-of-type(4):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(4) .spineStop,
+.radio:nth-of-type(5):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(5) .spineStop,
+.radio:nth-of-type(6):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(6) .spineStop,
+.radio:nth-of-type(7):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(7) .spineStop,
+.radio:nth-of-type(8):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(8) .spineStop {
+  color: var(--ink);
+}
+.radio:nth-of-type(1):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(1) .spineDot,
+.radio:nth-of-type(2):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(2) .spineDot,
+.radio:nth-of-type(3):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(3) .spineDot,
+.radio:nth-of-type(4):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(4) .spineDot,
+.radio:nth-of-type(5):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(5) .spineDot,
+.radio:nth-of-type(6):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(6) .spineDot,
+.radio:nth-of-type(7):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(7) .spineDot,
+.radio:nth-of-type(8):checked ~ .spineBody .spineRail .spineStopWrap:nth-child(8) .spineDot {
+  background: var(--signal); border-color: var(--signal);
+  box-shadow: 0 0 0 3px rgba(60, 156, 240, 0.22);
+}
+.radio:nth-of-type(1):checked ~ .spineBody .spinePanels .spinePanel:nth-child(1),
+.radio:nth-of-type(2):checked ~ .spineBody .spinePanels .spinePanel:nth-child(2),
+.radio:nth-of-type(3):checked ~ .spineBody .spinePanels .spinePanel:nth-child(3),
+.radio:nth-of-type(4):checked ~ .spineBody .spinePanels .spinePanel:nth-child(4),
+.radio:nth-of-type(5):checked ~ .spineBody .spinePanels .spinePanel:nth-child(5),
+.radio:nth-of-type(6):checked ~ .spineBody .spinePanels .spinePanel:nth-child(6),
+.radio:nth-of-type(7):checked ~ .spineBody .spinePanels .spinePanel:nth-child(7),
+.radio:nth-of-type(8):checked ~ .spineBody .spinePanels .spinePanel:nth-child(8) {
+  display: block;
+}
+.radio:nth-of-type(1):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(1) .spineStop,
+.radio:nth-of-type(2):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(2) .spineStop,
+.radio:nth-of-type(3):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(3) .spineStop,
+.radio:nth-of-type(4):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(4) .spineStop,
+.radio:nth-of-type(5):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(5) .spineStop,
+.radio:nth-of-type(6):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(6) .spineStop,
+.radio:nth-of-type(7):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(7) .spineStop,
+.radio:nth-of-type(8):focus-visible ~ .spineBody .spineRail .spineStopWrap:nth-child(8) .spineStop {
+  outline: 2px solid var(--signal); outline-offset: 3px;
+}
+
+/* the entry selector uses the same mechanism, six stops */
+.radio:nth-of-type(1):checked ~ .entryBody .entryRoles .entryRole:nth-child(1),
+.radio:nth-of-type(2):checked ~ .entryBody .entryRoles .entryRole:nth-child(2),
+.radio:nth-of-type(3):checked ~ .entryBody .entryRoles .entryRole:nth-child(3),
+.radio:nth-of-type(4):checked ~ .entryBody .entryRoles .entryRole:nth-child(4),
+.radio:nth-of-type(5):checked ~ .entryBody .entryRoles .entryRole:nth-child(5),
+.radio:nth-of-type(6):checked ~ .entryBody .entryRoles .entryRole:nth-child(6) {
+  color: var(--paper); background: var(--ink); border-color: var(--ink);
+}
+.radio:nth-of-type(1):checked ~ .entryBody .entryPanels .entryPanel:nth-child(1),
+.radio:nth-of-type(2):checked ~ .entryBody .entryPanels .entryPanel:nth-child(2),
+.radio:nth-of-type(3):checked ~ .entryBody .entryPanels .entryPanel:nth-child(3),
+.radio:nth-of-type(4):checked ~ .entryBody .entryPanels .entryPanel:nth-child(4),
+.radio:nth-of-type(5):checked ~ .entryBody .entryPanels .entryPanel:nth-child(5),
+.radio:nth-of-type(6):checked ~ .entryBody .entryPanels .entryPanel:nth-child(6) {
+  display: block;
+}
+.radio:nth-of-type(1):focus-visible ~ .entryBody .entryRoles .entryRole:nth-child(1),
+.radio:nth-of-type(2):focus-visible ~ .entryBody .entryRoles .entryRole:nth-child(2),
+.radio:nth-of-type(3):focus-visible ~ .entryBody .entryRoles .entryRole:nth-child(3),
+.radio:nth-of-type(4):focus-visible ~ .entryBody .entryRoles .entryRole:nth-child(4),
+.radio:nth-of-type(5):focus-visible ~ .entryBody .entryRoles .entryRole:nth-child(5),
+.radio:nth-of-type(6):focus-visible ~ .entryBody .entryRoles .entryRole:nth-child(6) {
+  outline: 2px solid var(--signal); outline-offset: 2px;
+}
+
+/* ── editorial quiet ───────────────────────────────────────────────────────────────────────── */
+.quietStatement {
+  margin: 0; max-width: 20ch;
+  font-size: var(--step-4); font-weight: 700; line-height: 1.35; letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spineStop, .entryRole { transition: none; }
+}

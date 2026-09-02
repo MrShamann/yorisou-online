@@ -209,6 +209,8 @@ export const CONSUMER_ROUTES: readonly string[] = [
 export const PROTOTYPE_ROUTES_LIST: readonly string[] = [
   "/prototype/capture",
   "/prototype/corporate",
+  /* CORP-v1.4 — added; it existed on disk and was missing here, so isKnownPageRoute said false. */
+  "/prototype/corporate/aida",
   "/prototype/corporate/about",
   "/prototype/corporate/company",
   "/prototype/corporate/contact",
@@ -411,7 +413,7 @@ export function sitemapDisposition(pathname: string): SitemapDisposition {
   return classify(pathname) === "CORPORATE_INDEXABLE" ? "IN_SITEMAP" : "EXCLUDED_FROM_SITEMAP";
 }
 
-/** Only the four corporate routes are sitemap-eligible. Everything else, including UNKNOWN. */
+/** Only the corporate indexable routes are sitemap-eligible. Everything else, including UNKNOWN. */
 export function isSitemapEligible(pathname: string): boolean {
   return sitemapDisposition(pathname) === "IN_SITEMAP";
 }
